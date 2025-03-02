@@ -142,7 +142,7 @@
             
             // Custom logging function
             function log(message, type = 'info') {
-                console.log(message);
+                // Don't call console.log here to avoid potential recursion
                 const entry = document.createElement('div');
                 entry.className = `log-entry ${type}`;
                 entry.textContent = message;
@@ -150,27 +150,30 @@
                 logOutput.scrollTop = logOutput.scrollHeight;
             }
             
-            // Override console.log and console.error
-            const originalConsoleLog = console.log;
-            const originalConsoleError = console.error;
+            // DON'T override console.log and console.error - this causes too many issues
+            // Instead use our custom log function directly
             
-            console.log = function() {
-                originalConsoleLog.apply(console, arguments);
-                const message = Array.from(arguments).join(' ');
-                log(message, 'info');
-            };
+            // Initialize scene - make sure this only happens once
+            let isInitializing = false; // Flag to prevent multiple initializations
             
-            console.error = function() {
-                originalConsoleError.apply(console, arguments);
-                const message = Array.from(arguments).join(' ');
-                log(message, 'error');
-            };
-            
-            // Initialize scene
             function initScene() {
-                log('Initializing scene...');
+                // Prevent multiple simultaneous initializations
+                if (isInitializing) return false;
+                isInitializing = true;
+                
+                // Clear any existing scene first
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+                    renderer.domElement.parentNode.removeChild(renderer.domElement);
+                }
                 
                 try {
+                    log('Initializing scene...', 'info');
+                    
                     // Create scene
                     scene = new THREE.Scene();
                     
@@ -209,20 +212,23 @@
                     ground.receiveShadow = true;
                     scene.add(ground);
                     
-                    // Start animation
-                    animate();
+                    // Start animation loop only after everything is set up
+                    lastTime = performance.now();
+                    animationId = requestAnimationFrame(animateWithoutLogging);
                     
                     log('Scene initialized successfully', 'success');
+                    isInitializing = false;
                     return true;
                 } catch (error) {
                     log('Error initializing scene: ' + error.message, 'error');
+                    isInitializing = false;
                     return false;
                 }
             }
             
             // Create car
             function createTestCar() {
-                log('Creating car...');
+                log('Creating car...', 'info');
                 
                 try {
                     // Remove existing car if any
@@ -235,7 +241,10 @@
                     const colorHex = carColorInput.value;
                     const colorValue = parseInt(colorHex.substring(1), 16);
                     
-                    log(`Using color: ${colorHex} (${colorValue})`);
+                    log(`Using color: ${colorHex}`, 'info');
+                    
+                    // Completely disable debug logging
+                    window.carModelDebug = false;
                     
                     // Create car
                     if (typeof createCar === 'function') {
@@ -257,24 +266,38 @@
                 }
             }
             
-            // Animation loop
-            function animate() {
-                animationId = requestAnimationFrame(animate);
+            // Animation loop with absolutely no logging
+            let lastTime = 0;
+            
+            function animateWithoutLogging(timestamp) {
+                // Important: Schedule next frame first
+                animationId = requestAnimationFrame(animateWithoutLogging);
                 
+                // Calculate time delta and throttle
+                const delta = timestamp - lastTime;
+                if (delta < 16) return; // ~60fps limit
+                
+                lastTime = timestamp;
+                
+                // Rotate car if it exists
                 if (car) {
                     car.rotation.y += 0.01;
                 }
                 
-                renderer.render(scene, camera);
+                // Render scene without any logging
+                if (scene && camera && renderer) {
+                    renderer.render(scene, camera);
+                }
             }
             
             // Reset scene
             function resetScene() {
-                log('Resetting scene...');
+                log('Resetting scene...', 'info');
                 
                 // Cancel animation
                 if (animationId) {
                     cancelAnimationFrame(animationId);
+                    animationId = null;
                 }
                 
                 // Remove renderer
@@ -288,13 +311,25 @@
                 renderer = null;
                 car = null;
                 
-                // Reinitialize
-                initScene();
-                
-                log('Scene reset complete', 'success');
+                // Wait a short time before reinitializing to prevent potential issues
+                setTimeout(() => {
+                    initScene();
+                    log('Scene reset complete', 'success');
+                }, 100);
             }
             
-            // Event listeners
+            // Initialize only once when the page loads
+            let initializationComplete = false;
+            
+            function onPageLoad() {
+                if (!initializationComplete) {
+                    initScene();
+                    initializationComplete = true;
+                    log('Test page loaded and initialized', 'info');
+                }
+            }
+            
+            // Event listeners - ensure they're only attached once
             createCarBtn.addEventListener('click', createTestCar);
             resetBtn.addEventListener('click', resetScene);
             
@@ -310,10 +345,9 @@
                 }
             });
             
-            // Initialize on load
-            window.addEventListener('load', initScene);
-            
-            log('Test page loaded');
+            // Initialize on load, only once
+            window.removeEventListener('load', onPageLoad); // Remove any existing handlers
+            window.addEventListener('load', onPageLoad);
         })();
     </script>
 </body>

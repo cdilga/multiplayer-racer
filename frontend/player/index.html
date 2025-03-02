@@ -5,11 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Race Game - Player</title>
     <link rel="stylesheet" href="/static/css/player.css">
+    <style>
+        .auto-join-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fade 2s linear forwards;
+        }
+
+        @keyframes fade {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div id="join-screen" class="screen">
             <h1>Multiplayer Racer</h1>
+            <div id="auto-join-message" class="auto-join-message" style="display: none;">
+                Room code detected: <strong id="detected-room-code"></strong>
+            </div>
             <div class="join-form">
                 <input type="text" id="player-name" placeholder="Your Name" maxlength="15">
                 <input type="text" id="room-code" placeholder="Room Code" maxlength="4">
@@ -48,6 +69,12 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.0/dist/nipplejs.min.js"></script>
+    
+    <!-- Pass room code if available -->
+    <script>
+        // This will be replaced by Flask template engine
+        window.roomCode = "{{ room_code }}";
+    </script>
     
     <!-- Load game scripts -->
     <script src="/static/js/player.js"></script>

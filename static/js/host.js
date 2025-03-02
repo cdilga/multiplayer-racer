@@ -63,9 +63,37 @@ socket.on('room_created', (data) => {
     gameState.roomCode = data.room_code;
     elements.roomCodeDisplay.textContent = gameState.roomCode;
     
-    // Update join URL
-    const joinUrl = `${window.location.origin}/player`;
-    elements.joinUrl.textContent = joinUrl;
+    // Get local IP address from server-provided data if available
+    let ipAddress = 'localhost';
+    let port = window.location.port || '5000';
+    
+    if (typeof serverConfig !== 'undefined') {
+        ipAddress = serverConfig.localIp;
+        port = serverConfig.port;
+    }
+    
+    // Update join URL with local IP instead of localhost
+    const joinUrl = `http://${ipAddress}:${port}/player`;
+    elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
+    
+    // Load QR code image
+    const qrCodeUrl = `/qrcode/${gameState.roomCode}`;
+    const qrCodeElement = document.getElementById('qr-code');
+    if (qrCodeElement) {
+        qrCodeElement.src = qrCodeUrl;
+        
+        // Add error handling in case the QR code fails to load
+        qrCodeElement.onerror = function() {
+            qrCodeElement.style.display = 'none';
+            const container = document.querySelector('.qr-code-container');
+            if (container) {
+                const errorMsg = document.createElement('p');
+                errorMsg.className = 'error';
+                errorMsg.textContent = 'QR code generation failed. Please use the room code instead.';
+                container.appendChild(errorMsg);
+            }
+        };
+    }
     
     // Show lobby screen
     showScreen('lobby');
@@ -190,14 +218,29 @@ function showScreen(screenName) {
 }
 
 // Three.js game initialization
+let isInitializing = false; // Flag to prevent multiple initializations
+let animationRequestId = null; // Track the animation frame request
+
 function initGame() {
+    // Prevent multiple simultaneous initializations
+    if (isInitializing) return;
+    isInitializing = true;
+    
+    // Cancel any existing animation frame to prevent duplicate loops
+    if (animationRequestId) {
+        cancelAnimationFrame(animationRequestId);
+        animationRequestId = null;
+    }
+    
     try {
         // Initialize Three.js scene
         gameState.scene = new THREE.Scene();
         
-        // Calculate proper aspect ratio
-        const containerWidth = elements.gameContainer.clientWidth;
-        const containerHeight = elements.gameContainer.clientHeight;
+        // Calculate proper aspect ratio - use getBoundingClientRect for more accurate dimensions
+        const container = elements.gameContainer;
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
         const aspectRatio = containerWidth / containerHeight;
         
         gameState.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
@@ -206,7 +249,13 @@ function initGame() {
         gameState.renderer.setSize(containerWidth, containerHeight);
         gameState.renderer.setClearColor(0x87CEEB); // Sky blue background
         gameState.renderer.shadowMap.enabled = true;
-        elements.gameContainer.appendChild(gameState.renderer.domElement);
+        
+        // Clear any existing renderer from the container
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+        
+        container.appendChild(gameState.renderer.domElement);
         
         // Set up camera position for better viewing angle
         gameState.camera.position.set(0, 40, 40); // Moved back to see more of the track
@@ -252,16 +301,30 @@ function initGame() {
             createPlayerCar(playerId, player.color);
         });
         
-        // Force a first render to make everything visible
+        // Force multiple renders to ensure everything is displayed correctly
         gameState.renderer.render(gameState.scene, gameState.camera);
         
-        // Start game loop immediately
-        requestAnimationFrame(gameLoop);
+        // Wait a short time before starting the game loop to ensure DOM is fully updated
+        setTimeout(() => {
+            // Force another render after a short delay
+            gameState.renderer.render(gameState.scene, gameState.camera);
+            
+            // Start game loop
+            animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+            
+            // Mark initialization as complete
+            isInitializing = false;
+        }, 50);
         
         // Handle window resize
+        window.removeEventListener('resize', onWindowResize); // Remove any existing handlers
         window.addEventListener('resize', onWindowResize);
+        
+        // Make an immediate call to onWindowResize to ensure proper sizing
+        onWindowResize();
     } catch (error) {
         console.error('Error initializing game:', error);
+        isInitializing = false; // Reset flag even on error
     }
 }
 
@@ -429,7 +492,11 @@ function initPhysics() {
     }
 }
 
-function gameLoop() {
+// Improved game loop that avoids potential stack overflow issues
+function gameLoopWithoutRecursion(timestamp) {
+    // Schedule next frame first to avoid recursion issues
+    animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+    
     if (!gameState.gameActive) {
         return;
     }
@@ -469,28 +536,38 @@ function gameLoop() {
         if (gameState.showStats) {
             updateStatsDisplay();
         }
-        
-        // Continue game loop
-        requestAnimationFrame(gameLoop);
     } catch (error) {
         console.error('Error in game loop:', error);
-        // Try to continue the game loop despite errors
-        requestAnimationFrame(gameLoop);
     }
 }
 
+// Modify the existing gameLoop function to use the new gameLoopWithoutRecursion function
+function gameLoop() {
+    // Start the improved game loop instead
+    if (animationRequestId) {
+        cancelAnimationFrame(animationRequestId);
+    }
+    animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+}
+
 function onWindowResize() {
-    console.log('Window resized');
-    // Update camera aspect ratio and renderer size when window is resized
-    const containerWidth = elements.gameContainer.clientWidth;
-    const containerHeight = elements.gameContainer.clientHeight;
+    if (!gameState.camera || !gameState.renderer) return;
     
-    gameState.camera.aspect = containerWidth / containerHeight;
+    // Get accurate container dimensions
+    const container = elements.gameContainer;
+    const containerRect = container.getBoundingClientRect();
+    const width = containerRect.width;
+    const height = containerRect.height;
+    
+    // Update camera
+    gameState.camera.aspect = width / height;
     gameState.camera.updateProjectionMatrix();
-    gameState.renderer.setSize(containerWidth, containerHeight);
+    
+    // Update renderer
+    gameState.renderer.setSize(width, height);
     
     // Force a render after resize
-    if (gameState.scene && gameState.camera) {
+    if (gameState.scene) {
         gameState.renderer.render(gameState.scene, gameState.camera);
     }
 }
@@ -566,17 +643,15 @@ function updateStatsDisplay() {
 function resetCarPosition(playerId) {
     if (!gameState.cars[playerId]) return;
     
-    // Reset to a position on the starting line
-    const startPosition = [0, 0.5, -20];
     const car = gameState.cars[playerId];
+    // Set a proper starting position (at the center of the track)
+    const startPosition = [0, 0.5, -20];
     
-    // Update car target position
+    // Set the car's target position to the start position
     car.targetPosition.set(startPosition[0], startPosition[1], startPosition[2]);
-    
-    // Reset rotation to point in the right direction
     car.targetRotation.set(0, 0, 0);
     
-    // Update player state
+    // Update internal game state
     gameState.players[playerId].position = startPosition;
     gameState.players[playerId].rotation = [0, 0, 0];
     

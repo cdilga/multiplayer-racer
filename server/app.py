@@ -1,10 +1,17 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import random
 import string
 import json
 import logging
+import socket
+import qrcode
+import io
+from PIL import Image
+import platform
+import subprocess
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +40,75 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # }
 game_rooms = {}
 
+def get_local_ip():
+    """Get the local IP address of this machine for LAN connections.
+    Uses multiple methods to find the most likely local network IP.
+    Prioritizes addresses in the 192.168.x.x range which are most
+    common for home networks."""
+    private_ips = []
+    
+    # Method 1: Try using socket connection (but this can pick VPN interfaces)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+        s.close()
+        if ip and not ip.startswith('127.'):
+            private_ips.append(ip)
+    except Exception as e:
+        logger.error(f"Error getting IP via socket method: {e}")
+    
+    # Method 2: Try platform-specific commands
+    system = platform.system()
+    try:
+        if system == 'Darwin':  # macOS
+            cmd = "ifconfig | grep 'inet ' | grep -v '127.0.0.1' | awk '{print $2}'"
+            output = subprocess.check_output(cmd, shell=True)
+            ips = output.decode().strip().split('\n')
+            for ip in ips:
+                if ip and not ip.startswith('127.'):
+                    private_ips.append(ip)
+        elif system == 'Linux':
+            cmd = "hostname -I"
+            output = subprocess.check_output(cmd, shell=True)
+            ips = output.decode().strip().split()
+            for ip in ips:
+                if ip and not ip.startswith('127.'):
+                    private_ips.append(ip)
+        elif system == 'Windows':
+            cmd = "ipconfig | findstr /i \"IPv4 Address\""
+            output = subprocess.check_output(cmd, shell=True)
+            ips = re.findall(r'(\d+\.\d+\.\d+\.\d+)', output.decode())
+            for ip in ips:
+                if ip and not ip.startswith('127.'):
+                    private_ips.append(ip)
+    except Exception as e:
+        logger.error(f"Error getting IP via platform-specific method: {e}")
+    
+    # If we have IPs, rank them by preference
+    if private_ips:
+        # Prefer 192.168.x.x networks (most common for home networks)
+        for ip in private_ips:
+            if ip.startswith('192.168.'):
+                return ip
+        
+        # Next prefer 10.x.x.x networks
+        for ip in private_ips:
+            if ip.startswith('10.'):
+                return ip
+        
+        # Last try 172.16-31.x.x networks
+        for ip in private_ips:
+            if re.match(r'^172\.(1[6-9]|2[0-9]|3[0-1])\.', ip):
+                return ip
+        
+        # If none of the above patterns matched but we have IPs, return the first one
+        return private_ips[0]
+    
+    # Fallback to localhost if all methods fail
+    logger.warning("Could not determine local IP address, defaulting to localhost")
+    return '127.0.0.1'
+
 def generate_room_code(length=4):
     """Generate a random room code of uppercase letters."""
     return ''.join(random.choices(string.ascii_uppercase, k=length))
@@ -40,12 +116,67 @@ def generate_room_code(length=4):
 @app.route('/')
 def index():
     """Serve the host interface."""
-    return render_template('host/index.html')
+    local_ip = get_local_ip()
+    port = request.environ.get('SERVER_PORT', 5000)
+    # For some reason, SERVER_PORT may not be accurate on all systems
+    # Check for host header to get actual port
+    if 'X-Forwarded-Host' in request.headers:
+        host_parts = request.headers['X-Forwarded-Host'].split(':')
+        if len(host_parts) > 1:
+            port = host_parts[1]
+    elif 'Host' in request.headers:
+        host_parts = request.headers['Host'].split(':')
+        if len(host_parts) > 1:
+            port = host_parts[1]
+    return render_template('host/index.html', local_ip=local_ip, port=port)
 
 @app.route('/player')
 def player():
     """Serve the player interface."""
-    return render_template('player/index.html')
+    # Get room code from query parameters if available
+    room_code = request.args.get('room', '')
+    return render_template('player/index.html', room_code=room_code)
+
+@app.route('/qrcode/<room_code>')
+def generate_qr_code(room_code):
+    """Generate a QR code for joining a specific room."""
+    try:
+        local_ip = get_local_ip()
+        # Default port for Flask is 5000, but check headers for actual port
+        port = request.environ.get('SERVER_PORT', 5000)
+        if 'X-Forwarded-Host' in request.headers:
+            host_parts = request.headers['X-Forwarded-Host'].split(':')
+            if len(host_parts) > 1:
+                port = host_parts[1]
+        elif 'Host' in request.headers:
+            host_parts = request.headers['Host'].split(':')
+            if len(host_parts) > 1:
+                port = host_parts[1]
+            
+        # Generate the URL with the room code
+        join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+        
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(join_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Save to byte stream
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        
+        return send_file(img_byte_arr, mimetype='image/png')
+    except Exception as e:
+        logger.error(f"Error generating QR code: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/test/car')
 def car_test():
@@ -83,10 +214,6 @@ def join_game(data):
         emit('join_error', {'message': 'Room not found'})
         return
     
-    if game_rooms[room_code]['game_state'] != 'waiting':
-        emit('join_error', {'message': 'Game already in progress'})
-        return
-    
     # Generate random car color
     car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
     
@@ -96,7 +223,7 @@ def join_game(data):
         'id': player_id,
         'name': player_name,
         'car_color': car_color,
-        'position': [0, 0, player_id * 2],  # Staggered starting positions
+        'position': [0, 0.5, -20 + (player_id * 3)],  # Staggered starting positions
         'rotation': [0, 0, 0],
         'velocity': [0, 0, 0]
     }
@@ -115,6 +242,10 @@ def join_game(data):
          to=game_rooms[room_code]['host_sid'])
     
     logger.info(f"Player {player_name} joined room {room_code}")
+    
+    # If game is already in progress, immediately send game_started to this player
+    if game_rooms[room_code]['game_state'] == 'racing':
+        emit('game_started')
 
 @socketio.on('start_game')
 def start_game(data):
@@ -199,15 +330,20 @@ def handle_reset_position(data):
     rotation = data.get('rotation')
     
     if not room_code or room_code not in game_rooms:
+        logger.error(f"Reset position: Room {room_code} not found")
         return
     
     # Find the player in the room
+    player_sid = None
     for sid, player_data in game_rooms[room_code]['players'].items():
         if player_data['id'] == player_id:
+            player_sid = sid
             # Update player position and rotation
             player_data['position'] = position
             player_data['rotation'] = rotation
             player_data['velocity'] = [0, 0, 0]  # Reset velocity
+            
+            logger.info(f"Resetting position for player {player_id} in room {room_code} to {position}")
             
             # Notify the player to reset their position
             emit('position_reset', {
@@ -222,8 +358,10 @@ def handle_reset_position(data):
                 'rotation': rotation,
                 'velocity': [0, 0, 0]
             }, to=game_rooms[room_code]['host_sid'])
-            
-            return
+            break
+    
+    if not player_sid:
+        logger.error(f"Reset position: Player {player_id} not found in room {room_code}")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

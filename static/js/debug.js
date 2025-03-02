@@ -50,20 +50,38 @@
         };
         console.log('Dependencies loaded:', dependencies);
         
-        // Monitor socket connection
+        // Monitor socket connection - but with reduced logging
         if (typeof socket !== 'undefined') {
+            // Only log non-frequent events by default
             const originalEmit = socket.emit;
             socket.emit = function(event, ...args) {
-                console.log(`Socket emit: ${event}`, args);
+                // Only log important events, not position updates
+                if (event !== 'player_update') {
+                    console.log(`Socket emit: ${event}`, args);
+                }
                 return originalEmit.apply(this, [event, ...args]);
             };
             
-            // Add logging for important socket events
+            // Add logging for important socket events, excluding frequent ones
             const eventsToLog = [
                 'connect', 'disconnect', 'error',
                 'room_created', 'game_joined', 'game_started',
-                'player_joined', 'player_left', 'player_position_update'
+                'player_joined', 'player_left'
+                // Removed 'player_position_update' to reduce spam
             ];
+            
+            // Sample rate for position updates (log 1 out of X position updates)
+            const positionUpdateSampleRate = 100;
+            let positionUpdateCounter = 0;
+            
+            // Add special handling for position updates
+            socket.on('player_position_update', function(data) {
+                // Only log occasional position updates to reduce console spam
+                positionUpdateCounter++;
+                if (positionUpdateCounter % positionUpdateSampleRate === 0) {
+                    console.log(`Position update sample (1/${positionUpdateSampleRate}):`, data);
+                }
+            });
             
             eventsToLog.forEach(event => {
                 const originalHandler = socket._callbacks[`$${event}`];
@@ -79,7 +97,7 @@
                 }
             });
             
-            console.log('Socket monitoring enabled');
+            console.log('Socket monitoring enabled (with reduced position logging)');
         } else {
             console.warn('socket is not defined');
         }

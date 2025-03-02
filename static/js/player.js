@@ -21,8 +21,16 @@ const gameState = {
         steeringActive: false,
         steeringStartX: 0,
         steeringCurrentX: 0
-    }
+    },
+    lastSpeed: 0,
+    lastUpdateTime: 0
 };
+
+// Helper function to get URL parameters
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
 
 // DOM elements
 const elements = {
@@ -46,6 +54,11 @@ const elements = {
 // Socket.io connection
 const socket = io();
 
+// Enable dev mode for faster testing
+const DEV_MODE = true;
+const DEFAULT_PLAYER_NAME = 'TestPlayer';
+const DEFAULT_ROOM_CODE = 'TEST';
+
 // Event listeners
 elements.joinButton.addEventListener('click', joinGame);
 elements.accelerateBtn.addEventListener('touchstart', () => setAcceleration(1));
@@ -64,6 +77,47 @@ document.addEventListener('touchmove', (e) => {
 socket.on('connect', () => {
     console.log('Connected to server');
     gameState.connected = true;
+    
+    // Check for room code in URL parameters or window.roomCode (from template)
+    let roomCode = getUrlParameter('room');
+    
+    // If no room code in URL, check if it was passed via template
+    if (!roomCode && window.roomCode && window.roomCode !== "{{ room_code }}") {
+        roomCode = window.roomCode;
+    }
+    
+    if (roomCode) {
+        // Set room code input value
+        elements.roomCodeInput.value = roomCode;
+        
+        // Show message that room code was detected
+        const autoJoinMessage = document.getElementById('auto-join-message');
+        const detectedRoomCode = document.getElementById('detected-room-code');
+        
+        if (autoJoinMessage && detectedRoomCode) {
+            detectedRoomCode.textContent = roomCode;
+            autoJoinMessage.style.display = 'block';
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                autoJoinMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Focus on the player name input for better UX
+        elements.playerNameInput.focus();
+    }
+    
+    // In dev mode, auto-fill form and auto-join
+    if (DEV_MODE) {
+        elements.playerNameInput.value = DEFAULT_PLAYER_NAME;
+        if (!elements.roomCodeInput.value) {
+            elements.roomCodeInput.value = DEFAULT_ROOM_CODE;
+        }
+        setTimeout(() => {
+            joinGame();
+        }, 500); // Short delay to ensure connection is ready
+    }
 });
 
 socket.on('join_error', (data) => {
@@ -106,14 +160,22 @@ socket.on('host_disconnected', () => {
 // Handle position reset from host
 socket.on('position_reset', (data) => {
     if (gameState.gameStarted) {
+        console.log('Position reset received:', data);
+        
         // Update position and rotation
-        gameState.position = data.position;
-        gameState.rotation = data.rotation;
+        gameState.position = [...data.position]; // Make a copy to ensure it's a new array
+        gameState.rotation = [...data.rotation];
         gameState.velocity = [0, 0, 0];
         gameState.speed = 0;
         
+        // Ensure car stays on the ground
+        gameState.position[1] = 0.5;
+        
         // Update speed display
         elements.speedDisplay.textContent = "0 km/h";
+        
+        // Force an immediate position update to the server
+        sendPositionUpdate();
     }
 });
 
@@ -450,16 +512,12 @@ function setBraking(value) {
 }
 
 function updatePhysics() {
-    // Improved car physics simulation
+    // Improved car physics simulation with better direction handling
     const maxSpeed = 3.0;
     const acceleration = 0.04;
     const deceleration = 0.015;
     const brakeForce = 0.07;
-    const turnSpeed = 0.03;
-    
-    // Calculate current forward direction based on rotation
-    const forwardX = Math.sin(gameState.rotation[1]);
-    const forwardZ = Math.cos(gameState.rotation[1]);
+    const turnSpeed = 0.05;
     
     // Update speed based on acceleration/braking
     if (gameState.controls.acceleration > 0) {
@@ -483,80 +541,70 @@ function updatePhysics() {
     // Clamp speed
     gameState.speed = Math.max(-maxSpeed/2, Math.min(maxSpeed, gameState.speed));
     
-    // Fix steering direction - IMPORTANT: We ADD to rotation for right turns (positive steering)
+    // Apply steering to yaw (y-axis rotation) 
     if (Math.abs(gameState.speed) > 0.01) {
         // Turn rate depends on speed - sharper at lower speeds
         const speedAdjustedTurnRate = turnSpeed * (1 + (1 - Math.min(Math.abs(gameState.speed), maxSpeed) / maxSpeed));
         
-        // FIX: ADDING instead of subtracting, so positive steering (right) increases angle (turns right)
-        // Note that we maintain the speed direction factor to allow proper reverse steering
+        // Update rotation - positive steering turns right
         gameState.rotation[1] += speedAdjustedTurnRate * gameState.controls.steering * Math.sign(gameState.speed);
+        
+        // Normalize rotation angle
+        gameState.rotation[1] = gameState.rotation[1] % (Math.PI * 2);
+        if (gameState.rotation[1] < 0) gameState.rotation[1] += Math.PI * 2;
     }
     
-    // Normalize rotation angle
-    gameState.rotation[1] = gameState.rotation[1] % (Math.PI * 2);
-    if (gameState.rotation[1] < 0) gameState.rotation[1] += Math.PI * 2;
+    // Calculate forward direction vector from rotation
+    const forwardX = Math.sin(gameState.rotation[1]); 
+    const forwardZ = Math.cos(gameState.rotation[1]);
     
-    // Update position based on current forward direction
+    // Update position based on current rotation and speed
     gameState.position[0] += forwardX * gameState.speed;
     gameState.position[2] -= forwardZ * gameState.speed;
     
     // Ensure car stays on the ground
     gameState.position[1] = 0.5;
     
-    // Update velocity vector based on current direction and speed
+    // Update velocity vector for server reporting
     gameState.velocity = [
         forwardX * gameState.speed,
         0,
         -forwardZ * gameState.speed
     ];
     
-    // Calculate actual movement direction
-    if (Math.abs(gameState.speed) > 0.01) {
-        // Use actual velocity direction for car rotation (make car face direction of travel)
-        const velocityMagnitude = Math.sqrt(
-            gameState.velocity[0] * gameState.velocity[0] + 
-            gameState.velocity[2] * gameState.velocity[2]
-        );
-        
-        if (velocityMagnitude > 0.01) {
-            // Calculate target rotation based on velocity direction
-            const targetRotation = Math.atan2(gameState.velocity[0], -gameState.velocity[2]);
-            
-            // Smoothly interpolate current rotation towards target rotation
-            const rotationLerp = 0.2; // Adjust for more/less drift
-            
-            let rotDiff = targetRotation - gameState.rotation[1];
-            
-            // Handle wrap-around for angles
-            if (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-            if (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-            
-            // Apply the lerped rotation
-            gameState.rotation[1] += rotDiff * rotationLerp;
-            
-            // Normalize rotation again after changes
-            gameState.rotation[1] = gameState.rotation[1] % (Math.PI * 2);
-            if (gameState.rotation[1] < 0) gameState.rotation[1] += Math.PI * 2;
-        }
-    }
-    
     // Update speed display (convert to km/h for display)
     const speedKmh = Math.abs(Math.round(gameState.speed * 200));
     elements.speedDisplay.textContent = `${speedKmh} km/h`;
-    
-    // Ensure position updates are being sent regularly
-    sendPositionUpdate();
 }
 
 function sendPositionUpdate() {
     if (gameState.gameStarted) {
-        socket.emit('player_update', {
-            room_code: gameState.roomCode,
-            position: gameState.position,
-            rotation: gameState.rotation,
-            velocity: gameState.velocity
-        });
+        // Only send updates if we're moving or just stopped
+        const isMoving = Math.abs(gameState.speed) > 0.01;
+        const justStopped = gameState.lastSpeed > 0.01 && Math.abs(gameState.speed) <= 0.01;
+        
+        // Store current speed for next comparison
+        gameState.lastSpeed = Math.abs(gameState.speed);
+        
+        // Limit update frequency based on speed
+        const currentTime = Date.now();
+        const timeSinceLastUpdate = currentTime - (gameState.lastUpdateTime || 0);
+        
+        // Send less frequent updates when stationary, more frequent when moving fast
+        const updateInterval = isMoving ? 
+            Math.max(50, 100 - Math.abs(gameState.speed) * 30) : // 50-100ms when moving
+            500; // 500ms when stationary
+        
+        if (isMoving || justStopped || timeSinceLastUpdate >= updateInterval) {
+            socket.emit('player_update', {
+                room_code: gameState.roomCode,
+                position: gameState.position,
+                rotation: gameState.rotation,
+                velocity: gameState.velocity
+            });
+            
+            gameState.lastUpdateTime = currentTime;
+        }
     }
 }
 
@@ -566,6 +614,9 @@ function gameLoop() {
     
     // Update physics
     updatePhysics();
+    
+    // Send position updates to server as needed
+    sendPositionUpdate();
     
     // Continue the game loop
     setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate

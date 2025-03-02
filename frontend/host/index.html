@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Race Game - Host</title>
     <link rel="stylesheet" href="/static/css/host.css">
+    <style>
+        .qr-code-container {
+            margin: 20px auto;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .qr-code-container img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .qr-code-container p {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -17,9 +36,17 @@
         <div id="lobby-screen" class="screen hidden">
             <h1>Room Code: <span id="room-code-display"></span></h1>
             <div class="instructions">
+                <p>Connect to this racing game using your local IP address:</p>
+                <p id="local-ip" class="highlight">{{ local_ip }}:{{ port }}</p>
                 <p>Go to this URL on your mobile device:</p>
                 <p id="join-url" class="highlight"></p>
                 <p>Or enter the room code</p>
+            </div>
+            
+            <div class="qr-code-container">
+                <h3>Scan QR Code to Join:</h3>
+                <img id="qr-code" src="" alt="QR Code to join game">
+                <p>Scan this QR code with your smartphone to join directly!</p>
             </div>
             
             <div class="player-list-container">
@@ -49,5 +76,14 @@
     <script src="/static/js/carModel.js"></script>
     <script src="/static/js/host.js"></script>
     <script src="/static/js/debug.js"></script>
+    
+    <!-- Pass server data to client -->
+    <script>
+        // Make server-provided data available to JavaScript
+        const serverConfig = {
+            localIp: "{{ local_ip }}",
+            port: "{{ port }}"
+        };
+    </script>
 </body>
 </html> 

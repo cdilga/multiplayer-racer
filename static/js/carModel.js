@@ -6,7 +6,7 @@
  * @returns {THREE.Group} - A Three.js group containing the car model
  */
 function createCar(options = {}) {
-    console.log('Creating car with options:', options);
+    // No logging at all - remove debug flag checking
     
     // Default options
     const config = {
@@ -173,13 +173,10 @@ function createCar(options = {}) {
         );
         carGroup.add(rightTaillight);
         
-        console.log('Car created successfully');
         return carGroup;
     } catch (error) {
-        console.error('Error creating car:', error);
-        // Return a fallback simple car if there's an error
+        // Create a simple fallback car without any logging
         try {
-            // Simple fallback car
             const fallbackGroup = new THREE.Group();
             const fallbackBody = new THREE.Mesh(
                 new THREE.BoxGeometry(2, 1, 4),
@@ -187,10 +184,9 @@ function createCar(options = {}) {
             );
             fallbackBody.position.y = 0.5;
             fallbackGroup.add(fallbackBody);
-            console.log('Created fallback car model');
             return fallbackGroup;
         } catch (fallbackError) {
-            console.error('Failed to create fallback car:', fallbackError);
+            // No logging here either
             throw new Error('Unable to create car model');
         }
     }
@@ -204,7 +200,6 @@ function createCar(options = {}) {
  */
 function updateCarPhysics(car, controls, deltaTime = 1/60) {
     if (!car || !controls) {
-        console.warn('Invalid car or controls object in updateCarPhysics');
         return 0;
     }
     
@@ -214,64 +209,73 @@ function updateCarPhysics(car, controls, deltaTime = 1/60) {
         const acceleration = 20; // Units per second squared
         const deceleration = 10; // Natural friction/drag
         const brakeForce = 30; // Braking force
-        const turnSpeed = 2.5; // Turning rate
+        const turnSpeed = 3.0; // Turning rate
         
-        // Calculate forward vector based on current rotation
-        const forwardX = Math.sin(car.rotation.y);
-        const forwardZ = Math.cos(car.rotation.y);
+        // Get car's local axes
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(car.quaternion);
+        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(car.quaternion);
         
-        // Calculate current speed
+        // Calculate current speed (magnitude of velocity)
         const currentSpeed = Math.sqrt(
             car.velocity.x * car.velocity.x + 
             car.velocity.z * car.velocity.z
         );
         
-        // Update speed based on acceleration/braking
-        let newSpeed = currentSpeed;
+        // Calculate acceleration force
+        let accelerationForce = 0;
         
         if (controls.acceleration > 0) {
-            // Accelerate
-            newSpeed += acceleration * controls.acceleration * deltaTime;
+            // Apply acceleration, reduced at higher speeds
+            const accelFactor = 1 - (currentSpeed / maxSpeed) * 0.7;
+            accelerationForce = acceleration * controls.acceleration * accelFactor;
         } else if (controls.braking > 0) {
-            // Apply brakes
-            newSpeed -= brakeForce * controls.braking * deltaTime;
-        } else {
-            // Natural deceleration
-            newSpeed -= deceleration * deltaTime;
+            // Apply brakes, more effective at higher speeds
+            const brakeFactor = 1 + (currentSpeed / maxSpeed) * 0.5;
+            accelerationForce = -brakeForce * controls.braking * brakeFactor;
         }
         
-        // Clamp speed
+        // Apply natural deceleration (drag)
+        const dragForce = currentSpeed > 0 ? -deceleration * (currentSpeed / maxSpeed) : 0;
+        const totalForce = accelerationForce + dragForce;
+        
+        // Calculate new speed and clamp it
+        let newSpeed = currentSpeed + totalForce * deltaTime;
         newSpeed = Math.max(0, Math.min(newSpeed, maxSpeed));
         
         // If almost stopped, just stop
         if (newSpeed < 0.1) {
             newSpeed = 0;
-        }
-        
-        // Update rotation based on steering (only if moving)
-        if (newSpeed > 0.5) {
-            // Steering effect is proportional to speed, with reduced effect at high speeds
-            const steeringFactor = Math.min(1, newSpeed / (maxSpeed * 0.5));
-            car.rotation.y += turnSpeed * controls.steering * steeringFactor * deltaTime;
-        }
-        
-        // Calculate new velocity vector
-        if (newSpeed > 0) {
-            car.velocity.x = forwardX * newSpeed;
-            car.velocity.z = -forwardZ * newSpeed;
+            car.velocity.set(0, 0, 0);
         } else {
-            car.velocity.x = 0;
-            car.velocity.z = 0;
+            // Update velocity in car's forward direction
+            car.velocity.copy(forward).multiplyScalar(newSpeed);
         }
         
-        // Update position
+        // Apply steering to rotation
+        if (newSpeed > 0.5) {
+            // Turning is more responsive at lower speeds, less at high speeds
+            const steeringFactor = Math.max(0.3, 1 - (newSpeed / maxSpeed) * 0.7);
+            
+            // Update rotation based on steering input
+            car.rotation.y += turnSpeed * controls.steering * steeringFactor * deltaTime;
+            
+            // When turning, add some inertial drift at higher speeds
+            if (Math.abs(controls.steering) > 0.1 && newSpeed > maxSpeed * 0.5) {
+                // Add lateral velocity component based on steering
+                const driftFactor = Math.min(0.3, (newSpeed / maxSpeed) * 0.05);
+                const lateralVelocity = right.multiplyScalar(controls.steering * driftFactor * newSpeed);
+                car.velocity.add(lateralVelocity);
+            }
+        }
+        
+        // Update position based on velocity
         car.position.x += car.velocity.x * deltaTime;
         car.position.z += car.velocity.z * deltaTime;
         
         // Return current speed for UI display
         return newSpeed;
     } catch (error) {
-        console.error('Error in updateCarPhysics:', error);
+        // No logging here to prevent stack issues
         return 0;
     }
 } 
