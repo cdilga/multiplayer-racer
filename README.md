@@ -50,7 +50,7 @@ python server/app.py
 2. Open the host interface in a web browser:
 
 ```
-http://localhost:5000/
+http://localhost:8000/
 ```
 
 3. Create a game room by clicking the "Create Game Room" button.
