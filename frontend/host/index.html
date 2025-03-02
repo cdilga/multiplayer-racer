@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Game - Host</title>
+    <link rel="stylesheet" href="/static/css/host.css">
+</head>
+<body>
+    <div class="container">
+        <div id="welcome-screen" class="screen">
+            <h1>Multiplayer Racer</h1>
+            <h2>Host Screen</h2>
+            <button id="create-room-btn">Create Game Room</button>
+        </div>
+        
+        <div id="lobby-screen" class="screen hidden">
+            <h1>Room Code: <span id="room-code-display"></span></h1>
+            <div class="instructions">
+                <p>Go to this URL on your mobile device:</p>
+                <p id="join-url" class="highlight"></p>
+                <p>Or enter the room code</p>
+            </div>
+            
+            <div class="player-list-container">
+                <h3>Players:</h3>
+                <ul id="player-list"></ul>
+            </div>
+            
+            <button id="start-game-btn" disabled>Start Race</button>
+        </div>
+        
+        <div id="game-screen" class="screen hidden">
+            <div id="game-ui">
+                <div id="game-status">Race in progress</div>
+            </div>
+            <div id="game-container"></div>
+            <div id="stats-overlay" class="hidden"></div>
+        </div>
+    </div>
+
+    <!-- Load libraries -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    
+    <!-- Load game scripts -->
+    <script src="/static/js/trackBuilder.js"></script>
+    <script src="/static/js/carModel.js"></script>
+    <script src="/static/js/host.js"></script>
+    <script src="/static/js/debug.js"></script>
+</body>
+</html> 

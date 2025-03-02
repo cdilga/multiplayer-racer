@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Race Game - Player</title>
+    <link rel="stylesheet" href="/static/css/player.css">
+</head>
+<body>
+    <div class="container">
+        <div id="join-screen" class="screen">
+            <h1>Multiplayer Racer</h1>
+            <div class="join-form">
+                <input type="text" id="player-name" placeholder="Your Name" maxlength="15">
+                <input type="text" id="room-code" placeholder="Room Code" maxlength="4">
+                <button id="join-btn">Join Race</button>
+            </div>
+            <div id="error-message" class="error hidden"></div>
+        </div>
+        
+        <div id="waiting-screen" class="screen hidden">
+            <h2>Waiting for race to start...</h2>
+            <div class="player-info">
+                <p>Your Name: <span id="display-name"></span></p>
+                <p>Room Code: <span id="display-room"></span></p>
+                <div class="car-preview-container">
+                    <div id="car-preview"></div>
+                </div>
+            </div>
+            <p class="waiting-text">The host will start the race soon</p>
+        </div>
+        
+        <div id="game-screen" class="screen hidden">
+            <div id="controls-container">
+                <div id="steering-wheel"></div>
+                <div id="pedals">
+                    <button id="accelerate-btn">▲</button>
+                    <button id="brake-btn">▼</button>
+                </div>
+            </div>
+            <div id="game-stats">
+                <span id="speed">0 km/h</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load libraries -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.0/dist/nipplejs.min.js"></script>
+    
+    <!-- Load game scripts -->
+    <script src="/static/js/player.js"></script>
+</body>
+</html> 

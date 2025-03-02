@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Model Test - Multiplayer Racer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .test-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .test-controls button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .test-controls button:hover {
+            background-color: #45a049;
+        }
+        
+        .test-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .color-picker {
+            display: flex;
+            align-items: center;
+        }
+        
+        .color-picker label {
+            margin-right: 10px;
+        }
+        
+        .test-container {
+            width: 100%;
+            height: 500px;
+            background-color: #87CEEB;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .log-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .log-entry.error {
+            color: #ff0000;
+            background-color: #ffeeee;
+        }
+        
+        .log-entry.success {
+            color: #008800;
+            background-color: #eeffee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Car Model Test</h1>
+        
+        <div class="test-controls">
+            <div>
+                <button id="create-car-btn">Create Car</button>
+                <button id="reset-btn">Reset Scene</button>
+            </div>
+            
+            <div class="color-picker">
+                <label for="car-color">Car Color:</label>
+                <input type="color" id="car-color" value="#ff0000">
+            </div>
+        </div>
+        
+        <div id="test-container" class="test-container"></div>
+        
+        <div class="log-container">
+            <div id="log-output"></div>
+        </div>
+    </div>
+
+    <!-- Load libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Load game scripts -->
+    <script src="/static/js/carModel.js"></script>
+    
+    <script>
+        // Test script
+        (function() {
+            // Elements
+            const testContainer = document.getElementById('test-container');
+            const createCarBtn = document.getElementById('create-car-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const carColorInput = document.getElementById('car-color');
+            const logOutput = document.getElementById('log-output');
+            
+            // Scene variables
+            let scene, camera, renderer, car;
+            let animationId;
+            
+            // Custom logging function
+            function log(message, type = 'info') {
+                console.log(message);
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = message;
+                logOutput.appendChild(entry);
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+            
+            // Override console.log and console.error
+            const originalConsoleLog = console.log;
+            const originalConsoleError = console.error;
+            
+            console.log = function() {
+                originalConsoleLog.apply(console, arguments);
+                const message = Array.from(arguments).join(' ');
+                log(message, 'info');
+            };
+            
+            console.error = function() {
+                originalConsoleError.apply(console, arguments);
+                const message = Array.from(arguments).join(' ');
+                log(message, 'error');
+            };
+            
+            // Initialize scene
+            function initScene() {
+                log('Initializing scene...');
+                
+                try {
+                    // Create scene
+                    scene = new THREE.Scene();
+                    
+                    // Create camera
+                    const width = testContainer.clientWidth;
+                    const height = testContainer.clientHeight;
+                    const aspectRatio = width / height;
+                    camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+                    camera.position.set(0, 5, 10);
+                    camera.lookAt(0, 0, 0);
+                    
+                    // Create renderer
+                    renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setSize(width, height);
+                    renderer.setClearColor(0x87CEEB);
+                    renderer.shadowMap.enabled = true;
+                    testContainer.appendChild(renderer.domElement);
+                    
+                    // Add lights
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    scene.add(ambientLight);
+                    
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    directionalLight.position.set(10, 10, 5);
+                    directionalLight.castShadow = true;
+                    scene.add(directionalLight);
+                    
+                    // Add ground
+                    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+                    const groundMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0x1e824c,
+                        roughness: 0.8
+                    });
+                    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                    ground.rotation.x = -Math.PI / 2;
+                    ground.receiveShadow = true;
+                    scene.add(ground);
+                    
+                    // Start animation
+                    animate();
+                    
+                    log('Scene initialized successfully', 'success');
+                    return true;
+                } catch (error) {
+                    log('Error initializing scene: ' + error.message, 'error');
+                    return false;
+                }
+            }
+            
+            // Create car
+            function createTestCar() {
+                log('Creating car...');
+                
+                try {
+                    // Remove existing car if any
+                    if (car) {
+                        scene.remove(car);
+                        car = null;
+                    }
+                    
+                    // Get color from input
+                    const colorHex = carColorInput.value;
+                    const colorValue = parseInt(colorHex.substring(1), 16);
+                    
+                    log(`Using color: ${colorHex} (${colorValue})`);
+                    
+                    // Create car
+                    if (typeof createCar === 'function') {
+                        car = createCar({
+                            color: colorValue,
+                            castShadow: true
+                        });
+                        
+                        scene.add(car);
+                        log('Car created successfully', 'success');
+                        return true;
+                    } else {
+                        log('Error: createCar function not found', 'error');
+                        return false;
+                    }
+                } catch (error) {
+                    log('Error creating car: ' + error.message, 'error');
+                    return false;
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                
+                if (car) {
+                    car.rotation.y += 0.01;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            
+            // Reset scene
+            function resetScene() {
+                log('Resetting scene...');
+                
+                // Cancel animation
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                // Remove renderer
+                if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+                    renderer.domElement.parentNode.removeChild(renderer.domElement);
+                }
+                
+                // Clear variables
+                scene = null;
+                camera = null;
+                renderer = null;
+                car = null;
+                
+                // Reinitialize
+                initScene();
+                
+                log('Scene reset complete', 'success');
+            }
+            
+            // Event listeners
+            createCarBtn.addEventListener('click', createTestCar);
+            resetBtn.addEventListener('click', resetScene);
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (renderer && camera) {
+                    const width = testContainer.clientWidth;
+                    const height = testContainer.clientHeight;
+                    
+                    camera.aspect = width / height;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(width, height);
+                }
+            });
+            
+            // Initialize on load
+            window.addEventListener('load', initScene);
+            
+            log('Test page loaded');
+        })();
+    </script>
+</body>
+</html> 
