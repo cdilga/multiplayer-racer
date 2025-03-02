@@ -3,4 +3,6 @@ Flask-SocketIO==5.3.2
 python-socketio==5.7.2
 python-engineio==4.3.4
 eventlet==0.35.2
-python-dotenv==1.0.0 
+python-dotenv==1.0.0
+qrcode==7.4.2
+pillow==10.2.0
