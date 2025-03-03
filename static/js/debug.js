@@ -42,7 +42,6 @@
         
         // Check for other dependencies
         const dependencies = {
-            'CANNON': typeof CANNON !== 'undefined',
             'io': typeof io !== 'undefined',
             'buildTrack': typeof buildTrack === 'function',
             'createCar': typeof createCar === 'function',
@@ -56,7 +55,7 @@
             const originalEmit = socket.emit;
             socket.emit = function(event, ...args) {
                 // Only log important events, not position updates
-                if (event !== 'player_update') {
+                if (event !== 'player_update' && event !== 'car_state_update') {
                     console.log(`Socket emit: ${event}`, args);
                 }
                 return originalEmit.apply(this, [event, ...args]);
@@ -66,7 +65,7 @@
             const eventsToLog = [
                 'connect', 'disconnect', 'error',
                 'room_created', 'game_joined', 'game_started',
-                'player_joined', 'player_left'
+                'player_joined', 'player_left', 'player_control_update'
                 // Removed 'player_position_update' to reduce spam
             ];
             
@@ -84,17 +83,10 @@
             });
             
             eventsToLog.forEach(event => {
-                const originalHandler = socket._callbacks[`$${event}`];
-                if (originalHandler && originalHandler.length > 0) {
-                    const originalFunction = originalHandler[0];
-                    socket.on(event, function(data) {
-                        console.log(`Socket received: ${event}`, data);
-                    });
-                } else {
-                    socket.on(event, function(data) {
-                        console.log(`Socket received: ${event}`, data);
-                    });
-                }
+                socket.on(event, function(data) {
+                    console.log(`Socket received: ${event}`, data);
+                    // Don't replace original handler, just log
+                });
             });
             
             console.log('Socket monitoring enabled (with reduced position logging)');

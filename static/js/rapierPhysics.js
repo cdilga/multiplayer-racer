@@ -152,7 +152,7 @@ function createGroundPlane(world) {
 }
 
 // Apply forces to a car body based on controls
-function applyCarControls(carBody, controls) {
+function applyCarControls(carBody, controls, playerId) {
     if (!carBody) return;
     
     try {
@@ -164,6 +164,18 @@ function applyCarControls(carBody, controls) {
             return;
         }
         
+        // More frequent debug logging of control application
+        // Log every time there are significant controls to apply
+        const hasSignificantControls = 
+            Math.abs(steering) > 0.1 || 
+            acceleration > 0.1 || 
+            braking > 0.1;
+            
+        if (hasSignificantControls || Math.random() < 0.05) {
+            const playerInfo = playerId ? `for player ${playerId}` : '';
+            console.log(`🚀 PHYSICS: Applying controls ${playerInfo}: steering=${steering.toFixed(2)}, accel=${acceleration.toFixed(2)}, brake=${braking.toFixed(2)}`);
+        }
+        
         // Get forward direction in world space
         const rotation = carBody.rotation();
         const forwardDir = { x: 0, y: 0, z: -1 };
@@ -172,15 +184,16 @@ function applyCarControls(carBody, controls) {
         const worldForward = { x: 0, y: 0, z: 0 };
         const q = rotation;
         
-        // Apply quaternion rotation to forward vector manually for better accuracy
-        const x = forwardDir.x;
-        const y = forwardDir.y;
-        const z = forwardDir.z;
-        
         // Transform direction vector by quaternion (q v q*)
-        worldForward.x = (1 - 2 * (q.y * q.y + q.z * q.z)) * x + 2 * (q.x * q.y - q.w * q.z) * y + 2 * (q.x * q.z + q.w * q.y) * z;
-        worldForward.y = 2 * (q.x * q.y + q.w * q.z) * x + (1 - 2 * (q.x * q.x + q.z * q.z)) * y + 2 * (q.y * q.z - q.w * q.x) * z;
-        worldForward.z = 2 * (q.x * q.z - q.w * q.y) * x + 2 * (q.y * q.z + q.w * q.x) * y + (1 - 2 * (q.x * q.x + q.y * q.y)) * z;
+        worldForward.x = (1 - 2 * (q.y * q.y + q.z * q.z)) * forwardDir.x + 
+                        2 * (q.x * q.y - q.w * q.z) * forwardDir.y + 
+                        2 * (q.x * q.z + q.w * q.y) * forwardDir.z;
+        worldForward.y = 2 * (q.x * q.y + q.w * q.z) * forwardDir.x + 
+                        (1 - 2 * (q.x * q.x + q.z * q.z)) * forwardDir.y + 
+                        2 * (q.y * q.z - q.w * q.x) * forwardDir.z;
+        worldForward.z = 2 * (q.x * q.z - q.w * q.y) * forwardDir.x + 
+                        2 * (q.y * q.z + q.w * q.x) * forwardDir.y + 
+                        (1 - 2 * (q.x * q.x + q.y * q.y)) * forwardDir.z;
         
         // Normalize the vector
         const len = Math.sqrt(worldForward.x * worldForward.x + worldForward.y * worldForward.y + worldForward.z * worldForward.z);
@@ -190,122 +203,104 @@ function applyCarControls(carBody, controls) {
             worldForward.z /= len;
         }
         
-        // Speed constants
-        const maxSpeedKmh = 100;  // 100 km/h forward max
-        const reverseMaxSpeedKmh = 50;  // 50 km/h reverse max
-        
-        // Convert to m/s (physics units)
+        // Speed constants (in m/s)
+        const maxSpeedKmh = 100;
+        const reverseMaxSpeedKmh = 50;
         const maxSpeedMs = maxSpeedKmh / 3.6;
         const reverseMaxSpeedMs = reverseMaxSpeedKmh / 3.6;
         
-        // Get current linear velocity
+        // Get current velocity
         const vel = carBody.linvel();
         const velMag = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         
         // Calculate speed in km/h for display/debugging
         const speedKmh = velMag * 3.6;
         
-        // Determine if we're moving forward or backward relative to the car's orientation
+        // Determine if we're moving forward or backward
         const dotProduct = worldForward.x * vel.x + worldForward.z * vel.z;
         const isMovingForward = dotProduct >= 0;
         
-        // SPEED LIMITING - only if setLinvel method exists
-        if (velMag > 0.1 && typeof carBody.setLinvel === 'function') {
-            // Create limited velocity vector
-            let limitedVel = { x: vel.x, y: vel.y, z: vel.z };
-            let needsLimiting = false;
-            
-            // Apply appropriate speed limit based on direction
-            const effectiveSpeedLimit = isMovingForward ? maxSpeedMs : reverseMaxSpeedMs;
-            
-            if (velMag > effectiveSpeedLimit) {
-                // Scale velocity to the maximum allowed
-                const scaleFactor = effectiveSpeedLimit / velMag;
-                limitedVel.x *= scaleFactor;
-                limitedVel.z *= scaleFactor;
-                needsLimiting = true;
-            }
-            
-            // Apply the limit if needed
-            if (needsLimiting) {
-                carBody.setLinvel(limitedVel, true);
-                
-                // Update local variables to reflect the change
-                vel.x = limitedVel.x;
-                vel.y = limitedVel.y;
-                vel.z = limitedVel.z;
-            }
-        }
-        
-        // Apply forces based on controls - only if applyForce method exists
+        // Apply forces based on controls
         if (typeof carBody.applyForce === 'function') {
-            const maxForce = 1500; // Maximum force in Newtons
-            
-            // Calculate speed factor for force application (reduces force as speed increases)
-            const speedFactor = 1 - Math.min(1, (speedKmh / maxSpeedKmh));
+            // Use much more force to overcome physics issues and make controls more responsive
+            const maxForce = 15000; // Greatly increased for better responsiveness
             
             if (acceleration > 0) {
-                // Only apply force if under speed limit
-                if (isMovingForward && speedKmh < maxSpeedKmh) {
-                    // Reduce force as we approach max speed
-                    const appliedForce = maxForce * acceleration * Math.max(0.2, speedFactor);
-                    
-                    const force = {
-                        x: worldForward.x * appliedForce,
-                        y: 0,
-                        z: worldForward.z * appliedForce
-                    };
-                    carBody.applyForce(force, true);
-                } else if (!isMovingForward) {
-                    // If moving backwards and accelerating, apply more force to help change direction
-                    const appliedForce = maxForce * 1.5 * acceleration;
-                    
-                    const force = {
-                        x: worldForward.x * appliedForce,
-                        y: 0,
-                        z: worldForward.z * appliedForce
-                    };
-                    carBody.applyForce(force, true);
+                // Calculate force based on current speed
+                const speedFactor = Math.max(0.3, 1 - (speedKmh / maxSpeedKmh));
+                const appliedForce = maxForce * acceleration * speedFactor;
+                
+                // Apply force in world forward direction
+                const force = {
+                    x: worldForward.x * appliedForce,
+                    y: 0, // No vertical force
+                    z: worldForward.z * appliedForce
+                };
+                
+                carBody.applyForce(force, true);
+                
+                // Log force application with distinctive marker for easier log scanning
+                if (Math.random() < 0.05 || acceleration > 0.5) {
+                    console.log(`🔥 PHYSICS FORCE: Applied forward force: ${appliedForce.toFixed(2)}N, speed: ${speedKmh.toFixed(1)} km/h, direction: (${worldForward.x.toFixed(2)}, ${worldForward.z.toFixed(2)})`);
                 }
             }
             
-            // Apply braking/reverse based on controls
+            // Apply braking/reverse with stronger forces
             if (braking > 0) {
+                const brakeForce = 8000; // Greatly increased for better responsiveness
+                
                 if (isMovingForward && velMag > 0.1) {
-                    // Apply braking force if moving forward
-                    const brakeForce = 2000; // Braking force in Newtons
+                    // Apply brake force opposite to velocity
                     const force = {
                         x: -vel.x / velMag * brakeForce * braking,
                         y: 0,
                         z: -vel.z / velMag * brakeForce * braking
                     };
                     carBody.applyForce(force, true);
+                    
+                    // Log braking with distinctive marker
+                    if (Math.random() < 0.05 || braking > 0.5) {
+                        console.log(`🛑 PHYSICS BRAKE: Applied braking force: ${(brakeForce * braking).toFixed(2)}N`);
+                    }
                 } else if (speedKmh < reverseMaxSpeedKmh) {
-                    // Apply reverse acceleration force
-                    const reverseForce = maxForce * 0.5 * braking; // Less force for reverse
+                    // Apply reverse force with stronger magnitude
                     const force = {
-                        x: -worldForward.x * reverseForce,
+                        x: -worldForward.x * maxForce * 0.8 * braking,
                         y: 0,
-                        z: -worldForward.z * reverseForce
+                        z: -worldForward.z * maxForce * 0.8 * braking
                     };
                     carBody.applyForce(force, true);
+                    
+                    // Log reverse with distinctive marker
+                    if (Math.random() < 0.05 || braking > 0.5) {
+                        console.log(`⏪ PHYSICS REVERSE: Applied reverse force: ${(maxForce * 0.8 * braking).toFixed(2)}N`);
+                    }
                 }
             }
             
-            // Apply steering torque - only if applyTorque method exists
+            // Apply steering torque with stronger forces
             if (Math.abs(steering) > 0.01 && typeof carBody.applyTorque === 'function') {
-                // Adjust steering force based on speed
-                // Stronger at low speeds, reduced at high speeds for stability
-                const maxSteeringForce = 100;
-                const minSteeringForce = 20;
+                // Increased steering forces significantly
+                const maxSteeringForce = 500;  // Greatly increased for better responsiveness
+                const minSteeringForce = 100;  // Increased for better low-speed steering
                 
+                // Adjust steering based on speed - more responsive at low speeds
                 const speedFactor = Math.min(1, velMag / maxSpeedMs);
                 const steeringForce = maxSteeringForce - (maxSteeringForce - minSteeringForce) * speedFactor;
                 
-                // Apply steering torque around Y axis
                 const torque = { x: 0, y: steering * steeringForce, z: 0 };
                 carBody.applyTorque(torque, true);
+                
+                // Log steering with distinctive marker
+                if (Math.random() < 0.05 || Math.abs(steering) > 0.5) {
+                    console.log(`🔄 PHYSICS STEERING: Applied steering torque: ${(steering * steeringForce).toFixed(2)}, speed factor: ${speedFactor.toFixed(2)}`);
+                }
             }
+        }
+        
+        // Wake up the body when forces are applied
+        if (typeof carBody.wakeUp === 'function') {
+            carBody.wakeUp();
         }
     } catch (error) {
         console.error('Error applying car controls:', error);

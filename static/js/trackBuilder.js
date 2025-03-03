@@ -166,7 +166,7 @@ function addLaneMarkings(parent, shape, innerRadius, outerRadius) {
             const centerLine = new THREE.Line(geometry, dashedLineMaterial);
             
             // Rotate to match the track orientation
-            centerLine.rotation.x = -Math.PI / 2;
+            //centerLine.rotation.x = -Math.PI / 2;
             
             // Slightly above track surface to prevent z-fighting
             centerLine.position.y = 0.02;

@@ -1,9 +1,14 @@
 // Player interface logic
 
+// Constants for input handling
+const INPUT_SEND_RATE = 60; // Hz
+const INPUT_SEND_INTERVAL = 1000 / INPUT_SEND_RATE;
+let lastInputUpdate = 0;
+
 // Game state
 const gameState = {
     playerName: '',
-    roomCode: '',
+    roomCode: null,
     playerId: null,
     carColor: null,
     connected: false,
@@ -14,7 +19,7 @@ const gameState = {
         braking: 0         // 0 to 1
     },
     position: [0, 0, 0],
-    rotation: [0, 0, 0],
+    rotation: [0, 0, 0, 1],
     velocity: [0, 0, 0],
     speed: 0,
     touchControls: {
@@ -25,7 +30,8 @@ const gameState = {
     lastSpeed: 0,
     lastUpdateTime: 0,
     nameSet: false, // Flag to track if user has set a custom name
-    autoJoinDelayMs: 2000 // Delay before auto-joining to give time to set name
+    autoJoinDelayMs: 2000, // Delay before auto-joining to give time to set name
+    lastServerUpdate: 0
 };
 
 // Helper function to get URL parameters
@@ -149,6 +155,12 @@ document.addEventListener('touchmove', (e) => {
 socket.on('connect', () => {
     console.log('Connected to server');
     gameState.connected = true;
+    
+    // Initialize error logging if not already initialized
+    if (!errorLog.container) {
+        errorLog.init();
+        console.log('Error log initialized on connect');
+    }
     
     // Check for room code in URL parameters or window.roomCode (from template)
     let roomCode = getUrlParameter('room');
@@ -282,8 +294,7 @@ socket.on('game_started', () => {
     // Show game screen
     showScreen('game');
     
-    // Start game loop
-    gameLoop();
+    // Note: The game loop (updateLoop) is already running via requestAnimationFrame
 });
 
 socket.on('host_disconnected', () => {
@@ -325,6 +336,19 @@ socket.on('name_updated', (data) => {
 // Add socket event handler for errors
 socket.on('error', (data) => {
     showError(data.message);
+});
+
+socket.on('car_state_update', (data) => {
+    if (data.player_id === socket.id) {
+        // Update our state with authoritative server data
+        gameState.position = data.position;
+        gameState.rotation = data.rotation;
+        gameState.velocity = data.velocity;
+        gameState.lastServerUpdate = data.timestamp;
+        
+        // Update visual representation
+        updateCarVisuals();
+    }
 });
 
 // Game functions
@@ -417,7 +441,7 @@ function showScreen(screenName) {
 function resetGame() {
     // Reset game state
     gameState.playerName = '';
-    gameState.roomCode = '';
+    gameState.roomCode = null;
     gameState.playerId = null;
     gameState.carColor = null;
     gameState.gameStarted = false;
@@ -687,116 +711,55 @@ function setBraking(value) {
     gameState.controls.braking = value;
 }
 
-function updatePhysics() {
-    // Improved car physics simulation with better direction handling
-    const maxSpeed = 3.0;
-    const acceleration = 0.04;
-    const deceleration = 0.015;
-    const brakeForce = 0.07;
-    const turnSpeed = 0.05;
-    
-    // Update speed based on acceleration/braking
-    if (gameState.controls.acceleration > 0) {
-        const accelerationFactor = 1 - (gameState.speed / maxSpeed) * 0.5;
-        gameState.speed += acceleration * gameState.controls.acceleration * accelerationFactor;
-    } else if (gameState.controls.braking > 0) {
-        const brakeEffectiveness = 1 + Math.abs(gameState.speed);
-        gameState.speed -= brakeForce * gameState.controls.braking * brakeEffectiveness;
-    } else {
-        if (Math.abs(gameState.speed) < deceleration) {
-            gameState.speed = 0;
-        } else if (gameState.speed > 0) {
-            const resistanceFactor = 1 + (gameState.speed / maxSpeed) * 0.5;
-            gameState.speed -= deceleration * resistanceFactor;
-        } else if (gameState.speed < 0) {
-            const resistanceFactor = 1 + (Math.abs(gameState.speed) / maxSpeed) * 0.5;
-            gameState.speed += deceleration * resistanceFactor;
-        }
-    }
-    
-    // Clamp speed
-    gameState.speed = Math.max(-maxSpeed/2, Math.min(maxSpeed, gameState.speed));
-    
-    // Apply steering to yaw (y-axis rotation) 
-    if (Math.abs(gameState.speed) > 0.01) {
-        // Turn rate depends on speed - sharper at lower speeds
-        const speedAdjustedTurnRate = turnSpeed * (1 + (1 - Math.min(Math.abs(gameState.speed), maxSpeed) / maxSpeed));
-        
-        // Update rotation - positive steering turns right
-        gameState.rotation[1] += speedAdjustedTurnRate * gameState.controls.steering * Math.sign(gameState.speed);
-        
-        // Normalize rotation angle
-        gameState.rotation[1] = gameState.rotation[1] % (Math.PI * 2);
-        if (gameState.rotation[1] < 0) gameState.rotation[1] += Math.PI * 2;
-    }
-    
-    // Calculate forward direction vector from rotation
-    const forwardX = Math.sin(gameState.rotation[1]); 
-    const forwardZ = Math.cos(gameState.rotation[1]);
-    
-    // Update position based on current rotation and speed
-    gameState.position[0] += forwardX * gameState.speed;
-    gameState.position[2] -= forwardZ * gameState.speed;
-    
-    // Ensure car stays on the ground
-    gameState.position[1] = 0.5;
-    
-    // Update velocity vector for server reporting
-    gameState.velocity = [
-        forwardX * gameState.speed,
-        0,
-        -forwardZ * gameState.speed
-    ];
-    
-    // Update speed display (convert to km/h for display)
-    const speedKmh = Math.abs(Math.round(gameState.speed * 200));
-    elements.speedDisplay.textContent = `${speedKmh} km/h`;
-}
-
-function sendPositionUpdate() {
+// Update the speed display based on the latest data received from the server
+function updateSpeedDisplay() {
     if (gameState.gameStarted) {
-        // Only send updates if we're moving or just stopped
-        const isMoving = Math.abs(gameState.speed) > 0.01;
-        const justStopped = gameState.lastSpeed > 0.01 && Math.abs(gameState.speed) <= 0.01;
+        // Calculate speed magnitude from velocity
+        const velocity = gameState.velocity;
+        const speedMagnitude = Math.sqrt(
+            velocity[0] * velocity[0] + 
+            velocity[1] * velocity[1] + 
+            velocity[2] * velocity[2]
+        );
         
-        // Store current speed for next comparison
-        gameState.lastSpeed = Math.abs(gameState.speed);
-        
-        // Limit update frequency based on speed
-        const currentTime = Date.now();
-        const timeSinceLastUpdate = currentTime - (gameState.lastUpdateTime || 0);
-        
-        // Send less frequent updates when stationary, more frequent when moving fast
-        const updateInterval = isMoving ? 
-            Math.max(50, 100 - Math.abs(gameState.speed) * 30) : // 50-100ms when moving
-            500; // 500ms when stationary
-        
-        if (isMoving || justStopped || timeSinceLastUpdate >= updateInterval) {
-            socket.emit('player_update', {
-                room_code: gameState.roomCode,
-                position: gameState.position,
-                rotation: gameState.rotation,
-                velocity: gameState.velocity
-            });
-            
-            gameState.lastUpdateTime = currentTime;
-        }
+        // Convert to km/h for display (applying same scaling factor as before)
+        const speedKmh = Math.abs(Math.round(speedMagnitude));
+        elements.speedDisplay.textContent = `${speedKmh} km/h`;
     }
 }
 
-// Game loop using setTimeout for consistent 60 FPS
-function gameLoop() {
-    if (!gameState.gameStarted) return;
-    
-    // Update physics
-    updatePhysics();
-    
-    // Send position updates to server as needed
-    sendPositionUpdate();
-    
-    // Continue the game loop
-    setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate
-}
+// Function to receive position updates FROM the server
+socket.on('car_state_update', (data) => {
+    if (data.player_id === gameState.playerId) {
+        console.log('Received car state update from server:', data);
+        
+        // Update our state with authoritative server data
+        gameState.position = data.position;
+        gameState.rotation = data.rotation;
+        gameState.velocity = data.velocity || [0, 0, 0];
+        gameState.lastServerUpdate = data.timestamp;
+        
+        // Calculate speed for logging
+        let speed = 0;
+        if (data.velocity) {
+            speed = Math.sqrt(
+                data.velocity[0] * data.velocity[0] + 
+                data.velocity[1] * data.velocity[1] + 
+                data.velocity[2] * data.velocity[2]
+            );
+        }
+        
+        // Log state update to mobile screen occasionally (once every few updates)
+        if (errorLog.info && Math.random() < 0.2) {
+            errorLog.info(`📡 Update: spd=${speed.toFixed(1)}`, 500);
+        }
+        
+        // Update speed display
+        updateSpeedDisplay();
+    }
+});
+
+// This is now handled by the updateLoop function using requestAnimationFrame
 
 // Update player name function
 function updatePlayerName(name) {
@@ -808,5 +771,357 @@ function updatePlayerName(name) {
     if (newName !== gameState.playerName) {
         socket.emit('update_player_name', { name: newName });
         gameState.nameSet = true;
+    }
+}
+
+// Input handling
+function handleInput() {
+    const currentTime = performance.now();
+    const elapsed = currentTime - lastInputUpdate;
+    
+    if (elapsed >= INPUT_SEND_INTERVAL) {
+        // Get current control states
+        const controls = {
+            steering: gameState.controls.steering,
+            acceleration: gameState.controls.acceleration,
+            braking: gameState.controls.braking
+        };
+        
+        // Log what we're sending, with clear markers for easy log reading
+        const logMessage = `⬆️ SENDING CONTROLS: steering=${controls.steering.toFixed(2)}, accel=${controls.acceleration.toFixed(2)}, brake=${controls.braking.toFixed(2)}`;
+        console.log(logMessage);
+        
+        // Add detailed debug info
+        console.log('🎮 Control Update Details:', {
+            player_id: gameState.playerId,
+            room_code: gameState.roomCode,
+            controls: controls,
+            gameStarted: gameState.gameStarted,
+            connected: gameState.connected,
+            timestamp: Date.now()
+        });
+        
+        // Add a helper method to errorLog to log info messages (different color)
+        if (!errorLog.info) {
+            errorLog.info = function(message, timeout = 1000) {
+                // Create info element (similar to error but different color)
+                const infoElement = document.createElement('div');
+                infoElement.className = 'info-log-item';
+                infoElement.style.backgroundColor = 'rgba(0, 100, 0, 0.7)'; // Dark green
+                infoElement.style.color = 'white';
+                infoElement.style.padding = '5px 8px';
+                infoElement.style.marginBottom = '3px';
+                infoElement.style.borderRadius = '4px';
+                infoElement.style.fontFamily = 'monospace';
+                infoElement.style.fontSize = '11px';
+                infoElement.style.opacity = '0.7';
+                infoElement.style.transition = 'opacity 0.3s';
+                
+                // Add timestamp
+                const time = new Date().toLocaleTimeString();
+                infoElement.textContent = `[${time}] ${message}`;
+                
+                // Make sure container exists
+                if (!this.container) {
+                    this.init();
+                }
+                
+                // Add to container
+                this.container.appendChild(infoElement);
+                
+                // Schedule removal
+                setTimeout(() => {
+                    infoElement.style.opacity = '0';
+                    setTimeout(() => {
+                        if (infoElement.parentNode) {
+                            infoElement.parentNode.removeChild(infoElement);
+                        }
+                    }, 300);
+                }, timeout);
+            };
+        }
+        
+        // Log the send event to the mobile screen
+        if (errorLog.info) {
+            errorLog.info(`Sent: a=${controls.acceleration.toFixed(1)}/b=${controls.braking.toFixed(1)}/s=${controls.steering.toFixed(1)}`, 500);
+        }
+        
+        // Show a temporary visual confirmation of sending
+        const tempIndicator = document.createElement('div');
+        tempIndicator.style.position = 'fixed';
+        tempIndicator.style.bottom = '60px';
+        tempIndicator.style.left = '10px';
+        tempIndicator.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+        tempIndicator.style.color = 'white';
+        tempIndicator.style.padding = '5px';
+        tempIndicator.style.borderRadius = '3px';
+        tempIndicator.style.fontFamily = 'monospace';
+        tempIndicator.textContent = `Sent: ${controls.acceleration.toFixed(1)}/${controls.braking.toFixed(1)}/${controls.steering.toFixed(1)}`;
+        document.body.appendChild(tempIndicator);
+        
+        // Remove the indicator after a short time
+        setTimeout(() => {
+            document.body.removeChild(tempIndicator);
+        }, 300);
+        
+        // Send control update to server
+        socket.emit('player_control_update', {
+            player_id: gameState.playerId,
+            room_code: gameState.roomCode,
+            controls: controls,
+            timestamp: Date.now()
+        });
+        
+        lastInputUpdate = currentTime;
+    }
+}
+
+// Create an on-screen error logger for mobile devices
+const errorLog = {
+    container: null,
+    errors: [],
+    maxErrors: 5,
+    displayTime: 5000, // How long errors stay visible (5 seconds)
+    
+    // Initialize the error log container
+    init: function() {
+        if (!this.container) {
+            this.container = document.createElement('div');
+            this.container.id = 'error-log-container';
+            this.container.style.position = 'fixed';
+            this.container.style.top = '10px';
+            this.container.style.left = '10px';
+            this.container.style.width = '80%';
+            this.container.style.maxHeight = '30%';
+            this.container.style.overflow = 'hidden';
+            this.container.style.zIndex = '9999';
+            this.container.style.pointerEvents = 'none'; // Touch passthrough
+            document.body.appendChild(this.container);
+        }
+        
+        // Override console.error to also log to our on-screen display
+        const originalError = console.error;
+        console.error = (...args) => {
+            // Call the original console.error
+            originalError.apply(console, args);
+            
+            // Also log to our on-screen display
+            this.log(args.join(' '));
+        };
+        
+        // Add a global error handler
+        window.addEventListener('error', (event) => {
+            this.log(`ERROR: ${event.message} at ${event.filename}:${event.lineno}`);
+        });
+        
+        // Add handler for promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            this.log(`PROMISE ERROR: ${event.reason}`);
+        });
+    },
+    
+    // Log an error
+    log: function(message) {
+        // Create error element
+        const errorElement = document.createElement('div');
+        errorElement.className = 'error-log-item';
+        errorElement.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+        errorElement.style.color = 'white';
+        errorElement.style.padding = '8px 12px';
+        errorElement.style.marginBottom = '5px';
+        errorElement.style.borderRadius = '4px';
+        errorElement.style.fontFamily = 'monospace';
+        errorElement.style.fontSize = '12px';
+        errorElement.style.wordBreak = 'break-word';
+        errorElement.style.opacity = '0.9';
+        errorElement.style.transition = 'opacity 0.3s';
+        
+        // Add timestamp
+        const time = new Date().toLocaleTimeString();
+        errorElement.innerHTML = `<strong>[${time}]</strong> ${message}`;
+        
+        // Add to container
+        this.container.appendChild(errorElement);
+        this.errors.push({
+            element: errorElement,
+            timestamp: Date.now()
+        });
+        
+        // Schedule removal
+        setTimeout(() => {
+            errorElement.style.opacity = '0';
+            setTimeout(() => {
+                if (errorElement.parentNode) {
+                    errorElement.parentNode.removeChild(errorElement);
+                }
+                // Remove from errors array
+                const index = this.errors.findIndex(e => e.element === errorElement);
+                if (index !== -1) {
+                    this.errors.splice(index, 1);
+                }
+            }, 300);
+        }, this.displayTime);
+        
+        // Limit number of errors
+        if (this.errors.length > this.maxErrors) {
+            const oldest = this.errors.shift();
+            if (oldest.element.parentNode) {
+                oldest.element.parentNode.removeChild(oldest.element);
+            }
+        }
+    }
+};
+
+// Add visual indicator for controls and server-reported speed
+function updateInputIndicator() {
+    // If game hasn't started, we don't need to update anything
+    if (!gameState.gameStarted) {
+        return;
+    }
+    
+    try {
+        const inputIndicator = document.getElementById('input-indicator');
+        if (!inputIndicator) {
+            const indicator = document.createElement('div');
+            indicator.id = 'input-indicator';
+            indicator.style.position = 'absolute';
+            indicator.style.bottom = '10px';
+            indicator.style.left = '10px';
+            indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            indicator.style.color = 'white';
+            indicator.style.padding = '10px';
+            indicator.style.borderRadius = '5px';
+            indicator.style.fontFamily = 'monospace';
+            indicator.style.fontSize = '14px';
+            indicator.style.pointerEvents = 'none'; // Pass events through
+            document.body.appendChild(indicator);
+        }
+        
+        // Get current control inputs
+        const controls = gameState.controls;
+        
+        // Calculate speed magnitude from server-provided velocity
+        let speedValue = 0;
+        if (gameState.velocity && gameState.velocity.length >= 3) {
+            speedValue = Math.sqrt(
+                gameState.velocity[0] * gameState.velocity[0] + 
+                gameState.velocity[2] * gameState.velocity[2]
+            );
+        }
+        
+        // Create visual indicators
+        const steeringBar = createVisualBar(controls.steering, -1, 1, 50);
+        const accelBar = createVisualBar(controls.acceleration, 0, 1, 50);
+        const brakeBar = createVisualBar(controls.braking, 0, 1, 50);
+        
+        // Display current inputs and server-reported speed with visual bars
+        inputIndicator.innerHTML = `
+            <div style="margin-bottom: 8px; text-align: center; font-weight: bold;">Controller Input</div>
+            <div>Steering: ${steeringBar} ${controls.steering.toFixed(2)}</div>
+            <div>Accelerate: ${accelBar} ${controls.acceleration.toFixed(2)}</div>
+            <div>Brake: ${brakeBar} ${controls.braking.toFixed(2)}</div>
+            <div style="margin-top: 5px; border-top: 1px solid #aaa; padding-top: 5px;">
+                Server Speed: ${speedValue.toFixed(2)} units/s
+            </div>
+        `;
+    } catch (error) {
+        console.error(`Error updating input indicator: ${error.message}`);
+    }
+}
+
+// Helper function to create visual bars for control values
+function createVisualBar(value, min, max, width) {
+    const isSymmetric = min < 0 && max > 0;
+    
+    if (isSymmetric) {
+        // For steering: center-based bar (-1 to 1)
+        const centerPos = width / 2;
+        const maxBarWidth = width / 2;
+        const barWidth = Math.abs(value) * maxBarWidth;
+        const leftPos = value < 0 ? centerPos - barWidth : centerPos;
+        const color = value < 0 ? '#f44336' : '#4CAF50';
+        
+        return `<div style="display:inline-block; width:${width}px; height:10px; background:#333; position:relative; margin:0 5px; vertical-align:middle;">
+            <div style="position:absolute; left:${centerPos}px; height:10px; width:1px; background:#fff;"></div>
+            <div style="position:absolute; left:${leftPos}px; width:${barWidth}px; height:10px; background:${color};"></div>
+        </div>`;
+    } else {
+        // For acceleration/braking: single bar (0 to 1)
+        const barWidth = Math.max(0, Math.min(1, (value - min) / (max - min))) * width;
+        
+        return `<div style="display:inline-block; width:${width}px; height:10px; background:#333; margin:0 5px; vertical-align:middle;">
+            <div style="width:${barWidth}px; height:10px; background:#4CAF50;"></div>
+        </div>`;
+    }
+}
+
+// Initialize the error log as soon as possible
+document.addEventListener('DOMContentLoaded', () => {
+    errorLog.init();
+    console.log('Error log initialized for mobile debugging');
+    
+    // Test the error log with a welcome message
+    errorLog.log('Mobile error logging ready! Errors will appear here.');
+});
+
+// Main game loop for updating UI based on server data and sending controls
+function updateLoop() {
+    if (gameState.gameStarted) {
+        // Handle input and send to server
+        handleInput();
+        
+        // Update visual indicators for input status
+        updateInputIndicator();
+    }
+    
+    // Continue the loop
+    requestAnimationFrame(updateLoop);
+}
+
+// Start update loop
+requestAnimationFrame(updateLoop);
+
+// Input event listeners
+document.addEventListener('keydown', (event) => {
+    switch(event.key) {
+        case 'ArrowUp':
+            gameState.controls.acceleration = 1;
+            break;
+        case 'ArrowDown':
+            gameState.controls.braking = 1;
+            break;
+        case 'ArrowLeft':
+            gameState.controls.steering = -1;
+            break;
+        case 'ArrowRight':
+            gameState.controls.steering = 1;
+            break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch(event.key) {
+        case 'ArrowUp':
+            gameState.controls.acceleration = 0;
+            break;
+        case 'ArrowDown':
+            gameState.controls.braking = 0;
+            break;
+        case 'ArrowLeft':
+        case 'ArrowRight':
+            gameState.controls.steering = 0;
+            break;
+    }
+});
+
+// Room joining function
+function joinRoom(roomCode) {
+    if (gameState.connected) {
+        gameState.roomCode = roomCode;
+        socket.emit('join_room', {
+            room_code: roomCode,
+            name: 'Player ' + socket.id.substr(0, 4),
+            car_color: '#' + Math.floor(Math.random()*16777215).toString(16)
+        });
     }
 } 

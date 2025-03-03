@@ -160,10 +160,6 @@ http://localhost:8000/
 
 Modify the `trackBuilder.js` file to add new track shapes and configurations. The track building system is modular and can be extended for more complex tracks.
 
-### Improving Physics
-
-For more realistic physics, you can integrate a full physics engine like Cannon.js or Ammo.js. The current implementation uses a simplified custom physics system.
-
 ### Adding Multiplayer Features
 
 Potential enhancements:
