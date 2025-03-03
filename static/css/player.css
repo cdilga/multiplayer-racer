@@ -4,6 +4,18 @@
     box-sizing: border-box;
     font-family: 'Arial', sans-serif;
     touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    height: 100%;
+    width: 100%;
 }
 
 body {
@@ -13,11 +25,12 @@ body {
     position: fixed;
     width: 100%;
     height: 100%;
+    min-height: -webkit-fill-available;
 }
 
 .container {
     width: 100%;
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -25,7 +38,173 @@ body {
     padding: 20px;
 }
 
-.screen {
+#game-screen {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Portrait suggestion overlay */
+.portrait-message {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    text-align: center;
+    pointer-events: none;
+    z-index: 2000;
+    transition: opacity 0.3s;
+}
+
+.portrait-message::before {
+    content: "📱";
+    display: block;
+    font-size: 2em;
+    margin-bottom: 10px;
+    animation: rotate 2s infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-90deg); }
+    75% { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@media screen and (orientation: portrait) {
+    .portrait-message {
+        display: block;
+    }
+    
+    #game-stats {
+        /* Adjust stats position for portrait */
+        top: auto;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+/* In landscape mode, render normally */
+@media screen and (orientation: landscape) {
+    #game-screen {
+        transform: none;
+    }
+    
+    #game-stats {
+        transform: none;
+    }
+}
+
+#controls-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    z-index: 100;
+}
+
+.control-area {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+}
+
+#steering-area {
+    width: 50%;
+    background-color: rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+#pedals-area {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0;
+}
+
+#steering-indicator {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(76, 201, 240, 0.3);
+    border: 3px solid #4cc9f0;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.1s;
+    pointer-events: none;
+}
+
+#steering-indicator.active {
+    opacity: 1;
+}
+
+#accelerate-btn, #brake-btn {
+    width: 100%;
+    height: 50%;
+    border-radius: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.2s;
+}
+
+#accelerate-btn {
+    background-color: #4cc9f0;
+}
+
+#brake-btn {
+    background-color: #f72585;
+}
+
+#accelerate-btn:active {
+    background-color: #3a9fc0;
+}
+
+#brake-btn:active {
+    background-color: #d61d6d;
+}
+
+#game-stats {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    z-index: 100;
+    transform: rotate(-90deg);
+}
+
+@media (orientation: landscape) {
+    #game-stats {
+        transform: none;
+    }
+}
+
+/* Other screens (join, waiting) */
+.screen:not(#game-screen) {
     width: 100%;
     max-width: 500px;
     text-align: center;
@@ -62,6 +241,11 @@ input {
     background-color: #16213e;
     color: #fff;
     text-align: center;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 input::placeholder {
@@ -116,121 +300,6 @@ button:hover, button:active {
     margin-top: 20px;
 }
 
-#game-screen {
-    width: 100%;
-    height: 100vh;
-    position: relative;
-}
-
-#controls-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 30vh;
-    display: flex;
-    justify-content: space-between;
-    padding: 0;
-    z-index: 100;
-}
-
-.control-area {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-#steering-area {
-    width: 50%;
-    background-color: rgba(0, 0, 0, 0.1);
-    position: relative;
-    touch-action: none;
-}
-
-#pedals-area {
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-}
-
-#steering-indicator {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: rgba(76, 201, 240, 0.3);
-    border: 3px solid #4cc9f0;
-    position: absolute;
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity 0.1s;
-    pointer-events: none;
-}
-
-#steering-indicator.active {
-    opacity: 1;
-}
-
-#accelerate-btn, #brake-btn {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2rem;
-    font-weight: bold;
-    touch-action: none;
-    user-select: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-#accelerate-btn {
-    background-color: #4cc9f0;
-}
-
-#brake-btn {
-    background-color: #f72585;
-}
-
-/* Remove unused styles */
-#steering-wheel {
-    display: none;
-}
-
-.steering-slider {
-    display: none;
-}
-
-#game-stats {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 5px;
-    z-index: 100;
-}
-
-/* Join timer display */
-.join-timer {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.join-timer:hover {
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
 /* Message display */
 .message-display {
     position: fixed;
@@ -251,6 +320,21 @@ button:hover, button:active {
 .message-display.visible {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+/* Join timer display */
+.join-timer {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.join-timer:hover {
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Name change in waiting room */
@@ -283,4 +367,4 @@ button:hover, button:active {
     padding: 15px;
     border-radius: 8px;
     text-align: center;
-} 
+}

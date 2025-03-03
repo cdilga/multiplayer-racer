@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Race Game - Player</title>
     <link rel="stylesheet" href="/static/css/player.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -43,9 +46,44 @@
             font-weight: bold;
             color: #333;
         }
+
+        #fullscreen-toggle {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        #fullscreen-toggle:hover {
+            opacity: 1;
+        }
+
+        /* Ensure safe areas on iOS */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(env(safe-area-inset-left), 20px);
+                padding-right: max(env(safe-area-inset-right), 20px);
+                padding-top: max(env(safe-area-inset-top), 20px);
+                padding-bottom: max(env(safe-area-inset-bottom), 20px);
+            }
+        }
     </style>
 </head>
 <body>
+    <button id="fullscreen-toggle">⛶ Fullscreen</button>
+    <div class="portrait-message">
+        Rotate for a better experience
+    </div>
     <div class="container">
         <div id="join-screen" class="screen">
             <h1>Multiplayer Racer</h1>
@@ -80,10 +118,12 @@
         
         <div id="game-screen" class="screen hidden">
             <div id="controls-container">
-                <div id="steering-wheel"></div>
-                <div id="pedals">
-                    <button id="accelerate-btn">▲</button>
-                    <button id="brake-btn">▼</button>
+                <div id="steering-area" class="control-area">
+                    <div id="steering-indicator"></div>
+                </div>
+                <div id="pedals-area" class="control-area">
+                    <button id="accelerate-btn">↑</button>
+                    <button id="brake-btn">↓</button>
                 </div>
             </div>
             <div id="game-stats">
@@ -95,7 +135,9 @@
     <!-- Load libraries -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.0/dist/nipplejs.min.js"></script>
+    
+    <!-- Load mobile utilities -->
+    <script src="/static/js/mobileUtils.js"></script>
     
     <!-- Pass room code if available -->
     <script>
@@ -118,6 +160,20 @@
                         // Trigger the input event to update the nameSet flag
                         const event = new Event('input', { bubbles: true });
                         playerNameInput.dispatchEvent(event);
+                    }
+                });
+            }
+
+            // Initialize mobile utilities
+            if (window.mobileUtils) {
+                mobileUtils.init().then(() => {
+                    // Show fullscreen toggle only if needed
+                    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+                    if (mobileUtils.isMobile() && mobileUtils.isFullscreenSupported()) {
+                        fullscreenToggle.classList.remove('hidden');
+                        fullscreenToggle.addEventListener('click', () => {
+                            mobileUtils.toggleFullscreen();
+                        });
                     }
                 });
             }

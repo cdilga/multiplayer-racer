@@ -83,44 +83,26 @@ function createCarPhysics(world, position, dimensions) {
         let rigidBodyDesc;
         
         // First create the basic rigid body description
-        rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z);
-        
-        // Set properties if these methods exist (compatible with different Rapier versions)
-        if (typeof rigidBodyDesc.setMass === 'function') {
-            console.log('Using Rapier API with explicit mass setting');
-            rigidBodyDesc
-                .setMass(1500) // 1500kg - typical car weight
-                .setLinearDamping(0.5) // Air resistance and rolling friction
-                .setAngularDamping(0.8); // Restricts how quickly the car can spin
-        } else {
-            console.log('Using alternative Rapier API (mass will be calculated from collider)');
-            // Some versions of Rapier calculate mass from the collider instead
-            if (typeof rigidBodyDesc.setLinearDamping === 'function') {
-                rigidBodyDesc.setLinearDamping(0.5);
-            }
-            if (typeof rigidBodyDesc.setAngularDamping === 'function') {
-                rigidBodyDesc.setAngularDamping(0.8);
-            }
-        }
+        rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+            .setTranslation(position.x, position.y, position.z)
+            .setLinearDamping(0.1)     // Reduced from 0.5 for less air resistance
+            .setAngularDamping(0.8)     // Keep this to prevent excessive spinning
+            .setAdditionalMass(1000.0); // Set explicit mass in kg
         
         const carBody = world.createRigidBody(rigidBodyDesc);
         
         // Create a collider for the car (box shape)
         const colliderDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
-            .setRestitution(0.1)  // Low bounciness for a car
-            .setFriction(0.9);    // High friction for tires
-        
-        // Set friction combine rule if available in this version
-        if (RAPIER.CoefficientCombineRule && typeof colliderDesc.setFrictionCombineRule === 'function') {
-            colliderDesc.setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max);
-        }
+            .setRestitution(0.2)     // Slightly bouncy
+            .setFriction(1.0)        // High friction for better traction
+            .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max);
         
         // Create the collider attached to the rigid body
         world.createCollider(colliderDesc, carBody);
         
-        // Initialize velocity if this method exists
-        if (typeof carBody.setLinvel === 'function') {
-            carBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        // Wake up the body to ensure it's active
+        if (typeof carBody.wakeUp === 'function') {
+            carBody.wakeUp();
         }
         
         console.log("Created car physics body successfully");
@@ -128,13 +110,6 @@ function createCarPhysics(world, position, dimensions) {
         return carBody;
     } catch (error) {
         console.error("Error creating car physics body:", error);
-        console.error("Rapier API available:", Object.keys(RAPIER));
-        if (RAPIER.RigidBodyDesc) {
-            console.error("RigidBodyDesc methods:", Object.getOwnPropertyNames(RAPIER.RigidBodyDesc.prototype));
-            console.log("Dynamic function:", RAPIER.RigidBodyDesc.dynamic);
-            const desc = RAPIER.RigidBodyDesc.dynamic();
-            console.log("Dynamic result methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(desc)));
-        }
         return null;
     }
 }

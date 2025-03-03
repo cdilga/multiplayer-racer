@@ -450,10 +450,11 @@ function createPlayerCar(playerId, carColor) {
         castShadow: true
     });
     
-    // Set initial position
+    // Set initial position - start higher off the ground for gravity test
+    const startY = 5.0; // Start 5 units up in the air
     carMesh.position.set(
         player.position[0],
-        player.position[1],
+        startY,
         player.position[2]
     );
     
@@ -474,10 +475,10 @@ function createPlayerCar(playerId, carColor) {
         };
         
         try {
-            // Create physics body for car
+            // Create physics body for car with elevated position
             physicsBody = rapierPhysics.createCarPhysics(
                 gameState.physics.world,
-                { x: player.position[0], y: player.position[1], z: player.position[2] },
+                { x: player.position[0], y: startY, z: player.position[2] },
                 carDimensions
             );
             
@@ -649,7 +650,21 @@ function gameLoopWithoutRecursion(timestamp) {
     try {
         // Update physics if initialized
         if (gameState.physics.initialized && gameState.physics.world) {
+            // Step the physics world - use fixed timestep
+            const fixedTimeStep = 1.0 / 60.0; // 60 Hz physics update
             gameState.physics.world.step();
+            
+            // Debug physics state
+            if (gameState.showPhysicsDebug) {
+                Object.keys(gameState.cars).forEach(playerId => {
+                    const car = gameState.cars[playerId];
+                    if (car && car.physicsBody) {
+                        const vel = car.physicsBody.linvel();
+                        const pos = car.physicsBody.translation();
+                        console.log(`Car ${playerId} physics - Vel: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)}) Pos: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+                    }
+                });
+            }
         }
         
         // Update car positions with smooth interpolation
@@ -676,6 +691,10 @@ function gameLoopWithoutRecursion(timestamp) {
             if (car.physicsBody && gameState.physics.usingRapier) {
                 // Apply player controls to physics body FIRST
                 if (player.controls) {
+                    // Debug log controls when physics debug is enabled
+                    if (gameState.showPhysicsDebug) {
+                        console.log(`Car ${playerId} controls:`, player.controls);
+                    }
                     rapierPhysics.applyCarControls(car.physicsBody, player.controls);
                 }
                 
