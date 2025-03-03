@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Race Game - Host</title>
     <link rel="stylesheet" href="/static/css/host.css">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <style>
         .qr-code-container {
             margin: 20px auto;
@@ -69,11 +70,53 @@
     <!-- Load libraries -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    
+    <!-- Load Rapier physics engine using ES modules -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+      }
+    }
+    </script>
+    
+    <!-- Add debugging script to visualize if Rapier is loaded properly -->
+    <script type="module">
+        // Create a global flag to indicate Rapier loading status
+        window.rapierLoaded = false;
+        
+        // Monitor Rapier loading
+        async function checkRapierStatus() {
+            try {
+                console.log("Attempting to load Rapier module...");
+                const rapier = await import('@dimforge/rapier3d-compat');
+                console.log("Rapier module imported successfully!");
+                
+                // Initialize WASM
+                await rapier.init();
+                console.log("Rapier WASM initialized!");
+                
+                // Set global flag
+                window.rapierLoaded = true;
+                
+                // Trigger a custom event to notify other scripts
+                window.dispatchEvent(new CustomEvent('rapier-ready'));
+                
+                return true;
+            } catch(error) {
+                console.error("Failed to load Rapier:", error);
+                return false;
+            }
+        }
+        
+        // Start monitoring
+        checkRapierStatus();
+    </script>
     
     <!-- Load game scripts -->
     <script src="/static/js/trackBuilder.js"></script>
     <script src="/static/js/carModel.js"></script>
+    <script src="/static/js/rapierPhysics.js"></script>
     <script src="/static/js/host.js"></script>
     <script src="/static/js/debug.js"></script>
     
@@ -84,6 +127,16 @@
             localIp: "{{ local_ip }}",
             port: "{{ port }}"
         };
+        
+        // Force a render after the page is fully loaded
+        window.addEventListener('load', function() {
+            // Force a reflow after a short delay
+            setTimeout(function() {
+                if (typeof forceDOMRender === 'function') {
+                    forceDOMRender();
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html> 

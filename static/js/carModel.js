@@ -253,21 +253,45 @@ function updateCarPhysics(car, controls, deltaTime = 1/60) {
         
         // Apply steering to rotation
         if (newSpeed > 0.5) {
-            // Turning is more responsive at lower speeds, less at high speeds
-            const steeringFactor = Math.max(0.3, 1 - (newSpeed / maxSpeed) * 0.7);
-            
-            // Update rotation based on steering input
-            car.rotation.y += turnSpeed * controls.steering * steeringFactor * deltaTime;
-            
-            // When turning, add some inertial drift at higher speeds
-            if (Math.abs(controls.steering) > 0.1 && newSpeed > maxSpeed * 0.5) {
-                // Add lateral velocity component based on steering
-                const driftFactor = Math.min(0.3, (newSpeed / maxSpeed) * 0.05);
-                const lateralVelocity = right.multiplyScalar(controls.steering * driftFactor * newSpeed);
-                car.velocity.add(lateralVelocity);
+            // Get the Rapier physics body for this car
+            const carPhysicsBody = world.getRigidBody(car.physicsId);
+            if (!carPhysicsBody) {
+                console.error('Could not find physics body for car');
+                return;
             }
+
+            // Get velocity and position from Rapier physics
+            const physicsVelocity = carPhysicsBody.linvel();
+            const physicsRotation = carPhysicsBody.rotation();
+
+            // Update Three.js car model position and rotation to match physics
+            car.position.set(
+                carPhysicsBody.translation().x,
+                carPhysicsBody.translation().y, 
+                carPhysicsBody.translation().z
+            );
+
+            // Calculate rotation from physics velocity direction
+            const velocityDirection = new THREE.Vector3(physicsVelocity.x, 0, physicsVelocity.z).normalize();
+            const targetRotation = Math.atan2(velocityDirection.x, -velocityDirection.z);
+            
+            // Smoothly interpolate to target rotation
+            const rotationLerpFactor = 0.1;
+            car.rotation.y = THREE.MathUtils.lerp(
+                car.rotation.y,
+                targetRotation,
+                rotationLerpFactor
+            );
+
+            // Apply steering force to physics body
+            const steeringFactor = Math.max(0.3, 1 - (newSpeed / maxSpeed) * 0.7);
+            const steeringForce = right.multiplyScalar(controls.steering * steeringFactor * newSpeed);
+            carPhysicsBody.applyImpulse({
+                x: steeringForce.x,
+                y: 0,
+                z: steeringForce.z
+            }, true);
         }
-        
         // Update position based on velocity
         car.position.x += car.velocity.x * deltaTime;
         car.position.z += car.velocity.z * deltaTime;

@@ -214,4 +214,73 @@ button:hover, button:active {
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 5px;
     z-index: 100;
+}
+
+/* Join timer display */
+.join-timer {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.join-timer:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Message display */
+.message-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.message-display.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Name change in waiting room */
+.name-change-container {
+    margin-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 15px;
+}
+
+.name-change-input {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.name-change-input input {
+    flex: 1;
+}
+
+.name-change-input button {
+    padding: 10px 15px;
+    background-color: #4cc9f0;
+    font-size: 0.9rem;
+}
+
+/* For auto-join message */
+.auto-join-message {
+    background-color: #2a6f97;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
 } 

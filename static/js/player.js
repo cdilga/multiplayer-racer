@@ -23,7 +23,9 @@ const gameState = {
         steeringCurrentX: 0
     },
     lastSpeed: 0,
-    lastUpdateTime: 0
+    lastUpdateTime: 0,
+    nameSet: false, // Flag to track if user has set a custom name
+    autoJoinDelayMs: 2000 // Delay before auto-joining to give time to set name
 };
 
 // Helper function to get URL parameters
@@ -48,16 +50,79 @@ const elements = {
     accelerateBtn: document.getElementById('accelerate-btn'),
     brakeBtn: document.getElementById('brake-btn'),
     speedDisplay: document.getElementById('speed'),
-    controlsContainer: document.getElementById('controls-container')
+    controlsContainer: document.getElementById('controls-container'),
+    generateNameBtn: document.getElementById('generate-name-btn'),
+    autoJoinMessage: document.getElementById('auto-join-message'),
+    detectedRoomCode: document.getElementById('detected-room-code'),
+    joinTimerDisplay: document.createElement('div')
 };
+
+// Add the join timer display to the auto-join message
+if (elements.autoJoinMessage) {
+    elements.joinTimerDisplay.className = 'join-timer';
+    elements.autoJoinMessage.appendChild(elements.joinTimerDisplay);
+}
 
 // Socket.io connection
 const socket = io();
 
-// Enable dev mode for faster testing
-const DEV_MODE = true;
-const DEFAULT_PLAYER_NAME = 'TestPlayer';
+// Enable dev mode for faster testing - changed to false to give time to customize name
+const DEV_MODE = false;
 const DEFAULT_ROOM_CODE = 'TEST';
+
+// Random name generator
+function generateRandomName() {
+    // Lists of adjectives and nouns for GitHub-style random names
+    const adjectives = [
+        'Admiring', 'Adoring', 'Affectionate', 'Agitated', 'Amazing', 'Angry', 'Awesome', 'Beautiful', 
+        'Blissful', 'Bold', 'Brave', 'Busy', 'Charming', 'Clever', 'Cool', 'Compassionate', 'Competent', 
+        'Confident', 'Crazy', 'Dazzling', 'Determined', 'Distracted', 'Dreamy', 'Eager', 'Ecstatic', 
+        'Elastic', 'Elated', 'Elegant', 'Eloquent', 'Epic', 'Exciting', 'Fervent', 'Festive', 'Flamboyant', 
+        'Focused', 'Friendly', 'Frosty', 'Funny', 'Gallant', 'Gifted', 'Goofy', 'Gracious', 'Great', 
+        'Happy', 'Hardcore', 'Heuristic', 'Hopeful', 'Hungry', 'Infallible', 'Inspiring', 'Intelligent', 
+        'Interesting', 'Jolly', 'Jovial', 'Keen', 'Kind', 'Laughing', 'Loving', 'Lucid', 'Magical', 
+        'Mystifying', 'Modest', 'Musing', 'Naughty', 'Nervous', 'Nice', 'Nifty', 'Nimble', 'Nostalgic', 
+        'Objective', 'Optimistic', 'Peaceful', 'Pedantic', 'Pensive', 'Practical', 'Priceless', 'Quirky', 
+        'Quizzical', 'Recursing', 'Relaxed', 'Reverent', 'Romantic', 'Sad', 'Serene', 'Sharp', 'Silly', 
+        'Sleepy', 'Stoic', 'Strange', 'Stupefied', 'Sweet', 'Tender', 'Thirsty', 'Trusting', 'Unruffled', 
+        'Upbeat', 'Vibrant', 'Vigilant', 'Vigorous', 'Wizardly', 'Wonderful', 'Xenodochial', 'Youthful', 
+        'Zealous', 'Zen'
+    ];
+    
+    const nouns = [
+        'Albattani', 'Allen', 'Almeida', 'Archimedes', 'Ardinghelli', 'Aryabhata', 'Austin', 'Babbage', 
+        'Banach', 'Banzai', 'Bardeen', 'Bartik', 'Bassi', 'Beaver', 'Bell', 'Benz', 'Bhabha', 'Bhaskara', 
+        'Black', 'Blackburn', 'Blackwell', 'Bohr', 'Booth', 'Borg', 'Bose', 'Bouman', 'Boyd', 'Brahmagupta', 
+        'Brattain', 'Brown', 'Buck', 'Burnell', 'Cannon', 'Carson', 'Cartwright', 'Cerf', 'Chandrasekhar', 
+        'Chaplygin', 'Chatelet', 'Chatterjee', 'Chebyshev', 'Cohen', 'Chaum', 'Clarke', 'Colden', 'Cori', 
+        'Cray', 'Curie', 'Darwin', 'Davinci', 'Dewdney', 'Dhawan', 'Diffie', 'Dijkstra', 'Dirac', 'Driscoll', 
+        'Driver', 'Dubinsky', 'Easley', 'Edison', 'Einstein', 'Elbakyan', 'Elgamal', 'Elion', 'Ellis', 
+        'Engelbart', 'Euclid', 'Euler', 'Faraday', 'Feistel', 'Fermat', 'Fermi', 'Feynman', 'Franklin', 
+        'Gagarin', 'Galileo', 'Galois', 'Ganguly', 'Gates', 'Gauss', 'Germain', 'Goldberg', 'Goldstine', 
+        'Goldwasser', 'Golick', 'Goodall', 'Gould', 'Greider', 'Grothendieck', 'Haibt', 'Hamilton', 'Haslett', 
+        'Hawking', 'Heisenberg', 'Hellman', 'Hermann', 'Herschel', 'Hertz', 'Heyrovsky', 'Hodgkin', 'Hofstadter', 
+        'Hoover', 'Hopper', 'Hugle', 'Hypatia', 'Ishizaka', 'Jackson', 'Jang', 'Jennings', 'Jepsen', 'Johnson', 
+        'Joliot', 'Jones', 'Kalam', 'Kapitsa', 'Kare', 'Keldysh', 'Keller', 'Kepler', 'Khayyam', 'Khorana', 
+        'Kilby', 'Kirch', 'Knuth', 'Kowalevski', 'Lalande', 'Lamarr', 'Lamport', 'Leakey', 'Leavitt', 'Lederberg', 
+        'Lehmann', 'Lewin', 'Lichterman', 'Liskov', 'Lovelace', 'Lumiere', 'Mahavira', 'Margulis', 'Matsumoto', 
+        'Maxwell', 'Mayer', 'McCartney', 'McWilliams', 'Meitner', 'Meninsky', 'Merkle', 'Mestorf', 'Mirzakhani', 
+        'Montalcini', 'Moore', 'Morse', 'Moser', 'Murdock', 'Neumann', 'Newton', 'Nightingale', 'Nobel', 'Noether', 
+        'Northcutt', 'Noyce', 'Panini', 'Pare', 'Pascal', 'Pasteur', 'Payne', 'Perlman', 'Pike', 'Poincare', 
+        'Poitras', 'Proskuriakova', 'Ptolemy', 'Raman', 'Ramanujan', 'Ride', 'Ritchie', 'Robinson', 'Roentgen', 
+        'Rosalind', 'Rubin', 'Saha', 'Sammet', 'Sanderson', 'Satoshi', 'Shamir', 'Shannon', 'Shaw', 'Shirley', 
+        'Shockley', 'Shtern', 'Sinoussi', 'Snyder', 'Spence', 'Stallman', 'Stonebraker', 'Sutherland', 'Swanson', 
+        'Swartz', 'Swirles', 'Taussig', 'Tesla', 'Tharp', 'Thompson', 'Torvalds', 'Tu', 'Turing', 'Varahamihira', 
+        'Vaughan', 'Villani', 'Visvesvaraya', 'Volhard', 'Wescoff', 'Wilbur', 'Wiles', 'Williams', 'Williamson', 
+        'Wilson', 'Wing', 'Wozniak', 'Wright', 'Wu', 'Yalow', 'Yonath', 'Zhukovsky'
+    ];
+    
+    // Pick a random adjective and noun
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    
+    // Combine them with a random number to ensure uniqueness
+    return `${adjective}${noun}`;
+}
 
 // Event listeners
 elements.joinButton.addEventListener('click', joinGame);
@@ -65,6 +130,13 @@ elements.accelerateBtn.addEventListener('touchstart', () => setAcceleration(1));
 elements.accelerateBtn.addEventListener('touchend', () => setAcceleration(0));
 elements.brakeBtn.addEventListener('touchstart', () => setBraking(1));
 elements.brakeBtn.addEventListener('touchend', () => setBraking(0));
+
+// Add input event listener to player name input to track when user sets a custom name
+elements.playerNameInput.addEventListener('input', function() {
+    if (this.value.trim() !== '') {
+        gameState.nameSet = true;
+    }
+});
 
 // Mobile controls - prevent default behaviors to avoid scrolling while playing
 document.addEventListener('touchmove', (e) => {
@@ -91,26 +163,51 @@ socket.on('connect', () => {
         elements.roomCodeInput.value = roomCode;
         
         // Show message that room code was detected
-        const autoJoinMessage = document.getElementById('auto-join-message');
-        const detectedRoomCode = document.getElementById('detected-room-code');
-        
-        if (autoJoinMessage && detectedRoomCode) {
-            detectedRoomCode.textContent = roomCode;
-            autoJoinMessage.style.display = 'block';
+        if (elements.autoJoinMessage && elements.detectedRoomCode) {
+            elements.detectedRoomCode.textContent = roomCode;
+            elements.autoJoinMessage.style.display = 'block';
             
-            // Hide message after 3 seconds
-            setTimeout(() => {
-                autoJoinMessage.style.display = 'none';
-            }, 3000);
+            // Generate a random name if the user hasn't set one
+            if (!gameState.nameSet && !elements.playerNameInput.value.trim()) {
+                elements.playerNameInput.value = generateRandomName();
+                // Don't set nameSet flag here to allow user to change it
+            }
+            
+            // Set up auto-join timer
+            let secondsLeft = Math.floor(gameState.autoJoinDelayMs / 1000);
+            elements.joinTimerDisplay.textContent = `Joining in ${secondsLeft} seconds... (click to cancel)`;
+            elements.joinTimerDisplay.style.display = 'block';
+            
+            // Allow clicking the timer to cancel auto-join
+            elements.joinTimerDisplay.addEventListener('click', () => {
+                clearInterval(joinTimerInterval);
+                clearTimeout(joinTimer);
+                elements.joinTimerDisplay.textContent = 'Auto-join cancelled';
+                setTimeout(() => {
+                    elements.joinTimerDisplay.style.display = 'none';
+                }, 1500);
+            });
+            
+            // Update countdown every second
+            const joinTimerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(joinTimerInterval);
+                    elements.joinTimerDisplay.textContent = 'Joining game...';
+                } else {
+                    elements.joinTimerDisplay.textContent = `Joining in ${secondsLeft} seconds... (click to cancel)`;
+                }
+            }, 1000);
+            
+            // Set up auto-join timer
+            const joinTimer = setTimeout(() => {
+                joinGame();
+            }, gameState.autoJoinDelayMs);
         }
-        
-        // Focus on the player name input for better UX
-        elements.playerNameInput.focus();
     }
     
     // In dev mode, auto-fill form and auto-join
     if (DEV_MODE) {
-        elements.playerNameInput.value = DEFAULT_PLAYER_NAME;
         if (!elements.roomCodeInput.value) {
             elements.roomCodeInput.value = DEFAULT_ROOM_CODE;
         }
@@ -134,6 +231,43 @@ socket.on('game_joined', (data) => {
     
     // Initialize car preview
     initCarPreview();
+    
+    // Add a name change option in the waiting room
+    const nameChangeContainer = document.createElement('div');
+    nameChangeContainer.className = 'name-change-container';
+    nameChangeContainer.innerHTML = `
+        <p>Want to change your name?</p>
+        <div class="name-change-input">
+            <input type="text" id="waiting-name-input" value="${gameState.playerName}" maxlength="15">
+            <button id="update-name-btn">Update</button>
+        </div>
+    `;
+    
+    // Add the name change container to the waiting screen
+    const playerInfo = elements.waitingScreen.querySelector('.player-info');
+    if (playerInfo) {
+        playerInfo.appendChild(nameChangeContainer);
+        
+        // Add event listeners for name change
+        const waitingNameInput = document.getElementById('waiting-name-input');
+        const updateNameBtn = document.getElementById('update-name-btn');
+        
+        if (waitingNameInput && updateNameBtn) {
+            updateNameBtn.addEventListener('click', () => {
+                const newName = waitingNameInput.value.trim();
+                if (newName && newName !== gameState.playerName) {
+                    // Update name
+                    updatePlayerName(newName);
+                }
+            });
+            
+            waitingNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    updateNameBtn.click();
+                }
+            });
+        }
+    }
     
     // Show waiting screen
     showScreen('waiting');
@@ -179,15 +313,29 @@ socket.on('position_reset', (data) => {
     }
 });
 
+// Add socket event handler for name update confirmation
+socket.on('name_updated', (data) => {
+    if (data.success) {
+        gameState.playerName = data.name;
+        elements.displayName.textContent = data.name;
+        console.log(`Name updated to: ${data.name}`);
+    }
+});
+
+// Add socket event handler for errors
+socket.on('error', (data) => {
+    showError(data.message);
+});
+
 // Game functions
 function joinGame() {
+    // Generate a random name if the field is empty
+    if (!elements.playerNameInput.value.trim()) {
+        elements.playerNameInput.value = generateRandomName();
+    }
+    
     const playerName = elements.playerNameInput.value.trim();
     const roomCode = elements.roomCodeInput.value.trim().toUpperCase();
-    
-    if (!playerName) {
-        showError('Please enter your name');
-        return;
-    }
     
     if (!roomCode) {
         showError('Please enter a room code');
@@ -202,12 +350,40 @@ function joinGame() {
     // Store values
     gameState.playerName = playerName;
     gameState.roomCode = roomCode;
+    gameState.nameSet = true; // Mark name as set when joining
+    
+    // Hide the auto-join timer if it's visible
+    if (elements.joinTimerDisplay) {
+        elements.joinTimerDisplay.style.display = 'none';
+    }
+    
+    // Show a joining message
+    showMessage('Joining game...', 1000);
     
     // Join game
     socket.emit('join_game', {
         player_name: playerName,
         room_code: roomCode
     });
+}
+
+// Show a temporary message
+function showMessage(message, duration = 3000) {
+    // Create a message element if it doesn't exist
+    if (!elements.messageDisplay) {
+        elements.messageDisplay = document.createElement('div');
+        elements.messageDisplay.className = 'message-display';
+        document.body.appendChild(elements.messageDisplay);
+    }
+    
+    // Show the message
+    elements.messageDisplay.textContent = message;
+    elements.messageDisplay.classList.add('visible');
+    
+    // Hide after duration
+    setTimeout(() => {
+        elements.messageDisplay.classList.remove('visible');
+    }, duration);
 }
 
 function showError(message) {
@@ -620,4 +796,17 @@ function gameLoop() {
     
     // Continue the game loop
     setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate
+}
+
+// Update player name function
+function updatePlayerName(name) {
+    if (!name || !name.trim() || !gameState.connected) return;
+    
+    const newName = name.trim();
+    
+    // Only update if different from current name
+    if (newName !== gameState.playerName) {
+        socket.emit('update_player_name', { name: newName });
+        gameState.nameSet = true;
+    }
 } 

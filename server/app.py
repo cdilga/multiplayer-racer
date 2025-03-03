@@ -204,48 +204,66 @@ def create_room(data):
     logger.info(f"Room created: {room_code}")
 
 @socketio.on('join_game')
-def join_game(data):
-    """Player joins an existing game room."""
-    player_sid = request.sid
-    room_code = data.get('room_code', '').upper()
+def on_join_game(data):
+    """Handle player joining a game room"""
     player_name = data.get('player_name', 'Player')
+    room_code = data.get('room_code', '').upper()
     
-    if room_code not in game_rooms:
-        emit('join_error', {'message': 'Room not found'})
+    # Validate room code
+    if not room_code or room_code not in game_rooms:
+        emit('error', {'message': 'Invalid room code'})
         return
+    
+    # Get room
+    room = game_rooms[room_code]
+    
+    # Check if game already started
+    if room['game_state'] != 'waiting':
+        emit('error', {'message': 'Game already in progress'})
+        return
+    
+    # Generate player ID (1-based index)
+    player_id = len(room['players']) + 1
     
     # Generate random car color
     car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
     
     # Add player to room
-    player_id = len(game_rooms[room_code]['players']) + 1
-    game_rooms[room_code]['players'][player_sid] = {
+    room['players'][request.sid] = {
         'id': player_id,
         'name': player_name,
         'car_color': car_color,
-        'position': [0, 0.5, -20 + (player_id * 3)],  # Staggered starting positions
-        'rotation': [0, 0, 0],
-        'velocity': [0, 0, 0]
+        'position': [0, 0.5, 0],  # Default starting position
+        'rotation': [0, 0, 0],    # Default rotation
+        'velocity': [0, 0, 0],    # Default velocity
+        'controls': {
+            'steering': 0,
+            'acceleration': 0,
+            'braking': 0
+        }
     }
     
+    # Join Socket.IO room
     join_room(room_code)
     
     # Notify player they've joined
     emit('game_joined', {
         'player_id': player_id,
-        'player_name': player_name,
+        'name': player_name,
         'car_color': car_color
     })
     
     # Notify host about new player
-    emit('player_joined', game_rooms[room_code]['players'][player_sid], 
-         to=game_rooms[room_code]['host_sid'])
+    emit('player_joined', {
+        'id': player_id,
+        'name': player_name,
+        'car_color': car_color,
+        'position': [0, 0.5, 0],
+        'rotation': [0, 0, 0],
+        'velocity': [0, 0, 0]
+    }, room=room['host_sid'])
     
-    logger.info(f"Player {player_name} joined room {room_code}")
-    
-    # If game is already in progress, immediately send game_started to this player
-    if game_rooms[room_code]['game_state'] == 'racing':
-        emit('game_started')
+    logger.info(f"Player {player_name} (ID: {player_id}) joined room {room_code}")
 
 @socketio.on('start_game')
 def start_game(data):
@@ -359,9 +377,42 @@ def handle_reset_position(data):
                 'velocity': [0, 0, 0]
             }, to=game_rooms[room_code]['host_sid'])
             break
+            
+@socketio.on('update_player_name')
+def update_player_name(data):
+    """Handle player name update."""
+    player_sid = request.sid
+    new_name = data.get('name', '').strip()
     
-    if not player_sid:
-        logger.error(f"Reset position: Player {player_id} not found in room {room_code}")
+    if not new_name:
+        emit('name_updated', {'success': False, 'message': 'Invalid name'})
+        return
+    
+    # Find which room the player is in
+    for room_code, room_data in game_rooms.items():
+        if player_sid in room_data['players']:
+            # Update player name
+            old_name = room_data['players'][player_sid]['name']
+            room_data['players'][player_sid]['name'] = new_name
+            
+            # Notify player that name was updated
+            emit('name_updated', {
+                'success': True,
+                'name': new_name
+            })
+            
+            # Notify host about player name change
+            emit('player_name_updated', {
+                'player_id': room_data['players'][player_sid]['id'],
+                'name': new_name
+            }, to=room_data['host_sid'])
+            
+            logger.info(f"Player name changed in room {room_code}: {old_name} -> {new_name}")
+            return
+    
+    # Player not found in any room
+    emit('name_updated', {'success': False, 'message': 'Player not in a room'})
+    logger.warning(f"Failed to update player name: Player not in a room")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

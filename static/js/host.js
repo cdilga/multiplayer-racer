@@ -14,7 +14,9 @@ const gameState = {
     track: null,
     physics: {
         world: null,
-        bodies: {}
+        bodies: {},
+        initialized: false,
+        rapier: null
     },
     gameActive: false,
     showStats: false // Display stats toggle
@@ -118,6 +120,27 @@ socket.on('player_joined', (playerData) => {
     elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
 });
 
+// Handle player name updates
+socket.on('player_name_updated', (data) => {
+    const { player_id, name } = data;
+    
+    // Update player name in local state
+    if (gameState.players[player_id]) {
+        gameState.players[player_id].name = name;
+        
+        // Update UI list
+        const playerElement = document.getElementById(`player-${player_id}`);
+        if (playerElement) {
+            const nameSpan = playerElement.querySelector('span:not(.player-color)');
+            if (nameSpan) {
+                nameSpan.textContent = name;
+            }
+        }
+        
+        console.log(`Player ${player_id} name updated to: ${name}`);
+    }
+});
+
 socket.on('player_left', (data) => {
     const { player_id } = data;
     
@@ -165,6 +188,22 @@ socket.on('player_position_update', (data) => {
         if (gameState.showStats) {
             updateStatsDisplay();
         }
+    }
+});
+
+// Add socket event handler for player name updates
+socket.on('player_name_updated', (data) => {
+    const playerId = data.id;
+    const newName = data.name;
+    
+    if (gameState.players[playerId]) {
+        // Update player name
+        gameState.players[playerId].name = newName;
+        
+        // Update player list in UI if in lobby
+        updatePlayerList();
+        
+        console.log(`Player ${playerId} updated name to: ${newName}`);
     }
 });
 
@@ -239,9 +278,11 @@ function initGame() {
         // Calculate proper aspect ratio - use getBoundingClientRect for more accurate dimensions
         const container = elements.gameContainer;
         const containerRect = container.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        const containerHeight = containerRect.height;
+        const containerWidth = containerRect.width || 800; // Fallback width if zero
+        const containerHeight = containerRect.height || 600; // Fallback height if zero
         const aspectRatio = containerWidth / containerHeight;
+        
+        console.log('Container dimensions:', containerWidth, containerHeight);
         
         gameState.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
         
@@ -322,9 +363,12 @@ function initGame() {
         
         // Make an immediate call to onWindowResize to ensure proper sizing
         onWindowResize();
+        
+        // Force a DOM reflow to fix rendering issues
+        forceDOMRender();
     } catch (error) {
         console.error('Error initializing game:', error);
-        isInitializing = false; // Reset flag even on error
+        isInitializing = false;
     }
 }
 
@@ -369,127 +413,179 @@ function createRaceTrack() {
     return track;
 }
 
-function createPlayerCar(playerId, color) {
-    // Check if we have a utility function for creating cars
-    if (typeof createCar === 'function') {
-        try {
-            const carMesh = createCar({
-                color: color,
-                castShadow: true
-            });
+function createPlayerCar(playerId, carColor) {
+    const player = gameState.players[playerId];
+    if (!player) return;
+    
+    // Create car mesh
+    const carMesh = createCar({
+        color: carColor || 0xff0000,
+        castShadow: true
+    });
+    
+    // Set initial position
+    carMesh.position.set(
+        player.position[0],
+        player.position[1],
+        player.position[2]
+    );
+    
+    // Add to scene
+    gameState.scene.add(carMesh);
+    
+    // Create physics body if physics is initialized
+    let physicsBody = null;
+    
+    if (gameState.physics.initialized && gameState.physics.world && gameState.physics.usingRapier) {
+        console.log('Creating Rapier physics body for car');
+        
+        // Get car dimensions
+        const carDimensions = {
+            width: 2,    // Car width
+            height: 1,   // Car height
+            length: 4    // Car length
+        };
+        
+        // Create physics body for car
+        physicsBody = rapierPhysics.createCarPhysics(
+            gameState.physics.world,
+            { x: player.position[0], y: player.position[1], z: player.position[2] },
+            carDimensions
+        );
+        
+        // If the physics body was created successfully
+        if (physicsBody) {
+            // Initialize rotation from player data if available
+            if (player.rotation && player.rotation.length >= 3) {
+                // Convert Euler rotation to quaternion
+                const euler = new THREE.Euler(
+                    player.rotation[0],
+                    player.rotation[1],
+                    player.rotation[2],
+                    'XYZ'
+                );
+                const quaternion = new THREE.Quaternion().setFromEuler(euler);
+                
+                // Set initial rotation of physics body
+                physicsBody.setRotation({
+                    x: quaternion.x,
+                    y: quaternion.y,
+                    z: quaternion.z,
+                    w: quaternion.w
+                }, true);
+            }
             
-            // Set the initial position
-            const player = gameState.players[playerId];
-            carMesh.position.set(player.position[0], player.position[1], player.position[2]);
-            
-            // Add to scene
-            gameState.scene.add(carMesh);
-            
-            // Store the car with its target properties for smooth interpolation
-            gameState.cars[playerId] = {
-                mesh: carMesh,
-                targetPosition: new THREE.Vector3(player.position[0], player.position[1], player.position[2]),
-                targetRotation: new THREE.Vector3(0, 0, 0),
-                velocity: [0, 0, 0]
-            };
-            
-            return;
-        } catch (error) {
-            console.error('Error using createCar utility:', error);
+            console.log('Physics body created successfully');
+        } else {
+            console.warn('Failed to create physics body for car');
         }
     }
     
-    // Fallback: Create a simple car model
-    const carGroup = new THREE.Group();
+    // Create initial targetQuaternion from player rotation
+    const targetQuaternion = new THREE.Quaternion();
+    if (player.rotation && player.rotation.length >= 3) {
+        const euler = new THREE.Euler(
+            player.rotation[0],
+            player.rotation[1],
+            player.rotation[2],
+            'XYZ'
+        );
+        targetQuaternion.setFromEuler(euler);
+    }
     
-    // Car body
-    const bodyGeometry = new THREE.BoxGeometry(2, 1, 4);
-    const bodyMaterial = new THREE.MeshStandardMaterial({ color: color });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.5;
-    body.castShadow = true;
-    carGroup.add(body);
-    
-    // Car roof
-    const roofGeometry = new THREE.BoxGeometry(1.5, 0.7, 2);
-    const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.y = 1.35;
-    roof.position.z = -0.2;
-    roof.castShadow = true;
-    carGroup.add(roof);
-    
-    // Wheels
-    const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
-    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
-    
-    // Front left wheel
-    const wheelFL = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    wheelFL.rotation.z = Math.PI / 2;
-    wheelFL.position.set(-1.1, 0.5, 1.2);
-    carGroup.add(wheelFL);
-    
-    // Front right wheel
-    const wheelFR = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    wheelFR.rotation.z = Math.PI / 2;
-    wheelFR.position.set(1.1, 0.5, 1.2);
-    carGroup.add(wheelFR);
-    
-    // Rear left wheel
-    const wheelRL = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    wheelRL.rotation.z = Math.PI / 2;
-    wheelRL.position.set(-1.1, 0.5, -1.2);
-    carGroup.add(wheelRL);
-    
-    // Rear right wheel
-    const wheelRR = new THREE.Mesh(wheelGeometry, wheelMaterial);
-    wheelRR.rotation.z = Math.PI / 2;
-    wheelRR.position.set(1.1, 0.5, -1.2);
-    carGroup.add(wheelRR);
-    
-    // Set initial position and add to scene
-    const player = gameState.players[playerId];
-    carGroup.position.set(player.position[0], player.position[1], player.position[2]);
-    gameState.scene.add(carGroup);
-    
-    // Store the car with its target properties for smooth interpolation
+    // Store car data
     gameState.cars[playerId] = {
-        mesh: carGroup,
-        targetPosition: new THREE.Vector3(player.position[0], player.position[1], player.position[2]),
-        targetRotation: new THREE.Vector3(0, 0, 0),
-        velocity: [0, 0, 0]
+        mesh: carMesh,
+        physicsBody: physicsBody,
+        targetPosition: new THREE.Vector3(
+            player.position[0],
+            player.position[1],
+            player.position[2]
+        ),
+        targetRotation: new THREE.Vector3(
+            player.rotation[0],
+            player.rotation[1],
+            player.rotation[2]
+        ),
+        targetQuaternion: targetQuaternion,
+        velocity: [0, 0, 0],
+        speed: 0
     };
+    
+    console.log(`Created car for player ${playerId}`);
 }
 
-function initPhysics() {
-    console.log('Initializing physics');
-    try {
-        // Initialize Cannon.js physics world if available
-        if (typeof CANNON !== 'undefined') {
-            gameState.physics.world = new CANNON.World();
-            gameState.physics.world.gravity.set(0, -9.82, 0); // Earth gravity
-            
-            // Add ground plane
-            const groundShape = new CANNON.Plane();
-            const groundBody = new CANNON.Body({ mass: 0 }); // Mass 0 makes it static
-            groundBody.addShape(groundShape);
-            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); // Rotate to be flat
-            gameState.physics.world.addBody(groundBody);
-            console.log('Physics world created with CANNON.js');
-        } else {
-            console.warn('CANNON.js not available, using simplified physics');
-            // Set up a simple physics placeholder
-            gameState.physics.world = {
-                step: function() {} // Do nothing function
-            };
-        }
-    } catch (error) {
-        console.error('Error initializing physics:', error);
-        // Set up a simple physics placeholder
-        gameState.physics.world = {
-            step: function() {} // Do nothing function
-        };
+// Initialize physics with Rapier instead of Cannon.js
+async function initPhysics() {
+    console.log('Initializing physics with Rapier');
+    
+    // Check if Rapier is already loaded
+    if (window.rapierLoaded) {
+        console.log('Rapier is already loaded, initializing physics');
+        await initializeWithRapier();
+    } else {
+        console.log('Waiting for Rapier to load...');
+        
+        // Set up event listener for when Rapier is ready
+        window.addEventListener('rapier-ready', async function onRapierReady() {
+            console.log('Received rapier-ready event, initializing physics');
+            window.removeEventListener('rapier-ready', onRapierReady);
+            await initializeWithRapier();
+        });
+        
+        // Fallback timeout in case the event never fires
+        setTimeout(() => {
+            console.warn('Timed out waiting for Rapier to be ready');
+            setupFallbackPhysics();
+        }, 5000);
     }
+    
+    async function initializeWithRapier() {
+        try {
+            // Initialize Rapier
+            gameState.physics.rapier = await rapierPhysics.init();
+            
+            if (gameState.physics.rapier) {
+                // Create physics world
+                gameState.physics.world = rapierPhysics.createWorld();
+                
+                // Create ground plane
+                const groundBody = rapierPhysics.createGroundPlane(gameState.physics.world);
+                gameState.physics.bodies.ground = groundBody;
+                
+                gameState.physics.initialized = true;
+                gameState.physics.usingRapier = true; // Flag to indicate we're using Rapier
+                console.log('Physics world created with Rapier');
+                
+                // Send debugging info to stats overlay if it exists
+                updateStatsDisplay();
+            } else {
+                console.error('Failed to initialize Rapier');
+                setupFallbackPhysics();
+            }
+        } catch (error) {
+            console.error('Error initializing physics with Rapier:', error);
+            setupFallbackPhysics();
+        }
+    }
+}
+
+// Fallback physics for when Rapier fails to initialize
+function setupFallbackPhysics() {
+    console.warn('Setting up fallback physics - game physics will be unavailable');
+    // Simple physics placeholder
+    gameState.physics.world = {
+        step: function(dt) {} // Do nothing function
+    };
+    gameState.physics.initialized = false;
+    gameState.physics.usingRapier = false;
+    
+    // Update stats to show fallback is in use
+    updateStatsDisplay();
+    
+    // Alert the user that physics will be limited
+    elements.gameStatus.textContent = 'Limited physics mode - car controls may be unreliable';
+    elements.gameStatus.style.color = 'orange';
 }
 
 // Improved game loop that avoids potential stack overflow issues
@@ -502,31 +598,119 @@ function gameLoopWithoutRecursion(timestamp) {
     }
     
     try {
-        // Update physics
-        gameState.physics.world.step(1 / 60);
+        // Update physics if initialized
+        if (gameState.physics.initialized && gameState.physics.world) {
+            gameState.physics.world.step();
+        }
         
         // Update car positions with smooth interpolation
         Object.keys(gameState.cars).forEach(playerId => {
             const car = gameState.cars[playerId];
+            const player = gameState.players[playerId];
             
             if (!car || !car.mesh) {
                 return;
             }
             
-            // Smoothly interpolate position and rotation
-            car.mesh.position.lerp(car.targetPosition, 0.1);
-            
-            // Create a rotation quaternion from euler angles
-            const targetQuaternion = new THREE.Quaternion();
-            targetQuaternion.setFromEuler(new THREE.Euler(
-                car.targetRotation.x,
-                car.targetRotation.y,
-                car.targetRotation.z,
-                'XYZ'
-            ));
-            
-            // Smoothly interpolate rotation
-            car.mesh.quaternion.slerp(targetQuaternion, 0.1);
+            // If we have a physics body, update from physics and apply controls
+            if (car.physicsBody && gameState.physics.usingRapier) {
+                // Apply player controls to physics body FIRST
+                if (player.controls) {
+                    rapierPhysics.applyCarControls(car.physicsBody, player.controls);
+                }
+                
+                // Get position and rotation from physics body
+                const physicsPos = car.physicsBody.translation();
+                const physicsRot = car.physicsBody.rotation();
+                
+                // Update target position from physics
+                car.targetPosition.set(physicsPos.x, physicsPos.y, physicsPos.z);
+                
+                // COMPLETELY OVERRIDE the car rotation to match the ACTUAL direction of movement
+                // This is a brute-force approach to ensure the car model points in the right direction
+                
+                // Get the velocity and extract direction
+                const vel = car.physicsBody.linvel();
+                
+                // Only override direction when actually moving
+                const speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z); // in m/s
+                
+                if (speed > 0.5) { // Only when moving at a reasonable speed
+                    // In THREE.js, we want the car to point in the direction of motion
+                    // Calculate the heading angle from velocity
+                    // NOTE: Z-axis is typically forward in THREE.js models, but negative Z is "into" the screen
+                    // So we negate Z to flip the direction
+                    const angle = Math.atan2(vel.x, -vel.z);
+                    
+                    // Create a quaternion representation of this rotation around Y axis
+                    const newRotation = new THREE.Quaternion();
+                    newRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+                    
+                    // DEBUG THIS TO CONSOLE
+                    console.log(`Car ${playerId} heading: ${(angle * 180 / Math.PI).toFixed(1)}° speed: ${(speed * 3.6).toFixed(1)} km/h`);
+                    
+                    // Assign directly to avoid any interpolation issues
+                    car.targetQuaternion = newRotation;
+                } else {
+                    // At very low speeds, use the physics rotation but only for Y axis
+                    // This prevents the car from flipping or rolling when stopped
+                    const euler = new THREE.Euler().setFromQuaternion(
+                        new THREE.Quaternion(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w)
+                    );
+                    
+                    // Only keep the Y rotation (heading) and reset others
+                    euler.x = 0;
+                    euler.z = 0;
+                    
+                    // Create new quaternion
+                    car.targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
+                }
+                
+                // Calculate Euler angles for network sync
+                const euler = new THREE.Euler().setFromQuaternion(car.targetQuaternion);
+                car.targetRotation.set(euler.x, euler.y, euler.z);
+                
+                // Update player's position and rotation for network sync
+                player.position = [physicsPos.x, physicsPos.y, physicsPos.z];
+                player.rotation = [euler.x, euler.y, euler.z];
+                
+                // Update velocity for display - reuse the vel variable from earlier
+                car.velocity = [vel.x, vel.y, vel.z];
+                
+                // We already calculated speed earlier, store it
+                car.speed = speed * 3.6; // Convert to km/h for display
+                
+                // Update the mesh position with smooth lerp
+                car.mesh.position.lerp(car.targetPosition, 0.2);
+                
+                // Apply rotation directly without slerp when moving, for immediate response
+                if (speed > 0.5) {
+                    car.mesh.quaternion.copy(car.targetQuaternion);
+                } else {
+                    // Use smooth interpolation when stopped or moving very slowly
+                    car.mesh.quaternion.slerp(car.targetQuaternion, 0.2);
+                }
+            } else {
+                // Fallback to the old method if no physics body or not using Rapier
+                
+                // Update the mesh position with smooth lerp
+                car.mesh.position.lerp(car.targetPosition, 0.1);
+                
+                // Create a rotation quaternion from euler angles
+                if (!car.targetQuaternion) {
+                    car.targetQuaternion = new THREE.Quaternion();
+                }
+                
+                car.targetQuaternion.setFromEuler(new THREE.Euler(
+                    car.targetRotation.x,
+                    car.targetRotation.y,
+                    car.targetRotation.z,
+                    'XYZ'
+                ));
+                
+                // Smoothly interpolate rotation
+                car.mesh.quaternion.slerp(car.targetQuaternion, 0.1);
+            }
         });
         
         // Render scene
@@ -556,8 +740,10 @@ function onWindowResize() {
     // Get accurate container dimensions
     const container = elements.gameContainer;
     const containerRect = container.getBoundingClientRect();
-    const width = containerRect.width;
-    const height = containerRect.height;
+    const width = containerRect.width || 800; // Fallback width if zero
+    const height = containerRect.height || 600; // Fallback height if zero
+    
+    console.log('Resize: Container dimensions:', width, height);
     
     // Update camera
     gameState.camera.aspect = width / height;
@@ -577,6 +763,14 @@ function updateStatsDisplay() {
     if (!elements.statsOverlay) return;
     
     let statsHTML = '<div class="stats-header">Game Stats (Press F3 to toggle)</div>';
+    
+    // Add physics engine status
+    const physicsStatus = gameState.physics.usingRapier ? 
+        '<span style="color:green">Active</span>' : 
+        '<span style="color:red">Unavailable</span>';
+    
+    statsHTML += `<div>Physics: ${physicsStatus}</div>`;
+    statsHTML += `<div>Rapier Loaded: ${window.rapierLoaded ? '<span style="color:green">Yes</span>' : '<span style="color:red">No</span>'}</div>`;
     
     // Add FPS counter
     const now = performance.now();
@@ -650,6 +844,22 @@ function resetCarPosition(playerId) {
     // Set the car's target position to the start position
     car.targetPosition.set(startPosition[0], startPosition[1], startPosition[2]);
     car.targetRotation.set(0, 0, 0);
+    
+    // Reset physics body if available
+    if (car.physicsBody) {
+        // Reset position
+        car.physicsBody.position.set(startPosition[0], startPosition[1], startPosition[2]);
+        
+        // Reset rotation (quaternion)
+        car.physicsBody.quaternion.set(0, 0, 0, 1); // Identity quaternion
+        
+        // Reset velocity and angular velocity
+        car.physicsBody.velocity.set(0, 0, 0);
+        car.physicsBody.angularVelocity.set(0, 0, 0);
+        
+        // Wake up the body to ensure it's active
+        car.physicsBody.wakeUp();
+    }
     
     // Update internal game state
     gameState.players[playerId].position = startPosition;
@@ -730,4 +940,22 @@ function initStatsOverlay() {
 }
 
 // Call this at page load
-initStatsOverlay(); 
+initStatsOverlay();
+
+// Force a DOM reflow to fix rendering issues
+function forceDOMRender() {
+    // Force browser to recalculate layout
+    const container = elements.gameContainer;
+    if (container) {
+        container.style.display = 'none';
+        container.offsetHeight; // Trigger reflow
+        container.style.display = '';
+        console.log('DOM render forced');
+    }
+    
+    // Force a Three.js render
+    if (gameState.scene && gameState.camera && gameState.renderer) {
+        gameState.renderer.render(gameState.scene, gameState.camera);
+        console.log('Three.js render forced');
+    }
+} 

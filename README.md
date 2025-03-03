@@ -1,6 +1,76 @@
-# Multiplayer Racing Game
+# Multiplayer Racer
 
-A real-time multiplayer racing game built with Python and Three.js. Players join a game room on their mobile devices and race against each other, with a host screen displaying all cars in the race.
+A multiplayer racing game with physics using Three.js, Rapier physics, and Socket.IO.
+
+## Recent Updates
+
+### Physics Engine Upgrade
+- Replaced Cannon.js with Rapier physics for improved performance and stability
+- Added better car physics with more realistic handling
+- Fixed issues with mesh synchronization between physics and rendering
+
+### Rendering Fixes
+- Fixed the issue with Three.js scene not rendering until screen resize
+- Added forced DOM rendering to ensure the game displays correctly on initialization
+- Improved window resize handling with fallback dimensions
+
+### Player Experience Improvements
+- Added random name generator with GitHub-style naming (adjective + noun)
+- Players can now set custom names before joining a game
+- Added ability to update player names during the waiting phase
+- Improved UI for player name input with a dice button for random names
+
+## Setup and Installation
+
+### Prerequisites
+- Node.js (for frontend dependencies)
+- Python 3.7+ (for the server)
+- pip (Python package manager)
+
+### Server Setup
+1. Clone the repository
+2. Install Python dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Install Node.js dependencies:
+   ```
+   npm install
+   ```
+
+### Running the Game
+1. Start the server:
+   ```
+   python server/app.py
+   ```
+2. Open a browser and navigate to:
+   ```
+   http://localhost:8000
+   ```
+3. Create a game room on the host screen
+4. Connect with mobile devices using the displayed QR code or room code
+
+## Development
+
+### Project Structure
+- `server/` - Flask and Socket.IO server
+- `frontend/` - HTML templates for host and player views
+- `static/` - JavaScript, CSS, and other static assets
+- `static/js/rapierPhysics.js` - Rapier physics integration
+
+### Building for Production
+1. Build the frontend assets:
+   ```
+   npm run build
+   ```
+2. Deploy the server and built assets to your hosting environment
+
+## Technologies Used
+- Three.js for 3D rendering
+- Rapier physics for realistic car physics
+- Socket.IO for real-time communication
+- Flask for the web server
+- Vite for frontend build tooling
 
 ## Features
 

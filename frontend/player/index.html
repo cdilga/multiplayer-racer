@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Race Game - Player</title>
     <link rel="stylesheet" href="/static/css/player.css">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <style>
         .auto-join-message {
             background-color: #4CAF50;
@@ -13,14 +14,34 @@
             border-radius: 5px;
             text-align: center;
             margin-bottom: 20px;
-            animation: fade 2s linear forwards;
         }
-
-        @keyframes fade {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { opacity: 0; }
+        
+        .name-generator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .name-generator button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        
+        .name-generator button:hover {
+            background-color: #45a049;
+        }
+        
+        .join-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
         }
     </style>
 </head>
@@ -32,8 +53,14 @@
                 Room code detected: <strong id="detected-room-code"></strong>
             </div>
             <div class="join-form">
-                <input type="text" id="player-name" placeholder="Your Name" maxlength="15">
-                <input type="text" id="room-code" placeholder="Room Code" maxlength="4">
+                <label for="player-name">Your Name:</label>
+                <div class="name-generator">
+                    <input type="text" id="player-name" placeholder="Enter your name" maxlength="15">
+                    <button id="generate-name-btn" title="Generate a random name">🎲</button>
+                </div>
+                
+                <label for="room-code">Room Code:</label>
+                <input type="text" id="room-code" placeholder="Enter room code" maxlength="4">
                 <button id="join-btn">Join Race</button>
             </div>
             <div id="error-message" class="error hidden"></div>
@@ -78,5 +105,23 @@
     
     <!-- Load game scripts -->
     <script src="/static/js/player.js"></script>
+    
+    <!-- Add event listener for the generate name button -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateNameBtn = document.getElementById('generate-name-btn');
+            if (generateNameBtn) {
+                generateNameBtn.addEventListener('click', function() {
+                    const playerNameInput = document.getElementById('player-name');
+                    if (playerNameInput && typeof generateRandomName === 'function') {
+                        playerNameInput.value = generateRandomName();
+                        // Trigger the input event to update the nameSet flag
+                        const event = new Event('input', { bubbles: true });
+                        playerNameInput.dispatchEvent(event);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

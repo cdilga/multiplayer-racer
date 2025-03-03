@@ -169,4 +169,109 @@
         
         console.log('Debug utilities ready. Use window.forceDOMRender() to force render.');
     }
-})(); 
+})();
+
+// Test Rapier initialization
+function testRapierPhysics() {
+    console.log('=== Testing Rapier Physics ===');
+    console.log('window.rapierLoaded:', window.rapierLoaded);
+    
+    if (typeof rapierPhysics !== 'undefined') {
+        console.log('rapierPhysics object available:', rapierPhysics);
+        
+        // Test initialization
+        rapierPhysics.init().then(rapier => {
+            console.log('Rapier initialization result:', rapier);
+            
+            if (rapier) {
+                console.log('Creating test world...');
+                const world = rapierPhysics.createWorld();
+                console.log('Test world created:', world);
+                
+                if (world) {
+                    // Test creating a box
+                    console.log('Creating test box...');
+                    const boxPos = { x: 0, y: 5, z: 0 };
+                    const boxDim = { width: 1, height: 1, length: 1 };
+                    const box = rapierPhysics.createCarPhysics(world, boxPos, boxDim);
+                    console.log('Test box created:', box);
+                    
+                    // Simulate a few steps
+                    console.log('Simulating physics...');
+                    for (let i = 0; i < 10; i++) {
+                        world.step();
+                        const pos = box.translation();
+                        console.log(`Box position after step ${i}:`, pos);
+                    }
+                    
+                    console.log('✅ Rapier test successful!');
+                }
+            }
+        }).catch(err => {
+            console.error('❌ Error testing Rapier:', err);
+        });
+    } else {
+        console.error('❌ rapierPhysics object not available');
+    }
+}
+
+// Expose debug functions globally
+window.debugUtils = {
+    testRapierPhysics
+};
+
+// Automatically run tests when debug mode is enabled via URL parameter
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('debug')) {
+        console.log('Debug mode enabled via URL parameter');
+        
+        // Add debug UI
+        const debugUI = document.createElement('div');
+        debugUI.className = 'debug-ui';
+        debugUI.innerHTML = `
+            <div class="debug-header">Debug Tools</div>
+            <button id="test-rapier-btn">Test Rapier Physics</button>
+        `;
+        document.body.appendChild(debugUI);
+        
+        // Style the debug UI
+        const style = document.createElement('style');
+        style.textContent = `
+            .debug-ui {
+                position: fixed;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+                font-family: monospace;
+                z-index: 9999;
+            }
+            .debug-header {
+                font-weight: bold;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            .debug-ui button {
+                display: block;
+                width: 100%;
+                margin: 5px 0;
+                padding: 5px;
+                background: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            .debug-ui button:hover {
+                background: #45a049;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add event listeners
+        document.getElementById('test-rapier-btn').addEventListener('click', testRapierPhysics);
+    }
+}); 
