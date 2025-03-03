@@ -76,30 +76,67 @@ function createCarPhysics(world, position, dimensions) {
     
     const { width, height, length } = dimensions;
     
-    // Create a rigid body for the car
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-        .setTranslation(position.x, position.y, position.z)
-        // Set reasonable mass and damping values for a car
-        .setMass(1500) // 1500kg - typical car weight
-        .setLinearDamping(0.5) // Represents air resistance and rolling friction
-        .setAngularDamping(0.8); // Restricts how quickly the car can spin
-    
-    const carBody = world.createRigidBody(rigidBodyDesc);
-    
-    // Create a collider for the car (box shape)
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
-        .setRestitution(0.1)  // Low bounciness for a car
-        .setFriction(0.9)     // High friction for tires
-        .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max);
-    
-    world.createCollider(colliderDesc, carBody);
-    
-    // Initial linear velocity limit - help prevent extreme accelerations at startup
-    carBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    
-    console.log("Created car physics body with proper damping and friction");
-    
-    return carBody;
+    try {
+        console.log('Creating car physics body with Rapier API version check');
+        
+        // Create a rigid body for the car
+        let rigidBodyDesc;
+        
+        // First create the basic rigid body description
+        rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(position.x, position.y, position.z);
+        
+        // Set properties if these methods exist (compatible with different Rapier versions)
+        if (typeof rigidBodyDesc.setMass === 'function') {
+            console.log('Using Rapier API with explicit mass setting');
+            rigidBodyDesc
+                .setMass(1500) // 1500kg - typical car weight
+                .setLinearDamping(0.5) // Air resistance and rolling friction
+                .setAngularDamping(0.8); // Restricts how quickly the car can spin
+        } else {
+            console.log('Using alternative Rapier API (mass will be calculated from collider)');
+            // Some versions of Rapier calculate mass from the collider instead
+            if (typeof rigidBodyDesc.setLinearDamping === 'function') {
+                rigidBodyDesc.setLinearDamping(0.5);
+            }
+            if (typeof rigidBodyDesc.setAngularDamping === 'function') {
+                rigidBodyDesc.setAngularDamping(0.8);
+            }
+        }
+        
+        const carBody = world.createRigidBody(rigidBodyDesc);
+        
+        // Create a collider for the car (box shape)
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
+            .setRestitution(0.1)  // Low bounciness for a car
+            .setFriction(0.9);    // High friction for tires
+        
+        // Set friction combine rule if available in this version
+        if (RAPIER.CoefficientCombineRule && typeof colliderDesc.setFrictionCombineRule === 'function') {
+            colliderDesc.setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max);
+        }
+        
+        // Create the collider attached to the rigid body
+        world.createCollider(colliderDesc, carBody);
+        
+        // Initialize velocity if this method exists
+        if (typeof carBody.setLinvel === 'function') {
+            carBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        }
+        
+        console.log("Created car physics body successfully");
+        
+        return carBody;
+    } catch (error) {
+        console.error("Error creating car physics body:", error);
+        console.error("Rapier API available:", Object.keys(RAPIER));
+        if (RAPIER.RigidBodyDesc) {
+            console.error("RigidBodyDesc methods:", Object.getOwnPropertyNames(RAPIER.RigidBodyDesc.prototype));
+            console.log("Dynamic function:", RAPIER.RigidBodyDesc.dynamic);
+            const desc = RAPIER.RigidBodyDesc.dynamic();
+            console.log("Dynamic result methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(desc)));
+        }
+        return null;
+    }
 }
 
 // Create a ground plane
@@ -109,192 +146,194 @@ function createGroundPlane(world) {
         return null;
     }
     
-    // Create a static rigid body for the ground
-    const groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
-    const groundBody = world.createRigidBody(groundBodyDesc);
-    
-    // Create a collider for the ground (large cuboid)
-    const groundColliderDesc = RAPIER.ColliderDesc.cuboid(100, 0.1, 100)
-        .setFriction(0.7);
-    
-    world.createCollider(groundColliderDesc, groundBody);
-    
-    return groundBody;
+    try {
+        console.log('Creating ground plane with Rapier API version check');
+        
+        // Create a static rigid body for the ground
+        const groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
+        const groundBody = world.createRigidBody(groundBodyDesc);
+        
+        // Create a collider for the ground (large cuboid)
+        const groundColliderDesc = RAPIER.ColliderDesc.cuboid(100, 0.1, 100);
+        
+        // Set friction if the method exists
+        if (typeof groundColliderDesc.setFriction === 'function') {
+            groundColliderDesc.setFriction(0.7);
+        }
+        
+        world.createCollider(groundColliderDesc, groundBody);
+        
+        console.log('Ground plane created successfully');
+        return groundBody;
+    } catch (error) {
+        console.error('Error creating ground plane:', error);
+        console.error('Rapier API available:', Object.keys(RAPIER));
+        if (RAPIER.ColliderDesc) {
+            console.log('Available ColliderDesc methods:', 
+                Object.getOwnPropertyNames(RAPIER.ColliderDesc.prototype));
+        }
+        return null;
+    }
 }
 
 // Apply forces to a car body based on controls
 function applyCarControls(carBody, controls) {
     if (!carBody) return;
     
-    const { steering, acceleration, braking } = controls;
-    
-    // Get forward direction in world space
-    const rotation = carBody.rotation();
-    const forwardDir = { x: 0, y: 0, z: -1 };
-    
-    // Apply rotation to get world forward direction
-    const worldForward = { x: 0, y: 0, z: 0 };
-    const q = rotation;
-    
-    // Apply quaternion rotation to forward vector manually for better accuracy
-    const x = forwardDir.x;
-    const y = forwardDir.y;
-    const z = forwardDir.z;
-    
-    // Transform direction vector by quaternion (q v q*)
-    worldForward.x = (1 - 2 * (q.y * q.y + q.z * q.z)) * x + 2 * (q.x * q.y - q.w * q.z) * y + 2 * (q.x * q.z + q.w * q.y) * z;
-    worldForward.y = 2 * (q.x * q.y + q.w * q.z) * x + (1 - 2 * (q.x * q.x + q.z * q.z)) * y + 2 * (q.y * q.z - q.w * q.x) * z;
-    worldForward.z = 2 * (q.x * q.z - q.w * q.y) * x + 2 * (q.y * q.z + q.w * q.x) * y + (1 - 2 * (q.x * q.x + q.y * q.y)) * z;
-    
-    // Normalize the vector
-    const len = Math.sqrt(worldForward.x * worldForward.x + worldForward.y * worldForward.y + worldForward.z * worldForward.z);
-    if (len > 0) {
-        worldForward.x /= len;
-        worldForward.y /= len;
-        worldForward.z /= len;
-    }
-    
-    // Speed constants
-    const maxSpeedKmh = 100;  // 100 km/h forward max
-    const reverseMaxSpeedKmh = 50;  // 50 km/h reverse max
-    
-    // Convert to m/s (physics units)
-    const maxSpeedMs = maxSpeedKmh / 3.6;
-    const reverseMaxSpeedMs = reverseMaxSpeedKmh / 3.6;
-    
-    // Get current linear velocity
-    const vel = carBody.linvel();
-    const velMag = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
-    
-    // Calculate speed in km/h for display/debugging
-    const speedKmh = velMag * 3.6;
-    
-    // Determine if we're moving forward or backward relative to the car's orientation
-    const dotProduct = worldForward.x * vel.x + worldForward.z * vel.z;
-    const isMovingForward = dotProduct >= 0;
-    
-    // AGGRESSIVE SPEED LIMITING
-    // Always check and enforce speed limits
-    if (velMag > 0.1) {
-        // Create limited velocity vector
-        let limitedVel = { x: vel.x, y: vel.y, z: vel.z };
-        let needsLimiting = false;
+    try {
+        const { steering, acceleration, braking } = controls;
         
-        // Apply appropriate speed limit based on direction
-        const effectiveSpeedLimit = isMovingForward ? maxSpeedMs : reverseMaxSpeedMs;
-        
-        if (velMag > effectiveSpeedLimit) {
-            // Scale velocity to the maximum allowed
-            const scaleFactor = effectiveSpeedLimit / velMag;
-            limitedVel.x *= scaleFactor;
-            limitedVel.z *= scaleFactor;
-            needsLimiting = true;
-            
-            // Debug logging when limiting
-            console.log(`Speed limited: ${speedKmh.toFixed(1)} km/h → ${(effectiveSpeedLimit * 3.6).toFixed(1)} km/h [${isMovingForward ? 'forward' : 'reverse'}]`);
+        // Check if required methods exist
+        if (typeof carBody.rotation !== 'function' || typeof carBody.linvel !== 'function') {
+            console.warn('Car body missing required methods for physics control');
+            return;
         }
         
-        // Apply the limit if needed
-        if (needsLimiting) {
-            carBody.setLinvel(limitedVel, true);
-            
-            // Update local variables to reflect the change
-            vel.x = limitedVel.x;
-            vel.y = limitedVel.y;
-            vel.z = limitedVel.z;
-        }
-    }
-    
-    // Apply forces based on controls
-    const maxForce = 1500; // Maximum force in Newtons
-    
-    // Calculate speed factor for force application (reduces force as speed increases)
-    const speedFactor = 1 - Math.min(1, (speedKmh / maxSpeedKmh));
-    
-    if (acceleration > 0) {
-        // Only apply force if under speed limit
-        if (isMovingForward && speedKmh < maxSpeedKmh) {
-            // Reduce force as we approach max speed
-            const appliedForce = maxForce * acceleration * Math.max(0.2, speedFactor);
-            
-            const force = {
-                x: worldForward.x * appliedForce,
-                y: 0,
-                z: worldForward.z * appliedForce
-            };
-            carBody.applyForce(force, true);
-        } else if (!isMovingForward) {
-            // If moving backwards and accelerating, apply more force to help change direction
-            const appliedForce = maxForce * 1.5 * acceleration;
-            
-            const force = {
-                x: worldForward.x * appliedForce,
-                y: 0,
-                z: worldForward.z * appliedForce
-            };
-            carBody.applyForce(force, true);
-        }
-    }
-    
-    // Apply braking/reverse based on controls
-    if (braking > 0) {
-        if (isMovingForward && velMag > 0.1) {
-            // Apply braking force if moving forward
-            const brakeForce = 2000; // Braking force in Newtons
-            const force = {
-                x: -vel.x / velMag * brakeForce * braking,
-                y: 0,
-                z: -vel.z / velMag * brakeForce * braking
-            };
-            carBody.applyForce(force, true);
-        } else if (speedKmh < reverseMaxSpeedKmh) {
-            // Apply reverse acceleration force
-            const reverseForce = maxForce * 0.5 * braking; // Less force for reverse
-            const force = {
-                x: -worldForward.x * reverseForce,
-                y: 0,
-                z: -worldForward.z * reverseForce
-            };
-            carBody.applyForce(force, true);
-        }
-    }
-    
-    // Apply steering torque with better handling
-    if (Math.abs(steering) > 0.01) {
-        // Adjust steering force based on speed
-        // Stronger at low speeds, reduced at high speeds for stability
-        const maxSteeringForce = 100;
-        const minSteeringForce = 20;
+        // Get forward direction in world space
+        const rotation = carBody.rotation();
+        const forwardDir = { x: 0, y: 0, z: -1 };
         
-        const speedFactor = Math.min(1, velMag / maxSpeedMs);
-        const steeringForce = maxSteeringForce - (maxSteeringForce - minSteeringForce) * speedFactor;
+        // Apply rotation to get world forward direction
+        const worldForward = { x: 0, y: 0, z: 0 };
+        const q = rotation;
         
-        // Apply steering torque around Y axis
-        const torque = { x: 0, y: steering * steeringForce, z: 0 };
-        carBody.applyTorque(torque, true);
+        // Apply quaternion rotation to forward vector manually for better accuracy
+        const x = forwardDir.x;
+        const y = forwardDir.y;
+        const z = forwardDir.z;
         
-        // Apply counter-force for drift correction at high speeds
-        if (velMag > 5) {
-            // Calculate drift correction
-            const rightDir = { 
-                x: worldForward.z, 
-                y: 0, 
-                z: -worldForward.x 
-            };
-            
-            // Project velocity onto right vector to measure lateral velocity
-            const lateralVel = vel.x * rightDir.x + vel.z * rightDir.z;
-            
-            // Apply correction force perpendicular to forward direction
-            const driftCorrection = -lateralVel * 0.1 * speedFactor;
-            const correctionForce = {
-                x: rightDir.x * driftCorrection,
-                y: 0,
-                z: rightDir.z * driftCorrection
-            };
-            
-            carBody.applyForce(correctionForce, true);
+        // Transform direction vector by quaternion (q v q*)
+        worldForward.x = (1 - 2 * (q.y * q.y + q.z * q.z)) * x + 2 * (q.x * q.y - q.w * q.z) * y + 2 * (q.x * q.z + q.w * q.y) * z;
+        worldForward.y = 2 * (q.x * q.y + q.w * q.z) * x + (1 - 2 * (q.x * q.x + q.z * q.z)) * y + 2 * (q.y * q.z - q.w * q.x) * z;
+        worldForward.z = 2 * (q.x * q.z - q.w * q.y) * x + 2 * (q.y * q.z + q.w * q.x) * y + (1 - 2 * (q.x * q.x + q.y * q.y)) * z;
+        
+        // Normalize the vector
+        const len = Math.sqrt(worldForward.x * worldForward.x + worldForward.y * worldForward.y + worldForward.z * worldForward.z);
+        if (len > 0) {
+            worldForward.x /= len;
+            worldForward.y /= len;
+            worldForward.z /= len;
         }
+        
+        // Speed constants
+        const maxSpeedKmh = 100;  // 100 km/h forward max
+        const reverseMaxSpeedKmh = 50;  // 50 km/h reverse max
+        
+        // Convert to m/s (physics units)
+        const maxSpeedMs = maxSpeedKmh / 3.6;
+        const reverseMaxSpeedMs = reverseMaxSpeedKmh / 3.6;
+        
+        // Get current linear velocity
+        const vel = carBody.linvel();
+        const velMag = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+        
+        // Calculate speed in km/h for display/debugging
+        const speedKmh = velMag * 3.6;
+        
+        // Determine if we're moving forward or backward relative to the car's orientation
+        const dotProduct = worldForward.x * vel.x + worldForward.z * vel.z;
+        const isMovingForward = dotProduct >= 0;
+        
+        // SPEED LIMITING - only if setLinvel method exists
+        if (velMag > 0.1 && typeof carBody.setLinvel === 'function') {
+            // Create limited velocity vector
+            let limitedVel = { x: vel.x, y: vel.y, z: vel.z };
+            let needsLimiting = false;
+            
+            // Apply appropriate speed limit based on direction
+            const effectiveSpeedLimit = isMovingForward ? maxSpeedMs : reverseMaxSpeedMs;
+            
+            if (velMag > effectiveSpeedLimit) {
+                // Scale velocity to the maximum allowed
+                const scaleFactor = effectiveSpeedLimit / velMag;
+                limitedVel.x *= scaleFactor;
+                limitedVel.z *= scaleFactor;
+                needsLimiting = true;
+            }
+            
+            // Apply the limit if needed
+            if (needsLimiting) {
+                carBody.setLinvel(limitedVel, true);
+                
+                // Update local variables to reflect the change
+                vel.x = limitedVel.x;
+                vel.y = limitedVel.y;
+                vel.z = limitedVel.z;
+            }
+        }
+        
+        // Apply forces based on controls - only if applyForce method exists
+        if (typeof carBody.applyForce === 'function') {
+            const maxForce = 1500; // Maximum force in Newtons
+            
+            // Calculate speed factor for force application (reduces force as speed increases)
+            const speedFactor = 1 - Math.min(1, (speedKmh / maxSpeedKmh));
+            
+            if (acceleration > 0) {
+                // Only apply force if under speed limit
+                if (isMovingForward && speedKmh < maxSpeedKmh) {
+                    // Reduce force as we approach max speed
+                    const appliedForce = maxForce * acceleration * Math.max(0.2, speedFactor);
+                    
+                    const force = {
+                        x: worldForward.x * appliedForce,
+                        y: 0,
+                        z: worldForward.z * appliedForce
+                    };
+                    carBody.applyForce(force, true);
+                } else if (!isMovingForward) {
+                    // If moving backwards and accelerating, apply more force to help change direction
+                    const appliedForce = maxForce * 1.5 * acceleration;
+                    
+                    const force = {
+                        x: worldForward.x * appliedForce,
+                        y: 0,
+                        z: worldForward.z * appliedForce
+                    };
+                    carBody.applyForce(force, true);
+                }
+            }
+            
+            // Apply braking/reverse based on controls
+            if (braking > 0) {
+                if (isMovingForward && velMag > 0.1) {
+                    // Apply braking force if moving forward
+                    const brakeForce = 2000; // Braking force in Newtons
+                    const force = {
+                        x: -vel.x / velMag * brakeForce * braking,
+                        y: 0,
+                        z: -vel.z / velMag * brakeForce * braking
+                    };
+                    carBody.applyForce(force, true);
+                } else if (speedKmh < reverseMaxSpeedKmh) {
+                    // Apply reverse acceleration force
+                    const reverseForce = maxForce * 0.5 * braking; // Less force for reverse
+                    const force = {
+                        x: -worldForward.x * reverseForce,
+                        y: 0,
+                        z: -worldForward.z * reverseForce
+                    };
+                    carBody.applyForce(force, true);
+                }
+            }
+            
+            // Apply steering torque - only if applyTorque method exists
+            if (Math.abs(steering) > 0.01 && typeof carBody.applyTorque === 'function') {
+                // Adjust steering force based on speed
+                // Stronger at low speeds, reduced at high speeds for stability
+                const maxSteeringForce = 100;
+                const minSteeringForce = 20;
+                
+                const speedFactor = Math.min(1, velMag / maxSpeedMs);
+                const steeringForce = maxSteeringForce - (maxSteeringForce - minSteeringForce) * speedFactor;
+                
+                // Apply steering torque around Y axis
+                const torque = { x: 0, y: steering * steeringForce, z: 0 };
+                carBody.applyTorque(torque, true);
+            }
+        }
+    } catch (error) {
+        console.error('Error applying car controls:', error);
     }
 }
 

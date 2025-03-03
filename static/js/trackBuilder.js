@@ -12,11 +12,11 @@ function buildTrack(options = {}) {
     const config = {
         trackWidth: 10,         // Width of the track
         trackLength: 100,       // Length for a straight track section
-        trackShape: 'oval',     // oval, figure8, custom
+        trackShape: 'figure8',     // oval, figure8, custom
         trackColor: 0x333333,   // Asphalt color
         groundColor: 0x1e824c,  // Grass color
         groundSize: 200,        // Size of the ground plane
-        barrierHeight: 1,       // Height of track barriers
+        barrierHeight: 10,       // Height of track barriers
         barrierColor: 0xdddddd, // Color of barriers
         ...options
     };
@@ -79,7 +79,7 @@ function createOvalTrack(parent, config) {
     
     // Add start/finish line
     const lineWidth = config.trackWidth;
-    const lineGeometry = new THREE.PlaneGeometry(lineWidth, 1);
+    const lineGeometry = new THREE.PlaneGeometry(1, lineWidth);
     const lineMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
     const startLine = new THREE.Mesh(lineGeometry, lineMaterial);
     startLine.rotation.x = -Math.PI / 2;
@@ -150,25 +150,27 @@ function addLaneMarkings(parent, shape, innerRadius, outerRadius) {
         });
         
         try {
-            // In newer Three.js versions, we need to use different approaches
-            // for creating circular paths
-            
-            // Method 1: Using BufferGeometry and setFromPoints
+            // Create points for the middle lane line
             const points = [];
             const segments = 64;
             for (let i = 0; i <= segments; i++) {
                 const theta = (i / segments) * Math.PI * 2;
                 points.push(new THREE.Vector3(
                     Math.cos(theta) * middleRadius,
-                    0,
+                    0,  // Set to 0 because we'll rotate the entire line
                     Math.sin(theta) * middleRadius
                 ));
             }
             
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             const centerLine = new THREE.Line(geometry, dashedLineMaterial);
+            
+            // Rotate to match the track orientation
             centerLine.rotation.x = -Math.PI / 2;
-            centerLine.position.y = 0.03; // Slightly above track
+            
+            // Slightly above track surface to prevent z-fighting
+            centerLine.position.y = 0.02;
+            
             centerLine.computeLineDistances(); // Required for dashed lines
             parent.add(centerLine);
             

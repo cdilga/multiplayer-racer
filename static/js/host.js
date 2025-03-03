@@ -19,7 +19,10 @@ const gameState = {
         rapier: null
     },
     gameActive: false,
-    showStats: false // Display stats toggle
+    showStats: false, // Display stats toggle
+    showPhysicsDebug: false,
+    physicsDebugObjects: [],
+    physicsDebugLogs: null
 };
 
 // DOM elements
@@ -53,6 +56,11 @@ document.addEventListener('keydown', (e) => {
         } else {
             elements.statsOverlay.classList.add('hidden');
         }
+    }
+    
+    // Add physics debug visualization toggle (F4)
+    if (e.key === 'F4' || e.key === 'f4') {
+        togglePhysicsDebug();
     }
 });
 
@@ -327,35 +335,54 @@ function initGame() {
         
         gameState.scene.add(gameState.track);
         
-        // Initialize physics world
-        initPhysics();
-        
-        // Create cars for each player with spread-out starting positions
-        const playerIds = Object.keys(gameState.players);
-        
-        // Offset each car on the track to avoid overlapping
-        playerIds.forEach((playerId, index) => {
-            const player = gameState.players[playerId];
+        // Initialize physics world - THIS IS ASYNC and needs to be waited for
+        // Initialize physics world and then create cars
+        initPhysics().then((physicsInitialized) => {
+            // Now create cars after physics is initialized
+            console.log('Physics initialized, now creating cars');
             
-            // Set starting positions in a spaced line on the track
-            player.position = [0, 0.5, -20 + (index * 5)]; // Line them up at the start line with 5 units spacing
-            createPlayerCar(playerId, player.color);
-        });
-        
-        // Force multiple renders to ensure everything is displayed correctly
-        gameState.renderer.render(gameState.scene, gameState.camera);
-        
-        // Wait a short time before starting the game loop to ensure DOM is fully updated
-        setTimeout(() => {
-            // Force another render after a short delay
+            // Create cars for each player with spread-out starting positions
+            const playerIds = Object.keys(gameState.players);
+            
+            // Offset each car on the track to avoid overlapping
+            playerIds.forEach((playerId, index) => {
+                const player = gameState.players[playerId];
+                
+                // Set starting positions in a spaced line on the track
+                player.position = [0, 0.5, -20 + (index * 5)]; // Line them up at the start line with 5 units spacing
+                createPlayerCar(playerId, player.color);
+            });
+            
+            // Force multiple renders to ensure everything is displayed correctly
             gameState.renderer.render(gameState.scene, gameState.camera);
             
-            // Start game loop
-            animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+            // Wait a short time before starting the game loop to ensure DOM is fully updated
+            setTimeout(() => {
+                // Force another render after a short delay
+                gameState.renderer.render(gameState.scene, gameState.camera);
+                
+                // Start game loop
+                animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+                
+                // Mark initialization as complete
+                isInitializing = false;
+            }, 50);
+        }).catch(error => {
+            console.error('Error initializing physics:', error);
             
-            // Mark initialization as complete
+            // Create cars anyway, but without physics bodies
+            console.warn('Creating cars without physics bodies due to initialization error');
+            const playerIds = Object.keys(gameState.players);
+            playerIds.forEach((playerId, index) => {
+                const player = gameState.players[playerId];
+                player.position = [0, 0.5, -20 + (index * 5)];
+                createPlayerCar(playerId, player.color);
+            });
+            
+            // Start the game loop anyway
+            animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
             isInitializing = false;
-        }, 50);
+        });
         
         // Handle window resize
         window.removeEventListener('resize', onWindowResize); // Remove any existing handlers
@@ -446,38 +473,45 @@ function createPlayerCar(playerId, carColor) {
             length: 4    // Car length
         };
         
-        // Create physics body for car
-        physicsBody = rapierPhysics.createCarPhysics(
-            gameState.physics.world,
-            { x: player.position[0], y: player.position[1], z: player.position[2] },
-            carDimensions
-        );
-        
-        // If the physics body was created successfully
-        if (physicsBody) {
-            // Initialize rotation from player data if available
-            if (player.rotation && player.rotation.length >= 3) {
-                // Convert Euler rotation to quaternion
-                const euler = new THREE.Euler(
-                    player.rotation[0],
-                    player.rotation[1],
-                    player.rotation[2],
-                    'XYZ'
-                );
-                const quaternion = new THREE.Quaternion().setFromEuler(euler);
-                
-                // Set initial rotation of physics body
-                physicsBody.setRotation({
-                    x: quaternion.x,
-                    y: quaternion.y,
-                    z: quaternion.z,
-                    w: quaternion.w
-                }, true);
-            }
+        try {
+            // Create physics body for car
+            physicsBody = rapierPhysics.createCarPhysics(
+                gameState.physics.world,
+                { x: player.position[0], y: player.position[1], z: player.position[2] },
+                carDimensions
+            );
             
-            console.log('Physics body created successfully');
-        } else {
-            console.warn('Failed to create physics body for car');
+            // Check if physics body was created properly
+            if (physicsBody) {
+                console.log('Physics body created successfully for player', playerId);
+                console.log('Physics body type:', typeof physicsBody);
+                console.log('Physics body methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(physicsBody)));
+                
+                // Initialize rotation from player data if available
+                if (player.rotation && player.rotation.length >= 3) {
+                    // Convert Euler rotation to quaternion
+                    const euler = new THREE.Euler(
+                        player.rotation[0],
+                        player.rotation[1],
+                        player.rotation[2],
+                        'XYZ'
+                    );
+                    const quaternion = new THREE.Quaternion().setFromEuler(euler);
+                    
+                    // Set initial rotation of physics body
+                    physicsBody.setRotation({
+                        x: quaternion.x,
+                        y: quaternion.y,
+                        z: quaternion.z,
+                        w: quaternion.w
+                    }, true);
+                }
+            } else {
+                console.error('Physics body creation failed - returned null/undefined');
+            }
+        } catch (error) {
+            console.error('Error creating physics body:', error);
+            physicsBody = null;
         }
     }
     
@@ -519,26 +553,37 @@ function createPlayerCar(playerId, carColor) {
 async function initPhysics() {
     console.log('Initializing physics with Rapier');
     
-    // Check if Rapier is already loaded
-    if (window.rapierLoaded) {
-        console.log('Rapier is already loaded, initializing physics');
-        await initializeWithRapier();
-    } else {
-        console.log('Waiting for Rapier to load...');
-        
-        // Set up event listener for when Rapier is ready
-        window.addEventListener('rapier-ready', async function onRapierReady() {
-            console.log('Received rapier-ready event, initializing physics');
-            window.removeEventListener('rapier-ready', onRapierReady);
-            await initializeWithRapier();
-        });
-        
-        // Fallback timeout in case the event never fires
-        setTimeout(() => {
-            console.warn('Timed out waiting for Rapier to be ready');
-            setupFallbackPhysics();
-        }, 5000);
-    }
+    // Return a promise that resolves when physics is initialized
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Check if Rapier is already loaded
+            if (window.rapierLoaded) {
+                console.log('Rapier is already loaded, initializing physics');
+                await initializeWithRapier();
+                resolve(true);
+            } else {
+                console.log('Waiting for Rapier to load...');
+                
+                // Set up event listener for when Rapier is ready
+                window.addEventListener('rapier-ready', async function onRapierReady() {
+                    console.log('Received rapier-ready event, initializing physics');
+                    window.removeEventListener('rapier-ready', onRapierReady);
+                    await initializeWithRapier();
+                    resolve(true);
+                });
+                
+                // Fallback timeout in case the event never fires
+                setTimeout(() => {
+                    console.warn('Timed out waiting for Rapier to be ready');
+                    setupFallbackPhysics();
+                    resolve(false); // Resolve with false to indicate physics init failed
+                }, 5000);
+            }
+        } catch (error) {
+            console.error('Physics initialization error:', error);
+            reject(error);
+        }
+    });
     
     async function initializeWithRapier() {
         try {
@@ -559,13 +604,17 @@ async function initPhysics() {
                 
                 // Send debugging info to stats overlay if it exists
                 updateStatsDisplay();
+                
+                return true;
             } else {
                 console.error('Failed to initialize Rapier');
                 setupFallbackPhysics();
+                return false;
             }
         } catch (error) {
             console.error('Error initializing physics with Rapier:', error);
             setupFallbackPhysics();
+            return false;
         }
     }
 }
@@ -610,6 +659,17 @@ function gameLoopWithoutRecursion(timestamp) {
             
             if (!car || !car.mesh) {
                 return;
+            }
+            
+            // Attempt to create a physics body if the car doesn't have one
+            // and physics is initialized
+            if (!car.physicsBody && gameState.physics.initialized && gameState.physics.usingRapier) {
+                // Only try to create once per second to avoid spamming
+                if (!car.lastPhysicsBodyCreationAttempt || 
+                    (timestamp - car.lastPhysicsBodyCreationAttempt > 1000)) {
+                    car.lastPhysicsBodyCreationAttempt = timestamp;
+                    ensureCarHasPhysicsBody(playerId);
+                }
             }
             
             // If we have a physics body, update from physics and apply controls
@@ -713,6 +773,11 @@ function gameLoopWithoutRecursion(timestamp) {
             }
         });
         
+        // Handle physics debug visualization
+        if (gameState.showPhysicsDebug) {
+            updatePhysicsDebugVisualization();
+        }
+        
         // Render scene
         gameState.renderer.render(gameState.scene, gameState.camera);
         
@@ -771,6 +836,12 @@ function updateStatsDisplay() {
     
     statsHTML += `<div>Physics: ${physicsStatus}</div>`;
     statsHTML += `<div>Rapier Loaded: ${window.rapierLoaded ? '<span style="color:green">Yes</span>' : '<span style="color:red">No</span>'}</div>`;
+    
+    // Add physics debug status
+    const debugStatus = gameState.showPhysicsDebug ? 
+        '<span style="color:green">ON</span> (Press F4 to toggle)' : 
+        '<span style="color:#888">OFF</span> (Press F4 to toggle)';
+    statsHTML += `<div>Physics Debug: ${debugStatus}</div>`;
     
     // Add FPS counter
     const now = performance.now();
@@ -958,4 +1029,228 @@ function forceDOMRender() {
         gameState.renderer.render(gameState.scene, gameState.camera);
         console.log('Three.js render forced');
     }
+}
+
+// Physics debug visualization
+function togglePhysicsDebug() {
+    // Initialize the debug property if it doesn't exist
+    if (typeof gameState.showPhysicsDebug === 'undefined') {
+        gameState.showPhysicsDebug = false;
+        gameState.physicsDebugObjects = [];
+    }
+    
+    // Toggle the debug state
+    gameState.showPhysicsDebug = !gameState.showPhysicsDebug;
+    
+    console.log(`Physics debug visualization: ${gameState.showPhysicsDebug ? 'ON' : 'OFF'}`);
+    
+    // Remove existing debug objects if turning off
+    if (!gameState.showPhysicsDebug) {
+        removePhysicsDebugObjects();
+    } else {
+        // Force immediate update if turning on
+        updatePhysicsDebugVisualization();
+    }
+}
+
+// Remove all physics debug visualization objects
+function removePhysicsDebugObjects() {
+    if (gameState.physicsDebugObjects && gameState.physicsDebugObjects.length > 0) {
+        gameState.physicsDebugObjects.forEach(obj => {
+            if (obj && gameState.scene) {
+                gameState.scene.remove(obj);
+            }
+        });
+        gameState.physicsDebugObjects = [];
+    }
+}
+
+// Update or create physics debug visualization
+function updatePhysicsDebugVisualization() {
+    // Clear existing debug objects
+    removePhysicsDebugObjects();
+    
+    // Initialize logging status if not already done
+    if (!gameState.physicsDebugLogs) {
+        gameState.physicsDebugLogs = {
+            noPhysicsWarning: false,
+            carsWithoutPhysics: {},
+            lastFullLog: 0
+        };
+    }
+    
+    // Ensure we have physics enabled
+    if (!gameState.physics.initialized || !gameState.physics.usingRapier) {
+        if (!gameState.physicsDebugLogs.noPhysicsWarning) {
+            console.warn('Physics debug visualization requested but physics is not available');
+            gameState.physicsDebugLogs.noPhysicsWarning = true;
+        }
+        return;
+    }
+    
+    // Only log full debug info once per session or every 10 seconds
+    const now = Date.now();
+    const shouldLogFull = !gameState.physicsDebugLogs.lastFullLog || 
+                         (now - gameState.physicsDebugLogs.lastFullLog > 10000);
+    
+    if (shouldLogFull) {
+        console.log('Updating physics debug visualization');
+        console.log('Number of cars:', Object.keys(gameState.cars).length);
+        gameState.physicsDebugLogs.lastFullLog = now;
+    }
+    
+    // Create wireframe boxes for each car's physics body
+    Object.keys(gameState.cars).forEach(playerId => {
+        const car = gameState.cars[playerId];
+        
+        if (!car || !car.physicsBody) {
+            // Only log this warning once per car
+            if (!gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
+                console.warn(`Car ${playerId} has no physics body`);
+                gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = true;
+            }
+            return;
+        }
+        
+        // If a car previously didn't have physics but now does, log that
+        if (gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
+            console.log(`Car ${playerId} now has a physics body`);
+            gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = false;
+        }
+        
+        // Get dimensions from the car model (physics body is a box)
+        const carWidth = 2;  // Standard car width
+        const carHeight = 1; // Standard car height
+        const carLength = 4; // Standard car length
+        
+        // Create wireframe box geometry
+        const wireGeometry = new THREE.BoxGeometry(carWidth, carHeight, carLength);
+        const wireframe = new THREE.LineSegments(
+            new THREE.WireframeGeometry(wireGeometry),
+            new THREE.LineBasicMaterial({ 
+                color: 0x00ff00,  // Green wireframe
+                linewidth: 2      // Line width (note: may not work in WebGL)
+            })
+        );
+        
+        // Get physics body position and rotation
+        const physicsPos = car.physicsBody.translation();
+        const physicsRot = car.physicsBody.rotation();
+        
+        if (shouldLogFull) {
+            console.log(`Physics position for car ${playerId}:`, physicsPos);
+            console.log(`Physics rotation for car ${playerId}:`, physicsRot);
+        }
+        
+        // Set wireframe position to match physics body
+        wireframe.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
+        
+        // Set wireframe rotation to match physics body
+        wireframe.quaternion.set(
+            physicsRot.x,
+            physicsRot.y,
+            physicsRot.z,
+            physicsRot.w
+        );
+        
+        // Add to scene and track for later removal
+        gameState.scene.add(wireframe);
+        gameState.physicsDebugObjects.push(wireframe);
+        
+        if (shouldLogFull) {
+            console.log(`Added wireframe for car ${playerId}`);
+        }
+    });
+    
+    // Also add a ground plane wireframe if we have one
+    if (gameState.physics.bodies && gameState.physics.bodies.ground) {
+        if (shouldLogFull) {
+            console.log('Adding ground plane wireframe');
+        }
+        // Ground plane is a cuboid with dimensions 100x0.1x100
+        const groundGeometry = new THREE.BoxGeometry(200, 0.2, 200);
+        const groundWireframe = new THREE.LineSegments(
+            new THREE.WireframeGeometry(groundGeometry),
+            new THREE.LineBasicMaterial({ 
+                color: 0x0000ff,  // Blue wireframe
+                linewidth: 1
+            })
+        );
+        
+        // Ground is at y=0
+        groundWireframe.position.set(0, 0, 0);
+        
+        // Add to scene and track
+        gameState.scene.add(groundWireframe);
+        gameState.physicsDebugObjects.push(groundWireframe);
+        
+        if (shouldLogFull) {
+            console.log('Ground wireframe added');
+        }
+    } else if (shouldLogFull) {
+        console.warn('No ground physics body found');
+    }
+    
+    if (shouldLogFull) {
+        console.log(`Total physics debug objects created: ${gameState.physicsDebugObjects.length}`);
+    }
+}
+
+// Function to ensure a car has a physics body
+function ensureCarHasPhysicsBody(playerId) {
+    const car = gameState.cars[playerId];
+    const player = gameState.players[playerId];
+    
+    if (!car || !player) return false;
+    
+    // If car already has a physics body, nothing to do
+    if (car.physicsBody) return true;
+    
+    // Only try to create a physics body if physics is properly initialized
+    if (!gameState.physics.initialized || !gameState.physics.world || !gameState.physics.usingRapier) {
+        return false;
+    }
+    
+    console.log(`Creating missing physics body for car ${playerId}`);
+    
+    try {
+        // Get car dimensions
+        const carDimensions = {
+            width: 2,    // Car width
+            height: 1,   // Car height
+            length: 4    // Car length
+        };
+        
+        // Create physics body for car using car's current position
+        const physicsBody = rapierPhysics.createCarPhysics(
+            gameState.physics.world,
+            { 
+                x: car.mesh.position.x, 
+                y: car.mesh.position.y, 
+                z: car.mesh.position.z 
+            },
+            carDimensions
+        );
+        
+        if (physicsBody) {
+            console.log(`Successfully created physics body for car ${playerId}`);
+            
+            // Set rotation to match visual mesh
+            const quaternion = car.mesh.quaternion.clone();
+            physicsBody.setRotation({
+                x: quaternion.x,
+                y: quaternion.y,
+                z: quaternion.z,
+                w: quaternion.w
+            }, true);
+            
+            // Assign physics body to car
+            car.physicsBody = physicsBody;
+            return true;
+        }
+    } catch (error) {
+        console.error(`Error creating physics body for car ${playerId}:`, error);
+    }
+    
+    return false;
 } 
