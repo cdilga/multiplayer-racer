@@ -195,7 +195,6 @@ socket.on('player_controls_update', (data) => {
     const { player_id, acceleration, braking, steering } = data;
     
     if (gameState.gameActive && gameState.cars[player_id]) {
-        console.log('Player controls update received:', data);
         const car = gameState.cars[player_id];
         // Validate and sanitize control inputs before assigning
         car.controls = {
@@ -205,12 +204,10 @@ socket.on('player_controls_update', (data) => {
         };
         // Update last control update timestamp
         car.lastControlUpdate = Date.now();
-        console.log('Car controls:', car.controls);
         // Force stats update since we have new control data
         if (gameState.showStats) {
             updateStatsDisplay();
 
-            console.log('Stats updated');
         }
     }
 });
@@ -296,7 +293,6 @@ function addPlayerToList(id, name, color) {
 }
 
 function showScreen(screenName) {
-    console.log('Showing screen:', screenName);
     elements.lobbyScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
     
@@ -335,9 +331,7 @@ function initGame() {
         const containerWidth = containerRect.width || 800; // Fallback width if zero
         const containerHeight = containerRect.height || 600; // Fallback height if zero
         const aspectRatio = containerWidth / containerHeight;
-        
-        console.log('Container dimensions:', containerWidth, containerHeight);
-        
+                
         gameState.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
         
         gameState.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -652,9 +646,16 @@ function gameLoopWithoutRecursion(timestamp) {
     try {
         // Schedule next frame first to avoid recursion issues
         animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
-        
+
         // Update physics if initialized
         if (gameState.physics.initialized && gameState.physics.world) {
+            // Given we've got physics, lets apply the car controls to the physics model for each of the players
+            Object.keys(gameState.cars).forEach(playerId => {
+                const car = gameState.cars[playerId];
+                if (!car || !car.physicsBody) return;
+                rapierPhysics.applyCarControls(car.physicsBody, car.controls, playerId);
+            });
+
             const now = performance.now();
             const elapsed = now - lastPhysicsUpdate;
             
@@ -833,10 +834,7 @@ function updateStatsDisplay() {
             posY = Math.round(pos.y * 100) / 100;
             posZ = Math.round(pos.z * 100) / 100;
         } else {
-            // Fallback to target position if no physics body
-            posX = Math.round(car.targetPosition.x * 100) / 100;
-            posY = Math.round(car.targetPosition.y * 100) / 100;
-            posZ = Math.round(car.targetPosition.z * 100) / 100;
+            console.error("No physics body for car", playerId);
         }
         
         // Get physics body state
@@ -852,7 +850,6 @@ function updateStatsDisplay() {
         // Get control inputs and their age
         let controlsHTML = '<div class="control-info">No controls received</div>';
         if (car.controls) {
-            console.log('Car controls received in the stats update:', car.controls);
             const timeSinceLastControl = car.lastControlUpdate ? Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
             controlsHTML = `
                 <div class="control-info">
@@ -873,8 +870,6 @@ function updateStatsDisplay() {
                     </div>
                     <div class="control-time">Last update: ${timeSinceLastControl}s ago</div>
                 </div>`;
-        } else {
-            console.log('No car controls received in the stats update');
         }
         
         statsHTML += `
