@@ -221,7 +221,8 @@ function applyCarControls(carBody, controls, playerId) {
         const isMovingForward = dotProduct >= 0;
         
         // Apply forces based on controls
-        if (typeof carBody.applyForce === 'function') {
+        if (typeof carBody.addForce === 'function') {
+            console.log('Adding forces to car', playerId);
             // Use much more force to overcome physics issues and make controls more responsive
             const maxForce = 15000; // Greatly increased for better responsiveness
             
@@ -237,7 +238,7 @@ function applyCarControls(carBody, controls, playerId) {
                     z: worldForward.z * appliedForce
                 };
                 
-                carBody.applyForce(force, true);
+                carBody.addForce(force, true);
                 
                 // Log force application with distinctive marker for easier log scanning
                 if (Math.random() < 0.05 || acceleration > 0.5) {
@@ -256,7 +257,7 @@ function applyCarControls(carBody, controls, playerId) {
                         y: 0,
                         z: -vel.z / velMag * brakeForce * braking
                     };
-                    carBody.applyForce(force, true);
+                    carBody.addForce(force, true);
                     
                     // Log braking with distinctive marker
                     if (Math.random() < 0.05 || braking > 0.5) {
@@ -269,7 +270,7 @@ function applyCarControls(carBody, controls, playerId) {
                         y: 0,
                         z: -worldForward.z * maxForce * 0.8 * braking
                     };
-                    carBody.applyForce(force, true);
+                    carBody.addForce(force, true);
                     
                     // Log reverse with distinctive marker
                     if (Math.random() < 0.05 || braking > 0.5) {
@@ -279,7 +280,7 @@ function applyCarControls(carBody, controls, playerId) {
             }
             
             // Apply steering torque with stronger forces
-            if (Math.abs(steering) > 0.01 && typeof carBody.applyTorque === 'function') {
+            if (Math.abs(steering) > 0.01 && typeof carBody.addTorque === 'function') {
                 // Increased steering forces significantly
                 const maxSteeringForce = 500;  // Greatly increased for better responsiveness
                 const minSteeringForce = 100;  // Increased for better low-speed steering
@@ -289,7 +290,7 @@ function applyCarControls(carBody, controls, playerId) {
                 const steeringForce = maxSteeringForce - (maxSteeringForce - minSteeringForce) * speedFactor;
                 
                 const torque = { x: 0, y: steering * steeringForce, z: 0 };
-                carBody.applyTorque(torque, true);
+                carBody.addTorque(torque, true);
                 
                 // Log steering with distinctive marker
                 if (Math.random() < 0.05 || Math.abs(steering) > 0.5) {

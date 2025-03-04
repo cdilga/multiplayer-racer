@@ -907,8 +907,8 @@ function resetCarPosition(playerId) {
     const startPosition = [0, 8.0, -20]; // Same height as initial spawn
     
     // Set the car's target position to the start position
-    car.targetPosition.set(startPosition[0], startPosition[1], startPosition[2]);
-    car.targetRotation.set(0, 0, 0);
+    car.physicsBody.setTranslation({ x: startPosition[0], y: startPosition[1], z: startPosition[2] });
+    car.physicsBody.setRotation({ x: 0, y: 0, z: 0 });
     
     // Reset speed and velocity tracking
     car.speed = 0;

@@ -759,31 +759,7 @@ function handleInput() {
                     }, 300);
                 }, timeout);
             };
-        }
-        
-        // Log the send event to the mobile screen
-        if (errorLog.info) {
-            errorLog.info(`Sent: a=${controls.acceleration.toFixed(1)}/b=${controls.braking.toFixed(1)}/s=${controls.steering.toFixed(1)}`, 500);
-        }
-        
-        // Show a temporary visual confirmation of sending
-        const tempIndicator = document.createElement('div');
-        tempIndicator.style.position = 'fixed';
-        tempIndicator.style.bottom = '60px';
-        tempIndicator.style.left = '10px';
-        tempIndicator.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
-        tempIndicator.style.color = 'white';
-        tempIndicator.style.padding = '5px';
-        tempIndicator.style.borderRadius = '3px';
-        tempIndicator.style.fontFamily = 'monospace';
-        tempIndicator.textContent = `Sent: ${controls.acceleration.toFixed(1)}/${controls.braking.toFixed(1)}/${controls.steering.toFixed(1)}`;
-        document.body.appendChild(tempIndicator);
-        
-        // Remove the indicator after a short time
-        setTimeout(() => {
-            document.body.removeChild(tempIndicator);
-        }, 300);
-        
+        }               
         lastInputUpdate = currentTime;
     }
 }
