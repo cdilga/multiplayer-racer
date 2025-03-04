@@ -136,4 +136,146 @@ button:disabled {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: space-between;
+}
+
+#stats-overlay {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 90vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.stats-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+.stats-section {
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 3px;
+}
+
+.player-stats {
+    margin: 10px 0;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.player-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.control-info {
+    margin-top: 5px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    margin: 3px 0;
+    gap: 8px;
+}
+
+.control-row span:first-child {
+    width: 80px;
+}
+
+.control-row .value {
+    width: 45px;
+    text-align: right;
+}
+
+.control-bar {
+    display: inline-block;
+    width: 60px;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.control-bar-center {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.control-bar-fill {
+    position: absolute;
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.1s ease-out;
+}
+
+.control-bar-fill.negative {
+    background-color: #f44336;
+    right: 50%;
+}
+
+.control-bar-fill.positive {
+    background-color: #4CAF50;
+    left: 50%;
+}
+
+.control-time {
+    font-size: 10px;
+    color: #888;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.controls-section {
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 5px;
+}
+
+.controls-header {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 3px;
+}
+
+.reset-button-container {
+    margin: 10px 0;
+    text-align: center;
+}
+
+.reset-button {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background-color 0.2s;
+}
+
+.reset-button:hover {
+    background-color: #b71c1c;
 } 

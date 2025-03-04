@@ -203,6 +203,56 @@ def create_room(data):
     emit('room_created', {'room_code': room_code})
     logger.info(f"Room created: {room_code}")
 
+@socketio.on('player_control_update')
+def player_control_update(data):
+    """
+    Handle player control updates.
+    Very simple, as all we need to do is some model validation and then pass through the controls as is to the correct room!
+    """
+    # Extract data from control update
+    player_sid = request.sid
+    room_code = data.get('room_code')
+    controls = data.get('controls', {})
+    timestamp = data.get('timestamp')
+
+    # Debug log the raw control update
+    logger.debug(f"Received control update from player {player_sid}: {data}")
+
+    # Validate required fields
+    if not all([player_sid, room_code, controls, timestamp]):
+        logger.warning(f"Invalid control update data received: {data}")
+        return
+    
+    # Validate control values are within expected ranges
+    steering = max(-1.0, min(1.0, float(controls.get('steering', 0))))
+    acceleration = max(0.0, min(1.0, float(controls.get('acceleration', 0)))) 
+    braking = max(0.0, min(1.0, float(controls.get('braking', 0))))
+
+    # Create validated control update
+    control_update = {
+        'player_id': player_sid,
+        'steering': steering,
+        'acceleration': acceleration, 
+        'braking': braking,
+        'timestamp': timestamp
+    }
+
+    # Debug log the validated control values
+    logger.debug(f"Validated controls for player {player_sid}: steering={steering:.2f}, " 
+                f"acceleration={acceleration:.2f}, braking={braking:.2f}")
+
+    # Forward the control update to all clients in the room
+    emit('player_controls_update', control_update, room=room_code)
+    
+    # Debug log the broadcast
+    logger.debug(f"Broadcasted control update to room {room_code}")
+    
+    if not room_code or room_code not in game_rooms:
+        logger.warning(f"Player {player_sid} sent control update for non-existent room {room_code}")
+        return
+    
+
+
 @socketio.on('join_game')
 def on_join_game(data):
     """Handle player joining a game room"""

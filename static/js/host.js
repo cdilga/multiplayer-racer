@@ -34,7 +34,6 @@ const gameState = {
 
 // DOM elements
 const elements = {
-    welcomeScreen: document.getElementById('welcome-screen'),
     lobbyScreen: document.getElementById('lobby-screen'),
     gameScreen: document.getElementById('game-screen'),
     createRoomBtn: document.getElementById('create-room-btn'),
@@ -58,137 +57,160 @@ const socketDebug = {
 };
 
 // Add comprehensive socket event monitoring
-socket.onAny((eventName, ...args) => {
-    // Track event counts
-    socketDebug.eventCounts[eventName] = (socketDebug.eventCounts[eventName] || 0) + 1;
+// socket.onAny((eventName, ...args) => {
+//     // Track event counts
+//     socketDebug.eventCounts[eventName] = (socketDebug.eventCounts[eventName] || 0) + 1;
     
-    // Track recent events
-    socketDebug.lastEvents.unshift({
-        event: eventName,
-        args: args,
-        timestamp: new Date().toISOString()
-    });
-    socketDebug.lastEvents = socketDebug.lastEvents.slice(0, socketDebug.maxEventHistory);
+//     // Track recent events
+//     socketDebug.lastEvents.unshift({
+//         event: eventName,
+//         args: args,
+//         timestamp: new Date().toISOString()
+//     });
+//     socketDebug.lastEvents = socketDebug.lastEvents.slice(0, socketDebug.maxEventHistory);
 
-    // Log every event with detailed information
-    console.log('🎯 Socket Event:', {
-        event: eventName,
-        count: socketDebug.eventCounts[eventName],
-        args: args,
-        timestamp: new Date().toISOString(),
-        socketId: socket.id,
-        connectedRooms: Array.from(socket.rooms || []),
-        hasListeners: socket.listeners(eventName).length > 0,
-        allRegisteredEvents: Object.keys(socket._callbacks || {})
-    });
+//     // Log every event with detailed information
+//     console.log('🎯 Socket Event:', {
+//         event: eventName,
+//         count: socketDebug.eventCounts[eventName],
+//         args: args,
+//         timestamp: new Date().toISOString(),
+//         socketId: socket.id,
+//         connectedRooms: Array.from(socket.rooms || []),
+//         hasListeners: socket.listeners(eventName).length > 0,
+//         allRegisteredEvents: Object.keys(socket._callbacks || {})
+//     });
+// });
+
+// Socket event handlers
+socket.on('connect', () => {
+    // Connected to server
 });
 
-// Consolidated socket event handlers
-const socketHandlers = {
-    connect: () => {
-        console.log('Socket connected, creating room...');
-        createRoom();
-    },
-    
-    room_created: (data) => {
-        console.log('Room created:', data);
-        gameState.roomCode = data.room_code;
-        elements.roomCodeDisplay.textContent = gameState.roomCode;
-        
-        // Update QR code and join URL
-        const qrCodeImg = document.getElementById('qr-code');
-        if (qrCodeImg) {
-            qrCodeImg.src = `/qrcode/${gameState.roomCode}`;
-        }
-        
-        // Update join URL display using server-provided IP and port
-        if (elements.joinUrl && window.serverConfig) {
-            const joinUrl = `${window.serverConfig.localIp}:${window.serverConfig.port}/player?room=${gameState.roomCode}`;
-            elements.joinUrl.textContent = joinUrl;
-        }
-        
-        showScreen('lobby');
-    },
-    
-    player_joined: (playerData) => {
-        console.log('Player joined:', playerData);
-        const { id, name, car_color } = playerData;
-        gameState.players[id] = {
-            id, name, color: car_color,
-            position: playerData.position || [0, 0.5, 0],
-            rotation: playerData.rotation || [0, 0, 0]
-        };
-        addPlayerToList(id, name, car_color);
-        elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
-    },
-    
-    player_control_update: (data) => {
-        console.log('🎮 Control Update:', {
-            raw_data: data,
-            timestamp: Date.now(),
-            socket_id: socket.id,
-            event_count: socketDebug.eventCounts['player_control_update'] || 0
-        });
-
-        // Extract data with fallbacks
-        const player_id = data.player_id || data.playerId;
-        const controls = data.controls || {};
-        const room_code = data.room_code || data.roomCode;
-
-        // Validate data
-        if (!room_code || room_code !== gameState.roomCode) {
-            console.warn('❌ Room code mismatch:', { got: room_code, expected: gameState.roomCode });
-            return;
-        }
-
-        if (!gameState.players[player_id]) {
-            console.warn('❌ Unknown player:', { player_id, known_players: Object.keys(gameState.players) });
-            return;
-        }
-
-        // Update player controls
-        gameState.players[player_id].controls = {
-            steering: controls.steering || 0,
-            acceleration: controls.acceleration || 0,
-            braking: controls.braking || 0,
-            timestamp: Date.now()
-        };
-
-        // Update visual indicators
-        const controlIndicator = document.getElementById('host-control-indicator') || createControlIndicator();
-        updateControlIndicator(controlIndicator, controls, gameState.players[player_id].name);
-
-        if (gameState.showStats) {
-            updateStatsDisplay();
-        }
-    }
-};
-
-// Register all socket handlers
-Object.entries(socketHandlers).forEach(([event, handler]) => {
-    // Remove any existing handlers for this event
-    socket.off(event);
-    // Add the new handler
-    socket.on(event, handler);
-    console.log(`Registered handler for ${event}`);
-});
-
-// Event listeners
-elements.createRoomBtn.addEventListener('click', createRoom);
+// Add event listeners for buttons
+createRoom();
 elements.startGameBtn.addEventListener('click', startGame);
 
-// Add key listener for stats toggle (F3)
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'F3' || e.key === 'f3') {
-        gameState.showStats = !gameState.showStats;
-        if (gameState.showStats) {
-            elements.statsOverlay.classList.remove('hidden');
-        } else {
-            elements.statsOverlay.classList.add('hidden');
-        }
+socket.on('room_created', (data) => {
+    gameState.roomCode = data.room_code;
+    elements.roomCodeDisplay.textContent = gameState.roomCode;
+    
+    // Get local IP address from server-provided data if available
+    let ipAddress = 'localhost';
+    let port = window.location.port || '5000';
+    
+    if (typeof serverConfig !== 'undefined') {
+        ipAddress = serverConfig.localIp;
+        port = serverConfig.port;
     }
     
-    // Add physics debug visualization toggle (F4)
+    // Update join URL with local IP instead of localhost
+    const joinUrl = `http://${ipAddress}:${port}/player`;
+    elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
+    
+    // Load QR code image
+    const qrCodeUrl = `/qrcode/${gameState.roomCode}`;
+    const qrCodeElement = document.getElementById('qr-code');
+    if (qrCodeElement) {
+        qrCodeElement.src = qrCodeUrl;
+        
+        // Add error handling in case the QR code fails to load
+        qrCodeElement.onerror = function() {
+            qrCodeElement.style.display = 'none';
+            const container = document.querySelector('.qr-code-container');
+            if (container) {
+                const errorMsg = document.createElement('p');
+                errorMsg.className = 'error';
+                errorMsg.textContent = 'QR code generation failed. Please use the room code instead.';
+                container.appendChild(errorMsg);
+            }
+        };
+    }
+    
+    // Show lobby screen
+    showScreen('lobby');
+});
+
+socket.on('player_joined', (playerData) => {
+    const { id, name, car_color } = playerData;
+    
+    // Add player to local state
+    gameState.players[id] = {
+        id,
+        name,
+        color: car_color
+    };
+    
+    // Add player to UI list
+    addPlayerToList(id, name, car_color);
+    
+    // Enable start button if we have at least one player
+    elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+});
+
+// Handle player name updates
+socket.on('player_name_updated', (data) => {
+    const { player_id, name } = data;
+    
+    // Update player name in local state
+    if (gameState.players[player_id]) {
+        gameState.players[player_id].name = name;
+        
+        // Update UI list
+        const playerElement = document.getElementById(`player-${player_id}`);
+        if (playerElement) {
+            const nameSpan = playerElement.querySelector('span:not(.player-color)');
+            if (nameSpan) {
+                nameSpan.textContent = name;
+            }
+        }
+        
+        console.log(`Player ${player_id} name updated to: ${name}`);
+    }
+});
+
+socket.on('player_left', (data) => {
+    const { player_id } = data;
+    
+    // Remove player from local state
+    delete gameState.players[player_id];
+    
+    // Remove player from UI
+    const playerElement = document.getElementById(`player-${player_id}`);
+    if (playerElement) {
+        playerElement.remove();
+    }
+    
+    // Remove player's car if game is active
+    if (gameState.gameActive && gameState.cars[player_id]) {
+        gameState.scene.remove(gameState.cars[player_id].mesh);
+        delete gameState.cars[player_id];
+    }
+    
+    // Update start button state
+    elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+});
+
+socket.on('player_controls_update', (data) => {
+    const { player_id, acceleration, braking, steering } = data;
+    
+    if (gameState.gameActive && gameState.cars[player_id]) {
+        const car = gameState.cars[player_id];
+        car.controls = { acceleration, braking, steering };
+        // Update last control update timestamp
+        car.lastControlUpdate = Date.now();
+    }
+});
+
+// Add keyboard event listener for F3/F4 keys
+document.addEventListener('keydown', (e) => {
+    // Toggle stats display (F3)
+    if (e.key === 'F3' || e.key === 'f3') {
+        gameState.showStats = !gameState.showStats;
+        elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
+    }
+    
+    // Toggle physics debug visualization (F4)
     if (e.key === 'F4' || e.key === 'f4') {
         togglePhysicsDebug();
     }
@@ -262,14 +284,10 @@ function addPlayerToList(id, name, color) {
 
 function showScreen(screenName) {
     console.log('Showing screen:', screenName);
-    elements.welcomeScreen.classList.add('hidden');
     elements.lobbyScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
     
     switch (screenName) {
-        case 'welcome':
-            elements.welcomeScreen.classList.remove('hidden');
-            break;
         case 'lobby':
             elements.lobbyScreen.classList.remove('hidden');
             break;
@@ -359,12 +377,9 @@ function initGame() {
             // Create cars for each player with spread-out starting positions
             const playerIds = Object.keys(gameState.players);
             
-            // Offset each car on the track to avoid overlapping
+            // Create cars for each player
             playerIds.forEach((playerId, index) => {
                 const player = gameState.players[playerId];
-                
-                // Set starting positions in a spaced line on the track
-                player.position = [0, 0.5, -20 + (index * 5)]; // Line them up at the start line with 5 units spacing
                 createPlayerCar(playerId, player.color);
             });
             
@@ -390,7 +405,6 @@ function initGame() {
             const playerIds = Object.keys(gameState.players);
             playerIds.forEach((playerId, index) => {
                 const player = gameState.players[playerId];
-                player.position = [0, 0.5, -20 + (index * 5)];
                 createPlayerCar(playerId, player.color);
             });
             
@@ -465,12 +479,14 @@ function createPlayerCar(playerId, carColor) {
         castShadow: true
     });
     
-    // Set initial position - start 8 units above the track to see the physics in action
-    const startY = 28.0; // Keeping at 8.0 to ensure we can see the physics working
+    // Set initial position - start high above the track to see the physics in action
+    const startY = 28.0;
+    const startPosition = { x: 0, y: startY, z: -20 }; // Default starting position
+    
     carMesh.position.set(
-        player.position[0],
-        startY,
-        player.position[2]
+        startPosition.x,
+        startPosition.y,
+        startPosition.z
     );
     
     // Add to scene
@@ -493,14 +509,14 @@ function createPlayerCar(playerId, carColor) {
             // Create physics body for car with elevated position
             physicsBody = rapierPhysics.createCarPhysics(
                 gameState.physics.world,
-                { x: player.position[0], y: startY, z: player.position[2] },
+                startPosition,
                 carDimensions
             );
             
             // Check if physics body was created properly
             if (physicsBody) {
                 console.log('Physics body created successfully for player', playerId);
-                console.log('Initial position:', { x: player.position[0], y: startY, z: player.position[2] });
+                console.log('Initial position:', startPosition);
                 
                 // Wake up the physics body immediately and apply a small force to activate it
                 if (typeof physicsBody.wakeUp === 'function') {
@@ -514,25 +530,13 @@ function createPlayerCar(playerId, carColor) {
                     console.log("Applied initial impulse to activate physics");
                 }
                 
-                // Initialize rotation from player data if available
-                if (player.rotation && player.rotation.length >= 3) {
-                    // Convert Euler rotation to quaternion
-                    const euler = new THREE.Euler(
-                        player.rotation[0],
-                        player.rotation[1],
-                        player.rotation[2],
-                        'XYZ'
-                    );
-                    const quaternion = new THREE.Quaternion().setFromEuler(euler);
-                    
-                    // Set initial rotation of physics body
-                    physicsBody.setRotation({
-                        x: quaternion.x,
-                        y: quaternion.y,
-                        z: quaternion.z,
-                        w: quaternion.w
-                    }, true);
-                }
+                // Set initial rotation (default to facing forward)
+                physicsBody.setRotation({
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    w: 1
+                }, true);
             } else {
                 console.error('Physics body creation failed - returned null/undefined');
             }
@@ -541,32 +545,15 @@ function createPlayerCar(playerId, carColor) {
         }
     }
     
-    // Create initial targetQuaternion from player rotation
+    // Create initial targetQuaternion (default to facing forward)
     const targetQuaternion = new THREE.Quaternion();
-    if (player.rotation && player.rotation.length >= 3) {
-        const euler = new THREE.Euler(
-            player.rotation[0],
-            player.rotation[1],
-            player.rotation[2],
-            'XYZ'
-        );
-        targetQuaternion.setFromEuler(euler);
-    }
     
-    // Store car data
+    // Store car data with default position and rotation
     gameState.cars[playerId] = {
         mesh: carMesh,
         physicsBody: physicsBody,
-        targetPosition: new THREE.Vector3(
-            player.position[0],
-            player.position[1],
-            player.position[2]
-        ),
-        targetRotation: new THREE.Vector3(
-            player.rotation[0],
-            player.rotation[1],
-            player.rotation[2]
-        ),
+        targetPosition: new THREE.Vector3(startPosition.x, startPosition.y, startPosition.z),
+        targetRotation: new THREE.Vector3(0, 0, 0),
         targetQuaternion: targetQuaternion,
         velocity: [0, 0, 0],
         speed: 0
@@ -600,8 +587,7 @@ async function initPhysics() {
                 
                 // Fallback timeout in case the event never fires
                 setTimeout(() => {
-                    console.warn('Timed out waiting for Rapier to be ready');
-                    setupFallbackPhysics();
+                    console.error('Timed out waiting for Rapier to be ready');
                     resolve(false); // Resolve with false to indicate physics init failed
                 }, 5000);
             }
@@ -634,230 +620,97 @@ async function initPhysics() {
                 return true;
             } else {
                 console.error('Failed to initialize Rapier');
-                setupFallbackPhysics();
                 return false;
             }
         } catch (error) {
             console.error('Error initializing physics with Rapier:', error);
-            setupFallbackPhysics();
             return false;
         }
     }
 }
 
-// Fallback physics for when Rapier fails to initialize
-function setupFallbackPhysics() {
-    console.warn('Setting up fallback physics - game physics will be unavailable');
-    // Simple physics placeholder
-    gameState.physics.world = {
-        step: function(dt) {} // Do nothing function
-    };
-    gameState.physics.initialized = false;
-    gameState.physics.usingRapier = false;
-    
-    // Update stats to show fallback is in use
-    updateStatsDisplay();
-    
-    // Alert the user that physics will be limited
-    elements.gameStatus.textContent = 'Limited physics mode - car controls may be unreliable';
-    elements.gameStatus.style.color = 'orange';
-}
-
 // Improved game loop that avoids potential stack overflow issues
 function gameLoopWithoutRecursion(timestamp) {
-    // Schedule next frame first to avoid recursion issues
-    animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
-    
-    if (!gameState.gameActive) {
-        return;
-    }
-    
     try {
+        // Schedule next frame first to avoid recursion issues
+        animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+        
         // Update physics if initialized
         if (gameState.physics.initialized && gameState.physics.world) {
-            // Step the physics world - use fixed timestep
-            const fixedTimeStep = 1.0 / 60.0; // 60 Hz physics update
-            gameState.physics.world.step();
+            const now = performance.now();
+            const elapsed = now - lastPhysicsUpdate;
             
-            // Debug physics state with reduced frequency
-            if (gameState.showPhysicsDebug) {
-                gameState.debugCounters.physicsUpdate = (gameState.debugCounters.physicsUpdate + 1) % 100;
+            if (elapsed >= (1000 / PHYSICS_UPDATE_RATE)) {
+                // Update physics world
+                gameState.physics.world.step();
+                lastPhysicsUpdate = now;
+                gameState.debugCounters.physicsUpdate++;
                 
-                if (gameState.debugCounters.physicsUpdate === 0) {
-                    Object.keys(gameState.cars).forEach(playerId => {
-                        const car = gameState.cars[playerId];
-                        if (car && car.physicsBody) {
-                            const vel = car.physicsBody.linvel();
-                            const pos = car.physicsBody.translation();
-                            console.log(`Car ${playerId} physics - Vel: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)}) Pos: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
-                        }
-                    });
-                }
+                // Update car positions from physics
+                Object.keys(gameState.cars).forEach(playerId => {
+                    const car = gameState.cars[playerId];
+                    if (!car || !car.physicsBody) return;
+                    
+                    // Get physics state
+                    const physicsPos = car.physicsBody.translation();
+                    const physicsRot = car.physicsBody.rotation();
+                    const vel = car.physicsBody.linvel();
+                    
+                    // Update mesh position
+                    car.mesh.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
+                    car.targetPosition.copy(car.mesh.position);
+                    
+                    // Calculate speed and store it
+                    car.speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+                    car.velocity = [vel.x, vel.y, vel.z];
+                    
+                    // Update rotation based on velocity
+                    const speed = car.speed;
+                    
+                    if (speed > 0.5) { // Only when moving at a reasonable speed
+                        // Calculate heading angle from velocity
+                        const angle = Math.atan2(vel.x, -vel.z);
+                        
+                        // Create a quaternion for this rotation around Y axis
+                        const newRotation = new THREE.Quaternion();
+                        newRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+                        
+                        // Apply rotation directly for responsive steering
+                        car.mesh.quaternion.copy(newRotation);
+                        car.targetQuaternion = newRotation;
+                    } else {
+                        // At very low speeds, use physics rotation but only for Y axis
+                        const euler = new THREE.Euler().setFromQuaternion(
+                            new THREE.Quaternion(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w)
+                        );
+                        
+                        // Only keep the Y rotation (heading)
+                        euler.x = 0;
+                        euler.z = 0;
+                        
+                        // Create new quaternion and apply smoothly
+                        car.targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
+                        car.mesh.quaternion.slerp(car.targetQuaternion, 0.1);
+                    }
+                });
             }
         }
-        
-        // Update car positions with smooth interpolation
-        Object.keys(gameState.cars).forEach(playerId => {
-            const car = gameState.cars[playerId];
-            const player = gameState.players[playerId];
-            
-            if (!car || !car.mesh) {
-                return;
-            }
-            
-            // If we have a physics body, update from physics and apply controls
-            if (car.physicsBody && gameState.physics.usingRapier) {
-                // Apply player controls to physics body FIRST if we have them
-                if (player && player.controls) {
-                    // Always log every control application for debugging
-                    const timestamp = player.controls.timestamp || 0;
-                    const currentTime = Date.now();
-                    const age = currentTime - timestamp;
-                    
-                    // Log every 60 frames or anytime there are significant controls
-                    const hasSignificantControls = 
-                        Math.abs(player.controls.steering) > 0.1 || 
-                        player.controls.acceleration > 0.1 || 
-                        player.controls.braking > 0.1;
-                    
-                    gameState.debugCounters.controlsUpdate = (gameState.debugCounters.controlsUpdate || 0) + 1;
-                    if (gameState.debugCounters.controlsUpdate % 60 === 0 || hasSignificantControls) {
-                        console.log(`🔄 APPLYING CONTROLS to car ${playerId} (age: ${age}ms):`, {
-                            steering: player.controls.steering,
-                            acceleration: player.controls.acceleration,
-                            braking: player.controls.braking
-                        });
-                    }
-                    
-                    // Ensure controls are properly formatted and have appropriate scale
-                    const controls = {
-                        steering: (player.controls.steering || 0) * 2.0,
-                        acceleration: (player.controls.acceleration || 0) * 2.0,
-                        braking: (player.controls.braking || 0) * 1.5
-                    };
-                    
-                    // Apply controls to physics body and pass player ID for debugging
-                    rapierPhysics.applyCarControls(car.physicsBody, controls, playerId);
-                    
-                    // Wake up the physics body when controls are applied
-                    if (typeof car.physicsBody.wakeUp === 'function') {
-                        car.physicsBody.wakeUp();
-                    }
-                    
-                    // Create a visual indicator for applying physics
-                    const physicsIndicator = document.getElementById('physics-indicator') || createPhysicsIndicator();
-                    updatePhysicsIndicator(physicsIndicator, controls, playerId, hasSignificantControls);
-                }
-                
-                function createPhysicsIndicator() {
-                    const indicator = document.createElement('div');
-                    indicator.id = 'physics-indicator';
-                    indicator.style.position = 'fixed';
-                    indicator.style.bottom = '10px';
-                    indicator.style.right = '10px';
-                    indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                    indicator.style.color = 'white';
-                    indicator.style.padding = '10px';
-                    indicator.style.borderRadius = '5px';
-                    indicator.style.fontFamily = 'monospace';
-                    indicator.style.zIndex = '9999';
-                    document.body.appendChild(indicator);
-                    return indicator;
-                }
-                
-                function updatePhysicsIndicator(indicator, controls, playerId, isActive) {
-                    // Change color based on active controls
-                    indicator.style.backgroundColor = isActive ? 
-                        'rgba(255, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.7)';
-                    
-                    // Format control values for display
-                    const steeringVal = (controls.steering * 2.0).toFixed(2);
-                    const accelVal = (controls.acceleration * 2.0).toFixed(2);
-                    const brakeVal = (controls.braking * 1.5).toFixed(2);
-                    
-                    indicator.innerHTML = `
-                        <div style="font-weight: bold; margin-bottom: 5px;">PHYSICS CONTROLS (Car ${playerId})</div>
-                        <div>Accel: ${accelVal} (x2.0)</div>
-                        <div>Brake: ${brakeVal} (x1.5)</div>
-                        <div>Steer: ${steeringVal} (x2.0)</div>
-                    `;
-                }
-                
-                // Get position and rotation from physics body
-                const physicsPos = car.physicsBody.translation();
-                const physicsRot = car.physicsBody.rotation();
-                
-                // Update target position from physics
-                car.targetPosition.set(physicsPos.x, physicsPos.y, physicsPos.z);
-                
-                // Get the velocity for speed calculation
-                const vel = car.physicsBody.linvel();
-                const speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z); // in m/s
-                
-                // Update the mesh position with smooth lerp
-                car.mesh.position.lerp(car.targetPosition, 0.2);
-                
-                if (speed > 0.5) { // Only when moving at a reasonable speed
-                    // Calculate heading angle from velocity
-                    const angle = Math.atan2(vel.x, -vel.z);
-                    
-                    // Create a quaternion for this rotation around Y axis
-                    const newRotation = new THREE.Quaternion();
-                    newRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-                    
-                    // Apply rotation directly for responsive steering
-                    car.mesh.quaternion.copy(newRotation);
-                    car.targetQuaternion = newRotation;
-                } else {
-                    // At very low speeds, use physics rotation but only for Y axis
-                    const euler = new THREE.Euler().setFromQuaternion(
-                        new THREE.Quaternion(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w)
-                    );
-                    
-                    // Only keep the Y rotation (heading)
-                    euler.x = 0;
-                    euler.z = 0;
-                    
-                    // Create new quaternion and apply smoothly
-                    car.targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
-                    car.mesh.quaternion.slerp(car.targetQuaternion, 0.1);
-                }
-                
-                // Update velocity and speed for display
-                car.velocity = [vel.x, vel.y, vel.z];
-                car.speed = speed * 3.6; // Convert to km/h
-                
-                // Update player state for network sync
-                player.position = [physicsPos.x, physicsPos.y, physicsPos.z];
-                const euler = new THREE.Euler().setFromQuaternion(car.targetQuaternion);
-                player.rotation = [euler.x, euler.y, euler.z];
-                
-                // Send car state update to the player
-                // Do this at a reduced rate (every 5 frames) to avoid network spam
-                if (gameState.debugCounters.physicsUpdate % 5 === 0) {
-                    socket.emit('car_state_update', {
-                        player_id: playerId,
-                        position: player.position,
-                        rotation: player.rotation,
-                        velocity: car.velocity,
-                        timestamp: Date.now()
-                    });
-                }
-            }
-        });
-        
-        // Handle physics debug visualization
-        if (gameState.showPhysicsDebug) {
-            updatePhysicsDebugVisualization();
-        }
-        
-        // Render scene
-        gameState.renderer.render(gameState.scene, gameState.camera);
         
         // Update stats display if visible
         if (gameState.showStats) {
             updateStatsDisplay();
         }
+        
+        // Render scene
+        if (gameState.scene && gameState.camera) {
+            gameState.renderer.render(gameState.scene, gameState.camera);
+        }
+        
+        // Update physics debug visualization if enabled
+        if (gameState.showPhysicsDebug) {
+            updatePhysicsDebugVisualization();
+        }
+        
     } catch (error) {
         console.error('Error in game loop:', error);
     }
@@ -941,18 +794,32 @@ function updateStatsDisplay() {
         <button id="reset-all-cars-btn" class="reset-button">Reset All Cars</button>
     </div>`;
     
-    // Add detailed player stats
-    statsHTML += '<div class="stats-section">Detailed Player Stats:</div>';
+    // Add detailed player stats with controls
+    statsHTML += '<div class="stats-section">Player Stats & Controls:</div>';
     
     Object.keys(gameState.cars).forEach(playerId => {
         const car = gameState.cars[playerId];
         const player = gameState.players[playerId];
         if (!car || !player) return;
         
-        const speed = Math.round((car.speed || 0) * 100) / 100;
-        const posX = Math.round(car.targetPosition.x * 100) / 100;
-        const posY = Math.round(car.targetPosition.y * 100) / 100;
-        const posZ = Math.round(car.targetPosition.z * 100) / 100;
+        // Calculate speed from velocity if physics body exists
+        let speed = 0;
+        let posX = 0, posY = 0, posZ = 0;
+        
+        if (car.physicsBody) {
+            const vel = car.physicsBody.linvel();
+            // Calculate speed as magnitude of horizontal velocity (x and z)
+            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+            const pos = car.physicsBody.translation();
+            posX = Math.round(pos.x * 100) / 100;
+            posY = Math.round(pos.y * 100) / 100;
+            posZ = Math.round(pos.z * 100) / 100;
+        } else {
+            // Fallback to target position if no physics body
+            posX = Math.round(car.targetPosition.x * 100) / 100;
+            posY = Math.round(car.targetPosition.y * 100) / 100;
+            posZ = Math.round(car.targetPosition.z * 100) / 100;
+        }
         
         // Get physics body state
         let physicsState = "No Physics Body";
@@ -966,52 +833,53 @@ function updateStatsDisplay() {
         
         // Get control inputs and their age
         let controlsHTML = '<div class="control-info">No controls received</div>';
-        if (player.controls) {
-            const controlAge = now - (player.controls.timestamp || 0);
-            const steering = Math.round(player.controls.steering * 100) / 100;
-            const accel = Math.round(player.controls.acceleration * 100) / 100;
-            const brake = Math.round(player.controls.braking * 100) / 100;
-            
-            // Add visual indicators for controls
-            const steeringBar = createBarIndicator(steering, -1, 1);
-            const accelBar = createBarIndicator(accel, 0, 1);
-            const brakeBar = createBarIndicator(brake, 0, 1);
-            
+        if (car.controls) {
+            const timeSinceLastControl = car.lastControlUpdate ? Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
             controlsHTML = `
                 <div class="control-info">
-                    <div>Last Input: ${controlAge.toFixed(0)}ms ago</div>
-                    <div>Steering: ${steeringBar} (${steering.toFixed(2)})</div>
-                    <div>Accelerate: ${accelBar} (${accel.toFixed(2)})</div>
-                    <div>Brake: ${brakeBar} (${brake.toFixed(2)})</div>
-                </div>
-            `;
+                    <div class="control-row">
+                        <span>Steering:</span>
+                        ${createBarIndicator(car.controls.steering, -1, 1)}
+                        <span class="value">${car.controls.steering.toFixed(2)}</span>
+                    </div>
+                    <div class="control-row">
+                        <span>Acceleration:</span>
+                        ${createBarIndicator(car.controls.acceleration, 0, 1)}
+                        <span class="value">${car.controls.acceleration.toFixed(2)}</span>
+                    </div>
+                    <div class="control-row">
+                        <span>Braking:</span>
+                        ${createBarIndicator(car.controls.braking, 0, 1)}
+                        <span class="value">${car.controls.braking.toFixed(2)}</span>
+                    </div>
+                    <div class="control-time">Last update: ${timeSinceLastControl}s ago</div>
+                </div>`;
         }
         
         statsHTML += `
             <div class="player-stats">
-                <div class="player-header">
-                    <span style="color:${player.color}">${player.name}</span>
-                    <span class="physics-state">[${physicsState}]</span>
+                <div class="player-header" style="color: ${player.color}">
+                    ${player.name} (ID: ${player.id})
                 </div>
-                <div>Speed: ${speed.toFixed(2)} km/h</div>
+                <div>Speed: ${speed.toFixed(2)} units/s</div>
                 <div>Position: (${posX}, ${posY}, ${posZ})</div>
                 ${velocityInfo}
-                ${controlsHTML}
-                <button class="reset-button reset-car-btn" data-player-id="${playerId}">Reset Position</button>
+                <div>Physics: ${physicsState}</div>
+                <div class="controls-section">
+                    <div class="controls-header">Controls:</div>
+                    ${controlsHTML}
+                </div>
             </div>
         `;
     });
     
     elements.statsOverlay.innerHTML = statsHTML;
     
-    // Add event listeners to reset buttons
-    document.getElementById('reset-all-cars-btn').addEventListener('click', resetAllCars);
-    document.querySelectorAll('.reset-car-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const playerId = e.target.getAttribute('data-player-id');
-            resetCarPosition(playerId);
-        });
-    });
+    // Re-attach event listener for reset button
+    const resetButton = document.getElementById('reset-all-cars-btn');
+    if (resetButton) {
+        resetButton.onclick = resetAllCars;
+    }
 }
 
 // Function to reset a car's position
@@ -1032,47 +900,19 @@ function resetCarPosition(playerId) {
     
     // Reset physics body if available
     if (car.physicsBody) {
-        try {
-            console.log(`Resetting car ${playerId} to starting position...`);
-            
-            // Reset position using Rapier's setTranslation
-            car.physicsBody.setTranslation({ x: startPosition[0], y: startPosition[1], z: startPosition[2] }, true);
-            
-            // Reset rotation using Rapier's setRotation
-            car.physicsBody.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
-            
-            // Reset linear and angular velocity
-            car.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-            car.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
-            
-            // Wake up the body to ensure it's active in the physics simulation
-            car.physicsBody.wakeUp();
-            
-            // Apply a small impulse to "activate" the physics (jiggle it a bit)
-            if (typeof car.physicsBody.applyImpulse === 'function') {
-                car.physicsBody.applyImpulse({ x: 0, y: 0.01, z: 0 }, true);
-                console.log("Applied reset impulse to activate physics");
-            }
-            
-            console.log(`Reset physics for car ${playerId} to position (${startPosition.join(', ')})`);
-            
-            // Also reset any player control state that might be stored
-            if (gameState.players[playerId]) {
-                gameState.players[playerId].controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0,
-                    timestamp: Date.now()
-                };
-            }
-        } catch (error) {
-            console.error('Error resetting car physics:', error);
-        }
+        // Reset position
+        car.physicsBody.position.set(startPosition[0], startPosition[1], startPosition[2]);
+        
+        // Reset rotation (quaternion)
+        car.physicsBody.quaternion.set(0, 0, 0, 1); // Identity quaternion
+        
+        // Reset velocity and angular velocity
+        car.physicsBody.velocity.set(0, 0, 0);
+        car.physicsBody.angularVelocity.set(0, 0, 0);
+        
+        // Wake up the body to ensure it's active
+        car.physicsBody.wakeUp();
     }
-    
-    // Update internal game state
-    gameState.players[playerId].position = startPosition;
-    gameState.players[playerId].rotation = [0, 0, 0];
     
     // Notify player to reset their position via server
     socket.emit('reset_player_position', {

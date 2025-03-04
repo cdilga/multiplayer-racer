@@ -18,9 +18,6 @@ const gameState = {
         acceleration: 0,   // 0 to 1
         braking: 0         // 0 to 1
     },
-    position: [0, 0, 0],
-    rotation: [0, 0, 0, 1],
-    velocity: [0, 0, 0],
     speed: 0,
     touchControls: {
         steeringActive: false,
@@ -30,8 +27,8 @@ const gameState = {
     lastSpeed: 0,
     lastUpdateTime: 0,
     nameSet: false, // Flag to track if user has set a custom name
-    autoJoinDelayMs: 2000, // Delay before auto-joining to give time to set name
-    lastServerUpdate: 0
+    lastServerUpdate: 0,
+    autoJoinDelayMs: 0 // Delay before auto-joining to give time to set name
 };
 
 // Helper function to get URL parameters
@@ -74,7 +71,6 @@ const socket = io();
 
 // Enable dev mode for faster testing - changed to false to give time to customize name
 const DEV_MODE = false;
-const DEFAULT_ROOM_CODE = 'TEST';
 
 // Random name generator
 function generateRandomName() {
@@ -185,48 +181,10 @@ socket.on('connect', () => {
                 // Don't set nameSet flag here to allow user to change it
             }
             
-            // Set up auto-join timer
-            let secondsLeft = Math.floor(gameState.autoJoinDelayMs / 1000);
-            elements.joinTimerDisplay.textContent = `Joining in ${secondsLeft} seconds... (click to cancel)`;
-            elements.joinTimerDisplay.style.display = 'block';
-            
-            // Allow clicking the timer to cancel auto-join
-            elements.joinTimerDisplay.addEventListener('click', () => {
-                clearInterval(joinTimerInterval);
-                clearTimeout(joinTimer);
-                elements.joinTimerDisplay.textContent = 'Auto-join cancelled';
-                setTimeout(() => {
-                    elements.joinTimerDisplay.style.display = 'none';
-                }, 1500);
-            });
-            
-            // Update countdown every second
-            const joinTimerInterval = setInterval(() => {
-                secondsLeft--;
-                if (secondsLeft <= 0) {
-                    clearInterval(joinTimerInterval);
-                    elements.joinTimerDisplay.textContent = 'Joining game...';
-                } else {
-                    elements.joinTimerDisplay.textContent = `Joining in ${secondsLeft} seconds... (click to cancel)`;
-                }
-            }, 1000);
-            
-            // Set up auto-join timer
-            const joinTimer = setTimeout(() => {
-                joinGame();
-            }, gameState.autoJoinDelayMs);
-        }
-    }
-    
-    // In dev mode, auto-fill form and auto-join
-    if (DEV_MODE) {
-        if (!elements.roomCodeInput.value) {
-            elements.roomCodeInput.value = DEFAULT_ROOM_CODE;
-        }
-        setTimeout(() => {
             joinGame();
-        }, 500); // Short delay to ensure connection is ready
+        }
     }
+
 });
 
 socket.on('join_error', (data) => {
@@ -307,20 +265,9 @@ socket.on('position_reset', (data) => {
     if (gameState.gameStarted) {
         console.log('Position reset received:', data);
         
-        // Update position and rotation
-        gameState.position = [...data.position]; // Make a copy to ensure it's a new array
-        gameState.rotation = [...data.rotation];
-        gameState.velocity = [0, 0, 0];
-        gameState.speed = 0;
-        
-        // Ensure car stays on the ground
-        gameState.position[1] = 0.5;
-        
         // Update speed display
         elements.speedDisplay.textContent = "0 km/h";
         
-        // Force an immediate position update to the server
-        sendPositionUpdate();
     }
 });
 
@@ -711,55 +658,25 @@ function setBraking(value) {
     gameState.controls.braking = value;
 }
 
-// Update the speed display based on the latest data received from the server
-function updateSpeedDisplay() {
-    if (gameState.gameStarted) {
-        // Calculate speed magnitude from velocity
-        const velocity = gameState.velocity;
-        const speedMagnitude = Math.sqrt(
-            velocity[0] * velocity[0] + 
-            velocity[1] * velocity[1] + 
-            velocity[2] * velocity[2]
-        );
-        
-        // Convert to km/h for display (applying same scaling factor as before)
-        const speedKmh = Math.abs(Math.round(speedMagnitude));
-        elements.speedDisplay.textContent = `${speedKmh} km/h`;
-    }
+function sendControls() {
+    socket.emit('player_controls_update', {
+        player_id: gameState.playerId,
+        acceleration: gameState.controls.acceleration,
+        braking: gameState.controls.braking,
+        steering: gameState.controls.steering
+    });
 }
 
-// Function to receive position updates FROM the server
-socket.on('car_state_update', (data) => {
-    if (data.player_id === gameState.playerId) {
-        console.log('Received car state update from server:', data);
-        
-        // Update our state with authoritative server data
-        gameState.position = data.position;
-        gameState.rotation = data.rotation;
-        gameState.velocity = data.velocity || [0, 0, 0];
-        gameState.lastServerUpdate = data.timestamp;
-        
-        // Calculate speed for logging
-        let speed = 0;
-        if (data.velocity) {
-            speed = Math.sqrt(
-                data.velocity[0] * data.velocity[0] + 
-                data.velocity[1] * data.velocity[1] + 
-                data.velocity[2] * data.velocity[2]
-            );
-        }
-        
-        // Log state update to mobile screen occasionally (once every few updates)
-        if (errorLog.info && Math.random() < 0.2) {
-            errorLog.info(`📡 Update: spd=${speed.toFixed(1)}`, 500);
-        }
-        
-        // Update speed display
-        updateSpeedDisplay();
-    }
-});
-
-// This is now handled by the updateLoop function using requestAnimationFrame
+// Game loop using setTimeout for consistent 60 FPS
+function gameLoop() {
+    if (!gameState.gameStarted) return;
+    
+    // Send control updates to server as needed
+    sendControls();
+    
+    // Continue the game loop
+    setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate
+}
 
 // Update player name function
 function updatePlayerName(name) {
@@ -786,21 +703,17 @@ function handleInput() {
             acceleration: gameState.controls.acceleration,
             braking: gameState.controls.braking
         };
-        
-        // Log what we're sending, with clear markers for easy log reading
-        const logMessage = `⬆️ SENDING CONTROLS: steering=${controls.steering.toFixed(2)}, accel=${controls.acceleration.toFixed(2)}, brake=${controls.braking.toFixed(2)}`;
-        console.log(logMessage);
-        
-        // Add detailed debug info
-        console.log('🎮 Control Update Details:', {
+    
+        const player_control_update = {
             player_id: gameState.playerId,
             room_code: gameState.roomCode,
             controls: controls,
-            gameStarted: gameState.gameStarted,
-            connected: gameState.connected,
             timestamp: Date.now()
-        });
+        };
         
+        // Send control update to server
+        socket.emit('player_control_update', player_control_update);
+
         // Add a helper method to errorLog to log info messages (different color)
         if (!errorLog.info) {
             errorLog.info = function(message, timeout = 1000) {
@@ -863,14 +776,6 @@ function handleInput() {
         setTimeout(() => {
             document.body.removeChild(tempIndicator);
         }, 300);
-        
-        // Send control update to server
-        socket.emit('player_control_update', {
-            player_id: gameState.playerId,
-            room_code: gameState.roomCode,
-            controls: controls,
-            timestamp: Date.now()
-        });
         
         lastInputUpdate = currentTime;
     }
@@ -1059,9 +964,6 @@ function createVisualBar(value, min, max, width) {
 document.addEventListener('DOMContentLoaded', () => {
     errorLog.init();
     console.log('Error log initialized for mobile debugging');
-    
-    // Test the error log with a welcome message
-    errorLog.log('Mobile error logging ready! Errors will appear here.');
 });
 
 // Main game loop for updating UI based on server data and sending controls
