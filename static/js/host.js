@@ -486,8 +486,8 @@ function createPlayerCar(playerId, carColor) {
         castShadow: true
     });
     
-    // Set initial position - start high above the track to see the physics in action
-    const startY = 28.0;
+    // Set initial position - lowered spawn height for better control
+    const startY = 20.0; // Changed from 28.0 to 1.0
     const startPosition = { x: 0, y: startY, z: -20 }; // Default starting position
     
     carMesh.position.set(
@@ -903,8 +903,8 @@ function resetCarPosition(playerId) {
     if (!gameState.cars[playerId]) return;
     
     const car = gameState.cars[playerId];
-    // Set starting position high above the track to see physics in action
-    const startPosition = [0, 8.0, -20]; // Same height as initial spawn
+    // Set starting position just above the ground
+    const startPosition = [0, 1.0, -20]; // Changed from 8.0 to 1.0
     
     // Set the car's target position to the start position
     car.physicsBody.setTranslation({ x: startPosition[0], y: startPosition[1], z: startPosition[2] });

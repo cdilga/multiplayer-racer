@@ -85,17 +85,18 @@ function createCarPhysics(world, position, dimensions) {
         // First create the basic rigid body description
         rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
-            .setLinearDamping(0.1)     // Reduced from 0.5 for less air resistance
-            .setAngularDamping(0.8)     // Keep this to prevent excessive spinning
-            .setAdditionalMass(1000.0); // Set explicit mass in kg
+            .setLinearDamping(1.5)     // Increased from 0.1 for more drag
+            .setAngularDamping(0.9)     // Increased from 0.8 for less spinning
+            .setAdditionalMass(1500.0); // Increased mass for more stability
         
         const carBody = world.createRigidBody(rigidBodyDesc);
+        carBody.enableCcd(true);
         
         // Create a collider for the car (box shape)
         const colliderDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
-            .setRestitution(0.2)     // Slightly bouncy
-            .setFriction(1.0)        // High friction for better traction
-            .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max);
+            .setRestitution(0.1) 
+            .setFriction(1)        
+            .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max); // Changed to average
         
         // Create the collider attached to the rigid body
         world.createCollider(colliderDesc, carBody);
@@ -204,8 +205,8 @@ function applyCarControls(carBody, controls, playerId) {
         }
         
         // Speed constants (in m/s)
-        const maxSpeedKmh = 100;
-        const reverseMaxSpeedKmh = 50;
+        const maxSpeedKmh = 50;  // Reduced from 100
+        const reverseMaxSpeedKmh = 25; // Reduced from 50
         const maxSpeedMs = maxSpeedKmh / 3.6;
         const reverseMaxSpeedMs = reverseMaxSpeedKmh / 3.6;
         
@@ -223,18 +224,18 @@ function applyCarControls(carBody, controls, playerId) {
         // Apply forces based on controls
         if (typeof carBody.addForce === 'function') {
             console.log('Adding forces to car', playerId);
-            // Use much more force to overcome physics issues and make controls more responsive
-            const maxForce = 15000; // Greatly increased for better responsiveness
+            // Reduced force for more controlled acceleration
+            const maxForce = 3000; // Reduced from 15000
             
             if (acceleration > 0) {
-                // Calculate force based on current speed
-                const speedFactor = Math.max(0.3, 1 - (speedKmh / maxSpeedKmh));
-                const appliedForce = maxForce * acceleration * speedFactor;
+                // Calculate force based on current speed with more gradual acceleration
+                const speedFactor = Math.max(0.2, 1 - (speedKmh / maxSpeedKmh));
+                const appliedForce = maxForce * acceleration * speedFactor * 0.7; // Added 0.7 multiplier
                 
                 // Apply force in world forward direction
                 const force = {
                     x: worldForward.x * appliedForce,
-                    y: 0, // No vertical force
+                    y: 0,
                     z: worldForward.z * appliedForce
                 };
                 
@@ -246,9 +247,9 @@ function applyCarControls(carBody, controls, playerId) {
                 }
             }
             
-            // Apply braking/reverse with stronger forces
+            // Apply braking/reverse with more controlled forces
             if (braking > 0) {
-                const brakeForce = 8000; // Greatly increased for better responsiveness
+                const brakeForce = 3000; // Reduced from 8000
                 
                 if (isMovingForward && velMag > 0.1) {
                     // Apply brake force opposite to velocity
@@ -264,26 +265,26 @@ function applyCarControls(carBody, controls, playerId) {
                         console.log(`🛑 PHYSICS BRAKE: Applied braking force: ${(brakeForce * braking).toFixed(2)}N`);
                     }
                 } else if (speedKmh < reverseMaxSpeedKmh) {
-                    // Apply reverse force with stronger magnitude
+                    // Apply reverse force with more controlled magnitude
                     const force = {
-                        x: -worldForward.x * maxForce * 0.8 * braking,
+                        x: -worldForward.x * maxForce * 0.5 * braking, // Reduced multiplier from 0.8
                         y: 0,
-                        z: -worldForward.z * maxForce * 0.8 * braking
+                        z: -worldForward.z * maxForce * 0.5 * braking
                     };
                     carBody.addForce(force, true);
                     
                     // Log reverse with distinctive marker
                     if (Math.random() < 0.05 || braking > 0.5) {
-                        console.log(`⏪ PHYSICS REVERSE: Applied reverse force: ${(maxForce * 0.8 * braking).toFixed(2)}N`);
+                        console.log(`⏪ PHYSICS REVERSE: Applied reverse force: ${(maxForce * 0.5 * braking).toFixed(2)}N`);
                     }
                 }
             }
             
-            // Apply steering torque with stronger forces
+            // Apply steering torque with more controlled forces
             if (Math.abs(steering) > 0.01 && typeof carBody.addTorque === 'function') {
-                // Increased steering forces significantly
-                const maxSteeringForce = 500;  // Greatly increased for better responsiveness
-                const minSteeringForce = 100;  // Increased for better low-speed steering
+                // Reduced steering forces for better control
+                const maxSteeringForce = 200;  // Reduced from 500
+                const minSteeringForce = 10;   // Reduced from 100
                 
                 // Adjust steering based on speed - more responsive at low speeds
                 const speedFactor = Math.min(1, velMag / maxSpeedMs);
