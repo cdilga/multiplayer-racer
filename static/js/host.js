@@ -767,8 +767,6 @@ function onWindowResize() {
         gameState.renderer.render(gameState.scene, gameState.camera);
     }
 }
-
-// Function to update the stats display
 function updateStatsDisplay() {
     if (!elements.statsOverlay) return;
     
@@ -808,49 +806,77 @@ function updateStatsDisplay() {
     statsHTML += `<div>Players: ${Object.keys(gameState.players).length}</div>`;
     statsHTML += `<div>Cars: ${Object.keys(gameState.cars).length}</div>`;
     
+    // Add physics update counter
+    statsHTML += `<div>Physics Updates: ${gameState.debugCounters?.physicsUpdate || 0}</div>`;
+    
     // Add reset all cars button
     statsHTML += `<div class="reset-button-container">
         <button id="reset-all-cars-btn" class="reset-button">Reset All Cars</button>
     </div>`;
     
-    // Add detailed player stats with controls
-    statsHTML += '<div class="stats-section">Player Stats & Controls:</div>';
+    // Add detailed player stats with controls and enhanced physics information
+    statsHTML += '<div class="stats-section">Player Stats & Car Physics:</div>';
     
     Object.keys(gameState.cars).forEach(playerId => {
         const car = gameState.cars[playerId];
         const player = gameState.players[playerId];
         if (!car || !player) return;
         
-        // Calculate speed from velocity if physics body exists
+        // Calculate speed from velocity
         let speed = 0;
         let posX = 0, posY = 0, posZ = 0;
+        let rotX = 0, rotY = 0, rotZ = 0, rotW = 0;
+        let isUpsideDown = false;
         
+        // Get physics state (if available)
         if (car.physicsBody) {
             const vel = car.physicsBody.linvel();
-            // Calculate speed as magnitude of horizontal velocity (x and z)
-            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
             const pos = car.physicsBody.translation();
+            const rot = car.physicsBody.rotation();
+            
+            // Velocity and position
+            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
             posX = Math.round(pos.x * 100) / 100;
             posY = Math.round(pos.y * 100) / 100;
             posZ = Math.round(pos.z * 100) / 100;
-        } else {
-            console.error("No physics body for car", playerId);
+            
+            // Rotation
+            rotX = Math.round(rot.x * 100) / 100;
+            rotY = Math.round(rot.y * 100) / 100;
+            rotZ = Math.round(rot.z * 100) / 100;
+            rotW = Math.round(rot.w * 100) / 100;
+            
+            // Check if car is upside down
+            if (typeof rapierPhysics.isCarUpsideDown === 'function') {
+                isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
+            }
         }
         
         // Get physics body state
         let physicsState = "No Physics Body";
         let velocityInfo = "";
+        
         if (car.physicsBody) {
             const vel = car.physicsBody.linvel();
-            const isAwake = car.physicsBody.isAwake ? car.physicsBody.isAwake() : "Unknown";
+            const isAwake = typeof car.physicsBody.isAwake === 'function' ? 
+                car.physicsBody.isAwake() : "Unknown";
+                
             physicsState = `Active: ${isAwake}`;
             velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
+            
+            // Add upside down indicator
+            if (isUpsideDown) {
+                physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
+            }
         }
         
-        // Get control inputs and their age
+        // Get player controls
         let controlsHTML = '<div class="control-info">No controls received</div>';
+        
         if (car.controls) {
-            const timeSinceLastControl = car.lastControlUpdate ? Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
+            const timeSinceLastControl = car.lastControlUpdate ? 
+                Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
+            
             controlsHTML = `
                 <div class="control-info">
                     <div class="control-row">
@@ -872,69 +898,217 @@ function updateStatsDisplay() {
                 </div>`;
         }
         
+        // NEW: Add applied forces display if available from user data
+        let forcesHTML = '';
+        
+        if (car.physicsBody && car.physicsBody.userData && car.physicsBody.userData.lastAppliedForces) {
+            const forces = car.physicsBody.userData.lastAppliedForces;
+            
+            forcesHTML = `
+                <div class="forces-section">
+                    <div class="forces-header">Applied Forces:</div>
+                    <div class="control-info">
+                        <div class="control-row">
+                            <span>Engine:</span>
+                            ${createBarIndicator(forces.engineForce/5000, 0, 1)} 
+                            <span class="value">${forces.engineForce.toFixed(0)}N</span>
+                        </div>
+                        <div class="control-row">
+                            <span>Brake:</span>
+                            ${createBarIndicator(forces.brakeForce/5000, 0, 1)}
+                            <span class="value">${forces.brakeForce.toFixed(0)}N</span>
+                        </div>
+                        <div class="control-row">
+                            <span>Steering:</span>
+                            ${createBarIndicator(forces.steeringTorque/500, -1, 1)}
+                            <span class="value">${forces.steeringTorque.toFixed(0)}Nm</span>
+                        </div>
+                        <div class="control-row">
+                            <span>Grip:</span>
+                            ${createBarIndicator(forces.lateralForce/2000, -1, 1)}
+                            <span class="value">${forces.lateralForce.toFixed(0)}N</span>
+                        </div>
+                        <div class="control-row">
+                            <span>Drag:</span>
+                            ${createBarIndicator(forces.dragForce/1000, 0, 1)}
+                            <span class="value">${forces.dragForce.toFixed(0)}N</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        
+        // Add per-car reset button
+        const resetButtonHTML = `
+            <div class="reset-button-container">
+                <button id="reset-car-${playerId}-btn" class="reset-button car-reset-btn">
+                    Reset This Car
+                </button>
+            </div>`;
+        
+        // Put it all together
         statsHTML += `
             <div class="player-stats">
                 <div class="player-header" style="color: ${player.color}">
                     ${player.name} (ID: ${player.id})
                 </div>
-                <div>Speed: ${speed.toFixed(2)} units/s</div>
+                <div>Speed: ${speed.toFixed(1)} km/h</div>
                 <div>Position: (${posX}, ${posY}, ${posZ})</div>
                 ${velocityInfo}
+                <div>Rotation: (${rotY.toFixed(2)}, ${rotX.toFixed(2)}, ${rotZ.toFixed(2)}, ${rotW.toFixed(2)})</div>
                 <div>Physics: ${physicsState}</div>
                 <div class="controls-section">
                     <div class="controls-header">Controls:</div>
                     ${controlsHTML}
                 </div>
+                ${forcesHTML}
+                ${resetButtonHTML}
             </div>
         `;
     });
     
     elements.statsOverlay.innerHTML = statsHTML;
     
-    // Re-attach event listener for reset button
+    // Re-attach event listener for reset buttons
     const resetButton = document.getElementById('reset-all-cars-btn');
     if (resetButton) {
         resetButton.onclick = resetAllCars;
     }
+    
+    // NEW: Attach event listeners for individual car reset buttons
+    document.querySelectorAll('.car-reset-btn').forEach(button => {
+        const playerId = button.id.replace('reset-car-', '').replace('-btn', '');
+        button.onclick = () => resetCarPosition(playerId);
+    });
 }
+
+// Add this CSS to improve the debug display
+function addPhysicsDebugStyles() {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+        .forces-section {
+            margin-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 5px;
+        }
+        
+        .forces-header {
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+        
+        /* Improved control bars */
+        .control-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #333;
+        }
+        
+        .control-bar-fill.positive {
+            background-color: #4CAF50;
+        }
+        
+        .control-bar-fill.negative {
+            background-color: #f44336;
+        }
+        
+        .car-reset-btn {
+            background-color: #2196F3;
+            font-size: 10px;
+            padding: 3px 8px;
+            margin-top: 8px;
+        }
+        
+        .car-reset-btn:hover {
+            background-color: #0b7dda;
+        }
+    `;
+    document.head.appendChild(styleEl);
+}
+
+// Call this when the game initializes
+addPhysicsDebugStyles();
 
 // Function to reset a car's position
 function resetCarPosition(playerId) {
     if (!gameState.cars[playerId]) return;
     
     const car = gameState.cars[playerId];
-    // Set starting position just above the ground
-    const startPosition = [0, 1.0, -20]; // Changed from 8.0 to 1.0
     
-    // Set the car's target position to the start position
-    car.physicsBody.setTranslation({ x: startPosition[0], y: startPosition[1], z: startPosition[2] });
-    car.physicsBody.setRotation({ x: 0, y: 0, z: 0 });
+    // Define proper starting position with a safe height above ground
+    const startPosition = { x: 0, y: 0.5, z: -20 };
+    const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
     
-    // Reset speed and velocity tracking
-    car.speed = 0;
-    car.velocity = [0, 0, 0];
-    
-    // Reset physics body if available
-    if (car.physicsBody) {
-        // Reset position
-        car.physicsBody.position.set(startPosition[0], startPosition[1], startPosition[2]);
+    // If we're using Rapier physics, use the improved reset function
+    if (car.physicsBody && gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
+        console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
         
-        // Reset rotation (quaternion)
-        car.physicsBody.quaternion.set(0, 0, 0, 1); // Identity quaternion
+        // Call the new reset function that properly resets all physics state
+        rapierPhysics.resetCarPosition(
+            gameState.physics.world,
+            car.physicsBody, 
+            startPosition, 
+            startRotation
+        );
         
-        // Reset velocity and angular velocity
-        car.physicsBody.velocity.set(0, 0, 0);
-        car.physicsBody.angularVelocity.set(0, 0, 0);
+        // Also update the visual mesh position and rotation to match
+        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
+        car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
         
-        // Wake up the body to ensure it's active
-        car.physicsBody.wakeUp();
+        // Reset velocity tracking in our game state
+        car.speed = 0;
+        car.velocity = [0, 0, 0];
+        
+        // Reset controls to neutral
+        car.controls = {
+            steering: 0,
+            acceleration: 0,
+            braking: 0
+        };
+    } 
+    else {
+        // Fallback for non-Rapier physics or missing reset function
+        console.log(`Using fallback reset for car ${playerId}`);
+        
+        // Reset mesh position & rotation
+        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
+        car.mesh.quaternion.set(0, 0, 0, 1); // Identity quaternion (no rotation)
+        
+        // If physics body exists, try basic reset
+        if (car.physicsBody) {
+            if (typeof car.physicsBody.setTranslation === 'function') {
+                car.physicsBody.setTranslation(startPosition, true);
+            }
+            
+            if (typeof car.physicsBody.setRotation === 'function') {
+                car.physicsBody.setRotation(startRotation, true);
+            }
+            
+            if (typeof car.physicsBody.setLinvel === 'function') {
+                car.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            }
+            
+            if (typeof car.physicsBody.setAngvel === 'function') {
+                car.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            }
+            
+            // Wake up the body to ensure it's active after reset
+            if (typeof car.physicsBody.wakeUp === 'function') {
+                car.physicsBody.wakeUp();
+            }
+        }
+        
+        // Reset velocity and controls in our game state
+        car.speed = 0;
+        car.velocity = [0, 0, 0];
+        car.controls = { steering: 0, acceleration: 0, braking: 0 };
     }
     
     // Notify player to reset their position via server
     socket.emit('reset_player_position', {
         room_code: gameState.roomCode,
         player_id: playerId,
-        position: startPosition,
+        position: [startPosition.x, startPosition.y, startPosition.z],
         rotation: [0, 0, 0]
     });
     
@@ -942,13 +1116,23 @@ function resetCarPosition(playerId) {
     if (gameState.showStats) {
         updateStatsDisplay();
     }
+    
+    console.log(`Reset complete for car ${playerId}`);
 }
 
 // Function to reset all cars
 function resetAllCars() {
+    console.log("Resetting all cars...");
     Object.keys(gameState.cars).forEach(playerId => {
         resetCarPosition(playerId);
     });
+    
+    // Force a physics world step to ensure all resets take effect
+    if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
+        gameState.physics.world.step();
+    }
+    
+    console.log("All cars reset complete");
 }
 
 // Initialize the stats overlay style
