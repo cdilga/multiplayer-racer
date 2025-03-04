@@ -210,7 +210,7 @@ def player_control_update(data):
     Very simple, as all we need to do is some model validation and then pass through the controls as is to the correct room!
     """
     # Extract data from control update
-    player_sid = request.sid
+    player_sid = data.get('player_id')  # Get player ID from the data payload instead of request.sid
     room_code = data.get('room_code')
     controls = data.get('controls', {})
     timestamp = data.get('timestamp')
@@ -220,7 +220,7 @@ def player_control_update(data):
 
     # Validate required fields
     if not all([player_sid, room_code, controls, timestamp]):
-        logger.warning(f"Invalid control update data received: {data}")
+        logger.info(f"Invalid control update data received: {data}")
         return
     
     # Validate control values are within expected ranges
@@ -238,14 +238,14 @@ def player_control_update(data):
     }
 
     # Debug log the validated control values
-    logger.debug(f"Validated controls for player {player_sid}: steering={steering:.2f}, " 
+    logger.info(f"Validated controls for player {player_sid}: steering={steering:.2f}, " 
                 f"acceleration={acceleration:.2f}, braking={braking:.2f}")
 
     # Forward the control update to all clients in the room
     emit('player_controls_update', control_update, room=room_code)
     
     # Debug log the broadcast
-    logger.debug(f"Broadcasted control update to room {room_code}")
+    logger.info(f"Broadcasted control update to room {room_code}")
     
     if not room_code or room_code not in game_rooms:
         logger.warning(f"Player {player_sid} sent control update for non-existent room {room_code}")

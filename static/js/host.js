@@ -195,10 +195,23 @@ socket.on('player_controls_update', (data) => {
     const { player_id, acceleration, braking, steering } = data;
     
     if (gameState.gameActive && gameState.cars[player_id]) {
+        console.log('Player controls update received:', data);
         const car = gameState.cars[player_id];
-        car.controls = { acceleration, braking, steering };
+        // Validate and sanitize control inputs before assigning
+        car.controls = {
+            acceleration: Math.max(0, Math.min(1, acceleration || 0)), // Clamp between 0-1
+            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1 
+            steering: Math.max(-1, Math.min(1, steering || 0)) // Clamp between -1 to 1
+        };
         // Update last control update timestamp
         car.lastControlUpdate = Date.now();
+        console.log('Car controls:', car.controls);
+        // Force stats update since we have new control data
+        if (gameState.showStats) {
+            updateStatsDisplay();
+
+            console.log('Stats updated');
+        }
     }
 });
 
@@ -556,7 +569,12 @@ function createPlayerCar(playerId, carColor) {
         targetRotation: new THREE.Vector3(0, 0, 0),
         targetQuaternion: targetQuaternion,
         velocity: [0, 0, 0],
-        speed: 0
+        speed: 0,
+        controls: {
+            acceleration: 0,
+            braking: 0,
+            steering: 0
+        }
     };
     
     console.log(`Created car for player ${playerId}`);
@@ -834,6 +852,7 @@ function updateStatsDisplay() {
         // Get control inputs and their age
         let controlsHTML = '<div class="control-info">No controls received</div>';
         if (car.controls) {
+            console.log('Car controls received in the stats update:', car.controls);
             const timeSinceLastControl = car.lastControlUpdate ? Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
             controlsHTML = `
                 <div class="control-info">
@@ -854,6 +873,8 @@ function updateStatsDisplay() {
                     </div>
                     <div class="control-time">Last update: ${timeSinceLastControl}s ago</div>
                 </div>`;
+        } else {
+            console.log('No car controls received in the stats update');
         }
         
         statsHTML += `

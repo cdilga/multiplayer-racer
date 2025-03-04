@@ -659,11 +659,18 @@ function setBraking(value) {
 }
 
 function sendControls() {
-    socket.emit('player_controls_update', {
-        player_id: gameState.playerId,
-        acceleration: gameState.controls.acceleration,
+
+    var to_send = {
+        room_code: gameState.roomCode,
+        controls: {acceleration: gameState.controls.acceleration,
         braking: gameState.controls.braking,
-        steering: gameState.controls.steering
+        steering: gameState.controls.steering},
+        player_id: gameState.playerId,
+        timestamp: Date.now()
+    }
+    console.log('Sending controls:', to_send);
+    socket.emit('player_controls_update', {
+        to_send
     });
 }
 
