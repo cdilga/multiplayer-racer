@@ -43,7 +43,8 @@ const elements = {
     joinUrl: document.getElementById('join-url'),
     gameContainer: document.getElementById('game-container'),
     gameStatus: document.getElementById('game-status'),
-    statsOverlay: document.getElementById('stats-overlay')
+    statsOverlay: document.getElementById('stats-overlay'),
+    fullscreenBtn: document.getElementById('fullscreen-btn')
 };
 
 // Initialize socket connection
@@ -302,6 +303,12 @@ function showScreen(screenName) {
             break;
         case 'game':
             elements.gameScreen.classList.remove('hidden');
+            // Show game status briefly then fade out
+            elements.gameStatus.style.opacity = '1';
+            elements.gameStatus.classList.remove('fade-out');
+            setTimeout(() => {
+                elements.gameStatus.classList.add('fade-out');
+            }, 3000);
             break;
     }
 }
@@ -325,29 +332,34 @@ function initGame() {
         // Initialize Three.js scene
         gameState.scene = new THREE.Scene();
         
-        // Calculate proper aspect ratio - use getBoundingClientRect for more accurate dimensions
-        const container = elements.gameContainer;
-        const containerRect = container.getBoundingClientRect();
-        const containerWidth = containerRect.width || 800; // Fallback width if zero
-        const containerHeight = containerRect.height || 600; // Fallback height if zero
-        const aspectRatio = containerWidth / containerHeight;
-                
+        // Get the actual window dimensions instead of container
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const aspectRatio = width / height;
+        
+        // Initialize camera with proper aspect ratio
         gameState.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
         
+        // Initialize renderer with window dimensions
         gameState.renderer = new THREE.WebGLRenderer({ antialias: true });
-        gameState.renderer.setSize(containerWidth, containerHeight);
+        gameState.renderer.setSize(width, height, true);
         gameState.renderer.setClearColor(0x87CEEB); // Sky blue background
         gameState.renderer.shadowMap.enabled = true;
         
         // Clear any existing renderer from the container
+        const container = elements.gameContainer;
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
         
         container.appendChild(gameState.renderer.domElement);
         
-        // Set up camera position for better viewing angle
-        gameState.camera.position.set(0, 40, 40); // Moved back to see more of the track
+        // Set initial camera position based on aspect ratio
+        if (aspectRatio > 1.5) {
+            gameState.camera.position.set(0, 45, 45);
+        } else {
+            gameState.camera.position.set(0, 50, 50);
+        }
         gameState.camera.lookAt(0, 0, 0);
         
         // Add ambient light
@@ -421,10 +433,10 @@ function initGame() {
         });
         
         // Handle window resize
-        window.removeEventListener('resize', onWindowResize); // Remove any existing handlers
+        window.removeEventListener('resize', onWindowResize);
         window.addEventListener('resize', onWindowResize);
         
-        // Make an immediate call to onWindowResize to ensure proper sizing
+        // Force an immediate resize to ensure proper dimensions
         onWindowResize();
         
         // Force a DOM reflow to fix rendering issues
@@ -747,26 +759,32 @@ function gameLoop() {
 function onWindowResize() {
     if (!gameState.camera || !gameState.renderer) return;
     
-    // Get accurate container dimensions
-    const container = elements.gameContainer;
-    const containerRect = container.getBoundingClientRect();
-    const width = containerRect.width || 800; // Fallback width if zero
-    const height = containerRect.height || 600; // Fallback height if zero
-    
-    console.log('Resize: Container dimensions:', width, height);
+    // Use window dimensions directly
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     
     // Update camera
     gameState.camera.aspect = width / height;
     gameState.camera.updateProjectionMatrix();
     
-    // Update renderer
-    gameState.renderer.setSize(width, height);
+    // Update renderer size
+    gameState.renderer.setSize(width, height, true);
     
-    // Force a render after resize
+    // Adjust camera position based on aspect ratio
+    const aspectRatio = width / height;
+    if (aspectRatio > 1.5) {
+        gameState.camera.position.set(0, 45, 45);
+    } else {
+        gameState.camera.position.set(0, 50, 50);
+    }
+    gameState.camera.lookAt(0, 0, 0);
+    
+    // Force a render
     if (gameState.scene) {
         gameState.renderer.render(gameState.scene, gameState.camera);
     }
 }
+
 function updateStatsDisplay() {
     if (!elements.statsOverlay) return;
     
@@ -1526,4 +1544,33 @@ function ensureCarHasPhysicsBody(playerId) {
     }
     
     return false;
-} 
+}
+
+// Add fullscreen handling functions
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        elements.gameScreen.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// Update fullscreen button icon based on state
+function updateFullscreenButton() {
+    const isFullscreen = document.fullscreenElement !== null;
+    elements.fullscreenBtn.innerHTML = isFullscreen ? `
+        <svg viewBox="0 0 24 24">
+            <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+        </svg>
+    ` : `
+        <svg viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    `;
+}
+
+// Add event listeners for fullscreen
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+elements.fullscreenBtn.addEventListener('click', toggleFullscreen); 
