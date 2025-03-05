@@ -499,7 +499,7 @@ function createPlayerCar(playerId, carColor) {
     });
     
     // Set initial position - lowered spawn height for better control
-    const startY = 20.0; // Changed from 28.0 to 1.0
+    const startY = 0.6; // Barely above the ground to minimize falling
     const startPosition = { x: 0, y: startY, z: -20 }; // Default starting position
     
     carMesh.position.set(
@@ -677,51 +677,92 @@ function gameLoopWithoutRecursion(timestamp) {
                 lastPhysicsUpdate = now;
                 gameState.debugCounters.physicsUpdate++;
                 
-                // Update car positions from physics
+                // Update car positions from physics using our new synchronization function
                 Object.keys(gameState.cars).forEach(playerId => {
                     const car = gameState.cars[playerId];
                     if (!car || !car.physicsBody) return;
                     
-                    // Get physics state
-                    const physicsPos = car.physicsBody.translation();
-                    const physicsRot = car.physicsBody.rotation();
+                    // Get velocity for speed calculations
                     const vel = car.physicsBody.linvel();
-                    
-                    // Update mesh position
-                    car.mesh.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
-                    car.targetPosition.copy(car.mesh.position);
                     
                     // Calculate speed and store it
                     car.speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
                     car.velocity = [vel.x, vel.y, vel.z];
                     
-                    // Update rotation based on velocity
-                    const speed = car.speed;
+                    // Extract wheelMeshes from the car mesh if available
+                    const wheelMeshes = [];
                     
-                    if (speed > 0.5) { // Only when moving at a reasonable speed
-                        // Calculate heading angle from velocity
-                        const angle = Math.atan2(vel.x, -vel.z);
+                    // Find wheel meshes in the car's children
+                    if (car.mesh && car.mesh.children) {
+                        // Look for cylinder geometries which should be the wheels
+                        car.mesh.children.forEach(child => {
+                            if (child.geometry && 
+                                child.geometry.type === "CylinderGeometry" &&
+                                child.rotation.z === Math.PI / 2) { // Wheels are rotated 90 degrees
+                                wheelMeshes.push(child);
+                            }
+                        });
                         
-                        // Create a quaternion for this rotation around Y axis
-                        const newRotation = new THREE.Quaternion();
-                        newRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-                        
-                        // Apply rotation directly for responsive steering
-                        car.mesh.quaternion.copy(newRotation);
-                        car.targetQuaternion = newRotation;
-                    } else {
-                        // At very low speeds, use physics rotation but only for Y axis
-                        const euler = new THREE.Euler().setFromQuaternion(
-                            new THREE.Quaternion(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w)
+                        // Sort wheels by position (front-left, front-right, rear-left, rear-right)
+                        if (wheelMeshes.length === 4) {
+                            wheelMeshes.sort((a, b) => {
+                                // Sort first by Z (front/rear)
+                                if (a.position.z > b.position.z) return -1;
+                                if (a.position.z < b.position.z) return 1;
+                                // Then by X (left/right)
+                                return a.position.x < b.position.x ? -1 : 1;
+                            });
+                        }
+                    }
+                    
+                    // Synchronize the car visual model with physics
+                    if (typeof rapierPhysics.syncCarModelWithPhysics === 'function') {
+                        rapierPhysics.syncCarModelWithPhysics(
+                            car.physicsBody,
+                            car.mesh,
+                            wheelMeshes
                         );
                         
-                        // Only keep the Y rotation (heading)
-                        euler.x = 0;
-                        euler.z = 0;
+                        // Update target position for any camera or UI that needs it
+                        car.targetPosition.copy(car.mesh.position);
+                        car.targetQuaternion = car.mesh.quaternion.clone();
+                    } else {
+                        // Fallback to old method if new function isn't available
+                        const physicsPos = car.physicsBody.translation();
+                        const physicsRot = car.physicsBody.rotation();
                         
-                        // Create new quaternion and apply smoothly
-                        car.targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
-                        car.mesh.quaternion.slerp(car.targetQuaternion, 0.1);
+                        // Update mesh position
+                        car.mesh.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
+                        car.targetPosition.copy(car.mesh.position);
+                        
+                        // Update rotation based on velocity
+                        const speed = car.speed;
+                        
+                        if (speed > 0.5) { // Only when moving at a reasonable speed
+                            // Calculate heading angle from velocity
+                            const angle = Math.atan2(vel.x, -vel.z);
+                            
+                            // Create a quaternion for this rotation around Y axis
+                            const newRotation = new THREE.Quaternion();
+                            newRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+                            
+                            // Apply rotation directly for responsive steering
+                            car.mesh.quaternion.copy(newRotation);
+                            car.targetQuaternion = newRotation;
+                        } else {
+                            // At very low speeds, use physics rotation but only for Y axis
+                            const euler = new THREE.Euler().setFromQuaternion(
+                                new THREE.Quaternion(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w)
+                            );
+                            
+                            // Only keep the Y rotation (heading)
+                            euler.x = 0;
+                            euler.z = 0;
+                            
+                            // Create new quaternion and apply smoothly
+                            car.targetQuaternion = new THREE.Quaternion().setFromEuler(euler);
+                            car.mesh.quaternion.slerp(car.targetQuaternion, 0.1);
+                        }
                     }
                 });
             }
@@ -1069,9 +1110,53 @@ function resetCarPosition(playerId) {
             startRotation
         );
         
-        // Also update the visual mesh position and rotation to match
-        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
-        car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
+        // Also reset wheel steering, suspension, etc. in the wheel data
+        if (car.physicsBody.userData && car.physicsBody.userData.wheels) {
+            car.physicsBody.userData.wheels.forEach(wheel => {
+                wheel.steering = 0;
+                wheel.compression = 0;
+                wheel.groundContact = false;
+                wheel.contactPoint = null;
+                wheel.contactNormal = null;
+            });
+        }
+        
+        // Extract wheelMeshes from the car mesh if available
+        const wheelMeshes = [];
+        if (car.mesh && car.mesh.children) {
+            // Look for cylinder geometries which should be the wheels
+            car.mesh.children.forEach(child => {
+                if (child.geometry && 
+                    child.geometry.type === "CylinderGeometry" &&
+                    child.rotation.z === Math.PI / 2) { // Wheels are rotated 90 degrees
+                    wheelMeshes.push(child);
+                }
+            });
+            
+            // Sort wheels by position
+            if (wheelMeshes.length === 4) {
+                wheelMeshes.sort((a, b) => {
+                    // Sort first by Z (front/rear)
+                    if (a.position.z > b.position.z) return -1;
+                    if (a.position.z < b.position.z) return 1;
+                    // Then by X (left/right)
+                    return a.position.x < b.position.x ? -1 : 1;
+                });
+            }
+        }
+        
+        // Use the sync function to update visual model
+        if (typeof rapierPhysics.syncCarModelWithPhysics === 'function' && wheelMeshes.length > 0) {
+            rapierPhysics.syncCarModelWithPhysics(
+                car.physicsBody,
+                car.mesh,
+                wheelMeshes
+            );
+        } else {
+            // Fallback to direct update
+            car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
+            car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
+        }
         
         // Reset velocity tracking in our game state
         car.speed = 0;
@@ -1083,7 +1168,7 @@ function resetCarPosition(playerId) {
             acceleration: 0,
             braking: 0
         };
-    } 
+    }
     else {
         // Fallback for non-Rapier physics or missing reset function
         console.log(`Using fallback reset for car ${playerId}`);

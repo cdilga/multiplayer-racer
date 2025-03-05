@@ -60,10 +60,10 @@ function createRapierWorld() {
     }
     
     // Create a world with gravity - lower gravity for more arcade-style fun
-    const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+    const gravity = { x: 0.0, y: -20.0, z: 0.0 }; // Increased gravity for faster stabilization
     const world = new RAPIER.World(gravity);
     
-    console.log('Rapier physics world created');
+    console.log('Rapier physics world created with stronger gravity');
     return world;
 }
 
@@ -82,79 +82,109 @@ function createCarPhysics(world, position, dimensions) {
         // STEP 1: Create the main rigid body with realistic parameters
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
-            .setLinearDamping(0.35)      // Light damping for smoother movement
-            .setAngularDamping(0.5)      // Medium angular damping for controlled rotation
-            .setCcdEnabled(true)         // Enable continuous collision detection for fast-moving objects
-            .setAdditionalMass(1200.0);  // More realistic car mass (kg)
+            .setLinearDamping(0.5)      // Increased linear damping for stability
+            .setAngularDamping(1.0)     // Higher angular damping to prevent excessive rotation
+            .setCanSleep(false)         // Don't let the car "sleep" (deactivate when still)
+            .setAdditionalMass(1200.0)  // Make the car much heavier for stability
+            .setCcdEnabled(true);       // Enable continuous collision detection
         
         const carBody = world.createRigidBody(rigidBodyDesc);
         
-        // STEP 2: Create a more complex multi-part collision shape
+        // STEP 2: Create a multi-part collision shape to match the visual model
         
-        // Main chassis - slightly tapered box for better collision profile
-        const mainChassisDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2 * 0.8, length/2)
-            .setDensity(1.0)
-            .setFriction(0.7)
-            .setRestitution(0.2)  // Some bounce for derby-style collisions
-            .setFrictionCombineRule(RAPIER.CoefficientCombineRule.Average);
+        // Main chassis - The main body of the car
+        const mainChassisDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2 * 0.6, length/2)
+            .setDensity(0.6)
+            .setFriction(0.1)          // Lower friction for the main body
+            .setRestitution(0.1);      // Low bounce
         
-        // Create the main chassis collider
         world.createCollider(mainChassisDesc, carBody);
         
-        // Lower chassis/floorpan - creates a lower center of mass for stability
+        // Car roof - Match the visual roof
+        const roofWidth = width * 0.75;
+        const roofHeight = height * 0.7;
+        const roofLength = length * 0.5;
+        
+        const roofDesc = RAPIER.ColliderDesc.cuboid(roofWidth/2, roofHeight/2, roofLength/2)
+            .setTranslation(0, height/2 + roofHeight/2, -(length * 0.05))  // Align with visual model
+            .setDensity(0.3)                                              // Even lighter roof
+            .setFriction(0.1)
+            .setRestitution(0.1);
+        
+        world.createCollider(roofDesc, carBody);
+        
+        // Lower chassis - Creates a lower center of mass for stability
         const floorpanDesc = RAPIER.ColliderDesc.cuboid(width/2 * 0.9, height/4, length/2 * 0.95)
             .setTranslation(0, -height/4, 0)  // Position it at the bottom of the car
-            .setDensity(3.0)                 // Higher density in the floor for stability
-            .setFriction(0.7)
-            .setRestitution(0.2);
+            .setDensity(4.0)                  // Much higher density in the floor for stability
+            .setFriction(0.2);                // Slightly more friction on the bottom
         
-        // Create the floorpan collider
         world.createCollider(floorpanDesc, carBody);
         
-        // STEP 3: Add wheel colliders for better grip simulation
+        // STEP 3: Set up wheel physics using raycasts
         
         // Wheel parameters
-        const wheelRadius = 0.4;
-        const wheelWidth = 0.25;
+        const wheelRadius = 0.5;
+        const wheelWidth = 0.4;
+        
+        // Define wheel positions to match the visual model
         const wheelPositions = [
             // Front left
-            { x: -width/2 + wheelWidth/2, y: -height/2 + wheelRadius * 0.7, z: length/2 - wheelRadius * 1.2 },
+            { x: -width/2 + wheelWidth/2, y: -0.1, z: length/3 },
             // Front right
-            { x: width/2 - wheelWidth/2, y: -height/2 + wheelRadius * 0.7, z: length/2 - wheelRadius * 1.2 },
+            { x: width/2 - wheelWidth/2, y: -0.1, z: length/3 },
             // Rear left
-            { x: -width/2 + wheelWidth/2, y: -height/2 + wheelRadius * 0.7, z: -length/2 + wheelRadius * 1.2 },
+            { x: -width/2 + wheelWidth/2, y: -0.1, z: -length/3 },
             // Rear right
-            { x: width/2 - wheelWidth/2, y: -height/2 + wheelRadius * 0.7, z: -length/2 + wheelRadius * 1.2 }
+            { x: width/2 - wheelWidth/2, y: -0.1, z: -length/3 }
         ];
         
-        // Add each wheel as a cylinder collider
-        wheelPositions.forEach((wheelPos) => {
-            const wheelDesc = RAPIER.ColliderDesc.cylinder(wheelRadius, wheelWidth/2)
-                .setTranslation(wheelPos.x, wheelPos.y, wheelPos.z)
-                .setDensity(1.0)
-                .setFriction(1.5)        // High friction for wheels
-                .setRestitution(0.2);    
-                
-            world.createCollider(wheelDesc, carBody);
+        // Store wheel raycast data for the car
+        const wheelRaycasts = [];
+        
+        // Create wheelRaycast data for each wheel
+        wheelPositions.forEach((wheelPos, index) => {
+            // We'll use this data for our custom raycast vehicle implementation
+            wheelRaycasts.push({
+                position: wheelPos,                  // Position relative to car
+                suspensionRestLength: 0.4,           // Increased rest length of suspension
+                suspensionStiffness: 25.0,           // Reduced spring stiffness for smoother ride
+                suspensionDamping: 3.5,              // Adjusted damping factor
+                suspensionCompression: 0.5,          // Reduced max compression for more stability
+                wheelRadius: wheelRadius,            // Wheel radius
+                wheelWidth: wheelWidth,              // Wheel width
+                frictionSlip: index < 2 ? 5.0 : 5.5, // Reduced tire friction for more stable handling
+                isFrontWheel: index < 2,             // Is this a front (steerable) wheel?
+                steering: 0,                         // Current steering angle
+                compression: 0,                      // Current suspension compression
+                groundContact: false,                // Is wheel in contact with ground?
+                contactPoint: null,                  // Point of contact with ground
+                contactNormal: null,                 // Normal vector at contact point
+                wheelObject: null                    // Reference to visual wheel object (added later)
+            });
         });
         
-        // STEP 4: Set up Derby-specific properties
+        // STEP 4: Set up vehicle-specific properties
         
         // Store car-specific properties in the user data
         carBody.userData = {
             // Physics properties
-            enginePower: 2500.0,       // Max engine force
-            brakeForce: 3000.0,        // Max braking force
-            steeringResponse: 0.7,     // How quickly steering responds (0-1)
-            lateralGripFactor: 1.8,    // Higher values mean more grip in turns
-            rollingResistance: 0.05,   // Natural rolling resistance
-            aerodynamicDrag: 0.4,      // Air resistance factor
+            enginePower: 1600.0,        // Reduced engine force for more gradual acceleration
+            brakeForce: 2000.0,         // Reduced braking force for smoother deceleration
+            steeringResponse: 0.3,      // Slower steering response for more stability
+            maxSteeringAngle: 0.6,      // Reduced maximum steering angle (about 35 degrees)
+            steeringReturnSpeed: 3.0,   // Slower steering return for stability
+            lateralGripFactor: 2.0,     // Reduced lateral grip factor
+            rollingResistance: 0.15,    // Increased rolling resistance for better deceleration
+            aerodynamicDrag: 0.5,       // Increased drag for better speed control
+            
+            // Vehicle-specific data
+            wheels: wheelRaycasts,      // Wheel data for raycast vehicle
             
             // Car state
             currentSpeed: 0,
             isGrounded: true,
             lastGroundContact: Date.now(),
-            wheelContactPoints: [false, false, false, false],
             
             // Control inputs (last applied)
             controls: {
@@ -178,7 +208,7 @@ function createCarPhysics(world, position, dimensions) {
             carBody.wakeUp();
         }
         
-        console.log("Created derby-style car physics body successfully");
+        console.log("Created improved vehicle physics model successfully");
         return carBody;
     } catch (error) {
         console.error("Error creating car physics body:", error);
@@ -197,12 +227,13 @@ function createGroundPlane(world) {
         console.log('Creating ground plane with derby arena barriers');
         
         // STEP 1: Create the main ground plane
-        const groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
+        const groundBodyDesc = RAPIER.RigidBodyDesc.fixed()
+            .setTranslation(0, 0, 0); // Ensure ground is at y=0
         const groundBody = world.createRigidBody(groundBodyDesc);
         
         // Main ground surface - large flat cuboid
-        const groundColliderDesc = RAPIER.ColliderDesc.cuboid(100, 0.1, 100)
-            .setFriction(0.8)           // Good grip on the main surface
+        const groundColliderDesc = RAPIER.ColliderDesc.cuboid(200, 0.5, 200) // Larger and thicker ground
+            .setFriction(1.0)           // Increased friction for better grip
             .setRestitution(0.2);       // Slight bounce for dramatic collisions
         
         world.createCollider(groundColliderDesc, groundBody);
@@ -234,7 +265,7 @@ function createGroundPlane(world) {
             
         world.createCollider(innerDesc, groundBody);
         
-        console.log('Ground plane and derby arena barriers created successfully');
+        console.log('Ground plane created at position (0,0,0) with size 400x1x400');
         return groundBody;
     } catch (error) {
         console.error('Error creating ground plane:', error);
@@ -276,7 +307,7 @@ function applyCarControls(carBody, controls, playerId) {
             acceleration > 0.1 || 
             braking > 0.1;
             
-        if (hasSignificantControls && Math.random() < 0.02) {
+        if (hasSignificantControls && Math.random() < 0.01) {
             const playerInfo = playerId ? `for player ${playerId}` : '';
             console.log(`🚗 APPLYING CONTROLS ${playerInfo}: steering=${steering.toFixed(2)}, accel=${acceleration.toFixed(2)}, brake=${braking.toFixed(2)}`);
         }
@@ -329,8 +360,9 @@ function applyCarControls(carBody, controls, playerId) {
         
         // STEP 2: Calculate the car's current velocity and orientation relative to it
         
-        // Get current velocity and orientation
+        // Get current velocity and world position
         const vel = carBody.linvel();
+        const worldPos = carBody.translation();
         
         // Project velocity onto forward/right directions for lateral and forward velocity
         const forwardVel = worldForward.x * vel.x + worldForward.z * vel.z;
@@ -349,16 +381,44 @@ function applyCarControls(carBody, controls, playerId) {
         // STEP 3: Get car-specific physics properties
         
         // Get car-specific properties from userData
-        const enginePower = carBody.userData?.enginePower || 2500.0;
+        const enginePower = carBody.userData?.enginePower || 2000.0;
         const brakePower = carBody.userData?.brakeForce || 3000.0;
-        const lateralGripFactor = carBody.userData?.lateralGripFactor || 1.8;
-        const rollingResistance = carBody.userData?.rollingResistance || 0.05;
+        const maxSteeringAngle = carBody.userData?.maxSteeringAngle || 0.8;
+        const steeringReturnSpeed = carBody.userData?.steeringReturnSpeed || 5.0;
+        const lateralGripFactor = carBody.userData?.lateralGripFactor || 3.0;
+        const rollingResistance = carBody.userData?.rollingResistance || 0.1;
         const aerodynamicDrag = carBody.userData?.aerodynamicDrag || 0.4;
         
-        // STEP 4: Apply forces and torques to simulate car dynamics
+        // STEP 4: Process wheel physics using raycast suspension model
+        
+        // Get wheel data from user data
+        const wheels = carBody.userData?.wheels || [];
+        if (wheels.length === 0) {
+            console.warn('No wheel data found for physics car');
+        }
+
+        // Initialize ground contact flag for whole vehicle
+        let atLeastOneWheelInContact = false;
+        
+        // Track forces for each wheel
+        let totalLongitudinalForce = 0;
+        let totalLateralForce = 0;
+        
+        // Update steering angle for front wheels based on input
+        wheels.forEach(wheel => {
+            if (wheel.isFrontWheel) {
+                // Calculate target steering angle - non-linear to make it more responsive
+                const targetSteeringAngle = steering * maxSteeringAngle * Math.sign(steering) * 
+                                         (0.8 + 0.2 * Math.abs(steering)); // Non-linear steering curve
+                
+                // Gradually approach target steering angle (smoother steering)
+                const steeringDelta = targetSteeringAngle - wheel.steering;
+                wheel.steering += steeringDelta * 0.2; // Adjust steering gradually
+            }
+        });
         
         // Speed limits
-        const maxSpeedKmh = 70;         // Maximum forward speed
+        const maxSpeedKmh = 80;         // Maximum forward speed
         const reverseMaxSpeedKmh = 30;  // Maximum reverse speed 
         
         // Convert to m/s
@@ -375,124 +435,221 @@ function applyCarControls(carBody, controls, playerId) {
         // Only apply forces if the appropriate method exists
         if (typeof carBody.addForce === 'function') {
             
-            // STEP 4A: Apply engine/acceleration force
-            if (acceleration > 0) {
-                // Progressive acceleration curve
-                // - Full power at low speeds
-                // - Reduced power as we approach max speed
-                const speedRatio = Math.min(1, speedKmh / maxSpeedKmh);
+            // Process each wheel using raycast suspension model
+            wheels.forEach((wheel, index) => {
+                // Get wheel position in world space using THREE.js for reliable math
+                const wheelPosLocal = new THREE.Vector3(
+                    wheel.position.x,
+                    wheel.position.y, 
+                    wheel.position.z
+                );
                 
-                // Calculate power curve - reduce power as speed increases
-                // This creates a more realistic feel as the car approaches top speed
-                const powerCurve = 1 - Math.pow(speedRatio, 2);
+                // Create rotation matrix from car's quaternion
+                const carRotation = new THREE.Quaternion(
+                    rotation.x, rotation.y, rotation.z, rotation.w
+                );
+                const carMatrix = new THREE.Matrix4().makeRotationFromQuaternion(carRotation);
                 
-                // Calculate final engine force with acceleration input
-                appliedEngineForce = enginePower * acceleration * powerCurve;
-                
-                // Only apply engine force if we're below max speed or moving backward
-                if (speedKmh < maxSpeedKmh || !isMovingForward) {
-                    const force = {
-                        x: worldForward.x * appliedEngineForce,
-                        y: 0,
-                        z: worldForward.z * appliedEngineForce
-                    };
-                    
-                    carBody.addForce(force, true);
-                    
-                    if (Math.random() < 0.005) {
-                        console.log(`💨 ENGINE: Applied force: ${appliedEngineForce.toFixed(0)}N, speed: ${speedKmh.toFixed(1)} km/h`);
-                    }
-                }
-            }
-            
-            // STEP 4B: Apply braking/reverse
-            if (braking > 0) {
-                // We handle braking differently depending on whether we're moving forward or backward
-                
-                if (isMovingForward && velMag > 0.1) {
-                    // Forward braking - apply force opposite to velocity vector
-                    appliedBrakeForce = brakePower * braking;
-                    
-                    // Apply relative to current speed - stronger at higher speeds
-                    const brakeFactor = 0.5 + 0.5 * (speedKmh / maxSpeedKmh);
-                    const scaledBrakeForce = appliedBrakeForce * brakeFactor;
-                    
-                    const force = {
-                        x: -vel.x / velMag * scaledBrakeForce,
-                        y: 0,
-                        z: -vel.z / velMag * scaledBrakeForce
-                    };
-                    
-                    carBody.addForce(force, true);
-                    
-                    if (Math.random() < 0.005) {
-                        console.log(`🛑 BRAKE: Applied brake force: ${scaledBrakeForce.toFixed(0)}N`);
-                    }
-                } 
-                else if (speedKmh < reverseMaxSpeedKmh) {
-                    // Reverse - apply force in backward direction
-                    // Use 60% of engine power for reverse
-                    appliedBrakeForce = enginePower * 0.6 * braking;
-                    
-                    // Reduce force as we approach max reverse speed 
-                    const reverseSpeedRatio = speedKmh / reverseMaxSpeedKmh;
-                    const reversePowerCurve = 1 - Math.pow(reverseSpeedRatio, 2);
-                    const scaledReverseForce = appliedBrakeForce * reversePowerCurve;
-                    
-                    const force = {
-                        x: -worldForward.x * scaledReverseForce,
-                        y: 0,
-                        z: -worldForward.z * scaledReverseForce
-                    };
-                    
-                    carBody.addForce(force, true);
-                    
-                    if (Math.random() < 0.005) {
-                        console.log(`⏪ REVERSE: Force: ${scaledReverseForce.toFixed(0)}N, speed: ${speedKmh.toFixed(1)} km/h`);
-                    }
-                }
-            }
-            
-            // STEP 4C: Apply lateral grip/friction (simulates tire sidewall grip)
-            
-            // Only apply lateral grip when moving at a reasonable speed
-            if (Math.abs(rightVel) > 0.2 && velMag > 1.0) {
-                // Calculate tire grip based on speed
-                // Reduce grip at higher speeds to allow drifting
-                const gripSpeedFactor = Math.max(0.5, 1.0 - (velMag / maxSpeedMs) * 0.3);
-                
-                // Apply lateral force proportional to sideways velocity
-                // This simulates tires resisting sideways movement
-                appliedLateralForce = -rightVel * lateralGripFactor * gripSpeedFactor;
-                
-                // Scale lateral force based on whether we're accelerating or braking
-                // This simulates weight transfer effects
-                const weightTransferFactor = 1.0 + acceleration * 0.2 - braking * 0.2;
-                appliedLateralForce *= weightTransferFactor;
-                
-                const lateralForce = {
-                    x: worldRight.x * appliedLateralForce,
-                    y: 0,
-                    z: worldRight.z * appliedLateralForce
+                // Transform wheel local position to world position
+                const wheelWorldPos = wheelPosLocal.clone().applyMatrix4(carMatrix);
+                const wheelPosWorld = {
+                    x: worldPos.x + wheelWorldPos.x,
+                    y: worldPos.y + wheelWorldPos.y,
+                    z: worldPos.z + wheelWorldPos.z
                 };
                 
-                carBody.addForce(lateralForce, true);
+                // Perform raycast test (simplified since we don't call the RAPIER raycast API directly)
+                const groundY = 0; // Assuming ground is at Y=0
+                const wheelHeight = wheelPosWorld.y;
                 
-                if (Math.random() < 0.005) {
-                    console.log(`↔️ GRIP: Lateral force: ${appliedLateralForce.toFixed(0)}N, sideways vel: ${rightVel.toFixed(2)}`);
+                // SIMPLIFIED GROUND DETECTION: If car is within a height threshold, force it to stay on ground
+                const heightThreshold = 10.0; // If car is within this distance of ground, consider it for contact
+                
+                if (wheelHeight < heightThreshold) {
+                    // We're close enough to ground, FORCE ground contact
+                    wheel.groundContact = true;
+                    
+                    // Calculate ideal wheel height (wheelRadius above ground)
+                    const idealHeight = wheel.wheelRadius;
+                    
+                    // Calculate how much suspension should be compressed to reach ideal height
+                    wheel.compression = Math.max(0, wheel.suspensionRestLength - (wheelHeight - idealHeight));
+                    
+                    // Force contact point to be at ground level
+                    wheel.contactPoint = {
+                        x: wheelPosWorld.x,
+                        y: groundY,
+                        z: wheelPosWorld.z
+                    };
+                    
+                    wheel.contactNormal = { x: 0, y: 1, z: 0 }; // Ground normal points up
+                    
+                    atLeastOneWheelInContact = true;
+                    
+                    // Always apply a strong downward force to keep car on ground
+                    const suspensionForce = 50.0 * (1.0 + (heightThreshold - wheelHeight) * 2.0);
+                    
+                    // Apply a strong force to keep the car on the ground
+                    carBody.addForceAtPoint(
+                        { x: 0, y: suspensionForce, z: 0 },
+                        wheelPosWorld,
+                        true
+                    );
+                    
+                    // Calculate wheel forces (engine, braking, lateral grip)
+                    
+                    // Calculate wheel forward direction (taking steering into account for front wheels)
+                    let wheelForward = { ...worldForward };
+                    
+                    if (wheel.isFrontWheel && Math.abs(wheel.steering) > 0.01) {
+                        // Apply steering rotation to front wheels
+                        const steerAngle = wheel.steering;
+                        const cosSteer = Math.cos(steerAngle);
+                        const sinSteer = Math.sin(steerAngle);
+                        
+                        // Rotate forward direction around Y axis based on steering angle
+                        wheelForward = {
+                            x: worldForward.x * cosSteer - worldRight.x * sinSteer,
+                            y: 0,
+                            z: worldForward.z * cosSteer - worldRight.z * sinSteer
+                        };
+                    }
+                    
+                    // Calculate wheel right vector (perpendicular to wheel forward)
+                    const wheelRight = {
+                        x: wheelForward.z,
+                        y: 0,
+                        z: -wheelForward.x
+                    };
+                    
+                    // Calculate wheel velocity at contact point
+                    // Using local linear velocity as Rapier doesn't have linvelAt function
+                    const carVel = carBody.linvel();
+                    const angVel = carBody.angvel();
+                    
+                    // Calculate velocity at the wheel position using the formula: v = v_cm + ω × r
+                    // where r is the vector from center of mass to wheel position
+                    const r = {
+                        x: wheelPosWorld.x - worldPos.x,
+                        y: wheelPosWorld.y - worldPos.y,
+                        z: wheelPosWorld.z - worldPos.z
+                    };
+                    
+                    const wheelVelAtContact = {
+                        x: carVel.x + (angVel.y * r.z - angVel.z * r.y),
+                        y: carVel.y + (angVel.z * r.x - angVel.x * r.z),
+                        z: carVel.z + (angVel.x * r.y - angVel.y * r.x)
+                    };
+                    
+                    // Project wheel velocity onto wheel forward/right directions
+                    const wheelForwardVel = wheelForward.x * wheelVelAtContact.x + wheelForward.z * wheelVelAtContact.z;
+                    const wheelRightVel = wheelRight.x * wheelVelAtContact.x + wheelRight.z * wheelVelAtContact.z;
+                    
+                    // Calculate engine force based on acceleration input
+                    let engineForce = 0;
+                    
+                    if (wheel.isFrontWheel) {
+                        // Front-wheel drive for simplicity
+                        if (acceleration > 0 && speedKmh < maxSpeedKmh) {
+                            // Progressive acceleration curve that reduces as speed increases
+                            const speedRatio = Math.min(1, speedKmh / maxSpeedKmh);
+                            const powerCurve = 1 - Math.pow(speedRatio, 2);
+                            engineForce = enginePower * acceleration * powerCurve / 2; // Divide by wheel count
+                            appliedEngineForce += engineForce;
+                        }
+                    }
+                    
+                    // Calculate braking force
+                    let brakeForce = 0;
+                    if (braking > 0) {
+                        if (isMovingForward) {
+                            // Forward braking
+                            const brakeFactor = 0.5 + 0.5 * (speedKmh / maxSpeedKmh);
+                            brakeForce = -(brakePower * braking * brakeFactor) / 4; // Divide by wheel count
+                        } else if (speedKmh < reverseMaxSpeedKmh) {
+                            // Reverse driving only when slow or stopped
+                            const reversePower = enginePower * 0.6;
+                            const reverseSpeedRatio = speedKmh / reverseMaxSpeedKmh;
+                            const reversePowerCurve = 1 - Math.pow(reverseSpeedRatio, 2);
+                            brakeForce = -(reversePower * braking * reversePowerCurve) / 4; // Divide by wheel count
+                        }
+                        appliedBrakeForce += Math.abs(brakeForce);
+                    }
+                    
+                    // Calculate longitudinal (forward/backward) force
+                    const longitudinalForce = engineForce + brakeForce;
+                    
+                    // Calculate lateral grip force (perpendicular to wheel direction)
+                    let lateralForce = 0;
+                    
+                    if (Math.abs(wheelRightVel) > 0.2) {
+                        // Calculate grip based on speed (less grip at higher speeds for drifting)
+                        const gripSpeedFactor = Math.max(0.5, 0.9 - (velMag / maxSpeedMs) * 0.25);
+                        
+                        // Calculate lateral force opposing sideways movement - reduced strength
+                        lateralForce = -wheelRightVel * wheel.frictionSlip * gripSpeedFactor * 0.7;
+                        
+                        // Scale based on vertical load (more force when suspension is compressed)
+                        const compressionRatio = wheel.compression > 0 ? wheel.compression / wheel.suspensionCompression : 0.1;
+                        lateralForce *= 0.3 + 0.7 * compressionRatio;
+                        
+                        // Scale based on player input - reduced effect
+                        const inputFactor = 1.0 + acceleration * 0.1 - braking * 0.15;
+                        lateralForce *= inputFactor;
+                        
+                        // Cap maximum lateral force (prevent unrealistic forces)
+                        const maxLateralForce = suspensionForce * 0.4; // Reduced max force
+                        lateralForce = Math.max(-maxLateralForce, Math.min(lateralForce, maxLateralForce));
+                        
+                        totalLateralForce += lateralForce;
+                    }
+                    
+                    // Apply forces at wheel contact point
+                    if (longitudinalForce !== 0) {
+                        const longForceVec = {
+                            x: wheelForward.x * longitudinalForce,
+                            y: 0,
+                            z: wheelForward.z * longitudinalForce
+                        };
+                        
+                        carBody.addForceAtPoint(
+                            longForceVec,
+                            wheelPosWorld,
+                            true
+                        );
+                        
+                        totalLongitudinalForce += longitudinalForce;
+                    }
+                    
+                    if (lateralForce !== 0) {
+                        const latForceVec = {
+                            x: wheelRight.x * lateralForce,
+                            y: 0,
+                            z: wheelRight.z * lateralForce
+                        };
+                        
+                        carBody.addForceAtPoint(
+                            latForceVec,
+                            wheelPosWorld,
+                            true
+                        );
+                        
+                        appliedLateralForce += Math.abs(lateralForce);
+                    }
                 }
-            }
+            });
             
-            // STEP 4D: Apply drag and rolling resistance
+            // STEP 5: Apply overall vehicle forces
             
-            // Rolling resistance (constant low force opposing movement)
+            // Apply drag and rolling resistance
             if (velMag > 0.1) {
+                // Calculate rolling resistance (constant low force opposing movement)
                 const rollingForce = rollingResistance * velMag;
                 
-                // Aerodynamic drag (increases with square of speed)
+                // Calculate aerodynamic drag (increases with square of speed)
                 const dragForce = aerodynamicDrag * velMag * velMag;
                 
-                // Combined resistance force
+                // Combined resistance force 
                 appliedDragForce = rollingForce + dragForce;
                 
                 // Apply opposite to velocity direction
@@ -504,58 +661,65 @@ function applyCarControls(carBody, controls, playerId) {
                 
                 carBody.addForce(resistanceForce, true);
                 
-                if (Math.random() < 0.002) {
+                // Add stabilizing torque to counteract unwanted rotation
+                // This helps keep the car from spinning around its axis
+                const angVel = carBody.angvel();
+                if (Math.abs(angVel.x) > 0.2 || Math.abs(angVel.z) > 0.2) {
+                    const stabilizingTorque = {
+                        x: -angVel.x * 15.0, // Strong damping for roll
+                        y: -angVel.y * 1.5,  // Light damping for yaw (steering)
+                        z: -angVel.z * 15.0  // Strong damping for pitch
+                    };
+                    carBody.addTorque(stabilizingTorque, true);
+                }
+                
+                if (Math.random() < 0.001) {
                     console.log(`🌬️ DRAG: Applied resistance: ${appliedDragForce.toFixed(0)}N at ${speedKmh.toFixed(1)} km/h`);
                 }
             }
-            
-            // STEP 4E: Apply steering torque
-            if (Math.abs(steering) > 0.01 && typeof carBody.addTorque === 'function') {
-                // Calculate steering magnitude based on speed
-                // - More responsive at low speeds
-                // - Reduced response at high speeds for stability
-                const speedFactor = Math.pow(Math.max(0, Math.min(1, 1 - (velMag / maxSpeedMs) * 0.8)), 0.8);
-                
-                // Base steering force with non-linear response curve
-                const steeringMagnitude = 300 * Math.sign(steering) * Math.pow(Math.abs(steering), 1.3);
-                
-                // Apply speed scaling
-                appliedSteeringTorque = steeringMagnitude * (0.3 + 0.7 * speedFactor);
-                
-                // Add countersteer assist to help control slides
-                if (Math.abs(rightVel) > 3.0) {
-                    const counterSteerMagnitude = 50 * Math.sign(-rightVel) * Math.min(1, Math.abs(rightVel) / 8);
-                    appliedSteeringTorque += counterSteerMagnitude;
-                }
-                
-                // Create torque vector (y-axis for steering)
-                const torque = { 
-                    x: 0, 
-                    y: appliedSteeringTorque, 
-                    z: 0 
+
+            // Apply a direct downward force to ensure the car doesn't float away
+            const carHeight = carBody.translation().y;
+            if (carHeight > 1.0) { // If car is more than 1 unit above ground
+                // Apply stronger force the higher the car is
+                const gravityMultiplier = 1.0 + carHeight * 2.0;
+                const downwardForce = {
+                    x: 0,
+                    y: -200.0 * gravityMultiplier, // Stronger direct force
+                    z: 0
                 };
                 
-                carBody.addTorque(torque, true);
+                carBody.addForce(downwardForce, true);
                 
                 if (Math.random() < 0.005) {
-                    console.log(`🔄 STEERING: Torque: ${appliedSteeringTorque.toFixed(0)}, speed factor: ${speedFactor.toFixed(2)}`);
+                    console.log(`⬇️ GRAVITY: Applied downward force: ${(200.0 * gravityMultiplier).toFixed(0)}N at height ${carHeight.toFixed(1)}`);
                 }
             }
         }
         
-        // STEP 5: Store debug data about applied forces
+        // STEP 6: Update car state
+        carBody.userData.isGrounded = atLeastOneWheelInContact;
+        
+        if (atLeastOneWheelInContact) {
+            carBody.userData.lastGroundContact = Date.now();
+        }
+        
+        // Record force application for debugging
         carBody.userData.lastAppliedForces = {
             engineForce: appliedEngineForce,
             brakeForce: appliedBrakeForce,
             steeringTorque: appliedSteeringTorque,
             lateralForce: appliedLateralForce,
-            dragForce: appliedDragForce
+            dragForce: appliedDragForce,
+            totalLongitudinalForce: totalLongitudinalForce,
+            totalLateralForce: totalLateralForce
         };
         
-        // Wake up the body when forces are applied
+        // Wake up the body to ensure physics simulation continues
         if (typeof carBody.wakeUp === 'function') {
             carBody.wakeUp();
         }
+        
     } catch (error) {
         console.error('Error applying car controls:', error);
     }
@@ -566,60 +730,60 @@ function resetCarPosition(world, carBody, startPosition, startRotation = { x: 0,
     if (!carBody || !world) return false;
     
     try {
+        // Ensure the position is at least 1 unit above ground to prevent clipping
+        const resetPosition = {
+            x: startPosition.x,
+            y: Math.max(startPosition.y, 2.0), // Ensure minimum height
+            z: startPosition.z
+        };
+        
+        console.log(`Resetting car to position: (${resetPosition.x}, ${resetPosition.y}, ${resetPosition.z})`);
+        
         // Stop all motion
         carBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
         carBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
         
-        // Reset position
-        carBody.setTranslation(startPosition, true);
+        // Set the position
+        carBody.setTranslation(resetPosition, true);
         
-        // Reset rotation - ensure quaternion is valid
-        if (!startRotation.w && startRotation.w !== 0) {
-            // If we only have Euler angles, convert to quaternion
-            if (typeof THREE !== 'undefined' && THREE.Quaternion) {
-                const euler = new THREE.Euler(
-                    startRotation.x || 0, 
-                    startRotation.y || 0, 
-                    startRotation.z || 0, 
-                    'XYZ'
-                );
-                const quaternion = new THREE.Quaternion().setFromEuler(euler);
-                startRotation = {
-                    x: quaternion.x,
-                    y: quaternion.y,
-                    z: quaternion.z,
-                    w: quaternion.w
+        // Set the rotation (quaternion)
+        carBody.setRotation(startRotation, true);
+        
+        // Reset additional properties in userData
+        if (carBody.userData) {
+            carBody.userData.currentSpeed = 0;
+            carBody.userData.isGrounded = false;
+            carBody.userData.lastGroundContact = Date.now();
+            
+            // Reset controls
+            if (carBody.userData.controls) {
+                carBody.userData.controls = {
+                    acceleration: 0,
+                    braking: 0,
+                    steering: 0
                 };
-            } else {
-                // Default to identity quaternion if THREE.js not available
-                startRotation = { x: 0, y: 0, z: 0, w: 1 };
+            }
+            
+            // Reset wheel data
+            if (carBody.userData.wheels) {
+                carBody.userData.wheels.forEach(wheel => {
+                    wheel.steering = 0;
+                    wheel.compression = 0;
+                    wheel.groundContact = false;
+                    wheel.contactPoint = null;
+                    wheel.contactNormal = null;
+                });
             }
         }
         
-        carBody.setRotation(startRotation, true);
-        
-        // Reset user data state
-        if (carBody.userData) {
-            carBody.userData.currentSpeed = 0;
-            carBody.userData.controls = { steering: 0, acceleration: 0, braking: 0 };
-            carBody.userData.lastAppliedForces = {
-                engineForce: 0,
-                brakeForce: 0,
-                steeringTorque: 0,
-                lateralForce: 0,
-                dragForce: 0
-            };
-        }
-        
-        // Wake up the body to ensure it starts fresh
+        // Wake up the physics body
         if (typeof carBody.wakeUp === 'function') {
             carBody.wakeUp();
         }
         
-        // Force a physics world step to ensure changes take effect
-        world.step();
+        // Apply a small downward impulse to ensure the car starts falling
+        carBody.applyImpulse({ x: 0, y: -10.0, z: 0 }, true);
         
-        console.log(`Car reset to position (${startPosition.x}, ${startPosition.y}, ${startPosition.z})`);
         return true;
     } catch (error) {
         console.error('Error resetting car position:', error);
@@ -632,20 +796,136 @@ function isCarUpsideDown(carBody) {
     if (!carBody) return false;
     
     try {
-        // Get car's up vector in world space
-        const rotation = carBody.rotation();
-        const q = rotation;
+        // Get the rotation of the car
+        const q = carBody.rotation();
         
-        // Transform up vector (0,1,0) by quaternion
-        const worldUpY = 2 * (q.x * q.y + q.w * q.z) * 0 + 
-                       (1 - 2 * (q.x * q.x + q.z * q.z)) * 1 + 
-                       2 * (q.y * q.z - q.w * q.x) * 0;
+        // Get the up vector in world space (transformed from local Y-up)
+        const localUp = { x: 0, y: 1, z: 0 };
         
-        // Car is upside down if its Y-up vector is pointing downward
-        return worldUpY < 0;
+        // Transform the up vector by the car's rotation quaternion
+        const worldUpY = 2 * (q.x * q.y + q.w * q.z) * localUp.x + 
+                        (1 - 2 * (q.x * q.x + q.z * q.z)) * localUp.y + 
+                        2 * (q.y * q.z - q.w * q.x) * localUp.z;
+        
+        // Check if the car is upside down (local Y-up is pointing down in world space)
+        // We use a threshold of -0.75 to prevent flipping back and forth around 90 degrees
+        return worldUpY < -0.75;
     } catch (error) {
         console.error('Error checking if car is upside down:', error);
         return false;
+    }
+}
+
+/**
+ * Synchronize the Three.js visual car model with the physics model
+ * This ensures the car visual representation matches exactly with the physics body
+ * @param {Object} carBody - The Rapier physics rigid body
+ * @param {Object} carMesh - The Three.js mesh or group for the car
+ * @param {Array} wheelMeshes - Array of wheel meshes in order [frontLeft, frontRight, rearLeft, rearRight]
+ */
+function syncCarModelWithPhysics(carBody, carMesh, wheelMeshes = []) {
+    if (!carBody || !carMesh) return;
+    
+    try {
+        // Update main car body position and rotation
+        const physicsPos = carBody.translation();
+        const physicsRot = carBody.rotation();
+        
+        // Set the car mesh position
+        carMesh.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
+        
+        // Set the car mesh rotation
+        carMesh.quaternion.set(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w);
+        
+        // If wheel meshes are provided and wheel data exists in the car body
+        if (wheelMeshes.length > 0 && carBody.userData && carBody.userData.wheels) {
+            const wheels = carBody.userData.wheels;
+            
+            // Update each wheel mesh based on physics data
+            wheels.forEach((wheelData, index) => {
+                // Make sure we have a corresponding wheel mesh
+                if (index < wheelMeshes.length && wheelMeshes[index]) {
+                    const wheelMesh = wheelMeshes[index];
+                    const worldPos = carBody.translation();
+                    const worldRot = carBody.rotation();
+                    
+                    // Calculate wheel position in world space
+                    // Use THREE.js for more reliable vector math
+                    const carPos = new THREE.Vector3(worldPos.x, worldPos.y, worldPos.z);
+                    const wheelLocalPos = new THREE.Vector3(
+                        wheelData.position.x, 
+                        wheelData.position.y, 
+                        wheelData.position.z
+                    );
+                    
+                    // Create rotation matrix from car's quaternion
+                    const carRotation = new THREE.Quaternion(worldRot.x, worldRot.y, worldRot.z, worldRot.w);
+                    const carMatrix = new THREE.Matrix4().makeRotationFromQuaternion(carRotation);
+                    
+                    // Transform wheel local position to world position
+                    const wheelWorldPos = wheelLocalPos.clone().applyMatrix4(carMatrix);
+                    const wheelFinalPos = carPos.clone().add(wheelWorldPos);
+                    
+                    // Adjust for suspension compression
+                    if (wheelData.groundContact) {
+                        // Apply compression along world up vector
+                        wheelFinalPos.y -= wheelData.compression;
+                    }
+                    
+                    // Set wheel position
+                    wheelMesh.position.set(wheelFinalPos.x, wheelFinalPos.y, wheelFinalPos.z);
+                    
+                    // Debug wheel positions - log occasionally
+                    if (Math.random() < 0.0002) {
+                        console.log(`Wheel ${index} position:`, 
+                                    { x: wheelFinalPos.x, y: wheelFinalPos.y, z: wheelFinalPos.z }, 
+                                    'Local pos:', wheelData.position,
+                                    'Contact:', wheelData.groundContact,
+                                    'Compression:', wheelData.compression);
+                    }
+                    
+                    // Apply car's rotation to the wheel
+                    wheelMesh.quaternion.set(worldRot.x, worldRot.y, worldRot.z, worldRot.w);
+                    
+                    // Apply steering rotation for front wheels
+                    if (wheelData.isFrontWheel && Math.abs(wheelData.steering) > 0.01) {
+                        // Create a quaternion for the steering rotation (around Y axis)
+                        const steerAngle = wheelData.steering;
+                        const steerQuat = new THREE.Quaternion().setFromAxisAngle(
+                            new THREE.Vector3(0, 1, 0), 
+                            steerAngle
+                        );
+                        
+                        // Apply the steering rotation
+                        wheelMesh.quaternion.premultiply(steerQuat);
+                    }
+                    
+                    // Simulate wheel rotation based on vehicle speed
+                    // (This can be enhanced to use actual wheel angular velocity)
+                    if (carBody.userData.currentSpeed) {
+                        // Simple rotation based on speed
+                        const speed = carBody.userData.currentSpeed / 3.6; // Convert km/h to m/s
+                        const wheelRadius = wheelData.wheelRadius;
+                        const rotationSpeed = speed / wheelRadius;
+                        
+                        // The existing rotation is around the Z axis since we rotated the wheels
+                        const rotationAxis = new THREE.Vector3(0, 0, 1);
+                        const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
+                            rotationAxis,
+                            rotationSpeed * 0.01 // Small increment per frame
+                        );
+                        
+                        // Apply the rotation
+                        wheelMesh.quaternion.premultiply(rotationQuat);
+                    }
+                    
+                    // Store reference to wheel mesh in wheel data for future updates
+                    wheelData.wheelObject = wheelMesh;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error synchronizing car model with physics:', error);
     }
 }
 
@@ -657,5 +937,6 @@ window.rapierPhysics = {
     createGroundPlane: createGroundPlane,
     applyCarControls: applyCarControls,
     resetCarPosition: resetCarPosition,
-    isCarUpsideDown: isCarUpsideDown
+    isCarUpsideDown: isCarUpsideDown,
+    syncCarModelWithPhysics: syncCarModelWithPhysics
 };

@@ -80,41 +80,51 @@ function createCar(options = {}) {
             color: config.wheelColor,
             roughness: 0.8
         });
+
+
+        const wheel_protrusion = 0.1;
         
         // Wheel positions
         const wheelPositions = [
             // Front left
             {
-                x: -(config.width / 2) + (config.wheelThickness / 2),
-                y: config.wheelRadius,
+                x: -(config.width / 2) + (config.wheelThickness / 2 - wheel_protrusion),
+                y: -0.1, // Position at the bottom of the car with slight overlap
                 z: (config.length / 3)
             },
             // Front right
             {
-                x: (config.width / 2) - (config.wheelThickness / 2),
-                y: config.wheelRadius,
+                x: (config.width / 2) - (config.wheelThickness / 2 - wheel_protrusion),
+                y: -0.1, // Position at the bottom of the car with slight overlap
                 z: (config.length / 3)
             },
             // Rear left
             {
-                x: -(config.width / 2) + (config.wheelThickness / 2),
-                y: config.wheelRadius,
+                x: -(config.width / 2) + (config.wheelThickness / 2 - wheel_protrusion),
+                y: -0.1, // Position at the bottom of the car with slight overlap
                 z: -(config.length / 3)
             },
             // Rear right
             {
-                x: (config.width / 2) - (config.wheelThickness / 2),
-                y: config.wheelRadius,
+                x: (config.width / 2) - (config.wheelThickness / 2 - wheel_protrusion),
+                y: -0.1, // Position at the bottom of the car with slight overlap
                 z: -(config.length / 3)
             }
         ];
+
+        console.log("Wheel positions:", wheelPositions);
         
         // Create each wheel and add to car
         wheelPositions.forEach((position, index) => {
             const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
-            wheel.rotation.z = Math.PI / 2; // Rotate to stand up
+
             wheel.position.set(position.x, position.y, position.z);
-            
+
+            wheel.rotateZ(Math.PI/2);
+            //wheel.rotation.z = ;
+            //wheel.rotation.x = Math.PI;
+            //wheel.rotation.y = Math.PI/2;
+
             if (config.castShadow) {
                 wheel.castShadow = true;
             }
