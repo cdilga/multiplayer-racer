@@ -12,11 +12,9 @@ async function initRapierPhysics() {
         // Import Rapier from CDN using the importmap defined in the HTML
         try {
             const rapierModule = await import('@dimforge/rapier3d-compat');
-            console.log('Rapier module imported successfully');
             
             // Init WASM module
             await rapierModule.init();
-            console.log('Rapier WASM initialized successfully');
             
             // Store the module globally
             RAPIER = rapierModule;
@@ -24,7 +22,6 @@ async function initRapierPhysics() {
             // Set a flag to indicate successful loading
             window.rapierLoaded = true;
             
-            console.log('Rapier physics initialized successfully');
             return RAPIER;
         } catch (importError) {
             console.error('Error importing Rapier module:', importError);
@@ -63,7 +60,6 @@ function createRapierWorld() {
     const gravity = { x: 0.0, y: -20.0, z: 0.0 }; // Increased gravity for faster stabilization
     const world = new RAPIER.World(gravity);
     
-    console.log('Rapier physics world created with stronger gravity');
     return world;
 }
 

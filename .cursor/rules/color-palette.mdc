@@ -1,0 +1,13 @@
+---
+description: Anything that may involve colours, design or generation of css or other color related tasks
+globs: 
+alwaysApply: false
+---
+Colours should be chosen to match this palette where possible:
+--pale-azure: #70d6ffff;
+--cyclamen: #ff70a6ff;
+--atomic-tangerine: #ff9770ff;
+--naples-yellow: #ffd670ff;
+--mindaro: #e9ff70ff;
+
+However, this is not prescriptive, if a user would benefit from a strong Green or Red to match established design norms, then we may use some color that fits in well with these instead.
