@@ -440,10 +440,8 @@ function initGame() {
     }
     
     try {
-        // Create the control indicator if it doesn't exist yet
-        if (!gameState.controlIndicator) {
-            gameState.controlIndicator = createControlIndicator();
-        }
+        // We no longer create the control indicator
+        // gameState.controlIndicator is intentionally left undefined
         
         // Initialize Three.js scene
         gameState.scene = new THREE.Scene();
@@ -672,7 +670,7 @@ function createPlayerCar(playerId, carColor) {
         gameState.scene.add(car);
         
         // Set start position near the start/finish line with higher elevation
-        const startPosition = { x: 0, y: 2.0, z: -20 }; // Increased height to avoid ground issues
+        const startPosition = { x: 0, y: 5.0, z: -20 }; // Increased height to better observe dropping
         
         // Apply position to mesh
         car.position.set(startPosition.x, startPosition.y, startPosition.z);
@@ -867,11 +865,11 @@ function createTrackWalls(world, rapier) {
     }
     
     try {
-        // Create outer walls based on track dimensions
-        const trackWidth = 30;  // Increased to match visible track size
-        const trackLength = 60; // Increased to match visible track size
-        const wallHeight = 2;
-        const wallThickness = 0.5;
+        // Use the same dimensions as the ground collider for consistency
+        const groundWidth = 150.0;
+        const groundLength = 150.0;
+        const wallHeight = 3; // Increased height for better visibility
+        const wallThickness = 1.0; // Thicker walls for better collision
         
         // Create walls container
         gameState.physics.bodies.walls = [];
@@ -879,11 +877,11 @@ function createTrackWalls(world, rapier) {
         
         // Left wall
         const leftWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        leftWallBodyDesc.setTranslation(-trackWidth/2 - wallThickness/2, wallHeight/2, 0);
+        leftWallBodyDesc.setTranslation(-groundWidth/2, wallHeight/2, 0);
         const leftWallBody = world.createRigidBody(leftWallBodyDesc);
         
-        const leftWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness, wallHeight, trackLength);
-        leftWallColliderDesc.setFriction(0.2);
+        const leftWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
+        leftWallColliderDesc.setFriction(0.3);
         const leftWallCollider = world.createCollider(leftWallColliderDesc, leftWallBody);
         
         gameState.physics.bodies.walls.push(leftWallBody);
@@ -891,11 +889,11 @@ function createTrackWalls(world, rapier) {
         
         // Right wall
         const rightWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        rightWallBodyDesc.setTranslation(trackWidth/2 + wallThickness/2, wallHeight/2, 0);
+        rightWallBodyDesc.setTranslation(groundWidth/2, wallHeight/2, 0);
         const rightWallBody = world.createRigidBody(rightWallBodyDesc);
         
-        const rightWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness, wallHeight, trackLength);
-        rightWallColliderDesc.setFriction(0.2);
+        const rightWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
+        rightWallColliderDesc.setFriction(0.3);
         const rightWallCollider = world.createCollider(rightWallColliderDesc, rightWallBody);
         
         gameState.physics.bodies.walls.push(rightWallBody);
@@ -903,11 +901,11 @@ function createTrackWalls(world, rapier) {
         
         // Top wall
         const topWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        topWallBodyDesc.setTranslation(0, wallHeight/2, -trackLength/2 - wallThickness/2);
+        topWallBodyDesc.setTranslation(0, wallHeight/2, -groundLength/2);
         const topWallBody = world.createRigidBody(topWallBodyDesc);
         
-        const topWallColliderDesc = rapier.ColliderDesc.cuboid(trackWidth + wallThickness*2, wallHeight, wallThickness);
-        topWallColliderDesc.setFriction(0.2);
+        const topWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
+        topWallColliderDesc.setFriction(0.3);
         const topWallCollider = world.createCollider(topWallColliderDesc, topWallBody);
         
         gameState.physics.bodies.walls.push(topWallBody);
@@ -915,19 +913,19 @@ function createTrackWalls(world, rapier) {
         
         // Bottom wall
         const bottomWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        bottomWallBodyDesc.setTranslation(0, wallHeight/2, trackLength/2 + wallThickness/2);
+        bottomWallBodyDesc.setTranslation(0, wallHeight/2, groundLength/2);
         const bottomWallBody = world.createRigidBody(bottomWallBodyDesc);
         
-        const bottomWallColliderDesc = rapier.ColliderDesc.cuboid(trackWidth + wallThickness*2, wallHeight, wallThickness);
-        bottomWallColliderDesc.setFriction(0.2);
+        const bottomWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
+        bottomWallColliderDesc.setFriction(0.3);
         const bottomWallCollider = world.createCollider(bottomWallColliderDesc, bottomWallBody);
         
         gameState.physics.bodies.walls.push(bottomWallBody);
         gameState.physics.colliders.walls.push(bottomWallCollider);
         
         console.log('Created track walls with dimensions:', {
-            trackWidth,
-            trackLength,
+            groundWidth,
+            groundLength,
             wallHeight,
             wallThickness
         });

@@ -79,7 +79,7 @@ function createCarPhysics(world, position, dimensions) {
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
             .setLinearDamping(0.5)      // Increased linear damping for stability
-            .setAngularDamping(1.0)     // Higher angular damping to prevent excessive rotation
+            .setAngularDamping(4.0)     // Higher angular damping to prevent wobble
             .setCanSleep(false)         // Don't let the car "sleep" (deactivate when still)
             .setAdditionalMass(1200.0)  // Make the car much heavier for stability
             .setCcdEnabled(true);       // Enable continuous collision detection
@@ -482,10 +482,11 @@ function applyCarControls(carBody, controls, playerId) {
                     
                     atLeastOneWheelInContact = true;
                     
-                    // Always apply a strong downward force to keep car on ground
-                    const suspensionForce = 50.0 * (1.0 + (heightThreshold - wheelHeight) * 2.0);
+                    // Apply a smoother suspension force that's more consistent
+                    // Removed the strong oscillating downward force that was causing jumping
+                    const suspensionForce = 20.0 + wheel.compression * 10.0;
                     
-                    // Apply a strong force to keep the car on the ground
+                    // Apply a consistent force to keep the car on the ground
                     carBody.addForceAtPoint(
                         { x: 0, y: suspensionForce, z: 0 },
                         wheelPosWorld,
@@ -518,6 +519,9 @@ function applyCarControls(carBody, controls, playerId) {
                         z: -wheelForward.x
                     };
                     
+                    // Create a container for all the forces we'll apply to this wheel
+                    const wheelForce = { x: 0, y: 0, z: 0 };
+                    
                     // Calculate wheel velocity at contact point
                     // Using local linear velocity as Rapier doesn't have linvelAt function
                     const carVel = carBody.linvel();
@@ -544,93 +548,73 @@ function applyCarControls(carBody, controls, playerId) {
                     // Calculate engine force based on acceleration input
                     let engineForce = 0;
                     
-                    if (wheel.isFrontWheel) {
-                        // Front-wheel drive for simplicity
+                    if (wheel.isFrontWheel) {  // Front-wheel drive
                         if (acceleration > 0 && speedKmh < maxSpeedKmh) {
-                            // Progressive acceleration curve that reduces as speed increases
-                            const speedRatio = Math.min(1, speedKmh / maxSpeedKmh);
-                            const powerCurve = 1 - Math.pow(speedRatio, 2);
-                            engineForce = enginePower * acceleration * powerCurve / 2; // Divide by wheel count
+                            // More consistent acceleration curve that doesn't diminish as much with speed
+                            const speedFactor = Math.max(0.6, 1.0 - (speedKmh / maxSpeedKmh));
+                            engineForce = acceleration * enginePower * speedFactor;
+                            
+                            // Apply force consistently regardless of wheel contact
+                            wheelForce.x += wheelForward.x * engineForce;
+                            wheelForce.z += wheelForward.z * engineForce;
+                            
+                            // Track for stats
+                            appliedEngineForce += engineForce;
+                        }
+                        else if (acceleration < 0 && speedKmh > -reverseMaxSpeedKmh) {
+                            // More consistent reverse acceleration
+                            const reverseFactor = 0.5; // Make reverse slower
+                            engineForce = acceleration * enginePower * reverseFactor; 
+                            
+                            // Apply force consistently
+                            wheelForce.x += wheelForward.x * engineForce;
+                            wheelForce.z += wheelForward.z * engineForce;
+                            
+                            // Track for stats
                             appliedEngineForce += engineForce;
                         }
                     }
                     
                     // Calculate braking force
                     let brakeForce = 0;
+                    
                     if (braking > 0) {
-                        if (isMovingForward) {
-                            // Forward braking
-                            const brakeFactor = 0.5 + 0.5 * (speedKmh / maxSpeedKmh);
-                            brakeForce = -(brakePower * braking * brakeFactor) / 4; // Divide by wheel count
-                        } else if (speedKmh < reverseMaxSpeedKmh) {
-                            // Reverse driving only when slow or stopped
-                            const reversePower = enginePower * 0.6;
-                            const reverseSpeedRatio = speedKmh / reverseMaxSpeedKmh;
-                            const reversePowerCurve = 1 - Math.pow(reverseSpeedRatio, 2);
-                            brakeForce = -(reversePower * braking * reversePowerCurve) / 4; // Divide by wheel count
+                        // More consistent braking forces
+                        brakeForce = braking * brakePower;
+                        
+                        // Scaling based on velocity to prevent locking of wheels
+                        if (Math.abs(wheelForwardVel) < 0.1) {
+                            brakeForce *= Math.abs(wheelForwardVel) * 10; // Reduce at very low speeds
                         }
-                        appliedBrakeForce += Math.abs(brakeForce);
+                        
+                        // Apply opposite to wheel forward direction
+                        if (wheelForwardVel > 0.1) {
+                            wheelForce.x -= wheelForward.x * brakeForce;
+                            wheelForce.z -= wheelForward.z * brakeForce;
+                        } else if (wheelForwardVel < -0.1) {
+                            wheelForce.x += wheelForward.x * brakeForce;
+                            wheelForce.z += wheelForward.z * brakeForce;
+                        }
+                        
+                        appliedBrakeForce += brakeForce;
                     }
                     
-                    // Calculate longitudinal (forward/backward) force
-                    const longitudinalForce = engineForce + brakeForce;
-                    
-                    // Calculate lateral grip force (perpendicular to wheel direction)
-                    let lateralForce = 0;
-                    
-                    if (Math.abs(wheelRightVel) > 0.2) {
-                        // Calculate grip based on speed (less grip at higher speeds for drifting)
-                        const gripSpeedFactor = Math.max(0.5, 0.9 - (velMag / maxSpeedMs) * 0.25);
+                    // Lateral grip forces (prevent sliding)
+                    if (Math.abs(wheelRightVel) > 0.1) {
+                        // Increased lateral grip force for better handling
+                        const lateralGrip = lateralGripFactor * 1.2;
+                        const lateralForce = -wheelRightVel * lateralGrip;
                         
-                        // Calculate lateral force opposing sideways movement - reduced strength
-                        lateralForce = -wheelRightVel * wheel.frictionSlip * gripSpeedFactor * 0.7;
+                        // Apply force perpendicular to wheel direction (side grip)
+                        wheelForce.x += wheelRight.x * lateralForce;
+                        wheelForce.z += wheelRight.z * lateralForce;
                         
-                        // Scale based on vertical load (more force when suspension is compressed)
-                        const compressionRatio = wheel.compression > 0 ? wheel.compression / wheel.suspensionCompression : 0.1;
-                        lateralForce *= 0.3 + 0.7 * compressionRatio;
-                        
-                        // Scale based on player input - reduced effect
-                        const inputFactor = 1.0 + acceleration * 0.1 - braking * 0.15;
-                        lateralForce *= inputFactor;
-                        
-                        // Cap maximum lateral force (prevent unrealistic forces)
-                        const maxLateralForce = suspensionForce * 0.4; // Reduced max force
-                        lateralForce = Math.max(-maxLateralForce, Math.min(lateralForce, maxLateralForce));
-                        
-                        totalLateralForce += lateralForce;
+                        appliedLateralForce += lateralForce;
                     }
                     
-                    // Apply forces at wheel contact point
-                    if (longitudinalForce !== 0) {
-                        const longForceVec = {
-                            x: wheelForward.x * longitudinalForce,
-                            y: 0,
-                            z: wheelForward.z * longitudinalForce
-                        };
-                        
-                        carBody.addForceAtPoint(
-                            longForceVec,
-                            wheelPosWorld,
-                            true
-                        );
-                        
-                        totalLongitudinalForce += longitudinalForce;
-                    }
-                    
-                    if (lateralForce !== 0) {
-                        const latForceVec = {
-                            x: wheelRight.x * lateralForce,
-                            y: 0,
-                            z: wheelRight.z * lateralForce
-                        };
-                        
-                        carBody.addForceAtPoint(
-                            latForceVec,
-                            wheelPosWorld,
-                            true
-                        );
-                        
-                        appliedLateralForce += Math.abs(lateralForce);
+                    // After calculating all wheel forces, apply them in a single call for efficiency
+                    if (wheelForce.x !== 0 || wheelForce.z !== 0) {
+                        carBody.addForceAtPoint(wheelForce, wheelPosWorld, true);
                     }
                 }
             });
@@ -676,19 +660,43 @@ function applyCarControls(carBody, controls, playerId) {
 
             // Apply a direct downward force to ensure the car doesn't float away
             const carHeight = carBody.translation().y;
+            
+            // Always apply anti-bounce force to counter vertical velocity
+            const verticalVel = vel.y;
+            if (Math.abs(verticalVel) > 0.1) {
+                // Strong counter-force to dampen vertical velocity - increased from 10.0 to 15.0
+                const antiVelocityForce = -verticalVel * 15.0;
+                carBody.addForce({
+                    x: 0,
+                    y: antiVelocityForce,
+                    z: 0
+                }, true);
+                
+                // If car is moving upward too fast, apply even more damping
+                if (verticalVel > 2.0) {
+                    const extraDamping = -verticalVel * 10.0; // Extra damping for upward velocity
+                    carBody.addForce({
+                        x: 0,
+                        y: extraDamping,
+                        z: 0
+                    }, true);
+                }
+            }
+            
+            // Additional gravity if car is too high
             if (carHeight > 1.0) { // If car is more than 1 unit above ground
                 // Apply stronger force the higher the car is
-                const gravityMultiplier = 1.0 + carHeight * 2.0;
+                const gravityMultiplier = 2.0 + carHeight * 3.0;
                 const downwardForce = {
                     x: 0,
-                    y: -200.0 * gravityMultiplier, // Stronger direct force
+                    y: -500.0 * gravityMultiplier, // Much stronger direct force
                     z: 0
                 };
                 
                 carBody.addForce(downwardForce, true);
                 
                 if (Math.random() < 0.005) {
-                    console.log(`⬇️ GRAVITY: Applied downward force: ${(200.0 * gravityMultiplier).toFixed(0)}N at height ${carHeight.toFixed(1)}`);
+                    console.log(`⬇️ GRAVITY: Applied downward force: ${(500.0 * gravityMultiplier).toFixed(0)}N at height ${carHeight.toFixed(1)}`);
                 }
             }
         }
@@ -715,7 +723,6 @@ function applyCarControls(carBody, controls, playerId) {
         if (typeof carBody.wakeUp === 'function') {
             carBody.wakeUp();
         }
-        
     } catch (error) {
         console.error('Error applying car controls:', error);
     }
