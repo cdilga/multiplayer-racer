@@ -56,8 +56,15 @@ function createRapierWorld() {
         return null;
     }
     
-    // Create a world with gravity - lower gravity for more arcade-style fun
-    const gravity = { x: 0.0, y: -20.0, z: 0.0 }; // Increased gravity for faster stabilization
+    // Get physics parameters from global object if available
+    const params = window.physicsParams ? window.physicsParams : {
+        world: {
+            gravity: { x: 0.0, y: -20.0, z: 0.0 }
+        }
+    };
+    
+    // Create a world with gravity
+    const gravity = params.world.gravity;
     const world = new RAPIER.World(gravity);
     
     return world;
@@ -75,14 +82,39 @@ function createCarPhysics(world, position, dimensions) {
     try {
         console.log('Creating derby-style car physics body');
         
+        // Get physics parameters from global object if available
+        const params = window.physicsParams ? window.physicsParams : {
+            car: {
+                mass: 1200.0,
+                linearDamping: 0.5,
+                angularDamping: 4.0,
+                enginePower: 1600.0,
+                brakeForce: 2000.0,
+                steeringResponse: 0.3,
+                maxSteeringAngle: 0.6,
+                steeringReturnSpeed: 3.0,
+                lateralGripFactor: 2.0,
+                rollingResistance: 0.15,
+                aerodynamicDrag: 0.5
+            },
+            wheels: {
+                frictionSlip: 5.0,
+                rearFrictionMultiplier: 1.1,
+                suspensionRestLength: 0.4,
+                suspensionStiffness: 25.0,
+                suspensionDamping: 3.5,
+                suspensionCompression: 0.5
+            }
+        };
+        
         // STEP 1: Create the main rigid body with realistic parameters
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
-            .setLinearDamping(0.5)      // Increased linear damping for stability
-            .setAngularDamping(4.0)     // Higher angular damping to prevent wobble
-            .setCanSleep(false)         // Don't let the car "sleep" (deactivate when still)
-            .setAdditionalMass(1200.0)  // Make the car much heavier for stability
-            .setCcdEnabled(true);       // Enable continuous collision detection
+            .setLinearDamping(params.car.linearDamping)
+            .setAngularDamping(params.car.angularDamping)
+            .setCanSleep(false)
+            .setAdditionalMass(params.car.mass)
+            .setCcdEnabled(true);
         
         const carBody = world.createRigidBody(rigidBodyDesc);
         
@@ -91,8 +123,8 @@ function createCarPhysics(world, position, dimensions) {
         // Main chassis - The main body of the car
         const mainChassisDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2 * 0.6, length/2)
             .setDensity(0.6)
-            .setFriction(0.1)          // Lower friction for the main body
-            .setRestitution(0.1);      // Low bounce
+            .setFriction(0.1)
+            .setRestitution(0.1);
         
         world.createCollider(mainChassisDesc, carBody);
         
@@ -102,8 +134,8 @@ function createCarPhysics(world, position, dimensions) {
         const roofLength = length * 0.5;
         
         const roofDesc = RAPIER.ColliderDesc.cuboid(roofWidth/2, roofHeight/2, roofLength/2)
-            .setTranslation(0, height/2 + roofHeight/2, -(length * 0.05))  // Align with visual model
-            .setDensity(0.3)                                              // Even lighter roof
+            .setTranslation(0, height/2 + roofHeight/2, -(length * 0.05))
+            .setDensity(0.3)
             .setFriction(0.1)
             .setRestitution(0.1);
         
@@ -111,9 +143,9 @@ function createCarPhysics(world, position, dimensions) {
         
         // Lower chassis - Creates a lower center of mass for stability
         const floorpanDesc = RAPIER.ColliderDesc.cuboid(width/2 * 0.9, height/4, length/2 * 0.95)
-            .setTranslation(0, -height/4, 0)  // Position it at the bottom of the car
-            .setDensity(4.0)                  // Much higher density in the floor for stability
-            .setFriction(0.2);                // Slightly more friction on the bottom
+            .setTranslation(0, -height/4, 0)
+            .setDensity(4.0)
+            .setFriction(0.2);
         
         world.createCollider(floorpanDesc, carBody);
         
@@ -140,23 +172,27 @@ function createCarPhysics(world, position, dimensions) {
         
         // Create wheelRaycast data for each wheel
         wheelPositions.forEach((wheelPos, index) => {
+            // Apply different friction to front and rear wheels
+            const frictionSlip = params.wheels.frictionSlip * 
+                (index >= 2 ? params.wheels.rearFrictionMultiplier : 1.0);
+            
             // We'll use this data for our custom raycast vehicle implementation
             wheelRaycasts.push({
-                position: wheelPos,                  // Position relative to car
-                suspensionRestLength: 0.4,           // Increased rest length of suspension
-                suspensionStiffness: 25.0,           // Reduced spring stiffness for smoother ride
-                suspensionDamping: 3.5,              // Adjusted damping factor
-                suspensionCompression: 0.5,          // Reduced max compression for more stability
-                wheelRadius: wheelRadius,            // Wheel radius
-                wheelWidth: wheelWidth,              // Wheel width
-                frictionSlip: index < 2 ? 5.0 : 5.5, // Reduced tire friction for more stable handling
-                isFrontWheel: index < 2,             // Is this a front (steerable) wheel?
-                steering: 0,                         // Current steering angle
-                compression: 0,                      // Current suspension compression
-                groundContact: false,                // Is wheel in contact with ground?
-                contactPoint: null,                  // Point of contact with ground
-                contactNormal: null,                 // Normal vector at contact point
-                wheelObject: null                    // Reference to visual wheel object (added later)
+                position: wheelPos,
+                suspensionRestLength: params.wheels.suspensionRestLength,
+                suspensionStiffness: params.wheels.suspensionStiffness,
+                suspensionDamping: params.wheels.suspensionDamping,
+                suspensionCompression: params.wheels.suspensionCompression,
+                wheelRadius: wheelRadius,
+                wheelWidth: wheelWidth,
+                frictionSlip: frictionSlip,
+                isFrontWheel: index < 2,
+                steering: 0,
+                compression: 0,
+                groundContact: false,
+                contactPoint: null,
+                contactNormal: null,
+                wheelObject: null
             });
         });
         
@@ -165,17 +201,17 @@ function createCarPhysics(world, position, dimensions) {
         // Store car-specific properties in the user data
         carBody.userData = {
             // Physics properties
-            enginePower: 1600.0,        // Reduced engine force for more gradual acceleration
-            brakeForce: 2000.0,         // Reduced braking force for smoother deceleration
-            steeringResponse: 0.3,      // Slower steering response for more stability
-            maxSteeringAngle: 0.6,      // Reduced maximum steering angle (about 35 degrees)
-            steeringReturnSpeed: 3.0,   // Slower steering return for stability
-            lateralGripFactor: 2.0,     // Reduced lateral grip factor
-            rollingResistance: 0.15,    // Increased rolling resistance for better deceleration
-            aerodynamicDrag: 0.5,       // Increased drag for better speed control
+            enginePower: params.car.enginePower,
+            brakeForce: params.car.brakeForce,
+            steeringResponse: params.car.steeringResponse,
+            maxSteeringAngle: params.car.maxSteeringAngle,
+            steeringReturnSpeed: params.car.steeringReturnSpeed,
+            lateralGripFactor: params.car.lateralGripFactor,
+            rollingResistance: params.car.rollingResistance,
+            aerodynamicDrag: params.car.aerodynamicDrag,
             
             // Vehicle-specific data
-            wheels: wheelRaycasts,      // Wheel data for raycast vehicle
+            wheels: wheelRaycasts,
             
             // Car state
             currentSpeed: 0,
@@ -413,9 +449,12 @@ function applyCarControls(carBody, controls, playerId) {
             }
         });
         
+        // Get speed limits from global physics parameters if available
+        const params = window.physicsParams ? window.physicsParams.car : null;
+        
         // Speed limits
-        const maxSpeedKmh = 80;         // Maximum forward speed
-        const reverseMaxSpeedKmh = 30;  // Maximum reverse speed 
+        const maxSpeedKmh = params?.maxSpeedKmh || 80;         // Maximum forward speed
+        const reverseMaxSpeedKmh = params?.reverseMaxSpeedKmh || 30;  // Maximum reverse speed 
         
         // Convert to m/s
         const maxSpeedMs = maxSpeedKmh / 3.6;

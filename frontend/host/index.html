@@ -63,6 +63,66 @@
             </div>
             <div id="game-container"></div>
             <div id="stats-overlay" class="hidden"></div>
+            
+            <!-- Physics Parameters Panel -->
+            <div id="physics-params-panel">
+                <h2>Physics Parameters</h2>
+                
+                <div class="params-tabs">
+                    <button class="params-tab active" data-tab="car">Car</button>
+                    <button class="params-tab" data-tab="world">World</button>
+                    <button class="params-tab" data-tab="wheels">Wheels</button>
+                </div>
+                
+                <div class="preset-container">
+                    <select class="preset-selector" id="physics-preset-selector">
+                        <option value="default">Default Physics</option>
+                        <option value="arcade">Arcade Racing</option>
+                        <option value="simulation">Simulation</option>
+                        <option value="drift">Drift Mode</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <!-- Car Parameters -->
+                <div class="params-container active" id="car-params">
+                    <div class="params-group">
+                        <div class="params-group-title">Car Body Physics</div>
+                        <!-- Parameters will be added dynamically -->
+                    </div>
+                    
+                    <div class="params-group">
+                        <div class="params-group-title">Movement Parameters</div>
+                        <!-- Parameters will be added dynamically -->
+                    </div>
+                </div>
+                
+                <!-- World Parameters -->
+                <div class="params-container" id="world-params">
+                    <div class="params-group">
+                        <div class="params-group-title">World Physics</div>
+                        <!-- Parameters will be added dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Wheels Parameters -->
+                <div class="params-container" id="wheels-params">
+                    <div class="params-group">
+                        <div class="params-group-title">Wheel Physics</div>
+                        <!-- Parameters will be added dynamically -->
+                    </div>
+                    
+                    <div class="params-group">
+                        <div class="params-group-title">Suspension</div>
+                        <!-- Parameters will be added dynamically -->
+                    </div>
+                </div>
+                
+                <div class="param-buttons">
+                    <button class="param-button reset" id="reset-physics">Reset All</button>
+                    <button class="param-button apply" id="apply-physics">Apply Changes</button>
+                </div>
+            </div>
         </div>
     </div>
 

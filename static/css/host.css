@@ -338,4 +338,147 @@ button:disabled {
 
 .reset-button:hover {
     background-color: #b71c1c;
+}
+
+/* Physics Parameters Panel */
+#physics-params-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: white;
+    z-index: 1000;
+    padding: 15px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: none;
+    font-family: monospace;
+    font-size: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#physics-params-panel.visible {
+    display: block;
+}
+
+.params-group {
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.params-group-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #4CAF50;
+    font-size: 14px;
+}
+
+.param-row {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.param-label {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.param-value {
+    width: 40px;
+    text-align: right;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 2px 5px;
+    margin-right: 5px;
+}
+
+.param-slider {
+    flex: 2;
+}
+
+.param-range {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.param-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.param-button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    margin: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    flex-grow: 1;
+}
+
+.param-button.reset {
+    background-color: #f44336;
+}
+
+.param-button.apply {
+    background-color: #4CAF50;
+}
+
+.param-button:hover {
+    filter: brightness(1.2);
+}
+
+.params-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.params-tab {
+    padding: 8px 15px;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    color: #bbb;
+    outline: none;
+    margin-right: 5px;
+}
+
+.params-tab.active {
+    color: white;
+    border-bottom: 2px solid #4CAF50;
+}
+
+.params-container {
+    display: none;
+}
+
+.params-container.active {
+    display: block;
+}
+
+/* Physics presets dropdown */
+.preset-selector {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.preset-selector option {
+    background-color: #222;
 } 

@@ -2153,4 +2153,511 @@ function visualizeAppliedForces() {
             console.error('Error visualizing forces:', error);
         }
     });
-} 
+}
+
+// Global object to store physics parameters
+let physicsParams = {
+    car: {
+        // Car body physics
+        mass: 1200.0,
+        linearDamping: 0.5,
+        angularDamping: 4.0,
+        
+        // Movement parameters
+        enginePower: 1600.0,
+        brakeForce: 2000.0,
+        steeringResponse: 0.3,
+        maxSteeringAngle: 0.6,
+        steeringReturnSpeed: 3.0,
+        lateralGripFactor: 2.0,
+        rollingResistance: 0.15,
+        aerodynamicDrag: 0.5,
+        maxSpeedKmh: 80,
+        reverseMaxSpeedKmh: 30
+    },
+    world: {
+        gravity: {
+            x: 0.0,
+            y: -20.0,
+            z: 0.0
+        }
+    },
+    wheels: {
+        // Wheel physics
+        frictionSlip: 5.0,
+        rearFrictionMultiplier: 1.1,
+        
+        // Suspension
+        suspensionRestLength: 0.4,
+        suspensionStiffness: 25.0,
+        suspensionDamping: 3.5,
+        suspensionCompression: 0.5
+    }
+};
+
+// Store original values for reset
+const defaultPhysicsParams = JSON.parse(JSON.stringify(physicsParams));
+
+// Presets for different physics behaviors
+const physicsPresets = {
+    default: JSON.parse(JSON.stringify(physicsParams)),
+    arcade: {
+        car: {
+            mass: 800.0,
+            linearDamping: 0.3,
+            angularDamping: 5.0,
+            enginePower: 2500.0,
+            brakeForce: 1800.0,
+            steeringResponse: 0.5,
+            maxSteeringAngle: 0.8,
+            steeringReturnSpeed: 4.0,
+            lateralGripFactor: 2.5,
+            rollingResistance: 0.1,
+            aerodynamicDrag: 0.3,
+            maxSpeedKmh: 120,
+            reverseMaxSpeedKmh: 40
+        },
+        world: {
+            gravity: { x: 0.0, y: -15.0, z: 0.0 }
+        },
+        wheels: {
+            frictionSlip: 6.0,
+            rearFrictionMultiplier: 1.2,
+            suspensionRestLength: 0.5,
+            suspensionStiffness: 20.0,
+            suspensionDamping: 2.5,
+            suspensionCompression: 0.4
+        }
+    },
+    simulation: {
+        car: {
+            mass: 1600.0,
+            linearDamping: 0.2,
+            angularDamping: 3.0,
+            enginePower: 1200.0,
+            brakeForce: 2500.0,
+            steeringResponse: 0.2,
+            maxSteeringAngle: 0.55,
+            steeringReturnSpeed: 2.5,
+            lateralGripFactor: 3.0,
+            rollingResistance: 0.2,
+            aerodynamicDrag: 0.7,
+            maxSpeedKmh: 70,
+            reverseMaxSpeedKmh: 25
+        },
+        world: {
+            gravity: { x: 0.0, y: -25.0, z: 0.0 }
+        },
+        wheels: {
+            frictionSlip: 4.0,
+            rearFrictionMultiplier: 1.0,
+            suspensionRestLength: 0.3,
+            suspensionStiffness: 30.0,
+            suspensionDamping: 4.5,
+            suspensionCompression: 0.6
+        }
+    },
+    drift: {
+        car: {
+            mass: 1000.0,
+            linearDamping: 0.3,
+            angularDamping: 2.0,
+            enginePower: 2000.0,
+            brakeForce: 1500.0,
+            steeringResponse: 0.4,
+            maxSteeringAngle: 0.7,
+            steeringReturnSpeed: 2.0,
+            lateralGripFactor: 1.0,
+            rollingResistance: 0.1,
+            aerodynamicDrag: 0.4,
+            maxSpeedKmh: 90,
+            reverseMaxSpeedKmh: 35
+        },
+        world: {
+            gravity: { x: 0.0, y: -18.0, z: 0.0 }
+        },
+        wheels: {
+            frictionSlip: 3.0,
+            rearFrictionMultiplier: 1.5,
+            suspensionRestLength: 0.45,
+            suspensionStiffness: 22.0,
+            suspensionDamping: 2.0,
+            suspensionCompression: 0.45
+        }
+    }
+};
+
+// Toggle physics parameter panel
+function togglePhysicsPanel() {
+    const panel = document.getElementById('physics-params-panel');
+    
+    if (!panel) {
+        console.error('Physics parameters panel not found in DOM');
+        return;
+    }
+    
+    panel.classList.toggle('visible');
+    
+    // Initialize parameters when first shown
+    if (panel.classList.contains('visible') && !panel.dataset.initialized) {
+        initPhysicsParametersPanel();
+        panel.dataset.initialized = 'true';
+    }
+}
+
+// Initialize the physics parameters panel UI with all controls
+function initPhysicsParametersPanel() {
+    console.log('Initializing physics parameters panel');
+    
+    // Setup tab switcher
+    setupTabSwitcher();
+    
+    // Setup preset selector
+    setupPresetSelector();
+    
+    // Create car parameters UI
+    createCarParametersUI();
+    
+    // Create world parameters UI
+    createWorldParametersUI();
+    
+    // Create wheels parameters UI
+    createWheelsParametersUI();
+    
+    // Setup buttons
+    setupPhysicsButtons();
+    
+    console.log('Physics parameters panel initialized');
+}
+
+// Setup tab switching functionality
+function setupTabSwitcher() {
+    const tabs = document.querySelectorAll('.params-tab');
+    const containers = document.querySelectorAll('.params-container');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and containers
+            tabs.forEach(t => t.classList.remove('active'));
+            containers.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            
+            // Show corresponding container
+            const targetId = tab.dataset.tab + '-params';
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
+}
+
+// Setup preset selector dropdown
+function setupPresetSelector() {
+    const selector = document.getElementById('physics-preset-selector');
+    
+    selector.addEventListener('change', () => {
+        const preset = selector.value;
+        
+        if (preset !== 'custom') {
+            // Apply preset values
+            physicsParams = JSON.parse(JSON.stringify(physicsPresets[preset]));
+            
+            // Update UI to match preset values
+            updateAllParameterControls();
+            
+            // Apply changes immediately
+            applyPhysicsChanges();
+        }
+    });
+}
+
+// Create a single parameter control row
+function createParameterControl(container, group, param, label, min, max, step) {
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    
+    const labelElement = document.createElement('div');
+    labelElement.className = 'param-label';
+    labelElement.textContent = label;
+    
+    const valueInput = document.createElement('input');
+    valueInput.className = 'param-value';
+    valueInput.type = 'text';
+    valueInput.value = physicsParams[group][param];
+    valueInput.dataset.group = group;
+    valueInput.dataset.param = param;
+    
+    const slider = document.createElement('input');
+    slider.className = 'param-slider';
+    slider.type = 'range';
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = physicsParams[group][param];
+    slider.dataset.group = group;
+    slider.dataset.param = param;
+    
+    // Add event listeners
+    slider.addEventListener('input', () => {
+        valueInput.value = slider.value;
+        updatePhysicsParameter(group, param, parseFloat(slider.value));
+    });
+    
+    valueInput.addEventListener('change', () => {
+        const value = parseFloat(valueInput.value);
+        if (!isNaN(value)) {
+            slider.value = value;
+            updatePhysicsParameter(group, param, value);
+        } else {
+            valueInput.value = physicsParams[group][param];
+        }
+    });
+    
+    const rangeDisplay = document.createElement('div');
+    rangeDisplay.className = 'param-range';
+    
+    const minSpan = document.createElement('span');
+    minSpan.textContent = min;
+    
+    const maxSpan = document.createElement('span');
+    maxSpan.textContent = max;
+    
+    rangeDisplay.appendChild(minSpan);
+    rangeDisplay.appendChild(maxSpan);
+    
+    row.appendChild(labelElement);
+    row.appendChild(valueInput);
+    row.appendChild(slider);
+    
+    container.appendChild(row);
+    container.appendChild(rangeDisplay);
+}
+
+// Create UI controls for car parameters
+function createCarParametersUI() {
+    const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
+    const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
+    
+    // Car body physics
+    createParameterControl(carBodyGroup, 'car', 'mass', 'Mass', 500, 2000, 50);
+    createParameterControl(carBodyGroup, 'car', 'linearDamping', 'Linear Damping', 0.1, 1.0, 0.05);
+    createParameterControl(carBodyGroup, 'car', 'angularDamping', 'Angular Damping', 1.0, 8.0, 0.1);
+    
+    // Movement parameters
+    createParameterControl(movementGroup, 'car', 'enginePower', 'Engine Power', 800, 3000, 100);
+    createParameterControl(movementGroup, 'car', 'brakeForce', 'Brake Force', 1000, 3000, 100);
+    createParameterControl(movementGroup, 'car', 'maxSteeringAngle', 'Max Steering', 0.3, 1.0, 0.05);
+    createParameterControl(movementGroup, 'car', 'steeringResponse', 'Steering Response', 0.1, 0.8, 0.05);
+    createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 1.0, 5.0, 0.1);
+    createParameterControl(movementGroup, 'car', 'lateralGripFactor', 'Lateral Grip', 0.5, 4.0, 0.1);
+    createParameterControl(movementGroup, 'car', 'rollingResistance', 'Rolling Resistance', 0.05, 0.3, 0.01);
+    createParameterControl(movementGroup, 'car', 'aerodynamicDrag', 'Aero Drag', 0.1, 1.0, 0.05);
+    createParameterControl(movementGroup, 'car', 'maxSpeedKmh', 'Max Speed (km/h)', 50, 150, 5);
+    createParameterControl(movementGroup, 'car', 'reverseMaxSpeedKmh', 'Max Reverse (km/h)', 20, 50, 5);
+}
+
+// Create UI controls for world parameters
+function createWorldParametersUI() {
+    const worldGroup = document.querySelector('#world-params .params-group');
+    
+    // World physics
+    createParameterControl(worldGroup, 'world', 'gravity.y', 'Gravity Y', -30, -10, 0.5);
+}
+
+// Create UI controls for wheels parameters
+function createWheelsParametersUI() {
+    const wheelGroup = document.querySelector('#wheels-params .params-group:nth-child(1)');
+    const suspensionGroup = document.querySelector('#wheels-params .params-group:nth-child(2)');
+    
+    // Wheel physics
+    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 1.0, 10.0, 0.5);
+    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction Mult', 0.8, 1.5, 0.05);
+    
+    // Suspension
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 0.7, 0.05);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 40.0, 1.0);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping', 1.0, 6.0, 0.1);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionCompression', 'Compression', 0.2, 0.8, 0.05);
+}
+
+// Setup physics parameter buttons
+function setupPhysicsButtons() {
+    // Reset button
+    document.getElementById('reset-physics').addEventListener('click', () => {
+        // Reset to default values
+        physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
+        
+        // Update UI
+        updateAllParameterControls();
+        
+        // Apply changes
+        applyPhysicsChanges();
+        
+        // Set preset selector to default
+        document.getElementById('physics-preset-selector').value = 'default';
+    });
+    
+    // Apply button
+    document.getElementById('apply-physics').addEventListener('click', () => {
+        applyPhysicsChanges();
+        
+        // Set preset selector to custom
+        document.getElementById('physics-preset-selector').value = 'custom';
+    });
+}
+
+// Update a specific physics parameter
+function updatePhysicsParameter(group, param, value) {
+    // Handle nested properties (e.g., gravity.y)
+    if (param.includes('.')) {
+        const parts = param.split('.');
+        let obj = physicsParams[group];
+        for (let i = 0; i < parts.length - 1; i++) {
+            obj = obj[parts[i]];
+        }
+        obj[parts[parts.length - 1]] = value;
+    } else {
+        physicsParams[group][param] = value;
+    }
+}
+
+// Update all UI controls to match current parameter values
+function updateAllParameterControls() {
+    const inputs = document.querySelectorAll('#physics-params-panel input');
+    
+    inputs.forEach(input => {
+        const group = input.dataset.group;
+        const param = input.dataset.param;
+        
+        if (group && param) {
+            // Handle nested properties
+            let value;
+            if (param.includes('.')) {
+                const parts = param.split('.');
+                let obj = physicsParams[group];
+                for (let i = 0; i < parts.length; i++) {
+                    obj = obj[parts[i]];
+                }
+                value = obj;
+            } else {
+                value = physicsParams[group][param];
+            }
+            
+            input.value = value;
+        }
+    });
+}
+
+// Apply physics changes to active car bodies
+function applyPhysicsChanges() {
+    // Apply changes to existing car bodies
+    for (const playerId in gameState.players) {
+        const player = gameState.players[playerId];
+        
+        if (player.carBody) {
+            updateCarPhysics(player.carBody);
+        }
+    }
+    
+    // Update world physics
+    if (gameState.physicsWorld) {
+        updateWorldPhysics(gameState.physicsWorld);
+    }
+    
+    console.log('Applied physics parameter changes');
+}
+
+// Update car physics body with current parameters
+function updateCarPhysics(carBody) {
+    if (!carBody || !carBody.userData) return;
+    
+    // Update car body properties
+    if (typeof carBody.setLinearDamping === 'function') {
+        carBody.setLinearDamping(physicsParams.car.linearDamping);
+    }
+    
+    if (typeof carBody.setAngularDamping === 'function') {
+        carBody.setAngularDamping(physicsParams.car.angularDamping);
+    }
+    
+    if (typeof carBody.setAdditionalMass === 'function') {
+        carBody.setAdditionalMass(physicsParams.car.mass);
+    }
+    
+    // Update movement parameters in userData
+    carBody.userData.enginePower = physicsParams.car.enginePower;
+    carBody.userData.brakeForce = physicsParams.car.brakeForce;
+    carBody.userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
+    carBody.userData.steeringResponse = physicsParams.car.steeringResponse;
+    carBody.userData.steeringReturnSpeed = physicsParams.car.steeringReturnSpeed;
+    carBody.userData.lateralGripFactor = physicsParams.car.lateralGripFactor;
+    carBody.userData.rollingResistance = physicsParams.car.rollingResistance;
+    carBody.userData.aerodynamicDrag = physicsParams.car.aerodynamicDrag;
+    
+    // Update wheel properties
+    if (carBody.userData.wheels) {
+        carBody.userData.wheels.forEach((wheel, index) => {
+            // Front wheels have base friction, rear wheels have multiplier applied
+            wheel.frictionSlip = physicsParams.wheels.frictionSlip;
+            if (index >= 2) { // Rear wheels
+                wheel.frictionSlip *= physicsParams.wheels.rearFrictionMultiplier;
+            }
+            
+            // Update suspension
+            wheel.suspensionRestLength = physicsParams.wheels.suspensionRestLength;
+            wheel.suspensionStiffness = physicsParams.wheels.suspensionStiffness;
+            wheel.suspensionDamping = physicsParams.wheels.suspensionDamping;
+            wheel.suspensionCompression = physicsParams.wheels.suspensionCompression;
+        });
+    }
+}
+
+// Update world physics
+function updateWorldPhysics(world) {
+    if (!world || typeof world.setGravity !== 'function') return;
+    
+    // Update gravity
+    world.setGravity(physicsParams.world.gravity);
+}
+
+// Add keyboard listener for F2 to toggle physics panel is now handled in initGame
+// Removing this duplicate event listener
+
+// Add initialization call to initGame
+const originalInitGame = initGame;
+initGame = function() {
+    // Call the original initGame function
+    originalInitGame();
+    
+    // Initialize physics panel HTML content
+    const gameScreen = document.getElementById('game-screen');
+    const existingPanel = document.getElementById('physics-params-panel');
+    
+    // If the panel already exists in HTML, just make sure it's properly initialized
+    if (existingPanel) {
+        console.log('Physics parameters panel found in HTML');
+    } else {
+        // Otherwise dynamically add it - this is a fallback
+        console.log('Creating physics parameters panel programmatically');
+        const panel = document.createElement('div');
+        panel.id = 'physics-params-panel';
+        gameScreen.appendChild(panel);
+    }
+    
+    // Make physicsParams available globally for other modules
+    window.physicsParams = physicsParams;
+    
+    // Add key event listener if not already added
+    if (!window.physicsKeyListenerAdded) {
+        document.addEventListener('keydown', function(event) {
+            // F2 key to toggle physics panel
+            if (event.key === 'F2') {
+                togglePhysicsPanel();
+                event.preventDefault();
+            }
+        });
+        window.physicsKeyListenerAdded = true;
+    }
+};
+
+// ... existing code ... 
