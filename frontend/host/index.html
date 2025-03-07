@@ -74,16 +74,6 @@
                     <button class="params-tab" data-tab="wheels">Wheels</button>
                 </div>
                 
-                <div class="preset-container">
-                    <select class="preset-selector" id="physics-preset-selector">
-                        <option value="default">Default Physics</option>
-                        <option value="arcade">Arcade Racing</option>
-                        <option value="simulation">Simulation</option>
-                        <option value="drift">Drift Mode</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-                
                 <!-- Car Parameters -->
                 <div class="params-container active" id="car-params">
                     <div class="params-group">
@@ -120,7 +110,6 @@
                 
                 <div class="param-buttons">
                     <button class="param-button reset" id="reset-physics">Reset All</button>
-                    <button class="param-button apply" id="apply-physics">Apply Changes</button>
                 </div>
             </div>
         </div>
@@ -176,6 +165,16 @@
     <script src="/static/js/trackBuilder.js"></script>
     <script src="/static/js/carModel.js"></script>
     <script src="/static/js/rapierPhysics.js"></script>
+    <script>
+        // Once Rapier is ready, then load and initialize the kinematic controller
+        window.addEventListener('rapier-ready', function() {
+            // Dynamic script loading for kinematic controller to ensure RAPIER is available first
+            const script = document.createElement('script');
+            script.src = '/static/js/carKinematicController.js';
+            script.async = false;
+            document.body.appendChild(script);
+        });
+    </script>
     <script src="/static/js/host.js"></script>
     
     <!-- Pass server data to client -->

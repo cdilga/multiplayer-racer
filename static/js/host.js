@@ -658,19 +658,28 @@ function createPlayerCar(playerId, carColor) {
         // Log player data
         console.log(`Creating car for player ${playerId}`);
         const player = gameState.players[playerId];
-        console.log('Player data:', player);
         
         // Set default color if none provided
         const color = carColor || "#FF0000";
         
-        // Create a simple car mesh
-        const car = createCar({ color });
+        // Set start position near the start/finish line with higher elevation
+        const startPosition = { x: 0, y: 1.5, z: -20 }; // Lower height for character controller
+        
+        // Get car dimensions
+        const carDimensions = {
+            width: 2,    // Car width
+            height: 1,   // Car height
+            length: 4    // Car length
+        };
+        
+        // Create a simple car mesh with specified dimensions
+        const car = createCar({ 
+            color,
+            dimensions: carDimensions
+        });
         
         // Add to scene
         gameState.scene.add(car);
-        
-        // Set start position near the start/finish line with higher elevation
-        const startPosition = { x: 0, y: 5.0, z: -20 }; // Increased height to better observe dropping
         
         // Apply position to mesh
         car.position.set(startPosition.x, startPosition.y, startPosition.z);
@@ -680,52 +689,67 @@ function createPlayerCar(playerId, carColor) {
         
         if (gameState.physics && gameState.physics.initialized && 
             gameState.physics.world && gameState.physics.usingRapier) {
-            console.log("Creating Rapier physics body for car");
-            
-            // Get car dimensions
-            const carDimensions = {
-                width: 2,    // Car width
-                height: 1,   // Car height
-                length: 4    // Car length
-            };
+            console.log("Creating character controller for car");
             
             try {
-                // Create physics body for car with elevated position
-                physicsBody = rapierPhysics.createCarPhysics(
-                    gameState.physics.world,
-                    startPosition,
-                    carDimensions
-                );
+                // Get configuration from the physics parameters
+                const controllerConfig = {
+                    // Movement
+                    forwardSpeed: physicsParams.car.forwardSpeed,
+                    reverseSpeed: physicsParams.car.reverseSpeed,
+                    
+                    // Steering
+                    maxSteeringAngle: physicsParams.car.maxSteeringAngle,
+                    steeringSpeed: physicsParams.car.steeringSpeed,
+                    steeringReturnSpeed: physicsParams.car.steeringReturnSpeed,
+                    
+                    // Character Controller specific
+                    characterOffset: physicsParams.characterController.characterOffset,
+                    maxSlopeClimbAngle: physicsParams.characterController.maxSlopeClimbAngle,
+                    minSlopeSlideAngle: physicsParams.characterController.minSlopeSlideAngle,
+                    
+                    // Gravity and autostep
+                    gravity: physicsParams.characterController.gravity,
+                    autostep: {
+                        maxHeight: physicsParams.characterController.autostepHeight,
+                        minWidth: physicsParams.characterController.autostepWidth,
+                        includeDynamicBodies: false
+                    }
+                };
                 
-                // Check if physics body was created properly
-                if (physicsBody) {
-                    console.log('Physics body created successfully for player', playerId);
-                    console.log('Initial position:', startPosition);
+                // Create kinematic character controller for physics
+                if (window.CarKinematicController) {
+                    physicsBody = window.CarKinematicController.createCarController(
+                        gameState.physics.world,
+                        startPosition,
+                        carDimensions,
+                        controllerConfig
+                    );
                     
-                    // Wake up the physics body immediately and apply a small force to activate it
-                    if (typeof physicsBody.wakeUp === 'function') {
-                        physicsBody.wakeUp();
+                    if (physicsBody) {
+                        console.log('Character controller created successfully for player', playerId);
+                        
+                        // Store player ID in physics body
+                        physicsBody.userData.playerId = playerId;
+                    } else {
+                        console.error('Failed to create character controller for player', playerId);
                     }
-                    
-                    // Apply initial push to activate the physics
-                    if (typeof physicsBody.applyImpulse === 'function') {
-                        // Apply a stronger downward impulse to ensure it hits the ground
-                        physicsBody.applyImpulse({ x: 0, y: -0.5, z: 0 }, true);
-                        console.log("Applied initial impulse to activate physics");
-                    }
-                    
-                    // Set initial rotation (default to facing forward)
-                    physicsBody.setRotation({
-                        x: 0,
-                        y: 0,
-                        z: 0,
-                        w: 1
-                    }, true);
                 } else {
-                    console.error('Failed to create physics body for player', playerId);
+                    console.error('CarKinematicController not found! Make sure the script is loaded correctly.');
                 }
             } catch (error) {
                 console.error('Error creating car physics:', error);
+            }
+        }
+        
+        // Extract wheels from the car model for visualization
+        const wheelMeshes = [];
+        if (car.children) {
+            for (let i = 0; i < car.children.length; i++) {
+                const child = car.children[i];
+                if (child.name && child.name.includes('wheel')) {
+                    wheelMeshes.push(child);
+                }
             }
         }
         
@@ -733,6 +757,7 @@ function createPlayerCar(playerId, carColor) {
         gameState.cars[playerId] = {
             mesh: car,
             physicsBody: physicsBody,
+            wheels: wheelMeshes,
             targetPosition: { ...startPosition },
             targetRotation: { x: 0, y: 0, z: 0 },
             targetQuaternion: new THREE.Quaternion(),
@@ -964,12 +989,31 @@ function gameLoopWithoutRecursion(timestamp) {
                 gameState.physics.world.step();
                 gameState.debugCounters.physicsUpdate++;
                 
-                // Debug log once every 60 frames
-                if (gameState.debugCounters.physicsUpdate % 60 === 0) {
+                // Debug log once every 300 frames (reduced frequency)
+                if (gameState.debugCounters.physicsUpdate % 300 === 0) {
                     console.log('Physics world stepping normally');
                 }
             } catch (error) {
                 console.error('Physics step error:', error);
+            }
+            
+            // Apply controls to each car with a physics body using the kinematic controller
+            if (window.CarKinematicController && typeof window.CarKinematicController.updateCarController === 'function') {
+                Object.keys(gameState.cars).forEach(playerId => {
+                    const car = gameState.cars[playerId];
+                    if (car && car.physicsBody && car.controls) {
+                        try {
+                            // Update the car controller with current controls
+                            window.CarKinematicController.updateCarController(
+                                car.physicsBody, 
+                                car.controls, 
+                                physicsStep
+                            );
+                        } catch (error) {
+                            console.error(`Error updating car controller for ${playerId}:`, error);
+                        }
+                    }
+                });
             }
             
             // Update all car meshes to match their physics bodies
@@ -977,31 +1021,45 @@ function gameLoopWithoutRecursion(timestamp) {
                 const car = gameState.cars[playerId];
                 if (car && car.mesh && car.physicsBody) {
                     try {
-                        // Get position and rotation from physics body
-                        const pos = car.physicsBody.translation();
-                        const rot = car.physicsBody.rotation();
-                        
-                        if (pos && rot) {
-                            // Log positions for debugging
-                            if (gameState.showPhysicsDebug && gameState.debugCounters.physicsUpdate % 60 === 0) {
-                                console.log(`Car ${playerId} physics position:`, pos);
-                                console.log(`Car ${playerId} physics velocity:`, car.physicsBody.linvel());
-                            }
-                            
-                            // Update car mesh position
-                            car.mesh.position.set(pos.x, pos.y, pos.z);
-                            
-                            // Update car mesh rotation
-                            car.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
-                            
-                            // Update the car's speed for stats display
-                            const vel = car.physicsBody.linvel();
-                            if (vel) {
-                                const velMag = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
-                                car.speed = velMag * 3.6; // Convert to km/h
+                        // Use the kinematic controller's sync function if available
+                        if (window.CarKinematicController && typeof window.CarKinematicController.syncCarModelWithKinematics === 'function') {
+                            try {
+                                window.CarKinematicController.syncCarModelWithKinematics(
+                                    car.physicsBody,
+                                    car.mesh,
+                                    car.wheels
+                                );
                                 
-                                // Also update velocity vector
-                                car.velocity = { x: vel.x, y: vel.y, z: vel.z };
+                                // Update the car's speed for stats display
+                                if (car.physicsBody.userData) {
+                                    car.speed = car.physicsBody.userData.currentSpeed || 0;
+                                    car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
+                                }
+                            } catch (syncError) {
+                                console.error(`Error syncing car model for ${playerId}:`, syncError);
+                                
+                                // If sync fails, check if the car's physics body has invalid values
+                                const pos = car.physicsBody.translation();
+                                if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
+                                    console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
+                                    resetCarPosition(playerId);
+                                }
+                            }
+                        } else {
+                            // Fallback to basic position/rotation sync
+                            const pos = car.physicsBody.translation();
+                            const rot = car.physicsBody.rotation();
+                            
+                            if (pos && rot && 
+                                isFinite(pos.x) && isFinite(pos.y) && isFinite(pos.z) &&
+                                isFinite(rot.x) && isFinite(rot.y) && isFinite(rot.z) && isFinite(rot.w)) {
+                                // Update car mesh position
+                                car.mesh.position.set(pos.x, pos.y, pos.z);
+                                
+                                // Update car mesh rotation
+                                car.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+                            } else {
+                                console.warn(`Detected invalid position/rotation for car ${playerId}, skipping update`);
                             }
                         }
                     } catch (error) {
@@ -1010,30 +1068,10 @@ function gameLoopWithoutRecursion(timestamp) {
                 }
             });
             
-            // Apply controls to each car with a physics body
-            if (gameState.physics.usingRapier && typeof rapierPhysics.applyCarControls === 'function') {
-                Object.keys(gameState.cars).forEach(playerId => {
-                    const car = gameState.cars[playerId];
-                    if (car && car.physicsBody && car.controls) {
-                        try {
-                            // Log controls for debugging
-                            if (gameState.showPhysicsDebug && 
-                                (car.controls.acceleration > 0.1 || car.controls.braking > 0.1 || Math.abs(car.controls.steering) > 0.1) &&
-                                gameState.debugCounters.physicsUpdate % 30 === 0) {
-                                console.log(`Applying controls to car ${playerId}:`, car.controls);
-                            }
-                            
-                            rapierPhysics.applyCarControls(car.physicsBody, car.controls, playerId);
-                        } catch (error) {
-                            console.error(`Error applying controls to car ${playerId}:`, error);
-                        }
-                    }
-                });
-            }
-            
             // Update force visualization if physics debug is enabled
             if (gameState.showPhysicsDebug) {
                 visualizeAppliedForces();
+                updatePhysicsDebugVisualization();
             }
         }
         
@@ -1367,132 +1405,86 @@ function resetCarPosition(playerId) {
     const car = gameState.cars[playerId];
     
     // Define proper starting position with a safe height above ground
-    const startPosition = { x: 0, y: 0.5, z: -20 };
+    const startPosition = { x: 0, y: 1.5, z: -20 };
     const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
     
-    // If we're using Rapier physics, use the improved reset function
-    if (car.physicsBody && gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
-        console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
-        
-        // Call the new reset function that properly resets all physics state
-        rapierPhysics.resetCarPosition(
-            gameState.physics.world,
-            car.physicsBody, 
-            startPosition, 
-            startRotation
-        );
-        
-        // Also reset wheel steering, suspension, etc. in the wheel data
-        if (car.physicsBody.userData && car.physicsBody.userData.wheels) {
-            car.physicsBody.userData.wheels.forEach(wheel => {
-                wheel.steering = 0;
-                wheel.compression = 0;
-                wheel.groundContact = false;
-                wheel.contactPoint = null;
-                wheel.contactNormal = null;
-            });
+    try {
+        // If we have a physics body, reset its position
+        if (car.physicsBody) {
+            // Check if we're using the kinematic controller
+            if (car.physicsBody.userData && car.physicsBody.userData.characterController) {
+                console.log(`Resetting kinematic controller for car ${playerId}`);
+                
+                // Set the next kinematic position and rotation
+                if (typeof car.physicsBody.setNextKinematicTranslation === 'function') {
+                    car.physicsBody.setNextKinematicTranslation(startPosition);
+                }
+                
+                if (typeof car.physicsBody.setNextKinematicRotation === 'function') {
+                    car.physicsBody.setNextKinematicRotation(startRotation);
+                }
+                
+                // Reset the rotation in userData
+                car.physicsBody.userData.rotation = { ...startRotation };
+                
+                // Reset velocity and speed
+                car.physicsBody.userData.velocity = { x: 0, y: 0, z: 0 };
+                car.physicsBody.userData.currentSpeed = 0;
+                
+                // Reset controls
+                car.physicsBody.userData.controls = {
+                    steering: 0,
+                    acceleration: 0,
+                    braking: 0
+                };
+                
+                // Also update the car's controls in gameState
+                car.controls = {
+                    steering: 0,
+                    acceleration: 0,
+                    braking: 0
+                };
+            } 
+            // Fallback to old physics reset if needed
+            else if (gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
+                console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
+                
+                // Call the old reset function
+                rapierPhysics.resetCarPosition(
+                    gameState.physics.world,
+                    car.physicsBody, 
+                    startPosition, 
+                    startRotation
+                );
+            }
         }
         
-        // Extract wheelMeshes from the car mesh if available
-        const wheelMeshes = [];
-        if (car.mesh && car.mesh.children) {
-            // Look for cylinder geometries which should be the wheels
-            car.mesh.children.forEach(child => {
-                if (child.geometry && 
-                    child.geometry.type === "CylinderGeometry" &&
-                    child.rotation.z === Math.PI / 2) { // Wheels are rotated 90 degrees
-                    wheelMeshes.push(child);
-                }
-            });
+        // Also reset the visual mesh position directly
+        if (car.mesh) {
+            car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
+            car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
             
-            // Sort wheels by position
-            if (wheelMeshes.length === 4) {
-                wheelMeshes.sort((a, b) => {
-                    // Sort first by Z (front/rear)
-                    if (a.position.z > b.position.z) return -1;
-                    if (a.position.z < b.position.z) return 1;
-                    // Then by X (left/right)
-                    return a.position.x < b.position.x ? -1 : 1;
+            // Reset wheel rotations if we have wheels
+            if (car.wheels && car.wheels.length > 0) {
+                car.wheels.forEach(wheel => {
+                    if (wheel) {
+                        // Reset steering rotation (y-axis)
+                        wheel.rotation.y = 0;
+                    }
                 });
             }
         }
         
-        // Use the sync function to update visual model
-        if (typeof rapierPhysics.syncCarModelWithPhysics === 'function' && wheelMeshes.length > 0) {
-            rapierPhysics.syncCarModelWithPhysics(
-                car.physicsBody,
-                car.mesh,
-                wheelMeshes
-            );
-        } else {
-            // Fallback to direct update
-            car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
-            car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
-        }
-        
-        // Reset velocity tracking in our game state
+        // Reset target position and rotation
+        car.targetPosition = { ...startPosition };
+        car.targetRotation = { x: 0, y: 0, z: 0 };
+        car.velocity = { x: 0, y: 0, z: 0 };
         car.speed = 0;
-        car.velocity = [0, 0, 0];
         
-        // Reset controls to neutral
-        car.controls = {
-            steering: 0,
-            acceleration: 0,
-            braking: 0
-        };
+        console.log(`Reset car ${playerId} to starting position`);
+    } catch (error) {
+        console.error(`Error resetting car ${playerId}:`, error);
     }
-    else {
-        // Fallback for non-Rapier physics or missing reset function
-        console.log(`Using fallback reset for car ${playerId}`);
-        
-        // Reset mesh position & rotation
-        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
-        car.mesh.quaternion.set(0, 0, 0, 1); // Identity quaternion (no rotation)
-        
-        // If physics body exists, try basic reset
-        if (car.physicsBody) {
-            if (typeof car.physicsBody.setTranslation === 'function') {
-                car.physicsBody.setTranslation(startPosition, true);
-            }
-            
-            if (typeof car.physicsBody.setRotation === 'function') {
-                car.physicsBody.setRotation(startRotation, true);
-            }
-            
-            if (typeof car.physicsBody.setLinvel === 'function') {
-                car.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-            }
-            
-            if (typeof car.physicsBody.setAngvel === 'function') {
-                car.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
-            }
-            
-            // Wake up the body to ensure it's active after reset
-            if (typeof car.physicsBody.wakeUp === 'function') {
-                car.physicsBody.wakeUp();
-            }
-        }
-        
-        // Reset velocity and controls in our game state
-        car.speed = 0;
-        car.velocity = [0, 0, 0];
-        car.controls = { steering: 0, acceleration: 0, braking: 0 };
-    }
-    
-    // Notify player to reset their position via server
-    socket.emit('reset_player_position', {
-        room_code: gameState.roomCode,
-        player_id: playerId,
-        position: [startPosition.x, startPosition.y, startPosition.z],
-        rotation: [0, 0, 0]
-    });
-    
-    // Force an immediate update of the stats display
-    if (gameState.showStats) {
-        updateStatsDisplay();
-    }
-    
-    console.log(`Reset complete for car ${playerId}`);
 }
 
 // Function to reset all cars
@@ -1769,7 +1761,6 @@ function updatePhysicsDebugVisualization() {
             // Track for later removal
             gameState.physicsDebugObjects.push(lines);
             
-            console.log(`Rendered ${gameState.debugCounters.physicsDebugLines} debug lines using Rapier's debugRender`);
             return;
         } catch (error) {
             console.error('Error using Rapier debug render:', error);
@@ -2158,40 +2149,26 @@ function visualizeAppliedForces() {
 // Global object to store physics parameters
 let physicsParams = {
     car: {
-        // Car body physics
-        mass: 1200.0,
-        linearDamping: 0.5,
-        angularDamping: 4.0,
+        // Movement
+        forwardSpeed: 10.0,
+        reverseSpeed: 5.0,
         
-        // Movement parameters
-        enginePower: 1600.0,
-        brakeForce: 2000.0,
-        steeringResponse: 0.3,
+        // Steering
         maxSteeringAngle: 0.6,
-        steeringReturnSpeed: 3.0,
-        lateralGripFactor: 2.0,
-        rollingResistance: 0.15,
-        aerodynamicDrag: 0.5,
-        maxSpeedKmh: 80,
-        reverseMaxSpeedKmh: 30
+        steeringSpeed: 0.3,
+        steeringReturnSpeed: 0.2
     },
     world: {
-        gravity: {
-            x: 0.0,
-            y: -20.0,
-            z: 0.0
-        }
+        gravity: { x: 0.0, y: -20.0, z: 0.0 }
     },
-    wheels: {
-        // Wheel physics
-        frictionSlip: 5.0,
-        rearFrictionMultiplier: 1.1,
-        
-        // Suspension
-        suspensionRestLength: 0.4,
-        suspensionStiffness: 25.0,
-        suspensionDamping: 3.5,
-        suspensionCompression: 0.5
+    characterController: {
+        characterOffset: 0.1,        // Gap between character and environment
+        maxSlopeClimbAngle: 0.6,     // About 35 degrees
+        minSlopeSlideAngle: 0.4,     // About 25 degrees
+        gravity: -20.0,               // Character-specific gravity
+        enableAutostep: true,        // Whether to enable auto-stepping
+        autostepHeight: 0.3,         // Maximum step height
+        autostepWidth: 0.2           // Minimum step width
     }
 };
 
@@ -2312,9 +2289,6 @@ function initPhysicsParametersPanel() {
     // Setup tab switcher
     setupTabSwitcher();
     
-    // Setup preset selector
-    setupPresetSelector();
-    
     // Create car parameters UI
     createCarParametersUI();
     
@@ -2324,7 +2298,7 @@ function initPhysicsParametersPanel() {
     // Create wheels parameters UI
     createWheelsParametersUI();
     
-    // Setup buttons
+    // Setup reset button
     setupPhysicsButtons();
     
     console.log('Physics parameters panel initialized');
@@ -2348,26 +2322,6 @@ function setupTabSwitcher() {
             const targetId = tab.dataset.tab + '-params';
             document.getElementById(targetId).classList.add('active');
         });
-    });
-}
-
-// Setup preset selector dropdown
-function setupPresetSelector() {
-    const selector = document.getElementById('physics-preset-selector');
-    
-    selector.addEventListener('change', () => {
-        const preset = selector.value;
-        
-        if (preset !== 'custom') {
-            // Apply preset values
-            physicsParams = JSON.parse(JSON.stringify(physicsPresets[preset]));
-            
-            // Update UI to match preset values
-            updateAllParameterControls();
-            
-            // Apply changes immediately
-            applyPhysicsChanges();
-        }
     });
 }
 
@@ -2397,10 +2351,11 @@ function createParameterControl(container, group, param, label, min, max, step) 
     slider.dataset.group = group;
     slider.dataset.param = param;
     
-    // Add event listeners
+    // Add event listeners with immediate application
     slider.addEventListener('input', () => {
         valueInput.value = slider.value;
         updatePhysicsParameter(group, param, parseFloat(slider.value));
+        applyPhysicsChanges(); // Apply changes immediately
     });
     
     valueInput.addEventListener('change', () => {
@@ -2408,6 +2363,7 @@ function createParameterControl(container, group, param, label, min, max, step) 
         if (!isNaN(value)) {
             slider.value = value;
             updatePhysicsParameter(group, param, value);
+            applyPhysicsChanges(); // Apply changes immediately
         } else {
             valueInput.value = physicsParams[group][param];
         }
@@ -2439,21 +2395,16 @@ function createCarParametersUI() {
     const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
     
     // Car body physics
-    createParameterControl(carBodyGroup, 'car', 'mass', 'Mass', 500, 2000, 50);
-    createParameterControl(carBodyGroup, 'car', 'linearDamping', 'Linear Damping', 0.1, 1.0, 0.05);
-    createParameterControl(carBodyGroup, 'car', 'angularDamping', 'Angular Damping', 1.0, 8.0, 0.1);
+    createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
+    createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
+    createParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
     
     // Movement parameters
-    createParameterControl(movementGroup, 'car', 'enginePower', 'Engine Power', 800, 3000, 100);
-    createParameterControl(movementGroup, 'car', 'brakeForce', 'Brake Force', 1000, 3000, 100);
+    createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
+    createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
     createParameterControl(movementGroup, 'car', 'maxSteeringAngle', 'Max Steering', 0.3, 1.0, 0.05);
-    createParameterControl(movementGroup, 'car', 'steeringResponse', 'Steering Response', 0.1, 0.8, 0.05);
-    createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 1.0, 5.0, 0.1);
-    createParameterControl(movementGroup, 'car', 'lateralGripFactor', 'Lateral Grip', 0.5, 4.0, 0.1);
-    createParameterControl(movementGroup, 'car', 'rollingResistance', 'Rolling Resistance', 0.05, 0.3, 0.01);
-    createParameterControl(movementGroup, 'car', 'aerodynamicDrag', 'Aero Drag', 0.1, 1.0, 0.05);
-    createParameterControl(movementGroup, 'car', 'maxSpeedKmh', 'Max Speed (km/h)', 50, 150, 5);
-    createParameterControl(movementGroup, 'car', 'reverseMaxSpeedKmh', 'Max Reverse (km/h)', 20, 50, 5);
+    createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Response', 0.1, 1.0, 0.05);
+    createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
 
 // Create UI controls for world parameters
@@ -2461,23 +2412,30 @@ function createWorldParametersUI() {
     const worldGroup = document.querySelector('#world-params .params-group');
     
     // World physics
-    createParameterControl(worldGroup, 'world', 'gravity.y', 'Gravity Y', -30, -10, 0.5);
+    createParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
+    createParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
 }
 
-// Create UI controls for wheels parameters
+// Create UI controls for wheels parameters - now just basic character controller settings
 function createWheelsParametersUI() {
     const wheelGroup = document.querySelector('#wheels-params .params-group:nth-child(1)');
     const suspensionGroup = document.querySelector('#wheels-params .params-group:nth-child(2)');
     
-    // Wheel physics
-    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 1.0, 10.0, 0.5);
-    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction Mult', 0.8, 1.5, 0.05);
+    // Update group titles to match new functionality
+    const wheelGroupTitle = wheelGroup.querySelector('.params-group-title');
+    if (wheelGroupTitle) {
+        wheelGroupTitle.textContent = 'Collision Settings';
+    }
     
-    // Suspension
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 0.7, 0.05);
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 40.0, 1.0);
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping', 1.0, 6.0, 0.1);
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionCompression', 'Compression', 0.2, 0.8, 0.05);
+    const suspensionGroupTitle = suspensionGroup.querySelector('.params-group-title');
+    if (suspensionGroupTitle) {
+        suspensionGroupTitle.textContent = 'Autostep Settings';
+    }
+    
+    // Character controller collision settings
+    createParameterControl(wheelGroup, 'characterController', 'enableAutostep', 'Enable Autostep', 0, 1, 1);
+    createParameterControl(suspensionGroup, 'characterController', 'autostepHeight', 'Autostep Height', 0.1, 0.5, 0.05);
+    createParameterControl(suspensionGroup, 'characterController', 'autostepWidth', 'Autostep Width', 0.1, 0.5, 0.05);
 }
 
 // Setup physics parameter buttons
@@ -2492,17 +2450,6 @@ function setupPhysicsButtons() {
         
         // Apply changes
         applyPhysicsChanges();
-        
-        // Set preset selector to default
-        document.getElementById('physics-preset-selector').value = 'default';
-    });
-    
-    // Apply button
-    document.getElementById('apply-physics').addEventListener('click', () => {
-        applyPhysicsChanges();
-        
-        // Set preset selector to custom
-        document.getElementById('physics-preset-selector').value = 'custom';
     });
 }
 
@@ -2548,67 +2495,67 @@ function updateAllParameterControls() {
     });
 }
 
-// Apply physics changes to active car bodies
+// Apply physics changes to active car bodies (now using character controller)
 function applyPhysicsChanges() {
-    // Apply changes to existing car bodies
-    for (const playerId in gameState.players) {
-        const player = gameState.players[playerId];
-        
-        if (player.carBody) {
-            updateCarPhysics(player.carBody);
+    try {
+        // Apply changes to world physics
+        if (gameState.physicsWorld) {
+            updateWorldPhysics(gameState.physicsWorld);
         }
+        
+        // Apply changes to existing car controllers
+        for (const playerId in gameState.players) {
+            const player = gameState.players[playerId];
+            
+            if (player.carBody) {
+                updateCarControllerConfig(player.carBody);
+            }
+        }
+    } catch (error) {
+        console.error('Error applying physics changes:', error);
     }
-    
-    // Update world physics
-    if (gameState.physicsWorld) {
-        updateWorldPhysics(gameState.physicsWorld);
-    }
-    
-    console.log('Applied physics parameter changes');
 }
 
-// Update car physics body with current parameters
-function updateCarPhysics(carBody) {
+// Update car controller configuration with current parameters
+function updateCarControllerConfig(carBody) {
     if (!carBody || !carBody.userData) return;
     
-    // Update car body properties
-    if (typeof carBody.setLinearDamping === 'function') {
-        carBody.setLinearDamping(physicsParams.car.linearDamping);
-    }
-    
-    if (typeof carBody.setAngularDamping === 'function') {
-        carBody.setAngularDamping(physicsParams.car.angularDamping);
-    }
-    
-    if (typeof carBody.setAdditionalMass === 'function') {
-        carBody.setAdditionalMass(physicsParams.car.mass);
-    }
-    
-    // Update movement parameters in userData
-    carBody.userData.enginePower = physicsParams.car.enginePower;
-    carBody.userData.brakeForce = physicsParams.car.brakeForce;
-    carBody.userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
-    carBody.userData.steeringResponse = physicsParams.car.steeringResponse;
-    carBody.userData.steeringReturnSpeed = physicsParams.car.steeringReturnSpeed;
-    carBody.userData.lateralGripFactor = physicsParams.car.lateralGripFactor;
-    carBody.userData.rollingResistance = physicsParams.car.rollingResistance;
-    carBody.userData.aerodynamicDrag = physicsParams.car.aerodynamicDrag;
-    
-    // Update wheel properties
-    if (carBody.userData.wheels) {
-        carBody.userData.wheels.forEach((wheel, index) => {
-            // Front wheels have base friction, rear wheels have multiplier applied
-            wheel.frictionSlip = physicsParams.wheels.frictionSlip;
-            if (index >= 2) { // Rear wheels
-                wheel.frictionSlip *= physicsParams.wheels.rearFrictionMultiplier;
-            }
+    try {
+        // Update character controller configuration
+        if (carBody.userData.config) {
+            // Forward the new parameters to the character controller config
+            carBody.userData.config.forwardSpeed = physicsParams.car.forwardSpeed;
+            carBody.userData.config.reverseSpeed = physicsParams.car.reverseSpeed;
+            carBody.userData.config.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
+            carBody.userData.config.steeringSpeed = physicsParams.car.steeringSpeed;
+            carBody.userData.config.steeringReturnSpeed = physicsParams.car.steeringReturnSpeed;
+            carBody.userData.config.characterOffset = physicsParams.characterController.characterOffset;
+            carBody.userData.config.maxSlopeClimbAngle = physicsParams.characterController.maxSlopeClimbAngle;
+            carBody.userData.config.minSlopeSlideAngle = physicsParams.characterController.minSlopeSlideAngle;
+            carBody.userData.config.gravity = physicsParams.characterController.gravity;
             
-            // Update suspension
-            wheel.suspensionRestLength = physicsParams.wheels.suspensionRestLength;
-            wheel.suspensionStiffness = physicsParams.wheels.suspensionStiffness;
-            wheel.suspensionDamping = physicsParams.wheels.suspensionDamping;
-            wheel.suspensionCompression = physicsParams.wheels.suspensionCompression;
-        });
+            // Update autostep settings if character controller is available
+            if (carBody.userData.characterController) {
+                const controller = carBody.userData.characterController;
+                
+                // Apply autostep settings
+                if (physicsParams.characterController.enableAutostep) {
+                    controller.enableAutostep(
+                        physicsParams.characterController.autostepHeight,
+                        physicsParams.characterController.autostepWidth,
+                        false // Don't enable dynamic bodies for autostep
+                    );
+                } else {
+                    controller.disableAutostep();
+                }
+                
+                // Update other controller settings
+                controller.setMaxSlopeClimbAngle(physicsParams.characterController.maxSlopeClimbAngle);
+                controller.setMinSlopeSlideAngle(physicsParams.characterController.minSlopeSlideAngle);
+            }
+        }
+    } catch (error) {
+        console.error('Error updating car controller config:', error);
     }
 }
 
@@ -2616,8 +2563,12 @@ function updateCarPhysics(carBody) {
 function updateWorldPhysics(world) {
     if (!world || typeof world.setGravity !== 'function') return;
     
-    // Update gravity
-    world.setGravity(physicsParams.world.gravity);
+    try {
+        // Update gravity
+        world.setGravity(physicsParams.world.gravity);
+    } catch (error) {
+        console.error('Error updating world physics:', error);
+    }
 }
 
 // Add keyboard listener for F2 to toggle physics panel is now handled in initGame
