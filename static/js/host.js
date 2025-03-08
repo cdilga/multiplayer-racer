@@ -210,12 +210,6 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
     }
     
-    // Reset all cars with R key
-    if (e.key === 'r' || e.key === 'R') {
-        resetAllCars();
-        e.preventDefault();
-    }
-    
     // Manual car controls for testing
     const playerCar = gameState.cars["1"]; // Control first car
     if (playerCar) {
@@ -961,11 +955,6 @@ function gameLoopWithoutRecursion(timestamp) {
                 // Just call step() without arguments to use default timestep
                 gameState.physics.world.step();
                 gameState.debugCounters.physicsUpdate++;
-                
-                // Debug log once every 300 frames (reduced frequency)
-                if (gameState.debugCounters.physicsUpdate % 300 === 0) {
-                    console.log('Physics world stepping normally');
-                }
             } catch (error) {
                 console.error('Physics step error:', error);
             }
@@ -1010,13 +999,6 @@ function gameLoopWithoutRecursion(timestamp) {
                                 }
                             } catch (syncError) {
                                 console.error(`Error syncing car model for ${playerId}:`, syncError);
-                                
-                                // If sync fails, check if the car's physics body has invalid values
-                                const pos = car.physicsBody.translation();
-                                if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
-                                    console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
-                                    resetCarPosition(playerId);
-                                }
                             }
                         } else {
                             // Fallback to basic position/rotation sync
@@ -1151,11 +1133,6 @@ function updateStatsDisplay() {
         statsHTML += `<div>Debug Lines: ${gameState.debugCounters?.physicsDebugLines || 0}</div>`;
     }
     
-    // Add reset all cars button
-    statsHTML += `<div class="reset-button-container">
-        <button id="reset-all-cars-btn" class="reset-button">Reset All Cars</button>
-    </div>`;
-    
     // Add detailed player stats with controls and enhanced physics information
     statsHTML += '<div class="stats-section">Player Stats & Car Physics:</div>';
     
@@ -1279,14 +1256,6 @@ function updateStatsDisplay() {
                 </div>`;
         }
         
-        // Add per-car reset button
-        const resetButtonHTML = `
-            <div class="reset-button-container">
-                <button id="reset-car-${playerId}-btn" class="reset-button car-reset-btn">
-                    Reset This Car
-                </button>
-            </div>`;
-        
         // Put it all together
         statsHTML += `
             <div class="player-stats">
@@ -1303,24 +1272,11 @@ function updateStatsDisplay() {
                     ${controlsHTML}
                 </div>
                 ${forcesHTML}
-                ${resetButtonHTML}
             </div>
         `;
     });
     
     elements.statsOverlay.innerHTML = statsHTML;
-    
-    // Re-attach event listener for reset buttons
-    const resetButton = document.getElementById('reset-all-cars-btn');
-    if (resetButton) {
-        resetButton.onclick = resetAllCars;
-    }
-    
-    // Attach event listeners for individual car reset buttons
-    document.querySelectorAll('.car-reset-btn').forEach(button => {
-        const playerId = button.id.replace('reset-car-', '').replace('-btn', '');
-        button.onclick = () => resetCarPosition(playerId);
-    });
 }
 
 //TODO: Move this to debug.js
@@ -1354,16 +1310,6 @@ function addPhysicsDebugStyles() {
             background-color: #f44336;
         }
         
-        .car-reset-btn {
-            background-color: #2196F3;
-            font-size: 10px;
-            padding: 3px 8px;
-            margin-top: 8px;
-        }
-        
-        .car-reset-btn:hover {
-            background-color: #0b7dda;
-        }
     `;
     document.head.appendChild(styleEl);
 }
@@ -1434,25 +1380,6 @@ function initStatsOverlay() {
             padding: 5px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 3px;
-        }
-        .reset-button {
-            background-color: #e63946;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 3px 8px;
-            margin-top: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-family: monospace;
-        }
-        .reset-button-container {
-            margin: 10px 0;
-            text-align: center;
-        }
-        #reset-all-cars-btn {
-            background-color: #f72585;
-            padding: 5px 10px;
         }
         
         /* Control indicator styles */
