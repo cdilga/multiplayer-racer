@@ -8,6 +8,7 @@
 ## Testing
 - Open host interface: `http://localhost:8000/`
 - Test car models: `http://localhost:8000/test/car`
+- Controller join will be a constructed url with the room name from the host interface
 - Manual testing via multiple browsers/devices
 
 ## Code Style Guidelines
@@ -26,8 +27,8 @@
 
 - **Error Handling**:
   - Log errors with appropriate levels
-  - Provide user-friendly error messages
-  - Fail gracefully with fallbacks when possible
+  - Provide user-friendly error messages, but keep the logs clean. Only give errors if bad things happen, and don't give info error messages in loops unless they're very infrequent, or they're explicitly asked for
+  - Don't implement fallbacks for scenarios where fallbacks shuoldn't need to happen, for example physics fallbacks don't make sense as the whole experience relies on physics being loaded.
 
 ## Architecture
 - Server: Flask + Socket.IO (Python)
