@@ -64,32 +64,6 @@ const socketDebug = {
     maxEventHistory: 10
 };
 
-// Add comprehensive socket event monitoring
-// socket.onAny((eventName, ...args) => {
-//     // Track event counts
-//     socketDebug.eventCounts[eventName] = (socketDebug.eventCounts[eventName] || 0) + 1;
-    
-//     // Track recent events
-//     socketDebug.lastEvents.unshift({
-//         event: eventName,
-//         args: args,
-//         timestamp: new Date().toISOString()
-//     });
-//     socketDebug.lastEvents = socketDebug.lastEvents.slice(0, socketDebug.maxEventHistory);
-
-//     // Log every event with detailed information
-//     console.log('🎯 Socket Event:', {
-//         event: eventName,
-//         count: socketDebug.eventCounts[eventName],
-//         args: args,
-//         timestamp: new Date().toISOString(),
-//         socketId: socket.id,
-//         connectedRooms: Array.from(socket.rooms || []),
-//         hasListeners: socket.listeners(eventName).length > 0,
-//         allRegisteredEvents: Object.keys(socket._callbacks || {})
-//     });
-// });
-
 // Socket event handlers
 socket.on('connect', () => {
     // Connected to server
@@ -502,7 +476,6 @@ function initGame() {
         gameState.scene.add(gameState.track);
         
         // Initialize physics world - THIS IS ASYNC and needs to be waited for
-        // Initialize physics world and then create cars
         initPhysics().then((physicsInitialized) => {
             // Now create cars after physics is initialized
             console.log('Physics initialized, now creating cars');
@@ -1350,7 +1323,7 @@ function updateStatsDisplay() {
     });
 }
 
-// Add this CSS to improve the debug display
+//TODO: Move this to debug.js
 function addPhysicsDebugStyles() {
     const styleEl = document.createElement('style');
     styleEl.innerHTML = `
@@ -1395,114 +1368,11 @@ function addPhysicsDebugStyles() {
     document.head.appendChild(styleEl);
 }
 
-// Call this when the game initializes
+//TODO Call this when the game initializes (import from debug.js)
 addPhysicsDebugStyles();
 
-// Function to reset a car's position
-function resetCarPosition(playerId) {
-    if (!gameState.cars[playerId]) return;
-    
-    const car = gameState.cars[playerId];
-    
-    // Define proper starting position with a safe height above ground
-    const startPosition = { x: 0, y: 1.5, z: -20 };
-    const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
-    
-    try {
-        // If we have a physics body, reset its position
-        if (car.physicsBody) {
-            // Check if we're using the kinematic controller
-            if (car.physicsBody.userData && car.physicsBody.userData.characterController) {
-                console.log(`Resetting kinematic controller for car ${playerId}`);
-                
-                // Set the next kinematic position and rotation
-                if (typeof car.physicsBody.setNextKinematicTranslation === 'function') {
-                    car.physicsBody.setNextKinematicTranslation(startPosition);
-                }
-                
-                if (typeof car.physicsBody.setNextKinematicRotation === 'function') {
-                    car.physicsBody.setNextKinematicRotation(startRotation);
-                }
-                
-                // Reset the rotation in userData
-                car.physicsBody.userData.rotation = { ...startRotation };
-                
-                // Reset velocity and speed
-                car.physicsBody.userData.velocity = { x: 0, y: 0, z: 0 };
-                car.physicsBody.userData.currentSpeed = 0;
-                
-                // Reset controls
-                car.physicsBody.userData.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-                
-                // Also update the car's controls in gameState
-                car.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-            } 
-            // Fallback to old physics reset if needed
-            else if (gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
-                console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
-                
-                // Call the old reset function
-                rapierPhysics.resetCarPosition(
-                    gameState.physics.world,
-                    car.physicsBody, 
-                    startPosition, 
-                    startRotation
-                );
-            }
-        }
-        
-        // Also reset the visual mesh position directly
-        if (car.mesh) {
-            car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
-            car.mesh.quaternion.set(startRotation.x, startRotation.y, startRotation.z, startRotation.w);
-            
-            // Reset wheel rotations if we have wheels
-            if (car.wheels && car.wheels.length > 0) {
-                car.wheels.forEach(wheel => {
-                    if (wheel) {
-                        // Reset steering rotation (y-axis)
-                        wheel.rotation.y = 0;
-                    }
-                });
-            }
-        }
-        
-        // Reset target position and rotation
-        car.targetPosition = { ...startPosition };
-        car.targetRotation = { x: 0, y: 0, z: 0 };
-        car.velocity = { x: 0, y: 0, z: 0 };
-        car.speed = 0;
-        
-        console.log(`Reset car ${playerId} to starting position`);
-    } catch (error) {
-        console.error(`Error resetting car ${playerId}:`, error);
-    }
-}
-
-// Function to reset all cars
-function resetAllCars() {
-    console.log("Resetting all cars...");
-    Object.keys(gameState.cars).forEach(playerId => {
-        resetCarPosition(playerId);
-    });
-    
-    // Force a physics world step to ensure all resets take effect
-    if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
-        gameState.physics.world.step();
-    }
-    
-    console.log("All cars reset complete");
-}
-
-// Initialize the stats overlay style
+//TODO: move to debug.js 
+//  Initialize the stats overlay style
 function initStatsOverlay() {
     const style = document.createElement('style');
     style.textContent = `
@@ -2571,9 +2441,6 @@ function updateWorldPhysics(world) {
     }
 }
 
-// Add keyboard listener for F2 to toggle physics panel is now handled in initGame
-// Removing this duplicate event listener
-
 // Add initialization call to initGame
 const originalInitGame = initGame;
 initGame = function() {
@@ -2610,5 +2477,3 @@ initGame = function() {
         window.physicsKeyListenerAdded = true;
     }
 };
-
-// ... existing code ... 
