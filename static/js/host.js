@@ -22,11 +22,11 @@ import gameStateManager, {
     setRenderer,
     setTrack,
     initializePhysics,
+    addPhysicsBody,
+    addPhysicsCollider,
     toggleStats,
     togglePhysicsDebug,
-    updateFPS,
-    addPhysicsBody,
-    addPhysicsCollider
+    updateFPS
 } from './gameState.js';
 
 // Import other modules
@@ -35,6 +35,37 @@ import { createCar } from './carModel.js';
 import rapierPhysics from './rapierPhysics.js';
 import * as THREE from 'three';
 import CarKinematicController from './carKinematicController.js';
+
+// Import domUtils.js at the top of the file, using renamed imports for conflicting functions
+import { 
+    initializeElements, 
+    getElement, 
+    addPlayerToList as domAddPlayerToList, 
+    removePlayerFromList, 
+    updatePlayerName, 
+    showScreen as domShowScreen, 
+    updateStatsDisplay as domUpdateStatsDisplay, 
+    toggleFullscreen as domToggleFullscreen, 
+    updateFullscreenButton as domUpdateFullscreenButton, 
+    createBarIndicator, 
+    initStatsOverlay as domInitStatsOverlay
+} from './domUtils.js';
+
+// Import the new statsManager module
+import { 
+    formatStatsDisplay, 
+    collectBasicStats 
+} from './statsManager.js';
+
+// Import the new physicsUI module
+import { 
+    createPhysicsDebugContainer, 
+    removePhysicsDebugObjects as physicsUIRemoveDebugObjects, 
+    togglePhysicsPanel as physicsUITogglePanel, 
+    setupPhysicsParametersPanel,
+    createParameterControl as physicsUICreateParameterControl,
+    addPhysicsDebugStyles 
+} from './physicsUI.js';
 
 // Get the game state object for direct access when needed
 const gameState = getGameState();
@@ -48,18 +79,7 @@ let socket;
 // Wait for DOM to be fully loaded before setting up event listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
-    elements = {
-        lobbyScreen: document.getElementById('lobby-screen'),
-        gameScreen: document.getElementById('game-screen'),
-        startGameBtn: document.getElementById('start-game-btn'),
-        roomCodeDisplay: document.getElementById('room-code-display'),
-        playerList: document.getElementById('player-list'),
-        joinUrl: document.getElementById('join-url'),
-        gameContainer: document.getElementById('game-container'),
-        gameStatus: document.getElementById('game-status'),
-        statsOverlay: document.getElementById('stats-overlay'),
-        fullscreenBtn: document.getElementById('fullscreen-btn')
-    };
+    elements = initializeElements();
     
     // Add event listener for start game button
     if (elements.startGameBtn) {
@@ -264,53 +284,26 @@ function startGame() {
     }
 }
 
-function addPlayerToList(id, name, color) {
-    if (!elements || !elements.playerList) return;
-    
-    const playerItem = document.createElement('li');
-    playerItem.id = `player-${id}`;
-    
-    const colorSpan = document.createElement('span');
-    colorSpan.className = 'player-color';
-    colorSpan.style.backgroundColor = color;
-    
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = name;
-    
-    playerItem.appendChild(colorSpan);
-    playerItem.appendChild(nameSpan);
-    elements.playerList.appendChild(playerItem);
-}
-
-function showScreen(screenName) {
-    if (!elements || !elements.lobbyScreen || !elements.gameScreen) return;
-    
-    elements.lobbyScreen.classList.add('hidden');
-    elements.gameScreen.classList.add('hidden');
-    
-    switch (screenName) {
-        case 'lobby':
-            elements.lobbyScreen.classList.remove('hidden');
-            break;
-        case 'game':
-            elements.gameScreen.classList.remove('hidden');
-            // Show game status briefly then fade out
-            if (elements.gameStatus) {
-                elements.gameStatus.style.opacity = '1';
-                elements.gameStatus.classList.remove('fade-out');
-                setTimeout(() => {
-                    elements.gameStatus.classList.add('fade-out');
-                }, 3000);
-            }
-            break;
-    }
-}
-
 // Three.js game initialization
 let isInitializing = false; // Flag to prevent multiple initializations
 let animationRequestId = null; // Track the animation frame request
 
 function initGame() {
+    if (isInitializing) return;
+    isInitializing = true;
+    
+    // Reset any previous state
+    if (animationRequestId) {
+        cancelAnimationFrame(animationRequestId);
+        animationRequestId = null;
+    }
+    
+    // Initialize stats overlay
+    initStatsOverlay();
+    
+    // Initialize physics parameters panel
+    initPhysicsParametersPanel();
+    
     // Initialize Three.js scene
     const scene = new THREE.Scene();
     setScene(scene);
@@ -842,640 +835,16 @@ function onWindowResize() {
     }
 }
 
+// Update updateStatsDisplay to use the renamed import
 function updateStatsDisplay() {
-    if (!elements.statsOverlay) return;
+    if (!gameState.showStats) return;
     
-    let statsHTML = '<div class="stats-header">Game Stats (Press F3 to toggle)</div>';
+    // Collect basic stats from game state
+    const stats = collectBasicStats(gameState);
     
-    // Add physics engine status
-    const physicsStatus = gameState.physics.usingRapier ? 
-        '<span style="color:green">Active</span>' : 
-        '<span style="color:red">Unavailable</span>';
-    
-    statsHTML += `<div>Physics: ${physicsStatus}</div>`;
-    statsHTML += `<div>Rapier Loaded: ${window.rapierLoaded ? '<span style="color:green">Yes</span>' : '<span style="color:red">No</span>'}</div>`;
-    
-    // Add physics debug status
-    const debugStatus = gameState.showPhysicsDebug ? 
-        '<span style="color:green">ON</span> (Press F4 to toggle)' : 
-        '<span style="color:#888">OFF</span> (Press F4 to toggle)';
-    statsHTML += `<div>Physics Debug: ${debugStatus}</div>`;
-    
-    // Add FPS counter
-    const now = performance.now();
-    if (!gameState.lastFrameTime) {
-        gameState.lastFrameTime = now;
-        gameState.frameCount = 0;
-        gameState.fps = 0;
-    }
-    
-    gameState.frameCount++;
-    
-    if (now - gameState.lastFrameTime >= 1000) {
-        gameState.fps = Math.round(gameState.frameCount * 1000 / (now - gameState.lastFrameTime));
-        gameState.frameCount = 0;
-        gameState.lastFrameTime = now;
-    }
-    
-    statsHTML += `<div>FPS: ${gameState.fps}</div>`;
-    statsHTML += `<div>Players: ${Object.keys(gameState.players).length}</div>`;
-    statsHTML += `<div>Cars: ${Object.keys(gameState.cars).length}</div>`;
-    
-    // Add physics update counter
-    statsHTML += `<div>Physics Updates: ${gameState.debugCounters?.physicsUpdate || 0}</div>`;
-    if (gameState.showPhysicsDebug) {
-        statsHTML += `<div>Debug Lines: ${gameState.debugCounters?.physicsDebugLines || 0}</div>`;
-    }
-    
-    // Add detailed player stats with controls and enhanced physics information
-    statsHTML += '<div class="stats-section">Player Stats & Car Physics:</div>';
-    
-    Object.keys(gameState.cars).forEach(playerId => {
-        const car = gameState.cars[playerId];
-        const player = gameState.players[playerId];
-        if (!car || !player) return;
-        
-        // Calculate speed from velocity
-        let speed = 0;
-        let posX = 0, posY = 0, posZ = 0;
-        let rotX = 0, rotY = 0, rotZ = 0, rotW = 0;
-        let isUpsideDown = false;
-        
-        // Get physics state (if available)
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const pos = car.physicsBody.translation();
-            const rot = car.physicsBody.rotation();
-            
-            // Velocity and position
-            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
-            posX = Math.round(pos.x * 100) / 100;
-            posY = Math.round(pos.y * 100) / 100;
-            posZ = Math.round(pos.z * 100) / 100;
-            
-            // Rotation
-            rotX = Math.round(rot.x * 100) / 100;
-            rotY = Math.round(rot.y * 100) / 100;
-            rotZ = Math.round(rot.z * 100) / 100;
-            rotW = Math.round(rot.w * 100) / 100;
-            
-            // Check if car is upside down
-            if (typeof rapierPhysics.isCarUpsideDown === 'function') {
-                isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
-            }
-        }
-        
-        // Get physics body state
-        let physicsState = "No Physics Body";
-        let velocityInfo = "";
-        
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const isAwake = typeof car.physicsBody.isAwake === 'function' ? 
-                car.physicsBody.isAwake() : "Unknown";
-                
-            physicsState = `Active: ${isAwake}`;
-            velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
-            
-            // Add upside down indicator
-            if (isUpsideDown) {
-                physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
-            }
-        }
-        
-        // Get player controls
-        let controlsHTML = '<div class="control-info">No controls received</div>';
-        
-        if (car.controls) {
-            const timeSinceLastControl = car.lastControlUpdate ? 
-                Math.round((Date.now() - car.lastControlUpdate) / 1000) : 'N/A';
-            
-            controlsHTML = `
-            <div class="control-info">
-                <div class="control-row">
-                    <span>Steering:</span>
-                        ${createBarIndicator(car.controls.steering, -1, 1)}
-                        <span class="value">${car.controls.steering.toFixed(2)}</span>
-                </div>
-                <div class="control-row">
-                        <span>Acceleration:</span>
-                        ${createBarIndicator(car.controls.acceleration, 0, 1)}
-                        <span class="value">${car.controls.acceleration.toFixed(2)}</span>
-                </div>
-                <div class="control-row">
-                        <span>Braking:</span>
-                        ${createBarIndicator(car.controls.braking, 0, 1)}
-                        <span class="value">${car.controls.braking.toFixed(2)}</span>
-                </div>
-                    <div class="control-time">Last update: ${timeSinceLastControl}s ago</div>
-                </div>`;
-        }
-        
-        // NEW: Add applied forces display if available from user data
-        let forcesHTML = '';
-        
-        if (car.physicsBody && car.physicsBody.userData && car.physicsBody.userData.lastAppliedForces) {
-            const forces = car.physicsBody.userData.lastAppliedForces;
-            
-            forcesHTML = `
-                <div class="forces-section">
-                    <div class="forces-header">Applied Forces:</div>
-                <div class="control-info">
-                    <div class="control-row">
-                            <span>Engine:</span>
-                            ${createBarIndicator(forces.engineForce/5000, 0, 1)} 
-                            <span class="value">${forces.engineForce.toFixed(0)}N</span>
-                    </div>
-                    <div class="control-row">
-                            <span>Brake:</span>
-                            ${createBarIndicator(forces.brakeForce/5000, 0, 1)}
-                            <span class="value">${forces.brakeForce.toFixed(0)}N</span>
-                    </div>
-                    <div class="control-row">
-                            <span>Steering:</span>
-                            ${createBarIndicator(forces.steeringTorque/500, -1, 1)}
-                            <span class="value">${forces.steeringTorque.toFixed(0)}Nm</span>
-                    </div>
-                        <div class="control-row">
-                            <span>Grip:</span>
-                            ${createBarIndicator(forces.lateralForce/2000, -1, 1)}
-                            <span class="value">${forces.lateralForce.toFixed(0)}N</span>
-                        </div>
-                        <div class="control-row">
-                            <span>Drag:</span>
-                            ${createBarIndicator(forces.dragForce/1000, 0, 1)}
-                            <span class="value">${forces.dragForce.toFixed(0)}N</span>
-                        </div>
-                    </div>
-                </div>`;
-        }
-        
-        // Put it all together
-        statsHTML += `
-            <div class="player-stats">
-                <div class="player-header" style="color: ${player.color}">
-                    ${player.name} (ID: ${player.id})
-                </div>
-                <div>Speed: ${speed.toFixed(1)} km/h</div>
-                <div>Position: (${posX}, ${posY}, ${posZ})</div>
-                ${velocityInfo}
-                <div>Rotation: (${rotY.toFixed(2)}, ${rotX.toFixed(2)}, ${rotZ.toFixed(2)}, ${rotW.toFixed(2)})</div>
-                <div>Physics: ${physicsState}</div>
-                <div class="controls-section">
-                    <div class="controls-header">Controls:</div>
-                    ${controlsHTML}
-                </div>
-                ${forcesHTML}
-            </div>
-        `;
-    });
-    
-    elements.statsOverlay.innerHTML = statsHTML;
-}
-
-//TODO: Move this to debug.js
-function addPhysicsDebugStyles() {
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = `
-        .forces-section {
-            margin-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 5px;
-        }
-        
-        .forces-header {
-            font-size: 11px;
-            color: #aaa;
-            margin-bottom: 3px;
-        }
-        
-        /* Improved control bars */
-        .control-bar {
-            height: 8px;
-            border-radius: 4px;
-            background-color: #333;
-        }
-        
-        .control-bar-fill.positive {
-            background-color: #4CAF50;
-        }
-        
-        .control-bar-fill.negative {
-            background-color: #f44336;
-        }
-        
-    `;
-    document.head.appendChild(styleEl);
-}
-
-//TODO Call this when the game initializes (import from debug.js)
-addPhysicsDebugStyles();
-
-//TODO: move to debug.js 
-//  Initialize the stats overlay style
-function initStatsOverlay() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .game-title {
-            font-size: 2.5em;
-            color: #f72585;
-            text-align: center;
-            margin-bottom: 1em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        #stats-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            z-index: 1000;
-            max-width: 300px;
-            pointer-events: auto;
-        }
-        #stats-overlay.hidden {
-            display: none;
-        }
-        .stats-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-        .stats-section {
-            margin-top: 5px;
-            font-weight: bold;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            padding-top: 5px;
-        }
-        .player-stats {
-            margin: 10px 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .physics-state {
-            font-size: 0.8em;
-            opacity: 0.8;
-        }
-        .control-info {
-            margin: 5px 0;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 3px;
-        }
-        
-        /* Control indicator styles */
-        .control-bar {
-            display: inline-block;
-            height: 10px;
-            background: #555;
-            margin: 0 5px;
-            position: relative;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .control-bar-fill {
-            height: 100%;
-            position: absolute;
-            top: 0;
-            transition: width 0.2s ease;
-        }
-        .control-bar-fill.positive {
-            background: #4CAF50;
-            left: 50%;
-        }
-        .control-bar-fill.negative {
-            background: #f44336;
-            right: 50%;
-        }
-        .control-bar-center {
-            position: absolute;
-            width: 1px;
-            height: 10px;
-            background: #fff;
-            top: 0;
-            left: 50%;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Call this at page load
-initStatsOverlay();
-
-// Force a DOM reflow to fix rendering issues
-function forceDOMRender() {
-    // Force browser to recalculate layout
-    const container = elements.gameContainer;
-    if (container) {
-        container.style.display = 'none';
-        container.offsetHeight; // Trigger reflow
-        container.style.display = '';
-        console.log('DOM render forced');
-    }
-    
-    // Force a Three.js render
-    if (gameState.scene && gameState.camera && gameState.renderer) {
-        gameState.renderer.render(gameState.scene, gameState.camera);
-        console.log('Three.js render forced');
-    }
-}
-
-// Physics debug visualization
-// Remove all physics debug visualization objects
-function removePhysicsDebugObjects() {
-    if (gameState.physicsDebugObjects && gameState.physicsDebugObjects.length > 0) {
-        gameState.physicsDebugObjects.forEach(obj => {
-            if (obj && gameState.scene) {
-                gameState.scene.remove(obj);
-                if (obj.geometry) obj.geometry.dispose();
-                if (obj.material) {
-                    if (Array.isArray(obj.material)) {
-                        obj.material.forEach(m => m.dispose());
-                    } else {
-                        obj.material.dispose();
-                    }
-                }
-            }
-        });
-        gameState.physicsDebugObjects = [];
-    }
-}
-
-// Update or create physics debug visualization
-function updatePhysicsDebugVisualization() {
-    // Clear existing debug objects
-    removePhysicsDebugObjects();
-    
-    // Initialize logging status if not already done
-    if (!gameState.physicsDebugLogs) {
-        gameState.physicsDebugLogs = {
-            noPhysicsWarning: false,
-            carsWithoutPhysics: {},
-            lastFullLog: 0
-        };
-    }
-    
-    // Ensure we have physics enabled
-    if (!gameState.physics || !gameState.physics.initialized || !gameState.physics.world) {
-        if (!gameState.physicsDebugLogs.noPhysicsWarning) {
-            console.warn('Physics debug visualization requested but physics is not available');
-            gameState.physicsDebugLogs.noPhysicsWarning = true;
-        }
-        return;
-    }
-    
-    const world = gameState.physics.world;
-    
-    // Check if the world has the debugRender method (Rapier should provide this)
-    if (world.debugRender) {
-        try {
-            // Use Rapier's built-in debug render function
-            const { vertices, colors } = world.debugRender();
-            
-            // Log debug data to understand the format
-            if (!gameState.debugRenderLogged) {
-                console.debug('Rapier debug render data:', {
-                    verticesLength: vertices.length,
-                    colorsLength: colors.length,
-                    firstFewVertices: vertices.slice(0, 10),
-                    firstFewColors: colors.slice(0, 10)
-                });
-                gameState.debugRenderLogged = true;
-            }
-            
-            gameState.debugCounters.physicsDebugLines = vertices.length / 6; // 6 values per line (3D start and end points)
-            
-            // Create a single geometry for all the debug lines
-            const positions = [];
-            
-            // Process vertices as 3D line segments (Rapier returns [x1,y1,z1,x2,y2,z2,...])
-            for (let i = 0; i < vertices.length; i += 6) {
-                // Only add valid line segments
-                if (i + 5 < vertices.length) {
-                    // Line start point
-                    positions.push(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    
-                    // Line end point
-                    positions.push(vertices[i + 3], vertices[i + 4], vertices[i + 5]);
-                }
-            }
-            
-            // Create geometry and material
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            
-            const material = new THREE.LineBasicMaterial({
-                color: 0x00ff00,
-                linewidth: 1,
-                opacity: 1.0,
-                transparent: false
-            });
-            
-            // Create the lines object and add to scene
-            const lines = new THREE.LineSegments(geometry, material);
-            gameState.scene.add(lines);
-            
-            // Track for later removal
-            gameState.physicsDebugObjects.push(lines);
-            
-            return;
-        } catch (error) {
-            console.error('Error using Rapier debug render:', error);
-        }
-    }
-    
-    // // Fallback to manual wireframe creation if debug render not available
-    // console.warn('Falling back to manual physics debug visualization');
-    
-    // // Only log full debug info once per session or every 10 seconds
-    // const now = Date.now();
-    // const shouldLogFull = !gameState.physicsDebugLogs.lastFullLog || 
-    //                      (now - gameState.physicsDebugLogs.lastFullLog > 10000);
-    
-    // if (shouldLogFull) {
-    //     console.log('Number of cars:', Object.keys(gameState.cars).length);
-    //     gameState.physicsDebugLogs.lastFullLog = now;
-    // }
-    
-    // // Create wireframe boxes for each car's physics body
-    // Object.keys(gameState.cars).forEach(playerId => {
-    //     const car = gameState.cars[playerId];
-        
-    //     if (!car || !car.physicsBody) {
-    //         // Only log this warning once per car
-    //         if (!gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
-    //             console.warn(`Car ${playerId} has no physics body`);
-    //             gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = true;
-    //         }
-    //         return;
-    //     }
-        
-    //     // If a car previously didn't have physics but now does, log that
-    //     if (gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
-    //         console.log(`Car ${playerId} now has a physics body`);
-    //         gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = false;
-    //     }
-        
-    //     try {
-    //         // Get actual dimensions from the physics body if possible
-    //         let carWidth = 2;  // Default car width
-    //         let carHeight = 1; // Default car height
-    //         let carLength = 4; // Default car length
-            
-    //         // Try to get actual dimensions from the body's colliders
-    //         if (car.physicsBody.collider && typeof car.physicsBody.collider === 'function') {
-    //             const collider = car.physicsBody.collider(0);
-    //             if (collider && collider.halfExtents) {
-    //                 const halfExtents = collider.halfExtents();
-    //                 carWidth = halfExtents.x * 2;
-    //                 carHeight = halfExtents.y * 2;
-    //                 carLength = halfExtents.z * 2;
-    //             }
-    //         }
-            
-    //         // Create wireframe box geometry
-    //         const wireGeometry = new THREE.BoxGeometry(carWidth, carHeight, carLength);
-    //         const wireframe = new THREE.LineSegments(
-    //             new THREE.WireframeGeometry(wireGeometry),
-    //             new THREE.LineBasicMaterial({ 
-    //                 color: 0x00ff00,  // Green wireframe
-    //                 linewidth: 2,      // Line width (note: may not work in WebGL)
-    //                 opacity: 1.0,
-    //                 transparent: false
-    //             })
-    //         );
-            
-    //         // Get physics body position and rotation
-    //         const physicsPos = car.physicsBody.translation();
-    //         const physicsRot = car.physicsBody.rotation();
-            
-    //         if (shouldLogFull) {
-    //             console.log(`Physics position for car ${playerId}:`, physicsPos);
-    //             console.log(`Physics rotation for car ${playerId}:`, physicsRot);
-    //         }
-            
-    //         // Set wireframe position to match physics body
-    //         wireframe.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
-            
-    //         // Set wireframe rotation to match physics body
-    //         wireframe.quaternion.set(
-    //             physicsRot.x,
-    //             physicsRot.y,
-    //             physicsRot.z,
-    //             physicsRot.w
-    //         );
-            
-    //         // Add to scene and track for later removal
-    //         gameState.scene.add(wireframe);
-    //         gameState.physicsDebugObjects.push(wireframe);
-    //     } catch (error) {
-    //         console.error(`Error creating wireframe for car ${playerId}:`, error);
-    //     }
-    // });
-    
-    // // Also add a ground plane wireframe if we have one
-    // if (gameState.physics.bodies && gameState.physics.bodies.ground) {
-    //     try {
-    //         // Ground plane is a cuboid with dimensions from the physics
-    //         const groundGeometry = new THREE.BoxGeometry(200, 0.2, 200);
-    //         const groundWireframe = new THREE.LineSegments(
-    //             new THREE.WireframeGeometry(groundGeometry),
-    //             new THREE.LineBasicMaterial({ 
-    //                 color: 0x0000ff,  // Blue wireframe
-    //                 linewidth: 1,
-    //                 opacity: 1.0,
-    //                 transparent: false
-    //             })
-    //         );
-            
-    //         // Ground is at y=0
-    //         groundWireframe.position.set(0, 0, 0);
-            
-    //         // Add to scene and track
-    //         gameState.scene.add(groundWireframe);
-    //         gameState.physicsDebugObjects.push(groundWireframe);
-    //     } catch (error) {
-    //         console.error('Error creating ground wireframe:', error);
-    //     }
-    // }
-    
-    // // Add track walls if we have them
-    // if (gameState.physics.bodies && gameState.physics.bodies.walls) {
-    //     gameState.physics.bodies.walls.forEach((wallBody, index) => {
-    //         try {
-    //             // Try to get wall dimensions and position
-    //             const wallTranslation = wallBody.translation();
-                
-    //             // Use more accurate wall dimensions based on our creation code
-    //             let wallWidth, wallHeight, wallLength;
-                
-    //             // Determine if this is a side wall or end wall based on index
-    //             if (index < 2) {
-    //                 // Side walls (left, right)
-    //                 wallWidth = 0.5;
-    //                 wallHeight = 2;
-    //                 wallLength = 40;
-    //             } else {
-    //                 // End walls (top, bottom)
-    //                 wallWidth = 21; // trackWidth + wallThickness*2
-    //                 wallHeight = 2;
-    //                 wallLength = 0.5;
-    //             }
-                
-    //             // Create a box wireframe for walls with correct dimensions
-    //             const wallGeometry = new THREE.BoxGeometry(wallWidth, wallHeight, wallLength);
-    //             const wallWireframe = new THREE.LineSegments(
-    //                 new THREE.WireframeGeometry(wallGeometry),
-    //                 new THREE.LineBasicMaterial({ 
-    //                     color: 0xff0000,  // Red wireframe
-    //                     linewidth: 1,
-    //                     opacity: 1.0,
-    //                     transparent: false
-    //                 })
-    //             );
-                
-    //             // Position the wireframe at the wall's position
-    //             wallWireframe.position.set(
-    //                 wallTranslation.x,
-    //                 wallTranslation.y,
-    //                 wallTranslation.z
-    //             );
-                
-    //             // Apply rotation if available
-    //             const wallRotation = wallBody.rotation();
-    //             if (wallRotation) {
-    //                 wallWireframe.quaternion.set(
-    //                     wallRotation.x,
-    //                     wallRotation.y,
-    //                     wallRotation.z,
-    //                     wallRotation.w
-    //                 );
-    //             }
-                
-    //             // Add to scene and track
-    //             gameState.scene.add(wallWireframe);
-    //             gameState.physicsDebugObjects.push(wallWireframe);
-    //         } catch (error) {
-    //             console.error(`Error creating wireframe for wall ${index}:`, error);
-    //         }
-    //     });
-    // }
-    
-    // Update debug counter
-    gameState.debugCounters.physicsDebugLines = gameState.physicsDebugObjects.length;
+    // Format the stats display and update the DOM
+    const formattedStats = formatStatsDisplay(stats, gameState);
+    domUpdateStatsDisplay(formattedStats);
 }
 
 // Function to ensure a car has a physics body
@@ -1536,62 +905,16 @@ function ensureCarHasPhysicsBody(playerId) {
     return false;
 }
 
-// Add fullscreen handling functions
+// Update the function to use the renamed import
 function toggleFullscreen() {
-    if (!elements || !elements.gameScreen) return;
-    
-    if (!document.fullscreenElement) {
-        elements.gameScreen.requestFullscreen().catch(err => {
-            console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-    } else {
-        document.exitFullscreen();
-    }
+    const isFullscreen = domToggleFullscreen();
+    domUpdateFullscreenButton(isFullscreen);
 }
 
-// Update fullscreen button icon based on state
+// Update the function to use the renamed import
 function updateFullscreenButton() {
-    if (!elements || !elements.fullscreenBtn) return;
-    
-    elements.fullscreenBtn.innerHTML = document.fullscreenElement ? `
-        <svg viewBox="0 0 24 24">
-            <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
-        </svg>
-    ` : `
-        <svg viewBox="0 0 24 24">
-            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-        </svg>
-    `;
-}
-
-
-// Helper function to create a visual bar indicator for control values
-function createBarIndicator(value, min, max) {
-    // For symmetric controls like steering (-1 to 1)
-    const isSymmetric = min < 0 && max > 0;
-    const barWidth = 60; // Width in pixels
-    
-    if (isSymmetric) {
-        // Create a bar with center marker and fill from center
-        const fillPercent = Math.abs(value) / Math.max(Math.abs(min), Math.abs(max)) * 50;
-        const fillDirection = value >= 0 ? 'positive' : 'negative';
-        
-        return `
-            <span class="control-bar" style="width: ${barWidth}px;">
-                <span class="control-bar-center"></span>
-                <span class="control-bar-fill ${fillDirection}" style="width: ${fillPercent}%;"></span>
-            </span>
-        `;
-    } else {
-        // Create a simple fill bar for non-symmetric values (0 to 1)
-        const fillPercent = (value - min) / (max - min) * 100;
-        
-        return `
-            <span class="control-bar" style="width: ${barWidth}px;">
-                <span class="control-bar-fill positive" style="width: ${fillPercent}%;"></span>
-            </span>
-        `;
-    }
+    const isFullscreen = !!document.fullscreenElement;
+    domUpdateFullscreenButton(isFullscreen);
 }
 
 // Function to visualize forces applied to the car for debugging
@@ -1793,125 +1116,49 @@ const physicsPresets = {
     }
 };
 
-// Toggle physics parameter panel
-function togglePhysicsPanel() {
-    const panel = document.getElementById('physics-params-panel');
+// Replace initPhysicsParametersPanel with a version that uses domUtils
+function initPhysicsParametersPanel() {
+    // Set up physics parameters panel
+    const panel = setupPhysicsParametersPanel({
+        // Configuration details here
+    }, updatePhysicsParameter);
     
-    if (!panel) {
-        console.error('Physics parameters panel not found in DOM');
-        return;
-    }
-    
-    panel.classList.toggle('visible');
-    
-    // Initialize parameters when first shown
-    if (panel.classList.contains('visible') && !panel.dataset.initialized) {
-        initPhysicsParametersPanel();
-        panel.dataset.initialized = 'true';
-    }
-}
-
-// Initialize the physics parameters panel UI with all controls
-function initPhysicsParametersPanel() {    
-    // Setup tab switcher
+    // Create tabs for different parameter groups
     setupTabSwitcher();
     
-    // Create car parameters UI
+    // Create UI controls for physics parameters
     createCarParametersUI();
-    
-    // Create world parameters UI
     createWorldParametersUI();
-    
-    // Create wheels parameters UI
     createWheelsParametersUI();
     
-    // Setup reset button
+    // Set up physics buttons
     setupPhysicsButtons();
-    }
-
-// Setup tab switching functionality
-function setupTabSwitcher() {
-    const tabs = document.querySelectorAll('.params-tab');
-    const containers = document.querySelectorAll('.params-container');
     
+    // Update all parameter controls with current values
+    updateAllParameterControls();
+}
+
+// Setup event listeners using domUtils
+function setupTabSwitcher() {
+    const tabs = document.querySelectorAll('.tab');
     tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Remove active class from all tabs and containers
-            tabs.forEach(t => t.classList.remove('active'));
-            containers.forEach(c => c.classList.remove('active'));
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
             
-            // Add active class to clicked tab
-            tab.classList.add('active');
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            // Show corresponding container
-            const targetId = tab.dataset.tab + '-params';
-            document.getElementById(targetId).classList.add('active');
+            // Add active class to clicked tab and its content
+            this.classList.add('active');
+            getElement(targetId).classList.add('active');
         });
     });
 }
 
 // Create a single parameter control row
 function createParameterControl(container, group, param, label, min, max, step) {
-    const row = document.createElement('div');
-    row.className = 'param-row';
-    
-    const labelElement = document.createElement('div');
-    labelElement.className = 'param-label';
-    labelElement.textContent = label;
-    
-    const valueInput = document.createElement('input');
-    valueInput.className = 'param-value';
-    valueInput.type = 'text';
-    valueInput.value = physicsParams[group][param];
-    valueInput.dataset.group = group;
-    valueInput.dataset.param = param;
-    
-    const slider = document.createElement('input');
-    slider.className = 'param-slider';
-    slider.type = 'range';
-    slider.min = min;
-    slider.max = max;
-    slider.step = step;
-    slider.value = physicsParams[group][param];
-    slider.dataset.group = group;
-    slider.dataset.param = param;
-    
-    // Add event listeners with immediate application
-    slider.addEventListener('input', () => {
-        valueInput.value = slider.value;
-        updatePhysicsParameter(group, param, parseFloat(slider.value));
-        applyPhysicsChanges(); // Apply changes immediately
-    });
-    
-    valueInput.addEventListener('change', () => {
-        const value = parseFloat(valueInput.value);
-        if (!isNaN(value)) {
-            slider.value = value;
-            updatePhysicsParameter(group, param, value);
-            applyPhysicsChanges(); // Apply changes immediately
-        } else {
-            valueInput.value = physicsParams[group][param];
-        }
-    });
-    
-    const rangeDisplay = document.createElement('div');
-    rangeDisplay.className = 'param-range';
-    
-    const minSpan = document.createElement('span');
-    minSpan.textContent = min;
-    
-    const maxSpan = document.createElement('span');
-    maxSpan.textContent = max;
-    
-    rangeDisplay.appendChild(minSpan);
-    rangeDisplay.appendChild(maxSpan);
-    
-    row.appendChild(labelElement);
-    row.appendChild(valueInput);
-    row.appendChild(slider);
-    
-    container.appendChild(row);
-    container.appendChild(rangeDisplay);
+    return physicsUICreateParameterControl(container, group, param, label, min, max, step, updatePhysicsParameter);
 }
 
 // Create UI controls for car parameters
@@ -2125,7 +1372,7 @@ initGame = function() {
         document.addEventListener('keydown', function(event) {
             // F2 key to toggle physics panel
             if (event.key === 'F2') {
-                togglePhysicsPanel();
+                physicsUITogglePanel();
                 event.preventDefault();
             }
         });
@@ -2134,14 +1381,28 @@ initGame = function() {
 };
 
 function toggleStatsDisplay() {
-    if (!elements || !elements.statsOverlay) return;
-    
+    // Toggle the state in gameState
     toggleStats();
-    elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
+    
+    // Get the current stats overlay element
+    const statsOverlay = getElement('stats-overlay');
+    if (!statsOverlay) return;
+    
+    // Show or hide based on the current state
+    if (gameState.showStats) {
+        statsOverlay.classList.remove('hidden');
+        
+        // Update the stats display immediately
+        updateStatsDisplay();
+    } else {
+        statsOverlay.classList.add('hidden');
+    }
+    
     console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
 }
 
 function togglePhysicsDebugDisplay() {
+    // Toggle the state in gameState
     togglePhysicsDebug();
     
     if (gameState.showPhysicsDebug) {
@@ -2149,30 +1410,15 @@ function togglePhysicsDebugDisplay() {
         addPhysicsDebugStyles();
         
         // Create debug container if it doesn't exist
-        if (!document.getElementById('physics-debug-container')) {
-            const debugContainer = document.createElement('div');
-            debugContainer.id = 'physics-debug-container';
-            debugContainer.className = 'physics-debug-container';
-            document.body.appendChild(debugContainer);
-            
-            // Add debug log container
-            const debugLogs = document.createElement('div');
-            debugLogs.id = 'physics-debug-logs';
-            debugLogs.className = 'physics-debug-logs';
-            debugContainer.appendChild(debugLogs);
-            
-            gameState.physicsDebugLogs = debugLogs;
+        createPhysicsDebugContainer();
+        
+        // Update visualization immediately if physics is initialized
+        if (gameState.physics.initialized && gameState.physics.world) {
+            updatePhysicsDebugVisualization();
         }
     } else {
         // Remove debug visualization objects
         removePhysicsDebugObjects();
-        
-        // Remove debug container
-        const debugContainer = document.getElementById('physics-debug-container');
-        if (debugContainer) {
-            document.body.removeChild(debugContainer);
-            gameState.physicsDebugLogs = null;
-        }
     }
     
     console.log(`Physics debug: ${gameState.showPhysicsDebug ? 'ON' : 'OFF'}`);
@@ -2197,4 +1443,132 @@ function createCarPhysics(world, rapier, position, config) {
         chassisBody: carBody,
         wheelBodies: [] // Simplified for this example
     };
+}
+
+/**
+ * Initialize the stats overlay
+ */
+function initStatsOverlay() {
+    // Call the domUtils initStatsOverlay function
+    domInitStatsOverlay();
+}
+
+// Update removePhysicsDebugObjects to use the renamed import
+function removePhysicsDebugObjects() {
+    // First remove any THREE.js objects from the scene
+    if (gameState.physicsDebugObjects && gameState.physicsDebugObjects.length > 0) {
+        gameState.physicsDebugObjects.forEach(obj => {
+            if (obj && gameState.scene) {
+                gameState.scene.remove(obj);
+                if (obj.geometry) obj.geometry.dispose();
+                if (obj.material) {
+                    if (Array.isArray(obj.material)) {
+                        obj.material.forEach(m => m.dispose());
+                    } else {
+                        obj.material.dispose();
+                    }
+                }
+            }
+        });
+        
+        // Clear stored debug objects
+        gameState.physicsDebugObjects = [];
+    }
+    
+    // Then call the physicsUI function to remove DOM elements
+    physicsUIRemoveDebugObjects();
+}
+
+/**
+ * Add a player to the player list in the UI
+ * @param {string} id - Player ID
+ * @param {string} name - Player name
+ * @param {string} color - Player color (CSS color)
+ */
+function addPlayerToList(id, name, color) {
+    domAddPlayerToList(id, name, color);
+}
+
+/**
+ * Switch between different screens (lobby, game, etc.)
+ * @param {string} screenName - Name of the screen to show
+ */
+function showScreen(screenName) {
+    domShowScreen(screenName);
+}
+
+/**
+ * Update or create physics debug visualization
+ */
+function updatePhysicsDebugVisualization() {
+    if (!gameState.physics.initialized || !gameState.physics.world) return;
+    
+    // Clear previous debug objects
+    removePhysicsDebugObjects();
+    
+    // Create debug container using domUtils
+    const debugContainer = createPhysicsDebugContainer();
+    
+    // If Rapier's debug render is available, use it
+    const world = gameState.physics.world;
+    
+    try {
+        if (world.debugRender) {
+            // Use Rapier's built-in debug render function
+            const { vertices, colors } = world.debugRender();
+            
+            // Log debug data to understand the format (only once)
+            if (!gameState.debugRenderLogged) {
+                console.debug('Rapier debug render data:', {
+                    verticesLength: vertices.length,
+                    colorsLength: colors.length,
+                    firstFewVertices: vertices.slice(0, 10),
+                    firstFewColors: colors.slice(0, 10)
+                });
+                gameState.debugRenderLogged = true;
+            }
+            
+            gameState.debugCounters.physicsDebugLines = vertices.length / 6; // 6 values per line (3D start and end points)
+            
+            // Create a single geometry for all the debug lines
+            const positions = [];
+            
+            // Process vertices as 3D line segments (Rapier returns [x1,y1,z1,x2,y2,z2,...])
+            for (let i = 0; i < vertices.length; i += 6) {
+                // Only add valid line segments
+                if (i + 5 < vertices.length) {
+                    // Line start point
+                    positions.push(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    
+                    // Line end point
+                    positions.push(vertices[i + 3], vertices[i + 4], vertices[i + 5]);
+                }
+            }
+            
+            // Create geometry and material
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            
+            const material = new THREE.LineBasicMaterial({
+                color: 0x00ff00,
+                linewidth: 1,
+                opacity: 1.0,
+                transparent: false
+            });
+            
+            // Create the lines object and add to scene
+            const lines = new THREE.LineSegments(geometry, material);
+            gameState.scene.add(lines);
+            
+            // Track for later removal
+            gameState.physicsDebugObjects.push(lines);
+        }
+    } catch (error) {
+        console.error('Error using Rapier debug render:', error);
+    }
+}
+
+// Update the togglePhysicsPanel function
+function togglePhysicsPanel() {
+    physicsUITogglePanel();
 }
