@@ -117,13 +117,13 @@
 
     <!-- Load libraries -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <!-- Load Rapier physics engine using ES modules -->
     <script type="importmap">
     {
       "imports": {
-        "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+        "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat",
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
       }
     }
     </script>
@@ -161,26 +161,10 @@
         checkRapierStatus();
     </script>
     
-    <!-- Load game scripts -->
-    <script src="/static/js/trackBuilder.js"></script>
-    <script src="/static/js/carModel.js"></script>
-    <script src="/static/js/rapierPhysics.js"></script>
-    <script>
-        // Once Rapier is ready, then load and initialize the kinematic controller
-        window.addEventListener('rapier-ready', function() {
-            // Dynamic script loading for kinematic controller to ensure RAPIER is available first
-            const script = document.createElement('script');
-            script.src = '/static/js/carKinematicController.js';
-            script.async = false;
-            document.body.appendChild(script);
-        });
-    </script>
-    <script src="/static/js/host.js"></script>
-    
     <!-- Pass server data to client -->
     <script>
         // Make server-provided data available to JavaScript
-        const serverConfig = {
+        window.serverConfig = {
             localIp: "{{ local_ip }}",
             port: "{{ port }}"
         };
@@ -195,5 +179,8 @@
             }, 100);
         });
     </script>
+    
+    <!-- Load game scripts -->
+    <script type="module" src="/static/js/host.js"></script>
 </body>
 </html> 

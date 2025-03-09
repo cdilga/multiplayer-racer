@@ -1,0 +1,8 @@
+---
+description: running the project
+globs: 
+alwaysApply: true
+---
+
+Don't run the project with `python server/app.py` - I'm running it myself and it'll live reload. 
+Tell me if I need to reload it because you've modified stuff in the python server code, but I'll do it

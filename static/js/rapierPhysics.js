@@ -19,33 +19,21 @@ async function initRapierPhysics() {
             // Store the module globally
             RAPIER = rapierModule;
             
-            // Set a flag to indicate successful loading
+            
+            // Dispatch event to notify other scripts
+            window.dispatchEvent(new Event('rapier-ready'));
+            
+            // Set global flag
             window.rapierLoaded = true;
             
             return RAPIER;
-        } catch (importError) {
-            console.error('Error importing Rapier module:', importError);
-            
-            // Fallback to global RAPIER object if available
-            if (typeof window.RAPIER !== 'undefined') {
-                console.log('Using globally available RAPIER object');
-                RAPIER = window.RAPIER;
-                
-                // Initialize WASM if needed
-                if (typeof RAPIER.init === 'function') {
-                    await RAPIER.init();
-                }
-                
-                window.rapierLoaded = true;
-                return RAPIER;
-            }
-            
-            throw new Error('Failed to load Rapier module');
+        } catch (error) {
+            console.error('Failed to import Rapier:', error);
+            throw error;
         }
     } catch (error) {
-        console.error('Failed to initialize Rapier physics:', error);
-        window.rapierLoaded = false;
-        return null;
+        console.error('Error initializing Rapier:', error);
+        throw error;
     }
 }
 
@@ -971,9 +959,10 @@ function syncCarModelWithPhysics(carBody, carMesh, wheelMeshes = []) {
     }
 }
 
-// Export functions
-window.rapierPhysics = {
+// Export the rapierPhysics object with all the functions
+const rapierPhysics = {
     init: initRapierPhysics,
+    // Add other functions here
     createWorld: createRapierWorld,
     createCarPhysics: createCarPhysics,
     createGroundPlane: createGroundPlane,
@@ -982,3 +971,9 @@ window.rapierPhysics = {
     isCarUpsideDown: isCarUpsideDown,
     syncCarModelWithPhysics: syncCarModelWithPhysics
 };
+
+// Make it available globally for backward compatibility
+window.rapierPhysics = rapierPhysics;
+
+// Export as default
+export default rapierPhysics;

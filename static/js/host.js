@@ -1,346 +1,254 @@
-// Host interface logic
+import { 
+    GAME_UPDATE_INTERVAL, 
+    PHYSICS_UPDATE_RATE, 
+    PHYSICS_TIMESTEP,
+    socketDebug
+} from './constants.js';
 
-// Constants
-const GAME_UPDATE_INTERVAL = 1000 / 60; // 60 FPS
-const PHYSICS_UPDATE_RATE = 60; // Hz
-const PHYSICS_TIMESTEP = 1.0 / PHYSICS_UPDATE_RATE;
-let lastPhysicsUpdate = 0;
+import gameStateManager, { 
+    getGameState, 
+    setLastPhysicsUpdate,
+    getLastPhysicsUpdate,
+    addPlayer,
+    updatePlayer,
+    removePlayer,
+    addCar,
+    updateCar,
+    removeCar,
+    setRoomCode,
+    setGameActive,
+    setScene,
+    setCamera,
+    setRenderer,
+    setTrack,
+    initializePhysics,
+    toggleStats,
+    togglePhysicsDebug,
+    updateFPS,
+    addPhysicsBody,
+    addPhysicsCollider
+} from './gameState.js';
 
-// Game state
-const gameState = {
-    gameActive: false,
-    players: {},
-    cars: {},
-    roomCode: null,
-    scene: null,
-    camera: null,
-    renderer: null,
-    physics: {
-        initialized: false,
-        world: null,
-        bodies: {},
-        colliders: {},
-        usingRapier: false
-    },
-    showStats: false,
-    showPhysicsDebug: false,
-    physicsDebugObjects: [],
-    physicsDebugLogs: null,
-    lastTimestamp: 0,
-    frameCount: 0,
-    fps: 0,
-    lastFrameTime: 0,
-    debugCounters: {
-        physicsUpdate: 0,
-        controlsUpdate: 0,
-        physicsDebugLines: 0
-    },
-    debugRenderLogged: false,
-    forceVisualization: []
-};
+// Import other modules
+import { buildTrack } from './trackBuilder.js';
+import { createCar } from './carModel.js';
+import rapierPhysics from './rapierPhysics.js';
+import * as THREE from 'three';
+import CarKinematicController from './carKinematicController.js';
 
-// DOM elements
-const elements = {
-    lobbyScreen: document.getElementById('lobby-screen'),
-    gameScreen: document.getElementById('game-screen'),
-    createRoomBtn: document.getElementById('create-room-btn'),
-    startGameBtn: document.getElementById('start-game-btn'),
-    roomCodeDisplay: document.getElementById('room-code-display'),
-    playerList: document.getElementById('player-list'),
-    joinUrl: document.getElementById('join-url'),
-    gameContainer: document.getElementById('game-container'),
-    gameStatus: document.getElementById('game-status'),
-    statsOverlay: document.getElementById('stats-overlay'),
-    fullscreenBtn: document.getElementById('fullscreen-btn')
-};
+// Get the game state object for direct access when needed
+const gameState = getGameState();
 
-// Initialize socket connection
-const socket = io();
+// DOM elements placeholder
+let elements = {};
 
-// Debug counter for socket events
-const socketDebug = {
-    eventCounts: {},
-    lastEvents: [],
-    maxEventHistory: 10
-};
+// Socket placeholder
+let socket;
 
-// Socket event handlers
-socket.on('connect', () => {
-    // Connected to server
-});
-
-// Add event listeners for buttons
-createRoom();
-elements.startGameBtn.addEventListener('click', startGame);
-
-socket.on('room_created', (data) => {
-    gameState.roomCode = data.room_code;
-    elements.roomCodeDisplay.textContent = gameState.roomCode;
-    
-    // Get local IP address from server-provided data if available
-    let ipAddress = 'localhost';
-    let port = window.location.port || '5000';
-    
-    if (typeof serverConfig !== 'undefined') {
-        ipAddress = serverConfig.localIp;
-        port = serverConfig.port;
-    }
-    
-    // Update join URL with local IP instead of localhost
-    const joinUrl = `http://${ipAddress}:${port}/player`;
-    elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
-    
-    // Load QR code image
-    const qrCodeUrl = `/qrcode/${gameState.roomCode}`;
-    const qrCodeElement = document.getElementById('qr-code');
-    if (qrCodeElement) {
-        qrCodeElement.src = qrCodeUrl;
-        
-        // Add error handling in case the QR code fails to load
-        qrCodeElement.onerror = function() {
-            qrCodeElement.style.display = 'none';
-            const container = document.querySelector('.qr-code-container');
-            if (container) {
-                const errorMsg = document.createElement('p');
-                errorMsg.className = 'error';
-                errorMsg.textContent = 'QR code generation failed. Please use the room code instead.';
-                container.appendChild(errorMsg);
-            }
-        };
-    }
-    
-    // Show lobby screen
-    showScreen('lobby');
-});
-
-socket.on('player_joined', (playerData) => {
-    const { id, name, car_color } = playerData;
-    
-    // Add player to local state
-    gameState.players[id] = {
-        id,
-        name,
-        color: car_color
+// Wait for DOM to be fully loaded before setting up event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements
+    elements = {
+        lobbyScreen: document.getElementById('lobby-screen'),
+        gameScreen: document.getElementById('game-screen'),
+        startGameBtn: document.getElementById('start-game-btn'),
+        roomCodeDisplay: document.getElementById('room-code-display'),
+        playerList: document.getElementById('player-list'),
+        joinUrl: document.getElementById('join-url'),
+        gameContainer: document.getElementById('game-container'),
+        gameStatus: document.getElementById('game-status'),
+        statsOverlay: document.getElementById('stats-overlay'),
+        fullscreenBtn: document.getElementById('fullscreen-btn')
     };
     
-    // Add player to UI list
-    addPlayerToList(id, name, car_color);
+    // Add event listener for start game button
+    if (elements.startGameBtn) {
+        elements.startGameBtn.addEventListener('click', startGame);
+    }
     
-    // Enable start button if we have at least one player
-    elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
-});
-
-// Handle player name updates
-socket.on('player_name_updated', (data) => {
-    const { player_id, name } = data;
+    // Initialize socket connection
+    socket = io();
     
-    // Update player name in local state
-    if (gameState.players[player_id]) {
-        gameState.players[player_id].name = name;
+    // Socket event handlers
+    socket.on('connect', () => {
+        // Connected to server
+        console.log('Connected to server');
         
-        // Update UI list
+        // Automatically create a room when connected
+        createRoom();
+    });
+    
+    // Handle room creation response
+    socket.on('room_created', (data) => {
+        setRoomCode(data.room_code);
+        elements.roomCodeDisplay.textContent = gameState.roomCode;
+        
+        // Get local IP address from server-provided data if available
+        let ipAddress = 'localhost';
+        let port = window.location.port || '5000';
+        
+        if (typeof window.serverConfig !== 'undefined') {
+            ipAddress = window.serverConfig.localIp;
+            port = window.serverConfig.port;
+        }
+        
+        // Update join URL with local IP instead of localhost
+        const joinUrl = `http://${ipAddress}:${port}/player`;
+        elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
+        
+        // Load QR code image
+        const qrCodeUrl = `/qrcode/${gameState.roomCode}`;
+
+        const qrCodeElement = document.getElementById('qr-code');
+        if (qrCodeElement) {
+            qrCodeElement.src = qrCodeUrl;
+            // Add error handling in case the QR code fails to load
+            qrCodeElement.onerror = function() {
+                console.error('QR code failed to load');
+                qrCodeElement.style.display = 'none';
+                const container = document.querySelector('.qr-code-container');
+                if (container) {
+                    const errorMsg = document.createElement('p');
+                    errorMsg.className = 'error';
+                    errorMsg.textContent = 'QR code generation failed. Please use the room code instead.';
+                    container.appendChild(errorMsg);
+                }
+            };
+        } else {
+            console.error('QR code element not found');
+        }
+        
+        // Show lobby screen
+        showScreen('lobby');
+    });
+    
+    // Handle player joining
+    socket.on('player_joined', (playerData) => {
+        const { id, name, car_color } = playerData;
+        
+        // Add player to local state using the addPlayer function
+        addPlayer(id, {
+            name: name,
+            carColor: car_color
+        });
+        
+        // Add player to UI list
+        addPlayerToList(id, name, car_color);
+        
+        // Enable start game button if there are players
+        elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+    });
+    
+    // Handle player name updates
+    socket.on('player_name_updated', (data) => {
+        const { player_id, name } = data;
+        
+        // Update player name in local state using the updatePlayer function
+        if (gameState.players[player_id]) {
+            updatePlayer(player_id, { name: name });
+            
+            // Update player name in UI
+            const playerElement = document.getElementById(`player-${player_id}`);
+            if (playerElement) {
+                const nameSpan = playerElement.querySelector('span:not(.player-color)');
+                if (nameSpan) {
+                    nameSpan.textContent = name;
+                }
+            }
+        }
+    });
+    
+    // Handle player leaving
+    socket.on('player_left', (data) => {
+        const { player_id } = data;
+        
+        // Remove player from local state using the removePlayer function
+        removePlayer(player_id);
+        
+        // Remove player from UI
         const playerElement = document.getElementById(`player-${player_id}`);
         if (playerElement) {
-            const nameSpan = playerElement.querySelector('span:not(.player-color)');
-            if (nameSpan) {
-                nameSpan.textContent = name;
-            }
+            playerElement.remove();
         }
         
-        console.log(`Player ${player_id} name updated to: ${name}`);
-    }
-});
-
-socket.on('player_left', (data) => {
-    const { player_id } = data;
-    
-    // Remove player from local state
-    delete gameState.players[player_id];
-    
-    // Remove player from UI
-    const playerElement = document.getElementById(`player-${player_id}`);
-    if (playerElement) {
-        playerElement.remove();
-    }
-    
-    // Remove player's car if game is active
-    if (gameState.gameActive && gameState.cars[player_id]) {
-        gameState.scene.remove(gameState.cars[player_id].mesh);
-        delete gameState.cars[player_id];
-    }
-    
-    // Update start button state
-    elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
-});
-
-socket.on('player_controls_update', (data) => {
-    const { player_id, acceleration, braking, steering } = data;
-    
-    if (gameState.gameActive && gameState.cars[player_id]) {
-        const car = gameState.cars[player_id];
-        // Validate and sanitize control inputs before assigning
-        car.controls = {
-            acceleration: Math.max(0, Math.min(1, acceleration || 0)), // Clamp between 0-1
-            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1 
-            steering: Math.max(-1, Math.min(1, steering || 0)) // Clamp between -1 to 1
-        };
-        // Update last control update timestamp
-        car.lastControlUpdate = Date.now();
-        // Force stats update since we have new control data
-        if (gameState.showStats) {
-            updateStatsDisplay();
-
+        // If game is active, remove player's car
+        if (gameState.gameActive && gameState.cars[player_id]) {
+            gameState.scene.remove(gameState.cars[player_id].mesh);
+            removeCar(player_id);
         }
-    }
-});
-
-// Add keyboard event listener for F3/F4 keys
-document.addEventListener('keydown', (e) => {
-    // Toggle stats display (F3)
-    if (e.key === 'F3' || e.key === 'f3') {
-        gameState.showStats = !gameState.showStats;
-        elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
-        console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
-        e.preventDefault();
-    }
+        
+        // Disable start game button if there are no players
+        elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+    });
     
-    // Toggle physics debug visualization (F4)
-    if (e.key === 'F4' || e.key === 'f4') {
-        togglePhysicsDebug();
-        e.preventDefault();
-    }
-    
-    // Manual car controls for testing
-    const playerCar = gameState.cars["1"]; // Control first car
-    if (playerCar) {
-        const controlsChanged = handleCarKeysDown(e, playerCar);
-        if (controlsChanged) {
-            // Update visual control indicator
+    // Handle player controls update
+    socket.on('player_controls_update', (data) => {
+        const { player_id, acceleration, braking, steering } = data;
+        
+        // Update car controls if the car exists
+        if (gameState.cars[player_id]) {
+            const car = gameState.cars[player_id];
+            updateCar(player_id, {
+                controls: {
+                    acceleration: acceleration,
+                    braking: braking,
+                    steering: steering
+                }
+            });
+            
+            // Update control indicator if it exists
             if (gameState.controlIndicator) {
                 updateControlIndicator(
-                    gameState.controlIndicator, 
-                    playerCar.controls, 
-                    "Manual Control"
+                    gameState.controlIndicator,
+                    car.controls,
+                    gameState.players[player_id]?.name || `Player ${player_id}`
                 );
             }
-            // Record the time of the control update
-            playerCar.lastControlUpdate = Date.now();
-            e.preventDefault();
         }
+    });
+    
+    // Handle player disconnection
+    socket.on('player_disconnected', (data) => {
+        const { player_id } = data;
+        
+        // Remove player from local state using the removePlayer function
+        removePlayer(player_id);
+        
+        // Remove player from UI
+        const playerElement = document.getElementById(`player-${player_id}`);
+        if (playerElement) {
+            playerElement.remove();
+        }
+        
+        // If game is active, remove player's car
+        if (gameState.gameActive && gameState.cars[player_id]) {
+            gameState.scene.remove(gameState.cars[player_id].mesh);
+            removeCar(player_id);
+        }
+        
+        // Disable start game button if there are no players
+        elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+    });
+    
+    // Add keyboard event listener for F3/F4 keys
+    document.addEventListener('keydown', (e) => {
+        // Toggle stats display (F3)
+        if (e.key === 'F3' || e.key === 'f3') {
+            toggleStatsDisplay();
+        }
+        
+        // Toggle physics debug (F4)
+        if (e.key === 'F4' || e.key === 'f4') {
+            togglePhysicsDebugDisplay();
+        }
+    });
+    
+    // Add event listeners for fullscreen
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    if (elements.fullscreenBtn) {
+        elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
     }
 });
-
-// Handle keyup events for car controls to reset values
-document.addEventListener('keyup', (e) => {
-    const playerCar = gameState.cars["1"]; // Control first car
-    if (playerCar) {
-        const controlsChanged = handleCarKeysUp(e, playerCar);
-        if (controlsChanged) {
-            // Update visual control indicator
-            if (gameState.controlIndicator) {
-                updateControlIndicator(
-                    gameState.controlIndicator, 
-                    playerCar.controls, 
-                    "Manual Control"
-                );
-            }
-            // Record the time of the control update
-            playerCar.lastControlUpdate = Date.now();
-            e.preventDefault();
-        }
-    }
-});
-
-// Function to handle keydown events for car controls
-function handleCarKeysDown(e, car) {
-    let controlsChanged = false;
-    
-    // Arrow keys for steering
-    if (e.key === 'ArrowLeft') {
-        car.controls.steering = -1.0; // Full left
-        controlsChanged = true;
-    } else if (e.key === 'ArrowRight') {
-        car.controls.steering = 1.0; // Full right
-        controlsChanged = true;
-    }
-    
-    // Up/Down arrows for acceleration/braking
-    if (e.key === 'ArrowUp') {
-        car.controls.acceleration = 1.0; // Full throttle
-        car.controls.braking = 0.0;     // No brakes
-        controlsChanged = true;
-    } else if (e.key === 'ArrowDown') {
-        car.controls.acceleration = 0.0; // No throttle
-        car.controls.braking = 1.0;     // Full brakes
-        controlsChanged = true;
-    }
-    
-    return controlsChanged;
-}
-
-// Function to handle keyup events for car controls
-function handleCarKeysUp(e, car) {
-    let controlsChanged = false;
-    
-    // Reset steering when left/right arrow released
-    if (e.key === 'ArrowLeft' && car.controls.steering < 0) {
-        car.controls.steering = 0.0;
-        controlsChanged = true;
-    } else if (e.key === 'ArrowRight' && car.controls.steering > 0) {
-        car.controls.steering = 0.0;
-        controlsChanged = true;
-    }
-    
-    // Reset acceleration/braking when up/down arrow released
-    if (e.key === 'ArrowUp' && car.controls.acceleration > 0) {
-        car.controls.acceleration = 0.0;
-        controlsChanged = true;
-    } else if (e.key === 'ArrowDown' && car.controls.braking > 0) {
-        car.controls.braking = 0.0;
-        controlsChanged = true;
-    }
-    
-    return controlsChanged;
-}
-
-// Create a visual control indicator that will be visible regardless of F3 menu
-function createControlIndicator() {
-    const indicator = document.createElement('div');
-    indicator.id = 'host-control-indicator';
-    indicator.style.position = 'fixed';
-    indicator.style.top = '10px';
-    indicator.style.right = '10px';
-    indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    indicator.style.color = 'white';
-    indicator.style.padding = '10px';
-    indicator.style.borderRadius = '5px';
-    indicator.style.fontFamily = 'monospace';
-    indicator.style.zIndex = '9999';
-    indicator.style.transition = 'background-color 0.3s';
-    document.body.appendChild(indicator);
-    return indicator;
-}
-
-// Update the control indicator with the latest values
-function updateControlIndicator(indicator, controls, playerName) {
-    // Check if indicator exists
-    if (!indicator) return;
-    
-    // Flash the background to show something was received
-    indicator.style.backgroundColor = 'rgba(0, 255, 0, 0.7)';
-    setTimeout(() => {
-        indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    }, 200);
-    
-    // Update the content
-    indicator.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 5px;">CONTROLS RECEIVED (${playerName})</div>
-        <div>Accel: ${controls.acceleration.toFixed(2)}</div>
-        <div>Brake: ${controls.braking.toFixed(2)}</div>
-        <div>Steer: ${controls.steering.toFixed(2)}</div>
-        <div style="font-size: 0.8em; margin-top: 5px;">Last update: ${new Date().toLocaleTimeString()}</div>
-    `;
-}
 
 // Game functions
 function createRoom() {
@@ -350,13 +258,15 @@ function createRoom() {
 function startGame() {
     if (gameState.roomCode && Object.keys(gameState.players).length > 0) {
         socket.emit('start_game', { room_code: gameState.roomCode });
-        initGame();
         showScreen('game');
-        gameState.gameActive = true;
+        setGameActive(true);
+        initGame();
     }
 }
 
 function addPlayerToList(id, name, color) {
+    if (!elements || !elements.playerList) return;
+    
     const playerItem = document.createElement('li');
     playerItem.id = `player-${id}`;
     
@@ -373,6 +283,8 @@ function addPlayerToList(id, name, color) {
 }
 
 function showScreen(screenName) {
+    if (!elements || !elements.lobbyScreen || !elements.gameScreen) return;
+    
     elements.lobbyScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
     
@@ -383,11 +295,13 @@ function showScreen(screenName) {
         case 'game':
             elements.gameScreen.classList.remove('hidden');
             // Show game status briefly then fade out
-            elements.gameStatus.style.opacity = '1';
-            elements.gameStatus.classList.remove('fade-out');
-            setTimeout(() => {
-                elements.gameStatus.classList.add('fade-out');
-            }, 3000);
+            if (elements.gameStatus) {
+                elements.gameStatus.style.opacity = '1';
+                elements.gameStatus.classList.remove('fade-out');
+                setTimeout(() => {
+                    elements.gameStatus.classList.add('fade-out');
+                }, 3000);
+            }
             break;
     }
 }
@@ -397,134 +311,90 @@ let isInitializing = false; // Flag to prevent multiple initializations
 let animationRequestId = null; // Track the animation frame request
 
 function initGame() {
-    // Prevent multiple simultaneous initializations
-    if (isInitializing) return;
-    isInitializing = true;
+    // Initialize Three.js scene
+    const scene = new THREE.Scene();
+    setScene(scene);
     
-    // Cancel any existing animation frame to prevent duplicate loops
-    if (animationRequestId) {
-        cancelAnimationFrame(animationRequestId);
-        animationRequestId = null;
+    // Set up camera
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspectRatio = width / height;
+    
+    const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+    setCamera(camera);
+    
+    // Set up renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height, true);
+    renderer.setClearColor(0x87CEEB); // Sky blue background
+    renderer.shadowMap.enabled = true;
+    setRenderer(renderer);
+    
+    // Add renderer to DOM
+    const container = elements.gameContainer;
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+    
+    // Position camera
+    if (window.innerWidth < 768) {
+        // Mobile view - higher angle
+        camera.position.set(0, 45, 45);
+    } else {
+        // Desktop view
+        camera.position.set(0, 50, 50);
+    }
+    camera.lookAt(0, 0, 0);
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    // Add directional light for shadows
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 10);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+    
+    // Create race track
+    let track;
+    if (typeof buildTrack === 'function') {
+        track = buildTrack({
+            scene: scene,
+            addToScene: false
+        });
+    } else {
+        track = createRaceTrack();
     }
     
-    try {
-        // We no longer create the control indicator
-        // gameState.controlIndicator is intentionally left undefined
-        
-        // Initialize Three.js scene
-        gameState.scene = new THREE.Scene();
-        
-        // Get the actual window dimensions instead of container
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const aspectRatio = width / height;
-        
-        // Initialize camera with proper aspect ratio
-        gameState.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
-        
-        // Initialize renderer with window dimensions
-        gameState.renderer = new THREE.WebGLRenderer({ antialias: true });
-        gameState.renderer.setSize(width, height, true);
-        gameState.renderer.setClearColor(0x87CEEB); // Sky blue background
-        gameState.renderer.shadowMap.enabled = true;
-        
-        // Clear any existing renderer from the container
-        const container = elements.gameContainer;
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
+    scene.add(track);
+    setTrack(track);
+    
+    // Initialize physics
+    initPhysics().then(() => {
+        // Create cars for all players
+        const playerIds = Object.keys(gameState.players);
+        for (const playerId of playerIds) {
+            const player = gameState.players[playerId];
+            createPlayerCar(playerId, player.carColor);
         }
         
-        container.appendChild(gameState.renderer.domElement);
-        
-        // Set initial camera position based on aspect ratio
-        if (aspectRatio > 1.5) {
-            gameState.camera.position.set(0, 45, 45);
-        } else {
-            gameState.camera.position.set(0, 50, 50);
-        }
-        gameState.camera.lookAt(0, 0, 0);
-        
-        // Add ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        gameState.scene.add(ambientLight);
-        
-        // Add directional light (sun)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(100, 100, 50);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024;
-        directionalLight.shadow.mapSize.height = 1024;
-        gameState.scene.add(directionalLight);
-        
-        // Create race track using the track builder utility
-        if (typeof buildTrack === 'function') {
-            gameState.track = buildTrack({
-                trackWidth: 10,
-                trackShape: 'oval',
-                barrierHeight: 1
-            });
-        } else {
-            gameState.track = createRaceTrack();
-        }
-        
-        gameState.scene.add(gameState.track);
-        
-        // Initialize physics world - THIS IS ASYNC and needs to be waited for
-        initPhysics().then((physicsInitialized) => {
-            // Now create cars after physics is initialized
-            console.log('Physics initialized, now creating cars');
-            
-            // Create cars for each player with spread-out starting positions
-            const playerIds = Object.keys(gameState.players);
-            
-            // Create cars for each player
-            playerIds.forEach((playerId, index) => {
-                const player = gameState.players[playerId];
-                createPlayerCar(playerId, player.color);
-            });
-            
-            // Force multiple renders to ensure everything is displayed correctly
-            gameState.renderer.render(gameState.scene, gameState.camera);
-            
-            // Wait a short time before starting the game loop to ensure DOM is fully updated
-            setTimeout(() => {
-                // Force another render after a short delay
-                gameState.renderer.render(gameState.scene, gameState.camera);
-                
-                // Start game loop
-                animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
-                
-                // Mark initialization as complete
-                isInitializing = false;
-            }, 50);
-        }).catch(error => {
-            console.error('Error initializing physics:', error);
-            
-            // Create cars anyway, but without physics bodies
-            console.warn('Creating cars without physics bodies due to initialization error');
-            const playerIds = Object.keys(gameState.players);
-            playerIds.forEach((playerId, index) => {
-                const player = gameState.players[playerId];
-                createPlayerCar(playerId, player.color);
-            });
-            
-            // Start the game loop anyway
-            animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
-            isInitializing = false;
-        });
-        
-        // Handle window resize
-        window.removeEventListener('resize', onWindowResize);
-        window.addEventListener('resize', onWindowResize);
-        
-        // Force an immediate resize to ensure proper dimensions
-        onWindowResize();
-        
-        // Force a DOM reflow to fix rendering issues
-        forceDOMRender();
-    } catch (error) {
-        console.error('Error initializing game:', error);
-        isInitializing = false;
+        // Start game loop
+        gameLoop();
+    });
+    
+    // Initial render
+    renderer.render(scene, camera);
+    
+    // Add window resize handler
+    window.addEventListener('resize', onWindowResize);
+    
+    // Create cars for all players
+    const playerIds = Object.keys(gameState.players);
+    for (const playerId of playerIds) {
+        const player = gameState.players[playerId];
+        createPlayerCar(playerId, player.carColor);
     }
 }
 
@@ -600,259 +470,204 @@ function createRaceTrack() {
 }
 
 function createPlayerCar(playerId, carColor) {
-    if (!playerId) return;
-    
-    try {
-        // Convert the player ID to string to ensure consistent usage as object keys
-        playerId = String(playerId);
+    // Remove existing car if it exists
+    if (gameState.cars[playerId]) {
+        // Remove from scene
+        gameState.scene.remove(gameState.cars[playerId].mesh);
         
-        // If a car already exists with this ID, remove it
-        if (gameState.cars[playerId]) {
-            console.log(`Removing existing car for player ${playerId}`);
-            gameState.scene.remove(gameState.cars[playerId].mesh);
-            
-            // If the car has a physics body, we should also remove that
-            if (gameState.cars[playerId].physicsBody && gameState.physics.world) {
-                // Ensure we have appropriate method to remove bodies
-                if (typeof gameState.physics.world.removeRigidBody === 'function') {
-                    gameState.physics.world.removeRigidBody(gameState.cars[playerId].physicsBody);
-                }
-            }
-            
-            delete gameState.cars[playerId];
-        }
-        
-        // Log player data
-        console.log(`Creating car for player ${playerId}`);
-        const player = gameState.players[playerId];
-        
-        // Set default color if none provided
-        const color = carColor || "#FF0000";
-        
-        // Set start position near the start/finish line with higher elevation
-        const startPosition = { x: 0, y: 1.5, z: -20 }; // Lower height for character controller
-        
-        // Get car dimensions
-        const carDimensions = {
-            width: 2,    // Car width
-            height: 1,   // Car height
-            length: 4    // Car length
-        };
-        
-        // Create a simple car mesh with specified dimensions
-        const car = createCar({ 
-            color,
-            dimensions: carDimensions
-        });
-        
-        // Add to scene
-        gameState.scene.add(car);
-        
-        // Apply position to mesh
-        car.position.set(startPosition.x, startPosition.y, startPosition.z);
-        
-        // Initialize physics body if physics is available
-        let physicsBody = null;
-        
-        if (gameState.physics && gameState.physics.initialized && 
-            gameState.physics.world && gameState.physics.usingRapier) {
-            console.log("Creating character controller for car");
-            
-            try {
-                // Get configuration from the physics parameters
-                const controllerConfig = {
-                    // Movement
-                    forwardSpeed: physicsParams.car.forwardSpeed,
-                    reverseSpeed: physicsParams.car.reverseSpeed,
-                    
-                    // Steering
-                    maxSteeringAngle: physicsParams.car.maxSteeringAngle,
-                    steeringSpeed: physicsParams.car.steeringSpeed,
-                    steeringReturnSpeed: physicsParams.car.steeringReturnSpeed,
-                    
-                    // Character Controller specific
-                    characterOffset: physicsParams.characterController.characterOffset,
-                    maxSlopeClimbAngle: physicsParams.characterController.maxSlopeClimbAngle,
-                    minSlopeSlideAngle: physicsParams.characterController.minSlopeSlideAngle,
-                    
-                    // Gravity and autostep
-                    gravity: physicsParams.characterController.gravity,
-                    autostep: {
-                        maxHeight: physicsParams.characterController.autostepHeight,
-                        minWidth: physicsParams.characterController.autostepWidth,
-                        includeDynamicBodies: false
-                    }
-                };
-                
-                // Create kinematic character controller for physics
-                if (window.CarKinematicController) {
-                    physicsBody = window.CarKinematicController.createCarController(
-                        gameState.physics.world,
-                        startPosition,
-                        carDimensions,
-                        controllerConfig
-                    );
-                    
-                    if (physicsBody) {
-                        console.log('Character controller created successfully for player', playerId);
-                        
-                        // Store player ID in physics body
-                        physicsBody.userData.playerId = playerId;
-                    } else {
-                        console.error('Failed to create character controller for player', playerId);
-                    }
-                } else {
-                    console.error('CarKinematicController not found! Make sure the script is loaded correctly.');
-                }
-            } catch (error) {
-                console.error('Error creating car physics:', error);
+        // Remove physics body if it exists
+        if (gameState.cars[playerId].physicsBody && gameState.physics.world) {
+            // Check if the world has a removeRigidBody method (Rapier does)
+            if (typeof gameState.physics.world.removeRigidBody === 'function') {
+                gameState.physics.world.removeRigidBody(gameState.cars[playerId].physicsBody);
             }
         }
         
-        // Extract wheels from the car model for visualization
-        const wheelMeshes = [];
-        if (car.children) {
-            for (let i = 0; i < car.children.length; i++) {
-                const child = car.children[i];
-                if (child.name && child.name.includes('wheel')) {
-                    wheelMeshes.push(child);
-                }
-            }
-        }
-        
-        // Store the car data
-        gameState.cars[playerId] = {
-            mesh: car,
-            physicsBody: physicsBody,
-            wheels: wheelMeshes,
-            targetPosition: { ...startPosition },
-            targetRotation: { x: 0, y: 0, z: 0 },
-            targetQuaternion: new THREE.Quaternion(),
-            velocity: { x: 0, y: 0, z: 0 },
-            speed: 0,
-            // Initialize with default controls (all zeros)
-            controls: {
-                steering: 0,
-                acceleration: 0,
-                braking: 0
-            },
-            lastControlUpdate: Date.now()
-        };
-        
-        // Reset the control indicator to show zero values
-        if (gameState.controlIndicator) {
-            updateControlIndicator(
-                gameState.controlIndicator, 
-                gameState.cars[playerId].controls, 
-                player ? player.name : `Player ${playerId}`
-            );
-        }
-        
-        console.log(`Created car for player ${playerId}`);
-        return gameState.cars[playerId];
-    } catch (error) {
-        console.error(`Failed to create car for player ${playerId}:`, error);
-        return null;
+        // Remove car from state
+        removeCar(playerId);
     }
+    
+    // Get player data
+    const player = gameState.players[playerId];
+    if (!player) return null;
+    
+    // Set car color (use default if not provided)
+    const color = carColor || "#FF0000";
+    
+    // Set starting position
+    const startPosition = { x: 0, y: 1.5, z: -20 }; // Lower height for character controller
+    
+    // Set car dimensions
+    const carDimensions = {
+        width: 2.0,
+        height: 1.0,
+        length: 4.0,
+        wheelRadius: 0.5,
+        wheelWidth: 0.4
+    };
+    
+    // Create car mesh
+    const car = createCar({
+        color: color,
+        dimensions: carDimensions
+    });
+    
+    // Position car
+    car.position.set(startPosition.x, startPosition.y, startPosition.z);
+    
+    // Add car to scene
+    gameState.scene.add(car);
+    
+    // Create physics body for car if physics is initialized
+    let physicsBody = null;
+    let wheelBodies = [];
+    
+    if (gameState.physics && gameState.physics.initialized &&
+        gameState.physics.world && gameState.physics.usingRapier) {
+        
+        // Create car controller configuration
+        const controllerConfig = {
+            // Car dimensions
+            chassisWidth: carDimensions.width,
+            chassisHeight: carDimensions.height,
+            chassisLength: carDimensions.length,
+            
+            // Wheel configuration
+            wheelRadius: carDimensions.wheelRadius,
+            wheelWidth: carDimensions.wheelWidth,
+            
+            // Wheel positions
+            frontWheelForward: carDimensions.length * 0.3,
+            rearWheelForward: -carDimensions.length * 0.3,
+            wheelHalfTrack: carDimensions.width * 0.4,
+            wheelRestingHeight: -carDimensions.height * 0.5,
+            
+            // Suspension
+            suspensionStiffness: 30.0,
+            suspensionDamping: 2.5,
+            suspensionTravel: 0.3,
+            
+            // Engine
+            engineForce: 500.0,
+            brakeForce: 10.0,
+            steeringAngle: 0.5,
+            
+            // Friction
+            wheelFriction: 2.0,
+            
+            // Mass
+            chassisMass: 150.0,
+            wheelMass: 20.0
+        };
+        
+        // Create car physics
+        const carPhysics = createCarPhysics(
+            gameState.physics.world,
+            gameState.physics.rapier,
+            startPosition,
+            controllerConfig
+        );
+        
+        physicsBody = carPhysics.chassisBody;
+        wheelBodies = carPhysics.wheelBodies;
+    }
+    
+    // Store wheel meshes for animation
+    const wheelMeshes = [];
+    
+    // Find wheel meshes in the car model
+    for (let i = 0; i < car.children.length; i++) {
+        const child = car.children[i];
+        if (child.name && child.name.includes('wheel')) {
+            wheelMeshes.push(child);
+        }
+    }
+    
+    // Add car to game state
+    const carData = {
+        mesh: car,
+        physicsBody: physicsBody,
+        wheelBodies: wheelBodies,
+        wheelMeshes: wheelMeshes,
+        controls: {
+            acceleration: 0,
+            braking: 0,
+            steering: 0
+        },
+        position: { ...startPosition },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        dimensions: { ...carDimensions }
+    };
+    
+    // Add car to game state using the addCar function
+    addCar(playerId, carData);
+    
+    return gameState.cars[playerId];
 }
 
 // Initialize physics with Rapier
 async function initPhysics() {
-    console.log('Initializing physics with Rapier');
-    
-    // Return a promise that resolves when physics is initialized
-    return new Promise(async (resolve, reject) => {
+    // Check if rapierPhysics is available
+    if (typeof rapierPhysics !== 'undefined') {
         try {
-            // Check if Rapier is already loaded
-            if (window.rapierLoaded) {
-                console.log('Rapier is already loaded, initializing physics');
-                await initializeWithRapier();
-                resolve(true);
-            } else {
-                console.log('Waiting for Rapier to load...');
-                
-                // Set up event listener for when Rapier is ready
-                window.addEventListener('rapier-ready', async function onRapierReady() {
-                    console.log('Received rapier-ready event, initializing physics');
-                    window.removeEventListener('rapier-ready', onRapierReady);
-                    await initializeWithRapier();
-                    resolve(true);
-                });
-                
-                // Fallback timeout in case the event never fires
-                setTimeout(() => {
-                    console.error('Timed out waiting for Rapier to be ready');
-                    resolve(false); // Resolve with false to indicate physics init failed
-                }, 5000);
-            }
-        } catch (error) {
-            console.error('Physics initialization error:', error);
-            reject(error);
-        }
-    });
-    
-    async function initializeWithRapier() {
-        try {
+            // Initialize Rapier physics engine
             const rapier = await rapierPhysics.init();
-            await rapier.init();
-            console.log('Rapier physics initialized successfully');
             
-            // Store Rapier instance and set flag
-            gameState.physics.rapier = rapier;
-            gameState.physics.usingRapier = true;
-            
-            // Create a new physics world with gravity
+            // Create physics world
             const gravity = { x: 0.0, y: -9.81, z: 0.0 };
             const world = new rapier.World(gravity);
-            gameState.physics.world = world;
             
-            // Create ground collider
+            // Initialize physics in game state
+            initializePhysics(world, rapier);
+            
+            // Create ground and walls
             createGroundCollider(world, rapier);
-            
-            // Create walls around the track
             createTrackWalls(world, rapier);
             
-            gameState.physics.initialized = true;
-            console.log('Physics world created');
+            // Physics is now initialized
+            console.log("Physics initialized with Rapier");
             
             return true;
         } catch (error) {
-            console.error('Failed to initialize Rapier physics:', error);
+            console.error("Failed to initialize Rapier physics:", error);
             return false;
         }
+    } else {
+        console.warn("Rapier physics not available");
+        return false;
     }
 }
 
 // Create ground collider for physics simulation
 function createGroundCollider(world, rapier) {
-    // Create a static rigid body for the ground
+    // Create a fixed rigid body for the ground
     const groundBodyDesc = rapier.RigidBodyDesc.fixed();
     const groundBody = world.createRigidBody(groundBodyDesc);
     
-    // Create a cuboid collider for the ground (large flat plane that matches the visual ground)
+    // Create a cuboid collider for the ground
     const groundWidth = 150.0;   // Increased from 100 to match visual size
     const groundHeight = 0.1;    // Same thin height
     const groundLength = 150.0;  // Increased from 100 to match visual size
     
-    // Create ground collider
+    // Create collider description
     const groundColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, groundHeight/2, groundLength/2);
-    groundColliderDesc.setFriction(0.8);  // Good friction for the ground
+    groundColliderDesc.setTranslation(0, -groundHeight/2, 0);
     
-    // Create the collider and attach it to the rigid body
+    // Create the collider
     const groundCollider = world.createCollider(groundColliderDesc, groundBody);
     
-    // Store references
-    gameState.physics.bodies.ground = groundBody;
-    gameState.physics.colliders.ground = groundCollider;
+    // Add to physics state using the imported functions
+    addPhysicsBody('ground', groundBody);
+    addPhysicsCollider('ground', groundCollider);
     
-    console.log(`Created ground collider with size ${groundWidth}x${groundHeight}x${groundLength}`);
+    return groundCollider;
 }
 
 // Create walls around the track
 function createTrackWalls(world, rapier) {
     // Only create walls if we have a track defined
     if (!gameState.track) {
-        console.log('No track defined, skipping wall creation');
+        console.warn('No track defined, skipping wall creation');
         return;
     }
     
@@ -863,7 +678,7 @@ function createTrackWalls(world, rapier) {
         const wallHeight = 3; // Increased height for better visibility
         const wallThickness = 1.0; // Thicker walls for better collision
         
-        // Create walls container
+        // Initialize walls arrays in the gameState
         gameState.physics.bodies.walls = [];
         gameState.physics.colliders.walls = [];
         
@@ -876,6 +691,7 @@ function createTrackWalls(world, rapier) {
         leftWallColliderDesc.setFriction(0.3);
         const leftWallCollider = world.createCollider(leftWallColliderDesc, leftWallBody);
         
+        // Add to physics state
         gameState.physics.bodies.walls.push(leftWallBody);
         gameState.physics.colliders.walls.push(leftWallCollider);
         
@@ -888,6 +704,7 @@ function createTrackWalls(world, rapier) {
         rightWallColliderDesc.setFriction(0.3);
         const rightWallCollider = world.createCollider(rightWallColliderDesc, rightWallBody);
         
+        // Add to physics state
         gameState.physics.bodies.walls.push(rightWallBody);
         gameState.physics.colliders.walls.push(rightWallCollider);
         
@@ -900,6 +717,7 @@ function createTrackWalls(world, rapier) {
         topWallColliderDesc.setFriction(0.3);
         const topWallCollider = world.createCollider(topWallColliderDesc, topWallBody);
         
+        // Add to physics state
         gameState.physics.bodies.walls.push(topWallBody);
         gameState.physics.colliders.walls.push(topWallCollider);
         
@@ -912,6 +730,7 @@ function createTrackWalls(world, rapier) {
         bottomWallColliderDesc.setFriction(0.3);
         const bottomWallCollider = world.createCollider(bottomWallColliderDesc, bottomWallBody);
         
+        // Add to physics state
         gameState.physics.bodies.walls.push(bottomWallBody);
         gameState.physics.colliders.walls.push(bottomWallCollider);
         
@@ -929,161 +748,96 @@ function createTrackWalls(world, rapier) {
 
 // Improved game loop that avoids potential stack overflow issues
 function gameLoopWithoutRecursion(timestamp) {
-    try {
-        // Request next frame early
-        animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+    // Calculate delta time
+    const deltaTime = timestamp - (gameState.lastTimestamp || timestamp);
+    
+    // Update FPS counter
+    updateFPS(timestamp);
+    
+    // Update stats display if enabled
+    if (gameState.showStats) {
+        updateStatsDisplay();
+    }
+    
+    // Update physics at fixed timestep
+    const now = performance.now();
+    if (now - getLastPhysicsUpdate() >= PHYSICS_TIMESTEP * 1000) {
+        // Calculate physics timestep (clamped to avoid spiral of death)
+        // Ensure physicsStep is never 0 by using Math.max with a small positive value
+        const physicsStep = Math.max(Math.min(deltaTime / 1000, 1/30), 1/60);
         
-        // Calculate delta time since last frame
-        const deltaTime = timestamp - (gameState.lastTimestamp || timestamp);
-        gameState.lastTimestamp = timestamp;
-        
-        // Skip frames with unreasonable delta times (e.g. after tab was inactive)
-        if (deltaTime > 1000) {
-            console.log(`Large frame time detected: ${deltaTime}ms, skipping physics update`);
-            return;
-        }
-        
-        // Process physics if available
-        if (gameState.physics && gameState.physics.world) {
-            // Step the physics simulation
-            // Limit deltaTime to avoid large steps causing instability (max 1/30th second)
-            const physicsStep = Math.min(deltaTime / 1000, 1/30);
+        // Update physics world
+        if (gameState.physics.initialized && gameState.physics.world) {
+            gameState.physics.world.step();
+            gameState.debugCounters.physicsUpdate++;
             
-            // Pass the time step to Rapier's step function
-            try {
-                // Don't pass the timestep directly - Rapier in this version might not accept it
-                // Just call step() without arguments to use default timestep
-                gameState.physics.world.step();
-                gameState.debugCounters.physicsUpdate++;
-            } catch (error) {
-                console.error('Physics step error:', error);
-            }
-            
-            // Apply controls to each car with a physics body using the kinematic controller
-            if (window.CarKinematicController && typeof window.CarKinematicController.updateCarController === 'function') {
-                Object.keys(gameState.cars).forEach(playerId => {
-                    const car = gameState.cars[playerId];
-                    if (car && car.physicsBody && car.controls) {
-                        try {
-                            // Update the car controller with current controls
-                            window.CarKinematicController.updateCarController(
-                                car.physicsBody, 
-                                car.controls, 
-                                physicsStep
-                            );
-                        } catch (error) {
-                            console.error(`Error updating car controller for ${playerId}:`, error);
-                        }
-                    }
-                });
-            }
-            
-            // Update all car meshes to match their physics bodies
-            Object.keys(gameState.cars).forEach(playerId => {
-                const car = gameState.cars[playerId];
-                if (car && car.mesh && car.physicsBody) {
-                    try {
-                        // Use the kinematic controller's sync function if available
-                        if (window.CarKinematicController && typeof window.CarKinematicController.syncCarModelWithKinematics === 'function') {
-                            try {
-                                window.CarKinematicController.syncCarModelWithKinematics(
-                                    car.physicsBody,
-                                    car.mesh,
-                                    car.wheels
-                                );
-                                
-                                // Update the car's speed for stats display
-                                if (car.physicsBody.userData) {
-                                    car.speed = car.physicsBody.userData.currentSpeed || 0;
-                                    car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
-                                }
-                            } catch (syncError) {
-                                console.error(`Error syncing car model for ${playerId}:`, syncError);
-                            }
-                        } else {
-                            // Fallback to basic position/rotation sync
-                            const pos = car.physicsBody.translation();
-                            const rot = car.physicsBody.rotation();
-                            
-                            if (pos && rot && 
-                                isFinite(pos.x) && isFinite(pos.y) && isFinite(pos.z) &&
-                                isFinite(rot.x) && isFinite(rot.y) && isFinite(rot.z) && isFinite(rot.w)) {
-                                // Update car mesh position
-                                car.mesh.position.set(pos.x, pos.y, pos.z);
-                                
-                                // Update car mesh rotation
-                                car.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
-                            } else {
-                                console.warn(`Detected invalid position/rotation for car ${playerId}, skipping update`);
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Error updating car ${playerId} from physics:`, error);
-                    }
-                }
-            });
-            
-            // Update force visualization if physics debug is enabled
+            // Update physics debug visualization if enabled
             if (gameState.showPhysicsDebug) {
-                visualizeAppliedForces();
                 updatePhysicsDebugVisualization();
             }
         }
         
-        // Update stats display if visible
-        if (gameState.showStats) {
-            updateStatsDisplay();
+        // Update car positions based on physics
+        for (const playerId in gameState.cars) {
+            const car = gameState.cars[playerId];
+            
+            // Apply controls to physics body
+            if (car.physicsBody) {
+                // Update car controller with current controls
+                CarKinematicController.updateCarController(
+                    car.physicsBody,
+                    car.controls,
+                    physicsStep
+                );
+            }
         }
         
-        // Render scene
-        if (gameState.scene && gameState.camera) {
-            gameState.renderer.render(gameState.scene, gameState.camera);
-        }
-        
-        // Update physics debug visualization if enabled
-        if (gameState.showPhysicsDebug) {
-            updatePhysicsDebugVisualization();
-        }
-        
-    } catch (error) {
-        console.error('Error in game loop:', error);
+        // Update last physics update time
+        setLastPhysicsUpdate(now);
     }
+    
+    // Update car meshes based on physics bodies
+    for (const playerId in gameState.cars) {
+        const car = gameState.cars[playerId];
+        
+        // Update car mesh position/rotation from physics body
+        if (car.physicsBody) {
+            // Sync car model with physics
+            CarKinematicController.syncCarModelWithKinematics(
+                car.physicsBody,
+                car.mesh,
+                car.wheelMeshes
+            );
+        }
+    }
+    
+    // Render the scene
+    gameState.renderer.render(gameState.scene, gameState.camera);
+    
+    // Request next frame
+    requestAnimationFrame(gameLoopWithoutRecursion);
 }
 
 // Modify the existing gameLoop function to use the new gameLoopWithoutRecursion function
 function gameLoop() {
-    // Start the improved game loop instead
-    if (animationRequestId) {
-        cancelAnimationFrame(animationRequestId);
-    }
-    animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+    // Start the non-recursive game loop
+    requestAnimationFrame(gameLoopWithoutRecursion);
 }
 
 function onWindowResize() {
-    if (!gameState.camera || !gameState.renderer) return;
-    
-    // Use window dimensions directly
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    
-    // Update camera
-    gameState.camera.aspect = width / height;
-    gameState.camera.updateProjectionMatrix();
-    
-    // Update renderer size
-    gameState.renderer.setSize(width, height, true);
-    
-    // Adjust camera position based on aspect ratio
-    const aspectRatio = width / height;
-    if (aspectRatio > 1.5) {
-        gameState.camera.position.set(0, 45, 45);
-    } else {
-        gameState.camera.position.set(0, 50, 50);
-    }
-    gameState.camera.lookAt(0, 0, 0);
-    
-    // Force a render
-    if (gameState.scene) {
+    if (gameState.camera && gameState.renderer) {
+        // Get new window dimensions
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Update camera aspect ratio
+        gameState.camera.aspect = width / height;
+        gameState.camera.updateProjectionMatrix();
+        
+        // Update renderer size
+        gameState.renderer.setSize(width, height, true);
+        
+        // Force a render to update the display
         gameState.renderer.render(gameState.scene, gameState.camera);
     }
 }
@@ -1440,27 +1194,6 @@ function forceDOMRender() {
 }
 
 // Physics debug visualization
-function togglePhysicsDebug() {
-    // Initialize the debug property if it doesn't exist
-    if (typeof gameState.showPhysicsDebug === 'undefined') {
-        gameState.showPhysicsDebug = false;
-        gameState.physicsDebugObjects = [];
-    }
-    
-    // Toggle the debug state
-    gameState.showPhysicsDebug = !gameState.showPhysicsDebug;
-    
-    console.log(`Physics debug visualization: ${gameState.showPhysicsDebug ? 'ON' : 'OFF'}`);
-    
-    // Remove existing debug objects if turning off
-    if (!gameState.showPhysicsDebug) {
-        removePhysicsDebugObjects();
-    } else {
-        // Force immediate update if turning on
-        updatePhysicsDebugVisualization();
-    }
-}
-
 // Remove all physics debug visualization objects
 function removePhysicsDebugObjects() {
     if (gameState.physicsDebugObjects && gameState.physicsDebugObjects.length > 0) {
@@ -1514,7 +1247,7 @@ function updatePhysicsDebugVisualization() {
             
             // Log debug data to understand the format
             if (!gameState.debugRenderLogged) {
-                console.log('Rapier debug render data:', {
+                console.debug('Rapier debug render data:', {
                     verticesLength: vertices.length,
                     colorsLength: colors.length,
                     firstFewVertices: vertices.slice(0, 10),
@@ -1564,182 +1297,182 @@ function updatePhysicsDebugVisualization() {
         }
     }
     
-    // Fallback to manual wireframe creation if debug render not available
-    console.log('Falling back to manual physics debug visualization');
+    // // Fallback to manual wireframe creation if debug render not available
+    // console.warn('Falling back to manual physics debug visualization');
     
-    // Only log full debug info once per session or every 10 seconds
-    const now = Date.now();
-    const shouldLogFull = !gameState.physicsDebugLogs.lastFullLog || 
-                         (now - gameState.physicsDebugLogs.lastFullLog > 10000);
+    // // Only log full debug info once per session or every 10 seconds
+    // const now = Date.now();
+    // const shouldLogFull = !gameState.physicsDebugLogs.lastFullLog || 
+    //                      (now - gameState.physicsDebugLogs.lastFullLog > 10000);
     
-    if (shouldLogFull) {
-        console.log('Number of cars:', Object.keys(gameState.cars).length);
-        gameState.physicsDebugLogs.lastFullLog = now;
-    }
+    // if (shouldLogFull) {
+    //     console.log('Number of cars:', Object.keys(gameState.cars).length);
+    //     gameState.physicsDebugLogs.lastFullLog = now;
+    // }
     
-    // Create wireframe boxes for each car's physics body
-    Object.keys(gameState.cars).forEach(playerId => {
-        const car = gameState.cars[playerId];
+    // // Create wireframe boxes for each car's physics body
+    // Object.keys(gameState.cars).forEach(playerId => {
+    //     const car = gameState.cars[playerId];
         
-        if (!car || !car.physicsBody) {
-            // Only log this warning once per car
-            if (!gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
-                console.warn(`Car ${playerId} has no physics body`);
-                gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = true;
-            }
-            return;
-        }
+    //     if (!car || !car.physicsBody) {
+    //         // Only log this warning once per car
+    //         if (!gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
+    //             console.warn(`Car ${playerId} has no physics body`);
+    //             gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = true;
+    //         }
+    //         return;
+    //     }
         
-        // If a car previously didn't have physics but now does, log that
-        if (gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
-            console.log(`Car ${playerId} now has a physics body`);
-            gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = false;
-        }
+    //     // If a car previously didn't have physics but now does, log that
+    //     if (gameState.physicsDebugLogs.carsWithoutPhysics[playerId]) {
+    //         console.log(`Car ${playerId} now has a physics body`);
+    //         gameState.physicsDebugLogs.carsWithoutPhysics[playerId] = false;
+    //     }
         
-        try {
-            // Get actual dimensions from the physics body if possible
-            let carWidth = 2;  // Default car width
-            let carHeight = 1; // Default car height
-            let carLength = 4; // Default car length
+    //     try {
+    //         // Get actual dimensions from the physics body if possible
+    //         let carWidth = 2;  // Default car width
+    //         let carHeight = 1; // Default car height
+    //         let carLength = 4; // Default car length
             
-            // Try to get actual dimensions from the body's colliders
-            if (car.physicsBody.collider && typeof car.physicsBody.collider === 'function') {
-                const collider = car.physicsBody.collider(0);
-                if (collider && collider.halfExtents) {
-                    const halfExtents = collider.halfExtents();
-                    carWidth = halfExtents.x * 2;
-                    carHeight = halfExtents.y * 2;
-                    carLength = halfExtents.z * 2;
-                }
-            }
+    //         // Try to get actual dimensions from the body's colliders
+    //         if (car.physicsBody.collider && typeof car.physicsBody.collider === 'function') {
+    //             const collider = car.physicsBody.collider(0);
+    //             if (collider && collider.halfExtents) {
+    //                 const halfExtents = collider.halfExtents();
+    //                 carWidth = halfExtents.x * 2;
+    //                 carHeight = halfExtents.y * 2;
+    //                 carLength = halfExtents.z * 2;
+    //             }
+    //         }
             
-            // Create wireframe box geometry
-            const wireGeometry = new THREE.BoxGeometry(carWidth, carHeight, carLength);
-            const wireframe = new THREE.LineSegments(
-                new THREE.WireframeGeometry(wireGeometry),
-                new THREE.LineBasicMaterial({ 
-                    color: 0x00ff00,  // Green wireframe
-                    linewidth: 2,      // Line width (note: may not work in WebGL)
-                    opacity: 1.0,
-                    transparent: false
-                })
-            );
+    //         // Create wireframe box geometry
+    //         const wireGeometry = new THREE.BoxGeometry(carWidth, carHeight, carLength);
+    //         const wireframe = new THREE.LineSegments(
+    //             new THREE.WireframeGeometry(wireGeometry),
+    //             new THREE.LineBasicMaterial({ 
+    //                 color: 0x00ff00,  // Green wireframe
+    //                 linewidth: 2,      // Line width (note: may not work in WebGL)
+    //                 opacity: 1.0,
+    //                 transparent: false
+    //             })
+    //         );
             
-            // Get physics body position and rotation
-            const physicsPos = car.physicsBody.translation();
-            const physicsRot = car.physicsBody.rotation();
+    //         // Get physics body position and rotation
+    //         const physicsPos = car.physicsBody.translation();
+    //         const physicsRot = car.physicsBody.rotation();
             
-            if (shouldLogFull) {
-                console.log(`Physics position for car ${playerId}:`, physicsPos);
-                console.log(`Physics rotation for car ${playerId}:`, physicsRot);
-            }
+    //         if (shouldLogFull) {
+    //             console.log(`Physics position for car ${playerId}:`, physicsPos);
+    //             console.log(`Physics rotation for car ${playerId}:`, physicsRot);
+    //         }
             
-            // Set wireframe position to match physics body
-            wireframe.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
+    //         // Set wireframe position to match physics body
+    //         wireframe.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
             
-            // Set wireframe rotation to match physics body
-            wireframe.quaternion.set(
-                physicsRot.x,
-                physicsRot.y,
-                physicsRot.z,
-                physicsRot.w
-            );
+    //         // Set wireframe rotation to match physics body
+    //         wireframe.quaternion.set(
+    //             physicsRot.x,
+    //             physicsRot.y,
+    //             physicsRot.z,
+    //             physicsRot.w
+    //         );
             
-            // Add to scene and track for later removal
-            gameState.scene.add(wireframe);
-            gameState.physicsDebugObjects.push(wireframe);
-        } catch (error) {
-            console.error(`Error creating wireframe for car ${playerId}:`, error);
-        }
-    });
+    //         // Add to scene and track for later removal
+    //         gameState.scene.add(wireframe);
+    //         gameState.physicsDebugObjects.push(wireframe);
+    //     } catch (error) {
+    //         console.error(`Error creating wireframe for car ${playerId}:`, error);
+    //     }
+    // });
     
-    // Also add a ground plane wireframe if we have one
-    if (gameState.physics.bodies && gameState.physics.bodies.ground) {
-        try {
-            // Ground plane is a cuboid with dimensions from the physics
-            const groundGeometry = new THREE.BoxGeometry(200, 0.2, 200);
-            const groundWireframe = new THREE.LineSegments(
-                new THREE.WireframeGeometry(groundGeometry),
-                new THREE.LineBasicMaterial({ 
-                    color: 0x0000ff,  // Blue wireframe
-                    linewidth: 1,
-                    opacity: 1.0,
-                    transparent: false
-                })
-            );
+    // // Also add a ground plane wireframe if we have one
+    // if (gameState.physics.bodies && gameState.physics.bodies.ground) {
+    //     try {
+    //         // Ground plane is a cuboid with dimensions from the physics
+    //         const groundGeometry = new THREE.BoxGeometry(200, 0.2, 200);
+    //         const groundWireframe = new THREE.LineSegments(
+    //             new THREE.WireframeGeometry(groundGeometry),
+    //             new THREE.LineBasicMaterial({ 
+    //                 color: 0x0000ff,  // Blue wireframe
+    //                 linewidth: 1,
+    //                 opacity: 1.0,
+    //                 transparent: false
+    //             })
+    //         );
             
-            // Ground is at y=0
-            groundWireframe.position.set(0, 0, 0);
+    //         // Ground is at y=0
+    //         groundWireframe.position.set(0, 0, 0);
             
-            // Add to scene and track
-            gameState.scene.add(groundWireframe);
-            gameState.physicsDebugObjects.push(groundWireframe);
-        } catch (error) {
-            console.error('Error creating ground wireframe:', error);
-        }
-    }
+    //         // Add to scene and track
+    //         gameState.scene.add(groundWireframe);
+    //         gameState.physicsDebugObjects.push(groundWireframe);
+    //     } catch (error) {
+    //         console.error('Error creating ground wireframe:', error);
+    //     }
+    // }
     
-    // Add track walls if we have them
-    if (gameState.physics.bodies && gameState.physics.bodies.walls) {
-        gameState.physics.bodies.walls.forEach((wallBody, index) => {
-            try {
-                // Try to get wall dimensions and position
-                const wallTranslation = wallBody.translation();
+    // // Add track walls if we have them
+    // if (gameState.physics.bodies && gameState.physics.bodies.walls) {
+    //     gameState.physics.bodies.walls.forEach((wallBody, index) => {
+    //         try {
+    //             // Try to get wall dimensions and position
+    //             const wallTranslation = wallBody.translation();
                 
-                // Use more accurate wall dimensions based on our creation code
-                let wallWidth, wallHeight, wallLength;
+    //             // Use more accurate wall dimensions based on our creation code
+    //             let wallWidth, wallHeight, wallLength;
                 
-                // Determine if this is a side wall or end wall based on index
-                if (index < 2) {
-                    // Side walls (left, right)
-                    wallWidth = 0.5;
-                    wallHeight = 2;
-                    wallLength = 40;
-                } else {
-                    // End walls (top, bottom)
-                    wallWidth = 21; // trackWidth + wallThickness*2
-                    wallHeight = 2;
-                    wallLength = 0.5;
-                }
+    //             // Determine if this is a side wall or end wall based on index
+    //             if (index < 2) {
+    //                 // Side walls (left, right)
+    //                 wallWidth = 0.5;
+    //                 wallHeight = 2;
+    //                 wallLength = 40;
+    //             } else {
+    //                 // End walls (top, bottom)
+    //                 wallWidth = 21; // trackWidth + wallThickness*2
+    //                 wallHeight = 2;
+    //                 wallLength = 0.5;
+    //             }
                 
-                // Create a box wireframe for walls with correct dimensions
-                const wallGeometry = new THREE.BoxGeometry(wallWidth, wallHeight, wallLength);
-                const wallWireframe = new THREE.LineSegments(
-                    new THREE.WireframeGeometry(wallGeometry),
-                    new THREE.LineBasicMaterial({ 
-                        color: 0xff0000,  // Red wireframe
-                        linewidth: 1,
-                        opacity: 1.0,
-                        transparent: false
-                    })
-                );
+    //             // Create a box wireframe for walls with correct dimensions
+    //             const wallGeometry = new THREE.BoxGeometry(wallWidth, wallHeight, wallLength);
+    //             const wallWireframe = new THREE.LineSegments(
+    //                 new THREE.WireframeGeometry(wallGeometry),
+    //                 new THREE.LineBasicMaterial({ 
+    //                     color: 0xff0000,  // Red wireframe
+    //                     linewidth: 1,
+    //                     opacity: 1.0,
+    //                     transparent: false
+    //                 })
+    //             );
                 
-                // Position the wireframe at the wall's position
-                wallWireframe.position.set(
-                    wallTranslation.x,
-                    wallTranslation.y,
-                    wallTranslation.z
-                );
+    //             // Position the wireframe at the wall's position
+    //             wallWireframe.position.set(
+    //                 wallTranslation.x,
+    //                 wallTranslation.y,
+    //                 wallTranslation.z
+    //             );
                 
-                // Apply rotation if available
-                const wallRotation = wallBody.rotation();
-                if (wallRotation) {
-                    wallWireframe.quaternion.set(
-                        wallRotation.x,
-                        wallRotation.y,
-                        wallRotation.z,
-                        wallRotation.w
-                    );
-                }
+    //             // Apply rotation if available
+    //             const wallRotation = wallBody.rotation();
+    //             if (wallRotation) {
+    //                 wallWireframe.quaternion.set(
+    //                     wallRotation.x,
+    //                     wallRotation.y,
+    //                     wallRotation.z,
+    //                     wallRotation.w
+    //                 );
+    //             }
                 
-                // Add to scene and track
-                gameState.scene.add(wallWireframe);
-                gameState.physicsDebugObjects.push(wallWireframe);
-            } catch (error) {
-                console.error(`Error creating wireframe for wall ${index}:`, error);
-            }
-        });
-    }
+    //             // Add to scene and track
+    //             gameState.scene.add(wallWireframe);
+    //             gameState.physicsDebugObjects.push(wallWireframe);
+    //         } catch (error) {
+    //             console.error(`Error creating wireframe for wall ${index}:`, error);
+    //         }
+    //     });
+    // }
     
     // Update debug counter
     gameState.debugCounters.physicsDebugLines = gameState.physicsDebugObjects.length;
@@ -1760,7 +1493,7 @@ function ensureCarHasPhysicsBody(playerId) {
         return false;
     }
     
-    console.log(`Creating missing physics body for car ${playerId}`);
+    console.warn(`Creating missing physics body for car ${playerId}`);
     
     try {
         // Get car dimensions
@@ -1782,7 +1515,6 @@ function ensureCarHasPhysicsBody(playerId) {
         );
         
         if (physicsBody) {
-            console.log(`Successfully created physics body for car ${playerId}`);
             
             // Set rotation to match visual mesh
             const quaternion = car.mesh.quaternion.clone();
@@ -1806,6 +1538,8 @@ function ensureCarHasPhysicsBody(playerId) {
 
 // Add fullscreen handling functions
 function toggleFullscreen() {
+    if (!elements || !elements.gameScreen) return;
+    
     if (!document.fullscreenElement) {
         elements.gameScreen.requestFullscreen().catch(err => {
             console.error(`Error attempting to enable fullscreen: ${err.message}`);
@@ -1817,8 +1551,9 @@ function toggleFullscreen() {
 
 // Update fullscreen button icon based on state
 function updateFullscreenButton() {
-    const isFullscreen = document.fullscreenElement !== null;
-    elements.fullscreenBtn.innerHTML = isFullscreen ? `
+    if (!elements || !elements.fullscreenBtn) return;
+    
+    elements.fullscreenBtn.innerHTML = document.fullscreenElement ? `
         <svg viewBox="0 0 24 24">
             <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
         </svg>
@@ -1829,9 +1564,6 @@ function updateFullscreenButton() {
     `;
 }
 
-// Add event listeners for fullscreen
-document.addEventListener('fullscreenchange', updateFullscreenButton);
-elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
 // Helper function to create a visual bar indicator for control values
 function createBarIndicator(value, min, max) {
@@ -2080,9 +1812,7 @@ function togglePhysicsPanel() {
 }
 
 // Initialize the physics parameters panel UI with all controls
-function initPhysicsParametersPanel() {
-    console.log('Initializing physics parameters panel');
-    
+function initPhysicsParametersPanel() {    
     // Setup tab switcher
     setupTabSwitcher();
     
@@ -2097,9 +1827,7 @@ function initPhysicsParametersPanel() {
     
     // Setup reset button
     setupPhysicsButtons();
-    
-    console.log('Physics parameters panel initialized');
-}
+    }
 
 // Setup tab switching functionality
 function setupTabSwitcher() {
@@ -2404,3 +2132,69 @@ initGame = function() {
         window.physicsKeyListenerAdded = true;
     }
 };
+
+function toggleStatsDisplay() {
+    if (!elements || !elements.statsOverlay) return;
+    
+    toggleStats();
+    elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
+    console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
+}
+
+function togglePhysicsDebugDisplay() {
+    togglePhysicsDebug();
+    
+    if (gameState.showPhysicsDebug) {
+        // Add debug visualization styles
+        addPhysicsDebugStyles();
+        
+        // Create debug container if it doesn't exist
+        if (!document.getElementById('physics-debug-container')) {
+            const debugContainer = document.createElement('div');
+            debugContainer.id = 'physics-debug-container';
+            debugContainer.className = 'physics-debug-container';
+            document.body.appendChild(debugContainer);
+            
+            // Add debug log container
+            const debugLogs = document.createElement('div');
+            debugLogs.id = 'physics-debug-logs';
+            debugLogs.className = 'physics-debug-logs';
+            debugContainer.appendChild(debugLogs);
+            
+            gameState.physicsDebugLogs = debugLogs;
+        }
+    } else {
+        // Remove debug visualization objects
+        removePhysicsDebugObjects();
+        
+        // Remove debug container
+        const debugContainer = document.getElementById('physics-debug-container');
+        if (debugContainer) {
+            document.body.removeChild(debugContainer);
+            gameState.physicsDebugLogs = null;
+        }
+    }
+    
+    console.log(`Physics debug: ${gameState.showPhysicsDebug ? 'ON' : 'OFF'}`);
+}
+
+function createCarPhysics(world, rapier, position, config) {
+    // Create car physics using the CarKinematicController
+    const carBody = CarKinematicController.createCarController(
+        world,
+        position,
+        {
+            width: config.chassisWidth,
+            height: config.chassisHeight,
+            length: config.chassisLength
+        },
+        config,
+        rapier  // Pass the Rapier instance
+    );
+    
+    // Return the car physics body and wheel bodies
+    return {
+        chassisBody: carBody,
+        wheelBodies: [] // Simplified for this example
+    };
+}

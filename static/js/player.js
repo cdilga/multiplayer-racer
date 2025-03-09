@@ -787,16 +787,6 @@ const errorLog = {
             document.body.appendChild(this.container);
         }
         
-        // Override console.error to also log to our on-screen display
-        const originalError = console.error;
-        console.error = (...args) => {
-            // Call the original console.error
-            originalError.apply(console, args);
-            
-            // Also log to our on-screen display
-            this.log(args.join(' '));
-        };
-        
         // Add a global error handler
         window.addEventListener('error', (event) => {
             this.log(`ERROR: ${event.message} at ${event.filename}:${event.lineno}`);

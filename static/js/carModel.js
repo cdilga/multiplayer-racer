@@ -1,11 +1,12 @@
 // Car model utility
+import * as THREE from 'three';
 
 /**
  * Creates a car model with specified parameters
  * @param {Object} options - Car configuration options
  * @returns {THREE.Group} - A Three.js group containing the car model
  */
-function createCar(options = {}) {
+export function createCar(options = {}) {
     // No logging at all - remove debug flag checking
     
     // Default options
@@ -18,8 +19,8 @@ function createCar(options = {}) {
         height: 1,              // Car body height
         wheelRadius: 0.5,       // Wheel radius
         wheelThickness: 0.4,    // Wheel thickness
-        castShadow: true,       // Whether the car casts shadows
-        ...options
+        ...options.dimensions,  // Override with provided dimensions
+        ...options              // Override with any other options
     };
     
     try {
@@ -204,11 +205,11 @@ function createCar(options = {}) {
 
 /**
  * Updates car physics based on controls
- * @param {Object} car - Car object with position, rotation, and velocity
- * @param {Object} controls - Control inputs (steering, acceleration, braking)
- * @param {Number} deltaTime - Time since last update in seconds
+ * @param {Object} car - The car object
+ * @param {Object} controls - Control inputs
+ * @param {Number} deltaTime - Time step
  */
-function updateCarPhysics(car, controls, deltaTime = 1/60) {
+export function updateCarPhysics(car, controls, deltaTime = 1/60) {
     if (!car || !controls) {
         return 0;
     }
@@ -312,4 +313,7 @@ function updateCarPhysics(car, controls, deltaTime = 1/60) {
         // No logging here to prevent stack issues
         return 0;
     }
-} 
+}
+
+// Export all functions as the default export
+export default { createCar, updateCarPhysics }; 

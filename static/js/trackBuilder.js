@@ -1,11 +1,12 @@
 // Track builder utility
+import * as THREE from 'three';
 
 /**
  * Creates a race track with specified parameters
  * @param {Object} options - Track configuration options
  * @returns {THREE.Group} - A Three.js group containing the track elements
  */
-function buildTrack(options = {}) {
+export function buildTrack(options = {}) {
     console.log('buildTrack called with options:', options);
     
     // Default options
@@ -201,4 +202,7 @@ function addLaneMarkings(parent, shape, innerRadius, outerRadius) {
             }
         }
     }
-} 
+}
+
+// Export the buildTrack function as the default export
+export default { buildTrack }; 

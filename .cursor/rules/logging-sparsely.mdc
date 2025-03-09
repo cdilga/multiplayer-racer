@@ -1,0 +1,12 @@
+---
+description: logging 
+globs: *.js, *.tsx, *.ts, *.py
+alwaysApply: false
+---
+
+# Logging guideslines
+
+You must protect high frequency logs and refrain at all costs from logging normal behaviour within hot loops (ones that run at high frequencies)
+If you MUST, absolutely MUST do it, then and only then may you include logs at a reduced frequency of about 1/1000 or another appropriate value, never more than 1 time in every 10 seconds.
+
+For errors, you may log every error, especially if recovery doesn't make sense, but - this shouldn't continue in a loop I don't think.

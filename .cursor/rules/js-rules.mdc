@@ -1,0 +1,22 @@
+---
+description: architecture, including or importing modules, creating javascript files
+globs: *.js
+alwaysApply: false
+---
+# We are using normal js imports and cdn's rather than bundlers
+Just import stuff with script tags, and consider that we are not using WebPack and ES6 bundling
+
+# Prevent overwriting global variables accidentally
+When you see a direct assignment to window.<variable> like "window.myVar = value;", suggest replacing it with "window.myVar = window.myVar || value;" to avoid overwriting existing values unless the intent is explicitly to reset it. Explain that this preserves existing globals and prevents conflicts between scripts.
+
+# Encourage namespacing related globals
+If you notice multiple global variables with similar names or purposes, like "window.player1", "window.player2", and "window.player3", suggest grouping them into a single object, such as "window.players = { player1: ..., player2: ..., player3: ... };". Highlight that this reduces clutter in the global namespace and makes related data easier to manage.
+
+# Suggest extracting physics-related code
+When you encounter code that uses physics-related variables or objects like "rapierPhysics", "PHYSICS_UPDATE_RATE", or "gameState.physics", recommend moving it to a separate file called "public/physics.js" and attaching it to "window.physics". Remind the developer to add "<script src='physics.js'></script>" to the HTML before dependent scripts. Explain that this separates concerns and improves maintainability.
+
+# Suggest extracting DOM manipulation code
+For code that uses DOM methods like "document.getElementById", "document.querySelector", or "document.createElement", suggest moving it to "public/domUtils.js" and attaching it to "window.domUtils". Advise adding "<script src='domUtils.js'></script>" to the HTML. Note that this keeps DOM logic separate from game logic.
+
+# Remind about script load order
+When a new JavaScript file is added or referenced, remind me to check the script load order in the HTML file (e.g., "index.html") and ensure dependencies like "three.min.js" or "rapierPhysics.js" are loaded before scripts that use them. Emphasize that incorrect order can cause runtime errors.

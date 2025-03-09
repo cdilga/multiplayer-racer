@@ -18,16 +18,16 @@ const defaultConfig = {
     
     // Character Controller specific
     characterOffset: 0.1,       // Gap between character and environment
-    maxSlopeClimbAngle: 0.6,    // About 35 degrees
-    minSlopeSlideAngle: 0.4,    // About 25 degrees
+    maxSlopeClimbAngle: 0.8,    // Max slope angle in radians (about 45 degrees)
+    minSlopeSlideAngle: 0.9,    // Min slope angle for sliding in radians (about 50 degrees)
+    
+    // Gravity and autostep
+    gravity: -9.8,              // Gravity force
     autostep: {
-        maxHeight: 0.3,
-        minWidth: 0.2,
+        maxHeight: 0.3,         // Max step height
+        minWidth: 0.1,          // Min step width
         includeDynamicBodies: false
     },
-    
-    // Character gravity (independent from world)
-    gravity: -20.0,
     
     // Debug
     enableDebugLogging: false
@@ -41,17 +41,22 @@ function debugLog(config, ...args) {
 }
 
 /**
- * Create a Kinematic Character Controller for a car
- * 
- * @param {Object} world - Rapier world instance
- * @param {Object} position - {x, y, z} position to create the car
- * @param {Object} dimensions - {width, height, length} of the car
- * @param {Object} [userConfig] - Optional configuration to override defaults
+ * Creates a car kinematic character controller
+ * @param {Object} world - Rapier physics world
+ * @param {Object} position - Initial position {x, y, z}
+ * @param {Object} dimensions - Car dimensions {width, height, length}
+ * @param {Object} userConfig - Optional configuration overrides
+ * @param {Object} rapier - Rapier physics instance
  * @returns {Object} The car body with controller attached
  */
-function createCarController(world, position, dimensions, userConfig = {}) {
+function createCarController(world, position, dimensions, userConfig = {}, rapier) {
     if (!world) {
         console.error('Rapier world not initialized for character controller');
+        return null;
+    }
+    
+    if (!rapier) {
+        console.error('Rapier instance not provided to createCarController');
         return null;
     }
     
@@ -80,7 +85,7 @@ function createCarController(world, position, dimensions, userConfig = {}) {
         
         // Create the rigid body for the car
         const { width, height, length } = dimensions;
-        const bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
+        const bodyDesc = rapier.RigidBodyDesc.kinematicPositionBased()
             .setTranslation(position.x, position.y, position.z);
         
         const carBody = world.createRigidBody(bodyDesc);
@@ -89,7 +94,7 @@ function createCarController(world, position, dimensions, userConfig = {}) {
         const radius = Math.min(width, height) * 0.4;
         const halfHeight = length * 0.35; // Shorter than half length for better handling
         
-        const colliderDesc = RAPIER.ColliderDesc.capsule(halfHeight, radius)
+        const colliderDesc = rapier.ColliderDesc.capsule(halfHeight, radius)
             .setTranslation(0, radius, 0);  // Lift capsule so bottom is at y=0
         
         world.createCollider(colliderDesc, carBody);
@@ -121,7 +126,7 @@ function createCarController(world, position, dimensions, userConfig = {}) {
         debugLog(config, "Created car kinematic controller successfully");
         return carBody;
     } catch (error) {
-        console.error("Error creating car kinematic controller:", error);
+        console.error('Error creating car kinematic controller:', error);
         return null;
     }
 }
@@ -480,8 +485,15 @@ function syncCarModelWithKinematics(carBody, carMesh, wheelMeshes = []) {
     }
 }
 
-// Export API
-window.CarKinematicController = {
+// Export the functions
+export { 
+    createCarController, 
+    updateCarController, 
+    syncCarModelWithKinematics 
+};
+
+// Export as default
+export default {
     createCarController,
     updateCarController,
     syncCarModelWithKinematics
