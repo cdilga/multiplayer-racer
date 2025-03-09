@@ -36,22 +36,50 @@ import rapierPhysics from './rapierPhysics.js';
 import * as THREE from 'three';
 import CarKinematicController from './carKinematicController.js';
 
-// Import domUtils.js at the top of the file, using renamed imports for conflicting functions
+// Import domUtils.js for core DOM utilities
 import { 
-    initializeElements, 
     getElement, 
-    addPlayerToList as domAddPlayerToList, 
-    removePlayerFromList, 
-    updatePlayerName, 
-    showScreen as domShowScreen, 
-    updateStatsDisplay as domUpdateStatsDisplay, 
+    on,
+    off,
+    addClass,
+    removeClass,
+    toggleClass,
+    createElement,
+    setText,
+    setHTML,
     toggleFullscreen as domToggleFullscreen, 
     updateFullscreenButton as domUpdateFullscreenButton, 
-    createBarIndicator, 
-    initStatsOverlay as domInitStatsOverlay
+    createBarIndicator
 } from './domUtils.js';
 
-// Import the new statsManager module
+// Import playerUI.js for player-specific UI functionality
+import {
+    addPlayerToList,
+    removePlayerFromList,
+    updatePlayerName,
+    updatePlayerColor
+} from './playerUI.js';
+
+// Import screenManager.js for screen transitions
+import {
+    showLobbyScreen,
+    showGameScreen,
+    updateRoomDisplay
+} from './screenManager.js';
+
+// Import statsUI.js for stats display
+import {
+    initStatsOverlay as initStatsOverlayUI,
+    updateStatsDisplay as updateStatsContent,
+    toggleStatsDisplay as toggleStatsUI
+} from './statsUI.js';
+
+// Import uiStyles.js for styling
+import {
+    initAllStyles
+} from './uiStyles.js';
+
+// Import the statsManager module if still needed
 import { 
     formatStatsDisplay, 
     collectBasicStats 
@@ -67,6 +95,54 @@ import {
     addPhysicsDebugStyles 
 } from './physicsUI.js';
 
+// Helper function to create and add an arrow to the scene
+function drawArrow(direction, origin, length, color, headLength = 0.5, headWidth = 0.3) {
+    const arrow = new THREE.ArrowHelper(
+        direction,
+        origin,
+        length,
+        color,
+        headLength,
+        headWidth
+    );
+    gameState.scene.add(arrow);
+    return arrow;
+}
+
+/**
+ * Update the control indicator UI to show current player controls
+ * @param {HTMLElement} indicator - The control indicator element
+ * @param {Object} controls - The control values (acceleration, braking, steering)
+ * @param {string} playerName - The name of the player
+ */
+function updateControlIndicator(indicator, controls, playerName) {
+    if (!indicator) return;
+
+    // Update the indicator labels
+    const accelBar = indicator.querySelector('.accel-bar');
+    const brakeBar = indicator.querySelector('.brake-bar');
+    const steerIndicator = indicator.querySelector('.steer-indicator');
+    const playerLabel = indicator.querySelector('.player-name');
+    
+    if (accelBar) {
+        accelBar.style.width = `${Math.max(0, Math.min(100, controls.acceleration * 100))}%`;
+    }
+    
+    if (brakeBar) {
+        brakeBar.style.width = `${Math.max(0, Math.min(100, controls.braking * 100))}%`;
+    }
+    
+    if (steerIndicator) {
+        // Convert steering (-1 to 1) to rotation (-45 to 45 degrees)
+        const rotation = controls.steering * 45;
+        steerIndicator.style.transform = `rotate(${rotation}deg)`;
+    }
+    
+    if (playerLabel) {
+        playerLabel.textContent = playerName;
+    }
+}
+
 // Get the game state object for direct access when needed
 const gameState = getGameState();
 
@@ -79,7 +155,18 @@ let socket;
 // Wait for DOM to be fully loaded before setting up event listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
-    elements = initializeElements();
+    elements = {
+        lobbyScreen: getElement('lobby-screen'),
+        gameScreen: getElement('game-screen'),
+        startGameBtn: getElement('start-game-btn'),
+        roomCodeDisplay: getElement('room-code-display'),
+        playerList: getElement('player-list'),
+        joinUrl: getElement('join-url'),
+        gameContainer: getElement('game-container'),
+        gameStatus: getElement('game-status'),
+        statsOverlay: getElement('stats-overlay'),
+        fullscreenBtn: getElement('fullscreen-btn')
+    };
     
     // Add event listener for start game button
     if (elements.startGameBtn) {
@@ -139,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Show lobby screen
-        showScreen('lobby');
+        showLobbyScreen();
     });
     
     // Handle player joining
@@ -254,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         // Toggle stats display (F3)
         if (e.key === 'F3' || e.key === 'f3') {
-            toggleStatsDisplay();
+            toggleStatsUI();
         }
         
         // Toggle physics debug (F4)
@@ -278,7 +365,7 @@ function createRoom() {
 function startGame() {
     if (gameState.roomCode && Object.keys(gameState.players).length > 0) {
         socket.emit('start_game', { room_code: gameState.roomCode });
-        showScreen('game');
+        showGameScreen();
         setGameActive(true);
         initGame();
     }
@@ -299,7 +386,7 @@ function initGame() {
     }
     
     // Initialize stats overlay
-    initStatsOverlay();
+    initStatsOverlayUI();
     
     // Initialize physics parameters panel
     initPhysicsParametersPanel();
@@ -835,16 +922,28 @@ function onWindowResize() {
     }
 }
 
-// Update updateStatsDisplay to use the renamed import
+/**
+ * Update stats display with game state information
+ */
 function updateStatsDisplay() {
     if (!gameState.showStats) return;
     
     // Collect basic stats from game state
-    const stats = collectBasicStats(gameState);
+    const stats = {
+        fps: gameState.fps,
+        physicsUpdates: gameState.debugCounters.physicsUpdate,
+        controlsUpdates: gameState.debugCounters.controlsUpdate,
+        debugLines: gameState.debugCounters.physicsDebugLines,
+        playerCount: Object.keys(gameState.players).length,
+        carCount: Object.keys(gameState.cars).length,
+        physicsStatus: gameState.physics.usingRapier ? 'Active' : 'Unavailable',
+        rapierLoaded: window.rapierLoaded ? 'Yes' : 'No',
+        physicsDebug: gameState.showPhysicsDebug ? 'ON' : 'OFF'
+    };
     
-    // Format the stats display and update the DOM
+    // Format stats and update display
     const formattedStats = formatStatsDisplay(stats, gameState);
-    domUpdateStatsDisplay(formattedStats);
+    updateStatsContent(formattedStats);
 }
 
 // Function to ensure a car has a physics body
@@ -947,7 +1046,7 @@ function visualizeAppliedForces() {
                 const engineDir = new THREE.Vector3(0, 0, -Math.sign(forces.engineForce));
                 engineDir.applyQuaternion(car.mesh.quaternion);
                 
-                const engineForceArrow = new THREE.ArrowHelper(
+                const engineForceArrow = drawArrow(
                     engineDir.normalize(),
                     position.clone().add(new THREE.Vector3(0, 1.5, 0)),
                     Math.min(Math.abs(forces.engineForce) / 1000, 5),
@@ -955,7 +1054,6 @@ function visualizeAppliedForces() {
                     0.5,
                     0.3
                 );
-                gameState.scene.add(engineForceArrow);
                 gameState.forceVisualization.push(engineForceArrow);
             }
             
@@ -964,7 +1062,7 @@ function visualizeAppliedForces() {
                 const brakeDir = new THREE.Vector3(0, 0, 1);
                 brakeDir.applyQuaternion(car.mesh.quaternion);
                 
-                const brakeForceArrow = new THREE.ArrowHelper(
+                const brakeForceArrow = drawArrow(
                     brakeDir.normalize(),
                     position.clone().add(new THREE.Vector3(0, 1.2, 0)),
                     Math.min(forces.brakeForce / 1000, 5),
@@ -972,7 +1070,6 @@ function visualizeAppliedForces() {
                     0.5,
                     0.3
                 );
-                gameState.scene.add(brakeForceArrow);
                 gameState.forceVisualization.push(brakeForceArrow);
             }
             
@@ -981,7 +1078,7 @@ function visualizeAppliedForces() {
                 const lateralDir = new THREE.Vector3(Math.sign(forces.lateralForce), 0, 0);
                 lateralDir.applyQuaternion(car.mesh.quaternion);
                 
-                const lateralForceArrow = new THREE.ArrowHelper(
+                const lateralForceArrow = drawArrow(
                     lateralDir.normalize(),
                     position.clone().add(new THREE.Vector3(0, 0.9, 0)),
                     Math.min(Math.abs(forces.lateralForce) / 500, 5),
@@ -989,7 +1086,6 @@ function visualizeAppliedForces() {
                     0.5,
                     0.3
                 );
-                gameState.scene.add(lateralForceArrow);
                 gameState.forceVisualization.push(lateralForceArrow);
             }
         } catch (error) {
@@ -1021,6 +1117,10 @@ let physicsParams = {
         enableAutostep: true,        // Whether to enable auto-stepping
         autostepHeight: 0.3,         // Maximum step height
         autostepWidth: 0.2           // Minimum step width
+    },
+    wheels: {
+        friction: 1.0,               // Wheel friction
+        suspensionStiffness: 10.0    // Suspension stiffness
     }
 };
 
@@ -1140,18 +1240,18 @@ function initPhysicsParametersPanel() {
 
 // Setup event listeners using domUtils
 function setupTabSwitcher() {
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(tab => {
         tab.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
+            const targetId = this.getAttribute('data-tab');
             
             // Remove active class from all tabs and contents
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
             // Add active class to clicked tab and its content
             this.classList.add('active');
-            getElement(targetId).classList.add('active');
+            document.getElementById(targetId).classList.add('active');
         });
     });
 }
@@ -1166,6 +1266,11 @@ function createCarParametersUI() {
     const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
     const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
     
+    if (!carBodyGroup || !movementGroup) {
+        console.error('Car parameter groups not found');
+        return;
+    }
+    
     // Car body physics
     createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
     createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
@@ -1174,14 +1279,17 @@ function createCarParametersUI() {
     // Movement parameters
     createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
     createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
-    createParameterControl(movementGroup, 'car', 'maxSteeringAngle', 'Max Steering', 0.3, 1.0, 0.05);
-    createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Response', 0.1, 1.0, 0.05);
+    createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Speed', 0.05, 0.3, 0.01);
     createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
 
 // Create UI controls for world parameters
 function createWorldParametersUI() {
     const worldGroup = document.querySelector('#world-params .params-group');
+    if (!worldGroup) {
+        console.error('World parameters group not found');
+        return;
+    }
     
     // World physics
     createParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
@@ -1190,30 +1298,37 @@ function createWorldParametersUI() {
 
 // Create UI controls for wheels parameters - now just basic character controller settings
 function createWheelsParametersUI() {
-    const wheelGroup = document.querySelector('#wheels-params .params-group:nth-child(1)');
-    const suspensionGroup = document.querySelector('#wheels-params .params-group:nth-child(2)');
-    
-    // Update group titles to match new functionality
-    const wheelGroupTitle = wheelGroup.querySelector('.params-group-title');
-    if (wheelGroupTitle) {
-        wheelGroupTitle.textContent = 'Collision Settings';
+    const wheelGroup = document.querySelector('#wheels-params .params-group');
+    if (!wheelGroup) {
+        console.error('Wheels parameters group not found');
+        return;
     }
     
-    const suspensionGroupTitle = suspensionGroup.querySelector('.params-group-title');
-    if (suspensionGroupTitle) {
-        suspensionGroupTitle.textContent = 'Autostep Settings';
-    }
-    
-    // Character controller collision settings
-    createParameterControl(wheelGroup, 'characterController', 'enableAutostep', 'Enable Autostep', 0, 1, 1);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepHeight', 'Autostep Height', 0.1, 0.5, 0.05);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepWidth', 'Autostep Width', 0.1, 0.5, 0.05);
+    // Wheel settings
+    createParameterControl(wheelGroup, 'wheels', 'friction', 'Wheel Friction', 0.1, 2.0, 0.1);
+    createParameterControl(wheelGroup, 'wheels', 'suspensionStiffness', 'Suspension Stiffness', 1.0, 30.0, 1.0);
 }
 
 // Setup physics parameter buttons
 function setupPhysicsButtons() {
+    // Get button elements
+    const resetButton = document.getElementById('reset-physics');
+    const closeButton = document.getElementById('close-physics-panel');
+    
+    // Add error handling
+    if (!resetButton) {
+        console.error('Reset physics button not found');
+        return;
+    }
+    
     // Reset button
-    document.getElementById('reset-physics').addEventListener('click', () => {
+    resetButton.addEventListener('click', () => {
+        // Check if defaultPhysicsParams exists
+        if (!defaultPhysicsParams) {
+            console.error('Default physics parameters not found');
+            return;
+        }
+        
         // Reset to default values
         physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
         
@@ -1223,6 +1338,13 @@ function setupPhysicsButtons() {
         // Apply changes
         applyPhysicsChanges();
     });
+    
+    // Close button
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            togglePhysicsPanel();
+        });
+    }
 }
 
 // Update a specific physics parameter
@@ -1249,20 +1371,43 @@ function updateAllParameterControls() {
         const param = input.dataset.param;
         
         if (group && param) {
-            // Handle nested properties
-            let value;
-            if (param.includes('.')) {
-                const parts = param.split('.');
-                let obj = physicsParams[group];
-                for (let i = 0; i < parts.length; i++) {
-                    obj = obj[parts[i]];
+            try {
+                // Check if the group exists
+                if (!physicsParams[group]) {
+                    console.warn(`Group ${group} not found in physicsParams`);
+                    return;
                 }
-                value = obj;
-            } else {
-                value = physicsParams[group][param];
+                
+                // Handle nested properties
+                let value;
+                if (param.includes('.')) {
+                    const parts = param.split('.');
+                    let obj = physicsParams[group];
+                    
+                    // Navigate through the object hierarchy
+                    for (let i = 0; i < parts.length && obj !== undefined; i++) {
+                        obj = obj[parts[i]];
+                    }
+                    value = obj;
+                } else {
+                    value = physicsParams[group][param];
+                }
+                
+                // Only update if value is defined
+                if (value !== undefined) {
+                    input.value = value;
+                    
+                    // Update the value display if it exists
+                    const valueDisplay = input.nextElementSibling;
+                    if (valueDisplay && valueDisplay.classList.contains('value-display')) {
+                        valueDisplay.textContent = value.toFixed(2);
+                    }
+                } else {
+                    console.warn(`Parameter ${param} not found in group ${group}`);
+                }
+            } catch (error) {
+                console.error(`Error updating parameter control (${group}.${param}):`, error);
             }
-            
-            input.value = value;
         }
     });
 }
@@ -1445,13 +1590,7 @@ function createCarPhysics(world, rapier, position, config) {
     };
 }
 
-/**
- * Initialize the stats overlay
- */
-function initStatsOverlay() {
-    // Call the domUtils initStatsOverlay function
-    domInitStatsOverlay();
-}
+// The initStatsOverlay function has been replaced with direct calls to initStatsOverlayUI
 
 // Update removePhysicsDebugObjects to use the renamed import
 function removePhysicsDebugObjects() {
@@ -1477,24 +1616,6 @@ function removePhysicsDebugObjects() {
     
     // Then call the physicsUI function to remove DOM elements
     physicsUIRemoveDebugObjects();
-}
-
-/**
- * Add a player to the player list in the UI
- * @param {string} id - Player ID
- * @param {string} name - Player name
- * @param {string} color - Player color (CSS color)
- */
-function addPlayerToList(id, name, color) {
-    domAddPlayerToList(id, name, color);
-}
-
-/**
- * Switch between different screens (lobby, game, etc.)
- * @param {string} screenName - Name of the screen to show
- */
-function showScreen(screenName) {
-    domShowScreen(screenName);
 }
 
 /**

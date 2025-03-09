@@ -1,0 +1,203 @@
+// Import core DOM utilities
+import {
+    getElement,
+    addClass,
+    removeClass,
+    toggleClass,
+    createElement,
+    on,
+    setText
+} from './domUtils.js';
+
+// Import player UI utilities
+import {
+    addPlayerToList,
+    removePlayerFromList,
+    updatePlayerName,
+    updatePlayerColor
+} from './playerUI.js';
+
+// Import screen management utilities
+import {
+    setActiveScreen,
+    showLobbyScreen,
+    showGameScreen,
+    updateRoomDisplay,
+    generateRoomQRCode
+} from './screenManager.js';
+
+// Import stats UI utilities
+import {
+    initStatsOverlay,
+    updateStatsDisplay,
+    toggleStatsDisplay,
+    formatStatsHTML
+} from './statsUI.js';
+
+// Import UI styles
+import {
+    initAllStyles
+} from './uiStyles.js';
+
+// Other game-specific imports
+import { GAME_UPDATE_INTERVAL, PHYSICS_TIMESTEP } from './constants.js';
+import gameStateManager, { getGameState /* other imports */ } from './gameState.js';
+import * as THREE from 'three';
+
+// Get the game state for direct access
+const gameState = getGameState();
+
+// DOM elements (can be refactored to use getElement directly)
+let elements = {};
+
+// Wait for DOM to be fully loaded before setting up event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize all styles
+    initAllStyles();
+    
+    // Initialize DOM elements
+    elements = {
+        startGameBtn: getElement('start-game-btn'),
+        // ... other elements
+    };
+    
+    // Initialize UI components
+    initStatsOverlay();
+    
+    // Add event listener for start game button
+    on(elements.startGameBtn, 'click', startGame);
+    
+    // Add keyboard event listener for F3/F4 keys
+    on(document, 'keydown', (e) => {
+        // Toggle stats display (F3)
+        if (e.key === 'F3' || e.key === 'f3') {
+            toggleStatsDisplay();
+            console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
+        }
+        
+        // Toggle physics debug (F4)
+        if (e.key === 'F4' || e.key === 'f4') {
+            // Call physics debug toggle here
+            // ...
+        }
+    });
+    
+    // Show the lobby screen initially
+    showLobbyScreen();
+});
+
+/**
+ * Create a new game room
+ */
+function createRoom() {
+    // Request room creation from server
+    socket.emit('create_room', {}, (response) => {
+        const { room_code } = response;
+        
+        // Update game state
+        setRoomCode(room_code);
+        
+        // Update UI with the room code
+        updateRoomDisplay(room_code);
+        
+        // Generate QR code for the room
+        generateRoomQRCode(room_code);
+        
+        console.log(`Room created with code: ${room_code}`);
+    });
+}
+
+/**
+ * Start the game when the host clicks "Start Game"
+ */
+function startGame() {
+    socket.emit('start_game', {}, (response) => {
+        if (response.success) {
+            // Update game state
+            setGameActive(true);
+            
+            // Show the game screen
+            showGameScreen();
+            
+            // Initialize game
+            initGame();
+            
+            console.log('Game started');
+        } else {
+            console.error('Failed to start game:', response.error);
+        }
+    });
+}
+
+/**
+ * Game loop - called every frame
+ */
+function gameLoop(timestamp) {
+    if (!gameState.gameActive) return;
+    
+    // Calculate delta time for smooth animations
+    const deltaTime = timestamp - gameState.lastTimestamp || 0;
+    gameState.lastTimestamp = timestamp;
+    
+    // Update FPS
+    updateFPS(timestamp);
+    
+    // Update stats display if enabled
+    if (gameState.showStats) {
+        updateStatsDisplay(formatStatsHTML({
+            fps: gameState.fps,
+            playerCount: Object.keys(gameState.players).length,
+            physicsUpdates: gameState.debugCounters.physicsUpdate,
+            cars: gameState.cars,
+            // Add other stats as needed
+        }));
+    }
+    
+    // Game physics and rendering logic
+    // ...
+    
+    // Request next frame
+    requestAnimationFrame(gameLoop);
+}
+
+// ... other game functions
+
+/**
+ * Socket event handler for when a player joins
+ */
+function handlePlayerJoined(data) {
+    const { id, name, car_color } = data;
+    
+    // Add player to game state
+    addPlayer(id, {
+        name: name,
+        carColor: car_color
+    });
+    
+    // Add player to UI
+    addPlayerToList(id, name, car_color);
+    
+    // Update UI elements
+    elements.startGameBtn.disabled = Object.keys(gameState.players).length === 0;
+    
+    console.log(`Player joined: ${name} (${id})`);
+}
+
+/**
+ * Socket event handler for when a player changes their name
+ */
+function handlePlayerNameUpdate(data) {
+    const { player_id, name } = data;
+    
+    // Update player in game state
+    if (gameState.players[player_id]) {
+        updatePlayer(player_id, { name: name });
+        
+        // Update player in UI
+        updatePlayerName(player_id, name);
+        
+        console.log(`Player ${player_id} changed name to ${name}`);
+    }
+}
+
+// ... more socket handlers and game functions 

@@ -51,8 +51,71 @@ export function setupPhysicsParametersPanel(config, updateCallback) {
     const tabsContainer = createElement('div', { className: 'tabs-container' });
     const tabsContent = createElement('div', { className: 'tabs-content' });
     
+    // Create the tab buttons
+    const carTab = createElement('button', { className: 'tab-button active', 'data-tab': 'car-params' }, 'Car');
+    const worldTab = createElement('button', { className: 'tab-button', 'data-tab': 'world-params' }, 'World');
+    const wheelsTab = createElement('button', { className: 'tab-button', 'data-tab': 'wheels-params' }, 'Wheels');
+    
+    tabsContainer.appendChild(carTab);
+    tabsContainer.appendChild(worldTab);
+    tabsContainer.appendChild(wheelsTab);
+    
+    // Create the tab content containers
+    const carParams = createElement('div', { id: 'car-params', className: 'tab-content active' });
+    const worldParams = createElement('div', { id: 'world-params', className: 'tab-content' });
+    const wheelsParams = createElement('div', { id: 'wheels-params', className: 'tab-content' });
+    
+    // Create parameter groups inside each tab
+    // Car parameters - two groups: body and movement
+    const carBodyGroup = createElement('div', { className: 'params-group' });
+    const carBodyHeading = createElement('h4', {}, 'Car Body');
+    carBodyGroup.appendChild(carBodyHeading);
+    
+    const movementGroup = createElement('div', { className: 'params-group' });
+    const movementHeading = createElement('h4', {}, 'Movement');
+    movementGroup.appendChild(movementHeading);
+    
+    carParams.appendChild(carBodyGroup);
+    carParams.appendChild(movementGroup);
+    
+    // World parameters - one group
+    const worldGroup = createElement('div', { className: 'params-group' });
+    const worldHeading = createElement('h4', {}, 'World Physics');
+    worldGroup.appendChild(worldHeading);
+    worldParams.appendChild(worldGroup);
+    
+    // Wheels parameters - one group
+    const wheelsGroup = createElement('div', { className: 'params-group' });
+    const wheelsHeading = createElement('h4', {}, 'Wheel Properties');
+    wheelsGroup.appendChild(wheelsHeading);
+    wheelsParams.appendChild(wheelsGroup);
+    
+    // Add the tab contents to the container
+    tabsContent.appendChild(carParams);
+    tabsContent.appendChild(worldParams);
+    tabsContent.appendChild(wheelsParams);
+    
+    // Create buttons container at the bottom of the panel
+    const buttonsContainer = createElement('div', { className: 'buttons-container' });
+    
+    // Add reset button
+    const resetButton = createElement('button', { 
+        id: 'reset-physics', 
+        className: 'physics-button'
+    }, 'Reset to Defaults');
+    
+    // Add close button
+    const closeButton = createElement('button', { 
+        id: 'close-physics-panel', 
+        className: 'physics-button'
+    }, 'Close');
+    
+    buttonsContainer.appendChild(resetButton);
+    buttonsContainer.appendChild(closeButton);
+    
     panel.appendChild(tabsContainer);
     panel.appendChild(tabsContent);
+    panel.appendChild(buttonsContainer);
     
     if (gameScreen) {
         gameScreen.appendChild(panel);
