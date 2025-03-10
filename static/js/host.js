@@ -468,7 +468,7 @@ function initGame() {
         }
         
         // Start game loop
-        gameLoop();
+        requestAnimationFrame(gameLoopWithoutRecursion);
     });
     
     // Initial render
@@ -504,7 +504,7 @@ function initGame() {
     
     isInitializing = false;
 }
-
+//TODO: move to trackBuilder.js or remove if duped
 function createRaceTrack() {
     console.log('Creating race track');
     // Create a simple oval track
@@ -575,7 +575,7 @@ function createRaceTrack() {
     
     return track;
 }
-
+//TODO: move to carModel.js
 function createPlayerCar(playerId, carColor) {
     // Remove existing car if it exists
     if (gameState.cars[playerId]) {
@@ -605,15 +605,15 @@ function createPlayerCar(playerId, carColor) {
     const color = carColor || "#FF0000";
     
     // Set starting position
-    const startPosition = { x: 0, y: 1.5, z: -20 }; // Lower height for character controller
+    const startPosition = { x: 0, y: 20, z: -20 }; // Lower height for character controller
     
     // Set car dimensions
     const carDimensions = {
-        width: 2.0,
-        height: 1.0,
-        length: 4.0,
-        wheelRadius: 0.5,
-        wheelWidth: 0.4
+        width: 3.0,
+        height: 2.0,
+        length: 6.0,
+        wheelRadius: 1.0,
+        wheelWidth: 0.8
     };
     
     // Create car mesh
@@ -724,7 +724,7 @@ function createPlayerCar(playerId, carColor) {
     return gameState.cars[playerId];
 }
 
-// Initialize physics with Rapier
+//TODO: move to rapierPhysics.js or remove if duped
 async function initPhysics() {
     // Check if rapierPhysics is available
     if (typeof rapierPhysics !== 'undefined') {
@@ -757,7 +757,7 @@ async function initPhysics() {
     }
 }
 
-// Create ground collider for physics simulation
+//TODO: move to trackBuilder.js or remove if duped
 function createGroundCollider(world, rapier) {
     // Create a fixed rigid body for the ground
     const groundBodyDesc = rapier.RigidBodyDesc.fixed();
@@ -782,7 +782,7 @@ function createGroundCollider(world, rapier) {
     return groundCollider;
 }
 
-// Create walls around the track
+//TODO: move to trackBuilder.js or remove if duped
 function createTrackWalls(world, rapier) {
     // Only create walls if we have a track defined
     if (!gameState.track) {
@@ -934,12 +934,6 @@ function gameLoopWithoutRecursion(timestamp) {
     gameState.renderer.render(gameState.scene, gameState.camera);
     
     // Request next frame
-    requestAnimationFrame(gameLoopWithoutRecursion);
-}
-
-// Modify the existing gameLoop function to use the new gameLoopWithoutRecursion function
-function gameLoop() {
-    // Start the non-recursive game loop
     requestAnimationFrame(gameLoopWithoutRecursion);
 }
 
@@ -1388,7 +1382,8 @@ function applyPhysicsChanges() {
 //TODO: move to physicsUI.js or remove if duped
 window.applyPhysicsChanges = applyPhysicsChanges;
 
-// Update car controller configuration with current parameters
+//TODO: Refactor this function to set the physics on the car more elegantly
+//I Never should have accepted this garbage from claude. My bad
 function updateCarControllerConfig(carBody) {
     if (!carBody) {
         console.error('Car body is null or undefined');
@@ -1483,9 +1478,7 @@ function updateWorldPhysics(world) {
     }
 }
 
-/**
- * Toggle stats display
- */
+//TODO: move to statsUI.js or remove if duped
 function toggleStatsDisplay() {
     // Toggle the state in gameState
     toggleStats();
@@ -1502,6 +1495,7 @@ function toggleStatsDisplay() {
     console.log("Stats display toggled:", isVisible);
 }
 
+//TODO: move to physicsUI.js or remove if duped
 function togglePhysicsDebugDisplay() {
     // Toggle the state in gameState
     togglePhysicsDebug();
