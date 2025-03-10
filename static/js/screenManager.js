@@ -100,17 +100,35 @@ export function showGameScreen() {
  * Update the displayed room code and join URL
  * @param {string} roomCode - Room code to display
  */
-export function updateRoomDisplay(roomCode) {
+export function updateRoomDisplay(roomCode, ip, port) {
     const roomCodeDisplay = getElement('room-code-display');
     if (roomCodeDisplay) {
         roomCodeDisplay.textContent = roomCode;
     }
+
+    const joinUrl = `http://${ip}:${port}/player`;
+    // elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
     
-    const joinUrl = getElement('join-url');
-    if (joinUrl) {
-        const url = `${window.location.origin}/join?room=${roomCode}`;
-        joinUrl.href = url;
-        joinUrl.textContent = url;
+    
+    
+    const joinUrlElement = getElement('join-url');
+
+    if (joinUrlElement) {
+        const url = `${joinUrl}?room=${roomCode}`;
+        
+        // The actual text will be set by the debug mode handler
+        joinUrlElement.setAttribute('data-url', url);
+        
+        // If debug mode is enabled, make the URL clickable
+        if (window.isDebugMode) {
+            console.warn("Debug mode is enabled");
+            joinUrlElement.innerHTML = `<a href="${url}" onclick="window.open(this.href, '_new', 'width=800,height=600'); return false;">${url}</a>`;
+        } else {    
+            joinUrlElement.textContent = url;
+        }
+        
+    } else {
+        console.error("Join URL element not found");
     }
 }
 

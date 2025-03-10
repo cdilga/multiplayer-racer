@@ -149,8 +149,23 @@ let elements = {};
 // Socket placeholder
 let socket;
 
+window.isDebugMode = false;
 // Wait for DOM to be fully loaded before setting up event listeners
 document.addEventListener('DOMContentLoaded', () => {
+        
+    // Also check URL parameters and path
+    if (!window.isDebugMode) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathIncludesDebug = window.location.pathname.includes('/debug');
+        window.isDebugMode = urlParams.has('debug') || pathIncludesDebug;
+    }
+    
+    if (window.isDebugMode) {
+        console.warn(`Debug mode: ${window.isDebugMode ? 'ON' : 'OFF'}`);
+        document.body.classList.add('debug-mode');
+    }
+    
+
     // Initialize DOM elements
     elements = {
         lobbyScreen: getElement('lobby-screen'),
@@ -167,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add event listener for start game button
     if (elements.startGameBtn) {
-        elements.startGameBtn.addEventListener('click', startGame);
+        elements.startGameBtn.addEventListener('click', initGame);
     }
     
     // Initialize socket connection
@@ -196,10 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
             port = window.serverConfig.port;
         }
         
-        // Update join URL with local IP instead of localhost
-        const joinUrl = `http://${ipAddress}:${port}/player`;
-        elements.joinUrl.textContent = `${joinUrl}?room=${gameState.roomCode}`;
-        
+        updateRoomDisplay(gameState.roomCode, ipAddress, port);
+
         // Load QR code image
         const qrCodeUrl = `/qrcode/${gameState.roomCode}`;
 
@@ -336,6 +349,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add keyboard event listener for F3/F4 keys
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'F2') {
+            
+            // Get the physics panel
+            const panel = document.getElementById('physics-params-panel');
+            if (!panel) {
+                console.error('Physics panel not found in DOM');
+                return;
+            }
+            
+            // Toggle the 'visible' class
+            const isVisible = panel.classList.toggle('visible');
+            
+            event.preventDefault();
+        }
         // Toggle stats display (F3)
         if (e.key === 'F3' || e.key === 'f3') {
             toggleStatsDisplay();
@@ -359,51 +386,17 @@ function createRoom() {
     socket.emit('create_room', {});
 }
 
-function startGame() {
-    if (gameState.roomCode && Object.keys(gameState.players).length > 0) {
-        socket.emit('start_game', { room_code: gameState.roomCode });
-        showGameScreen();
-        setGameActive(true);
-        initGame();
-    }
-}
-
 // Three.js game initialization
 let isInitializing = false; // Flag to prevent multiple initializations
 let animationRequestId = null; // Track the animation frame request
 
-/**
- * Set up the F2 key listener for toggling the physics panel
- */
-function setupPhysicsKeyListener() {
-    if (window.physicsKeyListenerAdded) {
-        console.error('F2 key listener already added');
-        return;
-    }
-    
-    
-    document.addEventListener('keydown', function(event) {
-        // F2 key to toggle physics panel
-        if (event.key === 'F2') {
-            
-            // Get the physics panel
-            const panel = document.getElementById('physics-params-panel');
-            if (!panel) {
-                console.error('Physics panel not found in DOM');
-                return;
-            }
-            
-            // Toggle the 'visible' class
-            const isVisible = panel.classList.toggle('visible');
-            
-            event.preventDefault();
-        }
-    });
-    
-    window.physicsKeyListenerAdded = true;
-}
-
 function initGame() {
+    if (gameState.roomCode && Object.keys(gameState.players).length > 0) {
+        socket.emit('start_game', { room_code: gameState.roomCode });
+        showGameScreen();
+    }
+
+    setGameActive(true);
     if (isInitializing) return;
     isInitializing = true;
     
@@ -418,9 +411,6 @@ function initGame() {
     
     // Initialize physics parameters panel
     initPhysicsParametersPanel();
-    
-    // Set up F2 key listener for physics panel
-    setupPhysicsKeyListener();
     
     // Initialize Three.js scene
     const scene = new THREE.Scene();
@@ -1196,95 +1186,6 @@ let physicsParams = {
 // Store original values for reset
 const defaultPhysicsParams = JSON.parse(JSON.stringify(physicsParams));
 
-// Presets for different physics behaviors
-const physicsPresets = {
-    default: JSON.parse(JSON.stringify(physicsParams)),
-    arcade: {
-        car: {
-            mass: 800.0,
-            linearDamping: 0.3,
-            angularDamping: 5.0,
-            enginePower: 2500.0,
-            brakeForce: 1800.0,
-            steeringResponse: 0.5,
-            maxSteeringAngle: 0.8,
-            steeringReturnSpeed: 4.0,
-            lateralGripFactor: 2.5,
-            rollingResistance: 0.1,
-            aerodynamicDrag: 0.3,
-            maxSpeedKmh: 120,
-            reverseMaxSpeedKmh: 40
-        },
-        world: {
-            gravity: { x: 0.0, y: -15.0, z: 0.0 }
-        },
-        wheels: {
-            frictionSlip: 6.0,
-            rearFrictionMultiplier: 1.2,
-            suspensionRestLength: 0.5,
-            suspensionStiffness: 20.0,
-            suspensionDamping: 2.5,
-            suspensionCompression: 0.4
-        }
-    },
-    simulation: {
-        car: {
-            mass: 1600.0,
-            linearDamping: 0.2,
-            angularDamping: 3.0,
-            enginePower: 1200.0,
-            brakeForce: 2500.0,
-            steeringResponse: 0.2,
-            maxSteeringAngle: 0.55,
-            steeringReturnSpeed: 2.5,
-            lateralGripFactor: 3.0,
-            rollingResistance: 0.2,
-            aerodynamicDrag: 0.7,
-            maxSpeedKmh: 70,
-            reverseMaxSpeedKmh: 25
-        },
-        world: {
-            gravity: { x: 0.0, y: -25.0, z: 0.0 }
-        },
-        wheels: {
-            frictionSlip: 4.0,
-            rearFrictionMultiplier: 1.0,
-            suspensionRestLength: 0.3,
-            suspensionStiffness: 30.0,
-            suspensionDamping: 4.5,
-            suspensionCompression: 0.6
-        }
-    },
-    drift: {
-        car: {
-            mass: 1000.0,
-            linearDamping: 0.3,
-            angularDamping: 2.0,
-            enginePower: 2000.0,
-            brakeForce: 1500.0,
-            steeringResponse: 0.4,
-            maxSteeringAngle: 0.7,
-            steeringReturnSpeed: 2.0,
-            lateralGripFactor: 1.0,
-            rollingResistance: 0.1,
-            aerodynamicDrag: 0.4,
-            maxSpeedKmh: 90,
-            reverseMaxSpeedKmh: 35
-        },
-        world: {
-            gravity: { x: 0.0, y: -18.0, z: 0.0 }
-        },
-        wheels: {
-            frictionSlip: 3.0,
-            rearFrictionMultiplier: 1.5,
-            suspensionRestLength: 0.45,
-            suspensionStiffness: 22.0,
-            suspensionDamping: 2.0,
-            suspensionCompression: 0.45
-        }
-    }
-};
-
 // Replace initPhysicsParametersPanel with a version that uses the existing panel
 function initPhysicsParametersPanel() {
     console.log('Initializing physics parameters panel');
@@ -1296,6 +1197,10 @@ function initPhysicsParametersPanel() {
         return;
     }
     
+    
+    console.log('Found existing physics panel in HTML');
+    
+        
     console.log('Found existing physics panel in HTML');
     
     // Create tabs for different parameter groups
@@ -1317,7 +1222,6 @@ function initPhysicsParametersPanel() {
         console.log('Parameter controls updated with delay');
     }, 1000);
     
-    console.log('Physics parameters panel initialized');
 }
 
 // Setup event listeners for the physics panel tabs
@@ -1358,11 +1262,6 @@ function setupTabSwitcher() {
     console.log('Tab switcher setup complete');
 }
 
-// Create a single parameter control row
-function createParameterControl(container, group, param, label, min, max, step) {
-    return physicsUICreateParameterControl(container, group, param, label, min, max, step, updatePhysicsParameter);
-}
-
 // Create UI controls for car parameters
 function createCarParametersUI() {
     const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
@@ -1374,20 +1273,20 @@ function createCarParametersUI() {
     }
     
     // Car body physics - add rectangular dimensions
-    createParameterControl(carBodyGroup, 'carBody', 'width', 'Width', 0.5, 3.0, 0.1);
-    createParameterControl(carBodyGroup, 'carBody', 'height', 'Height', 0.5, 2.0, 0.1);
-    createParameterControl(carBodyGroup, 'carBody', 'length', 'Length', 1.0, 5.0, 0.1);
+    physicsUICreateParameterControl(carBodyGroup, 'carBody', 'width', 'Width', 0.5, 3.0, 0.1);
+    physicsUICreateParameterControl(carBodyGroup, 'carBody', 'height', 'Height', 0.5, 2.0, 0.1);
+    physicsUICreateParameterControl(carBodyGroup, 'carBody', 'length', 'Length', 1.0, 5.0, 0.1);
     
     // Character controller settings
-    createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
+    physicsUICreateParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
+    physicsUICreateParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
+    physicsUICreateParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
     
     // Movement parameters
-    createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 50.0, 1.0);
-    createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 25.0, 1.0);
-    createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Speed', 0.05, 0.3, 0.01);
-    createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
+    physicsUICreateParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 50.0, 1.0);
+    physicsUICreateParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 25.0, 1.0);
+    physicsUICreateParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Speed', 0.05, 0.3, 0.01);
+    physicsUICreateParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
 
 // Create UI controls for world parameters
@@ -1399,8 +1298,8 @@ function createWorldParametersUI() {
     }
     
     // World physics
-    createParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
-    createParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
+    physicsUICreateParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
+    physicsUICreateParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
 }
 
 // Create UI controls for wheels parameters - now just basic character controller settings
@@ -1412,8 +1311,8 @@ function createWheelsParametersUI() {
     }
     
     // Wheel settings
-    createParameterControl(wheelGroup, 'wheels', 'friction', 'Wheel Friction', 0.1, 2.0, 0.1);
-    createParameterControl(wheelGroup, 'wheels', 'suspensionStiffness', 'Suspension Stiffness', 1.0, 30.0, 1.0);
+    physicsUICreateParameterControl(wheelGroup, 'wheels', 'friction', 'Wheel Friction', 0.1, 2.0, 0.1);
+    physicsUICreateParameterControl(wheelGroup, 'wheels', 'suspensionStiffness', 'Suspension Stiffness', 1.0, 30.0, 1.0);
 }
 
 // Setup physics parameter buttons
@@ -1476,21 +1375,6 @@ function setupPhysicsButtons() {
     }
     
     console.log('Physics buttons setup complete');
-}
-
-// Update a specific physics parameter
-function updatePhysicsParameter(group, param, value) {
-    // Handle nested properties (e.g., gravity.y)
-    if (param.includes('.')) {
-        const parts = param.split('.');
-        let obj = physicsParams[group];
-        for (let i = 0; i < parts.length - 1; i++) {
-            obj = obj[parts[i]];
-        }
-        obj[parts[parts.length - 1]] = value;
-    } else {
-        physicsParams[group][param] = value;
-    }
 }
 
 // Update all UI controls to match current parameter values
@@ -1853,63 +1737,4 @@ function updatePhysicsDebugVisualization() {
     } catch (error) {
         console.error('Error using Rapier debug render:', error);
     }
-}
-
-/**
- * Toggle physics panel visibility
- */
-function togglePhysicsPanel() {
-    console.log('Toggling physics panel');
-    
-    const panel = document.getElementById('physics-params-panel');
-    if (!panel) {
-        console.error('Physics panel not found in DOM');
-        return false;
-    }
-    
-    const isVisible = panel.classList.toggle('visible');
-    console.log('Physics panel is now ' + (isVisible ? 'visible' : 'hidden'));
-    
-    return isVisible;
-}
-
-/**
- * Reset a car to its starting position
- * @param {string} playerId - The player ID whose car should be reset
- */
-function resetCarPosition(playerId) {
-    const car = gameState.cars[playerId];
-    if (!car || !car.physicsBody) return;
-    
-    // Default start position if not stored
-    const startPosition = car.startPosition || { x: 0, y: 2, z: 0 };
-    const startRotation = car.startRotation || { x: 0, y: 0, z: 0, w: 1 };
-    
-    // Reset the car's position using rapierPhysics
-    rapierPhysics.resetCarPosition(
-        gameState.physics.world, 
-        car.physicsBody, 
-        startPosition, 
-        startRotation
-    );
-    
-    // Update the car mesh position to match physics
-    if (car.mesh) {
-        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
-        car.mesh.setRotationFromQuaternion(new THREE.Quaternion(
-            startRotation.x, startRotation.y, startRotation.z, startRotation.w
-        ));
-    }
-    
-    console.log(`Reset car position for player ${playerId}`);
-}
-
-/**
- * Reset all cars to their starting positions
- */
-function resetAllCars() {
-    Object.keys(gameState.cars).forEach(playerId => {
-        resetCarPosition(playerId);
-    });
-    console.log('Reset all cars');
 }
