@@ -52,7 +52,7 @@ import {
     createBarIndicator
 } from './domUtils.js';
 
-// Import playerUI.js for player-specific UI functionality
+//TODO: Looks like this didn't work, and should've never been imported here since playerUI.js should be for player.js
 import {
     addPlayerToList,
     removePlayerFromList,
@@ -90,20 +90,6 @@ import {
     createParameterControl as physicsUICreateParameterControl,
     addPhysicsDebugStyles 
 } from './physicsUI.js';
-
-// Helper function to create and add an arrow to the scene
-function drawArrow(direction, origin, length, color, headLength = 0.5, headWidth = 0.3) {
-    const arrow = new THREE.ArrowHelper(
-        direction,
-        origin,
-        length,
-        color,
-        headLength,
-        headWidth
-    );
-    gameState.scene.add(arrow);
-    return arrow;
-}
 
 /**
  * Update the control indicator UI to show current player controls
@@ -978,6 +964,7 @@ function onWindowResize() {
 /**
  * Update stats display with game state information
  */
+//TODO: Move this to statsUI.js or remove if duped
 function updateStatsDisplay() {
     if (!gameState.showStats) return;
     
@@ -999,6 +986,7 @@ function updateStatsDisplay() {
     updateStatsContent(formattedStats);
 }
 
+//TODO: Move this to rapierPhysics.js or the relevant controller file, or remove if duped
 // Function to ensure a car has a physics body
 function ensureCarHasPhysicsBody(playerId) {
     const car = gameState.cars[playerId];
@@ -1069,85 +1057,8 @@ function updateFullscreenButton() {
     domUpdateFullscreenButton(isFullscreen);
 }
 
-// Function to visualize forces applied to the car for debugging
-function visualizeAppliedForces() {
-    if (!gameState.showPhysicsDebug) return;
-    
-    // Remove any existing force visualization
-    if (gameState.forceVisualization) {
-        gameState.forceVisualization.forEach(arrow => {
-            if (arrow && gameState.scene) {
-                gameState.scene.remove(arrow);
-            }
-        });
-        gameState.forceVisualization = [];
-    } else {
-        gameState.forceVisualization = [];
-    }
-    
-    // Visualize forces on each car
-    Object.keys(gameState.cars).forEach(playerId => {
-        const car = gameState.cars[playerId];
-        if (!car || !car.physicsBody || !car.physicsBody.userData || !car.physicsBody.userData.lastAppliedForces) return;
-        
-        const forces = car.physicsBody.userData.lastAppliedForces;
-        const position = car.mesh.position.clone();
-        
-        try {
-            // Visualize engine force (forward/backward)
-            if (Math.abs(forces.engineForce) > 100) {
-                const engineDir = new THREE.Vector3(0, 0, -Math.sign(forces.engineForce));
-                engineDir.applyQuaternion(car.mesh.quaternion);
-                
-                const engineForceArrow = drawArrow(
-                    engineDir.normalize(),
-                    position.clone().add(new THREE.Vector3(0, 1.5, 0)),
-                    Math.min(Math.abs(forces.engineForce) / 1000, 5),
-                    0x00ff00, // Green
-                    0.5,
-                    0.3
-                );
-                gameState.forceVisualization.push(engineForceArrow);
-            }
-            
-            // Visualize brake force (always backward)
-            if (forces.brakeForce > 100) {
-                const brakeDir = new THREE.Vector3(0, 0, 1);
-                brakeDir.applyQuaternion(car.mesh.quaternion);
-                
-                const brakeForceArrow = drawArrow(
-                    brakeDir.normalize(),
-                    position.clone().add(new THREE.Vector3(0, 1.2, 0)),
-                    Math.min(forces.brakeForce / 1000, 5),
-                    0xff0000, // Red
-                    0.5,
-                    0.3
-                );
-                gameState.forceVisualization.push(brakeForceArrow);
-            }
-            
-            // Visualize lateral force (sideways)
-            if (Math.abs(forces.lateralForce) > 100) {
-                const lateralDir = new THREE.Vector3(Math.sign(forces.lateralForce), 0, 0);
-                lateralDir.applyQuaternion(car.mesh.quaternion);
-                
-                const lateralForceArrow = drawArrow(
-                    lateralDir.normalize(),
-                    position.clone().add(new THREE.Vector3(0, 0.9, 0)),
-                    Math.min(Math.abs(forces.lateralForce) / 500, 5),
-                    0x0000ff, // Blue
-                    0.5,
-                    0.3
-                );
-                gameState.forceVisualization.push(lateralForceArrow);
-            }
-        } catch (error) {
-            console.error('Error visualizing forces:', error);
-        }
-    });
-}
-
-// Global object to store physics parameters
+//TODO: move it to the rapierPhysics.js file or remove if duped
+// // Global object to store physics parameters
 let physicsParams = {
     car: {
         // Movement
@@ -1186,7 +1097,7 @@ let physicsParams = {
 // Store original values for reset
 const defaultPhysicsParams = JSON.parse(JSON.stringify(physicsParams));
 
-// Replace initPhysicsParametersPanel with a version that uses the existing panel
+//TODO: move to physicsUI.js or remove if duped
 function initPhysicsParametersPanel() {
     console.log('Initializing physics parameters panel');
     
@@ -1224,7 +1135,7 @@ function initPhysicsParametersPanel() {
     
 }
 
-// Setup event listeners for the physics panel tabs
+//TODO: move to physicsUI.js or remove if duped
 function setupTabSwitcher() {
     console.log('Setting up tab switcher for physics panel');
     
@@ -1262,7 +1173,7 @@ function setupTabSwitcher() {
     console.log('Tab switcher setup complete');
 }
 
-// Create UI controls for car parameters
+//TODO: move to physicsUI.js or remove if duped
 function createCarParametersUI() {
     const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
     const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
@@ -1289,7 +1200,7 @@ function createCarParametersUI() {
     physicsUICreateParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
 
-// Create UI controls for world parameters
+//TODO: move to physicsUI.js or remove if duped
 function createWorldParametersUI() {
     const worldGroup = document.querySelector('#world-params .params-group');
     if (!worldGroup) {
@@ -1302,7 +1213,7 @@ function createWorldParametersUI() {
     physicsUICreateParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
 }
 
-// Create UI controls for wheels parameters - now just basic character controller settings
+//TODO: move to physicsUI.js or remove if duped
 function createWheelsParametersUI() {
     const wheelGroup = document.querySelector('#wheels-params .params-group');
     if (!wheelGroup) {
@@ -1315,7 +1226,7 @@ function createWheelsParametersUI() {
     physicsUICreateParameterControl(wheelGroup, 'wheels', 'suspensionStiffness', 'Suspension Stiffness', 1.0, 30.0, 1.0);
 }
 
-// Setup physics parameter buttons
+//TODO: move to physicsUI.js or remove if duped
 function setupPhysicsButtons() {
     console.log('Setting up physics buttons');
     
@@ -1377,7 +1288,7 @@ function setupPhysicsButtons() {
     console.log('Physics buttons setup complete');
 }
 
-// Update all UI controls to match current parameter values
+//TODO: move to physicsUI.js or remove if duped
 function updateAllParameterControls() {
     console.log('Updating all parameter controls with current values');
     const inputs = document.querySelectorAll('#physics-params-panel input');
@@ -1447,7 +1358,7 @@ function updateAllParameterControls() {
     console.log('All parameter controls updated');
 }
 
-// Apply physics changes to active car bodies (now using character controller)
+//TODO: move to physicsUI.js or remove if duped
 function applyPhysicsChanges() {
     try {
         // Apply changes to world physics
@@ -1474,7 +1385,7 @@ function applyPhysicsChanges() {
     }
 }
 
-// Make applyPhysicsChanges available globally
+//TODO: move to physicsUI.js or remove if duped
 window.applyPhysicsChanges = applyPhysicsChanges;
 
 // Update car controller configuration with current parameters
@@ -1560,7 +1471,7 @@ function updateCarControllerConfig(carBody) {
     }
 }
 
-// Update world physics
+//TODO remove this 
 function updateWorldPhysics(world) {
     if (!world || typeof world.setGravity !== 'function') return;
     
@@ -1614,6 +1525,7 @@ function togglePhysicsDebugDisplay() {
     console.log(`Physics debug: ${gameState.showPhysicsDebug ? 'ON' : 'OFF'}`);
 }
 
+//TODO: move to rapierPhysics.js or carKinematicController.js or remove if duped
 function createCarPhysics(world, rapier, position, config) {
     // Create car physics using the CarKinematicController
     const carBody = CarKinematicController.createCarController(
@@ -1642,7 +1554,7 @@ function createCarPhysics(world, rapier, position, config) {
 
 // The initStatsOverlay function has been replaced with direct calls to initStatsOverlayUI
 
-// Update removePhysicsDebugObjects to use the renamed import
+// TODO: move to physicsUI.js or remove if duped
 function removePhysicsDebugObjects() {
     // First remove any THREE.js objects from the scene
     if (gameState.physicsDebugObjects && gameState.physicsDebugObjects.length > 0) {
@@ -1668,9 +1580,7 @@ function removePhysicsDebugObjects() {
     physicsUIRemoveDebugObjects();
 }
 
-/**
- * Update or create physics debug visualization
- */
+//TODO: move to physicsUI.js or remove if duped
 function updatePhysicsDebugVisualization() {
     if (!gameState.physics.initialized || !gameState.physics.world) return;
     
