@@ -291,6 +291,62 @@ export function addPhysicsDebugStyles() {
 // Call this when the module is loaded to ensure styles are available
 addPhysicsDebugStyles();
 
+/**
+ * Remove THREE.js physics debug objects from the scene and dispose of resources
+ * @param {Array} debugObjects - Array of debug objects to remove
+ */
+export function removePhysicsDebugMeshes(debugObjects) {
+    if (!debugObjects || !Array.isArray(debugObjects)) return;
+    
+    // Remove all debug objects from scene and dispose of geometries/materials
+    debugObjects.forEach(obj => {
+        if (!obj) return;
+        
+        // Remove from parent (scene)
+        if (obj.parent) {
+            obj.parent.remove(obj);
+        }
+        
+        // Dispose of geometry and materials to prevent memory leaks
+        if (obj.geometry) {
+            obj.geometry.dispose();
+        }
+        
+        if (obj.material) {
+            if (Array.isArray(obj.material)) {
+                obj.material.forEach(material => material.dispose());
+            } else {
+                obj.material.dispose();
+            }
+        }
+        
+        // If it's a group, recursively remove all children
+        if (obj.children && obj.children.length > 0) {
+            // Create a copy of the children array since it will be modified during removal
+            const children = [...obj.children];
+            children.forEach(child => {
+                obj.remove(child);
+                
+                // Dispose of geometry and materials
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(material => material.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            });
+        }
+    });
+    
+    // Clear the array
+    debugObjects.length = 0;
+}
+
 // Export all physics UI functions
 export default {
     createPhysicsDebugContainer,
@@ -298,5 +354,6 @@ export default {
     setupPhysicsParametersPanel,
     togglePhysicsPanel,
     createParameterControl,
-    addPhysicsDebugStyles
+    addPhysicsDebugStyles,
+    removePhysicsDebugMeshes
 }; 

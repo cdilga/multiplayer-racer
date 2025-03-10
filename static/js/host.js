@@ -71,19 +71,15 @@ import {
 import {
     initStatsOverlay as initStatsOverlayUI,
     updateStatsDisplay as updateStatsContent,
-    toggleStatsDisplay as toggleStatsUI
+    toggleStatsDisplay as toggleStatsUI,
+    formatStatsDisplay,
+    collectBasicStats
 } from './statsUI.js';
 
 // Import uiStyles.js for styling
 import {
     initAllStyles
 } from './uiStyles.js';
-
-// Import the statsManager module if still needed
-import { 
-    formatStatsDisplay, 
-    collectBasicStats 
-} from './statsManager.js';
 
 // Import the new physicsUI module
 import { 
@@ -342,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         // Toggle stats display (F3)
         if (e.key === 'F3' || e.key === 'f3') {
-            toggleStatsUI();
+            toggleStatsDisplay();
         }
         
         // Toggle physics debug (F4)
@@ -929,21 +925,30 @@ function onWindowResize() {
 function updateStatsDisplay() {
     if (!gameState.showStats) return;
     
+    // Get the current game state
+    const currentGameState = getGameState();
+    
+    // Debug car controls data
+    const carKeys = Object.keys(currentGameState.cars);
+    if (carKeys.length > 0) {
+        const firstCarId = carKeys[0];
+        const firstCar = currentGameState.cars[firstCarId];
+        console.log("First car data:", {
+            hasControls: !!firstCar.controls,
+            controls: firstCar.controls,
+            hasPhysicsBody: !!firstCar.physicsBody,
+            hasForces: firstCar.physicsBody && 
+                        firstCar.physicsBody.userData && 
+                        !!firstCar.physicsBody.userData.lastAppliedForces
+        });
+    }
+    
     // Collect basic stats from game state
-    const stats = {
-        fps: gameState.fps,
-        physicsUpdates: gameState.debugCounters.physicsUpdate,
-        controlsUpdates: gameState.debugCounters.controlsUpdate,
-        debugLines: gameState.debugCounters.physicsDebugLines,
-        playerCount: Object.keys(gameState.players).length,
-        carCount: Object.keys(gameState.cars).length,
-        physicsStatus: gameState.physics.usingRapier ? 'Active' : 'Unavailable',
-        rapierLoaded: window.rapierLoaded ? 'Yes' : 'No',
-        physicsDebug: gameState.showPhysicsDebug ? 'ON' : 'OFF'
-    };
+    const stats = collectBasicStats(currentGameState);
     
     // Format stats and update display
-    const formattedStats = formatStatsDisplay(stats, gameState);
+    const formattedStats = formatStatsDisplay(stats, currentGameState);
+    console.log("Stats display content:", formattedStats.substring(0, 100) + "...");
     updateStatsContent(formattedStats);
 }
 
@@ -1526,25 +1531,23 @@ initGame = function() {
     }
 };
 
+/**
+ * Toggle stats display
+ */
 function toggleStatsDisplay() {
     // Toggle the state in gameState
     toggleStats();
     
-    // Get the current stats overlay element
-    const statsOverlay = getElement('stats-overlay');
-    if (!statsOverlay) return;
+    // Call the imported toggleStatsUI function to handle the UI
+    const isVisible = toggleStatsUI(gameState.showStats);
     
-    // Show or hide based on the current state
-    if (gameState.showStats) {
-        statsOverlay.classList.remove('hidden');
-        
-        // Update the stats display immediately
+    // Update the stats display immediately if visible
+    if (isVisible) {
         updateStatsDisplay();
-    } else {
-        statsOverlay.classList.add('hidden');
     }
     
-    console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
+    // Log debug information
+    console.log("Stats display toggled:", isVisible);
 }
 
 function togglePhysicsDebugDisplay() {
@@ -1693,4 +1696,45 @@ function updatePhysicsDebugVisualization() {
 // Update the togglePhysicsPanel function
 function togglePhysicsPanel() {
     physicsUITogglePanel();
+}
+
+/**
+ * Reset a car to its starting position
+ * @param {string} playerId - The player ID whose car should be reset
+ */
+function resetCarPosition(playerId) {
+    const car = gameState.cars[playerId];
+    if (!car || !car.physicsBody) return;
+    
+    // Default start position if not stored
+    const startPosition = car.startPosition || { x: 0, y: 2, z: 0 };
+    const startRotation = car.startRotation || { x: 0, y: 0, z: 0, w: 1 };
+    
+    // Reset the car's position using rapierPhysics
+    rapierPhysics.resetCarPosition(
+        gameState.physics.world, 
+        car.physicsBody, 
+        startPosition, 
+        startRotation
+    );
+    
+    // Update the car mesh position to match physics
+    if (car.mesh) {
+        car.mesh.position.set(startPosition.x, startPosition.y, startPosition.z);
+        car.mesh.setRotationFromQuaternion(new THREE.Quaternion(
+            startRotation.x, startRotation.y, startRotation.z, startRotation.w
+        ));
+    }
+    
+    console.log(`Reset car position for player ${playerId}`);
+}
+
+/**
+ * Reset all cars to their starting positions
+ */
+function resetAllCars() {
+    Object.keys(gameState.cars).forEach(playerId => {
+        resetCarPosition(playerId);
+    });
+    console.log('Reset all cars');
 }
