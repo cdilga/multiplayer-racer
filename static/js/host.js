@@ -116,6 +116,7 @@ function drawArrow(direction, origin, length, color, headLength = 0.5, headWidth
  * @param {string} playerName - The name of the player
  */
 function updateControlIndicator(indicator, controls, playerName) {
+    console.error("updateControlIndicator is being used!")
     if (!indicator) return;
 
     // Update the indicator labels
