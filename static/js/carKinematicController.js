@@ -90,12 +90,14 @@ function createCarController(world, position, dimensions, userConfig = {}, rapie
         
         const carBody = world.createRigidBody(bodyDesc);
         
-        // Create collider for the car - use a capsule for better handling
-        const radius = Math.min(width, height) * 0.4;
-        const halfHeight = length * 0.35; // Shorter than half length for better handling
+        // Create collider for the car - use a cuboid (rectangular box) instead of capsule
+        // Half-extents are half the dimensions in each direction
+        const halfWidth = width * 0.5;
+        const halfHeight = height * 0.5;
+        const halfLength = length * 0.5;
         
-        const colliderDesc = rapier.ColliderDesc.capsule(halfHeight, radius)
-            .setTranslation(0, radius, 0);  // Lift capsule so bottom is at y=0
+        const colliderDesc = rapier.ColliderDesc.cuboid(halfWidth, halfHeight, halfLength)
+            .setTranslation(0, halfHeight, 0);  // Lift box so bottom is at y=0
         
         world.createCollider(colliderDesc, carBody);
         
@@ -120,7 +122,10 @@ function createCarController(world, position, dimensions, userConfig = {}, rapie
             },
             
             // Current orientation
-            rotation: { x: 0, y: 0, z: 0, w: 1 }
+            rotation: { x: 0, y: 0, z: 0, w: 1 },
+            
+            // Store dimensions for reference
+            dimensions: { width, height, length }
         };
         
         debugLog(config, "Created car kinematic controller successfully");
@@ -172,12 +177,16 @@ function updateCarController(carBody, controls, deltaTime = 1/60) {
     // Calculate velocity based on acceleration/braking
     let targetSpeed = 0;
     
+    // Make sure we're using the latest config values
+    const forwardSpeed = config.forwardSpeed || defaultConfig.forwardSpeed;
+    const reverseSpeed = config.reverseSpeed || defaultConfig.reverseSpeed;
+    
     if (acceleration > 0.1) {
         // Forward movement
-        targetSpeed = acceleration * config.forwardSpeed;
+        targetSpeed = acceleration * forwardSpeed;
     } else if (braking > 0.1) {
         // Reverse movement
-        targetSpeed = -braking * config.reverseSpeed;
+        targetSpeed = -braking * reverseSpeed;
     }
     
     // Apply gravity 
@@ -485,16 +494,133 @@ function syncCarModelWithKinematics(carBody, carMesh, wheelMeshes = []) {
     }
 }
 
-// Export the functions
-export { 
-    createCarController, 
-    updateCarController, 
-    syncCarModelWithKinematics 
-};
+/**
+ * Update the car's dimensions at runtime
+ * 
+ * @param {Object} carBody - The car rigid body
+ * @param {Object} dimensions - New dimensions {width, height, length}
+ * @param {Object} world - Rapier physics world
+ * @param {Object} rapier - Rapier physics instance
+ * @returns {boolean} Success status
+ */
+function updateCarDimensions(carBody, dimensions, world, rapier) {
+    if (!carBody || !dimensions || !world || !rapier) {
+        console.error('Missing required parameters for updateCarDimensions');
+        return false;
+    }
+    
+    try {
+        // Get current position and rotation
+        const position = carBody.translation();
+        const rotation = carBody.rotation();
+        
+        // Store current userData
+        const userData = carBody.userData;
+        
+        // Remove existing collider
+        if (carBody.numColliders() > 0) {
+            world.removeCollider(carBody.collider(0), true);
+        }
+        
+        // Create new collider with updated dimensions
+        const { width, height, length } = dimensions;
+        
+        // Half-extents are half the dimensions in each direction
+        const halfWidth = width * 0.5;
+        const halfHeight = height * 0.5;
+        const halfLength = length * 0.5;
+        
+        const colliderDesc = rapier.ColliderDesc.cuboid(halfWidth, halfHeight, halfLength)
+            .setTranslation(0, halfHeight, 0);  // Lift box so bottom is at y=0
+        
+        world.createCollider(colliderDesc, carBody);
+        
+        // Update dimensions in userData
+        if (userData) {
+            userData.dimensions = { width, height, length };
+        }
+        
+        debugLog(userData?.config, "Updated car dimensions successfully");
+        return true;
+    } catch (error) {
+        console.error('Error updating car dimensions:', error);
+        return false;
+    }
+}
+
+/**
+ * Update the car's movement parameters at runtime
+ * 
+ * @param {Object} carBody - The car rigid body
+ * @param {string} param - Parameter name to update
+ * @param {number} value - New value for the parameter
+ * @returns {boolean} Success status
+ */
+function updateCarMovementParams(carBody, param, value) {
+    if (!carBody || !carBody.userData || !carBody.userData.config) {
+        console.error('Invalid car body or missing config for updateCarMovementParams');
+        return false;
+    }
+    
+    try {
+        const config = carBody.userData.config;
+        
+        // Log the current value
+        console.log(`Updating car movement parameter ${param} from ${config[param]} to ${value}`);
+        
+        // Update the specific parameter
+        switch (param) {
+            case 'forwardSpeed':
+                config.forwardSpeed = value;
+                break;
+            case 'reverseSpeed':
+                config.reverseSpeed = value;
+                break;
+            case 'maxSteeringAngle':
+                // Convert from degrees to radians if the input is in degrees
+                if (value > 1.0) {
+                    config.maxSteeringAngle = value * (Math.PI / 180);
+                } else {
+                    config.maxSteeringAngle = value;
+                }
+                break;
+            case 'steeringSpeed':
+                config.steeringSpeed = value;
+                break;
+            case 'steeringReturnSpeed':
+                config.steeringReturnSpeed = value;
+                break;
+            case 'gravity':
+                config.gravity = value;
+                break;
+            default:
+                console.warn(`Unknown movement parameter: ${param}`);
+                return false;
+        }
+        
+        // Log the updated config
+        console.log('Updated car config:', {
+            forwardSpeed: config.forwardSpeed,
+            reverseSpeed: config.reverseSpeed,
+            maxSteeringAngle: config.maxSteeringAngle,
+            steeringSpeed: config.steeringSpeed,
+            steeringReturnSpeed: config.steeringReturnSpeed,
+            gravity: config.gravity
+        });
+        
+        debugLog(config, `Updated car movement parameter ${param} to ${value}`);
+        return true;
+    } catch (error) {
+        console.error('Error updating car movement parameters:', error);
+        return false;
+    }
+}
 
 // Export as default
 export default {
     createCarController,
     updateCarController,
-    syncCarModelWithKinematics
+    syncCarModelWithKinematics,
+    updateCarDimensions,
+    updateCarMovementParams
 }; 

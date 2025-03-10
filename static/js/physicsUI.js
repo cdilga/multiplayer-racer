@@ -44,7 +44,7 @@ export function setupPhysicsParametersPanel(config, updateCallback) {
     // Create panel
     const panel = createElement('div', { 
         id: 'physics-params-panel',
-        className: 'physics-panel hidden'
+        className: 'physics-panel'
     });
     
     // Create tabs for parameters
@@ -71,9 +71,19 @@ export function setupPhysicsParametersPanel(config, updateCallback) {
     const carBodyHeading = createElement('h4', {}, 'Car Body');
     carBodyGroup.appendChild(carBodyHeading);
     
+    // Add rectangular dimensions controls to car body group
+    createParameterControl(carBodyGroup, 'carBody', 'width', 'Width', 0.5, 3.0, 0.1, updateCallback);
+    createParameterControl(carBodyGroup, 'carBody', 'height', 'Height', 0.5, 2.0, 0.1, updateCallback);
+    createParameterControl(carBodyGroup, 'carBody', 'length', 'Length', 1.0, 5.0, 0.1, updateCallback);
+    
     const movementGroup = createElement('div', { className: 'params-group' });
     const movementHeading = createElement('h4', {}, 'Movement');
     movementGroup.appendChild(movementHeading);
+    
+    // Add movement controls
+    createParameterControl(movementGroup, 'movement', 'forwardSpeed', 'Forward Speed', 1.0, 20.0, 0.5, updateCallback);
+    createParameterControl(movementGroup, 'movement', 'reverseSpeed', 'Reverse Speed', 1.0, 15.0, 0.5, updateCallback);
+    createParameterControl(movementGroup, 'movement', 'maxSteeringAngle', 'Steering Angle', 10, 60, 1, updateCallback);
     
     carParams.appendChild(carBodyGroup);
     carParams.appendChild(movementGroup);
@@ -131,10 +141,27 @@ export function setupPhysicsParametersPanel(config, updateCallback) {
  * @returns {boolean} Whether the panel is now visible
  */
 export function togglePhysicsPanel() {
-    const panel = getElement('physics-params-panel');
-    if (!panel) return false;
+    // Try to get the panel using getElement
+    let panel = getElement('physics-params-panel');
     
-    return toggleClass(panel, 'hidden');
+    // If not found, try direct DOM query as fallback
+    if (!panel) {
+        console.warn('Panel not found via getElement, trying direct DOM query');
+        panel = document.getElementById('physics-params-panel');
+    }
+    
+    if (!panel) {
+        console.error('Physics panel not found in DOM');
+        return false;
+    }
+    
+    console.log('Physics panel found, toggling visibility');
+    
+    // Toggle the 'visible' class instead of 'hidden' to match the CSS in host.css
+    const isVisible = panel.classList.toggle('visible');
+    console.log('Panel visibility toggled, isVisible:', isVisible);
+    
+    return isVisible;
 }
 
 /**
@@ -170,6 +197,11 @@ export function createParameterControl(container, group, param, label, min, max,
         valueDisplay.textContent = value.toFixed(2);
         if (onChange) {
             onChange(group, param, value);
+            
+            // Call applyPhysicsChanges if it exists in the window object
+            if (typeof window.applyPhysicsChanges === 'function') {
+                window.applyPhysicsChanges();
+            }
         }
     });
     
@@ -347,6 +379,130 @@ export function removePhysicsDebugMeshes(debugObjects) {
     debugObjects.length = 0;
 }
 
+/**
+ * Update car dimensions based on physics panel inputs
+ * @param {Object} carBody - The car rigid body
+ * @param {string} param - The parameter being changed (width, height, length)
+ * @param {number} value - The new value
+ * @param {Object} world - Rapier physics world
+ * @param {Object} rapier - Rapier physics instance
+ * @param {Function} updateCarDimensions - Function from carKinematicController to update dimensions
+ * @returns {boolean} Success status
+ */
+export function updateCarDimensionsFromPanel(carBody, param, value, world, rapier, updateCarDimensions) {
+    if (!carBody || !world || !rapier || !updateCarDimensions) {
+        console.error('Missing required parameters for updateCarDimensionsFromPanel');
+        return false;
+    }
+    
+    try {
+        // Get current dimensions from userData
+        const currentDimensions = carBody.userData?.dimensions || { width: 1.0, height: 0.5, length: 2.0 };
+        
+        // Create new dimensions object with the updated parameter
+        const newDimensions = { ...currentDimensions };
+        
+        // Update the specific dimension
+        if (param === 'width' || param === 'height' || param === 'length') {
+            newDimensions[param] = value;
+        } else {
+            console.warn(`Unknown dimension parameter: ${param}`);
+            return false;
+        }
+        
+        // Call the updateCarDimensions function
+        return updateCarDimensions(carBody, newDimensions, world, rapier);
+    } catch (error) {
+        console.error('Error updating car dimensions from panel:', error);
+        return false;
+    }
+}
+
+/**
+ * Initialize physics panel controls with current car data
+ * @param {Object} carBody - The car rigid body
+ * @returns {boolean} Success status
+ */
+export function initializePhysicsPanelWithCarData(carBody) {
+    if (!carBody || !carBody.userData) {
+        console.error('Invalid car body for initializing physics panel');
+        return false;
+    }
+    
+    try {
+        // Get current dimensions from userData
+        const dimensions = carBody.userData.dimensions || { width: 1.0, height: 0.5, length: 2.0 };
+        const config = carBody.userData.config || {};
+        
+        // Update dimension controls
+        updateControlValue('carBody', 'width', dimensions.width);
+        updateControlValue('carBody', 'height', dimensions.height);
+        updateControlValue('carBody', 'length', dimensions.length);
+        
+        // Update movement controls if they exist
+        if (config.forwardSpeed) {
+            updateControlValue('movement', 'forwardSpeed', config.forwardSpeed);
+        }
+        if (config.reverseSpeed) {
+            updateControlValue('movement', 'reverseSpeed', config.reverseSpeed);
+        }
+        if (config.maxSteeringAngle) {
+            // Convert from radians to a more UI-friendly value (0-100)
+            const steeringValue = config.maxSteeringAngle * (180 / Math.PI);
+            updateControlValue('movement', 'maxSteeringAngle', steeringValue);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error initializing physics panel with car data:', error);
+        return false;
+    }
+}
+
+/**
+ * Helper function to update a control value in the physics panel
+ * @param {string} group - Parameter group name
+ * @param {string} param - Parameter name
+ * @param {number} value - New value
+ */
+function updateControlValue(group, param, value) {
+    // Find the input element
+    const input = document.querySelector(`input[data-group="${group}"][data-param="${param}"]`);
+    if (!input) return;
+    
+    // Update the input value
+    input.value = value;
+    
+    // Update the display value
+    const valueDisplay = input.nextElementSibling;
+    if (valueDisplay && valueDisplay.classList.contains('value-display')) {
+        valueDisplay.textContent = value.toFixed(2);
+    }
+}
+
+/**
+ * Update car movement parameters based on physics panel inputs
+ * @param {Object} carBody - The car rigid body
+ * @param {string} param - The parameter being changed
+ * @param {number} value - The new value
+ * @param {Function} updateCarMovementParams - Function from carKinematicController to update movement params
+ * @returns {boolean} Success status
+ */
+export function updateCarMovementFromPanel(carBody, param, value, updateCarMovementParams) {
+    if (!carBody || !updateCarMovementParams) {
+        console.error('Missing required parameters for updateCarMovementFromPanel');
+        return false;
+    }
+    
+    try {
+        // Call the updateCarMovementParams function
+        return updateCarMovementParams(carBody, param, value);
+    } catch (error) {
+        console.error('Error updating car movement from panel:', error);
+        return false;
+    }
+}
+
 // Export all physics UI functions
 export default {
     createPhysicsDebugContainer,
@@ -355,5 +511,8 @@ export default {
     togglePhysicsPanel,
     createParameterControl,
     addPhysicsDebugStyles,
-    removePhysicsDebugMeshes
+    removePhysicsDebugMeshes,
+    updateCarDimensionsFromPanel,
+    initializePhysicsPanelWithCarData,
+    updateCarMovementFromPanel
 }; 

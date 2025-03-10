@@ -372,6 +372,37 @@ function startGame() {
 let isInitializing = false; // Flag to prevent multiple initializations
 let animationRequestId = null; // Track the animation frame request
 
+/**
+ * Set up the F2 key listener for toggling the physics panel
+ */
+function setupPhysicsKeyListener() {
+    if (window.physicsKeyListenerAdded) {
+        console.error('F2 key listener already added');
+        return;
+    }
+    
+    
+    document.addEventListener('keydown', function(event) {
+        // F2 key to toggle physics panel
+        if (event.key === 'F2') {
+            
+            // Get the physics panel
+            const panel = document.getElementById('physics-params-panel');
+            if (!panel) {
+                console.error('Physics panel not found in DOM');
+                return;
+            }
+            
+            // Toggle the 'visible' class
+            const isVisible = panel.classList.toggle('visible');
+            
+            event.preventDefault();
+        }
+    });
+    
+    window.physicsKeyListenerAdded = true;
+}
+
 function initGame() {
     if (isInitializing) return;
     isInitializing = true;
@@ -387,6 +418,9 @@ function initGame() {
     
     // Initialize physics parameters panel
     initPhysicsParametersPanel();
+    
+    // Set up F2 key listener for physics panel
+    setupPhysicsKeyListener();
     
     // Initialize Three.js scene
     const scene = new THREE.Scene();
@@ -473,6 +507,26 @@ function initGame() {
         const player = gameState.players[playerId];
         createPlayerCar(playerId, player.carColor);
     }
+    
+    // Initialize physics panel HTML content
+    const gameScreen = document.getElementById('game-screen');
+    const existingPanel = document.getElementById('physics-params-panel');
+    
+    // If the panel already exists in HTML, just make sure it's properly initialized
+    if (existingPanel) {
+        console.log('Physics parameters panel found in HTML');
+    } else {
+        // Otherwise dynamically add it - this is a fallback
+        console.log('Creating physics parameters panel programmatically');
+        const panel = document.createElement('div');
+        panel.id = 'physics-params-panel';
+        gameScreen.appendChild(panel);
+    }
+    
+    // Make physicsParams available globally for other modules
+    window.physicsParams = physicsParams;
+    
+    isInitializing = false;
 }
 
 function createRaceTrack() {
@@ -566,7 +620,10 @@ function createPlayerCar(playerId, carColor) {
     
     // Get player data
     const player = gameState.players[playerId];
-    if (!player) return null;
+    if (!player) {
+        console.error(`Player ${playerId} not found`);
+        return null;
+    }
     
     // Set car color (use default if not provided)
     const color = carColor || "#FF0000";
@@ -634,7 +691,14 @@ function createPlayerCar(playerId, carColor) {
             
             // Mass
             chassisMass: 150.0,
-            wheelMass: 20.0
+            wheelMass: 20.0,
+            
+            // Movement parameters from physicsParams
+            forwardSpeed: physicsParams.car.forwardSpeed,
+            reverseSpeed: physicsParams.car.reverseSpeed,
+            maxSteeringAngle: physicsParams.car.maxSteeringAngle,
+            steeringSpeed: physicsParams.car.steeringSpeed,
+            steeringReturnSpeed: physicsParams.car.steeringReturnSpeed
         };
         
         // Create car physics
@@ -645,8 +709,10 @@ function createPlayerCar(playerId, carColor) {
             controllerConfig
         );
         
-        physicsBody = carPhysics.chassisBody;
-        wheelBodies = carPhysics.wheelBodies;
+        if (carPhysics) {
+            physicsBody = carPhysics.chassisBody;
+            wheelBodies = carPhysics.wheelBodies;
+        }
     }
     
     // Store wheel meshes for animation
@@ -933,14 +999,6 @@ function updateStatsDisplay() {
     if (carKeys.length > 0) {
         const firstCarId = carKeys[0];
         const firstCar = currentGameState.cars[firstCarId];
-        console.log("First car data:", {
-            hasControls: !!firstCar.controls,
-            controls: firstCar.controls,
-            hasPhysicsBody: !!firstCar.physicsBody,
-            hasForces: firstCar.physicsBody && 
-                        firstCar.physicsBody.userData && 
-                        !!firstCar.physicsBody.userData.lastAppliedForces
-        });
     }
     
     // Collect basic stats from game state
@@ -948,7 +1006,6 @@ function updateStatsDisplay() {
     
     // Format stats and update display
     const formattedStats = formatStatsDisplay(stats, currentGameState);
-    console.log("Stats display content:", formattedStats.substring(0, 100) + "...");
     updateStatsContent(formattedStats);
 }
 
@@ -1112,6 +1169,12 @@ let physicsParams = {
         steeringSpeed: 0.3,
         steeringReturnSpeed: 0.2
     },
+    carBody: {
+        // Dimensions
+        width: 1.5,
+        height: 0.8,
+        length: 3.0
+    },
     world: {
         gravity: { x: 0.0, y: -20.0, z: 0.0 }
     },
@@ -1222,12 +1285,18 @@ const physicsPresets = {
     }
 };
 
-// Replace initPhysicsParametersPanel with a version that uses domUtils
+// Replace initPhysicsParametersPanel with a version that uses the existing panel
 function initPhysicsParametersPanel() {
-    // Set up physics parameters panel
-    const panel = setupPhysicsParametersPanel({
-        // Configuration details here
-    }, updatePhysicsParameter);
+    console.log('Initializing physics parameters panel');
+    
+    // Get the existing physics panel from the HTML
+    const physicsPanel = document.getElementById('physics-params-panel');
+    if (!physicsPanel) {
+        console.error('Physics panel not found in HTML');
+        return;
+    }
+    
+    console.log('Found existing physics panel in HTML');
     
     // Create tabs for different parameter groups
     setupTabSwitcher();
@@ -1241,25 +1310,52 @@ function initPhysicsParametersPanel() {
     setupPhysicsButtons();
     
     // Update all parameter controls with current values
-    updateAllParameterControls();
+    // This needs to be called after the game has started and cars are created
+    // We'll set a small delay to ensure cars are created
+    setTimeout(() => {
+        updateAllParameterControls();
+        console.log('Parameter controls updated with delay');
+    }, 1000);
+    
+    console.log('Physics parameters panel initialized');
 }
 
-// Setup event listeners using domUtils
+// Setup event listeners for the physics panel tabs
 function setupTabSwitcher() {
-    const tabButtons = document.querySelectorAll('.tab-button');
+    console.log('Setting up tab switcher for physics panel');
+    
+    const tabButtons = document.querySelectorAll('.params-tab');
+    if (tabButtons.length === 0) {
+        console.error('No tab buttons found with class .params-tab');
+        return;
+    }
+    
+    console.log(`Found ${tabButtons.length} tab buttons`);
+    
     tabButtons.forEach(tab => {
         tab.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-tab');
+            const targetTab = this.getAttribute('data-tab');
+            const targetId = targetTab + '-params';
+            
+            console.log(`Tab clicked: ${targetTab}, targeting: ${targetId}`);
             
             // Remove active class from all tabs and contents
-            document.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.params-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.params-container').forEach(c => c.classList.remove('active'));
             
             // Add active class to clicked tab and its content
             this.classList.add('active');
-            document.getElementById(targetId).classList.add('active');
+            
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.classList.add('active');
+            } else {
+                console.error(`Target element #${targetId} not found`);
+            }
         });
     });
+    
+    console.log('Tab switcher setup complete');
 }
 
 // Create a single parameter control row
@@ -1277,14 +1373,19 @@ function createCarParametersUI() {
         return;
     }
     
-    // Car body physics
+    // Car body physics - add rectangular dimensions
+    createParameterControl(carBodyGroup, 'carBody', 'width', 'Width', 0.5, 3.0, 0.1);
+    createParameterControl(carBodyGroup, 'carBody', 'height', 'Height', 0.5, 2.0, 0.1);
+    createParameterControl(carBodyGroup, 'carBody', 'length', 'Length', 1.0, 5.0, 0.1);
+    
+    // Character controller settings
     createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
     createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
     createParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
     
     // Movement parameters
-    createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
-    createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
+    createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 50.0, 1.0);
+    createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 25.0, 1.0);
     createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Speed', 0.05, 0.3, 0.01);
     createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
@@ -1317,40 +1418,64 @@ function createWheelsParametersUI() {
 
 // Setup physics parameter buttons
 function setupPhysicsButtons() {
-    // Get button elements
+    console.log('Setting up physics buttons');
+    
+    // Get reset button element
     const resetButton = document.getElementById('reset-physics');
-    const closeButton = document.getElementById('close-physics-panel');
     
     // Add error handling
     if (!resetButton) {
         console.error('Reset physics button not found');
-        return;
-    }
-    
-    // Reset button
-    resetButton.addEventListener('click', () => {
-        // Check if defaultPhysicsParams exists
-        if (!defaultPhysicsParams) {
-            console.error('Default physics parameters not found');
-            return;
-        }
+    } else {
+        console.log('Found reset button');
         
-        // Reset to default values
-        physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
-        
-        // Update UI
-        updateAllParameterControls();
-        
-        // Apply changes
-        applyPhysicsChanges();
-    });
-    
-    // Close button
-    if (closeButton) {
-        closeButton.addEventListener('click', () => {
-            togglePhysicsPanel();
+        // Reset button
+        resetButton.addEventListener('click', () => {
+            console.log('Reset physics button clicked');
+            // Reset physics parameters to defaults
+            if (defaultPhysicsParams) {
+                physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
+                updateAllParameterControls();
+                applyPhysicsChanges();
+            }
         });
     }
+    
+    // Add a close button if it doesn't exist
+    let closeButton = document.getElementById('close-physics-panel');
+    if (!closeButton) {
+        console.log('Close button not found, creating one');
+        
+        // Get the buttons container
+        const buttonsContainer = document.querySelector('.param-buttons');
+        if (buttonsContainer) {
+            // Create close button
+            closeButton = document.createElement('button');
+            closeButton.id = 'close-physics-panel';
+            closeButton.className = 'param-button close';
+            closeButton.textContent = 'Close';
+            
+            // Add to container
+            buttonsContainer.appendChild(closeButton);
+            console.log('Close button created and added');
+        } else {
+            console.error('Buttons container not found');
+        }
+    }
+    
+    // Set up close button event listener
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            console.log('Close physics button clicked');
+            // Hide the panel
+            const panel = document.getElementById('physics-params-panel');
+            if (panel) {
+                panel.classList.remove('visible');
+            }
+        });
+    }
+    
+    console.log('Physics buttons setup complete');
 }
 
 // Update a specific physics parameter
@@ -1370,7 +1495,25 @@ function updatePhysicsParameter(group, param, value) {
 
 // Update all UI controls to match current parameter values
 function updateAllParameterControls() {
+    console.log('Updating all parameter controls with current values');
     const inputs = document.querySelectorAll('#physics-params-panel input');
+    
+    // First, make sure we have the current car dimensions from the first player's car
+    if (gameState.players) {
+        const playerIds = Object.keys(gameState.players);
+        if (playerIds.length > 0) {
+            const firstPlayer = gameState.players[playerIds[0]];
+            if (firstPlayer.carBody && firstPlayer.carBody.userData && firstPlayer.carBody.userData.dimensions) {
+                const dimensions = firstPlayer.carBody.userData.dimensions;
+                console.log('Got current car dimensions from player car:', dimensions);
+                
+                // Update physicsParams with the current dimensions
+                physicsParams.carBody.width = dimensions.width;
+                physicsParams.carBody.height = dimensions.height;
+                physicsParams.carBody.length = dimensions.length;
+            }
+        }
+    }
     
     inputs.forEach(input => {
         const group = input.dataset.group;
@@ -1416,22 +1559,30 @@ function updateAllParameterControls() {
             }
         }
     });
+    
+    console.log('All parameter controls updated');
 }
 
 // Apply physics changes to active car bodies (now using character controller)
 function applyPhysicsChanges() {
     try {
         // Apply changes to world physics
-        if (gameState.physicsWorld) {
-            updateWorldPhysics(gameState.physicsWorld);
+        if (gameState.physics.world) {
+            updateWorldPhysics(gameState.physics.world);
         }
         
         // Apply changes to existing car controllers
         for (const playerId in gameState.players) {
-            const player = gameState.players[playerId];
+            // Get the car for this player
+            const car = gameState.cars[playerId];
             
-            if (player.carBody) {
-                updateCarControllerConfig(player.carBody);
+            if (car && car.physicsBody) {
+                updateCarControllerConfig(car.physicsBody);
+            } else {
+                // Try to ensure the car has a physics body
+                if (car && !car.physicsBody) {
+                    ensureCarHasPhysicsBody(playerId);
+                }
             }
         }
     } catch (error) {
@@ -1439,9 +1590,20 @@ function applyPhysicsChanges() {
     }
 }
 
+// Make applyPhysicsChanges available globally
+window.applyPhysicsChanges = applyPhysicsChanges;
+
 // Update car controller configuration with current parameters
 function updateCarControllerConfig(carBody) {
-    if (!carBody || !carBody.userData) return;
+    if (!carBody) {
+        console.error('Car body is null or undefined');
+        return;
+    }
+    
+    if (!carBody.userData) {
+        console.error('Car body has no userData property');
+        return;
+    }
     
     try {
         // Update character controller configuration
@@ -1456,6 +1618,17 @@ function updateCarControllerConfig(carBody) {
             carBody.userData.config.maxSlopeClimbAngle = physicsParams.characterController.maxSlopeClimbAngle;
             carBody.userData.config.minSlopeSlideAngle = physicsParams.characterController.minSlopeSlideAngle;
             carBody.userData.config.gravity = physicsParams.characterController.gravity;
+            
+            // Update movement parameters using the updateCarMovementParams function if available
+            if (typeof CarKinematicController.updateCarMovementParams === 'function') {
+                // Update each movement parameter
+                CarKinematicController.updateCarMovementParams(carBody, 'forwardSpeed', physicsParams.car.forwardSpeed);
+                CarKinematicController.updateCarMovementParams(carBody, 'reverseSpeed', physicsParams.car.reverseSpeed);
+                CarKinematicController.updateCarMovementParams(carBody, 'maxSteeringAngle', physicsParams.car.maxSteeringAngle);
+                CarKinematicController.updateCarMovementParams(carBody, 'steeringSpeed', physicsParams.car.steeringSpeed);
+                CarKinematicController.updateCarMovementParams(carBody, 'steeringReturnSpeed', physicsParams.car.steeringReturnSpeed);
+                CarKinematicController.updateCarMovementParams(carBody, 'gravity', physicsParams.characterController.gravity);
+            }
             
             // Update autostep settings if character controller is available
             if (carBody.userData.characterController) {
@@ -1476,6 +1649,27 @@ function updateCarControllerConfig(carBody) {
                 controller.setMaxSlopeClimbAngle(physicsParams.characterController.maxSlopeClimbAngle);
                 controller.setMinSlopeSlideAngle(physicsParams.characterController.minSlopeSlideAngle);
             }
+        } else {
+            console.error('Car body userData has no config property');
+        }
+        
+        // Update car dimensions if the updateCarDimensions function is available
+        if (typeof CarKinematicController.updateCarDimensions === 'function' && 
+            gameState.physics.world && 
+            gameState.physics.rapier) {
+            
+            const dimensions = {
+                width: physicsParams.carBody.width,
+                height: physicsParams.carBody.height,
+                length: physicsParams.carBody.length
+            };
+            
+            CarKinematicController.updateCarDimensions(
+                carBody, 
+                dimensions, 
+                gameState.physics.world, 
+                gameState.physics.rapier
+            );
         }
     } catch (error) {
         console.error('Error updating car controller config:', error);
@@ -1493,43 +1687,6 @@ function updateWorldPhysics(world) {
         console.error('Error updating world physics:', error);
     }
 }
-
-// Add initialization call to initGame
-const originalInitGame = initGame;
-initGame = function() {
-    // Call the original initGame function
-    originalInitGame();
-    
-    // Initialize physics panel HTML content
-    const gameScreen = document.getElementById('game-screen');
-    const existingPanel = document.getElementById('physics-params-panel');
-    
-    // If the panel already exists in HTML, just make sure it's properly initialized
-    if (existingPanel) {
-        console.log('Physics parameters panel found in HTML');
-    } else {
-        // Otherwise dynamically add it - this is a fallback
-        console.log('Creating physics parameters panel programmatically');
-        const panel = document.createElement('div');
-        panel.id = 'physics-params-panel';
-        gameScreen.appendChild(panel);
-    }
-    
-    // Make physicsParams available globally for other modules
-    window.physicsParams = physicsParams;
-    
-    // Add key event listener if not already added
-    if (!window.physicsKeyListenerAdded) {
-        document.addEventListener('keydown', function(event) {
-            // F2 key to toggle physics panel
-            if (event.key === 'F2') {
-                physicsUITogglePanel();
-                event.preventDefault();
-            }
-        });
-        window.physicsKeyListenerAdded = true;
-    }
-};
 
 /**
  * Toggle stats display
@@ -1586,6 +1743,11 @@ function createCarPhysics(world, rapier, position, config) {
         config,
         rapier  // Pass the Rapier instance
     );
+    
+    if (!carBody) {
+        console.error('Failed to create car body');
+        return null;
+    }
     
     // Return the car physics body and wheel bodies
     return {
@@ -1693,9 +1855,22 @@ function updatePhysicsDebugVisualization() {
     }
 }
 
-// Update the togglePhysicsPanel function
+/**
+ * Toggle physics panel visibility
+ */
 function togglePhysicsPanel() {
-    physicsUITogglePanel();
+    console.log('Toggling physics panel');
+    
+    const panel = document.getElementById('physics-params-panel');
+    if (!panel) {
+        console.error('Physics panel not found in DOM');
+        return false;
+    }
+    
+    const isVisible = panel.classList.toggle('visible');
+    console.log('Physics panel is now ' + (isVisible ? 'visible' : 'hidden'));
+    
+    return isVisible;
 }
 
 /**

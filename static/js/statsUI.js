@@ -13,8 +13,6 @@ export function initStatsOverlay() {
     
     // Make sure the overlay is hidden initially
     statsOverlay.classList.add('hidden');
-    
-    console.log("Stats overlay initialized");
 }
 
 /**
@@ -27,10 +25,7 @@ export function updateStatsDisplay(content) {
         console.error("Stats overlay element not found!");
         return;
     }
-    
-    // Debug what content is being received
-    console.log("Stats UI received content length:", content ? content.length : 0);
-    
+        
     // Update the content
     setHTML(statsOverlay, content);
     
@@ -92,26 +87,11 @@ export function hideStatsDisplay() {
  * @returns {string} - Formatted HTML for the stats display
  */
 export function formatStatsDisplay(stats, gameState) {
-    // Debug logging to check what data we're receiving
-    console.log("formatStatsDisplay received gameState:", {
-        hasCars: gameState && !!gameState.cars,
-        carCount: gameState && gameState.cars ? Object.keys(gameState.cars).length : 0,
-        hasPlayers: gameState && !!gameState.players,
-        playerCount: gameState && gameState.players ? Object.keys(gameState.players).length : 0
-    });
     
     // If we have cars, log details about the first car
     if (gameState && gameState.cars && Object.keys(gameState.cars).length > 0) {
         const firstCarId = Object.keys(gameState.cars)[0];
         const firstCar = gameState.cars[firstCarId];
-        console.log("First car details:", {
-            id: firstCarId,
-            hasControls: !!firstCar.controls,
-            hasPhysicsBody: !!firstCar.physicsBody,
-            hasForces: firstCar.physicsBody && 
-                       firstCar.physicsBody.userData && 
-                       !!firstCar.physicsBody.userData.lastAppliedForces
-        });
     }
     
     let statsHTML = '<div class="stats-header">Game Stats (Press F3 to toggle)</div>';
