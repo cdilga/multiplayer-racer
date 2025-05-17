@@ -441,8 +441,8 @@ function applyCarControls(carBody, controls, playerId) {
         const params = window.physicsParams ? window.physicsParams.car : null;
         
         // Speed limits
-        const maxSpeedKmh = params?.maxSpeedKmh || 80;         // Maximum forward speed
-        const reverseMaxSpeedKmh = params?.reverseMaxSpeedKmh || 30;  // Maximum reverse speed 
+        const maxSpeedKmh = params?.maxSpeedKmh || 120;         // Maximum forward speed
+        const reverseMaxSpeedKmh = params?.reverseMaxSpeedKmh || 60;  // Maximum reverse speed 
         
         // Convert to m/s
         const maxSpeedMs = maxSpeedKmh / 3.6;

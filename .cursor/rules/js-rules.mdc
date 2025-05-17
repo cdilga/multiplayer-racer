@@ -10,7 +10,7 @@ Just import stuff with script tags, and consider that we are not using WebPack a
 When you see a direct assignment to window.<variable> like "window.myVar = value;", suggest replacing it with "window.myVar = window.myVar || value;" to avoid overwriting existing values unless the intent is explicitly to reset it. Explain that this preserves existing globals and prevents conflicts between scripts.
 
 # Encourage namespacing related globals
-If you notice multiple global variables with similar names or purposes, like "window.player1", "window.player2", and "window.player3", suggest grouping them into a single object, such as "window.players = { player1: ..., player2: ..., player3: ... };". Highlight that this reduces clutter in the global namespace and makes related data easier to manage.
+If you notice multiple global variables with similar names or purposes, like "window.player1", "window.player2", and "window.player3", suggest grouping them into a single object, such as "window.players = [ player1: ..., player2: ..., player3: ... ];". Highlight that this reduces clutter in the global namespace and makes related data easier to manage.
 
 # Suggest extracting physics-related code
 When you encounter code that uses physics-related variables or objects like "rapierPhysics", "PHYSICS_UPDATE_RATE", or "gameState.physics", recommend moving it to a separate file called "public/physics.js" and attaching it to "window.physics". Remind the developer to add "<script src='physics.js'></script>" to the HTML before dependent scripts. Explain that this separates concerns and improves maintainability.

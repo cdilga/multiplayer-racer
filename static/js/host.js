@@ -52,14 +52,6 @@ import {
     createBarIndicator
 } from './domUtils.js';
 
-//TODO: Looks like this didn't work, and should've never been imported here since playerUI.js should be for player.js
-import {
-    addPlayerToList,
-    removePlayerFromList,
-    updatePlayerName,
-    updatePlayerColor
-} from './playerUI.js';
-
 // Import screenManager.js for screen transitions
 import {
     showLobbyScreen,
@@ -124,6 +116,19 @@ function updateControlIndicator(indicator, controls, playerName) {
     if (playerLabel) {
         playerLabel.textContent = playerName;
     }
+}
+
+export function addPlayerToList(id, name, color) {
+    const playerList = getElement('player-list');
+    if (!playerList) return null;
+    
+    const playerItem = createElement('li', { id: `player-${id}`, className: 'player-item' }, [
+        createElement('span', { className: 'player-color', style: { backgroundColor: color } }),
+        createElement('span', { className: 'player-name' }, name)
+    ]);
+    
+    playerList.appendChild(playerItem);
+    return playerItem;
 }
 
 // Get the game state object for direct access when needed
@@ -575,6 +580,116 @@ function createRaceTrack() {
     
     return track;
 }
+
+//TODO: move to trackBuilder.js or remove if duped
+function createGroundCollider(world, rapier) {
+    // Create a fixed rigid body for the ground
+    const groundBodyDesc = rapier.RigidBodyDesc.fixed();
+    const groundBody = world.createRigidBody(groundBodyDesc);
+    
+    // Create a cuboid collider for the ground
+    const groundWidth = 150.0;   // Increased from 100 to match visual size
+    const groundHeight = 0.1;    // Same thin height
+    const groundLength = 150.0;  // Increased from 100 to match visual size
+    
+    // Create collider description
+    const groundColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, groundHeight/2, groundLength/2);
+    groundColliderDesc.setTranslation(0, -groundHeight/2, 0);
+    
+    // Create the collider
+    const groundCollider = world.createCollider(groundColliderDesc, groundBody);
+    
+    // Add to physics state using the imported functions
+    addPhysicsBody('ground', groundBody);
+    addPhysicsCollider('ground', groundCollider);
+    
+    return groundCollider;
+}
+
+//TODO: move to trackBuilder.js or remove if duped
+function createTrackWalls(world, rapier) {
+    // Only create walls if we have a track defined
+    if (!gameState.track) {
+        console.warn('No track defined, skipping wall creation');
+        return;
+    }
+    
+    try {
+        // Use the same dimensions as the ground collider for consistency
+        const groundWidth = 150.0;
+        const groundLength = 150.0;
+        const wallHeight = 3; // Increased height for better visibility
+        const wallThickness = 1.0; // Thicker walls for better collision
+        
+        // Initialize walls arrays in the gameState
+        gameState.physics.bodies.walls = [];
+        gameState.physics.colliders.walls = [];
+        
+        // Left wall
+        const leftWallBodyDesc = rapier.RigidBodyDesc.fixed();
+        leftWallBodyDesc.setTranslation(-groundWidth/2, wallHeight/2, 0);
+        const leftWallBody = world.createRigidBody(leftWallBodyDesc);
+        
+        const leftWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
+        leftWallColliderDesc.setFriction(0.3);
+        const leftWallCollider = world.createCollider(leftWallColliderDesc, leftWallBody);
+        
+        // Add to physics state
+        gameState.physics.bodies.walls.push(leftWallBody);
+        gameState.physics.colliders.walls.push(leftWallCollider);
+        
+        // Right wall
+        const rightWallBodyDesc = rapier.RigidBodyDesc.fixed();
+        rightWallBodyDesc.setTranslation(groundWidth/2, wallHeight/2, 0);
+        const rightWallBody = world.createRigidBody(rightWallBodyDesc);
+        
+        const rightWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
+        rightWallColliderDesc.setFriction(0.3);
+        const rightWallCollider = world.createCollider(rightWallColliderDesc, rightWallBody);
+        
+        // Add to physics state
+        gameState.physics.bodies.walls.push(rightWallBody);
+        gameState.physics.colliders.walls.push(rightWallCollider);
+        
+        // Top wall
+        const topWallBodyDesc = rapier.RigidBodyDesc.fixed();
+        topWallBodyDesc.setTranslation(0, wallHeight/2, -groundLength/2);
+        const topWallBody = world.createRigidBody(topWallBodyDesc);
+        
+        const topWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
+        topWallColliderDesc.setFriction(0.3);
+        const topWallCollider = world.createCollider(topWallColliderDesc, topWallBody);
+        
+        // Add to physics state
+        gameState.physics.bodies.walls.push(topWallBody);
+        gameState.physics.colliders.walls.push(topWallCollider);
+        
+        // Bottom wall
+        const bottomWallBodyDesc = rapier.RigidBodyDesc.fixed();
+        bottomWallBodyDesc.setTranslation(0, wallHeight/2, groundLength/2);
+        const bottomWallBody = world.createRigidBody(bottomWallBodyDesc);
+        
+        const bottomWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
+        bottomWallColliderDesc.setFriction(0.3);
+        const bottomWallCollider = world.createCollider(bottomWallColliderDesc, bottomWallBody);
+        
+        // Add to physics state
+        gameState.physics.bodies.walls.push(bottomWallBody);
+        gameState.physics.colliders.walls.push(bottomWallCollider);
+        
+        console.log('Created track walls with dimensions:', {
+            groundWidth,
+            groundLength,
+            wallHeight,
+            wallThickness
+        });
+        
+    } catch (error) {
+        console.error('Error creating track walls:', error);
+    }
+}
+
+
 //TODO: move to carModel.js
 function createPlayerCar(playerId, carColor) {
     // Remove existing car if it exists
@@ -754,114 +869,6 @@ async function initPhysics() {
     } else {
         console.warn("Rapier physics not available");
         return false;
-    }
-}
-
-//TODO: move to trackBuilder.js or remove if duped
-function createGroundCollider(world, rapier) {
-    // Create a fixed rigid body for the ground
-    const groundBodyDesc = rapier.RigidBodyDesc.fixed();
-    const groundBody = world.createRigidBody(groundBodyDesc);
-    
-    // Create a cuboid collider for the ground
-    const groundWidth = 150.0;   // Increased from 100 to match visual size
-    const groundHeight = 0.1;    // Same thin height
-    const groundLength = 150.0;  // Increased from 100 to match visual size
-    
-    // Create collider description
-    const groundColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, groundHeight/2, groundLength/2);
-    groundColliderDesc.setTranslation(0, -groundHeight/2, 0);
-    
-    // Create the collider
-    const groundCollider = world.createCollider(groundColliderDesc, groundBody);
-    
-    // Add to physics state using the imported functions
-    addPhysicsBody('ground', groundBody);
-    addPhysicsCollider('ground', groundCollider);
-    
-    return groundCollider;
-}
-
-//TODO: move to trackBuilder.js or remove if duped
-function createTrackWalls(world, rapier) {
-    // Only create walls if we have a track defined
-    if (!gameState.track) {
-        console.warn('No track defined, skipping wall creation');
-        return;
-    }
-    
-    try {
-        // Use the same dimensions as the ground collider for consistency
-        const groundWidth = 150.0;
-        const groundLength = 150.0;
-        const wallHeight = 3; // Increased height for better visibility
-        const wallThickness = 1.0; // Thicker walls for better collision
-        
-        // Initialize walls arrays in the gameState
-        gameState.physics.bodies.walls = [];
-        gameState.physics.colliders.walls = [];
-        
-        // Left wall
-        const leftWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        leftWallBodyDesc.setTranslation(-groundWidth/2, wallHeight/2, 0);
-        const leftWallBody = world.createRigidBody(leftWallBodyDesc);
-        
-        const leftWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
-        leftWallColliderDesc.setFriction(0.3);
-        const leftWallCollider = world.createCollider(leftWallColliderDesc, leftWallBody);
-        
-        // Add to physics state
-        gameState.physics.bodies.walls.push(leftWallBody);
-        gameState.physics.colliders.walls.push(leftWallCollider);
-        
-        // Right wall
-        const rightWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        rightWallBodyDesc.setTranslation(groundWidth/2, wallHeight/2, 0);
-        const rightWallBody = world.createRigidBody(rightWallBodyDesc);
-        
-        const rightWallColliderDesc = rapier.ColliderDesc.cuboid(wallThickness/2, wallHeight/2, groundLength/2);
-        rightWallColliderDesc.setFriction(0.3);
-        const rightWallCollider = world.createCollider(rightWallColliderDesc, rightWallBody);
-        
-        // Add to physics state
-        gameState.physics.bodies.walls.push(rightWallBody);
-        gameState.physics.colliders.walls.push(rightWallCollider);
-        
-        // Top wall
-        const topWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        topWallBodyDesc.setTranslation(0, wallHeight/2, -groundLength/2);
-        const topWallBody = world.createRigidBody(topWallBodyDesc);
-        
-        const topWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
-        topWallColliderDesc.setFriction(0.3);
-        const topWallCollider = world.createCollider(topWallColliderDesc, topWallBody);
-        
-        // Add to physics state
-        gameState.physics.bodies.walls.push(topWallBody);
-        gameState.physics.colliders.walls.push(topWallCollider);
-        
-        // Bottom wall
-        const bottomWallBodyDesc = rapier.RigidBodyDesc.fixed();
-        bottomWallBodyDesc.setTranslation(0, wallHeight/2, groundLength/2);
-        const bottomWallBody = world.createRigidBody(bottomWallBodyDesc);
-        
-        const bottomWallColliderDesc = rapier.ColliderDesc.cuboid(groundWidth/2, wallHeight/2, wallThickness/2);
-        bottomWallColliderDesc.setFriction(0.3);
-        const bottomWallCollider = world.createCollider(bottomWallColliderDesc, bottomWallBody);
-        
-        // Add to physics state
-        gameState.physics.bodies.walls.push(bottomWallBody);
-        gameState.physics.colliders.walls.push(bottomWallCollider);
-        
-        console.log('Created track walls with dimensions:', {
-            groundWidth,
-            groundLength,
-            wallHeight,
-            wallThickness
-        });
-        
-    } catch (error) {
-        console.error('Error creating track walls:', error);
     }
 }
 
