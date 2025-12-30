@@ -24,7 +24,7 @@ export default defineConfig({
     webServer: {
         command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && python server/app.py"',
         url: 'http://localhost:8000',
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true,
         timeout: 30000,
     },
 });
