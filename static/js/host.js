@@ -783,6 +783,8 @@ function createPlayerCar(playerId, carColor) {
             mesh: car,
             physicsBody: physicsBody,
             wheels: wheelMeshes,
+            spawnPosition: { ...startPosition }, // Store original spawn position for reset
+            spawnRotation: { x: 0, y: 0, z: 0, w: 1 }, // Store original spawn rotation
             targetPosition: { ...startPosition },
             targetRotation: { x: 0, y: 0, z: 0 },
             targetQuaternion: new THREE.Quaternion(),
@@ -1620,12 +1622,12 @@ addPhysicsDebugStyles();
 // Function to reset a car's position
 function resetCarPosition(playerId) {
     if (!gameState.cars[playerId]) return;
-    
+
     const car = gameState.cars[playerId];
-    
-    // Define proper starting position with a safe height above ground
-    const startPosition = { x: 0, y: 1.5, z: -20 };
-    const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
+
+    // Use stored spawn position, or fall back to default if not available
+    const startPosition = car.spawnPosition || { x: 0, y: 1.5, z: -20 };
+    const startRotation = car.spawnRotation || { x: 0, y: 0, z: 0, w: 1 };
     
     try {
         // If we have a physics body, reset its position using dynamic physics
@@ -1635,7 +1637,6 @@ function resetCarPosition(playerId) {
             // Use Rapier's comprehensive reset function
             if (typeof rapierPhysics.resetCarPosition === 'function') {
                 rapierPhysics.resetCarPosition(
-                    gameState.physics.world,
                     car.physicsBody,
                     startPosition,
                     startRotation
@@ -1684,14 +1685,18 @@ function resetAllCars() {
     Object.keys(gameState.cars).forEach(playerId => {
         resetCarPosition(playerId);
     });
-    
+
     // Force a physics world step to ensure all resets take effect
     if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
         gameState.physics.world.step();
     }
-    
+
     console.log("All cars reset complete");
 }
+
+// Expose reset functions for testing and debug panel
+window.resetCarPosition = resetCarPosition;
+window.resetAllCars = resetAllCars;
 
 // Initialize the stats overlay style
 function initStatsOverlay() {
