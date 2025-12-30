@@ -5,41 +5,50 @@
 let RAPIER = null;
 
 // Initialize Rapier physics
+// Note: The HTML page pre-loads and initializes Rapier via ES modules,
+// storing the result in window.RAPIER. We use that to avoid double initialization
+// which causes the deprecation warning: "using deprecated parameters for the initialization function"
 async function initRapierPhysics() {
     try {
         console.log('Starting Rapier initialization...');
-        
-        // Import Rapier from CDN using the importmap defined in the HTML
+
+        // First, check if Rapier was already initialized by the HTML page's ES module
+        // This is the preferred path - avoids double initialization
+        if (window.rapierLoaded && window.RAPIER) {
+            console.log('Using pre-initialized RAPIER from window.RAPIER');
+            RAPIER = window.RAPIER;
+            return RAPIER;
+        }
+
+        // Fallback: Import and initialize Rapier ourselves
+        // This path is taken if the HTML module hasn't completed yet
         try {
             const rapierModule = await import('@dimforge/rapier3d-compat');
-            
-            // Init WASM module
-            await rapierModule.init();
-            
-            // Store the module globally
-            RAPIER = rapierModule;
-            
+
+            // Only init if not already done (window.RAPIER would be set if already initialized)
+            if (!window.RAPIER) {
+                await rapierModule.init();
+                window.RAPIER = rapierModule;
+            }
+
+            // Store the module locally
+            RAPIER = window.RAPIER;
+
             // Set a flag to indicate successful loading
             window.rapierLoaded = true;
-            
+
             return RAPIER;
         } catch (importError) {
             console.error('Error importing Rapier module:', importError);
-            
-            // Fallback to global RAPIER object if available
-            if (typeof window.RAPIER !== 'undefined') {
+
+            // Final fallback to global RAPIER object if available (already initialized elsewhere)
+            if (typeof window.RAPIER !== 'undefined' && window.RAPIER !== null) {
                 console.log('Using globally available RAPIER object');
                 RAPIER = window.RAPIER;
-                
-                // Initialize WASM if needed
-                if (typeof RAPIER.init === 'function') {
-                    await RAPIER.init();
-                }
-                
                 window.rapierLoaded = true;
                 return RAPIER;
             }
-            
+
             throw new Error('Failed to load Rapier module');
         }
     } catch (error) {

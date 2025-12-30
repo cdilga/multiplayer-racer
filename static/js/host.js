@@ -20,7 +20,11 @@ const gameState = {
         world: null,
         bodies: {},
         colliders: {},
-        usingRapier: false
+        usingRapier: false,
+        healthy: true,  // Tracks if physics world is operational
+        lastErrorTime: 0,  // Timestamp of last error to prevent spam
+        recoveryAttempts: 0,  // Track recovery attempts
+        maxRecoveryAttempts: 3  // Maximum recovery attempts before giving up
     },
     showStats: false,
     showPhysicsDebug: false,
@@ -522,7 +526,27 @@ function initGame() {
                 const player = gameState.players[playerId];
                 createPlayerCar(playerId, player.color);
             });
-            
+
+            // Step physics world once to initialize body positions before game loop
+            // This prevents NaN values from translation() on newly created bodies
+            if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
+                console.log('Stepping physics world once to initialize body positions');
+                gameState.physics.world.step();
+
+                // Validate that all car physics bodies now have valid positions
+                for (const playerId of playerIds) {
+                    const car = gameState.cars[playerId];
+                    if (car && car.physicsBody) {
+                        const pos = car.physicsBody.translation();
+                        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(pos.z)) {
+                            console.error(`Car ${playerId} still has invalid position after initial step:`, pos);
+                        } else {
+                            console.log(`Car ${playerId} position initialized: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+                        }
+                    }
+                }
+            }
+
             // Force multiple renders to ensure everything is displayed correctly
             gameState.renderer.render(gameState.scene, gameState.camera);
             
@@ -806,8 +830,9 @@ async function initPhysics() {
     
     async function initializeWithRapier() {
         try {
+            // rapierPhysics.init() already calls RAPIER.init() internally,
+            // so we don't need to call rapier.init() again (causes deprecation warning)
             const rapier = await rapierPhysics.init();
-            await rapier.init();
             console.log('Rapier physics initialized successfully');
             
             // Store Rapier instance and set flag
@@ -824,8 +849,10 @@ async function initPhysics() {
             
             // Create walls around the track
             createTrackWalls(world, rapier);
-            
+
             gameState.physics.initialized = true;
+            gameState.physics.healthy = true;  // Mark physics as healthy on successful init
+            gameState.physics.recoveryAttempts = 0;  // Reset recovery attempts
             console.log('Physics world created');
             
             return true;
@@ -940,6 +967,168 @@ function createTrackWalls(world, rapier) {
     }
 }
 
+// Physics world recovery mechanism
+// Attempts to recreate the physics world and all bodies after a crash
+async function attemptPhysicsRecovery() {
+    const now = Date.now();
+
+    // Prevent recovery spam - only attempt once every 5 seconds
+    if (now - gameState.physics.lastErrorTime < 5000) {
+        return false;
+    }
+
+    gameState.physics.lastErrorTime = now;
+    gameState.physics.recoveryAttempts++;
+
+    // Check if we've exceeded max recovery attempts
+    if (gameState.physics.recoveryAttempts > gameState.physics.maxRecoveryAttempts) {
+        console.error(`Physics recovery failed after ${gameState.physics.maxRecoveryAttempts} attempts. Physics disabled.`);
+        return false;
+    }
+
+    console.log(`Attempting physics recovery (attempt ${gameState.physics.recoveryAttempts}/${gameState.physics.maxRecoveryAttempts})...`);
+
+    try {
+        // Store current car positions from meshes before destroying physics
+        const carPositions = {};
+        Object.keys(gameState.cars).forEach(playerId => {
+            const car = gameState.cars[playerId];
+            if (car && car.mesh) {
+                carPositions[playerId] = {
+                    position: {
+                        x: car.mesh.position.x,
+                        y: car.mesh.position.y,
+                        z: car.mesh.position.z
+                    },
+                    quaternion: {
+                        x: car.mesh.quaternion.x,
+                        y: car.mesh.quaternion.y,
+                        z: car.mesh.quaternion.z,
+                        w: car.mesh.quaternion.w
+                    }
+                };
+                // Clear the old physics body reference
+                car.physicsBody = null;
+            }
+        });
+
+        // Clear old physics references
+        gameState.physics.bodies = {};
+        gameState.physics.colliders = {};
+
+        // Try to free the old world (may fail if corrupted, but that's okay)
+        try {
+            if (gameState.physics.world && typeof gameState.physics.world.free === 'function') {
+                gameState.physics.world.free();
+            }
+        } catch (freeError) {
+            console.warn('Could not free old physics world (may already be corrupted):', freeError.message);
+        }
+
+        gameState.physics.world = null;
+
+        // Get the Rapier instance
+        const rapier = gameState.physics.rapier;
+        if (!rapier) {
+            console.error('Rapier instance not available for recovery');
+            return false;
+        }
+
+        // Create a new physics world
+        const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+        const newWorld = new rapier.World(gravity);
+        gameState.physics.world = newWorld;
+
+        console.log('New physics world created');
+
+        // Recreate ground collider
+        createGroundCollider(newWorld, rapier);
+
+        // Recreate walls
+        createTrackWalls(newWorld, rapier);
+
+        // Recreate physics bodies for all cars at their current mesh positions
+        const carDimensions = {
+            width: 2,
+            height: 1,
+            length: 4
+        };
+
+        Object.keys(carPositions).forEach(playerId => {
+            const car = gameState.cars[playerId];
+            const savedPos = carPositions[playerId];
+
+            if (car && savedPos) {
+                try {
+                    // Create new physics body
+                    const physicsBody = rapierPhysics.createCarPhysics(
+                        newWorld,
+                        savedPos.position,
+                        carDimensions
+                    );
+
+                    if (physicsBody) {
+                        // Set rotation to match saved quaternion
+                        physicsBody.setRotation(savedPos.quaternion, true);
+
+                        // Store player ID in physics body userData
+                        if (!physicsBody.userData) {
+                            physicsBody.userData = {};
+                        }
+                        physicsBody.userData.playerId = playerId;
+
+                        // Assign to car
+                        car.physicsBody = physicsBody;
+                        console.log(`Recreated physics body for car ${playerId}`);
+                    }
+                } catch (carError) {
+                    console.error(`Failed to recreate physics for car ${playerId}:`, carError);
+                }
+            }
+        });
+
+        // Mark physics as healthy again
+        gameState.physics.healthy = true;
+        gameState.physics.recoveryAttempts = 0; // Reset attempts on success
+
+        console.log('Physics recovery successful!');
+        return true;
+
+    } catch (recoveryError) {
+        console.error('Physics recovery failed:', recoveryError);
+        gameState.physics.healthy = false;
+        return false;
+    }
+}
+
+// Handle physics error with rate limiting
+function handlePhysicsError(error, context = 'unknown') {
+    const now = Date.now();
+
+    // Only log errors once per second to prevent spam
+    if (now - gameState.physics.lastErrorTime > 1000) {
+        console.error(`Physics error (${context}):`, error.message || error);
+
+        // Check for fatal errors that require recovery
+        const isFatalError = error.message && (
+            error.message.includes('unreachable') ||
+            error.message.includes('recursive use') ||
+            error.message.includes('unsafe aliasing')
+        );
+
+        if (isFatalError && gameState.physics.healthy) {
+            console.warn('Fatal physics error detected, marking world as unhealthy');
+            gameState.physics.healthy = false;
+            gameState.physics.lastErrorTime = now;
+
+            // Schedule recovery attempt
+            setTimeout(() => {
+                attemptPhysicsRecovery();
+            }, 100);
+        }
+    }
+}
+
 // Improved game loop that avoids potential stack overflow issues
 function gameLoopWithoutRecursion(timestamp) {
     try {
@@ -956,12 +1145,12 @@ function gameLoopWithoutRecursion(timestamp) {
             return;
         }
         
-        // Process physics if available
-        if (gameState.physics && gameState.physics.world) {
+        // Process physics if available and healthy
+        if (gameState.physics && gameState.physics.world && gameState.physics.healthy) {
             // Step the physics simulation
             // Limit deltaTime to avoid large steps causing instability (max 1/30th second)
             const physicsStep = Math.min(deltaTime / 1000, 1/30);
-            
+
             // Set the physics timestep via Rapier's integrationParameters
             try {
                 const world = gameState.physics.world;
@@ -980,26 +1169,27 @@ function gameLoopWithoutRecursion(timestamp) {
                     console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
                 }
             } catch (error) {
-                console.error('Physics step error:', error);
+                handlePhysicsError(error, 'world.step');
+                return; // Skip rest of physics processing when step fails
             }
 
             // Apply controls to each car with a physics body using dynamic physics
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
-                if (car && car.physicsBody && car.controls) {
+                if (car && car.physicsBody && car.controls && gameState.physics.healthy) {
                     try {
                         // Apply controls using dynamic physics with delta time and world for raycasting
                         rapierPhysics.applyCarControls(car.physicsBody, car.controls, physicsStep, gameState.physics.world, playerId);
                     } catch (error) {
-                        console.error(`Error applying car controls for ${playerId}:`, error);
+                        handlePhysicsError(error, `applyCarControls(${playerId})`);
                     }
                 }
             });
-            
+
             // Update all car meshes to match their physics bodies
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
-                if (car && car.mesh && car.physicsBody) {
+                if (car && car.mesh && car.physicsBody && gameState.physics.healthy) {
                     try {
                         // Sync visual model with dynamic physics body
                         rapierPhysics.syncCarModelWithPhysics(
@@ -1014,7 +1204,7 @@ function gameLoopWithoutRecursion(timestamp) {
                             car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
                         }
                     } catch (error) {
-                        console.error(`Error syncing car model for ${playerId}:`, error);
+                        handlePhysicsError(error, `syncCarModel(${playerId})`);
 
                         // If sync fails, check if the car's physics body has invalid values
                         try {
@@ -1024,7 +1214,7 @@ function gameLoopWithoutRecursion(timestamp) {
                                 resetCarPosition(playerId);
                             }
                         } catch (posError) {
-                            console.error(`Error getting position for car ${playerId}:`, posError);
+                            handlePhysicsError(posError, `getPosition(${playerId})`);
                         }
                     }
                 }
