@@ -1,5 +1,9 @@
 # Multiplayer Racer Development Guide
 
+## Environment Setup
+- Activate virtual environment: `pyenv activate multiplayer-racer`
+- This must be done before running the server or any Python commands
+
 ## Server Commands
 - Run server: `python server/app.py`
 - Run IP detection test: `python server/test_ip_detection.py`
@@ -35,3 +39,68 @@
   - Host will host a game on a big screen
   - Player gives a controller interface to mobile devices
 - Communication: Real-time via WebSockets
+
+## Physics Implementation (Rapier 3D)
+
+### IMPORTANT: Use Rapier's Built-in Vehicle Controller
+
+Rapier has a dedicated `DynamicRayCastVehicleController` class for vehicle physics.
+**DO NOT** manually apply suspension forces with `addForceAtPoint()` - this is error-prone and causes instability (cars flying upward).
+
+### Correct Implementation Pattern
+
+```javascript
+// 1. Create vehicle controller (once, during setup)
+const vehicleController = world.createVehicleController(chassisRigidBody);
+
+// 2. Add wheels with proper configuration
+vehicleController.addWheel(
+    {x: -1, y: 0, z: 1.5},    // Position relative to chassis
+    {x: 0, y: -1, z: 0},       // Suspension direction (DOWN)
+    {x: -1, y: 0, z: 0},       // Axle axis
+    0.8,                        // Suspension rest length
+    0.3                         // Wheel radius
+);
+
+// 3. Configure suspension for each wheel
+vehicleController.setWheelSuspensionStiffness(wheelIndex, 24.0);
+vehicleController.setWheelFrictionSlip(wheelIndex, 1000.0);
+
+// 4. In game loop - set controls then update
+vehicleController.setWheelEngineForce(0, engineForce);
+vehicleController.setWheelEngineForce(1, engineForce);
+vehicleController.setWheelSteering(0, steeringAngle);
+vehicleController.setWheelSteering(1, steeringAngle);
+vehicleController.setWheelBrake(2, brakeForce);
+vehicleController.setWheelBrake(3, brakeForce);
+
+// 5. Update vehicle physics (BEFORE world.step())
+vehicleController.updateVehicle(deltaTime);
+world.step();
+```
+
+### Key References
+- Official Rapier docs: https://rapier.rs/javascript3d/classes/DynamicRayCastVehicleController.html
+- Three.js example: https://threejs.org/examples/physics_rapier_vehicle_controller.html
+
+### Common Mistakes to Avoid
+1. **Don't** manually calculate suspension forces - Rapier does this correctly
+2. **Don't** use `addForceAtPoint()` for vehicle physics - causes instability
+3. **Don't** call `world.step()` before `vehicleController.updateVehicle()`
+4. **Do** use reasonable mass (10-50 units for arcade feel)
+5. **Do** set friction slip high enough for grip (500-1000)
+
+### Debugging Physics Issues - IMPORTANT
+**NEVER multiply/divide values by 1000x to "make it work"**
+
+If physics isn't working (car not moving, flying away, etc):
+- Don't just multiply force values by large numbers - this masks the real problem
+- Don't scale parameters randomly hoping something works
+- **DO** investigate the root cause: wrong API usage, order of operations, missing setup
+- **DO** check if you're using the correct Rapier API for the task
+- **DO** look for fundamental architectural issues (dead code, conflicting systems)
+- **DO** read official documentation and examples
+
+Example: If car won't move with engineForce=100, changing to 100000 won't fix it if
+the fundamental problem is that forces aren't being applied correctly or the vehicle
+controller isn't being used at all.

@@ -885,21 +885,21 @@ function updateInputIndicator() {
     }
     
     try {
-        const inputIndicator = document.getElementById('input-indicator');
+        let inputIndicator = document.getElementById('input-indicator');
         if (!inputIndicator) {
-            const indicator = document.createElement('div');
-            indicator.id = 'input-indicator';
-            indicator.style.position = 'absolute';
-            indicator.style.bottom = '10px';
-            indicator.style.left = '10px';
-            indicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            indicator.style.color = 'white';
-            indicator.style.padding = '10px';
-            indicator.style.borderRadius = '5px';
-            indicator.style.fontFamily = 'monospace';
-            indicator.style.fontSize = '14px';
-            indicator.style.pointerEvents = 'none'; // Pass events through
-            document.body.appendChild(indicator);
+            inputIndicator = document.createElement('div');
+            inputIndicator.id = 'input-indicator';
+            inputIndicator.style.position = 'absolute';
+            inputIndicator.style.bottom = '10px';
+            inputIndicator.style.left = '10px';
+            inputIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            inputIndicator.style.color = 'white';
+            inputIndicator.style.padding = '10px';
+            inputIndicator.style.borderRadius = '5px';
+            inputIndicator.style.fontFamily = 'monospace';
+            inputIndicator.style.fontSize = '14px';
+            inputIndicator.style.pointerEvents = 'none'; // Pass events through
+            document.body.appendChild(inputIndicator);
         }
         
         // Get current control inputs

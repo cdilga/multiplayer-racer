@@ -132,31 +132,35 @@
     <script type="module">
         // Create a global flag to indicate Rapier loading status
         window.rapierLoaded = false;
-        
+        window.RAPIER = null;
+
         // Monitor Rapier loading
         async function checkRapierStatus() {
             try {
                 console.log("Attempting to load Rapier module...");
                 const rapier = await import('@dimforge/rapier3d-compat');
                 console.log("Rapier module imported successfully!");
-                
-                // Initialize WASM
+
+                // Initialize WASM only once - store globally for other scripts to use
                 await rapier.init();
                 console.log("Rapier WASM initialized!");
-                
+
+                // Store the initialized module globally so other scripts don't need to re-initialize
+                window.RAPIER = rapier;
+
                 // Set global flag
                 window.rapierLoaded = true;
-                
+
                 // Trigger a custom event to notify other scripts
                 window.dispatchEvent(new CustomEvent('rapier-ready'));
-                
+
                 return true;
             } catch(error) {
                 console.error("Failed to load Rapier:", error);
                 return false;
             }
         }
-        
+
         // Start monitoring
         checkRapierStatus();
     </script>
@@ -165,16 +169,6 @@
     <script src="/static/js/trackBuilder.js"></script>
     <script src="/static/js/carModel.js"></script>
     <script src="/static/js/rapierPhysics.js"></script>
-    <script>
-        // Once Rapier is ready, then load and initialize the kinematic controller
-        window.addEventListener('rapier-ready', function() {
-            // Dynamic script loading for kinematic controller to ensure RAPIER is available first
-            const script = document.createElement('script');
-            script.src = '/static/js/carKinematicController.js';
-            script.async = false;
-            document.body.appendChild(script);
-        });
-    </script>
     <script src="/static/js/host.js"></script>
     
     <!-- Pass server data to client -->

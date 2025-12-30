@@ -20,7 +20,11 @@ const gameState = {
         world: null,
         bodies: {},
         colliders: {},
-        usingRapier: false
+        usingRapier: false,
+        healthy: true,  // Tracks if physics world is operational
+        lastErrorTime: 0,  // Timestamp of last error to prevent spam
+        recoveryAttempts: 0,  // Track recovery attempts
+        maxRecoveryAttempts: 3  // Maximum recovery attempts before giving up
     },
     showStats: false,
     showPhysicsDebug: false,
@@ -38,6 +42,9 @@ const gameState = {
     debugRenderLogged: false,
     forceVisualization: []
 };
+
+// Expose gameState globally for testing and debugging
+window.gameState = gameState;
 
 // DOM elements
 const elements = {
@@ -201,13 +208,18 @@ socket.on('player_left', (data) => {
 
 socket.on('player_controls_update', (data) => {
     const { player_id, acceleration, braking, steering } = data;
-    
+
+    // Skip control updates if test override is active (for automated testing)
+    if (gameState._testControlsOverride) {
+        return;
+    }
+
     if (gameState.gameActive && gameState.cars[player_id]) {
         const car = gameState.cars[player_id];
         // Validate and sanitize control inputs before assigning
         car.controls = {
             acceleration: Math.max(0, Math.min(1, acceleration || 0)), // Clamp between 0-1
-            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1 
+            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1
             steering: Math.max(-1, Math.min(1, steering || 0)) // Clamp between -1 to 1
         };
         // Update last control update timestamp
@@ -226,6 +238,10 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'F3' || e.key === 'f3') {
         gameState.showStats = !gameState.showStats;
         elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
+        // Immediately update stats content when showing
+        if (gameState.showStats) {
+            updateStatsDisplay();
+        }
         console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
         e.preventDefault();
     }
@@ -504,9 +520,13 @@ function initGame() {
         // Initialize physics world - THIS IS ASYNC and needs to be waited for
         // Initialize physics world and then create cars
         initPhysics().then((physicsInitialized) => {
-            // Now create cars after physics is initialized
-            console.log('Physics initialized, now creating cars');
-            
+            // Check if physics actually initialized successfully
+            if (!physicsInitialized) {
+                console.warn('Physics failed to initialize - creating cars without physics');
+            } else {
+                console.log('Physics initialized successfully, now creating cars');
+            }
+
             // Create cars for each player with spread-out starting positions
             const playerIds = Object.keys(gameState.players);
             
@@ -515,7 +535,39 @@ function initGame() {
                 const player = gameState.players[playerId];
                 createPlayerCar(playerId, player.color);
             });
-            
+
+            // Step physics world once to initialize body positions before game loop
+            // This prevents NaN values from translation() on newly created bodies
+            if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
+                console.log('Stepping physics world to initialize body positions');
+                try {
+                    const world = gameState.physics.world;
+                    world.step();
+
+                    // Validate that all car physics bodies now have valid positions
+                    for (const playerId of playerIds) {
+                        const car = gameState.cars[playerId];
+                        if (car && car.physicsBody) {
+                            try {
+                                const pos = car.physicsBody.translation();
+                                if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(pos.z)) {
+                                    console.error(`Car ${playerId} still has invalid position after initial step:`, pos);
+                                    gameState.physics.healthy = false;
+                                } else {
+                                    console.log(`Car ${playerId} position initialized: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+                                }
+                            } catch (e) {
+                                console.error(`Error getting car ${playerId} position:`, e.message);
+                                gameState.physics.healthy = false;
+                            }
+                        }
+                    }
+                } catch (stepError) {
+                    console.error('Initial world.step() failed:', stepError.message);
+                    gameState.physics.healthy = false;
+                }
+            }
+
             // Force multiple renders to ensure everything is displayed correctly
             gameState.renderer.render(gameState.scene, gameState.camera);
             
@@ -687,55 +739,28 @@ function createPlayerCar(playerId, carColor) {
         // Initialize physics body if physics is available
         let physicsBody = null;
         
-        if (gameState.physics && gameState.physics.initialized && 
+        if (gameState.physics && gameState.physics.initialized &&
             gameState.physics.world && gameState.physics.usingRapier) {
-            console.log("Creating character controller for car");
-            
+            console.log("Creating dynamic physics body for car");
+
             try {
-                // Get configuration from the physics parameters
-                const controllerConfig = {
-                    // Movement
-                    forwardSpeed: physicsParams.car.forwardSpeed,
-                    reverseSpeed: physicsParams.car.reverseSpeed,
-                    
-                    // Steering
-                    maxSteeringAngle: physicsParams.car.maxSteeringAngle,
-                    steeringSpeed: physicsParams.car.steeringSpeed,
-                    steeringReturnSpeed: physicsParams.car.steeringReturnSpeed,
-                    
-                    // Character Controller specific
-                    characterOffset: physicsParams.characterController.characterOffset,
-                    maxSlopeClimbAngle: physicsParams.characterController.maxSlopeClimbAngle,
-                    minSlopeSlideAngle: physicsParams.characterController.minSlopeSlideAngle,
-                    
-                    // Gravity and autostep
-                    gravity: physicsParams.characterController.gravity,
-                    autostep: {
-                        maxHeight: physicsParams.characterController.autostepHeight,
-                        minWidth: physicsParams.characterController.autostepWidth,
-                        includeDynamicBodies: false
+                // Create dynamic physics body using Rapier
+                physicsBody = rapierPhysics.createCarPhysics(
+                    gameState.physics.world,
+                    startPosition,
+                    carDimensions
+                );
+
+                if (physicsBody) {
+                    console.log('Dynamic physics body created successfully for player', playerId);
+
+                    // Store player ID in physics body userData
+                    if (!physicsBody.userData) {
+                        physicsBody.userData = {};
                     }
-                };
-                
-                // Create kinematic character controller for physics
-                if (window.CarKinematicController) {
-                    physicsBody = window.CarKinematicController.createCarController(
-                        gameState.physics.world,
-                        startPosition,
-                        carDimensions,
-                        controllerConfig
-                    );
-                    
-                    if (physicsBody) {
-                        console.log('Character controller created successfully for player', playerId);
-                        
-                        // Store player ID in physics body
-                        physicsBody.userData.playerId = playerId;
-                    } else {
-                        console.error('Failed to create character controller for player', playerId);
-                    }
+                    physicsBody.userData.playerId = playerId;
                 } else {
-                    console.error('CarKinematicController not found! Make sure the script is loaded correctly.');
+                    console.error('Failed to create dynamic physics body for player', playerId);
                 }
             } catch (error) {
                 console.error('Error creating car physics:', error);
@@ -792,42 +817,56 @@ function createPlayerCar(playerId, carColor) {
 // Initialize physics with Rapier
 async function initPhysics() {
     console.log('Initializing physics with Rapier');
-    
+
     // Return a promise that resolves when physics is initialized
     return new Promise(async (resolve, reject) => {
+        let resolved = false; // Guard against double resolution
+
         try {
             // Check if Rapier is already loaded
-            if (window.rapierLoaded) {
+            if (window.rapierLoaded && window.RAPIER) {
                 console.log('Rapier is already loaded, initializing physics');
-                await initializeWithRapier();
-                resolve(true);
+                const success = await initializeWithRapier();
+                resolved = true;
+                resolve(success);
             } else {
                 console.log('Waiting for Rapier to load...');
-                
+
                 // Set up event listener for when Rapier is ready
-                window.addEventListener('rapier-ready', async function onRapierReady() {
+                const onRapierReady = async function() {
+                    if (resolved) return; // Guard against double resolution
                     console.log('Received rapier-ready event, initializing physics');
                     window.removeEventListener('rapier-ready', onRapierReady);
-                    await initializeWithRapier();
-                    resolve(true);
-                });
-                
+                    const success = await initializeWithRapier();
+                    resolved = true;
+                    resolve(success);
+                };
+
+                window.addEventListener('rapier-ready', onRapierReady);
+
                 // Fallback timeout in case the event never fires
                 setTimeout(() => {
+                    if (resolved) return; // Guard against double resolution
                     console.error('Timed out waiting for Rapier to be ready');
+                    window.removeEventListener('rapier-ready', onRapierReady); // Clean up listener
+                    resolved = true;
                     resolve(false); // Resolve with false to indicate physics init failed
                 }, 5000);
             }
         } catch (error) {
             console.error('Physics initialization error:', error);
-            reject(error);
+            if (!resolved) {
+                resolved = true;
+                reject(error);
+            }
         }
     });
     
     async function initializeWithRapier() {
         try {
+            // rapierPhysics.init() already calls RAPIER.init() internally,
+            // so we don't need to call rapier.init() again (causes deprecation warning)
             const rapier = await rapierPhysics.init();
-            await rapier.init();
             console.log('Rapier physics initialized successfully');
             
             // Store Rapier instance and set flag
@@ -838,14 +877,17 @@ async function initPhysics() {
             const gravity = { x: 0.0, y: -9.81, z: 0.0 };
             const world = new rapier.World(gravity);
             gameState.physics.world = world;
-            
+
             // Create ground collider
             createGroundCollider(world, rapier);
-            
-            // Create walls around the track
+
+            // Create track walls
             createTrackWalls(world, rapier);
-            
+            console.log('Ground and walls created');
+
             gameState.physics.initialized = true;
+            gameState.physics.healthy = true;  // Mark physics as healthy on successful init
+            gameState.physics.recoveryAttempts = 0;  // Reset recovery attempts
             console.log('Physics world created');
             
             return true;
@@ -960,6 +1002,168 @@ function createTrackWalls(world, rapier) {
     }
 }
 
+// Physics world recovery mechanism
+// Attempts to recreate the physics world and all bodies after a crash
+async function attemptPhysicsRecovery() {
+    const now = Date.now();
+
+    // Prevent recovery spam - only attempt once every 5 seconds
+    if (now - gameState.physics.lastErrorTime < 5000) {
+        return false;
+    }
+
+    gameState.physics.lastErrorTime = now;
+    gameState.physics.recoveryAttempts++;
+
+    // Check if we've exceeded max recovery attempts
+    if (gameState.physics.recoveryAttempts > gameState.physics.maxRecoveryAttempts) {
+        console.error(`Physics recovery failed after ${gameState.physics.maxRecoveryAttempts} attempts. Physics disabled.`);
+        return false;
+    }
+
+    console.log(`Attempting physics recovery (attempt ${gameState.physics.recoveryAttempts}/${gameState.physics.maxRecoveryAttempts})...`);
+
+    try {
+        // Store current car positions from meshes before destroying physics
+        const carPositions = {};
+        Object.keys(gameState.cars).forEach(playerId => {
+            const car = gameState.cars[playerId];
+            if (car && car.mesh) {
+                carPositions[playerId] = {
+                    position: {
+                        x: car.mesh.position.x,
+                        y: car.mesh.position.y,
+                        z: car.mesh.position.z
+                    },
+                    quaternion: {
+                        x: car.mesh.quaternion.x,
+                        y: car.mesh.quaternion.y,
+                        z: car.mesh.quaternion.z,
+                        w: car.mesh.quaternion.w
+                    }
+                };
+                // Clear the old physics body reference
+                car.physicsBody = null;
+            }
+        });
+
+        // Clear old physics references
+        gameState.physics.bodies = {};
+        gameState.physics.colliders = {};
+
+        // Try to free the old world (may fail if corrupted, but that's okay)
+        try {
+            if (gameState.physics.world && typeof gameState.physics.world.free === 'function') {
+                gameState.physics.world.free();
+            }
+        } catch (freeError) {
+            console.warn('Could not free old physics world (may already be corrupted):', freeError.message);
+        }
+
+        gameState.physics.world = null;
+
+        // Get the Rapier instance
+        const rapier = gameState.physics.rapier;
+        if (!rapier) {
+            console.error('Rapier instance not available for recovery');
+            return false;
+        }
+
+        // Create a new physics world
+        const gravity = { x: 0.0, y: -9.81, z: 0.0 };
+        const newWorld = new rapier.World(gravity);
+        gameState.physics.world = newWorld;
+
+        console.log('New physics world created');
+
+        // Recreate ground collider
+        createGroundCollider(newWorld, rapier);
+
+        // Recreate walls
+        createTrackWalls(newWorld, rapier);
+
+        // Recreate physics bodies for all cars at their current mesh positions
+        const carDimensions = {
+            width: 2,
+            height: 1,
+            length: 4
+        };
+
+        Object.keys(carPositions).forEach(playerId => {
+            const car = gameState.cars[playerId];
+            const savedPos = carPositions[playerId];
+
+            if (car && savedPos) {
+                try {
+                    // Create new physics body
+                    const physicsBody = rapierPhysics.createCarPhysics(
+                        newWorld,
+                        savedPos.position,
+                        carDimensions
+                    );
+
+                    if (physicsBody) {
+                        // Set rotation to match saved quaternion
+                        physicsBody.setRotation(savedPos.quaternion, true);
+
+                        // Store player ID in physics body userData
+                        if (!physicsBody.userData) {
+                            physicsBody.userData = {};
+                        }
+                        physicsBody.userData.playerId = playerId;
+
+                        // Assign to car
+                        car.physicsBody = physicsBody;
+                        console.log(`Recreated physics body for car ${playerId}`);
+                    }
+                } catch (carError) {
+                    console.error(`Failed to recreate physics for car ${playerId}:`, carError);
+                }
+            }
+        });
+
+        // Mark physics as healthy again
+        gameState.physics.healthy = true;
+        gameState.physics.recoveryAttempts = 0; // Reset attempts on success
+
+        console.log('Physics recovery successful!');
+        return true;
+
+    } catch (recoveryError) {
+        console.error('Physics recovery failed:', recoveryError);
+        gameState.physics.healthy = false;
+        return false;
+    }
+}
+
+// Handle physics error with rate limiting
+function handlePhysicsError(error, context = 'unknown') {
+    const now = Date.now();
+
+    // Only log errors once per second to prevent spam
+    if (now - gameState.physics.lastErrorTime > 1000) {
+        console.error(`Physics error (${context}):`, error.message || error);
+
+        // Check for fatal errors that require recovery
+        const isFatalError = error.message && (
+            error.message.includes('unreachable') ||
+            error.message.includes('recursive use') ||
+            error.message.includes('unsafe aliasing')
+        );
+
+        if (isFatalError && gameState.physics.healthy) {
+            console.warn('Fatal physics error detected, marking world as unhealthy');
+            gameState.physics.healthy = false;
+            gameState.physics.lastErrorTime = now;
+
+            // Schedule recovery attempt
+            setTimeout(() => {
+                attemptPhysicsRecovery();
+            }, 100);
+        }
+    }
+}
+
 // Improved game loop that avoids potential stack overflow issues
 function gameLoopWithoutRecursion(timestamp) {
     try {
@@ -969,101 +1173,100 @@ function gameLoopWithoutRecursion(timestamp) {
         // Calculate delta time since last frame
         const deltaTime = timestamp - (gameState.lastTimestamp || timestamp);
         gameState.lastTimestamp = timestamp;
-        
-        // Skip frames with unreasonable delta times (e.g. after tab was inactive)
-        if (deltaTime > 1000) {
-            console.log(`Large frame time detected: ${deltaTime}ms, skipping physics update`);
+
+        // Skip first frame (deltaTime is 0) and frames with unreasonable delta times
+        if (deltaTime <= 0 || deltaTime > 1000) {
+            if (deltaTime > 1000) {
+                console.log(`Large frame time detected: ${deltaTime}ms, skipping physics update`);
+            }
             return;
         }
         
-        // Process physics if available
-        if (gameState.physics && gameState.physics.world) {
+        // Process physics if available and healthy
+        if (gameState.physics && gameState.physics.world && gameState.physics.healthy) {
             // Step the physics simulation
             // Limit deltaTime to avoid large steps causing instability (max 1/30th second)
             const physicsStep = Math.min(deltaTime / 1000, 1/30);
-            
-            // Pass the time step to Rapier's step function
+
+            // IMPORTANT: Apply controls BEFORE world.step()
+            // Forces are integrated during step() and then reset, so they must be applied first
+            Object.keys(gameState.cars).forEach(playerId => {
+                const car = gameState.cars[playerId];
+                if (car && car.physicsBody && car.controls && gameState.physics.healthy) {
+                    try {
+                        // Apply controls using dynamic physics with delta time and world for raycasting
+                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, physicsStep, gameState.physics.world, playerId);
+                    } catch (error) {
+                        handlePhysicsError(error, `applyCarControls(${playerId})`);
+                    }
+                }
+            });
+
+            // Set the physics timestep via Rapier's integrationParameters
             try {
-                // Don't pass the timestep directly - Rapier in this version might not accept it
-                // Just call step() without arguments to use default timestep
-                gameState.physics.world.step();
+                const world = gameState.physics.world;
+
+                // DON'T modify integrationParameters.dt - let Rapier use its default
+                // Modifying dt dynamically can cause instability
+
+                // DEBUG: Check car position before step
+                const carIds = Object.keys(gameState.cars);
+                const carBeforeStep = carIds.length > 0 && gameState.cars[carIds[0]]?.physicsBody
+                    ? gameState.cars[carIds[0]].physicsBody.translation()
+                    : null;
+
+                // Step the physics simulation (after forces are applied)
+                world.step();
                 gameState.debugCounters.physicsUpdate++;
-                
+
+                // DEBUG: Check if car position changed dramatically
+                if (carBeforeStep && carIds.length > 0 && gameState.cars[carIds[0]]?.physicsBody) {
+                    const carAfterStep = gameState.cars[carIds[0]].physicsBody.translation();
+                    const posChange = carAfterStep.y - carBeforeStep.y;
+                    if (Math.abs(posChange) > 0.5) {
+                        console.error(`⚠️ CAR POSITION JUMP: before=${carBeforeStep.y.toFixed(2)}, after=${carAfterStep.y.toFixed(2)}, change=${posChange.toFixed(2)}`);
+                    }
+                }
+
                 // Debug log once every 300 frames (reduced frequency)
                 if (gameState.debugCounters.physicsUpdate % 300 === 0) {
-                    console.log('Physics world stepping normally');
+                    console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
                 }
             } catch (error) {
-                console.error('Physics step error:', error);
+                handlePhysicsError(error, 'world.step');
+                return; // Skip rest of physics processing when step fails
             }
-            
-            // Apply controls to each car with a physics body using the kinematic controller
-            if (window.CarKinematicController && typeof window.CarKinematicController.updateCarController === 'function') {
-                Object.keys(gameState.cars).forEach(playerId => {
-                    const car = gameState.cars[playerId];
-                    if (car && car.physicsBody && car.controls) {
-                        try {
-                            // Update the car controller with current controls
-                            window.CarKinematicController.updateCarController(
-                                car.physicsBody, 
-                                car.controls, 
-                                physicsStep
-                            );
-                        } catch (error) {
-                            console.error(`Error updating car controller for ${playerId}:`, error);
-                        }
-                    }
-                });
-            }
-            
+
             // Update all car meshes to match their physics bodies
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
-                if (car && car.mesh && car.physicsBody) {
+                if (car && car.mesh && car.physicsBody && gameState.physics.healthy) {
                     try {
-                        // Use the kinematic controller's sync function if available
-                        if (window.CarKinematicController && typeof window.CarKinematicController.syncCarModelWithKinematics === 'function') {
-                            try {
-                                window.CarKinematicController.syncCarModelWithKinematics(
-                                    car.physicsBody,
-                                    car.mesh,
-                                    car.wheels
-                                );
-                                
-                                // Update the car's speed for stats display
-                                if (car.physicsBody.userData) {
-                                    car.speed = car.physicsBody.userData.currentSpeed || 0;
-                                    car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
-                                }
-                            } catch (syncError) {
-                                console.error(`Error syncing car model for ${playerId}:`, syncError);
-                                
-                                // If sync fails, check if the car's physics body has invalid values
-                                const pos = car.physicsBody.translation();
-                                if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
-                                    console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
-                                    resetCarPosition(playerId);
-                                }
-                            }
-                        } else {
-                            // Fallback to basic position/rotation sync
-                            const pos = car.physicsBody.translation();
-                            const rot = car.physicsBody.rotation();
-                            
-                            if (pos && rot && 
-                                isFinite(pos.x) && isFinite(pos.y) && isFinite(pos.z) &&
-                                isFinite(rot.x) && isFinite(rot.y) && isFinite(rot.z) && isFinite(rot.w)) {
-                                // Update car mesh position
-                                car.mesh.position.set(pos.x, pos.y, pos.z);
-                                
-                                // Update car mesh rotation
-                                car.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
-                            } else {
-                                console.warn(`Detected invalid position/rotation for car ${playerId}, skipping update`);
-                            }
+                        // Sync visual model with dynamic physics body
+                        rapierPhysics.syncCarModelWithPhysics(
+                            car.mesh,
+                            car.physicsBody,
+                            car.wheels
+                        );
+
+                        // Update the car's speed for stats display
+                        if (car.physicsBody.userData) {
+                            car.speed = car.physicsBody.userData.currentSpeed || 0;
+                            car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
                         }
                     } catch (error) {
-                        console.error(`Error updating car ${playerId} from physics:`, error);
+                        handlePhysicsError(error, `syncCarModel(${playerId})`);
+
+                        // If sync fails, check if the car's physics body has invalid values
+                        try {
+                            const pos = car.physicsBody.translation();
+                            if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
+                                console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
+                                resetCarPosition(playerId);
+                            }
+                        } catch (posError) {
+                            handlePhysicsError(posError, `getPosition(${playerId})`);
+                        }
                     }
                 }
             });
@@ -1197,45 +1400,61 @@ function updateStatsDisplay() {
         let rotX = 0, rotY = 0, rotZ = 0, rotW = 0;
         let isUpsideDown = false;
         
-        // Get physics state (if available)
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const pos = car.physicsBody.translation();
-            const rot = car.physicsBody.rotation();
-            
-            // Velocity and position
-            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
-            posX = Math.round(pos.x * 100) / 100;
-            posY = Math.round(pos.y * 100) / 100;
-            posZ = Math.round(pos.z * 100) / 100;
-            
-            // Rotation
-            rotX = Math.round(rot.x * 100) / 100;
-            rotY = Math.round(rot.y * 100) / 100;
-            rotZ = Math.round(rot.z * 100) / 100;
-            rotW = Math.round(rot.w * 100) / 100;
-            
-            // Check if car is upside down
-            if (typeof rapierPhysics.isCarUpsideDown === 'function') {
-                isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
+        // Get physics state (if available) with safety checks
+        if (car.physicsBody && gameState.physics.healthy) {
+            try {
+                const vel = car.physicsBody.linvel();
+                const pos = car.physicsBody.translation();
+                const rot = car.physicsBody.rotation();
+
+                // Validate values before using them
+                if (vel && Number.isFinite(vel.x) && Number.isFinite(vel.z)) {
+                    speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
+                }
+                if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y) && Number.isFinite(pos.z)) {
+                    posX = Math.round(pos.x * 100) / 100;
+                    posY = Math.round(pos.y * 100) / 100;
+                    posZ = Math.round(pos.z * 100) / 100;
+                }
+                if (rot && Number.isFinite(rot.x) && Number.isFinite(rot.y) && Number.isFinite(rot.z) && Number.isFinite(rot.w)) {
+                    rotX = Math.round(rot.x * 100) / 100;
+                    rotY = Math.round(rot.y * 100) / 100;
+                    rotZ = Math.round(rot.z * 100) / 100;
+                    rotW = Math.round(rot.w * 100) / 100;
+                }
+
+                // Check if car is upside down
+                if (typeof rapierPhysics.isCarUpsideDown === 'function') {
+                    isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
+                }
+            } catch (e) {
+                // Physics body access failed - silently skip
             }
         }
-        
+
         // Get physics body state
         let physicsState = "No Physics Body";
         let velocityInfo = "";
-        
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const isAwake = typeof car.physicsBody.isAwake === 'function' ? 
-                car.physicsBody.isAwake() : "Unknown";
-                
-            physicsState = `Active: ${isAwake}`;
-            velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
-            
-            // Add upside down indicator
-            if (isUpsideDown) {
-                physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
+
+        if (car.physicsBody && gameState.physics.healthy) {
+            try {
+                const vel = car.physicsBody.linvel();
+                const isAwake = typeof car.physicsBody.isAwake === 'function' ?
+                    car.physicsBody.isAwake() : "Unknown";
+
+                if (vel && Number.isFinite(vel.x) && Number.isFinite(vel.y) && Number.isFinite(vel.z)) {
+                    physicsState = `Active: ${isAwake}`;
+                    velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
+                } else {
+                    physicsState = '<span style="color:orange">Invalid State</span>';
+                }
+
+                // Add upside down indicator
+                if (isUpsideDown) {
+                    physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
+                }
+            } catch (e) {
+                physicsState = '<span style="color:red">Error</span>';
             }
         }
         
@@ -1409,54 +1628,26 @@ function resetCarPosition(playerId) {
     const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
     
     try {
-        // If we have a physics body, reset its position
-        if (car.physicsBody) {
-            // Check if we're using the kinematic controller
-            if (car.physicsBody.userData && car.physicsBody.userData.characterController) {
-                console.log(`Resetting kinematic controller for car ${playerId}`);
-                
-                // Set the next kinematic position and rotation
-                if (typeof car.physicsBody.setNextKinematicTranslation === 'function') {
-                    car.physicsBody.setNextKinematicTranslation(startPosition);
-                }
-                
-                if (typeof car.physicsBody.setNextKinematicRotation === 'function') {
-                    car.physicsBody.setNextKinematicRotation(startRotation);
-                }
-                
-                // Reset the rotation in userData
-                car.physicsBody.userData.rotation = { ...startRotation };
-                
-                // Reset velocity and speed
-                car.physicsBody.userData.velocity = { x: 0, y: 0, z: 0 };
-                car.physicsBody.userData.currentSpeed = 0;
-                
-                // Reset controls
-                car.physicsBody.userData.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-                
-                // Also update the car's controls in gameState
-                car.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-            } 
-            // Fallback to old physics reset if needed
-            else if (gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
-                console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
-                
-                // Call the old reset function
+        // If we have a physics body, reset its position using dynamic physics
+        if (car.physicsBody && gameState.physics.world) {
+            console.log(`Resetting dynamic physics body for car ${playerId}`);
+
+            // Use Rapier's comprehensive reset function
+            if (typeof rapierPhysics.resetCarPosition === 'function') {
                 rapierPhysics.resetCarPosition(
                     gameState.physics.world,
-                    car.physicsBody, 
-                    startPosition, 
+                    car.physicsBody,
+                    startPosition,
                     startRotation
                 );
             }
+
+            // Also update the car's controls in gameState
+            car.controls = {
+                steering: 0,
+                acceleration: 0,
+                braking: 0
+            };
         }
         
         // Also reset the visual mesh position directly
@@ -1698,15 +1889,15 @@ function updatePhysicsDebugVisualization() {
         };
     }
     
-    // Ensure we have physics enabled
-    if (!gameState.physics || !gameState.physics.initialized || !gameState.physics.world) {
+    // Ensure we have physics enabled and healthy
+    if (!gameState.physics || !gameState.physics.initialized || !gameState.physics.world || !gameState.physics.healthy) {
         if (!gameState.physicsDebugLogs.noPhysicsWarning) {
-            console.warn('Physics debug visualization requested but physics is not available');
+            console.warn('Physics debug visualization requested but physics is not available or unhealthy');
             gameState.physicsDebugLogs.noPhysicsWarning = true;
         }
         return;
     }
-    
+
     const world = gameState.physics.world;
     
     // Check if the world has the debugRender method (Rapier should provide this)
@@ -2161,14 +2352,13 @@ let physicsParams = {
     world: {
         gravity: { x: 0.0, y: -20.0, z: 0.0 }
     },
-    characterController: {
-        characterOffset: 0.1,        // Gap between character and environment
-        maxSlopeClimbAngle: 0.6,     // About 35 degrees
-        minSlopeSlideAngle: 0.4,     // About 25 degrees
-        gravity: -20.0,               // Character-specific gravity
-        enableAutostep: true,        // Whether to enable auto-stepping
-        autostepHeight: 0.3,         // Maximum step height
-        autostepWidth: 0.2           // Minimum step width
+    wheels: {
+        frictionSlip: 5.0,
+        rearFrictionMultiplier: 1.1,
+        suspensionRestLength: 0.4,
+        suspensionStiffness: 25.0,
+        suspensionDamping: 3.5,
+        suspensionCompression: 0.5
     }
 };
 
@@ -2393,12 +2583,13 @@ function createParameterControl(container, group, param, label, min, max, step) 
 function createCarParametersUI() {
     const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
     const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
-    
-    // Car body physics
-    createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
-    
+
+    // Update group title
+    const carBodyGroupTitle = carBodyGroup.querySelector('.params-group-title');
+    if (carBodyGroupTitle) {
+        carBodyGroupTitle.textContent = 'Car Body Physics';
+    }
+
     // Movement parameters
     createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
     createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
@@ -2410,32 +2601,35 @@ function createCarParametersUI() {
 // Create UI controls for world parameters
 function createWorldParametersUI() {
     const worldGroup = document.querySelector('#world-params .params-group');
-    
+
     // World physics
     createParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
-    createParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
 }
 
-// Create UI controls for wheels parameters - now just basic character controller settings
+// Create UI controls for wheels parameters
 function createWheelsParametersUI() {
     const wheelGroup = document.querySelector('#wheels-params .params-group:nth-child(1)');
     const suspensionGroup = document.querySelector('#wheels-params .params-group:nth-child(2)');
-    
-    // Update group titles to match new functionality
+
+    // Update group titles
     const wheelGroupTitle = wheelGroup.querySelector('.params-group-title');
     if (wheelGroupTitle) {
-        wheelGroupTitle.textContent = 'Collision Settings';
+        wheelGroupTitle.textContent = 'Wheel Friction';
     }
-    
+
     const suspensionGroupTitle = suspensionGroup.querySelector('.params-group-title');
     if (suspensionGroupTitle) {
-        suspensionGroupTitle.textContent = 'Autostep Settings';
+        suspensionGroupTitle.textContent = 'Suspension';
     }
-    
-    // Character controller collision settings
-    createParameterControl(wheelGroup, 'characterController', 'enableAutostep', 'Enable Autostep', 0, 1, 1);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepHeight', 'Autostep Height', 0.1, 0.5, 0.05);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepWidth', 'Autostep Width', 0.1, 0.5, 0.05);
+
+    // Wheel friction settings
+    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 1.0, 10.0, 0.5);
+    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction', 0.5, 2.0, 0.1);
+
+    // Suspension settings
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 0.8, 0.05);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 50.0, 1.0);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping', 1.0, 10.0, 0.5);
 }
 
 // Setup physics parameter buttons
@@ -2516,46 +2710,29 @@ function applyPhysicsChanges() {
     }
 }
 
-// Update car controller configuration with current parameters
+// Update car physics body configuration with current parameters
 function updateCarControllerConfig(carBody) {
     if (!carBody || !carBody.userData) return;
-    
+
     try {
-        // Update character controller configuration
-        if (carBody.userData.config) {
-            // Forward the new parameters to the character controller config
-            carBody.userData.config.forwardSpeed = physicsParams.car.forwardSpeed;
-            carBody.userData.config.reverseSpeed = physicsParams.car.reverseSpeed;
-            carBody.userData.config.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
-            carBody.userData.config.steeringSpeed = physicsParams.car.steeringSpeed;
-            carBody.userData.config.steeringReturnSpeed = physicsParams.car.steeringReturnSpeed;
-            carBody.userData.config.characterOffset = physicsParams.characterController.characterOffset;
-            carBody.userData.config.maxSlopeClimbAngle = physicsParams.characterController.maxSlopeClimbAngle;
-            carBody.userData.config.minSlopeSlideAngle = physicsParams.characterController.minSlopeSlideAngle;
-            carBody.userData.config.gravity = physicsParams.characterController.gravity;
-            
-            // Update autostep settings if character controller is available
-            if (carBody.userData.characterController) {
-                const controller = carBody.userData.characterController;
-                
-                // Apply autostep settings
-                if (physicsParams.characterController.enableAutostep) {
-                    controller.enableAutostep(
-                        physicsParams.characterController.autostepHeight,
-                        physicsParams.characterController.autostepWidth,
-                        false // Don't enable dynamic bodies for autostep
-                    );
-                } else {
-                    controller.disableAutostep();
-                }
-                
-                // Update other controller settings
-                controller.setMaxSlopeClimbAngle(physicsParams.characterController.maxSlopeClimbAngle);
-                controller.setMinSlopeSlideAngle(physicsParams.characterController.minSlopeSlideAngle);
-            }
+        // Update dynamic physics body parameters
+        // These are stored in userData and used by applyCarControls in rapierPhysics.js
+
+        // Update car-specific physics properties
+        carBody.userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
+
+        // Update wheel physics if wheels exist
+        if (carBody.userData.wheels) {
+            carBody.userData.wheels.forEach(wheel => {
+                wheel.suspensionStiffness = physicsParams.wheels.suspensionStiffness;
+                wheel.suspensionDamping = physicsParams.wheels.suspensionDamping;
+                wheel.suspensionRestLength = physicsParams.wheels.suspensionRestLength;
+                wheel.frictionSlip = physicsParams.wheels.frictionSlip *
+                    (wheel.isFrontWheel ? 1.0 : physicsParams.wheels.rearFrictionMultiplier);
+            });
         }
     } catch (error) {
-        console.error('Error updating car controller config:', error);
+        console.error('Error updating car physics config:', error);
     }
 }
 
