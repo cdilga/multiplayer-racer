@@ -687,55 +687,28 @@ function createPlayerCar(playerId, carColor) {
         // Initialize physics body if physics is available
         let physicsBody = null;
         
-        if (gameState.physics && gameState.physics.initialized && 
+        if (gameState.physics && gameState.physics.initialized &&
             gameState.physics.world && gameState.physics.usingRapier) {
-            console.log("Creating character controller for car");
-            
+            console.log("Creating dynamic physics body for car");
+
             try {
-                // Get configuration from the physics parameters
-                const controllerConfig = {
-                    // Movement
-                    forwardSpeed: physicsParams.car.forwardSpeed,
-                    reverseSpeed: physicsParams.car.reverseSpeed,
-                    
-                    // Steering
-                    maxSteeringAngle: physicsParams.car.maxSteeringAngle,
-                    steeringSpeed: physicsParams.car.steeringSpeed,
-                    steeringReturnSpeed: physicsParams.car.steeringReturnSpeed,
-                    
-                    // Character Controller specific
-                    characterOffset: physicsParams.characterController.characterOffset,
-                    maxSlopeClimbAngle: physicsParams.characterController.maxSlopeClimbAngle,
-                    minSlopeSlideAngle: physicsParams.characterController.minSlopeSlideAngle,
-                    
-                    // Gravity and autostep
-                    gravity: physicsParams.characterController.gravity,
-                    autostep: {
-                        maxHeight: physicsParams.characterController.autostepHeight,
-                        minWidth: physicsParams.characterController.autostepWidth,
-                        includeDynamicBodies: false
+                // Create dynamic physics body using Rapier
+                physicsBody = rapierPhysics.createCarPhysics(
+                    gameState.physics.world,
+                    startPosition,
+                    carDimensions
+                );
+
+                if (physicsBody) {
+                    console.log('Dynamic physics body created successfully for player', playerId);
+
+                    // Store player ID in physics body userData
+                    if (!physicsBody.userData) {
+                        physicsBody.userData = {};
                     }
-                };
-                
-                // Create kinematic character controller for physics
-                if (window.CarKinematicController) {
-                    physicsBody = window.CarKinematicController.createCarController(
-                        gameState.physics.world,
-                        startPosition,
-                        carDimensions,
-                        controllerConfig
-                    );
-                    
-                    if (physicsBody) {
-                        console.log('Character controller created successfully for player', playerId);
-                        
-                        // Store player ID in physics body
-                        physicsBody.userData.playerId = playerId;
-                    } else {
-                        console.error('Failed to create character controller for player', playerId);
-                    }
+                    physicsBody.userData.playerId = playerId;
                 } else {
-                    console.error('CarKinematicController not found! Make sure the script is loaded correctly.');
+                    console.error('Failed to create dynamic physics body for player', playerId);
                 }
             } catch (error) {
                 console.error('Error creating car physics:', error);
@@ -997,73 +970,49 @@ function gameLoopWithoutRecursion(timestamp) {
                 console.error('Physics step error:', error);
             }
             
-            // Apply controls to each car with a physics body using the kinematic controller
-            if (window.CarKinematicController && typeof window.CarKinematicController.updateCarController === 'function') {
-                Object.keys(gameState.cars).forEach(playerId => {
-                    const car = gameState.cars[playerId];
-                    if (car && car.physicsBody && car.controls) {
-                        try {
-                            // Update the car controller with current controls
-                            window.CarKinematicController.updateCarController(
-                                car.physicsBody, 
-                                car.controls, 
-                                physicsStep
-                            );
-                        } catch (error) {
-                            console.error(`Error updating car controller for ${playerId}:`, error);
-                        }
+            // Apply controls to each car with a physics body using dynamic physics
+            Object.keys(gameState.cars).forEach(playerId => {
+                const car = gameState.cars[playerId];
+                if (car && car.physicsBody && car.controls) {
+                    try {
+                        // Apply controls using dynamic physics
+                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, playerId);
+                    } catch (error) {
+                        console.error(`Error applying car controls for ${playerId}:`, error);
                     }
-                });
-            }
+                }
+            });
             
             // Update all car meshes to match their physics bodies
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
                 if (car && car.mesh && car.physicsBody) {
                     try {
-                        // Use the kinematic controller's sync function if available
-                        if (window.CarKinematicController && typeof window.CarKinematicController.syncCarModelWithKinematics === 'function') {
-                            try {
-                                window.CarKinematicController.syncCarModelWithKinematics(
-                                    car.physicsBody,
-                                    car.mesh,
-                                    car.wheels
-                                );
-                                
-                                // Update the car's speed for stats display
-                                if (car.physicsBody.userData) {
-                                    car.speed = car.physicsBody.userData.currentSpeed || 0;
-                                    car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
-                                }
-                            } catch (syncError) {
-                                console.error(`Error syncing car model for ${playerId}:`, syncError);
-                                
-                                // If sync fails, check if the car's physics body has invalid values
-                                const pos = car.physicsBody.translation();
-                                if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
-                                    console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
-                                    resetCarPosition(playerId);
-                                }
-                            }
-                        } else {
-                            // Fallback to basic position/rotation sync
-                            const pos = car.physicsBody.translation();
-                            const rot = car.physicsBody.rotation();
-                            
-                            if (pos && rot && 
-                                isFinite(pos.x) && isFinite(pos.y) && isFinite(pos.z) &&
-                                isFinite(rot.x) && isFinite(rot.y) && isFinite(rot.z) && isFinite(rot.w)) {
-                                // Update car mesh position
-                                car.mesh.position.set(pos.x, pos.y, pos.z);
-                                
-                                // Update car mesh rotation
-                                car.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
-                            } else {
-                                console.warn(`Detected invalid position/rotation for car ${playerId}, skipping update`);
-                            }
+                        // Sync visual model with dynamic physics body
+                        rapierPhysics.syncCarModelWithPhysics(
+                            car.physicsBody,
+                            car.mesh,
+                            car.wheels
+                        );
+
+                        // Update the car's speed for stats display
+                        if (car.physicsBody.userData) {
+                            car.speed = car.physicsBody.userData.currentSpeed || 0;
+                            car.velocity = car.physicsBody.userData.velocity || { x: 0, y: 0, z: 0 };
                         }
                     } catch (error) {
-                        console.error(`Error updating car ${playerId} from physics:`, error);
+                        console.error(`Error syncing car model for ${playerId}:`, error);
+
+                        // If sync fails, check if the car's physics body has invalid values
+                        try {
+                            const pos = car.physicsBody.translation();
+                            if (!pos || !isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
+                                console.warn(`Detected invalid position for car ${playerId}, attempting reset`);
+                                resetCarPosition(playerId);
+                            }
+                        } catch (posError) {
+                            console.error(`Error getting position for car ${playerId}:`, posError);
+                        }
                     }
                 }
             });
@@ -1409,54 +1358,26 @@ function resetCarPosition(playerId) {
     const startRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (no rotation)
     
     try {
-        // If we have a physics body, reset its position
-        if (car.physicsBody) {
-            // Check if we're using the kinematic controller
-            if (car.physicsBody.userData && car.physicsBody.userData.characterController) {
-                console.log(`Resetting kinematic controller for car ${playerId}`);
-                
-                // Set the next kinematic position and rotation
-                if (typeof car.physicsBody.setNextKinematicTranslation === 'function') {
-                    car.physicsBody.setNextKinematicTranslation(startPosition);
-                }
-                
-                if (typeof car.physicsBody.setNextKinematicRotation === 'function') {
-                    car.physicsBody.setNextKinematicRotation(startRotation);
-                }
-                
-                // Reset the rotation in userData
-                car.physicsBody.userData.rotation = { ...startRotation };
-                
-                // Reset velocity and speed
-                car.physicsBody.userData.velocity = { x: 0, y: 0, z: 0 };
-                car.physicsBody.userData.currentSpeed = 0;
-                
-                // Reset controls
-                car.physicsBody.userData.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-                
-                // Also update the car's controls in gameState
-                car.controls = {
-                    steering: 0,
-                    acceleration: 0,
-                    braking: 0
-                };
-            } 
-            // Fallback to old physics reset if needed
-            else if (gameState.physics.world && typeof rapierPhysics.resetCarPosition === 'function') {
-                console.log(`Using Rapier's comprehensive reset for car ${playerId}`);
-                
-                // Call the old reset function
+        // If we have a physics body, reset its position using dynamic physics
+        if (car.physicsBody && gameState.physics.world) {
+            console.log(`Resetting dynamic physics body for car ${playerId}`);
+
+            // Use Rapier's comprehensive reset function
+            if (typeof rapierPhysics.resetCarPosition === 'function') {
                 rapierPhysics.resetCarPosition(
                     gameState.physics.world,
-                    car.physicsBody, 
-                    startPosition, 
+                    car.physicsBody,
+                    startPosition,
                     startRotation
                 );
             }
+
+            // Also update the car's controls in gameState
+            car.controls = {
+                steering: 0,
+                acceleration: 0,
+                braking: 0
+            };
         }
         
         // Also reset the visual mesh position directly
