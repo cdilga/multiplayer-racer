@@ -308,7 +308,8 @@ function createGroundPlane(world) {
 
 // Apply forces to a car body based on controls
 // deltaTime is the physics timestep in seconds (used for smoothing, not force scaling - Rapier handles that)
-function applyCarControls(carBody, controls, deltaTime, playerId) {
+// world is the Rapier physics world (used for raycasting)
+function applyCarControls(carBody, controls, deltaTime, world, playerId) {
     if (!carBody) return;
 
     // Default deltaTime if not provided
@@ -499,33 +500,74 @@ function applyCarControls(carBody, controls, deltaTime, playerId) {
                     y: worldPos.y + wheelWorldPos.y,
                     z: worldPos.z + wheelWorldPos.z
                 };
-                
-                // Perform raycast test (simplified since we don't call the RAPIER raycast API directly)
-                const groundY = 0; // Assuming ground is at Y=0
-                const wheelHeight = wheelPosWorld.y;
-                
-                // SIMPLIFIED GROUND DETECTION: If car is within a height threshold, force it to stay on ground
-                const heightThreshold = 10.0; // If car is within this distance of ground, consider it for contact
-                
-                if (wheelHeight < heightThreshold) {
-                    // We're close enough to ground, FORCE ground contact
+
+                // Proper raycast ground detection using Rapier
+                const maxRayDistance = wheel.suspensionRestLength + wheel.wheelRadius + 0.5; // Extra margin
+                let groundHit = null;
+
+                // Perform raycast if world and RAPIER are available
+                if (world && RAPIER && RAPIER.Ray) {
+                    try {
+                        // Create ray from wheel position pointing downward
+                        const rayOrigin = { x: wheelPosWorld.x, y: wheelPosWorld.y, z: wheelPosWorld.z };
+                        const rayDirection = { x: 0, y: -1, z: 0 }; // Pointing down
+                        const ray = new RAPIER.Ray(rayOrigin, rayDirection);
+
+                        // Cast ray, excluding the car's own colliders
+                        const hit = world.castRay(
+                            ray,
+                            maxRayDistance,
+                            true, // solid
+                            undefined, // filterFlags
+                            undefined, // filterGroups
+                            undefined, // excludeCollider
+                            carBody    // excludeRigidBody - exclude the car itself
+                        );
+
+                        if (hit) {
+                            groundHit = {
+                                distance: hit.toi,
+                                point: {
+                                    x: rayOrigin.x + rayDirection.x * hit.toi,
+                                    y: rayOrigin.y + rayDirection.y * hit.toi,
+                                    z: rayOrigin.z + rayDirection.z * hit.toi
+                                },
+                                normal: { x: 0, y: 1, z: 0 } // Assume flat ground for now
+                            };
+                        }
+                    } catch (rayError) {
+                        // Raycast failed, fall back to height-based detection
+                        if (Math.random() < 0.001) {
+                            console.warn('Raycast failed:', rayError);
+                        }
+                    }
+                }
+
+                // Fallback to simple height check if raycast not available or failed
+                if (!groundHit) {
+                    const groundY = 0; // Assuming ground is at Y=0
+                    const distanceToGround = wheelPosWorld.y - groundY;
+                    if (distanceToGround < maxRayDistance && distanceToGround > 0) {
+                        groundHit = {
+                            distance: distanceToGround,
+                            point: { x: wheelPosWorld.x, y: groundY, z: wheelPosWorld.z },
+                            normal: { x: 0, y: 1, z: 0 }
+                        };
+                    }
+                }
+
+                // Process ground contact if we have a hit
+                if (groundHit && groundHit.distance < maxRayDistance) {
                     wheel.groundContact = true;
-                    
-                    // Calculate ideal wheel height (wheelRadius above ground)
-                    const idealHeight = wheel.wheelRadius;
-                    
-                    // Calculate suspension compression
+
+                    // Calculate suspension compression based on raycast distance
+                    const suspensionLength = groundHit.distance - wheel.wheelRadius;
                     const previousCompression = wheel.compression || 0;
-                    wheel.compression = Math.max(0, wheel.suspensionRestLength - (wheelHeight - idealHeight));
+                    wheel.compression = Math.max(0, wheel.suspensionRestLength - suspensionLength);
 
-                    // Force contact point to be at ground level
-                    wheel.contactPoint = {
-                        x: wheelPosWorld.x,
-                        y: groundY,
-                        z: wheelPosWorld.z
-                    };
-
-                    wheel.contactNormal = { x: 0, y: 1, z: 0 }; // Ground normal points up
+                    // Store contact point and normal
+                    wheel.contactPoint = groundHit.point;
+                    wheel.contactNormal = groundHit.normal;
 
                     atLeastOneWheelInContact = true;
 
@@ -537,12 +579,16 @@ function applyCarControls(carBody, controls, deltaTime, playerId) {
                     const compressionVelocity = (wheel.compression - previousCompression) / dt;
                     const damperForce = wheel.suspensionDamping * compressionVelocity;
 
-                    // Total suspension force (upward)
+                    // Total suspension force (upward along contact normal)
                     const suspensionForce = Math.max(0, springForce + damperForce);
 
-                    // Apply suspension force at wheel position
+                    // Apply suspension force at wheel position along surface normal
                     carBody.addForceAtPoint(
-                        { x: 0, y: suspensionForce, z: 0 },
+                        {
+                            x: wheel.contactNormal.x * suspensionForce,
+                            y: wheel.contactNormal.y * suspensionForce,
+                            z: wheel.contactNormal.z * suspensionForce
+                        },
                         wheelPosWorld,
                         true
                     );

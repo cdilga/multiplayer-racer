@@ -981,8 +981,8 @@ function gameLoopWithoutRecursion(timestamp) {
                 const car = gameState.cars[playerId];
                 if (car && car.physicsBody && car.controls) {
                     try {
-                        // Apply controls using dynamic physics with delta time
-                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, physicsStep, playerId);
+                        // Apply controls using dynamic physics with delta time and world for raycasting
+                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, physicsStep, gameState.physics.world, playerId);
                     } catch (error) {
                         console.error(`Error applying car controls for ${playerId}:`, error);
                     }
