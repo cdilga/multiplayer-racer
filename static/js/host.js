@@ -2499,14 +2499,14 @@ function updateAllParameterControls() {
 function applyPhysicsChanges() {
     try {
         // Apply changes to world physics
-        if (gameState.physicsWorld) {
-            updateWorldPhysics(gameState.physicsWorld);
+        if (gameState.physics && gameState.physics.world) {
+            updateWorldPhysics(gameState.physics.world);
         }
-        
+
         // Apply changes to existing car controllers
         for (const playerId in gameState.players) {
             const player = gameState.players[playerId];
-            
+
             if (player.carBody) {
                 updateCarControllerConfig(player.carBody);
             }

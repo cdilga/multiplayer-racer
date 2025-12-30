@@ -64,4 +64,9 @@ bower_components/
 # Coverage directory
 coverage/
 .coverage
-htmlcov/ 
+htmlcov/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/ 
