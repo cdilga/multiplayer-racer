@@ -514,25 +514,33 @@ function applyCarControls(carBody, controls, deltaTime, playerId) {
                     // Calculate ideal wheel height (wheelRadius above ground)
                     const idealHeight = wheel.wheelRadius;
                     
-                    // Calculate how much suspension should be compressed to reach ideal height
+                    // Calculate suspension compression
+                    const previousCompression = wheel.compression || 0;
                     wheel.compression = Math.max(0, wheel.suspensionRestLength - (wheelHeight - idealHeight));
-                    
+
                     // Force contact point to be at ground level
                     wheel.contactPoint = {
                         x: wheelPosWorld.x,
                         y: groundY,
                         z: wheelPosWorld.z
                     };
-                    
+
                     wheel.contactNormal = { x: 0, y: 1, z: 0 }; // Ground normal points up
-                    
+
                     atLeastOneWheelInContact = true;
-                    
-                    // Apply a smoother suspension force that's more consistent
-                    // Removed the strong oscillating downward force that was causing jumping
-                    const suspensionForce = 20.0 + wheel.compression * 10.0;
-                    
-                    // Apply a consistent force to keep the car on the ground
+
+                    // Proper spring-damper suspension model
+                    // Spring force: F = stiffness * compression
+                    const springForce = wheel.suspensionStiffness * wheel.compression;
+
+                    // Damper force: F = damping * compression_velocity
+                    const compressionVelocity = (wheel.compression - previousCompression) / dt;
+                    const damperForce = wheel.suspensionDamping * compressionVelocity;
+
+                    // Total suspension force (upward)
+                    const suspensionForce = Math.max(0, springForce + damperForce);
+
+                    // Apply suspension force at wheel position
                     carBody.addForceAtPoint(
                         { x: 0, y: suspensionForce, z: 0 },
                         wheelPosWorld,
@@ -687,63 +695,15 @@ function applyCarControls(carBody, controls, deltaTime, playerId) {
                 
                 carBody.addForce(resistanceForce, true);
                 
-                // Add stabilizing torque to counteract unwanted rotation
-                // This helps keep the car from spinning around its axis
+                // Angular stabilization for arcade-style handling
+                // Apply moderate damping to prevent excessive roll/pitch while allowing steering
                 const angVel = carBody.angvel();
-                if (Math.abs(angVel.x) > 0.2 || Math.abs(angVel.z) > 0.2) {
-                    const stabilizingTorque = {
-                        x: -angVel.x * 15.0, // Strong damping for roll
-                        y: -angVel.y * 1.5,  // Light damping for yaw (steering)
-                        z: -angVel.z * 15.0  // Strong damping for pitch
-                    };
-                    carBody.addTorque(stabilizingTorque, true);
-                }
-                
-                if (Math.random() < 0.001) {
-                    console.log(`🌬️ DRAG: Applied resistance: ${appliedDragForce.toFixed(0)}N at ${speedKmh.toFixed(1)} km/h`);
-                }
-            }
-
-            // Apply a direct downward force to ensure the car doesn't float away
-            const carHeight = carBody.translation().y;
-            
-            // Always apply anti-bounce force to counter vertical velocity
-            const verticalVel = vel.y;
-            if (Math.abs(verticalVel) > 0.1) {
-                // Strong counter-force to dampen vertical velocity - increased from 10.0 to 15.0
-                const antiVelocityForce = -verticalVel * 15.0;
-                carBody.addForce({
-                    x: 0,
-                    y: antiVelocityForce,
-                    z: 0
-                }, true);
-                
-                // If car is moving upward too fast, apply even more damping
-                if (verticalVel > 2.0) {
-                    const extraDamping = -verticalVel * 10.0; // Extra damping for upward velocity
-                    carBody.addForce({
-                        x: 0,
-                        y: extraDamping,
-                        z: 0
-                    }, true);
-                }
-            }
-            
-            // Additional gravity if car is too high
-            if (carHeight > 1.0) { // If car is more than 1 unit above ground
-                // Apply stronger force the higher the car is
-                const gravityMultiplier = 2.0 + carHeight * 3.0;
-                const downwardForce = {
-                    x: 0,
-                    y: -500.0 * gravityMultiplier, // Much stronger direct force
-                    z: 0
+                const stabilizingTorque = {
+                    x: -angVel.x * 5.0,  // Moderate damping for roll
+                    y: -angVel.y * 0.5,  // Very light damping for yaw (allow steering)
+                    z: -angVel.z * 5.0   // Moderate damping for pitch
                 };
-                
-                carBody.addForce(downwardForce, true);
-                
-                if (Math.random() < 0.005) {
-                    console.log(`⬇️ GRAVITY: Applied downward force: ${(500.0 * gravityMultiplier).toFixed(0)}N at height ${carHeight.toFixed(1)}`);
-                }
+                carBody.addTorque(stabilizingTorque, true);
             }
         }
         
