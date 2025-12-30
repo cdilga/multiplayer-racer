@@ -194,10 +194,14 @@ socket.on('join_error', (data) => {
 socket.on('game_joined', (data) => {
     gameState.playerId = data.player_id;
     gameState.carColor = data.car_color;
-    
-    // Update UI
-    elements.displayName.textContent = gameState.playerName;
-    elements.displayRoom.textContent = gameState.roomCode;
+
+    // Update UI (with null checks for DOM elements)
+    if (elements.displayName) {
+        elements.displayName.textContent = gameState.playerName;
+    }
+    if (elements.displayRoom) {
+        elements.displayRoom.textContent = gameState.roomCode;
+    }
     
     // Initialize car preview
     initCarPreview();
@@ -264,10 +268,11 @@ socket.on('host_disconnected', () => {
 socket.on('position_reset', (data) => {
     if (gameState.gameStarted) {
         console.log('Position reset received:', data);
-        
+
         // Update speed display
-        elements.speedDisplay.textContent = "0 km/h";
-        
+        if (elements.speedDisplay) {
+            elements.speedDisplay.textContent = "0 km/h";
+        }
     }
 });
 
@@ -275,7 +280,9 @@ socket.on('position_reset', (data) => {
 socket.on('name_updated', (data) => {
     if (data.success) {
         gameState.playerName = data.name;
-        elements.displayName.textContent = data.name;
+        if (elements.displayName) {
+            elements.displayName.textContent = data.name;
+        }
         console.log(`Name updated to: ${data.name}`);
     }
 });
@@ -358,12 +365,18 @@ function showMessage(message, duration = 3000) {
 }
 
 function showError(message) {
+    if (!elements.errorMessage) {
+        console.error('Error display element not found:', message);
+        return;
+    }
     elements.errorMessage.textContent = message;
     elements.errorMessage.classList.remove('hidden');
-    
+
     // Hide error after 3 seconds
     setTimeout(() => {
-        elements.errorMessage.classList.add('hidden');
+        if (elements.errorMessage) {
+            elements.errorMessage.classList.add('hidden');
+        }
     }, 3000);
 }
 
@@ -496,8 +509,12 @@ function createCarModel(color) {
 
 function initGameControls() {
     // Create new control layout with touch areas
-    
-    // Clear existing controls
+
+    // Clear existing controls (with null check)
+    if (!elements.controlsContainer) {
+        console.error('Controls container not found');
+        return;
+    }
     elements.controlsContainer.innerHTML = '';
     
     // Create left half (steering) and right half (pedals) areas
