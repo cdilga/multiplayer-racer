@@ -2088,14 +2088,13 @@ let physicsParams = {
     world: {
         gravity: { x: 0.0, y: -20.0, z: 0.0 }
     },
-    characterController: {
-        characterOffset: 0.1,        // Gap between character and environment
-        maxSlopeClimbAngle: 0.6,     // About 35 degrees
-        minSlopeSlideAngle: 0.4,     // About 25 degrees
-        gravity: -20.0,               // Character-specific gravity
-        enableAutostep: true,        // Whether to enable auto-stepping
-        autostepHeight: 0.3,         // Maximum step height
-        autostepWidth: 0.2           // Minimum step width
+    wheels: {
+        frictionSlip: 5.0,
+        rearFrictionMultiplier: 1.1,
+        suspensionRestLength: 0.4,
+        suspensionStiffness: 25.0,
+        suspensionDamping: 3.5,
+        suspensionCompression: 0.5
     }
 };
 
@@ -2320,12 +2319,13 @@ function createParameterControl(container, group, param, label, min, max, step) 
 function createCarParametersUI() {
     const carBodyGroup = document.querySelector('#car-params .params-group:nth-child(1)');
     const movementGroup = document.querySelector('#car-params .params-group:nth-child(2)');
-    
-    // Car body physics
-    createParameterControl(carBodyGroup, 'characterController', 'characterOffset', 'Character Offset', 0.05, 0.5, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'maxSlopeClimbAngle', 'Max Climb Angle', 0.2, 1.0, 0.05);
-    createParameterControl(carBodyGroup, 'characterController', 'minSlopeSlideAngle', 'Min Slide Angle', 0.2, 0.8, 0.05);
-    
+
+    // Update group title
+    const carBodyGroupTitle = carBodyGroup.querySelector('.params-group-title');
+    if (carBodyGroupTitle) {
+        carBodyGroupTitle.textContent = 'Car Body Physics';
+    }
+
     // Movement parameters
     createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
     createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
@@ -2337,32 +2337,35 @@ function createCarParametersUI() {
 // Create UI controls for world parameters
 function createWorldParametersUI() {
     const worldGroup = document.querySelector('#world-params .params-group');
-    
+
     // World physics
     createParameterControl(worldGroup, 'world', 'gravity.y', 'World Gravity Y', -30, -5, 0.5);
-    createParameterControl(worldGroup, 'characterController', 'gravity', 'Car Gravity', -30, -5, 0.5);
 }
 
-// Create UI controls for wheels parameters - now just basic character controller settings
+// Create UI controls for wheels parameters
 function createWheelsParametersUI() {
     const wheelGroup = document.querySelector('#wheels-params .params-group:nth-child(1)');
     const suspensionGroup = document.querySelector('#wheels-params .params-group:nth-child(2)');
-    
-    // Update group titles to match new functionality
+
+    // Update group titles
     const wheelGroupTitle = wheelGroup.querySelector('.params-group-title');
     if (wheelGroupTitle) {
-        wheelGroupTitle.textContent = 'Collision Settings';
+        wheelGroupTitle.textContent = 'Wheel Friction';
     }
-    
+
     const suspensionGroupTitle = suspensionGroup.querySelector('.params-group-title');
     if (suspensionGroupTitle) {
-        suspensionGroupTitle.textContent = 'Autostep Settings';
+        suspensionGroupTitle.textContent = 'Suspension';
     }
-    
-    // Character controller collision settings
-    createParameterControl(wheelGroup, 'characterController', 'enableAutostep', 'Enable Autostep', 0, 1, 1);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepHeight', 'Autostep Height', 0.1, 0.5, 0.05);
-    createParameterControl(suspensionGroup, 'characterController', 'autostepWidth', 'Autostep Width', 0.1, 0.5, 0.05);
+
+    // Wheel friction settings
+    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 1.0, 10.0, 0.5);
+    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction', 0.5, 2.0, 0.1);
+
+    // Suspension settings
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 0.8, 0.05);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 50.0, 1.0);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping', 1.0, 10.0, 0.5);
 }
 
 // Setup physics parameter buttons
@@ -2443,46 +2446,29 @@ function applyPhysicsChanges() {
     }
 }
 
-// Update car controller configuration with current parameters
+// Update car physics body configuration with current parameters
 function updateCarControllerConfig(carBody) {
     if (!carBody || !carBody.userData) return;
-    
+
     try {
-        // Update character controller configuration
-        if (carBody.userData.config) {
-            // Forward the new parameters to the character controller config
-            carBody.userData.config.forwardSpeed = physicsParams.car.forwardSpeed;
-            carBody.userData.config.reverseSpeed = physicsParams.car.reverseSpeed;
-            carBody.userData.config.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
-            carBody.userData.config.steeringSpeed = physicsParams.car.steeringSpeed;
-            carBody.userData.config.steeringReturnSpeed = physicsParams.car.steeringReturnSpeed;
-            carBody.userData.config.characterOffset = physicsParams.characterController.characterOffset;
-            carBody.userData.config.maxSlopeClimbAngle = physicsParams.characterController.maxSlopeClimbAngle;
-            carBody.userData.config.minSlopeSlideAngle = physicsParams.characterController.minSlopeSlideAngle;
-            carBody.userData.config.gravity = physicsParams.characterController.gravity;
-            
-            // Update autostep settings if character controller is available
-            if (carBody.userData.characterController) {
-                const controller = carBody.userData.characterController;
-                
-                // Apply autostep settings
-                if (physicsParams.characterController.enableAutostep) {
-                    controller.enableAutostep(
-                        physicsParams.characterController.autostepHeight,
-                        physicsParams.characterController.autostepWidth,
-                        false // Don't enable dynamic bodies for autostep
-                    );
-                } else {
-                    controller.disableAutostep();
-                }
-                
-                // Update other controller settings
-                controller.setMaxSlopeClimbAngle(physicsParams.characterController.maxSlopeClimbAngle);
-                controller.setMinSlopeSlideAngle(physicsParams.characterController.minSlopeSlideAngle);
-            }
+        // Update dynamic physics body parameters
+        // These are stored in userData and used by applyCarControls in rapierPhysics.js
+
+        // Update car-specific physics properties
+        carBody.userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
+
+        // Update wheel physics if wheels exist
+        if (carBody.userData.wheels) {
+            carBody.userData.wheels.forEach(wheel => {
+                wheel.suspensionStiffness = physicsParams.wheels.suspensionStiffness;
+                wheel.suspensionDamping = physicsParams.wheels.suspensionDamping;
+                wheel.suspensionRestLength = physicsParams.wheels.suspensionRestLength;
+                wheel.frictionSlip = physicsParams.wheels.frictionSlip *
+                    (wheel.isFrontWheel ? 1.0 : physicsParams.wheels.rearFrictionMultiplier);
+            });
         }
     } catch (error) {
-        console.error('Error updating car controller config:', error);
+        console.error('Error updating car physics config:', error);
     }
 }
 
