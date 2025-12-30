@@ -55,7 +55,7 @@ test.describe('Console Error Monitoring', () => {
             return !warn.includes('deprecated parameters');
         });
 
-        // Log all errors for debugging
+        // Log all errors for debugging test failures
         if (criticalErrors.length > 0) {
             console.log('Console errors found:', criticalErrors);
         }

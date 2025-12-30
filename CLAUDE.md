@@ -1,5 +1,9 @@
 # Multiplayer Racer Development Guide
 
+## Environment Setup
+- Activate virtual environment: `pyenv activate multiplayer-racer`
+- This must be done before running the server or any Python commands
+
 ## Server Commands
 - Run server: `python server/app.py`
 - Run IP detection test: `python server/test_ip_detection.py`

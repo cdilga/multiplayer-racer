@@ -20,11 +20,11 @@ export default defineConfig({
             use: { ...devices['Desktop Chrome'] },
         },
     ],
-    // Don't start server automatically - we'll handle it in CI
-    // webServer: {
-    //     command: 'python server/app.py',
-    //     url: 'http://localhost:8000',
-    //     reuseExistingServer: !process.env.CI,
-    //     timeout: 30000,
-    // },
+    // Start server automatically for tests using pyenv environment
+    webServer: {
+        command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && python server/app.py"',
+        url: 'http://localhost:8000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 30000,
+    },
 });

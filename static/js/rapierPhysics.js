@@ -85,14 +85,20 @@ function createCarPhysics(world, position, dimensions) {
         console.error('Rapier world not initialized');
         return null;
     }
+
+    // Verify RAPIER module matches the one used to create the world
+    if (window.RAPIER && RAPIER !== window.RAPIER) {
+        console.warn('RAPIER module mismatch! Local RAPIER differs from window.RAPIER. Syncing...');
+        RAPIER = window.RAPIER;
+    }
     
     const { width, height, length } = dimensions;
     
     try {
         console.log('Creating derby-style car physics body');
         
-        // Get physics parameters from global object if available
-        const params = window.physicsParams ? window.physicsParams : {
+        // Get physics parameters - use defaults for any missing values
+        const defaultParams = {
             car: {
                 mass: 1200.0,
                 linearDamping: 0.5,
@@ -115,49 +121,72 @@ function createCarPhysics(world, position, dimensions) {
                 suspensionCompression: 0.5
             }
         };
+        // Merge with global params, ensuring all values have defaults
+        const params = {
+            car: { ...defaultParams.car, ...(window.physicsParams?.car || {}) },
+            wheels: { ...defaultParams.wheels, ...(window.physicsParams?.wheels || {}) }
+        };
         
-        // STEP 1: Create the main rigid body with realistic parameters
+        // STEP 1: Create the rigid body with validated parameters
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
             .setLinearDamping(params.car.linearDamping)
             .setAngularDamping(params.car.angularDamping)
-            .setCanSleep(false)
-            .setAdditionalMass(params.car.mass)
-            .setCcdEnabled(true);
+            .setCanSleep(false);
+
+        console.log('Creating rigid body with linearDamping =', params.car.linearDamping, 'angularDamping =', params.car.angularDamping);
         
         const carBody = world.createRigidBody(rigidBodyDesc);
-        
-        // STEP 2: Create a multi-part collision shape to match the visual model
-        
-        // Main chassis - The main body of the car
-        const mainChassisDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2 * 0.6, length/2)
-            .setDensity(0.6)
-            .setFriction(0.1)
-            .setRestitution(0.1);
-        
-        world.createCollider(mainChassisDesc, carBody);
-        
-        // Car roof - Match the visual roof
-        const roofWidth = width * 0.75;
-        const roofHeight = height * 0.7;
-        const roofLength = length * 0.5;
-        
-        const roofDesc = RAPIER.ColliderDesc.cuboid(roofWidth/2, roofHeight/2, roofLength/2)
-            .setTranslation(0, height/2 + roofHeight/2, -(length * 0.05))
-            .setDensity(0.3)
-            .setFriction(0.1)
-            .setRestitution(0.1);
-        
-        world.createCollider(roofDesc, carBody);
-        
-        // Lower chassis - Creates a lower center of mass for stability
-        const floorpanDesc = RAPIER.ColliderDesc.cuboid(width/2 * 0.9, height/4, length/2 * 0.95)
-            .setTranslation(0, -height/4, 0)
-            .setDensity(4.0)
-            .setFriction(0.2);
-        
-        world.createCollider(floorpanDesc, carBody);
-        
+
+        // Immediately validate the body was created correctly
+        if (!carBody) {
+            console.error('createRigidBody returned null/undefined');
+            return null;
+        }
+
+        // Check position is valid immediately after creation (before adding colliders)
+        try {
+            const initialPos = carBody.translation();
+            console.log('Physics body created, checking initial position...');
+            if (!initialPos || !Number.isFinite(initialPos.x) || !Number.isFinite(initialPos.y) || !Number.isFinite(initialPos.z)) {
+                console.error('Physics body has invalid position immediately after creation:', initialPos);
+                console.error('Input position was:', position);
+                console.error('RigidBodyDesc settings: mass=%d, linearDamping=%d, angularDamping=%d',
+                    params.car.mass, params.car.linearDamping, params.car.angularDamping);
+                // Try to recover by removing the corrupted body
+                try {
+                    world.removeRigidBody(carBody);
+                } catch (e) {
+                    console.error('Failed to remove corrupted body:', e);
+                }
+                return null;
+            }
+            console.log('Physics body position OK:', initialPos.x.toFixed(2), initialPos.y.toFixed(2), initialPos.z.toFixed(2));
+        } catch (e) {
+            console.error('Error checking physics body position:', e);
+            return null;
+        }
+
+        // STEP 2: Create a simple collision shape for the car
+        const chassisDesc = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
+            .setDensity(1.0)
+            .setFriction(0.5);
+        world.createCollider(chassisDesc, carBody);
+        console.log('Created simple car collider');
+
+        // Validate position again after adding colliders
+        try {
+            const posAfterColliders = carBody.translation();
+            if (!posAfterColliders || !Number.isFinite(posAfterColliders.x) || !Number.isFinite(posAfterColliders.y) || !Number.isFinite(posAfterColliders.z)) {
+                console.error('Physics body position became invalid AFTER adding colliders:', posAfterColliders);
+                return null;
+            }
+            console.log('Physics body position still OK after colliders');
+        } catch (e) {
+            console.error('Error checking position after colliders:', e);
+            return null;
+        }
+
         // STEP 3: Set up wheel physics using raycasts
         
         // Wheel parameters
@@ -359,7 +388,14 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
         }
         
         // STEP 1: Get the car's current state and orientation
-        
+
+        // First validate the body state before doing any calculations
+        const currentPos = carBody.translation();
+        if (!currentPos || !Number.isFinite(currentPos.x) || !Number.isFinite(currentPos.y) || !Number.isFinite(currentPos.z)) {
+            console.error('applyCarControls: Body position is invalid:', currentPos, '- skipping controls');
+            return;
+        }
+
         // Get forward and right directions in world space
         const rotation = carBody.rotation();
         const forwardDir = { x: 0, y: 0, z: -1 }; // Default forward is -Z in Three.js
@@ -923,7 +959,9 @@ function syncCarModelWithPhysics(carBody, carMesh, wheelMeshes = []) {
 
         // Validate physics position before applying - prevent NaN from breaking rendering
         if (!physicsPos || !Number.isFinite(physicsPos.x) || !Number.isFinite(physicsPos.y) || !Number.isFinite(physicsPos.z)) {
-            console.error('Invalid physics position detected:', physicsPos, '- skipping sync');
+            // Check if body is still valid
+            const isBodyValid = carBody && typeof carBody.translation === 'function';
+            console.error('Invalid physics position detected:', physicsPos, '- bodyValid:', isBodyValid, '- skipping sync');
             return;
         }
 

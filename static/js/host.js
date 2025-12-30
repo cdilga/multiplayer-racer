@@ -515,9 +515,13 @@ function initGame() {
         // Initialize physics world - THIS IS ASYNC and needs to be waited for
         // Initialize physics world and then create cars
         initPhysics().then((physicsInitialized) => {
-            // Now create cars after physics is initialized
-            console.log('Physics initialized, now creating cars');
-            
+            // Check if physics actually initialized successfully
+            if (!physicsInitialized) {
+                console.warn('Physics failed to initialize - creating cars without physics');
+            } else {
+                console.log('Physics initialized successfully, now creating cars');
+            }
+
             // Create cars for each player with spread-out starting positions
             const playerIds = Object.keys(gameState.players);
             
@@ -530,20 +534,32 @@ function initGame() {
             // Step physics world once to initialize body positions before game loop
             // This prevents NaN values from translation() on newly created bodies
             if (gameState.physics.world && typeof gameState.physics.world.step === 'function') {
-                console.log('Stepping physics world once to initialize body positions');
-                gameState.physics.world.step();
+                console.log('Stepping physics world to initialize body positions');
+                try {
+                    const world = gameState.physics.world;
+                    world.step();
 
-                // Validate that all car physics bodies now have valid positions
-                for (const playerId of playerIds) {
-                    const car = gameState.cars[playerId];
-                    if (car && car.physicsBody) {
-                        const pos = car.physicsBody.translation();
-                        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(pos.z)) {
-                            console.error(`Car ${playerId} still has invalid position after initial step:`, pos);
-                        } else {
-                            console.log(`Car ${playerId} position initialized: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+                    // Validate that all car physics bodies now have valid positions
+                    for (const playerId of playerIds) {
+                        const car = gameState.cars[playerId];
+                        if (car && car.physicsBody) {
+                            try {
+                                const pos = car.physicsBody.translation();
+                                if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y) || !Number.isFinite(pos.z)) {
+                                    console.error(`Car ${playerId} still has invalid position after initial step:`, pos);
+                                    gameState.physics.healthy = false;
+                                } else {
+                                    console.log(`Car ${playerId} position initialized: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
+                                }
+                            } catch (e) {
+                                console.error(`Error getting car ${playerId} position:`, e.message);
+                                gameState.physics.healthy = false;
+                            }
                         }
                     }
+                } catch (stepError) {
+                    console.error('Initial world.step() failed:', stepError.message);
+                    gameState.physics.healthy = false;
                 }
             }
 
@@ -796,35 +812,48 @@ function createPlayerCar(playerId, carColor) {
 // Initialize physics with Rapier
 async function initPhysics() {
     console.log('Initializing physics with Rapier');
-    
+
     // Return a promise that resolves when physics is initialized
     return new Promise(async (resolve, reject) => {
+        let resolved = false; // Guard against double resolution
+
         try {
             // Check if Rapier is already loaded
-            if (window.rapierLoaded) {
+            if (window.rapierLoaded && window.RAPIER) {
                 console.log('Rapier is already loaded, initializing physics');
-                await initializeWithRapier();
-                resolve(true);
+                const success = await initializeWithRapier();
+                resolved = true;
+                resolve(success);
             } else {
                 console.log('Waiting for Rapier to load...');
-                
+
                 // Set up event listener for when Rapier is ready
-                window.addEventListener('rapier-ready', async function onRapierReady() {
+                const onRapierReady = async function() {
+                    if (resolved) return; // Guard against double resolution
                     console.log('Received rapier-ready event, initializing physics');
                     window.removeEventListener('rapier-ready', onRapierReady);
-                    await initializeWithRapier();
-                    resolve(true);
-                });
-                
+                    const success = await initializeWithRapier();
+                    resolved = true;
+                    resolve(success);
+                };
+
+                window.addEventListener('rapier-ready', onRapierReady);
+
                 // Fallback timeout in case the event never fires
                 setTimeout(() => {
+                    if (resolved) return; // Guard against double resolution
                     console.error('Timed out waiting for Rapier to be ready');
+                    window.removeEventListener('rapier-ready', onRapierReady); // Clean up listener
+                    resolved = true;
                     resolve(false); // Resolve with false to indicate physics init failed
                 }, 5000);
             }
         } catch (error) {
             console.error('Physics initialization error:', error);
-            reject(error);
+            if (!resolved) {
+                resolved = true;
+                reject(error);
+            }
         }
     });
     
@@ -843,12 +872,13 @@ async function initPhysics() {
             const gravity = { x: 0.0, y: -9.81, z: 0.0 };
             const world = new rapier.World(gravity);
             gameState.physics.world = world;
-            
+
             // Create ground collider
             createGroundCollider(world, rapier);
-            
-            // Create walls around the track
+
+            // Create track walls
             createTrackWalls(world, rapier);
+            console.log('Ground and walls created');
 
             gameState.physics.initialized = true;
             gameState.physics.healthy = true;  // Mark physics as healthy on successful init
@@ -1138,10 +1168,12 @@ function gameLoopWithoutRecursion(timestamp) {
         // Calculate delta time since last frame
         const deltaTime = timestamp - (gameState.lastTimestamp || timestamp);
         gameState.lastTimestamp = timestamp;
-        
-        // Skip frames with unreasonable delta times (e.g. after tab was inactive)
-        if (deltaTime > 1000) {
-            console.log(`Large frame time detected: ${deltaTime}ms, skipping physics update`);
+
+        // Skip first frame (deltaTime is 0) and frames with unreasonable delta times
+        if (deltaTime <= 0 || deltaTime > 1000) {
+            if (deltaTime > 1000) {
+                console.log(`Large frame time detected: ${deltaTime}ms, skipping physics update`);
+            }
             return;
         }
         
@@ -1155,10 +1187,8 @@ function gameLoopWithoutRecursion(timestamp) {
             try {
                 const world = gameState.physics.world;
 
-                // Set the timestep for this frame (Rapier uses integrationParameters.dt)
-                if (world.integrationParameters) {
-                    world.integrationParameters.dt = physicsStep;
-                }
+                // DON'T modify integrationParameters.dt - let Rapier use its default
+                // Modifying dt dynamically can cause instability
 
                 // Step the physics simulation
                 world.step();
@@ -1349,45 +1379,61 @@ function updateStatsDisplay() {
         let rotX = 0, rotY = 0, rotZ = 0, rotW = 0;
         let isUpsideDown = false;
         
-        // Get physics state (if available)
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const pos = car.physicsBody.translation();
-            const rot = car.physicsBody.rotation();
-            
-            // Velocity and position
-            speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
-            posX = Math.round(pos.x * 100) / 100;
-            posY = Math.round(pos.y * 100) / 100;
-            posZ = Math.round(pos.z * 100) / 100;
-            
-            // Rotation
-            rotX = Math.round(rot.x * 100) / 100;
-            rotY = Math.round(rot.y * 100) / 100;
-            rotZ = Math.round(rot.z * 100) / 100;
-            rotW = Math.round(rot.w * 100) / 100;
-            
-            // Check if car is upside down
-            if (typeof rapierPhysics.isCarUpsideDown === 'function') {
-                isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
+        // Get physics state (if available) with safety checks
+        if (car.physicsBody && gameState.physics.healthy) {
+            try {
+                const vel = car.physicsBody.linvel();
+                const pos = car.physicsBody.translation();
+                const rot = car.physicsBody.rotation();
+
+                // Validate values before using them
+                if (vel && Number.isFinite(vel.x) && Number.isFinite(vel.z)) {
+                    speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6; // Convert to km/h
+                }
+                if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y) && Number.isFinite(pos.z)) {
+                    posX = Math.round(pos.x * 100) / 100;
+                    posY = Math.round(pos.y * 100) / 100;
+                    posZ = Math.round(pos.z * 100) / 100;
+                }
+                if (rot && Number.isFinite(rot.x) && Number.isFinite(rot.y) && Number.isFinite(rot.z) && Number.isFinite(rot.w)) {
+                    rotX = Math.round(rot.x * 100) / 100;
+                    rotY = Math.round(rot.y * 100) / 100;
+                    rotZ = Math.round(rot.z * 100) / 100;
+                    rotW = Math.round(rot.w * 100) / 100;
+                }
+
+                // Check if car is upside down
+                if (typeof rapierPhysics.isCarUpsideDown === 'function') {
+                    isUpsideDown = rapierPhysics.isCarUpsideDown(car.physicsBody);
+                }
+            } catch (e) {
+                // Physics body access failed - silently skip
             }
         }
-        
+
         // Get physics body state
         let physicsState = "No Physics Body";
         let velocityInfo = "";
-        
-        if (car.physicsBody) {
-            const vel = car.physicsBody.linvel();
-            const isAwake = typeof car.physicsBody.isAwake === 'function' ? 
-                car.physicsBody.isAwake() : "Unknown";
-                
-            physicsState = `Active: ${isAwake}`;
-            velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
-            
-            // Add upside down indicator
-            if (isUpsideDown) {
-                physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
+
+        if (car.physicsBody && gameState.physics.healthy) {
+            try {
+                const vel = car.physicsBody.linvel();
+                const isAwake = typeof car.physicsBody.isAwake === 'function' ?
+                    car.physicsBody.isAwake() : "Unknown";
+
+                if (vel && Number.isFinite(vel.x) && Number.isFinite(vel.y) && Number.isFinite(vel.z)) {
+                    physicsState = `Active: ${isAwake}`;
+                    velocityInfo = `<div>Velocity: (${vel.x.toFixed(2)}, ${vel.y.toFixed(2)}, ${vel.z.toFixed(2)})</div>`;
+                } else {
+                    physicsState = '<span style="color:orange">Invalid State</span>';
+                }
+
+                // Add upside down indicator
+                if (isUpsideDown) {
+                    physicsState += ' <span style="color:red; font-weight:bold;">UPSIDE DOWN</span>';
+                }
+            } catch (e) {
+                physicsState = '<span style="color:red">Error</span>';
             }
         }
         
@@ -1822,15 +1868,15 @@ function updatePhysicsDebugVisualization() {
         };
     }
     
-    // Ensure we have physics enabled
-    if (!gameState.physics || !gameState.physics.initialized || !gameState.physics.world) {
+    // Ensure we have physics enabled and healthy
+    if (!gameState.physics || !gameState.physics.initialized || !gameState.physics.world || !gameState.physics.healthy) {
         if (!gameState.physicsDebugLogs.noPhysicsWarning) {
-            console.warn('Physics debug visualization requested but physics is not available');
+            console.warn('Physics debug visualization requested but physics is not available or unhealthy');
             gameState.physicsDebugLogs.noPhysicsWarning = true;
         }
         return;
     }
-    
+
     const world = gameState.physics.world;
     
     // Check if the world has the debugRender method (Rapier should provide this)
