@@ -955,28 +955,34 @@ function gameLoopWithoutRecursion(timestamp) {
             // Limit deltaTime to avoid large steps causing instability (max 1/30th second)
             const physicsStep = Math.min(deltaTime / 1000, 1/30);
             
-            // Pass the time step to Rapier's step function
+            // Set the physics timestep via Rapier's integrationParameters
             try {
-                // Don't pass the timestep directly - Rapier in this version might not accept it
-                // Just call step() without arguments to use default timestep
-                gameState.physics.world.step();
+                const world = gameState.physics.world;
+
+                // Set the timestep for this frame (Rapier uses integrationParameters.dt)
+                if (world.integrationParameters) {
+                    world.integrationParameters.dt = physicsStep;
+                }
+
+                // Step the physics simulation
+                world.step();
                 gameState.debugCounters.physicsUpdate++;
-                
+
                 // Debug log once every 300 frames (reduced frequency)
                 if (gameState.debugCounters.physicsUpdate % 300 === 0) {
-                    console.log('Physics world stepping normally');
+                    console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
                 }
             } catch (error) {
                 console.error('Physics step error:', error);
             }
-            
+
             // Apply controls to each car with a physics body using dynamic physics
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
                 if (car && car.physicsBody && car.controls) {
                     try {
-                        // Apply controls using dynamic physics
-                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, playerId);
+                        // Apply controls using dynamic physics with delta time
+                        rapierPhysics.applyCarControls(car.physicsBody, car.controls, physicsStep, playerId);
                     } catch (error) {
                         console.error(`Error applying car controls for ${playerId}:`, error);
                     }

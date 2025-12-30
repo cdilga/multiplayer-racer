@@ -307,9 +307,13 @@ function createGroundPlane(world) {
 }
 
 // Apply forces to a car body based on controls
-function applyCarControls(carBody, controls, playerId) {
+// deltaTime is the physics timestep in seconds (used for smoothing, not force scaling - Rapier handles that)
+function applyCarControls(carBody, controls, deltaTime, playerId) {
     if (!carBody) return;
-    
+
+    // Default deltaTime if not provided
+    const dt = deltaTime || 1/60;
+
     try {
         // Extract controls safely with defaults
         const steering = controls?.steering || 0;
@@ -437,15 +441,18 @@ function applyCarControls(carBody, controls, playerId) {
         let totalLateralForce = 0;
         
         // Update steering angle for front wheels based on input
+        // Use delta time for frame-rate independent steering response
+        const steeringSpeed = 12.0; // How fast steering responds (higher = faster)
         wheels.forEach(wheel => {
             if (wheel.isFrontWheel) {
                 // Calculate target steering angle - non-linear to make it more responsive
-                const targetSteeringAngle = steering * maxSteeringAngle * Math.sign(steering) * 
+                const targetSteeringAngle = steering * maxSteeringAngle * Math.sign(steering) *
                                          (0.8 + 0.2 * Math.abs(steering)); // Non-linear steering curve
-                
-                // Gradually approach target steering angle (smoother steering)
-                const steeringDelta = targetSteeringAngle - wheel.steering;
-                wheel.steering += steeringDelta * 0.2; // Adjust steering gradually
+
+                // Frame-rate independent steering interpolation
+                // Using exponential interpolation: lerp factor = 1 - e^(-speed * dt)
+                const lerpFactor = 1 - Math.exp(-steeringSpeed * dt);
+                wheel.steering += (targetSteeringAngle - wheel.steering) * lerpFactor;
             }
         });
         
