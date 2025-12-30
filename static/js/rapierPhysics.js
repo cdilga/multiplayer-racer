@@ -312,8 +312,8 @@ function createGroundPlane(world) {
 function applyCarControls(carBody, controls, deltaTime, world, playerId) {
     if (!carBody) return;
 
-    // Default deltaTime if not provided
-    const dt = deltaTime || 1/60;
+    // Default deltaTime if not provided, ensure it's always valid
+    const dt = (deltaTime && Number.isFinite(deltaTime) && deltaTime > 0.0001) ? deltaTime : 1/60;
 
     try {
         // Extract controls safely with defaults
@@ -371,10 +371,15 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
         
         // Normalize the forward vector
         const forwardLen = Math.sqrt(worldForward.x * worldForward.x + worldForward.y * worldForward.y + worldForward.z * worldForward.z);
-        if (forwardLen > 0) {
+        if (forwardLen > 0.001) {
             worldForward.x /= forwardLen;
             worldForward.y /= forwardLen;
             worldForward.z /= forwardLen;
+        } else {
+            // Default forward if vector is too small
+            worldForward.x = 0;
+            worldForward.y = 0;
+            worldForward.z = -1;
         }
         
         // Get right vector (perpendicular to forward)
@@ -386,10 +391,15 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
         
         // Normalize right vector
         const rightLen = Math.sqrt(worldRight.x * worldRight.x + worldRight.y * worldRight.y + worldRight.z * worldRight.z);
-        if (rightLen > 0) {
+        if (rightLen > 0.001) {
             worldRight.x /= rightLen;
             worldRight.y /= rightLen;
             worldRight.z /= rightLen;
+        } else {
+            // Default right if vector is too small
+            worldRight.x = 1;
+            worldRight.y = 0;
+            worldRight.z = 0;
         }
         
         // Up vector
@@ -584,16 +594,20 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
                     // Total suspension force (upward along contact normal)
                     const suspensionForce = Math.max(0, springForce + damperForce);
 
-                    // Apply suspension force at wheel position along surface normal
-                    carBody.addForceAtPoint(
-                        {
+                    // Validate suspension force before applying
+                    if (Number.isFinite(suspensionForce) && suspensionForce < 100000) {
+                        // Apply suspension force at wheel position along surface normal
+                        const suspForceVec = {
                             x: wheel.contactNormal.x * suspensionForce,
                             y: wheel.contactNormal.y * suspensionForce,
                             z: wheel.contactNormal.z * suspensionForce
-                        },
-                        wheelPosWorld,
-                        true
-                    );
+                        };
+
+                        // Final validation of force vector
+                        if (Number.isFinite(suspForceVec.x) && Number.isFinite(suspForceVec.y) && Number.isFinite(suspForceVec.z)) {
+                            carBody.addForceAtPoint(suspForceVec, wheelPosWorld, true);
+                        }
+                    }
                     
                     // Calculate wheel forces (engine, braking, lateral grip)
                     
@@ -715,7 +729,10 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
                     }
                     
                     // After calculating all wheel forces, apply them in a single call for efficiency
-                    if (wheelForce.x !== 0 || wheelForce.z !== 0) {
+                    // Validate forces before applying
+                    if ((wheelForce.x !== 0 || wheelForce.z !== 0) &&
+                        Number.isFinite(wheelForce.x) && Number.isFinite(wheelForce.y) && Number.isFinite(wheelForce.z) &&
+                        Number.isFinite(wheelPosWorld.x) && Number.isFinite(wheelPosWorld.y) && Number.isFinite(wheelPosWorld.z)) {
                         carBody.addForceAtPoint(wheelForce, wheelPosWorld, true);
                     }
                 }
@@ -734,24 +751,31 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
                 // Combined resistance force 
                 appliedDragForce = rollingForce + dragForce;
                 
-                // Apply opposite to velocity direction
-                const resistanceForce = {
-                    x: -vel.x / velMag * appliedDragForce,
-                    y: 0,
-                    z: -vel.z / velMag * appliedDragForce
-                };
-                
-                carBody.addForce(resistanceForce, true);
-                
+                // Apply opposite to velocity direction (only if velMag is valid)
+                if (velMag > 0.001) {
+                    const resistanceForce = {
+                        x: -vel.x / velMag * appliedDragForce,
+                        y: 0,
+                        z: -vel.z / velMag * appliedDragForce
+                    };
+
+                    // Validate before applying
+                    if (Number.isFinite(resistanceForce.x) && Number.isFinite(resistanceForce.z)) {
+                        carBody.addForce(resistanceForce, true);
+                    }
+                }
+
                 // Angular stabilization for arcade-style handling
                 // Apply moderate damping to prevent excessive roll/pitch while allowing steering
                 const angVel = carBody.angvel();
-                const stabilizingTorque = {
-                    x: -angVel.x * 5.0,  // Moderate damping for roll
-                    y: -angVel.y * 0.5,  // Very light damping for yaw (allow steering)
-                    z: -angVel.z * 5.0   // Moderate damping for pitch
-                };
-                carBody.addTorque(stabilizingTorque, true);
+                if (angVel && Number.isFinite(angVel.x) && Number.isFinite(angVel.y) && Number.isFinite(angVel.z)) {
+                    const stabilizingTorque = {
+                        x: -angVel.x * 5.0,  // Moderate damping for roll
+                        y: -angVel.y * 0.5,  // Very light damping for yaw (allow steering)
+                        z: -angVel.z * 5.0   // Moderate damping for pitch
+                    };
+                    carBody.addTorque(stabilizingTorque, true);
+                }
             }
         }
         
@@ -882,15 +906,28 @@ function isCarUpsideDown(carBody) {
  */
 function syncCarModelWithPhysics(carBody, carMesh, wheelMeshes = []) {
     if (!carBody || !carMesh) return;
-    
+
     try {
         // Update main car body position and rotation
         const physicsPos = carBody.translation();
         const physicsRot = carBody.rotation();
-        
+
+        // Validate physics position before applying - prevent NaN from breaking rendering
+        if (!physicsPos || !Number.isFinite(physicsPos.x) || !Number.isFinite(physicsPos.y) || !Number.isFinite(physicsPos.z)) {
+            console.error('Invalid physics position detected:', physicsPos, '- skipping sync');
+            return;
+        }
+
+        // Validate physics rotation
+        if (!physicsRot || !Number.isFinite(physicsRot.x) || !Number.isFinite(physicsRot.y) ||
+            !Number.isFinite(physicsRot.z) || !Number.isFinite(physicsRot.w)) {
+            console.error('Invalid physics rotation detected:', physicsRot, '- skipping sync');
+            return;
+        }
+
         // Set the car mesh position
         carMesh.position.set(physicsPos.x, physicsPos.y, physicsPos.z);
-        
+
         // Set the car mesh rotation
         carMesh.quaternion.set(physicsRot.x, physicsRot.y, physicsRot.z, physicsRot.w);
         

@@ -39,6 +39,9 @@ const gameState = {
     forceVisualization: []
 };
 
+// Expose gameState globally for testing and debugging
+window.gameState = gameState;
+
 // DOM elements
 const elements = {
     lobbyScreen: document.getElementById('lobby-screen'),

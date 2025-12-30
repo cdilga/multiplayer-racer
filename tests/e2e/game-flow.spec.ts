@@ -1,6 +1,69 @@
 import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, sendPlayerControls, releaseAllControls } from './fixtures';
 
 test.describe('Multiplayer Racer Game Flow', () => {
+    test('car should have valid position after game starts', async ({ hostPage, playerPage }) => {
+        // Host creates room
+        await hostPage.goto('/');
+        const roomCode = await waitForRoomCode(hostPage);
+
+        // Player joins
+        await joinGameAsPlayer(playerPage, roomCode, 'PositionTest');
+        await expect(hostPage.locator('#player-list')).toContainText('PositionTest', { timeout: 10000 });
+
+        // Start game
+        await startGameFromHost(hostPage);
+
+        // Wait for game to initialize and physics to settle
+        await hostPage.waitForTimeout(2000);
+
+        // Check car position via gameState
+        const carData = await hostPage.evaluate(() => {
+            // @ts-ignore - gameState is a global
+            const gameState = window.gameState;
+            if (!gameState || !gameState.cars) {
+                return { error: 'No gameState or cars' };
+            }
+
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length === 0) {
+                return { error: 'No cars in gameState' };
+            }
+
+            const car = gameState.cars[carIds[0]];
+            if (!car || !car.mesh) {
+                return { error: 'No car mesh' };
+            }
+
+            const pos = car.mesh.position;
+            return {
+                exists: true,
+                position: { x: pos.x, y: pos.y, z: pos.z },
+                isVisible: car.mesh.visible,
+                inScene: car.mesh.parent !== null
+            };
+        });
+
+        // Verify car exists
+        expect(carData.error).toBeUndefined();
+        expect(carData.exists).toBe(true);
+
+        // Log actual values for debugging
+        console.log('Car data:', JSON.stringify(carData, null, 2));
+
+        // Verify position is valid (not NaN, not Infinity)
+        expect(Number.isFinite(carData.position.x), `position.x should be finite, got: ${carData.position.x}`).toBe(true);
+        expect(Number.isFinite(carData.position.y), `position.y should be finite, got: ${carData.position.y}`).toBe(true);
+        expect(Number.isFinite(carData.position.z), `position.z should be finite, got: ${carData.position.z}`).toBe(true);
+
+        // Verify car is in reasonable bounds (not fallen through world)
+        expect(carData.position.y).toBeGreaterThan(-10); // Not fallen through
+        expect(carData.position.y).toBeLessThan(100);    // Not launched to sky
+
+        // Verify mesh is visible and in scene
+        expect(carData.isVisible).toBe(true);
+        expect(carData.inScene).toBe(true);
+    });
+
     test('should receive control inputs and update car position', async ({ hostPage, playerPage }) => {
         // Host creates room
         await hostPage.goto('/');
