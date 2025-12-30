@@ -208,13 +208,18 @@ socket.on('player_left', (data) => {
 
 socket.on('player_controls_update', (data) => {
     const { player_id, acceleration, braking, steering } = data;
-    
+
+    // Skip control updates if test override is active (for automated testing)
+    if (gameState._testControlsOverride) {
+        return;
+    }
+
     if (gameState.gameActive && gameState.cars[player_id]) {
         const car = gameState.cars[player_id];
         // Validate and sanitize control inputs before assigning
         car.controls = {
             acceleration: Math.max(0, Math.min(1, acceleration || 0)), // Clamp between 0-1
-            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1 
+            braking: Math.max(0, Math.min(1, braking || 0)), // Clamp between 0-1
             steering: Math.max(-1, Math.min(1, steering || 0)) // Clamp between -1 to 1
         };
         // Update last control update timestamp
@@ -1183,27 +1188,8 @@ function gameLoopWithoutRecursion(timestamp) {
             // Limit deltaTime to avoid large steps causing instability (max 1/30th second)
             const physicsStep = Math.min(deltaTime / 1000, 1/30);
 
-            // Set the physics timestep via Rapier's integrationParameters
-            try {
-                const world = gameState.physics.world;
-
-                // DON'T modify integrationParameters.dt - let Rapier use its default
-                // Modifying dt dynamically can cause instability
-
-                // Step the physics simulation
-                world.step();
-                gameState.debugCounters.physicsUpdate++;
-
-                // Debug log once every 300 frames (reduced frequency)
-                if (gameState.debugCounters.physicsUpdate % 300 === 0) {
-                    console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
-                }
-            } catch (error) {
-                handlePhysicsError(error, 'world.step');
-                return; // Skip rest of physics processing when step fails
-            }
-
-            // Apply controls to each car with a physics body using dynamic physics
+            // IMPORTANT: Apply controls BEFORE world.step()
+            // Forces are integrated during step() and then reset, so they must be applied first
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
                 if (car && car.physicsBody && car.controls && gameState.physics.healthy) {
@@ -1216,6 +1202,41 @@ function gameLoopWithoutRecursion(timestamp) {
                 }
             });
 
+            // Set the physics timestep via Rapier's integrationParameters
+            try {
+                const world = gameState.physics.world;
+
+                // DON'T modify integrationParameters.dt - let Rapier use its default
+                // Modifying dt dynamically can cause instability
+
+                // DEBUG: Check car position before step
+                const carIds = Object.keys(gameState.cars);
+                const carBeforeStep = carIds.length > 0 && gameState.cars[carIds[0]]?.physicsBody
+                    ? gameState.cars[carIds[0]].physicsBody.translation()
+                    : null;
+
+                // Step the physics simulation (after forces are applied)
+                world.step();
+                gameState.debugCounters.physicsUpdate++;
+
+                // DEBUG: Check if car position changed dramatically
+                if (carBeforeStep && carIds.length > 0 && gameState.cars[carIds[0]]?.physicsBody) {
+                    const carAfterStep = gameState.cars[carIds[0]].physicsBody.translation();
+                    const posChange = carAfterStep.y - carBeforeStep.y;
+                    if (Math.abs(posChange) > 0.5) {
+                        console.error(`⚠️ CAR POSITION JUMP: before=${carBeforeStep.y.toFixed(2)}, after=${carAfterStep.y.toFixed(2)}, change=${posChange.toFixed(2)}`);
+                    }
+                }
+
+                // Debug log once every 300 frames (reduced frequency)
+                if (gameState.debugCounters.physicsUpdate % 300 === 0) {
+                    console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
+                }
+            } catch (error) {
+                handlePhysicsError(error, 'world.step');
+                return; // Skip rest of physics processing when step fails
+            }
+
             // Update all car meshes to match their physics bodies
             Object.keys(gameState.cars).forEach(playerId => {
                 const car = gameState.cars[playerId];
@@ -1223,8 +1244,8 @@ function gameLoopWithoutRecursion(timestamp) {
                     try {
                         // Sync visual model with dynamic physics body
                         rapierPhysics.syncCarModelWithPhysics(
-                            car.physicsBody,
                             car.mesh,
+                            car.physicsBody,
                             car.wheels
                         );
 

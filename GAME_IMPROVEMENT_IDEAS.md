@@ -1,0 +1,55 @@
+How to make the game better and cooler:
+
+- Gameplay features
+  - Implement a rejoin ability, so if the controlleer disconnects, it can reconnect and keep controlling the same car without issue. Use localstorage to manage some persistence.
+  - Add proper hot-reload support to aide in development
+  - Revamp the controller to make it very very nice to use. Combination of human dev and logic required, but include following:
+    - Readd real nipple controller to left hand side (but constrained such that for us, it's only left right. Keep the design well encapsulated, as we wish to re-use the controller concept in future AI builds)
+    - Fix errors where the nipple controller doesn't work if we first press on the accelerator
+    - Fix errors on long press on iPhone selecting things
+    - Fix problems with long presses doing stuff on android too (but some kind of tactile feeback thing happens)
+  - Add in game ads to the play space integrated into the design of levels, cars skins etc. Even just "your ad here" to begin with, but make it cool and tasteful. Take a subscription.
+  - Add an ingme subscription. 
+    - Add a reaaaally super basic LLM which can make funny statements at the end of races, during races when cars are knocked out, or gneerally at other points. They'd be passed some of the game state and game logic so they can seemingly "know" about it, as well as the history of players and their rankings.
+      - Add a series of semi random prompts
+      - Should be lazily loaded client side and stored for ages whenever possible. Otherwise - use our LLM to generate it, and it can be lazy and slow without issue as well. Cheap!
+  - Add clear instructions to advise a loop for development. Test -> Fails -> Implement logic -> run test -> Check visuals -> everything passes in CI.
+  - Another refactor which makes responsibilities clearer. Major move to relocate logic within the areas it makes the most sense. Including moving arund objects, and establishing some patterns which we can work within. 
+  - Full derby mode with damage and exploding vehicles, where wheels go off on their own way and blow up properly
+    - Last man wins
+    - Scores across rounds
+  - Race mode
+    - Fastes aroudn the track wins
+  - Add shooting type items, like huge guns and stuff that can be equipped to the cars
+  - Add account system and car persistence of unlocked stuff
+    - This would just be an email system where you click login, with long lived tokens living in localstorage or something. The server host can keep the accounts I think
+  - Add boost or jump mechanic on unlock so you can jump stuff
+  - Make tracks more interesting. Build 3 or 4 tracks.
+    - Add things like obstacles, walls and jumps
+    - Add surface types
+    - Level designer system
+    - Consider adding traditional AI based players as "bots"
+  - Global scores or something for specific maps
+    - User generated maps and content
+    - User generated weapons and stuff
+    - Car customisation and user textures (needs sanitisation)
+  - Add car types, some like tanks. Host can come up with all these whacky new features to save down. Can set stats like speed, armour, handling, boost etc
+  - Sounds effects and music. Can start with suno generation, but can switch to directly generated audio as well.
+    - Generate sfx and audio tracks with suno at build time, and can bundle resources somehow (git lfs for starters)
+  - Create a full downloadable executable server environment for distribution via steam
+    - Set price for initial build at like, $5 or something
+    - Full game price of $15 upon launch
+  - Add website to download it, and join the publicly hosted version of the game with continuous games hosted on an online instance with live join and leaving in a permananent gameroom derby match as a trial, just use phone to scan code and join the remote server version. No limit to number of players, can take thousands at once
+  - Add a user based bug submisison system. takes screenshots, or video and allows it to be uploaded and prioritised, similar to what the bug pages of levelsio uses. Then we can use the tickets and community voting and input to prioritise bugfixes and feature requests. This would be similar to https://ideasbugs.featurebase.app/, and in fact we could potentially use the free version of featurebase or roll our own. 
+
+
+# Meta claude setup stuff:
+- Gameplay researcher
+- User feedback collector
+- Add anlytics
+  - Proactively catch bugs while watching the users play
+  - Play the game yourself as an AI
+- Social media post maker
+- Blogpost maker
+- Feature prioritiser
+- Researcher on user experience
