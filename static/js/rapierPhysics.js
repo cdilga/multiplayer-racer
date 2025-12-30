@@ -545,12 +545,14 @@ function applyCarControls(carBody, controls, deltaTime, world, playerId) {
 
                 // Fallback to simple height check if raycast not available or failed
                 if (!groundHit) {
-                    const groundY = 0; // Assuming ground is at Y=0
-                    const distanceToGround = wheelPosWorld.y - groundY;
-                    if (distanceToGround < maxRayDistance && distanceToGround > 0) {
+                    // Ground surface is at y=0.5 (cuboid with half-height 0.5 at body y=0)
+                    const groundSurfaceY = 0.5;
+                    const distanceToGround = wheelPosWorld.y - groundSurfaceY;
+                    if (distanceToGround < maxRayDistance && distanceToGround > -0.5) {
+                        // Allow slightly negative (car touching ground) for stability
                         groundHit = {
-                            distance: distanceToGround,
-                            point: { x: wheelPosWorld.x, y: groundY, z: wheelPosWorld.z },
+                            distance: Math.max(0.01, distanceToGround), // Clamp to minimum
+                            point: { x: wheelPosWorld.x, y: groundSurfaceY, z: wheelPosWorld.z },
                             normal: { x: 0, y: 1, z: 0 }
                         };
                     }
