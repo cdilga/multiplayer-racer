@@ -226,6 +226,10 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'F3' || e.key === 'f3') {
         gameState.showStats = !gameState.showStats;
         elements.statsOverlay.classList.toggle('hidden', !gameState.showStats);
+        // Immediately update stats content when showing
+        if (gameState.showStats) {
+            updateStatsDisplay();
+        }
         console.log(`Stats display: ${gameState.showStats ? 'ON' : 'OFF'}`);
         e.preventDefault();
     }
