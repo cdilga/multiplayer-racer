@@ -11,8 +11,8 @@
 class AudioManager {
     constructor() {
         this.audioContext = null;
-        this.musicVolume = 0.5;
-        this.sfxVolume = 0.7;
+        this.musicVolume = 0.35;  // Lower music volume for better SFX clarity
+        this.sfxVolume = 0.9;     // Higher SFX volume
         this.isMuted = false;
 
         // Music tracks
@@ -43,6 +43,11 @@ class AudioManager {
 
         // Audio unlocked state (browser policy)
         this.unlocked = false;
+
+        // Ducking state (temporarily lower music for important sounds)
+        this.isDucking = false;
+        this.duckLevel = 0.3;  // Duck music to 30% of normal volume
+        this.duckTimeout = null;
 
         // Bind methods
         this.unlock = this.unlock.bind(this);
@@ -560,7 +565,9 @@ class AudioManager {
      */
     playCollisionSound(intensity = 0.5) {
         const soundName = intensity > 0.6 ? 'collision_hard' : 'collision_soft';
-        this.playSound(soundName, { volume: 0.5 + intensity * 0.5 });
+        // Duck music for collision sounds
+        this.duckMusic(0.4);
+        this.playSound(soundName, { volume: 0.7 + intensity * 0.3 });
     }
 
     /**
@@ -568,14 +575,65 @@ class AudioManager {
      * @returns {number} Sound ID for stopping
      */
     playTireScreech() {
-        return this.playSound('tire_screech', { volume: 0.4 });
+        return this.playSound('tire_screech', { volume: 0.5 });
     }
 
     /**
-     * Play player join notification
+     * Play player join notification with ducking
      */
     playPlayerJoin() {
-        this.playSound('player_join', { volume: 0.6 });
+        // Duck music so the chime is clearly audible
+        this.duckMusic(0.6);
+        this.playSound('player_join', { volume: 1.0 });
+    }
+
+    // ==========================================
+    // DUCKING (Temporarily lower music for SFX)
+    // ==========================================
+
+    /**
+     * Temporarily lower music volume to let important sounds through
+     * @param {number} duration - How long to duck in seconds
+     */
+    duckMusic(duration = 0.5) {
+        if (!this.currentMusicGain || this.isMuted) return;
+
+        // Clear any pending unduck
+        if (this.duckTimeout) {
+            clearTimeout(this.duckTimeout);
+        }
+
+        // Calculate ducked volume
+        const duckedVolume = this.musicVolume * this.duckLevel;
+
+        // Quick duck down
+        this.currentMusicGain.gain.linearRampToValueAtTime(
+            duckedVolume,
+            this.audioContext.currentTime + 0.05
+        );
+
+        this.isDucking = true;
+
+        // Schedule unduck
+        this.duckTimeout = setTimeout(() => {
+            this.unduckMusic();
+        }, duration * 1000);
+    }
+
+    /**
+     * Restore music volume after ducking
+     */
+    unduckMusic() {
+        if (!this.currentMusicGain || this.isMuted) return;
+
+        // Gradual restore
+        this.currentMusicGain.gain.linearRampToValueAtTime(
+            this.musicVolume,
+            this.audioContext.currentTime + 0.3
+        );
+
+        this.isDucking = false;
+        this.duckTimeout = null;
     }
 }
 

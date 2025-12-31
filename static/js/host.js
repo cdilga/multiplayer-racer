@@ -1269,6 +1269,10 @@ function gameLoopWithoutRecursion(timestamp) {
                 if (gameState.debugCounters.physicsUpdate % 300 === 0) {
                     console.log(`Physics stepping with dt=${physicsStep.toFixed(4)}s`);
                 }
+
+                // Check for collisions by detecting sudden velocity changes
+                checkCarCollisions();
+
             } catch (error) {
                 handlePhysicsError(error, 'world.step');
                 return; // Skip rest of physics processing when step fails
@@ -1364,6 +1368,63 @@ function gameLoop() {
         cancelAnimationFrame(animationRequestId);
     }
     animationRequestId = requestAnimationFrame(gameLoopWithoutRecursion);
+}
+
+// Collision detection state
+const collisionState = {
+    lastVelocities: {},  // Track previous velocities per car
+    collisionCooldowns: {},  // Prevent sound spam
+    cooldownMs: 300  // Minimum time between collision sounds per car
+};
+
+/**
+ * Check for car collisions by detecting sudden velocity changes
+ * Plays collision sounds when impacts are detected
+ */
+function checkCarCollisions() {
+    if (!window.audioManager || !audioManager.loaded) return;
+
+    const now = Date.now();
+
+    Object.keys(gameState.cars).forEach(playerId => {
+        const car = gameState.cars[playerId];
+        if (!car || !car.physicsBody) return;
+
+        try {
+            const linvel = car.physicsBody.linvel();
+            const currentVel = { x: linvel.x, y: linvel.y, z: linvel.z };
+            const currentSpeed = Math.sqrt(currentVel.x ** 2 + currentVel.z ** 2);
+
+            const lastVel = collisionState.lastVelocities[playerId];
+
+            if (lastVel) {
+                // Calculate velocity change (impact force indicator)
+                const deltaVx = currentVel.x - lastVel.x;
+                const deltaVz = currentVel.z - lastVel.z;
+                const impactMagnitude = Math.sqrt(deltaVx ** 2 + deltaVz ** 2);
+
+                // Threshold for collision detection (tune as needed)
+                const collisionThreshold = 3.0;
+
+                if (impactMagnitude > collisionThreshold) {
+                    // Check cooldown to prevent sound spam
+                    const lastCollision = collisionState.collisionCooldowns[playerId] || 0;
+                    if (now - lastCollision > collisionState.cooldownMs) {
+                        // Normalize intensity (0-1 range)
+                        const intensity = Math.min(1, impactMagnitude / 15);
+                        audioManager.playCollisionSound(intensity);
+                        collisionState.collisionCooldowns[playerId] = now;
+                    }
+                }
+            }
+
+            // Store current velocity for next frame
+            collisionState.lastVelocities[playerId] = currentVel;
+
+        } catch (error) {
+            // Silently ignore physics errors during collision check
+        }
+    });
 }
 
 function onWindowResize() {
