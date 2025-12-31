@@ -2,6 +2,11 @@
  * Video capture script for README documentation
  * Creates a demo video showing the full game flow
  * Run with: npx tsx scripts/capture-video.ts
+ *
+ * Prerequisites:
+ * - Server running: python server/app.py
+ * - ffmpeg installed for GIF conversion
+ * - Local Rapier files: npm run setup:local-deps (or manually copy)
  */
 import { chromium, Browser, Page, BrowserContext } from '@playwright/test';
 import * as fs from 'fs';
@@ -10,15 +15,69 @@ import { execSync } from 'child_process';
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
+const STATIC_DIR = path.join(__dirname, '../static');
+
+/**
+ * Setup route interception to serve local dependencies
+ * This allows video capture to work in restricted network environments
+ */
+async function setupLocalRoutes(context: BrowserContext): Promise<void> {
+    // Intercept Skypack CDN requests for Rapier and serve local files
+    await context.route('**/cdn.skypack.dev/@dimforge/rapier3d-compat**', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier.es.js');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: body
+            });
+        } else {
+            // Fallback to network if local file doesn't exist
+            await route.continue();
+        }
+    });
+
+    // Intercept Three.js CDN and serve local
+    await context.route('**/cdnjs.cloudflare.com/ajax/libs/three.js/**', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/three.min.js');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: body
+            });
+        } else {
+            await route.continue();
+        }
+    });
+
+    // Intercept Socket.IO CDN and serve local
+    await context.route('**/cdn.socket.io/**', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/socket.io.min.js');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: body
+            });
+        } else {
+            await route.continue();
+        }
+    });
+}
 
 async function waitForRoomCode(page: Page): Promise<string> {
-    await page.waitForSelector('#room-code-display', { timeout: 10000 });
+    console.log('  Waiting for room code...');
+    await page.waitForSelector('#room-code-display', { timeout: 20000 });
     await page.waitForFunction(
         () => {
             const el = document.getElementById('room-code-display');
             return el && el.textContent && el.textContent.trim().length > 0;
         },
-        { timeout: 15000 }
+        { timeout: 25000 }
     );
     const roomCode = await page.locator('#room-code-display').textContent();
     if (!roomCode) throw new Error('No room code found');
@@ -32,9 +91,21 @@ async function captureVideo() {
 
     console.log('🎬 Starting video capture...\n');
 
+    // Use headed mode with xvfb for proper WebGL rendering
+    // Run with: xvfb-run npx tsx scripts/capture-video.ts
+    const useHeadless = process.env.HEADLESS !== 'false';
+
     const browser = await chromium.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        headless: useHeadless,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--use-gl=egl',              // Use EGL for better WebGL in xvfb
+            '--enable-webgl',
+            '--ignore-gpu-blocklist',
+            '--disable-gpu-sandbox',
+            '--enable-features=Vulkan'
+        ]
     });
 
     const videoPath = path.join(OUTPUT_DIR, 'gameplay-demo.webm');
@@ -48,7 +119,17 @@ async function captureVideo() {
                 size: { width: 1280, height: 720 }
             }
         });
+        // Setup local routes to bypass CDN restrictions
+        await setupLocalRoutes(hostContext);
         const hostPage = await hostContext.newPage();
+
+        // Log browser console for debugging
+        hostPage.on('console', msg => {
+            const text = msg.text();
+            if (msg.type() === 'error' || text.includes('Rapier')) {
+                console.log(`  [Browser] ${text}`);
+            }
+        });
 
         // Create player contexts
         const player1Context = await browser.newContext({
@@ -56,6 +137,7 @@ async function captureVideo() {
             isMobile: true,
             hasTouch: true
         });
+        await setupLocalRoutes(player1Context);
         const player1Page = await player1Context.newPage();
 
         const player2Context = await browser.newContext({
@@ -63,6 +145,7 @@ async function captureVideo() {
             isMobile: true,
             hasTouch: true
         });
+        await setupLocalRoutes(player2Context);
         const player2Page = await player2Context.newPage();
 
         console.log('📹 Recording lobby...');
@@ -77,20 +160,26 @@ async function captureVideo() {
         await hostPage.waitForTimeout(1500);
 
         console.log('📹 Players joining...');
-        // Player 1 joins
-        await player1Page.goto(`${BASE_URL}/player?room=${roomCode}`);
+        // Player 1 joins - navigate without room code to show join form
+        await player1Page.goto(`${BASE_URL}/player`);
         await player1Page.waitForLoadState('networkidle');
+        await player1Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
         await player1Page.fill('#player-name', 'SpeedDemon');
+        await player1Page.fill('#room-code', roomCode);
         await player1Page.click('#join-btn');
         await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+        console.log('  Player 1 joined');
         await hostPage.waitForTimeout(1000);
 
         // Player 2 joins
-        await player2Page.goto(`${BASE_URL}/player?room=${roomCode}`);
+        await player2Page.goto(`${BASE_URL}/player`);
         await player2Page.waitForLoadState('networkidle');
+        await player2Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
         await player2Page.fill('#player-name', 'TurboKing');
+        await player2Page.fill('#room-code', roomCode);
         await player2Page.click('#join-btn');
         await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+        console.log('  Player 2 joined');
         await hostPage.waitForTimeout(1500);
 
         console.log('📹 Starting race...');

@@ -14,7 +14,9 @@
 
 <br />
 
-<img src="docs/images/gameplay-screenshot.png" alt="Multiplayer Racer Gameplay" width="800" />
+<img src="docs/images/gameplay-demo.gif" alt="Multiplayer Racer Demo" width="800" />
+
+*Watch the full game flow: lobby → players join → race!*
 
 <br />
 
