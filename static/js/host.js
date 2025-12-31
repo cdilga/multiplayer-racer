@@ -144,6 +144,13 @@ socket.on('room_created', (data) => {
     
     // Show lobby screen
     showScreen('lobby');
+
+    // Initialize audio and play lobby music
+    if (window.audioManager) {
+        audioManager.loadSounds().then(() => {
+            audioManager.playMusic('lobby', { loop: true, fadeIn: 1.5 });
+        });
+    }
 });
 
 socket.on('player_joined', (playerData) => {
@@ -401,6 +408,18 @@ function startGame() {
         initGame();
         showScreen('game');
         gameState.gameActive = true;
+
+        // Play countdown music, then crossfade to race music
+        if (window.audioManager && audioManager.loaded) {
+            audioManager.stopMusic(0.3);
+            audioManager.playSound('countdown', { volume: 0.8 });
+            // After countdown (approx 5 seconds), start race music
+            setTimeout(() => {
+                if (gameState.gameActive) {
+                    audioManager.playMusic('race_main', { loop: true, fadeIn: 1.0 });
+                }
+            }, 5000);
+        }
     }
 }
 
