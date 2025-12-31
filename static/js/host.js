@@ -422,7 +422,7 @@ function startGame() {
             // Play countdown sound
             const countdownId = audioManager.playSound('countdown', { volume: 0.8 });
 
-            // After countdown (approx 5 seconds), stop countdown and start race music + engine
+            // After countdown (approx 5 seconds), stop countdown and start race music
             setTimeout(() => {
                 if (gameState.gameActive) {
                     // Stop countdown if still playing
@@ -430,9 +430,6 @@ function startGame() {
                         audioManager.stopSound(countdownId, 0.3);
                     }
                     audioManager.playMusic('race_main', { loop: true, fadeIn: 1.0 });
-
-                    // Start engine sound
-                    audioManager.startEngineSound();
                 }
             }, 5000);
         }
@@ -1318,27 +1315,6 @@ function gameLoopWithoutRecursion(timestamp) {
                 updatePhysicsDebugVisualization();
             }
 
-            // Update engine sound based on average car speed
-            if (window.audioManager && audioManager.enginePlaying) {
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    // Get max speed and check if any car is accelerating
-                    let maxSpeed = 0;
-                    let anyAccelerating = false;
-
-                    carIds.forEach(id => {
-                        const car = gameState.cars[id];
-                        if (car && car.speed !== undefined) {
-                            maxSpeed = Math.max(maxSpeed, Math.abs(car.speed));
-                        }
-                        if (car && car.controls && car.controls.acceleration > 0) {
-                            anyAccelerating = true;
-                        }
-                    });
-
-                    audioManager.updateEngineSound(maxSpeed, 30, anyAccelerating);
-                }
-            }
         }
 
         // Update stats display if visible
