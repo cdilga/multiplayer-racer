@@ -1408,9 +1408,20 @@ function updateStatsDisplay() {
     const playerStatsContent = elements.statsOverlay.querySelector('#player-stats-content');
     if (!playerStatsContent) return;
 
-    let playerStatsHTML = '';
+    // Get current player IDs and existing player containers
+    const currentCarIds = Object.keys(gameState.cars);
+    const existingContainers = playerStatsContent.querySelectorAll('.player-stats-container');
 
-    Object.keys(gameState.cars).forEach(playerId => {
+    // Remove containers for players that no longer exist
+    existingContainers.forEach(container => {
+        const containerId = container.getAttribute('data-player-id');
+        if (!currentCarIds.includes(containerId)) {
+            container.remove();
+        }
+    });
+
+    // Update or create containers for each player
+    currentCarIds.forEach(playerId => {
         const car = gameState.cars[playerId];
         const player = gameState.players[playerId];
         if (!car || !player) return;
@@ -1546,20 +1557,40 @@ function updateStatsDisplay() {
                 </div>`;
         }
         
-        // Add per-car reset button
-        const resetButtonHTML = `
-            <div class="reset-button-container">
-                <button id="reset-car-${playerId}-btn" class="reset-button car-reset-btn">
-                    Reset This Car
-                </button>
-            </div>`;
-        
-        // Put it all together
-        playerStatsHTML += `
-            <div class="player-stats">
-                <div class="player-header" style="color: ${player.color}">
-                    ${player.name} (ID: ${player.id})
+        // Check if container exists for this player
+        let container = playerStatsContent.querySelector(`[data-player-id="${playerId}"]`);
+
+        if (!container) {
+            // Create new container with stable structure
+            container = document.createElement('div');
+            container.className = 'player-stats-container';
+            container.setAttribute('data-player-id', playerId);
+            container.innerHTML = `
+                <div class="player-stats">
+                    <div class="player-header" style="color: ${player.color}">
+                        ${player.name} (ID: ${player.id})
+                    </div>
+                    <div class="player-stats-dynamic"></div>
+                    <div class="reset-button-container">
+                        <button id="reset-car-${playerId}-btn" class="reset-button car-reset-btn">
+                            Reset This Car
+                        </button>
+                    </div>
                 </div>
+            `;
+            playerStatsContent.appendChild(container);
+
+            // Attach click handler to the button (only once when created)
+            const resetBtn = container.querySelector('.car-reset-btn');
+            if (resetBtn) {
+                resetBtn.onclick = () => resetCarPosition(playerId);
+            }
+        }
+
+        // Update only the dynamic stats content
+        const dynamicStatsDiv = container.querySelector('.player-stats-dynamic');
+        if (dynamicStatsDiv) {
+            dynamicStatsDiv.innerHTML = `
                 <div>Speed: ${speed.toFixed(1)} km/h</div>
                 <div>Position: (${posX}, ${posY}, ${posZ})</div>
                 ${velocityInfo}
@@ -1570,17 +1601,8 @@ function updateStatsDisplay() {
                     ${controlsHTML}
                 </div>
                 ${forcesHTML}
-                ${resetButtonHTML}
-            </div>
-        `;
-    });
-
-    playerStatsContent.innerHTML = playerStatsHTML;
-
-    // Attach event listeners for individual car reset buttons (these are recreated each time)
-    playerStatsContent.querySelectorAll('.car-reset-btn').forEach(button => {
-        const playerId = button.id.replace('reset-car-', '').replace('-btn', '');
-        button.onclick = () => resetCarPosition(playerId);
+            `;
+        }
     });
 }
 

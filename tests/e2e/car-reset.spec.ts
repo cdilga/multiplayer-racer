@@ -246,124 +246,143 @@ test.describe('Car Reset Functionality', () => {
         expect(distanceFromSpawn, 'Car should be back at spawn after resetAllCars').toBeLessThan(0.5);
     });
 
-    test('Reset All Cars button should reset car to spawn position', async ({ hostPage, playerPage }) => {
-        // Setup game
-        await hostPage.goto('/');
-        const roomCode = await waitForRoomCode(hostPage);
-        await joinGameAsPlayer(playerPage, roomCode, 'ButtonTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ButtonTest', { timeout: 10000 });
+    // Parameterized test for both reset buttons
+    const resetButtonTests = [
+        {
+            name: 'Reset All Cars button',
+            buttonSelector: '#reset-all-cars-btn',
+            screenshotPrefix: 'reset-all-cars',
+            playerName: 'AllCarsBtn'
+        },
+        {
+            name: 'Reset This Car button',
+            // The individual car button has a dynamic ID based on player ID
+            buttonSelector: '.car-reset-btn',
+            screenshotPrefix: 'reset-this-car',
+            playerName: 'ThisCarBtn'
+        }
+    ];
 
-        // Start game
-        await startGameFromHost(hostPage);
+    for (const { name, buttonSelector, screenshotPrefix, playerName } of resetButtonTests) {
+        test(`${name} should reset car to spawn position`, async ({ hostPage, playerPage }) => {
+            // Setup game
+            await hostPage.goto('/');
+            const roomCode = await waitForRoomCode(hostPage);
+            await joinGameAsPlayer(playerPage, roomCode, playerName);
+            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 10000 });
 
-        // Let car settle
-        await hostPage.waitForTimeout(2000);
+            // Start game
+            await startGameFromHost(hostPage);
 
-        // Enable test control override
-        await hostPage.evaluate(() => {
-            // @ts-ignore
-            window.gameState._testControlsOverride = true;
-        });
+            // Let car settle
+            await hostPage.waitForTimeout(2000);
 
-        // Get spawn position
-        const spawnPosition = await hostPage.evaluate(() => {
-            // @ts-ignore
-            const gameState = window.gameState;
-            const carIds = Object.keys(gameState.cars);
-            if (carIds.length > 0) {
-                return gameState.cars[carIds[0]].spawnPosition;
+            // Enable test control override
+            await hostPage.evaluate(() => {
+                // @ts-ignore
+                window.gameState._testControlsOverride = true;
+            });
+
+            // Get spawn position
+            const spawnPosition = await hostPage.evaluate(() => {
+                // @ts-ignore
+                const gameState = window.gameState;
+                const carIds = Object.keys(gameState.cars);
+                if (carIds.length > 0) {
+                    return gameState.cars[carIds[0]].spawnPosition;
+                }
+                return null;
+            });
+            expect(spawnPosition, 'Spawn position should exist').not.toBeNull();
+            console.log('Spawn position:', spawnPosition);
+
+            // Move the car away from spawn
+            for (let i = 0; i < 30; i++) {
+                await hostPage.evaluate(() => {
+                    // @ts-ignore
+                    const gameState = window.gameState;
+                    const carIds = Object.keys(gameState.cars);
+                    if (carIds.length > 0) {
+                        gameState.cars[carIds[0]].controls = {
+                            acceleration: 1.0,
+                            braking: 0,
+                            steering: 0
+                        };
+                        gameState.cars[carIds[0]].lastControlUpdate = Date.now();
+                    }
+                });
+                await hostPage.waitForTimeout(100);
             }
-            return null;
-        });
-        expect(spawnPosition, 'Spawn position should exist').not.toBeNull();
-        console.log('Spawn position:', spawnPosition);
 
-        // Move the car away from spawn
-        for (let i = 0; i < 30; i++) {
+            // Stop controls
             await hostPage.evaluate(() => {
                 // @ts-ignore
                 const gameState = window.gameState;
                 const carIds = Object.keys(gameState.cars);
                 if (carIds.length > 0) {
-                    gameState.cars[carIds[0]].controls = {
-                        acceleration: 1.0,
-                        braking: 0,
-                        steering: 0
-                    };
-                    gameState.cars[carIds[0]].lastControlUpdate = Date.now();
+                    gameState.cars[carIds[0]].controls = { acceleration: 0, braking: 0, steering: 0 };
                 }
             });
-            await hostPage.waitForTimeout(100);
-        }
 
-        // Stop controls
-        await hostPage.evaluate(() => {
-            // @ts-ignore
-            const gameState = window.gameState;
-            const carIds = Object.keys(gameState.cars);
-            if (carIds.length > 0) {
-                gameState.cars[carIds[0]].controls = { acceleration: 0, braking: 0, steering: 0 };
-            }
+            // Get position after moving
+            const movedPosition = await hostPage.evaluate(() => {
+                // @ts-ignore
+                const gameState = window.gameState;
+                const carIds = Object.keys(gameState.cars);
+                if (carIds.length > 0 && gameState.cars[carIds[0]].mesh) {
+                    const pos = gameState.cars[carIds[0]].mesh.position;
+                    return { x: pos.x, y: pos.y, z: pos.z };
+                }
+                return null;
+            });
+            console.log('Position after moving:', movedPosition);
+
+            const distanceMoved = Math.sqrt(
+                Math.pow(movedPosition!.x - spawnPosition!.x, 2) +
+                Math.pow(movedPosition!.z - spawnPosition!.z, 2)
+            );
+            console.log('Distance moved:', distanceMoved);
+            expect(distanceMoved, 'Car should have moved').toBeGreaterThan(5);
+
+            // Press F3 to open stats overlay (where the reset buttons are)
+            await hostPage.keyboard.press('F3');
+            await hostPage.waitForTimeout(500);
+
+            // Take screenshot before clicking reset
+            await hostPage.screenshot({ path: `test-results/${screenshotPrefix}-before.png` });
+
+            // Click the reset button
+            const resetButton = hostPage.locator(buttonSelector).first();
+            await expect(resetButton, `${name} should be visible`).toBeVisible({ timeout: 5000 });
+            await resetButton.click();
+
+            // Wait for reset
+            await hostPage.waitForTimeout(1000);
+
+            // Take screenshot after reset
+            await hostPage.screenshot({ path: `test-results/${screenshotPrefix}-after.png` });
+
+            // Get position after clicking button
+            const resetPosition = await hostPage.evaluate(() => {
+                // @ts-ignore
+                const gameState = window.gameState;
+                const carIds = Object.keys(gameState.cars);
+                if (carIds.length > 0 && gameState.cars[carIds[0]].mesh) {
+                    const pos = gameState.cars[carIds[0]].mesh.position;
+                    return { x: pos.x, y: pos.y, z: pos.z };
+                }
+                return null;
+            });
+            console.log('Position after button reset:', resetPosition);
+
+            const distanceFromSpawn = Math.sqrt(
+                Math.pow(resetPosition!.x - spawnPosition!.x, 2) +
+                Math.pow(resetPosition!.z - spawnPosition!.z, 2)
+            );
+            console.log(`Distance from spawn after ${name}:`, distanceFromSpawn);
+            expect(distanceFromSpawn, `Car should be back at spawn after clicking ${name}`).toBeLessThan(1);
         });
-
-        // Get position after moving
-        const movedPosition = await hostPage.evaluate(() => {
-            // @ts-ignore
-            const gameState = window.gameState;
-            const carIds = Object.keys(gameState.cars);
-            if (carIds.length > 0 && gameState.cars[carIds[0]].mesh) {
-                const pos = gameState.cars[carIds[0]].mesh.position;
-                return { x: pos.x, y: pos.y, z: pos.z };
-            }
-            return null;
-        });
-        console.log('Position after moving:', movedPosition);
-
-        const distanceMoved = Math.sqrt(
-            Math.pow(movedPosition!.x - spawnPosition!.x, 2) +
-            Math.pow(movedPosition!.z - spawnPosition!.z, 2)
-        );
-        console.log('Distance moved:', distanceMoved);
-        expect(distanceMoved, 'Car should have moved').toBeGreaterThan(5);
-
-        // Press F3 to open stats overlay (where the Reset All Cars button is)
-        await hostPage.keyboard.press('F3');
-        await hostPage.waitForTimeout(500);
-
-        // Take screenshot before clicking reset
-        await hostPage.screenshot({ path: 'test-results/before-button-reset.png' });
-
-        // Click the actual "Reset All Cars" button
-        const resetButton = hostPage.locator('#reset-all-cars-btn');
-        await expect(resetButton, 'Reset All Cars button should be visible').toBeVisible({ timeout: 5000 });
-        await resetButton.click();
-
-        // Wait for reset
-        await hostPage.waitForTimeout(1000);
-
-        // Take screenshot after reset
-        await hostPage.screenshot({ path: 'test-results/after-button-reset.png' });
-
-        // Get position after clicking button
-        const resetPosition = await hostPage.evaluate(() => {
-            // @ts-ignore
-            const gameState = window.gameState;
-            const carIds = Object.keys(gameState.cars);
-            if (carIds.length > 0 && gameState.cars[carIds[0]].mesh) {
-                const pos = gameState.cars[carIds[0]].mesh.position;
-                return { x: pos.x, y: pos.y, z: pos.z };
-            }
-            return null;
-        });
-        console.log('Position after button reset:', resetPosition);
-
-        const distanceFromSpawn = Math.sqrt(
-            Math.pow(resetPosition!.x - spawnPosition!.x, 2) +
-            Math.pow(resetPosition!.z - spawnPosition!.z, 2)
-        );
-        console.log('Distance from spawn after button reset:', distanceFromSpawn);
-        expect(distanceFromSpawn, 'Car should be back at spawn after clicking Reset All Cars button').toBeLessThan(1);
-    });
+    }
 
     test('upside-down car should reset to correct orientation', async ({ hostPage, playerPage }) => {
         // Setup game

@@ -1,6 +1,10 @@
 How to make the game better and cooler:
 
 - Gameplay features
+  - Fix the physics parameters window
+    - Systematically analyse eash aspect of the window and make a note of all areas which aren't working
+    - Work througha nd fix each of them
+    - Add any other tunable parameters we need to control our car derby world. Be comprehensive so that we can create a fun game for others when we learn how the physics should work, and which values are most fun.
   - Implement a rejoin ability, so if the controlleer disconnects, it can reconnect and keep controlling the same car without issue. Use localstorage to manage some persistence.
   - Add proper hot-reload support to aide in development
   - Revamp the controller to make it very very nice to use. Combination of human dev and logic required, but include following:
