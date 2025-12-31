@@ -112,8 +112,20 @@ class AudioManager {
             countdown: '/static/audio/music/countdown.mp3'
         };
 
+        const sfxTracks = {
+            engine_idle: '/static/audio/sfx/engine_idle.mp3',
+            engine_rev: '/static/audio/sfx/engine_rev.mp3',
+            collision_soft: '/static/audio/sfx/collision_soft.mp3',
+            collision_hard: '/static/audio/sfx/collision_hard.mp3',
+            tire_screech: '/static/audio/sfx/tire_screech.mp3',
+            player_join: '/static/audio/sfx/player_join.mp3',
+            button_click: '/static/audio/sfx/button_click.mp3',
+            countdown_beep: '/static/audio/sfx/countdown_beep.mp3',
+            countdown_go: '/static/audio/sfx/countdown_go.mp3'
+        };
+
         // Load music tracks
-        const loadPromises = Object.entries(musicTracks).map(async ([name, url]) => {
+        const musicPromises = Object.entries(musicTracks).map(async ([name, url]) => {
             try {
                 const buffer = await this.loadAudioBuffer(url);
                 this.musicBuffers[name] = buffer;
@@ -123,7 +135,18 @@ class AudioManager {
             }
         });
 
-        await Promise.all(loadPromises);
+        // Load SFX tracks
+        const sfxPromises = Object.entries(sfxTracks).map(async ([name, url]) => {
+            try {
+                const buffer = await this.loadAudioBuffer(url);
+                this.sfxBuffers[name] = buffer;
+                console.log(`[AudioManager] Loaded SFX: ${name}`);
+            } catch (e) {
+                console.warn(`[AudioManager] Failed to load SFX ${name}:`, e);
+            }
+        });
+
+        await Promise.all([...musicPromises, ...sfxPromises]);
 
         this.loaded = true;
         this.loading = false;
@@ -433,6 +456,126 @@ class AudioManager {
             currentTrack: this.currentMusic,
             loaded: this.loaded
         };
+    }
+
+    // ==========================================
+    // ENGINE SOUND SYSTEM
+    // ==========================================
+
+    /**
+     * Start the engine sound loop
+     */
+    startEngineSound() {
+        if (this.enginePlaying || !this.audioContext) return;
+
+        const buffer = this.sfxBuffers['engine_idle'];
+        if (!buffer) {
+            console.warn('[AudioManager] Engine sound not loaded');
+            return;
+        }
+
+        // Create source
+        this.engineSource = this.audioContext.createBufferSource();
+        this.engineSource.buffer = buffer;
+        this.engineSource.loop = true;
+
+        // Create gain node
+        this.engineGain = this.audioContext.createGain();
+        const effectiveVolume = this.isMuted ? 0 : this.sfxVolume * 0.4;
+        this.engineGain.gain.setValueAtTime(effectiveVolume, this.audioContext.currentTime);
+
+        // Connect
+        this.engineSource.connect(this.engineGain);
+        this.engineGain.connect(this.audioContext.destination);
+
+        // Start
+        this.engineSource.start(0);
+        this.enginePlaying = true;
+
+        console.log('[AudioManager] Engine sound started');
+    }
+
+    /**
+     * Stop the engine sound
+     * @param {number} fadeOut - Fade out duration in seconds
+     */
+    stopEngineSound(fadeOut = 0.3) {
+        if (!this.enginePlaying || !this.engineSource) return;
+
+        if (fadeOut > 0 && this.engineGain) {
+            this.engineGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
+            setTimeout(() => {
+                try {
+                    this.engineSource.stop();
+                } catch (e) {}
+                this.enginePlaying = false;
+                this.engineSource = null;
+                this.engineGain = null;
+            }, fadeOut * 1000);
+        } else {
+            try {
+                this.engineSource.stop();
+            } catch (e) {}
+            this.enginePlaying = false;
+            this.engineSource = null;
+            this.engineGain = null;
+        }
+
+        console.log('[AudioManager] Engine sound stopped');
+    }
+
+    /**
+     * Update engine sound based on car speed
+     * @param {number} speed - Current speed (0 to max)
+     * @param {number} maxSpeed - Maximum speed for normalization
+     * @param {boolean} isAccelerating - Whether accelerating (affects volume)
+     */
+    updateEngineSound(speed, maxSpeed = 50, isAccelerating = false) {
+        if (!this.enginePlaying || !this.engineSource || !this.engineGain) return;
+
+        // Normalize speed to 0-1 range
+        const normalizedSpeed = Math.min(1, Math.max(0, speed / maxSpeed));
+
+        // Pitch: 0.8x at idle, up to 1.6x at max speed
+        const minPitch = 0.8;
+        const maxPitch = 1.6;
+        const targetPitch = minPitch + (maxPitch - minPitch) * normalizedSpeed;
+        this.engineSource.playbackRate.setValueAtTime(targetPitch, this.audioContext.currentTime);
+
+        // Volume: slightly louder when accelerating
+        const baseVolume = this.isMuted ? 0 : this.sfxVolume * 0.4;
+        const accelBoost = isAccelerating ? 1.2 : 1.0;
+        const speedBoost = 1 + normalizedSpeed * 0.3; // Slightly louder at high speed
+        const targetVolume = baseVolume * accelBoost * speedBoost;
+
+        this.engineGain.gain.setValueAtTime(
+            Math.min(targetVolume, this.sfxVolume),
+            this.audioContext.currentTime
+        );
+    }
+
+    /**
+     * Play collision sound based on impact intensity
+     * @param {number} intensity - Impact intensity (0-1)
+     */
+    playCollisionSound(intensity = 0.5) {
+        const soundName = intensity > 0.6 ? 'collision_hard' : 'collision_soft';
+        this.playSound(soundName, { volume: 0.5 + intensity * 0.5 });
+    }
+
+    /**
+     * Play tire screech sound
+     * @returns {number} Sound ID for stopping
+     */
+    playTireScreech() {
+        return this.playSound('tire_screech', { volume: 0.4 });
+    }
+
+    /**
+     * Play player join notification
+     */
+    playPlayerJoin() {
+        this.playSound('player_join', { volume: 0.6 });
     }
 }
 
