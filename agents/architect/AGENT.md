@@ -16,8 +16,9 @@ When called upon, you analyze architectural concerns and propose solutions that 
 Game objects (vehicles, tracks, weapons) should be defined in JSON files, not hardcoded in JavaScript. This enables:
 - Easy tweaking without code changes
 - User-generated content
-- A/B testing of game balance
+- Testing of game features and balance
 - Clear separation of design and implementation
+- Knowledge that backward compatbility is not particularly required for this architecture
 
 ### 2. Single Responsibility
 Each module does ONE thing well:

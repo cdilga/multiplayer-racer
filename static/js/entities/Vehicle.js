@@ -78,6 +78,9 @@ class Vehicle extends Entity {
         // Network state
         this.lastUpdateTime = 0;
         this.interpolationBuffer = [];
+
+        // Spawn position (for reset functionality)
+        this.spawnPosition = options.position ? { ...options.position, rotation: options.rotation || 0 } : null;
     }
 
     /**

@@ -48,12 +48,21 @@ export { expect } from '@playwright/test';
 
 // Helper to wait for room code to appear on host
 export async function waitForRoomCode(hostPage: Page): Promise<string> {
-    await hostPage.waitForSelector('#room-code-display', { state: 'visible' });
-    const roomCode = await hostPage.locator('#room-code-display').textContent();
-    if (!roomCode || roomCode.length !== 4) {
-        throw new Error(`Invalid room code: ${roomCode}`);
+    // Wait for room code element to be visible
+    await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 30000 });
+
+    // Wait for a valid room code (not placeholder dashes)
+    let roomCode = '';
+    for (let i = 0; i < 50; i++) {  // Try for up to 5 seconds
+        roomCode = await hostPage.locator('#room-code-display').textContent() || '';
+        if (roomCode && roomCode.length === 4 && !roomCode.includes('-')) {
+            return roomCode;
+        }
+        await hostPage.waitForTimeout(100);
     }
-    return roomCode;
+
+    // If still invalid, throw with helpful error
+    throw new Error(`Invalid or missing room code after waiting: "${roomCode}"`);
 }
 
 // Helper to join game as player

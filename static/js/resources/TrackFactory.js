@@ -281,14 +281,16 @@ class TrackFactory {
 
             const segmentLength = (2 * Math.PI * radius) / segments;
 
-            const geometry = new THREE.BoxGeometry(thickness, height, segmentLength * 1.1);
+            // Swap geometry: length along X, thickness along Z for proper tangent alignment
+            const geometry = new THREE.BoxGeometry(segmentLength * 1.1, height, thickness);
             const segment = new THREE.Mesh(geometry, material);
 
             const midAngle = (angle + nextAngle) / 2;
             segment.position.x = Math.cos(midAngle) * radius;
             segment.position.z = Math.sin(midAngle) * radius;
             segment.position.y = height / 2;
-            segment.rotation.y = -midAngle + Math.PI / 2;
+            // Rotate so local X (length) is tangent to circle
+            segment.rotation.y = midAngle + Math.PI / 2;
 
             segment.castShadow = true;
             segment.receiveShadow = true;

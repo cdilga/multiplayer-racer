@@ -55,6 +55,8 @@ How to make the game better and cooler:
     - For e.g. Read(~/Documents/dev/multiplayer-racer-1/static/js/host.js)
   ⎿  Error: File content (31289 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to 
      search for specific content. - This is one error we wish to remove from our development process
+  - Rename the entire game Joystick Jammers
+    - One that could mostly be delegated to the documentation agent, ensuring teh readme and video are all updated.
 
 # Meta claude setup stuff:
 - Gameplay researcher

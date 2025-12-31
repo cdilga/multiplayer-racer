@@ -113,8 +113,9 @@
     </style>
 </head>
 <body>
-    <!-- Game container -->
+    <!-- Game container (game-screen ID for test compatibility) -->
     <div id="game-container"></div>
+    <div id="game-screen" class="hidden"></div>
 
     <!-- Loading overlay -->
     <div id="loading-overlay" class="loading-overlay">
@@ -203,6 +204,54 @@
 
                 // Make game accessible globally for debugging
                 window.game = game;
+
+                // Expose gameState for test compatibility
+                window.gameState = {
+                    get cars() {
+                        const result = {};
+                        for (const [playerId, vehicle] of game.vehicles) {
+                            result[playerId] = {
+                                mesh: vehicle.mesh,
+                                playerId: playerId,
+                                spawnPosition: vehicle.spawnPosition,
+                                controls: vehicle.controls
+                            };
+                        }
+                        return result;
+                    },
+                    _testControlsOverride: false
+                };
+
+                // Expose reset functions for test compatibility
+                window.resetCarPosition = (playerId) => {
+                    const vehicle = game.vehicles.get(playerId);
+                    if (vehicle && vehicle.spawnPosition) {
+                        vehicle.reset(vehicle.spawnPosition);
+                        if (game.systems.physics) {
+                            game.systems.physics.resetVehicle(
+                                vehicle.id,
+                                vehicle.spawnPosition,
+                                vehicle.spawnPosition.rotation || 0
+                            );
+                        }
+                    }
+                };
+
+                window.resetAllCars = () => {
+                    let index = 0;
+                    for (const [playerId, vehicle] of game.vehicles) {
+                        const spawnPos = game.track?.getSpawnPosition(index) || vehicle.spawnPosition;
+                        vehicle.reset(spawnPos);
+                        if (game.systems.physics) {
+                            game.systems.physics.resetVehicle(
+                                vehicle.id,
+                                spawnPos,
+                                spawnPos.rotation || 0
+                            );
+                        }
+                        index++;
+                    }
+                };
 
                 updateLoading('Initializing systems...');
                 await game.init();

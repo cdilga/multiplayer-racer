@@ -114,14 +114,16 @@ class NetworkSystem {
 
         // Player events
         this.socket.on('player_joined', (data) => {
+            // Server sends: id, name, car_color
+            const playerId = data.id || data.player_id;
             const playerData = {
-                id: data.player_id,
-                name: data.player_name || `Player ${this.players.size + 1}`,
-                color: data.color,
+                id: playerId,
+                name: data.name || data.player_name || `Player ${this.players.size + 1}`,
+                color: data.car_color || data.color,
                 connected: true
             };
-            this.players.set(data.player_id, playerData);
-            this.playerControls.set(data.player_id, {
+            this.players.set(playerId, playerData);
+            this.playerControls.set(playerId, {
                 steering: 0,
                 acceleration: 0,
                 braking: 0
@@ -130,30 +132,53 @@ class NetworkSystem {
         });
 
         this.socket.on('player_left', (data) => {
-            const player = this.players.get(data.player_id);
+            // Server sends: player_id, player_name
+            const playerId = data.player_id || data.id;
+            const player = this.players.get(playerId);
             if (player) {
-                this.players.delete(data.player_id);
-                this.playerControls.delete(data.player_id);
-                this._emit('network:playerLeft', { playerId: data.player_id, player });
+                this.players.delete(playerId);
+                this.playerControls.delete(playerId);
+                this._emit('network:playerLeft', { playerId: playerId, player });
             }
         });
 
-        // Control input from mobile
-        this.socket.on('player_input', (data) => {
-            const controls = this.playerControls.get(data.player_id);
+        // Control input from mobile (server sends player_controls_update)
+        this.socket.on('player_controls_update', (data) => {
+            const playerId = data.player_id;
+            const controls = this.playerControls.get(playerId);
             if (controls) {
                 if (data.steering !== undefined) controls.steering = data.steering;
                 if (data.acceleration !== undefined) controls.acceleration = data.acceleration;
                 if (data.braking !== undefined) controls.braking = data.braking;
 
                 this._emit('network:playerInput', {
-                    playerId: data.player_id,
+                    playerId: playerId,
                     controls: { ...controls }
                 });
             }
         });
 
-        // Game events from server
+        // Also listen for player_input for compatibility
+        this.socket.on('player_input', (data) => {
+            const playerId = data.player_id;
+            const controls = this.playerControls.get(playerId);
+            if (controls) {
+                if (data.steering !== undefined) controls.steering = data.steering;
+                if (data.acceleration !== undefined) controls.acceleration = data.acceleration;
+                if (data.braking !== undefined) controls.braking = data.braking;
+
+                this._emit('network:playerInput', {
+                    playerId: playerId,
+                    controls: { ...controls }
+                });
+            }
+        });
+
+        // Game events from server (server sends game_started, not game_start)
+        this.socket.on('game_started', (data) => {
+            this._emit('network:gameStart', data);
+        });
+
         this.socket.on('game_start', (data) => {
             this._emit('network:gameStart', data);
         });

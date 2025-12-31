@@ -67,19 +67,20 @@ class LobbyUI {
 
                 <div class="room-code-section">
                     <p class="room-code-label">Room Code</p>
-                    <div class="room-code" id="lobby-room-code">----</div>
-                    <p class="room-code-hint">Share this code with players</p>
+                    <div class="room-code" id="room-code-display">----</div>
+                    <img id="qr-code" class="qr-code hidden" alt="QR Code to join" />
+                    <p class="room-code-hint" id="join-url">Share this code with players</p>
                 </div>
 
                 <div class="players-section">
-                    <h2>Players (<span id="lobby-player-count">0</span>)</h2>
-                    <ul class="player-list" id="lobby-player-list"></ul>
+                    <h2>Players (<span id="player-count">0</span>)</h2>
+                    <ul class="player-list" id="player-list"></ul>
                 </div>
 
                 <div class="settings-section">
                     <label>
                         Laps:
-                        <select id="lobby-laps">
+                        <select id="laps-select">
                             <option value="1">1</option>
                             <option value="3" selected>3</option>
                             <option value="5">5</option>
@@ -88,7 +89,7 @@ class LobbyUI {
                     </label>
                 </div>
 
-                <button class="start-button" id="lobby-start-btn" disabled>
+                <button class="start-button" id="start-game-btn" disabled>
                     Waiting for players...
                 </button>
             </div>
@@ -106,11 +107,13 @@ class LobbyUI {
      * @private
      */
     _bindElements() {
-        this.elements.roomCode = this.element.querySelector('#lobby-room-code');
-        this.elements.playerCount = this.element.querySelector('#lobby-player-count');
-        this.elements.playerList = this.element.querySelector('#lobby-player-list');
-        this.elements.lapsSelect = this.element.querySelector('#lobby-laps');
-        this.elements.startButton = this.element.querySelector('#lobby-start-btn');
+        this.elements.roomCode = this.element.querySelector('#room-code-display');
+        this.elements.qrCode = this.element.querySelector('#qr-code');
+        this.elements.joinUrl = this.element.querySelector('#join-url');
+        this.elements.playerCount = this.element.querySelector('#player-count');
+        this.elements.playerList = this.element.querySelector('#player-list');
+        this.elements.lapsSelect = this.element.querySelector('#laps-select');
+        this.elements.startButton = this.element.querySelector('#start-game-btn');
 
         // Setup start button handler
         if (this.elements.startButton) {
@@ -183,6 +186,17 @@ class LobbyUI {
                 margin: 0;
                 color: #666;
                 font-size: 12px;
+            }
+            .qr-code {
+                width: 150px;
+                height: 150px;
+                margin: 15px auto;
+                border-radius: 10px;
+                background: white;
+                padding: 5px;
+            }
+            .qr-code.hidden {
+                display: none;
             }
             .players-section {
                 margin-bottom: 30px;
@@ -291,6 +305,16 @@ class LobbyUI {
         this.roomCode = code;
         if (this.elements.roomCode) {
             this.elements.roomCode.textContent = code;
+        }
+        // Update QR code image
+        if (this.elements.qrCode && code && code !== '----') {
+            this.elements.qrCode.src = `/qrcode/${code}`;
+            this.elements.qrCode.classList.remove('hidden');
+        }
+        // Update join URL
+        if (this.elements.joinUrl && code && code !== '----') {
+            const joinUrl = `${window.location.origin}/player?room=${code}`;
+            this.elements.joinUrl.textContent = joinUrl;
         }
     }
 

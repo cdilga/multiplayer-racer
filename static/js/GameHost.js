@@ -187,6 +187,16 @@ class GameHost {
         // State change events
         this.eventBus.on('state:change', ({ from, to }) => {
             console.log(`GameHost: State ${from} -> ${to}`);
+
+            // Update game-screen visibility for test compatibility
+            const gameScreen = document.getElementById('game-screen');
+            if (gameScreen) {
+                if (to === GAME_STATES.RACING || to === GAME_STATES.COUNTDOWN) {
+                    gameScreen.classList.remove('hidden');
+                } else if (to === GAME_STATES.LOBBY) {
+                    gameScreen.classList.add('hidden');
+                }
+            }
         });
     }
 
@@ -216,6 +226,10 @@ class GameHost {
         try {
             this.roomCode = await this.systems.network.createRoom();
             console.log('GameHost: Room created:', this.roomCode);
+            // Explicitly update lobby UI with room code
+            if (this.ui.lobby && this.roomCode) {
+                this.ui.lobby.setRoomCode(this.roomCode);
+            }
         } catch (error) {
             console.error('GameHost: Failed to create room:', error);
         }

@@ -131,13 +131,13 @@ def _get_host_info():
 
 @app.route('/')
 def index():
-    """Serve the host interface."""
+    """Serve the host interface (v1 - stable, tested)."""
     local_ip, port = _get_host_info()
     return render_template('host/index.html', local_ip=local_ip, port=port)
 
 @app.route('/v2')
 def index_v2():
-    """Serve the new modular host interface (v2 architecture)."""
+    """Serve the new modular host interface (v2 - experimental)."""
     local_ip, port = _get_host_info()
     return render_template('host/index-v2.html', local_ip=local_ip, port=port)
 
