@@ -51,7 +51,10 @@ How to make the game better and cooler:
     - Full game price of $15 upon launch
   - Add website to download it, and join the publicly hosted version of the game with continuous games hosted on an online instance with live join and leaving in a permananent gameroom derby match as a trial, just use phone to scan code and join the remote server version. No limit to number of players, can take thousands at once
   - Add a user based bug submisison system. takes screenshots, or video and allows it to be uploaded and prioritised, similar to what the bug pages of levelsio uses. Then we can use the tickets and community voting and input to prioritise bugfixes and feature requests. This would be similar to https://ideasbugs.featurebase.app/, and in fact we could potentially use the free version of featurebase or roll our own. 
-
+  - Break down files into more logical subdivisions. Examine other repositories for ideas of project structure. 
+    - For e.g. Read(~/Documents/dev/multiplayer-racer-1/static/js/host.js)
+  ⎿  Error: File content (31289 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to 
+     search for specific content. - This is one error we wish to remove from our development process
 
 # Meta claude setup stuff:
 - Gameplay researcher

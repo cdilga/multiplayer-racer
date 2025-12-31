@@ -113,9 +113,8 @@ def generate_room_code(length=4):
     """Generate a random room code of uppercase letters."""
     return ''.join(random.choices(string.ascii_uppercase, k=length))
 
-@app.route('/')
-def index():
-    """Serve the host interface."""
+def _get_host_info():
+    """Get local IP and port for host templates."""
     local_ip = get_local_ip()
     port = request.environ.get('SERVER_PORT', 5000)
     # For some reason, SERVER_PORT may not be accurate on all systems
@@ -128,7 +127,19 @@ def index():
         host_parts = request.headers['Host'].split(':')
         if len(host_parts) > 1:
             port = host_parts[1]
+    return local_ip, port
+
+@app.route('/')
+def index():
+    """Serve the host interface."""
+    local_ip, port = _get_host_info()
     return render_template('host/index.html', local_ip=local_ip, port=port)
+
+@app.route('/v2')
+def index_v2():
+    """Serve the new modular host interface (v2 architecture)."""
+    local_ip, port = _get_host_info()
+    return render_template('host/index-v2.html', local_ip=local_ip, port=port)
 
 @app.route('/player')
 def player():

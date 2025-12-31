@@ -1,0 +1,84 @@
+{
+  "id": "default",
+  "name": "Standard Sedan",
+  "visual": {
+    "body": {
+      "length": 4,
+      "width": 2,
+      "height": 1,
+      "color": "#ff0000",
+      "roughness": 0.5
+    },
+    "roof": {
+      "widthScale": 0.75,
+      "heightScale": 0.7,
+      "lengthScale": 0.5,
+      "color": "#333333",
+      "roughness": 0.7,
+      "zOffset": -0.05
+    },
+    "wheels": {
+      "radius": 0.35,
+      "thickness": 0.4,
+      "color": "#111111",
+      "roughness": 0.8,
+      "segments": 16,
+      "protrusion": 0.1,
+      "yOffset": -0.1
+    },
+    "headlights": {
+      "radius": 0.2,
+      "color": "#ffffcc",
+      "emissiveIntensity": 0.5
+    },
+    "taillights": {
+      "radius": 0.2,
+      "color": "#ff0000",
+      "emissiveIntensity": 0.5
+    }
+  },
+  "physics": {
+    "mass": 32,
+    "linearDamping": 0.2,
+    "angularDamping": 0.5,
+    "friction": 0.5,
+    "density": 4.0,
+    "engine": {
+      "force": 200,
+      "brakeForce": 50
+    },
+    "steering": {
+      "maxAngle": 0.5
+    },
+    "wheels": {
+      "radius": 0.35,
+      "suspensionRestLength": 0.5,
+      "positions": {
+        "frontLeft": { "x": -0.8, "y": 0, "z": 1.5 },
+        "frontRight": { "x": 0.8, "y": 0, "z": 1.5 },
+        "rearLeft": { "x": -0.8, "y": 0, "z": -1.5 },
+        "rearRight": { "x": 0.8, "y": 0, "z": -1.5 }
+      }
+    },
+    "suspension": {
+      "stiffness": 30,
+      "compression": 2,
+      "relaxation": 3,
+      "maxTravel": 0.3,
+      "direction": { "x": 0, "y": -1, "z": 0 }
+    },
+    "axle": {
+      "direction": { "x": -1, "y": 0, "z": 0 }
+    },
+    "frictionSlip": 1000
+  },
+  "stats": {
+    "maxHealth": 100,
+    "armor": 1.0,
+    "weight": "medium"
+  },
+  "audio": {
+    "enginePitch": 1.0,
+    "collisionVolume": 1.0
+  }
+}

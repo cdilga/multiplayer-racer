@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Game - Host (v2)</title>
+    <link rel="stylesheet" href="/static/css/host.css">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        /* Container for 3D game */
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .loading-overlay.hidden {
+            display: none;
+        }
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #333;
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #888;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error display */
+        .error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 46, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .error-overlay.hidden {
+            display: none;
+        }
+        .error-title {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: #888;
+            max-width: 500px;
+        }
+        .error-retry {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff88;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+            border-radius: 5px;
+        }
+        .debug-info.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Game container -->
+    <div id="game-container"></div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">Initializing game engine...</div>
+    </div>
+
+    <!-- Error overlay -->
+    <div id="error-overlay" class="error-overlay hidden">
+        <div class="error-title">Something went wrong</div>
+        <div class="error-message" id="error-message"></div>
+        <button class="error-retry" onclick="location.reload()">Retry</button>
+    </div>
+
+    <!-- Debug info (press D to toggle) -->
+    <div id="debug-info" class="debug-info hidden">
+        <div>FPS: <span id="debug-fps">0</span></div>
+        <div>State: <span id="debug-state">-</span></div>
+        <div>Players: <span id="debug-players">0</span></div>
+        <div>Room: <span id="debug-room">-</span></div>
+    </div>
+
+    <!-- Load libraries -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Import map for ES modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+        }
+    }
+    </script>
+
+    <!-- Main game initialization -->
+    <script type="module">
+        import { GameHost } from '/static/js/GameHost.js';
+
+        // UI elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const errorOverlay = document.getElementById('error-overlay');
+        const errorMessage = document.getElementById('error-message');
+        const debugInfo = document.getElementById('debug-info');
+
+        // Debug display
+        let showDebug = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'd' || e.key === 'D') {
+                showDebug = !showDebug;
+                debugInfo.classList.toggle('hidden', !showDebug);
+            }
+        });
+
+        // Show error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // Update loading text
+        function updateLoading(text) {
+            loadingText.textContent = text;
+        }
+
+        // Initialize game
+        async function initGame() {
+            try {
+                updateLoading('Loading physics engine...');
+
+                // Wait for Rapier to load
+                const rapier = await import('@dimforge/rapier3d-compat');
+                await rapier.init();
+                window.RAPIER = rapier;
+                window.rapierLoaded = true;
+
+                updateLoading('Creating game host...');
+
+                // Create and initialize game host
+                const game = new GameHost({
+                    container: document.getElementById('game-container')
+                });
+
+                // Make game accessible globally for debugging
+                window.game = game;
+
+                updateLoading('Initializing systems...');
+                await game.init();
+
+                updateLoading('Starting game...');
+                await game.start();
+
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+
+                // Setup debug display updates
+                if (showDebug) {
+                    setInterval(() => {
+                        document.getElementById('debug-fps').textContent = game.engine.getFps();
+                        document.getElementById('debug-state').textContent = game.engine.getState() || '-';
+                        document.getElementById('debug-players').textContent = game.vehicles.size;
+                        document.getElementById('debug-room').textContent = game.roomCode || '-';
+                    }, 500);
+                }
+
+                console.log('Game initialized successfully!');
+
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+                showError(error.message || 'Failed to initialize game. Please refresh and try again.');
+            }
+        }
+
+        // Start initialization
+        initGame();
+    </script>
+
+    <!-- Pass server data to client -->
+    <script>
+        const serverConfig = {
+            localIp: "{{ local_ip }}",
+            port: "{{ port }}"
+        };
+    </script>
+</body>
+</html>

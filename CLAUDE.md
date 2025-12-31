@@ -163,3 +163,49 @@ If physics isn't working (car not moving, flying away, etc):
 Example: If car won't move with engineForce=100, changing to 100000 won't fix it if
 the fundamental problem is that forces aren't being applied correctly or the vehicle
 controller isn't being used at all.
+
+## Architecture Vision
+
+This project is evolving toward a clean, data-driven architecture. See the full plan at:
+`.claude/plans/typed-sauteeing-pony.md`
+
+### Core Principles
+1. **Data over Code** - Vehicles, tracks, physics params defined in JSON files
+2. **Single Responsibility** - Each module does one thing well
+3. **Event-Driven** - Systems communicate via EventBus, not direct references
+4. **Composition** - Entity-Component pattern for flexibility
+
+### Target Structure
+```
+static/
+├── assets/          # JSON definitions (vehicles, tracks)
+├── js/
+│   ├── engine/      # Core: Engine, GameLoop, EventBus, StateMachine
+│   ├── resources/   # ResourceLoader, VehicleFactory, TrackFactory
+│   ├── entities/    # Entity, Vehicle, Track
+│   ├── systems/     # PhysicsSystem, RenderSystem, NetworkSystem, etc.
+│   ├── input/       # InputManager, TouchController
+│   └── ui/          # LobbyUI, RaceUI, ResultsUI
+```
+
+### When Making Architectural Decisions
+- Prefer extracting systems over adding to existing files
+- Move hardcoded values to JSON configuration
+- Use EventBus for inter-system communication
+- Keep host.js and player.js as thin orchestrators
+
+## Claude Agents
+
+Specialized agents are available in the `agents/` directory. Invoke them when facing domain-specific challenges.
+
+### Architect Agent
+**Location:** `agents/architect/AGENT.md`
+
+Call upon the Architect when facing:
+- Module organization questions ("Where should this code go?")
+- Decomposition guidance ("This file is too big")
+- Integration patterns ("How should these systems communicate?")
+- Data vs code decisions ("Should this be configurable?")
+- Refactoring guidance ("This feels hacky")
+
+The Architect ensures artisan-quality abstractions that are elegant, maintainable, and a joy to work with.
