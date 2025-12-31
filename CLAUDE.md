@@ -10,9 +10,68 @@
 - Install dependencies: `pip install -r requirements.txt`
 
 ## Testing
+
+### Running Tests
+- Run all tests: `npm test`
+- Run tests with UI: `npm run test:ui`
+- Run tests headed (visible browser): `npm run test:headed`
+
+### Manual Testing URLs
 - Open host interface: `http://localhost:8000/`
 - Test car models: `http://localhost:8000/test/car`
 - Manual testing via multiple browsers/devices
+
+## Development Workflow (TDD)
+
+**Always follow this Test-Driven Development loop:**
+
+```
+1. Write Test (that fails)
+   └─→ npm test -- --grep "your test name"
+
+2. Verify Test Fails
+   └─→ Confirm the test fails for the right reason
+
+3. Implement Logic
+   └─→ Write minimal code to make the test pass
+
+4. Run Tests
+   └─→ npm test
+
+5. Check Visuals (if UI-related)
+   └─→ npm run test:headed
+   └─→ Manually verify in browser if needed
+
+6. All Tests Pass in CI
+   └─→ Push changes, verify GitHub Actions pass
+```
+
+### Example Workflow
+
+```bash
+# 1. Start the server (in one terminal)
+python server/app.py
+
+# 2. Write your test in tests/e2e/
+# 3. Run specific test to see it fail
+npm test -- --grep "should reset car to spawn position"
+
+# 4. Implement the feature
+# 5. Run tests again
+npm test
+
+# 6. Visual verification
+npm run test:headed
+
+# 7. Push and verify CI
+git push origin your-branch
+```
+
+### Key Principles
+- **Red-Green-Refactor**: Write failing test → Make it pass → Clean up
+- **Test first**: Don't write implementation code without a failing test
+- **Small increments**: Each test should verify one specific behavior
+- **CI is truth**: Local passing isn't enough - CI must pass
 
 ## Code Style Guidelines
 - **Python**: Follow PEP 8 conventions

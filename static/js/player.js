@@ -20,9 +20,9 @@ const gameState = {
     },
     speed: 0,
     touchControls: {
-        steeringActive: false,
-        steeringStartX: 0,
-        steeringCurrentX: 0
+        steeringJoystick: null, // Joystick instance
+        accelerateTouchId: null, // Touch ID for accelerator
+        brakeTouchId: null // Touch ID for brake
     },
     lastSpeed: 0,
     lastUpdateTime: 0,
@@ -516,59 +516,73 @@ function initGameControls() {
         return;
     }
     elements.controlsContainer.innerHTML = '';
-    
+
     // Create left half (steering) and right half (pedals) areas
     const steeringArea = document.createElement('div');
     steeringArea.id = 'steering-area';
     steeringArea.className = 'control-area';
-    
+
     const pedalsArea = document.createElement('div');
     pedalsArea.id = 'pedals-area';
     pedalsArea.className = 'control-area';
-    
+
     // Add accelerate and brake buttons to pedals area
     const accelerateBtn = document.createElement('div');
     accelerateBtn.id = 'accelerate-btn';
     accelerateBtn.innerHTML = '↑';
-    
+
     const brakeBtn = document.createElement('div');
     brakeBtn.id = 'brake-btn';
     brakeBtn.innerHTML = '↓';
-    
+
     pedalsArea.appendChild(accelerateBtn);
     pedalsArea.appendChild(brakeBtn);
-    
-    // Add touch indicator to steering area
-    const steeringIndicator = document.createElement('div');
-    steeringIndicator.id = 'steering-indicator';
-    steeringArea.appendChild(steeringIndicator);
-    
+
     // Add areas to container
     elements.controlsContainer.appendChild(steeringArea);
     elements.controlsContainer.appendChild(pedalsArea);
-    
+
     // Update element references
     elements.steeringArea = steeringArea;
     elements.pedalsArea = pedalsArea;
     elements.accelerateBtn = accelerateBtn;
     elements.brakeBtn = brakeBtn;
-    elements.steeringIndicator = steeringIndicator;
-    
-    // Add touch event listeners for steering area
-    steeringArea.addEventListener('touchstart', handleSteeringStart);
-    steeringArea.addEventListener('touchmove', handleSteeringMove);
-    steeringArea.addEventListener('touchend', handleSteeringEnd);
-    steeringArea.addEventListener('touchcancel', handleSteeringEnd);
-    
-    // Add touch event listeners for pedals
-    accelerateBtn.addEventListener('touchstart', () => setAcceleration(1));
-    accelerateBtn.addEventListener('touchend', () => setAcceleration(0));
-    accelerateBtn.addEventListener('touchcancel', () => setAcceleration(0));
-    
-    brakeBtn.addEventListener('touchstart', () => setBraking(1));
-    brakeBtn.addEventListener('touchend', () => setBraking(0));
-    brakeBtn.addEventListener('touchcancel', () => setBraking(0));
-    
+
+    // Initialize joystick for steering (horizontal only)
+    if (typeof Joystick !== 'undefined') {
+        gameState.touchControls.steeringJoystick = new Joystick({
+            container: steeringArea,
+            mode: 'horizontal',
+            size: 100,
+            maxDistance: 40,
+            onMove: ({ x }) => setSteering(x),
+            onEnd: () => setSteering(0)
+        });
+    } else {
+        console.error('Joystick class not loaded');
+    }
+
+    // Add touch event listeners for pedals with proper touch ID tracking
+    accelerateBtn.addEventListener('touchstart', handleAccelerateStart, { passive: false });
+    accelerateBtn.addEventListener('touchend', handleAccelerateEnd, { passive: false });
+    accelerateBtn.addEventListener('touchcancel', handleAccelerateEnd, { passive: false });
+
+    brakeBtn.addEventListener('touchstart', handleBrakeStart, { passive: false });
+    brakeBtn.addEventListener('touchend', handleBrakeEnd, { passive: false });
+    brakeBtn.addEventListener('touchcancel', handleBrakeEnd, { passive: false });
+
+    // Prevent context menu on long press (Android)
+    [steeringArea, accelerateBtn, brakeBtn].forEach(el => {
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+
+    // Global context menu prevention during game
+    document.addEventListener('contextmenu', (e) => {
+        if (gameState.gameStarted) {
+            e.preventDefault();
+        }
+    });
+
     // Also support keyboard controls for testing
     document.addEventListener('keydown', (e) => {
         switch (e.key) {
@@ -586,7 +600,7 @@ function initGameControls() {
                 break;
         }
     });
-    
+
     document.addEventListener('keyup', (e) => {
         switch (e.key) {
             case 'ArrowLeft':
@@ -603,65 +617,55 @@ function initGameControls() {
     });
 }
 
-function handleSteeringStart(e) {
-    if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = elements.steeringArea.getBoundingClientRect();
-        
-        gameState.touchControls.steeringActive = true;
-        gameState.touchControls.steeringStartX = touch.clientX;
-        gameState.touchControls.steeringCurrentX = touch.clientX;
-        
-        // Position the indicator where the touch started
-        elements.steeringIndicator.style.left = `${touch.clientX - rect.left}px`;
-        elements.steeringIndicator.style.top = `${touch.clientY - rect.top}px`;
-        elements.steeringIndicator.classList.add('active');
-        
-        // Initial steering value
-        updateSteeringFromTouch();
+// Touch handlers for accelerator with touch ID tracking
+function handleAccelerateStart(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+        if (gameState.touchControls.accelerateTouchId === null) {
+            gameState.touchControls.accelerateTouchId = touch.identifier;
+            setAcceleration(1);
+            elements.accelerateBtn.style.backgroundColor = '#3a9fc0';
+            break;
+        }
     }
 }
 
-function handleSteeringMove(e) {
-    if (gameState.touchControls.steeringActive && e.touches.length > 0) {
-        const touch = e.touches[0];
-        const rect = elements.steeringArea.getBoundingClientRect();
-        
-        gameState.touchControls.steeringCurrentX = touch.clientX;
-        
-        // Update the position of the indicator with vertical position from touch
-        elements.steeringIndicator.style.left = `${touch.clientX - rect.left}px`;
-        elements.steeringIndicator.style.top = `${touch.clientY - rect.top}px`;
-        
-        updateSteeringFromTouch();
+function handleAccelerateEnd(e) {
+    for (const touch of e.changedTouches) {
+        if (touch.identifier === gameState.touchControls.accelerateTouchId) {
+            gameState.touchControls.accelerateTouchId = null;
+            setAcceleration(0);
+            elements.accelerateBtn.style.backgroundColor = '#4cc9f0';
+            break;
+        }
     }
 }
 
-function handleSteeringEnd() {
-    if (gameState.touchControls.steeringActive) {
-        gameState.touchControls.steeringActive = false;
-        elements.steeringIndicator.classList.remove('active');
-        setSteering(0);
+// Touch handlers for brake with touch ID tracking
+function handleBrakeStart(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+        if (gameState.touchControls.brakeTouchId === null) {
+            gameState.touchControls.brakeTouchId = touch.identifier;
+            setBraking(1);
+            elements.brakeBtn.style.backgroundColor = '#d61d6d';
+            break;
+        }
     }
 }
 
-function updateSteeringFromTouch() {
-    if (!gameState.touchControls.steeringActive) return;
-    
-    const steeringWidth = elements.steeringArea.clientWidth;
-    const deltaX = gameState.touchControls.steeringCurrentX - gameState.touchControls.steeringStartX;
-    
-    // Map the horizontal movement to steering (-1 to 1)
-    // Use a sensitivity factor to determine how much movement is needed for full lock
-    const sensitivity = 0.5; // Adjust as needed
-    const maxDelta = steeringWidth * sensitivity;
-    
-    // Calculate steering value
-    let steeringValue = deltaX / maxDelta;
-    steeringValue = Math.max(-1, Math.min(1, steeringValue)); // Clamp between -1 and 1
-    
-    setSteering(steeringValue);
+function handleBrakeEnd(e) {
+    for (const touch of e.changedTouches) {
+        if (touch.identifier === gameState.touchControls.brakeTouchId) {
+            gameState.touchControls.brakeTouchId = null;
+            setBraking(0);
+            elements.brakeBtn.style.backgroundColor = '#f72585';
+            break;
+        }
+    }
 }
+
+// Old steering functions removed - now using Joystick class
 
 function setSteering(value) {
     gameState.controls.steering = value;
