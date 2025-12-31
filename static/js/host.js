@@ -411,11 +411,19 @@ function startGame() {
 
         // Play countdown music, then crossfade to race music
         if (window.audioManager && audioManager.loaded) {
-            audioManager.stopMusic(0.3);
-            audioManager.playSound('countdown', { volume: 0.8 });
-            // After countdown (approx 5 seconds), start race music
+            // Stop all current audio first
+            audioManager.stopAllMusic();
+
+            // Play countdown sound
+            const countdownId = audioManager.playSound('countdown', { volume: 0.8 });
+
+            // After countdown (approx 5 seconds), stop countdown and start race music
             setTimeout(() => {
                 if (gameState.gameActive) {
+                    // Stop countdown if still playing
+                    if (countdownId) {
+                        audioManager.stopSound(countdownId, 0.3);
+                    }
                     audioManager.playMusic('race_main', { loop: true, fadeIn: 1.0 });
                 }
             }, 5000);

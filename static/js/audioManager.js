@@ -30,6 +30,13 @@ class AudioManager {
         // SFX buffers
         this.sfxBuffers = {};
 
+        // Track active one-shot sounds for stopping
+        this.activeSounds = new Map();
+        this.soundIdCounter = 0;
+
+        // Track sources being faded out (to prevent overlaps)
+        this.fadingOutSources = [];
+
         // Track loading state
         this.loaded = false;
         this.loading = false;
@@ -185,21 +192,58 @@ class AudioManager {
         const gain = this.currentMusicGain;
         const source = this.currentMusicSource;
 
+        // Track this source as fading out
+        this.fadingOutSources.push(source);
+
         // Fade out
         gain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
 
-        // Stop after fade
+        // Stop after fade and clean up
         setTimeout(() => {
             try {
                 source.stop();
             } catch (e) {
                 // Already stopped
             }
+            // Remove from fading list
+            const idx = this.fadingOutSources.indexOf(source);
+            if (idx > -1) this.fadingOutSources.splice(idx, 1);
         }, fadeOut * 1000);
 
         this.currentMusicSource = null;
         this.currentMusicGain = null;
         this.currentMusic = null;
+    }
+
+    /**
+     * Immediately stop all music (no fade)
+     */
+    stopAllMusic() {
+        // Stop current music immediately
+        if (this.currentMusicSource) {
+            try {
+                this.currentMusicSource.stop();
+            } catch (e) {}
+            this.currentMusicSource = null;
+            this.currentMusicGain = null;
+            this.currentMusic = null;
+        }
+
+        // Stop all fading out sources
+        this.fadingOutSources.forEach(source => {
+            try {
+                source.stop();
+            } catch (e) {}
+        });
+        this.fadingOutSources = [];
+
+        // Stop all active one-shot sounds
+        this.activeSounds.forEach((sound, id) => {
+            try {
+                sound.source.stop();
+            } catch (e) {}
+        });
+        this.activeSounds.clear();
     }
 
     /**
@@ -255,14 +299,15 @@ class AudioManager {
      * Play a one-shot sound effect
      * @param {string} trackName - Name of the track (can reuse music buffers)
      * @param {Object} options - { volume: 1.0 }
+     * @returns {number} Sound ID for stopping later
      */
     playSound(trackName, options = {}) {
-        if (!this.audioContext) return;
+        if (!this.audioContext) return null;
 
         const buffer = this.musicBuffers[trackName] || this.sfxBuffers[trackName];
         if (!buffer) {
             console.warn(`[AudioManager] Sound not found: ${trackName}`);
-            return;
+            return null;
         }
 
         const { volume = 1.0 } = options;
@@ -276,7 +321,44 @@ class AudioManager {
 
         source.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
+
+        // Track this sound
+        const soundId = ++this.soundIdCounter;
+        this.activeSounds.set(soundId, { source, gainNode, trackName });
+
+        // Remove from tracking when ended
+        source.onended = () => {
+            this.activeSounds.delete(soundId);
+        };
+
         source.start(0);
+        console.log(`[AudioManager] Playing sound: ${trackName} (id: ${soundId})`);
+        return soundId;
+    }
+
+    /**
+     * Stop a specific sound by ID
+     * @param {number} soundId - Sound ID returned from playSound
+     * @param {number} fadeOut - Fade out duration in seconds
+     */
+    stopSound(soundId, fadeOut = 0.1) {
+        const sound = this.activeSounds.get(soundId);
+        if (!sound) return;
+
+        if (fadeOut > 0) {
+            sound.gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
+            setTimeout(() => {
+                try {
+                    sound.source.stop();
+                } catch (e) {}
+                this.activeSounds.delete(soundId);
+            }, fadeOut * 1000);
+        } else {
+            try {
+                sound.source.stop();
+            } catch (e) {}
+            this.activeSounds.delete(soundId);
+        }
     }
 
     /**
