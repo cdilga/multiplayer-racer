@@ -123,6 +123,13 @@ body {
     justify-content: center;
     align-items: center;
     touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #steering-area {
@@ -168,6 +175,12 @@ body {
     margin: 0;
     padding: 0;
     transition: background-color 0.2s;
+    /* Prevent long-press issues on mobile */
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #accelerate-btn {
