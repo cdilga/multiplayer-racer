@@ -1340,23 +1340,39 @@ function onWindowResize() {
 
 function updateStatsDisplay() {
     if (!elements.statsOverlay) return;
-    
-    let statsHTML = '<div class="stats-header">Game Stats (Press F3 to toggle)</div>';
-    
+
+    // Create persistent structure if it doesn't exist
+    if (!elements.statsOverlay.querySelector('#stats-dynamic-content')) {
+        elements.statsOverlay.innerHTML = `
+            <div class="stats-header">Game Stats (Press F3 to toggle)</div>
+            <div id="stats-dynamic-content"></div>
+            <div class="reset-button-container">
+                <button id="reset-all-cars-btn" class="reset-button">Reset All Cars</button>
+            </div>
+            <div class="stats-section">Player Stats & Car Physics:</div>
+            <div id="player-stats-content"></div>
+        `;
+        // Attach click handler once
+        const resetBtn = elements.statsOverlay.querySelector('#reset-all-cars-btn');
+        if (resetBtn) {
+            resetBtn.onclick = resetAllCars;
+        }
+    }
+
+    // Update only the dynamic content
+    const dynamicContent = elements.statsOverlay.querySelector('#stats-dynamic-content');
+    if (!dynamicContent) return;
+
     // Add physics engine status
-    const physicsStatus = gameState.physics.usingRapier ? 
-        '<span style="color:green">Active</span>' : 
+    const physicsStatus = gameState.physics.usingRapier ?
+        '<span style="color:green">Active</span>' :
         '<span style="color:red">Unavailable</span>';
-    
-    statsHTML += `<div>Physics: ${physicsStatus}</div>`;
-    statsHTML += `<div>Rapier Loaded: ${window.rapierLoaded ? '<span style="color:green">Yes</span>' : '<span style="color:red">No</span>'}</div>`;
-    
+
     // Add physics debug status
-    const debugStatus = gameState.showPhysicsDebug ? 
-        '<span style="color:green">ON</span> (Press F4 to toggle)' : 
+    const debugStatus = gameState.showPhysicsDebug ?
+        '<span style="color:green">ON</span> (Press F4 to toggle)' :
         '<span style="color:#888">OFF</span> (Press F4 to toggle)';
-    statsHTML += `<div>Physics Debug: ${debugStatus}</div>`;
-    
+
     // Add FPS counter
     const now = performance.now();
     if (!gameState.lastFrameTime) {
@@ -1364,33 +1380,36 @@ function updateStatsDisplay() {
         gameState.frameCount = 0;
         gameState.fps = 0;
     }
-    
+
     gameState.frameCount++;
-    
+
     if (now - gameState.lastFrameTime >= 1000) {
         gameState.fps = Math.round(gameState.frameCount * 1000 / (now - gameState.lastFrameTime));
         gameState.frameCount = 0;
         gameState.lastFrameTime = now;
     }
-    
+
+    let statsHTML = `<div>Physics: ${physicsStatus}</div>`;
+    statsHTML += `<div>Rapier Loaded: ${window.rapierLoaded ? '<span style="color:green">Yes</span>' : '<span style="color:red">No</span>'}</div>`;
+    statsHTML += `<div>Physics Debug: ${debugStatus}</div>`;
     statsHTML += `<div>FPS: ${gameState.fps}</div>`;
     statsHTML += `<div>Players: ${Object.keys(gameState.players).length}</div>`;
     statsHTML += `<div>Cars: ${Object.keys(gameState.cars).length}</div>`;
-    
+
     // Add physics update counter
     statsHTML += `<div>Physics Updates: ${gameState.debugCounters?.physicsUpdate || 0}</div>`;
     if (gameState.showPhysicsDebug) {
         statsHTML += `<div>Debug Lines: ${gameState.debugCounters?.physicsDebugLines || 0}</div>`;
     }
-    
-    // Add reset all cars button
-    statsHTML += `<div class="reset-button-container">
-        <button id="reset-all-cars-btn" class="reset-button">Reset All Cars</button>
-    </div>`;
-    
-    // Add detailed player stats with controls and enhanced physics information
-    statsHTML += '<div class="stats-section">Player Stats & Car Physics:</div>';
-    
+
+    dynamicContent.innerHTML = statsHTML;
+
+    // Update player stats in the dedicated container
+    const playerStatsContent = elements.statsOverlay.querySelector('#player-stats-content');
+    if (!playerStatsContent) return;
+
+    let playerStatsHTML = '';
+
     Object.keys(gameState.cars).forEach(playerId => {
         const car = gameState.cars[playerId];
         const player = gameState.players[playerId];
@@ -1536,7 +1555,7 @@ function updateStatsDisplay() {
             </div>`;
         
         // Put it all together
-        statsHTML += `
+        playerStatsHTML += `
             <div class="player-stats">
                 <div class="player-header" style="color: ${player.color}">
                     ${player.name} (ID: ${player.id})
@@ -1555,17 +1574,11 @@ function updateStatsDisplay() {
             </div>
         `;
     });
-    
-    elements.statsOverlay.innerHTML = statsHTML;
-    
-    // Re-attach event listener for reset buttons
-    const resetButton = document.getElementById('reset-all-cars-btn');
-    if (resetButton) {
-        resetButton.onclick = resetAllCars;
-    }
-    
-    // Attach event listeners for individual car reset buttons
-    document.querySelectorAll('.car-reset-btn').forEach(button => {
+
+    playerStatsContent.innerHTML = playerStatsHTML;
+
+    // Attach event listeners for individual car reset buttons (these are recreated each time)
+    playerStatsContent.querySelectorAll('.car-reset-btn').forEach(button => {
         const playerId = button.id.replace('reset-car-', '').replace('-btn', '');
         button.onclick = () => resetCarPosition(playerId);
     });
