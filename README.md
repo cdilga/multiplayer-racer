@@ -1,180 +1,285 @@
-# Multiplayer Racer
+<div align="center">
 
-A multiplayer racing game with physics using Three.js, Rapier physics, and Socket.IO.
+# 🏎️ Multiplayer Racer
 
-## Recent Updates
+### *Real-time browser-based multiplayer racing on the big screen*
 
-### Physics Engine Upgrade
-- Replaced Cannon.js with Rapier physics for improved performance and stability
-- Added better car physics with more realistic handling
-- Fixed issues with mesh synchronization between physics and rendering
+[![CI](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml/badge.svg)](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Three.js](https://img.shields.io/badge/Three.js-r128-black?logo=three.js&logoColor=white)](https://threejs.org)
+[![Rapier](https://img.shields.io/badge/Rapier-3D_Physics-orange)](https://rapier.rs)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.5-010101?logo=socket.io&logoColor=white)](https://socket.io)
 
-### Rendering Fixes
-- Fixed the issue with Three.js scene not rendering until screen resize
-- Added forced DOM rendering to ensure the game displays correctly on initialization
-- Improved window resize handling with fallback dimensions
+<br />
 
-### Player Experience Improvements
-- Added random name generator with GitHub-style naming (adjective + noun)
-- Players can now set custom names before joining a game
-- Added ability to update player names during the waiting phase
-- Improved UI for player name input with a dice button for random names
+<img src="docs/images/gameplay-screenshot.png" alt="Multiplayer Racer Gameplay" width="800" />
 
-## Setup and Installation
+<br />
+
+**Connect your phone. Race your friends. Party game chaos.**
+
+[Getting Started](#-quick-start) •
+[Features](#-features) •
+[How It Works](#-how-it-works) •
+[Development](#-development) •
+[Roadmap](#-roadmap)
+
+</div>
+
+---
+
+## 🎮 What is Multiplayer Racer?
+
+Multiplayer Racer is a **Jackbox/Kahoot-style party racing game** where players use their smartphones as controllers while the race displays on a shared screen (TV, projector, or monitor).
+
+Perfect for:
+- 🎉 **Party nights** - Everyone joins with their phone
+- 🏠 **Living room gaming** - No extra controllers needed
+- 🎊 **Events & gatherings** - Easy setup, instant fun
+
+### Key Highlights
+
+| Feature | Description |
+|---------|-------------|
+| 📱 **Phone as Controller** | Touch controls optimized for mobile |
+| 📺 **Big Screen Display** | 3D racing view on the host screen |
+| 🔗 **Easy Join** | QR code or room code to connect |
+| ⚡ **Real-time** | WebSocket-powered instant response |
+| 🎵 **Dynamic Audio** | Music tracks & sound effects |
+| 🔧 **Physics Tuning** | Built-in debug panels for customization |
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js (for frontend dependencies)
-- Python 3.7+ (for the server)
-- pip (Python package manager)
 
-### Server Setup
-1. Clone the repository
-2. Install Python dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Install Node.js dependencies:
-   ```
-   npm install
-   ```
-
-### Running the Game
-1. Start the server:
-   ```
-   python server/app.py
-   ```
-2. Open a browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
-3. Create a game room on the host screen
-4. Connect with mobile devices using the displayed QR code or room code
-
-## Development
-
-### Project Structure
-- `server/` - Flask and Socket.IO server
-- `frontend/` - HTML templates for host and player views
-- `static/` - JavaScript, CSS, and other static assets
-- `static/js/rapierPhysics.js` - Rapier physics integration
-
-### Building for Production
-1. Build the frontend assets:
-   ```
-   npm run build
-   ```
-2. Deploy the server and built assets to your hosting environment
-
-## Technologies Used
-- Three.js for 3D rendering
-- Rapier physics for realistic car physics
-- Socket.IO for real-time communication
-- Flask for the web server
-- Vite for frontend build tooling
-
-## Features
-
-- Mobile-first design with touch controls
-- Room-based multiplayer with join codes (similar to Kahoot/Jackbox)
-- 3D rendering with Three.js
-- Real-time updates via WebSockets
-- Basic car physics and controls
-- Host screen to view all racers at once
-
-## Tech Stack
-
-- **Backend**: Python with Flask and Socket.IO
-- **Frontend**: HTML, CSS, JavaScript with Three.js for 3D rendering
-- **Communication**: WebSockets via Socket.IO
-- **Physics**: Simple custom physics implementation (with optional Cannon.js support)
-
-## Prerequisites
-
-- Python 3.7+
-- pip (Python package manager)
+- **Python 3.11+** with pip
+- **Node.js 20+** with npm
 - Modern web browser with WebGL support
 
-## Installation
-
-1. Clone the repository:
+### Installation
 
 ```bash
-git clone https://github.com/your-username/multiplayer-racer.git
+# Clone the repository
+git clone https://github.com/cdilga/multiplayer-racer.git
 cd multiplayer-racer
-```
 
-2. Install the Python dependencies:
-
-```bash
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Install Node.js dependencies
+npm install
 ```
 
-## Running the Game
-
-1. Start the Python server:
+### Start Racing
 
 ```bash
+# Start the server
 python server/app.py
 ```
 
-2. Open the host interface in a web browser:
+Open your browser to **http://localhost:8000** - you're ready to race!
+
+### Join the Game
+
+1. **Host** opens the game on a big screen/TV
+2. **Players** scan the QR code or enter the room code on their phones
+3. **Everyone** picks a name and joins the lobby
+4. **Host** clicks "Start Race" when ready
+
+---
+
+## ✨ Features
+
+### 🏁 Multiplayer Racing
+- **Room-based matchmaking** with 4-character codes
+- **QR code join** - Scan and play instantly
+- **Multiple players** racing simultaneously
+- **Real-time synchronization** via WebSockets
+
+### 🎮 Mobile Controls
+- **Touch joystick** for steering
+- **Accelerate/brake buttons** optimized for thumbs
+- **Full-screen mode** for immersive play
+- **Responsive design** for all screen sizes
+
+### 🚗 3D Racing Experience
+- **Three.js rendering** with smooth 60fps gameplay
+- **Rapier physics engine** for realistic car handling
+- **Dynamic camera** following the action
+- **Multiple track designs** (oval, figure-8)
+
+### 🎵 Audio System
+- **6 music tracks** for different game phases
+- **Sound effects** for collisions, engines, UI
+- **Audio ducking** for clear SFX over music
+- **Volume controls** built into the UI
+
+### 🔧 Developer Tools
+- **Physics debug panel** (Press F4) - Tune car handling live
+- **Stats overlay** (Press F3) - FPS, physics updates, player info
+- **Keyboard controls** for testing without mobile
+- **Comprehensive test suite** with Playwright
+
+---
+
+## 🔄 How It Works
 
 ```
-http://localhost:8000/
+┌─────────────────────────────────────────────────────────────────┐
+│                         HOST (Big Screen)                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │   Lobby     │→ │  3D Racing  │→ │    Results/Replay       │  │
+│  │  QR Code    │  │    View     │  │                         │  │
+│  │  Players    │  │   Physics   │  │                         │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ Socket.IO
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    FLASK + SOCKET.IO SERVER                      │
+│  • Room management (create/join/leave)                          │
+│  • Player state synchronization                                  │
+│  • Control input routing                                         │
+│  • QR code generation                                            │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ Socket.IO
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│   PLAYER 1   │   │   PLAYER 2   │   │   PLAYER N   │
+│  📱 Mobile   │   │  📱 Mobile   │   │  📱 Mobile   │
+│  Controller  │   │  Controller  │   │  Controller  │
+└──────────────┘   └──────────────┘   └──────────────┘
 ```
 
-3. Create a game room by clicking the "Create Game Room" button.
+---
 
-4. Players can join the game on their mobile devices by navigating to the displayed URL or by entering the room code.
+## 🛠️ Development
 
-5. Start the race when all players have joined.
+### Tech Stack
 
-## Game Controls
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Three.js, Vanilla JS, CSS |
+| **Physics** | Rapier 3D (WASM) |
+| **Backend** | Flask + Flask-SocketIO |
+| **Real-time** | Socket.IO |
+| **Testing** | Playwright E2E |
+| **Build** | Vite |
 
-### Mobile Controls
-- Use the virtual joystick on the left side of the screen to steer
-- Tap and hold the acceleration button (up arrow) to accelerate
-- Tap and hold the brake button (down arrow) to brake
+### Project Structure
 
-### Keyboard Controls (for testing)
-- Arrow keys: Up (accelerate), Down (brake), Left/Right (steering)
+```
+multiplayer-racer/
+├── server/              # Flask backend
+│   └── app.py          # Main server (rooms, WebSocket handling)
+├── frontend/            # HTML templates
+│   ├── host/           # Big screen interface
+│   └── player/         # Mobile controller interface
+├── static/
+│   ├── js/             # Game logic
+│   │   ├── host.js     # Host game loop & rendering
+│   │   ├── player.js   # Mobile controls
+│   │   ├── rapierPhysics.js  # Physics integration
+│   │   ├── audioManager.js   # Sound system
+│   │   ├── carModel.js       # 3D car geometry
+│   │   └── trackBuilder.js   # Track generation
+│   ├── css/            # Stylesheets
+│   └── audio/          # Music & SFX
+├── tests/e2e/          # Playwright test suite
+└── docs/               # Documentation & images
+```
 
-## Project Structure
+### Running Tests
 
-- `server/`: Python server and backend logic
-  - `app.py`: Main server file with Flask and Socket.IO
-- `frontend/`: Frontend HTML files
-  - `host/`: Host interface
-  - `player/`: Player interface
-- `static/`: Static assets
-  - `css/`: CSS stylesheets
-  - `js/`: JavaScript files
-    - `host.js`: Host interface logic
-    - `player.js`: Player interface logic
-    - `trackBuilder.js`: Track creation utilities
-    - `carModel.js`: Car model utilities
+```bash
+# Run all tests
+npm test
 
-## Extending the Game
+# Run with visible browser
+npm run test:headed
 
-### Adding Different Tracks
+# Run with Playwright UI
+npm run test:ui
+```
 
-Modify the `trackBuilder.js` file to add new track shapes and configurations. The track building system is modular and can be extended for more complex tracks.
+### Debug Controls (Host)
 
-### Adding Multiplayer Features
+| Key | Action |
+|-----|--------|
+| `F3` | Toggle stats overlay |
+| `F4` | Toggle physics parameters panel |
+| `R` | Reset all cars |
+| `Arrow Keys` | Test drive controls |
 
-Potential enhancements:
-- Race position tracking
-- Lap counting
-- Collision detection between cars
-- Power-ups and obstacles
-- Different car types with varying attributes
+---
 
-## License
+## 🗺️ Roadmap
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+### Current Status: Alpha
 
-## Acknowledgments
+The game is fully playable locally with core features working:
+- [x] Room creation & QR code joining
+- [x] Mobile touch controls
+- [x] 3D rendering with Three.js
+- [x] Rapier physics integration
+- [x] Real-time multiplayer sync
+- [x] Audio system with music & SFX
+- [x] Debug/tuning tools
 
-- Three.js for 3D rendering
-- Flask and Socket.IO for the server implementation
-- nipplejs for touch joystick controls 
+### Coming Soon
+
+| Phase | Features |
+|-------|----------|
+| **Phase 1** | Damage system, explosions, improved physics |
+| **Phase 2** | Multiple game modes (Derby, Race) |
+| **Phase 3** | More tracks, obstacles, power-ups |
+| **Phase 4** | Online hosting, public lobbies |
+| **Phase 5** | Steam release, car customization |
+
+> 🌐 **Online Demo** - Coming soon! Currently local network only.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! This project follows Test-Driven Development:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Write tests first** (they should fail)
+4. **Implement** the feature (make tests pass)
+5. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+6. **Push** to the branch (`git push origin feature/amazing-feature`)
+7. **Open** a Pull Request
+
+See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- [Three.js](https://threejs.org) - 3D graphics library
+- [Rapier](https://rapier.rs) - Physics engine
+- [Flask](https://flask.palletsprojects.com) & [Socket.IO](https://socket.io) - Backend framework
+- [Playwright](https://playwright.dev) - E2E testing
+
+---
+
+<div align="center">
+
+**Made with ❤️ for party game nights**
+
+[⬆ Back to Top](#️-multiplayer-racer)
+
+</div>
