@@ -245,4 +245,183 @@ test.describe('Car Reset Functionality', () => {
 
         expect(distanceFromSpawn, 'Car should be back at spawn after resetAllCars').toBeLessThan(0.5);
     });
+
+    test('upside-down car should reset to correct orientation', async ({ hostPage, playerPage }) => {
+        // Setup game
+        await hostPage.goto('/');
+        const roomCode = await waitForRoomCode(hostPage);
+        await joinGameAsPlayer(playerPage, roomCode, 'FlipTest');
+        await expect(hostPage.locator('#player-list')).toContainText('FlipTest', { timeout: 10000 });
+
+        // Start game
+        await startGameFromHost(hostPage);
+
+        // Let car settle after spawn drop
+        await hostPage.waitForTimeout(2000);
+
+        // Enable test control override
+        await hostPage.evaluate(() => {
+            // @ts-ignore
+            window.gameState._testControlsOverride = true;
+        });
+
+        // Move the car forward a bit first
+        console.log('Moving car forward...');
+        for (let i = 0; i < 20; i++) {
+            await hostPage.evaluate(() => {
+                // @ts-ignore
+                const gameState = window.gameState;
+                const carIds = Object.keys(gameState.cars);
+                if (carIds.length > 0) {
+                    const car = gameState.cars[carIds[0]];
+                    car.controls = {
+                        acceleration: 1.0,
+                        braking: 0,
+                        steering: 0
+                    };
+                    car.lastControlUpdate = Date.now();
+                }
+            });
+            await hostPage.waitForTimeout(100);
+        }
+
+        // Stop controls
+        await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                car.controls = { acceleration: 0, braking: 0, steering: 0 };
+            }
+        });
+
+        // Directly flip the car upside down by setting its rotation
+        // This is more reliable than trying to flip via physics simulation
+        console.log('Flipping car upside down programmatically...');
+        await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                if (car && car.physicsBody) {
+                    // Rotate 180 degrees around Z axis to flip upside down
+                    // Quaternion for 180 deg rotation around Z: (0, 0, 1, 0)
+                    car.physicsBody.setRotation({ x: 0, y: 0, z: 1, w: 0 }, true);
+                    // Zero out velocities
+                    car.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+                    car.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+                }
+            }
+        });
+
+        // Let physics settle
+        await hostPage.waitForTimeout(500);
+
+        // Take screenshot of flipped state
+        await hostPage.screenshot({ path: 'test-results/car-flipped-state.png', fullPage: true });
+
+        // Check if car is upside down using the rapierPhysics function
+        const isUpsideDown = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                if (car && car.physicsBody && typeof rapierPhysics.isCarUpsideDown === 'function') {
+                    return rapierPhysics.isCarUpsideDown(car.physicsBody);
+                }
+            }
+            return false;
+        });
+
+        console.log('Is car upside down:', isUpsideDown);
+        expect(isUpsideDown, 'Car should be upside down after flipping').toBe(true);
+
+        // Stop controls before reset
+        await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                car.controls = {
+                    acceleration: 0,
+                    braking: 0,
+                    steering: 0
+                };
+            }
+        });
+
+        // Call reset
+        await hostPage.evaluate(() => {
+            // @ts-ignore
+            const carIds = Object.keys(window.gameState.cars);
+            if (carIds.length > 0 && typeof window.resetCarPosition === 'function') {
+                // @ts-ignore
+                window.resetCarPosition(carIds[0]);
+            }
+        });
+
+        // Wait for reset to complete
+        await hostPage.waitForTimeout(1000);
+
+        // Take screenshot after reset
+        await hostPage.screenshot({ path: 'test-results/car-reset-state.png', fullPage: true });
+
+        // Check car is no longer upside down
+        const isStillUpsideDown = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                if (car && car.physicsBody && typeof rapierPhysics.isCarUpsideDown === 'function') {
+                    return rapierPhysics.isCarUpsideDown(car.physicsBody);
+                }
+            }
+            return false;
+        });
+
+        console.log('Is car still upside down after reset:', isStillUpsideDown);
+        expect(isStillUpsideDown, 'Car should NOT be upside down after reset').toBe(false);
+
+        // Also verify position is back at spawn
+        const spawnPosition = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                return gameState.cars[carIds[0]].spawnPosition;
+            }
+            return null;
+        });
+
+        const currentPosition = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const gameState = window.gameState;
+            const carIds = Object.keys(gameState.cars);
+            if (carIds.length > 0) {
+                const car = gameState.cars[carIds[0]];
+                if (car && car.mesh) {
+                    return {
+                        x: car.mesh.position.x,
+                        y: car.mesh.position.y,
+                        z: car.mesh.position.z
+                    };
+                }
+            }
+            return null;
+        });
+
+        if (spawnPosition && currentPosition) {
+            const distanceFromSpawn = Math.sqrt(
+                Math.pow(currentPosition.x - spawnPosition.x, 2) +
+                Math.pow(currentPosition.z - spawnPosition.z, 2)
+            );
+            console.log('Distance from spawn after reset:', distanceFromSpawn);
+            expect(distanceFromSpawn, 'Car should be back at spawn position').toBeLessThan(1);
+        }
+    });
 });
