@@ -481,4 +481,84 @@ button:disabled {
 
 .preset-selector option {
     background-color: #222;
+}
+
+/* Profile section styling */
+.profile-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.preset-btn {
+    flex: 1 1 45%;
+    padding: 8px 5px;
+    background-color: #607D8B;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background-color 0.2s;
+}
+
+.preset-btn:hover {
+    background-color: #78909C;
+}
+
+.preset-btn.active {
+    background-color: #4CAF50;
+}
+
+.profile-controls {
+    margin-bottom: 8px;
+}
+
+.profile-select {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.profile-select option {
+    background-color: #222;
+}
+
+.profile-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.profile-buttons .param-button {
+    flex: 1;
+}
+
+.save-profile-row {
+    display: flex;
+    gap: 5px;
+}
+
+.profile-input {
+    flex: 1;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.profile-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 } 

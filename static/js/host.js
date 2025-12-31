@@ -2340,116 +2340,217 @@ function visualizeAppliedForces() {
 // Global object to store physics parameters
 let physicsParams = {
     car: {
-        // Movement
-        forwardSpeed: 10.0,
-        reverseSpeed: 5.0,
-        
-        // Steering
-        maxSteeringAngle: 0.6,
-        steeringSpeed: 0.3,
-        steeringReturnSpeed: 0.2
+        // Engine/Drive - maps to vehicleController
+        engineForce: 200.0,
+        brakeForce: 50.0,
+        maxSteeringAngle: 0.55,
+
+        // Body physics - maps to rigidBody
+        density: 4.0,
+        linearDamping: 0.25,
+        angularDamping: 0.6
     },
     world: {
-        gravity: { x: 0.0, y: -20.0, z: 0.0 }
+        gravity: { x: 0.0, y: -12.0, z: 0.0 }
     },
     wheels: {
-        frictionSlip: 5.0,
-        rearFrictionMultiplier: 1.1,
-        suspensionRestLength: 0.4,
-        suspensionStiffness: 25.0,
-        suspensionDamping: 3.5,
-        suspensionCompression: 0.5
+        frictionSlip: 1000.0,
+        rearFrictionMultiplier: 1.0,
+        sideFrictionStiffness: 1.0,
+        suspensionRestLength: 0.5,
+        suspensionStiffness: 30.0,
+        suspensionDamping: 3.0,
+        suspensionCompression: 2.0,
+        maxSuspensionTravel: 0.3
     }
 };
 
 // Store original values for reset
 const defaultPhysicsParams = JSON.parse(JSON.stringify(physicsParams));
 
+// localStorage keys for persistence
+const PHYSICS_STORAGE_KEY = 'racerPhysicsParams';
+const PROFILES_STORAGE_KEY = 'racerPhysicsProfiles';
+
+// Deep merge utility for loading saved params
+function deepMerge(target, source) {
+    const result = { ...target };
+    for (const key in source) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+            result[key] = deepMerge(target[key] || {}, source[key]);
+        } else {
+            result[key] = source[key];
+        }
+    }
+    return result;
+}
+
+// Load saved params from localStorage
+function loadPhysicsParams() {
+    try {
+        const saved = localStorage.getItem(PHYSICS_STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Deep merge to preserve any new params not in saved data
+            physicsParams = deepMerge(defaultPhysicsParams, parsed);
+            console.log('Loaded physics params from localStorage');
+        }
+    } catch (e) {
+        console.warn('Failed to load physics params:', e);
+    }
+}
+
+// Save current params to localStorage
+function savePhysicsParams() {
+    try {
+        localStorage.setItem(PHYSICS_STORAGE_KEY, JSON.stringify(physicsParams));
+    } catch (e) {
+        console.warn('Failed to save physics params:', e);
+    }
+}
+
+// Get all saved profiles
+function getPhysicsProfiles() {
+    try {
+        const saved = localStorage.getItem(PROFILES_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+// Save a profile
+function savePhysicsProfile(name) {
+    const profiles = getPhysicsProfiles();
+    profiles[name] = JSON.parse(JSON.stringify(physicsParams));
+    localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(profiles));
+    updateProfileUI();
+    console.log(`Saved physics profile: ${name}`);
+}
+
+// Load a profile
+function loadPhysicsProfile(name) {
+    const profiles = getPhysicsProfiles();
+    if (profiles[name]) {
+        physicsParams = deepMerge(defaultPhysicsParams, profiles[name]);
+        window.physicsParams = physicsParams;
+        updateAllParameterControls();
+        applyPhysicsChanges();
+        savePhysicsParams(); // Also save as current
+        console.log(`Loaded physics profile: ${name}`);
+    }
+}
+
+// Delete a profile
+function deletePhysicsProfile(name) {
+    const profiles = getPhysicsProfiles();
+    delete profiles[name];
+    localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(profiles));
+    updateProfileUI();
+    console.log(`Deleted physics profile: ${name}`);
+}
+
+// Export current settings as JSON file
+function exportPhysicsProfile() {
+    const json = JSON.stringify(physicsParams, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'physics-profile.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log('Exported physics profile to JSON');
+}
+
+// Update profile dropdown UI
+function updateProfileUI() {
+    const select = document.getElementById('profile-select');
+    if (!select) return;
+
+    const profiles = getPhysicsProfiles();
+    select.innerHTML = '<option value="">-- Saved Profiles --</option>';
+
+    Object.keys(profiles).forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
 // Presets for different physics behaviors
 const physicsPresets = {
     default: JSON.parse(JSON.stringify(physicsParams)),
     arcade: {
         car: {
-            mass: 800.0,
+            engineForce: 300.0,
+            brakeForce: 80.0,
+            maxSteeringAngle: 0.7,
+            density: 3.0,
             linearDamping: 0.3,
-            angularDamping: 5.0,
-            enginePower: 2500.0,
-            brakeForce: 1800.0,
-            steeringResponse: 0.5,
-            maxSteeringAngle: 0.8,
-            steeringReturnSpeed: 4.0,
-            lateralGripFactor: 2.5,
-            rollingResistance: 0.1,
-            aerodynamicDrag: 0.3,
-            maxSpeedKmh: 120,
-            reverseMaxSpeedKmh: 40
+            angularDamping: 0.8
         },
         world: {
-            gravity: { x: 0.0, y: -15.0, z: 0.0 }
+            gravity: { x: 0.0, y: -10.0, z: 0.0 }
         },
         wheels: {
-            frictionSlip: 6.0,
-            rearFrictionMultiplier: 1.2,
+            frictionSlip: 1500.0,
+            rearFrictionMultiplier: 1.1,
+            sideFrictionStiffness: 1.5,
             suspensionRestLength: 0.5,
-            suspensionStiffness: 20.0,
+            suspensionStiffness: 25.0,
             suspensionDamping: 2.5,
-            suspensionCompression: 0.4
+            suspensionCompression: 1.5,
+            maxSuspensionTravel: 0.35
         }
     },
     simulation: {
         car: {
-            mass: 1600.0,
+            engineForce: 150.0,
+            brakeForce: 60.0,
+            maxSteeringAngle: 0.5,
+            density: 5.0,
             linearDamping: 0.2,
-            angularDamping: 3.0,
-            enginePower: 1200.0,
-            brakeForce: 2500.0,
-            steeringResponse: 0.2,
-            maxSteeringAngle: 0.55,
-            steeringReturnSpeed: 2.5,
-            lateralGripFactor: 3.0,
-            rollingResistance: 0.2,
-            aerodynamicDrag: 0.7,
-            maxSpeedKmh: 70,
-            reverseMaxSpeedKmh: 25
+            angularDamping: 0.5
         },
         world: {
-            gravity: { x: 0.0, y: -25.0, z: 0.0 }
+            gravity: { x: 0.0, y: -9.81, z: 0.0 }
         },
         wheels: {
-            frictionSlip: 4.0,
+            frictionSlip: 800.0,
             rearFrictionMultiplier: 1.0,
-            suspensionRestLength: 0.3,
-            suspensionStiffness: 30.0,
-            suspensionDamping: 4.5,
-            suspensionCompression: 0.6
+            sideFrictionStiffness: 1.2,
+            suspensionRestLength: 0.4,
+            suspensionStiffness: 35.0,
+            suspensionDamping: 4.0,
+            suspensionCompression: 2.5,
+            maxSuspensionTravel: 0.25
         }
     },
     drift: {
         car: {
-            mass: 1000.0,
-            linearDamping: 0.3,
-            angularDamping: 2.0,
-            enginePower: 2000.0,
-            brakeForce: 1500.0,
-            steeringResponse: 0.4,
-            maxSteeringAngle: 0.7,
-            steeringReturnSpeed: 2.0,
-            lateralGripFactor: 1.0,
-            rollingResistance: 0.1,
-            aerodynamicDrag: 0.4,
-            maxSpeedKmh: 90,
-            reverseMaxSpeedKmh: 35
+            engineForce: 250.0,
+            brakeForce: 40.0,
+            maxSteeringAngle: 0.8,
+            density: 4.0,
+            linearDamping: 0.25,
+            angularDamping: 0.3
         },
         world: {
-            gravity: { x: 0.0, y: -18.0, z: 0.0 }
+            gravity: { x: 0.0, y: -12.0, z: 0.0 }
         },
         wheels: {
-            frictionSlip: 3.0,
-            rearFrictionMultiplier: 1.5,
+            frictionSlip: 600.0,
+            rearFrictionMultiplier: 0.7,
+            sideFrictionStiffness: 0.6,
             suspensionRestLength: 0.45,
-            suspensionStiffness: 22.0,
+            suspensionStiffness: 28.0,
             suspensionDamping: 2.0,
-            suspensionCompression: 0.45
+            suspensionCompression: 1.5,
+            maxSuspensionTravel: 0.3
         }
     }
 };
@@ -2587,15 +2688,23 @@ function createCarParametersUI() {
     // Update group title
     const carBodyGroupTitle = carBodyGroup.querySelector('.params-group-title');
     if (carBodyGroupTitle) {
-        carBodyGroupTitle.textContent = 'Car Body Physics';
+        carBodyGroupTitle.textContent = 'Body Physics';
     }
 
-    // Movement parameters
-    createParameterControl(movementGroup, 'car', 'forwardSpeed', 'Forward Speed', 5.0, 20.0, 0.5);
-    createParameterControl(movementGroup, 'car', 'reverseSpeed', 'Reverse Speed', 2.0, 10.0, 0.5);
+    const movementGroupTitle = movementGroup.querySelector('.params-group-title');
+    if (movementGroupTitle) {
+        movementGroupTitle.textContent = 'Drive & Steering';
+    }
+
+    // Body physics parameters
+    createParameterControl(carBodyGroup, 'car', 'density', 'Density (mass)', 1.0, 10.0, 0.5);
+    createParameterControl(carBodyGroup, 'car', 'linearDamping', 'Linear Damping', 0.0, 1.0, 0.05);
+    createParameterControl(carBodyGroup, 'car', 'angularDamping', 'Angular Damping', 0.0, 2.0, 0.1);
+
+    // Drive parameters
+    createParameterControl(movementGroup, 'car', 'engineForce', 'Engine Force', 50.0, 500.0, 10.0);
+    createParameterControl(movementGroup, 'car', 'brakeForce', 'Brake Force', 10.0, 200.0, 5.0);
     createParameterControl(movementGroup, 'car', 'maxSteeringAngle', 'Max Steering', 0.3, 1.0, 0.05);
-    createParameterControl(movementGroup, 'car', 'steeringSpeed', 'Steering Response', 0.1, 1.0, 0.05);
-    createParameterControl(movementGroup, 'car', 'steeringReturnSpeed', 'Steering Return', 0.1, 1.0, 0.05);
 }
 
 // Create UI controls for world parameters
@@ -2623,28 +2732,103 @@ function createWheelsParametersUI() {
     }
 
     // Wheel friction settings
-    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 1.0, 10.0, 0.5);
-    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction', 0.5, 2.0, 0.1);
+    createParameterControl(wheelGroup, 'wheels', 'frictionSlip', 'Friction Slip', 100.0, 2000.0, 50.0);
+    createParameterControl(wheelGroup, 'wheels', 'rearFrictionMultiplier', 'Rear Friction Mult', 0.5, 2.0, 0.1);
+    createParameterControl(wheelGroup, 'wheels', 'sideFrictionStiffness', 'Side Friction', 0.5, 2.0, 0.1);
 
     // Suspension settings
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 0.8, 0.05);
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 50.0, 1.0);
-    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping', 1.0, 10.0, 0.5);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionRestLength', 'Rest Length', 0.2, 1.0, 0.05);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionStiffness', 'Stiffness', 10.0, 60.0, 2.0);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionDamping', 'Damping (Relax)', 1.0, 10.0, 0.5);
+    createParameterControl(suspensionGroup, 'wheels', 'suspensionCompression', 'Compression', 0.5, 5.0, 0.5);
+    createParameterControl(suspensionGroup, 'wheels', 'maxSuspensionTravel', 'Max Travel', 0.1, 0.5, 0.05);
 }
 
 // Setup physics parameter buttons
 function setupPhysicsButtons() {
     // Reset button
-    document.getElementById('reset-physics').addEventListener('click', () => {
-        // Reset to default values
-        physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
-        
-        // Update UI
-        updateAllParameterControls();
-        
-        // Apply changes
-        applyPhysicsChanges();
+    const resetBtn = document.getElementById('reset-physics');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            // Reset to default values
+            physicsParams = JSON.parse(JSON.stringify(defaultPhysicsParams));
+            window.physicsParams = physicsParams;
+
+            // Update UI
+            updateAllParameterControls();
+
+            // Apply changes
+            applyPhysicsChanges();
+            savePhysicsParams();
+
+            // Clear active preset buttons
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        });
+    }
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const presetName = btn.dataset.preset;
+            if (physicsPresets[presetName]) {
+                physicsParams = JSON.parse(JSON.stringify(physicsPresets[presetName]));
+                window.physicsParams = physicsParams;
+                updateAllParameterControls();
+                applyPhysicsChanges();
+                savePhysicsParams();
+
+                // Update active state
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+        });
     });
+
+    // Save profile button
+    const saveProfileBtn = document.getElementById('save-profile');
+    if (saveProfileBtn) {
+        saveProfileBtn.addEventListener('click', () => {
+            const nameInput = document.getElementById('profile-name');
+            const name = nameInput.value.trim();
+            if (name) {
+                savePhysicsProfile(name);
+                nameInput.value = '';
+            }
+        });
+    }
+
+    // Load profile button
+    const loadProfileBtn = document.getElementById('load-profile');
+    if (loadProfileBtn) {
+        loadProfileBtn.addEventListener('click', () => {
+            const select = document.getElementById('profile-select');
+            if (select && select.value) {
+                loadPhysicsProfile(select.value);
+            }
+        });
+    }
+
+    // Delete profile button
+    const deleteProfileBtn = document.getElementById('delete-profile');
+    if (deleteProfileBtn) {
+        deleteProfileBtn.addEventListener('click', () => {
+            const select = document.getElementById('profile-select');
+            if (select && select.value) {
+                if (confirm(`Delete profile "${select.value}"?`)) {
+                    deletePhysicsProfile(select.value);
+                }
+            }
+        });
+    }
+
+    // Export profile button
+    const exportProfileBtn = document.getElementById('export-profile');
+    if (exportProfileBtn) {
+        exportProfileBtn.addEventListener('click', exportPhysicsProfile);
+    }
+
+    // Initialize profile dropdown
+    updateProfileUI();
 }
 
 // Update a specific physics parameter
@@ -2660,6 +2844,9 @@ function updatePhysicsParameter(group, param, value) {
     } else {
         physicsParams[group][param] = value;
     }
+
+    // Auto-save to localStorage after each change
+    savePhysicsParams();
 }
 
 // Update all UI controls to match current parameter values
@@ -2715,20 +2902,63 @@ function updateCarControllerConfig(carBody) {
     if (!carBody || !carBody.userData) return;
 
     try {
-        // Update dynamic physics body parameters
-        // These are stored in userData and used by applyCarControls in rapierPhysics.js
+        const userData = carBody.userData;
+        const vc = userData.vehicleController;
 
-        // Update car-specific physics properties
-        carBody.userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
+        // Update control parameters (used by applyCarControls in rapierPhysics.js)
+        userData.engineForce = physicsParams.car.engineForce;
+        userData.brakeForce = physicsParams.car.brakeForce;
+        userData.maxSteeringAngle = physicsParams.car.maxSteeringAngle;
 
-        // Update wheel physics if wheels exist
-        if (carBody.userData.wheels) {
-            carBody.userData.wheels.forEach(wheel => {
+        // Update damping on the rigid body itself
+        if (typeof carBody.setLinearDamping === 'function') {
+            carBody.setLinearDamping(physicsParams.car.linearDamping);
+            carBody.setAngularDamping(physicsParams.car.angularDamping);
+        }
+
+        // Update vehicle controller wheel parameters directly via Rapier API
+        if (vc) {
+            const numWheels = typeof vc.numWheels === 'function' ? vc.numWheels() : 4;
+
+            for (let i = 0; i < numWheels; i++) {
+                const isFront = i < 2;
+                const frictionMult = isFront ? 1.0 : physicsParams.wheels.rearFrictionMultiplier;
+
+                // Suspension parameters
+                if (typeof vc.setWheelSuspensionStiffness === 'function') {
+                    vc.setWheelSuspensionStiffness(i, physicsParams.wheels.suspensionStiffness);
+                }
+                if (typeof vc.setWheelSuspensionCompression === 'function') {
+                    vc.setWheelSuspensionCompression(i, physicsParams.wheels.suspensionCompression);
+                }
+                if (typeof vc.setWheelSuspensionRelaxation === 'function') {
+                    vc.setWheelSuspensionRelaxation(i, physicsParams.wheels.suspensionDamping);
+                }
+                if (typeof vc.setWheelMaxSuspensionTravel === 'function') {
+                    vc.setWheelMaxSuspensionTravel(i, physicsParams.wheels.maxSuspensionTravel);
+                }
+
+                // Friction
+                if (typeof vc.setWheelFrictionSlip === 'function') {
+                    vc.setWheelFrictionSlip(i, physicsParams.wheels.frictionSlip * frictionMult);
+                }
+
+                // Side friction stiffness if available
+                if (typeof vc.setWheelSideFrictionStiffness === 'function') {
+                    vc.setWheelSideFrictionStiffness(i, physicsParams.wheels.sideFrictionStiffness);
+                }
+            }
+        }
+
+        // Also update legacy userData.wheels for any code that might read it
+        if (userData.wheels) {
+            userData.wheels.forEach((wheel, i) => {
+                const isFront = i < 2;
                 wheel.suspensionStiffness = physicsParams.wheels.suspensionStiffness;
                 wheel.suspensionDamping = physicsParams.wheels.suspensionDamping;
                 wheel.suspensionRestLength = physicsParams.wheels.suspensionRestLength;
                 wheel.frictionSlip = physicsParams.wheels.frictionSlip *
-                    (wheel.isFrontWheel ? 1.0 : physicsParams.wheels.rearFrictionMultiplier);
+                    (isFront ? 1.0 : physicsParams.wheels.rearFrictionMultiplier);
             });
         }
     } catch (error) {
@@ -2754,13 +2984,19 @@ function updateWorldPhysics(world) {
 // Add initialization call to initGame
 const originalInitGame = initGame;
 initGame = function() {
+    // Load saved physics params from localStorage BEFORE calling original init
+    loadPhysicsParams();
+
+    // Make physicsParams available globally BEFORE other modules use it
+    window.physicsParams = physicsParams;
+
     // Call the original initGame function
     originalInitGame();
-    
+
     // Initialize physics panel HTML content
     const gameScreen = document.getElementById('game-screen');
     const existingPanel = document.getElementById('physics-params-panel');
-    
+
     // If the panel already exists in HTML, just make sure it's properly initialized
     if (existingPanel) {
         console.log('Physics parameters panel found in HTML');
@@ -2771,10 +3007,7 @@ initGame = function() {
         panel.id = 'physics-params-panel';
         gameScreen.appendChild(panel);
     }
-    
-    // Make physicsParams available globally for other modules
-    window.physicsParams = physicsParams;
-    
+
     // Add key event listener if not already added
     if (!window.physicsKeyListenerAdded) {
         document.addEventListener('keydown', function(event) {
