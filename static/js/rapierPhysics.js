@@ -73,6 +73,28 @@ function createCarPhysics(world, position, dimensions) {
         RAPIER = window.RAPIER;
     }
 
+    // Get physics params from global (set by host.js) or use defaults
+    const params = window.physicsParams || {
+        car: {
+            engineForce: 200.0,
+            brakeForce: 50.0,
+            maxSteeringAngle: 0.55,
+            density: 4.0,
+            linearDamping: 0.25,
+            angularDamping: 0.6
+        },
+        wheels: {
+            frictionSlip: 1000.0,
+            rearFrictionMultiplier: 1.0,
+            sideFrictionStiffness: 1.0,
+            suspensionRestLength: 0.5,
+            suspensionStiffness: 30.0,
+            suspensionDamping: 3.0,
+            suspensionCompression: 2.0,
+            maxSuspensionTravel: 0.3
+        }
+    };
+
     const { width, height, length } = dimensions;
 
     try {
@@ -81,8 +103,8 @@ function createCarPhysics(world, position, dimensions) {
         // STEP 1: Create chassis rigid body
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(position.x, position.y, position.z)
-            .setLinearDamping(0.2)
-            .setAngularDamping(0.5)
+            .setLinearDamping(params.car.linearDamping)
+            .setAngularDamping(params.car.angularDamping)
             .setCanSleep(false);
 
         const chassisBody = world.createRigidBody(rigidBodyDesc);
@@ -100,12 +122,12 @@ function createCarPhysics(world, position, dimensions) {
         }
         console.log('Chassis created at:', initialPos.x.toFixed(2), initialPos.y.toFixed(2), initialPos.z.toFixed(2));
 
-        // STEP 2: Create chassis collider (mass ~30 for arcade feel)
+        // STEP 2: Create chassis collider
         const chassisCollider = RAPIER.ColliderDesc.cuboid(width/2, height/2, length/2)
-            .setDensity(4.0)  // With 2x1x4=8m³, gives mass ~32kg - good for arcade
+            .setDensity(params.car.density)
             .setFriction(0.5);
         world.createCollider(chassisCollider, chassisBody);
-        console.log('Chassis collider created, estimated mass:', (width * height * length * 4).toFixed(0), 'kg');
+        console.log('Chassis collider created, estimated mass:', (width * height * length * params.car.density).toFixed(0), 'kg');
 
         // STEP 3: Create vehicle controller
         let vehicleController = null;
@@ -120,7 +142,7 @@ function createCarPhysics(world, position, dimensions) {
 
         // STEP 4: Define wheel configuration
         const wheelRadius = 0.35;
-        const suspensionRestLength = 0.5;
+        const suspensionRestLength = params.wheels.suspensionRestLength;
         const suspensionDirection = { x: 0, y: -1, z: 0 };  // Points DOWN
         const axleDirection = { x: -1, y: 0, z: 0 };        // Points LEFT
 
@@ -135,6 +157,9 @@ function createCarPhysics(world, position, dimensions) {
         // Add wheels to vehicle controller (if available)
         if (vehicleController) {
             wheelPositions.forEach((pos, index) => {
+                const isFront = index < 2;
+                const frictionMult = isFront ? 1.0 : params.wheels.rearFrictionMultiplier;
+
                 vehicleController.addWheel(
                     pos,
                     suspensionDirection,
@@ -143,12 +168,17 @@ function createCarPhysics(world, position, dimensions) {
                     wheelRadius
                 );
 
-                // Configure suspension
-                vehicleController.setWheelSuspensionStiffness(index, 30.0);
-                vehicleController.setWheelSuspensionCompression(index, 2.0);
-                vehicleController.setWheelSuspensionRelaxation(index, 3.0);
-                vehicleController.setWheelMaxSuspensionTravel(index, 0.3);
-                vehicleController.setWheelFrictionSlip(index, 1000.0);
+                // Configure suspension from params
+                vehicleController.setWheelSuspensionStiffness(index, params.wheels.suspensionStiffness);
+                vehicleController.setWheelSuspensionCompression(index, params.wheels.suspensionCompression);
+                vehicleController.setWheelSuspensionRelaxation(index, params.wheels.suspensionDamping);
+                vehicleController.setWheelMaxSuspensionTravel(index, params.wheels.maxSuspensionTravel);
+                vehicleController.setWheelFrictionSlip(index, params.wheels.frictionSlip * frictionMult);
+
+                // Side friction stiffness if available
+                if (typeof vehicleController.setWheelSideFrictionStiffness === 'function') {
+                    vehicleController.setWheelSideFrictionStiffness(index, params.wheels.sideFrictionStiffness);
+                }
 
                 console.log(`Added wheel ${index} at (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`);
             });
@@ -161,10 +191,10 @@ function createCarPhysics(world, position, dimensions) {
             wheelRadius: wheelRadius,
             suspensionRestLength: suspensionRestLength,
 
-            // Control parameters
-            engineForce: 200.0,     // Force per wheel
-            brakeForce: 50.0,
-            maxSteeringAngle: 0.5,  // radians (~30 degrees)
+            // Control parameters (from global params)
+            engineForce: params.car.engineForce,
+            brakeForce: params.car.brakeForce,
+            maxSteeringAngle: params.car.maxSteeringAngle,
 
             // State
             currentSpeed: 0,

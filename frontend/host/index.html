@@ -108,6 +108,35 @@
                     </div>
                 </div>
                 
+                <!-- Presets & Profiles -->
+                <div class="params-group profile-section">
+                    <div class="params-group-title">Presets</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-preset="arcade">Arcade</button>
+                        <button class="preset-btn" data-preset="default">Default</button>
+                        <button class="preset-btn" data-preset="simulation">Simulation</button>
+                        <button class="preset-btn" data-preset="drift">Drift</button>
+                    </div>
+                </div>
+
+                <div class="params-group profile-section">
+                    <div class="params-group-title">Custom Profiles</div>
+                    <div class="profile-controls">
+                        <select id="profile-select" class="profile-select">
+                            <option value="">-- Saved Profiles --</option>
+                        </select>
+                        <div class="profile-buttons">
+                            <button class="param-button" id="load-profile">Load</button>
+                            <button class="param-button" id="delete-profile">Delete</button>
+                        </div>
+                    </div>
+                    <div class="save-profile-row">
+                        <input type="text" id="profile-name" placeholder="Profile name" class="profile-input">
+                        <button class="param-button apply" id="save-profile">Save</button>
+                    </div>
+                    <button class="param-button" id="export-profile" style="width: 100%; margin-top: 8px;">Export as JSON</button>
+                </div>
+
                 <div class="param-buttons">
                     <button class="param-button reset" id="reset-physics">Reset All</button>
                 </div>

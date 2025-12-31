@@ -1,6 +1,12 @@
 How to make the game better and cooler:
 
 - Gameplay features
+  - Fix the physics panel. Look through each of the functions, and determine if they're old, outdated or need tobe fixed.
+    - Ensure any new physics params we might want to tune are added into the panels
+    - Ensure it's persisted to localstoratge 
+    - Add any extra bits we need so that we can tune our gameplay and set actual values for all our users to have a lot of fun when playing the car game.
+
+  - Add a damage and explosion mechanic. When the car runs out of health, it explodes. Add health bars to the debug settings, when we have that window open so we can see health. Add a basic smoke effect emitting from the car's engine when the health is at 10%. Ensure the car takes semi-realistic damage when it hits other cars. 
   - Fix the physics parameters window
     - Systematically analyse eash aspect of the window and make a note of all areas which aren't working
     - Work througha nd fix each of them
