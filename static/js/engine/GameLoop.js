@@ -62,6 +62,18 @@ class GameLoop {
 
         this._emit('loop:start');
         this.animationFrameId = requestAnimationFrame(this._tick);
+
+        // Add setInterval fallback for headless/background mode where rAF is throttled
+        // This ensures physics updates still happen even when rAF is not firing
+        this._fallbackInterval = setInterval(() => {
+            if (!this.running || this.paused) return;
+
+            const now = performance.now();
+            // Only trigger fallback if rAF hasn't fired for 100ms (throttled)
+            if (now - (this._lastRafTime || 0) > 100) {
+                this._tick(now);
+            }
+        }, 16); // ~60 Hz
     }
 
     /**
@@ -76,6 +88,12 @@ class GameLoop {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
+        }
+
+        // Clear fallback interval
+        if (this._fallbackInterval) {
+            clearInterval(this._fallbackInterval);
+            this._fallbackInterval = null;
         }
 
         this._emit('loop:stop');
@@ -115,13 +133,16 @@ class GameLoop {
     }
 
     /**
-     * Main tick function called by requestAnimationFrame
+     * Main tick function called by requestAnimationFrame or fallback
      * @private
      */
     _tick(timestamp) {
         if (!this.running) return;
 
-        // Schedule next frame immediately
+        // Track when tick was last called (for fallback detection)
+        this._lastRafTime = performance.now();
+
+        // Always schedule next rAF frame (rAF will handle deduplication)
         this.animationFrameId = requestAnimationFrame(this._tick);
 
         // Convert to seconds

@@ -182,15 +182,16 @@ class PhysicsSystem {
     }
 
     /**
-     * Create circular barrier
+     * Create circular barrier (low curb for driving over)
      * @private
      */
     _createCircularBarrier(radius, height, thickness, restitution, type) {
-        const segments = 32;
+        const segments = 48;
         const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
         const body = this.world.createRigidBody(bodyDesc);
 
-        // Create box colliders around the circle
+        // Create smooth, low curb colliders around the circle
+        // Use more segments for smoother feel when driving over
         for (let i = 0; i < segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const segmentLength = (2 * Math.PI * radius) / segments;
@@ -198,11 +199,13 @@ class PhysicsSystem {
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
 
+            // Use a flatter, wider collider for curb-like behavior
+            // Cars can drive over but will get rocked
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(thickness / 2, height / 2, segmentLength / 2)
                 .setTranslation(x, height / 2, z)
                 .setRotation(this._eulerToQuat(0, -angle + Math.PI / 2, 0))
-                .setFriction(0.5)
+                .setFriction(0.3)  // Lower friction for sliding over
                 .setRestitution(restitution);
 
             this.world.createCollider(colliderDesc, body);
@@ -277,7 +280,12 @@ class PhysicsSystem {
             body: chassisBody,
             controller: controller,
             entity: vehicle,
-            config: physicsConfig
+            config: physicsConfig,
+            // Reverse state tracking
+            brakeStartTime: null,
+            isReversing: false,
+            reverseDelayMs: 1000,           // 1 second hold before reverse
+            reverseForceMultiplier: 0.5     // Reverse is 50% of forward power
         };
 
         this.vehicleBodies.set(vehicle.id, vehicleData);
@@ -331,8 +339,51 @@ class PhysicsSystem {
         const config = data.config;
         const vc = data.controller;
 
-        // Engine force on rear wheels (RWD)
-        const engineForce = (controls.acceleration || 0) * (config.engine?.force || 200);
+        const acceleration = controls.acceleration || 0;
+        const braking = controls.braking || 0;
+        const baseEngineForce = config.engine?.force || 200;
+
+        // Speed threshold for considering the car "stopped"
+        const STOP_THRESHOLD = 2.0;
+        const currentSpeed = vc.currentVehicleSpeed ? Math.abs(vc.currentVehicleSpeed()) : 0;
+
+        // Determine engine force based on acceleration vs reverse
+        let engineForce = 0;
+
+        if (acceleration > 0) {
+            // Forward acceleration - reset reverse state
+            engineForce = acceleration * baseEngineForce;
+            data.brakeStartTime = null;
+            data.isReversing = false;
+        } else if (braking > 0) {
+            // Braking logic with reverse after delay
+            const isNearlyStopped = currentSpeed < STOP_THRESHOLD;
+
+            if (isNearlyStopped) {
+                // Car is stopped or nearly stopped while holding brake
+                if (data.brakeStartTime === null) {
+                    data.brakeStartTime = Date.now();
+                }
+
+                const brakeHoldDuration = Date.now() - data.brakeStartTime;
+
+                if (brakeHoldDuration >= data.reverseDelayMs) {
+                    // Activate reverse mode
+                    data.isReversing = true;
+                    engineForce = -braking * baseEngineForce * data.reverseForceMultiplier;
+                }
+            } else {
+                // Still moving forward, just brake (don't start reverse timer yet)
+                data.brakeStartTime = null;
+                data.isReversing = false;
+            }
+        } else {
+            // No acceleration or braking - reset reverse state
+            data.brakeStartTime = null;
+            data.isReversing = false;
+        }
+
+        // Apply engine force to rear wheels (RWD)
         vc.setWheelEngineForce(2, engineForce);
         vc.setWheelEngineForce(3, engineForce);
 
@@ -341,8 +392,8 @@ class PhysicsSystem {
         vc.setWheelSteering(0, steerAngle);
         vc.setWheelSteering(1, steerAngle);
 
-        // Braking on all wheels
-        const brakeForce = (controls.braking || 0) * (config.engine?.brakeForce || 50);
+        // Braking on all wheels - don't apply brake when reversing
+        const brakeForce = (braking > 0 && !data.isReversing) ? braking * (config.engine?.brakeForce || 50) : 0;
         for (let i = 0; i < 4; i++) {
             vc.setWheelBrake(i, brakeForce);
         }
@@ -425,6 +476,16 @@ class PhysicsSystem {
 
         const vel = data.body.linvel();
         return Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6;
+    }
+
+    /**
+     * Get vehicle physics body
+     * @param {string} vehicleId
+     * @returns {Object|null} Rapier rigid body or null
+     */
+    getVehicleBody(vehicleId) {
+        const data = this.vehicleBodies.get(vehicleId);
+        return data ? data.body : null;
     }
 
     /**

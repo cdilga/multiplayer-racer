@@ -549,12 +549,13 @@ function initGameControls() {
     elements.brakeBtn = brakeBtn;
 
     // Initialize joystick for steering (horizontal only)
+    // Size is 2x larger for finer control on mobile
     if (typeof Joystick !== 'undefined') {
         gameState.touchControls.steeringJoystick = new Joystick({
             container: steeringArea,
             mode: 'horizontal',
-            size: 100,
-            maxDistance: 40,
+            size: 200,
+            maxDistance: 80,
             onMove: ({ x }) => setSteering(x),
             onEnd: () => setSteering(0)
         });

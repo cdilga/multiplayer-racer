@@ -179,6 +179,10 @@ class GameHost {
 
         // Race events
         this.eventBus.on('race:finished', this._onRaceFinished);
+        this.eventBus.on('race:start', () => {
+            // Transition engine state to RACING when countdown finishes
+            this.engine.setState(GAME_STATES.RACING);
+        });
 
         // Game loop events
         this.eventBus.on('loop:update', this._onUpdate);
@@ -187,6 +191,17 @@ class GameHost {
         // State change events
         this.eventBus.on('state:change', ({ from, to }) => {
             console.log(`GameHost: State ${from} -> ${to}`);
+
+            // Emit game-specific events for UI components
+            if (to === GAME_STATES.LOBBY) {
+                this.eventBus.emit('game:lobby');
+            } else if (to === GAME_STATES.COUNTDOWN) {
+                this.eventBus.emit('game:countdown');
+            } else if (to === GAME_STATES.RACING) {
+                this.eventBus.emit('game:racing');
+            } else if (to === GAME_STATES.RESULTS) {
+                this.eventBus.emit('game:results');
+            }
 
             // Update game-screen visibility for test compatibility
             const gameScreen = document.getElementById('game-screen');
@@ -365,6 +380,11 @@ class GameHost {
      * @private
      */
     _onPlayerInput(data) {
+        // Check for test override flag (used in e2e tests to prevent network from overwriting controls)
+        if (typeof window !== 'undefined' && window.gameState?._testControlsOverride) {
+            return;
+        }
+
         const vehicle = this.vehicles.get(data.playerId);
         if (vehicle) {
             vehicle.setControls(data.controls);
@@ -465,6 +485,9 @@ class GameHost {
                 );
             }
         }
+
+        // Step physics world
+        this.systems.physics.update(dt);
 
         // Sync vehicle meshes from physics
         for (const [playerId, vehicle] of this.vehicles) {
