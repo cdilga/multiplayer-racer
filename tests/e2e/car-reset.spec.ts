@@ -2,6 +2,16 @@ import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } fr
 
 test.describe('Car Reset Functionality', () => {
     test('car should reset to original spawn position after moving', async ({ hostPage, playerPage }) => {
+        // Capture browser console logs
+        const consoleLogs: string[] = [];
+        hostPage.on('console', (msg) => {
+            const text = msg.text();
+            if (text.includes('🔧') || text.includes('Reset')) {
+                consoleLogs.push(text);
+                console.log('HOST CONSOLE:', text);
+            }
+        });
+
         // Setup game
         await hostPage.goto('/');
         const roomCode = await waitForRoomCode(hostPage);
@@ -106,7 +116,7 @@ test.describe('Car Reset Functionality', () => {
         });
 
         // Click the reset button for this car
-        await hostPage.evaluate(() => {
+        const resetResult = await hostPage.evaluate(() => {
             // @ts-ignore
             const gameState = window.gameState;
             const carIds = Object.keys(gameState.cars);
@@ -114,11 +124,26 @@ test.describe('Car Reset Functionality', () => {
                 // Call resetCarPosition directly
                 // @ts-ignore
                 if (typeof window.resetCarPosition === 'function') {
+                    console.log('🔧 Calling resetCarPosition with:', carIds[0]);
                     // @ts-ignore
                     window.resetCarPosition(carIds[0]);
+                    console.log('🔧 Reset called');
+
+                    // Check vehicle state after reset
+                    const car = gameState.cars[carIds[0]];
+                    const currentPos = car.mesh?.position || null;
+                    return {
+                        carId: carIds[0],
+                        currentPos: currentPos,
+                        hasPhysicsBody: !!car.physicsBody,
+                        spawnPosition: car.spawnPosition
+                    };
                 }
             }
+            return null;
         });
+
+        console.log('Reset result:', resetResult);
 
         // Wait for reset and physics to complete
         await hostPage.waitForTimeout(1000);

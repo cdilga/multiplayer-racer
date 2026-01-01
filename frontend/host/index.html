@@ -354,18 +354,35 @@
 
                 // Expose reset functions for test compatibility
                 window.resetCarPosition = (playerId) => {
-                    // Try both string and number keys since Map keys can be either
-                    let vehicle = game.vehicles.get(playerId);
-                    if (!vehicle) {
-                        // Try as number if string lookup failed
-                        vehicle = game.vehicles.get(Number(playerId));
+                    console.log('🔧 Reset: Looking for vehicle with playerId:', playerId, 'type:', typeof playerId);
+                    console.log('🔧 Reset: game.vehicles keys:', Array.from(game.vehicles.keys()));
+
+                    // Iterate through vehicles to find the one we need
+                    let vehicle = null;
+                    for (const [key, v] of game.vehicles) {
+                        console.log('🔧 Reset: Checking vehicle, key:', key, 'id:', v.id);
+                        if (key === playerId || v.id === playerId || String(key) === String(playerId)) {
+                            vehicle = v;
+                            console.log('🔧 Reset: Found vehicle!');
+                            break;
+                        }
                     }
-                    if (!vehicle) {
-                        // Try as string if number lookup failed
-                        vehicle = game.vehicles.get(String(playerId));
-                    }
+
                     if (vehicle && vehicle.spawnPosition) {
+                        console.log('🔧 Reset: vehicle found, spawn pos:', vehicle.spawnPosition);
+                        console.log('🔧 Reset: before - entity pos:', {x: vehicle.position.x, y: vehicle.position.y, z: vehicle.position.z});
+                        console.log('🔧 Reset: before - mesh pos:', {x: vehicle.mesh.position.x, y: vehicle.mesh.position.y, z: vehicle.mesh.position.z});
+
+                        // Pause physics during reset to avoid conflicts
+                        if (game.systems.physics) {
+                            game.systems.physics.pause();
+                        }
+
+                        // Reset vehicle
                         vehicle.reset(vehicle.spawnPosition);
+                        console.log('🔧 Reset: after reset() - entity pos:', {x: vehicle.position.x, y: vehicle.position.y, z: vehicle.position.z});
+                        console.log('🔧 Reset: after reset() - mesh pos:', {x: vehicle.mesh.position.x, y: vehicle.mesh.position.y, z: vehicle.mesh.position.z});
+
                         if (game.systems.physics) {
                             game.systems.physics.resetVehicle(
                                 vehicle.id,
@@ -373,10 +390,28 @@
                                 vehicle.spawnPosition.rotation || 0
                             );
                         }
+
+                        // Sync mesh immediately
+                        vehicle.syncMeshToEntity();
+                        console.log('🔧 Reset: after syncMesh - mesh pos:', {x: vehicle.mesh.position.x, y: vehicle.mesh.position.y, z: vehicle.mesh.position.z});
+
+                        // Resume physics after a brief moment
+                        setTimeout(() => {
+                            if (game.systems.physics) {
+                                game.systems.physics.resume();
+                            }
+                        }, 50);
+                    } else {
+                        console.log('🔧 Reset: vehicle NOT found or no spawn position. vehicle:', !!vehicle, 'spawn:', vehicle?.spawnPosition);
                     }
                 };
 
                 window.resetAllCars = () => {
+                    // Pause physics during reset
+                    if (game.systems.physics) {
+                        game.systems.physics.pause();
+                    }
+
                     let index = 0;
                     for (const [playerId, vehicle] of game.vehicles) {
                         const spawnPos = game.track?.getSpawnPosition(index) || vehicle.spawnPosition;
@@ -388,8 +423,17 @@
                                 spawnPos.rotation || 0
                             );
                         }
+                        // Sync mesh immediately
+                        vehicle.syncMeshToEntity();
                         index++;
                     }
+
+                    // Resume physics after a brief moment
+                    setTimeout(() => {
+                        if (game.systems.physics) {
+                            game.systems.physics.resume();
+                        }
+                    }, 50);
                 };
 
                 updateLoading('Initializing systems...');
