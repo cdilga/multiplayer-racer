@@ -182,15 +182,16 @@ class PhysicsSystem {
     }
 
     /**
-     * Create circular barrier
+     * Create circular barrier (low curb for driving over)
      * @private
      */
     _createCircularBarrier(radius, height, thickness, restitution, type) {
-        const segments = 32;
+        const segments = 48;
         const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
         const body = this.world.createRigidBody(bodyDesc);
 
-        // Create box colliders around the circle
+        // Create smooth, low curb colliders around the circle
+        // Use more segments for smoother feel when driving over
         for (let i = 0; i < segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const segmentLength = (2 * Math.PI * radius) / segments;
@@ -198,11 +199,13 @@ class PhysicsSystem {
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
 
+            // Use a flatter, wider collider for curb-like behavior
+            // Cars can drive over but will get rocked
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(thickness / 2, height / 2, segmentLength / 2)
                 .setTranslation(x, height / 2, z)
                 .setRotation(this._eulerToQuat(0, -angle + Math.PI / 2, 0))
-                .setFriction(0.5)
+                .setFriction(0.3)  // Lower friction for sliding over
                 .setRestitution(restitution);
 
             this.world.createCollider(colliderDesc, body);
@@ -425,6 +428,16 @@ class PhysicsSystem {
 
         const vel = data.body.linvel();
         return Math.sqrt(vel.x * vel.x + vel.z * vel.z) * 3.6;
+    }
+
+    /**
+     * Get vehicle physics body
+     * @param {string} vehicleId
+     * @returns {Object|null} Rapier rigid body or null
+     */
+    getVehicleBody(vehicleId) {
+        const data = this.vehicleBodies.get(vehicleId);
+        return data ? data.body : null;
     }
 
     /**

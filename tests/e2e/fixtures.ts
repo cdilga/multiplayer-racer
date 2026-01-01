@@ -103,6 +103,10 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
 
     // Wait a bit for game to initialize
     await hostPage.waitForTimeout(1000);
+
+    // Click on the page body to ensure keyboard events work
+    // This is necessary because Playwright keyboard events need a focused element
+    await hostPage.click('body', { position: { x: 100, y: 100 } });
 }
 
 // Helper to send control inputs from player

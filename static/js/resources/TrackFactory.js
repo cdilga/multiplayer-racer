@@ -259,13 +259,10 @@ class TrackFactory {
     }
 
     /**
-     * Create circular barrier
+     * Create circular barrier (smooth curb)
      * @private
      */
     _createCircularBarrier(radius, height, thickness, visual, type) {
-        const segments = 64;
-
-        // Create torus-like barrier using cylinder segments
         const barrierGroup = new THREE.Group();
         barrierGroup.userData = { isBarrier: true, barrierType: type };
 
@@ -274,29 +271,36 @@ class TrackFactory {
             roughness: visual.roughness || 0.7
         });
 
-        // Create segments around the circle
-        for (let i = 0; i < segments; i++) {
-            const angle = (i / segments) * Math.PI * 2;
-            const nextAngle = ((i + 1) / segments) * Math.PI * 2;
+        // Create a smooth ring using TorusGeometry for a curb-like appearance
+        // For low curbs, we use a half-circle cross-section (tube)
+        const tubeRadius = Math.min(height, thickness) / 2;
+        const torusGeometry = new THREE.TorusGeometry(radius, tubeRadius, 8, 64);
+        const torus = new THREE.Mesh(torusGeometry, material);
 
-            const segmentLength = (2 * Math.PI * radius) / segments;
+        // Rotate to lie flat and position at ground level
+        torus.rotation.x = Math.PI / 2;
+        torus.position.y = tubeRadius;
 
-            // Swap geometry: length along X, thickness along Z for proper tangent alignment
-            const geometry = new THREE.BoxGeometry(segmentLength * 1.1, height, thickness);
-            const segment = new THREE.Mesh(geometry, material);
+        torus.castShadow = true;
+        torus.receiveShadow = true;
+        barrierGroup.add(torus);
 
-            const midAngle = (angle + nextAngle) / 2;
-            segment.position.x = Math.cos(midAngle) * radius;
-            segment.position.z = Math.sin(midAngle) * radius;
-            segment.position.y = height / 2;
-            // Rotate so local X (length) is tangent to circle
-            segment.rotation.y = midAngle + Math.PI / 2;
-
-            segment.castShadow = true;
-            segment.receiveShadow = true;
-
-            barrierGroup.add(segment);
-        }
+        // Add a flat top strip for the curb surface
+        const ringGeometry = new THREE.RingGeometry(
+            radius - thickness / 2,
+            radius + thickness / 2,
+            64
+        );
+        const topMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.7,
+            side: THREE.DoubleSide
+        });
+        const topRing = new THREE.Mesh(ringGeometry, topMaterial);
+        topRing.rotation.x = -Math.PI / 2;
+        topRing.position.y = height;
+        topRing.receiveShadow = true;
+        barrierGroup.add(topRing);
 
         return barrierGroup;
     }

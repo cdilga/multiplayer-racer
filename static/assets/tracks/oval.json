@@ -4,11 +4,11 @@
   "description": "A simple oval track for quick races",
   "geometry": {
     "type": "oval",
-    "innerRadius": 15,
-    "outerRadius": 25,
-    "trackWidth": 10,
-    "barrierHeight": 2,
-    "barrierThickness": 0.5
+    "innerRadius": 35,
+    "outerRadius": 55,
+    "trackWidth": 20,
+    "barrierHeight": 0.3,
+    "barrierThickness": 0.8
   },
   "visual": {
     "track": {
@@ -30,38 +30,38 @@
   },
   "spawn": {
     "positions": [
-      { "x": 0, "y": 1.5, "z": -20, "rotation": 0 },
-      { "x": 3, "y": 1.5, "z": -20, "rotation": 0 },
-      { "x": -3, "y": 1.5, "z": -20, "rotation": 0 },
-      { "x": 0, "y": 1.5, "z": -23, "rotation": 0 },
-      { "x": 3, "y": 1.5, "z": -23, "rotation": 0 },
-      { "x": -3, "y": 1.5, "z": -23, "rotation": 0 }
+      { "x": -5, "y": 1.5, "z": -45, "rotation": 0 },
+      { "x": 5, "y": 1.5, "z": -45, "rotation": 0 },
+      { "x": -5, "y": 1.5, "z": -51, "rotation": 0 },
+      { "x": 5, "y": 1.5, "z": -51, "rotation": 0 },
+      { "x": -5, "y": 1.5, "z": -57, "rotation": 0 },
+      { "x": 5, "y": 1.5, "z": -57, "rotation": 0 }
     ],
     "defaultHeight": 1.5
   },
   "checkpoints": [
     {
       "id": 0,
-      "position": { "x": 0, "y": 0, "z": -20 },
-      "width": 10,
+      "position": { "x": 0, "y": 0, "z": -45 },
+      "width": 20,
       "isFinishLine": true
     },
     {
       "id": 1,
-      "position": { "x": 20, "y": 0, "z": 0 },
-      "width": 10,
+      "position": { "x": 45, "y": 0, "z": 0 },
+      "width": 20,
       "isFinishLine": false
     },
     {
       "id": 2,
-      "position": { "x": 0, "y": 0, "z": 20 },
-      "width": 10,
+      "position": { "x": 0, "y": 0, "z": 45 },
+      "width": 20,
       "isFinishLine": false
     },
     {
       "id": 3,
-      "position": { "x": -20, "y": 0, "z": 0 },
-      "width": 10,
+      "position": { "x": -45, "y": 0, "z": 0 },
+      "width": 20,
       "isFinishLine": false
     }
   ],

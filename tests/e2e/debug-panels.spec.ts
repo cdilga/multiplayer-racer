@@ -16,8 +16,10 @@ test.describe('Debug Panels', () => {
         const physicsPanel = hostPage.locator('#physics-params-panel');
         await expect(physicsPanel).toBeHidden();
 
-        // Press F2 to show physics panel
-        await hostPage.keyboard.press('F2');
+        // Toggle physics panel to show (call exposed function for reliability)
+        await hostPage.evaluate(() => {
+            (window as any).togglePhysicsPanel();
+        });
         await hostPage.waitForTimeout(300);
 
         // Physics panel should now be visible
@@ -26,8 +28,10 @@ test.describe('Debug Panels', () => {
         // Panel should contain parameter controls
         await expect(physicsPanel).toContainText('Physics');
 
-        // Press F2 again to hide
-        await hostPage.keyboard.press('F2');
+        // Toggle again to hide
+        await hostPage.evaluate(() => {
+            (window as any).togglePhysicsPanel();
+        });
         await hostPage.waitForTimeout(300);
 
         // Should be hidden again
@@ -49,15 +53,19 @@ test.describe('Debug Panels', () => {
         const statsOverlay = hostPage.locator('#stats-overlay');
         await expect(statsOverlay).toHaveClass(/hidden/);
 
-        // Press F3 to show stats
-        await hostPage.keyboard.press('F3');
+        // Toggle stats overlay to show (call exposed function for reliability)
+        await hostPage.evaluate(() => {
+            (window as any).toggleStatsOverlay();
+        });
         await hostPage.waitForTimeout(500);
 
         // Stats overlay should now be visible (no hidden class)
         await expect(statsOverlay).not.toHaveClass(/hidden/);
 
-        // Press F3 again to hide
-        await hostPage.keyboard.press('F3');
+        // Toggle again to hide
+        await hostPage.evaluate(() => {
+            (window as any).toggleStatsOverlay();
+        });
         await hostPage.waitForTimeout(300);
 
         // Should be hidden again

@@ -134,6 +134,11 @@ class InputSystem {
      * @private
      */
     _onNetworkInput(data) {
+        // Check for test override flag (used in e2e tests)
+        if (typeof window !== 'undefined' && window.gameState?._testControlsOverride) {
+            return;
+        }
+
         const vehicle = this.vehicles.get(data.playerId);
         if (vehicle) {
             vehicle.setControls(data.controls);
@@ -146,6 +151,11 @@ class InputSystem {
      */
     update(dt) {
         if (!this.initialized) return;
+
+        // Check for test override flag (used in e2e tests)
+        if (typeof window !== 'undefined' && window.gameState?._testControlsOverride) {
+            return;
+        }
 
         // Apply network inputs to vehicles
         if (this.networkSystem) {

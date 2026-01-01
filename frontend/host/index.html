@@ -7,333 +7,436 @@
     <link rel="stylesheet" href="/static/css/host.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <style>
-        .qr-code-container {
-            margin: 20px auto;
-            width: 200px;
+        /* Container for 3D game */
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1a1a2e;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        .qr-code-container img {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .qr-code-container p {
-            margin-top: 10px;
-            font-size: 0.8em;
-            color: #666;
-        }
-
-        /* Audio Controls */
-        #audio-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(26, 26, 46, 0.9);
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: 1px solid rgba(76, 201, 240, 0.3);
+            justify-content: center;
             z-index: 1000;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .loading-overlay.hidden {
+            display: none;
+        }
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #333;
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #888;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        #audio-controls button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px;
+        /* Error display */
+        .error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 46, 0.95);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 1001;
+            color: white;
+            padding: 40px;
+            text-align: center;
         }
-
-        #audio-controls button svg {
-            width: 24px;
-            height: 24px;
-            fill: #4cc9f0;
-            transition: fill 0.2s;
+        .error-overlay.hidden {
+            display: none;
         }
-
-        #audio-controls button:hover svg {
-            fill: #f72585;
+        .error-title {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 20px;
         }
-
-        #audio-controls button.muted svg {
-            fill: #666;
+        .error-message {
+            color: #888;
+            max-width: 500px;
         }
-
-        #volume-slider {
-            width: 80px;
-            height: 4px;
-            -webkit-appearance: none;
-            background: rgba(76, 201, 240, 0.3);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: #4cc9f0;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        #volume-slider::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            background: #4cc9f0;
-            border-radius: 50%;
-            cursor: pointer;
+        .error-retry {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #00ff88;
+            color: #1a1a2e;
             border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff88;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+            border-radius: 5px;
+        }
+        .debug-info.hidden {
+            display: none;
+        }
+
+        /* Debug panels (F2/F3 toggles) */
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 200;
+            min-width: 200px;
+        }
+        .debug-panel.hidden {
+            display: none;
+        }
+        .debug-panel-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00ff88;
+        }
+        #stats-overlay {
+            top: 10px;
+            right: 10px;
+        }
+        #physics-params-panel {
+            top: 10px;
+            right: 230px;
+        }
+        #reset-all-cars-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        #reset-all-cars-btn:hover {
+            background: #ff6666;
         }
     </style>
 </head>
-<body>
-    <div class="container">       
-        <div id="lobby-screen" class="screen">
-            <h1>Room Code: <span id="room-code-display"></span></h1>
-            <div class="instructions">
-                <p>Connect to this racing game using your local IP address:</p>
-                <p id="local-ip" class="highlight">{{ local_ip }}:{{ port }}</p>
-                <p>Go to this URL on your mobile device:</p>
-                <p id="join-url" class="highlight"></p>
-                <p>Or enter the room code</p>
-            </div>
-            
-            <div class="qr-code-container">
-                <h3>Scan QR Code to Join:</h3>
-                <img id="qr-code" src="" alt="QR Code to join game">
-                <p>Scan this QR code with your smartphone to join directly!</p>
-            </div>
-            
-            <div class="player-list-container">
-                <h3>Players:</h3>
-                <ul id="player-list"></ul>
-            </div>
-            
-            <button id="start-game-btn" disabled>Start Race</button>
+<body tabindex="-1">
+    <!-- Game container (game-screen ID for test compatibility) -->
+    <div id="game-container"></div>
+    <div id="game-screen" class="hidden"></div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">Initializing game engine...</div>
+    </div>
+
+    <!-- Error overlay -->
+    <div id="error-overlay" class="error-overlay hidden">
+        <div class="error-title">Something went wrong</div>
+        <div class="error-message" id="error-message"></div>
+        <button class="error-retry" onclick="location.reload()">Retry</button>
+    </div>
+
+    <!-- Debug info (press D to toggle) -->
+    <div id="debug-info" class="debug-info hidden">
+        <div>FPS: <span id="debug-fps">0</span></div>
+        <div>State: <span id="debug-state">-</span></div>
+        <div>Players: <span id="debug-players">0</span></div>
+        <div>Room: <span id="debug-room">-</span></div>
+    </div>
+
+    <!-- Stats overlay (F3 toggle) -->
+    <div id="stats-overlay" class="debug-panel hidden">
+        <div class="debug-panel-header">Stats</div>
+        <div id="stats-content">
+            <div>Players: <span id="stats-players">0</span></div>
+            <div>State: <span id="stats-state">-</span></div>
         </div>
-        
-        <div id="game-screen" class="screen hidden">
-            <div id="game-ui">
-                <div id="game-status">Race in progress</div>
-                <button id="fullscreen-btn" title="Toggle fullscreen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                    </svg>
-                </button>
-            </div>
-            <div id="game-container"></div>
-            <div id="stats-overlay" class="hidden"></div>
-            
-            <!-- Physics Parameters Panel -->
-            <div id="physics-params-panel">
-                <h2>Physics Parameters</h2>
-                
-                <div class="params-tabs">
-                    <button class="params-tab active" data-tab="car">Car</button>
-                    <button class="params-tab" data-tab="world">World</button>
-                    <button class="params-tab" data-tab="wheels">Wheels</button>
-                </div>
-                
-                <!-- Car Parameters -->
-                <div class="params-container active" id="car-params">
-                    <div class="params-group">
-                        <div class="params-group-title">Car Body Physics</div>
-                        <!-- Parameters will be added dynamically -->
-                    </div>
-                    
-                    <div class="params-group">
-                        <div class="params-group-title">Movement Parameters</div>
-                        <!-- Parameters will be added dynamically -->
-                    </div>
-                </div>
-                
-                <!-- World Parameters -->
-                <div class="params-container" id="world-params">
-                    <div class="params-group">
-                        <div class="params-group-title">World Physics</div>
-                        <!-- Parameters will be added dynamically -->
-                    </div>
-                </div>
-                
-                <!-- Wheels Parameters -->
-                <div class="params-container" id="wheels-params">
-                    <div class="params-group">
-                        <div class="params-group-title">Wheel Physics</div>
-                        <!-- Parameters will be added dynamically -->
-                    </div>
-                    
-                    <div class="params-group">
-                        <div class="params-group-title">Suspension</div>
-                        <!-- Parameters will be added dynamically -->
-                    </div>
-                </div>
-                
-                <!-- Presets & Profiles -->
-                <div class="params-group profile-section">
-                    <div class="params-group-title">Presets</div>
-                    <div class="preset-buttons">
-                        <button class="preset-btn" data-preset="arcade">Arcade</button>
-                        <button class="preset-btn" data-preset="default">Default</button>
-                        <button class="preset-btn" data-preset="simulation">Simulation</button>
-                        <button class="preset-btn" data-preset="drift">Drift</button>
-                    </div>
-                </div>
+        <button id="reset-all-cars-btn">Reset All Cars</button>
+    </div>
 
-                <div class="params-group profile-section">
-                    <div class="params-group-title">Custom Profiles</div>
-                    <div class="profile-controls">
-                        <select id="profile-select" class="profile-select">
-                            <option value="">-- Saved Profiles --</option>
-                        </select>
-                        <div class="profile-buttons">
-                            <button class="param-button" id="load-profile">Load</button>
-                            <button class="param-button" id="delete-profile">Delete</button>
-                        </div>
-                    </div>
-                    <div class="save-profile-row">
-                        <input type="text" id="profile-name" placeholder="Profile name" class="profile-input">
-                        <button class="param-button apply" id="save-profile">Save</button>
-                    </div>
-                    <button class="param-button" id="export-profile" style="width: 100%; margin-top: 8px;">Export as JSON</button>
-                </div>
-
-                <div class="param-buttons">
-                    <button class="param-button reset" id="reset-physics">Reset All</button>
-                </div>
-            </div>
+    <!-- Physics params panel (F2 toggle) - uses .visible class from host.css -->
+    <div id="physics-params-panel">
+        <div class="debug-panel-header">Physics Parameters</div>
+        <div id="physics-params-content">
+            <div>Engine Force: <span id="physics-engine-force">-</span></div>
+            <div>Brake Force: <span id="physics-brake-force">-</span></div>
         </div>
     </div>
 
-    <!-- Audio Controls -->
-    <div id="audio-controls">
-        <button id="mute-btn" title="Toggle mute">
-            <svg id="volume-icon" viewBox="0 0 24 24">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-            <svg id="mute-icon" viewBox="0 0 24 24" style="display: none;">
-                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-            </svg>
-        </button>
-        <input type="range" id="volume-slider" min="0" max="100" value="50" title="Music volume">
-    </div>
+    <!-- Debug panel keyboard handlers (must be non-module for immediate registration) -->
+    <script>
+        // Expose toggle functions globally for testing
+        window.togglePhysicsPanel = function() {
+            const panel = document.getElementById('physics-params-panel');
+            if (panel) {
+                // host.css uses .visible class, not .hidden
+                panel.classList.toggle('visible');
+            }
+        };
+        window.toggleStatsOverlay = function() {
+            const panel = document.getElementById('stats-overlay');
+            if (panel) panel.classList.toggle('hidden');
+        };
+
+        // Use window.addEventListener for keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                window.togglePhysicsPanel();
+            }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                window.toggleStatsOverlay();
+            }
+            if (e.key === 'F4') {
+                e.preventDefault();
+                // Toggle physics debug visualization (handled by game)
+                if (window.game && window.game.systems && window.game.systems.physics) {
+                    window.game.systems.physics.toggleDebug?.();
+                }
+            }
+        });
+    </script>
 
     <!-- Load libraries -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- Load Rapier physics engine using ES modules -->
+
+    <!-- Import map for ES modules -->
     <script type="importmap">
     {
-      "imports": {
-        "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
-      }
+        "imports": {
+            "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+        }
     }
     </script>
-    
-    <!-- Add debugging script to visualize if Rapier is loaded properly -->
+
+    <!-- Main game initialization -->
     <script type="module">
-        // Create a global flag to indicate Rapier loading status
-        window.rapierLoaded = false;
-        window.RAPIER = null;
+        import { GameHost } from '/static/js/GameHost.js';
 
-        // Monitor Rapier loading
-        async function checkRapierStatus() {
+        // UI elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const errorOverlay = document.getElementById('error-overlay');
+        const errorMessage = document.getElementById('error-message');
+        const debugInfo = document.getElementById('debug-info');
+
+        // Debug display (D key handler only, F2/F3/F4 in separate non-module script)
+        let showDebug = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'd' || e.key === 'D') {
+                showDebug = !showDebug;
+                debugInfo.classList.toggle('hidden', !showDebug);
+            }
+        });
+
+        // Show error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // Update loading text
+        function updateLoading(text) {
+            loadingText.textContent = text;
+        }
+
+        // Initialize game
+        async function initGame() {
             try {
-                console.log("Attempting to load Rapier module...");
+                updateLoading('Loading physics engine...');
+
+                // Wait for Rapier to load
                 const rapier = await import('@dimforge/rapier3d-compat');
-                console.log("Rapier module imported successfully!");
-
-                // Initialize WASM only once - store globally for other scripts to use
                 await rapier.init();
-                console.log("Rapier WASM initialized!");
-
-                // Store the initialized module globally so other scripts don't need to re-initialize
                 window.RAPIER = rapier;
-
-                // Set global flag
                 window.rapierLoaded = true;
 
-                // Trigger a custom event to notify other scripts
-                window.dispatchEvent(new CustomEvent('rapier-ready'));
+                updateLoading('Creating game host...');
 
-                return true;
-            } catch(error) {
-                console.error("Failed to load Rapier:", error);
-                return false;
+                // Create and initialize game host
+                const game = new GameHost({
+                    container: document.getElementById('game-container')
+                });
+
+                // Make game accessible globally for debugging
+                window.game = game;
+
+                // Expose rapierPhysics for test compatibility (upside-down detection)
+                window.rapierPhysics = {
+                    isCarUpsideDown: (physicsBody) => {
+                        if (!physicsBody) return false;
+                        try {
+                            const rot = physicsBody.rotation();
+                            // Calculate up vector after quaternion rotation
+                            // upY = 1 - 2*(x² + z²) for unit quaternion
+                            const upY = 1 - 2 * (rot.x * rot.x + rot.z * rot.z);
+                            return upY < 0.3; // Car is upside down if Y-up < 0.3
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+                };
+
+                // Expose gameState for test compatibility
+                // Use a proxy to allow setting controls on the actual vehicle
+                window.gameState = {
+                    get cars() {
+                        const result = {};
+                        for (const [playerId, vehicle] of game.vehicles) {
+                            // Create a proxy that forwards property sets to the actual vehicle
+                            result[playerId] = new Proxy({
+                                mesh: vehicle.mesh,
+                                playerId: playerId,
+                                spawnPosition: vehicle.spawnPosition,
+                                physicsBody: game.systems.physics?.getVehicleBody?.(vehicle.id) || null
+                            }, {
+                                get(target, prop) {
+                                    if (prop === 'controls') {
+                                        return vehicle.controls;
+                                    }
+                                    return target[prop];
+                                },
+                                set(target, prop, value) {
+                                    if (prop === 'controls') {
+                                        // Update the actual vehicle's controls
+                                        vehicle.controls = value;
+                                        return true;
+                                    }
+                                    target[prop] = value;
+                                    return true;
+                                }
+                            });
+                        }
+                        return result;
+                    },
+                    _testControlsOverride: false
+                };
+
+                // Expose reset functions for test compatibility
+                window.resetCarPosition = (playerId) => {
+                    // Try both string and number keys since Map keys can be either
+                    let vehicle = game.vehicles.get(playerId);
+                    if (!vehicle) {
+                        // Try as number if string lookup failed
+                        vehicle = game.vehicles.get(Number(playerId));
+                    }
+                    if (!vehicle) {
+                        // Try as string if number lookup failed
+                        vehicle = game.vehicles.get(String(playerId));
+                    }
+                    if (vehicle && vehicle.spawnPosition) {
+                        vehicle.reset(vehicle.spawnPosition);
+                        if (game.systems.physics) {
+                            game.systems.physics.resetVehicle(
+                                vehicle.id,
+                                vehicle.spawnPosition,
+                                vehicle.spawnPosition.rotation || 0
+                            );
+                        }
+                    }
+                };
+
+                window.resetAllCars = () => {
+                    let index = 0;
+                    for (const [playerId, vehicle] of game.vehicles) {
+                        const spawnPos = game.track?.getSpawnPosition(index) || vehicle.spawnPosition;
+                        vehicle.reset(spawnPos);
+                        if (game.systems.physics) {
+                            game.systems.physics.resetVehicle(
+                                vehicle.id,
+                                spawnPos,
+                                spawnPos.rotation || 0
+                            );
+                        }
+                        index++;
+                    }
+                };
+
+                updateLoading('Initializing systems...');
+                await game.init();
+
+                updateLoading('Starting game...');
+                await game.start();
+
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+
+                // Wire up reset button
+                document.getElementById('reset-all-cars-btn')?.addEventListener('click', () => {
+                    window.resetAllCars();
+                });
+
+                // Setup debug display updates
+                setInterval(() => {
+                    document.getElementById('debug-fps').textContent = game.engine?.getFps?.() || '0';
+                    document.getElementById('debug-state').textContent = game.engine?.getState?.() || '-';
+                    document.getElementById('debug-players').textContent = game.vehicles?.size || '0';
+                    document.getElementById('debug-room').textContent = game.roomCode || '-';
+                    // Also update stats overlay
+                    document.getElementById('stats-players').textContent = game.vehicles?.size || '0';
+                    document.getElementById('stats-state').textContent = game.engine?.getState?.() || '-';
+                }, 500);
+
+                console.log('Game initialized successfully!');
+
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+                showError(error.message || 'Failed to initialize game. Please refresh and try again.');
             }
         }
 
-        // Start monitoring
-        checkRapierStatus();
+        // Start initialization
+        initGame();
     </script>
-    
-    <!-- Load game scripts -->
-    <script src="/static/js/audioManager.js"></script>
-    <script src="/static/js/trackBuilder.js"></script>
-    <script src="/static/js/carModel.js"></script>
-    <script src="/static/js/rapierPhysics.js"></script>
-    <script src="/static/js/host.js"></script>
-    
+
     <!-- Pass server data to client -->
     <script>
-        // Make server-provided data available to JavaScript
         const serverConfig = {
             localIp: "{{ local_ip }}",
             port: "{{ port }}"
         };
-        
-        // Force a render after the page is fully loaded
-        window.addEventListener('load', function() {
-            // Force a reflow after a short delay
-            setTimeout(function() {
-                if (typeof forceDOMRender === 'function') {
-                    forceDOMRender();
-                }
-            }, 100);
-        });
-
-        // Audio controls initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            const muteBtn = document.getElementById('mute-btn');
-            const volumeSlider = document.getElementById('volume-slider');
-            const volumeIcon = document.getElementById('volume-icon');
-            const muteIcon = document.getElementById('mute-icon');
-
-            // Initialize slider from saved preferences
-            if (window.audioManager) {
-                const state = audioManager.getState();
-                volumeSlider.value = state.musicVolume * 100;
-                updateMuteIcon(state.isMuted);
-            }
-
-            // Mute button handler
-            muteBtn.addEventListener('click', function() {
-                if (window.audioManager) {
-                    const isMuted = audioManager.toggleMute();
-                    updateMuteIcon(isMuted);
-                }
-            });
-
-            // Volume slider handler
-            volumeSlider.addEventListener('input', function() {
-                if (window.audioManager) {
-                    audioManager.setMusicVolume(this.value / 100);
-                }
-            });
-
-            function updateMuteIcon(isMuted) {
-                volumeIcon.style.display = isMuted ? 'none' : 'block';
-                muteIcon.style.display = isMuted ? 'block' : 'none';
-                muteBtn.classList.toggle('muted', isMuted);
-            }
-        });
     </script>
 </body>
-</html> 
+</html>
