@@ -131,15 +131,9 @@ def _get_host_info():
 
 @app.route('/')
 def index():
-    """Serve the host interface (v1 - stable, tested)."""
+    """Serve the host interface."""
     local_ip, port = _get_host_info()
     return render_template('host/index.html', local_ip=local_ip, port=port)
-
-@app.route('/v2')
-def index_v2():
-    """Serve the new modular host interface (v2 - experimental)."""
-    local_ip, port = _get_host_info()
-    return render_template('host/index-v2.html', local_ip=local_ip, port=port)
 
 @app.route('/player')
 def player():
@@ -189,13 +183,8 @@ def generate_qr_code(room_code):
         logger.error(f"Error generating QR code: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/test/car')
-def car_test():
-    """Serve the car model test page."""
-    return render_template('test/car-test.html')
-
 @socketio.on('create_room')
-def create_room(data):
+def create_room(data=None):
     """Host creates a new game room."""
     host_sid = request.sid
     room_code = generate_room_code()
