@@ -28,6 +28,9 @@ import { Track } from './entities/Track.js';
 import { LobbyUI } from './ui/LobbyUI.js';
 import { RaceUI } from './ui/RaceUI.js';
 import { ResultsUI } from './ui/ResultsUI.js';
+import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
+import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
+import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
 
 class GameHost {
     constructor(options = {}) {
@@ -57,7 +60,10 @@ class GameHost {
         this.ui = {
             lobby: null,
             race: null,
-            results: null
+            results: null,
+            debugOverlay: null,    // F4 - Physics visualization
+            statsOverlay: null,    // F3 - Game statistics
+            physicsTuning: null    // F2 - Physics parameter tuning
         };
 
         // Entities
@@ -165,6 +171,37 @@ class GameHost {
         this.ui.results.init();
         this.ui.results.setOnPlayAgain(() => this._startNewRace());
         this.ui.results.setOnBackToLobby(() => this._returnToLobby());
+
+        // Debug UI components
+        this.ui.debugOverlay = new DebugOverlayUI({
+            eventBus: this.eventBus,
+            physicsSystem: this.systems.physics,
+            renderSystem: this.systems.render
+        });
+        this.ui.debugOverlay.init();
+
+        this.ui.statsOverlay = new StatsOverlayUI({
+            eventBus: this.eventBus,
+            container: this.container,
+            gameHost: this
+        });
+        this.ui.statsOverlay.init();
+
+        this.ui.physicsTuning = new PhysicsTuningUI({
+            eventBus: this.eventBus,
+            container: this.container,
+            gameHost: this
+        });
+        this.ui.physicsTuning.init();
+
+        // Expose toggle functions globally for keyboard handlers
+        window.togglePhysicsDebug = () => this.ui.debugOverlay?.toggle();
+        window.toggleStatsOverlay = () => this.ui.statsOverlay?.toggle();
+        window.togglePhysicsPanel = () => this.ui.physicsTuning?.toggle();
+
+        // Expose reset functions globally for debug UI
+        window.resetCarPosition = (vehicleId) => this.resetVehicleToSpawn(vehicleId);
+        window.resetAllCars = () => this.resetAllVehicles();
     }
 
     /**
@@ -461,6 +498,33 @@ class GameHost {
     }
 
     /**
+     * Reset a specific vehicle to its spawn position
+     * @param {string} vehicleId
+     */
+    resetVehicleToSpawn(vehicleId) {
+        const vehicle = this.vehicles.get(vehicleId);
+        if (!vehicle || !this.track) return;
+
+        const spawnPos = this.track.getSpawnPosition(0);
+        vehicle.reset(spawnPos);
+        this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
+    }
+
+    /**
+     * Reset all vehicles to their spawn positions
+     */
+    resetAllVehicles() {
+        let index = 0;
+        for (const [playerId, vehicle] of this.vehicles) {
+            if (!this.track) return;
+            const spawnPos = this.track.getSpawnPosition(index);
+            vehicle.reset(spawnPos);
+            this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
+            index++;
+        }
+    }
+
+    /**
      * Return to lobby
      * @private
      */
@@ -517,7 +581,10 @@ class GameHost {
      */
     _onRender({ dt, interpolation, fps }) {
         // Render system handles actual rendering
-        // This is just for any additional per-frame updates
+        // Update debug overlay visualization each frame
+        if (this.ui.debugOverlay?.visible) {
+            this.ui.debugOverlay.update();
+        }
     }
 
     /**

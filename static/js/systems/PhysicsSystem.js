@@ -357,25 +357,30 @@ class PhysicsSystem {
             data.isReversing = false;
         } else if (braking > 0) {
             // Braking logic with reverse after delay
-            const isNearlyStopped = currentSpeed < STOP_THRESHOLD;
-
-            if (isNearlyStopped) {
-                // Car is stopped or nearly stopped while holding brake
-                if (data.brakeStartTime === null) {
-                    data.brakeStartTime = Date.now();
-                }
-
-                const brakeHoldDuration = Date.now() - data.brakeStartTime;
-
-                if (brakeHoldDuration >= data.reverseDelayMs) {
-                    // Activate reverse mode
-                    data.isReversing = true;
-                    engineForce = -braking * baseEngineForce * data.reverseForceMultiplier;
-                }
+            // If already reversing, stay in reverse mode as long as brake is held
+            if (data.isReversing) {
+                engineForce = -braking * baseEngineForce * data.reverseForceMultiplier;
             } else {
-                // Still moving forward, just brake (don't start reverse timer yet)
-                data.brakeStartTime = null;
-                data.isReversing = false;
+                // Not yet reversing - check if we should activate
+                const isNearlyStopped = currentSpeed < STOP_THRESHOLD;
+
+                if (isNearlyStopped) {
+                    // Car is stopped or nearly stopped while holding brake
+                    if (data.brakeStartTime === null) {
+                        data.brakeStartTime = Date.now();
+                    }
+
+                    const brakeHoldDuration = Date.now() - data.brakeStartTime;
+
+                    if (brakeHoldDuration >= data.reverseDelayMs) {
+                        // Activate reverse mode
+                        data.isReversing = true;
+                        engineForce = -braking * baseEngineForce * data.reverseForceMultiplier;
+                    }
+                } else {
+                    // Still moving forward, apply brakes (don't start reverse timer yet)
+                    data.brakeStartTime = null;
+                }
             }
         } else {
             // No acceleration or braking - reset reverse state
@@ -500,6 +505,63 @@ class PhysicsSystem {
      */
     resume() {
         this.paused = false;
+    }
+
+    /**
+     * Get physics debug vertices from Rapier world
+     * @returns {Object|null} { vertices, colors } from debugRender()
+     */
+    getDebugVertices() {
+        if (!this.world || !this.world.debugRender) {
+            return null;
+        }
+        try {
+            return this.world.debugRender();
+        } catch (error) {
+            console.warn('Error getting debug vertices:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Get debug data for a specific vehicle
+     * @param {string} vehicleId
+     * @returns {Object|null} Debug data with position, velocity, forces
+     */
+    getVehicleDebugData(vehicleId) {
+        const data = this.vehicleBodies.get(vehicleId);
+        if (!data) return null;
+
+        const body = data.body;
+        const pos = body.translation();
+        const rot = body.rotation();
+        const linvel = body.linvel();
+        const angvel = body.angvel();
+
+        // Calculate speed in km/h
+        const speedMs = Math.sqrt(linvel.x * linvel.x + linvel.y * linvel.y + linvel.z * linvel.z);
+        const speedKmh = speedMs * 3.6;
+
+        return {
+            position: { x: pos.x, y: pos.y, z: pos.z },
+            rotation: { x: rot.x, y: rot.y, z: rot.z, w: rot.w },
+            velocity: { x: linvel.x, y: linvel.y, z: linvel.z },
+            angularVelocity: { x: angvel.x, y: angvel.y, z: angvel.z },
+            speed: speedKmh,
+            isReversing: data.isReversing
+        };
+    }
+
+    /**
+     * Get debug data for all vehicles
+     * @returns {Object} Map of vehicleId -> debug data
+     */
+    getAllVehiclesDebugData() {
+        const result = {};
+        for (const [vehicleId, data] of this.vehicleBodies) {
+            result[vehicleId] = this.getVehicleDebugData(vehicleId);
+        }
+        return result;
     }
 
     /**

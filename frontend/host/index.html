@@ -220,18 +220,16 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'F2') {
                 e.preventDefault();
-                window.togglePhysicsPanel();
+                window.togglePhysicsPanel?.();
             }
             if (e.key === 'F3') {
                 e.preventDefault();
-                window.toggleStatsOverlay();
+                window.toggleStatsOverlay?.();
             }
             if (e.key === 'F4') {
                 e.preventDefault();
-                // Toggle physics debug visualization (handled by game)
-                if (window.game && window.game.systems && window.game.systems.physics) {
-                    window.game.systems.physics.toggleDebug?.();
-                }
+                // Toggle physics debug visualization
+                window.togglePhysicsDebug?.();
             }
         });
     </script>

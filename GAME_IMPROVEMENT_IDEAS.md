@@ -1,5 +1,10 @@
 How to make the game better and cooler:
 
+- Fix bundling and build tools
+  - Should use something that will assist us deploying three.js and all our dependencies
+  - Update all versions
+  - Ensure we're deploying correctly
+  - Should work offline as long as controllers can reach host
 - Gameplay features
   - Fix the physics panel. Look through each of the functions, and determine if they're old, outdated or need tobe fixed.
     - Ensure any new physics params we might want to tune are added into the panels
