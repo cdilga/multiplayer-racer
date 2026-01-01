@@ -502,21 +502,35 @@ class GameHost {
      * @param {string} vehicleId
      */
     resetVehicleToSpawn(vehicleId) {
-        const vehicle = this.vehicles.get(vehicleId);
-        if (!vehicle || !this.track) return;
+        if (!this.track) return;
 
-        const spawnPos = this.track.getSpawnPosition(0);
-        vehicle.reset(spawnPos);
-        this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
+        // Find the vehicle's index in the vehicles map
+        let vehicleIndex = 0;
+        let foundVehicle = null;
+
+        for (const [playerId, vehicle] of this.vehicles) {
+            if (vehicle.id === vehicleId) {
+                foundVehicle = vehicle;
+                break;
+            }
+            vehicleIndex++;
+        }
+
+        if (!foundVehicle) return;
+
+        const spawnPos = this.track.getSpawnPosition(vehicleIndex);
+        foundVehicle.reset(spawnPos);
+        this.systems.physics.resetVehicle(foundVehicle.id, spawnPos, spawnPos.rotation);
     }
 
     /**
      * Reset all vehicles to their spawn positions
      */
     resetAllVehicles() {
+        if (!this.track) return;
+
         let index = 0;
         for (const [playerId, vehicle] of this.vehicles) {
-            if (!this.track) return;
             const spawnPos = this.track.getSpawnPosition(index);
             vehicle.reset(spawnPos);
             this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
