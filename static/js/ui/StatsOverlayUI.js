@@ -270,7 +270,7 @@ class StatsOverlayUI {
                     `;
                 }
 
-                html += `<button class="reset-all-btn" onclick="window.resetAllCars()">Reset All Cars</button>`;
+                html += `<button id="reset-all-cars-btn" class="reset-all-btn" onclick="window.resetAllCars()">Reset All Cars</button>`;
             }
 
             this.element.innerHTML = html;

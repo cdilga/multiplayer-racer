@@ -141,19 +141,6 @@
             top: 10px;
             right: 230px;
         }
-        #reset-all-cars-btn {
-            margin-top: 10px;
-            padding: 8px 16px;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-        #reset-all-cars-btn:hover {
-            background: #ff6666;
-        }
     </style>
 </head>
 <body tabindex="-1">
@@ -182,24 +169,7 @@
         <div>Room: <span id="debug-room">-</span></div>
     </div>
 
-    <!-- Stats overlay (F3 toggle) -->
-    <div id="stats-overlay" class="debug-panel hidden">
-        <div class="debug-panel-header">Stats</div>
-        <div id="stats-content">
-            <div>Players: <span id="stats-players">0</span></div>
-            <div>State: <span id="stats-state">-</span></div>
-        </div>
-        <button id="reset-all-cars-btn">Reset All Cars</button>
-    </div>
-
-    <!-- Physics params panel (F2 toggle) - uses .visible class from host.css -->
-    <div id="physics-params-panel">
-        <div class="debug-panel-header">Physics Parameters</div>
-        <div id="physics-params-content">
-            <div>Engine Force: <span id="physics-engine-force">-</span></div>
-            <div>Brake Force: <span id="physics-brake-force">-</span></div>
-        </div>
-    </div>
+    <!-- Debug UI panels are created dynamically by StatsOverlayUI and PhysicsTuningUI -->
 
     <!-- Debug panel keyboard handlers (must be non-module for immediate registration) -->
     <script>
@@ -406,11 +376,6 @@
 
                 // Hide loading overlay
                 loadingOverlay.classList.add('hidden');
-
-                // Wire up reset button
-                document.getElementById('reset-all-cars-btn')?.addEventListener('click', () => {
-                    window.resetAllCars();
-                });
 
                 // Setup debug display updates
                 setInterval(() => {
