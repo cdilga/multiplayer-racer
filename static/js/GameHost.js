@@ -502,25 +502,41 @@ class GameHost {
      * @param {string} vehicleId
      */
     resetVehicleToSpawn(vehicleId) {
-        if (!this.track) return;
+        console.log('🚗 resetVehicleToSpawn called with vehicleId:', vehicleId);
+        if (!this.track) {
+            console.log('🚗 No track, returning');
+            return;
+        }
 
         // Find the vehicle's index in the vehicles map
         let vehicleIndex = 0;
         let foundVehicle = null;
 
+        console.log('🚗 Searching through vehicles, total count:', this.vehicles.size);
         for (const [playerId, vehicle] of this.vehicles) {
-            if (vehicle.id === vehicleId) {
+            console.log('🚗 Checking vehicle with playerId:', playerId, 'vehicle.id:', vehicle.id);
+            if (vehicle.id === vehicleId || String(vehicle.id) === String(vehicleId)) {
                 foundVehicle = vehicle;
+                console.log('🚗 FOUND MATCH!');
                 break;
             }
             vehicleIndex++;
         }
 
-        if (!foundVehicle) return;
+        if (!foundVehicle) {
+            console.log('🚗 Vehicle not found after iterating all');
+            return;
+        }
 
+        console.log('🚗 Vehicle found at index:', vehicleIndex);
         const spawnPos = this.track.getSpawnPosition(vehicleIndex);
+        console.log('🚗 Spawn position:', spawnPos);
+
         foundVehicle.reset(spawnPos);
+        console.log('🚗 foundVehicle.reset() called');
+
         this.systems.physics.resetVehicle(foundVehicle.id, spawnPos, spawnPos.rotation);
+        console.log('🚗 physics.resetVehicle() called');
     }
 
     /**
