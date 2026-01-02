@@ -379,13 +379,26 @@
 
                 // Setup debug display updates
                 setInterval(() => {
-                    document.getElementById('debug-fps').textContent = game.engine?.getFps?.() || '0';
-                    document.getElementById('debug-state').textContent = game.engine?.getState?.() || '-';
-                    document.getElementById('debug-players').textContent = game.vehicles?.size || '0';
-                    document.getElementById('debug-room').textContent = game.roomCode || '-';
-                    // Also update stats overlay
-                    document.getElementById('stats-players').textContent = game.vehicles?.size || '0';
-                    document.getElementById('stats-state').textContent = game.engine?.getState?.() || '-';
+                    try {
+                        // Update debug info panel
+                        const debugFps = document.getElementById('debug-fps');
+                        const debugState = document.getElementById('debug-state');
+                        const debugPlayers = document.getElementById('debug-players');
+                        const debugRoom = document.getElementById('debug-room');
+
+                        if (debugFps) debugFps.textContent = game.engine?.getFps?.() || '0';
+                        if (debugState) debugState.textContent = game.engine?.getState?.() || '-';
+                        if (debugPlayers) debugPlayers.textContent = game.vehicles?.size || '0';
+                        if (debugRoom) debugRoom.textContent = game.roomCode || '-';
+
+                        // Also update stats overlay if visible
+                        const statsPlayers = document.getElementById('stats-players');
+                        const statsState = document.getElementById('stats-state');
+                        if (statsPlayers) statsPlayers.textContent = game.vehicles?.size || '0';
+                        if (statsState) statsState.textContent = game.engine?.getState?.() || '-';
+                    } catch (error) {
+                        // Silently ignore errors during debug updates
+                    }
                 }, 500);
 
                 console.log('Game initialized successfully!');

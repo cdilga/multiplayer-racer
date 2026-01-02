@@ -233,31 +233,48 @@ class StatsOverlayUI {
             const vehicles = this.gameHost?.vehicles || new Map();
             const playerCount = vehicles.size;
 
-            // Build HTML
-            let html = `
-                <div class="stats-header">Game Stats (Press F3 to toggle)</div>
-                <div class="stats-item">FPS: <span style="color: #ffff00;">${this.frameCounter.fps}</span></div>
-                <div class="stats-item">State: ${state}</div>
-                <div class="stats-item">Players: ${playerCount}</div>
-                <div class="stats-item">Physics: Active</div>
-            `;
+            // Initialize content on first update only
+            if (this.element.innerHTML === '') {
+                let html = `
+                    <div class="stats-header">Game Stats (Press F3 to toggle)</div>
+                    <div class="stats-item">FPS: <span style="color: #ffff00;" id="stats-fps">0</span></div>
+                    <div class="stats-item">State: <span id="stats-state">-</span></div>
+                    <div class="stats-item">Players: <span id="stats-players">0</span></div>
+                    <div class="stats-item">Physics: Active</div>
+                `;
 
-            // Per-player stats
-            if (playerCount > 0) {
-                html += '<div class="stats-section">Players:</div>';
+                if (playerCount > 0) {
+                    html += '<div class="stats-section">Players:</div>';
+                    html += '<div id="player-cards-container"></div>';
+                    html += `<button id="reset-all-cars-btn" class="reset-all-btn" onclick="window.resetAllCars()">Reset All Cars</button>`;
+                }
 
+                this.element.innerHTML = html;
+            }
+
+            // Update only the values that change
+            const fpsFps = this.element.querySelector('#stats-fps');
+            if (fpsFps) fpsFps.textContent = this.frameCounter.fps;
+
+            const statsState = this.element.querySelector('#stats-state');
+            if (statsState) statsState.textContent = state;
+
+            const statsPlayers = this.element.querySelector('#stats-players');
+            if (statsPlayers) statsPlayers.textContent = playerCount;
+
+            // Update player cards
+            const container = this.element.querySelector('#player-cards-container');
+            if (container && playerCount > 0) {
+                let playerHtml = '';
                 for (const [playerId, vehicle] of vehicles) {
                     const debugData = this.gameHost?.systems?.physics?.getVehicleDebugData(vehicle.id);
-
-                    if (!debugData) {
-                        continue;
-                    }
+                    if (!debugData) continue;
 
                     const pos = debugData.position;
                     const speed = debugData.speed.toFixed(1);
                     const lap = (vehicle.currentLap || 0) + 1;
 
-                    html += `
+                    playerHtml += `
                         <div class="player-card">
                             <div class="player-name">Player ${playerId}</div>
                             <div class="stats-item">Speed: ${speed} km/h</div>
@@ -269,11 +286,8 @@ class StatsOverlayUI {
                         </div>
                     `;
                 }
-
-                html += `<button id="reset-all-cars-btn" class="reset-all-btn" onclick="window.resetAllCars()">Reset All Cars</button>`;
+                container.innerHTML = playerHtml;
             }
-
-            this.element.innerHTML = html;
         } catch (error) {
             console.error('StatsOverlayUI update error:', error);
         }
