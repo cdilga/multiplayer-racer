@@ -251,54 +251,64 @@ class DebugOverlayUI {
      */
     _updateForceVectors() {
         // Remove old force arrows
-        this.forceArrows.forEach(arrow => {
-            this.renderSystem.scene.remove(arrow);
-        });
+        try {
+            this.forceArrows.forEach(arrow => {
+                if (arrow && arrow.parent) {
+                    this.renderSystem.scene.remove(arrow);
+                }
+            });
+        } catch (error) {
+            console.warn('DebugOverlayUI: Error removing force arrows:', error);
+        }
         this.forceArrows = [];
 
-        if (!this.physicsSystem) return;
+        if (!this.physicsSystem || !this.physicsSystem.vehicleBodies) return;
 
-        // Get all vehicles
-        const vehiclesData = this.physicsSystem.getAllVehiclesDebugData();
-        if (!vehiclesData) return;
+        try {
+            // Get all vehicles
+            const vehiclesData = this.physicsSystem.getAllVehiclesDebugData();
+            if (!vehiclesData) return;
 
-        // For each vehicle, create force arrows
-        for (const [vehicleId, debugData] of Object.entries(vehiclesData)) {
-            if (!debugData || !debugData.position) continue;
+            // For each vehicle, create force arrows
+            for (const [vehicleId, debugData] of Object.entries(vehiclesData)) {
+                if (!debugData || !debugData.position) continue;
 
-            // Get the vehicle body to determine current forces
-            const vehicleData = this.physicsSystem.vehicleBodies.get(vehicleId);
-            if (!vehicleData) continue;
+                // Get the vehicle body to determine current forces
+                const vehicleData = this.physicsSystem.vehicleBodies.get(vehicleId);
+                if (!vehicleData) continue;
 
-            const pos = debugData.position;
-            const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
+                const pos = debugData.position;
+                const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
 
-            // Get the forward direction from the rotation
-            const rot = debugData.rotation;
-            const forward = this._getForwardVector(rot);
+                // Get the forward direction from the rotation
+                const rot = debugData.rotation;
+                const forward = this._getForwardVector(rot);
 
-            // Approximate forces from velocity (actual force magnitude)
-            const velocity = debugData.velocity;
-            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+                // Approximate forces from velocity (actual force magnitude)
+                const velocity = debugData.velocity;
+                const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
 
-            // Create velocity arrow (blue)
-            if (speed > 0.1) {
-                const velDirection = new THREE.Vector3(velocity.x, velocity.y, velocity.z).normalize();
-                const velMagnitude = Math.min(speed * 0.3, 3.0);  // Scale for visibility
-                this._createForceArrow(origin, velDirection, velMagnitude, 0x0088ff, 'velocity');
+                // Create velocity arrow (blue)
+                if (speed > 0.1) {
+                    const velDirection = new THREE.Vector3(velocity.x, velocity.y, velocity.z).normalize();
+                    const velMagnitude = Math.min(speed * 0.3, 3.0);  // Scale for visibility
+                    this._createForceArrow(origin, velDirection, velMagnitude, 0x0088ff, 'velocity');
+                }
+
+                // Create reverse indicator if reversing
+                if (vehicleData && vehicleData.isReversing) {
+                    const reverseDir = new THREE.Vector3(forward.x, 0, forward.z).normalize().multiplyScalar(-1);
+                    this._createForceArrow(
+                        origin.clone().add(new THREE.Vector3(0, -0.5, 0)),
+                        reverseDir,
+                        1.0,
+                        0xff8800,  // Orange for reverse
+                        'reverse'
+                    );
+                }
             }
-
-            // Create reverse indicator if reversing
-            if (vehicleData && vehicleData.isReversing) {
-                const reverseDir = new THREE.Vector3(forward.x, 0, forward.z).normalize().multiplyScalar(-1);
-                this._createForceArrow(
-                    origin.clone().add(new THREE.Vector3(0, -0.5, 0)),
-                    reverseDir,
-                    1.0,
-                    0xff8800,  // Orange for reverse
-                    'reverse'
-                );
-            }
+        } catch (error) {
+            console.warn('DebugOverlayUI: Error updating force vectors:', error);
         }
     }
 

@@ -6,10 +6,15 @@ test.describe('Car Reset Functionality', () => {
         const consoleLogs: string[] = [];
         hostPage.on('console', (msg) => {
             const text = msg.text();
-            if (text.includes('🔧') || text.includes('Reset')) {
-                consoleLogs.push(text);
-                console.log('HOST CONSOLE:', text);
+            if (text.includes('🔧') || text.includes('Reset') || msg.type() === 'error') {
+                consoleLogs.push(`[${msg.type()}] ${text}`);
+                console.log(`HOST CONSOLE [${msg.type()}]:`, text);
             }
+        });
+
+        // Also capture page errors
+        hostPage.on('pageerror', (error) => {
+            console.log('PAGE ERROR:', error);
         });
 
         // Setup game
@@ -115,30 +120,36 @@ test.describe('Car Reset Functionality', () => {
             }
         });
 
-        // Click the reset button for this car
+        // Call reset directly through game object instead of window.resetCarPosition
         const resetResult = await hostPage.evaluate(() => {
             // @ts-ignore
+            const game = window.game;
             const gameState = window.gameState;
             const carIds = Object.keys(gameState.cars);
-            if (carIds.length > 0) {
-                // Call resetCarPosition directly
-                // @ts-ignore
-                if (typeof window.resetCarPosition === 'function') {
-                    console.log('🔧 Calling resetCarPosition with:', carIds[0]);
-                    // @ts-ignore
-                    window.resetCarPosition(carIds[0]);
-                    console.log('🔧 Reset called');
 
-                    // Check vehicle state after reset
-                    const car = gameState.cars[carIds[0]];
-                    const currentPos = car.mesh?.position || null;
-                    return {
-                        carId: carIds[0],
-                        currentPos: currentPos,
-                        hasPhysicsBody: !!car.physicsBody,
-                        spawnPosition: car.spawnPosition
-                    };
+            console.log('🔧 In evaluate: carIds:', carIds);
+            console.log('🔧 In evaluate: game exists:', !!game);
+            console.log('🔧 In evaluate: game.resetVehicleToSpawn:', typeof game?.resetVehicleToSpawn);
+
+            if (carIds.length > 0 && game) {
+                const carId = carIds[0];
+                console.log('🔧 Calling game.resetVehicleToSpawn with carId:', carId);
+                try {
+                    game.resetVehicleToSpawn(carId);
+                    console.log('🔧 game.resetVehicleToSpawn completed');
+                } catch (e) {
+                    console.log('🔧 ERROR:', e);
                 }
+
+                // Check vehicle state after reset
+                const car = gameState.cars[carId];
+                const currentPos = car.mesh?.position || null;
+                return {
+                    carId: carId,
+                    currentPos: currentPos,
+                    hasPhysicsBody: !!car.physicsBody,
+                    spawnPosition: car.spawnPosition
+                };
             }
             return null;
         });
