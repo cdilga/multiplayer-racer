@@ -380,7 +380,10 @@ class GameHost {
             // Store vehicle
             this.vehicles.set(playerData.id, vehicle);
 
-            // Update camera to follow first vehicle
+            // Add vehicle to camera tracking (multi-vehicle camera)
+            this.systems.render.addCameraTarget(vehicle);
+
+            // Also set as primary target for single-vehicle fallback
             if (this.vehicles.size === 1) {
                 this.systems.render.setCameraTarget(vehicle);
             }
@@ -403,6 +406,7 @@ class GameHost {
             // Remove from systems
             this.systems.physics.removeVehicle(vehicle.id);
             this.systems.render.removeMesh(vehicle.id);
+            this.systems.render.removeCameraTarget(vehicle);
             this.systems.input.unregisterVehicle(vehicle.id);
             this.systems.race.unregisterVehicle(vehicle.id);
             this.systems.damage.unregisterVehicle(vehicle.id);
