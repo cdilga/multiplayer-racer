@@ -41,6 +41,17 @@ class RenderSystem {
         this.cameraLookOffset = { x: 0, y: 0, z: -5 };
         this.cameraSmoothing = 0.1;
 
+        // Multi-vehicle camera (keeps all vehicles in view)
+        this.cameraTargets = [];  // Array of entities to track
+        this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
+        this.targetFOV = 60;  // Target field of view
+        this.currentFOV = 60;  // Current FOV (smoothed)
+        this.fovSmoothing = 0.15;  // FOV transition speed (higher = faster)
+        this.cameraMultiSmoothing = 0.15;  // Multi-vehicle camera position smoothing
+        this.minFOV = 30;  // Minimum FOV (most zoomed in)
+        this.maxFOV = 100;  // Maximum FOV (most zoomed out)
+        this.boundsPadding = 15;  // Padding around vehicle bounds (in world units)
+
         // Tracked meshes
         this.meshes = new Map();  // entityId -> mesh
 
@@ -166,10 +177,17 @@ class RenderSystem {
     }
 
     /**
-     * Update camera position (follow target)
+     * Update camera position (follow target or multiple targets)
      * @private
      */
     _updateCamera(dt) {
+        // If we have multiple targets, use multi-vehicle camera
+        if (this.cameraTargets.length > 1) {
+            this._updateMultiVehicleCamera(dt);
+            return;
+        }
+
+        // Single target fallback
         if (!this.cameraTarget) return;
 
         // Get target position
@@ -201,6 +219,154 @@ class RenderSystem {
             z: targetPos.z + this.cameraLookOffset.z
         };
         this.camera.lookAt(lookAt.x, lookAt.y, lookAt.z);
+    }
+
+    /**
+     * Update camera to keep all tracked vehicles in view
+     * @private
+     */
+    _updateMultiVehicleCamera(dt) {
+        if (this.cameraTargets.length === 0) return;
+
+        // Calculate bounding box of all vehicles
+        const bounds = this._calculateVehicleBounds();
+        if (!bounds) return;
+
+        // Calculate center point of all vehicles
+        const center = {
+            x: (bounds.min.x + bounds.max.x) / 2,
+            y: (bounds.min.y + bounds.max.y) / 2,
+            z: (bounds.min.z + bounds.max.z) / 2
+        };
+
+        // Smooth the look target (use multi-vehicle smoothing which is faster)
+        this.cameraLookTarget.x += (center.x - this.cameraLookTarget.x) * this.cameraMultiSmoothing;
+        this.cameraLookTarget.y += (center.y - this.cameraLookTarget.y) * this.cameraMultiSmoothing;
+        this.cameraLookTarget.z += (center.z - this.cameraLookTarget.z) * this.cameraMultiSmoothing;
+
+        // Calculate required FOV to fit all vehicles
+        this.targetFOV = this._calculateRequiredFOV(bounds, center);
+
+        // Smooth FOV transition
+        this.currentFOV += (this.targetFOV - this.currentFOV) * this.fovSmoothing;
+        this.camera.fov = this.currentFOV;
+        this.camera.updateProjectionMatrix();
+
+        // Calculate camera position (above and behind center)
+        const desiredPos = {
+            x: this.cameraLookTarget.x + this.cameraOffset.x,
+            y: this.cameraLookTarget.y + this.cameraOffset.y,
+            z: this.cameraLookTarget.z + this.cameraOffset.z
+        };
+
+        // Smooth camera movement (use multi-vehicle smoothing which is faster)
+        this.camera.position.x += (desiredPos.x - this.camera.position.x) * this.cameraMultiSmoothing;
+        this.camera.position.y += (desiredPos.y - this.camera.position.y) * this.cameraMultiSmoothing;
+        this.camera.position.z += (desiredPos.z - this.camera.position.z) * this.cameraMultiSmoothing;
+
+        // Look at center
+        this.camera.lookAt(
+            this.cameraLookTarget.x + this.cameraLookOffset.x,
+            this.cameraLookTarget.y + this.cameraLookOffset.y,
+            this.cameraLookTarget.z + this.cameraLookOffset.z
+        );
+    }
+
+    /**
+     * Calculate bounding box of all tracked vehicles
+     * @private
+     * @returns {Object|null} { min: {x,y,z}, max: {x,y,z} }
+     */
+    _calculateVehicleBounds() {
+        if (this.cameraTargets.length === 0) return null;
+
+        const bounds = {
+            min: { x: Infinity, y: Infinity, z: Infinity },
+            max: { x: -Infinity, y: -Infinity, z: -Infinity }
+        };
+
+        for (const target of this.cameraTargets) {
+            let pos;
+            if (target.mesh) {
+                pos = target.mesh.position;
+            } else if (target.position) {
+                pos = target.position;
+            } else {
+                continue;
+            }
+
+            bounds.min.x = Math.min(bounds.min.x, pos.x);
+            bounds.min.y = Math.min(bounds.min.y, pos.y);
+            bounds.min.z = Math.min(bounds.min.z, pos.z);
+            bounds.max.x = Math.max(bounds.max.x, pos.x);
+            bounds.max.y = Math.max(bounds.max.y, pos.y);
+            bounds.max.z = Math.max(bounds.max.z, pos.z);
+        }
+
+        // Add padding
+        bounds.min.x -= this.boundsPadding;
+        bounds.min.z -= this.boundsPadding;
+        bounds.max.x += this.boundsPadding;
+        bounds.max.z += this.boundsPadding;
+
+        return bounds;
+    }
+
+    /**
+     * Calculate the FOV needed to fit all vehicles in view
+     * @private
+     * @param {Object} bounds - Bounding box
+     * @param {Object} center - Center point
+     * @returns {number} Required FOV in degrees
+     */
+    _calculateRequiredFOV(bounds, center) {
+        // Calculate the size of the area to view
+        const width = bounds.max.x - bounds.min.x;
+        const depth = bounds.max.z - bounds.min.z;
+
+        // Use the larger dimension
+        const maxSpan = Math.max(width, depth);
+
+        // Calculate distance from camera to center (approximation)
+        const cameraHeight = this.cameraOffset.y;
+        const cameraDepth = this.cameraOffset.z;
+        const distance = Math.sqrt(cameraHeight * cameraHeight + cameraDepth * cameraDepth);
+
+        // Calculate required FOV using trigonometry
+        // FOV = 2 * atan(halfWidth / distance)
+        const halfSpan = maxSpan / 2;
+        const requiredFOV = 2 * Math.atan(halfSpan / distance) * (180 / Math.PI);
+
+        // Clamp to min/max bounds
+        return Math.max(this.minFOV, Math.min(this.maxFOV, requiredFOV));
+    }
+
+    /**
+     * Add a vehicle to be tracked by the camera
+     * @param {Object} target - Entity with mesh or position
+     */
+    addCameraTarget(target) {
+        if (!this.cameraTargets.includes(target)) {
+            this.cameraTargets.push(target);
+        }
+    }
+
+    /**
+     * Remove a vehicle from camera tracking
+     * @param {Object} target - Entity to remove
+     */
+    removeCameraTarget(target) {
+        const index = this.cameraTargets.indexOf(target);
+        if (index !== -1) {
+            this.cameraTargets.splice(index, 1);
+        }
+    }
+
+    /**
+     * Clear all camera targets
+     */
+    clearCameraTargets() {
+        this.cameraTargets = [];
     }
 
     /**
