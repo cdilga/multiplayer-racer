@@ -152,7 +152,7 @@ class LobbyUI {
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.85);
+                background: rgba(0, 0, 0, 0.4);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -163,13 +163,17 @@ class LobbyUI {
                 display: none;
             }
             .lobby-content {
-                background: #1a1a2e;
+                background: rgba(26, 26, 46, 0.85);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
                 border-radius: 20px;
-                padding: 40px;
+                padding: 30px 40px;
                 text-align: center;
                 color: white;
-                max-width: 500px;
-                width: 90%;
+                max-width: 800px;
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
             }
             .lobby-title {
                 font-size: 32px;

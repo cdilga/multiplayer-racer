@@ -2,6 +2,35 @@
 
 ## PRIORITY 1: Core Gameplay Polish (Foundation)
 
+### Ensure sound system works
+- Status: Missing after update
+- We previously had sounds, and we have music in the music/tracks directory for different scenarios
+- We previously had rotary engine sounds generated live. We should re add something that sounds better. With config options to disable. 
+- Add sound panel to the physics settings to tune the generation of live audio based on speed. Sound should mimic rotary components and be futuristic, but mapped to the car motion. Params influcing should be engine load and speed.
+
+### Test optimisation and cleanup
+- We have very long running tests
+- Some scenarios are duplicates. We need to keep the more valuable, longer and more complex tests, which likely test simpler scenarios anyway. Keep the super fast scenarios like game generation and joining anyway. 
+- We need to take care that we don't remove tests that are actually valuable, so that we don't let bugs in.
+- Examine all tests in their entirety, and see if we can remove any
+- Make tests faster
+- See if we can run the simulation in a faster mode than realtime for some tests. If we can, keep at least a single test in complete realtime.
+- Update docs about testing so we keep fast tests in future.
+
+### Issues with curb
+- We have a curb which is placed in a circle around the track, kind of like a ladder
+- It needs to be rotated 90* to the current position
+- If necessary, we can see the type of issue by looking at the debug bounding box to find the rotation issue
+
+### Rename project
+Replace all references and rename to Joystick Jammers
+
+### Docs update
+- Using the documentation agent to assist us
+- Update readmes, diagrams and descriptions for a killer readme
+- Update the main video on the readme too. Follow same steps as last time (ffmpeg gif / video generation of gameplay)
+- This time, use 32 instances of playwright controllers to create chaos when videoing and have them all drive in random patterns to create epic chaos.
+
 ### CRITICAL: Camera System - Keep All Cars in View
 - **Status:** ✅ DONE - Dynamic FOV adjustment keeps all vehicles visible
 - **Completed:**
@@ -113,9 +142,9 @@
     - Entertaining bowl-like arena (flat floor, walls at edges)
     - Multiple tracks/variations of the bowl arena
     - Obstacles inside: jumps, loops, trees, houses, stadium stands
-    - **Question:** How many arenas? What's the progression?
-    - **Question:** Is derby best-of-3 rounds? How are rounds defined?
-    - **Question:** What's the victory condition? Last car standing? Most damage dealt? Longest survival time?
+    - **Question:** How many arenas? What's the progression? The last man standing wins
+    - **Question:** Is derby best-of-3 rounds? How are rounds defined? Best of 3 rounds - with bonus rounds as are required. Last man standing like brawlhalla.
+    - **Question:** What's the victory condition? Last car standing? Most damage dealt? Longest survival time? Yes, last man. If there's a tie, we do a countdown and do it based on most health / most damage dealt.
   - **Build Phase:**
     - Create track/arena geometry
     - Place obstacles using track editor or manually in JSON
@@ -135,8 +164,8 @@
     - Arena type? Same bowl as derby? Specific arena?
     - Victory condition? Last car standing with health > 0?
     - Weapon balance: what's fun?
-    - **Question:** How are weapons obtained? Spawn points? Start with one?
-    - **Question:** How much damage do weapons deal? Can one-shot kill?
+    - **Question:** How are weapons obtained? Spawn points? Start with one? - Start with none. Drops spawn around the map.
+    - **Question:** How much damage do weapons deal? Can one-shot kill? - generally, no one shot cannot kill. Make a sniper weapon though that can do that, but only gets a single shot per use, so it's rare.
   - **Build Phase:**
     - Weapon system implementation
     - Weapon pickup spawning and respawning
@@ -187,25 +216,27 @@
 
 ### Code Organization
 - **Status:** ⚠️ PARTIAL - V2 architecture is clean but some files large
-- **Issue:** Some files exceed 25k tokens (host.js mentioned as 31k tokens)
+- **Issue:** Some files exceed 25k tokens
 - **Needed:**
   - Break down large files into logical modules
   - No changes to architecture (already clean), just subdivision
   - Document module responsibilities clearly
   - Benefit: easier code review, faster development
+  - Ask the architect to help.
 
 ### Build Tools & Bundling
-- **Status:** ⚠️ PARTIAL - Using Vite, works but could be improved
-- **Current:** Vite dev server + npm build
+- **Status:** ⚠️ PARTIAL - works but could be improved
+- **Current:** Playwright is slow, takes like 50 minutes to run full suite.
 - **Needed:**
   - Ensure Three.js and all dependencies properly bundled
+  - Several of the tests are redundant
   - Update all dependency versions to latest stable
   - Test offline functionality (controllers connecting to local host)
-  - Optimize for production: minify, tree-shake, chunk splitting
+  - Optimize for production
 
 ---
 
-## PRIORITY 4: Polish & Features (Later)
+## PRIORITY 4: Polish & Features 
 
 ### Visual Enhancements
 - Track improvements: obstacles, walls, jumps, different surfaces (3-4 tracks total)
