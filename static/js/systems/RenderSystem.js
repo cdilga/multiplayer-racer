@@ -32,6 +32,13 @@ class RenderSystem {
         this.camera = null;
         this.renderer = null;
 
+        // Post-processing
+        this.postProcessing = {
+            enabled: true,
+            composer: null,
+            passes: {}
+        };
+
         // Lighting
         this.lights = {};
 
@@ -71,7 +78,13 @@ class RenderSystem {
 
         // Create scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87ceeb);  // Sky blue
+        this.scene.background = new THREE.Color(0x0a0a1a);  // Dark cyberpunk sky
+
+        // Add fog for atmosphere (FogExp2 for exponential density)
+        this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.008);
+
+        // Create sky dome
+        this._createSkyDome();
 
         // Create camera
         const aspect = window.innerWidth / window.innerHeight;
@@ -100,6 +113,12 @@ class RenderSystem {
         // Setup default lighting
         this._setupDefaultLighting();
 
+        // Initialize post-processing (async, but don't block initialization)
+        this._initPostProcessing().catch((error) => {
+            console.warn('RenderSystem: Post-processing initialization failed, continuing without it:', error);
+            this.postProcessing.enabled = false;
+        });
+
         // Handle window resize
         window.addEventListener('resize', this._onResize.bind(this));
 
@@ -109,17 +128,80 @@ class RenderSystem {
     }
 
     /**
+     * Initialize post-processing (Bloom effect)
+     * @private
+     * @returns {Promise<void>}
+     */
+    async _initPostProcessing() {
+        if (!this.postProcessing.enabled) return;
+
+        try {
+            // Import post-processing modules using the import map
+            const { EffectComposer } = await import('three/addons/postprocessing/EffectComposer.js');
+            const { RenderPass } = await import('three/addons/postprocessing/RenderPass.js');
+            const { UnrealBloomPass } = await import('three/addons/postprocessing/UnrealBloomPass.js');
+            const { ShaderPass } = await import('three/addons/postprocessing/ShaderPass.js');
+            const { RGBShiftShader } = await import('three/addons/shaders/RGBShiftShader.js');
+
+            // Create composer
+            this.postProcessing.composer = new EffectComposer(this.renderer);
+
+            // Add render pass
+            const renderPass = new RenderPass(this.scene, this.camera);
+            this.postProcessing.composer.addPass(renderPass);
+            this.postProcessing.passes.render = renderPass;
+
+            // Add bloom pass with MAXIMAL settings
+            const bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                1.5,  // strength - MAXIMAL!
+                0.4,  // radius
+                0.85  // threshold
+            );
+            this.postProcessing.composer.addPass(bloomPass);
+            this.postProcessing.passes.bloom = bloomPass;
+
+            // Add color grading + vignette pass (after bloom)
+            try {
+                const { ColorGradingShader } = await import('../shaders/ColorGradingShader.js');
+                const colorGradingPass = new ShaderPass(ColorGradingShader);
+                colorGradingPass.uniforms.gradingIntensity.value = 0.5;
+                colorGradingPass.uniforms.vignetteAmount.value = 0.3;
+                this.postProcessing.composer.addPass(colorGradingPass);
+                this.postProcessing.passes.colorGrading = colorGradingPass;
+            } catch (error) {
+                console.warn('RenderSystem: Failed to load ColorGradingShader, skipping color grading:', error);
+            }
+
+            // Add chromatic aberration pass (after color grading)
+            try {
+                const rgbShiftPass = new ShaderPass(RGBShiftShader);
+                rgbShiftPass.uniforms.amount.value = 0.0015; // Subtle speed warp
+                this.postProcessing.composer.addPass(rgbShiftPass);
+                this.postProcessing.passes.chromaticAberration = rgbShiftPass;
+            } catch (error) {
+                console.warn('RenderSystem: Failed to add chromatic aberration, skipping:', error);
+            }
+
+            console.log('RenderSystem: Post-processing initialized with all effects');
+        } catch (error) {
+            console.error('RenderSystem: Error loading post-processing modules:', error);
+            throw error; // Re-throw so caller can handle
+        }
+    }
+
+    /**
      * Setup default lighting
      * @private
      */
     _setupDefaultLighting() {
-        // Ambient light
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        // Ambient light - dimmer for cyberpunk atmosphere
+        const ambient = new THREE.AmbientLight(0x4444ff, 0.3);
         this.scene.add(ambient);
         this.lights.ambient = ambient;
 
-        // Directional light (sun)
-        const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+        // Directional light (moon/neon glow)
+        const directional = new THREE.DirectionalLight(0x6666ff, 0.5);
         directional.position.set(50, 100, 50);
         directional.castShadow = true;
 
@@ -135,6 +217,60 @@ class RenderSystem {
 
         this.scene.add(directional);
         this.lights.directional = directional;
+    }
+
+    /**
+     * Create sky dome with gradient
+     * @private
+     */
+    _createSkyDome() {
+        // Create large inverted sphere for sky
+        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+
+        // Custom shader material for gradient sky
+        const skyMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                topColor: { value: new THREE.Color(0x0a0a2e) },     // Deep dark blue
+                bottomColor: { value: new THREE.Color(0x1a0a2e) },  // Purple-tinted dark
+                horizonColor: { value: new THREE.Color(0x2a1a4e) }, // Electric purple horizon
+                offset: { value: 33 },
+                exponent: { value: 0.6 }
+            },
+            vertexShader: `
+                varying vec3 vWorldPosition;
+                void main() {
+                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                    vWorldPosition = worldPosition.xyz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 topColor;
+                uniform vec3 bottomColor;
+                uniform vec3 horizonColor;
+                uniform float offset;
+                uniform float exponent;
+                varying vec3 vWorldPosition;
+                void main() {
+                    float h = normalize(vWorldPosition + offset).y;
+                    // Two-stage gradient: bottom to horizon, horizon to top
+                    vec3 color;
+                    if (h < 0.3) {
+                        color = mix(bottomColor, horizonColor, h / 0.3);
+                    } else {
+                        color = mix(horizonColor, topColor, (h - 0.3) / 0.7);
+                    }
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `,
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+
+        const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+        skyDome.name = 'skyDome';
+        this.scene.add(skyDome);
+        this.skyDome = skyDome;
     }
 
     /**
@@ -172,8 +308,18 @@ class RenderSystem {
         // Update camera if following target
         this._updateCamera(dt);
 
-        // Render scene
-        this.renderer.render(this.scene, this.camera);
+        // Render with post-processing if available and ready, otherwise standard render
+        if (this.postProcessing.enabled && this.postProcessing.composer) {
+            try {
+                this.postProcessing.composer.render();
+            } catch (error) {
+                // Fallback to standard render if composer fails
+                console.warn('RenderSystem: Composer render failed, using standard render:', error);
+                this.renderer.render(this.scene, this.camera);
+            }
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     /**
@@ -519,6 +665,11 @@ class RenderSystem {
         this.camera.updateProjectionMatrix();
 
         this.renderer.setSize(width, height);
+
+        // Update post-processing composer size
+        if (this.postProcessing.composer) {
+            this.postProcessing.composer.setSize(width, height);
+        }
     }
 
     /**

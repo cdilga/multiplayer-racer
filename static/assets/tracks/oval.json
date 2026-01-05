@@ -13,7 +13,9 @@
   "visual": {
     "track": {
       "color": "#424242",
-      "roughness": 0.9
+      "roughness": 0.9,
+      "emissive": "#00ffff",
+      "emissiveIntensity": 0.3
     },
     "ground": {
       "color": "#1e824c",
@@ -21,11 +23,15 @@
     },
     "barriers": {
       "color": "#888888",
-      "roughness": 0.7
+      "roughness": 0.7,
+      "emissive": "#ff00ff",
+      "emissiveIntensity": 0.5
     },
     "lineMarkings": {
       "color": "#ffffff",
-      "width": 0.3
+      "width": 0.3,
+      "emissive": "#ccff00",
+      "emissiveIntensity": 1.0
     }
   },
   "spawn": {

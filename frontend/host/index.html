@@ -206,13 +206,15 @@
 
     <!-- Load libraries -->
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
 
     <!-- Import map for ES modules -->
     <script type="importmap">
     {
         "imports": {
-            "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+            "@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat",
+            "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/"
         }
     }
     </script>

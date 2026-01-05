@@ -116,7 +116,9 @@ class VehicleFactory {
         const bodyGeometry = new THREE.BoxGeometry(body.width, body.height, body.length);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: bodyColor,
-            roughness: body.roughness || 0.5
+            roughness: body.roughness || 0.5,
+            emissive: body.emissive ? this._parseColor(body.emissive) : 0x000000,
+            emissiveIntensity: body.emissiveIntensity || 0
         });
         const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
         bodyMesh.position.y = body.height / 2;
@@ -223,7 +225,7 @@ class VehicleFactory {
         const lightGeometry = new THREE.SphereGeometry(lightConfig.radius || 0.2, 16, 16);
         const lightMaterial = new THREE.MeshStandardMaterial({
             color: this._parseColor(lightConfig.color),
-            emissive: this._parseColor(lightConfig.color),
+            emissive: lightConfig.emissive ? this._parseColor(lightConfig.emissive) : this._parseColor(lightConfig.color),
             emissiveIntensity: lightConfig.emissiveIntensity || 0.5
         });
 
@@ -231,15 +233,41 @@ class VehicleFactory {
             ? (body.length / 2) - 0.1
             : -(body.length / 2) + 0.1;
 
-        // Left light
-        const leftLight = new THREE.Mesh(lightGeometry, lightMaterial);
-        leftLight.position.set(-(body.width / 3), body.height / 2, zPos);
-        group.add(leftLight);
+        // Left light mesh
+        const leftLightMesh = new THREE.Mesh(lightGeometry, lightMaterial);
+        leftLightMesh.position.set(-(body.width / 3), body.height / 2, zPos);
+        group.add(leftLightMesh);
 
-        // Right light
-        const rightLight = new THREE.Mesh(lightGeometry, lightMaterial);
-        rightLight.position.set(body.width / 3, body.height / 2, zPos);
-        group.add(rightLight);
+        // Right light mesh
+        const rightLightMesh = new THREE.Mesh(lightGeometry, lightMaterial);
+        rightLightMesh.position.set(body.width / 3, body.height / 2, zPos);
+        group.add(rightLightMesh);
+
+        // Add PointLights for headlights (only if pointLight is enabled)
+        if (isFront && lightConfig.pointLight) {
+            const lightIntensity = lightConfig.pointLightIntensity || 3.0;
+            const lightDistance = lightConfig.pointLightDistance || 20;
+
+            // Left headlight PointLight
+            const leftPointLight = new THREE.PointLight(
+                this._parseColor(lightConfig.color),
+                lightIntensity,
+                lightDistance
+            );
+            leftPointLight.position.set(-(body.width / 3), body.height / 2, zPos);
+            group.add(leftPointLight);
+            leftLightMesh.userData.pointLight = leftPointLight;
+
+            // Right headlight PointLight
+            const rightPointLight = new THREE.PointLight(
+                this._parseColor(lightConfig.color),
+                lightIntensity,
+                lightDistance
+            );
+            rightPointLight.position.set(body.width / 3, body.height / 2, zPos);
+            group.add(rightPointLight);
+            rightLightMesh.userData.pointLight = rightPointLight;
+        }
     }
 
     /**

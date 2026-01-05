@@ -21,8 +21,8 @@ test.describe('Car Movement and Physics', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle after spawn drop (reduced from 2000ms)
+        await hostPage.waitForTimeout(500);
 
         // Get initial position
         const initialPosition = await hostPage.evaluate(() => {
@@ -54,23 +54,14 @@ test.describe('Car Movement and Physics', () => {
             gameState._testControlsOverride = true;
         });
 
-        // Set controls directly on the car
-        for (let i = 0; i < 30; i++) {
-            const debug = await hostPage.evaluate((iteration) => {
+        // Set controls directly on the car (reduced iterations and wait time)
+        for (let i = 0; i < 15; i++) {
+            await hostPage.evaluate(() => {
                 // @ts-ignore
-                const game = window.game;
                 const gameState = window.gameState;
                 const carIds = Object.keys(gameState.cars);
-                const engineState = game?.engine?.getState?.() || 'unknown';
-                const loopRunning = game?.engine?.gameLoop?.isRunning?.() || false;
-                const physicsInit = game?.systems?.physics?.initialized || false;
-                const vehicleCount = game?.vehicles?.size || 0;
-
                 if (carIds.length > 0) {
                     const car = gameState.cars[carIds[0]];
-                    const vehicle = game?.vehicles?.get(carIds[0]);
-                    const vehicleControls = vehicle?.controls;
-
                     // Force set controls
                     car.controls = {
                         acceleration: 1.0,
@@ -78,25 +69,13 @@ test.describe('Car Movement and Physics', () => {
                         steering: 0
                     };
                     car.lastControlUpdate = Date.now();
-
-                    return {
-                        engineState, loopRunning, physicsInit, vehicleCount,
-                        iteration,
-                        vehicleControlsBefore: vehicleControls,
-                        vehicleControlsAfter: vehicle?.controls,
-                        position: car.mesh?.position ? { x: car.mesh.position.x, z: car.mesh.position.z } : null
-                    };
                 }
-                return { engineState, loopRunning, physicsInit, vehicleCount, iteration };
-            }, i);
-            if (i === 0 || i === 15 || i === 29) {
-                console.log('Debug:', JSON.stringify(debug, null, 2));
-            }
-            await hostPage.waitForTimeout(100);
+            });
+            await hostPage.waitForTimeout(50); // Reduced from 100ms
         }
 
-        // Additional wait for physics
-        await hostPage.waitForTimeout(1000);
+        // Wait for physics to process (reduced from 1000ms)
+        await hostPage.waitForTimeout(300);
 
         // Get final position
         const finalPosition = await hostPage.evaluate(() => {
@@ -147,8 +126,8 @@ test.describe('Car Movement and Physics', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle
-        await hostPage.waitForTimeout(2000);
+        // Let car settle (reduced from 2000ms)
+        await hostPage.waitForTimeout(500);
 
         // Enable test control override to prevent socket from overwriting
         await hostPage.evaluate(() => {
@@ -156,8 +135,8 @@ test.describe('Car Movement and Physics', () => {
             window.gameState._testControlsOverride = true;
         });
 
-        // Accelerate first - set controls continuously for 2 seconds
-        for (let i = 0; i < 20; i++) {
+        // Accelerate first - set controls continuously (reduced iterations)
+        for (let i = 0; i < 10; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
                 const gameState = window.gameState;
@@ -171,7 +150,7 @@ test.describe('Car Movement and Physics', () => {
                     };
                 }
             });
-            await hostPage.waitForTimeout(100);
+            await hostPage.waitForTimeout(50); // Reduced from 100ms
         }
 
         // Get velocity and position while moving
@@ -209,8 +188,8 @@ test.describe('Car Movement and Physics', () => {
         expect(movingState.position.z, 'Car should have moved forward').toBeGreaterThan(-19);
         const movingVelocity = movingState.velocity;
 
-        // Apply brakes - set controls continuously for 2 seconds
-        for (let i = 0; i < 20; i++) {
+        // Apply brakes - set controls continuously (reduced iterations)
+        for (let i = 0; i < 10; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
                 const gameState = window.gameState;
@@ -224,7 +203,7 @@ test.describe('Car Movement and Physics', () => {
                     };
                 }
             });
-            await hostPage.waitForTimeout(100);
+            await hostPage.waitForTimeout(50); // Reduced from 100ms
         }
 
         // Get position after braking

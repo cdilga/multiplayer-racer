@@ -23,6 +23,7 @@ import { InputSystem } from './systems/InputSystem.js';
 import { AudioSystem } from './systems/AudioSystem.js';
 import { RaceSystem } from './systems/RaceSystem.js';
 import { DamageSystem } from './systems/DamageSystem.js';
+import { TrailSystem } from './systems/TrailSystem.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Track } from './entities/Track.js';
 import { LobbyUI } from './ui/LobbyUI.js';
@@ -48,7 +49,8 @@ class GameHost {
             input: null,
             audio: null,
             race: null,
-            damage: null
+            damage: null,
+            trails: null
         };
 
         // Factories
@@ -125,14 +127,27 @@ class GameHost {
         this.systems.audio = new AudioSystem({ eventBus: this.eventBus });
         this.systems.race = new RaceSystem({ eventBus: this.eventBus });
         this.systems.damage = new DamageSystem({ eventBus: this.eventBus });
+        
+        // TrailSystem needs renderSystem, so create after render is initialized
+        // But we'll create it after engine.init() so renderSystem is ready
 
-        // Register systems with engine
+        // Register systems with engine (trails will be registered separately)
         Object.entries(this.systems).forEach(([name, system]) => {
-            this.engine.registerSystem(name, system);
+            if (system) {  // Skip trails for now
+                this.engine.registerSystem(name, system);
+            }
         });
 
         // Initialize engine (initializes all systems)
         await this.engine.init();
+
+        // Create TrailSystem after render is initialized
+        this.systems.trails = new TrailSystem({
+            eventBus: this.eventBus,
+            renderSystem: this.systems.render
+        });
+        await this.systems.trails.init();
+        this.engine.registerSystem('trails', this.systems.trails);
 
         // Create UI
         this._createUI();
@@ -383,6 +398,9 @@ class GameHost {
             // Add vehicle to camera tracking (multi-vehicle camera)
             this.systems.render.addCameraTarget(vehicle);
 
+            // Emit vehicle created event (for TrailSystem and other systems)
+            this.eventBus.emit('vehicle:created', { vehicle });
+
             // Also set as primary target for single-vehicle fallback
             if (this.vehicles.size === 1) {
                 this.systems.render.setCameraTarget(vehicle);
@@ -403,6 +421,9 @@ class GameHost {
 
         const vehicle = this.vehicles.get(data.playerId);
         if (vehicle) {
+            // Emit vehicle removed event (for TrailSystem)
+            this.eventBus.emit('vehicle:removed', { vehicleId: vehicle.id });
+
             // Remove from systems
             this.systems.physics.removeVehicle(vehicle.id);
             this.systems.render.removeMesh(vehicle.id);
