@@ -151,6 +151,14 @@ class LobbyUI {
                                 Post-Processing Effects
                             </label>
                         </div>
+                        <div class="presets-group">
+                            <label>Presets:</label>
+                            <div class="preset-buttons">
+                                <button class="preset-button" id="preset-neon-max">Neon Max</button>
+                                <button class="preset-button" id="preset-mobile-lite">Mobile Lite</button>
+                                <button class="preset-button" id="preset-off">Off</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -190,6 +198,9 @@ class LobbyUI {
         this.elements.bloomValue = this.element.querySelector('#bloom-value');
         this.elements.fogValue = this.element.querySelector('#fog-value');
         this.elements.shakeValue = this.element.querySelector('#shake-value');
+        this.elements.presetNeonMax = this.element.querySelector('#preset-neon-max');
+        this.elements.presetMobileLite = this.element.querySelector('#preset-mobile-lite');
+        this.elements.presetOff = this.element.querySelector('#preset-off');
 
         // Setup start button handler
         if (this.elements.startButton) {
@@ -301,6 +312,23 @@ class LobbyUI {
                 this._updateVisualSetting('postProcessing', e.target.checked);
             });
         }
+
+        // Preset buttons
+        if (this.elements.presetNeonMax) {
+            this.elements.presetNeonMax.addEventListener('click', () => {
+                this._applyPreset('neonMax');
+            });
+        }
+        if (this.elements.presetMobileLite) {
+            this.elements.presetMobileLite.addEventListener('click', () => {
+                this._applyPreset('mobileLite');
+            });
+        }
+        if (this.elements.presetOff) {
+            this.elements.presetOff.addEventListener('click', () => {
+                this._applyPreset('off');
+            });
+        }
     }
 
     /**
@@ -347,6 +375,79 @@ class LobbyUI {
         if (this.eventBus) {
             this.eventBus.emit('visualSettings:changed', { setting, value });
         }
+    }
+
+    /**
+     * Apply a visual settings preset
+     * @private
+     * @param {string} presetName - 'neonMax', 'mobileLite', or 'off'
+     */
+    _applyPreset(presetName) {
+        let preset;
+
+        switch (presetName) {
+            case 'neonMax':
+                // Maximum visual impact - all effects at max
+                preset = {
+                    bloom: 2.0,
+                    fog: 0.012,
+                    shake: 0.2,
+                    postProcessing: true
+                };
+                break;
+            case 'mobileLite':
+                // Performance-optimized settings for mobile
+                preset = {
+                    bloom: 0.8,
+                    fog: 0.005,
+                    shake: 0.1,
+                    postProcessing: true
+                };
+                break;
+            case 'off':
+                // Minimal effects for maximum performance
+                preset = {
+                    bloom: 0,
+                    fog: 0,
+                    shake: 0,
+                    postProcessing: false
+                };
+                break;
+            default:
+                console.warn(`Unknown preset: ${presetName}`);
+                return;
+        }
+
+        // Apply each setting
+        this.visualSettings = { ...this.visualSettings, ...preset };
+
+        // Update UI sliders to reflect preset values
+        if (this.elements.bloomSlider) {
+            this.elements.bloomSlider.value = preset.bloom.toString();
+            if (this.elements.bloomValue) {
+                this.elements.bloomValue.textContent = preset.bloom.toFixed(1);
+            }
+        }
+        if (this.elements.fogSlider) {
+            this.elements.fogSlider.value = preset.fog.toString();
+            if (this.elements.fogValue) {
+                this.elements.fogValue.textContent = preset.fog.toFixed(3);
+            }
+        }
+        if (this.elements.shakeSlider) {
+            this.elements.shakeSlider.value = preset.shake.toString();
+            if (this.elements.shakeValue) {
+                this.elements.shakeValue.textContent = preset.shake.toFixed(2);
+            }
+        }
+        if (this.elements.postProcessingToggle) {
+            this.elements.postProcessingToggle.checked = preset.postProcessing;
+        }
+
+        // Apply all settings to render system
+        this._applyVisualSettings();
+
+        console.log(`Applied preset: ${presetName}`);
     }
 
     /**
@@ -543,6 +644,39 @@ class LobbyUI {
                 width: 18px;
                 height: 18px;
                 accent-color: #FF6B6B;
+            }
+            .presets-group {
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #4a2510;
+            }
+            .presets-group label {
+                display: block;
+                color: #c9a887;
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+            .preset-buttons {
+                display: flex;
+                gap: 10px;
+            }
+            .preset-button {
+                flex: 1;
+                background: #4a2510;
+                color: #c9a887;
+                border: 1px solid #6a3015;
+                padding: 8px 12px;
+                font-size: 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .preset-button:hover {
+                background: #6a3015;
+                color: #fff;
+            }
+            .preset-button:active {
+                transform: scale(0.95);
             }
             .start-button {
                 background: #FF6B6B;

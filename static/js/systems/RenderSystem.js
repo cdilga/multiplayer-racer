@@ -51,13 +51,20 @@ class RenderSystem {
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
-        this.targetFOV = 60;  // Target field of view
-        this.currentFOV = 60;  // Current FOV (smoothed)
+        this.baseFOV = 50;  // Base field of view (reduced for tighter framing)
+        this.targetFOV = 50;  // Target field of view
+        this.currentFOV = 50;  // Current FOV (smoothed)
         this.fovSmoothing = 0.15;  // FOV transition speed (higher = faster)
         this.cameraMultiSmoothing = 0.15;  // Multi-vehicle camera position smoothing
-        this.minFOV = 30;  // Minimum FOV (most zoomed in)
-        this.maxFOV = 100;  // Maximum FOV (most zoomed out)
-        this.boundsPadding = 15;  // Padding around vehicle bounds (in world units)
+        this.minFOV = 45;  // Minimum FOV (most zoomed in)
+        this.maxFOV = 60;  // Maximum FOV (slightly zoomed out) - narrower range
+        this.boundsPadding = 10;  // Padding around vehicle bounds (in world units)
+        this.baseCameraHeight = 15;  // Base camera height
+        this.baseCameraDepth = 20;   // Base camera depth (distance behind center)
+        this.minCameraDepth = 15;    // Minimum distance
+        this.maxCameraDepth = 80;    // Maximum distance (for zooming out)
+        this.targetCameraDepth = 20; // Current target depth
+        this.currentCameraDepth = 20; // Current depth (smoothed)
 
         // Camera shake effect (speed-based and collision-based)
         this.cameraShake = {
@@ -108,7 +115,7 @@ class RenderSystem {
         // Create camera
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.PerspectiveCamera(
-            this.cameraConfig.fov || 60,
+            this.cameraConfig.fov || this.baseFOV,
             aspect,
             this.cameraConfig.near || 0.1,
             this.cameraConfig.far || 1000
@@ -391,6 +398,7 @@ class RenderSystem {
 
     /**
      * Update camera to keep all tracked vehicles in view
+     * Uses dynamic camera distance calculation with 3D geometry
      * @private
      */
     _updateMultiVehicleCamera(dt) {
@@ -412,19 +420,26 @@ class RenderSystem {
         this.cameraLookTarget.y += (center.y - this.cameraLookTarget.y) * this.cameraMultiSmoothing;
         this.cameraLookTarget.z += (center.z - this.cameraLookTarget.z) * this.cameraMultiSmoothing;
 
-        // Calculate required FOV to fit all vehicles
-        this.targetFOV = this._calculateRequiredFOV(bounds, center);
+        // Calculate required camera distance and FOV based on bounding box and window dimensions
+        const { distance, fov } = this._calculateOptimalCameraPosition(bounds, center);
 
-        // Smooth FOV transition
+        // Update target values
+        this.targetCameraDepth = distance;
+        this.targetFOV = fov;
+
+        // Smooth transitions
+        this.currentCameraDepth += (this.targetCameraDepth - this.currentCameraDepth) * this.cameraMultiSmoothing;
         this.currentFOV += (this.targetFOV - this.currentFOV) * this.fovSmoothing;
+
+        // Update camera FOV
         this.camera.fov = this.currentFOV;
         this.camera.updateProjectionMatrix();
 
-        // Calculate camera position (above and behind center)
+        // Calculate camera position (above and behind center, at calculated distance)
         const desiredPos = {
             x: this.cameraLookTarget.x + this.cameraOffset.x,
-            y: this.cameraLookTarget.y + this.cameraOffset.y,
-            z: this.cameraLookTarget.z + this.cameraOffset.z
+            y: this.cameraLookTarget.y + this.baseCameraHeight,
+            z: this.cameraLookTarget.z + this.currentCameraDepth  // Dynamic distance
         };
 
         // Smooth camera movement (use multi-vehicle smoothing which is faster)
@@ -553,32 +568,78 @@ class RenderSystem {
     }
 
     /**
-     * Calculate the FOV needed to fit all vehicles in view
+     * Calculate optimal camera position and FOV to fit all vehicles
+     * Uses window dimensions and 3D frustum calculations
      * @private
-     * @param {Object} bounds - Bounding box
-     * @param {Object} center - Center point
-     * @returns {number} Required FOV in degrees
+     * @param {Object} bounds - Bounding box of all vehicles
+     * @param {Object} center - Center point of all vehicles
+     * @returns {Object} { distance: number, fov: number }
      */
-    _calculateRequiredFOV(bounds, center) {
-        // Calculate the size of the area to view
-        const width = bounds.max.x - bounds.min.x;
-        const depth = bounds.max.z - bounds.min.z;
+    _calculateOptimalCameraPosition(bounds, center) {
+        // Get window dimensions
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const aspect = windowWidth / windowHeight;
 
-        // Use the larger dimension
-        const maxSpan = Math.max(width, depth);
+        // Calculate bounding box dimensions in world space
+        const boundsWidth = bounds.max.x - bounds.min.x;
+        const boundsDepth = bounds.max.z - bounds.min.z;
+        const boundsHeight = bounds.max.y - bounds.min.y;
 
-        // Calculate distance from camera to center (approximation)
-        const cameraHeight = this.cameraOffset.y;
-        const cameraDepth = this.cameraOffset.z;
-        const distance = Math.sqrt(cameraHeight * cameraHeight + cameraDepth * cameraDepth);
+        // For top-down-ish camera, we care about horizontal (x) and forward (z) spread
+        // The camera looks down at an angle, so we need to account for projection
 
-        // Calculate required FOV using trigonometry
-        // FOV = 2 * atan(halfWidth / distance)
-        const halfSpan = maxSpan / 2;
-        const requiredFOV = 2 * Math.atan(halfSpan / distance) * (180 / Math.PI);
+        // Camera angle from vertical (we're at height=15, looking down)
+        const cameraHeight = this.baseCameraHeight;
+
+        // Calculate the effective size we need to fit in view
+        // We need to fit both the width and depth, considering the camera angle
+        const effectiveWidth = boundsWidth;
+        const effectiveDepth = boundsDepth;
+
+        // Calculate required distance for horizontal constraint (width)
+        // Using frustum geometry: width = 2 * distance * tan(fov/2) * aspect
+        // Solving for distance: distance = width / (2 * tan(fov/2) * aspect)
+        const fovRad = this.baseFOV * (Math.PI / 180);
+        const halfFovTan = Math.tan(fovRad / 2);
+
+        // Calculate distance needed for width constraint
+        const distanceForWidth = (effectiveWidth / 2) / (halfFovTan * aspect);
+
+        // Calculate distance needed for depth constraint
+        // We need to ensure the forward/backward spread is visible
+        const distanceForDepth = (effectiveDepth / 2) / halfFovTan;
+
+        // Use the larger distance to ensure everything fits
+        let requiredDistance = Math.max(distanceForWidth, distanceForDepth);
+
+        // Add extra distance for the camera height (pythagoras)
+        // The actual distance from camera to center includes the height component
+        const diagonalDistance = Math.sqrt(requiredDistance * requiredDistance + cameraHeight * cameraHeight);
+
+        // Add some margin for safety
+        const margin = 1.2; // 20% extra space
+        requiredDistance = diagonalDistance * margin;
 
         // Clamp to min/max bounds
-        return Math.max(this.minFOV, Math.min(this.maxFOV, requiredFOV));
+        const clampedDistance = Math.max(this.minCameraDepth, Math.min(this.maxCameraDepth, requiredDistance));
+
+        // Calculate FOV adjustment if distance is maxed out
+        // If we've hit max distance, increase FOV slightly to fit everything
+        let adjustedFOV = this.baseFOV;
+        if (requiredDistance > this.maxCameraDepth) {
+            // Need wider FOV to compensate
+            const fovIncrease = Math.min(10, (requiredDistance - this.maxCameraDepth) / 2);
+            adjustedFOV = this.baseFOV + fovIncrease;
+        }
+
+        // Clamp FOV to limits
+        adjustedFOV = Math.max(this.minFOV, Math.min(this.maxFOV, adjustedFOV));
+
+        return {
+            distance: clampedDistance,
+            fov: adjustedFOV
+        };
     }
 
     /**
