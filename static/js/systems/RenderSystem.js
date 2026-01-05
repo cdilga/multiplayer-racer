@@ -59,6 +59,25 @@ class RenderSystem {
         this.maxFOV = 100;  // Maximum FOV (most zoomed out)
         this.boundsPadding = 15;  // Padding around vehicle bounds (in world units)
 
+        // Camera shake effect (speed-based and collision-based)
+        this.cameraShake = {
+            enabled: true,
+            intensity: 0.15,          // Maximum shake intensity
+            speedThreshold: 60,       // km/h - speed above which shake activates
+            currentOffset: { x: 0, y: 0, z: 0 },
+            decayRate: 0.9,           // How quickly shake decays
+            collisionIntensity: 0.5,  // Extra shake on collision
+            time: 0                   // Internal time counter for noise
+        };
+
+        // Headlight flicker effect
+        this.headlightFlicker = {
+            enabled: true,
+            speedThreshold: 80,       // km/h - speed above which flicker activates
+            flickerChance: 0.1,       // Chance per frame to flicker
+            flickerIntensity: 0.3     // How much intensity varies
+        };
+
         // Tracked meshes
         this.meshes = new Map();  // entityId -> mesh
 
@@ -365,6 +384,9 @@ class RenderSystem {
             z: targetPos.z + this.cameraLookOffset.z
         };
         this.camera.lookAt(lookAt.x, lookAt.y, lookAt.z);
+
+        // Apply camera shake effect
+        this._applyCameraShake(dt);
     }
 
     /**
@@ -416,6 +438,78 @@ class RenderSystem {
             this.cameraLookTarget.y + this.cameraLookOffset.y,
             this.cameraLookTarget.z + this.cameraLookOffset.z
         );
+
+        // Apply camera shake effect
+        this._applyCameraShake(dt);
+    }
+
+    /**
+     * Apply speed-based camera shake effect
+     * Uses pseudo-Perlin noise for smooth, organic shake motion
+     * @private
+     * @param {number} dt - Delta time in seconds
+     */
+    _applyCameraShake(dt) {
+        if (!this.cameraShake.enabled) return;
+
+        // Get maximum speed from all tracked vehicles
+        const maxSpeed = this._getMaxVehicleSpeed();
+
+        // Only shake above speed threshold
+        if (maxSpeed < this.cameraShake.speedThreshold) {
+            // Decay any existing shake
+            this.cameraShake.currentOffset.x *= this.cameraShake.decayRate;
+            this.cameraShake.currentOffset.y *= this.cameraShake.decayRate;
+            this.cameraShake.currentOffset.z *= this.cameraShake.decayRate;
+            return;
+        }
+
+        // Calculate shake intensity based on speed (0 to 1)
+        const speedFactor = Math.min(
+            (maxSpeed - this.cameraShake.speedThreshold) / 100,
+            1.0
+        );
+        const intensity = this.cameraShake.intensity * speedFactor;
+
+        // Update time for noise
+        this.cameraShake.time += dt * 10;
+        const t = this.cameraShake.time;
+
+        // Generate smooth noise using multiple sine waves (pseudo-Perlin)
+        const noiseX = Math.sin(t * 1.7) * 0.5 + Math.sin(t * 3.2) * 0.3 + Math.sin(t * 5.1) * 0.2;
+        const noiseY = Math.sin(t * 2.3) * 0.5 + Math.sin(t * 4.1) * 0.3 + Math.sin(t * 6.7) * 0.2;
+        const noiseZ = Math.sin(t * 1.9) * 0.4 + Math.sin(t * 3.8) * 0.35 + Math.sin(t * 5.5) * 0.25;
+
+        // Set target offset
+        this.cameraShake.currentOffset.x = noiseX * intensity;
+        this.cameraShake.currentOffset.y = noiseY * intensity * 0.5; // Less vertical shake
+        this.cameraShake.currentOffset.z = noiseZ * intensity * 0.3; // Even less depth shake
+
+        // Apply offset to camera position
+        this.camera.position.x += this.cameraShake.currentOffset.x;
+        this.camera.position.y += this.cameraShake.currentOffset.y;
+        this.camera.position.z += this.cameraShake.currentOffset.z;
+    }
+
+    /**
+     * Get the maximum speed of all tracked vehicles in km/h
+     * @private
+     * @returns {number} Maximum speed in km/h
+     */
+    _getMaxVehicleSpeed() {
+        let maxSpeed = 0;
+        const targets = this.cameraTargets.length > 0 ? this.cameraTargets :
+                        (this.cameraTarget ? [this.cameraTarget] : []);
+
+        for (const target of targets) {
+            if (target.rigidBody) {
+                const vel = target.rigidBody.linvel();
+                const speedMps = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+                const speedKmh = speedMps * 3.6;
+                maxSpeed = Math.max(maxSpeed, speedKmh);
+            }
+        }
+        return maxSpeed;
     }
 
     /**

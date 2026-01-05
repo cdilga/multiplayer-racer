@@ -122,4 +122,35 @@ test.describe('Visual Effects', () => {
             expect(postProcessing.hasBloom).toBe(true);
         }
     });
+
+    test('should have camera shake config available', async ({ hostPage }) => {
+        // Host creates room (this initializes the game)
+        await hostPage.goto('/');
+        await waitForRoomCode(hostPage);
+
+        // Wait for game to fully initialize
+        await hostPage.waitForFunction(
+            () => {
+                // @ts-ignore
+                const game = window.game;
+                return game?.systems?.render?.initialized === true;
+            },
+            { timeout: 15000 }
+        );
+
+        // Verify camera shake config exists
+        const shakeConfig = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const game = window.game;
+            const render = game?.systems?.render;
+            return {
+                hasShakeConfig: render?.cameraShake !== undefined,
+                shakeIntensity: render?.cameraShake?.intensity,
+                shakeEnabled: render?.cameraShake?.enabled
+            };
+        });
+
+        console.log('Camera shake config:', JSON.stringify(shakeConfig, null, 2));
+        expect(shakeConfig.hasShakeConfig).toBe(true);
+    });
 });
