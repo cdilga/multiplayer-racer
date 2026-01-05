@@ -73,6 +73,7 @@ class GameHost {
         // Game state
         this.roomCode = null;
         this.settings = {
+            mode: 'race',
             laps: 3,
             damageEnabled: true,
             track: 'oval',
@@ -439,6 +440,11 @@ class GameHost {
     _onStartGame(options) {
         console.log('GameHost: Starting game with options:', options);
 
+        if (options.mode) {
+            this.settings.mode = options.mode;
+            this.systems.race.setMode(options.mode);
+        }
+
         if (options.laps) {
             this.settings.laps = options.laps;
             this.systems.race.setLaps(options.laps);
@@ -454,7 +460,7 @@ class GameHost {
         }
 
         // Notify network
-        this.systems.network.startGame({ laps: this.settings.laps });
+        this.systems.network.startGame({ mode: this.settings.mode, laps: this.settings.laps });
 
         // Update race UI
         this.ui.race.setTotalLaps(this.settings.laps);

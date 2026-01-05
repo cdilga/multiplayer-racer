@@ -79,6 +79,14 @@ class LobbyUI {
 
                 <div class="settings-section">
                     <label>
+                        Mode:
+                        <select id="mode-select">
+                            <option value="race" selected>Race</option>
+                            <option value="derby" disabled>Derby (Coming Soon)</option>
+                            <option value="fight" disabled>Fight (Coming Soon)</option>
+                        </select>
+                    </label>
+                    <label style="margin-left: 20px;">
                         Laps:
                         <select id="laps-select">
                             <option value="1">1</option>
@@ -112,6 +120,7 @@ class LobbyUI {
         this.elements.joinUrl = this.element.querySelector('#join-url');
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
+        this.elements.modeSelect = this.element.querySelector('#mode-select');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
 
@@ -119,8 +128,9 @@ class LobbyUI {
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
                 if (this.onStartGame) {
+                    const mode = this.elements.modeSelect?.value || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
-                    this.onStartGame({ laps });
+                    this.onStartGame({ mode, laps });
                 }
             });
         }

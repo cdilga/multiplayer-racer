@@ -92,8 +92,18 @@ export async function joinGameAsPlayer(
 
 // Helper to start game from host
 export async function startGameFromHost(hostPage: Page): Promise<void> {
-    // Wait for start button to be enabled
-    await hostPage.waitForSelector('#start-game-btn:not([disabled])', { timeout: 10000 });
+    // Wait for start button to be enabled by checking it's not disabled
+    // First wait for the button to exist
+    await hostPage.waitForSelector('#start-game-btn', { timeout: 10000 });
+
+    // Wait until button is enabled (not having disabled attribute)
+    await hostPage.waitForFunction(
+        () => {
+            const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
+            return btn && !btn.disabled;
+        },
+        { timeout: 10000 }
+    );
 
     // Click start button
     await hostPage.click('#start-game-btn');
