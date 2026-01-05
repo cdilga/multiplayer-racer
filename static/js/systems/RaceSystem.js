@@ -26,6 +26,7 @@ class RaceSystem {
             (typeof window !== 'undefined' ? window.eventBus : null);
         this.track = options.track || null;
         this.totalLaps = options.laps || 3;
+        this.mode = options.mode || 'race';
 
         // Race state
         this.state = 'idle';  // idle, countdown, racing, finished
@@ -64,6 +65,15 @@ class RaceSystem {
     setTrack(track) {
         this.track = track;
         this.totalLaps = track.defaultLaps || this.totalLaps;
+    }
+
+    /**
+     * Set game mode
+     * @param {string} mode - 'race', 'derby', 'fight'
+     */
+    setMode(mode) {
+        this.mode = mode;
+        console.log('RaceSystem: Mode set to', mode);
     }
 
     /**
