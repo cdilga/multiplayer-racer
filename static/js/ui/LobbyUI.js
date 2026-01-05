@@ -376,7 +376,7 @@ class LobbyUI {
                 display: none;
             }
             .lobby-content {
-                background: #1a1a2e;
+                background: #2a1510;
                 border-radius: 20px;
                 padding: 40px;
                 text-align: center;
@@ -387,27 +387,27 @@ class LobbyUI {
             .lobby-title {
                 font-size: 32px;
                 margin: 0 0 30px;
-                color: #00d4ff;
+                color: #FFD93D;
             }
             .room-code-section {
                 margin-bottom: 30px;
             }
             .room-code-label {
                 margin: 0;
-                color: #888;
+                color: #c9a887;
                 font-size: 14px;
             }
             .room-code {
                 font-size: 48px;
                 font-weight: bold;
                 letter-spacing: 8px;
-                color: #00ff88;
+                color: #FF6B6B;
                 margin: 10px 0;
                 font-family: monospace;
             }
             .room-code-hint {
                 margin: 0;
-                color: #666;
+                color: #8a6f5a;
                 font-size: 12px;
             }
             .qr-code {
@@ -427,7 +427,7 @@ class LobbyUI {
             .players-section h2 {
                 font-size: 18px;
                 margin: 0 0 15px;
-                color: #aaa;
+                color: #c9a887;
             }
             .player-list {
                 list-style: none;
@@ -438,7 +438,7 @@ class LobbyUI {
             }
             .player-list li {
                 padding: 10px 15px;
-                background: #16213e;
+                background: #3a2015;
                 border-radius: 8px;
                 margin-bottom: 8px;
                 display: flex;
@@ -458,19 +458,19 @@ class LobbyUI {
                 margin-bottom: 30px;
             }
             .settings-section label {
-                color: #888;
+                color: #c9a887;
             }
             .settings-section select {
-                background: #16213e;
+                background: #3a2015;
                 color: white;
-                border: 1px solid #333;
+                border: 1px solid #4a2510;
                 padding: 8px 15px;
                 border-radius: 5px;
                 margin-left: 10px;
             }
             .visual-settings-section {
                 margin-bottom: 20px;
-                background: #16213e;
+                background: #3a2015;
                 border-radius: 10px;
                 overflow: hidden;
             }
@@ -478,7 +478,7 @@ class LobbyUI {
                 margin: 0;
                 padding: 12px 15px;
                 font-size: 14px;
-                color: #888;
+                color: #c9a887;
                 cursor: pointer;
                 display: flex;
                 justify-content: space-between;
@@ -486,7 +486,7 @@ class LobbyUI {
                 transition: background 0.2s;
             }
             .visual-settings-header:hover {
-                background: #1e2a4a;
+                background: #4a2510;
             }
             .toggle-arrow {
                 font-size: 12px;
@@ -497,7 +497,7 @@ class LobbyUI {
             }
             .visual-settings-content {
                 padding: 15px;
-                border-top: 1px solid #333;
+                border-top: 1px solid #4a2510;
             }
             .visual-settings-section.collapsed .visual-settings-content {
                 display: none;
@@ -508,7 +508,7 @@ class LobbyUI {
             .slider-group label {
                 display: flex;
                 justify-content: space-between;
-                color: #888;
+                color: #c9a887;
                 font-size: 13px;
                 margin-bottom: 5px;
             }
@@ -516,7 +516,7 @@ class LobbyUI {
                 width: 100%;
                 height: 6px;
                 -webkit-appearance: none;
-                background: #333;
+                background: #4a2510;
                 border-radius: 3px;
                 outline: none;
             }
@@ -524,7 +524,7 @@ class LobbyUI {
                 -webkit-appearance: none;
                 width: 16px;
                 height: 16px;
-                background: #00ff88;
+                background: #FF6B6B;
                 border-radius: 50%;
                 cursor: pointer;
             }
@@ -535,18 +535,18 @@ class LobbyUI {
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                color: #888;
+                color: #c9a887;
                 font-size: 13px;
                 cursor: pointer;
             }
             .toggle-group input[type="checkbox"] {
                 width: 18px;
                 height: 18px;
-                accent-color: #00ff88;
+                accent-color: #FF6B6B;
             }
             .start-button {
-                background: #00ff88;
-                color: #1a1a2e;
+                background: #FF6B6B;
+                color: #1a0f0a;
                 border: none;
                 padding: 15px 40px;
                 font-size: 18px;
@@ -556,12 +556,12 @@ class LobbyUI {
                 transition: all 0.2s;
             }
             .start-button:disabled {
-                background: #333;
-                color: #666;
+                background: #4a2510;
+                color: #8a6f5a;
                 cursor: not-allowed;
             }
             .start-button:not(:disabled):hover {
-                background: #00cc6a;
+                background: #FF8800;
                 transform: scale(1.05);
             }
         `;

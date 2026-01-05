@@ -97,10 +97,10 @@ class RenderSystem {
 
         // Create scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x0a0a1a);  // Dark cyberpunk sky
+        this.scene.background = new THREE.Color(0x1a0f0a);  // Midnight (Sunset Neon theme)
 
         // Add fog for atmosphere (FogExp2 for exponential density)
-        this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.008);
+        this.scene.fog = new THREE.FogExp2(0x1a0f0a, 0.008);
 
         // Create sky dome
         this._createSkyDome();
@@ -214,13 +214,13 @@ class RenderSystem {
      * @private
      */
     _setupDefaultLighting() {
-        // Ambient light - dimmer for cyberpunk atmosphere
-        const ambient = new THREE.AmbientLight(0x4444ff, 0.3);
+        // Ambient light - warm amber for sunset atmosphere
+        const ambient = new THREE.AmbientLight(0xffaa44, 0.3);
         this.scene.add(ambient);
         this.lights.ambient = ambient;
 
-        // Directional light (moon/neon glow)
-        const directional = new THREE.DirectionalLight(0x6666ff, 0.5);
+        // Directional light (golden sun)
+        const directional = new THREE.DirectionalLight(0xffcc66, 0.5);
         directional.position.set(50, 100, 50);
         directional.castShadow = true;
 
@@ -249,9 +249,9 @@ class RenderSystem {
         // Custom shader material for gradient sky
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                topColor: { value: new THREE.Color(0x0a0a2e) },     // Deep dark blue
-                bottomColor: { value: new THREE.Color(0x1a0a2e) },  // Purple-tinted dark
-                horizonColor: { value: new THREE.Color(0x2a1a4e) }, // Electric purple horizon
+                topColor: { value: new THREE.Color(0x6a3015) },     // Sunset Peak (burnt orange)
+                bottomColor: { value: new THREE.Color(0x0f0a1a) },  // Sky Base (deep indigo)
+                horizonColor: { value: new THREE.Color(0x4a2510) }, // Horizon Glow (warm orange)
                 offset: { value: 33 },
                 exponent: { value: 0.6 }
             },
