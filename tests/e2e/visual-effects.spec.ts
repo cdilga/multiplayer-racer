@@ -186,4 +186,49 @@ test.describe('Visual Effects', () => {
         expect(visualSettings.hasFogSlider).toBe(true);
         expect(visualSettings.hasShakeSlider).toBe(true);
     });
+
+    test('should persist visual settings to localStorage', async ({ hostPage }) => {
+        // Set custom localStorage value before navigating
+        await hostPage.goto('/');
+
+        // First set some custom values in localStorage
+        await hostPage.evaluate(() => {
+            localStorage.setItem('visualSettings', JSON.stringify({
+                bloom: 1.5,
+                fog: 0.012,
+                shake: 0.25,
+                postProcessing: false
+            }));
+        });
+
+        // Reload the page to trigger loading from localStorage
+        await hostPage.reload();
+        await waitForRoomCode(hostPage);
+
+        // Verify sliders have loaded values from localStorage
+        const loadedSettings = await hostPage.evaluate(() => {
+            const bloomSlider = document.querySelector('#bloom-intensity-slider') as HTMLInputElement;
+            const fogSlider = document.querySelector('#fog-density-slider') as HTMLInputElement;
+            const shakeSlider = document.querySelector('#camera-shake-slider') as HTMLInputElement;
+            const postProcessingToggle = document.querySelector('#post-processing-toggle') as HTMLInputElement;
+
+            return {
+                bloomValue: parseFloat(bloomSlider?.value || '0'),
+                fogValue: parseFloat(fogSlider?.value || '0'),
+                shakeValue: parseFloat(shakeSlider?.value || '0'),
+                postProcessingEnabled: postProcessingToggle?.checked
+            };
+        });
+
+        console.log('Loaded settings from localStorage:', JSON.stringify(loadedSettings, null, 2));
+        expect(loadedSettings.bloomValue).toBe(1.5);
+        expect(loadedSettings.fogValue).toBe(0.012);
+        expect(loadedSettings.shakeValue).toBe(0.25);
+        expect(loadedSettings.postProcessingEnabled).toBe(false);
+
+        // Clean up
+        await hostPage.evaluate(() => {
+            localStorage.removeItem('visualSettings');
+        });
+    });
 });

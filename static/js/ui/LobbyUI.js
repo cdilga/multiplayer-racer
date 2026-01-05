@@ -12,6 +12,8 @@
  *   lobby.show();
  */
 
+const VISUAL_SETTINGS_STORAGE_KEY = 'visualSettings';
+
 class LobbyUI {
     /**
      * @param {Object} options
@@ -29,6 +31,14 @@ class LobbyUI {
         this.players = [];
         this.minPlayersToStart = 1;
 
+        // Default visual settings
+        this.visualSettings = {
+            bloom: 1.0,
+            fog: 0.008,
+            shake: 0.15,
+            postProcessing: true
+        };
+
         // Elements
         this.element = null;
         this.elements = {};
@@ -41,8 +51,37 @@ class LobbyUI {
      * Initialize lobby UI
      */
     init() {
+        this._loadVisualSettingsFromStorage();
         this._createElements();
         this._subscribeToEvents();
+    }
+
+    /**
+     * Load visual settings from localStorage
+     * @private
+     */
+    _loadVisualSettingsFromStorage() {
+        try {
+            const stored = localStorage.getItem(VISUAL_SETTINGS_STORAGE_KEY);
+            if (stored) {
+                const settings = JSON.parse(stored);
+                this.visualSettings = { ...this.visualSettings, ...settings };
+            }
+        } catch (e) {
+            console.warn('Failed to load visual settings from localStorage:', e);
+        }
+    }
+
+    /**
+     * Save visual settings to localStorage
+     * @private
+     */
+    _saveVisualSettingsToStorage() {
+        try {
+            localStorage.setItem(VISUAL_SETTINGS_STORAGE_KEY, JSON.stringify(this.visualSettings));
+        } catch (e) {
+            console.warn('Failed to save visual settings to localStorage:', e);
+        }
     }
 
     /**
@@ -171,6 +210,51 @@ class LobbyUI {
 
         // Setup visual settings sliders
         this._setupVisualSettingsListeners();
+
+        // Initialize slider values from loaded settings
+        this._initializeSliderValues();
+    }
+
+    /**
+     * Initialize slider values from loaded settings
+     * @private
+     */
+    _initializeSliderValues() {
+        if (this.elements.bloomSlider) {
+            this.elements.bloomSlider.value = this.visualSettings.bloom.toString();
+            if (this.elements.bloomValue) {
+                this.elements.bloomValue.textContent = this.visualSettings.bloom.toFixed(1);
+            }
+        }
+        if (this.elements.fogSlider) {
+            this.elements.fogSlider.value = this.visualSettings.fog.toString();
+            if (this.elements.fogValue) {
+                this.elements.fogValue.textContent = this.visualSettings.fog.toFixed(3);
+            }
+        }
+        if (this.elements.shakeSlider) {
+            this.elements.shakeSlider.value = this.visualSettings.shake.toString();
+            if (this.elements.shakeValue) {
+                this.elements.shakeValue.textContent = this.visualSettings.shake.toFixed(2);
+            }
+        }
+        if (this.elements.postProcessingToggle) {
+            this.elements.postProcessingToggle.checked = this.visualSettings.postProcessing;
+        }
+
+        // Apply loaded settings to the RenderSystem
+        this._applyVisualSettings();
+    }
+
+    /**
+     * Apply all visual settings to the RenderSystem
+     * @private
+     */
+    _applyVisualSettings() {
+        this._updateVisualSetting('bloom', this.visualSettings.bloom);
+        this._updateVisualSetting('fog', this.visualSettings.fog);
+        this._updateVisualSetting('shake', this.visualSettings.shake);
+        this._updateVisualSetting('postProcessing', this.visualSettings.postProcessing);
     }
 
     /**
@@ -226,6 +310,12 @@ class LobbyUI {
      * @param {number|boolean} value - Setting value
      */
     _updateVisualSetting(setting, value) {
+        // Update internal state
+        this.visualSettings[setting] = value;
+
+        // Save to localStorage
+        this._saveVisualSettingsToStorage();
+
         // Access game through window.game
         const render = window.game?.systems?.render;
         if (!render) return;
