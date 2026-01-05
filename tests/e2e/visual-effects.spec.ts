@@ -153,4 +153,37 @@ test.describe('Visual Effects', () => {
         console.log('Camera shake config:', JSON.stringify(shakeConfig, null, 2));
         expect(shakeConfig.hasShakeConfig).toBe(true);
     });
+
+    test('should have visual settings controls in lobby', async ({ hostPage }) => {
+        // Host creates room (this initializes the game)
+        await hostPage.goto('/');
+        await waitForRoomCode(hostPage);
+
+        // Verify visual settings section exists in lobby
+        const visualSettings = await hostPage.evaluate(() => {
+            const section = document.querySelector('.visual-settings-section');
+            const bloomSlider = document.querySelector('#bloom-intensity-slider') as HTMLInputElement;
+            const fogSlider = document.querySelector('#fog-density-slider') as HTMLInputElement;
+            const shakeSlider = document.querySelector('#camera-shake-slider') as HTMLInputElement;
+            const postProcessingToggle = document.querySelector('#post-processing-toggle') as HTMLInputElement;
+
+            return {
+                hasSection: section !== null,
+                hasBloomSlider: bloomSlider !== null,
+                hasFogSlider: fogSlider !== null,
+                hasShakeSlider: shakeSlider !== null,
+                hasPostProcessingToggle: postProcessingToggle !== null,
+                bloomValue: bloomSlider?.value,
+                fogValue: fogSlider?.value,
+                shakeValue: shakeSlider?.value,
+                postProcessingEnabled: postProcessingToggle?.checked
+            };
+        });
+
+        console.log('Visual settings in lobby:', JSON.stringify(visualSettings, null, 2));
+        expect(visualSettings.hasSection).toBe(true);
+        expect(visualSettings.hasBloomSlider).toBe(true);
+        expect(visualSettings.hasFogSlider).toBe(true);
+        expect(visualSettings.hasShakeSlider).toBe(true);
+    });
 });

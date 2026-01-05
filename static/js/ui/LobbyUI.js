@@ -89,6 +89,32 @@ class LobbyUI {
                     </label>
                 </div>
 
+                <div class="visual-settings-section">
+                    <h3 class="visual-settings-header" id="visual-settings-toggle">
+                        Visual Settings <span class="toggle-arrow">▼</span>
+                    </h3>
+                    <div class="visual-settings-content" id="visual-settings-content">
+                        <div class="slider-group">
+                            <label for="bloom-intensity-slider">Bloom: <span id="bloom-value">1.0</span></label>
+                            <input type="range" id="bloom-intensity-slider" min="0" max="2" step="0.1" value="1">
+                        </div>
+                        <div class="slider-group">
+                            <label for="fog-density-slider">Fog: <span id="fog-value">0.008</span></label>
+                            <input type="range" id="fog-density-slider" min="0" max="0.02" step="0.001" value="0.008">
+                        </div>
+                        <div class="slider-group">
+                            <label for="camera-shake-slider">Camera Shake: <span id="shake-value">0.15</span></label>
+                            <input type="range" id="camera-shake-slider" min="0" max="0.5" step="0.05" value="0.15">
+                        </div>
+                        <div class="toggle-group">
+                            <label for="post-processing-toggle">
+                                <input type="checkbox" id="post-processing-toggle" checked>
+                                Post-Processing Effects
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="start-button" id="start-game-btn" disabled>
                     Waiting for players...
                 </button>
@@ -115,6 +141,17 @@ class LobbyUI {
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
 
+        // Visual settings elements
+        this.elements.visualSettingsSection = this.element.querySelector('.visual-settings-section');
+        this.elements.visualSettingsToggle = this.element.querySelector('#visual-settings-toggle');
+        this.elements.bloomSlider = this.element.querySelector('#bloom-intensity-slider');
+        this.elements.fogSlider = this.element.querySelector('#fog-density-slider');
+        this.elements.shakeSlider = this.element.querySelector('#camera-shake-slider');
+        this.elements.postProcessingToggle = this.element.querySelector('#post-processing-toggle');
+        this.elements.bloomValue = this.element.querySelector('#bloom-value');
+        this.elements.fogValue = this.element.querySelector('#fog-value');
+        this.elements.shakeValue = this.element.querySelector('#shake-value');
+
         // Setup start button handler
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
@@ -123,6 +160,102 @@ class LobbyUI {
                     this.onStartGame({ laps });
                 }
             });
+        }
+
+        // Setup visual settings toggle (collapse/expand)
+        if (this.elements.visualSettingsToggle) {
+            this.elements.visualSettingsToggle.addEventListener('click', () => {
+                this.elements.visualSettingsSection?.classList.toggle('collapsed');
+            });
+        }
+
+        // Setup visual settings sliders
+        this._setupVisualSettingsListeners();
+    }
+
+    /**
+     * Setup event listeners for visual settings sliders
+     * @private
+     */
+    _setupVisualSettingsListeners() {
+        // Bloom intensity slider
+        if (this.elements.bloomSlider) {
+            this.elements.bloomSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.bloomValue) {
+                    this.elements.bloomValue.textContent = value.toFixed(1);
+                }
+                this._updateVisualSetting('bloom', value);
+            });
+        }
+
+        // Fog density slider
+        if (this.elements.fogSlider) {
+            this.elements.fogSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.fogValue) {
+                    this.elements.fogValue.textContent = value.toFixed(3);
+                }
+                this._updateVisualSetting('fog', value);
+            });
+        }
+
+        // Camera shake slider
+        if (this.elements.shakeSlider) {
+            this.elements.shakeSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.shakeValue) {
+                    this.elements.shakeValue.textContent = value.toFixed(2);
+                }
+                this._updateVisualSetting('shake', value);
+            });
+        }
+
+        // Post-processing toggle
+        if (this.elements.postProcessingToggle) {
+            this.elements.postProcessingToggle.addEventListener('change', (e) => {
+                this._updateVisualSetting('postProcessing', e.target.checked);
+            });
+        }
+    }
+
+    /**
+     * Update a visual setting in the RenderSystem
+     * @private
+     * @param {string} setting - Setting name
+     * @param {number|boolean} value - Setting value
+     */
+    _updateVisualSetting(setting, value) {
+        // Access game through window.game
+        const render = window.game?.systems?.render;
+        if (!render) return;
+
+        switch (setting) {
+            case 'bloom':
+                if (render.postProcessing?.passes?.bloom) {
+                    render.postProcessing.passes.bloom.strength = value;
+                }
+                break;
+            case 'fog':
+                if (render.scene?.fog) {
+                    render.scene.fog.density = value;
+                }
+                break;
+            case 'shake':
+                if (render.cameraShake) {
+                    render.cameraShake.intensity = value;
+                }
+                break;
+            case 'postProcessing':
+                if (render.postProcessing) {
+                    render.postProcessing.enabled = value;
+                }
+                break;
+        }
+
+        // Emit event for other systems
+        if (this.eventBus) {
+            this.eventBus.emit('visualSettings:changed', { setting, value });
         }
     }
 
@@ -244,6 +377,82 @@ class LobbyUI {
                 padding: 8px 15px;
                 border-radius: 5px;
                 margin-left: 10px;
+            }
+            .visual-settings-section {
+                margin-bottom: 20px;
+                background: #16213e;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            .visual-settings-header {
+                margin: 0;
+                padding: 12px 15px;
+                font-size: 14px;
+                color: #888;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: background 0.2s;
+            }
+            .visual-settings-header:hover {
+                background: #1e2a4a;
+            }
+            .toggle-arrow {
+                font-size: 12px;
+                transition: transform 0.2s;
+            }
+            .visual-settings-section.collapsed .toggle-arrow {
+                transform: rotate(-90deg);
+            }
+            .visual-settings-content {
+                padding: 15px;
+                border-top: 1px solid #333;
+            }
+            .visual-settings-section.collapsed .visual-settings-content {
+                display: none;
+            }
+            .slider-group {
+                margin-bottom: 15px;
+            }
+            .slider-group label {
+                display: flex;
+                justify-content: space-between;
+                color: #888;
+                font-size: 13px;
+                margin-bottom: 5px;
+            }
+            .slider-group input[type="range"] {
+                width: 100%;
+                height: 6px;
+                -webkit-appearance: none;
+                background: #333;
+                border-radius: 3px;
+                outline: none;
+            }
+            .slider-group input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 16px;
+                height: 16px;
+                background: #00ff88;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            .toggle-group {
+                margin-top: 15px;
+            }
+            .toggle-group label {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #888;
+                font-size: 13px;
+                cursor: pointer;
+            }
+            .toggle-group input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                accent-color: #00ff88;
             }
             .start-button {
                 background: #00ff88;
