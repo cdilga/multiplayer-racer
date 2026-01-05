@@ -195,6 +195,27 @@ socket.on('game_joined', (data) => {
     gameState.playerId = data.player_id;
     gameState.carColor = data.car_color;
 
+    // Store player ID for reconnection
+    try {
+        const reconnectKey = `racer_reconnect_${gameState.roomCode}`;
+        localStorage.setItem(reconnectKey, JSON.stringify({
+            player_id: data.player_id,
+            player_name: gameState.playerName,
+            room_code: gameState.roomCode
+        }));
+    } catch (e) {
+        console.warn('Could not save reconnect data:', e);
+    }
+
+    // Handle reconnection - if game is already racing, skip to controller
+    if (data.reconnected && data.game_state === 'racing') {
+        console.log('Reconnected to racing game!');
+        elements.waitingScreen.classList.add('hidden');
+        elements.controllerScreen.classList.remove('hidden');
+        showMessage('Reconnected! You are back in the race.');
+        return;
+    }
+
     // Update UI (with null checks for DOM elements)
     if (elements.displayName) {
         elements.displayName.textContent = gameState.playerName;
@@ -338,10 +359,27 @@ function joinGame() {
     // Show a joining message
     showMessage('Joining game...', 1000);
     
+    // Check for saved reconnection data
+    let reconnectId = null;
+    try {
+        const reconnectKey = `racer_reconnect_${roomCode}`;
+        const savedData = localStorage.getItem(reconnectKey);
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            if (parsed.room_code === roomCode) {
+                reconnectId = parsed.player_id;
+                console.log('Found reconnection data, attempting to rejoin as player', reconnectId);
+            }
+        }
+    } catch (e) {
+        console.warn('Could not read reconnect data:', e);
+    }
+
     // Join game
     socket.emit('join_game', {
         player_name: playerName,
-        room_code: roomCode
+        room_code: roomCode,
+        reconnect_id: reconnectId
     });
 }
 

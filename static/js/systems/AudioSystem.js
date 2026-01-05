@@ -42,6 +42,13 @@ class AudioSystem {
 
         console.log('AudioSystem: Initializing...');
 
+        // Initialize and load sounds from audioManager
+        if (this.audioManager) {
+            this.audioManager.init();
+            await this.audioManager.loadSounds();
+            this.audioManager.loadPreferences();
+        }
+
         // Subscribe to game events
         this._subscribeToEvents();
 
@@ -59,6 +66,7 @@ class AudioSystem {
 
         // Game state events
         this.eventBus.on('game:lobby', () => {
+            this.stopEngineSound();
             this.playMusic('lobby');
         });
 
@@ -68,9 +76,11 @@ class AudioSystem {
 
         this.eventBus.on('game:racing', () => {
             this.playMusic('racing');
+            this.startEngineSound();
         });
 
         this.eventBus.on('game:results', () => {
+            this.stopEngineSound();
             this.playMusic('results');
         });
 
@@ -105,12 +115,13 @@ class AudioSystem {
     playMusic(trackName) {
         if (!this.enabled || !this.audioManager) return;
 
-        // Map track names to actual music files
+        // Map track names to actual music files (must match audioManager loaded tracks)
         const musicMap = {
-            'lobby': 'lobby_chill',
-            'racing': 'high_energy_race',
-            'results': 'victory_fanfare',
-            'menu': 'menu_theme'
+            'lobby': 'lobby',
+            'racing': 'race_main',
+            'results': 'victory',
+            'menu': 'lobby',
+            'countdown': 'countdown'
         };
 
         const actualTrack = musicMap[trackName] || trackName;
@@ -270,10 +281,63 @@ class AudioSystem {
         }
     }
 
+    // ==========================================
+    // ENGINE SOUND SYSTEM
+    // ==========================================
+
+    /**
+     * Start the engine sound loop
+     */
+    startEngineSound() {
+        if (!this.enabled || !this.audioManager) return;
+
+        try {
+            if (typeof this.audioManager.startEngineSound === 'function') {
+                this.audioManager.startEngineSound();
+            }
+        } catch (error) {
+            console.warn('AudioSystem: Failed to start engine sound', error);
+        }
+    }
+
+    /**
+     * Stop the engine sound
+     */
+    stopEngineSound() {
+        if (!this.audioManager) return;
+
+        try {
+            if (typeof this.audioManager.stopEngineSound === 'function') {
+                this.audioManager.stopEngineSound();
+            }
+        } catch (error) {
+            console.warn('AudioSystem: Failed to stop engine sound', error);
+        }
+    }
+
+    /**
+     * Update engine sound based on vehicle state
+     * @param {number} speed - Current vehicle speed
+     * @param {number} maxSpeed - Maximum vehicle speed
+     * @param {boolean} isAccelerating - Whether vehicle is accelerating
+     */
+    updateEngineSound(speed, maxSpeed = 50, isAccelerating = false) {
+        if (!this.enabled || !this.audioManager) return;
+
+        try {
+            if (typeof this.audioManager.updateEngineSound === 'function') {
+                this.audioManager.updateEngineSound(speed, maxSpeed, isAccelerating);
+            }
+        } catch (error) {
+            // Don't log every frame, too noisy
+        }
+    }
+
     /**
      * Destroy audio system
      */
     destroy() {
+        this.stopEngineSound();
         this.stopMusic();
         this.initialized = false;
     }

@@ -593,12 +593,13 @@ class GameHost {
         // Step physics world
         this.systems.physics.update(dt);
 
-        // Sync vehicle meshes from physics
+        // Sync vehicle meshes from physics and update effects
         for (const [playerId, vehicle] of this.vehicles) {
             vehicle.syncMeshFromPhysics();
+            vehicle.updateEffects(dt);
         }
 
-        // Update race UI
+        // Update race UI and audio
         if (state === GAME_STATES.RACING) {
             const raceTime = this.systems.race.getRaceTime();
             this.ui.race.setTime(raceTime);
@@ -611,7 +612,28 @@ class GameHost {
                     lap: firstVehicle.currentLap + 1,
                     position: firstVehicle.racePosition
                 });
+
+                // Update engine sound based on vehicle state
+                const isAccelerating = firstVehicle.controls?.accelerate > 0;
+                this.systems.audio.updateEngineSound(
+                    firstVehicle.speed || 0,
+                    50, // maxSpeed
+                    isAccelerating
+                );
             }
+
+            // Update health bars for all players
+            const healthData = [];
+            for (const [playerId, vehicle] of this.vehicles) {
+                healthData.push({
+                    id: playerId,
+                    name: vehicle.playerName || `Player ${playerId}`,
+                    color: vehicle.color || '#888',
+                    health: vehicle.health ?? 100,
+                    maxHealth: vehicle.maxHealth ?? 100
+                });
+            }
+            this.ui.race.updateHealthBars(healthData);
         }
     }
 
