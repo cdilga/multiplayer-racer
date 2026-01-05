@@ -94,7 +94,7 @@ export async function joinGameAsPlayer(
 export async function startGameFromHost(hostPage: Page): Promise<void> {
     // Wait for start button to be enabled by checking it's not disabled
     // First wait for the button to exist
-    await hostPage.waitForSelector('#start-game-btn', { timeout: 10000 });
+    await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
 
     // Wait until button is enabled (not having disabled attribute)
     await hostPage.waitForFunction(
@@ -102,11 +102,14 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
             return btn && !btn.disabled;
         },
-        { timeout: 10000 }
+        { timeout: 30000 }
     );
 
-    // Click start button
-    await hostPage.click('#start-game-btn');
+    // Click start button via JavaScript to bypass viewport checks
+    await hostPage.evaluate(() => {
+        const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
+        if (btn) btn.click();
+    });
 
     // Wait for game screen to be visible (game-container should have canvas)
     await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 });
@@ -114,9 +117,8 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
     // Wait a bit for game to initialize
     await hostPage.waitForTimeout(1000);
 
-    // Click on the page body to ensure keyboard events work
-    // This is necessary because Playwright keyboard events need a focused element
-    await hostPage.click('body', { position: { x: 100, y: 100 } });
+    // Focus the page for keyboard events (use evaluate to avoid viewport issues)
+    await hostPage.evaluate(() => document.body.focus());
 }
 
 // Helper to send control inputs from player

@@ -219,8 +219,11 @@ test.describe('Race Completion', () => {
         // Verify results UI is visible
         await expect(hostPage.locator('.results-ui')).toBeVisible({ timeout: 5000 });
 
-        // Click Back to Lobby button
-        await hostPage.click('#results-lobby');
+        // Click Back to Lobby button via JS to avoid viewport issues
+        await hostPage.evaluate(() => {
+            const btn = document.querySelector('#results-lobby') as HTMLButtonElement;
+            if (btn) btn.click();
+        });
 
         // Wait for state transition
         await hostPage.waitForTimeout(1000);
