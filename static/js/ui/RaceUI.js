@@ -79,6 +79,10 @@ class RaceUI {
                     </div>
                 </div>
 
+                <div class="hud-health-bars" id="health-bars-container">
+                    <!-- Health bars populated dynamically -->
+                </div>
+
                 <div class="hud-bottom">
                     <div class="hud-speed">
                         <span class="speed-value" id="race-speed">0</span>
@@ -110,6 +114,7 @@ class RaceUI {
         this.elements.lap = this.element.querySelector('#race-lap');
         this.elements.totalLaps = this.element.querySelector('#race-total-laps');
         this.elements.speed = this.element.querySelector('#race-speed');
+        this.elements.healthBars = this.element.querySelector('#health-bars-container');
         this.countdownElement = this.element.querySelector('#race-countdown');
     }
 
@@ -229,6 +234,64 @@ class RaceUI {
                 0% { transform: scale(1.5); opacity: 0; }
                 50% { transform: scale(1); opacity: 1; }
                 100% { transform: scale(0.8); opacity: 0.5; }
+            }
+
+            /* Health bars */
+            .hud-health-bars {
+                position: absolute;
+                top: 80px;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                min-width: 200px;
+            }
+            .health-bar-item {
+                background: rgba(0, 0, 0, 0.7);
+                padding: 8px 12px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .health-bar-color {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            .health-bar-name {
+                color: white;
+                font-size: 12px;
+                min-width: 60px;
+                flex-shrink: 0;
+            }
+            .health-bar-container {
+                flex: 1;
+                height: 16px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .health-bar-fill {
+                height: 100%;
+                transition: width 0.3s ease, background 0.3s ease;
+                border-radius: 8px;
+            }
+            .health-bar-fill.health-high {
+                background: linear-gradient(90deg, #00ff88, #00cc66);
+            }
+            .health-bar-fill.health-medium {
+                background: linear-gradient(90deg, #ffcc00, #ff9900);
+            }
+            .health-bar-fill.health-low {
+                background: linear-gradient(90deg, #ff4444, #cc0000);
+            }
+            .health-bar-value {
+                color: white;
+                font-size: 11px;
+                min-width: 35px;
+                text-align: right;
             }
         `;
         document.head.appendChild(style);
@@ -405,6 +468,63 @@ class RaceUI {
             this.element.classList.add('hidden');
         }
         this.hideCountdown();
+    }
+
+    /**
+     * Update health bars for all players
+     * @param {Array} players - Array of { id, name, color, health, maxHealth }
+     */
+    updateHealthBars(players) {
+        if (!this.elements.healthBars) return;
+
+        // Clear existing health bars
+        this.elements.healthBars.innerHTML = '';
+
+        // Create health bar for each player
+        players.forEach(player => {
+            const healthPercent = Math.max(0, Math.min(100, (player.health / player.maxHealth) * 100));
+            const healthClass = healthPercent > 50 ? 'health-high' : healthPercent > 25 ? 'health-medium' : 'health-low';
+
+            const healthBarItem = document.createElement('div');
+            healthBarItem.className = 'health-bar-item';
+            healthBarItem.dataset.playerId = player.id;
+            healthBarItem.innerHTML = `
+                <div class="health-bar-color" style="background: ${player.color || '#888'}"></div>
+                <span class="health-bar-name">${player.name || 'Player'}</span>
+                <div class="health-bar-container">
+                    <div class="health-bar-fill ${healthClass}" style="width: ${healthPercent}%"></div>
+                </div>
+                <span class="health-bar-value">${Math.round(player.health)}%</span>
+            `;
+            this.elements.healthBars.appendChild(healthBarItem);
+        });
+    }
+
+    /**
+     * Update single player's health bar
+     * @param {string} playerId
+     * @param {number} health
+     * @param {number} maxHealth
+     */
+    updatePlayerHealth(playerId, health, maxHealth) {
+        if (!this.elements.healthBars) return;
+
+        const healthBarItem = this.elements.healthBars.querySelector(`[data-player-id="${playerId}"]`);
+        if (!healthBarItem) return;
+
+        const healthPercent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+        const healthClass = healthPercent > 50 ? 'health-high' : healthPercent > 25 ? 'health-medium' : 'health-low';
+
+        const fill = healthBarItem.querySelector('.health-bar-fill');
+        const value = healthBarItem.querySelector('.health-bar-value');
+
+        if (fill) {
+            fill.style.width = `${healthPercent}%`;
+            fill.className = `health-bar-fill ${healthClass}`;
+        }
+        if (value) {
+            value.textContent = `${Math.round(health)}%`;
+        }
     }
 
     /**
