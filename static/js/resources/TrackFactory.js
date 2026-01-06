@@ -152,7 +152,9 @@ class TrackFactory {
         const trackMaterial = new THREE.MeshStandardMaterial({
             color: this._parseColor(visual.color),
             roughness: visual.roughness || 0.9,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
         });
 
         const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
@@ -201,7 +203,9 @@ class TrackFactory {
         const trackMaterial = new THREE.MeshStandardMaterial({
             color: this._parseColor(visual.color),
             roughness: visual.roughness || 0.9,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
         });
 
         const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
@@ -268,7 +272,9 @@ class TrackFactory {
 
         const material = new THREE.MeshStandardMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.7
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
         });
 
         // Create a smooth ring using TorusGeometry for a curb-like appearance

@@ -7,7 +7,9 @@
       "width": 2,
       "height": 1,
       "color": "#ff0000",
-      "roughness": 0.5
+      "roughness": 0.5,
+      "emissive": "#ff6600",
+      "emissiveIntensity": 0.4
     },
     "roof": {
       "widthScale": 0.75,
@@ -29,7 +31,11 @@
     "headlights": {
       "radius": 0.2,
       "color": "#ffffcc",
-      "emissiveIntensity": 0.5
+      "emissive": "#ffffcc",
+      "emissiveIntensity": 1.5,
+      "pointLight": true,
+      "pointLightIntensity": 3.0,
+      "pointLightDistance": 20
     },
     "taillights": {
       "radius": 0.2,

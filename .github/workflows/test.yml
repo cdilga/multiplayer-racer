@@ -57,7 +57,10 @@ jobs:
         run: npx wait-on http://localhost:8000 --timeout 30000
 
       - name: Run Playwright tests
-        run: npx playwright test
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" npx playwright test
+        env:
+          # Enable WebGL in headless mode
+          PLAYWRIGHT_CHROMIUM_SANDBOX: 0
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

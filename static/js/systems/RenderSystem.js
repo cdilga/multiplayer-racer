@@ -32,6 +32,13 @@ class RenderSystem {
         this.camera = null;
         this.renderer = null;
 
+        // Post-processing
+        this.postProcessing = {
+            enabled: true,
+            composer: null,
+            passes: {}
+        };
+
         // Lighting
         this.lights = {};
 
@@ -44,13 +51,39 @@ class RenderSystem {
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
-        this.targetFOV = 60;  // Target field of view
-        this.currentFOV = 60;  // Current FOV (smoothed)
-        this.fovSmoothing = 0.2;  // FOV transition speed (higher = faster)
-        this.cameraMultiSmoothing = 0.2;  // Multi-vehicle camera position smoothing (increased)
-        this.minFOV = 30;  // Minimum FOV (most zoomed in)
-        this.maxFOV = 100;  // Maximum FOV (most zoomed out)
-        this.boundsPadding = 15;  // Padding around vehicle bounds (in world units)
+        this.baseFOV = 50;  // Base field of view (reduced for tighter framing)
+        this.targetFOV = 50;  // Target field of view
+        this.currentFOV = 50;  // Current FOV (smoothed)
+        this.fovSmoothing = 0.15;  // FOV transition speed (higher = faster)
+        this.cameraMultiSmoothing = 0.15;  // Multi-vehicle camera position smoothing
+        this.minFOV = 45;  // Minimum FOV (most zoomed in)
+        this.maxFOV = 60;  // Maximum FOV (slightly zoomed out) - narrower range
+        this.boundsPadding = 10;  // Padding around vehicle bounds (in world units)
+        this.baseCameraHeight = 15;  // Base camera height
+        this.baseCameraDepth = 20;   // Base camera depth (distance behind center)
+        this.minCameraDepth = 15;    // Minimum distance
+        this.maxCameraDepth = 80;    // Maximum distance (for zooming out)
+        this.targetCameraDepth = 20; // Current target depth
+        this.currentCameraDepth = 20; // Current depth (smoothed)
+
+        // Camera shake effect (speed-based and collision-based)
+        this.cameraShake = {
+            enabled: true,
+            intensity: 0.15,          // Maximum shake intensity
+            speedThreshold: 60,       // km/h - speed above which shake activates
+            currentOffset: { x: 0, y: 0, z: 0 },
+            decayRate: 0.9,           // How quickly shake decays
+            collisionIntensity: 0.5,  // Extra shake on collision
+            time: 0                   // Internal time counter for noise
+        };
+
+        // Headlight flicker effect
+        this.headlightFlicker = {
+            enabled: true,
+            speedThreshold: 80,       // km/h - speed above which flicker activates
+            flickerChance: 0.1,       // Chance per frame to flicker
+            flickerIntensity: 0.3     // How much intensity varies
+        };
 
         // Tracked meshes
         this.meshes = new Map();  // entityId -> mesh
@@ -71,12 +104,18 @@ class RenderSystem {
 
         // Create scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87ceeb);  // Sky blue
+        this.scene.background = new THREE.Color(0x1a0f0a);  // Midnight (Sunset Neon theme)
+
+        // Add fog for atmosphere (FogExp2 for exponential density)
+        this.scene.fog = new THREE.FogExp2(0x1a0f0a, 0.008);
+
+        // Create sky dome
+        this._createSkyDome();
 
         // Create camera
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.PerspectiveCamera(
-            this.cameraConfig.fov || 60,
+            this.cameraConfig.fov || this.baseFOV,
             aspect,
             this.cameraConfig.near || 0.1,
             this.cameraConfig.far || 1000
@@ -100,6 +139,12 @@ class RenderSystem {
         // Setup default lighting
         this._setupDefaultLighting();
 
+        // Initialize post-processing (async, but don't block initialization)
+        this._initPostProcessing().catch((error) => {
+            console.warn('RenderSystem: Post-processing initialization failed, continuing without it:', error);
+            this.postProcessing.enabled = false;
+        });
+
         // Handle window resize
         window.addEventListener('resize', this._onResize.bind(this));
 
@@ -109,17 +154,80 @@ class RenderSystem {
     }
 
     /**
+     * Initialize post-processing (Bloom effect)
+     * @private
+     * @returns {Promise<void>}
+     */
+    async _initPostProcessing() {
+        if (!this.postProcessing.enabled) return;
+
+        try {
+            // Import post-processing modules using the import map
+            const { EffectComposer } = await import('three/addons/postprocessing/EffectComposer.js');
+            const { RenderPass } = await import('three/addons/postprocessing/RenderPass.js');
+            const { UnrealBloomPass } = await import('three/addons/postprocessing/UnrealBloomPass.js');
+            const { ShaderPass } = await import('three/addons/postprocessing/ShaderPass.js');
+            const { RGBShiftShader } = await import('three/addons/shaders/RGBShiftShader.js');
+
+            // Create composer
+            this.postProcessing.composer = new EffectComposer(this.renderer);
+
+            // Add render pass
+            const renderPass = new RenderPass(this.scene, this.camera);
+            this.postProcessing.composer.addPass(renderPass);
+            this.postProcessing.passes.render = renderPass;
+
+            // Add bloom pass with MAXIMAL settings
+            const bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                1.5,  // strength - MAXIMAL!
+                0.4,  // radius
+                0.85  // threshold
+            );
+            this.postProcessing.composer.addPass(bloomPass);
+            this.postProcessing.passes.bloom = bloomPass;
+
+            // Add color grading + vignette pass (after bloom)
+            try {
+                const { ColorGradingShader } = await import('../shaders/ColorGradingShader.js');
+                const colorGradingPass = new ShaderPass(ColorGradingShader);
+                colorGradingPass.uniforms.gradingIntensity.value = 0.5;
+                colorGradingPass.uniforms.vignetteAmount.value = 0.3;
+                this.postProcessing.composer.addPass(colorGradingPass);
+                this.postProcessing.passes.colorGrading = colorGradingPass;
+            } catch (error) {
+                console.warn('RenderSystem: Failed to load ColorGradingShader, skipping color grading:', error);
+            }
+
+            // Add chromatic aberration pass (after color grading)
+            try {
+                const rgbShiftPass = new ShaderPass(RGBShiftShader);
+                rgbShiftPass.uniforms.amount.value = 0.0015; // Subtle speed warp
+                this.postProcessing.composer.addPass(rgbShiftPass);
+                this.postProcessing.passes.chromaticAberration = rgbShiftPass;
+            } catch (error) {
+                console.warn('RenderSystem: Failed to add chromatic aberration, skipping:', error);
+            }
+
+            console.log('RenderSystem: Post-processing initialized with all effects');
+        } catch (error) {
+            console.error('RenderSystem: Error loading post-processing modules:', error);
+            throw error; // Re-throw so caller can handle
+        }
+    }
+
+    /**
      * Setup default lighting
      * @private
      */
     _setupDefaultLighting() {
-        // Ambient light
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        // Ambient light - warm amber for sunset atmosphere
+        const ambient = new THREE.AmbientLight(0xffaa44, 0.3);
         this.scene.add(ambient);
         this.lights.ambient = ambient;
 
-        // Directional light (sun)
-        const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+        // Directional light (golden sun)
+        const directional = new THREE.DirectionalLight(0xffcc66, 0.5);
         directional.position.set(50, 100, 50);
         directional.castShadow = true;
 
@@ -135,6 +243,60 @@ class RenderSystem {
 
         this.scene.add(directional);
         this.lights.directional = directional;
+    }
+
+    /**
+     * Create sky dome with gradient
+     * @private
+     */
+    _createSkyDome() {
+        // Create large inverted sphere for sky
+        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+
+        // Custom shader material for gradient sky
+        const skyMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                topColor: { value: new THREE.Color(0x6a3015) },     // Sunset Peak (burnt orange)
+                bottomColor: { value: new THREE.Color(0x0f0a1a) },  // Sky Base (deep indigo)
+                horizonColor: { value: new THREE.Color(0x4a2510) }, // Horizon Glow (warm orange)
+                offset: { value: 33 },
+                exponent: { value: 0.6 }
+            },
+            vertexShader: `
+                varying vec3 vWorldPosition;
+                void main() {
+                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                    vWorldPosition = worldPosition.xyz;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 topColor;
+                uniform vec3 bottomColor;
+                uniform vec3 horizonColor;
+                uniform float offset;
+                uniform float exponent;
+                varying vec3 vWorldPosition;
+                void main() {
+                    float h = normalize(vWorldPosition + offset).y;
+                    // Two-stage gradient: bottom to horizon, horizon to top
+                    vec3 color;
+                    if (h < 0.3) {
+                        color = mix(bottomColor, horizonColor, h / 0.3);
+                    } else {
+                        color = mix(horizonColor, topColor, (h - 0.3) / 0.7);
+                    }
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `,
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+
+        const skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+        skyDome.name = 'skyDome';
+        this.scene.add(skyDome);
+        this.skyDome = skyDome;
     }
 
     /**
@@ -172,8 +334,18 @@ class RenderSystem {
         // Update camera if following target
         this._updateCamera(dt);
 
-        // Render scene
-        this.renderer.render(this.scene, this.camera);
+        // Render with post-processing if available and ready, otherwise standard render
+        if (this.postProcessing.enabled && this.postProcessing.composer) {
+            try {
+                this.postProcessing.composer.render();
+            } catch (error) {
+                // Fallback to standard render if composer fails
+                console.warn('RenderSystem: Composer render failed, using standard render:', error);
+                this.renderer.render(this.scene, this.camera);
+            }
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     /**
@@ -221,10 +393,14 @@ class RenderSystem {
             z: targetPos.z + this.cameraLookOffset.z
         };
         this.camera.lookAt(lookAt.x, lookAt.y, lookAt.z);
+
+        // Apply camera shake effect
+        this._applyCameraShake(dt);
     }
 
     /**
      * Update camera to keep all tracked vehicles in view
+     * Uses dynamic camera distance calculation with 3D geometry
      * @private
      */
     _updateMultiVehicleCamera(dt) {
@@ -250,19 +426,26 @@ class RenderSystem {
         this.cameraLookTarget.y += (center.y - this.cameraLookTarget.y) * smoothFactor;
         this.cameraLookTarget.z += (center.z - this.cameraLookTarget.z) * smoothFactor;
 
-        // Calculate required FOV to fit all vehicles
-        this.targetFOV = this._calculateRequiredFOV(bounds, center);
+        // Calculate required camera distance and FOV based on bounding box and window dimensions
+        const { distance, fov } = this._calculateOptimalCameraPosition(bounds, center);
 
-        // Smooth FOV transition (frame-rate independent)
-        this.currentFOV += (this.targetFOV - this.currentFOV) * fovSmoothFactor;
+        // Update target values
+        this.targetCameraDepth = distance;
+        this.targetFOV = fov;
+
+        // Smooth transitions
+        this.currentCameraDepth += (this.targetCameraDepth - this.currentCameraDepth) * this.cameraMultiSmoothing;
+        this.currentFOV += (this.targetFOV - this.currentFOV) * this.fovSmoothing;
+
+        // Update camera FOV
         this.camera.fov = this.currentFOV;
         this.camera.updateProjectionMatrix();
 
-        // Calculate camera position (above and behind center)
+        // Calculate camera position (above and behind center, at calculated distance)
         const desiredPos = {
             x: this.cameraLookTarget.x + this.cameraOffset.x,
-            y: this.cameraLookTarget.y + this.cameraOffset.y,
-            z: this.cameraLookTarget.z + this.cameraOffset.z
+            y: this.cameraLookTarget.y + this.baseCameraHeight,
+            z: this.cameraLookTarget.z + this.currentCameraDepth  // Dynamic distance
         };
 
         // Smooth camera movement (frame-rate independent)
@@ -276,6 +459,78 @@ class RenderSystem {
             this.cameraLookTarget.y + this.cameraLookOffset.y,
             this.cameraLookTarget.z + this.cameraLookOffset.z
         );
+
+        // Apply camera shake effect
+        this._applyCameraShake(dt);
+    }
+
+    /**
+     * Apply speed-based camera shake effect
+     * Uses pseudo-Perlin noise for smooth, organic shake motion
+     * @private
+     * @param {number} dt - Delta time in seconds
+     */
+    _applyCameraShake(dt) {
+        if (!this.cameraShake.enabled) return;
+
+        // Get maximum speed from all tracked vehicles
+        const maxSpeed = this._getMaxVehicleSpeed();
+
+        // Only shake above speed threshold
+        if (maxSpeed < this.cameraShake.speedThreshold) {
+            // Decay any existing shake
+            this.cameraShake.currentOffset.x *= this.cameraShake.decayRate;
+            this.cameraShake.currentOffset.y *= this.cameraShake.decayRate;
+            this.cameraShake.currentOffset.z *= this.cameraShake.decayRate;
+            return;
+        }
+
+        // Calculate shake intensity based on speed (0 to 1)
+        const speedFactor = Math.min(
+            (maxSpeed - this.cameraShake.speedThreshold) / 100,
+            1.0
+        );
+        const intensity = this.cameraShake.intensity * speedFactor;
+
+        // Update time for noise
+        this.cameraShake.time += dt * 10;
+        const t = this.cameraShake.time;
+
+        // Generate smooth noise using multiple sine waves (pseudo-Perlin)
+        const noiseX = Math.sin(t * 1.7) * 0.5 + Math.sin(t * 3.2) * 0.3 + Math.sin(t * 5.1) * 0.2;
+        const noiseY = Math.sin(t * 2.3) * 0.5 + Math.sin(t * 4.1) * 0.3 + Math.sin(t * 6.7) * 0.2;
+        const noiseZ = Math.sin(t * 1.9) * 0.4 + Math.sin(t * 3.8) * 0.35 + Math.sin(t * 5.5) * 0.25;
+
+        // Set target offset
+        this.cameraShake.currentOffset.x = noiseX * intensity;
+        this.cameraShake.currentOffset.y = noiseY * intensity * 0.5; // Less vertical shake
+        this.cameraShake.currentOffset.z = noiseZ * intensity * 0.3; // Even less depth shake
+
+        // Apply offset to camera position
+        this.camera.position.x += this.cameraShake.currentOffset.x;
+        this.camera.position.y += this.cameraShake.currentOffset.y;
+        this.camera.position.z += this.cameraShake.currentOffset.z;
+    }
+
+    /**
+     * Get the maximum speed of all tracked vehicles in km/h
+     * @private
+     * @returns {number} Maximum speed in km/h
+     */
+    _getMaxVehicleSpeed() {
+        let maxSpeed = 0;
+        const targets = this.cameraTargets.length > 0 ? this.cameraTargets :
+                        (this.cameraTarget ? [this.cameraTarget] : []);
+
+        for (const target of targets) {
+            if (target.rigidBody) {
+                const vel = target.rigidBody.linvel();
+                const speedMps = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+                const speedKmh = speedMps * 3.6;
+                maxSpeed = Math.max(maxSpeed, speedKmh);
+            }
+        }
+        return maxSpeed;
     }
 
     /**
@@ -319,32 +574,78 @@ class RenderSystem {
     }
 
     /**
-     * Calculate the FOV needed to fit all vehicles in view
+     * Calculate optimal camera position and FOV to fit all vehicles
+     * Uses window dimensions and 3D frustum calculations
      * @private
-     * @param {Object} bounds - Bounding box
-     * @param {Object} center - Center point
-     * @returns {number} Required FOV in degrees
+     * @param {Object} bounds - Bounding box of all vehicles
+     * @param {Object} center - Center point of all vehicles
+     * @returns {Object} { distance: number, fov: number }
      */
-    _calculateRequiredFOV(bounds, center) {
-        // Calculate the size of the area to view
-        const width = bounds.max.x - bounds.min.x;
-        const depth = bounds.max.z - bounds.min.z;
+    _calculateOptimalCameraPosition(bounds, center) {
+        // Get window dimensions
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const aspect = windowWidth / windowHeight;
 
-        // Use the larger dimension
-        const maxSpan = Math.max(width, depth);
+        // Calculate bounding box dimensions in world space
+        const boundsWidth = bounds.max.x - bounds.min.x;
+        const boundsDepth = bounds.max.z - bounds.min.z;
+        const boundsHeight = bounds.max.y - bounds.min.y;
 
-        // Calculate distance from camera to center (approximation)
-        const cameraHeight = this.cameraOffset.y;
-        const cameraDepth = this.cameraOffset.z;
-        const distance = Math.sqrt(cameraHeight * cameraHeight + cameraDepth * cameraDepth);
+        // For top-down-ish camera, we care about horizontal (x) and forward (z) spread
+        // The camera looks down at an angle, so we need to account for projection
 
-        // Calculate required FOV using trigonometry
-        // FOV = 2 * atan(halfWidth / distance)
-        const halfSpan = maxSpan / 2;
-        const requiredFOV = 2 * Math.atan(halfSpan / distance) * (180 / Math.PI);
+        // Camera angle from vertical (we're at height=15, looking down)
+        const cameraHeight = this.baseCameraHeight;
+
+        // Calculate the effective size we need to fit in view
+        // We need to fit both the width and depth, considering the camera angle
+        const effectiveWidth = boundsWidth;
+        const effectiveDepth = boundsDepth;
+
+        // Calculate required distance for horizontal constraint (width)
+        // Using frustum geometry: width = 2 * distance * tan(fov/2) * aspect
+        // Solving for distance: distance = width / (2 * tan(fov/2) * aspect)
+        const fovRad = this.baseFOV * (Math.PI / 180);
+        const halfFovTan = Math.tan(fovRad / 2);
+
+        // Calculate distance needed for width constraint
+        const distanceForWidth = (effectiveWidth / 2) / (halfFovTan * aspect);
+
+        // Calculate distance needed for depth constraint
+        // We need to ensure the forward/backward spread is visible
+        const distanceForDepth = (effectiveDepth / 2) / halfFovTan;
+
+        // Use the larger distance to ensure everything fits
+        let requiredDistance = Math.max(distanceForWidth, distanceForDepth);
+
+        // Add extra distance for the camera height (pythagoras)
+        // The actual distance from camera to center includes the height component
+        const diagonalDistance = Math.sqrt(requiredDistance * requiredDistance + cameraHeight * cameraHeight);
+
+        // Add some margin for safety
+        const margin = 1.2; // 20% extra space
+        requiredDistance = diagonalDistance * margin;
 
         // Clamp to min/max bounds
-        return Math.max(this.minFOV, Math.min(this.maxFOV, requiredFOV));
+        const clampedDistance = Math.max(this.minCameraDepth, Math.min(this.maxCameraDepth, requiredDistance));
+
+        // Calculate FOV adjustment if distance is maxed out
+        // If we've hit max distance, increase FOV slightly to fit everything
+        let adjustedFOV = this.baseFOV;
+        if (requiredDistance > this.maxCameraDepth) {
+            // Need wider FOV to compensate
+            const fovIncrease = Math.min(10, (requiredDistance - this.maxCameraDepth) / 2);
+            adjustedFOV = this.baseFOV + fovIncrease;
+        }
+
+        // Clamp FOV to limits
+        adjustedFOV = Math.max(this.minFOV, Math.min(this.maxFOV, adjustedFOV));
+
+        return {
+            distance: clampedDistance,
+            fov: adjustedFOV
+        };
     }
 
     /**
@@ -409,7 +710,7 @@ class RenderSystem {
             }
         }
 
-        if (mesh) {
+        if (mesh && typeof mesh.traverse === 'function') {
             this.scene.remove(mesh);
 
             // Dispose geometry and materials
@@ -525,6 +826,11 @@ class RenderSystem {
         this.camera.updateProjectionMatrix();
 
         this.renderer.setSize(width, height);
+
+        // Update post-processing composer size
+        if (this.postProcessing.composer) {
+            this.postProcessing.composer.setSize(width, height);
+        }
     }
 
     /**
