@@ -201,10 +201,12 @@ class PhysicsSystem {
 
             // Use a flatter, wider collider for curb-like behavior
             // Cars can drive over but will get rocked
+            // Rotation: segment should be tangent to circle (perpendicular to radius)
+            // At angle θ, tangent direction is θ + π/2
             const colliderDesc = this.RAPIER.ColliderDesc
-                .cuboid(thickness / 2, height / 2, segmentLength / 2)
+                .cuboid(segmentLength / 2, height / 2, thickness / 2)
                 .setTranslation(x, height / 2, z)
-                .setRotation(this._eulerToQuat(0, -angle + Math.PI / 2, 0))
+                .setRotation(this._eulerToQuat(0, angle, 0))
                 .setFriction(0.3)  // Lower friction for sliding over
                 .setRestitution(restitution);
 

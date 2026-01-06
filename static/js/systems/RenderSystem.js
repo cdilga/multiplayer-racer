@@ -39,15 +39,15 @@ class RenderSystem {
         this.cameraTarget = null;
         this.cameraOffset = { x: 0, y: 15, z: 20 };
         this.cameraLookOffset = { x: 0, y: 0, z: -5 };
-        this.cameraSmoothing = 0.1;
+        this.cameraSmoothing = 0.15;  // Smoothing factor for camera (higher = more responsive)
 
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
         this.targetFOV = 60;  // Target field of view
         this.currentFOV = 60;  // Current FOV (smoothed)
-        this.fovSmoothing = 0.15;  // FOV transition speed (higher = faster)
-        this.cameraMultiSmoothing = 0.15;  // Multi-vehicle camera position smoothing
+        this.fovSmoothing = 0.2;  // FOV transition speed (higher = faster)
+        this.cameraMultiSmoothing = 0.2;  // Multi-vehicle camera position smoothing (increased)
         this.minFOV = 30;  // Minimum FOV (most zoomed in)
         this.maxFOV = 100;  // Maximum FOV (most zoomed out)
         this.boundsPadding = 15;  // Padding around vehicle bounds (in world units)
@@ -207,10 +207,12 @@ class RenderSystem {
             z: targetPos.z + this.cameraOffset.z
         };
 
-        // Smooth camera movement
-        this.camera.position.x += (desiredPos.x - this.camera.position.x) * this.cameraSmoothing;
-        this.camera.position.y += (desiredPos.y - this.camera.position.y) * this.cameraSmoothing;
-        this.camera.position.z += (desiredPos.z - this.camera.position.z) * this.cameraSmoothing;
+        // Smooth camera movement (frame-rate independent using exponential decay)
+        // smoothFactor = 1 - e^(-speed * dt), approximated for small dt as speed * dt
+        const smoothFactor = Math.min(1, this.cameraSmoothing * dt * 60); // Normalized to 60fps
+        this.camera.position.x += (desiredPos.x - this.camera.position.x) * smoothFactor;
+        this.camera.position.y += (desiredPos.y - this.camera.position.y) * smoothFactor;
+        this.camera.position.z += (desiredPos.z - this.camera.position.z) * smoothFactor;
 
         // Look at target
         const lookAt = {
@@ -239,16 +241,20 @@ class RenderSystem {
             z: (bounds.min.z + bounds.max.z) / 2
         };
 
-        // Smooth the look target (use multi-vehicle smoothing which is faster)
-        this.cameraLookTarget.x += (center.x - this.cameraLookTarget.x) * this.cameraMultiSmoothing;
-        this.cameraLookTarget.y += (center.y - this.cameraLookTarget.y) * this.cameraMultiSmoothing;
-        this.cameraLookTarget.z += (center.z - this.cameraLookTarget.z) * this.cameraMultiSmoothing;
+        // Frame-rate independent smoothing factor
+        const smoothFactor = Math.min(1, this.cameraMultiSmoothing * dt * 60); // Normalized to 60fps
+        const fovSmoothFactor = Math.min(1, this.fovSmoothing * dt * 60);
+
+        // Smooth the look target
+        this.cameraLookTarget.x += (center.x - this.cameraLookTarget.x) * smoothFactor;
+        this.cameraLookTarget.y += (center.y - this.cameraLookTarget.y) * smoothFactor;
+        this.cameraLookTarget.z += (center.z - this.cameraLookTarget.z) * smoothFactor;
 
         // Calculate required FOV to fit all vehicles
         this.targetFOV = this._calculateRequiredFOV(bounds, center);
 
-        // Smooth FOV transition
-        this.currentFOV += (this.targetFOV - this.currentFOV) * this.fovSmoothing;
+        // Smooth FOV transition (frame-rate independent)
+        this.currentFOV += (this.targetFOV - this.currentFOV) * fovSmoothFactor;
         this.camera.fov = this.currentFOV;
         this.camera.updateProjectionMatrix();
 
@@ -259,10 +265,10 @@ class RenderSystem {
             z: this.cameraLookTarget.z + this.cameraOffset.z
         };
 
-        // Smooth camera movement (use multi-vehicle smoothing which is faster)
-        this.camera.position.x += (desiredPos.x - this.camera.position.x) * this.cameraMultiSmoothing;
-        this.camera.position.y += (desiredPos.y - this.camera.position.y) * this.cameraMultiSmoothing;
-        this.camera.position.z += (desiredPos.z - this.camera.position.z) * this.cameraMultiSmoothing;
+        // Smooth camera movement (frame-rate independent)
+        this.camera.position.x += (desiredPos.x - this.camera.position.x) * smoothFactor;
+        this.camera.position.y += (desiredPos.y - this.camera.position.y) * smoothFactor;
+        this.camera.position.z += (desiredPos.z - this.camera.position.z) * smoothFactor;
 
         // Look at center
         this.camera.lookAt(

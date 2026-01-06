@@ -107,6 +107,25 @@ class PhysicsTuningUI {
                 </label>
             </div>
 
+            <div class="physics-section">
+                <h4>Audio</h4>
+                <label>
+                    <span>Engine Min Pitch</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineMinPitch" min="0.5" max="1.5" value="${this.params.audio.engineMinPitch}" step="0.1">
+                    <span class="physics-value" data-param="audio.engineMinPitch">${this.params.audio.engineMinPitch}</span>
+                </label>
+                <label>
+                    <span>Engine Max Pitch</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineMaxPitch" min="1.0" max="3.0" value="${this.params.audio.engineMaxPitch}" step="0.1">
+                    <span class="physics-value" data-param="audio.engineMaxPitch">${this.params.audio.engineMaxPitch}</span>
+                </label>
+                <label>
+                    <span>Engine Volume</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineVolume" min="0" max="1" value="${this.params.audio.engineVolume}" step="0.05">
+                    <span class="physics-value" data-param="audio.engineVolume">${this.params.audio.engineVolume}</span>
+                </label>
+            </div>
+
             <div class="physics-actions">
                 <button id="physics-save-btn" class="physics-btn">Save</button>
                 <button id="physics-reset-btn" class="physics-btn">Reset Defaults</button>
@@ -351,6 +370,15 @@ class PhysicsTuningUI {
             damage.setDamageMultiplier(this.params.damage.multiplier);
             damage.setRespawnDelay(this.params.damage.respawnDelay * 1000); // Convert seconds to ms
         }
+
+        // Apply audio parameters to audioManager
+        const audioManager = typeof window !== 'undefined' ? window.audioManager : null;
+        if (audioManager) {
+            // Store audio params for engine sound updates
+            audioManager.engineMinPitch = this.params.audio.engineMinPitch;
+            audioManager.engineMaxPitch = this.params.audio.engineMaxPitch;
+            audioManager.engineBaseVolume = this.params.audio.engineVolume;
+        }
     }
 
     /**
@@ -370,6 +398,11 @@ class PhysicsTuningUI {
             damage: {
                 multiplier: 1,
                 respawnDelay: 3
+            },
+            audio: {
+                engineMinPitch: 0.8,
+                engineMaxPitch: 1.6,
+                engineVolume: 0.4
             }
         };
     }
@@ -389,7 +422,8 @@ class PhysicsTuningUI {
             return {
                 car: { ...defaults.car, ...parsed.car },
                 wheels: { ...defaults.wheels, ...parsed.wheels },
-                damage: { ...defaults.damage, ...parsed.damage }
+                damage: { ...defaults.damage, ...parsed.damage },
+                audio: { ...defaults.audio, ...parsed.audio }
             };
         } catch (error) {
             console.warn('Error loading physics params:', error);
