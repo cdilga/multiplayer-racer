@@ -93,6 +93,20 @@ class PhysicsTuningUI {
                 </label>
             </div>
 
+            <div class="physics-section">
+                <h4>Damage</h4>
+                <label>
+                    <span>Damage Multiplier</span>
+                    <input type="range" class="physics-slider" data-param="damage.multiplier" min="0" max="5" value="${this.params.damage.multiplier}" step="0.1">
+                    <span class="physics-value" data-param="damage.multiplier">${this.params.damage.multiplier}</span>
+                </label>
+                <label>
+                    <span>Respawn Delay (s)</span>
+                    <input type="range" class="physics-slider" data-param="damage.respawnDelay" min="0.5" max="10" value="${this.params.damage.respawnDelay}" step="0.5">
+                    <span class="physics-value" data-param="damage.respawnDelay">${this.params.damage.respawnDelay}</span>
+                </label>
+            </div>
+
             <div class="physics-actions">
                 <button id="physics-save-btn" class="physics-btn">Save</button>
                 <button id="physics-reset-btn" class="physics-btn">Reset Defaults</button>
@@ -330,6 +344,13 @@ class PhysicsTuningUI {
                 }
             }
         }
+
+        // Apply damage system parameters
+        const damage = this.gameHost.systems.damage;
+        if (damage) {
+            damage.setDamageMultiplier(this.params.damage.multiplier);
+            damage.setRespawnDelay(this.params.damage.respawnDelay * 1000); // Convert seconds to ms
+        }
     }
 
     /**
@@ -345,6 +366,10 @@ class PhysicsTuningUI {
             wheels: {
                 frictionSlip: 1000,
                 suspensionStiffness: 30
+            },
+            damage: {
+                multiplier: 1,
+                respawnDelay: 3
             }
         };
     }
@@ -355,8 +380,17 @@ class PhysicsTuningUI {
      */
     _loadParams() {
         try {
+            const defaults = this._getDefaultParams();
             const saved = localStorage.getItem('racerPhysicsParams');
-            return saved ? JSON.parse(saved) : this._getDefaultParams();
+            if (!saved) return defaults;
+
+            // Merge saved params with defaults to ensure new params are included
+            const parsed = JSON.parse(saved);
+            return {
+                car: { ...defaults.car, ...parsed.car },
+                wheels: { ...defaults.wheels, ...parsed.wheels },
+                damage: { ...defaults.damage, ...parsed.damage }
+            };
         } catch (error) {
             console.warn('Error loading physics params:', error);
             return this._getDefaultParams();

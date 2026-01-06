@@ -30,8 +30,6 @@ class RaceUI {
         this.currentSpeed = 0;
         this.currentLap = 0;
         this.totalLaps = 3;
-        this.position = 0;
-        this.totalPlayers = 0;
         this.raceTime = 0;
 
         // Elements
@@ -69,10 +67,6 @@ class RaceUI {
         this.element.innerHTML = `
             <div class="race-hud">
                 <div class="hud-top">
-                    <div class="hud-position">
-                        <span class="position-value" id="race-position">1</span>
-                        <span class="position-suffix">st</span>
-                    </div>
                     <div class="hud-timer" id="race-timer">0:00.000</div>
                     <div class="hud-lap">
                         Lap <span id="race-lap">1</span>/<span id="race-total-laps">3</span>
@@ -108,8 +102,6 @@ class RaceUI {
      * @private
      */
     _bindElements() {
-        this.elements.position = this.element.querySelector('#race-position');
-        this.elements.positionSuffix = this.element.querySelector('.position-suffix');
         this.elements.timer = this.element.querySelector('#race-timer');
         this.elements.lap = this.element.querySelector('#race-lap');
         this.elements.totalLaps = this.element.querySelector('#race-total-laps');
@@ -156,21 +148,6 @@ class RaceUI {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
-            }
-            .hud-position {
-                background: rgba(0, 0, 0, 0.7);
-                padding: 10px 20px;
-                border-radius: 10px;
-                color: white;
-            }
-            .position-value {
-                font-size: 48px;
-                font-weight: bold;
-                color: #00ff88;
-            }
-            .position-suffix {
-                font-size: 24px;
-                color: #888;
             }
             .hud-timer {
                 background: rgba(0, 0, 0, 0.7);
@@ -305,11 +282,16 @@ class RaceUI {
         if (!this.eventBus) return;
 
         this.eventBus.on('race:countdown', (data) => {
+            this.show(); // Ensure UI is visible during countdown
             this.showCountdown(data.count);
         });
 
         this.eventBus.on('race:start', () => {
             this.hideCountdown();
+        });
+
+        this.eventBus.on('game:countdown', () => {
+            this.show(); // Show race UI when countdown state begins
         });
 
         this.eventBus.on('game:racing', () => {
@@ -386,33 +368,6 @@ class RaceUI {
         }
     }
 
-    /**
-     * Update position display
-     * @param {number} position - 1-based position
-     */
-    setPosition(position) {
-        this.position = position;
-        if (this.elements.position) {
-            this.elements.position.textContent = position.toString();
-        }
-        if (this.elements.positionSuffix) {
-            this.elements.positionSuffix.textContent = this._getPositionSuffix(position);
-        }
-    }
-
-    /**
-     * Get position suffix (st, nd, rd, th)
-     * @private
-     */
-    _getPositionSuffix(pos) {
-        if (pos >= 11 && pos <= 13) return 'th';
-        switch (pos % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
-    }
 
     /**
      * Update race timer
@@ -440,12 +395,11 @@ class RaceUI {
 
     /**
      * Update all values at once
-     * @param {Object} data - { speed, lap, position, time }
+     * @param {Object} data - { speed, lap, time }
      */
     update(data) {
         if (data.speed !== undefined) this.setSpeed(data.speed);
         if (data.lap !== undefined) this.setLap(data.lap);
-        if (data.position !== undefined) this.setPosition(data.position);
         if (data.time !== undefined) this.setTime(data.time);
     }
 
