@@ -541,14 +541,15 @@ class AudioManager {
         // Normalize speed to 0-1 range
         const normalizedSpeed = Math.min(1, Math.max(0, speed / maxSpeed));
 
-        // Pitch: 0.8x at idle, up to 1.6x at max speed
-        const minPitch = 0.8;
-        const maxPitch = 1.6;
+        // Pitch: configurable min/max pitch (defaults to 0.8-1.6)
+        const minPitch = this.engineMinPitch || 0.8;
+        const maxPitch = this.engineMaxPitch || 1.6;
         const targetPitch = minPitch + (maxPitch - minPitch) * normalizedSpeed;
         this.engineSource.playbackRate.setValueAtTime(targetPitch, this.audioContext.currentTime);
 
-        // Volume: slightly louder when accelerating
-        const baseVolume = this.isMuted ? 0 : this.sfxVolume * 0.4;
+        // Volume: configurable base volume (default 0.4)
+        const engineBaseVolume = this.engineBaseVolume !== undefined ? this.engineBaseVolume : 0.4;
+        const baseVolume = this.isMuted ? 0 : this.sfxVolume * engineBaseVolume;
         const accelBoost = isAccelerating ? 1.2 : 1.0;
         const speedBoost = 1 + normalizedSpeed * 0.3; // Slightly louder at high speed
         const targetVolume = baseVolume * accelBoost * speedBoost;

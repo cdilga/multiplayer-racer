@@ -97,6 +97,23 @@ class LobbyUI {
                     </label>
                 </div>
 
+                <div class="audio-settings-section">
+                    <h3>Audio</h3>
+                    <div class="audio-controls">
+                        <label class="volume-control">
+                            <span>Music</span>
+                            <input type="range" id="music-volume" min="0" max="100" value="35">
+                            <span class="volume-value" id="music-volume-value">35%</span>
+                        </label>
+                        <label class="volume-control">
+                            <span>SFX</span>
+                            <input type="range" id="sfx-volume" min="0" max="100" value="90">
+                            <span class="volume-value" id="sfx-volume-value">90%</span>
+                        </label>
+                        <button class="mute-button" id="mute-button">Mute</button>
+                    </div>
+                </div>
+
                 <button class="start-button" id="start-game-btn" disabled>
                     Waiting for players...
                 </button>
@@ -124,6 +141,13 @@ class LobbyUI {
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
 
+        // Audio controls
+        this.elements.musicVolume = this.element.querySelector('#music-volume');
+        this.elements.musicVolumeValue = this.element.querySelector('#music-volume-value');
+        this.elements.sfxVolume = this.element.querySelector('#sfx-volume');
+        this.elements.sfxVolumeValue = this.element.querySelector('#sfx-volume-value');
+        this.elements.muteButton = this.element.querySelector('#mute-button');
+
         // Setup start button handler
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
@@ -131,6 +155,76 @@ class LobbyUI {
                     const mode = this.elements.modeSelect?.value || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
                     this.onStartGame({ mode, laps });
+                }
+            });
+        }
+
+        // Setup audio controls
+        this._setupAudioControls();
+    }
+
+    /**
+     * Setup audio control handlers
+     * @private
+     */
+    _setupAudioControls() {
+        const audioManager = typeof window !== 'undefined' ? window.audioManager : null;
+        if (!audioManager) return;
+
+        // Load current values from audioManager
+        if (this.elements.musicVolume && audioManager.musicVolume !== undefined) {
+            const musicPercent = Math.round(audioManager.musicVolume * 100);
+            this.elements.musicVolume.value = musicPercent;
+            if (this.elements.musicVolumeValue) {
+                this.elements.musicVolumeValue.textContent = `${musicPercent}%`;
+            }
+        }
+
+        if (this.elements.sfxVolume && audioManager.sfxVolume !== undefined) {
+            const sfxPercent = Math.round(audioManager.sfxVolume * 100);
+            this.elements.sfxVolume.value = sfxPercent;
+            if (this.elements.sfxVolumeValue) {
+                this.elements.sfxVolumeValue.textContent = `${sfxPercent}%`;
+            }
+        }
+
+        // Update mute button state
+        if (this.elements.muteButton) {
+            this.elements.muteButton.textContent = audioManager.isMuted ? 'Unmute' : 'Mute';
+        }
+
+        // Music volume slider
+        if (this.elements.musicVolume) {
+            this.elements.musicVolume.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (this.elements.musicVolumeValue) {
+                    this.elements.musicVolumeValue.textContent = `${value}%`;
+                }
+                if (audioManager.setMusicVolume) {
+                    audioManager.setMusicVolume(value / 100);
+                }
+            });
+        }
+
+        // SFX volume slider
+        if (this.elements.sfxVolume) {
+            this.elements.sfxVolume.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (this.elements.sfxVolumeValue) {
+                    this.elements.sfxVolumeValue.textContent = `${value}%`;
+                }
+                if (audioManager.setSFXVolume) {
+                    audioManager.setSFXVolume(value / 100);
+                }
+            });
+        }
+
+        // Mute button
+        if (this.elements.muteButton) {
+            this.elements.muteButton.addEventListener('click', () => {
+                if (audioManager.toggleMute) {
+                    const isMuted = audioManager.toggleMute();
+                    this.elements.muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
                 }
             });
         }
@@ -278,6 +372,80 @@ class LobbyUI {
             .start-button:not(:disabled):hover {
                 background: #00cc6a;
                 transform: scale(1.05);
+            }
+            .audio-settings-section {
+                margin-bottom: 30px;
+                padding: 15px;
+                background: rgba(22, 33, 62, 0.5);
+                border-radius: 10px;
+            }
+            .audio-settings-section h3 {
+                margin: 0 0 15px;
+                font-size: 14px;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .audio-controls {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 20px;
+            }
+            .volume-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #aaa;
+                font-size: 14px;
+            }
+            .volume-control span:first-child {
+                min-width: 40px;
+            }
+            .volume-control input[type="range"] {
+                width: 100px;
+                height: 6px;
+                -webkit-appearance: none;
+                background: #333;
+                border-radius: 3px;
+                outline: none;
+            }
+            .volume-control input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 16px;
+                height: 16px;
+                background: #00ff88;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            .volume-control input[type="range"]::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                background: #00ff88;
+                border-radius: 50%;
+                cursor: pointer;
+                border: none;
+            }
+            .volume-value {
+                min-width: 40px;
+                text-align: right;
+                color: #00ff88;
+                font-family: monospace;
+            }
+            .mute-button {
+                background: #333;
+                color: #aaa;
+                border: 1px solid #444;
+                padding: 8px 16px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+            }
+            .mute-button:hover {
+                background: #444;
+                color: white;
             }
         `;
         document.head.appendChild(style);

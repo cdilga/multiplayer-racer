@@ -170,6 +170,9 @@ class Vehicle extends Entity {
     _triggerExplosion() {
         if (!this.mesh || typeof THREE === 'undefined') return;
 
+        // Hide the vehicle mesh during destruction
+        this.mesh.visible = false;
+
         // Create explosion effect at vehicle position
         const explosionGroup = new THREE.Group();
         explosionGroup.position.copy(this.mesh.position);
@@ -297,6 +300,10 @@ class Vehicle extends Entity {
         this.health = Math.min(this.maxHealth, this.health + amount);
         if (this.health > 0) {
             this.isDead = false;
+            // Make vehicle visible again after respawn
+            if (this.mesh) {
+                this.mesh.visible = true;
+            }
         }
     }
 
@@ -328,6 +335,12 @@ class Vehicle extends Entity {
             );
             this.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             this.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
+
+        // Ensure vehicle is visible and reset death state
+        this.isDead = false;
+        if (this.mesh) {
+            this.mesh.visible = true;
         }
 
         // Sync mesh
