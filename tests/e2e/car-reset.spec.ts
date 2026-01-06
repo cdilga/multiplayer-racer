@@ -54,8 +54,8 @@ test.describe('Car Reset Functionality', () => {
             window.gameState._testControlsOverride = true;
         });
 
-        // Move the car forward (reduced iterations)
-        for (let i = 0; i < 15; i++) {
+        // Move the car forward for a few seconds
+        for (let i = 0; i < 30; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
                 const gameState = window.gameState;
@@ -70,11 +70,11 @@ test.describe('Car Reset Functionality', () => {
                     car.lastControlUpdate = Date.now();
                 }
             });
-            await hostPage.waitForTimeout(50); // Reduced from 100ms
+            await hostPage.waitForTimeout(100);
         }
 
-        // Wait for physics to settle (reduced from 500ms)
-        await hostPage.waitForTimeout(200);
+        // Wait for physics to settle
+        await hostPage.waitForTimeout(500);
 
         // Get position after moving
         const movedPosition = await hostPage.evaluate(() => {

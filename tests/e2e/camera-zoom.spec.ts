@@ -2,7 +2,7 @@ import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } fr
 
 test.describe('Dynamic Camera Zoom', () => {
 
-    test('should keep both vehicles visible when positioned far apart', async ({ hostPage, playerPage, browser }) => {
+    test('should keep both vehicles visible when positioned far apart', async ({ hostPage, playerPage, playerContext }) => {
         // Host creates room
         await hostPage.goto('/');
         const roomCode = await waitForRoomCode(hostPage);
@@ -11,13 +11,8 @@ test.describe('Dynamic Camera Zoom', () => {
         await joinGameAsPlayer(playerPage, roomCode, 'Player1');
         await expect(hostPage.locator('#player-list')).toContainText('Player1', { timeout: 10000 });
 
-        // Create a fresh context for Player 2 (avoid conflicts with shared context)
-        const player2Context = await browser.newContext({
-            viewport: { width: 375, height: 667 },
-            isMobile: true,
-            hasTouch: true,
-        });
-        const player2Page = await player2Context.newPage();
+        // Create a second player page for Player 2
+        const player2Page = await playerContext.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'Player2');
         await expect(hostPage.locator('#player-list')).toContainText('Player2', { timeout: 10000 });
 
@@ -103,10 +98,9 @@ test.describe('Dynamic Camera Zoom', () => {
         expect(cameraResult.vehicle2InFrustum).toBe(true);
 
         await player2Page.close();
-        await player2Context.close();
     });
 
-    test('should adjust camera FOV/zoom when vehicles spread apart', async ({ hostPage, playerPage, browser }) => {
+    test('should adjust camera FOV/zoom when vehicles spread apart', async ({ hostPage, playerPage, playerContext }) => {
         // Host creates room
         await hostPage.goto('/');
         const roomCode = await waitForRoomCode(hostPage);
@@ -115,13 +109,8 @@ test.describe('Dynamic Camera Zoom', () => {
         await joinGameAsPlayer(playerPage, roomCode, 'ZoomTest1');
         await expect(hostPage.locator('#player-list')).toContainText('ZoomTest1', { timeout: 10000 });
 
-        // Create a fresh context for Player 2
-        const player2Context = await browser.newContext({
-            viewport: { width: 375, height: 667 },
-            isMobile: true,
-            hasTouch: true,
-        });
-        const player2Page = await player2Context.newPage();
+        // Create a second player
+        const player2Page = await playerContext.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'ZoomTest2');
         await expect(hostPage.locator('#player-list')).toContainText('ZoomTest2', { timeout: 10000 });
 
@@ -199,10 +188,9 @@ test.describe('Dynamic Camera Zoom', () => {
         expect(zoomResult.vehicle2Visible).toBe(true);
 
         await player2Page.close();
-        await player2Context.close();
     });
 
-    test('should center camera on average position of all vehicles', async ({ hostPage, playerPage, browser }) => {
+    test('should center camera on average position of all vehicles', async ({ hostPage, playerPage, playerContext }) => {
         // Host creates room
         await hostPage.goto('/');
         const roomCode = await waitForRoomCode(hostPage);
@@ -211,13 +199,8 @@ test.describe('Dynamic Camera Zoom', () => {
         await joinGameAsPlayer(playerPage, roomCode, 'CenterTest1');
         await expect(hostPage.locator('#player-list')).toContainText('CenterTest1', { timeout: 10000 });
 
-        // Create a fresh context for Player 2
-        const player2Context = await browser.newContext({
-            viewport: { width: 375, height: 667 },
-            isMobile: true,
-            hasTouch: true,
-        });
-        const player2Page = await player2Context.newPage();
+        // Create a second player
+        const player2Page = await playerContext.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'CenterTest2');
         await expect(hostPage.locator('#player-list')).toContainText('CenterTest2', { timeout: 10000 });
 
@@ -278,7 +261,6 @@ test.describe('Dynamic Camera Zoom', () => {
         expect(centerResult.cameraCenteredApprox).toBe(true);
 
         await player2Page.close();
-        await player2Context.close();
     });
 
 });

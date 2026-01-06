@@ -88,9 +88,10 @@ export async function joinGameAsPlayer(
 
     // Wait for waiting screen to appear OR game screen (race may have started)
     // Use a Promise.race to handle either outcome
+    // Increased timeout to 30s to handle slow CDN/socket connections
     await Promise.race([
-        playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 }),
-        playerPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 }),
+        playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 30000 }),
+        playerPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 30000 }),
     ]);
 
     // Small delay to ensure socket connection is stable

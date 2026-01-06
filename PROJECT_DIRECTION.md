@@ -112,70 +112,11 @@ When building features autonomously, use this priority tree:
 - **If it restricts fun** → Simplify it
 - **If it's realistic but reduces chaos** → Make it more arcade-like
 
-## Current Game State
+## Current Status
 
-### What's Working ✅
-- Physics engine (Rapier 3D with vehicle controller)
-- Damage system (collision-based, respawn mechanics)
-- Joystick controller (mobile-friendly, multi-touch safe)
-- Debug UI (F2/F3/F4 overlays for tuning)
-- Networking (Socket.IO, multiplayer synchronization)
-- Race loop (lobby → countdown → racing → results)
-- Architecture (event-driven, modular systems)
-- **All 21 E2E tests passing**
+**See `GAME_IMPROVEMENT_IDEAS.md` for current roadmap and task tracking.**
 
-### What's Broken / Incomplete ❌
-- Race never ends (laps increment but no finish condition)
-- Camera doesn't adjust for 2+ vehicles
-- No game mode selector (only Race mode)
-- No destruction visuals (explosions, particles, debris)
-- No health bar UI
-- No weapon/combat system
-- No Derby mode
-- No Fight mode
-
-## Three-Month Roadmap
-
-### Phase 1: Race Completion & Core Loop (Weeks 1-2)
-- Fix race finish logic (lap gates, results screen)
-- Implement lobby return
-- Dynamic camera zoom for multi-vehicle
-- Mode system infrastructure (selector UI, mode passing)
-
-### Phase 2: Visual Destruction (Weeks 3-4)
-- Explosion particle effects
-- Progressive vehicle damage visuals
-- Smoke effects (at 10% health)
-- Damage visualization on vehicle model
-- Test destruction feel with camera shake/effects
-
-### Phase 3: Derby Mode (Weeks 5-6)
-- Bowl arena design
-- Obstacle placement (jumps, loops, trees, houses, stadium)
-- Round system with scoring
-- Victory condition implementation
-- Visual arena testing/refinement
-
-### Phase 4: Fight Mode (Weeks 7-8)
-- Weapon system (guns, power-ups, abilities)
-- Weapon spawning and pickup mechanics
-- Combat mechanics and feedback
-- Fight arena design
-- Balancing and feel testing
-
-### Phase 5: Polish & Performance (Weeks 9-12)
-- Visual refinement (particles, lighting, effects)
-- Performance optimization (desktop app)
-- All modes integrated and tested
-- Playtesting with 16+ players
-- UI refinement
-- Bug fixes and stability
-
-### Phase 6: Launch Prep (Week 13+)
-- Final testing across all modes
-- Desktop app packaging (Windows/Mac)
-- Documentation and build process
-- Post-launch: roadmap for web version, cosmetics, etc.
+---
 
 ## Non-Goals (Not Part of MVP)
 
