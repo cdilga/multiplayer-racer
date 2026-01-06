@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='../static', template_folder='../frontend')
 app.config['SECRET_KEY'] = 'race_game_secret!'
+# Configure SocketIO - keep defaults for stability during long-polling
+# Shorter intervals caused "transport error" disconnects
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Game rooms dictionary
@@ -331,7 +333,8 @@ def on_join_game(data):
         'game_state': room['game_state']
     })
 
-    # Notify host about new/reconnected player
+    # Notify everyone in the room about new/reconnected player (including host)
+    # Using room broadcast instead of direct emit to host_sid for better reliability
     event_name = 'player_reconnected' if is_reconnecting else 'player_joined'
     emit(event_name, {
         'id': player_id,
@@ -340,7 +343,7 @@ def on_join_game(data):
         'position': position,
         'rotation': rotation,
         'velocity': velocity
-    }, room=room['host_sid'])
+    }, room=room_code)
 
     action = "reconnected to" if is_reconnecting else "joined"
     logger.info(f"Player {player_name} (ID: {player_id}) {action} room {room_code}")

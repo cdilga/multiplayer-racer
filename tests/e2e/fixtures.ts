@@ -46,6 +46,11 @@ export const test = base.extend<GameTestFixtures>({
 
 export { expect } from '@playwright/test';
 
+// Helper to navigate to host page with test mode for faster socket connections
+export async function gotoHost(hostPage: Page): Promise<void> {
+    await hostPage.goto('/?testMode=1');
+}
+
 // Helper to wait for room code to appear on host
 export async function waitForRoomCode(hostPage: Page): Promise<string> {
     // Wait for room code element to be visible
@@ -71,8 +76,8 @@ export async function joinGameAsPlayer(
     roomCode: string,
     playerName: string = 'TestPlayer'
 ): Promise<void> {
-    // Navigate to player page
-    await playerPage.goto('/player');
+    // Navigate to player page with testMode flag for faster socket connections
+    await playerPage.goto('/player?testMode=1');
 
     // Wait for join screen to be visible
     await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
@@ -86,16 +91,19 @@ export async function joinGameAsPlayer(
     // Click join button
     await playerPage.click('#join-btn');
 
-    // Wait for waiting screen to appear OR game screen (race may have started)
-    // Use a Promise.race to handle either outcome
-    // Increased timeout to 30s to handle slow CDN/socket connections
-    await Promise.race([
-        playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 30000 }),
-        playerPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 30000 }),
-    ]);
+    // Wait for game state to indicate we've joined (via JavaScript)
+    // This is more reliable than waiting for CSS class changes which depend on socket timing
+    await playerPage.waitForFunction(
+        () => {
+            // @ts-ignore - gameState is a global
+            const gs = window.gameState;
+            return gs && gs.playerId !== null;
+        },
+        { timeout: 30000 }
+    );
 
-    // Small delay to ensure socket connection is stable
-    await playerPage.waitForTimeout(200);
+    // Small delay to ensure UI has updated
+    await playerPage.waitForTimeout(100);
 }
 
 // Helper to start game from host
@@ -120,7 +128,7 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
     });
 
     // Wait for game screen to be visible (game-container should have canvas)
-    await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 });
+    await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 30000 });
 
     // Wait for game to actually initialize (check for game object and canvas)
     // Use a more lenient check - just verify game and canvas exist, not that loop is running

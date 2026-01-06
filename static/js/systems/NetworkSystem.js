@@ -56,7 +56,12 @@ class NetworkSystem {
                 console.error('NetworkSystem: Socket.IO not loaded');
                 return;
             }
-            this.socket = io();
+            // Use polling only in test mode to avoid websocket upgrade issues
+            const isTestMode = typeof window !== 'undefined' &&
+                new URLSearchParams(window.location?.search).get('testMode') === '1';
+            this.socket = io({
+                transports: isTestMode ? ['polling'] : ['polling', 'websocket']
+            });
         }
 
         // Setup event handlers

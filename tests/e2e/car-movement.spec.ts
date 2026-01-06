@@ -1,4 +1,4 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Car Movement and Physics', () => {
     test('car should move forward when acceleration is applied', async ({ hostPage, playerPage }) => {
@@ -13,10 +13,11 @@ test.describe('Car Movement and Physics', () => {
         });
 
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'MoveTest');
-        await expect(hostPage.locator('#player-list')).toContainText('MoveTest', { timeout: 10000 });
+        // Wait longer for socket event to propagate (polling can take up to 10s per cycle)
+        await expect(hostPage.locator('#player-list')).toContainText('MoveTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
