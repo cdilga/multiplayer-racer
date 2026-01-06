@@ -704,7 +704,7 @@ class RenderSystem {
             }
         }
 
-        if (mesh) {
+        if (mesh && typeof mesh.traverse === 'function') {
             this.scene.remove(mesh);
 
             // Dispose geometry and materials

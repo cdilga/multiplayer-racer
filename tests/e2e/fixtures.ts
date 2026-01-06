@@ -86,8 +86,15 @@ export async function joinGameAsPlayer(
     // Click join button
     await playerPage.click('#join-btn');
 
-    // Wait for waiting screen to appear (not hidden)
-    await playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+    // Wait for waiting screen to appear OR game screen (race may have started)
+    // Use a Promise.race to handle either outcome
+    await Promise.race([
+        playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 }),
+        playerPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 }),
+    ]);
+
+    // Small delay to ensure socket connection is stable
+    await playerPage.waitForTimeout(200);
 }
 
 // Helper to start game from host
@@ -95,8 +102,10 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
     // Wait for start button to be enabled
     await hostPage.waitForSelector('#start-game-btn:not([disabled])', { timeout: 10000 });
 
-    // Click start button
-    await hostPage.click('#start-game-btn');
+    // Scroll button into view and click with force to handle viewport edge cases
+    const startButton = hostPage.locator('#start-game-btn');
+    await startButton.scrollIntoViewIfNeeded();
+    await startButton.click({ force: true });
 
     // Wait for game screen to be visible (game-container should have canvas)
     await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 });

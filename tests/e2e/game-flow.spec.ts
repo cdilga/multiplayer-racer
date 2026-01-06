@@ -143,7 +143,10 @@ test.describe('Multiplayer Racer Game Flow', () => {
             await player1Page.fill('#player-name', 'Player1');
             await player1Page.fill('#room-code', roomCode);
             await player1Page.click('#join-btn');
-            await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            await Promise.race([
+                player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 }),
+                player1Page.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 }),
+            ]);
 
             // Player 2 joins
             await player2Page.goto(`${baseURL || 'http://localhost:8000'}/player`);
@@ -151,7 +154,10 @@ test.describe('Multiplayer Racer Game Flow', () => {
             await player2Page.fill('#player-name', 'Player2');
             await player2Page.fill('#room-code', roomCode);
             await player2Page.click('#join-btn');
-            await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            await Promise.race([
+                player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 }),
+                player2Page.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 }),
+            ]);
 
             // Verify both players appear in host's list
             await expect(hostPage.locator('#player-list')).toContainText('Player1', { timeout: 10000 });

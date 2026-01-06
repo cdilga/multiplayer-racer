@@ -54,21 +54,18 @@ test.describe('Car Movement and Physics', () => {
             gameState._testControlsOverride = true;
         });
 
-        // Set controls directly on the car (reduced iterations and wait time)
+        // Set controls via Vehicle.setControls (reduced iterations and wait time)
         for (let i = 0; i < 15; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    // Force set controls
-                    car.controls = {
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({
                         acceleration: 1.0,
                         braking: 0,
                         steering: 0
-                    };
-                    car.lastControlUpdate = Date.now();
+                    });
                 }
             });
             await hostPage.waitForTimeout(50); // Reduced from 100ms
@@ -135,19 +132,18 @@ test.describe('Car Movement and Physics', () => {
             window.gameState._testControlsOverride = true;
         });
 
-        // Accelerate first - set controls continuously (reduced iterations)
+        // Accelerate first - set controls via Vehicle.setControls (reduced iterations)
         for (let i = 0; i < 10; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    car.controls = {
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({
                         acceleration: 1.0,
                         braking: 0,
                         steering: 0
-                    };
+                    });
                 }
             });
             await hostPage.waitForTimeout(50); // Reduced from 100ms
@@ -188,19 +184,18 @@ test.describe('Car Movement and Physics', () => {
         expect(movingState.position.z, 'Car should have moved forward').toBeGreaterThan(-19);
         const movingVelocity = movingState.velocity;
 
-        // Apply brakes - set controls continuously (reduced iterations)
+        // Apply brakes via Vehicle.setControls (reduced iterations)
         for (let i = 0; i < 10; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    car.controls = {
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({
                         acceleration: 0,
                         braking: 1.0,
                         steering: 0
-                    };
+                    });
                 }
             });
             await hostPage.waitForTimeout(50); // Reduced from 100ms
@@ -276,11 +271,10 @@ test.describe('Car Movement and Physics', () => {
         for (let i = 0; i < 15; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    car.controls = { acceleration: 0, braking: 1.0, steering: 0 };
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({ acceleration: 0, braking: 1.0, steering: 0 });
                 }
             });
             await hostPage.waitForTimeout(100);
@@ -310,11 +304,10 @@ test.describe('Car Movement and Physics', () => {
         for (let i = 0; i < 35; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    car.controls = { acceleration: 0, braking: 1.0, steering: 0 };
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({ acceleration: 0, braking: 1.0, steering: 0 });
                 }
             });
 
@@ -351,11 +344,10 @@ test.describe('Car Movement and Physics', () => {
         for (let i = 0; i < 10; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
-                const gameState = window.gameState;
-                const carIds = Object.keys(gameState.cars);
-                if (carIds.length > 0) {
-                    const car = gameState.cars[carIds[0]];
-                    car.controls = { acceleration: 0, braking: 0, steering: 0 };
+                const game = window.game;
+                if (game && game.vehicles && game.vehicles.size > 0) {
+                    const vehicle = game.vehicles.values().next().value;
+                    vehicle.setControls({ acceleration: 0, braking: 0, steering: 0 });
                 }
             });
             await hostPage.waitForTimeout(100);

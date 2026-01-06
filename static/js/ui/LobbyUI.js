@@ -128,7 +128,7 @@ class LobbyUI {
                     </label>
                 </div>
 
-                <div class="visual-settings-section">
+                <div class="visual-settings-section collapsed">
                     <h3 class="visual-settings-header" id="visual-settings-toggle">
                         Visual Settings <span class="toggle-arrow">▼</span>
                     </h3>
