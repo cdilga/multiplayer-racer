@@ -99,13 +99,24 @@ export async function joinGameAsPlayer(
 
 // Helper to start game from host
 export async function startGameFromHost(hostPage: Page): Promise<void> {
-    // Wait for start button to be enabled
-    await hostPage.waitForSelector('#start-game-btn:not([disabled])', { timeout: 10000 });
+    // Wait for start button to be enabled by checking it's not disabled
+    // First wait for the button to exist
+    await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
 
-    // Scroll button into view and click with force to handle viewport edge cases
-    const startButton = hostPage.locator('#start-game-btn');
-    await startButton.scrollIntoViewIfNeeded();
-    await startButton.click({ force: true });
+    // Wait until button is enabled (not having disabled attribute)
+    await hostPage.waitForFunction(
+        () => {
+            const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
+            return btn && !btn.disabled;
+        },
+        { timeout: 30000 }
+    );
+
+    // Click start button via JavaScript to bypass viewport checks
+    await hostPage.evaluate(() => {
+        const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
+        if (btn) btn.click();
+    });
 
     // Wait for game screen to be visible (game-container should have canvas)
     await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 15000 });

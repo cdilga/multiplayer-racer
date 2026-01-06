@@ -35,7 +35,17 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 #         'velocity': [x, y, z]
 #       }
 #     },
-#     'game_state': 'waiting'|'racing'|'finished'
+#     'game_state': 'waiting'|'racing'|'finished',
+#     'disconnected_players': {
+#       player_id: {
+#         'name': player_name,
+#         'car_color': car_color,
+#         'position': [x, y, z],
+#         'rotation': [x, y, z],
+#         'velocity': [x, y, z],
+#         'disconnect_time': timestamp
+#       }
+#     }
 #   }
 # }
 game_rooms = {}
@@ -196,7 +206,8 @@ def create_room(data=None):
     game_rooms[room_code] = {
         'host_sid': host_sid,
         'players': {},
-        'game_state': 'waiting'
+        'game_state': 'waiting',
+        'disconnected_players': {}
     }
     
     join_room(room_code)
@@ -245,64 +256,94 @@ def player_control_update(data):
 @socketio.on('join_game')
 def on_join_game(data):
     """Handle player joining a game room"""
+    import time
+
     player_name = data.get('player_name', 'Player')
     room_code = data.get('room_code', '').upper()
-    
+    reconnect_id = data.get('reconnect_id')  # Optional: for reconnection
+
     # Validate room code
     if not room_code or room_code not in game_rooms:
         emit('error', {'message': 'Invalid room code'})
         return
-    
+
     # Get room
     room = game_rooms[room_code]
-    
-    # Check if game already started
-    if room['game_state'] != 'waiting':
+
+    # Check for reconnection - allow during racing if player was disconnected
+    is_reconnecting = False
+    reconnect_data = None
+
+    if reconnect_id and reconnect_id in room.get('disconnected_players', {}):
+        # Player is reconnecting
+        reconnect_data = room['disconnected_players'][reconnect_id]
+        # Only allow reconnection within 5 minutes
+        if time.time() - reconnect_data.get('disconnect_time', 0) < 300:
+            is_reconnecting = True
+            del room['disconnected_players'][reconnect_id]
+            logger.info(f"Player {player_name} reconnecting to room {room_code}")
+
+    # Check if game already started (unless reconnecting)
+    if room['game_state'] != 'waiting' and not is_reconnecting:
         emit('error', {'message': 'Game already in progress'})
         return
-    
-    # Generate player ID (1-based index)
-    player_id = len(room['players']) + 1
-    
-    # Generate random car color
-    car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
-    
+
+    if is_reconnecting and reconnect_data:
+        # Restore player with same ID and color
+        player_id = reconnect_id
+        car_color = reconnect_data['car_color']
+        position = reconnect_data['position']
+        rotation = reconnect_data['rotation']
+        velocity = reconnect_data['velocity']
+    else:
+        # Generate player ID (1-based index)
+        player_id = len(room['players']) + len(room.get('disconnected_players', {})) + 1
+        # Generate random car color
+        car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
+        position = [0, 0.5, 0]
+        rotation = [0, 0, 0]
+        velocity = [0, 0, 0]
+
     # Add player to room
     room['players'][request.sid] = {
         'id': player_id,
         'name': player_name,
         'car_color': car_color,
-        'position': [0, 0.5, 0],  # Default starting position
-        'rotation': [0, 0, 0],    # Default rotation
-        'velocity': [0, 0, 0],    # Default velocity
+        'position': position,
+        'rotation': rotation,
+        'velocity': velocity,
         'controls': {
             'steering': 0,
             'acceleration': 0,
             'braking': 0
         }
     }
-    
+
     # Join Socket.IO room
     join_room(room_code)
-    
+
     # Notify player they've joined
     emit('game_joined', {
         'player_id': player_id,
         'name': player_name,
-        'car_color': car_color
+        'car_color': car_color,
+        'reconnected': is_reconnecting,
+        'game_state': room['game_state']
     })
-    
-    # Notify host about new player
-    emit('player_joined', {
+
+    # Notify host about new/reconnected player
+    event_name = 'player_reconnected' if is_reconnecting else 'player_joined'
+    emit(event_name, {
         'id': player_id,
         'name': player_name,
         'car_color': car_color,
-        'position': [0, 0.5, 0],
-        'rotation': [0, 0, 0],
-        'velocity': [0, 0, 0]
+        'position': position,
+        'rotation': rotation,
+        'velocity': velocity
     }, room=room['host_sid'])
-    
-    logger.info(f"Player {player_name} (ID: {player_id}) joined room {room_code}")
+
+    action = "reconnected to" if is_reconnecting else "joined"
+    logger.info(f"Player {player_name} (ID: {player_id}) {action} room {room_code}")
 
 @socketio.on('start_game')
 def start_game(data):
@@ -353,8 +394,10 @@ def player_update(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle client disconnection."""
+    import time
+
     client_sid = request.sid
-    
+
     # Check if disconnected client was a host
     for room_code, room_data in list(game_rooms.items()):
         if room_data['host_sid'] == client_sid:
@@ -363,19 +406,35 @@ def handle_disconnect():
             del game_rooms[room_code]
             logger.info(f"Host disconnected, room {room_code} closed")
             break
-            
+
         # Check if disconnected client was a player
         if client_sid in room_data['players']:
             player_data = room_data['players'][client_sid]
+            player_id = player_data['id']
+
+            # If game is racing, save player state for reconnection
+            if room_data['game_state'] == 'racing':
+                room_data['disconnected_players'][player_id] = {
+                    'name': player_data['name'],
+                    'car_color': player_data['car_color'],
+                    'position': player_data['position'],
+                    'rotation': player_data['rotation'],
+                    'velocity': player_data['velocity'],
+                    'disconnect_time': time.time()
+                }
+                logger.info(f"Player {player_data['name']} disconnected (can reconnect) from room {room_code}")
+            else:
+                logger.info(f"Player {player_data['name']} disconnected from room {room_code}")
+
             del room_data['players'][client_sid]
-            
+
             # Notify host about player disconnect
             emit('player_left', {
-                'player_id': player_data['id'],
-                'player_name': player_data['name']
+                'player_id': player_id,
+                'player_name': player_data['name'],
+                'can_reconnect': room_data['game_state'] == 'racing'
             }, to=room_data['host_sid'])
-            
-            logger.info(f"Player {player_data['name']} disconnected from room {room_code}")
+
             break
 
 @socketio.on('reset_player_position')

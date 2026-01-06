@@ -118,6 +118,14 @@ class LobbyUI {
 
                 <div class="settings-section">
                     <label>
+                        Mode:
+                        <select id="mode-select">
+                            <option value="race" selected>Race</option>
+                            <option value="derby" disabled>Derby (Coming Soon)</option>
+                            <option value="fight" disabled>Fight (Coming Soon)</option>
+                        </select>
+                    </label>
+                    <label style="margin-left: 20px;">
                         Laps:
                         <select id="laps-select">
                             <option value="1">1</option>
@@ -185,6 +193,7 @@ class LobbyUI {
         this.elements.joinUrl = this.element.querySelector('#join-url');
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
+        this.elements.modeSelect = this.element.querySelector('#mode-select');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
 
@@ -201,13 +210,90 @@ class LobbyUI {
         this.elements.presetNeonMax = this.element.querySelector('#preset-neon-max');
         this.elements.presetMobileLite = this.element.querySelector('#preset-mobile-lite');
         this.elements.presetOff = this.element.querySelector('#preset-off');
+        // Audio controls
+        this.elements.musicVolume = this.element.querySelector('#music-volume');
+        this.elements.musicVolumeValue = this.element.querySelector('#music-volume-value');
+        this.elements.sfxVolume = this.element.querySelector('#sfx-volume');
+        this.elements.sfxVolumeValue = this.element.querySelector('#sfx-volume-value');
+        this.elements.muteButton = this.element.querySelector('#mute-button');
 
         // Setup start button handler
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
                 if (this.onStartGame) {
+                    const mode = this.elements.modeSelect?.value || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
-                    this.onStartGame({ laps });
+                    this.onStartGame({ mode, laps });
+                }
+            });
+        }
+
+        // Setup audio controls
+        this._setupAudioControls();
+    }
+
+    /**
+     * Setup audio control handlers
+     * @private
+     */
+    _setupAudioControls() {
+        const audioManager = typeof window !== 'undefined' ? window.audioManager : null;
+        if (!audioManager) return;
+
+        // Load current values from audioManager
+        if (this.elements.musicVolume && audioManager.musicVolume !== undefined) {
+            const musicPercent = Math.round(audioManager.musicVolume * 100);
+            this.elements.musicVolume.value = musicPercent;
+            if (this.elements.musicVolumeValue) {
+                this.elements.musicVolumeValue.textContent = `${musicPercent}%`;
+            }
+        }
+
+        if (this.elements.sfxVolume && audioManager.sfxVolume !== undefined) {
+            const sfxPercent = Math.round(audioManager.sfxVolume * 100);
+            this.elements.sfxVolume.value = sfxPercent;
+            if (this.elements.sfxVolumeValue) {
+                this.elements.sfxVolumeValue.textContent = `${sfxPercent}%`;
+            }
+        }
+
+        // Update mute button state
+        if (this.elements.muteButton) {
+            this.elements.muteButton.textContent = audioManager.isMuted ? 'Unmute' : 'Mute';
+        }
+
+        // Music volume slider
+        if (this.elements.musicVolume) {
+            this.elements.musicVolume.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (this.elements.musicVolumeValue) {
+                    this.elements.musicVolumeValue.textContent = `${value}%`;
+                }
+                if (audioManager.setMusicVolume) {
+                    audioManager.setMusicVolume(value / 100);
+                }
+            });
+        }
+
+        // SFX volume slider
+        if (this.elements.sfxVolume) {
+            this.elements.sfxVolume.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value, 10);
+                if (this.elements.sfxVolumeValue) {
+                    this.elements.sfxVolumeValue.textContent = `${value}%`;
+                }
+                if (audioManager.setSFXVolume) {
+                    audioManager.setSFXVolume(value / 100);
+                }
+            });
+        }
+
+        // Mute button
+        if (this.elements.muteButton) {
+            this.elements.muteButton.addEventListener('click', () => {
+                if (audioManager.toggleMute) {
+                    const isMuted = audioManager.toggleMute();
+                    this.elements.muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
                 }
             });
         }
@@ -466,7 +552,7 @@ class LobbyUI {
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.85);
+                background: rgba(0, 0, 0, 0.4);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -477,13 +563,17 @@ class LobbyUI {
                 display: none;
             }
             .lobby-content {
-                background: #2a1510;
+                background: rgba(26, 26, 46, 0.85);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
                 border-radius: 20px;
-                padding: 40px;
+                padding: 30px 40px;
                 text-align: center;
                 color: white;
-                max-width: 500px;
-                width: 90%;
+                max-width: 800px;
+                width: 95%;
+                max-height: 90vh;
+                overflow-y: auto;
             }
             .lobby-title {
                 font-size: 32px;
@@ -697,6 +787,80 @@ class LobbyUI {
             .start-button:not(:disabled):hover {
                 background: #FF8800;
                 transform: scale(1.05);
+            }
+            .audio-settings-section {
+                margin-bottom: 30px;
+                padding: 15px;
+                background: rgba(22, 33, 62, 0.5);
+                border-radius: 10px;
+            }
+            .audio-settings-section h3 {
+                margin: 0 0 15px;
+                font-size: 14px;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .audio-controls {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 20px;
+            }
+            .volume-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #aaa;
+                font-size: 14px;
+            }
+            .volume-control span:first-child {
+                min-width: 40px;
+            }
+            .volume-control input[type="range"] {
+                width: 100px;
+                height: 6px;
+                -webkit-appearance: none;
+                background: #333;
+                border-radius: 3px;
+                outline: none;
+            }
+            .volume-control input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 16px;
+                height: 16px;
+                background: #00ff88;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            .volume-control input[type="range"]::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                background: #00ff88;
+                border-radius: 50%;
+                cursor: pointer;
+                border: none;
+            }
+            .volume-value {
+                min-width: 40px;
+                text-align: right;
+                color: #00ff88;
+                font-family: monospace;
+            }
+            .mute-button {
+                background: #333;
+                color: #aaa;
+                border: 1px solid #444;
+                padding: 8px 16px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+            }
+            .mute-button:hover {
+                background: #444;
+                color: white;
             }
         `;
         document.head.appendChild(style);

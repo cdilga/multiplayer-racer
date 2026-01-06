@@ -294,6 +294,11 @@ class ResultsUI {
         this.eventBus.on('game:lobby', () => {
             this.hide();
         });
+
+        // Hide results when a new race starts (Play Again)
+        this.eventBus.on('game:countdown', () => {
+            this.hide();
+        });
     }
 
     /**

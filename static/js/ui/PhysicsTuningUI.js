@@ -93,6 +93,39 @@ class PhysicsTuningUI {
                 </label>
             </div>
 
+            <div class="physics-section">
+                <h4>Damage</h4>
+                <label>
+                    <span>Damage Multiplier</span>
+                    <input type="range" class="physics-slider" data-param="damage.multiplier" min="0" max="5" value="${this.params.damage.multiplier}" step="0.1">
+                    <span class="physics-value" data-param="damage.multiplier">${this.params.damage.multiplier}</span>
+                </label>
+                <label>
+                    <span>Respawn Delay (s)</span>
+                    <input type="range" class="physics-slider" data-param="damage.respawnDelay" min="0.5" max="10" value="${this.params.damage.respawnDelay}" step="0.5">
+                    <span class="physics-value" data-param="damage.respawnDelay">${this.params.damage.respawnDelay}</span>
+                </label>
+            </div>
+
+            <div class="physics-section">
+                <h4>Audio</h4>
+                <label>
+                    <span>Engine Min Pitch</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineMinPitch" min="0.5" max="1.5" value="${this.params.audio.engineMinPitch}" step="0.1">
+                    <span class="physics-value" data-param="audio.engineMinPitch">${this.params.audio.engineMinPitch}</span>
+                </label>
+                <label>
+                    <span>Engine Max Pitch</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineMaxPitch" min="1.0" max="3.0" value="${this.params.audio.engineMaxPitch}" step="0.1">
+                    <span class="physics-value" data-param="audio.engineMaxPitch">${this.params.audio.engineMaxPitch}</span>
+                </label>
+                <label>
+                    <span>Engine Volume</span>
+                    <input type="range" class="physics-slider" data-param="audio.engineVolume" min="0" max="1" value="${this.params.audio.engineVolume}" step="0.05">
+                    <span class="physics-value" data-param="audio.engineVolume">${this.params.audio.engineVolume}</span>
+                </label>
+            </div>
+
             <div class="physics-actions">
                 <button id="physics-save-btn" class="physics-btn">Save</button>
                 <button id="physics-reset-btn" class="physics-btn">Reset Defaults</button>
@@ -330,6 +363,22 @@ class PhysicsTuningUI {
                 }
             }
         }
+
+        // Apply damage system parameters
+        const damage = this.gameHost.systems.damage;
+        if (damage) {
+            damage.setDamageMultiplier(this.params.damage.multiplier);
+            damage.setRespawnDelay(this.params.damage.respawnDelay * 1000); // Convert seconds to ms
+        }
+
+        // Apply audio parameters to audioManager
+        const audioManager = typeof window !== 'undefined' ? window.audioManager : null;
+        if (audioManager) {
+            // Store audio params for engine sound updates
+            audioManager.engineMinPitch = this.params.audio.engineMinPitch;
+            audioManager.engineMaxPitch = this.params.audio.engineMaxPitch;
+            audioManager.engineBaseVolume = this.params.audio.engineVolume;
+        }
     }
 
     /**
@@ -345,6 +394,15 @@ class PhysicsTuningUI {
             wheels: {
                 frictionSlip: 1000,
                 suspensionStiffness: 30
+            },
+            damage: {
+                multiplier: 1,
+                respawnDelay: 3
+            },
+            audio: {
+                engineMinPitch: 0.8,
+                engineMaxPitch: 1.6,
+                engineVolume: 0.4
             }
         };
     }
@@ -355,8 +413,18 @@ class PhysicsTuningUI {
      */
     _loadParams() {
         try {
+            const defaults = this._getDefaultParams();
             const saved = localStorage.getItem('racerPhysicsParams');
-            return saved ? JSON.parse(saved) : this._getDefaultParams();
+            if (!saved) return defaults;
+
+            // Merge saved params with defaults to ensure new params are included
+            const parsed = JSON.parse(saved);
+            return {
+                car: { ...defaults.car, ...parsed.car },
+                wheels: { ...defaults.wheels, ...parsed.wheels },
+                damage: { ...defaults.damage, ...parsed.damage },
+                audio: { ...defaults.audio, ...parsed.audio }
+            };
         } catch (error) {
             console.warn('Error loading physics params:', error);
             return this._getDefaultParams();

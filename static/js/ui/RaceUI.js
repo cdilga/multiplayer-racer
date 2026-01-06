@@ -30,8 +30,6 @@ class RaceUI {
         this.currentSpeed = 0;
         this.currentLap = 0;
         this.totalLaps = 3;
-        this.position = 0;
-        this.totalPlayers = 0;
         this.raceTime = 0;
 
         // Elements
@@ -69,14 +67,14 @@ class RaceUI {
         this.element.innerHTML = `
             <div class="race-hud">
                 <div class="hud-top">
-                    <div class="hud-position">
-                        <span class="position-value" id="race-position">1</span>
-                        <span class="position-suffix">st</span>
-                    </div>
                     <div class="hud-timer" id="race-timer">0:00.000</div>
                     <div class="hud-lap">
                         Lap <span id="race-lap">1</span>/<span id="race-total-laps">3</span>
                     </div>
+                </div>
+
+                <div class="hud-health-bars" id="health-bars-container">
+                    <!-- Health bars populated dynamically -->
                 </div>
 
                 <div class="hud-bottom">
@@ -104,12 +102,11 @@ class RaceUI {
      * @private
      */
     _bindElements() {
-        this.elements.position = this.element.querySelector('#race-position');
-        this.elements.positionSuffix = this.element.querySelector('.position-suffix');
         this.elements.timer = this.element.querySelector('#race-timer');
         this.elements.lap = this.element.querySelector('#race-lap');
         this.elements.totalLaps = this.element.querySelector('#race-total-laps');
         this.elements.speed = this.element.querySelector('#race-speed');
+        this.elements.healthBars = this.element.querySelector('#health-bars-container');
         this.countdownElement = this.element.querySelector('#race-countdown');
     }
 
@@ -151,21 +148,6 @@ class RaceUI {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
-            }
-            .hud-position {
-                background: rgba(0, 0, 0, 0.7);
-                padding: 10px 20px;
-                border-radius: 10px;
-                color: white;
-            }
-            .position-value {
-                font-size: 48px;
-                font-weight: bold;
-                color: #00ff88;
-            }
-            .position-suffix {
-                font-size: 24px;
-                color: #888;
             }
             .hud-timer {
                 background: rgba(0, 0, 0, 0.7);
@@ -230,6 +212,64 @@ class RaceUI {
                 50% { transform: scale(1); opacity: 1; }
                 100% { transform: scale(0.8); opacity: 0.5; }
             }
+
+            /* Health bars */
+            .hud-health-bars {
+                position: absolute;
+                top: 80px;
+                left: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                min-width: 200px;
+            }
+            .health-bar-item {
+                background: rgba(0, 0, 0, 0.7);
+                padding: 8px 12px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .health-bar-color {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            .health-bar-name {
+                color: white;
+                font-size: 12px;
+                min-width: 60px;
+                flex-shrink: 0;
+            }
+            .health-bar-container {
+                flex: 1;
+                height: 16px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .health-bar-fill {
+                height: 100%;
+                transition: width 0.3s ease, background 0.3s ease;
+                border-radius: 8px;
+            }
+            .health-bar-fill.health-high {
+                background: linear-gradient(90deg, #00ff88, #00cc66);
+            }
+            .health-bar-fill.health-medium {
+                background: linear-gradient(90deg, #ffcc00, #ff9900);
+            }
+            .health-bar-fill.health-low {
+                background: linear-gradient(90deg, #ff4444, #cc0000);
+            }
+            .health-bar-value {
+                color: white;
+                font-size: 11px;
+                min-width: 35px;
+                text-align: right;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -242,11 +282,16 @@ class RaceUI {
         if (!this.eventBus) return;
 
         this.eventBus.on('race:countdown', (data) => {
+            this.show(); // Ensure UI is visible during countdown
             this.showCountdown(data.count);
         });
 
         this.eventBus.on('race:start', () => {
             this.hideCountdown();
+        });
+
+        this.eventBus.on('game:countdown', () => {
+            this.show(); // Show race UI when countdown state begins
         });
 
         this.eventBus.on('game:racing', () => {
@@ -323,33 +368,6 @@ class RaceUI {
         }
     }
 
-    /**
-     * Update position display
-     * @param {number} position - 1-based position
-     */
-    setPosition(position) {
-        this.position = position;
-        if (this.elements.position) {
-            this.elements.position.textContent = position.toString();
-        }
-        if (this.elements.positionSuffix) {
-            this.elements.positionSuffix.textContent = this._getPositionSuffix(position);
-        }
-    }
-
-    /**
-     * Get position suffix (st, nd, rd, th)
-     * @private
-     */
-    _getPositionSuffix(pos) {
-        if (pos >= 11 && pos <= 13) return 'th';
-        switch (pos % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
-    }
 
     /**
      * Update race timer
@@ -377,12 +395,11 @@ class RaceUI {
 
     /**
      * Update all values at once
-     * @param {Object} data - { speed, lap, position, time }
+     * @param {Object} data - { speed, lap, time }
      */
     update(data) {
         if (data.speed !== undefined) this.setSpeed(data.speed);
         if (data.lap !== undefined) this.setLap(data.lap);
-        if (data.position !== undefined) this.setPosition(data.position);
         if (data.time !== undefined) this.setTime(data.time);
     }
 
@@ -405,6 +422,63 @@ class RaceUI {
             this.element.classList.add('hidden');
         }
         this.hideCountdown();
+    }
+
+    /**
+     * Update health bars for all players
+     * @param {Array} players - Array of { id, name, color, health, maxHealth }
+     */
+    updateHealthBars(players) {
+        if (!this.elements.healthBars) return;
+
+        // Clear existing health bars
+        this.elements.healthBars.innerHTML = '';
+
+        // Create health bar for each player
+        players.forEach(player => {
+            const healthPercent = Math.max(0, Math.min(100, (player.health / player.maxHealth) * 100));
+            const healthClass = healthPercent > 50 ? 'health-high' : healthPercent > 25 ? 'health-medium' : 'health-low';
+
+            const healthBarItem = document.createElement('div');
+            healthBarItem.className = 'health-bar-item';
+            healthBarItem.dataset.playerId = player.id;
+            healthBarItem.innerHTML = `
+                <div class="health-bar-color" style="background: ${player.color || '#888'}"></div>
+                <span class="health-bar-name">${player.name || 'Player'}</span>
+                <div class="health-bar-container">
+                    <div class="health-bar-fill ${healthClass}" style="width: ${healthPercent}%"></div>
+                </div>
+                <span class="health-bar-value">${Math.round(player.health)}%</span>
+            `;
+            this.elements.healthBars.appendChild(healthBarItem);
+        });
+    }
+
+    /**
+     * Update single player's health bar
+     * @param {string} playerId
+     * @param {number} health
+     * @param {number} maxHealth
+     */
+    updatePlayerHealth(playerId, health, maxHealth) {
+        if (!this.elements.healthBars) return;
+
+        const healthBarItem = this.elements.healthBars.querySelector(`[data-player-id="${playerId}"]`);
+        if (!healthBarItem) return;
+
+        const healthPercent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+        const healthClass = healthPercent > 50 ? 'health-high' : healthPercent > 25 ? 'health-medium' : 'health-low';
+
+        const fill = healthBarItem.querySelector('.health-bar-fill');
+        const value = healthBarItem.querySelector('.health-bar-value');
+
+        if (fill) {
+            fill.style.width = `${healthPercent}%`;
+            fill.className = `health-bar-fill ${healthClass}`;
+        }
+        if (value) {
+            value.textContent = `${Math.round(health)}%`;
+        }
     }
 
     /**

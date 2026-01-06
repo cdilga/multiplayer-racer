@@ -81,6 +81,11 @@ class Vehicle extends Entity {
 
         // Spawn position (for reset functionality)
         this.spawnPosition = options.position ? { ...options.position, rotation: options.rotation || 0 } : null;
+
+        // Visual effects
+        this.smokeEffect = null;
+        this.smokeParticles = [];
+        this.isSmoking = false;
     }
 
     /**
@@ -151,10 +156,140 @@ class Vehicle extends Entity {
 
         if (this.health <= 0) {
             this.isDead = true;
+            this._triggerExplosion();
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Trigger explosion effect when vehicle is destroyed
+     * @private
+     */
+    _triggerExplosion() {
+        if (!this.mesh || typeof THREE === 'undefined') return;
+
+        // Hide the vehicle mesh during destruction
+        this.mesh.visible = false;
+
+        // Create explosion effect at vehicle position
+        const explosionGroup = new THREE.Group();
+        explosionGroup.position.copy(this.mesh.position);
+
+        // Get parent scene
+        const scene = this.mesh.parent;
+        if (!scene) return;
+
+        scene.add(explosionGroup);
+
+        // Create multiple explosion particles
+        const particleCount = 30;
+        const particles = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            const size = 0.3 + Math.random() * 0.5;
+            const geometry = new THREE.SphereGeometry(size, 8, 8);
+            const material = new THREE.MeshBasicMaterial({
+                color: Math.random() > 0.3 ? 0xff6600 : 0xffcc00, // Orange/yellow
+                transparent: true,
+                opacity: 1
+            });
+
+            const particle = new THREE.Mesh(geometry, material);
+
+            // Random direction
+            particle.userData.velocity = {
+                x: (Math.random() - 0.5) * 15,
+                y: Math.random() * 10 + 5,
+                z: (Math.random() - 0.5) * 15
+            };
+            particle.userData.life = 0.8 + Math.random() * 0.4;
+            particle.userData.maxLife = particle.userData.life;
+
+            explosionGroup.add(particle);
+            particles.push(particle);
+        }
+
+        // Add debris particles (darker)
+        for (let i = 0; i < 15; i++) {
+            const size = 0.1 + Math.random() * 0.2;
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x333333,
+                transparent: true,
+                opacity: 1
+            });
+
+            const debris = new THREE.Mesh(geometry, material);
+            debris.userData.velocity = {
+                x: (Math.random() - 0.5) * 20,
+                y: Math.random() * 8,
+                z: (Math.random() - 0.5) * 20
+            };
+            debris.userData.life = 1.0 + Math.random() * 0.5;
+            debris.userData.maxLife = debris.userData.life;
+            debris.userData.rotationSpeed = {
+                x: (Math.random() - 0.5) * 10,
+                y: (Math.random() - 0.5) * 10,
+                z: (Math.random() - 0.5) * 10
+            };
+
+            explosionGroup.add(debris);
+            particles.push(debris);
+        }
+
+        // Animate explosion over time
+        const startTime = performance.now();
+        const duration = 1500; // 1.5 seconds
+
+        const animateExplosion = () => {
+            const elapsed = performance.now() - startTime;
+            const dt = 0.016; // Approximate frame time
+
+            if (elapsed > duration) {
+                // Clean up
+                particles.forEach(p => {
+                    if (p.geometry) p.geometry.dispose();
+                    if (p.material) p.material.dispose();
+                });
+                scene.remove(explosionGroup);
+                return;
+            }
+
+            // Update particles
+            particles.forEach(particle => {
+                if (particle.userData.life <= 0) return;
+
+                particle.userData.life -= dt;
+
+                // Apply velocity and gravity
+                particle.position.x += particle.userData.velocity.x * dt;
+                particle.position.y += particle.userData.velocity.y * dt;
+                particle.position.z += particle.userData.velocity.z * dt;
+                particle.userData.velocity.y -= 15 * dt; // Gravity
+
+                // Rotate debris
+                if (particle.userData.rotationSpeed) {
+                    particle.rotation.x += particle.userData.rotationSpeed.x * dt;
+                    particle.rotation.y += particle.userData.rotationSpeed.y * dt;
+                    particle.rotation.z += particle.userData.rotationSpeed.z * dt;
+                }
+
+                // Fade out
+                const lifeRatio = particle.userData.life / particle.userData.maxLife;
+                particle.material.opacity = lifeRatio;
+
+                // Scale down fire particles
+                if (!particle.userData.rotationSpeed) {
+                    particle.scale.setScalar(lifeRatio);
+                }
+            });
+
+            requestAnimationFrame(animateExplosion);
+        };
+
+        requestAnimationFrame(animateExplosion);
     }
 
     /**
@@ -165,6 +300,10 @@ class Vehicle extends Entity {
         this.health = Math.min(this.maxHealth, this.health + amount);
         if (this.health > 0) {
             this.isDead = false;
+            // Make vehicle visible again after respawn
+            if (this.mesh) {
+                this.mesh.visible = true;
+            }
         }
     }
 
@@ -196,6 +335,12 @@ class Vehicle extends Entity {
             );
             this.physicsBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             this.physicsBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        }
+
+        // Ensure vehicle is visible and reset death state
+        this.isDead = false;
+        if (this.mesh) {
+            this.mesh.visible = true;
         }
 
         // Sync mesh
@@ -267,6 +412,148 @@ class Vehicle extends Entity {
 
         this.mesh.position.set(pos.x, pos.y, pos.z);
         this.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+    }
+
+    /**
+     * Update visual effects based on health
+     * @param {number} dt - Delta time
+     */
+    updateEffects(dt) {
+        const healthPercent = (this.health / this.maxHealth) * 100;
+
+        // Start smoking at 25% health, heavy smoke at 10%
+        if (healthPercent <= 25 && !this.isSmoking) {
+            this._startSmokeEffect();
+        } else if (healthPercent > 25 && this.isSmoking) {
+            this._stopSmokeEffect();
+        }
+
+        // Update smoke particles
+        if (this.isSmoking && this.smokeEffect) {
+            this._updateSmokeParticles(dt, healthPercent);
+        }
+    }
+
+    /**
+     * Start smoke effect
+     * @private
+     */
+    _startSmokeEffect() {
+        if (this.isSmoking || !this.mesh) return;
+
+        // Check if THREE is available
+        if (typeof THREE === 'undefined') return;
+
+        this.isSmoking = true;
+
+        // Create smoke container
+        this.smokeEffect = new THREE.Group();
+        this.smokeEffect.position.set(0, 0.5, -0.8); // Position at rear of car
+        this.mesh.add(this.smokeEffect);
+
+        // Initialize particle pool
+        this.smokeParticles = [];
+    }
+
+    /**
+     * Stop smoke effect
+     * @private
+     */
+    _stopSmokeEffect() {
+        if (!this.isSmoking) return;
+
+        this.isSmoking = false;
+
+        // Remove smoke effect from mesh
+        if (this.smokeEffect && this.mesh) {
+            this.mesh.remove(this.smokeEffect);
+            // Dispose of particles
+            this.smokeParticles.forEach(p => {
+                if (p.geometry) p.geometry.dispose();
+                if (p.material) p.material.dispose();
+            });
+        }
+
+        this.smokeEffect = null;
+        this.smokeParticles = [];
+    }
+
+    /**
+     * Update smoke particles
+     * @private
+     */
+    _updateSmokeParticles(dt, healthPercent) {
+        if (!this.smokeEffect || typeof THREE === 'undefined') return;
+
+        // Spawn rate increases as health decreases
+        const spawnRate = healthPercent <= 10 ? 0.05 : 0.15; // Time between spawns
+        this._smokeSpawnTimer = (this._smokeSpawnTimer || 0) + dt;
+
+        if (this._smokeSpawnTimer >= spawnRate) {
+            this._smokeSpawnTimer = 0;
+            this._spawnSmokeParticle(healthPercent);
+        }
+
+        // Update existing particles
+        for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
+            const particle = this.smokeParticles[i];
+            particle.userData.life -= dt;
+
+            if (particle.userData.life <= 0) {
+                // Remove dead particle
+                this.smokeEffect.remove(particle);
+                if (particle.geometry) particle.geometry.dispose();
+                if (particle.material) particle.material.dispose();
+                this.smokeParticles.splice(i, 1);
+            } else {
+                // Animate particle - rise and fade
+                particle.position.y += dt * 2;
+                particle.position.x += (Math.random() - 0.5) * dt * 0.5;
+                particle.position.z += (Math.random() - 0.5) * dt * 0.5;
+
+                // Fade out and grow
+                const lifeRatio = particle.userData.life / particle.userData.maxLife;
+                particle.material.opacity = lifeRatio * 0.7;
+                particle.scale.setScalar(1 + (1 - lifeRatio) * 2);
+            }
+        }
+    }
+
+    /**
+     * Spawn a single smoke particle
+     * @private
+     */
+    _spawnSmokeParticle(healthPercent) {
+        if (!this.smokeEffect || typeof THREE === 'undefined') return;
+
+        // Limit particle count
+        if (this.smokeParticles.length >= 20) return;
+
+        // Create simple sprite for smoke
+        const geometry = new THREE.PlaneGeometry(0.5, 0.5);
+        const material = new THREE.MeshBasicMaterial({
+            color: healthPercent <= 10 ? 0x111111 : 0x555555, // Darker smoke at lower health
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide,
+            depthWrite: false
+        });
+
+        const particle = new THREE.Mesh(geometry, material);
+        particle.position.set(
+            (Math.random() - 0.5) * 0.3,
+            0,
+            (Math.random() - 0.5) * 0.3
+        );
+
+        particle.userData.life = 1.0 + Math.random() * 0.5;
+        particle.userData.maxLife = particle.userData.life;
+
+        // Billboard effect - face camera
+        particle.lookAt(0, 100, 0);
+
+        this.smokeEffect.add(particle);
+        this.smokeParticles.push(particle);
     }
 
     /**
