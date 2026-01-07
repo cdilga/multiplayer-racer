@@ -13,49 +13,25 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 
+// Type declaration for window.socket
+declare global {
+    interface Window {
+        socket?: { connected?: boolean };
+    }
+}
+
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
 const STATIC_DIR = path.join(__dirname, '../static');
-const NUM_CARS = 32; // Number of cars to spawn
+const NUM_CARS = 2; // Number of cars to spawn (testing with 2 first)
 
 /**
  * Setup route interception to serve local dependencies
- * This allows video capture to work in restricted network environments
+ * Uses VERY specific URL patterns to avoid interfering with Socket.IO
  */
 async function setupLocalRoutes(context: BrowserContext): Promise<void> {
-    // Intercept Skypack CDN requests for Rapier and serve local files
-    await context.route('**/cdn.skypack.dev/@dimforge/rapier3d-compat**', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier.es.js');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/javascript',
-                body: body
-            });
-        } else {
-            // Fallback to network if local file doesn't exist
-            await route.continue();
-        }
-    });
-
-    // Intercept Three.js CDN and serve local (jsdelivr)
-    await context.route('**/cdn.jsdelivr.net/npm/three**', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/three.min.js');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/javascript',
-                body: body
-            });
-        } else {
-            await route.continue();
-        }
-    });
-
-    // Intercept Socket.IO CDN and serve local
-    await context.route('**/cdn.socket.io/**', async route => {
+    // Intercept Socket.IO CDN library ONLY (not the WebSocket endpoint!)
+    await context.route('https://cdn.socket.io/4.5.4/socket.io.min.js', async route => {
         const localPath = path.join(STATIC_DIR, 'vendor/socket.io.min.js');
         if (fs.existsSync(localPath)) {
             const body = fs.readFileSync(localPath);
@@ -65,7 +41,52 @@ async function setupLocalRoutes(context: BrowserContext): Promise<void> {
                 body: body
             });
         } else {
-            await route.continue();
+            await route.abort();
+        }
+    });
+
+    // Intercept Three.js CDN - regular script version
+    await context.route('https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/three.min.js');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: body
+            });
+        } else {
+            await route.abort();
+        }
+    });
+
+    // Intercept Rapier CDN - ES module version
+    await context.route('https://cdn.skypack.dev/@dimforge/rapier3d-compat', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier.es.js');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/javascript',
+                body: body
+            });
+        } else {
+            await route.abort();
+        }
+    });
+
+    // Intercept Rapier WASM file
+    await context.route('**/rapier_wasm3d_bg.wasm', async route => {
+        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier_wasm3d_bg.wasm');
+        if (fs.existsSync(localPath)) {
+            const body = fs.readFileSync(localPath);
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/wasm',
+                body: body
+            });
+        } else {
+            await route.abort();
         }
     });
 }
@@ -120,8 +141,8 @@ async function captureVideo() {
                 size: { width: 1280, height: 720 }
             }
         });
-        // Setup local routes to bypass CDN restrictions
-        await setupLocalRoutes(hostContext);
+        // Route interception disabled - requires internet for CDN dependencies
+        // await setupLocalRoutes(hostContext);
         const hostPage = await hostContext.newPage();
 
         // Log browser console for debugging
@@ -160,50 +181,56 @@ async function captureVideo() {
         const playerContexts: BrowserContext[] = [];
         const playerPages: Page[] = [];
 
-        // Create all player contexts in batches to avoid overwhelming the system
-        const BATCH_SIZE = 8;
-        for (let batch = 0; batch < Math.ceil(NUM_CARS / BATCH_SIZE); batch++) {
-            const batchStart = batch * BATCH_SIZE;
-            const batchEnd = Math.min(batchStart + BATCH_SIZE, NUM_CARS);
+        // Create players sequentially to avoid Socket.IO connection issues
+        // Add small delays between each to let WebSocket connections stabilize
+        for (let i = 0; i < NUM_CARS; i++) {
+            console.log(`   Joining player ${i + 1}/${NUM_CARS}: ${playerNames[i]}...`);
 
-            console.log(`   Batch ${batch + 1}/${Math.ceil(NUM_CARS / BATCH_SIZE)}: Joining players ${batchStart + 1}-${batchEnd}...`);
+            const context = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                isMobile: true,
+                hasTouch: true
+            });
+            // Route interception disabled - requires internet for CDN dependencies
+            // await setupLocalRoutes(context);
+            const page = await context.newPage();
 
-            // Create contexts in parallel within batch
-            const batchPromises = [];
-            for (let i = batchStart; i < batchEnd; i++) {
-                batchPromises.push(
-                    (async () => {
-                        const context = await browser.newContext({
-                            viewport: { width: 390, height: 844 },
-                            isMobile: true,
-                            hasTouch: true
-                        });
-                        await setupLocalRoutes(context);
-                        const page = await context.newPage();
+            // Navigate and join
+            await page.goto(`${BASE_URL}/player`);
+            await page.waitForLoadState('networkidle');
 
-                        // Navigate and join
-                        await page.goto(`${BASE_URL}/player`);
-                        await page.waitForLoadState('networkidle');
-                        await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-                        await page.fill('#player-name', playerNames[i]);
-                        await page.fill('#room-code', roomCode);
-                        await page.click('#join-btn');
-                        await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            // Give extra time for Socket.IO and page to fully initialize
+            // Increased to 5s to allow WebSocket upgrade to complete
+            await page.waitForTimeout(5000);
 
-                        return { context, page };
-                    })()
-                );
+            await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
+            await page.fill('#player-name', playerNames[i]);
+            await page.fill('#room-code', roomCode);
+
+            // Take screenshot for debugging
+            if (i === 0) {
+                await page.screenshot({ path: path.join(OUTPUT_DIR, 'debug-player-form.png') });
+                console.log('    Debug screenshot saved');
             }
 
-            const batchResults = await Promise.all(batchPromises);
-            batchResults.forEach(({ context, page }) => {
-                playerContexts.push(context);
-                playerPages.push(page);
-            });
+            await page.click('#join-btn');
 
-            console.log(`   ✓ Batch ${batch + 1} complete (${batchEnd} players total)`);
-            // Small delay between batches
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait for either waiting screen or error
+            try {
+                await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 });
+            } catch (e) {
+                // Take screenshot of error state
+                await page.screenshot({ path: path.join(OUTPUT_DIR, `debug-player-${i}-error.png`) });
+                console.log(`    Error screenshot saved for player ${i}`);
+                throw e;
+            }
+
+            playerContexts.push(context);
+            playerPages.push(page);
+
+            // Longer delay to let Socket.IO connection fully establish
+            // Increased to 2s to prevent overwhelming the server
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
         console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
@@ -239,12 +266,10 @@ async function captureVideo() {
 
         console.log('\n🧹 Cleaning up contexts...');
         // Close all player contexts
-        for (let i = 0; i < playerContexts.length; i++) {
-            await playerContexts[i].close();
-            if ((i + 1) % 10 === 0) {
-                console.log(`   Closed ${i + 1}/${playerContexts.length} player contexts`);
-            }
+        for (const context of playerContexts) {
+            await context.close();
         }
+        console.log(`   Closed ${playerContexts.length} player contexts`);
 
         // Close host context to finalize video
         await hostContext.close();
