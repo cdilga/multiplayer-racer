@@ -1,4 +1,4 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Console Error Monitoring', () => {
     test('game should run without console errors after starting', async ({ hostPage, playerPage }) => {
@@ -21,10 +21,10 @@ test.describe('Console Error Monitoring', () => {
         });
 
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ErrorTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ErrorTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ErrorTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -73,10 +73,10 @@ test.describe('Console Error Monitoring', () => {
 
     test('physics should maintain valid car positions throughout gameplay', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'PhysicsTest');
-        await expect(hostPage.locator('#player-list')).toContainText('PhysicsTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('PhysicsTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);

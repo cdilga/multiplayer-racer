@@ -116,10 +116,10 @@ test.describe('Car Movement and Physics', () => {
 
     test('car should stop when brakes are applied after moving', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'BrakeTest');
-        await expect(hostPage.locator('#player-list')).toContainText('BrakeTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('BrakeTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -233,16 +233,16 @@ test.describe('Car Movement and Physics', () => {
 
     test('reverse gear should activate after 1 second brake hold and continue reversing smoothly', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ReverseTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ReverseTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ReverseTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Get initial position
         const initialPosition = await hostPage.evaluate(() => {

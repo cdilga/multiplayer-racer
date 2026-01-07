@@ -1,9 +1,9 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Visual Effects', () => {
     test('should have fog and sky dome after initialization', async ({ hostPage }) => {
         // Host creates room (this initializes the game)
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         await waitForRoomCode(hostPage);
 
         // Wait for game to fully initialize
@@ -71,7 +71,7 @@ test.describe('Visual Effects', () => {
 
     test('should have post-processing effects enabled', async ({ hostPage }) => {
         // Host creates room (this initializes the game)
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         await waitForRoomCode(hostPage);
 
         // Wait for game to fully initialize
@@ -125,7 +125,7 @@ test.describe('Visual Effects', () => {
 
     test('should have camera shake config available', async ({ hostPage }) => {
         // Host creates room (this initializes the game)
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         await waitForRoomCode(hostPage);
 
         // Wait for game to fully initialize
@@ -156,7 +156,7 @@ test.describe('Visual Effects', () => {
 
     test('should have visual settings controls in lobby', async ({ hostPage }) => {
         // Host creates room (this initializes the game)
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         await waitForRoomCode(hostPage);
 
         // Verify visual settings section exists in lobby
@@ -189,7 +189,7 @@ test.describe('Visual Effects', () => {
 
     test('should persist visual settings to localStorage', async ({ hostPage }) => {
         // Set custom localStorage value before navigating
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
 
         // First set some custom values in localStorage
         await hostPage.evaluate(() => {

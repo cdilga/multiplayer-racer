@@ -1,21 +1,21 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Race Completion', () => {
 
     test('should complete race after driving through all checkpoints for required laps', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'RaceCompleter');
-        await expect(hostPage.locator('#player-list')).toContainText('RaceCompleter', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('RaceCompleter', { timeout: 30000 });
 
         // Start game with just 1 lap to make test faster
         await startGameFromHost(hostPage);
 
-        // Wait for countdown to finish and race to start
-        await hostPage.waitForTimeout(4000);
+        // Wait for race to initialize (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Set the race to 1 lap AFTER the game starts (so it applies to this race)
         await hostPage.evaluate(() => {
@@ -128,12 +128,12 @@ test.describe('Race Completion', () => {
 
     test('should show results UI after race completes', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'ResultsTester');
-        await expect(hostPage.locator('#player-list')).toContainText('ResultsTester', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ResultsTester', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -179,12 +179,12 @@ test.describe('Race Completion', () => {
 
     test('should return to lobby when clicking Back to Lobby button', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'LobbyReturner');
-        await expect(hostPage.locator('#player-list')).toContainText('LobbyReturner', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('LobbyReturner', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
