@@ -81,10 +81,11 @@ body {
 }
 
 @media screen and (orientation: portrait) {
-    .portrait-message {
+    /* Only show rotate message when game is active (controlled via .game-active class) */
+    body.game-active .portrait-message {
         display: block;
     }
-    
+
     #game-stats {
         /* Adjust stats position for portrait */
         top: auto;

@@ -429,7 +429,10 @@ function showScreen(screenName) {
     elements.joinScreen.classList.add('hidden');
     elements.waitingScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
-    
+
+    // Toggle portrait-mode rotate message (only show during game)
+    document.body.classList.toggle('game-active', screenName === 'game');
+
     switch (screenName) {
         case 'join':
             elements.joinScreen.classList.remove('hidden');
