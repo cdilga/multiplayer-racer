@@ -285,9 +285,12 @@ def on_join_game(data):
             del room['disconnected_players'][reconnect_id]
             logger.info(f"Player {player_name} reconnecting to room {room_code}")
 
-    # Check if game already started (unless reconnecting)
-    if room['game_state'] != 'waiting' and not is_reconnecting:
-        emit('error', {'message': 'Game already in progress'})
+    # Check game state for join eligibility
+    is_late_join = room['game_state'] == 'racing' and not is_reconnecting
+
+    # Block joins only when race is finished (allow late joins during racing)
+    if room['game_state'] == 'finished' and not is_reconnecting:
+        emit('error', {'message': 'Race has ended. Wait for next race.'})
         return
 
     if is_reconnecting and reconnect_data:
@@ -330,6 +333,7 @@ def on_join_game(data):
         'name': player_name,
         'car_color': car_color,
         'reconnected': is_reconnecting,
+        'is_late_join': is_late_join,
         'game_state': room['game_state']
     })
 

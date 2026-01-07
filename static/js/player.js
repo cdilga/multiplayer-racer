@@ -217,9 +217,20 @@ socket.on('game_joined', (data) => {
     // Handle reconnection - if game is already racing, skip to controller
     if (data.reconnected && data.game_state === 'racing') {
         console.log('Reconnected to racing game!');
-        elements.waitingScreen.classList.add('hidden');
-        elements.controllerScreen.classList.remove('hidden');
+        gameState.gameStarted = true;
+        initGameControls();
+        showScreen('game');
         showMessage('Reconnected! You are back in the race.');
+        return;
+    }
+
+    // Handle late join - if joining a race in progress, skip to controller
+    if (data.is_late_join && data.game_state === 'racing') {
+        console.log('Late joining racing game!');
+        gameState.gameStarted = true;
+        initGameControls();
+        showScreen('game');
+        showMessage('Joined the race! Good luck catching up!');
         return;
     }
 
