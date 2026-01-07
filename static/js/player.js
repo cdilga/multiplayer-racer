@@ -5,8 +5,8 @@ const INPUT_SEND_RATE = 60; // Hz
 const INPUT_SEND_INTERVAL = 1000 / INPUT_SEND_RATE;
 let lastInputUpdate = 0;
 
-// Game state
-const gameState = {
+// Game state - exposed on window for testing
+const gameState = window.gameState = {
     playerName: '',
     roomCode: null,
     playerId: null,
@@ -66,8 +66,11 @@ if (elements.autoJoinMessage) {
     elements.autoJoinMessage.appendChild(elements.joinTimerDisplay);
 }
 
-// Socket.io connection
-const socket = io();
+// Socket.io connection - use polling only in test mode to avoid websocket upgrade issues
+const isTestMode = new URLSearchParams(window.location.search).get('testMode') === '1';
+const socket = io({
+    transports: isTestMode ? ['polling'] : ['polling', 'websocket']
+});
 
 // Enable dev mode for faster testing - changed to false to give time to customize name
 const DEV_MODE = false;
@@ -151,40 +154,44 @@ document.addEventListener('touchmove', (e) => {
 socket.on('connect', () => {
     console.log('Connected to server');
     gameState.connected = true;
-    
+
     // Initialize error logging if not already initialized
     if (!errorLog.container) {
         errorLog.init();
         console.log('Error log initialized on connect');
     }
-    
+
     // Check for room code in URL parameters or window.roomCode (from template)
     let roomCode = getUrlParameter('room');
-    
+
     // If no room code in URL, check if it was passed via template
     if (!roomCode && window.roomCode && window.roomCode !== "{{ room_code }}") {
         roomCode = window.roomCode;
     }
-    
+
     if (roomCode) {
         // Set room code input value
         elements.roomCodeInput.value = roomCode;
-        
+
         // Show message that room code was detected
         if (elements.autoJoinMessage && elements.detectedRoomCode) {
             elements.detectedRoomCode.textContent = roomCode;
             elements.autoJoinMessage.style.display = 'block';
-            
+
             // Generate a random name if the user hasn't set one
             if (!gameState.nameSet && !elements.playerNameInput.value.trim()) {
                 elements.playerNameInput.value = generateRandomName();
                 // Don't set nameSet flag here to allow user to change it
             }
-            
+
             joinGame();
         }
     }
+});
 
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected from server:', reason);
+    gameState.connected = false;
 });
 
 socket.on('join_error', (data) => {
@@ -210,9 +217,20 @@ socket.on('game_joined', (data) => {
     // Handle reconnection - if game is already racing, skip to controller
     if (data.reconnected && data.game_state === 'racing') {
         console.log('Reconnected to racing game!');
-        elements.waitingScreen.classList.add('hidden');
-        elements.controllerScreen.classList.remove('hidden');
+        gameState.gameStarted = true;
+        initGameControls();
+        showScreen('game');
         showMessage('Reconnected! You are back in the race.');
+        return;
+    }
+
+    // Handle late join - if joining a race in progress, skip to controller
+    if (data.is_late_join && data.game_state === 'racing') {
+        console.log('Late joining racing game!');
+        gameState.gameStarted = true;
+        initGameControls();
+        showScreen('game');
+        showMessage('Joined the race! Good luck catching up!');
         return;
     }
 
@@ -422,7 +440,10 @@ function showScreen(screenName) {
     elements.joinScreen.classList.add('hidden');
     elements.waitingScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
-    
+
+    // Toggle portrait-mode rotate message (only show during game)
+    document.body.classList.toggle('game-active', screenName === 'game');
+
     switch (screenName) {
         case 'join':
             elements.joinScreen.classList.remove('hidden');

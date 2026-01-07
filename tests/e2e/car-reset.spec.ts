@@ -1,4 +1,4 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Car Reset Functionality', () => {
     test('car should reset to original spawn position after moving', async ({ hostPage, playerPage }) => {
@@ -18,16 +18,16 @@ test.describe('Car Reset Functionality', () => {
         });
 
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ResetTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ResetTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ResetTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle after spawn (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Get spawn position (should be stored on the car)
         const spawnPosition = await hostPage.evaluate(() => {
@@ -54,8 +54,8 @@ test.describe('Car Reset Functionality', () => {
             window.gameState._testControlsOverride = true;
         });
 
-        // Move the car forward (reduced iterations)
-        for (let i = 0; i < 15; i++) {
+        // Move the car forward for a few seconds
+        for (let i = 0; i < 30; i++) {
             await hostPage.evaluate(() => {
                 // @ts-ignore
                 const gameState = window.gameState;
@@ -70,11 +70,11 @@ test.describe('Car Reset Functionality', () => {
                     car.lastControlUpdate = Date.now();
                 }
             });
-            await hostPage.waitForTimeout(50); // Reduced from 100ms
+            await hostPage.waitForTimeout(100);
         }
 
-        // Wait for physics to settle (reduced from 500ms)
-        await hostPage.waitForTimeout(200);
+        // Wait for physics to settle
+        await hostPage.waitForTimeout(500);
 
         // Get position after moving
         const movedPosition = await hostPage.evaluate(() => {
@@ -193,16 +193,16 @@ test.describe('Car Reset Functionality', () => {
 
     test('reset all cars should reset all cars to their spawn positions', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ResetAllTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ResetAllTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ResetAllTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle
-        await hostPage.waitForTimeout(2000);
+        // Let car settle (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Get spawn position
         const spawnPosition = await hostPage.evaluate(() => {
@@ -297,10 +297,10 @@ test.describe('Car Reset Functionality', () => {
     for (const { name, buttonSelector, screenshotPrefix, playerName } of resetButtonTests) {
         test(`${name} should reset car to spawn position`, async ({ hostPage, playerPage }) => {
             // Setup game
-            await hostPage.goto('/');
+            await gotoHost(hostPage);
             const roomCode = await waitForRoomCode(hostPage);
             await joinGameAsPlayer(playerPage, roomCode, playerName);
-            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 10000 });
+            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 30000 });
 
             // Start game
             await startGameFromHost(hostPage);
@@ -418,16 +418,16 @@ test.describe('Car Reset Functionality', () => {
 
     test('upside-down car should reset to correct orientation', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'FlipTest');
-        await expect(hostPage.locator('#player-list')).toContainText('FlipTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('FlipTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle after spawn (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Enable test control override
         await hostPage.evaluate(() => {

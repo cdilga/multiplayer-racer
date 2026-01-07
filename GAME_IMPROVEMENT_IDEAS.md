@@ -1,7 +1,7 @@
 # Joystick Jammers - Improvement Roadmap
 
 **Dev loop:** After each major feature, commit and propose a PR. Keep appending to the same branch, periodically pull from main.
-
+**Do some due dilligence:** Ensure features marked as complete are indeed complete, if you begin a new run and see completed tasks
 ---
 
 ## Priority Order
@@ -20,6 +20,7 @@
 
 ### Test Optimization
 **Status:** TOP PRIORITY - blocks neon visual overhaul
+**Spec:** See `TEST_OPTIMISATION_SPEC.md` for detailed implementation strategies
 **Target:** Under 5 minutes total (currently ~50 min)
 **Approach:** Elite engineering, effective test slicing, robust management of long-running components - no compromise on coverage
 - Remove duplicate/redundant scenarios while keeping valuable complex tests

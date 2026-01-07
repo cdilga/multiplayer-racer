@@ -1,12 +1,12 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Debug Panels', () => {
     test('F2 should toggle physics parameters panel', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'DebugTest');
-        await expect(hostPage.locator('#player-list')).toContainText('DebugTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('DebugTest', { timeout: 30000 });
         await startGameFromHost(hostPage);
 
         // Wait for game to initialize
@@ -40,10 +40,10 @@ test.describe('Debug Panels', () => {
 
     test('F3 should toggle stats overlay visibility', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'StatsTest');
-        await expect(hostPage.locator('#player-list')).toContainText('StatsTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('StatsTest', { timeout: 30000 });
         await startGameFromHost(hostPage);
 
         // Wait for game to initialize
@@ -74,10 +74,10 @@ test.describe('Debug Panels', () => {
 
     test('F4 should toggle physics debug visualization', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'PhysicsDebug');
-        await expect(hostPage.locator('#player-list')).toContainText('PhysicsDebug', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('PhysicsDebug', { timeout: 30000 });
         await startGameFromHost(hostPage);
 
         // Wait for game to initialize

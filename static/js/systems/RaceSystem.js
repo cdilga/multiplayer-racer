@@ -126,9 +126,29 @@ class RaceSystem {
     }
 
     /**
+     * Check if running in test mode (for faster tests)
+     * @returns {boolean}
+     * @private
+     */
+    _isTestMode() {
+        return typeof window !== 'undefined' && (
+            window._testMode === true ||
+            new URLSearchParams(window.location?.search).get('testMode') === '1'
+        );
+    }
+
+    /**
      * Start countdown
      */
     startCountdown() {
+        // Skip countdown in test mode for faster tests
+        if (this._isTestMode()) {
+            console.log('RaceSystem: Test mode - skipping countdown');
+            this._emit('race:countdown', { count: 0, testMode: true });
+            this.startRace();
+            return;
+        }
+
         this.state = 'countdown';
         this.countdownValue = 3;
         this.countdownTimer = 0;

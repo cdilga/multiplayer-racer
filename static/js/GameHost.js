@@ -29,6 +29,7 @@ import { Track } from './entities/Track.js';
 import { LobbyUI } from './ui/LobbyUI.js';
 import { RaceUI } from './ui/RaceUI.js';
 import { ResultsUI } from './ui/ResultsUI.js';
+import { RoomCodeOverlayUI } from './ui/RoomCodeOverlayUI.js';
 import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
 import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
@@ -188,6 +189,13 @@ class GameHost {
         this.ui.results.setOnPlayAgain(() => this._startNewRace());
         this.ui.results.setOnBackToLobby(() => this._returnToLobby());
 
+        // Persistent QR code overlay for late joiners
+        this.ui.roomCodeOverlay = new RoomCodeOverlayUI({
+            eventBus: this.eventBus,
+            container: this.container
+        });
+        this.ui.roomCodeOverlay.init();
+
         // Debug UI components
         this.ui.debugOverlay = new DebugOverlayUI({
             eventBus: this.eventBus,
@@ -298,6 +306,10 @@ class GameHost {
             if (this.ui.lobby && this.roomCode) {
                 this.ui.lobby.setRoomCode(this.roomCode);
             }
+            // Also set on persistent overlay for late joiners
+            if (this.ui.roomCodeOverlay && this.roomCode) {
+                this.ui.roomCodeOverlay.setRoomCode(this.roomCode);
+            }
         } catch (error) {
             console.error('GameHost: Failed to create room:', error);
         }
@@ -359,9 +371,20 @@ class GameHost {
         console.log('GameHost: Player joined:', playerData.id);
 
         try {
-            // Get spawn position
-            const spawnIndex = this.vehicles.size;
-            const spawnPos = this.track.getSpawnPosition(spawnIndex);
+            // Determine spawn position based on game state
+            let spawnPos;
+            const currentState = this.engine.getState();
+            const isRacing = currentState === GAME_STATES.RACING || currentState === GAME_STATES.COUNTDOWN;
+
+            if (isRacing && this.vehicles.size > 0) {
+                // Late join: spawn near last place vehicle
+                spawnPos = this._getLateJoinSpawnPosition();
+                console.log('GameHost: Late join spawn position:', spawnPos);
+            } else {
+                // Normal join: use track spawn positions
+                const spawnIndex = this.vehicles.size;
+                spawnPos = this.track.getSpawnPosition(spawnIndex);
+            }
 
             // Create vehicle
             const vehicleData = await this.vehicleFactory.create(this.settings.vehicle, {
@@ -411,6 +434,46 @@ class GameHost {
         } catch (error) {
             console.error('GameHost: Error creating vehicle:', error);
         }
+    }
+
+    /**
+     * Get spawn position for late-joining players (near last place)
+     * @private
+     * @returns {Object} Spawn position {x, y, z, rotation}
+     */
+    _getLateJoinSpawnPosition() {
+        // Get race positions to find last place
+        const positions = this.systems.race.getPositions();
+
+        if (positions.length === 0) {
+            // Fallback to default spawn if no positions yet
+            return this.track.getSpawnPosition(0);
+        }
+
+        // Get last place vehicle
+        const lastPlace = positions[positions.length - 1];
+        const lastVehicle = this.vehicles.get(lastPlace.playerId);
+
+        if (!lastVehicle || !lastVehicle.mesh) {
+            // Fallback if vehicle not found
+            return this.track.getSpawnPosition(this.vehicles.size);
+        }
+
+        // Get position slightly behind last place vehicle
+        const lastPos = lastVehicle.mesh.position;
+        const lastRot = lastVehicle.mesh.rotation.y;
+
+        // Calculate offset behind the vehicle (10 units back)
+        const offsetDistance = 10;
+        const offsetX = lastPos.x - Math.sin(lastRot) * offsetDistance;
+        const offsetZ = lastPos.z - Math.cos(lastRot) * offsetDistance;
+
+        return {
+            x: offsetX,
+            y: 1.5, // Standard spawn height
+            z: offsetZ,
+            rotation: lastRot
+        };
     }
 
     /**
