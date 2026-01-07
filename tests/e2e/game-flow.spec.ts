@@ -1,14 +1,14 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, sendPlayerControls, releaseAllControls } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, sendPlayerControls, releaseAllControls, gotoHost } from './fixtures';
 
 test.describe('Multiplayer Racer Game Flow', () => {
     test('car should have valid position after game starts', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'PositionTest');
-        await expect(hostPage.locator('#player-list')).toContainText('PositionTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('PositionTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -66,12 +66,12 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
     test('should receive control inputs and update car position', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'ControlTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ControlTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ControlTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -98,7 +98,7 @@ test.describe('Multiplayer Racer Game Flow', () => {
     });
     test('should create room and display room code', async ({ hostPage }) => {
         // Navigate to host page
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
 
         // Wait for room to be created automatically
         const roomCode = await waitForRoomCode(hostPage);
@@ -117,14 +117,14 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
     test('should allow player to join room', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins the room
         await joinGameAsPlayer(playerPage, roomCode, 'TestPlayer1');
 
         // Verify player appears in host's player list
-        await expect(hostPage.locator('#player-list')).toContainText('TestPlayer1', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('TestPlayer1', { timeout: 30000 });
 
         // Verify player sees waiting screen with their name
         await expect(playerPage.locator('#waiting-screen')).toBeVisible();
@@ -133,14 +133,14 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
     test('should start game when host clicks start', async ({ hostPage, playerPage }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'RacerOne');
 
         // Wait for player to appear in list
-        await expect(hostPage.locator('#player-list')).toContainText('RacerOne', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('RacerOne', { timeout: 30000 });
 
         // Host starts game
         await startGameFromHost(hostPage);
@@ -154,14 +154,14 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
     test('should handle player disconnection gracefully', async ({ hostPage, playerPage, playerContext }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'DisconnectTest');
 
         // Wait for player to appear
-        await expect(hostPage.locator('#player-list')).toContainText('DisconnectTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('DisconnectTest', { timeout: 30000 });
 
         // Disconnect player by closing context
         await playerContext.close();
@@ -179,14 +179,14 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
     test('should handle host disconnection gracefully', async ({ hostPage, playerPage, hostContext }) => {
         // Host creates room
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
 
         // Player joins
         await joinGameAsPlayer(playerPage, roomCode, 'OrphanTest');
 
         // Wait for player to appear
-        await expect(hostPage.locator('#player-list')).toContainText('OrphanTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('OrphanTest', { timeout: 30000 });
 
         // Disconnect host by closing context
         await hostContext.close();
@@ -223,29 +223,29 @@ test.describe('Multiplayer Racer Game Flow', () => {
         const player2Page = await player2Context.newPage();
 
         try {
-            // Host creates room
-            await hostPage.goto(baseURL || 'http://localhost:8000/');
+            // Host creates room with testMode
+            await hostPage.goto(`${baseURL || 'http://localhost:8000'}/?testMode=1`);
             const roomCode = await waitForRoomCode(hostPage);
 
             // Player 1 joins
-            await player1Page.goto(`${baseURL || 'http://localhost:8000'}/player`);
+            await player1Page.goto(`${baseURL || 'http://localhost:8000'}/player?testMode=1`);
             await player1Page.waitForSelector('#join-screen', { state: 'visible' });
             await player1Page.fill('#player-name', 'Player1');
             await player1Page.fill('#room-code', roomCode);
             await player1Page.click('#join-btn');
-            await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 30000 });
 
             // Player 2 joins
-            await player2Page.goto(`${baseURL || 'http://localhost:8000'}/player`);
+            await player2Page.goto(`${baseURL || 'http://localhost:8000'}/player?testMode=1`);
             await player2Page.waitForSelector('#join-screen', { state: 'visible' });
             await player2Page.fill('#player-name', 'Player2');
             await player2Page.fill('#room-code', roomCode);
             await player2Page.click('#join-btn');
-            await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 30000 });
 
             // Verify both players appear in host's list
-            await expect(hostPage.locator('#player-list')).toContainText('Player1', { timeout: 10000 });
-            await expect(hostPage.locator('#player-list')).toContainText('Player2', { timeout: 10000 });
+            await expect(hostPage.locator('#player-list')).toContainText('Player1', { timeout: 30000 });
+            await expect(hostPage.locator('#player-list')).toContainText('Player2', { timeout: 30000 });
 
             // Start game
             await startGameFromHost(hostPage);

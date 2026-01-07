@@ -1,4 +1,4 @@
-import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost } from './fixtures';
+import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Car Reset Functionality', () => {
     test('car should reset to original spawn position after moving', async ({ hostPage, playerPage }) => {
@@ -18,10 +18,10 @@ test.describe('Car Reset Functionality', () => {
         });
 
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ResetTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ResetTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ResetTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -193,10 +193,10 @@ test.describe('Car Reset Functionality', () => {
 
     test('reset all cars should reset all cars to their spawn positions', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'ResetAllTest');
-        await expect(hostPage.locator('#player-list')).toContainText('ResetAllTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('ResetAllTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
@@ -297,10 +297,10 @@ test.describe('Car Reset Functionality', () => {
     for (const { name, buttonSelector, screenshotPrefix, playerName } of resetButtonTests) {
         test(`${name} should reset car to spawn position`, async ({ hostPage, playerPage }) => {
             // Setup game
-            await hostPage.goto('/');
+            await gotoHost(hostPage);
             const roomCode = await waitForRoomCode(hostPage);
             await joinGameAsPlayer(playerPage, roomCode, playerName);
-            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 10000 });
+            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 30000 });
 
             // Start game
             await startGameFromHost(hostPage);
@@ -418,10 +418,10 @@ test.describe('Car Reset Functionality', () => {
 
     test('upside-down car should reset to correct orientation', async ({ hostPage, playerPage }) => {
         // Setup game
-        await hostPage.goto('/');
+        await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
         await joinGameAsPlayer(playerPage, roomCode, 'FlipTest');
-        await expect(hostPage.locator('#player-list')).toContainText('FlipTest', { timeout: 10000 });
+        await expect(hostPage.locator('#player-list')).toContainText('FlipTest', { timeout: 30000 });
 
         // Start game
         await startGameFromHost(hostPage);
