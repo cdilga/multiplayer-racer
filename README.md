@@ -244,14 +244,11 @@ npm run test:ui
 Capture gameplay footage for documentation:
 
 ```bash
-# Standard 2-player demo
+# 32-car demo (works completely offline with bundled dependencies)
 npx tsx scripts/capture-video.ts
-
-# 32-player stress test demo
-npx tsx scripts/capture-32-cars.ts
 ```
 
-**Note**: Video capture requires a running server (`python server/app.py`) and `ffmpeg` for GIF conversion.
+**Note**: Video capture requires a running server (`python server/app.py`) and `ffmpeg` for GIF conversion. All dependencies are bundled locally - no internet connection needed.
 
 ### Debug Controls (Host)
 

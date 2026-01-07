@@ -147,15 +147,15 @@ stateDiagram-v2
 
 **Before writing any video capture scripts**, check if the project already has them:
 
-1. **Standard demo**: `scripts/capture-video.ts` - Basic gameplay flow (2 players)
-2. **Stress test demo**: `scripts/capture-32-cars.ts` - Massive scale showcase (32 players)
-3. **Screenshots**: `scripts/capture-screenshots.ts` - Static images
+1. **Video demo**: `scripts/capture-video.ts` - 32-car demo (works completely offline)
+2. **Screenshots**: `scripts/capture-screenshots.ts` - Static images
 
 These scripts are battle-tested and handle common issues like:
+- Bundled dependencies (no CDN/internet required)
 - Proper server startup checks
 - Waiting for elements to load
 - ffmpeg conversion to optimized GIFs
-- Batch processing of multiple contexts
+- Batch processing of multiple contexts (8 players at a time)
 
 ### Running Existing Capture Scripts
 
@@ -164,10 +164,9 @@ These scripts are battle-tested and handle common issues like:
 python server/app.py
 
 # 2. Run the capture script (in a separate terminal)
-npx tsx scripts/capture-video.ts        # 2-player demo
-npx tsx scripts/capture-32-cars.ts      # 32-player demo
+npx tsx scripts/capture-video.ts
 
-# Output: docs/images/gameplay-demo.gif or 32-cars-demo.gif
+# Output: docs/images/gameplay-demo.gif
 ```
 
 ### Video Capture Script Template
@@ -283,8 +282,7 @@ Store all media in `docs/images/`:
 ```
 docs/
 └── images/
-    ├── gameplay-demo.gif      # Hero animation (2-player)
-    ├── 32-cars-demo.gif       # Stress test showcase (32 players)
+    ├── gameplay-demo.gif      # Hero animation (32 cars)
     ├── gameplay-screenshot.png # Fallback static image
     ├── mobile-controller.png  # Mobile view
     └── lobby-screen.png       # Feature screenshots
@@ -294,9 +292,9 @@ docs/
 
 ## Multiplayer Racer Specific Guidance
 
-### The 32-Car Demo Script
+### The Video Capture Script
 
-The `scripts/capture-32-cars.ts` script is a powerful showcase tool that demonstrates:
+The `scripts/capture-video.ts` script is a powerful showcase tool that demonstrates:
 - Spawning 32 simultaneous player instances
 - Batch processing (8 players at a time) to avoid overwhelming the system
 - Automated joining with varied player names
@@ -324,8 +322,8 @@ The `scripts/capture-32-cars.ts` script is a powerful showcase tool that demonst
 
 **Problem**: "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
 - **Solution**: CDN dependencies not loading (Three.js, Socket.IO, Rapier)
-- **Fix**: The existing scripts handle this automatically - don't intercept CDN routes
-- **Local testing**: Works without internet as long as server serves vendor files
+- **Fix**: The script automatically intercepts CDN requests and serves bundled dependencies from `static/vendor/`
+- **Works completely offline**: No internet connection needed, all dependencies bundled locally
 
 **Problem**: Browser crashes during capture
 - **Solution**: Reduce player count or add delays between spawns
@@ -356,11 +354,8 @@ When you've captured new footage:
    ### Creating Demo Videos
 
    ```bash
-   # Standard 2-player demo
+   # 32-car demo (works completely offline)
    npx tsx scripts/capture-video.ts
-
-   # 32-player stress test demo
-   npx tsx scripts/capture-32-cars.ts
    ```
    ```
 
@@ -393,7 +388,7 @@ Before finalizing documentation:
 4. **Run the project** to understand user flow
 5. **Capture screenshots/video** using existing scripts
    - Start server: `python server/app.py`
-   - Run capture: `npx tsx scripts/capture-video.ts` or `scripts/capture-32-cars.ts`
+   - Run capture: `npx tsx scripts/capture-video.ts` (works offline!)
 6. **Create Mermaid diagrams** for architecture
 7. **Draft new README** with all sections
 8. **Add badges** for CI, license, tech stack

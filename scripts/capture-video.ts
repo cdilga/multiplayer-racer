@@ -1,12 +1,12 @@
 /**
  * Video capture script for README documentation
- * Creates a demo video showing the full game flow
+ * Creates a demo video showing 32 cars racing simultaneously
  * Run with: npx tsx scripts/capture-video.ts
  *
  * Prerequisites:
  * - Server running: python server/app.py
  * - ffmpeg installed for GIF conversion
- * - Local Rapier files: npm run setup:local-deps (or manually copy)
+ * - Works completely offline using bundled dependencies
  */
 import { chromium, Browser, Page, BrowserContext } from '@playwright/test';
 import * as fs from 'fs';
@@ -16,6 +16,7 @@ import { execSync } from 'child_process';
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
 const STATIC_DIR = path.join(__dirname, '../static');
+const NUM_CARS = 32; // Number of cars to spawn
 
 /**
  * Setup route interception to serve local dependencies
@@ -38,8 +39,8 @@ async function setupLocalRoutes(context: BrowserContext): Promise<void> {
         }
     });
 
-    // Intercept Three.js CDN and serve local
-    await context.route('**/cdnjs.cloudflare.com/ajax/libs/three.js/**', async route => {
+    // Intercept Three.js CDN and serve local (jsdelivr)
+    await context.route('**/cdn.jsdelivr.net/npm/three**', async route => {
         const localPath = path.join(STATIC_DIR, 'vendor/three.min.js');
         if (fs.existsSync(localPath)) {
             const body = fs.readFileSync(localPath);
@@ -131,23 +132,6 @@ async function captureVideo() {
             }
         });
 
-        // Create player contexts
-        const player1Context = await browser.newContext({
-            viewport: { width: 390, height: 844 },
-            isMobile: true,
-            hasTouch: true
-        });
-        await setupLocalRoutes(player1Context);
-        const player1Page = await player1Context.newPage();
-
-        const player2Context = await browser.newContext({
-            viewport: { width: 390, height: 844 },
-            isMobile: true,
-            hasTouch: true
-        });
-        await setupLocalRoutes(player2Context);
-        const player2Page = await player2Context.newPage();
-
         console.log('📹 Recording lobby...');
         await hostPage.goto(BASE_URL);
         await hostPage.waitForLoadState('networkidle');
@@ -159,54 +143,111 @@ async function captureVideo() {
         // Show lobby for a moment
         await hostPage.waitForTimeout(1500);
 
-        console.log('📹 Players joining...');
-        // Player 1 joins - navigate without room code to show join form
-        await player1Page.goto(`${BASE_URL}/player`);
-        await player1Page.waitForLoadState('networkidle');
-        await player1Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-        await player1Page.fill('#player-name', 'SpeedDemon');
-        await player1Page.fill('#room-code', roomCode);
-        await player1Page.click('#join-btn');
-        await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
-        console.log('  Player 1 joined');
-        await hostPage.waitForTimeout(1000);
+        console.log(`📹 Spawning ${NUM_CARS} players...`);
 
-        // Player 2 joins
-        await player2Page.goto(`${BASE_URL}/player`);
-        await player2Page.waitForLoadState('networkidle');
-        await player2Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-        await player2Page.fill('#player-name', 'TurboKing');
-        await player2Page.fill('#room-code', roomCode);
-        await player2Page.click('#join-btn');
-        await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
-        console.log('  Player 2 joined');
-        await hostPage.waitForTimeout(1500);
+        // Create player names with variety
+        const playerNames = [];
+        const prefixes = ['Speed', 'Turbo', 'Nitro', 'Hyper', 'Ultra', 'Mega', 'Super', 'Rocket'];
+        const suffixes = ['Racer', 'King', 'Queen', 'Demon', 'Beast', 'Flash', 'Bolt', 'Storm'];
+
+        for (let i = 0; i < NUM_CARS; i++) {
+            const prefix = prefixes[i % prefixes.length];
+            const suffix = suffixes[Math.floor(i / prefixes.length) % suffixes.length];
+            const num = Math.floor(i / (prefixes.length * suffixes.length)) || '';
+            playerNames.push(`${prefix}${suffix}${num}`);
+        }
+
+        const playerContexts: BrowserContext[] = [];
+        const playerPages: Page[] = [];
+
+        // Create all player contexts in batches to avoid overwhelming the system
+        const BATCH_SIZE = 8;
+        for (let batch = 0; batch < Math.ceil(NUM_CARS / BATCH_SIZE); batch++) {
+            const batchStart = batch * BATCH_SIZE;
+            const batchEnd = Math.min(batchStart + BATCH_SIZE, NUM_CARS);
+
+            console.log(`   Batch ${batch + 1}/${Math.ceil(NUM_CARS / BATCH_SIZE)}: Joining players ${batchStart + 1}-${batchEnd}...`);
+
+            // Create contexts in parallel within batch
+            const batchPromises = [];
+            for (let i = batchStart; i < batchEnd; i++) {
+                batchPromises.push(
+                    (async () => {
+                        const context = await browser.newContext({
+                            viewport: { width: 390, height: 844 },
+                            isMobile: true,
+                            hasTouch: true
+                        });
+                        await setupLocalRoutes(context);
+                        const page = await context.newPage();
+
+                        // Navigate and join
+                        await page.goto(`${BASE_URL}/player`);
+                        await page.waitForLoadState('networkidle');
+                        await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
+                        await page.fill('#player-name', playerNames[i]);
+                        await page.fill('#room-code', roomCode);
+                        await page.click('#join-btn');
+                        await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+
+                        return { context, page };
+                    })()
+                );
+            }
+
+            const batchResults = await Promise.all(batchPromises);
+            batchResults.forEach(({ context, page }) => {
+                playerContexts.push(context);
+                playerPages.push(page);
+            });
+
+            console.log(`   ✓ Batch ${batch + 1} complete (${batchEnd} players total)`);
+            // Small delay between batches
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
+        await hostPage.waitForTimeout(2000);
 
         console.log('📹 Starting race...');
         await hostPage.waitForSelector('#start-game-btn:not([disabled])', { timeout: 10000 });
         await hostPage.click('#start-game-btn');
+
+        // Wait for cars to spawn and physics to settle
+        await hostPage.waitForTimeout(5000);
+
+        console.log(`📹 Recording ${NUM_CARS} cars in action...`);
+
+        // Let the cars sit for a moment so we can see all 32
         await hostPage.waitForTimeout(3000);
 
-        console.log('📹 Recording racing action...');
-        // Simulate some racing with keyboard controls
-        for (let i = 0; i < 3; i++) {
+        // Simulate some movement with keyboard controls
+        for (let i = 0; i < 4; i++) {
             await hostPage.keyboard.down('ArrowUp');
-            await hostPage.waitForTimeout(800);
+            await hostPage.waitForTimeout(1000);
             await hostPage.keyboard.down('ArrowLeft');
-            await hostPage.waitForTimeout(600);
-            await hostPage.keyboard.up('ArrowLeft');
             await hostPage.waitForTimeout(800);
+            await hostPage.keyboard.up('ArrowLeft');
             await hostPage.keyboard.down('ArrowRight');
-            await hostPage.waitForTimeout(600);
+            await hostPage.waitForTimeout(800);
             await hostPage.keyboard.up('ArrowRight');
         }
         await hostPage.keyboard.up('ArrowUp');
-        await hostPage.waitForTimeout(1000);
 
-        // Close contexts to finalize video
+        // Hold for final view
+        await hostPage.waitForTimeout(2000);
+
+        console.log('\n🧹 Cleaning up contexts...');
+        // Close all player contexts
+        for (let i = 0; i < playerContexts.length; i++) {
+            await playerContexts[i].close();
+            if ((i + 1) % 10 === 0) {
+                console.log(`   Closed ${i + 1}/${playerContexts.length} player contexts`);
+            }
+        }
+
+        // Close host context to finalize video
         await hostContext.close();
-        await player1Context.close();
-        await player2Context.close();
 
         console.log('\n✅ Video recording complete!');
 
@@ -223,13 +264,12 @@ async function captureVideo() {
             console.log('\n🔄 Converting to GIF...');
             const gifPath = path.join(OUTPUT_DIR, 'gameplay-demo.gif');
 
-            // ffmpeg command for high-quality GIF:
-            // - Scale to 640px width
-            // - 15 fps for smaller size
-            // - Generate palette for better colors
-            // - Limit to 10 seconds
-            const paletteCmd = `ffmpeg -y -i "${videoPath}" -vf "fps=12,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t 12 "${OUTPUT_DIR}/palette.png"`;
-            const gifCmd = `ffmpeg -y -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=12,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t 12 "${gifPath}"`;
+            // ffmpeg command for high-quality GIF optimized for 32 cars
+            // - 10fps and 800px width for reasonable file size
+            // - 15 second duration to show all the action
+            // - Palette optimization for better colors
+            const paletteCmd = `ffmpeg -y -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t 15 "${OUTPUT_DIR}/palette.png"`;
+            const gifCmd = `ffmpeg -y -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t 15 "${gifPath}"`;
 
             try {
                 console.log('   Generating color palette...');
@@ -259,6 +299,9 @@ async function captureVideo() {
         }
 
         console.log('\n🎉 Video capture complete!');
+        console.log(`📊 Stats:`);
+        console.log(`   - Cars: ${NUM_CARS}`);
+        console.log(`   - Video: ${videoPath}`);
 
     } catch (error) {
         console.error('\n❌ Error:', error);
