@@ -19,8 +19,8 @@ test.describe('Dynamic Camera Zoom', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Wait for countdown to finish and race to start
-        await hostPage.waitForTimeout(4500);
+        // Wait for race to initialize (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Enable test controls override
         await hostPage.evaluate(() => {
@@ -117,8 +117,8 @@ test.describe('Dynamic Camera Zoom', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Wait for countdown
-        await hostPage.waitForTimeout(4500);
+        // Wait for race to initialize (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Enable test controls override
         await hostPage.evaluate(() => {

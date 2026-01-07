@@ -26,8 +26,8 @@ test.describe('Car Reset Functionality', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle after spawn (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Get spawn position (should be stored on the car)
         const spawnPosition = await hostPage.evaluate(() => {
@@ -201,8 +201,8 @@ test.describe('Car Reset Functionality', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle
-        await hostPage.waitForTimeout(2000);
+        // Let car settle (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Get spawn position
         const spawnPosition = await hostPage.evaluate(() => {
@@ -426,8 +426,8 @@ test.describe('Car Reset Functionality', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Let car settle after spawn drop
-        await hostPage.waitForTimeout(2000);
+        // Let car settle after spawn (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Enable test control override
         await hostPage.evaluate(() => {

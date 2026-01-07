@@ -13,8 +13,8 @@ test.describe('Multiplayer Racer Game Flow', () => {
         // Start game
         await startGameFromHost(hostPage);
 
-        // Wait for game to initialize and physics to settle
-        await hostPage.waitForTimeout(2000);
+        // Wait for game to initialize (testMode skips countdown)
+        await hostPage.waitForTimeout(1000);
 
         // Check car position via gameState
         const carData = await hostPage.evaluate(() => {
