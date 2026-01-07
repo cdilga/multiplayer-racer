@@ -2,12 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: false, // Run tests sequentially - multiplayer tests share server state
+    fullyParallel: true, // Enable parallel execution - each test creates its own room
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: 1, // Single worker to avoid port conflicts
+    workers: process.env.CI ? 2 : 4, // More workers for faster local testing
     reporter: 'html',
-    timeout: 120000, // 120s timeout for each test (accounts for socket polling latency)
+    timeout: 60000, // 60s timeout - tests should complete faster with optimizations
     use: {
         baseURL: 'http://localhost:8000',
         trace: 'on-first-retry',
