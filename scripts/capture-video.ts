@@ -24,7 +24,7 @@ declare global {
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
-const NUM_CARS = 32; // Number of cars to spawn
+const NUM_CARS = 16; // Number of cars to spawn (32 causes timeout issues)
 
 async function waitForRoomCode(page: Page): Promise<string> {
     console.log('  Waiting for room code...');
@@ -111,7 +111,7 @@ async function captureVideo() {
         const playerContexts: BrowserContext[] = [];
         const playerPages: Page[] = [];
 
-        // Create players quickly - minimal delays
+        // Create players as fast as possible - no delays
         for (let i = 0; i < NUM_CARS; i++) {
             console.log(`   Joining player ${i + 1}/${NUM_CARS}: ${playerNames[i]}...`);
 
@@ -124,7 +124,6 @@ async function captureVideo() {
 
             await page.goto(`${BASE_URL}/player`);
             await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(500);
 
             await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
             await page.fill('#player-name', playerNames[i]);
@@ -134,15 +133,10 @@ async function captureVideo() {
 
             playerContexts.push(context);
             playerPages.push(page);
-
-            // Very short delay between players for fast joining
-            if (i < NUM_CARS - 1) {
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
         }
 
         console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
-        await hostPage.waitForTimeout(1000);
+        await hostPage.waitForTimeout(500);
 
         // Scroll to ensure start button is visible
         console.log('📹 Scrolling to start button...');
@@ -204,30 +198,37 @@ async function captureVideo() {
             fs.renameSync(sourcePath, videoPath);
             console.log(`📁 Video saved: ${videoPath}`);
 
-            // Convert to GIF using ffmpeg
-            console.log('\n🔄 Converting to GIF...');
+            // Convert to GIF using ffmpeg with speed manipulation
+            console.log('\n🔄 Converting to GIF with optimized timing...');
             const gifPath = path.join(OUTPUT_DIR, 'gameplay-demo.gif');
+            const speedupPath = path.join(OUTPUT_DIR, 'speedup-temp.webm');
 
-            // ffmpeg command for high-quality GIF optimized for 32 cars
-            // - Skip first 8 seconds (loading screen + room code display)
-            // - 10fps and 800px width for reasonable file size
-            // - Palette optimization for better colors
-            const skipSeconds = 8; // Skip initial loading
-            const paletteCmd = `ffmpeg -y -ss ${skipSeconds} -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" "${OUTPUT_DIR}/palette.png"`;
-            const gifCmd = `ffmpeg -y -ss ${skipSeconds} -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${gifPath}"`;
+            // Create sped-up video:
+            // - Skip first 8s (loading)
+            // - Speed up 8s-20s (player joining) by 10x -> ~1.2s in output
+            // - Show 20s+ (gameplay) at normal speed for 13.8s
+            // - Total: ~15 seconds (1.2s joining + 13.8s gameplay)
+            const speedupCmd = `ffmpeg -y -i "${videoPath}" -filter_complex "[0:v]trim=start=8:end=20,setpts=PTS/10[v1];[0:v]trim=start=20,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,fps=10,scale=800:-1:flags=lanczos[vout]" -map "[vout]" -t 15 "${speedupPath}"`;
+
+            const paletteCmd = `ffmpeg -y -i "${speedupPath}" -vf "palettegen=stats_mode=diff" "${OUTPUT_DIR}/palette.png"`;
+            const gifCmd = `ffmpeg -y -i "${speedupPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "[0:v][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${gifPath}"`;
 
             try {
+                console.log('   Creating sped-up video (joining 10x faster)...');
+                execSync(speedupCmd, { stdio: 'pipe' });
                 console.log('   Generating color palette...');
                 execSync(paletteCmd, { stdio: 'pipe' });
                 console.log('   Creating optimized GIF...');
                 execSync(gifCmd, { stdio: 'pipe' });
 
-                // Clean up palette
+                // Clean up temp files
                 fs.unlinkSync(path.join(OUTPUT_DIR, 'palette.png'));
+                fs.unlinkSync(speedupPath);
 
                 const gifSize = fs.statSync(gifPath).size / (1024 * 1024);
                 console.log(`\n✅ GIF created: ${gifPath}`);
                 console.log(`   Size: ${gifSize.toFixed(2)} MB`);
+                console.log(`   Duration: ~15 seconds (joining sped up 10x, then gameplay)`);
 
                 // If GIF is too large, create a more compressed version
                 if (gifSize > 10) {
