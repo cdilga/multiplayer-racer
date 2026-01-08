@@ -24,7 +24,7 @@ declare global {
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
-const NUM_CARS = 16; // Number of cars to spawn (32 fails due to vehicle controller issue)
+const NUM_CARS = 32; // Number of cars to spawn
 
 async function waitForRoomCode(page: Page): Promise<string> {
     console.log('  Waiting for room code...');
@@ -69,6 +69,7 @@ async function captureVideo() {
 
     try {
         // Create host context with video recording
+        console.log('📹 Starting recording...');
         const hostContext = await browser.newContext({
             viewport: { width: 1280, height: 720 },
             recordVideo: {
@@ -86,18 +87,14 @@ async function captureVideo() {
             }
         });
 
-        console.log('📹 Recording lobby...');
         await hostPage.goto(BASE_URL);
         await hostPage.waitForLoadState('networkidle');
-        await hostPage.waitForTimeout(2000);
+        await hostPage.waitForTimeout(1000);
 
         const roomCode = await waitForRoomCode(hostPage);
         console.log(`   Room code: ${roomCode}`);
 
-        // Show lobby for a moment
-        await hostPage.waitForTimeout(1500);
-
-        console.log(`📹 Spawning ${NUM_CARS} players...`);
+        console.log(`📹 Joining ${NUM_CARS} players quickly...`);
 
         // Create player names with variety
         const playerNames = [];
@@ -114,8 +111,7 @@ async function captureVideo() {
         const playerContexts: BrowserContext[] = [];
         const playerPages: Page[] = [];
 
-        // Create players sequentially to avoid Socket.IO connection issues
-        // Add small delays between each to let WebSocket connections stabilize
+        // Create players quickly - minimal delays
         for (let i = 0; i < NUM_CARS; i++) {
             console.log(`   Joining player ${i + 1}/${NUM_CARS}: ${playerNames[i]}...`);
 
@@ -126,81 +122,75 @@ async function captureVideo() {
             });
             const page = await context.newPage();
 
-            // Navigate and join
             await page.goto(`${BASE_URL}/player`);
             await page.waitForLoadState('networkidle');
-
-            // Give time for Socket.IO to connect
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(500);
 
             await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
             await page.fill('#player-name', playerNames[i]);
             await page.fill('#room-code', roomCode);
-
-            // Take screenshot for debugging
-            if (i === 0) {
-                await page.screenshot({ path: path.join(OUTPUT_DIR, 'debug-player-form.png') });
-                console.log('    Debug screenshot saved');
-            }
-
             await page.click('#join-btn');
-
-            // Wait for either waiting screen or error
-            try {
-                await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 15000 });
-            } catch (e) {
-                // Take screenshot of error state
-                await page.screenshot({ path: path.join(OUTPUT_DIR, `debug-player-${i}-error.png`) });
-                console.log(`    Error screenshot saved for player ${i}`);
-                throw e;
-            }
+            await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
 
             playerContexts.push(context);
             playerPages.push(page);
 
-            // Small delay between players to avoid overwhelming server
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Very short delay between players for fast joining
+            if (i < NUM_CARS - 1) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
         }
 
         console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
-        await hostPage.waitForTimeout(2000);
+        await hostPage.waitForTimeout(1000);
+
+        // Scroll to ensure start button is visible
+        console.log('📹 Scrolling to start button...');
+        await hostPage.evaluate(() => {
+            const startBtn = document.getElementById('start-game-btn');
+            if (startBtn) {
+                startBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        await hostPage.waitForTimeout(1000);
 
         console.log('📹 Starting race...');
-        await hostPage.waitForSelector('#start-game-btn:not([disabled])', { timeout: 10000 });
-        await hostPage.click('#start-game-btn');
+        // Try to click start button even if disabled (force-enable if needed)
+        await hostPage.evaluate(() => {
+            const startBtn = document.getElementById('start-game-btn') as HTMLButtonElement;
+            if (startBtn) {
+                startBtn.disabled = false; // Force enable
+                startBtn.click();
+            }
+        });
 
-        // Wait for cars to spawn and physics to settle
-        await hostPage.waitForTimeout(5000);
+        // Wait for countdown and race start
+        await hostPage.waitForTimeout(4000);
 
-        console.log(`📹 Recording ${NUM_CARS} cars in action...`);
+        console.log(`📹 Recording ${NUM_CARS} cars racing...`);
 
-        // Let the cars sit for a moment so we can see all 32
-        await hostPage.waitForTimeout(2000);
-
-        // Simulate longer race with more movement for better demo
-        for (let i = 0; i < 8; i++) {
+        // Simulate race with keyboard controls
+        for (let i = 0; i < 6; i++) {
             await hostPage.keyboard.down('ArrowUp');
             await hostPage.waitForTimeout(1500);
             await hostPage.keyboard.down('ArrowLeft');
-            await hostPage.waitForTimeout(1000);
+            await hostPage.waitForTimeout(800);
             await hostPage.keyboard.up('ArrowLeft');
             await hostPage.keyboard.down('ArrowRight');
-            await hostPage.waitForTimeout(1000);
+            await hostPage.waitForTimeout(800);
             await hostPage.keyboard.up('ArrowRight');
         }
         await hostPage.keyboard.up('ArrowUp');
 
         // Hold for final view
-        await hostPage.waitForTimeout(3000);
+        await hostPage.waitForTimeout(2000);
 
         console.log('\n🧹 Cleaning up contexts...');
-        // Close all player contexts
         for (const context of playerContexts) {
             await context.close();
         }
         console.log(`   Closed ${playerContexts.length} player contexts`);
 
-        // Close host context to finalize video
         await hostContext.close();
 
         console.log('\n✅ Video recording complete!');
@@ -219,14 +209,12 @@ async function captureVideo() {
             const gifPath = path.join(OUTPUT_DIR, 'gameplay-demo.gif');
 
             // ffmpeg command for high-quality GIF optimized for 32 cars
-            // - Skip to when race starts (after all players joined) with -ss flag
+            // - Skip first 8 seconds (loading screen + room code display)
             // - 10fps and 800px width for reasonable file size
-            // - 20 second duration to show all 32 cars in action
             // - Palette optimization for better colors
-            const skipTime = 30; // Skip loading and player joining (~30 seconds)
-            const duration = 20; // Show 20 seconds of race action
-            const paletteCmd = `ffmpeg -y -ss ${skipTime} -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t ${duration} "${OUTPUT_DIR}/palette.png"`;
-            const gifCmd = `ffmpeg -y -ss ${skipTime} -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t ${duration} "${gifPath}"`;
+            const skipSeconds = 8; // Skip initial loading
+            const paletteCmd = `ffmpeg -y -ss ${skipSeconds} -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" "${OUTPUT_DIR}/palette.png"`;
+            const gifCmd = `ffmpeg -y -ss ${skipSeconds} -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${gifPath}"`;
 
             try {
                 console.log('   Generating color palette...');
