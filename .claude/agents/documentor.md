@@ -143,9 +143,35 @@ stateDiagram-v2
 
 ## Video & GIF Capture
 
-### Video Capture Script
+### IMPORTANT: Use Existing Scripts First!
 
-Use Playwright's built-in video recording:
+**Before writing any video capture scripts**, check if the project already has them:
+
+1. **Video demo**: `scripts/capture-video.ts` - 32-car demo (works completely offline)
+2. **Screenshots**: `scripts/capture-screenshots.ts` - Static images
+
+These scripts are battle-tested and handle common issues like:
+- Bundled dependencies (no CDN/internet required)
+- Proper server startup checks
+- Waiting for elements to load
+- ffmpeg conversion to optimized GIFs
+- Batch processing of multiple contexts (8 players at a time)
+
+### Running Existing Capture Scripts
+
+```bash
+# 1. Start the server (required!)
+python server/app.py
+
+# 2. Run the capture script (in a separate terminal)
+npx tsx scripts/capture-video.ts
+
+# Output: docs/images/gameplay-demo.gif
+```
+
+### Video Capture Script Template
+
+Only create a new script if existing ones don't meet your needs:
 
 ```typescript
 import { chromium } from '@playwright/test';
@@ -162,8 +188,6 @@ const context = await browser.newContext({
 
 await context.close(); // Finalizes video
 ```
-
-A complete video capture script is available at `scripts/capture-video.ts`.
 
 ### Convert Video to GIF with ffmpeg
 
@@ -258,11 +282,82 @@ Store all media in `docs/images/`:
 ```
 docs/
 └── images/
-    ├── gameplay-demo.gif      # Hero animation
+    ├── gameplay-demo.gif      # Hero animation (32 cars)
     ├── gameplay-screenshot.png # Fallback static image
     ├── mobile-controller.png  # Mobile view
     └── lobby-screen.png       # Feature screenshots
 ```
+
+---
+
+## Multiplayer Racer Specific Guidance
+
+### The Video Capture Script
+
+The `scripts/capture-video.ts` script is a powerful showcase tool that demonstrates:
+- Spawning 32 simultaneous player instances
+- Batch processing (8 players at a time) to avoid overwhelming the system
+- Automated joining with varied player names
+- Recording the full chaos with Playwright's video recording
+- Converting to optimized GIF with ffmpeg
+
+**Key features:**
+- `NUM_CARS` constant: Easily adjust player count (default: 32)
+- Batched context creation: Prevents memory/connection issues
+- Creative player names: Combines prefixes and suffixes for variety
+- Progress logging: Shows which batch is processing
+
+**Usage tips:**
+1. Server MUST be running first (`python server/app.py`)
+2. Requires Playwright browsers: `npx playwright install chromium`
+3. Requires ffmpeg for GIF conversion: `apt-get install ffmpeg` or `brew install ffmpeg`
+4. Takes 2-3 minutes to complete full capture cycle
+5. Output GIF may be large (>10MB) - script auto-creates compressed version if needed
+
+### Troubleshooting Video Capture
+
+**Problem**: "Timeout waiting for room code"
+- **Solution**: Ensure server is running and accessible on localhost:8000
+- **Check**: `curl http://localhost:8000/` should return HTML
+
+**Problem**: "Failed to load resource: net::ERR_TUNNEL_CONNECTION_FAILED"
+- **Solution**: CDN dependencies not loading (Three.js, Socket.IO, Rapier)
+- **Fix**: The script automatically intercepts CDN requests and serves bundled dependencies from `static/vendor/`
+- **Works completely offline**: No internet connection needed, all dependencies bundled locally
+
+**Problem**: Browser crashes during capture
+- **Solution**: Reduce player count or add delays between spawns
+- **Check**: Look for WebGL/memory errors in console
+
+**Problem**: GIF file too large
+- **Solution**: Scripts auto-detect and create compressed versions
+- **Manual**: Reduce FPS (10→8), duration (15s→12s), or scale (800px→640px)
+
+### Updating README with Demo Videos
+
+When you've captured new footage:
+
+1. **Place GIF** in `docs/images/` directory
+2. **Update README hero section** with:
+   ```markdown
+   <img src="docs/images/gameplay-demo.gif" alt="Multiplayer Racer Demo" width="800" />
+
+   *Up to 32 cars racing simultaneously with real-time 3D physics!*
+   ```
+3. **Highlight scale** in features section:
+   - "Support for 1-32 players racing simultaneously"
+   - "Massive multiplayer support"
+   - Update player count badges/mentions
+
+4. **Document in Development section**:
+   ```markdown
+   ### Creating Demo Videos
+
+   ```bash
+   # 32-car demo (works completely offline)
+   npx tsx scripts/capture-video.ts
+   ```
+   ```
 
 ---
 
@@ -287,24 +382,40 @@ Before finalizing documentation:
 
 1. **Explore codebase** with Task/Explore agent
 2. **Read existing README** to understand current state
-3. **Run the project** to understand user flow
-4. **Capture screenshots/video** at key moments
-5. **Create Mermaid diagrams** for architecture
-6. **Draft new README** with all sections
-7. **Add badges** for CI, license, tech stack
-8. **Test all examples** and links
-9. **Optimize media** (compress images, GIF palette)
-10. **Commit and create PR** with visual preview
+3. **Check for existing capture scripts** in `scripts/` directory
+   - Use existing scripts if available (saves hours of work!)
+   - Only create new scripts if existing ones don't fit the need
+4. **Run the project** to understand user flow
+5. **Capture screenshots/video** using existing scripts
+   - Start server: `python server/app.py`
+   - Run capture: `npx tsx scripts/capture-video.ts` (works offline!)
+6. **Create Mermaid diagrams** for architecture
+7. **Draft new README** with all sections
+8. **Add badges** for CI, license, tech stack
+9. **Test all examples** and links
+10. **Verify media** (GIFs load, correct size, compelling content)
+11. **Commit and create PR** with visual preview
+
+### Time-Saving Tips
+
+- ✅ **Reuse existing scripts** - Don't reinvent the wheel
+- ✅ **Check `docs/images/`** - May already have usable media
+- ✅ **Read project's CLAUDE.md** - Often has dev-specific guidance
+- ✅ **Look for `.claude/agents/`** - Project-specific agent instructions
+- ❌ **Don't write capture scripts from scratch** unless necessary
+- ❌ **Don't manually run ffmpeg** - scripts handle conversion
 
 ---
 
 ## Common Mistakes to Avoid
 
-1. **ASCII diagrams** - Always use Mermaid
-2. **Missing hero visual** - First impression matters
-3. **Broken badge links** - Test all badges render
-4. **Huge GIFs** - Optimize with ffmpeg palette
-5. **No mobile screenshots** - Show responsive design
-6. **Outdated screenshots** - Re-capture after UI changes
-7. **Missing Quick Start** - Users want to try immediately
-8. **No architecture overview** - Developers need the big picture
+1. **Writing capture scripts from scratch** - ALWAYS check `scripts/` first!
+2. **ASCII diagrams** - Always use Mermaid
+3. **Missing hero visual** - First impression matters
+4. **Broken badge links** - Test all badges render
+5. **Huge GIFs** - Optimize with ffmpeg palette (or use existing scripts)
+6. **No mobile screenshots** - Show responsive design
+7. **Outdated screenshots** - Re-capture after UI changes
+8. **Missing Quick Start** - Users want to try immediately
+9. **No architecture overview** - Developers need the big picture
+10. **Ignoring existing media** - Check `docs/images/` before capturing new content

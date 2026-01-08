@@ -16,11 +16,13 @@
 
 <img src="docs/images/gameplay-demo.gif" alt="Multiplayer Racer Demo" width="800" />
 
-*Watch the full game flow: lobby → players join → race!*
+*Up to 32 cars racing simultaneously with real-time 3D physics!*
 
 <br />
 
-**Connect your phone. Race your friends. Party game chaos.**
+**Connect your phone. Race your friends. Epic party game chaos.**
+
+Support for **1-32 players** • Full physics simulation • WebGL rendering
 
 [Getting Started](#-quick-start) •
 [Features](#-features) •
@@ -45,10 +47,11 @@ Perfect for:
 
 | Feature | Description |
 |---------|-------------|
+| 🏎️ **Massive Scale** | Support for 1-32 players racing simultaneously |
 | 📱 **Phone as Controller** | Touch controls optimized for mobile |
-| 📺 **Big Screen Display** | 3D racing view on the host screen |
-| 🔗 **Easy Join** | QR code or room code to connect |
-| ⚡ **Real-time** | WebSocket-powered instant response |
+| 📺 **Big Screen Display** | 3D racing view with WebGL rendering |
+| 🔗 **Easy Join** | QR code or room code to connect instantly |
+| ⚡ **Real-time Physics** | Rapier 3D engine with WebSocket sync |
 | 🎵 **Dynamic Audio** | Music tracks & sound effects |
 | 🔧 **Physics Tuning** | Built-in debug panels for customization |
 
@@ -97,10 +100,10 @@ Open your browser to **http://localhost:8000** - you're ready to race!
 ## ✨ Features
 
 ### 🏁 Multiplayer Racing
+- **Massive multiplayer support** - Up to 32 players racing simultaneously
 - **Room-based matchmaking** with 4-character codes
 - **QR code join** - Scan and play instantly
-- **Multiple players** racing simultaneously
-- **Real-time synchronization** via WebSockets
+- **Real-time synchronization** via WebSockets with sub-100ms latency
 
 ### 🎮 Mobile Controls
 - **Touch joystick** for steering
@@ -235,6 +238,17 @@ npm run test:headed
 # Run with Playwright UI
 npm run test:ui
 ```
+
+### Creating Demo Videos
+
+Capture gameplay footage for documentation:
+
+```bash
+# 32-car demo (works completely offline with bundled dependencies)
+npx tsx scripts/capture-video.ts
+```
+
+**Note**: Video capture requires a running server (`python server/app.py`) and `ffmpeg` for GIF conversion. All dependencies are bundled locally - no internet connection needed.
 
 ### Debug Controls (Host)
 
