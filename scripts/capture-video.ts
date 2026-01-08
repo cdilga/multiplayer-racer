@@ -24,7 +24,7 @@ declare global {
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
-const NUM_CARS = 16; // Number of cars to spawn (max stable for demo)
+const NUM_CARS = 16; // Number of cars to spawn (32 fails due to vehicle controller issue)
 
 async function waitForRoomCode(page: Page): Promise<string> {
     console.log('  Waiting for room code...');
@@ -131,7 +131,7 @@ async function captureVideo() {
             await page.waitForLoadState('networkidle');
 
             // Give time for Socket.IO to connect
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(1000);
 
             await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
             await page.fill('#player-name', playerNames[i]);
@@ -158,9 +158,8 @@ async function captureVideo() {
             playerContexts.push(context);
             playerPages.push(page);
 
-            // Longer delay to let Socket.IO connection fully establish
-            // Increased to 2s to prevent overwhelming the server
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Small delay between players to avoid overwhelming server
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
@@ -176,23 +175,23 @@ async function captureVideo() {
         console.log(`📹 Recording ${NUM_CARS} cars in action...`);
 
         // Let the cars sit for a moment so we can see all 32
-        await hostPage.waitForTimeout(3000);
+        await hostPage.waitForTimeout(2000);
 
-        // Simulate some movement with keyboard controls
-        for (let i = 0; i < 4; i++) {
+        // Simulate longer race with more movement for better demo
+        for (let i = 0; i < 8; i++) {
             await hostPage.keyboard.down('ArrowUp');
-            await hostPage.waitForTimeout(1000);
+            await hostPage.waitForTimeout(1500);
             await hostPage.keyboard.down('ArrowLeft');
-            await hostPage.waitForTimeout(800);
+            await hostPage.waitForTimeout(1000);
             await hostPage.keyboard.up('ArrowLeft');
             await hostPage.keyboard.down('ArrowRight');
-            await hostPage.waitForTimeout(800);
+            await hostPage.waitForTimeout(1000);
             await hostPage.keyboard.up('ArrowRight');
         }
         await hostPage.keyboard.up('ArrowUp');
 
         // Hold for final view
-        await hostPage.waitForTimeout(2000);
+        await hostPage.waitForTimeout(3000);
 
         console.log('\n🧹 Cleaning up contexts...');
         // Close all player contexts
@@ -220,11 +219,14 @@ async function captureVideo() {
             const gifPath = path.join(OUTPUT_DIR, 'gameplay-demo.gif');
 
             // ffmpeg command for high-quality GIF optimized for 32 cars
+            // - Skip to when race starts (after all players joined) with -ss flag
             // - 10fps and 800px width for reasonable file size
-            // - 15 second duration to show all the action
+            // - 20 second duration to show all 32 cars in action
             // - Palette optimization for better colors
-            const paletteCmd = `ffmpeg -y -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t 15 "${OUTPUT_DIR}/palette.png"`;
-            const gifCmd = `ffmpeg -y -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t 15 "${gifPath}"`;
+            const skipTime = 30; // Skip loading and player joining (~30 seconds)
+            const duration = 20; // Show 20 seconds of race action
+            const paletteCmd = `ffmpeg -y -ss ${skipTime} -i "${videoPath}" -vf "fps=10,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t ${duration} "${OUTPUT_DIR}/palette.png"`;
+            const gifCmd = `ffmpeg -y -ss ${skipTime} -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t ${duration} "${gifPath}"`;
 
             try {
                 console.log('   Generating color palette...');
