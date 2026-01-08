@@ -6,7 +6,9 @@
  * Prerequisites:
  * - Server running: python server/app.py
  * - ffmpeg installed for GIF conversion
- * - Works completely offline using bundled dependencies
+ *
+ * Note: Works completely offline! All dependencies (Socket.IO, Three.js, Rapier)
+ * are bundled in static/vendor/ and served by Flask.
  */
 import { chromium, Browser, Page, BrowserContext } from '@playwright/test';
 import * as fs from 'fs';
@@ -22,74 +24,7 @@ declare global {
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
-const STATIC_DIR = path.join(__dirname, '../static');
-const NUM_CARS = 2; // Number of cars to spawn (testing with 2 first)
-
-/**
- * Setup route interception to serve local dependencies
- * Uses VERY specific URL patterns to avoid interfering with Socket.IO
- */
-async function setupLocalRoutes(context: BrowserContext): Promise<void> {
-    // Intercept Socket.IO CDN library ONLY (not the WebSocket endpoint!)
-    await context.route('https://cdn.socket.io/4.5.4/socket.io.min.js', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/socket.io.min.js');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/javascript',
-                body: body
-            });
-        } else {
-            await route.abort();
-        }
-    });
-
-    // Intercept Three.js CDN - regular script version
-    await context.route('https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/three.min.js');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/javascript',
-                body: body
-            });
-        } else {
-            await route.abort();
-        }
-    });
-
-    // Intercept Rapier CDN - ES module version
-    await context.route('https://cdn.skypack.dev/@dimforge/rapier3d-compat', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier.es.js');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/javascript',
-                body: body
-            });
-        } else {
-            await route.abort();
-        }
-    });
-
-    // Intercept Rapier WASM file
-    await context.route('**/rapier_wasm3d_bg.wasm', async route => {
-        const localPath = path.join(STATIC_DIR, 'vendor/rapier/rapier_wasm3d_bg.wasm');
-        if (fs.existsSync(localPath)) {
-            const body = fs.readFileSync(localPath);
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/wasm',
-                body: body
-            });
-        } else {
-            await route.abort();
-        }
-    });
-}
+const NUM_CARS = 16; // Number of cars to spawn (max stable for demo)
 
 async function waitForRoomCode(page: Page): Promise<string> {
     console.log('  Waiting for room code...');
@@ -141,8 +76,6 @@ async function captureVideo() {
                 size: { width: 1280, height: 720 }
             }
         });
-        // Route interception disabled - requires internet for CDN dependencies
-        // await setupLocalRoutes(hostContext);
         const hostPage = await hostContext.newPage();
 
         // Log browser console for debugging
@@ -191,17 +124,14 @@ async function captureVideo() {
                 isMobile: true,
                 hasTouch: true
             });
-            // Route interception disabled - requires internet for CDN dependencies
-            // await setupLocalRoutes(context);
             const page = await context.newPage();
 
             // Navigate and join
             await page.goto(`${BASE_URL}/player`);
             await page.waitForLoadState('networkidle');
 
-            // Give extra time for Socket.IO and page to fully initialize
-            // Increased to 5s to allow WebSocket upgrade to complete
-            await page.waitForTimeout(5000);
+            // Give time for Socket.IO to connect
+            await page.waitForTimeout(2000);
 
             await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
             await page.fill('#player-name', playerNames[i]);
