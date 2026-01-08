@@ -204,11 +204,11 @@ async function captureVideo() {
             const speedupPath = path.join(OUTPUT_DIR, 'speedup-temp.webm');
 
             // Create sped-up video:
-            // - Skip first 8s (loading)
-            // - Speed up 8s-20s (player joining) by 10x -> ~1.2s in output
-            // - Show 20s+ (gameplay) at normal speed for 13.8s
-            // - Total: ~15 seconds (1.2s joining + 13.8s gameplay)
-            const speedupCmd = `ffmpeg -y -i "${videoPath}" -filter_complex "[0:v]trim=start=8:end=20,setpts=PTS/10[v1];[0:v]trim=start=20,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,fps=10,scale=800:-1:flags=lanczos[vout]" -map "[vout]" -t 15 "${speedupPath}"`;
+            // - Skip first 8s (loading + room code)
+            // - Speed up 8s-25s (player joining + scroll + countdown) by 10x -> ~1.7s in output
+            // - Show 25s+ (actual race gameplay) at normal speed for 13.3s
+            // - Total: ~15 seconds (1.7s fast-join + 13.3s gameplay)
+            const speedupCmd = `ffmpeg -y -i "${videoPath}" -filter_complex "[0:v]trim=start=8:end=25,setpts=PTS/10[v1];[0:v]trim=start=25,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,fps=10,scale=800:-1:flags=lanczos[vout]" -map "[vout]" -t 15 "${speedupPath}"`;
 
             const paletteCmd = `ffmpeg -y -i "${speedupPath}" -vf "palettegen=stats_mode=diff" "${OUTPUT_DIR}/palette.png"`;
             const gifCmd = `ffmpeg -y -i "${speedupPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "[0:v][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${gifPath}"`;
@@ -223,7 +223,10 @@ async function captureVideo() {
 
                 // Clean up temp files
                 fs.unlinkSync(path.join(OUTPUT_DIR, 'palette.png'));
-                fs.unlinkSync(speedupPath);
+                // fs.unlinkSync(speedupPath); // Keep for validation
+
+                console.log(`   Source video saved at: ${videoPath}`);
+                console.log(`   Sped-up video saved at: ${speedupPath}`);
 
                 const gifSize = fs.statSync(gifPath).size / (1024 * 1024);
                 console.log(`\n✅ GIF created: ${gifPath}`);
