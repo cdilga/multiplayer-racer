@@ -73,6 +73,45 @@ git push origin your-branch
 - **Small increments**: Each test should verify one specific behavior
 - **CI is truth**: Local passing isn't enough - CI must pass
 
+## Dependency Management - CRITICAL
+
+**NEVER use CDN links for dependencies. ALL dependencies MUST be installed via NPM and bundled.**
+
+### Why This Matters
+- CDN imports break tests and make them slow/flaky
+- CDN imports bypass our bundling tooling
+- CDN imports create network dependencies during development
+- CDN imports make offline development impossible
+
+### The Rule
+```
+❌ WRONG - Never do this:
+"three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js"
+"@dimforge/rapier3d-compat": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+
+✅ CORRECT - Always do this:
+npm install three @dimforge/rapier3d-compat
+import * as THREE from 'three';
+import RAPIER from '@dimforge/rapier3d-compat';
+```
+
+### If You Need a New Dependency
+1. `npm install <package-name>`
+2. Import it normally in your JavaScript/TypeScript
+3. Let the bundler handle it
+4. **NEVER** add CDN URLs to import maps or script tags
+
+### Existing CDN References
+If you encounter existing CDN references in the codebase, **convert them to NPM packages** rather than perpetuating the pattern.
+
+### DO NOT Use Test-Time CDN Interception
+**NEVER** intercept CDN requests in tests as a workaround. Route interception is a broken band-aid that:
+- Still makes network requests (slow)
+- Can fail intermittently
+- Doesn't fix the root cause
+
+The ONLY acceptable fix is removing CDN dependencies and using NPM + bundling.
+
 ## Code Style Guidelines
 - **Python**: Follow PEP 8 conventions
   - 4-space indentation
