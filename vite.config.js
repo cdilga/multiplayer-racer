@@ -19,11 +19,19 @@ export default defineConfig({
         target: 'http://localhost:8000',
         ws: true,
       },
-      '/host': 'http://localhost:8000',
-      '/player': 'http://localhost:8000',
+      '/qrcode': 'http://localhost:8000',
+    },
+  },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        host: path.resolve(__dirname, 'frontend/host/index.html'),
+        player: path.resolve(__dirname, 'frontend/player/index.html'),
+      },
     },
   },
   optimizeDeps: {
-    include: ['three', '@dimforge/rapier3d-compat'],
+    include: ['three', '@dimforge/rapier3d-compat', 'socket.io-client'],
   },
 }); 
