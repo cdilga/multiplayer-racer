@@ -1,13 +1,47 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Detect environment for GPU strategy
+const isCI = !!process.env.CI;
+
+// GPU flags strategy:
+// - CI: Use SwiftShader (software renderer) since no GPU available
+// - Local: Use native GPU acceleration for speed
+const gpuArgs = isCI ? [
+    // CI: Force software rendering (no GPU)
+    '--use-gl=angle',
+    '--use-angle=swiftshader',
+] : [
+    // Local: Use hardware GPU when available
+    '--use-gl=angle',
+    '--use-angle=default',  // Let ANGLE pick best backend (Metal on Mac, D3D on Windows)
+    '--enable-gpu-rasterization',
+];
+
+// Common WebGL and stability flags
+const commonArgs = [
+    '--enable-webgl',
+    '--enable-webgl2',
+    '--ignore-gpu-blocklist',
+    '--disable-background-timer-throttling',
+    '--disable-renderer-backgrounding',
+];
+
+// CI-specific flags for containerized environments
+const ciArgs = isCI ? [
+    '--disable-gpu-sandbox',
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+] : [];
+
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: true, // Enable parallel execution - each test creates its own room
-    forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: 2, // Limited workers due to WebGL resource contention
+    fullyParallel: true,
+    forbidOnly: isCI,
+    retries: isCI ? 2 : 0,
+    // Limit workers to 2 - WebGL tests have resource contention with more workers
+    workers: 2,
     reporter: 'html',
-    timeout: 60000, // 60s timeout - tests should complete faster with optimizations
+    timeout: 60000,
     use: {
         baseURL: 'http://localhost:8000',
         trace: 'on-first-retry',
@@ -19,27 +53,13 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // Use headless mode - xvfb in CI provides virtual display for WebGL
                 headless: true,
                 launchOptions: {
-                    args: [
-                        '--use-gl=angle',
-                        '--use-angle=swiftshader',
-                        '--enable-webgl',
-                        '--enable-webgl2',
-                        '--ignore-gpu-blocklist',
-                        '--disable-gpu-sandbox',
-                        '--no-sandbox',
-                        '--disable-dev-shm-usage',
-                        // Increase stability for WebGL
-                        '--disable-background-timer-throttling',
-                        '--disable-renderer-backgrounding',
-                    ],
+                    args: [...gpuArgs, ...commonArgs, ...ciArgs],
                 },
             },
         },
     ],
-    // Start server automatically for tests using pyenv environment
     webServer: {
         command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && python server/app.py"',
         url: 'http://localhost:8000',

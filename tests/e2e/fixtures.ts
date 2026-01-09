@@ -54,16 +54,16 @@ export async function gotoHost(hostPage: Page): Promise<void> {
 // Helper to wait for room code to appear on host
 export async function waitForRoomCode(hostPage: Page): Promise<string> {
     // Wait for room code element to be visible
-    await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 30000 });
+    await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 10000 });
 
-    // Wait for a valid room code (not placeholder dashes) - optimized
+    // Wait for a valid room code (not placeholder dashes) - fast polling
     let roomCode = '';
-    for (let i = 0; i < 30; i++) {  // Reduced from 50 to 30 (3 seconds max)
+    for (let i = 0; i < 40; i++) {  // 40 * 50ms = 2 seconds max
         roomCode = await hostPage.locator('#room-code-display').textContent() || '';
         if (roomCode && roomCode.length === 4 && !roomCode.includes('-')) {
             return roomCode;
         }
-        await hostPage.waitForTimeout(100);
+        await hostPage.waitForTimeout(50);  // Faster polling
     }
 
     // If still invalid, throw with helpful error
@@ -99,72 +99,34 @@ export async function joinGameAsPlayer(
             const gs = window.gameState;
             return gs && gs.playerId !== null;
         },
-        { timeout: 30000 }
+        { timeout: 10000 }
     );
-
-    // Small delay to ensure UI has updated
-    await playerPage.waitForTimeout(100);
 }
 
 // Helper to start game from host
 export async function startGameFromHost(hostPage: Page): Promise<void> {
-    // Wait for start button to be enabled by checking it's not disabled
-    // First wait for the button to exist
-    await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
-
-    // Wait until button is enabled (not having disabled attribute)
+    // Wait for start button to be enabled
+    await hostPage.waitForSelector('#start-game-btn', { timeout: 10000 });
     await hostPage.waitForFunction(
         () => {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
             return btn && !btn.disabled;
         },
-        { timeout: 30000 }
+        { timeout: 10000 }
     );
 
-    // Click start button via JavaScript to bypass viewport checks
+    // Click start button
     await hostPage.evaluate(() => {
         const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
         if (btn) btn.click();
     });
 
-    // Wait for game screen to be visible (game-container should have canvas)
-    await hostPage.waitForSelector('#game-screen:not(.hidden)', { timeout: 30000 });
-
-    // Wait for game to actually initialize (check for game object and canvas)
-    // Use a more lenient check - just verify game and canvas exist, not that loop is running
+    // Wait for game to be ready (canvas + game object initialized)
     await hostPage.waitForFunction(() => {
         // @ts-ignore
         const game = window.game;
-        const canvas = document.querySelector('canvas');
-        // Check that game is initialized and canvas exists
-        return game && game.engine && game.engine.initialized && canvas !== null;
-    }, { timeout: 10000 }).catch(() => {
-        // If check fails, continue anyway - game might still be initializing
-        console.warn('Game initialization check timed out, continuing...');
-    });
-
-    // Wait a bit for game to initialize (reduced from 1000ms)
-    await hostPage.waitForTimeout(300);
-
-    // Click on the page body to ensure keyboard events work
-    // This is necessary because Playwright keyboard events need a focused element
-    // Use try-catch to handle page closure gracefully
-    try {
-        await hostPage.click('body', { position: { x: 100, y: 100 }, timeout: 5000 });
-    } catch (e) {
-        // Check if page is still alive and game is running
-        const pageAlive = await hostPage.evaluate(() => {
-            // @ts-ignore
-            const game = window.game;
-            return game?.engine?.gameLoop?.isRunning() || false;
-        }).catch(() => false);
-        
-        if (!pageAlive) {
-            // Page crashed - try to get console errors before failing
-            console.error('Page crashed during game initialization. Check browser console for Three.js errors.');
-            throw new Error('Page crashed during game initialization - possible Three.js compatibility issue');
-        }
-    }
+        return game?.engine?.initialized && document.querySelector('canvas');
+    }, { timeout: 10000 });
 }
 
 // Helper to send control inputs from player

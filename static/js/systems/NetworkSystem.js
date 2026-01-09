@@ -114,7 +114,10 @@ class NetworkSystem {
         this.socket.on('room_created', (data) => {
             this.roomCode = data.room_code;
             this.isHost = true;
-            this._emit('network:roomCreated', { roomCode: data.room_code });
+            this._emit('network:roomCreated', {
+                roomCode: data.room_code,
+                joinUrl: data.join_url
+            });
         });
 
         // Player events
