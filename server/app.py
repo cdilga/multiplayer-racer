@@ -213,7 +213,17 @@ def create_room(data=None):
     }
     
     join_room(room_code)
-    emit('room_created', {'room_code': room_code})
+
+    # Get join URL with proper IP for display
+    local_ip = get_local_ip()
+    port = request.environ.get('SERVER_PORT', 8000)
+    if 'Host' in request.headers:
+        host_parts = request.headers['Host'].split(':')
+        if len(host_parts) > 1:
+            port = host_parts[1]
+    join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+
+    emit('room_created', {'room_code': room_code, 'join_url': join_url})
     logger.info(f"Room created: {room_code}")
 
 @socketio.on('player_control_update')

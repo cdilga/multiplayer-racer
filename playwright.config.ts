@@ -5,7 +5,7 @@ export default defineConfig({
     fullyParallel: true, // Enable parallel execution - each test creates its own room
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 2 : 4, // More workers for faster local testing
+    workers: 2, // Limited workers due to WebGL resource contention
     reporter: 'html',
     timeout: 60000, // 60s timeout - tests should complete faster with optimizations
     use: {

@@ -50,6 +50,17 @@
 - Hot reload / HMR support
 - Split large files into modules
 - Update dependencies to latest stable
+- REMOVE all dependencies on CDN assets, and introduce a sensible build chain which will build the html assets keeping it simple and still hot reloading
+
+### Bugs found:
+- ![curb misplaced](image-1.png) - curbs are still not placed correctly, they're not circular in the map
+- The QR code overlaps with the lap counter - perhaps move QR code to bottom left. Also, it needs to be a little transparent unless hovered over, and it needs to be much bigger, as a proportion of the screen, with a small subtle join now prompt
+  - The main QR join code also needs to be much much larger on initial join, 2x the size
+  - The text below the QR code is incorrect, saying http://0.0.0.0:8000/player?room=WGDL - but it should have the IP address it calculated for itself.
+- The car engine sound is still really off. DO research online using online search tools to figure out how to directly generate more believable car sounds.
+- When my phone sleeps, and the controller page is reopened, it doesn't reininialise the connection properly - the car reset buttons no longer work
+- Damage doesn't work as expected. We take damage from the ground. We should only be taking damage from collisions with walls, cars or if the car was able to flip etc
+  - Damage should send little wheels (hard objects that can be hit and also cause other cars to flip on them) and parts of the car model exploding outwards. This might be hard to achieve but should happen. ideally at least all 4 wheels come off
 
 ### Project Housekeeping
 **Status:** Do after test optimization and demo video update
@@ -107,7 +118,7 @@
 - Reconnect restores same vehicle/position
 
 ### Earlier Completed
-- Camera System - Dynamic FOV (30-100°) keeps all vehicles visible
+- Camera System - Dynamic FOV (30-50*) keeps all vehicles visible
 - Physics & Debug System - F2 tuning panel with localStorage persistence
 - Joystick Controller - Mobile-friendly with multi-touch support
 - Damage System - Collision-based damage calculation with respawn

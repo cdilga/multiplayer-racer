@@ -602,12 +602,12 @@ class LobbyUI {
                 font-size: 12px;
             }
             .qr-code {
-                width: 150px;
-                height: 150px;
+                width: 300px;
+                height: 300px;
                 margin: 15px auto;
                 border-radius: 10px;
                 background: white;
-                padding: 5px;
+                padding: 8px;
             }
             .qr-code.hidden {
                 display: none;
@@ -874,7 +874,7 @@ class LobbyUI {
         if (!this.eventBus) return;
 
         this.eventBus.on('network:roomCreated', (data) => {
-            this.setRoomCode(data.roomCode);
+            this.setRoomCode(data.roomCode, data.joinUrl);
         });
 
         this.eventBus.on('network:playerJoined', (player) => {
@@ -895,10 +895,11 @@ class LobbyUI {
     }
 
     /**
-     * Set room code
+     * Set room code and optional join URL
      * @param {string} code
+     * @param {string} [joinUrl] - Server-provided join URL with proper IP
      */
-    setRoomCode(code) {
+    setRoomCode(code, joinUrl = null) {
         this.roomCode = code;
         if (this.elements.roomCode) {
             this.elements.roomCode.textContent = code;
@@ -908,10 +909,10 @@ class LobbyUI {
             this.elements.qrCode.src = `/qrcode/${code}`;
             this.elements.qrCode.classList.remove('hidden');
         }
-        // Update join URL
+        // Update join URL - use server-provided URL if available
         if (this.elements.joinUrl && code && code !== '----') {
-            const joinUrl = `${window.location.origin}/player?room=${code}`;
-            this.elements.joinUrl.textContent = joinUrl;
+            const displayUrl = joinUrl || `${window.location.origin}/player?room=${code}`;
+            this.elements.joinUrl.textContent = displayUrl;
         }
     }
 
