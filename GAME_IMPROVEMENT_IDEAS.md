@@ -6,51 +6,96 @@
 
 ## Priority Order
 
-1. **Test Optimization** - CRITICAL (blocks visual overhaul)
-2. **Player Name Fix** - UX broken on all mobile
-3. **Late Join** - Core feature
-4. **Developer Experience** - Enables faster iteration
-5. **Project Rename** - After demo video update
-6. **Derby/Fight Mode** - New game mode
-7. **Hill Climber Pro Max** - Third game mode
+1. ~~**Test Optimization**~~ - ✅ DONE (1.4 min from ~50 min)
+2. ~~**Player Name Fix**~~ - ✅ DONE (tests pass, input visible on mobile)
+3. ~~**Late Join**~~ - ✅ DONE (commit 96902a9)
+4. **Vite Bundling Migration** - HIGH PRIORITY (improves DX and test performance)
+5. **Developer Experience** - Enables faster iteration
+6. **Project Rename** - After demo video update
+7. **Derby/Fight Mode** - New game mode
+8. **Hill Climber Pro Max** - Third game mode
 
 ---
 
 ## Active Work
 
-### Test Optimization
-**Status:** TOP PRIORITY - blocks neon visual overhaul
-**Spec:** See `TEST_OPTIMISATION_SPEC.md` for detailed implementation strategies
-**Target:** Under 5 minutes total (currently ~50 min)
-**Approach:** Elite engineering, effective test slicing, robust management of long-running components - no compromise on coverage
-- Remove duplicate/redundant scenarios while keeping valuable complex tests
-- Run simulation faster than realtime (keep at least one realtime test)
-- Update docs to maintain fast tests in future
+### Vite Bundling Migration (CRITICAL - Improves Test Performance Further)
+**Status:** HIGH PRIORITY - Next task to implement
+**Why:** CDN imports make tests slower than they need to be. This migration will:
+- Eliminate all network requests for dependencies
+- Enable hot module reloading (HMR) for fast iteration
+- Unify the build pipeline
 
-### Player Name Setting
-**Status:** Ready to implement - all mobile devices affected
-**Bug:** Name input is half off screen on ALL mobile devices (confirmed in Playwright too)
-- Users cannot set their name
-- Add name setting test
-- Allow longer names, names with emoji
-- Use frontend designer skill (`/frontend-designer`) for visual revamp - invoke directly, don't defer
-- Color reference: `.cursor/color-palette.mdc`
-- Note: Neon visual overhaul in progress on `feature/visual-overhaul` branch (see `COLOR_SCHEME.md`)
+**Current State (broken):**
+- Vite is installed but NOT used for serving
+- Flask serves HTML directly from `frontend/host/index.html`
+- HTML uses CDN import maps (lines 217-222) → slow, flaky
+- Vendor scripts in `/static/vendor/` → duplicates NPM packages
+- NPM packages installed but unused (three, rapier, socket.io-client)
 
-### Late Join / In-Progress Join
-**Status:** Ready to implement
-**Design decisions:**
-- Players can join at any time during race
-- Late joiners spawn near last place (gives fighting chance)
-- Display QR code persistently in corner
-- Stats won't be great but it's about fun
+**Target State:**
+```
+Dev:  npm run dev → Vite dev server (port 5173) with HMR
+      Flask only handles /socket.io WebSocket connections
+
+Prod: npm run build → outputs to dist/
+      Flask serves dist/ as static files
+```
+
+**Implementation Steps:**
+
+1. **Create Vite entry points** (new files)
+   ```
+   src/host/main.ts    - imports GameHost, rapier, three from NPM
+   src/player/main.ts  - imports player code from NPM
+   ```
+
+2. **Update vite.config.js for multi-page**
+   ```js
+   build: {
+     rollupOptions: {
+       input: {
+         host: 'frontend/host/index.html',
+         player: 'frontend/player/index.html'
+       }
+     }
+   }
+   ```
+
+3. **Update HTML files**
+   - Remove import maps (CDN references)
+   - Remove vendor script tags
+   - Add single `<script type="module" src="/src/host/main.ts">`
+   - Vite handles bundling three, rapier, socket.io from NPM
+
+4. **Update Flask to proxy to Vite in dev**
+   ```python
+   # In dev: proxy frontend requests to Vite
+   # In prod: serve from dist/
+   ```
+
+5. **Delete vendor files**
+   - Remove `/static/vendor/socket.io.min.js`
+   - Remove `/static/vendor/three.min.js`
+
+6. **Update playwright config**
+   - Tests should work against either Vite dev server or built output
+   - No more CDN interception needed
+
+**Files to modify:**
+- `vite.config.js` - add build config, proper entry points
+- `frontend/host/index.html` - remove CDN imports, add Vite entry
+- `frontend/player/index.html` - same
+- `server/app.py` - add Vite proxy for dev mode
+- `playwright.config.ts` - update webServer config
+- Delete: `static/vendor/`, `scripts/capture-video.ts` CDN interception
 
 ### Developer Experience
-**Status:** HIGH PRIORITY - do after test optimization
-- Hot reload / HMR support
+**Status:** HIGH PRIORITY - do after Vite migration
+- Hot reload / HMR support ✓ (comes with Vite migration)
 - Split large files into modules
 - Update dependencies to latest stable
-- REMOVE all dependencies on CDN assets, and introduce a sensible build chain which will build the html assets keeping it simple and still hot reloading
+- **CRITICAL: REMOVE all CDN dependencies** - CDN imports break tests, slow everything down, and bypass bundling. ALL dependencies MUST be via NPM. See CLAUDE.md for details. ✓ (comes with Vite migration)
 
 ### Bugs found:
 - ![curb misplaced](image-1.png) - curbs are still not placed correctly, they're not circular in the map
