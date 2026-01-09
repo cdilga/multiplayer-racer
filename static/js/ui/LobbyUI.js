@@ -875,6 +875,10 @@ class LobbyUI {
 
         this.eventBus.on('network:roomCreated', (data) => {
             this.setRoomCode(data.roomCode, data.joinUrl);
+            // Also set on RoomCodeOverlayUI if available
+            if (window.roomCodeOverlay && window.roomCodeOverlay.setRoomCode) {
+                window.roomCodeOverlay.setRoomCode(data.roomCode);
+            }
         });
 
         this.eventBus.on('network:playerJoined', (player) => {
