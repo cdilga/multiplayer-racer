@@ -46,10 +46,10 @@ const ciArgs = isCI ? [
 
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: true,  // Parallel in both CI and local for speed
+    fullyParallel: true,  // Parallel for speed
     forbidOnly: isCI,
     retries: isCI ? 1 : 0,  // Reduced from 2 to save time
-    // 2 workers in both CI and local - balances speed vs resource usage
+    // 2 workers for better parallel performance
     workers: 2,
     reporter: 'html',
     // Longer timeouts in CI due to SwiftShader slowness
@@ -70,7 +70,8 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                headless: true,
+                // Use 'new' headless mode - more stable than headless shell
+                headless: 'new',
                 launchOptions: {
                     args: [...gpuArgs, ...commonArgs, ...ciArgs],
                 },
