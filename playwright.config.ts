@@ -30,6 +30,8 @@ const commonArgs = [
 
 // CI-specific flags for containerized environments
 // These optimize for resource-constrained CI runners (see CI_TEST_PERFORMANCE_SPEC.md)
+// NOTE: --single-process removed - causes browser crashes in multi-context scenarios
+// Instead, we use parallel workers to improve performance
 const ciArgs = isCI ? [
     '--disable-gpu-sandbox',
     '--no-sandbox',
@@ -37,20 +39,18 @@ const ciArgs = isCI ? [
     '--disable-setuid-sandbox',
     '--disable-accelerated-2d-canvas',
     '--disable-accelerated-video-decode',
-    '--single-process',              // Required for performance (without: 59min, with: 7min)
-    '--no-zygote',                   // Improves single-process stability
-    '--disable-audio-output',        // Prevent audio-related crashes
+    '--disable-audio-output',        // Prevent audio-related issues
     '--mute-audio',
     '--disable-features=VizDisplayCompositor,AudioServiceOutOfProcess',
 ] : [];
 
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: !isCI,  // Sequential in CI for stability
+    fullyParallel: true,  // Parallel in both CI and local for speed
     forbidOnly: isCI,
     retries: isCI ? 1 : 0,  // Reduced from 2 to save time
-    // Single worker in CI (resource-constrained), 2 locally for speed
-    workers: isCI ? 1 : 2,
+    // 2 workers in both CI and local - balances speed vs resource usage
+    workers: 2,
     reporter: 'html',
     // Longer timeouts in CI due to SwiftShader slowness
     timeout: isCI ? 120000 : 60000,
