@@ -61,6 +61,7 @@ pids
 node_modules/
 jspm_packages/
 bower_components/
+static/vendor/
 
 # Coverage directory
 coverage/

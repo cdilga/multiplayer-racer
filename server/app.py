@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import random
@@ -17,11 +17,34 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder='../static', template_folder='../frontend')
+# Check if dist/ exists (production build from Vite)
+dist_path = os.path.join(os.path.dirname(__file__), '..', 'dist')
+if os.path.exists(dist_path):
+    # Production: serve from Vite build output
+    # Vite's publicDir copies static/ contents to dist/ root
+    logger.info('Production mode: Serving from dist/')
+    app = Flask(__name__,
+                static_folder='../dist',
+                static_url_path='/static',
+                template_folder='../dist/frontend')
+else:
+    # Development: serve from source (when using Vite dev server)
+    logger.info('Development mode: Serving from source')
+    app = Flask(__name__,
+                static_folder='../static',
+                template_folder='../frontend')
+
 app.config['SECRET_KEY'] = 'race_game_secret!'
 # Configure SocketIO - keep defaults for stability during long-polling
 # Shorter intervals caused "transport error" disconnects
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Serve Vite bundled assets in production mode
+if os.path.exists(dist_path):
+    @app.route('/assets/<path:filename>')
+    def serve_assets(filename):
+        """Serve Vite bundled assets from dist/assets/"""
+        return send_from_directory(os.path.join(dist_path, 'assets'), filename)
 
 # Game rooms dictionary
 # Structure: {
