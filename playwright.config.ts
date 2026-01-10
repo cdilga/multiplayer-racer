@@ -70,8 +70,7 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
-                // Use 'new' headless mode - more stable than headless shell
-                headless: 'new',
+                headless: true,
                 launchOptions: {
                     args: [...gpuArgs, ...commonArgs, ...ciArgs],
                 },
