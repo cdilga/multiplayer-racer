@@ -36,16 +36,18 @@ const ciArgs = isCI ? [
     '--disable-setuid-sandbox',
     '--disable-accelerated-2d-canvas',
     '--disable-accelerated-video-decode',
-    // Note: --single-process removed - causes "Target page, context or browser has been closed"
-    // crashes when one context failure takes down the entire browser process
-    '--disable-features=VizDisplayCompositor',
+    '--single-process',              // Required for performance (without: 59min, with: 7min)
+    '--no-zygote',                   // Improves single-process stability
+    '--disable-audio-output',        // Prevent audio-related crashes
+    '--mute-audio',
+    '--disable-features=VizDisplayCompositor,AudioServiceOutOfProcess',
 ] : [];
 
 export default defineConfig({
     testDir: './tests/e2e',
     fullyParallel: !isCI,  // Sequential in CI for stability
     forbidOnly: isCI,
-    retries: isCI ? 2 : 0,
+    retries: isCI ? 1 : 0,  // Reduced from 2 to save time
     // Single worker in CI (resource-constrained), 2 locally for speed
     workers: isCI ? 1 : 2,
     reporter: 'html',
