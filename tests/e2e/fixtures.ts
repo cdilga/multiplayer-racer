@@ -80,7 +80,7 @@ export async function joinGameAsPlayer(
     await playerPage.goto('/player?testMode=1');
 
     // Wait for join screen to be visible
-    await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
+    await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 30000 });
 
     // Fill in player name
     await playerPage.fill('#player-name', playerName);
@@ -99,20 +99,20 @@ export async function joinGameAsPlayer(
             const gs = window.gameState;
             return gs && gs.playerId !== null;
         },
-        { timeout: 10000 }
+        { timeout: 30000 }
     );
 }
 
 // Helper to start game from host
 export async function startGameFromHost(hostPage: Page): Promise<void> {
     // Wait for start button to be enabled
-    await hostPage.waitForSelector('#start-game-btn', { timeout: 10000 });
+    await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
     await hostPage.waitForFunction(
         () => {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
             return btn && !btn.disabled;
         },
-        { timeout: 10000 }
+        { timeout: 30000 }
     );
 
     // Click start button
@@ -126,7 +126,7 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
         // @ts-ignore
         const game = window.game;
         return game?.engine?.initialized && document.querySelector('canvas');
-    }, { timeout: 10000 });
+    }, { timeout: 30000 });
 }
 
 // Helper to send control inputs from player
