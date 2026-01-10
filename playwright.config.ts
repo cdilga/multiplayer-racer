@@ -36,7 +36,8 @@ const ciArgs = isCI ? [
     '--disable-setuid-sandbox',
     '--disable-accelerated-2d-canvas',
     '--disable-accelerated-video-decode',
-    '--single-process',              // Reduces memory overhead (~200MB) and IPC latency
+    // Note: --single-process removed - causes "Target page, context or browser has been closed"
+    // crashes when one context failure takes down the entire browser process
     '--disable-features=VizDisplayCompositor',
 ] : [];
 
