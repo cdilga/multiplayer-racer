@@ -10,6 +10,7 @@ const gpuArgs = isCI ? [
     // CI: Force software rendering (no GPU)
     '--use-gl=angle',
     '--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader',  // Required for SwiftShader WebGL (avoids deprecation crash)
     '--disable-gpu',  // Forces SwiftShader, prevents futile GPU detection
 ] : [
     // Local: Use hardware GPU when available
