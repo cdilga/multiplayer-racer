@@ -53,8 +53,8 @@ export async function gotoHost(hostPage: Page): Promise<void> {
 
 // Helper to wait for room code to appear on host
 export async function waitForRoomCode(hostPage: Page): Promise<string> {
-    // Wait for room code element to be visible
-    await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 10000 });
+    // Wait for room code element to be visible (longer timeout for CI with SwiftShader)
+    await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 30000 });
 
     // Wait for a valid room code (not placeholder dashes) - fast polling
     let roomCode = '';
