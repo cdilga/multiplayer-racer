@@ -66,31 +66,17 @@ test.describe('CI Diagnostic Tests', () => {
         // Skip host screenshot here - it's slow with WebGL. Player page is fast.
         await takeScreenshot(playerPage, 'diag-03-player-joined-player');
 
-        console.log('=== STEP 4: Check start button state ===');
-        const startBtnState = await hostPage.evaluate(() => {
-            const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
-            return {
-                exists: !!btn,
-                disabled: btn?.disabled,
-                visible: btn?.checkVisibility?.() ?? false,
-                text: btn?.textContent,
-                classes: btn?.className
-            };
-        });
-        console.log('Start button state:', JSON.stringify(startBtnState, null, 2));
-
-        // Wait for button to be enabled
-        console.log('=== STEP 5: Wait for start button to be enabled ===');
+        console.log('=== STEP 4: Wait for start button to be enabled ===');
+        // Use waitForFunction instead of waitForSelector - more reliable for checking state
         try {
-            await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
             await hostPage.waitForFunction(
                 () => {
                     const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
-                    return btn && !btn.disabled;
+                    return btn && !btn.disabled && btn.checkVisibility?.();
                 },
-                { timeout: 30000 }
+                { timeout: 60000 }  // Give more time for CI with SwiftShader
             );
-            console.log('Start button is enabled');
+            console.log('Start button is enabled and visible');
         } catch (e) {
             console.log('ERROR waiting for start button:', e);
             const debugInfo = await hostPage.evaluate(() => {
@@ -99,6 +85,7 @@ test.describe('CI Diagnostic Tests', () => {
                 return {
                     btnExists: !!btn,
                     btnDisabled: btn?.disabled,
+                    btnVisible: btn?.checkVisibility?.() ?? false,
                     btnText: btn?.textContent,
                     playerListHTML: playerList?.innerHTML?.substring(0, 500)
                 };
@@ -109,14 +96,14 @@ test.describe('CI Diagnostic Tests', () => {
             throw e;
         }
 
-        console.log('=== STEP 6: Click start button ===');
+        console.log('=== STEP 5: Click start button ===');
         await hostPage.evaluate(() => {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
             if (btn) btn.click();
         });
         console.log('Start button clicked');
 
-        console.log('=== STEP 7: Wait for game engine initialization ===');
+        console.log('=== STEP 6: Wait for game engine initialization ===');
         try {
             await hostPage.waitForFunction(() => {
                 // @ts-ignore
