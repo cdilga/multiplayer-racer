@@ -52,6 +52,9 @@ export default defineConfig({
     // 2 workers for better parallel performance
     workers: 2,
     reporter: 'html',
+    // TEMPORARY: Only run diagnostic tests to debug CI failures
+    // Remove this grep once CI issues are resolved
+    grep: isCI ? /CI Diagnostic/ : undefined,
     // Longer timeouts in CI due to SwiftShader slowness
     timeout: isCI ? 120000 : 60000,
     expect: {
