@@ -46,6 +46,8 @@ const ciArgs = isCI ? [
 
 export default defineConfig({
     testDir: './tests/e2e',
+    // In CI, only run the full-game test (single comprehensive E2E)
+    testMatch: isCI ? 'full-game.spec.ts' : '**/*.spec.ts',
     fullyParallel: !isCI,  // Parallel locally, serial in CI (SwiftShader can't handle multiple WebGL contexts)
     forbidOnly: isCI,
     retries: isCI ? 1 : 0,  // Reduced from 2 to save time
