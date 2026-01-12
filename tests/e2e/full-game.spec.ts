@@ -64,18 +64,14 @@ test.describe('Full Game E2E', () => {
                 { timeout: 30000 }
             );
 
+            // Wait for this player to appear in host's player list before continuing
+            // This ensures socket events have propagated to the host UI
+            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 30000 });
+
             players.push({ context: playerContext, page: playerPage, name: playerName });
             console.log(`${playerName} joined`);
         }
 
-        // === Verify All Players Joined ===
-        // Wait a moment for host UI to update after all players joined
-        await hostPage.waitForTimeout(500);
-
-        const playerList = hostPage.locator('#player-list');
-        for (const player of players) {
-            await expect(playerList).toContainText(player.name, { timeout: 30000 });
-        }
         console.log('All 4 players visible in lobby');
 
         // === Start Game ===
