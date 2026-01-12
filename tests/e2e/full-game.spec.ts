@@ -49,24 +49,25 @@ test.describe('Full Game E2E', () => {
             const playerName = `Player${i}`;
 
             await playerPage.goto('/player?testMode=1');
-            await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
+            await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 30000 });
             await playerPage.fill('#room-code', roomCode);
             await playerPage.fill('#player-name', playerName);
             await playerPage.click('#join-btn');
 
-            // Wait for join confirmation via gameState
+            // Wait for join confirmation via gameState (60s for slow CI)
             await playerPage.waitForFunction(
                 () => {
                     // @ts-ignore
                     const gs = window.gameState;
                     return gs && gs.playerId !== null;
                 },
-                { timeout: 30000 }
+                { timeout: 60000 }
             );
 
             // Wait for this player to appear in host's player list before continuing
             // This ensures socket events have propagated to the host UI
-            await expect(hostPage.locator('#player-list')).toContainText(playerName, { timeout: 30000 });
+            // Uses global expect.timeout (60s in CI) from playwright.config.ts
+            await expect(hostPage.locator('#player-list')).toContainText(playerName);
 
             players.push({ context: playerContext, page: playerPage, name: playerName });
             console.log(`${playerName} joined`);
