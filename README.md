@@ -245,6 +245,17 @@ npm run test:ui
 | `R` | Reset all cars |
 | `Arrow Keys` | Test drive controls |
 
+### Performance Notes
+
+**8-Car Scenario:** The gameplay demo shows 8 cars racing simultaneously on the track. This configuration provides an exciting multiplayer experience with a full lobby.
+
+⚠️ **Performance Warning:** The 8-car scenario is **very slow in software shader mode** (when WebGL hardware acceleration is disabled or unavailable). For optimal performance:
+- Ensure WebGL hardware acceleration is enabled in your browser
+- Use a device with GPU support
+- Consider reducing the number of players if experiencing performance issues
+
+For best results, use a modern browser with hardware-accelerated WebGL support on the host screen.
+
 ---
 
 ## 🗺️ Roadmap
