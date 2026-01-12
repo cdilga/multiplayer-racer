@@ -1,6 +1,9 @@
 import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Car Reset Functionality', () => {
+    // All reset tests are slow due to physics cycles with SwiftShader
+    test.slow();
+
     test('car should reset to original spawn position after moving', async ({ hostPage, playerPage }) => {
         // Capture browser console logs
         const consoleLogs: string[] = [];

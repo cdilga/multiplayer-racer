@@ -61,6 +61,7 @@ pids
 node_modules/
 jspm_packages/
 bower_components/
+static/vendor/
 
 # Coverage directory
 coverage/
@@ -69,5 +70,10 @@ htmlcov/
 
 # Playwright test artifacts
 test-results/
+test-artifacts/
 playwright-report/
 playwright/.cache/ 
+
+# Temporary files
+test-logs.txt
+image-*.*

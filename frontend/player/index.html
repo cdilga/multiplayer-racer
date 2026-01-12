@@ -132,24 +132,14 @@
         </div>
     </div>
 
-    <!-- Load libraries -->
-    <script src="/static/vendor/socket.io.min.js"></script>
-    <script src="/static/vendor/three.min.js"></script>
-    
-    <!-- Load mobile utilities -->
-    <script src="/static/js/mobileUtils.js"></script>
-
-    <!-- Load reusable joystick component -->
-    <script src="/static/js/Joystick.js"></script>
-    
     <!-- Pass room code if available -->
     <script>
         // This will be replaced by Flask template engine
         window.roomCode = "{{ room_code }}";
     </script>
-    
-    <!-- Load game scripts -->
-    <script src="/static/js/player.js"></script>
+
+    <!-- Main player entry point (Vite bundles THREE and socket.io) -->
+    <script type="module" src="/src/player/main.js"></script>
     
     <!-- Add event listener for the generate name button -->
     <script>

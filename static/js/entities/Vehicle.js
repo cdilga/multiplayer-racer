@@ -239,15 +239,21 @@ class Vehicle extends Entity {
             particles.push(debris);
         }
 
-        // Animate explosion over time
+        // Animate explosion over time with proper delta time
         const startTime = performance.now();
+        let lastTime = startTime;
         const duration = 1500; // 1.5 seconds
 
         const animateExplosion = () => {
-            const elapsed = performance.now() - startTime;
-            const dt = 0.016; // Approximate frame time
+            const currentTime = performance.now();
+            const rawDt = (currentTime - lastTime) / 1000; // Convert ms to seconds
+            lastTime = currentTime;
 
-            if (elapsed > duration) {
+            // Clamp dt to prevent huge jumps after tab switch
+            const dt = Math.min(rawDt, 0.1);
+
+            // Check if animation is complete
+            if (currentTime - startTime > duration) {
                 // Clean up
                 particles.forEach(p => {
                     if (p.geometry) p.geometry.dispose();
