@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import random
@@ -17,11 +17,34 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder='../static', template_folder='../frontend')
+# Check if dist/ exists (production build from Vite)
+dist_path = os.path.join(os.path.dirname(__file__), '..', 'dist')
+if os.path.exists(dist_path):
+    # Production: serve from Vite build output
+    # Vite's publicDir copies static/ contents to dist/ root
+    logger.info('Production mode: Serving from dist/')
+    app = Flask(__name__,
+                static_folder='../dist',
+                static_url_path='/static',
+                template_folder='../dist/frontend')
+else:
+    # Development: serve from source (when using Vite dev server)
+    logger.info('Development mode: Serving from source')
+    app = Flask(__name__,
+                static_folder='../static',
+                template_folder='../frontend')
+
 app.config['SECRET_KEY'] = 'race_game_secret!'
 # Configure SocketIO - keep defaults for stability during long-polling
 # Shorter intervals caused "transport error" disconnects
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Serve Vite bundled assets in production mode
+if os.path.exists(dist_path):
+    @app.route('/assets/<path:filename>')
+    def serve_assets(filename):
+        """Serve Vite bundled assets from dist/assets/"""
+        return send_from_directory(os.path.join(dist_path, 'assets'), filename)
 
 # Game rooms dictionary
 # Structure: {
@@ -213,7 +236,17 @@ def create_room(data=None):
     }
     
     join_room(room_code)
-    emit('room_created', {'room_code': room_code})
+
+    # Get join URL with proper IP for display
+    local_ip = get_local_ip()
+    port = request.environ.get('SERVER_PORT', 8000)
+    if 'Host' in request.headers:
+        host_parts = request.headers['Host'].split(':')
+        if len(host_parts) > 1:
+            port = host_parts[1]
+    join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+
+    emit('room_created', {'room_code': room_code, 'join_url': join_url})
     logger.info(f"Room created: {room_code}")
 
 @socketio.on('player_control_update')

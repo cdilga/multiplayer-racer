@@ -162,12 +162,12 @@ class RenderSystem {
         if (!this.postProcessing.enabled) return;
 
         try {
-            // Import post-processing modules using the import map
-            const { EffectComposer } = await import('three/addons/postprocessing/EffectComposer.js');
-            const { RenderPass } = await import('three/addons/postprocessing/RenderPass.js');
-            const { UnrealBloomPass } = await import('three/addons/postprocessing/UnrealBloomPass.js');
-            const { ShaderPass } = await import('three/addons/postprocessing/ShaderPass.js');
-            const { RGBShiftShader } = await import('three/addons/shaders/RGBShiftShader.js');
+            // Import post-processing modules (Vite resolves from node_modules)
+            const { EffectComposer } = await import('three/examples/jsm/postprocessing/EffectComposer.js');
+            const { RenderPass } = await import('three/examples/jsm/postprocessing/RenderPass.js');
+            const { UnrealBloomPass } = await import('three/examples/jsm/postprocessing/UnrealBloomPass.js');
+            const { ShaderPass } = await import('three/examples/jsm/postprocessing/ShaderPass.js');
+            const { RGBShiftShader } = await import('three/examples/jsm/shaders/RGBShiftShader.js');
 
             // Create composer
             this.postProcessing.composer = new EffectComposer(this.renderer);

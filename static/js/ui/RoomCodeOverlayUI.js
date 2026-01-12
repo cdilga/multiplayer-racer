@@ -72,15 +72,20 @@ class RoomCodeOverlayUI {
         style.textContent = `
             .room-code-overlay {
                 position: fixed;
-                top: 10px;
-                right: 10px;
+                bottom: 20px;
+                left: 20px;
                 background: rgba(0, 0, 0, 0.8);
-                border-radius: 10px;
-                padding: 10px;
+                border-radius: 12px;
+                padding: 15px;
                 text-align: center;
                 z-index: 1000;
                 transition: all 0.3s ease;
                 border: 2px solid #4cc9f0;
+                opacity: 0.5;
+            }
+
+            .room-code-overlay:hover {
+                opacity: 1;
             }
 
             .room-code-overlay.hidden {
@@ -88,25 +93,30 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay.minimized {
-                padding: 5px;
+                padding: 10px;
+                opacity: 0.4;
+            }
+
+            .room-code-overlay.minimized:hover {
+                opacity: 1;
             }
 
             .room-code-overlay .overlay-qr {
-                width: 80px;
-                height: 80px;
-                border-radius: 5px;
+                width: 120px;
+                height: 120px;
+                border-radius: 8px;
                 background: white;
                 display: block;
-                margin: 0 auto 5px;
+                margin: 0 auto 8px;
             }
 
             .room-code-overlay.minimized .overlay-qr {
-                width: 60px;
-                height: 60px;
+                width: 100px;
+                height: 100px;
             }
 
             .room-code-overlay .overlay-code {
-                font-size: 1.2rem;
+                font-size: 1.4rem;
                 font-weight: bold;
                 color: #4cc9f0;
                 letter-spacing: 3px;
@@ -114,17 +124,18 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay.minimized .overlay-code {
-                font-size: 1rem;
+                font-size: 1.1rem;
             }
 
             .room-code-overlay .overlay-label {
-                font-size: 0.7rem;
+                font-size: 0.8rem;
                 color: #8d99ae;
-                margin-top: 3px;
+                margin-top: 5px;
             }
 
             .room-code-overlay.minimized .overlay-label {
-                display: none;
+                font-size: 0.7rem;
+                color: #6d7a8e;
             }
         `;
         document.head.appendChild(style);
