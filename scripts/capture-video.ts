@@ -1,12 +1,15 @@
 /**
  * Video capture script for README documentation
- * Creates a demo video showing the full game flow
+ * Creates a demo video showing the full game flow with 8 cars
  * Run with: npx tsx scripts/capture-video.ts
  *
  * Prerequisites:
  * - Server running: python server/app.py
  * - ffmpeg installed for GIF conversion
- * - Local Rapier files: npm run setup:local-deps (or manually copy)
+ * - Project built: npm run build
+ * - GPU-enabled environment (local machine with graphics card)
+ *   NOTE: This script will crash in CI/containers with software rendering
+ *   due to the 8-car scenario being very slow in SwiftShader mode
  */
 import { chromium, Browser, Page, BrowserContext } from '@playwright/test';
 import * as fs from 'fs';
@@ -98,13 +101,23 @@ async function captureVideo() {
     const browser = await chromium.launch({
         headless: useHeadless,
         args: [
+            // SwiftShader software rendering (same as CI tests)
+            '--use-gl=angle',
+            '--use-angle=swiftshader',
+            '--enable-unsafe-swiftshader',
+            '--disable-gpu',
+            // WebGL flags
+            '--enable-webgl',
+            '--enable-webgl2',
+            '--ignore-gpu-blocklist',
+            // Stability flags for containers
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--use-gl=egl',              // Use EGL for better WebGL in xvfb
-            '--enable-webgl',
-            '--ignore-gpu-blocklist',
+            '--disable-dev-shm-usage',
             '--disable-gpu-sandbox',
-            '--enable-features=Vulkan'
+            '--disable-accelerated-2d-canvas',
+            '--disable-audio-output',
+            '--mute-audio'
         ]
     });
 
@@ -131,22 +144,25 @@ async function captureVideo() {
             }
         });
 
-        // Create player contexts
-        const player1Context = await browser.newContext({
-            viewport: { width: 390, height: 844 },
-            isMobile: true,
-            hasTouch: true
-        });
-        await setupLocalRoutes(player1Context);
-        const player1Page = await player1Context.newPage();
+        // Create 8 player contexts for full lobby
+        const playerNames = [
+            'SpeedDemon', 'TurboKing', 'NitroQueen', 'DriftMaster',
+            'RocketRacer', 'ThunderBolt', 'BlazeFury', 'StormChaser'
+        ];
 
-        const player2Context = await browser.newContext({
-            viewport: { width: 390, height: 844 },
-            isMobile: true,
-            hasTouch: true
-        });
-        await setupLocalRoutes(player2Context);
-        const player2Page = await player2Context.newPage();
+        const playerContexts: BrowserContext[] = [];
+        const playerPages: Page[] = [];
+
+        for (let i = 0; i < 8; i++) {
+            const playerContext = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                isMobile: true,
+                hasTouch: true
+            });
+            await setupLocalRoutes(playerContext);
+            playerContexts.push(playerContext);
+            playerPages.push(await playerContext.newPage());
+        }
 
         console.log('📹 Recording lobby...');
         await hostPage.goto(BASE_URL);
@@ -160,26 +176,23 @@ async function captureVideo() {
         await hostPage.waitForTimeout(1500);
 
         console.log('📹 Players joining...');
-        // Player 1 joins - navigate without room code to show join form
-        await player1Page.goto(`${BASE_URL}/player`);
-        await player1Page.waitForLoadState('networkidle');
-        await player1Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-        await player1Page.fill('#player-name', 'SpeedDemon');
-        await player1Page.fill('#room-code', roomCode);
-        await player1Page.click('#join-btn');
-        await player1Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
-        console.log('  Player 1 joined');
-        await hostPage.waitForTimeout(1000);
+        // All 8 players join
+        for (let i = 0; i < playerPages.length; i++) {
+            const playerPage = playerPages[i];
+            const playerName = playerNames[i];
 
-        // Player 2 joins
-        await player2Page.goto(`${BASE_URL}/player`);
-        await player2Page.waitForLoadState('networkidle');
-        await player2Page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-        await player2Page.fill('#player-name', 'TurboKing');
-        await player2Page.fill('#room-code', roomCode);
-        await player2Page.click('#join-btn');
-        await player2Page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
-        console.log('  Player 2 joined');
+            await playerPage.goto(`${BASE_URL}/player`);
+            await playerPage.waitForLoadState('networkidle');
+            await playerPage.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
+            await playerPage.fill('#player-name', playerName);
+            await playerPage.fill('#room-code', roomCode);
+            await playerPage.click('#join-btn');
+            await playerPage.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+            console.log(`  Player ${i + 1} (${playerName}) joined`);
+            await hostPage.waitForTimeout(500);
+        }
+
+        // Extra pause to show full lobby
         await hostPage.waitForTimeout(1500);
 
         console.log('📹 Starting race...');
@@ -187,9 +200,9 @@ async function captureVideo() {
         await hostPage.click('#start-game-btn');
         await hostPage.waitForTimeout(3000);
 
-        console.log('📹 Recording racing action...');
-        // Simulate some racing with keyboard controls
-        for (let i = 0; i < 3; i++) {
+        console.log('📹 Recording racing action with 8 cars...');
+        // Simulate racing with keyboard controls - longer for 8 cars
+        for (let i = 0; i < 5; i++) {
             await hostPage.keyboard.down('ArrowUp');
             await hostPage.waitForTimeout(800);
             await hostPage.keyboard.down('ArrowLeft');
@@ -201,12 +214,13 @@ async function captureVideo() {
             await hostPage.keyboard.up('ArrowRight');
         }
         await hostPage.keyboard.up('ArrowUp');
-        await hostPage.waitForTimeout(1000);
+        await hostPage.waitForTimeout(2000);
 
         // Close contexts to finalize video
         await hostContext.close();
-        await player1Context.close();
-        await player2Context.close();
+        for (const playerContext of playerContexts) {
+            await playerContext.close();
+        }
 
         console.log('\n✅ Video recording complete!');
 
@@ -224,12 +238,12 @@ async function captureVideo() {
             const gifPath = path.join(OUTPUT_DIR, 'gameplay-demo.gif');
 
             // ffmpeg command for high-quality GIF:
-            // - Scale to 640px width
-            // - 15 fps for smaller size
+            // - Scale to 800px width
+            // - 12 fps for smaller size
             // - Generate palette for better colors
-            // - Limit to 10 seconds
-            const paletteCmd = `ffmpeg -y -i "${videoPath}" -vf "fps=12,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t 12 "${OUTPUT_DIR}/palette.png"`;
-            const gifCmd = `ffmpeg -y -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=12,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t 12 "${gifPath}"`;
+            // - Limit to 15 seconds for 8-car scenario
+            const paletteCmd = `ffmpeg -y -i "${videoPath}" -vf "fps=12,scale=800:-1:flags=lanczos,palettegen=stats_mode=diff" -t 15 "${OUTPUT_DIR}/palette.png"`;
+            const gifCmd = `ffmpeg -y -i "${videoPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "fps=12,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -t 15 "${gifPath}"`;
 
             try {
                 console.log('   Generating color palette...');
