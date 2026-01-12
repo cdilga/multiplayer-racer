@@ -1,6 +1,6 @@
-# Future Visual Effects Ideas
+# Visual Effects Spec
 
-This document outlines potential visual effects that could be implemented to further enhance the game's visual appeal. These are designed to be optional/configurable and maintain performance.
+This document defines the visual effects system for the neon cyberpunk racing game. All effects are designed to be optional/configurable and maintain performance.
 
 ## Priority 1: Gameplay Enhancement Effects
 
@@ -146,4 +146,38 @@ This document outlines potential visual effects that could be implemented to fur
 
 ---
 
-**Note:** This is a living document. Add new ideas as they emerge, and move implemented effects to the main documentation.
+## Future Directions
+
+### Day/Night Cycles
+- **Dynamic lighting**: Sun position changes, shadows move
+- **Sky transitions**: Gradient sky that shifts colors
+- **Headlights auto-brighten**: Headlights get brighter at night
+- **Neon intensity**: Neon effects more prominent at night
+
+### Camera Modes
+- **Chase camera** (current)
+- **First-person** (driver view)
+- **Cinematic** (orbital, dramatic angles)
+- **Spectator mode** (free camera)
+
+### Vehicle Customization Visuals
+- **Car skins**: Custom textures and patterns
+- **Neon underglow**: Configurable color per vehicle
+- **Custom headlight colors**: Per-player headlight customization
+- **Damage visualization**: Visual damage states (scratches, dents, missing parts)
+
+### Track Interaction Effects
+- **Tire marks**: Skid marks on track surface
+- **Boost effects**: Visual feedback for boost/jump mechanics
+- **Checkpoint effects**: Visual feedback when passing checkpoints
+- **Surface types**: Different materials (dirt, ice, metal) with visual feedback
+
+### Notes
+- All effects should be configurable via visual config system
+- Consider performance impact when adding new effects
+- Maintain retro-futuro aesthetic
+- Keep effects bold and over-the-top (not subtle)
+
+---
+
+**Note:** This is a living document. Add new ideas as they emerge.
