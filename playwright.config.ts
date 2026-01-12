@@ -46,11 +46,12 @@ const ciArgs = isCI ? [
 
 export default defineConfig({
     testDir: './tests/e2e',
-    fullyParallel: true,  // Parallel for speed
+    fullyParallel: !isCI,  // Parallel locally, serial in CI (SwiftShader can't handle multiple WebGL contexts)
     forbidOnly: isCI,
     retries: isCI ? 1 : 0,  // Reduced from 2 to save time
-    // 2 workers for better parallel performance
-    workers: 2,
+    // 1 worker in CI - SwiftShader software rendering needs dedicated CPU
+    // 2 workers locally where GPU acceleration is available
+    workers: isCI ? 1 : 2,
     reporter: 'html',
     // Longer timeouts in CI due to SwiftShader slowness
     timeout: isCI ? 120000 : 60000,

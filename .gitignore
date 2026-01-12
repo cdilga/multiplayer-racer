@@ -70,6 +70,7 @@ htmlcov/
 
 # Playwright test artifacts
 test-results/
+test-artifacts/
 playwright-report/
 playwright/.cache/ 
 

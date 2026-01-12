@@ -122,11 +122,12 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
     });
 
     // Wait for game to be ready (canvas + game object initialized)
+    // SwiftShader takes 60-90s to init WebGL - give it full time budget
     await hostPage.waitForFunction(() => {
         // @ts-ignore
         const game = window.game;
         return game?.engine?.initialized && document.querySelector('canvas');
-    }, { timeout: 60000 });  // Longer timeout for CI with SwiftShader
+    }, { timeout: 90000 });
 }
 
 // Helper to send control inputs from player
