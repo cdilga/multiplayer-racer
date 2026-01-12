@@ -187,6 +187,8 @@ test.describe('Car Movement and Physics', () => {
     });
 
     test('reverse gear should activate after 1 second brake hold and continue reversing smoothly', async ({ hostPage, playerPage }) => {
+        // This test requires many physics cycles for brake hold timing
+        test.slow();
         // Setup game - optimized
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);

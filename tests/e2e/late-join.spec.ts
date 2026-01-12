@@ -1,6 +1,9 @@
 import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Late Join', () => {
+    // Late join tests are slow due to multiple player setup and race progression
+    test.slow();
+
     test('player should be able to join a race in progress', async ({ hostPage, playerPage, playerContext }) => {
         // Host creates room
         await gotoHost(hostPage);
