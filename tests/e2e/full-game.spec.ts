@@ -61,6 +61,7 @@ test.describe('Full Game E2E', () => {
                     const gs = window.gameState;
                     return gs && gs.playerId !== null;
                 },
+                undefined,
                 { timeout: 60000 }
             );
 
@@ -82,6 +83,7 @@ test.describe('Full Game E2E', () => {
                 const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
                 return btn && !btn.disabled && btn.checkVisibility?.();
             },
+            undefined,
             { timeout: 60000 }
         );
 
@@ -99,6 +101,7 @@ test.describe('Full Game E2E', () => {
                 const game = window.game;
                 return game?.engine?.initialized && document.querySelector('canvas');
             },
+            undefined,
             { timeout: 120000 }
         );
         console.log('Game engine initialized');
