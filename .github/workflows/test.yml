@@ -9,7 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 90 minutes for serial WebGL tests with SwiftShader software rendering
+    # Each test takes ~1-2 min with software rendering (no GPU in CI)
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
