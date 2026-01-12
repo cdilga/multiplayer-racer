@@ -53,8 +53,8 @@ export default defineConfig({
     // 2 workers locally where GPU acceleration is available
     workers: isCI ? 1 : 2,
     reporter: 'html',
-    // Longer timeouts in CI due to SwiftShader slowness
-    timeout: isCI ? 120000 : 60000,
+    // Longer timeouts in CI due to SwiftShader slowness (3 min for complex multi-step tests)
+    timeout: isCI ? 180000 : 60000,
     expect: {
         timeout: isCI ? 30000 : 5000,
     },
