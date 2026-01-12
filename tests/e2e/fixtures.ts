@@ -105,14 +105,14 @@ export async function joinGameAsPlayer(
 
 // Helper to start game from host
 export async function startGameFromHost(hostPage: Page): Promise<void> {
-    // Wait for start button to be enabled
-    await hostPage.waitForSelector('#start-game-btn', { timeout: 30000 });
+    // Wait for start button to be visible and enabled
+    // Using waitForFunction instead of waitForSelector - more reliable in CI
     await hostPage.waitForFunction(
         () => {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
-            return btn && !btn.disabled;
+            return btn && !btn.disabled && btn.checkVisibility?.();
         },
-        { timeout: 30000 }
+        { timeout: 60000 }  // Longer timeout for CI with SwiftShader
     );
 
     // Click start button
@@ -126,7 +126,7 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
         // @ts-ignore
         const game = window.game;
         return game?.engine?.initialized && document.querySelector('canvas');
-    }, { timeout: 30000 });
+    }, { timeout: 60000 });  // Longer timeout for CI with SwiftShader
 }
 
 // Helper to send control inputs from player
