@@ -97,4 +97,47 @@ describe('Vehicle Physics', () => {
         const upYFlipped = 1 - 2 * (qFlipped.x * qFlipped.x + qFlipped.z * qFlipped.z);
         expect(upYFlipped).toBeLessThan(-0.5); // Upside down
     });
+
+    it('should reset orientation when flipped upside down', () => {
+        const spawnPos = { x: 0, y: 1, z: 0 };
+        const spawnRotation = { x: 0, y: 0, z: 0, w: 1 }; // Identity quaternion (upright)
+
+        // Move and flip the vehicle upside down
+        vehicleBody.setTranslation({ x: 10, y: 5, z: -20 }, true);
+        vehicleBody.setRotation({ x: 0, y: 0, z: 1, w: 0 }, true); // 180 deg around Z
+        vehicleBody.setLinvel({ x: 5, y: 2, z: -10 }, true);
+        vehicleBody.setAngvel({ x: 1, y: 2, z: 3 }, true);
+
+        // Verify it's upside down before reset
+        const flippedQ = vehicleBody.rotation();
+        const upYFlipped = 1 - 2 * (flippedQ.x * flippedQ.x + flippedQ.z * flippedQ.z);
+        expect(upYFlipped).toBeLessThan(-0.5); // Upside down
+
+        // Reset position, rotation, and velocities (simulates game's resetVehicleToSpawn)
+        vehicleBody.setTranslation(spawnPos, true);
+        vehicleBody.setRotation(spawnRotation, true);
+        vehicleBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        vehicleBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+        // Verify upright after reset
+        const resetQ = vehicleBody.rotation();
+        const upYReset = 1 - 2 * (resetQ.x * resetQ.x + resetQ.z * resetQ.z);
+        expect(upYReset).toBeGreaterThan(0.5); // Upright
+
+        // Verify position
+        const pos = vehicleBody.translation();
+        expect(pos.x).toBeCloseTo(spawnPos.x);
+        expect(pos.y).toBeCloseTo(spawnPos.y);
+        expect(pos.z).toBeCloseTo(spawnPos.z);
+
+        // Verify velocities are zeroed
+        const linvel = vehicleBody.linvel();
+        const angvel = vehicleBody.angvel();
+        expect(linvel.x).toBeCloseTo(0);
+        expect(linvel.y).toBeCloseTo(0);
+        expect(linvel.z).toBeCloseTo(0);
+        expect(angvel.x).toBeCloseTo(0);
+        expect(angvel.y).toBeCloseTo(0);
+        expect(angvel.z).toBeCloseTo(0);
+    });
 });
