@@ -69,6 +69,9 @@ test.describe('Full Game E2E', () => {
         }
 
         // === Verify All Players Joined ===
+        // Wait a moment for host UI to update after all players joined
+        await hostPage.waitForTimeout(500);
+
         const playerList = hostPage.locator('#player-list');
         for (const player of players) {
             await expect(playerList).toContainText(player.name, { timeout: 30000 });
@@ -76,15 +79,20 @@ test.describe('Full Game E2E', () => {
         console.log('All 4 players visible in lobby');
 
         // === Start Game ===
+        // Wait for start button to be visible and enabled (longer timeout for CI with SwiftShader)
         await hostPage.waitForFunction(
             () => {
                 const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
-                return btn && !btn.disabled;
+                return btn && !btn.disabled && btn.checkVisibility?.();
             },
             { timeout: 60000 }
         );
 
-        await hostPage.click('#start-game-btn');
+        // Click via evaluate to avoid action timeout issues in CI
+        await hostPage.evaluate(() => {
+            const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
+            if (btn) btn.click();
+        });
         console.log('Start button clicked');
 
         // === Wait for Game Engine ===
