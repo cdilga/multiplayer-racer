@@ -743,25 +743,27 @@ assets/
 
 ## Implementation Phases
 
-### Phase 0: Mode Selection UI
-- [ ] Mode selector cards in lobby
-- [ ] Card hover/select states with mode-specific colors
+### Phase 0: Mode Selection UI ✅ COMPLETE
+- [x] Mode selector cards in lobby
+- [x] Card hover/select states with mode-specific colors
 - [ ] Video preview integration (placeholder images initially)
-- [ ] Mode state passed to game engine on start
-- [ ] Mobile controller shows selected mode
+- [x] Mode state passed to game engine on start
+- [x] Mobile controller shows selected mode
 
-### Phase 1: Core Derby (MVP)
-- [ ] DerbySystem with round state machine
-- [ ] Bowl arena with static walls
-- [ ] Elimination detection
-- [ ] Basic scoring
-- [ ] Controller fire button (no weapon yet - just ram mode)
+### Phase 1: Core Derby (MVP) ✅ COMPLETE
+- [x] DerbySystem with round state machine
+- [x] Bowl arena with static walls
+- [x] Elimination detection
+- [x] Basic scoring
+- [x] Controller fire button (no weapon yet - just ram mode)
 
-### Phase 2: Weapons
-- [ ] WeaponSystem foundation
-- [ ] Weapon spawning
-- [ ] 3 starter weapons: Missile, Mine, Boost
-- [ ] Weapon pickup and firing
+### Phase 2: Weapons ✅ COMPLETE
+- [x] WeaponSystem foundation
+- [x] Weapon spawning (random positions, rarity-based selection)
+- [x] 3 starter weapons: Missile, Mine, Boost
+- [x] Weapon pickup and firing
+- [x] Fire button on mobile controller for derby mode
+- [x] Network events for weapon pickup/fired
 
 ### Phase 3: Full Arsenal
 - [ ] Remaining weapons: Oil, Sniper, Shield, EMP, Flamethrower

@@ -24,6 +24,7 @@ import { AudioSystem } from './systems/AudioSystem.js';
 import { RaceSystem } from './systems/RaceSystem.js';
 import { DamageSystem } from './systems/DamageSystem.js';
 import { DerbySystem } from './systems/DerbySystem.js';
+import { WeaponSystem } from './systems/WeaponSystem.js';
 import { TrailSystem } from './systems/TrailSystem.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Track } from './entities/Track.js';
@@ -53,6 +54,7 @@ class GameHost {
             race: null,
             damage: null,
             derby: null,
+            weapons: null,
             trails: null
         };
 
@@ -132,6 +134,7 @@ class GameHost {
         this.systems.race = new RaceSystem({ eventBus: this.eventBus });
         this.systems.damage = new DamageSystem({ eventBus: this.eventBus });
         this.systems.derby = new DerbySystem({ eventBus: this.eventBus });
+        this.systems.weapons = new WeaponSystem({ eventBus: this.eventBus });
 
         // TrailSystem needs renderSystem, so create after render is initialized
         // But we'll create it after engine.init() so renderSystem is ready
@@ -153,6 +156,10 @@ class GameHost {
         });
         await this.systems.trails.init();
         this.engine.registerSystem('trails', this.systems.trails);
+
+        // Configure WeaponSystem with render and damage systems
+        this.systems.weapons.renderSystem = this.systems.render;
+        this.systems.weapons.damageSystem = this.systems.damage;
 
         // Create UI
         this._createUI();
@@ -256,6 +263,25 @@ class GameHost {
         this.eventBus.on('derby:matchEnd', this._onDerbyMatchEnd.bind(this));
         this.eventBus.on('derby:roundEnd', this._onDerbyRoundEnd.bind(this));
         this.eventBus.on('derby:nextRoundReady', this._onDerbyNextRoundReady.bind(this));
+
+        // Weapon events - relay to players
+        this.eventBus.on('weapon:pickup', (data) => {
+            if (this.systems.network && data.playerId) {
+                const weapon = this.systems.weapons?.weaponDefs?.get(data.weaponId);
+                this.systems.network.sendWeaponPickup(data.playerId, {
+                    weaponId: data.weaponId,
+                    weaponName: data.weaponName || weapon?.name,
+                    icon: weapon?.icon
+                });
+            }
+        });
+        this.eventBus.on('weapon:fired', (data) => {
+            if (this.systems.network && data.playerId) {
+                this.systems.network.sendWeaponFired(data.playerId, {
+                    weaponId: data.weaponId
+                });
+            }
+        });
 
         // Lobby events
         this.eventBus.on('lobby:modeSelected', ({ mode }) => {
@@ -597,7 +623,15 @@ class GameHost {
             // Register vehicles with derby system
             for (const [playerId, vehicle] of this.vehicles) {
                 this.systems.derby.registerVehicle(vehicle);
+                this.systems.weapons.registerVehicle(vehicle);
             }
+
+            // Configure weapon system for this arena
+            const trackConfig = this.track?.config || {};
+            this.systems.weapons.setArenaConfig({
+                geometry: trackConfig.geometry,
+                weapons: trackConfig.weapons
+            });
 
             // Start derby match
             this.engine.setState(GAME_STATES.COUNTDOWN);

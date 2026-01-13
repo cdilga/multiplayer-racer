@@ -13,6 +13,7 @@ const gameState = window.gameState = {
     carColor: null,
     connected: false,
     gameStarted: false,
+    gameMode: 'race', // 'race' or 'derby'
     controls: {
         steering: 0,       // -1 to 1 (left to right)
         acceleration: 0,   // 0 to 1
@@ -22,8 +23,10 @@ const gameState = window.gameState = {
     touchControls: {
         steeringJoystick: null, // Joystick instance
         accelerateTouchId: null, // Touch ID for accelerator
-        brakeTouchId: null // Touch ID for brake
+        brakeTouchId: null, // Touch ID for brake
+        fireTouchId: null // Touch ID for fire button (derby mode)
     },
+    weapon: null, // Current weapon { id, name, icon }
     lastSpeed: 0,
     lastUpdateTime: 0,
     nameSet: false, // Flag to track if user has set a custom name
@@ -301,7 +304,26 @@ socket.on('game_started', () => {
 // Handle mode selection from host
 socket.on('mode_selected', (data) => {
     console.log('Mode selected:', data);
+    gameState.gameMode = data.mode;
     updateModeDisplay(data.mode);
+});
+
+// Handle weapon pickup notification from host
+socket.on('weapon_pickup', (data) => {
+    console.log('Weapon pickup:', data);
+    gameState.weapon = {
+        id: data.weaponId,
+        name: data.weaponName,
+        icon: data.icon || getWeaponIcon(data.weaponId)
+    };
+    updateWeaponDisplay();
+});
+
+// Handle weapon fired (used) notification
+socket.on('weapon_fired', (data) => {
+    console.log('Weapon fired:', data);
+    gameState.weapon = null;
+    updateWeaponDisplay();
 });
 
 socket.on('host_disconnected', () => {
@@ -461,6 +483,73 @@ function showScreen(screenName) {
             elements.gameScreen.classList.remove('hidden');
             break;
     }
+}
+
+/**
+ * Get weapon icon by weapon ID
+ * @param {string} weaponId
+ * @returns {string} Emoji icon
+ */
+function getWeaponIcon(weaponId) {
+    const icons = {
+        'missile': '\uD83D\uDE80',
+        'mine': '\uD83D\uDCA3',
+        'boost': '\uD83D\uDD25',
+        'shield': '\uD83D\uDEE1\uFE0F',
+        'emp': '\u26A1',
+        'sniper': '\u26A1',
+        'oil-slick': '\uD83D\uDEE2\uFE0F',
+        'flamethrower': '\uD83D\uDD25'
+    };
+    return icons[weaponId] || '\u2753';
+}
+
+/**
+ * Update the weapon display on the controller
+ */
+function updateWeaponDisplay() {
+    const weaponIndicator = document.getElementById('weapon-indicator');
+    const fireBtn = document.getElementById('fire-btn');
+
+    if (weaponIndicator) {
+        if (gameState.weapon) {
+            weaponIndicator.innerHTML = `${gameState.weapon.icon}<span>${gameState.weapon.name}</span>`;
+            weaponIndicator.classList.add('has-weapon');
+        } else {
+            weaponIndicator.innerHTML = '<span>No Weapon</span>';
+            weaponIndicator.classList.remove('has-weapon');
+        }
+    }
+
+    if (fireBtn) {
+        if (gameState.weapon) {
+            fireBtn.classList.add('enabled');
+            fireBtn.style.opacity = '1';
+        } else {
+            fireBtn.classList.remove('enabled');
+            fireBtn.style.opacity = '0.3';
+        }
+    }
+}
+
+/**
+ * Fire weapon
+ */
+function fireWeapon() {
+    if (!gameState.weapon) {
+        console.log('No weapon to fire');
+        return;
+    }
+
+    console.log('Firing weapon:', gameState.weapon.id);
+    socket.emit('weapon_fire', {
+        room_code: gameState.roomCode,
+        player_id: gameState.playerId
+    });
+
+    // Optimistically clear weapon (server will confirm)
+    gameState.weapon = null;
+    updateWeaponDisplay();
 }
 
 /**
@@ -636,6 +725,39 @@ function initGameControls() {
     elements.controlsContainer.appendChild(steeringArea);
     elements.controlsContainer.appendChild(pedalsArea);
 
+    // Add fire button and weapon indicator for derby mode
+    if (gameState.gameMode === 'derby') {
+        const weaponArea = document.createElement('div');
+        weaponArea.id = 'weapon-area';
+        weaponArea.className = 'weapon-area';
+
+        // Weapon indicator shows current weapon
+        const weaponIndicator = document.createElement('div');
+        weaponIndicator.id = 'weapon-indicator';
+        weaponIndicator.className = 'weapon-indicator';
+        weaponIndicator.innerHTML = '<span>No Weapon</span>';
+
+        // Fire button - triangle shaped
+        const fireBtn = document.createElement('div');
+        fireBtn.id = 'fire-btn';
+        fireBtn.className = 'fire-btn';
+        fireBtn.innerHTML = 'FIRE';
+        fireBtn.style.opacity = '0.3'; // Disabled until weapon picked up
+
+        weaponArea.appendChild(weaponIndicator);
+        weaponArea.appendChild(fireBtn);
+        elements.controlsContainer.appendChild(weaponArea);
+
+        // Fire button touch handlers
+        fireBtn.addEventListener('touchstart', handleFireStart, { passive: false });
+        fireBtn.addEventListener('touchend', handleFireEnd, { passive: false });
+        fireBtn.addEventListener('touchcancel', handleFireEnd, { passive: false });
+        fireBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        elements.fireBtn = fireBtn;
+        elements.weaponIndicator = weaponIndicator;
+    }
+
     // Update element references
     elements.steeringArea = steeringArea;
     elements.pedalsArea = pedalsArea;
@@ -755,6 +877,34 @@ function handleBrakeEnd(e) {
             gameState.touchControls.brakeTouchId = null;
             setBraking(0);
             elements.brakeBtn.style.backgroundColor = '#f72585';
+            break;
+        }
+    }
+}
+
+// Touch handlers for fire button with touch ID tracking
+function handleFireStart(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+        if (gameState.touchControls.fireTouchId === null) {
+            gameState.touchControls.fireTouchId = touch.identifier;
+            if (elements.fireBtn) {
+                elements.fireBtn.classList.add('pressed');
+            }
+            // Fire weapon on touch start
+            fireWeapon();
+            break;
+        }
+    }
+}
+
+function handleFireEnd(e) {
+    for (const touch of e.changedTouches) {
+        if (touch.identifier === gameState.touchControls.fireTouchId) {
+            gameState.touchControls.fireTouchId = null;
+            if (elements.fireBtn) {
+                elements.fireBtn.classList.remove('pressed');
+            }
             break;
         }
     }

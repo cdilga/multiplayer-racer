@@ -182,6 +182,12 @@ class NetworkSystem {
             }
         });
 
+        // Weapon fire event from mobile controller
+        this.socket.on('weapon_fire', (data) => {
+            const playerId = data.player_id;
+            this._emit('weapon:fire', { playerId });
+        });
+
         // Game events from server (server sends game_started, not game_start)
         this.socket.on('game_started', (data) => {
             this._emit('network:gameStart', data);
@@ -285,6 +291,32 @@ class NetworkSystem {
         this.socket.emit('mode_selected', {
             room_code: this.roomCode,
             mode
+        });
+    }
+
+    /**
+     * Send weapon pickup notification to a specific player
+     * @param {string|number} playerId
+     * @param {Object} weaponData - { weaponId, weaponName, icon }
+     */
+    sendWeaponPickup(playerId, weaponData) {
+        this.socket.emit('weapon_pickup', {
+            room_code: this.roomCode,
+            player_id: playerId,
+            ...weaponData
+        });
+    }
+
+    /**
+     * Send weapon fired notification to a specific player
+     * @param {string|number} playerId
+     * @param {Object} weaponData - { weaponId }
+     */
+    sendWeaponFired(playerId, weaponData) {
+        this.socket.emit('weapon_fired', {
+            room_code: this.roomCode,
+            player_id: playerId,
+            ...weaponData
         });
     }
 

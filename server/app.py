@@ -538,6 +538,75 @@ def handle_reset_position(data):
             }, to=game_rooms[room_code]['host_sid'])
             break
             
+@socketio.on('weapon_fire')
+def handle_weapon_fire(data):
+    """Handle weapon fire event from player."""
+    player_sid = request.sid
+    room_code = data.get('room_code')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if player_sid not in room['players']:
+        return
+
+    player_data = room['players'][player_sid]
+    player_id = player_data['id']
+
+    # Forward to host
+    emit('weapon_fire', {
+        'player_id': player_id
+    }, to=room['host_sid'])
+
+    logger.debug(f"Player {player_id} fired weapon in room {room_code}")
+
+@socketio.on('weapon_pickup')
+def handle_weapon_pickup(data):
+    """Handle weapon pickup notification from host to player."""
+    host_sid = request.sid
+    room_code = data.get('room_code')
+    target_player_id = data.get('player_id')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if room['host_sid'] != host_sid:
+        return
+
+    # Find target player's socket
+    for sid, player_data in room['players'].items():
+        if player_data['id'] == target_player_id:
+            emit('weapon_pickup', {
+                'weaponId': data.get('weaponId'),
+                'weaponName': data.get('weaponName'),
+                'icon': data.get('icon')
+            }, to=sid)
+            break
+
+@socketio.on('weapon_fired')
+def handle_weapon_fired(data):
+    """Handle weapon fired notification from host to player."""
+    host_sid = request.sid
+    room_code = data.get('room_code')
+    target_player_id = data.get('player_id')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if room['host_sid'] != host_sid:
+        return
+
+    # Find target player's socket
+    for sid, player_data in room['players'].items():
+        if player_data['id'] == target_player_id:
+            emit('weapon_fired', {
+                'weaponId': data.get('weaponId')
+            }, to=sid)
+            break
+
 @socketio.on('update_player_name')
 def update_player_name(data):
     """Handle player name update."""

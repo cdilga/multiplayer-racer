@@ -72,6 +72,12 @@
       "minDiameter": 40
     }
   },
+  "weapons": {
+    "enabled": true,
+    "spawnInterval": [8, 12],
+    "maxActive": 3,
+    "spawnHeight": 1.5
+  },
   "physics": {
     "groundFriction": 0.9,
     "barrierRestitution": 0.5
