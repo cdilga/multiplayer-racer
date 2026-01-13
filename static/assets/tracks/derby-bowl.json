@@ -66,10 +66,11 @@
     "maxRounds": 3,
     "eliminationRespawn": false,
     "shrinking": {
-      "enabled": false,
+      "enabled": true,
       "startTime": 30,
       "rate": 0.5,
-      "minDiameter": 40
+      "minDiameter": 40,
+      "warningColor": "#FF4444"
     }
   },
   "weapons": {

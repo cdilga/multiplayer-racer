@@ -67,6 +67,21 @@ class DerbySystem {
         this.matchScores = new Map();  // playerId -> total points
         this.roundWins = new Map();    // playerId -> round win count
 
+        // Arena shrinking
+        this.arenaConfig = null;
+        this.shrinkingEnabled = false;
+        this.shrinkingActive = false;
+        this.originalDiameter = 80;
+        this.currentDiameter = 80;
+        this.minDiameter = 40;
+        this.shrinkRate = 0.5; // units per second
+        this.shrinkStartTime = 30; // seconds into combat
+        this.warningColor = '#FF4444';
+
+        // Wall mesh reference (set by GameHost)
+        this.wallMesh = null;
+        this.wallCollider = null;
+
         // State
         this.initialized = false;
     }
@@ -132,6 +147,46 @@ class DerbySystem {
     }
 
     /**
+     * Set arena configuration including shrinking settings
+     * @param {Object} config - Arena config from track JSON
+     */
+    setArenaConfig(config) {
+        this.arenaConfig = config;
+
+        if (config.geometry) {
+            this.originalDiameter = config.geometry.diameter || 80;
+            this.currentDiameter = this.originalDiameter;
+        }
+
+        if (config.derby?.shrinking) {
+            const shrink = config.derby.shrinking;
+            this.shrinkingEnabled = shrink.enabled !== false;
+            this.shrinkStartTime = shrink.startTime || 30;
+            this.shrinkRate = shrink.rate || 0.5;
+            this.minDiameter = shrink.minDiameter || 40;
+            this.warningColor = shrink.warningColor || '#FF4444';
+        }
+
+        console.log(`DerbySystem: Arena config set. Shrinking: ${this.shrinkingEnabled ? 'enabled' : 'disabled'}`);
+    }
+
+    /**
+     * Set the wall mesh for shrinking visual updates
+     * @param {THREE.Mesh} wallMesh - The arena wall mesh
+     */
+    setWallMesh(wallMesh) {
+        this.wallMesh = wallMesh;
+    }
+
+    /**
+     * Set the physics collider for walls
+     * @param {Object} collider - The Rapier collider for walls
+     */
+    setWallCollider(collider) {
+        this.wallCollider = collider;
+    }
+
+    /**
      * Check if running in test mode
      * @returns {boolean}
      * @private
@@ -187,6 +242,13 @@ class DerbySystem {
                 data.vehicle.health = data.vehicle.maxHealth || 100;
                 data.vehicle.isDead = false;
             }
+        }
+
+        // Reset arena shrinking
+        this.shrinkingActive = false;
+        this.currentDiameter = this.originalDiameter;
+        if (this.wallMesh) {
+            this.wallMesh.scale.set(1, 1, 1);
         }
 
         // Skip countdown in test mode
@@ -266,7 +328,114 @@ class DerbySystem {
 
         if (survivors.length <= 1) {
             this._endRound(survivors[0] || null);
+            return;
         }
+
+        // Handle arena shrinking
+        if (this.shrinkingEnabled) {
+            this._updateShrinking(dt);
+        }
+    }
+
+    /**
+     * Update arena shrinking
+     * @private
+     */
+    _updateShrinking(dt) {
+        const combatTime = (performance.now() - this.roundStartTime) / 1000;
+
+        // Check if we should start shrinking
+        if (!this.shrinkingActive && combatTime >= this.shrinkStartTime) {
+            this.shrinkingActive = true;
+            this._emit('derby:wallsShrinking', {
+                currentDiameter: this.currentDiameter,
+                minDiameter: this.minDiameter,
+                rate: this.shrinkRate
+            });
+            console.log('DerbySystem: Walls starting to shrink!');
+        }
+
+        // Shrink the arena
+        if (this.shrinkingActive && this.currentDiameter > this.minDiameter) {
+            const shrinkAmount = this.shrinkRate * dt;
+            this.currentDiameter = Math.max(this.minDiameter, this.currentDiameter - shrinkAmount);
+
+            // Update wall visuals
+            this._updateWallVisuals();
+
+            // Push vehicles that are outside the shrinking boundary
+            this._pushVehiclesInward();
+        }
+    }
+
+    /**
+     * Update wall mesh visuals to reflect shrinking
+     * @private
+     */
+    _updateWallVisuals() {
+        if (!this.wallMesh) return;
+
+        const scale = this.currentDiameter / this.originalDiameter;
+        this.wallMesh.scale.set(scale, 1, scale);
+
+        // Make walls glow red when shrinking
+        if (this.shrinkingActive && this.wallMesh.material) {
+            const intensity = 0.5 + Math.sin(performance.now() / 200) * 0.3;
+            if (this.wallMesh.material.emissive) {
+                this.wallMesh.material.emissive.setHex(0xFF4444);
+                this.wallMesh.material.emissiveIntensity = intensity;
+            }
+        }
+    }
+
+    /**
+     * Push vehicles inward if they are outside the current boundary
+     * @private
+     */
+    _pushVehiclesInward() {
+        const currentRadius = this.currentDiameter / 2;
+        const pushForce = 10; // Force magnitude
+
+        for (const [vehicleId, data] of this.vehicles) {
+            if (data.eliminated) continue;
+
+            const vehicle = data.vehicle;
+            if (!vehicle?.mesh?.position) continue;
+
+            const pos = vehicle.mesh.position;
+            const distanceFromCenter = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+
+            // If vehicle is outside the shrinking boundary, push it inward
+            if (distanceFromCenter > currentRadius - 2) { // 2 units buffer
+                const angle = Math.atan2(pos.z, pos.x);
+                const pushX = -Math.cos(angle) * pushForce;
+                const pushZ = -Math.sin(angle) * pushForce;
+
+                // Apply impulse if physics body available
+                if (vehicle.rigidBody) {
+                    vehicle.rigidBody.applyImpulse(
+                        { x: pushX, y: 0, z: pushZ },
+                        true
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Get current arena radius (accounting for shrinking)
+     * @returns {number}
+     */
+    getCurrentRadius() {
+        return this.currentDiameter / 2;
+    }
+
+    /**
+     * Check if shrinking is active
+     * @returns {boolean}
+     */
+    isShrinking() {
+        return this.shrinkingActive;
     }
 
     /**
@@ -566,6 +735,13 @@ class DerbySystem {
         this.eliminationOrder = [];
         this.roundWinners = [];
         this.roundScores = [];
+
+        // Reset arena shrinking
+        this.shrinkingActive = false;
+        this.currentDiameter = this.originalDiameter;
+        if (this.wallMesh) {
+            this.wallMesh.scale.set(1, 1, 1);
+        }
 
         // Reset vehicle data but keep registrations
         for (const [vehicleId, data] of this.vehicles) {

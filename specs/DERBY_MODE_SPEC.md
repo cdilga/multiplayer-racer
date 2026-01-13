@@ -765,16 +765,18 @@ assets/
 - [x] Fire button on mobile controller for derby mode
 - [x] Network events for weapon pickup/fired
 
-### Phase 3: Full Arsenal
-- [ ] Remaining weapons: Oil, Sniper, Shield, EMP, Flamethrower
-- [ ] Weapon balancing
-- [ ] Visual effects for all weapons
+### Phase 3: Full Arsenal ✅ COMPLETE
+- [x] Remaining weapons: Oil Slick, Sniper (Rail Gun), Shield, EMP, Flamethrower
+- [x] Weapon behavior implementations (zone, hitscan, AOE, continuous, buff)
+- [x] Visual effects for all weapons (shield sphere, flame cone, oil puddle)
+- [x] Invulnerability system for shield
 
-### Phase 4: Shrinking Arena
-- [ ] Dynamic wall colliders
-- [ ] Shrink timing logic
-- [ ] Visual warning effects
-- [ ] Spawn point deactivation
+### Phase 4: Shrinking Arena ✅ COMPLETE
+- [x] Dynamic wall scaling based on diameter
+- [x] Shrink timing logic (starts at 30s, 0.5 units/sec)
+- [x] Visual warning effects (red glow pulse on walls)
+- [x] Push vehicles inward when outside boundary
+- [x] Arena reset on new round
 
 ### Phase 5: Polish
 - [ ] Sound effects

@@ -14,6 +14,7 @@ Keep in mind the [parent readme](../README.md) is the human-readable project ove
 | [VISUAL_EFFECTS_SPEC.md](VISUAL_EFFECTS_SPEC.md) | Visual effects system and future directions |
 | [COLOR_SCHEME_SPEC.md](COLOR_SCHEME_SPEC.md) | Sunset neon color palette |
 | [DERBY_MODE_SPEC.md](DERBY_MODE_SPEC.md) | Derby mode: last-car-standing arena combat |
+| [VULTR_DEPLOYMENT_SPEC.md](VULTR_DEPLOYMENT_SPEC.md) | Docker + Vultr VPS deployment with CI/CD |
 
 ### Core Systems
 

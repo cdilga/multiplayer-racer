@@ -29,8 +29,8 @@ const WEAPON_TYPES = {
 
 // Rarity tiers
 const RARITY_TIERS = {
-    COMMON: { weight: 70, weapons: ['missile', 'mine', 'boost'] },
-    UNCOMMON: { weight: 25, weapons: ['shield', 'emp'] },
+    COMMON: { weight: 70, weapons: ['missile', 'mine', 'boost', 'oil-slick'] },
+    UNCOMMON: { weight: 25, weapons: ['shield', 'emp', 'flamethrower'] },
     RARE: { weight: 5, weapons: ['sniper'] }
 };
 
@@ -183,6 +183,110 @@ class WeaponSystem {
                 active: { type: 'flames', color: '#FF4400', emitFrom: 'exhaust' }
             },
             ui: { color: '#FF8800', description: 'Speed burst + ram damage' }
+        });
+
+        // Phase 3 weapons: Oil Slick, Sniper, Shield, EMP, Flamethrower
+
+        this.weaponDefs.set('oil-slick', {
+            id: 'oil-slick',
+            name: 'Oil Slick',
+            icon: '\uD83D\uDEE2\uFE0F', // oil drum emoji
+            rarity: 'common',
+            behavior: {
+                type: 'zone',
+                deployBehind: true,
+                zoneRadius: 6,
+                lifetime: 15,
+                frictionMultiplier: 0.1
+            },
+            damage: {
+                amount: 0
+            },
+            effects: {
+                zone: { type: 'oil', color: '#222222', opacity: 0.8 }
+            },
+            ui: { color: '#444444', description: 'Creates slippery zone' }
+        });
+
+        this.weaponDefs.set('sniper', {
+            id: 'sniper',
+            name: 'Rail Gun',
+            icon: '\u26A1', // lightning emoji
+            rarity: 'rare',
+            behavior: {
+                type: 'hitscan',
+                range: 100,
+                chargeTime: 0.5
+            },
+            damage: {
+                amount: 50,
+                knockback: 30
+            },
+            effects: {
+                beam: { color: '#00FFFF', width: 0.3, duration: 0.2 }
+            },
+            ui: { color: '#00FFFF', description: 'Instant hit, high damage' }
+        });
+
+        this.weaponDefs.set('shield', {
+            id: 'shield',
+            name: 'Energy Shield',
+            icon: '\uD83D\uDEE1\uFE0F', // shield emoji
+            rarity: 'uncommon',
+            behavior: {
+                type: 'buff',
+                duration: 5,
+                invulnerable: true
+            },
+            damage: {
+                amount: 0
+            },
+            effects: {
+                active: { type: 'sphere', color: '#44FFFF', opacity: 0.3, pulse: true }
+            },
+            ui: { color: '#44FFFF', description: '5 seconds invulnerability' }
+        });
+
+        this.weaponDefs.set('emp', {
+            id: 'emp',
+            name: 'EMP Blast',
+            icon: '\u26A1', // lightning emoji
+            rarity: 'uncommon',
+            behavior: {
+                type: 'aoe',
+                radius: 15,
+                stunDuration: 3
+            },
+            damage: {
+                amount: 0
+            },
+            effects: {
+                blast: { type: 'shockwave', color: '#4444FF', expandSpeed: 30 },
+                stunned: { type: 'sparks', color: '#4444FF' }
+            },
+            ui: { color: '#4444FF', description: 'Stuns nearby enemies' }
+        });
+
+        this.weaponDefs.set('flamethrower', {
+            id: 'flamethrower',
+            name: 'Flamethrower',
+            icon: '\uD83D\uDD25', // fire emoji
+            rarity: 'uncommon',
+            behavior: {
+                type: 'continuous',
+                duration: 3,
+                coneAngle: 30,
+                range: 8,
+                tickRate: 0.1
+            },
+            damage: {
+                amount: 5,
+                perTick: true
+            },
+            effects: {
+                stream: { type: 'fire-particles', color: ['#FF4400', '#FFAA00'], density: 50 }
+            },
+            ui: { color: '#FF4400', description: 'Continuous fire damage' }
         });
 
         console.log(`WeaponSystem: Loaded ${this.weaponDefs.size} weapon definitions`);
@@ -517,6 +621,12 @@ class WeaponSystem {
             case 'aoe':
                 this._fireAOE(vehicle, weapon);
                 break;
+            case 'zone':
+                this._deployZone(vehicle, weapon);
+                break;
+            case 'continuous':
+                this._fireContinuous(vehicle, weapon);
+                break;
         }
 
         // Clear inventory after use
@@ -627,7 +737,7 @@ class WeaponSystem {
     }
 
     /**
-     * Apply a buff weapon (boost)
+     * Apply a buff weapon (boost, shield)
      * @private
      */
     _applyBuff(vehicle, weapon) {
@@ -642,21 +752,59 @@ class WeaponSystem {
             createdAt: performance.now(),
             duration: weapon.behavior.duration * 1000,
             speedMultiplier: weapon.behavior.speedMultiplier || 1,
-            ramDamageBonus: weapon.behavior.ramDamageBonus || 0
+            ramDamageBonus: weapon.behavior.ramDamageBonus || 0,
+            invulnerable: weapon.behavior.invulnerable || false
         });
 
-        // Apply speed boost effect
-        vehicle.speedBoost = weapon.behavior.speedMultiplier || 2;
-        vehicle.ramDamageBonus = weapon.behavior.ramDamageBonus || 25;
+        // Apply speed boost effect (for Nitro Boost)
+        if (weapon.behavior.speedMultiplier) {
+            vehicle.speedBoost = weapon.behavior.speedMultiplier;
+        }
+        if (weapon.behavior.ramDamageBonus) {
+            vehicle.ramDamageBonus = weapon.behavior.ramDamageBonus;
+        }
+        // Apply invulnerability (for Shield)
+        if (weapon.behavior.invulnerable) {
+            vehicle.invulnerable = true;
+            // Create shield visual
+            this._createShieldVisual(vehicle, weapon);
+        }
 
         this._emit('weapon:buffApplied', {
             playerId: vehicle.playerId,
             vehicleId: vehicle.id,
             weaponId: weapon.id,
-            duration: weapon.behavior.duration
+            duration: weapon.behavior.duration,
+            invulnerable: weapon.behavior.invulnerable || false
         });
 
         console.log(`WeaponSystem: ${vehicle.playerId} activated ${weapon.name}`);
+    }
+
+    /**
+     * Create shield visual effect around vehicle
+     * @private
+     */
+    _createShieldVisual(vehicle, weapon) {
+        if (typeof THREE === 'undefined') return;
+
+        const color = weapon.effects?.active?.color || '#44FFFF';
+        const geometry = new THREE.SphereGeometry(3, 16, 16);
+        const material = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+
+        const shieldMesh = new THREE.Mesh(geometry, material);
+        shieldMesh.userData.isShieldEffect = true;
+
+        // Add to vehicle mesh as child
+        if (vehicle.mesh) {
+            vehicle.mesh.add(shieldMesh);
+            vehicle.shieldMesh = shieldMesh;
+        }
     }
 
     /**
@@ -716,6 +864,143 @@ class WeaponSystem {
         }
 
         console.log(`WeaponSystem: ${vehicle.playerId} fired ${weapon.name}`);
+    }
+
+    /**
+     * Deploy a zone weapon (oil slick)
+     * @private
+     */
+    _deployZone(vehicle, weapon) {
+        const pos = vehicle.mesh?.position;
+        const rot = vehicle.mesh?.rotation.y || 0;
+        if (!pos) return;
+
+        // Deploy behind vehicle
+        const deployPos = {
+            x: pos.x - Math.sin(rot) * 2,
+            y: 0.05, // Just above ground
+            z: pos.z - Math.cos(rot) * 2
+        };
+
+        const effectId = `zone_${++this.projectileCounter}`;
+
+        // Create zone mesh (flat circle)
+        const mesh = this._createZoneMesh(weapon);
+        if (mesh) {
+            mesh.position.set(deployPos.x, deployPos.y, deployPos.z);
+            if (this.renderSystem) {
+                this.renderSystem.addMesh(mesh, effectId);
+            }
+        }
+
+        this.effects.set(effectId, {
+            id: effectId,
+            type: 'zone',
+            weapon: weapon,
+            ownerId: vehicle.playerId,
+            position: { ...deployPos },
+            mesh: mesh,
+            createdAt: performance.now(),
+            lifetime: weapon.behavior.lifetime * 1000,
+            radius: weapon.behavior.zoneRadius || 6,
+            frictionMultiplier: weapon.behavior.frictionMultiplier || 0.1
+        });
+
+        console.log(`WeaponSystem: ${vehicle.playerId} deployed ${weapon.name}`);
+    }
+
+    /**
+     * Create zone mesh (for oil slick)
+     * @private
+     */
+    _createZoneMesh(weapon) {
+        if (typeof THREE === 'undefined') return null;
+
+        const radius = weapon.behavior.zoneRadius || 6;
+        const geometry = new THREE.CircleGeometry(radius, 32);
+        geometry.rotateX(-Math.PI / 2); // Flat on ground
+
+        const color = weapon.effects?.zone?.color || '#222222';
+        const opacity = weapon.effects?.zone?.opacity || 0.8;
+
+        const material = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: opacity,
+            side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.userData.isZoneEffect = true;
+
+        return mesh;
+    }
+
+    /**
+     * Fire continuous weapon (flamethrower)
+     * @private
+     */
+    _fireContinuous(vehicle, weapon) {
+        const effectId = `continuous_${++this.projectileCounter}`;
+
+        this.effects.set(effectId, {
+            id: effectId,
+            type: 'continuous',
+            weapon: weapon,
+            ownerId: vehicle.playerId,
+            vehicleId: vehicle.id,
+            createdAt: performance.now(),
+            duration: weapon.behavior.duration * 1000,
+            coneAngle: weapon.behavior.coneAngle || 30,
+            range: weapon.behavior.range || 8,
+            tickRate: weapon.behavior.tickRate || 0.1,
+            lastTick: 0,
+            damagePerTick: weapon.damage.amount || 5
+        });
+
+        // Create flame visual effect
+        this._createFlameEffect(vehicle, weapon);
+
+        this._emit('weapon:continuousStart', {
+            playerId: vehicle.playerId,
+            vehicleId: vehicle.id,
+            weaponId: weapon.id,
+            duration: weapon.behavior.duration
+        });
+
+        console.log(`WeaponSystem: ${vehicle.playerId} activated ${weapon.name}`);
+    }
+
+    /**
+     * Create flame effect for flamethrower
+     * @private
+     */
+    _createFlameEffect(vehicle, weapon) {
+        if (typeof THREE === 'undefined') return;
+
+        // Simple cone representing flame
+        const range = weapon.behavior.range || 8;
+        const coneAngle = (weapon.behavior.coneAngle || 30) * Math.PI / 180;
+        const coneRadius = Math.tan(coneAngle / 2) * range;
+
+        const geometry = new THREE.ConeGeometry(coneRadius, range, 16);
+        geometry.rotateX(-Math.PI / 2); // Point forward
+        geometry.translate(0, 0, range / 2); // Move tip to origin
+
+        const material = new THREE.MeshBasicMaterial({
+            color: '#FF4400',
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide
+        });
+
+        const flameMesh = new THREE.Mesh(geometry, material);
+        flameMesh.userData.isFlameEffect = true;
+
+        if (vehicle.mesh) {
+            vehicle.mesh.add(flameMesh);
+            vehicle.flameMesh = flameMesh;
+        }
     }
 
     /**
@@ -812,7 +1097,7 @@ class WeaponSystem {
     }
 
     /**
-     * Update active effects (mines, buffs)
+     * Update active effects (mines, buffs, zones, continuous)
      * @private
      */
     _updateEffects(dt) {
@@ -866,6 +1151,16 @@ class WeaponSystem {
                     if (vehicle) {
                         vehicle.speedBoost = 1;
                         vehicle.ramDamageBonus = 0;
+                        // Remove invulnerability and shield visual
+                        if (effect.invulnerable) {
+                            vehicle.invulnerable = false;
+                            if (vehicle.shieldMesh) {
+                                vehicle.mesh?.remove(vehicle.shieldMesh);
+                                vehicle.shieldMesh.geometry?.dispose();
+                                vehicle.shieldMesh.material?.dispose();
+                                vehicle.shieldMesh = null;
+                            }
+                        }
                     }
 
                     this._emit('weapon:buffExpired', {
@@ -876,6 +1171,125 @@ class WeaponSystem {
 
                     this._removeEffect(effectId);
                 }
+            } else if (effect.type === 'zone') {
+                // Check lifetime
+                if (now - effect.createdAt > effect.lifetime) {
+                    this._removeEffect(effectId);
+                    continue;
+                }
+
+                // Apply friction effect to vehicles in zone
+                for (const [vehicleId, vehicle] of this.vehicles) {
+                    if (vehicle.isDead) continue;
+
+                    const pos = vehicle.mesh?.position;
+                    if (!pos) continue;
+
+                    const dx = pos.x - effect.position.x;
+                    const dz = pos.z - effect.position.z;
+                    const distance = Math.sqrt(dx * dx + dz * dz);
+
+                    if (distance <= effect.radius) {
+                        // Vehicle is in the oil slick - reduce friction
+                        vehicle.inOilSlick = true;
+                        vehicle.oilFrictionMultiplier = effect.frictionMultiplier;
+                    }
+                }
+            } else if (effect.type === 'continuous') {
+                // Check duration
+                if (now - effect.createdAt > effect.duration) {
+                    // Remove flame visual
+                    const vehicle = this.vehicles.get(effect.vehicleId);
+                    if (vehicle?.flameMesh) {
+                        vehicle.mesh?.remove(vehicle.flameMesh);
+                        vehicle.flameMesh.geometry?.dispose();
+                        vehicle.flameMesh.material?.dispose();
+                        vehicle.flameMesh = null;
+                    }
+
+                    this._emit('weapon:continuousEnd', {
+                        playerId: effect.ownerId,
+                        vehicleId: effect.vehicleId,
+                        weaponId: effect.weapon.id
+                    });
+
+                    this._removeEffect(effectId);
+                    continue;
+                }
+
+                // Apply damage on tick
+                const tickInterval = effect.tickRate * 1000;
+                if (now - effect.lastTick >= tickInterval) {
+                    effect.lastTick = now;
+
+                    const ownerVehicle = this.vehicles.get(effect.vehicleId);
+                    if (!ownerVehicle || ownerVehicle.isDead) continue;
+
+                    const ownerPos = ownerVehicle.mesh?.position;
+                    const ownerRot = ownerVehicle.mesh?.rotation.y || 0;
+                    if (!ownerPos) continue;
+
+                    // Check all vehicles in cone
+                    const coneAngleRad = (effect.coneAngle / 2) * Math.PI / 180;
+
+                    for (const [vehicleId, vehicle] of this.vehicles) {
+                        if (vehicleId === effect.vehicleId) continue;
+                        if (vehicle.isDead) continue;
+
+                        const targetPos = vehicle.mesh?.position;
+                        if (!targetPos) continue;
+
+                        const dx = targetPos.x - ownerPos.x;
+                        const dz = targetPos.z - ownerPos.z;
+                        const distance = Math.sqrt(dx * dx + dz * dz);
+
+                        if (distance > effect.range) continue;
+
+                        // Check if in cone
+                        const angleToTarget = Math.atan2(dx, dz);
+                        let angleDiff = angleToTarget - ownerRot;
+                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+                        if (Math.abs(angleDiff) <= coneAngleRad) {
+                            // In cone - apply damage
+                            this._applyDamage(vehicleId, effect.damagePerTick, effect.ownerId, effect.weapon.id);
+
+                            this._emit('weapon:hit', {
+                                effectId: effect.id,
+                                weaponId: effect.weapon.id,
+                                shooterId: effect.ownerId,
+                                targetId: vehicle.playerId,
+                                damage: effect.damagePerTick
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Reset oil slick state for vehicles not in any zone
+        for (const [vehicleId, vehicle] of this.vehicles) {
+            let inAnyZone = false;
+            for (const [effectId, effect] of this.effects) {
+                if (effect.type !== 'zone') continue;
+
+                const pos = vehicle.mesh?.position;
+                if (!pos) continue;
+
+                const dx = pos.x - effect.position.x;
+                const dz = pos.z - effect.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+
+                if (distance <= effect.radius) {
+                    inAnyZone = true;
+                    break;
+                }
+            }
+
+            if (!inAnyZone && vehicle.inOilSlick) {
+                vehicle.inOilSlick = false;
+                vehicle.oilFrictionMultiplier = 1;
             }
         }
     }
@@ -929,6 +1343,14 @@ class WeaponSystem {
      * @private
      */
     _applyDamage(vehicleId, amount, sourcePlayerId, weaponId) {
+        const vehicle = this.vehicles.get(vehicleId);
+
+        // Check invulnerability (shield)
+        if (vehicle?.invulnerable) {
+            console.log(`WeaponSystem: ${vehicle.playerId} blocked damage (shield active)`);
+            return;
+        }
+
         if (this.damageSystem) {
             this.damageSystem.applyDamage(vehicleId, amount, {
                 type: 'weapon',
@@ -937,7 +1359,6 @@ class WeaponSystem {
             });
         } else {
             // Fallback: apply damage directly
-            const vehicle = this.vehicles.get(vehicleId);
             if (vehicle) {
                 vehicle.takeDamage(amount, {
                     type: 'weapon',

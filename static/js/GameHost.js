@@ -626,12 +626,18 @@ class GameHost {
                 this.systems.weapons.registerVehicle(vehicle);
             }
 
-            // Configure weapon system for this arena
+            // Configure systems for this arena
             const trackConfig = this.track?.config || {};
             this.systems.weapons.setArenaConfig({
                 geometry: trackConfig.geometry,
                 weapons: trackConfig.weapons
             });
+            this.systems.derby.setArenaConfig(trackConfig);
+
+            // Set wall mesh for shrinking animation
+            if (this.track?.barriers && this.track.barriers.length > 0) {
+                this.systems.derby.setWallMesh(this.track.barriers[0]);
+            }
 
             // Start derby match
             this.engine.setState(GAME_STATES.COUNTDOWN);
