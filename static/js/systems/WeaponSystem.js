@@ -1081,12 +1081,21 @@ class WeaponSystem {
                     // Hit!
                     this._applyDamage(vehicleId, weapon.damage.amount, projectile.ownerId, weapon.id);
 
+                    const hitPosition = { ...projectile.position };
+
                     this._emit('weapon:hit', {
                         projectileId,
                         weaponId: weapon.id,
                         shooterId: projectile.ownerId,
                         targetId: vehicle.playerId,
-                        damage: weapon.damage.amount
+                        damage: weapon.damage.amount,
+                        position: hitPosition
+                    });
+
+                    // Emit explosion for missile impact
+                    this._emit('weapon:explosion', {
+                        position: hitPosition,
+                        weaponId: weapon.id
                     });
 
                     this._removeProjectile(projectileId);

@@ -1,6 +1,6 @@
 # Derby Mode Spec
 
-**Status:** Design Complete - Ready for Implementation
+**Status:** ✅ Implementation Complete (All 6 Phases)
 
 ## Overview
 
@@ -778,11 +778,11 @@ assets/
 - [x] Push vehicles inward when outside boundary
 - [x] Arena reset on new round
 
-### Phase 5: Polish
-- [ ] Sound effects
-- [ ] Particle effects
-- [ ] Results screen
-- [ ] Multiple arena variants
+### Phase 5: Polish ✅ COMPLETE
+- [x] Sound effects (Derby event listeners in AudioSystem, weapon fire/hit/explosion sounds)
+- [x] Particle effects (ParticleSystem for explosions, sparks, shockwaves)
+- [x] Results screen (Derby-specific theme with red/orange colors, round/points display)
+- [x] Multiple arena variants (derby-bowl, derby-arena "Iron Cage", derby-coliseum)
 
 ---
 
@@ -800,4 +800,4 @@ assets/
 
 ---
 
-**Note:** This spec focuses on Derby as a standalone mode. The "Fight Mode" mentioned in PROJECT_DIRECTION_SPEC is effectively merged into this design.
+**Note:** This spec focuses on Derby as a standalone mode. The "Fight Mode" mentioned in PROJECT_DIRECTION_SPEC is effectively merged into this design, but will be it's own mode which has respawning and the like.

@@ -26,6 +26,7 @@ import { DamageSystem } from './systems/DamageSystem.js';
 import { DerbySystem } from './systems/DerbySystem.js';
 import { WeaponSystem } from './systems/WeaponSystem.js';
 import { TrailSystem } from './systems/TrailSystem.js';
+import { ParticleSystem } from './systems/ParticleSystem.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Track } from './entities/Track.js';
 import { LobbyUI } from './ui/LobbyUI.js';
@@ -55,7 +56,8 @@ class GameHost {
             damage: null,
             derby: null,
             weapons: null,
-            trails: null
+            trails: null,
+            particles: null
         };
 
         // Factories
@@ -156,6 +158,14 @@ class GameHost {
         });
         await this.systems.trails.init();
         this.engine.registerSystem('trails', this.systems.trails);
+
+        // Create ParticleSystem after render is initialized
+        this.systems.particles = new ParticleSystem({
+            eventBus: this.eventBus,
+            scene: this.systems.render.getScene()
+        });
+        this.systems.particles.init();
+        this.engine.registerSystem('particles', this.systems.particles);
 
         // Configure WeaponSystem with render and damage systems
         this.systems.weapons.renderSystem = this.systems.render;
@@ -332,7 +342,7 @@ class GameHost {
         try {
             await this.resourceLoader.preload({
                 vehicles: ['default'],
-                tracks: ['oval', 'derby-bowl']
+                tracks: ['oval', 'derby-bowl', 'derby-arena', 'derby-coliseum']
             });
             console.log('GameHost: Assets preloaded');
         } catch (error) {

@@ -1,0 +1,98 @@
+{
+  "id": "derby-coliseum",
+  "name": "The Coliseum",
+  "description": "A massive oval arena for epic battles",
+  "type": "derby",
+  "geometry": {
+    "type": "bowl",
+    "diameter": 100,
+    "wallHeight": 20,
+    "wallSlope": 35,
+    "floorConcavity": 0.08
+  },
+  "visual": {
+    "track": {
+      "color": "#3a3020",
+      "roughness": 0.8,
+      "emissive": "#FFaa00",
+      "emissiveIntensity": 0.12
+    },
+    "ground": {
+      "color": "#1a1510",
+      "size": 250
+    },
+    "barriers": {
+      "color": "#4a4030",
+      "roughness": 0.65,
+      "emissive": "#FFAA00",
+      "emissiveIntensity": 0.35
+    },
+    "lineMarkings": {
+      "color": "#FFAA00",
+      "width": 0.6,
+      "emissive": "#FFCC44",
+      "emissiveIntensity": 0.75
+    }
+  },
+  "spawn": {
+    "positions": [
+      { "x": 45, "y": 1.5, "z": 0, "rotation": 3.14159 },
+      { "x": -45, "y": 1.5, "z": 0, "rotation": 0 },
+      { "x": 0, "y": 1.5, "z": 45, "rotation": -1.5708 },
+      { "x": 0, "y": 1.5, "z": -45, "rotation": 1.5708 },
+      { "x": 32, "y": 1.5, "z": 32, "rotation": -2.3562 },
+      { "x": -32, "y": 1.5, "z": 32, "rotation": -0.7854 },
+      { "x": -32, "y": 1.5, "z": -32, "rotation": 0.7854 },
+      { "x": 32, "y": 1.5, "z": -32, "rotation": 2.3562 },
+      { "x": 42, "y": 1.5, "z": 18, "rotation": -2.7489 },
+      { "x": 18, "y": 1.5, "z": 42, "rotation": -2.0071 },
+      { "x": -18, "y": 1.5, "z": 42, "rotation": -1.1345 },
+      { "x": -42, "y": 1.5, "z": 18, "rotation": -0.3927 },
+      { "x": -42, "y": 1.5, "z": -18, "rotation": 0.3927 },
+      { "x": -18, "y": 1.5, "z": -42, "rotation": 1.1345 },
+      { "x": 18, "y": 1.5, "z": -42, "rotation": 2.0071 },
+      { "x": 42, "y": 1.5, "z": -18, "rotation": 2.7489 }
+    ],
+    "defaultHeight": 1.5
+  },
+  "checkpoints": [],
+  "race": {
+    "defaultLaps": 0,
+    "checkpointOrder": [],
+    "countdownSeconds": 3
+  },
+  "derby": {
+    "roundsToWin": 2,
+    "maxRounds": 3,
+    "eliminationRespawn": false,
+    "shrinking": {
+      "enabled": true,
+      "startTime": 40,
+      "rate": 0.4,
+      "minDiameter": 50,
+      "warningColor": "#FFAA00"
+    }
+  },
+  "weapons": {
+    "enabled": true,
+    "spawnInterval": [10, 15],
+    "maxActive": 5,
+    "spawnHeight": 1.5
+  },
+  "physics": {
+    "groundFriction": 0.88,
+    "barrierRestitution": 0.45
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#FFAA44",
+      "intensity": 0.45
+    },
+    "directional": {
+      "color": "#FFCC66",
+      "intensity": 0.75,
+      "position": { "x": -50, "y": 120, "z": 50 },
+      "castShadow": true
+    }
+  }
+}

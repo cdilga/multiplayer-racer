@@ -116,6 +116,133 @@ class AudioSystem {
         this.eventBus.on('race:finished', () => {
             this.playSound('race_finish');
         });
+
+        // Derby mode events
+        this._subscribeToDerbyEvents();
+    }
+
+    /**
+     * Subscribe to Derby mode events
+     * @private
+     */
+    _subscribeToDerbyEvents() {
+        if (!this.eventBus) return;
+
+        // Derby countdown
+        this.eventBus.on('derby:countdown', (data) => {
+            if (data.count > 0) {
+                this.playSound('countdown_beep', { volume: 0.8 });
+            } else {
+                this.playSound('countdown_go', { volume: 1.0 });
+            }
+        });
+
+        // Derby combat start
+        this.eventBus.on('derby:combatStart', () => {
+            this.currentGameState = 'derby';
+            this.playMusic('racing'); // Use race music for now
+            this.startEngineSound();
+        });
+
+        // Weapon pickup
+        this.eventBus.on('weapon:pickup', (data) => {
+            this.playSound('player_join', { volume: 0.6 }); // Reuse join chime for pickup
+        });
+
+        // Weapon fired - different sounds per weapon type
+        this.eventBus.on('weapon:fired', (data) => {
+            this._playWeaponFireSound(data.weaponId);
+        });
+
+        // Weapon hit/explosion
+        this.eventBus.on('weapon:hit', (data) => {
+            this.playCollisionSound({ intensity: 0.8 }); // Use collision as impact
+        });
+
+        // Mine/weapon explosion
+        this.eventBus.on('weapon:explosion', (data) => {
+            this.duckMusic(0.5);
+            this.playSound('collision_hard', { volume: 1.0 }); // Use hard collision for explosion
+        });
+
+        // Player eliminated
+        this.eventBus.on('derby:playerEliminated', (data) => {
+            this.duckMusic(0.5);
+            this.playSound('collision_hard', { volume: 1.0 }); // Death explosion
+        });
+
+        // Walls shrinking warning
+        this.eventBus.on('derby:wallsShrinking', (data) => {
+            // Play warning sound when walls start shrinking
+            this.playSound('countdown_beep', { volume: 0.5 });
+        });
+
+        // Round end
+        this.eventBus.on('derby:roundEnd', (data) => {
+            this.stopEngineSound();
+            this.playSound('countdown_go', { volume: 0.8 }); // Victory fanfare substitute
+        });
+
+        // Match end
+        this.eventBus.on('derby:matchEnd', (data) => {
+            this.stopEngineSound();
+            this.playMusic('results');
+        });
+
+        // Buff applied (shield, boost)
+        this.eventBus.on('weapon:buffApplied', (data) => {
+            if (data.invulnerable) {
+                this.playSound('player_join', { volume: 0.7 }); // Shield activation
+            } else {
+                this.playSound('engine_rev', { volume: 0.5 }); // Boost activation
+            }
+        });
+
+        // Continuous weapon (flamethrower)
+        this.eventBus.on('weapon:continuousStart', (data) => {
+            // Could play looping sound here if we had one
+            this.playSound('tire_screech', { volume: 0.4 }); // Placeholder
+        });
+    }
+
+    /**
+     * Play weapon-specific fire sound
+     * @param {string} weaponId
+     * @private
+     */
+    _playWeaponFireSound(weaponId) {
+        this.duckMusic(0.3);
+
+        // Map weapon types to existing sounds as placeholders
+        // Once proper sounds are added, these can be mapped directly
+        switch (weaponId) {
+            case 'missile':
+                this.playSound('engine_rev', { volume: 0.6 }); // Whoosh sound
+                break;
+            case 'mine':
+                this.playSound('button_click', { volume: 0.8 }); // Deploy click
+                break;
+            case 'boost':
+                this.playSound('engine_rev', { volume: 0.7 }); // Engine boost
+                break;
+            case 'oil-slick':
+                this.playSound('button_click', { volume: 0.5 }); // Splat
+                break;
+            case 'sniper':
+                this.playSound('collision_hard', { volume: 0.9 }); // Rail gun zap
+                break;
+            case 'shield':
+                this.playSound('player_join', { volume: 0.6 }); // Shield up
+                break;
+            case 'emp':
+                this.playSound('countdown_go', { volume: 0.7 }); // EMP pulse
+                break;
+            case 'flamethrower':
+                this.playSound('tire_screech', { volume: 0.5 }); // Flame roar
+                break;
+            default:
+                this.playSound('button_click', { volume: 0.5 });
+        }
     }
 
     /**
