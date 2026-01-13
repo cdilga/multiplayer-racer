@@ -264,6 +264,22 @@ class PhysicsSystem {
     }
 
     /**
+     * Remove all static bodies (ground and barriers)
+     * Called when switching tracks
+     */
+    removeStaticBodies() {
+        if (!this.world) return;
+
+        for (const [key, body] of this.staticBodies) {
+            if (body) {
+                this.world.removeRigidBody(body);
+            }
+        }
+        this.staticBodies.clear();
+        console.log('PhysicsSystem: Removed all static bodies');
+    }
+
+    /**
      * Create vehicle physics body with controller
      * @param {Vehicle} vehicle - Vehicle entity
      * @param {Object} physicsConfig - Physics config from vehicle JSON

@@ -352,6 +352,22 @@ class GameHost {
      */
     async _createTrack(trackId) {
         try {
+            // Clean up existing track first
+            if (this.track) {
+                console.log('GameHost: Removing old track:', this.track.configId);
+
+                // Remove mesh from render system
+                const oldMesh = this.track.getMesh();
+                if (oldMesh) {
+                    this.systems.render.removeMesh(oldMesh);
+                }
+
+                // Remove physics bodies
+                this.systems.physics.removeStaticBodies();
+
+                this.track = null;
+            }
+
             const trackData = await this.trackFactory.create(trackId);
 
             // Create Track entity
@@ -549,6 +565,7 @@ class GameHost {
         if (options.mode) {
             this.settings.mode = options.mode;
             this.systems.race.setMode(options.mode);
+            this.ui.race.setMode(options.mode);
         }
 
         if (options.laps) {
@@ -794,18 +811,25 @@ class GameHost {
 
         // Update race UI and audio
         if (state === GAME_STATES.RACING) {
-            const raceTime = this.systems.race.getRaceTime();
-            this.ui.race.setTime(raceTime);
+            // Only update race-specific UI in race mode
+            if (this.settings.mode === 'race') {
+                const raceTime = this.systems.race.getRaceTime();
+                this.ui.race.setTime(raceTime);
 
-            // Update UI for first vehicle (could be extended for spectator mode)
+                // Update UI for first vehicle (could be extended for spectator mode)
+                const firstVehicle = this.vehicles.values().next().value;
+                if (firstVehicle) {
+                    this.ui.race.update({
+                        speed: firstVehicle.speed,
+                        lap: firstVehicle.currentLap + 1,
+                        position: firstVehicle.racePosition
+                    });
+                }
+            }
+
+            // Update engine sound for all modes
             const firstVehicle = this.vehicles.values().next().value;
             if (firstVehicle) {
-                this.ui.race.update({
-                    speed: firstVehicle.speed,
-                    lap: firstVehicle.currentLap + 1,
-                    position: firstVehicle.racePosition
-                });
-
                 // Update engine sound based on vehicle state
                 const isAccelerating = firstVehicle.controls?.accelerate > 0;
                 this.systems.audio.updateEngineSound(

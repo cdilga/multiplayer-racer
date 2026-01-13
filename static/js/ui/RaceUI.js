@@ -105,6 +105,8 @@ class RaceUI {
         this.elements.timer = this.element.querySelector('#race-timer');
         this.elements.lap = this.element.querySelector('#race-lap');
         this.elements.totalLaps = this.element.querySelector('#race-total-laps');
+        this.elements.lapContainer = this.element.querySelector('.hud-lap');
+        this.elements.timerContainer = this.element.querySelector('.hud-timer');
         this.elements.speed = this.element.querySelector('#race-speed');
         this.elements.healthBars = this.element.querySelector('#health-bars-container');
         this.countdownElement = this.element.querySelector('#race-countdown');
@@ -290,6 +292,16 @@ class RaceUI {
             this.hideCountdown();
         });
 
+        // Derby mode countdown events
+        this.eventBus.on('derby:countdown', (data) => {
+            this.show();
+            this.showCountdown(data.count);
+        });
+
+        this.eventBus.on('derby:combatStart', () => {
+            this.hideCountdown();
+        });
+
         this.eventBus.on('game:countdown', () => {
             this.show(); // Show race UI when countdown state begins
         });
@@ -422,6 +434,24 @@ class RaceUI {
             this.element.classList.add('hidden');
         }
         this.hideCountdown();
+    }
+
+    /**
+     * Set game mode - hides race-specific elements in derby mode
+     * @param {string} mode - 'race' or 'derby'
+     */
+    setMode(mode) {
+        this.mode = mode;
+
+        // Hide race-specific elements in derby mode
+        const isRace = mode === 'race';
+
+        if (this.elements.lapContainer) {
+            this.elements.lapContainer.style.display = isRace ? '' : 'none';
+        }
+        if (this.elements.timerContainer) {
+            this.elements.timerContainer.style.display = isRace ? '' : 'none';
+        }
     }
 
     /**
