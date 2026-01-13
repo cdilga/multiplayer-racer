@@ -11,6 +11,7 @@ Keep in mind the [parent readme](../README.md) is the human-readable project ove
 | [TESTING_SPEC.md](TESTING_SPEC.md) | Testing approach and 3-tier architecture |
 | [TEST_OPTIMISATION_SPEC.md](TEST_OPTIMISATION_SPEC.md) | Migration from slow E2E to tiered testing |
 | [PROJECT_DIRECTION_SPEC.md](PROJECT_DIRECTION_SPEC.md) | Game vision, priorities, decision framework |
+| [DAMAGE_SYSTEM.md](DAMAGE_SYSTEM.md) | Progressive vehicle damage, destruction, and respawn mechanics |
 | [VISUAL_EFFECTS_SPEC.md](VISUAL_EFFECTS_SPEC.md) | Visual effects system and future directions |
 | [COLOR_SCHEME_SPEC.md](COLOR_SCHEME_SPEC.md) | Sunset neon color palette |
 
