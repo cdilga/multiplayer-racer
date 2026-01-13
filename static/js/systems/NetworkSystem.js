@@ -278,6 +278,17 @@ class NetworkSystem {
     }
 
     /**
+     * Broadcast mode selection to all players in the room
+     * @param {string} mode - 'race' or 'derby'
+     */
+    broadcastModeSelected(mode) {
+        this.socket.emit('mode_selected', {
+            room_code: this.roomCode,
+            mode
+        });
+    }
+
+    /**
      * Send race position update to a player
      * @param {string} playerId
      * @param {Object} raceData - { position, lap, time }

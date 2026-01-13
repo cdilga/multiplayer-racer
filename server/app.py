@@ -403,6 +403,28 @@ def start_game(data):
     emit('game_started', to=room_code)
     logger.info(f"Game started in room {room_code}")
 
+@socketio.on('mode_selected')
+def mode_selected(data):
+    """Host broadcasts mode selection to all players."""
+    room_code = data.get('room_code')
+    mode = data.get('mode')
+    host_sid = request.sid
+
+    if room_code not in game_rooms:
+        emit('error', {'message': 'Room not found'})
+        return
+
+    if game_rooms[room_code]['host_sid'] != host_sid:
+        emit('error', {'message': 'Only the host can select the mode'})
+        return
+
+    # Store the selected mode
+    game_rooms[room_code]['mode'] = mode
+
+    # Broadcast to all players in the room (except host)
+    emit('mode_selected', {'mode': mode}, to=room_code, include_self=False)
+    logger.info(f"Mode selected in room {room_code}: {mode}")
+
 @socketio.on('player_update')
 def player_update(data):
     """Player sends position and rotation updates."""

@@ -116,16 +116,38 @@ class LobbyUI {
                     <ul class="player-list" id="player-list"></ul>
                 </div>
 
-                <div class="settings-section">
+                <div class="mode-selection-section">
+                    <h2 class="mode-selection-title">SELECT MODE</h2>
+                    <div class="mode-cards-container">
+                        <div class="mode-card selected" data-mode="race">
+                            <div class="mode-card-preview">
+                                <div class="mode-card-icon">🏁</div>
+                            </div>
+                            <div class="mode-card-content">
+                                <h3 class="mode-card-name">RACE</h3>
+                                <p class="mode-card-tagline">"First across the line wins"</p>
+                                <div class="mode-card-details">
+                                    <span id="race-laps-display">3 laps</span> • Oval Track
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mode-card" data-mode="derby">
+                            <div class="mode-card-preview">
+                                <div class="mode-card-icon">💥</div>
+                            </div>
+                            <div class="mode-card-content">
+                                <h3 class="mode-card-name">DERBY</h3>
+                                <p class="mode-card-tagline">"Last car standing wins"</p>
+                                <div class="mode-card-details">
+                                    Best of 3 • Arena
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section race-settings" id="race-settings">
                     <label>
-                        Mode:
-                        <select id="mode-select">
-                            <option value="race" selected>Race</option>
-                            <option value="derby" disabled>Derby (Coming Soon)</option>
-                            <option value="fight" disabled>Fight (Coming Soon)</option>
-                        </select>
-                    </label>
-                    <label style="margin-left: 20px;">
                         Laps:
                         <select id="laps-select">
                             <option value="1">1</option>
@@ -193,9 +215,14 @@ class LobbyUI {
         this.elements.joinUrl = this.element.querySelector('#join-url');
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
-        this.elements.modeSelect = this.element.querySelector('#mode-select');
+        this.elements.modeCards = this.element.querySelectorAll('.mode-card');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
+        this.elements.raceSettings = this.element.querySelector('#race-settings');
+        this.elements.raceLapsDisplay = this.element.querySelector('#race-laps-display');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
+
+        // Track selected mode
+        this.selectedMode = 'race';
 
         // Visual settings elements
         this.elements.visualSettingsSection = this.element.querySelector('.visual-settings-section');
@@ -221,10 +248,20 @@ class LobbyUI {
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
                 if (this.onStartGame) {
-                    const mode = this.elements.modeSelect?.value || 'race';
+                    const mode = this.selectedMode || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
                     this.onStartGame({ mode, laps });
                 }
+            });
+        }
+
+        // Setup mode card selection
+        this._setupModeCards();
+
+        // Setup laps select to update display
+        if (this.elements.lapsSelect) {
+            this.elements.lapsSelect.addEventListener('change', () => {
+                this._updateLapsDisplay();
             });
         }
 
@@ -537,6 +574,66 @@ class LobbyUI {
     }
 
     /**
+     * Setup mode card click handlers
+     * @private
+     */
+    _setupModeCards() {
+        if (!this.elements.modeCards) return;
+
+        this.elements.modeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                this._selectMode(card.dataset.mode);
+            });
+        });
+    }
+
+    /**
+     * Select a game mode
+     * @private
+     * @param {string} mode - 'race' or 'derby'
+     */
+    _selectMode(mode) {
+        this.selectedMode = mode;
+
+        // Update card visual states
+        this.elements.modeCards.forEach(card => {
+            if (card.dataset.mode === mode) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+
+        // Show/hide race-specific settings
+        if (this.elements.raceSettings) {
+            if (mode === 'race') {
+                this.elements.raceSettings.style.display = '';
+            } else {
+                this.elements.raceSettings.style.display = 'none';
+            }
+        }
+
+        // Update start button text
+        this._updateStartButton();
+
+        // Emit event for other components
+        if (this.eventBus) {
+            this.eventBus.emit('lobby:modeSelected', { mode });
+        }
+    }
+
+    /**
+     * Update the laps display in the race mode card
+     * @private
+     */
+    _updateLapsDisplay() {
+        if (this.elements.raceLapsDisplay && this.elements.lapsSelect) {
+            const laps = this.elements.lapsSelect.value;
+            this.elements.raceLapsDisplay.textContent = `${laps} lap${laps === '1' ? '' : 's'}`;
+        }
+    }
+
+    /**
      * Add CSS styles
      * @private
      */
@@ -645,6 +742,94 @@ class LobbyUI {
                 flex: 1;
                 text-align: left;
             }
+
+            /* Mode Selection Styles */
+            .mode-selection-section {
+                margin-bottom: 30px;
+            }
+            .mode-selection-title {
+                font-size: 16px;
+                color: #c9a887;
+                margin: 0 0 20px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+            .mode-cards-container {
+                display: flex;
+                gap: 20px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .mode-card {
+                --mode-color: #44FF88;
+                background: rgba(26, 26, 46, 0.9);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                border-radius: 15px;
+                padding: 20px;
+                width: 200px;
+                cursor: pointer;
+                opacity: 0.7;
+                transform: scale(0.95);
+                transition: all 0.3s ease;
+            }
+            .mode-card[data-mode="race"] {
+                --mode-color: #44FF88;
+            }
+            .mode-card[data-mode="derby"] {
+                --mode-color: #FF4444;
+            }
+            .mode-card:hover {
+                opacity: 0.9;
+                transform: scale(0.98);
+                border-color: var(--mode-color);
+                box-shadow: 0 0 20px var(--mode-color);
+            }
+            .mode-card.selected {
+                opacity: 1;
+                transform: scale(1);
+                border: 3px solid var(--mode-color);
+                box-shadow: 0 0 40px var(--mode-color),
+                            inset 0 0 20px rgba(255, 255, 255, 0.05);
+            }
+            .mode-card-preview {
+                height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 15px;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+            }
+            .mode-card-icon {
+                font-size: 48px;
+            }
+            .mode-card-content {
+                text-align: center;
+            }
+            .mode-card-name {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0 0 8px;
+                color: var(--mode-color);
+            }
+            .mode-card-tagline {
+                font-size: 12px;
+                color: #aaa;
+                margin: 0 0 12px;
+                font-style: italic;
+            }
+            .mode-card-details {
+                font-size: 11px;
+                color: #888;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            /* Race-specific settings */
+            .race-settings {
+                margin-bottom: 20px;
+            }
+
             .settings-section {
                 margin-bottom: 30px;
             }
@@ -787,6 +972,22 @@ class LobbyUI {
             .start-button:not(:disabled):hover {
                 background: #FF8800;
                 transform: scale(1.05);
+            }
+            .start-button.race-mode:not(:disabled) {
+                background: #44FF88;
+                color: #0a1a0f;
+            }
+            .start-button.race-mode:not(:disabled):hover {
+                background: #66FFAA;
+                box-shadow: 0 0 20px #44FF88;
+            }
+            .start-button.derby-mode:not(:disabled) {
+                background: #FF4444;
+                color: #1a0f0f;
+            }
+            .start-button.derby-mode:not(:disabled):hover {
+                background: #FF6666;
+                box-shadow: 0 0 20px #FF4444;
             }
             .audio-settings-section {
                 margin-bottom: 30px;
@@ -978,9 +1179,21 @@ class LobbyUI {
 
         const canStart = this.players.length >= this.minPlayersToStart;
         this.elements.startButton.disabled = !canStart;
+
+        // Mode-specific button text
+        const modeText = this.selectedMode === 'derby' ? 'Start Derby!' : 'Start Race!';
         this.elements.startButton.textContent = canStart
-            ? 'Start Race!'
+            ? modeText
             : `Waiting for players... (${this.players.length}/${this.minPlayersToStart})`;
+
+        // Mode-specific button color
+        if (this.selectedMode === 'derby') {
+            this.elements.startButton.classList.add('derby-mode');
+            this.elements.startButton.classList.remove('race-mode');
+        } else {
+            this.elements.startButton.classList.add('race-mode');
+            this.elements.startButton.classList.remove('derby-mode');
+        }
     }
 
     /**

@@ -105,15 +105,19 @@
         </div>
         
         <div id="waiting-screen" class="screen hidden">
-            <h2>Waiting for race to start...</h2>
+            <h2>Waiting for host to start...</h2>
             <div class="player-info">
                 <p>Your Name: <span id="display-name"></span></p>
                 <p>Room Code: <span id="display-room"></span></p>
+                <div class="mode-display">
+                    <span class="mode-icon" id="mode-icon">🏁</span>
+                    <span class="mode-name" id="mode-name">RACE</span>
+                </div>
                 <div class="car-preview-container">
                     <div id="car-preview"></div>
                 </div>
             </div>
-            <p class="waiting-text">The host will start the race soon</p>
+            <p class="waiting-text" id="waiting-text">The host will start the race soon</p>
         </div>
         
         <div id="game-screen" class="screen hidden">

@@ -245,6 +245,16 @@ class GameHost {
             this.engine.setState(GAME_STATES.RACING);
         });
 
+        // Lobby events
+        this.eventBus.on('lobby:modeSelected', ({ mode }) => {
+            console.log('GameHost: Mode selected:', mode);
+            this.settings.mode = mode;
+            // Broadcast to all connected players
+            if (this.systems.network) {
+                this.systems.network.broadcastModeSelected(mode);
+            }
+        });
+
         // Game loop events
         this.eventBus.on('loop:update', this._onUpdate);
         this.eventBus.on('loop:render', this._onRender);

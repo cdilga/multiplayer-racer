@@ -288,14 +288,20 @@ socket.on('game_joined', (data) => {
 
 socket.on('game_started', () => {
     gameState.gameStarted = true;
-    
+
     // Initialize game controls
     initGameControls();
-    
+
     // Show game screen
     showScreen('game');
-    
+
     // Note: The game loop (updateLoop) is already running via requestAnimationFrame
+});
+
+// Handle mode selection from host
+socket.on('mode_selected', (data) => {
+    console.log('Mode selected:', data);
+    updateModeDisplay(data.mode);
 });
 
 socket.on('host_disconnected', () => {
@@ -454,6 +460,35 @@ function showScreen(screenName) {
         case 'game':
             elements.gameScreen.classList.remove('hidden');
             break;
+    }
+}
+
+/**
+ * Update the mode display in the waiting room
+ * @param {string} mode - 'race' or 'derby'
+ */
+function updateModeDisplay(mode) {
+    const modeDisplay = document.querySelector('.mode-display');
+    const modeIcon = document.getElementById('mode-icon');
+    const modeName = document.getElementById('mode-name');
+    const waitingText = document.getElementById('waiting-text');
+
+    if (modeDisplay) {
+        modeDisplay.setAttribute('data-mode', mode);
+    }
+
+    if (modeIcon) {
+        modeIcon.textContent = mode === 'derby' ? '💥' : '🏁';
+    }
+
+    if (modeName) {
+        modeName.textContent = mode === 'derby' ? 'DERBY' : 'RACE';
+    }
+
+    if (waitingText) {
+        waitingText.textContent = mode === 'derby'
+            ? 'The host will start the derby soon'
+            : 'The host will start the race soon';
     }
 }
 
