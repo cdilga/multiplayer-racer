@@ -120,6 +120,8 @@ class TrackFactory {
                 return this._createOvalTrack(geometry, visual);
             case 'rectangle':
                 return this._createRectangleTrack(geometry, visual);
+            case 'bowl':
+                return this._createBowlArena(geometry, visual);
             case 'custom':
                 return this._createCustomTrack(geometry, visual);
             default:
@@ -218,6 +220,49 @@ class TrackFactory {
     }
 
     /**
+     * Create bowl arena for derby mode
+     * @private
+     */
+    _createBowlArena(geometry, visual) {
+        const diameter = geometry.diameter || 80;
+        const radius = diameter / 2;
+        const concavity = geometry.floorConcavity || 0.1;
+        const segments = 64;
+
+        // Create a slightly concave circular floor
+        const arenaGeometry = new THREE.CircleGeometry(radius, segments);
+
+        // Apply concavity to vertices (bowl shape)
+        const positions = arenaGeometry.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+            const x = positions.getX(i);
+            const y = positions.getY(i);
+            const distFromCenter = Math.sqrt(x * x + y * y);
+            const normalizedDist = distFromCenter / radius;
+            // Bowl curve: lower at center, higher at edges
+            const height = (normalizedDist * normalizedDist) * concavity * radius;
+            positions.setZ(i, -height);
+        }
+        arenaGeometry.computeVertexNormals();
+
+        const arenaMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.85,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
+        arenaMesh.rotation.x = -Math.PI / 2;
+        arenaMesh.position.y = 0.02;
+        arenaMesh.receiveShadow = true;
+        arenaMesh.userData = { isTrackSurface: true, isBowl: true };
+
+        return arenaMesh;
+    }
+
+    /**
      * Create custom track from path data
      * @private
      */
@@ -236,7 +281,7 @@ class TrackFactory {
         const geometry = config.geometry;
         const visual = config.visual.barriers;
 
-        const barrierHeight = geometry.barrierHeight || 2;
+        const barrierHeight = geometry.barrierHeight || geometry.wallHeight || 2;
         const barrierThickness = geometry.barrierThickness || 0.5;
 
         if (geometry.type === 'oval') {
@@ -257,9 +302,77 @@ class TrackFactory {
             );
 
             barriers.push(innerBarrier, outerBarrier);
+        } else if (geometry.type === 'bowl') {
+            // Create outer wall for bowl arena
+            const diameter = geometry.diameter || 80;
+            const radius = diameter / 2;
+            const wallHeight = geometry.wallHeight || 15;
+            const wallSlope = geometry.wallSlope || 30;
+
+            const outerWall = this._createBowlWall(
+                radius,
+                wallHeight,
+                wallSlope,
+                visual
+            );
+            barriers.push(outerWall);
         }
 
         return barriers;
+    }
+
+    /**
+     * Create sloped wall for bowl arena
+     * @private
+     */
+    _createBowlWall(radius, height, slopeAngle, visual) {
+        const wallGroup = new THREE.Group();
+        wallGroup.userData = { isBarrier: true, barrierType: 'bowl-wall' };
+
+        const material = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0,
+            side: THREE.DoubleSide
+        });
+
+        // Create a sloped cylinder wall
+        const segments = 64;
+        const slopeRad = (slopeAngle * Math.PI) / 180;
+        const topRadius = radius + Math.tan(slopeRad) * height;
+        const thickness = 1;
+
+        // Create outer cylinder (visible wall)
+        const wallGeometry = new THREE.CylinderGeometry(
+            topRadius,      // top radius
+            radius,         // bottom radius
+            height,         // height
+            segments,       // radial segments
+            1,              // height segments
+            true            // open ended
+        );
+
+        const wall = new THREE.Mesh(wallGeometry, material);
+        wall.position.y = height / 2;
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        wallGroup.add(wall);
+
+        // Add a rim at the top for visibility
+        const rimGeometry = new THREE.TorusGeometry(topRadius, thickness / 2, 8, segments);
+        const rimMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: (visual.emissiveIntensity || 0) * 1.5
+        });
+        const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+        rim.rotation.x = Math.PI / 2;
+        rim.position.y = height;
+        wallGroup.add(rim);
+
+        return wallGroup;
     }
 
     /**

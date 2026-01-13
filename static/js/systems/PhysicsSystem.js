@@ -176,6 +176,19 @@ class PhysicsSystem {
 
             if (innerBarrier) barriers.push(innerBarrier);
             if (outerBarrier) barriers.push(outerBarrier);
+        } else if (geometry.type === 'bowl') {
+            // Create bowl arena wall - tall wall that cars can't escape
+            const diameter = geometry.diameter || 80;
+            const radius = diameter / 2;
+            const wallHeight = geometry.wallHeight || 15;
+
+            const bowlWall = this._createBowlWallBarrier(
+                radius,
+                wallHeight,
+                physics.barrierRestitution || 0.5
+            );
+
+            if (bowlWall) barriers.push(bowlWall);
         }
 
         return barriers;
@@ -214,6 +227,39 @@ class PhysicsSystem {
         }
 
         this.staticBodies.set(`barrier_${type}`, body);
+        return body;
+    }
+
+    /**
+     * Create tall wall barrier for bowl arena
+     * @private
+     */
+    _createBowlWallBarrier(radius, height, restitution) {
+        const segments = 64;  // More segments for smoother wall
+        const thickness = 2;  // Thick wall for solid collision
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        // Create wall segments around the arena perimeter
+        for (let i = 0; i < segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const segmentLength = (2 * Math.PI * radius) / segments;
+
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            // Create tall wall collider
+            const colliderDesc = this.RAPIER.ColliderDesc
+                .cuboid(segmentLength / 2, height / 2, thickness / 2)
+                .setTranslation(x, height / 2, z)
+                .setRotation(this._eulerToQuat(0, angle, 0))
+                .setFriction(0.5)
+                .setRestitution(restitution);
+
+            this.world.createCollider(colliderDesc, body);
+        }
+
+        this.staticBodies.set('barrier_bowl_wall', body);
         return body;
     }
 

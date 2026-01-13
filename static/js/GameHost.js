@@ -23,6 +23,7 @@ import { InputSystem } from './systems/InputSystem.js';
 import { AudioSystem } from './systems/AudioSystem.js';
 import { RaceSystem } from './systems/RaceSystem.js';
 import { DamageSystem } from './systems/DamageSystem.js';
+import { DerbySystem } from './systems/DerbySystem.js';
 import { TrailSystem } from './systems/TrailSystem.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Track } from './entities/Track.js';
@@ -51,6 +52,7 @@ class GameHost {
             audio: null,
             race: null,
             damage: null,
+            derby: null,
             trails: null
         };
 
@@ -129,7 +131,8 @@ class GameHost {
         this.systems.audio = new AudioSystem({ eventBus: this.eventBus });
         this.systems.race = new RaceSystem({ eventBus: this.eventBus });
         this.systems.damage = new DamageSystem({ eventBus: this.eventBus });
-        
+        this.systems.derby = new DerbySystem({ eventBus: this.eventBus });
+
         // TrailSystem needs renderSystem, so create after render is initialized
         // But we'll create it after engine.init() so renderSystem is ready
 
@@ -245,6 +248,15 @@ class GameHost {
             this.engine.setState(GAME_STATES.RACING);
         });
 
+        // Derby events
+        this.eventBus.on('derby:combatStart', () => {
+            // Transition engine state to RACING when derby countdown finishes
+            this.engine.setState(GAME_STATES.RACING);
+        });
+        this.eventBus.on('derby:matchEnd', this._onDerbyMatchEnd.bind(this));
+        this.eventBus.on('derby:roundEnd', this._onDerbyRoundEnd.bind(this));
+        this.eventBus.on('derby:nextRoundReady', this._onDerbyNextRoundReady.bind(this));
+
         // Lobby events
         this.eventBus.on('lobby:modeSelected', ({ mode }) => {
             console.log('GameHost: Mode selected:', mode);
@@ -294,7 +306,7 @@ class GameHost {
         try {
             await this.resourceLoader.preload({
                 vehicles: ['default'],
-                tracks: ['oval']
+                tracks: ['oval', 'derby-bowl']
             });
             console.log('GameHost: Assets preloaded');
         } catch (error) {
@@ -531,7 +543,7 @@ class GameHost {
      * Handle start game request
      * @private
      */
-    _onStartGame(options) {
+    async _onStartGame(options) {
         console.log('GameHost: Starting game with options:', options);
 
         if (options.mode) {
@@ -542,6 +554,13 @@ class GameHost {
         if (options.laps) {
             this.settings.laps = options.laps;
             this.systems.race.setLaps(options.laps);
+        }
+
+        // Switch track for derby mode
+        if (this.settings.mode === 'derby' && this.track?.configId !== 'derby-bowl') {
+            await this._createTrack('derby-bowl');
+        } else if (this.settings.mode === 'race' && this.track?.configId !== 'oval') {
+            await this._createTrack('oval');
         }
 
         // Reset all vehicles to spawn positions
@@ -556,12 +575,24 @@ class GameHost {
         // Notify network
         this.systems.network.startGame({ mode: this.settings.mode, laps: this.settings.laps });
 
-        // Update race UI
-        this.ui.race.setTotalLaps(this.settings.laps);
+        // Start the appropriate mode
+        if (this.settings.mode === 'derby') {
+            // Register vehicles with derby system
+            for (const [playerId, vehicle] of this.vehicles) {
+                this.systems.derby.registerVehicle(vehicle);
+            }
 
-        // Start countdown
-        this.engine.setState(GAME_STATES.COUNTDOWN);
-        this.systems.race.startCountdown();
+            // Start derby match
+            this.engine.setState(GAME_STATES.COUNTDOWN);
+            this.systems.derby.startMatch();
+        } else {
+            // Update race UI
+            this.ui.race.setTotalLaps(this.settings.laps);
+
+            // Start countdown
+            this.engine.setState(GAME_STATES.COUNTDOWN);
+            this.systems.race.startCountdown();
+        }
     }
 
     /**
@@ -576,6 +607,74 @@ class GameHost {
 
         // Network broadcast
         this.systems.network.endGame(data.results);
+    }
+
+    /**
+     * Handle derby round end
+     * @private
+     */
+    _onDerbyRoundEnd(data) {
+        console.log('GameHost: Derby round ended', data);
+        // The UI will show round results
+        // Next round will be triggered by _onDerbyNextRoundReady or match ends
+    }
+
+    /**
+     * Handle derby next round ready
+     * @private
+     */
+    _onDerbyNextRoundReady(data) {
+        console.log('GameHost: Derby next round ready', data);
+
+        // Auto-start next round after a short delay
+        setTimeout(() => {
+            // Reset vehicles for next round
+            let index = 0;
+            for (const [playerId, vehicle] of this.vehicles) {
+                const spawnPos = this.track.getSpawnPosition(index);
+                vehicle.reset(spawnPos);
+                vehicle.health = vehicle.maxHealth;
+                vehicle.isDead = false;
+                this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
+                index++;
+            }
+
+            // Start next round
+            this.systems.derby.nextRound();
+        }, 3000);  // 3 second delay between rounds
+    }
+
+    /**
+     * Handle derby match end
+     * @private
+     */
+    _onDerbyMatchEnd(data) {
+        console.log('GameHost: Derby match ended', data);
+
+        // Convert derby results to race results format for ResultsUI
+        const results = data.standings.map(entry => ({
+            position: entry.position,
+            playerId: entry.playerId,
+            vehicleId: this._getVehicleIdForPlayer(entry.playerId),
+            finishTime: null,
+            totalPoints: entry.totalPoints,
+            roundWins: entry.roundWins
+        }));
+
+        // Transition to results state
+        this.engine.setState(GAME_STATES.RESULTS);
+
+        // Network broadcast
+        this.systems.network.endGame(results);
+    }
+
+    /**
+     * Get vehicle ID for a player
+     * @private
+     */
+    _getVehicleIdForPlayer(playerId) {
+        const vehicle = this.vehicles.get(playerId);
+        return vehicle ? vehicle.id : null;
     }
 
     /**

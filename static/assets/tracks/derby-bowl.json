@@ -1,0 +1,91 @@
+{
+  "id": "derby-bowl",
+  "name": "The Pit",
+  "description": "A circular arena for derby combat",
+  "type": "derby",
+  "geometry": {
+    "type": "bowl",
+    "diameter": 80,
+    "wallHeight": 15,
+    "wallSlope": 30,
+    "floorConcavity": 0.1
+  },
+  "visual": {
+    "track": {
+      "color": "#333333",
+      "roughness": 0.85,
+      "emissive": "#FF4444",
+      "emissiveIntensity": 0.15
+    },
+    "ground": {
+      "color": "#1a1a1a",
+      "size": 200
+    },
+    "barriers": {
+      "color": "#444444",
+      "roughness": 0.7,
+      "emissive": "#FF4444",
+      "emissiveIntensity": 0.4
+    },
+    "lineMarkings": {
+      "color": "#FF4444",
+      "width": 0.5,
+      "emissive": "#FF6600",
+      "emissiveIntensity": 0.8
+    }
+  },
+  "spawn": {
+    "positions": [
+      { "x": 35, "y": 1.5, "z": 0, "rotation": 3.14159 },
+      { "x": -35, "y": 1.5, "z": 0, "rotation": 0 },
+      { "x": 0, "y": 1.5, "z": 35, "rotation": -1.5708 },
+      { "x": 0, "y": 1.5, "z": -35, "rotation": 1.5708 },
+      { "x": 24.75, "y": 1.5, "z": 24.75, "rotation": -2.3562 },
+      { "x": -24.75, "y": 1.5, "z": 24.75, "rotation": -0.7854 },
+      { "x": -24.75, "y": 1.5, "z": -24.75, "rotation": 0.7854 },
+      { "x": 24.75, "y": 1.5, "z": -24.75, "rotation": 2.3562 },
+      { "x": 33, "y": 1.5, "z": 14, "rotation": -2.7489 },
+      { "x": 14, "y": 1.5, "z": 33, "rotation": -2.0071 },
+      { "x": -14, "y": 1.5, "z": 33, "rotation": -1.1345 },
+      { "x": -33, "y": 1.5, "z": 14, "rotation": -0.3927 },
+      { "x": -33, "y": 1.5, "z": -14, "rotation": 0.3927 },
+      { "x": -14, "y": 1.5, "z": -33, "rotation": 1.1345 },
+      { "x": 14, "y": 1.5, "z": -33, "rotation": 2.0071 },
+      { "x": 33, "y": 1.5, "z": -14, "rotation": 2.7489 }
+    ],
+    "defaultHeight": 1.5
+  },
+  "checkpoints": [],
+  "race": {
+    "defaultLaps": 0,
+    "checkpointOrder": [],
+    "countdownSeconds": 3
+  },
+  "derby": {
+    "roundsToWin": 2,
+    "maxRounds": 3,
+    "eliminationRespawn": false,
+    "shrinking": {
+      "enabled": false,
+      "startTime": 30,
+      "rate": 0.5,
+      "minDiameter": 40
+    }
+  },
+  "physics": {
+    "groundFriction": 0.9,
+    "barrierRestitution": 0.5
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#FF4444",
+      "intensity": 0.4
+    },
+    "directional": {
+      "color": "#FF8844",
+      "intensity": 0.7,
+      "position": { "x": 0, "y": 100, "z": 0 },
+      "castShadow": true
+    }
+  }
+}
