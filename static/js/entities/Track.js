@@ -101,6 +101,30 @@ class Track extends Entity {
     }
 
     /**
+     * Get the visual mesh group
+     * @returns {THREE.Group|null}
+     */
+    getMesh() {
+        return this.mesh;
+    }
+
+    /**
+     * Get the ground mesh
+     * @returns {THREE.Mesh|null}
+     */
+    get ground() {
+        return this.groundMesh;
+    }
+
+    /**
+     * Get barrier meshes (alias for barrierMeshes)
+     * @returns {THREE.Mesh[]}
+     */
+    get barriers() {
+        return this.barrierMeshes;
+    }
+
+    /**
      * Set physics bodies
      * @param {Object} groundBody - Ground rigid body
      * @param {Object[]} barrierBodies - Barrier rigid bodies

@@ -161,8 +161,6 @@ class DebugOverlayUI {
         // Add to scene and track
         this.renderSystem.scene.add(lineSegments);
         this.debugMeshes.push(lineSegments);
-
-        console.log(`DebugOverlayUI: Created ${this.debugMeshes.length} debug mesh with ${positions.length / 6} lines`);
     }
 
     /**
