@@ -516,8 +516,8 @@ class ResultsUI {
                     <div class="podium-player">
                         <div class="podium-name">${result.playerId || `Player ${position}`}</div>
                         <div class="podium-stats">
-                            <span class="podium-rounds">${result.roundWins} win${result.roundWins !== 1 ? 's' : ''}</span>
-                            <span class="podium-points">${result.totalPoints} pts</span>
+                            <span class="podium-rounds">${result.roundWins || 0} win${(result.roundWins || 0) !== 1 ? 's' : ''}</span>
+                            <span class="podium-points">${result.totalPoints || 0} pts</span>
                         </div>
                     </div>
                     <div class="podium-stand">${position}</div>
@@ -537,8 +537,8 @@ class ResultsUI {
             <tr>
                 <td class="position-cell">${result.position}</td>
                 <td>${result.playerId || `Player ${result.position}`}</td>
-                <td class="rounds-cell">${result.roundWins}</td>
-                <td class="points-cell">${result.totalPoints}</td>
+                <td class="rounds-cell">${result.roundWins || 0}</td>
+                <td class="points-cell">${result.totalPoints || 0}</td>
             </tr>
         `).join('');
     }

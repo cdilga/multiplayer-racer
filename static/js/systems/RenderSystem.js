@@ -146,8 +146,9 @@ class RenderSystem {
             this.postProcessing.enabled = false;
         });
 
-        // Handle window resize
-        window.addEventListener('resize', this._onResize.bind(this));
+        // Handle window resize (bound once so destroy() can remove it)
+        this._boundOnResize = this._onResize.bind(this);
+        window.addEventListener('resize', this._boundOnResize);
 
         // Impact shake on crashes and explosions
         if (this.eventBus) {
@@ -915,7 +916,7 @@ class RenderSystem {
      * Destroy renderer
      */
     destroy() {
-        window.removeEventListener('resize', this._onResize.bind(this));
+        window.removeEventListener('resize', this._boundOnResize);
 
         // Remove all meshes
         for (const [id, mesh] of this.meshes) {

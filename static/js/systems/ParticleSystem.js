@@ -403,20 +403,13 @@ class ParticleSystem {
     _updateShockwave(group, dt, age) {
         const progress = age / group.maxLifetime;
 
-        // Expand the ring
+        // Expand the ring by scaling - rebuilding geometry every frame
+        // churns the garbage collector and stalls frames
         group.currentRadius += group.expandSpeed * dt;
 
-        // Update geometry
-        if (group.mesh && group.mesh.geometry) {
-            group.mesh.geometry.dispose();
-            const innerRadius = group.currentRadius - 0.5;
-            const outerRadius = group.currentRadius;
-            group.mesh.geometry = new THREE.RingGeometry(
-                Math.max(0, innerRadius),
-                outerRadius,
-                32
-            );
-            group.mesh.geometry.rotateX(-Math.PI / 2);
+        if (group.mesh) {
+            const scale = group.currentRadius / 0.5;  // base outer radius is 0.5
+            group.mesh.scale.set(scale, scale, scale);
         }
 
         // Fade out

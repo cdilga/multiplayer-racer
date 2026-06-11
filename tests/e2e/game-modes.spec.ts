@@ -138,4 +138,118 @@ test.describe('Game Modes', () => {
             expect(result.respawnState.physicsEnabled).toBe(true);
         }
     });
+
+    test('two-player derby: elimination, rounds, match end, play again', async ({ hostPage, playerPage, browser }) => {
+        test.slow();
+        await gotoHost(hostPage);
+        const roomCode = await waitForRoomCode(hostPage);
+        await joinGameAsPlayer(playerPage, roomCode, 'DerbyA');
+
+        // Second player from a fresh context
+        const ctx2 = await browser.newContext();
+        const playerPage2 = await ctx2.newPage();
+        await joinGameAsPlayer(playerPage2, roomCode, 'DerbyB');
+
+        await expect(hostPage.locator('#player-list')).toContainText('DerbyA', { timeout: 30000 });
+        await expect(hostPage.locator('#player-list')).toContainText('DerbyB', { timeout: 30000 });
+
+        await hostPage.click('.mode-card[data-mode="derby"]');
+        await hostPage.click('#start-game-btn');
+        await hostPage.waitForTimeout(3000);
+
+        // Round 1: eliminate the first vehicle, second should win the round
+        const round1 = await hostPage.evaluate(async () => {
+            // @ts-ignore
+            const game = window.game;
+            const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+            // Wait for derby combat to begin
+            const start = Date.now();
+            while (game.systems.derby.state !== 'combat' && Date.now() - start < 15000) {
+                await wait(250);
+            }
+            if (game.systems.derby.state !== 'combat') {
+                return { error: 'combat never started', state: game.systems.derby.state };
+            }
+
+            const vehicles = [...game.vehicles.values()];
+            game.systems.damage.applyDamage(vehicles[0].id, 10000);
+            await wait(1000);
+
+            return {
+                state: game.systems.derby.state,
+                round: game.systems.derby.currentRound,
+                victimDead: vehicles[0].isDead,
+                victimRespawned: false
+            };
+        });
+        console.log('Round 1:', JSON.stringify(round1));
+        expect(round1.error).toBeUndefined();
+        expect(round1.victimDead).toBe(true);
+        expect(['round_end', 'countdown', 'combat']).toContain(round1.state);
+
+        // Wait for round 2 to start (3s inter-round delay + countdown skip in test mode)
+        const round2 = await hostPage.evaluate(async () => {
+            // @ts-ignore
+            const game = window.game;
+            const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+            const start = Date.now();
+            while (Date.now() - start < 20000) {
+                if (game.systems.derby.currentRound >= 2 && game.systems.derby.state === 'combat') break;
+                await wait(300);
+            }
+
+            const vehicles = [...game.vehicles.values()];
+            const round = game.systems.derby.currentRound;
+            const state = game.systems.derby.state;
+            const allAlive = vehicles.every(v => !v.isDead && v.health === v.maxHealth);
+
+            if (state !== 'combat') {
+                return { round, state, allAlive, error: 'round 2 combat never started' };
+            }
+
+            // Eliminate the same vehicle again - second straight win ends the match
+            game.systems.damage.applyDamage(vehicles[0].id, 10000);
+            await wait(1500);
+
+            return {
+                round,
+                allAliveAtRoundStart: allAlive,
+                finalState: game.systems.derby.state
+            };
+        });
+        console.log('Round 2:', JSON.stringify(round2));
+        expect(round2.error).toBeUndefined();
+        expect(round2.round).toBe(2);
+        expect(round2.allAliveAtRoundStart).toBe(true);
+        expect(round2.finalState).toBe('match_end');
+
+        // Results screen with Play Again should restart the derby
+        await expect(hostPage.locator('#results-play-again')).toBeVisible({ timeout: 10000 });
+        await hostPage.click('#results-play-again');
+
+        const restarted = await hostPage.evaluate(async () => {
+            // @ts-ignore
+            const game = window.game;
+            const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+            const start = Date.now();
+            while (Date.now() - start < 15000) {
+                if (game.systems.derby.state === 'combat' && game.systems.derby.currentRound === 1) break;
+                await wait(250);
+            }
+            const vehicles = [...game.vehicles.values()];
+            return {
+                state: game.systems.derby.state,
+                round: game.systems.derby.currentRound,
+                allAlive: vehicles.every(v => !v.isDead)
+            };
+        });
+        console.log('Play Again:', JSON.stringify(restarted));
+        expect(restarted.state).toBe('combat');
+        expect(restarted.round).toBe(1);
+        expect(restarted.allAlive).toBe(true);
+
+        await ctx2.close();
+    });
 });

@@ -879,41 +879,25 @@ class GameHost {
      * @param {string} vehicleId
      */
     resetVehicleToSpawn(vehicleId) {
-        console.log('🚗 resetVehicleToSpawn called with vehicleId:', vehicleId);
-        if (!this.track) {
-            console.log('🚗 No track, returning');
-            return;
-        }
+        if (!this.track) return;
 
         // Find the vehicle's index in the vehicles map
         let vehicleIndex = 0;
         let foundVehicle = null;
 
-        console.log('🚗 Searching through vehicles, total count:', this.vehicles.size);
         for (const [playerId, vehicle] of this.vehicles) {
-            console.log('🚗 Checking vehicle with playerId:', playerId, 'vehicle.id:', vehicle.id);
             if (vehicle.id === vehicleId || String(vehicle.id) === String(vehicleId)) {
                 foundVehicle = vehicle;
-                console.log('🚗 FOUND MATCH!');
                 break;
             }
             vehicleIndex++;
         }
 
-        if (!foundVehicle) {
-            console.log('🚗 Vehicle not found after iterating all');
-            return;
-        }
+        if (!foundVehicle) return;
 
-        console.log('🚗 Vehicle found at index:', vehicleIndex);
         const spawnPos = this.track.getSpawnPosition(vehicleIndex);
-        console.log('🚗 Spawn position:', spawnPos);
-
         foundVehicle.reset(spawnPos);
-        console.log('🚗 foundVehicle.reset() called');
-
         this.systems.physics.resetVehicle(foundVehicle.id, spawnPos, spawnPos.rotation);
-        console.log('🚗 physics.resetVehicle() called');
     }
 
     /**
@@ -997,13 +981,19 @@ class GameHost {
                 }
             }
 
-            // Update engine sound for all modes
-            const firstVehicle = this.vehicles.values().next().value;
-            if (firstVehicle) {
-                // Update engine sound based on vehicle state
-                const isAccelerating = firstVehicle.controls?.accelerate > 0;
+            // Engine sound follows the fastest living car - the one the
+            // camera/action is most likely centered on
+            let loudest = null;
+            for (const [playerId, vehicle] of this.vehicles) {
+                if (vehicle.isDead) continue;
+                if (!loudest || (vehicle.speed || 0) > (loudest.speed || 0)) {
+                    loudest = vehicle;
+                }
+            }
+            if (loudest) {
+                const isAccelerating = (loudest.controls?.acceleration || 0) > 0;
                 this.systems.audio.updateEngineSound(
-                    firstVehicle.speed || 0,
+                    loudest.speed || 0,
                     50, // maxSpeed
                     isAccelerating
                 );

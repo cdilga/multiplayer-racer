@@ -478,7 +478,7 @@ class RaceUI {
                 <div class="health-bar-container">
                     <div class="health-bar-fill ${healthClass}" style="width: ${healthPercent}%"></div>
                 </div>
-                <span class="health-bar-value">${Math.round(player.health)}%</span>
+                <span class="health-bar-value">${Math.round(healthPercent)}%</span>
             `;
             this.elements.healthBars.appendChild(healthBarItem);
         });

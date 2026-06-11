@@ -232,7 +232,8 @@ def create_room(data=None):
         'host_sid': host_sid,
         'players': {},
         'game_state': 'waiting',
-        'disconnected_players': {}
+        'disconnected_players': {},
+        'next_player_id': 1
     }
     
     join_room(room_code)
@@ -334,8 +335,10 @@ def on_join_game(data):
         rotation = reconnect_data['rotation']
         velocity = reconnect_data['velocity']
     else:
-        # Generate player ID (1-based index)
-        player_id = len(room['players']) + len(room.get('disconnected_players', {})) + 1
+        # Monotonic player ID - counting current players is collision-prone
+        # (a leaver shrinks the count and the next joiner duplicates an ID)
+        player_id = room.get('next_player_id', len(room['players']) + 1)
+        room['next_player_id'] = player_id + 1
         # Generate random car color
         car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
         position = [0, 0.5, 0]
