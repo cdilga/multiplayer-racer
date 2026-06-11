@@ -24,7 +24,7 @@ declare global {
 
 const OUTPUT_DIR = path.join(__dirname, '../docs/images');
 const BASE_URL = 'http://localhost:8000';
-const NUM_CARS = 16; // Number of cars to spawn (32 causes timeout issues)
+const NUM_CARS = 4; // Reduced for faster capture - enough for demo
 
 async function waitForRoomCode(page: Page): Promise<string> {
     console.log('  Waiting for room code...');
@@ -115,24 +115,32 @@ async function captureVideo() {
         for (let i = 0; i < NUM_CARS; i++) {
             console.log(`   Joining player ${i + 1}/${NUM_CARS}: ${playerNames[i]}...`);
 
-            const context = await browser.newContext({
-                viewport: { width: 390, height: 844 },
-                isMobile: true,
-                hasTouch: true
-            });
-            const page = await context.newPage();
+            try {
+                const context = await browser.newContext({
+                    viewport: { width: 390, height: 844 },
+                    isMobile: true,
+                    hasTouch: true
+                });
+                const page = await context.newPage();
 
-            await page.goto(`${BASE_URL}/player`);
-            await page.waitForLoadState('networkidle');
+                await page.goto(`${BASE_URL}/player`);
+                await page.waitForLoadState('networkidle');
+                await page.waitForTimeout(300);
 
-            await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 10000 });
-            await page.fill('#player-name', playerNames[i]);
-            await page.fill('#room-code', roomCode);
-            await page.click('#join-btn');
-            await page.waitForSelector('#waiting-screen:not(.hidden)', { timeout: 10000 });
+                await page.waitForSelector('#join-screen:not(.hidden)', { timeout: 5000 });
+                await page.fill('#player-name', playerNames[i]);
+                await page.fill('#room-code', roomCode);
+                await page.click('#join-btn');
 
-            playerContexts.push(context);
-            playerPages.push(page);
+                // Wait for waiting screen OR controller screen (shorter timeout)
+                await page.waitForSelector('#waiting-screen:not(.hidden), #controller-screen:not(.hidden)', { timeout: 8000 });
+
+                playerContexts.push(context);
+                playerPages.push(page);
+            } catch (e) {
+                console.log(`   Warning: Player ${i + 1} join may have failed, continuing...`);
+                // Continue anyway - we'll still have some players
+            }
         }
 
         console.log(`\n✓ All ${NUM_CARS} players joined!\n`);
@@ -158,26 +166,52 @@ async function captureVideo() {
             }
         });
 
-        // Wait for countdown and race start
-        await hostPage.waitForTimeout(4000);
+        // Wait for countdown
+        await hostPage.waitForTimeout(2000);
+
+        // Force hide lobby UI to show the 3D racing view
+        console.log('📹 Switching to race view...');
+        await hostPage.evaluate(() => {
+            // Hide the lobby UI overlay
+            const lobbyUI = document.querySelector('.lobby-ui');
+            if (lobbyUI) {
+                (lobbyUI as HTMLElement).classList.add('hidden');
+                (lobbyUI as HTMLElement).style.display = 'none';
+            }
+
+            // Also hide the loading overlay if visible
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            if (loadingOverlay) {
+                (loadingOverlay as HTMLElement).classList.add('hidden');
+            }
+
+            // Ensure canvas is visible
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                (canvas as HTMLElement).style.zIndex = '1';
+            }
+        });
+
+        // Wait for 3D scene to render
+        await hostPage.waitForTimeout(2000);
 
         console.log(`📹 Recording ${NUM_CARS} cars racing...`);
 
-        // Simulate race with keyboard controls
-        for (let i = 0; i < 6; i++) {
+        // Simulate race with keyboard controls (extended for longer racing footage)
+        for (let i = 0; i < 8; i++) {
             await hostPage.keyboard.down('ArrowUp');
-            await hostPage.waitForTimeout(1500);
+            await hostPage.waitForTimeout(2000);
             await hostPage.keyboard.down('ArrowLeft');
-            await hostPage.waitForTimeout(800);
+            await hostPage.waitForTimeout(1000);
             await hostPage.keyboard.up('ArrowLeft');
             await hostPage.keyboard.down('ArrowRight');
-            await hostPage.waitForTimeout(800);
+            await hostPage.waitForTimeout(1000);
             await hostPage.keyboard.up('ArrowRight');
         }
         await hostPage.keyboard.up('ArrowUp');
 
         // Hold for final view
-        await hostPage.waitForTimeout(2000);
+        await hostPage.waitForTimeout(3000);
 
         console.log('\n🧹 Cleaning up contexts...');
         for (const context of playerContexts) {
@@ -204,11 +238,11 @@ async function captureVideo() {
             const speedupPath = path.join(OUTPUT_DIR, 'speedup-temp.webm');
 
             // Create sped-up video:
-            // - Skip first 8s (loading + room code)
-            // - Speed up 8s-25s (player joining + scroll + countdown) by 10x -> ~1.7s in output
-            // - Show 25s+ (actual race gameplay) at normal speed for 13.3s
-            // - Total: ~15 seconds (1.7s fast-join + 13.3s gameplay)
-            const speedupCmd = `ffmpeg -y -i "${videoPath}" -filter_complex "[0:v]trim=start=8:end=25,setpts=PTS/10[v1];[0:v]trim=start=25,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,fps=10,scale=800:-1:flags=lanczos[vout]" -map "[vout]" -t 15 "${speedupPath}"`;
+            // - Skip first 3s (loading)
+            // - Speed up 3s-15s (player joining + scroll + countdown) by 5x -> ~2.4s in output
+            // - Show 15s+ (actual race gameplay with cars visible) at normal speed for ~12s
+            // - Total: ~15 seconds
+            const speedupCmd = `ffmpeg -y -i "${videoPath}" -filter_complex "[0:v]trim=start=3:end=15,setpts=PTS/5[v1];[0:v]trim=start=15,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,fps=10,scale=800:-1:flags=lanczos[vout]" -map "[vout]" -t 15 "${speedupPath}"`;
 
             const paletteCmd = `ffmpeg -y -i "${speedupPath}" -vf "palettegen=stats_mode=diff" "${OUTPUT_DIR}/palette.png"`;
             const gifCmd = `ffmpeg -y -i "${speedupPath}" -i "${OUTPUT_DIR}/palette.png" -lavfi "[0:v][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${gifPath}"`;

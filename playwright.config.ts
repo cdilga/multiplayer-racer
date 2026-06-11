@@ -4,10 +4,10 @@ export default defineConfig({
     testDir: './tests/e2e',
     fullyParallel: true, // Enable parallel execution - each test creates its own room
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 2 : 4, // More workers for faster local testing
+    retries: 0,
+    workers: 1, // More workers for faster local testing
     reporter: 'html',
-    timeout: 60000, // 60s timeout - tests should complete faster with optimizations
+    timeout: 10000, // 60s timeout - tests should complete faster with optimizations
     use: {
         baseURL: 'http://localhost:8000',
         trace: 'on-first-retry',
@@ -44,6 +44,6 @@ export default defineConfig({
         command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && python server/app.py"',
         url: 'http://localhost:8000',
         reuseExistingServer: true,
-        timeout: 30000,
+        timeout: 3000,
     },
 });
