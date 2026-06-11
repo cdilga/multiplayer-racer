@@ -37,7 +37,7 @@ curl -s http://localhost:8000/static/js/GameHost.js | grep "your new function"
 ### Running Tests
 - Run all tests: `npm test`
 - Run E2E tests: `npx playwright test tests/e2e`
-- Run Derby mode tests: `npx playwright test tests/e2e/derby-mode.spec.ts`
+- Run game mode tests: `npx playwright test tests/e2e/game-modes.spec.ts`
 - Run tests with UI: `npm run test:ui`
 - Run tests headed (visible browser): `npm run test:headed`
 
@@ -48,7 +48,7 @@ curl -s http://localhost:8000/static/js/GameHost.js | grep "your new function"
 
 ### E2E Test Files
 - `full-game.spec.ts` - Core 4-player game flow (runs in CI)
-- `derby-mode.spec.ts` - Derby mode track switching, weapons, visuals
+- `game-modes.spec.ts` - Procedural race + derby modes, weapon pickups, visuals
 - `game-flow.spec.ts` - Player join/leave, controls
 - `car-movement.spec.ts` - Vehicle physics tests
 

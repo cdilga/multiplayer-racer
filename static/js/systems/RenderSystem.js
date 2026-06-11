@@ -74,6 +74,7 @@ class RenderSystem {
             currentOffset: { x: 0, y: 0, z: 0 },
             decayRate: 0.9,           // How quickly shake decays
             collisionIntensity: 0.5,  // Extra shake on collision
+            impact: 0,                // Current impact shake (decays to 0)
             time: 0                   // Internal time counter for noise
         };
 
@@ -148,9 +149,31 @@ class RenderSystem {
         // Handle window resize
         window.addEventListener('resize', this._onResize.bind(this));
 
+        // Impact shake on crashes and explosions
+        if (this.eventBus) {
+            this.eventBus.on('damage:vehicleCollision', (data) => {
+                const strength = Math.min(1, (data?.damage || 10) / 40);
+                this.addImpactShake(this.cameraShake.collisionIntensity * strength);
+            });
+            this.eventBus.on('weapon:explosion', () => {
+                this.addImpactShake(this.cameraShake.collisionIntensity);
+            });
+            this.eventBus.on('damage:destroyed', () => {
+                this.addImpactShake(this.cameraShake.collisionIntensity * 1.5);
+            });
+        }
+
         this.initialized = true;
         this._emit('render:ready');
         console.log('RenderSystem: Ready');
+    }
+
+    /**
+     * Add a one-off impact shake (decays automatically)
+     * @param {number} amount - Shake intensity to add
+     */
+    addImpactShake(amount) {
+        this.cameraShake.impact = Math.min(1.2, this.cameraShake.impact + amount);
     }
 
     /**
@@ -473,11 +496,18 @@ class RenderSystem {
     _applyCameraShake(dt) {
         if (!this.cameraShake.enabled) return;
 
+        // Impact shake (collisions/explosions) decays each frame
+        if (this.cameraShake.impact > 0.001) {
+            this.cameraShake.impact *= Math.pow(this.cameraShake.decayRate, dt * 60);
+        } else {
+            this.cameraShake.impact = 0;
+        }
+
         // Get maximum speed from all tracked vehicles
         const maxSpeed = this._getMaxVehicleSpeed();
 
-        // Only shake above speed threshold
-        if (maxSpeed < this.cameraShake.speedThreshold) {
+        // Only shake above speed threshold (unless an impact is active)
+        if (maxSpeed < this.cameraShake.speedThreshold && this.cameraShake.impact === 0) {
             // Decay any existing shake
             this.cameraShake.currentOffset.x *= this.cameraShake.decayRate;
             this.cameraShake.currentOffset.y *= this.cameraShake.decayRate;
@@ -486,11 +516,11 @@ class RenderSystem {
         }
 
         // Calculate shake intensity based on speed (0 to 1)
-        const speedFactor = Math.min(
+        const speedFactor = Math.max(0, Math.min(
             (maxSpeed - this.cameraShake.speedThreshold) / 100,
             1.0
-        );
-        const intensity = this.cameraShake.intensity * speedFactor;
+        ));
+        const intensity = this.cameraShake.intensity * speedFactor + this.cameraShake.impact;
 
         // Update time for noise
         this.cameraShake.time += dt * 10;
