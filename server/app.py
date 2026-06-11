@@ -367,7 +367,8 @@ def on_join_game(data):
         'car_color': car_color,
         'reconnected': is_reconnecting,
         'is_late_join': is_late_join,
-        'game_state': room['game_state']
+        'game_state': room['game_state'],
+        'mode': room.get('mode', 'race')
     })
 
     # Notify everyone in the room about new/reconnected player (including host)

@@ -60,10 +60,26 @@
       "radius": 0.35,
       "suspensionRestLength": 0.5,
       "positions": {
-        "frontLeft": { "x": -0.8, "y": 0, "z": 1.5 },
-        "frontRight": { "x": 0.8, "y": 0, "z": 1.5 },
-        "rearLeft": { "x": -0.8, "y": 0, "z": -1.5 },
-        "rearRight": { "x": 0.8, "y": 0, "z": -1.5 }
+        "frontLeft": {
+          "x": -0.8,
+          "y": 0,
+          "z": 1.5
+        },
+        "frontRight": {
+          "x": 0.8,
+          "y": 0,
+          "z": 1.5
+        },
+        "rearLeft": {
+          "x": -0.8,
+          "y": 0,
+          "z": -1.5
+        },
+        "rearRight": {
+          "x": 0.8,
+          "y": 0,
+          "z": -1.5
+        }
       }
     },
     "suspension": {
@@ -71,15 +87,23 @@
       "compression": 2,
       "relaxation": 3,
       "maxTravel": 0.3,
-      "direction": { "x": 0, "y": -1, "z": 0 }
+      "direction": {
+        "x": 0,
+        "y": -1,
+        "z": 0
+      }
     },
     "axle": {
-      "direction": { "x": -1, "y": 0, "z": 0 }
+      "direction": {
+        "x": -1,
+        "y": 0,
+        "z": 0
+      }
     },
     "frictionSlip": 1000
   },
   "stats": {
-    "maxHealth": 100,
+    "maxHealth": 250,
     "armor": 1.0,
     "weight": "medium"
   },

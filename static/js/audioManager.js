@@ -75,6 +75,12 @@ class AudioManager {
                 document.addEventListener(event, this.unlock, { once: false });
             });
 
+            // Browsers refuse to start audio before a user gesture - show a
+            // hint so silence doesn't read as broken sound
+            if (this.audioContext.state === 'suspended') {
+                this._showUnlockHint();
+            }
+
             console.log('[AudioManager] Initialized');
         } catch (e) {
             console.error('[AudioManager] Failed to create AudioContext:', e);
@@ -103,6 +109,55 @@ class AudioManager {
             }
         } else {
             this.unlocked = true;
+        }
+
+        if (this.unlocked) {
+            this._hideUnlockHint();
+        }
+    }
+
+    /**
+     * Show a small "click for sound" pill until audio is unlocked
+     * @private
+     */
+    _showUnlockHint() {
+        if (this._unlockHint || !document.body) return;
+
+        const hint = document.createElement('div');
+        hint.id = 'audio-unlock-hint';
+        hint.textContent = '🔊 Click anywhere to enable sound';
+        hint.style.cssText = [
+            'position: fixed',
+            'bottom: 18px',
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'background: rgba(0, 0, 0, 0.75)',
+            'color: #fff',
+            'padding: 10px 18px',
+            'border-radius: 20px',
+            'font-family: -apple-system, BlinkMacSystemFont, sans-serif',
+            'font-size: 14px',
+            'z-index: 10000',
+            'pointer-events: none',
+            'animation: audioHintPulse 2s ease-in-out infinite'
+        ].join(';');
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes audioHintPulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }';
+        hint.appendChild(style);
+
+        document.body.appendChild(hint);
+        this._unlockHint = hint;
+    }
+
+    /**
+     * Remove the unlock hint
+     * @private
+     */
+    _hideUnlockHint() {
+        if (this._unlockHint) {
+            this._unlockHint.remove();
+            this._unlockHint = null;
         }
     }
 

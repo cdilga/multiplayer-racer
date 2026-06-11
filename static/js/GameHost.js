@@ -274,6 +274,17 @@ class GameHost {
         this.eventBus.on('derby:roundEnd', this._onDerbyRoundEnd.bind(this));
         this.eventBus.on('derby:nextRoundReady', this._onDerbyNextRoundReady.bind(this));
 
+        // Dead cars become non-solid until they respawn
+        this.eventBus.on('damage:destroyed', ({ vehicleId }) => {
+            this.systems.physics.setVehicleEnabled(vehicleId, false);
+        });
+        this.eventBus.on('damage:respawn', ({ vehicleId }) => {
+            this.systems.physics.setVehicleEnabled(vehicleId, true);
+        });
+
+        // Race respawns drop you at your last checkpoint, facing the next one
+        this.systems.damage.respawnPositionProvider = (vehicle) => this._getRespawnPosition(vehicle);
+
         // Weapon events - relay to players
         this.eventBus.on('weapon:pickup', (data) => {
             if (this.systems.network && data.playerId) {
@@ -306,6 +317,24 @@ class GameHost {
         // Game loop events
         this.eventBus.on('loop:update', this._onUpdate);
         this.eventBus.on('loop:render', this._onRender);
+
+        // Pause cleanly when the tab is hidden - browser timer throttling and
+        // energy savers otherwise step physics with stale inputs and the game
+        // glitches out. Resume resets loop timing so there's no catch-up jump.
+        document.addEventListener('visibilitychange', () => {
+            if (!this.engine?.gameLoop?.isRunning()) return;
+            if (document.hidden) {
+                this.engine.gameLoop.pause();
+                this.systems.physics.pause();
+                this.systems.audio?.stopEngineSound?.();
+            } else {
+                this.systems.physics.resume();
+                this.engine.gameLoop.resume();
+                if (this.engine.getState() === GAME_STATES.RACING) {
+                    this.systems.audio?.startEngineSound?.();
+                }
+            }
+        });
 
         // State change events
         this.eventBus.on('state:change', ({ from, to }) => {
@@ -491,6 +520,11 @@ class GameHost {
             this.systems.damage.registerVehicle(vehicle);
             this.systems.weapons.registerVehicle(vehicle);
 
+            // Late joiners during a derby match enter the current round
+            if (this.settings.mode === 'derby' && isRacing) {
+                this.systems.derby.registerVehicle(vehicle);
+            }
+
             // Store vehicle
             this.vehicles.set(playerData.id, vehicle);
 
@@ -534,11 +568,18 @@ class GameHost {
             return this.track.getSpawnPosition(this.vehicles.size);
         }
 
-        // Get position slightly behind last place vehicle
+        // In races, drop the late joiner at last place's last checkpoint -
+        // guaranteed to be on the track, unlike "10 units behind" which can
+        // land outside a curving barrier
+        const checkpointSpawn = this._getRespawnPosition(lastVehicle);
+        if (checkpointSpawn) {
+            return checkpointSpawn;
+        }
+
+        // Derby/no-checkpoint fallback: slightly behind the last place vehicle
         const lastPos = lastVehicle.mesh.position;
         const lastRot = lastVehicle.mesh.rotation.y;
 
-        // Calculate offset behind the vehicle (10 units back)
         const offsetDistance = 10;
         const offsetX = lastPos.x - Math.sin(lastRot) * offsetDistance;
         const offsetZ = lastPos.z - Math.cos(lastRot) * offsetDistance;
@@ -625,9 +666,14 @@ class GameHost {
         for (const [playerId, vehicle] of this.vehicles) {
             const spawnPos = this.track.getSpawnPosition(index);
             vehicle.reset(spawnPos);
+            vehicle.health = vehicle.maxHealth;
+            this.systems.physics.setVehicleEnabled(vehicle.id, true);
             this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
             index++;
         }
+
+        // Derby is elimination: no auto-respawns there
+        this.systems.damage.setRespawnEnabled(this.settings.mode !== 'derby');
 
         // Notify network
         this.systems.network.startGame({ mode: this.settings.mode, laps: this.settings.laps });
@@ -667,6 +713,32 @@ class GameHost {
             this.engine.setState(GAME_STATES.COUNTDOWN);
             this.systems.race.startCountdown();
         }
+    }
+
+    /**
+     * Where a destroyed vehicle should respawn. In races: the last checkpoint
+     * crossed, facing the next one. Elsewhere: null (falls back to grid spawn).
+     * @private
+     * @param {Vehicle} vehicle
+     * @returns {Object|null} { x, y, z, rotation }
+     */
+    _getRespawnPosition(vehicle) {
+        if (this.settings.mode !== 'race' || !this.track) return null;
+
+        const count = this.track.getCheckpointCount();
+        if (count < 2) return null;
+
+        const nextIdx = vehicle.nextCheckpoint ?? 0;
+        const lastIdx = (nextIdx - 1 + count) % count;
+        const last = this.track.getCheckpoint(lastIdx);
+        const next = this.track.getCheckpoint(nextIdx);
+        if (!last || !next) return null;
+
+        const rotation = Math.atan2(
+            next.position.x - last.position.x,
+            next.position.z - last.position.z
+        );
+        return { x: last.position.x, y: 1.5, z: last.position.z, rotation };
     }
 
     /**
@@ -732,6 +804,7 @@ class GameHost {
                 vehicle.reset(spawnPos);
                 vehicle.health = vehicle.maxHealth;
                 vehicle.isDead = false;
+                this.systems.physics.setVehicleEnabled(vehicle.id, true);
                 this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
                 index++;
             }
@@ -779,22 +852,26 @@ class GameHost {
      * @private
      */
     _startNewRace() {
-        // Reset race
-        this.systems.race.reset();
-
         // Reset all vehicles
         let index = 0;
         for (const [playerId, vehicle] of this.vehicles) {
             const spawnPos = this.track.getSpawnPosition(index);
             vehicle.reset(spawnPos);
             vehicle.health = vehicle.maxHealth;
+            this.systems.physics.setVehicleEnabled(vehicle.id, true);
             this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
             index++;
         }
 
-        // Start countdown
-        this.engine.setState(GAME_STATES.COUNTDOWN);
-        this.systems.race.startCountdown();
+        // Restart the mode that just finished
+        if (this.settings.mode === 'derby') {
+            this.engine.setState(GAME_STATES.COUNTDOWN);
+            this.systems.derby.startMatch();
+        } else {
+            this.systems.race.reset();
+            this.engine.setState(GAME_STATES.COUNTDOWN);
+            this.systems.race.startCountdown();
+        }
     }
 
     /**
@@ -860,6 +937,19 @@ class GameHost {
      */
     _returnToLobby() {
         this.systems.race.reset();
+        this.systems.derby.reset();
+        this.systems.weapons.clearAll();
+        this.systems.damage.setRespawnEnabled(true);
+
+        // Revive any dead vehicles so the next game starts clean
+        for (const [playerId, vehicle] of this.vehicles) {
+            if (vehicle.isDead) {
+                vehicle.reset(vehicle.spawnPosition || { x: 0, y: 1.5, z: 0, rotation: 0 });
+                vehicle.health = vehicle.maxHealth;
+            }
+            this.systems.physics.setVehicleEnabled(vehicle.id, true);
+        }
+
         this.engine.setState(GAME_STATES.LOBBY);
     }
 

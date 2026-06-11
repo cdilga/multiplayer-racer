@@ -205,6 +205,12 @@ socket.on('game_joined', (data) => {
     gameState.playerId = data.player_id;
     gameState.carColor = data.car_color;
 
+    // Sync mode chosen before we joined (late join / reconnect)
+    if (data.mode) {
+        gameState.gameMode = data.mode;
+        updateModeDisplay(data.mode);
+    }
+
     // Store player ID for reconnection
     try {
         const reconnectKey = `racer_reconnect_${gameState.roomCode}`;
@@ -953,32 +959,31 @@ function setBraking(value) {
     gameState.controls.braking = value;
 }
 
-function sendControls() {
+// Release all controls and push the zeroed state to the server immediately.
+// Used when the tab is hidden/locked so the car doesn't drive itself.
+function releaseAllControls() {
+    gameState.controls.steering = 0;
+    gameState.controls.acceleration = 0;
+    gameState.controls.braking = 0;
+    gameState.touchControls.accelerateTouchId = null;
+    gameState.touchControls.brakeTouchId = null;
+    gameState.touchControls.fireTouchId = null;
 
-    var to_send = {
-        room_code: gameState.roomCode,
-        controls: {acceleration: gameState.controls.acceleration,
-        braking: gameState.controls.braking,
-        steering: gameState.controls.steering},
-        player_id: gameState.playerId,
-        timestamp: Date.now()
+    if (gameState.gameStarted && gameState.playerId) {
+        socket.emit('player_control_update', {
+            player_id: gameState.playerId,
+            room_code: gameState.roomCode,
+            controls: { steering: 0, acceleration: 0, braking: 0 },
+            timestamp: Date.now()
+        });
     }
-    console.log('Sending controls:', to_send);
-    socket.emit('player_controls_update', {
-        to_send
-    });
 }
 
-// Game loop using setTimeout for consistent 60 FPS
-function gameLoop() {
-    if (!gameState.gameStarted) return;
-    
-    // Send control updates to server as needed
-    sendControls();
-    
-    // Continue the game loop
-    setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate
-}
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        releaseAllControls();
+    }
+});
 
 // Update player name function
 function updatePlayerName(name) {

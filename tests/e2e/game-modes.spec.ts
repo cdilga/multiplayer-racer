@@ -84,4 +84,58 @@ test.describe('Game Modes', () => {
 
         await hostPage.screenshot({ path: 'test-results/visual/derby-arena.png' });
     });
+
+    test('destroyed car explodes, ghosts, and respawns', async ({ hostPage, playerPage }) => {
+        await gotoHost(hostPage);
+        const roomCode = await waitForRoomCode(hostPage);
+        await joinGameAsPlayer(playerPage, roomCode, 'Boomer');
+        await expect(hostPage.locator('#player-list')).toContainText('Boomer', { timeout: 30000 });
+
+        await hostPage.click('#start-game-btn');
+        await hostPage.waitForTimeout(2000);
+
+        const result = await hostPage.evaluate(async () => {
+            // @ts-ignore
+            const game = window.game;
+            const vehicle = game.vehicles.values().next().value;
+            const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+            // Kill the car via the damage system
+            game.systems.damage.applyDamage(vehicle.id, 10000);
+            await wait(300);
+
+            const deadState = {
+                isDead: vehicle.isDead,
+                meshVisible: vehicle.mesh.visible,
+                physicsEnabled: game.systems.physics.getVehicleBody(vehicle.id)?.isEnabled?.() ?? null
+            };
+
+            // Respawn delay is 3s - wait it out
+            await wait(3800);
+
+            const respawnState = {
+                isDead: vehicle.isDead,
+                meshVisible: vehicle.mesh.visible,
+                health: vehicle.health,
+                maxHealth: vehicle.maxHealth,
+                physicsEnabled: game.systems.physics.getVehicleBody(vehicle.id)?.isEnabled?.() ?? null
+            };
+
+            return { deadState, respawnState };
+        });
+        console.log('Respawn cycle:', JSON.stringify(result));
+
+        expect(result.deadState.isDead).toBe(true);
+        expect(result.deadState.meshVisible).toBe(false);
+        if (result.deadState.physicsEnabled !== null) {
+            expect(result.deadState.physicsEnabled).toBe(false);
+        }
+
+        expect(result.respawnState.isDead).toBe(false);
+        expect(result.respawnState.meshVisible).toBe(true);
+        expect(result.respawnState.health).toBe(result.respawnState.maxHealth);
+        if (result.respawnState.physicsEnabled !== null) {
+            expect(result.respawnState.physicsEnabled).toBe(true);
+        }
+    });
 });

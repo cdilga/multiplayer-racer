@@ -27,9 +27,13 @@ class DamageSystem {
         this.enabled = options.enabled !== false;
         this.collisionDamageMultiplier = options.collisionDamageMultiplier || 1;
         this.respawnDelay = options.respawnDelay || 3000;
+        this.respawnEnabled = true;  // Off in derby (elimination mode)
 
         // Registered vehicles
         this.vehicles = new Map();
+
+        // Optional callback: (vehicle) => {x, y, z, rotation} for respawn spot
+        this.respawnPositionProvider = null;
 
         // Pending respawns
         this.respawnQueue = [];
@@ -161,9 +165,9 @@ class DamageSystem {
         if (this.collisionCooldowns.has(key)) return;
         this.collisionCooldowns.set(key, now + this.cooldownDuration);
 
-        // Calculate damage from speed
+        // Calculate damage from speed - walls give chip damage, not death
         const speed = vehicle.speed || 0;
-        const damage = Math.max(0, (speed - 10) * 0.5) * this.collisionDamageMultiplier;
+        const damage = Math.max(0, (speed - 18) * 0.35) * this.collisionDamageMultiplier;
 
         if (damage > 0) {
             this.applyDamage(vehicle.id, damage);
@@ -197,8 +201,8 @@ class DamageSystem {
             relVel.z * relVel.z
         );
 
-        // Damage based on relative speed
-        const baseDamage = Math.max(0, relSpeed - 5) * 2;
+        // Damage based on relative speed - ramming stays a viable derby tactic
+        const baseDamage = Math.max(0, relSpeed - 5) * 2.5;
         return baseDamage * this.collisionDamageMultiplier;
     }
 
@@ -258,11 +262,13 @@ class DamageSystem {
             playerId: vehicle.playerId
         });
 
-        // Queue respawn
-        this.respawnQueue.push({
-            vehicleId: vehicle.id,
-            respawnTime: performance.now() + this.respawnDelay
-        });
+        // Queue respawn (derby is elimination - no respawns there)
+        if (this.respawnEnabled) {
+            this.respawnQueue.push({
+                vehicleId: vehicle.id,
+                respawnTime: performance.now() + this.respawnDelay
+            });
+        }
     }
 
     /**
@@ -293,14 +299,37 @@ class DamageSystem {
         const vehicle = this.vehicles.get(vehicleId);
         if (!vehicle) return;
 
-        // Reset health
+        // Full reset: restores position, velocity, mesh visibility, isDead.
+        // Host can supply a smarter spot (e.g. last checkpoint in races).
+        const respawnPos = this.respawnPositionProvider?.(vehicle) || vehicle.spawnPosition;
+        if (respawnPos) {
+            vehicle.reset(respawnPos);
+        } else {
+            vehicle.isDead = false;
+            if (vehicle.mesh) vehicle.mesh.visible = true;
+        }
+
+        // Reset health and any lingering weapon effects
         vehicle.health = vehicle.maxHealth;
-        vehicle.isDead = false;
+        vehicle.speedBoost = 1;
+        vehicle.stunned = false;
+        vehicle.inOilSlick = false;
 
         this._emit('damage:respawn', {
             vehicleId,
             playerId: vehicle.playerId
         });
+    }
+
+    /**
+     * Enable/disable automatic respawns (derby disables them)
+     * @param {boolean} enabled
+     */
+    setRespawnEnabled(enabled) {
+        this.respawnEnabled = enabled;
+        if (!enabled) {
+            this.respawnQueue = [];
+        }
     }
 
     /**

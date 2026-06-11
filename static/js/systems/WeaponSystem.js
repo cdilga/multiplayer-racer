@@ -148,7 +148,7 @@ class WeaponSystem {
                 }
             },
             damage: {
-                amount: 35,
+                amount: 70,
                 radius: 0,
                 knockback: 15
             },
@@ -173,7 +173,7 @@ class WeaponSystem {
                 armDelay: 1
             },
             damage: {
-                amount: 40,
+                amount: 85,
                 radius: 5,
                 knockback: 25
             },
@@ -238,7 +238,7 @@ class WeaponSystem {
                 chargeTime: 0.5
             },
             damage: {
-                amount: 50,
+                amount: 125,
                 knockback: 30
             },
             effects: {
@@ -299,7 +299,7 @@ class WeaponSystem {
                 tickRate: 0.1
             },
             damage: {
-                amount: 5,
+                amount: 10,
                 perTick: true
             },
             effects: {
@@ -1675,6 +1675,13 @@ class WeaponSystem {
     }
 
     /**
+     * Public cleanup: clear all pickups, projectiles, effects and inventories
+     */
+    clearAll() {
+        this._cleanup();
+    }
+
+    /**
      * Clean up all pickups, projectiles, and effects
      * @private
      */
@@ -1710,6 +1717,20 @@ class WeaponSystem {
             }
         }
         this.effects.clear();
+
+        // Strip any orphaned buff visuals still attached to vehicles
+        for (const [vehicleId, vehicle] of this.vehicles) {
+            vehicle.invulnerable = false;
+            for (const meshKey of ['shieldMesh', 'flameMesh']) {
+                const effectMesh = vehicle[meshKey];
+                if (effectMesh) {
+                    vehicle.mesh?.remove(effectMesh);
+                    effectMesh.geometry?.dispose();
+                    effectMesh.material?.dispose();
+                    vehicle[meshKey] = null;
+                }
+            }
+        }
 
         // Clear inventories
         for (const [playerId] of this.inventory) {

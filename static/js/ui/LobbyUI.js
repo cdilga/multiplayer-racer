@@ -102,8 +102,10 @@ class LobbyUI {
         this.element.className = 'lobby-ui';
         this.element.innerHTML = `
             <div class="lobby-content">
-                <h1 class="lobby-title">Multiplayer Racer</h1>
+                <h1 class="lobby-title">Joystick Jammers</h1>
 
+                <div class="lobby-columns">
+                <div class="lobby-col lobby-col-left">
                 <div class="room-code-section">
                     <p class="room-code-label">Room Code</p>
                     <div class="room-code" id="room-code-display">----</div>
@@ -115,7 +117,9 @@ class LobbyUI {
                     <h2>Players (<span id="player-count">0</span>)</h2>
                     <ul class="player-list" id="player-list"></ul>
                 </div>
+                </div>
 
+                <div class="lobby-col lobby-col-right">
                 <div class="mode-selection-section">
                     <h2 class="mode-selection-title">SELECT MODE</h2>
                     <div class="mode-cards-container">
@@ -202,6 +206,8 @@ class LobbyUI {
                 <button class="start-button" id="start-game-btn" disabled>
                     Waiting for players...
                 </button>
+                </div>
+                </div>
             </div>
         `;
 
@@ -706,21 +712,38 @@ class LobbyUI {
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
                 border-radius: 20px;
-                padding: 30px 40px;
+                padding: 18px 30px 24px;
                 text-align: center;
                 color: white;
-                max-width: 800px;
-                width: 95%;
-                max-height: 90vh;
+                max-width: 1100px;
+                width: 96%;
+                max-height: 94vh;
                 overflow-y: auto;
             }
+            .lobby-columns {
+                display: flex;
+                gap: 30px;
+                justify-content: center;
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+            .lobby-col {
+                min-width: 280px;
+            }
+            .lobby-col-left {
+                flex: 0 1 320px;
+            }
+            .lobby-col-right {
+                flex: 1 1 420px;
+                max-width: 560px;
+            }
             .lobby-title {
-                font-size: 32px;
-                margin: 0 0 30px;
+                font-size: 26px;
+                margin: 0 0 14px;
                 color: #FFD93D;
             }
             .room-code-section {
-                margin-bottom: 30px;
+                margin-bottom: 16px;
             }
             .room-code-label {
                 margin: 0;
@@ -728,11 +751,11 @@ class LobbyUI {
                 font-size: 14px;
             }
             .room-code {
-                font-size: 48px;
+                font-size: 40px;
                 font-weight: bold;
                 letter-spacing: 8px;
                 color: #FF6B6B;
-                margin: 10px 0;
+                margin: 6px 0;
                 font-family: monospace;
             }
             .room-code-hint {
@@ -741,9 +764,10 @@ class LobbyUI {
                 font-size: 12px;
             }
             .qr-code {
-                width: 300px;
-                height: 300px;
-                margin: 15px auto;
+                display: block;
+                width: 210px;
+                height: 210px;
+                margin: 10px auto;
                 border-radius: 10px;
                 background: white;
                 padding: 8px;
@@ -752,22 +776,22 @@ class LobbyUI {
                 display: none;
             }
             .players-section {
-                margin-bottom: 30px;
+                margin-bottom: 10px;
             }
             .players-section h2 {
-                font-size: 18px;
-                margin: 0 0 15px;
+                font-size: 16px;
+                margin: 0 0 10px;
                 color: #c9a887;
             }
             .player-list {
                 list-style: none;
                 padding: 0;
                 margin: 0;
-                max-height: 200px;
+                max-height: 130px;
                 overflow-y: auto;
             }
             .player-list li {
-                padding: 10px 15px;
+                padding: 7px 12px;
                 background: #3a2015;
                 border-radius: 8px;
                 margin-bottom: 8px;
@@ -787,18 +811,18 @@ class LobbyUI {
 
             /* Mode Selection Styles */
             .mode-selection-section {
-                margin-bottom: 30px;
+                margin-bottom: 14px;
             }
             .mode-selection-title {
-                font-size: 16px;
+                font-size: 14px;
                 color: #c9a887;
-                margin: 0 0 20px;
+                margin: 0 0 12px;
                 text-transform: uppercase;
                 letter-spacing: 2px;
             }
             .mode-cards-container {
                 display: flex;
-                gap: 20px;
+                gap: 16px;
                 justify-content: center;
                 flex-wrap: wrap;
             }
@@ -807,11 +831,12 @@ class LobbyUI {
                 background: rgba(26, 26, 46, 0.9);
                 border: 2px solid rgba(255, 255, 255, 0.2);
                 border-radius: 15px;
-                padding: 20px;
-                width: 200px;
+                padding: 14px;
+                width: 180px;
+                box-sizing: border-box;
                 cursor: pointer;
                 opacity: 0.7;
-                transform: scale(0.95);
+                transform: scale(0.97);
                 transition: all 0.3s ease;
             }
             .mode-card[data-mode="race"] {
@@ -834,24 +859,24 @@ class LobbyUI {
                             inset 0 0 20px rgba(255, 255, 255, 0.05);
             }
             .mode-card-preview {
-                height: 80px;
+                height: 56px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 background: rgba(0, 0, 0, 0.3);
                 border-radius: 10px;
             }
             .mode-card-icon {
-                font-size: 48px;
+                font-size: 36px;
             }
             .mode-card-content {
                 text-align: center;
             }
             .mode-card-name {
-                font-size: 24px;
+                font-size: 20px;
                 font-weight: bold;
-                margin: 0 0 8px;
+                margin: 0 0 6px;
                 color: var(--mode-color);
             }
             .mode-card-tagline {
@@ -869,11 +894,11 @@ class LobbyUI {
 
             /* Race-specific settings */
             .race-settings {
-                margin-bottom: 20px;
+                margin-bottom: 12px;
             }
 
             .settings-section {
-                margin-bottom: 30px;
+                margin-bottom: 12px;
             }
             .settings-section label {
                 color: #c9a887;
@@ -887,7 +912,7 @@ class LobbyUI {
                 margin-left: 10px;
             }
             .visual-settings-section {
-                margin-bottom: 20px;
+                margin-bottom: 14px;
                 background: #3a2015;
                 border-radius: 10px;
                 overflow: hidden;
@@ -999,12 +1024,14 @@ class LobbyUI {
                 background: #FF6B6B;
                 color: #1a0f0a;
                 border: none;
-                padding: 15px 40px;
+                padding: 14px 40px;
                 font-size: 18px;
                 font-weight: bold;
                 border-radius: 30px;
                 cursor: pointer;
                 transition: all 0.2s;
+                width: 100%;
+                max-width: 400px;
             }
             .start-button:disabled {
                 background: #4a2510;

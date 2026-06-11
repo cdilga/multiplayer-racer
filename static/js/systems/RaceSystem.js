@@ -239,9 +239,9 @@ class RaceSystem {
     _updateRace(dt) {
         const now = performance.now();
 
-        // Check checkpoints for each vehicle
+        // Check checkpoints for each vehicle (dead cars don't progress)
         for (const [vehicleId, data] of this.vehicles) {
-            if (data.finished) continue;
+            if (data.finished || data.vehicle.isDead) continue;
 
             const vehicle = data.vehicle;
             const pos = vehicle.position;

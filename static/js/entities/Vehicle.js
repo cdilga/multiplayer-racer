@@ -352,6 +352,22 @@ class Vehicle extends Entity {
             this.mesh.visible = true;
         }
 
+        // Clear weapon buff state and any attached effect visuals
+        this.speedBoost = 1;
+        this.ramDamageBonus = 0;
+        this.invulnerable = false;
+        this.stunned = false;
+        this.inOilSlick = false;
+        for (const meshKey of ['shieldMesh', 'flameMesh']) {
+            const effectMesh = this[meshKey];
+            if (effectMesh) {
+                this.mesh?.remove(effectMesh);
+                effectMesh.geometry?.dispose();
+                effectMesh.material?.dispose();
+                this[meshKey] = null;
+            }
+        }
+
         // Sync mesh
         this.syncMeshToEntity();
     }

@@ -99,9 +99,9 @@ class PhysicsSystem {
     update(dt) {
         if (!this.initialized || this.paused || !this.world) return;
 
-        // Update vehicle controllers
+        // Update vehicle controllers (skip disabled/dead bodies)
         for (const [vehicleId, data] of this.vehicleBodies) {
-            if (data.controller) {
+            if (data.controller && (!data.body.isEnabled || data.body.isEnabled())) {
                 data.controller.updateVehicle(dt);
             }
         }
@@ -456,6 +456,15 @@ class PhysicsSystem {
         const vc = data.controller;
         const entity = data.entity;
 
+        // Dead cars don't drive
+        if (entity?.isDead) {
+            vc.setWheelEngineForce(2, 0);
+            vc.setWheelEngineForce(3, 0);
+            vc.setWheelSteering(0, 0);
+            vc.setWheelSteering(1, 0);
+            return;
+        }
+
         // EMP stun: no engine, no steering until stun expires
         if (entity?.stunned) {
             if (performance.now() >= (entity.stunEndTime || 0)) {
@@ -565,6 +574,17 @@ class PhysicsSystem {
         body.setRotation(this._eulerToQuat(0, rotation, 0), true);
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
         body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    }
+
+    /**
+     * Enable/disable a vehicle's physics body (dead cars become non-solid)
+     * @param {string} vehicleId
+     * @param {boolean} enabled
+     */
+    setVehicleEnabled(vehicleId, enabled) {
+        const data = this.vehicleBodies.get(vehicleId);
+        if (!data?.body?.setEnabled) return;
+        data.body.setEnabled(enabled);
     }
 
     /**

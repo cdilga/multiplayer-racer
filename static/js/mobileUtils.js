@@ -31,6 +31,9 @@ const mobileUtils = {
                 await elem.mozRequestFullScreen();
             } else if (elem.msRequestFullscreen) {
                 await elem.msRequestFullscreen();
+            } else {
+                // No Fullscreen API (e.g. iPhone Safari) - don't pretend
+                return false;
             }
             this.isFullscreen = true;
             return true;
@@ -62,21 +65,29 @@ const mobileUtils = {
     
     // Toggle fullscreen
     async toggleFullscreen() {
+        // Trust the document's actual state over our flag - the user can exit
+        // fullscreen via system gestures without us seeing the event in time
+        const actuallyFullscreen = !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullscreenElement ||
+            document.msFullscreenElement
+        );
+        this.isFullscreen = actuallyFullscreen;
+
         if (this.isFullscreen) {
             return this.exitFullscreen();
         }
         return this.enterFullscreen();
     },
-    
+
     // Initialize mobile optimizations
     async init() {
         if (!this.isMobile()) return;
-        
-        // Enter fullscreen if supported
-        if (this.isFullscreenSupported()) {
-            await this.enterFullscreen();
-        }
-        
+
+        // NOTE: no auto-fullscreen here - browsers reject requestFullscreen
+        // without a user gesture. The toggle button handles it on first tap.
+
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', () => {
             this.isFullscreen = !!document.fullscreenElement;
