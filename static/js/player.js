@@ -310,18 +310,17 @@ socket.on('mode_selected', (data) => {
 
 // Handle weapon pickup notification from host
 socket.on('weapon_pickup', (data) => {
-    console.log('Weapon pickup:', data);
     gameState.weapon = {
         id: data.weaponId,
         name: data.weaponName,
         icon: data.icon || getWeaponIcon(data.weaponId)
     };
     updateWeaponDisplay();
+    hapticBuzz([30, 40, 60]);
 });
 
 // Handle weapon fired (used) notification
 socket.on('weapon_fired', (data) => {
-    console.log('Weapon fired:', data);
     gameState.weapon = null;
     updateWeaponDisplay();
 });
@@ -525,9 +524,11 @@ function updateWeaponDisplay() {
         if (gameState.weapon) {
             fireBtn.classList.add('enabled');
             fireBtn.style.opacity = '1';
+            fireBtn.innerHTML = `${gameState.weapon.icon}<br>FIRE`;
         } else {
             fireBtn.classList.remove('enabled');
             fireBtn.style.opacity = '0.3';
+            fireBtn.innerHTML = 'FIRE';
         }
     }
 }
@@ -541,11 +542,11 @@ function fireWeapon() {
         return;
     }
 
-    console.log('Firing weapon:', gameState.weapon.id);
     socket.emit('weapon_fire', {
         room_code: gameState.roomCode,
         player_id: gameState.playerId
     });
+    hapticBuzz(40);
 
     // Optimistically clear weapon (server will confirm)
     gameState.weapon = null;
@@ -725,38 +726,39 @@ function initGameControls() {
     elements.controlsContainer.appendChild(steeringArea);
     elements.controlsContainer.appendChild(pedalsArea);
 
-    // Add fire button and weapon indicator for derby mode
-    if (gameState.gameMode === 'derby') {
-        const weaponArea = document.createElement('div');
-        weaponArea.id = 'weapon-area';
-        weaponArea.className = 'weapon-area';
+    // Add fire button and weapon indicator (weapons available in every mode)
+    const weaponArea = document.createElement('div');
+    weaponArea.id = 'weapon-area';
+    weaponArea.className = 'weapon-area';
 
-        // Weapon indicator shows current weapon
-        const weaponIndicator = document.createElement('div');
-        weaponIndicator.id = 'weapon-indicator';
-        weaponIndicator.className = 'weapon-indicator';
-        weaponIndicator.innerHTML = '<span>No Weapon</span>';
+    // Weapon indicator shows current weapon
+    const weaponIndicator = document.createElement('div');
+    weaponIndicator.id = 'weapon-indicator';
+    weaponIndicator.className = 'weapon-indicator';
+    weaponIndicator.innerHTML = '<span>No Weapon</span>';
 
-        // Fire button - triangle shaped
-        const fireBtn = document.createElement('div');
-        fireBtn.id = 'fire-btn';
-        fireBtn.className = 'fire-btn';
-        fireBtn.innerHTML = 'FIRE';
-        fireBtn.style.opacity = '0.3'; // Disabled until weapon picked up
+    // Fire button - triangle shaped
+    const fireBtn = document.createElement('div');
+    fireBtn.id = 'fire-btn';
+    fireBtn.className = 'fire-btn';
+    fireBtn.innerHTML = 'FIRE';
+    fireBtn.style.opacity = '0.3'; // Disabled until weapon picked up
 
-        weaponArea.appendChild(weaponIndicator);
-        weaponArea.appendChild(fireBtn);
-        elements.controlsContainer.appendChild(weaponArea);
+    weaponArea.appendChild(weaponIndicator);
+    weaponArea.appendChild(fireBtn);
+    elements.controlsContainer.appendChild(weaponArea);
 
-        // Fire button touch handlers
-        fireBtn.addEventListener('touchstart', handleFireStart, { passive: false });
-        fireBtn.addEventListener('touchend', handleFireEnd, { passive: false });
-        fireBtn.addEventListener('touchcancel', handleFireEnd, { passive: false });
-        fireBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Fire button touch handlers
+    fireBtn.addEventListener('touchstart', handleFireStart, { passive: false });
+    fireBtn.addEventListener('touchend', handleFireEnd, { passive: false });
+    fireBtn.addEventListener('touchcancel', handleFireEnd, { passive: false });
+    fireBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Keyboard/desktop fallback
+    fireBtn.addEventListener('mousedown', handleFireStart);
+    fireBtn.addEventListener('mouseup', handleFireEnd);
 
-        elements.fireBtn = fireBtn;
-        elements.weaponIndicator = weaponIndicator;
-    }
+    elements.fireBtn = fireBtn;
+    elements.weaponIndicator = weaponIndicator;
 
     // Update element references
     elements.steeringArea = steeringArea;
@@ -885,6 +887,16 @@ function handleBrakeEnd(e) {
 // Touch handlers for fire button with touch ID tracking
 function handleFireStart(e) {
     e.preventDefault();
+
+    // Mouse/desktop fallback
+    if (!e.changedTouches) {
+        if (elements.fireBtn) {
+            elements.fireBtn.classList.add('pressed');
+        }
+        fireWeapon();
+        return;
+    }
+
     for (const touch of e.changedTouches) {
         if (gameState.touchControls.fireTouchId === null) {
             gameState.touchControls.fireTouchId = touch.identifier;
@@ -899,6 +911,13 @@ function handleFireStart(e) {
 }
 
 function handleFireEnd(e) {
+    if (!e.changedTouches) {
+        if (elements.fireBtn) {
+            elements.fireBtn.classList.remove('pressed');
+        }
+        return;
+    }
+
     for (const touch of e.changedTouches) {
         if (touch.identifier === gameState.touchControls.fireTouchId) {
             gameState.touchControls.fireTouchId = null;
@@ -907,6 +926,16 @@ function handleFireEnd(e) {
             }
             break;
         }
+    }
+}
+
+/**
+ * Trigger haptic feedback where supported (Android Chrome etc.)
+ * @param {number|number[]} pattern - Vibration pattern in ms
+ */
+function hapticBuzz(pattern) {
+    if (navigator.vibrate) {
+        navigator.vibrate(pattern);
     }
 }
 

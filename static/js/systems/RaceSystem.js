@@ -89,10 +89,11 @@ class RaceSystem {
      * @param {Vehicle} vehicle
      */
     registerVehicle(vehicle) {
+        const firstTarget = this._getFirstCheckpointTarget();
         this.vehicles.set(vehicle.id, {
             vehicle: vehicle,
             currentLap: 0,
-            nextCheckpoint: 0,
+            nextCheckpoint: firstTarget,
             lapTimes: [],
             bestLapTime: null,
             lastCheckpointTime: 0,
@@ -104,9 +105,20 @@ class RaceSystem {
 
         // Sync to vehicle entity
         vehicle.currentLap = 0;
-        vehicle.nextCheckpoint = 0;
+        vehicle.nextCheckpoint = firstTarget;
         vehicle.lapTimes = [];
         vehicle.finished = false;
+    }
+
+    /**
+     * First checkpoint to chase after the start. Cars line up on the finish
+     * line, so targeting it first would award a free lap immediately.
+     * @private
+     * @returns {number}
+     */
+    _getFirstCheckpointTarget() {
+        if (!this.track || this.track.getCheckpointCount() < 2) return 0;
+        return this.track.getNextCheckpointIndex(this.track.finishLineIndex);
     }
 
     /**
@@ -164,9 +176,10 @@ class RaceSystem {
         this.raceStartTime = performance.now();
 
         // Reset all vehicle race data
+        const firstTarget = this._getFirstCheckpointTarget();
         for (const [id, data] of this.vehicles) {
             data.currentLap = 0;
-            data.nextCheckpoint = 0;
+            data.nextCheckpoint = firstTarget;
             data.lapTimes = [];
             data.lastCheckpointTime = this.raceStartTime;
             data.totalTime = 0;
@@ -176,7 +189,7 @@ class RaceSystem {
 
             // Sync to vehicle
             data.vehicle.currentLap = 0;
-            data.vehicle.nextCheckpoint = 0;
+            data.vehicle.nextCheckpoint = firstTarget;
             data.vehicle.lapTimes = [];
             data.vehicle.finished = false;
         }

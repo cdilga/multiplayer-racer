@@ -14,6 +14,16 @@
  *   await audio.init();
  */
 
+// Importing registers window.EngineSynth so the non-module audioManager
+// can synthesize the engine sound instead of looping a sample
+import { EngineSynth } from '../audio/EngineSynth.js';
+
+// Belt and braces: make sure the global is set even if the module's own
+// window assignment is ever tree-shaken
+if (typeof window !== 'undefined' && !window.EngineSynth) {
+    window.EngineSynth = EngineSynth;
+}
+
 class AudioSystem {
     /**
      * @param {Object} options
@@ -79,7 +89,9 @@ class AudioSystem {
 
         this.eventBus.on('game:countdown', () => {
             this.currentGameState = 'countdown';
-            this.playSound('countdown');
+            // Play as (non-looping) music so the lobby track crossfades out
+            // instead of both playing on top of each other
+            this.playMusic('countdown', { loop: false, fadeIn: 0.3 });
         });
 
         this.eventBus.on('game:racing', () => {
@@ -104,17 +116,18 @@ class AudioSystem {
             this.playCollisionSound(data);
         });
 
-        // Checkpoint events
+        // Checkpoint events (mapped to loaded sfx - there are no dedicated
+        // checkpoint/lap/finish samples yet)
         this.eventBus.on('race:checkpoint', () => {
-            this.playSound('checkpoint');
+            this.playSound('button_click', { volume: 0.5 });
         });
 
         this.eventBus.on('race:lapComplete', () => {
-            this.playSound('lap_complete');
+            this.playSound('countdown_beep', { volume: 0.7 });
         });
 
         this.eventBus.on('race:finished', () => {
-            this.playSound('race_finish');
+            this.playSound('countdown_go', { volume: 1.0 });
         });
 
         // Derby mode events
@@ -246,10 +259,11 @@ class AudioSystem {
     }
 
     /**
-     * Play background music
+     * Play background music (crossfades automatically if a track is playing)
      * @param {string} trackName - Music track name
+     * @param {Object} [options] - { loop, fadeIn }
      */
-    playMusic(trackName) {
+    playMusic(trackName, options = {}) {
         if (!this.enabled || !this.audioManager) return;
 
         // Map track names to actual music files (must match audioManager loaded tracks)
@@ -264,9 +278,21 @@ class AudioSystem {
         const actualTrack = musicMap[trackName] || trackName;
 
         try {
-            this.audioManager.playMusic(actualTrack);
+            this.audioManager.playMusic(actualTrack, options);
         } catch (error) {
             console.warn(`AudioSystem: Failed to play music '${trackName}'`, error);
+        }
+    }
+
+    /**
+     * Temporarily duck music volume (delegates to audioManager)
+     * @param {number} [duration] - Duck duration in seconds
+     */
+    duckMusic(duration = 0.5) {
+        if (!this.enabled || !this.audioManager) return;
+
+        if (typeof this.audioManager.duckMusic === 'function') {
+            this.audioManager.duckMusic(duration);
         }
     }
 
@@ -318,8 +344,10 @@ class AudioSystem {
     playCollisionSound(collisionData) {
         if (!this.enabled || !this.audioManager) return;
 
-        // Calculate intensity from collision (if velocity available)
-        let intensity = 0.5;
+        // Use explicit intensity when provided (e.g. weapon hits emit { intensity })
+        let intensity = typeof collisionData?.intensity === 'number'
+            ? collisionData.intensity
+            : 0.5;
         if (collisionData.entityA?.velocity && collisionData.entityB?.velocity) {
             const velA = collisionData.entityA.velocity;
             const velB = collisionData.entityB.velocity || { x: 0, y: 0, z: 0 };
@@ -376,7 +404,10 @@ class AudioSystem {
     setSfxVolume(volume) {
         if (!this.audioManager) return;
 
-        if (typeof this.audioManager.setSfxVolume === 'function') {
+        // audioManager exposes setSFXVolume (capitalized SFX)
+        if (typeof this.audioManager.setSFXVolume === 'function') {
+            this.audioManager.setSFXVolume(volume);
+        } else if (typeof this.audioManager.setSfxVolume === 'function') {
             this.audioManager.setSfxVolume(volume);
         }
     }
@@ -405,6 +436,7 @@ class AudioSystem {
      */
     disable() {
         this.enabled = false;
+        this.stopEngineSound();
         this.stopMusic();
     }
 

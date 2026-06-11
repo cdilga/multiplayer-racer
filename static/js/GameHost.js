@@ -489,6 +489,7 @@ class GameHost {
             this.systems.input.registerVehicle(vehicle);
             this.systems.race.registerVehicle(vehicle);
             this.systems.damage.registerVehicle(vehicle);
+            this.systems.weapons.registerVehicle(vehicle);
 
             // Store vehicle
             this.vehicles.set(playerData.id, vehicle);
@@ -569,6 +570,7 @@ class GameHost {
             this.systems.input.unregisterVehicle(vehicle.id);
             this.systems.race.unregisterVehicle(vehicle.id);
             this.systems.damage.unregisterVehicle(vehicle.id);
+            this.systems.weapons.unregisterVehicle(vehicle.id);
 
             // Remove from map
             this.vehicles.delete(data.playerId);
@@ -609,11 +611,13 @@ class GameHost {
             this.systems.race.setLaps(options.laps);
         }
 
-        // Switch track for derby mode
-        if (this.settings.mode === 'derby' && this.track?.configId !== 'derby-bowl') {
-            await this._createTrack('derby-bowl');
-        } else if (this.settings.mode === 'race' && this.track?.configId !== 'oval') {
-            await this._createTrack('oval');
+        // Resolve which track/arena to load
+        const trackId = this._resolveTrackId(options.track);
+        this.settings.track = trackId;
+
+        // Procedural tracks regenerate every start; others only when changed
+        if (trackId === 'procedural' || this.track?.configId !== trackId) {
+            await this._createTrack(trackId);
         }
 
         // Reset all vehicles to spawn positions
@@ -628,20 +632,23 @@ class GameHost {
         // Notify network
         this.systems.network.startGame({ mode: this.settings.mode, laps: this.settings.laps });
 
+        // Weapons run in every mode: register vehicles and configure spawn area
+        const trackConfig = this.track?.config || {};
+        for (const [playerId, vehicle] of this.vehicles) {
+            this.systems.weapons.registerVehicle(vehicle);
+        }
+        this.systems.weapons.setArenaConfig({
+            geometry: trackConfig.geometry,
+            weapons: trackConfig.weapons
+        });
+
         // Start the appropriate mode
         if (this.settings.mode === 'derby') {
             // Register vehicles with derby system
             for (const [playerId, vehicle] of this.vehicles) {
                 this.systems.derby.registerVehicle(vehicle);
-                this.systems.weapons.registerVehicle(vehicle);
             }
 
-            // Configure systems for this arena
-            const trackConfig = this.track?.config || {};
-            this.systems.weapons.setArenaConfig({
-                geometry: trackConfig.geometry,
-                weapons: trackConfig.weapons
-            });
             this.systems.derby.setArenaConfig(trackConfig);
 
             // Set wall mesh for shrinking animation
@@ -660,6 +667,29 @@ class GameHost {
             this.engine.setState(GAME_STATES.COUNTDOWN);
             this.systems.race.startCountdown();
         }
+    }
+
+    /**
+     * Resolve the requested track id, handling mode defaults and random arenas
+     * @private
+     * @param {string|null} requested - Track id from the lobby (may be 'random')
+     * @returns {string} Concrete track id (or 'procedural')
+     */
+    _resolveTrackId(requested) {
+        const DERBY_ARENAS = ['derby-bowl', 'derby-arena', 'derby-coliseum'];
+
+        if (this.settings.mode === 'derby') {
+            if (requested === 'random' || !requested || requested === 'oval' || requested === 'procedural') {
+                return DERBY_ARENAS[Math.floor(Math.random() * DERBY_ARENAS.length)];
+            }
+            return requested;
+        }
+
+        // Race mode
+        if (!requested || requested === 'random' || DERBY_ARENAS.includes(requested)) {
+            return 'procedural';
+        }
+        return requested;
     }
 
     /**

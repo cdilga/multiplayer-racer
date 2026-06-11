@@ -57,12 +57,12 @@ class RenderSystem {
         this.fovSmoothing = 0.15;  // FOV transition speed (higher = faster)
         this.cameraMultiSmoothing = 0.15;  // Multi-vehicle camera position smoothing
         this.minFOV = 45;  // Minimum FOV (most zoomed in)
-        this.maxFOV = 60;  // Maximum FOV (slightly zoomed out) - narrower range
+        this.maxFOV = 68;  // Maximum FOV (zoomed out for spread-out fields)
         this.boundsPadding = 10;  // Padding around vehicle bounds (in world units)
         this.baseCameraHeight = 15;  // Base camera height
         this.baseCameraDepth = 20;   // Base camera depth (distance behind center)
         this.minCameraDepth = 15;    // Minimum distance
-        this.maxCameraDepth = 80;    // Maximum distance (for zooming out)
+        this.maxCameraDepth = 150;   // Maximum distance (procedural circuits are large)
         this.targetCameraDepth = 20; // Current target depth
         this.currentCameraDepth = 20; // Current depth (smoothed)
 

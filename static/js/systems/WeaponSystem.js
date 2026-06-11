@@ -34,6 +34,15 @@ const RARITY_TIERS = {
     RARE: { weight: 5, weapons: ['sniper'] }
 };
 
+// Weapon progression: rarity weights escalate as the match goes on,
+// pickups spawn faster and more of them stay active. Keeps the early
+// game readable and the late game chaotic.
+const PROGRESSION_PHASES = [
+    { after: 0, weights: { COMMON: 80, UNCOMMON: 18, RARE: 2 }, intervalScale: 1.0, extraPickups: 0 },
+    { after: 30, weights: { COMMON: 55, UNCOMMON: 35, RARE: 10 }, intervalScale: 0.8, extraPickups: 1 },
+    { after: 75, weights: { COMMON: 35, UNCOMMON: 45, RARE: 20 }, intervalScale: 0.6, extraPickups: 3 }
+];
+
 class WeaponSystem {
     /**
      * @param {Object} options
@@ -55,6 +64,13 @@ class WeaponSystem {
         this.spawnInterval = [8, 12]; // seconds
         this.maxActivePickups = 3;
         this.arenaRadius = 35; // Default, updated from arena config
+
+        // Where pickups may spawn: { type: 'circle'|'ring'|'points', ... }
+        this.spawnArea = { type: 'circle', radius: 30 };
+
+        // Weapon progression over match time
+        this.matchStartTime = 0;
+        this.progressionEnabled = true;
 
         // State
         this.initialized = false;
@@ -99,6 +115,9 @@ class WeaponSystem {
             this.eventBus.on('derby:combatStart', this._onCombatStart.bind(this));
             this.eventBus.on('derby:roundEnd', this._onRoundEnd.bind(this));
             this.eventBus.on('derby:matchEnd', this._onMatchEnd.bind(this));
+            // Race mode lifecycle
+            this.eventBus.on('race:start', this._onCombatStart.bind(this));
+            this.eventBus.on('race:finished', this._onMatchEnd.bind(this));
         }
 
         this.initialized = true;
@@ -303,13 +322,54 @@ class WeaponSystem {
             this.enabled = config.weapons.enabled !== false;
             this.spawnInterval = config.weapons.spawnInterval || [8, 12];
             this.maxActivePickups = config.weapons.maxActive || 3;
+        } else {
+            // No weapons section: default to enabled with standard pacing
+            this.enabled = true;
+            this.spawnInterval = [8, 12];
+            this.maxActivePickups = 3;
         }
+
+        this.spawnArea = this._computeSpawnArea(config.geometry);
 
         if (config.geometry) {
             this.arenaRadius = (config.geometry.diameter || 80) / 2 - 5; // Stay away from walls
         }
+    }
 
-        console.log(`WeaponSystem: Arena config set, weapons ${this.enabled ? 'enabled' : 'disabled'}`);
+    /**
+     * Work out where pickups can spawn for this track/arena geometry
+     * @private
+     * @param {Object} geometry - Track geometry config
+     * @returns {Object} Spawn area descriptor
+     */
+    _computeSpawnArea(geometry) {
+        if (!geometry) {
+            return { type: 'circle', radius: 30 };
+        }
+
+        switch (geometry.type) {
+            case 'bowl':
+                return {
+                    type: 'circle',
+                    radius: (geometry.diameter || 80) / 2 - 8
+                };
+            case 'oval':
+                // Spawn on the drivable ring between the barriers
+                return {
+                    type: 'ring',
+                    innerRadius: (geometry.innerRadius || 35) + 3,
+                    outerRadius: (geometry.outerRadius || 55) - 3
+                };
+            case 'spline':
+                // Spawn on the racing line itself
+                return {
+                    type: 'points',
+                    points: geometry.centerline || [],
+                    jitter: Math.max(2, (geometry.trackWidth || 18) / 2 - 3)
+                };
+            default:
+                return { type: 'circle', radius: 30 };
+        }
     }
 
     /**
@@ -341,13 +401,33 @@ class WeaponSystem {
      */
     start() {
         if (!this.enabled) {
-            console.log('WeaponSystem: Weapons disabled for this arena');
             return;
         }
 
         this.running = true;
+        this.matchStartTime = performance.now() / 1000;
         this._scheduleNextSpawn();
         console.log('WeaponSystem: Started');
+    }
+
+    /**
+     * Get the current progression phase based on match time
+     * @private
+     * @returns {Object} Progression phase
+     */
+    _getProgressionPhase() {
+        if (!this.progressionEnabled || !this.running) {
+            return PROGRESSION_PHASES[0];
+        }
+
+        const elapsed = performance.now() / 1000 - this.matchStartTime;
+        let phase = PROGRESSION_PHASES[0];
+        for (const candidate of PROGRESSION_PHASES) {
+            if (elapsed >= candidate.after) {
+                phase = candidate;
+            }
+        }
+        return phase;
     }
 
     /**
@@ -367,9 +447,10 @@ class WeaponSystem {
 
         const now = performance.now() / 1000;
 
-        // Spawn new pickups if running
+        // Spawn new pickups if running (cap grows with match progression)
         if (this.running && this.enabled && now >= this.nextSpawnTime) {
-            if (this.pickups.size < this.maxActivePickups) {
+            const phase = this._getProgressionPhase();
+            if (this.pickups.size < this.maxActivePickups + phase.extraPickups) {
                 this._spawnWeaponPickup();
             }
             this._scheduleNextSpawn();
@@ -391,7 +472,8 @@ class WeaponSystem {
      */
     _scheduleNextSpawn() {
         const [minInterval, maxInterval] = this.spawnInterval;
-        const interval = minInterval + Math.random() * (maxInterval - minInterval);
+        const scale = this._getProgressionPhase().intervalScale;
+        const interval = (minInterval + Math.random() * (maxInterval - minInterval)) * scale;
         this.nextSpawnTime = performance.now() / 1000 + interval;
     }
 
@@ -444,29 +526,33 @@ class WeaponSystem {
      * @returns {Object} Weapon definition
      */
     _selectRandomWeapon() {
+        // Rarity weights shift with match progression
+        const phaseWeights = this._getProgressionPhase().weights;
+
         // Calculate total weight
         let totalWeight = 0;
-        for (const tier of Object.values(RARITY_TIERS)) {
+        for (const [tierName, tier] of Object.entries(RARITY_TIERS)) {
             // Only include weapons that are defined
             const availableWeapons = tier.weapons.filter(w => this.weaponDefs.has(w));
             if (availableWeapons.length > 0) {
-                totalWeight += tier.weight;
+                totalWeight += phaseWeights[tierName] ?? tier.weight;
             }
         }
 
         // Random selection
         let random = Math.random() * totalWeight;
 
-        for (const tier of Object.values(RARITY_TIERS)) {
+        for (const [tierName, tier] of Object.entries(RARITY_TIERS)) {
             const availableWeapons = tier.weapons.filter(w => this.weaponDefs.has(w));
             if (availableWeapons.length === 0) continue;
 
-            if (random < tier.weight) {
+            const weight = phaseWeights[tierName] ?? tier.weight;
+            if (random < weight) {
                 // Select random weapon from this tier
                 const weaponId = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
                 return this.weaponDefs.get(weaponId);
             }
-            random -= tier.weight;
+            random -= weight;
         }
 
         // Fallback to first available weapon
@@ -479,9 +565,33 @@ class WeaponSystem {
      * @returns {Object} { x, y, z }
      */
     _getRandomSpawnPosition() {
-        // Random position within arena circle
+        const area = this.spawnArea || { type: 'circle', radius: this.arenaRadius };
+
+        if (area.type === 'ring') {
+            // Random position on an annulus (e.g. oval track surface)
+            const angle = Math.random() * Math.PI * 2;
+            const distance = area.innerRadius + Math.random() * (area.outerRadius - area.innerRadius);
+            return {
+                x: Math.cos(angle) * distance,
+                y: 1.5,
+                z: Math.sin(angle) * distance
+            };
+        }
+
+        if (area.type === 'points' && area.points?.length > 0) {
+            // Random point on the racing line with lateral jitter
+            const point = area.points[Math.floor(Math.random() * area.points.length)];
+            const jitter = area.jitter || 2;
+            return {
+                x: point.x + (Math.random() * 2 - 1) * jitter,
+                y: 1.5,
+                z: point.z + (Math.random() * 2 - 1) * jitter
+            };
+        }
+
+        // Default: random position within arena circle
         const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * this.arenaRadius * 0.8; // Keep away from edges
+        const distance = Math.random() * (area.radius || this.arenaRadius) * 0.8;
 
         return {
             x: Math.cos(angle) * distance,

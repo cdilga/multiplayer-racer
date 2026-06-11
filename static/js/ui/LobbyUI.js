@@ -127,7 +127,7 @@ class LobbyUI {
                                 <h3 class="mode-card-name">RACE</h3>
                                 <p class="mode-card-tagline">"First across the line wins"</p>
                                 <div class="mode-card-details">
-                                    <span id="race-laps-display">3 laps</span> • Oval Track
+                                    <span id="race-laps-display">3 laps</span> • Weapons on track
                                 </div>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ class LobbyUI {
                                 <h3 class="mode-card-name">DERBY</h3>
                                 <p class="mode-card-tagline">"Last car standing wins"</p>
                                 <div class="mode-card-details">
-                                    Best of 3 • Arena
+                                    Best of 3 • Full arsenal
                                 </div>
                             </div>
                         </div>
@@ -155,6 +155,13 @@ class LobbyUI {
                             <option value="5">5</option>
                             <option value="10">10</option>
                         </select>
+                    </label>
+                </div>
+
+                <div class="settings-section" id="track-settings">
+                    <label>
+                        Track:
+                        <select id="track-select"></select>
                     </label>
                 </div>
 
@@ -217,6 +224,7 @@ class LobbyUI {
         this.elements.playerList = this.element.querySelector('#player-list');
         this.elements.modeCards = this.element.querySelectorAll('.mode-card');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
+        this.elements.trackSelect = this.element.querySelector('#track-select');
         this.elements.raceSettings = this.element.querySelector('#race-settings');
         this.elements.raceLapsDisplay = this.element.querySelector('#race-laps-display');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
@@ -250,13 +258,17 @@ class LobbyUI {
                 if (this.onStartGame) {
                     const mode = this.selectedMode || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
-                    this.onStartGame({ mode, laps });
+                    const track = this.elements.trackSelect?.value || null;
+                    this.onStartGame({ mode, laps, track });
                 }
             });
         }
 
         // Setup mode card selection
         this._setupModeCards();
+
+        // Populate track options for the default mode
+        this._updateTrackOptions(this.selectedMode);
 
         // Setup laps select to update display
         if (this.elements.lapsSelect) {
@@ -588,12 +600,42 @@ class LobbyUI {
     }
 
     /**
+     * Update the track dropdown to match the selected mode
+     * @private
+     * @param {string} mode - 'race' or 'derby'
+     */
+    _updateTrackOptions(mode) {
+        if (!this.elements.trackSelect) return;
+
+        const TRACKS = {
+            race: [
+                { id: 'procedural', name: '✨ Random Circuit' },
+                { id: 'oval', name: 'Classic Oval' }
+            ],
+            derby: [
+                { id: 'random', name: '🎲 Random Arena' },
+                { id: 'derby-bowl', name: 'The Pit' },
+                { id: 'derby-arena', name: 'Iron Cage' },
+                { id: 'derby-coliseum', name: 'The Coliseum' }
+            ]
+        };
+
+        const options = TRACKS[mode] || TRACKS.race;
+        this.elements.trackSelect.innerHTML = options.map(track =>
+            `<option value="${track.id}">${track.name}</option>`
+        ).join('');
+    }
+
+    /**
      * Select a game mode
      * @private
      * @param {string} mode - 'race' or 'derby'
      */
     _selectMode(mode) {
         this.selectedMode = mode;
+
+        // Refresh track choices for this mode
+        this._updateTrackOptions(mode);
 
         // Update card visual states
         this.elements.modeCards.forEach(card => {

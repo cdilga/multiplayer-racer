@@ -250,6 +250,17 @@ class Track extends Entity {
             };
         }
 
+        if (geometry?.type === 'spline' && geometry.rightEdge?.length) {
+            let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+            for (const point of geometry.rightEdge) {
+                if (point.x < minX) minX = point.x;
+                if (point.x > maxX) maxX = point.x;
+                if (point.z < minZ) minZ = point.z;
+                if (point.z > maxZ) maxZ = point.z;
+            }
+            return { minX, maxX, minZ, maxZ };
+        }
+
         if (geometry?.type === 'rectangle') {
             const hw = (geometry.width || 100) / 2;
             const hl = (geometry.length || 150) / 2;

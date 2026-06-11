@@ -189,9 +189,61 @@ class PhysicsSystem {
             );
 
             if (bowlWall) barriers.push(bowlWall);
+        } else if (geometry.type === 'spline') {
+            // Procedural track: barrier walls along both precomputed edges
+            const height = geometry.barrierHeight || 1.5;
+            const restitution = physics.barrierRestitution || 0.4;
+
+            const innerBarrier = this._createEdgeBarrier(geometry.leftEdge, height, restitution, 'spline_left');
+            const outerBarrier = this._createEdgeBarrier(geometry.rightEdge, height, restitution, 'spline_right');
+
+            if (innerBarrier) barriers.push(innerBarrier);
+            if (outerBarrier) barriers.push(outerBarrier);
         }
 
         return barriers;
+    }
+
+    /**
+     * Create barrier colliders along a closed loop of edge points
+     * @private
+     * @param {Object[]} points - [{x, z}, ...] closed loop
+     * @param {number} height
+     * @param {number} restitution
+     * @param {string} key - staticBodies key
+     */
+    _createEdgeBarrier(points, height, restitution, key) {
+        if (!points || points.length < 2) return null;
+
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i];
+            const b = points[(i + 1) % points.length];
+
+            const dx = b.x - a.x;
+            const dz = b.z - a.z;
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (length < 0.01) continue;
+
+            const midX = (a.x + b.x) / 2;
+            const midZ = (a.z + b.z) / 2;
+            // Yaw so the segment's local X axis aligns with the edge direction
+            const yaw = Math.atan2(-dz, dx);
+
+            const colliderDesc = this.RAPIER.ColliderDesc
+                .cuboid(length / 2 + 0.3, height / 2, 0.5)
+                .setTranslation(midX, height / 2, midZ)
+                .setRotation(this._eulerToQuat(0, yaw, 0))
+                .setFriction(0.3)
+                .setRestitution(restitution);
+
+            this.world.createCollider(colliderDesc, body);
+        }
+
+        this.staticBodies.set(`barrier_${key}`, body);
+        return body;
     }
 
     /**
@@ -402,10 +454,39 @@ class PhysicsSystem {
 
         const config = data.config;
         const vc = data.controller;
+        const entity = data.entity;
+
+        // EMP stun: no engine, no steering until stun expires
+        if (entity?.stunned) {
+            if (performance.now() >= (entity.stunEndTime || 0)) {
+                entity.stunned = false;
+            } else {
+                vc.setWheelEngineForce(2, 0);
+                vc.setWheelEngineForce(3, 0);
+                vc.setWheelSteering(0, 0);
+                vc.setWheelSteering(1, 0);
+                for (let i = 0; i < 4; i++) {
+                    vc.setWheelBrake(i, 0);
+                }
+                return;
+            }
+        }
 
         const acceleration = controls.acceleration || 0;
         const braking = controls.braking || 0;
-        const baseEngineForce = config.engine?.force || 200;
+        // Nitro boost multiplies engine force while the buff is active
+        const boostMultiplier = entity?.speedBoost || 1;
+        const baseEngineForce = (config.engine?.force || 200) * boostMultiplier;
+
+        // Oil slick: drop tyre grip so the car slides
+        const baseFrictionSlip = config.frictionSlip || 1000;
+        const gripMultiplier = entity?.inOilSlick ? (entity.oilFrictionMultiplier || 0.1) : 1;
+        if (gripMultiplier !== data.lastGripMultiplier) {
+            for (let i = 0; i < 4; i++) {
+                vc.setWheelFrictionSlip(i, baseFrictionSlip * gripMultiplier);
+            }
+            data.lastGripMultiplier = gripMultiplier;
+        }
 
         // Speed threshold for considering the car "stopped"
         const STOP_THRESHOLD = 2.0;

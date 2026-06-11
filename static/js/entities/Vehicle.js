@@ -323,6 +323,9 @@ class Vehicle extends Entity {
         this.position.z = spawnPos.z;
         this.rotation.y = spawnPos.rotation || 0;
 
+        // Remember the new spawn so respawns target the current track
+        this.spawnPosition = { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z, rotation: spawnPos.rotation || 0 };
+
         this.velocity = { x: 0, y: 0, z: 0 };
         this.angularVelocity = { x: 0, y: 0, z: 0 };
         this.speed = 0;
