@@ -14,6 +14,16 @@
  *   await audio.init();
  */
 
+// Importing registers window.EngineSynth so the non-module audioManager
+// can synthesize the engine sound instead of looping a sample
+import { EngineSynth } from '../audio/EngineSynth.js';
+
+// Belt and braces: make sure the global is set even if the module's own
+// window assignment is ever tree-shaken
+if (typeof window !== 'undefined' && !window.EngineSynth) {
+    window.EngineSynth = EngineSynth;
+}
+
 class AudioSystem {
     /**
      * @param {Object} options
@@ -79,7 +89,9 @@ class AudioSystem {
 
         this.eventBus.on('game:countdown', () => {
             this.currentGameState = 'countdown';
-            this.playSound('countdown');
+            // Play as (non-looping) music so the lobby track crossfades out
+            // instead of both playing on top of each other
+            this.playMusic('countdown', { loop: false, fadeIn: 0.3 });
         });
 
         this.eventBus.on('game:racing', () => {
@@ -104,25 +116,154 @@ class AudioSystem {
             this.playCollisionSound(data);
         });
 
-        // Checkpoint events
+        // Checkpoint events (mapped to loaded sfx - there are no dedicated
+        // checkpoint/lap/finish samples yet)
         this.eventBus.on('race:checkpoint', () => {
-            this.playSound('checkpoint');
+            this.playSound('button_click', { volume: 0.5 });
         });
 
         this.eventBus.on('race:lapComplete', () => {
-            this.playSound('lap_complete');
+            this.playSound('countdown_beep', { volume: 0.7 });
         });
 
         this.eventBus.on('race:finished', () => {
-            this.playSound('race_finish');
+            this.playSound('countdown_go', { volume: 1.0 });
+        });
+
+        // Derby mode events
+        this._subscribeToDerbyEvents();
+    }
+
+    /**
+     * Subscribe to Derby mode events
+     * @private
+     */
+    _subscribeToDerbyEvents() {
+        if (!this.eventBus) return;
+
+        // Derby countdown
+        this.eventBus.on('derby:countdown', (data) => {
+            if (data.count > 0) {
+                this.playSound('countdown_beep', { volume: 0.8 });
+            } else {
+                this.playSound('countdown_go', { volume: 1.0 });
+            }
+        });
+
+        // Derby combat start
+        this.eventBus.on('derby:combatStart', () => {
+            this.currentGameState = 'derby';
+            this.playMusic('racing'); // Use race music for now
+            this.startEngineSound();
+        });
+
+        // Weapon pickup
+        this.eventBus.on('weapon:pickup', (data) => {
+            this.playSound('player_join', { volume: 0.6 }); // Reuse join chime for pickup
+        });
+
+        // Weapon fired - different sounds per weapon type
+        this.eventBus.on('weapon:fired', (data) => {
+            this._playWeaponFireSound(data.weaponId);
+        });
+
+        // Weapon hit/explosion
+        this.eventBus.on('weapon:hit', (data) => {
+            this.playCollisionSound({ intensity: 0.8 }); // Use collision as impact
+        });
+
+        // Mine/weapon explosion
+        this.eventBus.on('weapon:explosion', (data) => {
+            this.duckMusic(0.5);
+            this.playSound('collision_hard', { volume: 1.0 }); // Use hard collision for explosion
+        });
+
+        // Player eliminated
+        this.eventBus.on('derby:playerEliminated', (data) => {
+            this.duckMusic(0.5);
+            this.playSound('collision_hard', { volume: 1.0 }); // Death explosion
+        });
+
+        // Walls shrinking warning
+        this.eventBus.on('derby:wallsShrinking', (data) => {
+            // Play warning sound when walls start shrinking
+            this.playSound('countdown_beep', { volume: 0.5 });
+        });
+
+        // Round end
+        this.eventBus.on('derby:roundEnd', (data) => {
+            this.stopEngineSound();
+            this.playSound('countdown_go', { volume: 0.8 }); // Victory fanfare substitute
+        });
+
+        // Match end
+        this.eventBus.on('derby:matchEnd', (data) => {
+            this.stopEngineSound();
+            this.playMusic('results');
+        });
+
+        // Buff applied (shield, boost)
+        this.eventBus.on('weapon:buffApplied', (data) => {
+            if (data.invulnerable) {
+                this.playSound('player_join', { volume: 0.7 }); // Shield activation
+            } else {
+                this.playSound('engine_rev', { volume: 0.5 }); // Boost activation
+            }
+        });
+
+        // Continuous weapon (flamethrower)
+        this.eventBus.on('weapon:continuousStart', (data) => {
+            // Could play looping sound here if we had one
+            this.playSound('tire_screech', { volume: 0.4 }); // Placeholder
         });
     }
 
     /**
-     * Play background music
-     * @param {string} trackName - Music track name
+     * Play weapon-specific fire sound
+     * @param {string} weaponId
+     * @private
      */
-    playMusic(trackName) {
+    _playWeaponFireSound(weaponId) {
+        this.duckMusic(0.3);
+
+        // Map weapon types to existing sounds as placeholders
+        // Once proper sounds are added, these can be mapped directly
+        switch (weaponId) {
+            case 'missile':
+                this.playSound('engine_rev', { volume: 0.6 }); // Whoosh sound
+                break;
+            case 'mine':
+                this.playSound('button_click', { volume: 0.8 }); // Deploy click
+                break;
+            case 'boost':
+                this.playSound('engine_rev', { volume: 0.7 }); // Engine boost
+                break;
+            case 'oil-slick':
+                this.playSound('button_click', { volume: 0.5 }); // Splat
+                break;
+            case 'sniper':
+                this.playSound('collision_hard', { volume: 0.9 }); // Rail gun zap
+                break;
+            case 'shield':
+                this.playSound('player_join', { volume: 0.6 }); // Shield up
+                break;
+            case 'emp':
+                this.playSound('countdown_go', { volume: 0.7 }); // EMP pulse
+                break;
+            case 'flamethrower':
+                this.playSound('tire_screech', { volume: 0.5 }); // Flame roar
+                break;
+            default:
+                this.playSound('button_click', { volume: 0.5 });
+        }
+    }
+
+    /**
+     * Play background music (crossfades automatically if a track is playing)
+     * @param {string} trackName - Music track name
+     * @param {Object} [options] - { loop, fadeIn }
+     */
+    playMusic(trackName, options = {}) {
         if (!this.enabled || !this.audioManager) return;
 
         // Map track names to actual music files (must match audioManager loaded tracks)
@@ -137,9 +278,21 @@ class AudioSystem {
         const actualTrack = musicMap[trackName] || trackName;
 
         try {
-            this.audioManager.playMusic(actualTrack);
+            this.audioManager.playMusic(actualTrack, options);
         } catch (error) {
             console.warn(`AudioSystem: Failed to play music '${trackName}'`, error);
+        }
+    }
+
+    /**
+     * Temporarily duck music volume (delegates to audioManager)
+     * @param {number} [duration] - Duck duration in seconds
+     */
+    duckMusic(duration = 0.5) {
+        if (!this.enabled || !this.audioManager) return;
+
+        if (typeof this.audioManager.duckMusic === 'function') {
+            this.audioManager.duckMusic(duration);
         }
     }
 
@@ -191,8 +344,10 @@ class AudioSystem {
     playCollisionSound(collisionData) {
         if (!this.enabled || !this.audioManager) return;
 
-        // Calculate intensity from collision (if velocity available)
-        let intensity = 0.5;
+        // Use explicit intensity when provided (e.g. weapon hits emit { intensity })
+        let intensity = typeof collisionData?.intensity === 'number'
+            ? collisionData.intensity
+            : 0.5;
         if (collisionData.entityA?.velocity && collisionData.entityB?.velocity) {
             const velA = collisionData.entityA.velocity;
             const velB = collisionData.entityB.velocity || { x: 0, y: 0, z: 0 };
@@ -249,7 +404,10 @@ class AudioSystem {
     setSfxVolume(volume) {
         if (!this.audioManager) return;
 
-        if (typeof this.audioManager.setSfxVolume === 'function') {
+        // audioManager exposes setSFXVolume (capitalized SFX)
+        if (typeof this.audioManager.setSFXVolume === 'function') {
+            this.audioManager.setSFXVolume(volume);
+        } else if (typeof this.audioManager.setSfxVolume === 'function') {
             this.audioManager.setSfxVolume(volume);
         }
     }
@@ -278,6 +436,7 @@ class AudioSystem {
      */
     disable() {
         this.enabled = false;
+        this.stopEngineSound();
         this.stopMusic();
     }
 

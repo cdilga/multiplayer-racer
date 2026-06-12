@@ -1,0 +1,29 @@
+services:
+  app:
+    image: ghcr.io/cdilga/multiplayer-racer:latest
+    container_name: multiplayer-racer
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8095}:8000"
+    environment:
+      PORT: "8000"
+      FLASK_DEBUG: "0"
+      PUBLIC_URL: ${PUBLIC_URL:-https://jammers.dilger.dev}
+    networks:
+      - multiplayer-racer
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: multiplayer-racer-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - app
+    networks:
+      - multiplayer-racer
+
+networks:
+  multiplayer-racer:
+    driver: bridge

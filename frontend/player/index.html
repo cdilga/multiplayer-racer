@@ -80,7 +80,7 @@
     </style>
 </head>
 <body>
-    <button id="fullscreen-toggle">⛶ Fullscreen</button>
+    <button id="fullscreen-toggle" class="hidden">⛶ Fullscreen</button>
     <div class="portrait-message">
         Rotate for a better experience
     </div>
@@ -105,15 +105,19 @@
         </div>
         
         <div id="waiting-screen" class="screen hidden">
-            <h2>Waiting for race to start...</h2>
+            <h2>Waiting for host to start...</h2>
             <div class="player-info">
                 <p>Your Name: <span id="display-name"></span></p>
                 <p>Room Code: <span id="display-room"></span></p>
+                <div class="mode-display">
+                    <span class="mode-icon" id="mode-icon">🏁</span>
+                    <span class="mode-name" id="mode-name">RACE</span>
+                </div>
                 <div class="car-preview-container">
                     <div id="car-preview"></div>
                 </div>
             </div>
-            <p class="waiting-text">The host will start the race soon</p>
+            <p class="waiting-text" id="waiting-text">The host will start the race soon</p>
         </div>
         
         <div id="game-screen" class="screen hidden">
@@ -160,13 +164,20 @@
             // Initialize mobile utilities
             if (window.mobileUtils) {
                 mobileUtils.init().then(() => {
-                    // Show fullscreen toggle only if needed
+                    // Show fullscreen toggle only where the API actually works
                     const fullscreenToggle = document.getElementById('fullscreen-toggle');
                     if (mobileUtils.isMobile() && mobileUtils.isFullscreenSupported()) {
                         fullscreenToggle.classList.remove('hidden');
-                        fullscreenToggle.addEventListener('click', () => {
-                            mobileUtils.toggleFullscreen();
+                        const updateLabel = () => {
+                            const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                            fullscreenToggle.textContent = active ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+                        };
+                        fullscreenToggle.addEventListener('click', async () => {
+                            await mobileUtils.toggleFullscreen();
+                            updateLabel();
                         });
+                        document.addEventListener('fullscreenchange', updateLabel);
+                        document.addEventListener('webkitfullscreenchange', updateLabel);
                     }
                 });
             }

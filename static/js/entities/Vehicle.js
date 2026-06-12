@@ -323,6 +323,9 @@ class Vehicle extends Entity {
         this.position.z = spawnPos.z;
         this.rotation.y = spawnPos.rotation || 0;
 
+        // Remember the new spawn so respawns target the current track
+        this.spawnPosition = { x: spawnPos.x, y: spawnPos.y, z: spawnPos.z, rotation: spawnPos.rotation || 0 };
+
         this.velocity = { x: 0, y: 0, z: 0 };
         this.angularVelocity = { x: 0, y: 0, z: 0 };
         this.speed = 0;
@@ -347,6 +350,22 @@ class Vehicle extends Entity {
         this.isDead = false;
         if (this.mesh) {
             this.mesh.visible = true;
+        }
+
+        // Clear weapon buff state and any attached effect visuals
+        this.speedBoost = 1;
+        this.ramDamageBonus = 0;
+        this.invulnerable = false;
+        this.stunned = false;
+        this.inOilSlick = false;
+        for (const meshKey of ['shieldMesh', 'flameMesh']) {
+            const effectMesh = this[meshKey];
+            if (effectMesh) {
+                this.mesh?.remove(effectMesh);
+                effectMesh.geometry?.dispose();
+                effectMesh.material?.dispose();
+                this[meshKey] = null;
+            }
         }
 
         // Sync mesh

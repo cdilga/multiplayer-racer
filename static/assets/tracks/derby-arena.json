@@ -1,0 +1,98 @@
+{
+  "id": "derby-arena",
+  "name": "Iron Cage",
+  "description": "A square arena with industrial hazards",
+  "type": "derby",
+  "geometry": {
+    "type": "square",
+    "diameter": 70,
+    "wallHeight": 12,
+    "wallSlope": 20,
+    "floorConcavity": 0.05
+  },
+  "visual": {
+    "track": {
+      "color": "#2a2a3a",
+      "roughness": 0.9,
+      "emissive": "#4444FF",
+      "emissiveIntensity": 0.1
+    },
+    "ground": {
+      "color": "#151522",
+      "size": 200
+    },
+    "barriers": {
+      "color": "#3a3a4a",
+      "roughness": 0.6,
+      "emissive": "#4444FF",
+      "emissiveIntensity": 0.3
+    },
+    "lineMarkings": {
+      "color": "#4444FF",
+      "width": 0.4,
+      "emissive": "#6666FF",
+      "emissiveIntensity": 0.7
+    }
+  },
+  "spawn": {
+    "positions": [
+      { "x": 30, "y": 1.5, "z": 0, "rotation": 3.14159 },
+      { "x": -30, "y": 1.5, "z": 0, "rotation": 0 },
+      { "x": 0, "y": 1.5, "z": 30, "rotation": -1.5708 },
+      { "x": 0, "y": 1.5, "z": -30, "rotation": 1.5708 },
+      { "x": 25, "y": 1.5, "z": 25, "rotation": -2.3562 },
+      { "x": -25, "y": 1.5, "z": 25, "rotation": -0.7854 },
+      { "x": -25, "y": 1.5, "z": -25, "rotation": 0.7854 },
+      { "x": 25, "y": 1.5, "z": -25, "rotation": 2.3562 },
+      { "x": 30, "y": 1.5, "z": 15, "rotation": -2.7489 },
+      { "x": 15, "y": 1.5, "z": 30, "rotation": -2.0071 },
+      { "x": -15, "y": 1.5, "z": 30, "rotation": -1.1345 },
+      { "x": -30, "y": 1.5, "z": 15, "rotation": -0.3927 },
+      { "x": -30, "y": 1.5, "z": -15, "rotation": 0.3927 },
+      { "x": -15, "y": 1.5, "z": -30, "rotation": 1.1345 },
+      { "x": 15, "y": 1.5, "z": -30, "rotation": 2.0071 },
+      { "x": 30, "y": 1.5, "z": -15, "rotation": 2.7489 }
+    ],
+    "defaultHeight": 1.5
+  },
+  "checkpoints": [],
+  "race": {
+    "defaultLaps": 0,
+    "checkpointOrder": [],
+    "countdownSeconds": 3
+  },
+  "derby": {
+    "roundsToWin": 2,
+    "maxRounds": 3,
+    "eliminationRespawn": false,
+    "shrinking": {
+      "enabled": true,
+      "startTime": 25,
+      "rate": 0.6,
+      "minDiameter": 35,
+      "warningColor": "#4444FF"
+    }
+  },
+  "weapons": {
+    "enabled": true,
+    "spawnInterval": [6, 10],
+    "maxActive": 4,
+    "spawnHeight": 1.5
+  },
+  "physics": {
+    "groundFriction": 0.85,
+    "barrierRestitution": 0.6
+  },
+  "lighting": {
+    "ambient": {
+      "color": "#4444FF",
+      "intensity": 0.35
+    },
+    "directional": {
+      "color": "#6688FF",
+      "intensity": 0.65,
+      "position": { "x": 30, "y": 100, "z": 30 },
+      "castShadow": true
+    }
+  }
+}

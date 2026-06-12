@@ -133,9 +133,10 @@ test.describe('Late Join', () => {
         await joinGameAsPlayer(playerPage, roomCode, 'QRTestPlayer');
         await expect(hostPage.locator('#player-list')).toContainText('QRTestPlayer', { timeout: 30000 });
 
-        // QR overlay should be visible in lobby
+        // The corner overlay stays hidden in the lobby - the lobby panel
+        // already shows a large QR code, so a second one is just clutter
         const qrOverlay = hostPage.locator('.room-code-overlay');
-        await expect(qrOverlay).toBeVisible({ timeout: 5000 });
+        await expect(qrOverlay).toBeHidden({ timeout: 5000 });
 
         // Start the race
         await startGameFromHost(hostPage);

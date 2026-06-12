@@ -148,10 +148,9 @@ class RoomCodeOverlayUI {
     _subscribeToEvents() {
         if (!this.eventBus) return;
 
-        // Show during lobby
+        // Hide during lobby - the lobby panel already shows a large QR code
         this.eventBus.on('game:lobby', () => {
-            this.show();
-            this.expand();
+            this.hide();
         });
 
         // Minimize during countdown/racing

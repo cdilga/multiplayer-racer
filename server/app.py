@@ -75,6 +75,30 @@ if os.path.exists(dist_path):
 # }
 game_rooms = {}
 
+# Public base URL when deployed behind a reverse proxy / Cloudflare tunnel.
+# Unset for local development (LAN IP detection is used instead).
+PUBLIC_URL = os.environ.get('PUBLIC_URL', '').rstrip('/')
+
+
+def get_join_url(room_code, local_ip=None, port=None):
+    """Build the URL players use to join a room.
+
+    Deployed: PUBLIC_URL drives it. Local: LAN IP + port so phones on the
+    same network can reach the host machine.
+    """
+    if PUBLIC_URL:
+        return f"{PUBLIC_URL}/player?room={room_code}"
+    if local_ip is None:
+        local_ip = get_local_ip()
+    if port is None:
+        port = request.environ.get('SERVER_PORT', 8000)
+        if 'Host' in request.headers:
+            host_parts = request.headers['Host'].split(':')
+            if len(host_parts) > 1:
+                port = host_parts[1]
+    return f"http://{local_ip}:{port}/player?room={room_code}"
+
+
 def get_local_ip():
     """Get the local IP address of this machine for LAN connections.
     Uses multiple methods to find the most likely local network IP.
@@ -194,7 +218,7 @@ def generate_qr_code(room_code):
                 port = host_parts[1]
             
         # Generate the URL with the room code
-        join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+        join_url = get_join_url(room_code, local_ip, port)
         
         # Create QR code
         qr = qrcode.QRCode(
@@ -232,7 +256,8 @@ def create_room(data=None):
         'host_sid': host_sid,
         'players': {},
         'game_state': 'waiting',
-        'disconnected_players': {}
+        'disconnected_players': {},
+        'next_player_id': 1
     }
     
     join_room(room_code)
@@ -244,7 +269,7 @@ def create_room(data=None):
         host_parts = request.headers['Host'].split(':')
         if len(host_parts) > 1:
             port = host_parts[1]
-    join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+    join_url = get_join_url(room_code, local_ip, port)
 
     emit('room_created', {'room_code': room_code, 'join_url': join_url})
     logger.info(f"Room created: {room_code}")
@@ -334,8 +359,10 @@ def on_join_game(data):
         rotation = reconnect_data['rotation']
         velocity = reconnect_data['velocity']
     else:
-        # Generate player ID (1-based index)
-        player_id = len(room['players']) + len(room.get('disconnected_players', {})) + 1
+        # Monotonic player ID - counting current players is collision-prone
+        # (a leaver shrinks the count and the next joiner duplicates an ID)
+        player_id = room.get('next_player_id', len(room['players']) + 1)
+        room['next_player_id'] = player_id + 1
         # Generate random car color
         car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
         position = [0, 0.5, 0]
@@ -367,7 +394,8 @@ def on_join_game(data):
         'car_color': car_color,
         'reconnected': is_reconnecting,
         'is_late_join': is_late_join,
-        'game_state': room['game_state']
+        'game_state': room['game_state'],
+        'mode': room.get('mode', 'race')
     })
 
     # Notify everyone in the room about new/reconnected player (including host)
@@ -402,6 +430,28 @@ def start_game(data):
     game_rooms[room_code]['game_state'] = 'racing'
     emit('game_started', to=room_code)
     logger.info(f"Game started in room {room_code}")
+
+@socketio.on('mode_selected')
+def mode_selected(data):
+    """Host broadcasts mode selection to all players."""
+    room_code = data.get('room_code')
+    mode = data.get('mode')
+    host_sid = request.sid
+
+    if room_code not in game_rooms:
+        emit('error', {'message': 'Room not found'})
+        return
+
+    if game_rooms[room_code]['host_sid'] != host_sid:
+        emit('error', {'message': 'Only the host can select the mode'})
+        return
+
+    # Store the selected mode
+    game_rooms[room_code]['mode'] = mode
+
+    # Broadcast to all players in the room (except host)
+    emit('mode_selected', {'mode': mode}, to=room_code, include_self=False)
+    logger.info(f"Mode selected in room {room_code}: {mode}")
 
 @socketio.on('player_update')
 def player_update(data):
@@ -516,6 +566,75 @@ def handle_reset_position(data):
             }, to=game_rooms[room_code]['host_sid'])
             break
             
+@socketio.on('weapon_fire')
+def handle_weapon_fire(data):
+    """Handle weapon fire event from player."""
+    player_sid = request.sid
+    room_code = data.get('room_code')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if player_sid not in room['players']:
+        return
+
+    player_data = room['players'][player_sid]
+    player_id = player_data['id']
+
+    # Forward to host
+    emit('weapon_fire', {
+        'player_id': player_id
+    }, to=room['host_sid'])
+
+    logger.debug(f"Player {player_id} fired weapon in room {room_code}")
+
+@socketio.on('weapon_pickup')
+def handle_weapon_pickup(data):
+    """Handle weapon pickup notification from host to player."""
+    host_sid = request.sid
+    room_code = data.get('room_code')
+    target_player_id = data.get('player_id')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if room['host_sid'] != host_sid:
+        return
+
+    # Find target player's socket
+    for sid, player_data in room['players'].items():
+        if player_data['id'] == target_player_id:
+            emit('weapon_pickup', {
+                'weaponId': data.get('weaponId'),
+                'weaponName': data.get('weaponName'),
+                'icon': data.get('icon')
+            }, to=sid)
+            break
+
+@socketio.on('weapon_fired')
+def handle_weapon_fired(data):
+    """Handle weapon fired notification from host to player."""
+    host_sid = request.sid
+    room_code = data.get('room_code')
+    target_player_id = data.get('player_id')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if room['host_sid'] != host_sid:
+        return
+
+    # Find target player's socket
+    for sid, player_data in room['players'].items():
+        if player_data['id'] == target_player_id:
+            emit('weapon_fired', {
+                'weaponId': data.get('weaponId')
+            }, to=sid)
+            break
+
 @socketio.on('update_player_name')
 def update_player_name(data):
     """Handle player name update."""
@@ -552,6 +671,16 @@ def update_player_name(data):
     emit('name_updated', {'success': False, 'message': 'Player not in a room'})
     logger.warning(f"Failed to update player name: Player not in a room")
 
+@app.route('/health')
+def health():
+    """Liveness endpoint for deploy health checks."""
+    return jsonify({
+        'status': 'ok',
+        'rooms': len(game_rooms)
+    })
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True) 
+    # Debug stays on for local development; deployments set FLASK_DEBUG=0
+    debug = os.environ.get('FLASK_DEBUG', '1') == '1'
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug) 

@@ -101,6 +101,30 @@ class Track extends Entity {
     }
 
     /**
+     * Get the visual mesh group
+     * @returns {THREE.Group|null}
+     */
+    getMesh() {
+        return this.mesh;
+    }
+
+    /**
+     * Get the ground mesh
+     * @returns {THREE.Mesh|null}
+     */
+    get ground() {
+        return this.groundMesh;
+    }
+
+    /**
+     * Get barrier meshes (alias for barrierMeshes)
+     * @returns {THREE.Mesh[]}
+     */
+    get barriers() {
+        return this.barrierMeshes;
+    }
+
+    /**
      * Set physics bodies
      * @param {Object} groundBody - Ground rigid body
      * @param {Object[]} barrierBodies - Barrier rigid bodies
@@ -224,6 +248,17 @@ class Track extends Entity {
                 minZ: -outer,
                 maxZ: outer
             };
+        }
+
+        if (geometry?.type === 'spline' && geometry.rightEdge?.length) {
+            let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+            for (const point of geometry.rightEdge) {
+                if (point.x < minX) minX = point.x;
+                if (point.x > maxX) maxX = point.x;
+                if (point.z < minZ) minZ = point.z;
+                if (point.z > maxZ) maxZ = point.z;
+            }
+            return { minX, maxX, minZ, maxZ };
         }
 
         if (geometry?.type === 'rectangle') {

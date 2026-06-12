@@ -99,9 +99,9 @@ class PhysicsSystem {
     update(dt) {
         if (!this.initialized || this.paused || !this.world) return;
 
-        // Update vehicle controllers
+        // Update vehicle controllers (skip disabled/dead bodies)
         for (const [vehicleId, data] of this.vehicleBodies) {
-            if (data.controller) {
+            if (data.controller && (!data.body.isEnabled || data.body.isEnabled())) {
                 data.controller.updateVehicle(dt);
             }
         }
@@ -176,9 +176,74 @@ class PhysicsSystem {
 
             if (innerBarrier) barriers.push(innerBarrier);
             if (outerBarrier) barriers.push(outerBarrier);
+        } else if (geometry.type === 'bowl') {
+            // Create bowl arena wall - tall wall that cars can't escape
+            const diameter = geometry.diameter || 80;
+            const radius = diameter / 2;
+            const wallHeight = geometry.wallHeight || 15;
+
+            const bowlWall = this._createBowlWallBarrier(
+                radius,
+                wallHeight,
+                physics.barrierRestitution || 0.5
+            );
+
+            if (bowlWall) barriers.push(bowlWall);
+        } else if (geometry.type === 'spline') {
+            // Procedural track: barrier walls along both precomputed edges
+            const height = geometry.barrierHeight || 1.5;
+            const restitution = physics.barrierRestitution || 0.4;
+
+            const innerBarrier = this._createEdgeBarrier(geometry.leftEdge, height, restitution, 'spline_left');
+            const outerBarrier = this._createEdgeBarrier(geometry.rightEdge, height, restitution, 'spline_right');
+
+            if (innerBarrier) barriers.push(innerBarrier);
+            if (outerBarrier) barriers.push(outerBarrier);
         }
 
         return barriers;
+    }
+
+    /**
+     * Create barrier colliders along a closed loop of edge points
+     * @private
+     * @param {Object[]} points - [{x, z}, ...] closed loop
+     * @param {number} height
+     * @param {number} restitution
+     * @param {string} key - staticBodies key
+     */
+    _createEdgeBarrier(points, height, restitution, key) {
+        if (!points || points.length < 2) return null;
+
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        for (let i = 0; i < points.length; i++) {
+            const a = points[i];
+            const b = points[(i + 1) % points.length];
+
+            const dx = b.x - a.x;
+            const dz = b.z - a.z;
+            const length = Math.sqrt(dx * dx + dz * dz);
+            if (length < 0.01) continue;
+
+            const midX = (a.x + b.x) / 2;
+            const midZ = (a.z + b.z) / 2;
+            // Yaw so the segment's local X axis aligns with the edge direction
+            const yaw = Math.atan2(-dz, dx);
+
+            const colliderDesc = this.RAPIER.ColliderDesc
+                .cuboid(length / 2 + 0.3, height / 2, 0.5)
+                .setTranslation(midX, height / 2, midZ)
+                .setRotation(this._eulerToQuat(0, yaw, 0))
+                .setFriction(0.3)
+                .setRestitution(restitution);
+
+            this.world.createCollider(colliderDesc, body);
+        }
+
+        this.staticBodies.set(`barrier_${key}`, body);
+        return body;
     }
 
     /**
@@ -215,6 +280,55 @@ class PhysicsSystem {
 
         this.staticBodies.set(`barrier_${type}`, body);
         return body;
+    }
+
+    /**
+     * Create tall wall barrier for bowl arena
+     * @private
+     */
+    _createBowlWallBarrier(radius, height, restitution) {
+        const segments = 64;  // More segments for smoother wall
+        const thickness = 2;  // Thick wall for solid collision
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        // Create wall segments around the arena perimeter
+        for (let i = 0; i < segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const segmentLength = (2 * Math.PI * radius) / segments;
+
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+
+            // Create tall wall collider
+            const colliderDesc = this.RAPIER.ColliderDesc
+                .cuboid(segmentLength / 2, height / 2, thickness / 2)
+                .setTranslation(x, height / 2, z)
+                .setRotation(this._eulerToQuat(0, angle, 0))
+                .setFriction(0.5)
+                .setRestitution(restitution);
+
+            this.world.createCollider(colliderDesc, body);
+        }
+
+        this.staticBodies.set('barrier_bowl_wall', body);
+        return body;
+    }
+
+    /**
+     * Remove all static bodies (ground and barriers)
+     * Called when switching tracks
+     */
+    removeStaticBodies() {
+        if (!this.world) return;
+
+        for (const [key, body] of this.staticBodies) {
+            if (body) {
+                this.world.removeRigidBody(body);
+            }
+        }
+        this.staticBodies.clear();
+        console.log('PhysicsSystem: Removed all static bodies');
     }
 
     /**
@@ -340,10 +454,48 @@ class PhysicsSystem {
 
         const config = data.config;
         const vc = data.controller;
+        const entity = data.entity;
+
+        // Dead cars don't drive
+        if (entity?.isDead) {
+            vc.setWheelEngineForce(2, 0);
+            vc.setWheelEngineForce(3, 0);
+            vc.setWheelSteering(0, 0);
+            vc.setWheelSteering(1, 0);
+            return;
+        }
+
+        // EMP stun: no engine, no steering until stun expires
+        if (entity?.stunned) {
+            if (performance.now() >= (entity.stunEndTime || 0)) {
+                entity.stunned = false;
+            } else {
+                vc.setWheelEngineForce(2, 0);
+                vc.setWheelEngineForce(3, 0);
+                vc.setWheelSteering(0, 0);
+                vc.setWheelSteering(1, 0);
+                for (let i = 0; i < 4; i++) {
+                    vc.setWheelBrake(i, 0);
+                }
+                return;
+            }
+        }
 
         const acceleration = controls.acceleration || 0;
         const braking = controls.braking || 0;
-        const baseEngineForce = config.engine?.force || 200;
+        // Nitro boost multiplies engine force while the buff is active
+        const boostMultiplier = entity?.speedBoost || 1;
+        const baseEngineForce = (config.engine?.force || 200) * boostMultiplier;
+
+        // Oil slick: drop tyre grip so the car slides
+        const baseFrictionSlip = config.frictionSlip || 1000;
+        const gripMultiplier = entity?.inOilSlick ? (entity.oilFrictionMultiplier || 0.1) : 1;
+        if (gripMultiplier !== data.lastGripMultiplier) {
+            for (let i = 0; i < 4; i++) {
+                vc.setWheelFrictionSlip(i, baseFrictionSlip * gripMultiplier);
+            }
+            data.lastGripMultiplier = gripMultiplier;
+        }
 
         // Speed threshold for considering the car "stopped"
         const STOP_THRESHOLD = 2.0;
@@ -422,6 +574,17 @@ class PhysicsSystem {
         body.setRotation(this._eulerToQuat(0, rotation, 0), true);
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
         body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    }
+
+    /**
+     * Enable/disable a vehicle's physics body (dead cars become non-solid)
+     * @param {string} vehicleId
+     * @param {boolean} enabled
+     */
+    setVehicleEnabled(vehicleId, enabled) {
+        const data = this.vehicleBodies.get(vehicleId);
+        if (!data?.body?.setEnabled) return;
+        data.body.setEnabled(enabled);
     }
 
     /**

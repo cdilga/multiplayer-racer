@@ -296,6 +296,40 @@ button:hover, button:active {
     border-radius: 10px;
 }
 
+/* Mode display in waiting room */
+.mode-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 2px solid var(--mode-color, #44FF88);
+    box-shadow: 0 0 15px var(--mode-color, #44FF88);
+    transition: all 0.3s ease;
+}
+
+.mode-display[data-mode="race"] {
+    --mode-color: #44FF88;
+}
+
+.mode-display[data-mode="derby"] {
+    --mode-color: #FF4444;
+}
+
+.mode-icon {
+    font-size: 1.5rem;
+}
+
+.mode-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--mode-color, #44FF88);
+}
+
 .car-preview-container {
     width: 100%;
     height: 150px;
@@ -381,4 +415,75 @@ button:hover, button:active {
     padding: 15px;
     border-radius: 8px;
     text-align: center;
+}
+
+/* Derby mode weapon controls */
+.weapon-area {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 200;
+    pointer-events: auto;
+}
+
+.weapon-indicator {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 68, 68, 0.5);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.weapon-indicator.has-weapon {
+    border-color: #FF4444;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+}
+
+.weapon-indicator.has-weapon span {
+    font-weight: bold;
+}
+
+.fire-btn {
+    width: 100px;
+    height: 80px;
+    background: linear-gradient(135deg, #FF4444 0%, #FF6644 100%);
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fire-btn.enabled {
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+}
+
+.fire-btn.pressed {
+    transform: scale(0.9);
+}
+
+.fire-btn:not(.enabled) {
+    background: linear-gradient(135deg, #666 0%, #888 100%);
 }

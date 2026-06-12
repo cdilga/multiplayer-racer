@@ -61,14 +61,20 @@ test.describe('Race Completion', () => {
             const initialLap = vehicle.currentLap;
             const initialState = raceSystem.getState();
 
-            // Simulate driving through each checkpoint
-            // Track has 4 checkpoints: 0 (finish at z=-45), 1 (x=45), 2 (z=45), 3 (x=-45)
-            const checkpoints = [
-                { x: 45, z: 0 },    // Checkpoint 1
-                { x: 0, z: 45 },    // Checkpoint 2
-                { x: -45, z: 0 },   // Checkpoint 3
-                { x: 0, z: -45 },   // Checkpoint 0 (finish line) - crossing completes lap
-            ];
+            // Simulate driving through each checkpoint, reading positions from
+            // the live track so this works on any track (oval or procedural)
+            const track = game.track;
+            if (!track || track.getCheckpointCount() === 0) {
+                return { error: 'No track or checkpoints' };
+            }
+
+            const checkpoints: { x: number, z: number }[] = [];
+            const count = track.getCheckpointCount();
+            // Visit checkpoints in lap order: 1..n-1, then 0 (finish line)
+            for (let i = 1; i <= count; i++) {
+                const cp = track.getCheckpoint(i % count);
+                checkpoints.push({ x: cp.position.x, z: cp.position.z });
+            }
 
             // Teleport vehicle to each checkpoint to simulate driving
             for (const cp of checkpoints) {

@@ -17,7 +17,26 @@
 
 ---
 
+## Full Vision Update (Jun 2026)
+
+### Completed on `claude/full-vision`
+- **Derby mode** - rounds, scoring, shrinking arena, 3 arenas with random rotation
+- **Weapons in every mode** - full arsenal active in Race as well as Derby
+- **Weapon progression** - rarity escalates and spawns accelerate over match time
+- **Weapon physics effects** - boost/EMP/oil slick now affect handling for real
+- **Procedural tracks** - seeded spline circuits with neon palettes, lobby selector
+- **Track/arena selection** - lobby dropdown per mode (random circuit, oval, arenas)
+- **Synthesized engine audio** - 5-gear Web Audio synth replaces looping sample;
+  crossfades, ducking fixes, collision-sound cooldowns
+- **Controller upgrades** - fire button + weapon display in all modes, haptics
+- **Camera/feel** - impact shake on crashes/explosions, wider zoom range,
+  neon-night oval palette
+- **Bug fixes** - free lap at race start, stale spawn after track switch
+
+---
+
 ## Active Work
+
 
 ### Vite Bundling Migration (CRITICAL - Improves Test Performance Further)
 **Status:** HIGH PRIORITY - Next task to implement

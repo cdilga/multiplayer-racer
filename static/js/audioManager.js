@@ -21,14 +21,21 @@ class AudioManager {
         this.currentMusicSource = null;
         this.currentMusicGain = null;
 
-        // Engine sound
+        // Engine sound (synthesized via EngineSynth; sample loop kept as fallback)
         this.engineBuffer = null;
         this.engineSource = null;
         this.engineGain = null;
         this.enginePlaying = false;
+        this.engineSynth = null;
 
         // SFX buffers
         this.sfxBuffers = {};
+
+        // Per-sound cooldown tracking (prevents rapid-fire stacking/clipping)
+        this.soundLastPlayed = new Map();
+
+        // Missing-sound warnings logged once per name (not per call)
+        this.warnedMissingSounds = new Set();
 
         // Track active one-shot sounds for stopping
         this.activeSounds = new Map();
@@ -68,6 +75,12 @@ class AudioManager {
                 document.addEventListener(event, this.unlock, { once: false });
             });
 
+            // Browsers refuse to start audio before a user gesture - show a
+            // hint so silence doesn't read as broken sound
+            if (this.audioContext.state === 'suspended') {
+                this._showUnlockHint();
+            }
+
             console.log('[AudioManager] Initialized');
         } catch (e) {
             console.error('[AudioManager] Failed to create AudioContext:', e);
@@ -96,6 +109,55 @@ class AudioManager {
             }
         } else {
             this.unlocked = true;
+        }
+
+        if (this.unlocked) {
+            this._hideUnlockHint();
+        }
+    }
+
+    /**
+     * Show a small "click for sound" pill until audio is unlocked
+     * @private
+     */
+    _showUnlockHint() {
+        if (this._unlockHint || !document.body) return;
+
+        const hint = document.createElement('div');
+        hint.id = 'audio-unlock-hint';
+        hint.textContent = '🔊 Click anywhere to enable sound';
+        hint.style.cssText = [
+            'position: fixed',
+            'bottom: 18px',
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'background: rgba(0, 0, 0, 0.75)',
+            'color: #fff',
+            'padding: 10px 18px',
+            'border-radius: 20px',
+            'font-family: -apple-system, BlinkMacSystemFont, sans-serif',
+            'font-size: 14px',
+            'z-index: 10000',
+            'pointer-events: none',
+            'animation: audioHintPulse 2s ease-in-out infinite'
+        ].join(';');
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes audioHintPulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }';
+        hint.appendChild(style);
+
+        document.body.appendChild(hint);
+        this._unlockHint = hint;
+    }
+
+    /**
+     * Remove the unlock hint
+     * @private
+     */
+    _hideUnlockHint() {
+        if (this._unlockHint) {
+            this._unlockHint.remove();
+            this._unlockHint = null;
         }
     }
 
@@ -180,34 +242,62 @@ class AudioManager {
 
         const { loop = true, fadeIn = 1.0 } = options;
 
-        // Stop current music with fade out
-        if (this.currentMusicSource) {
-            this.stopMusic(0.5);
+        // Already playing this track - don't restart/overlap it
+        if (this.currentMusic === trackName && this.currentMusicSource) {
+            return;
         }
 
-        // Create new source
+        // Something else is playing - crossfade instead of overlapping
+        if (this.currentMusicSource) {
+            this.crossfadeMusic(trackName, Math.max(0.5, Math.min(fadeIn, 1.0)), { loop });
+            return;
+        }
+
+        this._startMusicSource(trackName, { loop, fadeIn });
+        console.log(`[AudioManager] Playing music: ${trackName}`);
+    }
+
+    /**
+     * Create and start a music source with fade-in (internal helper)
+     * @private
+     */
+    _startMusicSource(trackName, { loop = true, fadeIn = 1.0 } = {}) {
         const source = this.audioContext.createBufferSource();
         source.buffer = this.musicBuffers[trackName];
         source.loop = loop;
 
-        // Create gain node for volume control
         const gainNode = this.audioContext.createGain();
-        const effectiveVolume = this.isMuted ? 0 : this.musicVolume;
-        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(effectiveVolume, this.audioContext.currentTime + fadeIn);
+        const now = this.audioContext.currentTime;
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(this._musicTargetVolume(), now + fadeIn);
 
-        // Connect nodes
         source.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
-
-        // Start playback
         source.start(0);
+
+        // Non-looping tracks (e.g. countdown stinger) clear state when done
+        if (!loop) {
+            source.onended = () => {
+                if (this.currentMusicSource === source) {
+                    this.currentMusicSource = null;
+                    this.currentMusicGain = null;
+                    this.currentMusic = null;
+                }
+            };
+        }
 
         this.currentMusic = trackName;
         this.currentMusicSource = source;
         this.currentMusicGain = gainNode;
+    }
 
-        console.log(`[AudioManager] Playing music: ${trackName}`);
+    /**
+     * Current target volume for music, accounting for mute and ducking
+     * @private
+     */
+    _musicTargetVolume() {
+        if (this.isMuted) return 0;
+        return this.isDucking ? this.musicVolume * this.duckLevel : this.musicVolume;
     }
 
     /**
@@ -223,8 +313,11 @@ class AudioManager {
         // Track this source as fading out
         this.fadingOutSources.push(source);
 
-        // Fade out
-        gain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
+        // Anchor at current value so the ramp starts from where we actually are
+        const now = this.audioContext.currentTime;
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.linearRampToValueAtTime(0, now + fadeOut);
 
         // Stop after fade and clean up
         setTimeout(() => {
@@ -272,6 +365,13 @@ class AudioManager {
             } catch (e) {}
         });
         this.activeSounds.clear();
+
+        // Clear any pending duck state so the next track starts at full volume
+        if (this.duckTimeout) {
+            clearTimeout(this.duckTimeout);
+            this.duckTimeout = null;
+        }
+        this.isDucking = false;
     }
 
     /**
@@ -279,46 +379,39 @@ class AudioManager {
      * @param {string} newTrack - Name of the new track
      * @param {number} duration - Crossfade duration in seconds
      */
-    crossfadeMusic(newTrack, duration = 2.0) {
+    crossfadeMusic(newTrack, duration = 2.0, options = {}) {
         if (!this.audioContext || !this.musicBuffers[newTrack]) {
             console.warn(`[AudioManager] Cannot crossfade to: ${newTrack}`);
             return;
         }
 
-        if (this.currentMusic === newTrack) return;
+        if (this.currentMusic === newTrack && this.currentMusicSource) return;
 
+        const { loop = true } = options;
         const oldGain = this.currentMusicGain;
         const oldSource = this.currentMusicSource;
+        const now = this.audioContext.currentTime;
 
-        // Create new source
-        const source = this.audioContext.createBufferSource();
-        source.buffer = this.musicBuffers[newTrack];
-        source.loop = true;
-
-        const gainNode = this.audioContext.createGain();
-        const effectiveVolume = this.isMuted ? 0 : this.musicVolume;
-        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(effectiveVolume, this.audioContext.currentTime + duration);
-
-        source.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
-        source.start(0);
-
-        // Fade out old track
-        if (oldGain) {
-            oldGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + duration);
+        // Fade out old track (anchored so the ramp starts from the real value)
+        if (oldGain && oldSource) {
+            this.fadingOutSources.push(oldSource);
+            oldGain.gain.cancelScheduledValues(now);
+            oldGain.gain.setValueAtTime(oldGain.gain.value, now);
+            oldGain.gain.linearRampToValueAtTime(0, now + duration);
             setTimeout(() => {
                 try {
                     oldSource.stop();
                 } catch (e) {
                     // Already stopped
                 }
+                const idx = this.fadingOutSources.indexOf(oldSource);
+                if (idx > -1) this.fadingOutSources.splice(idx, 1);
             }, duration * 1000);
         }
 
-        this.currentMusic = newTrack;
-        this.currentMusicSource = source;
-        this.currentMusicGain = gainNode;
+        this.currentMusicSource = null;
+        this.currentMusicGain = null;
+        this._startMusicSource(newTrack, { loop, fadeIn: duration });
 
         console.log(`[AudioManager] Crossfading to: ${newTrack}`);
     }
@@ -326,26 +419,46 @@ class AudioManager {
     /**
      * Play a one-shot sound effect
      * @param {string} trackName - Name of the track (can reuse music buffers)
-     * @param {Object} options - { volume: 1.0 }
-     * @returns {number} Sound ID for stopping later
+     * @param {Object} options - { volume: 1.0, cooldown: 60 }
+     *   cooldown: minimum ms between plays of the same sound (prevents
+     *   rapid-fire stacking into clipping)
+     * @returns {number|null} Sound ID for stopping later
      */
     playSound(trackName, options = {}) {
         if (!this.audioContext) return null;
 
         const buffer = this.musicBuffers[trackName] || this.sfxBuffers[trackName];
         if (!buffer) {
-            console.warn(`[AudioManager] Sound not found: ${trackName}`);
+            if (!this.warnedMissingSounds.has(trackName)) {
+                this.warnedMissingSounds.add(trackName);
+                console.warn(`[AudioManager] Sound not found: ${trackName}`);
+            }
             return null;
         }
 
-        const { volume = 1.0 } = options;
+        const { volume = 1.0, cooldown = 60 } = options;
+
+        // Per-sound cooldown: identical sounds triggered in rapid succession
+        // (e.g. multi-body collisions in one tick) don't stack and clip
+        if (cooldown > 0) {
+            const lastPlayed = this.soundLastPlayed.get(trackName) || 0;
+            const nowMs = performance.now();
+            if (nowMs - lastPlayed < cooldown) {
+                return null;
+            }
+            this.soundLastPlayed.set(trackName, nowMs);
+        }
 
         const source = this.audioContext.createBufferSource();
         source.buffer = buffer;
 
         const gainNode = this.audioContext.createGain();
         const effectiveVolume = this.isMuted ? 0 : this.sfxVolume * volume;
-        gainNode.gain.setValueAtTime(effectiveVolume, this.audioContext.currentTime);
+        const now = this.audioContext.currentTime;
+
+        // Short attack ramp avoids clicks from samples that don't start at zero
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(effectiveVolume, now + 0.008);
 
         source.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
@@ -360,7 +473,6 @@ class AudioManager {
         };
 
         source.start(0);
-        console.log(`[AudioManager] Playing sound: ${trackName} (id: ${soundId})`);
         return soundId;
     }
 
@@ -374,7 +486,10 @@ class AudioManager {
         if (!sound) return;
 
         if (fadeOut > 0) {
-            sound.gainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
+            const now = this.audioContext.currentTime;
+            sound.gainNode.gain.cancelScheduledValues(now);
+            sound.gainNode.gain.setValueAtTime(sound.gainNode.gain.value, now);
+            sound.gainNode.gain.linearRampToValueAtTime(0, now + fadeOut);
             setTimeout(() => {
                 try {
                     sound.source.stop();
@@ -396,8 +511,12 @@ class AudioManager {
     setMusicVolume(volume) {
         this.musicVolume = Math.max(0, Math.min(1, volume));
 
-        if (this.currentMusicGain && !this.isMuted) {
-            this.currentMusicGain.gain.setValueAtTime(this.musicVolume, this.audioContext.currentTime);
+        // Short ramp (no click) toward the correct target, respecting ducking
+        if (this.currentMusicGain && this.audioContext) {
+            const now = this.audioContext.currentTime;
+            this.currentMusicGain.gain.cancelScheduledValues(now);
+            this.currentMusicGain.gain.setValueAtTime(this.currentMusicGain.gain.value, now);
+            this.currentMusicGain.gain.linearRampToValueAtTime(this._musicTargetVolume(), now + 0.05);
         }
 
         // Persist to localStorage
@@ -419,15 +538,32 @@ class AudioManager {
     toggleMute() {
         this.isMuted = !this.isMuted;
 
-        if (this.currentMusicGain) {
-            const targetVolume = this.isMuted ? 0 : this.musicVolume;
-            this.currentMusicGain.gain.linearRampToValueAtTime(
-                targetVolume,
-                this.audioContext.currentTime + 0.1
-            );
+        if (this.currentMusicGain && this.audioContext) {
+            const now = this.audioContext.currentTime;
+            this.currentMusicGain.gain.cancelScheduledValues(now);
+            this.currentMusicGain.gain.setValueAtTime(this.currentMusicGain.gain.value, now);
+            this.currentMusicGain.gain.linearRampToValueAtTime(this._musicTargetVolume(), now + 0.1);
+        }
+
+        // Engine synth picks up the mute state on its next update, but apply
+        // immediately too in case the car is idle and updates are sparse
+        if (this.engineSynth && this.enginePlaying) {
+            this.engineSynth.setVolume(this._engineVolume());
         }
 
         localStorage.setItem('audioManager_muted', this.isMuted.toString());
+        return this.isMuted;
+    }
+
+    /**
+     * Set mute state explicitly
+     * @param {boolean} muted
+     * @returns {boolean} New mute state
+     */
+    setMuted(muted) {
+        if (this.isMuted !== !!muted) {
+            this.toggleMute();
+        }
         return this.isMuted;
     }
 
@@ -468,36 +604,64 @@ class AudioManager {
     // ==========================================
 
     /**
-     * Start the engine sound loop
+     * Effective engine output volume (mute, sfx volume, tunable base level)
+     * @private
+     */
+    _engineVolume() {
+        if (this.isMuted) return 0;
+        const engineBaseVolume = this.engineBaseVolume !== undefined ? this.engineBaseVolume : 0.4;
+        return this.sfxVolume * engineBaseVolume;
+    }
+
+    /**
+     * Resolve the EngineSynth class (loaded as an ES module by AudioSystem)
+     * @private
+     */
+    _getEngineSynthClass() {
+        return (typeof window !== 'undefined' && window.EngineSynth) ? window.EngineSynth : null;
+    }
+
+    /**
+     * Start the synthesized engine sound.
+     * Falls back to the old looping sample only if EngineSynth is unavailable.
      */
     startEngineSound() {
         if (this.enginePlaying || !this.audioContext) return;
 
-        const buffer = this.sfxBuffers['engine_idle'];
-        if (!buffer) {
-            console.warn('[AudioManager] Engine sound not loaded');
+        const SynthClass = this._getEngineSynthClass();
+        if (SynthClass) {
+            if (!this.engineSynth) {
+                this.engineSynth = new SynthClass(this.audioContext);
+            }
+            this.engineSynth.setVolume(this._engineVolume());
+            this.engineSynth.start();
+            this.enginePlaying = true;
+            console.log('[AudioManager] Engine synth started');
             return;
         }
 
-        // Create source
+        // Fallback: legacy sample loop (only if the synth module failed to load)
+        const buffer = this.sfxBuffers['engine_idle'];
+        if (!buffer) {
+            console.warn('[AudioManager] Engine sound not available');
+            return;
+        }
+
         this.engineSource = this.audioContext.createBufferSource();
         this.engineSource.buffer = buffer;
         this.engineSource.loop = true;
 
-        // Create gain node
         this.engineGain = this.audioContext.createGain();
-        const effectiveVolume = this.isMuted ? 0 : this.sfxVolume * 0.4;
-        this.engineGain.gain.setValueAtTime(effectiveVolume, this.audioContext.currentTime);
+        const now = this.audioContext.currentTime;
+        this.engineGain.gain.setValueAtTime(0, now);
+        this.engineGain.gain.linearRampToValueAtTime(this._engineVolume(), now + 0.25);
 
-        // Connect
         this.engineSource.connect(this.engineGain);
         this.engineGain.connect(this.audioContext.destination);
-
-        // Start
         this.engineSource.start(0);
         this.enginePlaying = true;
 
-        console.log('[AudioManager] Engine sound started');
+        console.log('[AudioManager] Engine sound started (sample fallback)');
     }
 
     /**
@@ -505,78 +669,105 @@ class AudioManager {
      * @param {number} fadeOut - Fade out duration in seconds
      */
     stopEngineSound(fadeOut = 0.3) {
-        if (!this.enginePlaying || !this.engineSource) return;
+        if (!this.enginePlaying) return;
 
-        if (fadeOut > 0 && this.engineGain) {
-            this.engineGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + fadeOut);
+        if (this.engineSynth && this.engineSynth.isRunning()) {
+            this.engineSynth.stop(fadeOut);
+            this.enginePlaying = false;
+            return;
+        }
+
+        if (!this.engineSource) {
+            this.enginePlaying = false;
+            return;
+        }
+
+        const source = this.engineSource;
+        const gain = this.engineGain;
+        this.enginePlaying = false;
+        this.engineSource = null;
+        this.engineGain = null;
+
+        if (fadeOut > 0 && gain) {
+            const now = this.audioContext.currentTime;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(gain.gain.value, now);
+            gain.gain.linearRampToValueAtTime(0, now + fadeOut);
             setTimeout(() => {
                 try {
-                    this.engineSource.stop();
+                    source.stop();
                 } catch (e) {}
-                this.enginePlaying = false;
-                this.engineSource = null;
-                this.engineGain = null;
             }, fadeOut * 1000);
         } else {
             try {
-                this.engineSource.stop();
+                source.stop();
             } catch (e) {}
-            this.enginePlaying = false;
-            this.engineSource = null;
-            this.engineGain = null;
         }
-
-        console.log('[AudioManager] Engine sound stopped');
     }
 
     /**
-     * Update engine sound based on car speed
+     * Update engine sound based on car speed (called per-frame - no logging)
      * @param {number} speed - Current speed (0 to max)
      * @param {number} maxSpeed - Maximum speed for normalization
-     * @param {boolean} isAccelerating - Whether accelerating (affects volume)
+     * @param {boolean} isAccelerating - Whether accelerating (affects RPM/volume)
      */
     updateEngineSound(speed, maxSpeed = 50, isAccelerating = false) {
-        if (!this.enginePlaying || !this.engineSource || !this.engineGain) return;
+        if (!this.enginePlaying) return;
 
-        // Normalize speed to 0-1 range
         const normalizedSpeed = Math.min(1, Math.max(0, speed / maxSpeed));
 
-        // Pitch: configurable min/max pitch (defaults to 0.8-1.6)
+        if (this.engineSynth && this.engineSynth.isRunning()) {
+            this.engineSynth.setVolume(this._engineVolume());
+            this.engineSynth.update(normalizedSpeed, isAccelerating);
+            return;
+        }
+
+        // Fallback sample loop: pitch/volume tracking with smooth targets
+        if (!this.engineSource || !this.engineGain) return;
+
+        const now = this.audioContext.currentTime;
         const minPitch = this.engineMinPitch || 0.8;
         const maxPitch = this.engineMaxPitch || 1.6;
         const targetPitch = minPitch + (maxPitch - minPitch) * normalizedSpeed;
-        this.engineSource.playbackRate.setValueAtTime(targetPitch, this.audioContext.currentTime);
+        this.engineSource.playbackRate.setTargetAtTime(targetPitch, now, 0.05);
 
-        // Volume: configurable base volume (default 0.4)
-        const engineBaseVolume = this.engineBaseVolume !== undefined ? this.engineBaseVolume : 0.4;
-        const baseVolume = this.isMuted ? 0 : this.sfxVolume * engineBaseVolume;
         const accelBoost = isAccelerating ? 1.2 : 1.0;
-        const speedBoost = 1 + normalizedSpeed * 0.3; // Slightly louder at high speed
-        const targetVolume = baseVolume * accelBoost * speedBoost;
-
-        this.engineGain.gain.setValueAtTime(
-            Math.min(targetVolume, this.sfxVolume),
-            this.audioContext.currentTime
-        );
+        const speedBoost = 1 + normalizedSpeed * 0.3;
+        const targetVolume = Math.min(this._engineVolume() * accelBoost * speedBoost, this.sfxVolume);
+        this.engineGain.gain.setTargetAtTime(targetVolume, now, 0.08);
     }
 
     /**
-     * Play collision sound based on impact intensity
+     * Play collision sound based on impact intensity.
+     * Rate-limited so collision bursts don't stack into clipping, and
+     * volume scales with intensity so light taps stay light.
      * @param {number} intensity - Impact intensity (0-1)
      */
     playCollisionSound(intensity = 0.5) {
-        const soundName = intensity > 0.6 ? 'collision_hard' : 'collision_soft';
-        // Duck music for collision sounds
-        this.duckMusic(0.4);
-        this.playSound(soundName, { volume: 0.7 + intensity * 0.3 });
+        const clamped = Math.min(1, Math.max(0, intensity));
+
+        // Ignore negligible scrapes entirely
+        if (clamped < 0.05) return;
+
+        const soundName = clamped > 0.6 ? 'collision_hard' : 'collision_soft';
+
+        // Only duck music for substantial hits - constant ducking is annoying
+        if (clamped > 0.4) {
+            this.duckMusic(0.4);
+        }
+
+        this.playSound(soundName, {
+            volume: 0.3 + clamped * 0.6,
+            cooldown: 150
+        });
     }
 
     /**
-     * Play tire screech sound
-     * @returns {number} Sound ID for stopping
+     * Play tire screech sound (rate-limited so it can't machine-gun)
+     * @returns {number|null} Sound ID for stopping
      */
     playTireScreech() {
-        return this.playSound('tire_screech', { volume: 0.5 });
+        return this.playSound('tire_screech', { volume: 0.4, cooldown: 400 });
     }
 
     /**
@@ -597,23 +788,25 @@ class AudioManager {
      * @param {number} duration - How long to duck in seconds
      */
     duckMusic(duration = 0.5) {
-        if (!this.currentMusicGain || this.isMuted) return;
+        if (!this.currentMusicGain || this.isMuted || !this.audioContext) return;
 
-        // Clear any pending unduck
+        // Clear any pending unduck so an earlier duck's timer can't restore
+        // volume in the middle of this one
         if (this.duckTimeout) {
             clearTimeout(this.duckTimeout);
+            this.duckTimeout = null;
         }
 
-        // Calculate ducked volume
-        const duckedVolume = this.musicVolume * this.duckLevel;
-
-        // Quick duck down
-        this.currentMusicGain.gain.linearRampToValueAtTime(
-            duckedVolume,
-            this.audioContext.currentTime + 0.05
-        );
-
         this.isDucking = true;
+
+        // Quick duck down (anchored ramp so it starts from the real value)
+        const now = this.audioContext.currentTime;
+        this.currentMusicGain.gain.cancelScheduledValues(now);
+        this.currentMusicGain.gain.setValueAtTime(this.currentMusicGain.gain.value, now);
+        this.currentMusicGain.gain.linearRampToValueAtTime(
+            this._musicTargetVolume(),
+            now + 0.05
+        );
 
         // Schedule unduck
         this.duckTimeout = setTimeout(() => {
@@ -622,19 +815,27 @@ class AudioManager {
     }
 
     /**
-     * Restore music volume after ducking
+     * Restore music volume after ducking.
+     * Always clears the ducking state, even if no music is playing -
+     * otherwise the next track would start stuck at the ducked level.
      */
     unduckMusic() {
-        if (!this.currentMusicGain || this.isMuted) return;
+        if (this.duckTimeout) {
+            clearTimeout(this.duckTimeout);
+            this.duckTimeout = null;
+        }
+        this.isDucking = false;
+
+        if (!this.currentMusicGain || this.isMuted || !this.audioContext) return;
 
         // Gradual restore
+        const now = this.audioContext.currentTime;
+        this.currentMusicGain.gain.cancelScheduledValues(now);
+        this.currentMusicGain.gain.setValueAtTime(this.currentMusicGain.gain.value, now);
         this.currentMusicGain.gain.linearRampToValueAtTime(
-            this.musicVolume,
-            this.audioContext.currentTime + 0.3
+            this._musicTargetVolume(),
+            now + 0.3
         );
-
-        this.isDucking = false;
-        this.duckTimeout = null;
     }
 }
 

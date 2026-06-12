@@ -102,8 +102,10 @@ class LobbyUI {
         this.element.className = 'lobby-ui';
         this.element.innerHTML = `
             <div class="lobby-content">
-                <h1 class="lobby-title">Multiplayer Racer</h1>
+                <h1 class="lobby-title">Joystick Jammers</h1>
 
+                <div class="lobby-columns">
+                <div class="lobby-col lobby-col-left">
                 <div class="room-code-section">
                     <p class="room-code-label">Room Code</p>
                     <div class="room-code" id="room-code-display">----</div>
@@ -115,17 +117,41 @@ class LobbyUI {
                     <h2>Players (<span id="player-count">0</span>)</h2>
                     <ul class="player-list" id="player-list"></ul>
                 </div>
+                </div>
 
-                <div class="settings-section">
+                <div class="lobby-col lobby-col-right">
+                <div class="mode-selection-section">
+                    <h2 class="mode-selection-title">SELECT MODE</h2>
+                    <div class="mode-cards-container">
+                        <div class="mode-card selected" data-mode="race">
+                            <div class="mode-card-preview">
+                                <div class="mode-card-icon">🏁</div>
+                            </div>
+                            <div class="mode-card-content">
+                                <h3 class="mode-card-name">RACE</h3>
+                                <p class="mode-card-tagline">"First across the line wins"</p>
+                                <div class="mode-card-details">
+                                    <span id="race-laps-display">3 laps</span> • Weapons on track
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mode-card" data-mode="derby">
+                            <div class="mode-card-preview">
+                                <div class="mode-card-icon">💥</div>
+                            </div>
+                            <div class="mode-card-content">
+                                <h3 class="mode-card-name">DERBY</h3>
+                                <p class="mode-card-tagline">"Last car standing wins"</p>
+                                <div class="mode-card-details">
+                                    Best of 3 • Full arsenal
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section race-settings" id="race-settings">
                     <label>
-                        Mode:
-                        <select id="mode-select">
-                            <option value="race" selected>Race</option>
-                            <option value="derby" disabled>Derby (Coming Soon)</option>
-                            <option value="fight" disabled>Fight (Coming Soon)</option>
-                        </select>
-                    </label>
-                    <label style="margin-left: 20px;">
                         Laps:
                         <select id="laps-select">
                             <option value="1">1</option>
@@ -133,6 +159,13 @@ class LobbyUI {
                             <option value="5">5</option>
                             <option value="10">10</option>
                         </select>
+                    </label>
+                </div>
+
+                <div class="settings-section" id="track-settings">
+                    <label>
+                        Track:
+                        <select id="track-select"></select>
                     </label>
                 </div>
 
@@ -173,6 +206,8 @@ class LobbyUI {
                 <button class="start-button" id="start-game-btn" disabled>
                     Waiting for players...
                 </button>
+                </div>
+                </div>
             </div>
         `;
 
@@ -193,9 +228,15 @@ class LobbyUI {
         this.elements.joinUrl = this.element.querySelector('#join-url');
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
-        this.elements.modeSelect = this.element.querySelector('#mode-select');
+        this.elements.modeCards = this.element.querySelectorAll('.mode-card');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
+        this.elements.trackSelect = this.element.querySelector('#track-select');
+        this.elements.raceSettings = this.element.querySelector('#race-settings');
+        this.elements.raceLapsDisplay = this.element.querySelector('#race-laps-display');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
+
+        // Track selected mode
+        this.selectedMode = 'race';
 
         // Visual settings elements
         this.elements.visualSettingsSection = this.element.querySelector('.visual-settings-section');
@@ -221,10 +262,24 @@ class LobbyUI {
         if (this.elements.startButton) {
             this.elements.startButton.addEventListener('click', () => {
                 if (this.onStartGame) {
-                    const mode = this.elements.modeSelect?.value || 'race';
+                    const mode = this.selectedMode || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
-                    this.onStartGame({ mode, laps });
+                    const track = this.elements.trackSelect?.value || null;
+                    this.onStartGame({ mode, laps, track });
                 }
+            });
+        }
+
+        // Setup mode card selection
+        this._setupModeCards();
+
+        // Populate track options for the default mode
+        this._updateTrackOptions(this.selectedMode);
+
+        // Setup laps select to update display
+        if (this.elements.lapsSelect) {
+            this.elements.lapsSelect.addEventListener('change', () => {
+                this._updateLapsDisplay();
             });
         }
 
@@ -537,6 +592,96 @@ class LobbyUI {
     }
 
     /**
+     * Setup mode card click handlers
+     * @private
+     */
+    _setupModeCards() {
+        if (!this.elements.modeCards) return;
+
+        this.elements.modeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                this._selectMode(card.dataset.mode);
+            });
+        });
+    }
+
+    /**
+     * Update the track dropdown to match the selected mode
+     * @private
+     * @param {string} mode - 'race' or 'derby'
+     */
+    _updateTrackOptions(mode) {
+        if (!this.elements.trackSelect) return;
+
+        const TRACKS = {
+            race: [
+                { id: 'procedural', name: '✨ Random Circuit' },
+                { id: 'oval', name: 'Classic Oval' }
+            ],
+            derby: [
+                { id: 'random', name: '🎲 Random Arena' },
+                { id: 'derby-bowl', name: 'The Pit' },
+                { id: 'derby-arena', name: 'Iron Cage' },
+                { id: 'derby-coliseum', name: 'The Coliseum' }
+            ]
+        };
+
+        const options = TRACKS[mode] || TRACKS.race;
+        this.elements.trackSelect.innerHTML = options.map(track =>
+            `<option value="${track.id}">${track.name}</option>`
+        ).join('');
+    }
+
+    /**
+     * Select a game mode
+     * @private
+     * @param {string} mode - 'race' or 'derby'
+     */
+    _selectMode(mode) {
+        this.selectedMode = mode;
+
+        // Refresh track choices for this mode
+        this._updateTrackOptions(mode);
+
+        // Update card visual states
+        this.elements.modeCards.forEach(card => {
+            if (card.dataset.mode === mode) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+
+        // Show/hide race-specific settings
+        if (this.elements.raceSettings) {
+            if (mode === 'race') {
+                this.elements.raceSettings.style.display = '';
+            } else {
+                this.elements.raceSettings.style.display = 'none';
+            }
+        }
+
+        // Update start button text
+        this._updateStartButton();
+
+        // Emit event for other components
+        if (this.eventBus) {
+            this.eventBus.emit('lobby:modeSelected', { mode });
+        }
+    }
+
+    /**
+     * Update the laps display in the race mode card
+     * @private
+     */
+    _updateLapsDisplay() {
+        if (this.elements.raceLapsDisplay && this.elements.lapsSelect) {
+            const laps = this.elements.lapsSelect.value;
+            this.elements.raceLapsDisplay.textContent = `${laps} lap${laps === '1' ? '' : 's'}`;
+        }
+    }
+
+    /**
      * Add CSS styles
      * @private
      */
@@ -567,21 +712,38 @@ class LobbyUI {
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
                 border-radius: 20px;
-                padding: 30px 40px;
+                padding: 18px 30px 24px;
                 text-align: center;
                 color: white;
-                max-width: 800px;
-                width: 95%;
-                max-height: 90vh;
+                max-width: 1100px;
+                width: 96%;
+                max-height: 94vh;
                 overflow-y: auto;
             }
+            .lobby-columns {
+                display: flex;
+                gap: 30px;
+                justify-content: center;
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+            .lobby-col {
+                min-width: 280px;
+            }
+            .lobby-col-left {
+                flex: 0 1 320px;
+            }
+            .lobby-col-right {
+                flex: 1 1 420px;
+                max-width: 560px;
+            }
             .lobby-title {
-                font-size: 32px;
-                margin: 0 0 30px;
+                font-size: 26px;
+                margin: 0 0 14px;
                 color: #FFD93D;
             }
             .room-code-section {
-                margin-bottom: 30px;
+                margin-bottom: 16px;
             }
             .room-code-label {
                 margin: 0;
@@ -589,11 +751,11 @@ class LobbyUI {
                 font-size: 14px;
             }
             .room-code {
-                font-size: 48px;
+                font-size: 40px;
                 font-weight: bold;
                 letter-spacing: 8px;
                 color: #FF6B6B;
-                margin: 10px 0;
+                margin: 6px 0;
                 font-family: monospace;
             }
             .room-code-hint {
@@ -602,9 +764,10 @@ class LobbyUI {
                 font-size: 12px;
             }
             .qr-code {
-                width: 300px;
-                height: 300px;
-                margin: 15px auto;
+                display: block;
+                width: 210px;
+                height: 210px;
+                margin: 10px auto;
                 border-radius: 10px;
                 background: white;
                 padding: 8px;
@@ -613,22 +776,22 @@ class LobbyUI {
                 display: none;
             }
             .players-section {
-                margin-bottom: 30px;
+                margin-bottom: 10px;
             }
             .players-section h2 {
-                font-size: 18px;
-                margin: 0 0 15px;
+                font-size: 16px;
+                margin: 0 0 10px;
                 color: #c9a887;
             }
             .player-list {
                 list-style: none;
                 padding: 0;
                 margin: 0;
-                max-height: 200px;
+                max-height: 130px;
                 overflow-y: auto;
             }
             .player-list li {
-                padding: 10px 15px;
+                padding: 7px 12px;
                 background: #3a2015;
                 border-radius: 8px;
                 margin-bottom: 8px;
@@ -645,8 +808,97 @@ class LobbyUI {
                 flex: 1;
                 text-align: left;
             }
+
+            /* Mode Selection Styles */
+            .mode-selection-section {
+                margin-bottom: 14px;
+            }
+            .mode-selection-title {
+                font-size: 14px;
+                color: #c9a887;
+                margin: 0 0 12px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+            .mode-cards-container {
+                display: flex;
+                gap: 16px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .mode-card {
+                --mode-color: #44FF88;
+                background: rgba(26, 26, 46, 0.9);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                border-radius: 15px;
+                padding: 14px;
+                width: 180px;
+                box-sizing: border-box;
+                cursor: pointer;
+                opacity: 0.7;
+                transform: scale(0.97);
+                transition: all 0.3s ease;
+            }
+            .mode-card[data-mode="race"] {
+                --mode-color: #44FF88;
+            }
+            .mode-card[data-mode="derby"] {
+                --mode-color: #FF4444;
+            }
+            .mode-card:hover {
+                opacity: 0.9;
+                transform: scale(0.98);
+                border-color: var(--mode-color);
+                box-shadow: 0 0 20px var(--mode-color);
+            }
+            .mode-card.selected {
+                opacity: 1;
+                transform: scale(1);
+                border: 3px solid var(--mode-color);
+                box-shadow: 0 0 40px var(--mode-color),
+                            inset 0 0 20px rgba(255, 255, 255, 0.05);
+            }
+            .mode-card-preview {
+                height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 10px;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+            }
+            .mode-card-icon {
+                font-size: 36px;
+            }
+            .mode-card-content {
+                text-align: center;
+            }
+            .mode-card-name {
+                font-size: 20px;
+                font-weight: bold;
+                margin: 0 0 6px;
+                color: var(--mode-color);
+            }
+            .mode-card-tagline {
+                font-size: 12px;
+                color: #aaa;
+                margin: 0 0 12px;
+                font-style: italic;
+            }
+            .mode-card-details {
+                font-size: 11px;
+                color: #888;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            /* Race-specific settings */
+            .race-settings {
+                margin-bottom: 12px;
+            }
+
             .settings-section {
-                margin-bottom: 30px;
+                margin-bottom: 12px;
             }
             .settings-section label {
                 color: #c9a887;
@@ -660,7 +912,7 @@ class LobbyUI {
                 margin-left: 10px;
             }
             .visual-settings-section {
-                margin-bottom: 20px;
+                margin-bottom: 14px;
                 background: #3a2015;
                 border-radius: 10px;
                 overflow: hidden;
@@ -772,12 +1024,14 @@ class LobbyUI {
                 background: #FF6B6B;
                 color: #1a0f0a;
                 border: none;
-                padding: 15px 40px;
+                padding: 14px 40px;
                 font-size: 18px;
                 font-weight: bold;
                 border-radius: 30px;
                 cursor: pointer;
                 transition: all 0.2s;
+                width: 100%;
+                max-width: 400px;
             }
             .start-button:disabled {
                 background: #4a2510;
@@ -787,6 +1041,22 @@ class LobbyUI {
             .start-button:not(:disabled):hover {
                 background: #FF8800;
                 transform: scale(1.05);
+            }
+            .start-button.race-mode:not(:disabled) {
+                background: #44FF88;
+                color: #0a1a0f;
+            }
+            .start-button.race-mode:not(:disabled):hover {
+                background: #66FFAA;
+                box-shadow: 0 0 20px #44FF88;
+            }
+            .start-button.derby-mode:not(:disabled) {
+                background: #FF4444;
+                color: #1a0f0f;
+            }
+            .start-button.derby-mode:not(:disabled):hover {
+                background: #FF6666;
+                box-shadow: 0 0 20px #FF4444;
             }
             .audio-settings-section {
                 margin-bottom: 30px;
@@ -978,9 +1248,21 @@ class LobbyUI {
 
         const canStart = this.players.length >= this.minPlayersToStart;
         this.elements.startButton.disabled = !canStart;
+
+        // Mode-specific button text
+        const modeText = this.selectedMode === 'derby' ? 'Start Derby!' : 'Start Race!';
         this.elements.startButton.textContent = canStart
-            ? 'Start Race!'
+            ? modeText
             : `Waiting for players... (${this.players.length}/${this.minPlayersToStart})`;
+
+        // Mode-specific button color
+        if (this.selectedMode === 'derby') {
+            this.elements.startButton.classList.add('derby-mode');
+            this.elements.startButton.classList.remove('race-mode');
+        } else {
+            this.elements.startButton.classList.add('race-mode');
+            this.elements.startButton.classList.remove('derby-mode');
+        }
     }
 
     /**

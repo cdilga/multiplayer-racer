@@ -9,10 +9,35 @@
 - Run IP detection test: `python server/test_ip_detection.py`
 - Install dependencies: `pip install -r requirements.txt`
 
+## Build System - CRITICAL
+
+This project uses **Vite** for bundling JavaScript. The Flask server serves from `dist/` if it exists (production mode).
+
+### ALWAYS Rebuild After Code Changes
+```bash
+npm run build   # Rebuild dist/ folder
+```
+
+**If you modify ANY JavaScript in `static/js/`**, you MUST rebuild before testing in the browser. The server serves from `dist/` which contains the built/bundled code.
+
+### Detecting Stale dist/ Folder
+If you see unexpected behavior:
+1. Check if `dist/` exists and when it was last modified
+2. Compare timestamps: `ls -la dist/js/ static/js/`
+3. Delete and rebuild: `rm -rf dist && npm run build`
+
+### Quick Validation
+```bash
+# Check if dist matches source
+curl -s http://localhost:8000/static/js/GameHost.js | grep "your new function"
+```
+
 ## Testing
 
 ### Running Tests
 - Run all tests: `npm test`
+- Run E2E tests: `npx playwright test tests/e2e`
+- Run game mode tests: `npx playwright test tests/e2e/game-modes.spec.ts`
 - Run tests with UI: `npm run test:ui`
 - Run tests headed (visible browser): `npm run test:headed`
 
@@ -20,6 +45,12 @@
 - Open host interface: `http://localhost:8000/`
 - Test car models: `http://localhost:8000/test/car`
 - Manual testing via multiple browsers/devices
+
+### E2E Test Files
+- `full-game.spec.ts` - Core 4-player game flow (runs in CI)
+- `game-modes.spec.ts` - Procedural race + derby modes, weapon pickups, visuals
+- `game-flow.spec.ts` - Player join/leave, controls
+- `car-movement.spec.ts` - Vehicle physics tests
 
 ## Development Workflow (TDD)
 
@@ -54,16 +85,19 @@ python server/app.py
 
 # 2. Write your test in tests/e2e/
 # 3. Run specific test to see it fail
-npm test -- --grep "should reset car to spawn position"
+npx playwright test --grep "should reset car to spawn position"
 
-# 4. Implement the feature
-# 5. Run tests again
-npm test
+# 4. Implement the feature in static/js/
+# 5. REBUILD (critical!)
+npm run build
 
-# 6. Visual verification
+# 6. Run tests again
+npx playwright test --grep "your test"
+
+# 7. Visual verification
 npm run test:headed
 
-# 7. Push and verify CI
+# 8. Push and verify CI
 git push origin your-branch
 ```
 
@@ -130,6 +164,14 @@ The ONLY acceptable fix is removing CDN dependencies and using NPM + bundling.
   - Log errors with appropriate levels
   - Provide user-friendly error messages
   - Fail gracefully with fallbacks when possible
+
+- **Logging - CRITICAL**:
+  - **Default to NO logging.** Only log when genuinely necessary.
+  - **Per-tick logging is NEVER useful** - even for debugging. 60 logs/sec is unreadable and tanks performance. If you need per-frame data, use Playwright screenshots or the debug overlay UI.
+  - CI will fail if log count matches tick count (see `console-errors.spec.ts`)
+  - Acceptable: errors, one-time init messages, user-triggered events
+  - Unacceptable: logging in update(), render(), step(), or any per-frame method
+  - **For debugging: prefer Playwright** - use `npm run test:headed` with screenshots/recordings. Remove any debug logs before committing.
 
 ## Architecture
 - Server: Flask + Socket.IO (Python)

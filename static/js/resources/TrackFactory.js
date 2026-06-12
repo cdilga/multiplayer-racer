@@ -10,6 +10,8 @@
  *   const track = await factory.create('oval');
  */
 
+import { generateTrackConfig } from './ProceduralTrackGenerator.js';
+
 class TrackFactory {
     /**
      * @param {Object} options
@@ -32,11 +34,18 @@ class TrackFactory {
      * @returns {Promise<Object>} Track data with visual and physics components
      */
     async create(trackId) {
-        // Load config if not cached
-        let config = this.configCache.get(trackId);
-        if (!config) {
-            config = await this.resourceLoader.loadTrack(trackId);
-            this.configCache.set(trackId, config);
+        let config;
+        if (trackId === 'procedural') {
+            // Fresh random circuit every time
+            config = generateTrackConfig();
+            this.configCache.set(config.id, config);
+        } else {
+            // Load config if not cached
+            config = this.configCache.get(trackId);
+            if (!config) {
+                config = await this.resourceLoader.loadTrack(trackId);
+                this.configCache.set(trackId, config);
+            }
         }
 
         // Create container group
@@ -120,6 +129,10 @@ class TrackFactory {
                 return this._createOvalTrack(geometry, visual);
             case 'rectangle':
                 return this._createRectangleTrack(geometry, visual);
+            case 'bowl':
+                return this._createBowlArena(geometry, visual);
+            case 'spline':
+                return this._createSplineTrack(geometry, visual);
             case 'custom':
                 return this._createCustomTrack(geometry, visual);
             default:
@@ -218,6 +231,189 @@ class TrackFactory {
     }
 
     /**
+     * Create bowl arena for derby mode
+     * @private
+     */
+    _createBowlArena(geometry, visual) {
+        const diameter = geometry.diameter || 80;
+        const radius = diameter / 2;
+        const concavity = geometry.floorConcavity || 0.1;
+        const segments = 64;
+
+        // Create a slightly concave circular floor
+        const arenaGeometry = new THREE.CircleGeometry(radius, segments);
+
+        // Apply concavity to vertices (bowl shape)
+        const positions = arenaGeometry.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+            const x = positions.getX(i);
+            const y = positions.getY(i);
+            const distFromCenter = Math.sqrt(x * x + y * y);
+            const normalizedDist = distFromCenter / radius;
+            // Bowl curve: lower at center, higher at edges
+            const height = (normalizedDist * normalizedDist) * concavity * radius;
+            positions.setZ(i, -height);
+        }
+        arenaGeometry.computeVertexNormals();
+
+        const arenaMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.85,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
+        arenaMesh.rotation.x = -Math.PI / 2;
+        arenaMesh.position.y = 0.02;
+        arenaMesh.receiveShadow = true;
+        arenaMesh.userData = { isTrackSurface: true, isBowl: true };
+
+        return arenaMesh;
+    }
+
+    /**
+     * Create procedural spline track as a ribbon between edge loops
+     * @private
+     */
+    _createSplineTrack(geometry, visual) {
+        const left = geometry.leftEdge;
+        const right = geometry.rightEdge;
+        if (!left || !right || left.length !== right.length) {
+            console.warn('Spline track missing edge data');
+            return null;
+        }
+
+        const n = left.length;
+        const positions = new Float32Array(n * 2 * 3 + 6);
+        const indices = [];
+
+        // Vertex pairs (left, right) along the loop
+        for (let i = 0; i < n; i++) {
+            positions[i * 6 + 0] = left[i].x;
+            positions[i * 6 + 1] = 0.01;
+            positions[i * 6 + 2] = left[i].z;
+            positions[i * 6 + 3] = right[i].x;
+            positions[i * 6 + 4] = 0.01;
+            positions[i * 6 + 5] = right[i].z;
+        }
+        // Closing pair duplicates the first
+        positions[n * 6 + 0] = left[0].x;
+        positions[n * 6 + 1] = 0.01;
+        positions[n * 6 + 2] = left[0].z;
+        positions[n * 6 + 3] = right[0].x;
+        positions[n * 6 + 4] = 0.01;
+        positions[n * 6 + 5] = right[0].z;
+
+        for (let i = 0; i < n; i++) {
+            const a = i * 2;
+            const b = i * 2 + 1;
+            const c = i * 2 + 2;
+            const d = i * 2 + 3;
+            indices.push(a, b, c, b, d, c);
+        }
+
+        const trackGeometry = new THREE.BufferGeometry();
+        trackGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        trackGeometry.setIndex(indices);
+        trackGeometry.computeVertexNormals();
+
+        const trackMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.85,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
+        trackMesh.receiveShadow = true;
+        trackMesh.userData = { isTrackSurface: true };
+
+        return trackMesh;
+    }
+
+    /**
+     * Create glowing barrier wall mesh along an edge loop
+     * @private
+     */
+    _createEdgeBarrierMesh(points, height, visual) {
+        const n = points.length;
+        const positions = new Float32Array((n + 1) * 2 * 3);
+        const indices = [];
+
+        for (let i = 0; i <= n; i++) {
+            const point = points[i % n];
+            positions[i * 6 + 0] = point.x;
+            positions[i * 6 + 1] = 0;
+            positions[i * 6 + 2] = point.z;
+            positions[i * 6 + 3] = point.x;
+            positions[i * 6 + 4] = height;
+            positions[i * 6 + 5] = point.z;
+        }
+
+        for (let i = 0; i < n; i++) {
+            const a = i * 2;
+            const b = i * 2 + 1;
+            const c = i * 2 + 2;
+            const d = i * 2 + 3;
+            indices.push(a, b, c, b, d, c);
+        }
+
+        const wallGeometry = new THREE.BufferGeometry();
+        wallGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        wallGeometry.setIndex(indices);
+        wallGeometry.computeVertexNormals();
+
+        const wallMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.6,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0.5
+        });
+
+        const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        wall.userData = { isBarrier: true, barrierType: 'spline-wall' };
+
+        return wall;
+    }
+
+    /**
+     * Create start/finish line marking for spline tracks
+     * @private
+     */
+    _createStartLine(geometry, visual) {
+        const left = geometry.leftEdge?.[0];
+        const right = geometry.rightEdge?.[0];
+        if (!left || !right) return null;
+
+        const dx = right.x - left.x;
+        const dz = right.z - left.z;
+        const length = Math.sqrt(dx * dx + dz * dz);
+
+        const lineGeometry = new THREE.PlaneGeometry(length, 2);
+        lineGeometry.rotateX(-Math.PI / 2);
+        const lineMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color || '#ffffff'),
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0xffffff,
+            emissiveIntensity: visual.emissiveIntensity || 0.8,
+            side: THREE.DoubleSide
+        });
+
+        const line = new THREE.Mesh(lineGeometry, lineMaterial);
+        // Yaw so the plane's long axis spans from left edge to right edge
+        line.rotation.y = Math.atan2(-dz, dx);
+        line.position.set((left.x + right.x) / 2, 0.03, (left.z + right.z) / 2);
+        line.userData = { isStartLine: true };
+
+        return line;
+    }
+
+    /**
      * Create custom track from path data
      * @private
      */
@@ -236,7 +432,7 @@ class TrackFactory {
         const geometry = config.geometry;
         const visual = config.visual.barriers;
 
-        const barrierHeight = geometry.barrierHeight || 2;
+        const barrierHeight = geometry.barrierHeight || geometry.wallHeight || 2;
         const barrierThickness = geometry.barrierThickness || 0.5;
 
         if (geometry.type === 'oval') {
@@ -257,9 +453,86 @@ class TrackFactory {
             );
 
             barriers.push(innerBarrier, outerBarrier);
+        } else if (geometry.type === 'bowl') {
+            // Create outer wall for bowl arena
+            const diameter = geometry.diameter || 80;
+            const radius = diameter / 2;
+            const wallHeight = geometry.wallHeight || 15;
+            const wallSlope = geometry.wallSlope || 30;
+
+            const outerWall = this._createBowlWall(
+                radius,
+                wallHeight,
+                wallSlope,
+                visual
+            );
+            barriers.push(outerWall);
+        } else if (geometry.type === 'spline') {
+            // Glowing walls along both edges of the procedural circuit
+            const height = geometry.barrierHeight || 1.4;
+            barriers.push(this._createEdgeBarrierMesh(geometry.leftEdge, height, visual));
+            barriers.push(this._createEdgeBarrierMesh(geometry.rightEdge, height, visual));
+
+            // Start/finish line marking
+            const startLine = this._createStartLine(geometry, config.visual.lineMarkings || {});
+            if (startLine) barriers.push(startLine);
         }
 
         return barriers;
+    }
+
+    /**
+     * Create sloped wall for bowl arena
+     * @private
+     */
+    _createBowlWall(radius, height, slopeAngle, visual) {
+        const wallGroup = new THREE.Group();
+        wallGroup.userData = { isBarrier: true, barrierType: 'bowl-wall' };
+
+        const material = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0,
+            side: THREE.DoubleSide
+        });
+
+        // Create a sloped cylinder wall
+        const segments = 64;
+        const slopeRad = (slopeAngle * Math.PI) / 180;
+        const topRadius = radius + Math.tan(slopeRad) * height;
+        const thickness = 1;
+
+        // Create outer cylinder (visible wall)
+        const wallGeometry = new THREE.CylinderGeometry(
+            topRadius,      // top radius
+            radius,         // bottom radius
+            height,         // height
+            segments,       // radial segments
+            1,              // height segments
+            true            // open ended
+        );
+
+        const wall = new THREE.Mesh(wallGeometry, material);
+        wall.position.y = height / 2;
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        wallGroup.add(wall);
+
+        // Add a rim at the top for visibility
+        const rimGeometry = new THREE.TorusGeometry(topRadius, thickness / 2, 8, segments);
+        const rimMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: (visual.emissiveIntensity || 0) * 1.5
+        });
+        const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+        rim.rotation.x = Math.PI / 2;
+        rim.position.y = height;
+        wallGroup.add(rim);
+
+        return wallGroup;
     }
 
     /**

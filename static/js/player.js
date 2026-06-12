@@ -13,6 +13,7 @@ const gameState = window.gameState = {
     carColor: null,
     connected: false,
     gameStarted: false,
+    gameMode: 'race', // 'race' or 'derby'
     controls: {
         steering: 0,       // -1 to 1 (left to right)
         acceleration: 0,   // 0 to 1
@@ -22,8 +23,10 @@ const gameState = window.gameState = {
     touchControls: {
         steeringJoystick: null, // Joystick instance
         accelerateTouchId: null, // Touch ID for accelerator
-        brakeTouchId: null // Touch ID for brake
+        brakeTouchId: null, // Touch ID for brake
+        fireTouchId: null // Touch ID for fire button (derby mode)
     },
+    weapon: null, // Current weapon { id, name, icon }
     lastSpeed: 0,
     lastUpdateTime: 0,
     nameSet: false, // Flag to track if user has set a custom name
@@ -202,6 +205,12 @@ socket.on('game_joined', (data) => {
     gameState.playerId = data.player_id;
     gameState.carColor = data.car_color;
 
+    // Sync mode chosen before we joined (late join / reconnect)
+    if (data.mode) {
+        gameState.gameMode = data.mode;
+        updateModeDisplay(data.mode);
+    }
+
     // Store player ID for reconnection
     try {
         const reconnectKey = `racer_reconnect_${gameState.roomCode}`;
@@ -288,14 +297,38 @@ socket.on('game_joined', (data) => {
 
 socket.on('game_started', () => {
     gameState.gameStarted = true;
-    
+
     // Initialize game controls
     initGameControls();
-    
+
     // Show game screen
     showScreen('game');
-    
+
     // Note: The game loop (updateLoop) is already running via requestAnimationFrame
+});
+
+// Handle mode selection from host
+socket.on('mode_selected', (data) => {
+    console.log('Mode selected:', data);
+    gameState.gameMode = data.mode;
+    updateModeDisplay(data.mode);
+});
+
+// Handle weapon pickup notification from host
+socket.on('weapon_pickup', (data) => {
+    gameState.weapon = {
+        id: data.weaponId,
+        name: data.weaponName,
+        icon: data.icon || getWeaponIcon(data.weaponId)
+    };
+    updateWeaponDisplay();
+    hapticBuzz([30, 40, 60]);
+});
+
+// Handle weapon fired (used) notification
+socket.on('weapon_fired', (data) => {
+    gameState.weapon = null;
+    updateWeaponDisplay();
 });
 
 socket.on('host_disconnected', () => {
@@ -457,6 +490,104 @@ function showScreen(screenName) {
     }
 }
 
+/**
+ * Get weapon icon by weapon ID
+ * @param {string} weaponId
+ * @returns {string} Emoji icon
+ */
+function getWeaponIcon(weaponId) {
+    const icons = {
+        'missile': '\uD83D\uDE80',
+        'mine': '\uD83D\uDCA3',
+        'boost': '\uD83D\uDD25',
+        'shield': '\uD83D\uDEE1\uFE0F',
+        'emp': '\u26A1',
+        'sniper': '\u26A1',
+        'oil-slick': '\uD83D\uDEE2\uFE0F',
+        'flamethrower': '\uD83D\uDD25'
+    };
+    return icons[weaponId] || '\u2753';
+}
+
+/**
+ * Update the weapon display on the controller
+ */
+function updateWeaponDisplay() {
+    const weaponIndicator = document.getElementById('weapon-indicator');
+    const fireBtn = document.getElementById('fire-btn');
+
+    if (weaponIndicator) {
+        if (gameState.weapon) {
+            weaponIndicator.innerHTML = `${gameState.weapon.icon}<span>${gameState.weapon.name}</span>`;
+            weaponIndicator.classList.add('has-weapon');
+        } else {
+            weaponIndicator.innerHTML = '<span>No Weapon</span>';
+            weaponIndicator.classList.remove('has-weapon');
+        }
+    }
+
+    if (fireBtn) {
+        if (gameState.weapon) {
+            fireBtn.classList.add('enabled');
+            fireBtn.style.opacity = '1';
+            fireBtn.innerHTML = `${gameState.weapon.icon}<br>FIRE`;
+        } else {
+            fireBtn.classList.remove('enabled');
+            fireBtn.style.opacity = '0.3';
+            fireBtn.innerHTML = 'FIRE';
+        }
+    }
+}
+
+/**
+ * Fire weapon
+ */
+function fireWeapon() {
+    if (!gameState.weapon) {
+        console.log('No weapon to fire');
+        return;
+    }
+
+    socket.emit('weapon_fire', {
+        room_code: gameState.roomCode,
+        player_id: gameState.playerId
+    });
+    hapticBuzz(40);
+
+    // Optimistically clear weapon (server will confirm)
+    gameState.weapon = null;
+    updateWeaponDisplay();
+}
+
+/**
+ * Update the mode display in the waiting room
+ * @param {string} mode - 'race' or 'derby'
+ */
+function updateModeDisplay(mode) {
+    const modeDisplay = document.querySelector('.mode-display');
+    const modeIcon = document.getElementById('mode-icon');
+    const modeName = document.getElementById('mode-name');
+    const waitingText = document.getElementById('waiting-text');
+
+    if (modeDisplay) {
+        modeDisplay.setAttribute('data-mode', mode);
+    }
+
+    if (modeIcon) {
+        modeIcon.textContent = mode === 'derby' ? '💥' : '🏁';
+    }
+
+    if (modeName) {
+        modeName.textContent = mode === 'derby' ? 'DERBY' : 'RACE';
+    }
+
+    if (waitingText) {
+        waitingText.textContent = mode === 'derby'
+            ? 'The host will start the derby soon'
+            : 'The host will start the race soon';
+    }
+}
+
 function resetGame() {
     // Reset game state
     gameState.playerName = '';
@@ -601,6 +732,40 @@ function initGameControls() {
     elements.controlsContainer.appendChild(steeringArea);
     elements.controlsContainer.appendChild(pedalsArea);
 
+    // Add fire button and weapon indicator (weapons available in every mode)
+    const weaponArea = document.createElement('div');
+    weaponArea.id = 'weapon-area';
+    weaponArea.className = 'weapon-area';
+
+    // Weapon indicator shows current weapon
+    const weaponIndicator = document.createElement('div');
+    weaponIndicator.id = 'weapon-indicator';
+    weaponIndicator.className = 'weapon-indicator';
+    weaponIndicator.innerHTML = '<span>No Weapon</span>';
+
+    // Fire button - triangle shaped
+    const fireBtn = document.createElement('div');
+    fireBtn.id = 'fire-btn';
+    fireBtn.className = 'fire-btn';
+    fireBtn.innerHTML = 'FIRE';
+    fireBtn.style.opacity = '0.3'; // Disabled until weapon picked up
+
+    weaponArea.appendChild(weaponIndicator);
+    weaponArea.appendChild(fireBtn);
+    elements.controlsContainer.appendChild(weaponArea);
+
+    // Fire button touch handlers
+    fireBtn.addEventListener('touchstart', handleFireStart, { passive: false });
+    fireBtn.addEventListener('touchend', handleFireEnd, { passive: false });
+    fireBtn.addEventListener('touchcancel', handleFireEnd, { passive: false });
+    fireBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Keyboard/desktop fallback
+    fireBtn.addEventListener('mousedown', handleFireStart);
+    fireBtn.addEventListener('mouseup', handleFireEnd);
+
+    elements.fireBtn = fireBtn;
+    elements.weaponIndicator = weaponIndicator;
+
     // Update element references
     elements.steeringArea = steeringArea;
     elements.pedalsArea = pedalsArea;
@@ -725,6 +890,61 @@ function handleBrakeEnd(e) {
     }
 }
 
+// Touch handlers for fire button with touch ID tracking
+function handleFireStart(e) {
+    e.preventDefault();
+
+    // Mouse/desktop fallback
+    if (!e.changedTouches) {
+        if (elements.fireBtn) {
+            elements.fireBtn.classList.add('pressed');
+        }
+        fireWeapon();
+        return;
+    }
+
+    for (const touch of e.changedTouches) {
+        if (gameState.touchControls.fireTouchId === null) {
+            gameState.touchControls.fireTouchId = touch.identifier;
+            if (elements.fireBtn) {
+                elements.fireBtn.classList.add('pressed');
+            }
+            // Fire weapon on touch start
+            fireWeapon();
+            break;
+        }
+    }
+}
+
+function handleFireEnd(e) {
+    if (!e.changedTouches) {
+        if (elements.fireBtn) {
+            elements.fireBtn.classList.remove('pressed');
+        }
+        return;
+    }
+
+    for (const touch of e.changedTouches) {
+        if (touch.identifier === gameState.touchControls.fireTouchId) {
+            gameState.touchControls.fireTouchId = null;
+            if (elements.fireBtn) {
+                elements.fireBtn.classList.remove('pressed');
+            }
+            break;
+        }
+    }
+}
+
+/**
+ * Trigger haptic feedback where supported (Android Chrome etc.)
+ * @param {number|number[]} pattern - Vibration pattern in ms
+ */
+function hapticBuzz(pattern) {
+    if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+    }
+}
+
 // Old steering functions removed - now using Joystick class
 
 function setSteering(value) {
@@ -739,32 +959,31 @@ function setBraking(value) {
     gameState.controls.braking = value;
 }
 
-function sendControls() {
+// Release all controls and push the zeroed state to the server immediately.
+// Used when the tab is hidden/locked so the car doesn't drive itself.
+function releaseAllControls() {
+    gameState.controls.steering = 0;
+    gameState.controls.acceleration = 0;
+    gameState.controls.braking = 0;
+    gameState.touchControls.accelerateTouchId = null;
+    gameState.touchControls.brakeTouchId = null;
+    gameState.touchControls.fireTouchId = null;
 
-    var to_send = {
-        room_code: gameState.roomCode,
-        controls: {acceleration: gameState.controls.acceleration,
-        braking: gameState.controls.braking,
-        steering: gameState.controls.steering},
-        player_id: gameState.playerId,
-        timestamp: Date.now()
+    if (gameState.gameStarted && gameState.playerId) {
+        socket.emit('player_control_update', {
+            player_id: gameState.playerId,
+            room_code: gameState.roomCode,
+            controls: { steering: 0, acceleration: 0, braking: 0 },
+            timestamp: Date.now()
+        });
     }
-    console.log('Sending controls:', to_send);
-    socket.emit('player_controls_update', {
-        to_send
-    });
 }
 
-// Game loop using setTimeout for consistent 60 FPS
-function gameLoop() {
-    if (!gameState.gameStarted) return;
-    
-    // Send control updates to server as needed
-    sendControls();
-    
-    // Continue the game loop
-    setTimeout(gameLoop, 1000 / 60); // 60 FPS update rate
-}
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        releaseAllControls();
+    }
+});
 
 // Update player name function
 function updatePlayerName(name) {

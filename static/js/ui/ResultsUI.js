@@ -26,6 +26,7 @@ class ResultsUI {
         // State
         this.visible = false;
         this.results = [];
+        this.mode = 'race'; // 'race' or 'derby'
 
         // Elements
         this.element = null;
@@ -276,6 +277,67 @@ class ResultsUI {
             .btn-secondary:hover {
                 background: #444;
             }
+
+            /* Derby Mode Styles */
+            .results-ui.derby-mode .results-content {
+                background: linear-gradient(135deg, #2a0f0f 0%, #1a1a2e 100%);
+                border: 2px solid #FF4444;
+                box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+            }
+            .results-ui.derby-mode .results-title,
+            .derby-title {
+                color: #FF4444 !important;
+                text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+            }
+            .results-ui.derby-mode .btn-primary {
+                background: linear-gradient(135deg, #FF4444, #FF8844);
+                color: white;
+            }
+            .results-ui.derby-mode .btn-primary:hover {
+                background: linear-gradient(135deg, #FF6666, #FFAA66);
+            }
+            .results-ui.derby-mode .podium-1 .podium-stand {
+                background: linear-gradient(#FF4444, #CC2222);
+            }
+            .results-ui.derby-mode .podium-2 .podium-stand {
+                background: linear-gradient(#FF8844, #CC6633);
+            }
+            .results-ui.derby-mode .podium-3 .podium-stand {
+                background: linear-gradient(#FFAA44, #CC8833);
+            }
+            .results-ui.derby-mode tr:first-child td {
+                color: #FF4444;
+            }
+            .podium-winner .podium-player {
+                border: 2px solid #FF4444;
+                box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+                animation: winner-pulse 1.5s ease-in-out infinite;
+            }
+            @keyframes winner-pulse {
+                0%, 100% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.5); }
+                50% { box-shadow: 0 0 25px rgba(255, 68, 68, 0.8); }
+            }
+            .podium-stats {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 5px;
+            }
+            .podium-rounds {
+                color: #FF8844;
+                font-weight: bold;
+            }
+            .podium-points {
+                color: #888;
+                font-size: 12px;
+            }
+            .rounds-cell {
+                font-weight: bold;
+                color: #FF8844;
+            }
+            .points-cell {
+                font-family: monospace;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -288,7 +350,14 @@ class ResultsUI {
         if (!this.eventBus) return;
 
         this.eventBus.on('race:finished', (data) => {
+            this.mode = 'race';
             this.showResults(data.results);
+        });
+
+        // Derby match end
+        this.eventBus.on('derby:matchEnd', (data) => {
+            this.mode = 'derby';
+            this.showDerbyResults(data);
         });
 
         this.eventBus.on('game:lobby', () => {
@@ -302,11 +371,43 @@ class ResultsUI {
     }
 
     /**
+     * Set the game mode
+     * @param {string} mode - 'race' or 'derby'
+     */
+    setMode(mode) {
+        this.mode = mode;
+    }
+
+    /**
      * Show results with data
      * @param {Object[]} results - Array of { position, playerId, finishTime, bestLapTime }
      */
     showResults(results) {
         this.results = results;
+
+        // Reset to race mode styling
+        if (this.element) {
+            this.element.classList.remove('derby-mode');
+        }
+
+        // Update title for race
+        const title = this.element.querySelector('.results-title');
+        if (title) {
+            title.textContent = 'Race Complete!';
+            title.classList.remove('derby-title');
+        }
+
+        // Update table header for race
+        const thead = this.element.querySelector('thead tr');
+        if (thead) {
+            thead.innerHTML = `
+                <th>Pos</th>
+                <th>Player</th>
+                <th>Time</th>
+                <th>Best Lap</th>
+            `;
+        }
+
         this._renderPodium(results.slice(0, 3));
         this._renderTable(results);
         this.show();
@@ -363,6 +464,83 @@ class ResultsUI {
         const millis = Math.floor(ms % 1000);
 
         return `${minutes}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
+    }
+
+    /**
+     * Show Derby results
+     * @param {Object} data - Derby match end data { winnerId, standings, roundWins, matchScores }
+     */
+    showDerbyResults(data) {
+        this.results = data.standings || [];
+
+        // Update title for derby
+        const title = this.element.querySelector('.results-title');
+        if (title) {
+            title.textContent = 'Derby Complete!';
+            title.classList.add('derby-title');
+        }
+
+        // Update table header for derby
+        const thead = this.element.querySelector('thead tr');
+        if (thead) {
+            thead.innerHTML = `
+                <th>Pos</th>
+                <th>Player</th>
+                <th>Rounds</th>
+                <th>Points</th>
+            `;
+        }
+
+        // Apply derby styling
+        if (this.element) {
+            this.element.classList.add('derby-mode');
+        }
+
+        this._renderDerbyPodium(this.results.slice(0, 3), data.winnerId);
+        this._renderDerbyTable(this.results);
+        this.show();
+    }
+
+    /**
+     * Render derby podium
+     * @private
+     */
+    _renderDerbyPodium(topThree, winnerId) {
+        if (!this.elements.podium) return;
+
+        this.elements.podium.innerHTML = topThree.map((result, index) => {
+            const position = index + 1;
+            const isWinner = result.playerId === winnerId;
+            return `
+                <div class="podium-place podium-${position} ${isWinner ? 'podium-winner' : ''}">
+                    <div class="podium-player">
+                        <div class="podium-name">${result.playerId || `Player ${position}`}</div>
+                        <div class="podium-stats">
+                            <span class="podium-rounds">${result.roundWins || 0} win${(result.roundWins || 0) !== 1 ? 's' : ''}</span>
+                            <span class="podium-points">${result.totalPoints || 0} pts</span>
+                        </div>
+                    </div>
+                    <div class="podium-stand">${position}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Render derby results table
+     * @private
+     */
+    _renderDerbyTable(standings) {
+        if (!this.elements.tableBody) return;
+
+        this.elements.tableBody.innerHTML = standings.map((result) => `
+            <tr>
+                <td class="position-cell">${result.position}</td>
+                <td>${result.playerId || `Player ${result.position}`}</td>
+                <td class="rounds-cell">${result.roundWins || 0}</td>
+                <td class="points-cell">${result.totalPoints || 0}</td>
+            </tr>
+        `).join('');
     }
 
     /**
