@@ -3,4 +3,4 @@ on:
   workflow_dispatch:
 jobs:
   ping:
-    uses: cdilga/ppaas/.github/workflows/ping.yml@main
+    uses: cdilga/ppaas-workflows/.github/workflows/ping.yml@main

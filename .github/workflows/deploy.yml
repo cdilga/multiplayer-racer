@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: cdilga/ppaas/.github/workflows/deploy-service.yml@main
+    uses: cdilga/ppaas-workflows/.github/workflows/deploy-service.yml@main
     with:
       image_name: cdilga/multiplayer-racer
       deploy_dir: ~/multiplayer-racer
