@@ -7,7 +7,7 @@ import { test, expect, chromium, devices } from '@playwright/test';
 const BASE = process.env.LIVE_URL || 'https://jammers.dilger.dev';
 
 test('live: host creates room, player joins, race starts', async () => {
-    test.setTimeout(120000);
+    test.setTimeout(300000);  // generous: cold CF cache after a deploy makes first loads slow
     const browser = await chromium.launch();
 
     // Host on a desktop viewport
@@ -31,7 +31,8 @@ test('live: host creates room, player joins, race starts', async () => {
     // Player joins from a phone profile
     const playerCtx = await browser.newContext({ ...devices['iPhone 13'] });
     const player = await playerCtx.newPage();
-    await player.goto(`${BASE}/player?room=${roomCode}`, { waitUntil: 'domcontentloaded' });
+    console.log('Loading player page...');
+    await player.goto(`${BASE}/player?room=${roomCode}`, { waitUntil: 'domcontentloaded', timeout: 90000 });
     await player.fill('#player-name', 'LiveSmoke');
     await player.click('#join-btn');
 
