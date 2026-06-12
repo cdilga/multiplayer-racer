@@ -2,6 +2,8 @@
 
 # 🏎️ Multiplayer Racer
 
+> 🎮 **Play it live: [jammers.dilger.dev](https://jammers.dilger.dev)** (alias: [multiplayer-racer.dilger.dev](https://multiplayer-racer.dilger.dev)) — open on a big screen, players join by scanning the QR with their phones.
+
 ### *Real-time browser-based multiplayer racing on the big screen*
 
 [![CI](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml/badge.svg)](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml)
