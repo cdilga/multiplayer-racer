@@ -33,6 +33,7 @@ import { LobbyUI } from './ui/LobbyUI.js';
 import { RaceUI } from './ui/RaceUI.js';
 import { ResultsUI } from './ui/ResultsUI.js';
 import { RoomCodeOverlayUI } from './ui/RoomCodeOverlayUI.js';
+import { GameMenuUI } from './ui/GameMenuUI.js';
 import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
 import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
@@ -216,6 +217,16 @@ class GameHost {
         });
         this.ui.roomCodeOverlay.init();
 
+        // Always-available menu: restart / back to lobby / reset cars / help
+        this.ui.gameMenu = new GameMenuUI({
+            eventBus: this.eventBus,
+            container: this.container
+        });
+        this.ui.gameMenu.init();
+        this.ui.gameMenu.setOnRestart(() => this._startNewRace());
+        this.ui.gameMenu.setOnBackToLobby(() => this._returnToLobby());
+        this.ui.gameMenu.setOnResetCars(() => this.resetAllVehicles());
+
         // Debug UI components
         this.ui.debugOverlay = new DebugOverlayUI({
             eventBus: this.eventBus,
@@ -257,6 +268,20 @@ class GameHost {
         this.eventBus.on('network:playerJoined', this._onPlayerJoined);
         this.eventBus.on('network:playerLeft', this._onPlayerLeft);
         this.eventBus.on('network:playerInput', this._onPlayerInput);
+
+        // Player-requested car reset (stuck car escape hatch)
+        this.eventBus.on('network:carResetRequest', ({ playerId }) => {
+            const vehicle = this.vehicles.get(playerId);
+            if (!vehicle || vehicle.isDead) return;
+
+            // Races go back to the last checkpoint; arenas right the car in place
+            const spot = this._getRespawnPosition(vehicle);
+            if (spot) {
+                this.systems.physics.resetVehicle(vehicle.id, spot, spot.rotation);
+            } else {
+                this._rightVehicle(vehicle);
+            }
+        });
 
         // Race events
         this.eventBus.on('race:finished', this._onRaceFinished);
@@ -460,9 +485,41 @@ class GameHost {
             const lighting = this.track.getLightingConfig();
             this.systems.render.setLighting(lighting);
 
+            // Camera profile: walled arenas need a high angle so the walls
+            // don't occlude the cars; open tracks use the default chase view
+            this._applyCameraProfile(trackData.config);
+
             console.log('GameHost: Track created:', trackId);
         } catch (error) {
             console.error('GameHost: Error creating track:', error);
+        }
+    }
+
+    /**
+     * Pick camera parameters for the loaded track. Derby bowls have tall
+     * walls, so the camera goes high and steep to look over them instead of
+     * through them.
+     * @private
+     * @param {Object} trackConfig
+     */
+    _applyCameraProfile(trackConfig) {
+        const geometry = trackConfig.geometry || {};
+        const isWalledArena = trackConfig.type === 'derby' || geometry.type === 'bowl';
+
+        if (isWalledArena) {
+            const wallHeight = geometry.wallHeight || 15;
+            const radius = (geometry.diameter || 80) / 2;
+            const height = wallHeight + 35;
+
+            this.systems.render.setCameraParams({
+                offset: { x: 0, y: height, z: radius * 0.75 },
+                lookOffset: { x: 0, y: 0, z: 0 },
+                baseCameraHeight: height,
+                minCameraDepth: 15,
+                maxCameraDepth: radius * 1.1
+            });
+        } else {
+            this.systems.render.resetCameraParams();
         }
     }
 
@@ -472,6 +529,12 @@ class GameHost {
      */
     async _onPlayerJoined(playerData) {
         console.log('GameHost: Player joined:', playerData.id);
+
+        // Reconnects and duplicate join events must not spawn a second car
+        if (this.vehicles.has(playerData.id)) {
+            console.log('GameHost: Vehicle already exists for player, skipping creation:', playerData.id);
+            return;
+        }
 
         try {
             // Determine spawn position based on game state
@@ -963,6 +1026,11 @@ class GameHost {
             vehicle.updateEffects(dt);
         }
 
+        // Auto-right flipped cars (critical in derby where respawn is off)
+        if (state === GAME_STATES.RACING) {
+            this._updateFlipRecovery(dt);
+        }
+
         // Update race UI and audio
         if (state === GAME_STATES.RACING) {
             // Only update race-specific UI in race mode
@@ -1012,6 +1080,70 @@ class GameHost {
             }
             this.ui.race.updateHealthBars(healthData);
         }
+    }
+
+    /**
+     * Detect vehicles stuck on their roof/side and right them after a short
+     * delay. Without this, flipped cars in derby are dead weight forever
+     * because elimination mode has no respawns.
+     * @private
+     * @param {number} dt - Delta time in seconds
+     */
+    _updateFlipRecovery(dt) {
+        const FLIP_UP_THRESHOLD = 0.35;   // world-up Y component below this = flipped
+        const FLIP_RECOVER_SECONDS = 2.5;
+
+        for (const [playerId, vehicle] of this.vehicles) {
+            const body = vehicle.physicsBody;
+            if (!body || vehicle.isDead) {
+                vehicle._flipTimer = 0;
+                continue;
+            }
+
+            const rot = body.rotation();
+            // Y component of the chassis up-vector for a unit quaternion
+            const upY = 1 - 2 * (rot.x * rot.x + rot.z * rot.z);
+
+            if (upY < FLIP_UP_THRESHOLD) {
+                vehicle._flipTimer = (vehicle._flipTimer || 0) + dt;
+                if (vehicle._flipTimer >= FLIP_RECOVER_SECONDS) {
+                    this._rightVehicle(vehicle);
+                    vehicle._flipTimer = 0;
+                }
+            } else {
+                vehicle._flipTimer = 0;
+            }
+        }
+    }
+
+    /**
+     * Set a flipped vehicle upright in place, preserving its heading
+     * @private
+     * @param {Vehicle} vehicle
+     */
+    _rightVehicle(vehicle) {
+        const body = vehicle.physicsBody;
+        if (!body) return;
+
+        const pos = body.translation();
+        const rot = body.rotation();
+
+        // Heading from the chassis forward axis (quaternion applied to +Z),
+        // which stays horizontal-ish even when the car is on its roof
+        const fwdX = 2 * (rot.x * rot.z + rot.w * rot.y);
+        const fwdZ = 1 - 2 * (rot.x * rot.x + rot.y * rot.y);
+        const yaw = Math.atan2(fwdX, fwdZ) || 0;
+
+        this.systems.physics.resetVehicle(
+            vehicle.id,
+            { x: pos.x, y: pos.y + 1.5, z: pos.z },
+            yaw
+        );
+
+        this.eventBus.emit('vehicle:flipRecovered', {
+            vehicleId: vehicle.id,
+            playerId: vehicle.playerId
+        });
     }
 
     /**

@@ -141,6 +141,26 @@
             top: 10px;
             right: 230px;
         }
+
+        /* Fullscreen toggle */
+        #fullscreen-toggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 500;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        #fullscreen-toggle:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body tabindex="-1">
@@ -170,6 +190,32 @@
     </div>
 
     <!-- Debug UI panels are created dynamically by StatsOverlayUI and PhysicsTuningUI -->
+
+    <!-- Fullscreen toggle -->
+    <button id="fullscreen-toggle">⛶ Fullscreen</button>
+    <script>
+        (function() {
+            const btn = document.getElementById('fullscreen-toggle');
+            const root = document.documentElement;
+            if (!root.requestFullscreen && !root.webkitRequestFullscreen) {
+                btn.style.display = 'none';
+                return;
+            }
+            const isActive = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+            const updateLabel = () => {
+                btn.textContent = isActive() ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+            };
+            btn.addEventListener('click', () => {
+                if (isActive()) {
+                    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+                } else {
+                    (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+                }
+            });
+            document.addEventListener('fullscreenchange', updateLabel);
+            document.addEventListener('webkitfullscreenchange', updateLabel);
+        })();
+    </script>
 
     <!-- Debug panel keyboard handlers (must be non-module for immediate registration) -->
     <script>

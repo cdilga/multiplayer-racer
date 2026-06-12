@@ -68,13 +68,14 @@
             opacity: 1;
         }
 
-        /* Ensure safe areas on iOS */
+        /* Ensure safe areas on iOS (notch only - .container provides its own
+           20px padding, so don't double up on small screens) */
         @supports (padding: max(0px)) {
             body {
-                padding-left: max(env(safe-area-inset-left), 20px);
-                padding-right: max(env(safe-area-inset-right), 20px);
-                padding-top: max(env(safe-area-inset-top), 20px);
-                padding-bottom: max(env(safe-area-inset-bottom), 20px);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
             }
         }
     </style>
@@ -121,6 +122,7 @@
         </div>
         
         <div id="game-screen" class="screen hidden">
+            <button id="player-menu-btn" title="Menu / Help">☰</button>
             <div id="controls-container">
                 <div id="steering-area" class="control-area">
                     <div id="steering-indicator"></div>
@@ -133,6 +135,23 @@
             <div id="game-stats">
                 <span id="speed">0 km/h</span>
             </div>
+        </div>
+    </div>
+
+    <!-- In-game menu overlay (help / reset car / leave) -->
+    <div id="player-menu" class="hidden">
+        <div class="player-menu-content">
+            <div class="player-menu-title">Menu</div>
+            <button id="player-menu-reset">🚗 Reset My Car</button>
+            <button id="player-menu-leave">🚪 Leave Game</button>
+            <div class="player-menu-help">
+                <div class="player-menu-help-title">How to play</div>
+                <div>Left side: drag the joystick to steer.</div>
+                <div>Right side: hold ↑ to accelerate, ↓ to brake/reverse.</div>
+                <div>Grab pickups on the track, then hit FIRE.</div>
+                <div>Stuck or flipped? Use "Reset My Car".</div>
+            </div>
+            <button id="player-menu-close">Close</button>
         </div>
     </div>
 
@@ -161,26 +180,8 @@
                 });
             }
 
-            // Initialize mobile utilities
-            if (window.mobileUtils) {
-                mobileUtils.init().then(() => {
-                    // Show fullscreen toggle only where the API actually works
-                    const fullscreenToggle = document.getElementById('fullscreen-toggle');
-                    if (mobileUtils.isMobile() && mobileUtils.isFullscreenSupported()) {
-                        fullscreenToggle.classList.remove('hidden');
-                        const updateLabel = () => {
-                            const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                            fullscreenToggle.textContent = active ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
-                        };
-                        fullscreenToggle.addEventListener('click', async () => {
-                            await mobileUtils.toggleFullscreen();
-                            updateLabel();
-                        });
-                        document.addEventListener('fullscreenchange', updateLabel);
-                        document.addEventListener('webkitfullscreenchange', updateLabel);
-                    }
-                });
-            }
+            // Fullscreen toggle wiring lives in mobileUtils.js - it loads
+            // after this event fires, so wiring it here would race and lose
         });
     </script>
 </body>

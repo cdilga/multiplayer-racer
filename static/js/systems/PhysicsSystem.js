@@ -364,6 +364,24 @@ class PhysicsSystem {
             .setFriction(physicsConfig.friction || 0.5)
             .setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
 
+        // Lower the centre of mass so impacts rock the car instead of rolling
+        // it. Inertia is the analytic cuboid tensor about the shifted CoM.
+        const com = physicsConfig.centerOfMass;
+        if (com) {
+            const mass = physicsConfig.mass || 30;
+            const inertia = {
+                x: mass * (bodyHeight * bodyHeight + bodyLength * bodyLength) / 12,
+                y: mass * (bodyWidth * bodyWidth + bodyLength * bodyLength) / 12,
+                z: mass * (bodyWidth * bodyWidth + bodyHeight * bodyHeight) / 12
+            };
+            colliderDesc.setMassProperties(
+                mass,
+                { x: com.x || 0, y: com.y || 0, z: com.z || 0 },
+                inertia,
+                { x: 0, y: 0, z: 0, w: 1 }
+            );
+        }
+
         this.world.createCollider(colliderDesc, chassisBody);
 
         // Create vehicle controller

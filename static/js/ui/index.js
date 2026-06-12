@@ -8,3 +8,4 @@ export { ResultsUI } from './ResultsUI.js';
 export { DebugOverlayUI } from './DebugOverlayUI.js';
 export { StatsOverlayUI } from './StatsOverlayUI.js';
 export { PhysicsTuningUI } from './PhysicsTuningUI.js';
+export { GameMenuUI } from './GameMenuUI.js';

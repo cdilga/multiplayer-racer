@@ -351,6 +351,16 @@ def on_join_game(data):
         emit('error', {'message': 'Race has ended. Wait for next race.'})
         return
 
+    # Rejoin while the old socket is still lingering (e.g. page reload before
+    # the disconnect fires): take over the stale entry instead of duplicating
+    # the player in the room
+    stale_sid = None
+    if reconnect_id and not is_reconnecting:
+        for sid, player in room['players'].items():
+            if player['id'] == reconnect_id and sid != request.sid:
+                stale_sid = sid
+                break
+
     if is_reconnecting and reconnect_data:
         # Restore player with same ID and color
         player_id = reconnect_id
@@ -358,6 +368,21 @@ def on_join_game(data):
         position = reconnect_data['position']
         rotation = reconnect_data['rotation']
         velocity = reconnect_data['velocity']
+    elif stale_sid:
+        stale_player = room['players'].pop(stale_sid)
+        # Tell the host to drop the ghost before the rejoin lands
+        emit('player_left', {
+            'player_id': stale_player['id'],
+            'player_name': stale_player['name'],
+            'can_reconnect': False
+        }, to=room['host_sid'])
+        logger.info(f"Player {player_name} rejoined room {room_code}, replacing stale session")
+
+        player_id = stale_player['id']
+        car_color = stale_player['car_color']
+        position = stale_player['position']
+        rotation = stale_player['rotation']
+        velocity = [0, 0, 0]
     else:
         # Monotonic player ID - counting current players is collision-prone
         # (a leaver shrinks the count and the next joiner duplicates an ID)
@@ -588,6 +613,23 @@ def handle_weapon_fire(data):
     }, to=room['host_sid'])
 
     logger.debug(f"Player {player_id} fired weapon in room {room_code}")
+
+@socketio.on('request_car_reset')
+def handle_request_car_reset(data):
+    """Player asks the host to un-stick their car (reset to a safe spot)."""
+    player_sid = request.sid
+    room_code = data.get('room_code')
+
+    if not room_code or room_code not in game_rooms:
+        return
+
+    room = game_rooms[room_code]
+    if player_sid not in room['players']:
+        return
+
+    player_id = room['players'][player_sid]['id']
+    emit('car_reset_request', {'player_id': player_id}, to=room['host_sid'])
+    logger.info(f"Player {player_id} requested car reset in room {room_code}")
 
 @socketio.on('weapon_pickup')
 def handle_weapon_pickup(data):

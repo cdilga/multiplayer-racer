@@ -33,9 +33,13 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* flex-start + margin:auto on screens centers content when it fits but
+       keeps the top reachable when it overflows (small phones, keyboard up) */
+    justify-content: flex-start;
     align-items: center;
     padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 #game-screen {
@@ -222,6 +226,9 @@ body {
     width: 100%;
     max-width: 500px;
     text-align: center;
+    /* Center vertically when there's room; scroll instead of clip when not */
+    margin: auto 0;
+    flex-shrink: 0;
 }
 
 .hidden {
@@ -415,6 +422,81 @@ button:hover, button:active {
     padding: 15px;
     border-radius: 8px;
     text-align: center;
+}
+
+/* In-game menu (help / reset / leave) */
+#player-menu-btn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 300;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 1.3rem;
+    opacity: 0.7;
+}
+
+#player-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.player-menu-content {
+    background: #16213e;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 320px;
+    max-height: 90%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.player-menu-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #4cc9f0;
+    text-align: center;
+}
+
+.player-menu-content button {
+    padding: 12px;
+    font-size: 1rem;
+}
+
+#player-menu-close {
+    background-color: #333;
+}
+
+.player-menu-help {
+    font-size: 0.85rem;
+    color: #8d99ae;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 10px;
+}
+
+.player-menu-help-title {
+    font-weight: bold;
+    color: #aaa;
 }
 
 /* Derby mode weapon controls */

@@ -89,9 +89,43 @@ class RenderSystem {
         // Tracked meshes
         this.meshes = new Map();  // entityId -> mesh
 
+        // Default camera parameters, restored when leaving special tracks
+        // (derby arenas override these to look over the tall walls)
+        this._defaultCameraParams = {
+            offset: { ...this.cameraOffset },
+            lookOffset: { ...this.cameraLookOffset },
+            baseCameraHeight: this.baseCameraHeight,
+            minCameraDepth: this.minCameraDepth,
+            maxCameraDepth: this.maxCameraDepth
+        };
+
         // State
         this.initialized = false;
         this.paused = false;
+    }
+
+    /**
+     * Override camera follow parameters (e.g. high angle for walled arenas)
+     * @param {Object} params
+     * @param {Object} [params.offset] - Single-target follow offset { x, y, z }
+     * @param {Object} [params.lookOffset] - Look-at offset { x, y, z }
+     * @param {number} [params.baseCameraHeight] - Multi-target camera height
+     * @param {number} [params.minCameraDepth]
+     * @param {number} [params.maxCameraDepth]
+     */
+    setCameraParams(params = {}) {
+        if (params.offset) this.cameraOffset = { ...params.offset };
+        if (params.lookOffset) this.cameraLookOffset = { ...params.lookOffset };
+        if (params.baseCameraHeight !== undefined) this.baseCameraHeight = params.baseCameraHeight;
+        if (params.minCameraDepth !== undefined) this.minCameraDepth = params.minCameraDepth;
+        if (params.maxCameraDepth !== undefined) this.maxCameraDepth = params.maxCameraDepth;
+    }
+
+    /**
+     * Restore default camera parameters
+     */
+    resetCameraParams() {
+        this.setCameraParams(this._defaultCameraParams);
     }
 
     /**

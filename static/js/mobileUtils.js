@@ -105,4 +105,29 @@ const mobileUtils = {
 };
 
 // Export for use in other files
-window.mobileUtils = mobileUtils; 
+window.mobileUtils = mobileUtils;
+
+// Wire the fullscreen toggle button. This script is loaded dynamically after
+// the DOM exists, so wiring here avoids the DOMContentLoaded race that left
+// the button permanently hidden.
+(function initFullscreenToggle() {
+    const toggle = document.getElementById('fullscreen-toggle');
+    if (!toggle) return;
+
+    // Show wherever the API actually works (iOS Safari has none - stays hidden)
+    if (!mobileUtils.isFullscreenSupported()) return;
+
+    mobileUtils.init();
+    toggle.classList.remove('hidden');
+
+    const updateLabel = () => {
+        const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        toggle.textContent = active ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+    };
+    toggle.addEventListener('click', async () => {
+        await mobileUtils.toggleFullscreen();
+        updateLabel();
+    });
+    document.addEventListener('fullscreenchange', updateLabel);
+    document.addEventListener('webkitfullscreenchange', updateLabel);
+})(); 

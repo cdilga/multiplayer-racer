@@ -153,6 +153,43 @@ document.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 
+// In-game menu (help / reset car / leave) - escape hatch when stuck
+function initPlayerMenu() {
+    const menuBtn = document.getElementById('player-menu-btn');
+    const menu = document.getElementById('player-menu');
+    const resetBtn = document.getElementById('player-menu-reset');
+    const leaveBtn = document.getElementById('player-menu-leave');
+    const closeBtn = document.getElementById('player-menu-close');
+    if (!menuBtn || !menu) return;
+
+    const closeMenu = () => menu.classList.add('hidden');
+    menuBtn.addEventListener('click', () => menu.classList.remove('hidden'));
+    closeBtn?.addEventListener('click', closeMenu);
+    menu.addEventListener('click', (e) => {
+        if (e.target === menu) closeMenu();
+    });
+
+    resetBtn?.addEventListener('click', () => {
+        if (gameState.gameStarted && gameState.roomCode) {
+            socket.emit('request_car_reset', { room_code: gameState.roomCode });
+            showMessage('Resetting your car...', 1500);
+            hapticBuzz(30);
+        }
+        closeMenu();
+    });
+
+    leaveBtn?.addEventListener('click', () => {
+        try {
+            sessionStorage.removeItem(`racer_reconnect_${gameState.roomCode}`);
+        } catch (e) {
+            // sessionStorage unavailable - nothing to clean up
+        }
+        // Reload without ?room so we don't instantly auto-rejoin
+        window.location.href = window.location.pathname;
+    });
+}
+initPlayerMenu();
+
 // Socket event handlers
 socket.on('connect', () => {
     console.log('Connected to server');
@@ -214,7 +251,7 @@ socket.on('game_joined', (data) => {
     // Store player ID for reconnection
     try {
         const reconnectKey = `racer_reconnect_${gameState.roomCode}`;
-        localStorage.setItem(reconnectKey, JSON.stringify({
+        sessionStorage.setItem(reconnectKey, JSON.stringify({
             player_id: data.player_id,
             player_name: gameState.playerName,
             room_code: gameState.roomCode
@@ -254,22 +291,27 @@ socket.on('game_joined', (data) => {
     // Initialize car preview
     initCarPreview();
     
-    // Add a name change option in the waiting room
-    const nameChangeContainer = document.createElement('div');
-    nameChangeContainer.className = 'name-change-container';
-    nameChangeContainer.innerHTML = `
-        <p>Want to change your name?</p>
-        <div class="name-change-input">
-            <input type="text" id="waiting-name-input" value="${gameState.playerName}" maxlength="15">
-            <button id="update-name-btn">Update</button>
-        </div>
-    `;
-    
-    // Add the name change container to the waiting screen
+    // Add a name change option in the waiting room (once - rejoining must
+    // not stack duplicate name inputs)
     const playerInfo = elements.waitingScreen.querySelector('.player-info');
-    if (playerInfo) {
+    const existingNameChange = playerInfo?.querySelector('.name-change-container');
+    if (existingNameChange) {
+        const waitingNameInput = existingNameChange.querySelector('#waiting-name-input');
+        if (waitingNameInput) {
+            waitingNameInput.value = gameState.playerName;
+        }
+    } else if (playerInfo) {
+        const nameChangeContainer = document.createElement('div');
+        nameChangeContainer.className = 'name-change-container';
+        nameChangeContainer.innerHTML = `
+            <p>Want to change your name?</p>
+            <div class="name-change-input">
+                <input type="text" id="waiting-name-input" value="${gameState.playerName}" maxlength="15">
+                <button id="update-name-btn">Update</button>
+            </div>
+        `;
         playerInfo.appendChild(nameChangeContainer);
-        
+
         // Add event listeners for name change
         const waitingNameInput = document.getElementById('waiting-name-input');
         const updateNameBtn = document.getElementById('update-name-btn');
@@ -414,7 +456,7 @@ function joinGame() {
     let reconnectId = null;
     try {
         const reconnectKey = `racer_reconnect_${roomCode}`;
-        const savedData = localStorage.getItem(reconnectKey);
+        const savedData = sessionStorage.getItem(reconnectKey);
         if (savedData) {
             const parsed = JSON.parse(savedData);
             if (parsed.room_code === roomCode) {
@@ -610,6 +652,9 @@ function resetGame() {
 }
 
 function initCarPreview() {
+    // Rejoining re-runs this; drop the old canvas so previews don't stack
+    elements.carPreview.innerHTML = '';
+
     // Create a simple Three.js scene for car preview
     const previewScene = new THREE.Scene();
     const previewCamera = new THREE.PerspectiveCamera(75, 1.5, 0.1, 1000);
@@ -635,9 +680,10 @@ function initCarPreview() {
     previewCamera.position.set(0, 3, 6);
     previewCamera.lookAt(carGroup.position);
     
-    // Animation loop for preview
+    // Animation loop for preview - stops once the game starts or this
+    // canvas has been replaced by a newer preview (rejoin)
     function animatePreview() {
-        if (!gameState.gameStarted) {
+        if (!gameState.gameStarted && previewRenderer.domElement.isConnected) {
             requestAnimationFrame(animatePreview);
             carGroup.rotation.y += 0.01;
             previewRenderer.render(previewScene, previewCamera);
@@ -1160,10 +1206,14 @@ const errorLog = {
     }
 };
 
+// Controls/speed debug overlay - hidden unless the page is opened with
+// ?debug=1 (it covers the controls and means nothing to players)
+const SHOW_INPUT_DEBUG = getUrlParameter('debug') === '1';
+
 // Add visual indicator for controls and server-reported speed
 function updateInputIndicator() {
     // If game hasn't started, we don't need to update anything
-    if (!gameState.gameStarted) {
+    if (!SHOW_INPUT_DEBUG || !gameState.gameStarted) {
         return;
     }
     

@@ -139,6 +139,27 @@ class NetworkSystem {
             this._emit('network:playerJoined', playerData);
         });
 
+        // Reconnections re-enter the game like a join; GameHost skips
+        // vehicle creation if the player's car still exists
+        this.socket.on('player_reconnected', (data) => {
+            const playerId = data.id || data.player_id;
+            const playerData = {
+                id: playerId,
+                name: data.name || data.player_name || `Player ${playerId}`,
+                color: data.car_color || data.color,
+                connected: true
+            };
+            this.players.set(playerId, playerData);
+            if (!this.playerControls.has(playerId)) {
+                this.playerControls.set(playerId, {
+                    steering: 0,
+                    acceleration: 0,
+                    braking: 0
+                });
+            }
+            this._emit('network:playerJoined', playerData);
+        });
+
         this.socket.on('player_left', (data) => {
             // Server sends: player_id, player_name
             const playerId = data.player_id || data.id;
@@ -186,6 +207,11 @@ class NetworkSystem {
         this.socket.on('weapon_fire', (data) => {
             const playerId = data.player_id;
             this._emit('weapon:fire', { playerId });
+        });
+
+        // Player asked for their stuck car to be reset
+        this.socket.on('car_reset_request', (data) => {
+            this._emit('network:carResetRequest', { playerId: data.player_id });
         });
 
         // Game events from server (server sends game_started, not game_start)
