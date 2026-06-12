@@ -1,0 +1,33 @@
+name: Deploy
+
+# Deploys to the garage via the central ppaas pipeline.
+# Shared deploy credentials are synced from cdilga/ppaas (rotate-secrets);
+# RUNTIME_ENV holds this project's runtime .env (tunnel creds, public URL).
+# Live at: https://jammers.dilger.dev (alias: multiplayer-racer.dilger.dev)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    uses: cdilga/ppaas/.github/workflows/deploy-service.yml@main
+    with:
+      image_name: cdilga/multiplayer-racer
+      deploy_dir: ~/multiplayer-racer
+      compose_path: infra/docker-compose.yml
+      env_example_path: infra/.env.example
+      deploy_script_path: infra/scripts/deploy.sh
+      setup_target_path: infra/scripts/setup-target.sh
+      validate_command: pip install -r requirements.txt >/dev/null && python -m py_compile server/app.py
+    secrets:
+      runtime_env: ${{ secrets.RUNTIME_ENV }}
+      CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+      CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      TRUENAS_SSH_KEY: ${{ secrets.TRUENAS_SSH_KEY }}

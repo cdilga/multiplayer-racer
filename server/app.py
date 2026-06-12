@@ -75,6 +75,30 @@ if os.path.exists(dist_path):
 # }
 game_rooms = {}
 
+# Public base URL when deployed behind a reverse proxy / Cloudflare tunnel.
+# Unset for local development (LAN IP detection is used instead).
+PUBLIC_URL = os.environ.get('PUBLIC_URL', '').rstrip('/')
+
+
+def get_join_url(room_code, local_ip=None, port=None):
+    """Build the URL players use to join a room.
+
+    Deployed: PUBLIC_URL drives it. Local: LAN IP + port so phones on the
+    same network can reach the host machine.
+    """
+    if PUBLIC_URL:
+        return f"{PUBLIC_URL}/player?room={room_code}"
+    if local_ip is None:
+        local_ip = get_local_ip()
+    if port is None:
+        port = request.environ.get('SERVER_PORT', 8000)
+        if 'Host' in request.headers:
+            host_parts = request.headers['Host'].split(':')
+            if len(host_parts) > 1:
+                port = host_parts[1]
+    return f"http://{local_ip}:{port}/player?room={room_code}"
+
+
 def get_local_ip():
     """Get the local IP address of this machine for LAN connections.
     Uses multiple methods to find the most likely local network IP.
@@ -194,7 +218,7 @@ def generate_qr_code(room_code):
                 port = host_parts[1]
             
         # Generate the URL with the room code
-        join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+        join_url = get_join_url(room_code, local_ip, port)
         
         # Create QR code
         qr = qrcode.QRCode(
@@ -245,7 +269,7 @@ def create_room(data=None):
         host_parts = request.headers['Host'].split(':')
         if len(host_parts) > 1:
             port = host_parts[1]
-    join_url = f"http://{local_ip}:{port}/player?room={room_code}"
+    join_url = get_join_url(room_code, local_ip, port)
 
     emit('room_created', {'room_code': room_code, 'join_url': join_url})
     logger.info(f"Room created: {room_code}")
@@ -647,6 +671,16 @@ def update_player_name(data):
     emit('name_updated', {'success': False, 'message': 'Player not in a room'})
     logger.warning(f"Failed to update player name: Player not in a room")
 
+@app.route('/health')
+def health():
+    """Liveness endpoint for deploy health checks."""
+    return jsonify({
+        'status': 'ok',
+        'rooms': len(game_rooms)
+    })
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True) 
+    # Debug stays on for local development; deployments set FLASK_DEBUG=0
+    debug = os.environ.get('FLASK_DEBUG', '1') == '1'
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug) 
