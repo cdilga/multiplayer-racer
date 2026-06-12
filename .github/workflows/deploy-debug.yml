@@ -1,6 +1,0 @@
-name: Deploy Debug
-on:
-  workflow_dispatch:
-jobs:
-  ping:
-    uses: cdilga/ppaas-workflows/.github/workflows/ping.yml@main

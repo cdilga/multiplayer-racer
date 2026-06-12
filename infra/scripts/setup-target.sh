@@ -21,8 +21,10 @@ set -a; source .env; set +a
 
 mkdir -p cloudflared
 
+# 644 not 600: the cloudflared container runs as a non-root user and reads
+# this via a read-only bind mount. The deploy dir itself is the trust boundary.
 echo "$TUNNEL_CREDENTIALS_B64" | base64 -d > cloudflared/credentials.json
-chmod 600 cloudflared/credentials.json
+chmod 644 cloudflared/credentials.json
 
 {
     echo "tunnel: ${TUNNEL_ID}"
