@@ -15,6 +15,8 @@
  *   physics.update(dt);
  */
 
+import { buildDunesGrid } from '../resources/terrain.js';
+
 class PhysicsSystem {
     /**
      * @param {Object} options
@@ -146,6 +148,72 @@ class PhysicsSystem {
     }
 
     /**
+     * Create rolling dunes terrain as a static trimesh, plus launch ramps.
+     * The trimesh is built from the SAME vertex grid as the visual mesh
+     * (resources/terrain.js), so collision matches what the player sees.
+     * @param {Object} trackConfig - Track configuration (geometry.type === 'dunes')
+     * @returns {Object} Rapier rigid body for the terrain
+     */
+    createTerrainBody(trackConfig) {
+        if (!this.RAPIER || !this.world) return null;
+
+        const geometry = trackConfig.geometry || {};
+        const physics = trackConfig.physics || {};
+        const { vertices, indices } = buildDunesGrid(geometry);
+
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        const colliderDesc = this.RAPIER.ColliderDesc
+            .trimesh(vertices, indices)
+            .setFriction(physics.groundFriction || 0.9)
+            .setRestitution(0.0);
+        this.world.createCollider(colliderDesc, body);
+
+        this.staticBodies.set('terrain', body);
+
+        // Launch ramps
+        const ramps = geometry.ramps || [];
+        const base = geometry.base || 0;
+        ramps.forEach((ramp, i) => this._createRampCollider(ramp, base, i));
+
+        return body;
+    }
+
+    /**
+     * Create a single ramp wedge collider. Orientation matches the visual
+     * ramp mesh in TrackFactory (yaw to heading, then pitch up).
+     * @private
+     */
+    _createRampCollider(ramp, base, idx) {
+        const length = ramp.length || 10;
+        const width = ramp.width || 7;
+        const rise = ramp.rise || 3;
+        const thickness = 0.6;
+        const pitch = Math.atan2(rise, length);
+        const slantLen = Math.sqrt(length * length + rise * rise);
+
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        // q = yaw(heading) * pitch(-pitch about local X)
+        const q = this._quatMul(
+            this._quatFromAxisAngle(0, 1, 0, ramp.heading || 0),
+            this._quatFromAxisAngle(1, 0, 0, -pitch)
+        );
+
+        const colliderDesc = this.RAPIER.ColliderDesc
+            .cuboid(width / 2, thickness / 2, slantLen / 2)
+            .setTranslation(ramp.x, base + thickness / 2 + rise / 2, ramp.z)
+            .setRotation(q)
+            .setFriction(0.9)
+            .setRestitution(0.1);
+
+        this.world.createCollider(colliderDesc, body);
+        this.staticBodies.set(`ramp_${idx}`, body);
+    }
+
+    /**
      * Create barrier physics bodies
      * @param {Object} trackConfig - Track configuration
      * @returns {Object[]} Array of rigid bodies
@@ -177,18 +245,33 @@ class PhysicsSystem {
             if (innerBarrier) barriers.push(innerBarrier);
             if (outerBarrier) barriers.push(outerBarrier);
         } else if (geometry.type === 'bowl') {
-            // Create bowl arena wall - tall wall that cars can't escape
+            // Create bowl arena wall - a sloped, climbable bank (matches the
+            // visual cone) so cars can ride up the edges and catch air. The
+            // steep angle still contains them.
             const diameter = geometry.diameter || 80;
             const radius = diameter / 2;
             const wallHeight = geometry.wallHeight || 15;
+            const wallSlope = geometry.wallSlope || 30;
 
             const bowlWall = this._createBowlWallBarrier(
                 radius,
                 wallHeight,
+                wallSlope,
                 physics.barrierRestitution || 0.5
             );
 
             if (bowlWall) barriers.push(bowlWall);
+        } else if (geometry.type === 'dunes') {
+            // Tall containment wall at the dunes arena edge
+            const radius = geometry.radius || 70;
+            const wallHeight = geometry.wallHeight || 14;
+            const dunesWall = this._createBowlWallBarrier(
+                radius,
+                wallHeight,
+                20,
+                physics.barrierRestitution || 0.4
+            );
+            if (dunesWall) barriers.push(dunesWall);
         } else if (geometry.type === 'spline') {
             // Procedural track: barrier walls along both precomputed edges
             const height = geometry.barrierHeight || 1.5;
@@ -235,15 +318,38 @@ class PhysicsSystem {
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(length / 2 + 0.3, height / 2, 0.5)
                 .setTranslation(midX, height / 2, midZ)
-                .setRotation(this._eulerToQuat(0, yaw, 0))
-                .setFriction(0.3)
-                .setRestitution(restitution);
+                .setRotation(this._eulerToQuat(0, yaw, 0));
+            this._makeWallSlippery(colliderDesc, 0.15, restitution);
 
             this.world.createCollider(colliderDesc, body);
         }
 
         this.staticBodies.set(`barrier_${key}`, body);
         return body;
+    }
+
+    /**
+     * Configure a wall collider so cars glance off it instead of sticking.
+     *
+     * The chassis collider carries real friction (so car-on-car shoves feel
+     * solid), but against a wall we want the contact to slide. Using the Min
+     * combine rule makes the wall's low friction win regardless of the
+     * chassis value, while Max restitution keeps the bounce lively.
+     * @private
+     * @param {Object} colliderDesc - Rapier ColliderDesc to mutate
+     * @param {number} friction - Low tangential friction for the wall
+     * @param {number} restitution - Bounciness of the wall
+     */
+    _makeWallSlippery(colliderDesc, friction, restitution) {
+        colliderDesc
+            .setFriction(friction)
+            .setRestitution(restitution);
+
+        const rule = this.RAPIER.CoefficientCombineRule;
+        if (rule) {
+            colliderDesc.setFrictionCombineRule(rule.Min);
+            colliderDesc.setRestitutionCombineRule(rule.Max);
+        }
     }
 
     /**
@@ -271,9 +377,8 @@ class PhysicsSystem {
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(segmentLength / 2, height / 2, thickness / 2)
                 .setTranslation(x, height / 2, z)
-                .setRotation(this._eulerToQuat(0, angle, 0))
-                .setFriction(0.3)  // Lower friction for sliding over
-                .setRestitution(restitution);
+                .setRotation(this._eulerToQuat(0, angle, 0));
+            this._makeWallSlippery(colliderDesc, 0.15, restitution);
 
             this.world.createCollider(colliderDesc, body);
         }
@@ -283,30 +388,52 @@ class PhysicsSystem {
     }
 
     /**
-     * Create tall wall barrier for bowl arena
+     * Create a sloped, climbable wall barrier for an arena (bowl / dunes).
+     *
+     * Each segment is a thin box leaning outward by `slopeDeg` (measured from
+     * vertical), matching the visual cone. Cars can ride up the bank and catch
+     * air, but the steep angle and height keep them contained. This replaces
+     * the old vertical wall, which looked sloped but physically blocked the
+     * car dead - the cause of "can't drive up the derby edges".
      * @private
+     * @param {number} radius - bottom radius of the wall
+     * @param {number} height - vertical wall height
+     * @param {number} slopeDeg - lean from vertical, in degrees
+     * @param {number} restitution - bounciness
      */
-    _createBowlWallBarrier(radius, height, restitution) {
-        const segments = 64;  // More segments for smoother wall
-        const thickness = 2;  // Thick wall for solid collision
+    _createBowlWallBarrier(radius, height, slopeDeg, restitution) {
+        const segments = 64;
+        const thickness = 2;
+        const slopeRad = (slopeDeg * Math.PI) / 180;
+        const slantLen = height / Math.cos(slopeRad);
+        const hy = slantLen / 2;
+        const sinS = Math.sin(slopeRad);
+        const cosS = Math.cos(slopeRad);
+
         const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
         const body = this.world.createRigidBody(bodyDesc);
 
-        // Create wall segments around the arena perimeter
         for (let i = 0; i < segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const segmentLength = (2 * Math.PI * radius) / segments;
 
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
+            // Reference (+X side): box leans outward as it rises (tilt about
+            // local Z by -slope), tangential axis is world Z. Then yaw to angle.
+            const tilt = this._quatFromAxisAngle(0, 0, 1, -slopeRad);
+            const yaw = this._quatFromAxisAngle(0, 1, 0, angle);
+            const rotation = this._quatMul(yaw, tilt);
 
-            // Create tall wall collider
+            // Centre of the slanted segment, at the reference angle then yawed
+            const cx = radius + sinS * hy;
+            const cy = cosS * hy;
+            const x = cx * Math.cos(angle);
+            const z = -cx * Math.sin(angle);
+
             const colliderDesc = this.RAPIER.ColliderDesc
-                .cuboid(segmentLength / 2, height / 2, thickness / 2)
-                .setTranslation(x, height / 2, z)
-                .setRotation(this._eulerToQuat(0, angle, 0))
-                .setFriction(0.5)
-                .setRestitution(restitution);
+                .cuboid(thickness / 2, hy, segmentLength / 2)
+                .setTranslation(x, cy, z)
+                .setRotation(rotation);
+            this._makeWallSlippery(colliderDesc, 0.2, restitution);
 
             this.world.createCollider(colliderDesc, body);
         }
@@ -564,10 +691,26 @@ class PhysicsSystem {
         vc.setWheelEngineForce(2, engineForce);
         vc.setWheelEngineForce(3, engineForce);
 
-        // Steering on front wheels (negate for correct direction)
-        const steerAngle = -(controls.steering || 0) * (config.steering?.maxAngle || 0.5);
-        vc.setWheelSteering(0, steerAngle);
-        vc.setWheelSteering(1, steerAngle);
+        // Steering on front wheels (negate for correct direction).
+        // Two stability aids make the car easier to drive:
+        //  - the steering lock tightens as speed rises (twitchy at a crawl,
+        //    progressively gentler at speed) so high-speed inputs don't spin out
+        //  - the applied angle is smoothed toward the target so a flick of the
+        //    joystick ramps in instead of snapping the wheels instantly
+        const steerCfg = config.steering || {};
+        const maxAngle = steerCfg.maxAngle || 0.5;
+        const highSpeedReduction = steerCfg.highSpeedReduction ?? 0;
+        const smoothing = steerCfg.smoothing ?? 1;
+
+        // currentSpeed is m/s; ease the lock down to (1 - reduction) by ~15 m/s
+        const speedFactor = Math.min(1, currentSpeed / 15);
+        const effectiveMax = maxAngle * (1 - highSpeedReduction * speedFactor);
+        const targetSteer = -(controls.steering || 0) * effectiveMax;
+
+        const prevSteer = data.currentSteer || 0;
+        data.currentSteer = prevSteer + (targetSteer - prevSteer) * smoothing;
+        vc.setWheelSteering(0, data.currentSteer);
+        vc.setWheelSteering(1, data.currentSteer);
 
         // Braking on all wheels - don't apply brake when reversing
         const brakeForce = (braking > 0 && !data.isReversing) ? braking * (config.engine?.brakeForce || 50) : 0;
@@ -745,6 +888,29 @@ class PhysicsSystem {
             result[vehicleId] = this.getVehicleDebugData(vehicleId);
         }
         return result;
+    }
+
+    /**
+     * Quaternion from an axis (unit) and angle
+     * @private
+     */
+    _quatFromAxisAngle(ax, ay, az, angle) {
+        const h = angle / 2;
+        const s = Math.sin(h);
+        return { x: ax * s, y: ay * s, z: az * s, w: Math.cos(h) };
+    }
+
+    /**
+     * Hamilton product a * b (apply b first, then a)
+     * @private
+     */
+    _quatMul(a, b) {
+        return {
+            x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+            y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+            z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+            w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z
+        };
     }
 
     /**

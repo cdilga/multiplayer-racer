@@ -103,6 +103,15 @@ class NetworkSystem {
         this.socket.on('connect', () => {
             this.connected = true;
             this._emit('network:connected');
+
+            // If we already hosted a room, reclaim it on reconnect. The room
+            // may have been dropped server-side (host socket blip or a server
+            // recycle on the live deploy), which would make players who scan
+            // the still-displayed code hit "room doesn't exist". Reclaiming
+            // re-binds (or recreates) the room under the same code.
+            if (this.isHost && this.roomCode) {
+                this.socket.emit('reclaim_room', { room_code: this.roomCode });
+            }
         });
 
         this.socket.on('disconnect', () => {
@@ -251,6 +260,16 @@ class NetworkSystem {
                 resolve(data.room_code);
             });
         });
+    }
+
+    /**
+     * Tell the server the host has returned to the lobby so it resets the
+     * room's game state back to 'waiting' - otherwise late joiners are still
+     * treated as mid-race joins.
+     */
+    returnToLobby() {
+        if (!this.roomCode) return;
+        this.socket.emit('return_to_lobby', { room_code: this.roomCode });
     }
 
     /**

@@ -154,7 +154,9 @@ class DerbySystem {
         this.arenaConfig = config;
 
         if (config.geometry) {
-            this.originalDiameter = config.geometry.diameter || 80;
+            // Bowls specify `diameter`; dunes specify `radius`
+            const geo = config.geometry;
+            this.originalDiameter = geo.diameter || (geo.radius ? geo.radius * 2 : 80);
             this.currentDiameter = this.originalDiameter;
         }
 

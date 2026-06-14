@@ -172,16 +172,24 @@ class AudioSystem {
             this.playCollisionSound({ intensity: 0.8 }); // Use collision as impact
         });
 
-        // Mine/weapon explosion
+        // Mine/weapon/missile explosion - synthesized boom
         this.eventBus.on('weapon:explosion', (data) => {
-            this.duckMusic(0.5);
-            this.playSound('collision_hard', { volume: 1.0 }); // Use hard collision for explosion
+            if (typeof this.audioManager?.playExplosion === 'function') {
+                this.audioManager.playExplosion(0.9);
+            } else {
+                this.duckMusic(0.5);
+                this.playSound('collision_hard', { volume: 1.0 });
+            }
         });
 
         // Player eliminated
         this.eventBus.on('derby:playerEliminated', (data) => {
-            this.duckMusic(0.5);
-            this.playSound('collision_hard', { volume: 1.0 }); // Death explosion
+            if (typeof this.audioManager?.playExplosion === 'function') {
+                this.audioManager.playExplosion(1.0);
+            } else {
+                this.duckMusic(0.5);
+                this.playSound('collision_hard', { volume: 1.0 });
+            }
         });
 
         // Walls shrinking warning
@@ -230,7 +238,12 @@ class AudioSystem {
         // Once proper sounds are added, these can be mapped directly
         switch (weaponId) {
             case 'missile':
-                this.playSound('engine_rev', { volume: 0.6 }); // Whoosh sound
+                // Synthesized rocket whoosh (the old engine_rev sample was wrong)
+                if (typeof this.audioManager?.playMissileLaunch === 'function') {
+                    this.audioManager.playMissileLaunch(0.7);
+                } else {
+                    this.playSound('engine_rev', { volume: 0.6 });
+                }
                 break;
             case 'mine':
                 this.playSound('button_click', { volume: 0.8 }); // Deploy click

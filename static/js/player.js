@@ -153,11 +153,73 @@ document.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 
+// Bug reporting (player side) - opens a pre-filled email with controller-side
+// debug info. Correlation fields (room code, player id, timestamp) let reports
+// be matched against host + server logs later.
+const BUG_REPORT_EMAIL = 'bugs@jammers.dilger.dev';
+
+function collectPlayerDebugInfo() {
+    return {
+        timestamp: new Date().toISOString(),
+        side: 'player',
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        roomCode: gameState.roomCode || null,
+        playerId: gameState.playerId || null,
+        playerName: gameState.playerName || null,
+        connected: gameState.connected,
+        gameStarted: gameState.gameStarted,
+        gameMode: gameState.gameMode,
+        speed: Math.round(gameState.speed || 0),
+        weapon: gameState.weapon?.id || null,
+        socketId: (typeof socket !== 'undefined' && socket?.id) || null
+    };
+}
+
+function openPlayerBugReport() {
+    const info = collectPlayerDebugInfo();
+    const template =
+`What went wrong? (be specific — what did you see?)
+
+
+What did you expect to happen instead?
+
+
+What were you doing right before it happened?
+1.
+2.
+
+What device + browser are you on? (e.g. iPhone 13, Safari)
+
+`;
+    const summary = [
+        `Time: ${info.timestamp}`,
+        `Room: ${info.roomCode || '-'}`,
+        `Player: ${info.playerName || '-'} (${info.playerId || '-'})`,
+        `Socket: ${info.socketId || '-'}`,
+        `Mode: ${info.gameMode}`,
+        `Started: ${info.gameStarted}  Connected: ${info.connected}`,
+        `Browser: ${info.userAgent}`,
+        `URL: ${info.url}`
+    ].join('\n');
+
+    const subject = `Bug report (player): ${info.roomCode || 'multiplayer-racer'} @ ${info.timestamp}`;
+    const body =
+`${template}
+----------------------------------------
+Debug info (auto-captured — please leave this in):
+${summary}
+`;
+    window.location.href =
+        `mailto:${BUG_REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 // In-game menu (help / reset car / leave) - escape hatch when stuck
 function initPlayerMenu() {
     const menuBtn = document.getElementById('player-menu-btn');
     const menu = document.getElementById('player-menu');
     const resetBtn = document.getElementById('player-menu-reset');
+    const reportBugBtn = document.getElementById('player-menu-report-bug');
     const leaveBtn = document.getElementById('player-menu-leave');
     const closeBtn = document.getElementById('player-menu-close');
     if (!menuBtn || !menu) return;
@@ -167,6 +229,11 @@ function initPlayerMenu() {
     closeBtn?.addEventListener('click', closeMenu);
     menu.addEventListener('click', (e) => {
         if (e.target === menu) closeMenu();
+    });
+
+    reportBugBtn?.addEventListener('click', () => {
+        openPlayerBugReport();
+        closeMenu();
     });
 
     resetBtn?.addEventListener('click', () => {
@@ -201,6 +268,19 @@ socket.on('connect', () => {
         console.log('Error log initialized on connect');
     }
 
+    // Reconnect path: if we were already in a game when the socket dropped
+    // (phone slept, network blip), rejoin automatically. joinGame() pulls the
+    // saved reconnect_id from sessionStorage so the server restores our car.
+    if (gameState.roomCode) {
+        console.log('Socket reconnected - rejoining room', gameState.roomCode);
+        elements.roomCodeInput.value = gameState.roomCode;
+        if (gameState.playerName) {
+            elements.playerNameInput.value = gameState.playerName;
+        }
+        joinGame();
+        return;
+    }
+
     // Check for room code in URL parameters or window.roomCode (from template)
     let roomCode = getUrlParameter('room');
 
@@ -209,25 +289,61 @@ socket.on('connect', () => {
         roomCode = window.roomCode;
     }
 
+    // Fresh page load with no URL room (e.g. typed code earlier, tab restored
+    // after the phone slept): pre-fill the room/name from the saved reconnect
+    // record so the player can rejoin with one tap. We don't auto-submit here -
+    // that would hijack someone trying to join a different room.
+    if (!roomCode) {
+        const saved = findSavedReconnect();
+        if (saved) {
+            elements.roomCodeInput.value = saved.room_code;
+            if (saved.player_name && elements.playerNameInput && !elements.playerNameInput.value.trim()) {
+                elements.playerNameInput.value = saved.player_name;
+            }
+        }
+    }
+
     if (roomCode) {
         // Set room code input value
         elements.roomCodeInput.value = roomCode;
 
-        // Show message that room code was detected
+        // Show the "room detected" banner when present (cosmetic only)
         if (elements.autoJoinMessage && elements.detectedRoomCode) {
             elements.detectedRoomCode.textContent = roomCode;
             elements.autoJoinMessage.style.display = 'block';
-
-            // Generate a random name if the user hasn't set one
-            if (!gameState.nameSet && !elements.playerNameInput.value.trim()) {
-                elements.playerNameInput.value = generateRandomName();
-                // Don't set nameSet flag here to allow user to change it
-            }
-
-            joinGame();
         }
+
+        // Generate a random name if the user hasn't set one
+        if (!gameState.nameSet && !elements.playerNameInput.value.trim()) {
+            elements.playerNameInput.value = generateRandomName();
+            // Don't set nameSet flag here to allow user to change it
+        }
+
+        // Always attempt the join - don't gate it on the banner elements
+        joinGame();
     }
 });
+
+/**
+ * Find the most recent saved reconnect record across all rooms in
+ * sessionStorage. Lets a phone that fully reloaded after sleeping rejoin
+ * even when the room code was typed manually (no ?room= in the URL).
+ * @returns {{player_id:any, player_name:string, room_code:string}|null}
+ */
+function findSavedReconnect() {
+    try {
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith('racer_reconnect_')) {
+                const parsed = JSON.parse(sessionStorage.getItem(key));
+                if (parsed && parsed.room_code) return parsed;
+            }
+        }
+    } catch (e) {
+        // sessionStorage unavailable / blocked
+    }
+    return null;
+}
 
 socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);

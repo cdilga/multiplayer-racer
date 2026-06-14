@@ -11,6 +11,7 @@
  */
 
 import { generateTrackConfig } from './ProceduralTrackGenerator.js';
+import { buildDunesGrid } from './terrain.js';
 
 class TrackFactory {
     /**
@@ -131,6 +132,8 @@ class TrackFactory {
                 return this._createRectangleTrack(geometry, visual);
             case 'bowl':
                 return this._createBowlArena(geometry, visual);
+            case 'dunes':
+                return this._createDunesArena(geometry, visual);
             case 'spline':
                 return this._createSplineTrack(geometry, visual);
             case 'custom':
@@ -271,6 +274,69 @@ class TrackFactory {
         arenaMesh.userData = { isTrackSurface: true, isBowl: true };
 
         return arenaMesh;
+    }
+
+    /**
+     * Create rolling dunes arena surface (derby). Built from the shared
+     * terrain grid so it lines up exactly with the physics trimesh.
+     * @private
+     */
+    _createDunesArena(geometry, visual) {
+        const { vertices, indices } = buildDunesGrid(geometry);
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geo.setIndex(new THREE.BufferAttribute(indices, 1));
+        geo.computeVertexNormals();
+
+        const material = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.95,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const mesh = new THREE.Mesh(geo, material);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        mesh.userData = { isTrackSurface: true, isDunes: true };
+
+        return mesh;
+    }
+
+    /**
+     * Create a ramp wedge visual mesh (a tilted ramp surface the car drives up)
+     * @private
+     */
+    _createRampMesh(ramp, visual, base) {
+        const length = ramp.length || 10;
+        const width = ramp.width || 7;
+        const rise = ramp.rise || 3;
+        const thickness = 0.6;
+        const pitch = Math.atan2(rise, length);
+        const slantLen = Math.sqrt(length * length + rise * rise);
+
+        const geo = new THREE.BoxGeometry(width, thickness, slantLen);
+        const material = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color || '#888066'),
+            roughness: visual.roughness || 0.7,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const mesh = new THREE.Mesh(geo, material);
+        // Yaw to the ramp heading, then pitch up so the far end is raised.
+        // Matches the physics collider orientation in PhysicsSystem.
+        mesh.rotation.order = 'YXZ';
+        mesh.rotation.y = ramp.heading || 0;
+        mesh.rotation.x = -pitch;
+        mesh.position.set(ramp.x, (base || 0) + thickness / 2 + rise / 2, ramp.z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.userData = { isRamp: true };
+
+        return mesh;
     }
 
     /**
@@ -467,6 +533,21 @@ class TrackFactory {
                 visual
             );
             barriers.push(outerWall);
+        } else if (geometry.type === 'dunes') {
+            // Tall containment wall at the arena edge (cars ride up the rolling
+            // rim and can catch air, but can't escape the arena)
+            const radius = geometry.radius || 70;
+            const wallHeight = geometry.wallHeight || 14;
+            const wall = this._createBowlWall(radius, wallHeight, 20, visual);
+            barriers.push(wall);
+
+            // Launch ramps
+            const ramps = geometry.ramps || [];
+            const rampVisual = config.visual.ramps || {};
+            const base = geometry.base || 0;
+            ramps.forEach(ramp => {
+                barriers.push(this._createRampMesh(ramp, rampVisual, base));
+            });
         } else if (geometry.type === 'spline') {
             // Glowing walls along both edges of the procedural circuit
             const height = geometry.barrierHeight || 1.4;

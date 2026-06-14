@@ -770,6 +770,121 @@ class AudioManager {
         return this.playSound('tire_screech', { volume: 0.4, cooldown: 400 });
     }
 
+    // ==========================================
+    // SYNTHESIZED WEAPON SFX (no samples needed)
+    // ==========================================
+
+    /**
+     * Synthesized homing-missile launch: a pitch-swept rocket tone under a
+     * filtered-noise whoosh. Built procedurally (like the engine) so it
+     * doesn't depend on a sample that may be missing or wrong.
+     * @param {number} [volume] - 0 to 1 relative level
+     */
+    playMissileLaunch(volume = 0.7) {
+        const ctx = this.audioContext;
+        if (!ctx || this.isMuted) return;
+
+        const now = ctx.currentTime;
+        const level = this.sfxVolume * volume;
+        const dur = 0.55;
+
+        const out = ctx.createGain();
+        out.gain.setValueAtTime(0.0001, now);
+        out.gain.exponentialRampToValueAtTime(level, now + 0.03);
+        out.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        out.connect(ctx.destination);
+
+        // Rocket body: square tone sweeping up as it accelerates away
+        const osc = ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(520, now + dur);
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.18, now);
+        osc.connect(oscGain);
+        oscGain.connect(out);
+
+        // Whoosh: bandpass noise sweeping up in frequency
+        const noise = ctx.createBufferSource();
+        noise.buffer = this._getSfxNoiseBuffer();
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.Q.setValueAtTime(0.9, now);
+        bp.frequency.setValueAtTime(600, now);
+        bp.frequency.exponentialRampToValueAtTime(2600, now + dur);
+        noise.connect(bp);
+        bp.connect(out);
+
+        osc.start(now);
+        noise.start(now);
+        osc.stop(now + dur + 0.05);
+        noise.stop(now + dur + 0.05);
+    }
+
+    /**
+     * Synthesized explosion: a low filtered-noise boom with a fast decay.
+     * @param {number} [volume] - 0 to 1 relative level
+     */
+    playExplosion(volume = 0.9) {
+        const ctx = this.audioContext;
+        if (!ctx || this.isMuted) return;
+
+        const now = ctx.currentTime;
+        const level = this.sfxVolume * volume;
+        const dur = 0.6;
+
+        // Duck music briefly so the boom punches through
+        this.duckMusic(0.35);
+
+        const out = ctx.createGain();
+        out.gain.setValueAtTime(level, now);
+        out.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        out.connect(ctx.destination);
+
+        // Body: low-passed noise sweeping down (the boom)
+        const noise = ctx.createBufferSource();
+        noise.buffer = this._getSfxNoiseBuffer();
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(900, now);
+        lp.frequency.exponentialRampToValueAtTime(120, now + dur);
+        noise.connect(lp);
+        lp.connect(out);
+
+        // Sub thump for weight
+        const sub = ctx.createOscillator();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(90, now);
+        sub.frequency.exponentialRampToValueAtTime(40, now + dur);
+        const subGain = ctx.createGain();
+        subGain.gain.setValueAtTime(level * 0.7, now);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+
+        noise.start(now);
+        sub.start(now);
+        noise.stop(now + dur + 0.05);
+        sub.stop(now + dur + 0.05);
+    }
+
+    /**
+     * Two seconds of cached white noise for synthesized SFX
+     * @private
+     */
+    _getSfxNoiseBuffer() {
+        if (this._sfxNoiseBuffer) return this._sfxNoiseBuffer;
+        const ctx = this.audioContext;
+        const length = ctx.sampleRate * 2;
+        const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        this._sfxNoiseBuffer = buffer;
+        return buffer;
+    }
+
     /**
      * Play player join notification with ducking
      */

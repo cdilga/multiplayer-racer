@@ -34,6 +34,7 @@ import { RaceUI } from './ui/RaceUI.js';
 import { ResultsUI } from './ui/ResultsUI.js';
 import { RoomCodeOverlayUI } from './ui/RoomCodeOverlayUI.js';
 import { GameMenuUI } from './ui/GameMenuUI.js';
+import { BugReportUI } from './ui/BugReportUI.js';
 import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
 import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
@@ -227,6 +228,16 @@ class GameHost {
         this.ui.gameMenu.setOnBackToLobby(() => this._returnToLobby());
         this.ui.gameMenu.setOnResetCars(() => this.resetAllVehicles());
 
+        // Bug reporter: captures a screenshot + game-state snapshot and opens
+        // a pre-filled email so reports can be correlated with server logs.
+        this.ui.bugReport = new BugReportUI({
+            container: this.container,
+            getDebugInfo: () => this.collectDebugInfo(),
+            captureScreenshot: () => this.captureScreenshot()
+        });
+        this.ui.bugReport.init();
+        this.ui.gameMenu.setOnReportBug(() => this.ui.bugReport.open());
+
         // Debug UI components
         this.ui.debugOverlay = new DebugOverlayUI({
             eventBus: this.eventBus,
@@ -396,7 +407,7 @@ class GameHost {
         try {
             await this.resourceLoader.preload({
                 vehicles: ['default'],
-                tracks: ['oval', 'derby-bowl', 'derby-arena', 'derby-coliseum']
+                tracks: ['oval', 'derby-bowl', 'derby-arena', 'derby-coliseum', 'derby-dunes']
             });
             console.log('GameHost: Assets preloaded');
         } catch (error) {
@@ -469,10 +480,16 @@ class GameHost {
 
             // Create physics bodies for track
             const groundConfig = trackData.config.physics || {};
-            const groundBody = this.systems.physics.createGroundBody({
-                size: trackData.config.visual?.ground?.size || 200,
-                friction: groundConfig.groundFriction || 0.8
-            });
+            let groundBody;
+            if (trackData.config.geometry?.type === 'dunes') {
+                // Rolling trimesh terrain instead of a flat ground plane
+                groundBody = this.systems.physics.createTerrainBody(trackData.config);
+            } else {
+                groundBody = this.systems.physics.createGroundBody({
+                    size: trackData.config.visual?.ground?.size || 200,
+                    friction: groundConfig.groundFriction || 0.8
+                });
+            }
             const barrierBodies = this.systems.physics.createBarrierBodies(trackData.config);
 
             this.track.setPhysicsBodies(groundBody, barrierBodies);
@@ -504,11 +521,12 @@ class GameHost {
      */
     _applyCameraProfile(trackConfig) {
         const geometry = trackConfig.geometry || {};
-        const isWalledArena = trackConfig.type === 'derby' || geometry.type === 'bowl';
+        const isWalledArena = trackConfig.type === 'derby' || geometry.type === 'bowl' || geometry.type === 'dunes';
 
         if (isWalledArena) {
             const wallHeight = geometry.wallHeight || 15;
-            const radius = (geometry.diameter || 80) / 2;
+            // dunes specify `radius`; bowls specify `diameter`
+            const radius = geometry.radius || (geometry.diameter || 80) / 2;
             const height = wallHeight + 35;
 
             this.systems.render.setCameraParams({
@@ -811,7 +829,7 @@ class GameHost {
      * @returns {string} Concrete track id (or 'procedural')
      */
     _resolveTrackId(requested) {
-        const DERBY_ARENAS = ['derby-bowl', 'derby-arena', 'derby-coliseum'];
+        const DERBY_ARENAS = ['derby-bowl', 'derby-arena', 'derby-coliseum', 'derby-dunes'];
 
         if (this.settings.mode === 'derby') {
             if (requested === 'random' || !requested || requested === 'oval' || requested === 'procedural') {
@@ -979,6 +997,81 @@ class GameHost {
     }
 
     /**
+     * Collect a snapshot of the current game state for a bug report.
+     *
+     * Everything here is defensive (optional chaining + try/catch) so capturing
+     * a report can never crash the game, even mid-transition. The returned
+     * object carries correlation IDs (roomCode, socketId, timestamp) so a report
+     * can be matched against server logs after the fact.
+     *
+     * @returns {Object}
+     */
+    collectDebugInfo() {
+        const round = (n) => (typeof n === 'number' ? Math.round(n * 100) / 100 : null);
+
+        const info = {
+            timestamp: new Date().toISOString(),
+            url: typeof window !== 'undefined' ? window.location.href : null,
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+            roomCode: this.roomCode || null,
+            socketId: this.systems.network?.socket?.id || null,
+            connected: this.systems.network?.connected ?? null,
+            gameState: this.engine?.getState?.() ?? null,
+            fps: Math.round(this.engine?.getFps?.() || 0),
+            settings: { ...this.settings },
+            track: this.track?.configId || null,
+            playerCount: this.vehicles?.size || 0,
+            players: []
+        };
+
+        try {
+            for (const [playerId, vehicle] of this.vehicles) {
+                const pos = vehicle.position || vehicle.mesh?.position || null;
+                info.players.push({
+                    playerId,
+                    name: this.systems.network?.players?.get?.(playerId)?.name ?? null,
+                    speed: round(vehicle.speed),
+                    health: vehicle.health ?? null,
+                    isDead: vehicle.isDead ?? null,
+                    position: pos ? { x: round(pos.x), y: round(pos.y), z: round(pos.z) } : null
+                });
+            }
+        } catch (e) {
+            info.playersError = String(e);
+        }
+
+        try {
+            if (this.settings.mode === 'derby' && this.systems.derby) {
+                info.derby = {
+                    state: this.systems.derby.getState?.() ?? null,
+                    round: this.systems.derby.getCurrentRound?.() ?? null,
+                    survivors: this.systems.derby.getSurvivorCount?.() ?? null,
+                    combatTime: this.systems.derby.getCombatTime?.() ?? null
+                };
+            } else if (this.systems.race) {
+                info.race = {
+                    state: this.systems.race.state ?? null,
+                    totalLaps: this.systems.race.totalLaps ?? null,
+                    raceTime: this.systems.race.getRaceTime?.() ?? null,
+                    positions: this.systems.race.getPositions?.() ?? null
+                };
+            }
+        } catch (e) {
+            info.modeError = String(e);
+        }
+
+        return info;
+    }
+
+    /**
+     * Capture a screenshot of the current scene for a bug report.
+     * @returns {string|null} image data URL, or null if capture failed
+     */
+    captureScreenshot() {
+        return this.systems.render?.captureScreenshot?.() ?? null;
+    }
+
+    /**
      * Return to lobby
      * @private
      */
@@ -987,6 +1080,10 @@ class GameHost {
         this.systems.derby.reset();
         this.systems.weapons.clearAll();
         this.systems.damage.setRespawnEnabled(true);
+
+        // Reset the server-side room state so new players join the lobby
+        // cleanly instead of being treated as mid-race late joiners
+        this.systems.network.returnToLobby();
 
         // Revive any dead vehicles so the next game starts clean
         for (const [playerId, vehicle] of this.vehicles) {
@@ -1060,9 +1157,13 @@ class GameHost {
             }
             if (loudest) {
                 const isAccelerating = (loudest.controls?.acceleration || 0) > 0;
+                // maxSpeed must match the car's real top speed (~124 km/h) so the
+                // virtual gearbox spans the full range and audibly shifts through
+                // gears. With the old value of 50 the car was past the ceiling
+                // almost instantly, pinning the engine at redline (no shifts).
                 this.systems.audio.updateEngineSound(
                     loudest.speed || 0,
-                    50, // maxSpeed
+                    120, // maxSpeed (km/h)
                     isAccelerating
                 );
             }

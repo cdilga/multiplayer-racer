@@ -159,9 +159,12 @@ class RenderSystem {
         this.camera.lookAt(0, 0, 0);
 
         // Create renderer
+        // preserveDrawingBuffer keeps the WebGL back buffer readable so the bug
+        // reporter can grab a screenshot via canvas.toDataURL() at any time.
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            alpha: false
+            alpha: false,
+            preserveDrawingBuffer: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -920,6 +923,49 @@ class RenderSystem {
      */
     getRenderer() {
         return this.renderer;
+    }
+
+    /**
+     * Capture a screenshot of the current scene as a data URL.
+     * Forces a fresh render first so the back buffer is up to date, then
+     * downscales to keep the resulting image small enough to download/email.
+     *
+     * @param {Object} [opts]
+     * @param {number} [opts.maxWidth=1280] - Max width of the output image
+     * @param {number} [opts.quality=0.8] - JPEG quality (0-1)
+     * @returns {string|null} data URL (image/jpeg) or null if capture failed
+     */
+    captureScreenshot({ maxWidth = 1280, quality = 0.8 } = {}) {
+        if (!this.renderer || !this.scene || !this.camera) return null;
+
+        try {
+            // Render one fresh frame so the buffer reflects the current state.
+            if (this.postProcessing.enabled && this.postProcessing.composer) {
+                try {
+                    this.postProcessing.composer.render();
+                } catch (e) {
+                    this.renderer.render(this.scene, this.camera);
+                }
+            } else {
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            const source = this.renderer.domElement;
+            const scale = Math.min(1, maxWidth / source.width);
+            const w = Math.max(1, Math.round(source.width * scale));
+            const h = Math.max(1, Math.round(source.height * scale));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(source, 0, 0, w, h);
+
+            return canvas.toDataURL('image/jpeg', quality);
+        } catch (error) {
+            console.warn('RenderSystem: Screenshot capture failed:', error);
+            return null;
+        }
     }
 
     /**

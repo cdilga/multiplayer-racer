@@ -31,6 +31,7 @@ class GameMenuUI {
         this.onRestart = null;
         this.onBackToLobby = null;
         this.onResetCars = null;
+        this.onReportBug = null;
 
         this.visible = false;
         this.initialized = false;
@@ -51,6 +52,7 @@ class GameMenuUI {
     setOnRestart(callback) { this.onRestart = callback; }
     setOnBackToLobby(callback) { this.onBackToLobby = callback; }
     setOnResetCars(callback) { this.onResetCars = callback; }
+    setOnReportBug(callback) { this.onReportBug = callback; }
 
     /**
      * Create menu button and panel
@@ -72,6 +74,7 @@ class GameMenuUI {
             <button class="game-menu-action" data-action="restart">🔄 Restart Game</button>
             <button class="game-menu-action" data-action="lobby">🚪 Back to Lobby</button>
             <button class="game-menu-action" data-action="reset-cars">🚗 Reset All Cars</button>
+            <button class="game-menu-action" data-action="report-bug">🐞 Report a Bug</button>
             <div class="game-menu-help">
                 <div class="game-menu-help-title">Help</div>
                 <div>Players join by scanning the QR code.</div>
@@ -97,6 +100,9 @@ class GameMenuUI {
                 this.hide();
             } else if (action === 'reset-cars') {
                 this.onResetCars?.();
+                this.hide();
+            } else if (action === 'report-bug') {
+                this.onReportBug?.();
                 this.hide();
             } else if (action === 'close') {
                 this.hide();

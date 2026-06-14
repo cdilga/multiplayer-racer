@@ -274,6 +274,53 @@ def create_room(data=None):
     emit('room_created', {'room_code': room_code, 'join_url': join_url})
     logger.info(f"Room created: {room_code}")
 
+@socketio.on('reclaim_room')
+def reclaim_room(data):
+    """Host re-binds (or recreates) a room under a known code after a socket
+    blip or server recycle, so players using the still-displayed code can
+    still join instead of hitting 'room doesn't exist'."""
+    host_sid = request.sid
+    room_code = (data.get('room_code') or '').upper()
+    if not room_code:
+        return
+
+    if room_code in game_rooms:
+        # Existing room: rebind to the reconnected host socket
+        game_rooms[room_code]['host_sid'] = host_sid
+        logger.info(f"Host reconnected, rebound room {room_code}")
+    else:
+        # Room was lost - recreate it empty under the same code
+        game_rooms[room_code] = {
+            'host_sid': host_sid,
+            'players': {},
+            'game_state': 'waiting',
+            'disconnected_players': {},
+            'next_player_id': 1
+        }
+        logger.info(f"Host reclaimed missing room {room_code}")
+
+    join_room(room_code)
+    emit('room_reclaimed', {'room_code': room_code})
+
+
+@socketio.on('return_to_lobby')
+def return_to_lobby(data):
+    """Host returned to the lobby: reset room state so subsequent joins are
+    treated as fresh lobby joins, not mid-race late joins."""
+    host_sid = request.sid
+    room_code = (data.get('room_code') or '').upper()
+
+    if not room_code or room_code not in game_rooms:
+        return
+    if game_rooms[room_code]['host_sid'] != host_sid:
+        return
+
+    game_rooms[room_code]['game_state'] = 'waiting'
+    game_rooms[room_code]['disconnected_players'] = {}
+    emit('returned_to_lobby', to=room_code)
+    logger.info(f"Room {room_code} returned to lobby")
+
+
 @socketio.on('player_control_update')
 def player_control_update(data):
     """
