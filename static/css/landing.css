@@ -1,0 +1,822 @@
+/*
+ * Joystick Jammers — Marketing Landing Page
+ * Neon arcade aesthetic matching the in-game CSS (host.css / player.css).
+ * Self-contained: no heavy deps, CSS/SVG flourishes only.
+ */
+
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+:root {
+    /* Backgrounds (dark navy layers) */
+    --bg-deep: #0d1429;
+    --bg-base: #1a1a2e;
+    --bg-panel: #16213e;
+
+    /* Neon accents */
+    --cyan: #4cc9f0;
+    --green: #00ff88;
+    --indigo: #4361ee;
+    --pink: #f72585;
+
+    /* Text */
+    --text: #ffffff;
+    --text-muted: #8d99ae;
+
+    /* Surfaces */
+    --surface: rgba(22, 33, 62, 0.72);
+    --surface-solid: #16213e;
+    --border: rgba(76, 201, 240, 0.18);
+    --border-strong: rgba(76, 201, 240, 0.45);
+
+    /* Typography */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Spacing scale (8px base) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-8: 3rem;
+    --space-10: 4rem;
+    --space-12: 6rem;
+
+    /* Radii */
+    --radius-md: 0.75rem;
+    --radius-lg: 1.25rem;
+    --radius-full: 9999px;
+
+    /* Glows */
+    --glow-cyan: 0 0 24px rgba(76, 201, 240, 0.5);
+    --glow-green: 0 0 24px rgba(0, 255, 136, 0.5);
+    --glow-pink: 0 0 24px rgba(247, 37, 133, 0.5);
+
+    /* Layout */
+    --maxw: 1140px;
+    --header-h: 64px;
+
+    --transition: 200ms ease;
+}
+
+/* ============================================================
+   Reset / Base
+   ============================================================ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* Layered animated background: stacked radial neon glows + grid. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+        radial-gradient(ellipse 80% 60% at 12% 8%, rgba(67, 97, 238, 0.35), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 88% 18%, rgba(247, 37, 133, 0.28), transparent 60%),
+        radial-gradient(ellipse 90% 70% at 50% 100%, rgba(0, 255, 136, 0.18), transparent 60%),
+        linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-base) 45%, var(--bg-panel) 100%);
+}
+
+/* Subtle Tron grid that slowly drifts toward the horizon. */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(76, 201, 240, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(76, 201, 240, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+    animation: gridDrift 18s linear infinite;
+}
+
+@keyframes gridDrift {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 0 48px, 48px 0; }
+}
+
+a {
+    color: var(--cyan);
+    text-decoration: none;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* Visually hidden but accessible to screen readers. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Skip link for keyboard users. */
+.skip-link {
+    position: absolute;
+    top: -48px;
+    left: var(--space-4);
+    background: var(--green);
+    color: var(--bg-base);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    z-index: 200;
+    transition: top var(--transition);
+}
+.skip-link:focus {
+    top: var(--space-2);
+}
+
+/* Shared focus ring. */
+:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.container {
+    width: 100%;
+    max-width: var(--maxw);
+    margin-inline: auto;
+    padding-inline: var(--space-5);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(13, 20, 41, 0.55);
+    border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    height: var(--header-h);
+}
+
+.wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--text);
+}
+
+.wordmark__glyph {
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(var(--glow-cyan));
+}
+
+.wordmark__name b {
+    color: var(--green);
+    text-shadow: var(--glow-green);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.header-link {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.header-link:hover {
+    color: var(--text);
+}
+
+@media (max-width: 560px) {
+    .header-link {
+        display: none;
+    }
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: var(--space-3) var(--space-6);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    text-align: center;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    white-space: nowrap;
+}
+.btn:hover {
+    transform: translateY(-2px);
+}
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn--primary {
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    color: var(--bg-deep);
+    box-shadow: 0 8px 28px rgba(0, 255, 136, 0.35);
+}
+.btn--primary:hover {
+    box-shadow: 0 12px 36px rgba(0, 255, 136, 0.5);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--cyan);
+    border: 2px solid var(--border-strong);
+}
+.btn--ghost:hover {
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+.btn--lg {
+    min-height: 58px;
+    padding: var(--space-4) var(--space-8);
+    font-size: 1.15rem;
+}
+
+.btn--block {
+    width: 100%;
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+    position: relative;
+    padding-block: var(--space-12) var(--space-10);
+}
+
+.hero__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--space-8);
+    align-items: center;
+}
+
+@media (max-width: 880px) {
+    .hero__grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+.hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    margin-bottom: var(--space-5);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    background: rgba(76, 201, 240, 0.1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+}
+
+.hero__eyebrow .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: var(--glow-green);
+    animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero__title {
+    font-size: clamp(2.6rem, 8vw, 5rem);
+    line-height: 1.02;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-5);
+}
+
+/* Animated neon gradient sweep across the brand name. */
+.hero__title .gradient {
+    background: linear-gradient(100deg, var(--green), var(--cyan), var(--indigo), var(--pink), var(--green));
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: sweep 6s linear infinite;
+    text-shadow: 0 0 40px rgba(76, 201, 240, 0.25);
+}
+
+@keyframes sweep {
+    to { background-position: 300% center; }
+}
+
+.hero__tagline {
+    font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+    color: var(--text-muted);
+    max-width: 34ch;
+    margin: 0 0 var(--space-6);
+}
+
+@media (max-width: 880px) {
+    .hero__tagline {
+        margin-inline: auto;
+    }
+}
+
+.hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: stretch;
+}
+
+@media (max-width: 880px) {
+    .hero__ctas {
+        justify-content: center;
+    }
+}
+
+/* Join box: code input + submit. */
+.join {
+    display: flex;
+    gap: var(--space-2);
+    align-items: stretch;
+}
+
+.join__input {
+    width: 9ch;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.join__input::placeholder {
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+}
+.join__input:focus {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--glow-pink);
+}
+
+.hero__joinlink {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+.hero__joinlink a {
+    color: var(--cyan);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Hero visual: CSS/SVG arcade scene (TV + cars + joystick). */
+.hero__visual {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background:
+        radial-gradient(circle at 50% 40%, rgba(67, 97, 238, 0.25), transparent 65%),
+        var(--bg-panel);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(76, 201, 240, 0.08);
+}
+
+.hero__visual svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Gentle float of the whole scene for life without distraction. */
+.hero__visual .float {
+    animation: float 6s ease-in-out infinite;
+    transform-origin: center;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* Headlights / neon trails dashing animation. */
+.hero__visual .dash {
+    stroke-dasharray: 6 10;
+    animation: dashMove 1.2s linear infinite;
+}
+@keyframes dashMove {
+    to { stroke-dashoffset: -32; }
+}
+
+@media (max-width: 880px) {
+    .hero__visual {
+        max-width: 480px;
+        margin-inline: auto;
+    }
+}
+
+/* ============================================================
+   Section scaffolding
+   ============================================================ */
+.section {
+    padding-block: var(--space-10);
+}
+
+.section__head {
+    max-width: 56ch;
+    margin: 0 auto var(--space-8);
+    text-align: center;
+}
+
+.section__kicker {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin: 0 0 var(--space-2);
+}
+
+.section__title {
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0 0 var(--space-3);
+}
+
+.section__sub {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+/* ============================================================
+   How it works (3 steps)
+   ============================================================ */
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    counter-reset: step;
+}
+
+@media (max-width: 760px) {
+    .steps {
+        grid-template-columns: 1fr;
+        max-width: 440px;
+        margin-inline: auto;
+    }
+}
+
+.step {
+    position: relative;
+    padding: var(--space-6) var(--space-5) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: var(--space-4);
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--bg-deep);
+    background: linear-gradient(135deg, var(--cyan), var(--indigo));
+    border-radius: var(--radius-full);
+    box-shadow: var(--glow-cyan);
+}
+
+.step h3 {
+    font-size: 1.2rem;
+    margin: 0 0 var(--space-2);
+}
+
+.step p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.98rem;
+}
+
+/* ============================================================
+   Modes (Race vs Derby)
+   ============================================================ */
+.modes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+}
+
+@media (max-width: 760px) {
+    .modes {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mode-card {
+    position: relative;
+    padding: var(--space-8) var(--space-6);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.mode-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+}
+
+/* Accent glow corner per mode. */
+.mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 85% 0%, var(--accent-glow, transparent), transparent 55%);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.mode-card--race {
+    --accent-glow: rgba(76, 201, 240, 0.35);
+}
+.mode-card--race:hover {
+    box-shadow: var(--glow-cyan);
+}
+
+.mode-card--derby {
+    --accent-glow: rgba(247, 37, 133, 0.35);
+}
+.mode-card--derby:hover {
+    box-shadow: var(--glow-pink);
+}
+
+.mode-card__badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-4);
+}
+.mode-card--race .mode-card__badge {
+    color: var(--bg-deep);
+    background: var(--cyan);
+}
+.mode-card--derby .mode-card__badge {
+    color: var(--text);
+    background: var(--pink);
+}
+
+.mode-card h3 {
+    font-size: 1.6rem;
+    margin: 0 0 var(--space-3);
+}
+
+.mode-card p {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+}
+
+.mode-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+.mode-card li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.95rem;
+}
+.mode-card li::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    background: var(--green);
+    box-shadow: var(--glow-green);
+}
+
+/* ============================================================
+   Weapons strip
+   ============================================================ */
+.weapons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+}
+
+.weapon {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.weapon:hover {
+    transform: translateY(-3px) scale(1.04);
+    border-color: var(--border-strong);
+    box-shadow: var(--glow-cyan);
+}
+.weapon__icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+/* ============================================================
+   Features grid
+   ============================================================ */
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-5);
+}
+
+.feature {
+    padding: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.feature__icon {
+    font-size: 1.8rem;
+    margin-bottom: var(--space-3);
+    filter: drop-shadow(var(--glow-cyan));
+}
+
+.feature h3 {
+    font-size: 1.15rem;
+    margin: 0 0 var(--space-2);
+}
+
+.feature p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.96rem;
+}
+
+/* ============================================================
+   Final CTA band
+   ============================================================ */
+.cta-band {
+    text-align: center;
+    padding: var(--space-10) var(--space-5);
+    margin-block: var(--space-8);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-strong);
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.18), transparent 60%),
+        var(--surface);
+}
+
+.cta-band h2 {
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    margin: 0 0 var(--space-3);
+}
+
+.cta-band p {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-6);
+    font-size: 1.1rem;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-8);
+    margin-top: var(--space-8);
+}
+
+.site-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.site-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+}
+.site-footer__links a {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.site-footer__links a:hover {
+    color: var(--cyan);
+}
+
+.site-footer__couch {
+    width: 100%;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    opacity: 0.8;
+}
+
+/* ============================================================
+   Reduced motion: kill all non-essential animation.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .hero__title .gradient {
+        background-position: 0 center;
+    }
+}

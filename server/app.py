@@ -189,12 +189,23 @@ def _get_host_info():
     return local_ip, port
 
 @app.route('/')
-def index():
-    """Serve the host interface."""
+def landing():
+    """Serve the marketing landing page (Kahoot-style entry point).
+
+    "Host Now" routes to /host, "Join Game" routes to /player. A dev bypass
+    (?dev=1, handled client-side) skips straight to the host for fast local
+    iteration.
+    """
+    return render_template('landing/index.html')
+
+@app.route('/host')
+def host():
+    """Serve the host interface (big screen)."""
     local_ip, port = _get_host_info()
     return render_template('host/index.html', local_ip=local_ip, port=port)
 
 @app.route('/player')
+@app.route('/join')
 def player():
     """Serve the player interface."""
     # Get room code from query parameters if available

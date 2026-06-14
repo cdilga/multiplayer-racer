@@ -18,7 +18,8 @@ test.describe('Full Game E2E', () => {
             viewport: { width: 1280, height: 720 },
         });
         const hostPage = await hostContext.newPage();
-        await hostPage.goto('/?testMode=1');
+        // Landing page lives at "/"; host screen moved to "/host".
+        await hostPage.goto('/host?testMode=1');
 
         // Wait for room code
         await hostPage.waitForSelector('#room-code-display', { state: 'visible', timeout: 30000 });

@@ -6,7 +6,21 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Race Game - Player</title>
+    <title>Join a Joystick Jammers game</title>
+    <meta name="description" content="Turn your phone into a controller and join a Joystick Jammers party game — race or wreck your friends on the big screen. No installs.">
+    <meta name="theme-color" content="#16213e">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Join a Joystick Jammers game">
+    <meta property="og:description" content="Your phone is the controller. Enter the room code from the big screen and jump in.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://jammers.dilger.dev/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Join a Joystick Jammers game">
+    <meta name="twitter:description" content="Your phone is the controller. Race or wreck your friends on the big screen.">
+    <meta name="twitter:image" content="https://jammers.dilger.dev/static/og-image.png">
     <link rel="stylesheet" href="/static/css/player.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <style>
@@ -87,19 +101,22 @@
     </div>
     <div class="container">
         <div id="join-screen" class="screen">
-            <h1>Multiplayer Racer</h1>
+            <h1>Joystick Jammers</h1>
+            <p class="join-subtitle">Your phone is the controller</p>
             <div id="auto-join-message" class="auto-join-message" style="display: none;">
                 Room code detected: <strong id="detected-room-code"></strong>
             </div>
             <div class="join-form">
                 <label for="player-name">Your Name:</label>
                 <div class="name-generator">
-                    <input type="text" id="player-name" placeholder="Enter your name" maxlength="20">
+                    <input type="text" id="player-name" placeholder="Enter your name" maxlength="20" autocomplete="off">
                     <button id="generate-name-btn" title="Generate a random name">🎲</button>
                 </div>
-                
+
                 <label for="room-code">Room Code:</label>
-                <input type="text" id="room-code" placeholder="Enter room code" maxlength="4">
+                <input type="text" id="room-code" placeholder="ABCD" maxlength="4"
+                       inputmode="latin" autocapitalize="characters" autocomplete="off"
+                       autocorrect="off" spellcheck="false">
                 <button id="join-btn">Join Race</button>
             </div>
             <div id="error-message" class="error hidden"></div>

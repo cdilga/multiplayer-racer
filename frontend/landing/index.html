@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joystick Jammers — Phone-Controller Party Racer &amp; Demolition Derby</title>
+    <meta name="description" content="Joystick Jammers turns phones into controllers for a big-screen party game. Race with weapon pickups or wreck rivals in demolition derby. No installs — just a browser.">
+    <meta name="theme-color" content="#16213e">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://jammers.dilger.dev/">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/css/landing.css">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Joystick Jammers — Phone-Controller Party Racer &amp; Demolition Derby">
+    <meta property="og:description" content="Phones become controllers, the action plays on the big screen. Race with weapons or wreck rivals in derby. Up to 16+ players, no installs.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jammers.dilger.dev/">
+    <meta property="og:image" content="https://jammers.dilger.dev/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Joystick Jammers">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Joystick Jammers — Phone-Controller Party Racer &amp; Demolition Derby">
+    <meta name="twitter:description" content="Phones become controllers, the action plays on the big screen. Race with weapons or wreck rivals in derby. No installs — just a browser.">
+    <meta name="twitter:image" content="https://jammers.dilger.dev/static/og-image.png">
+
+    <!--
+      AEO / SEO: structured data for rich results and answer engines.
+      VideoGame describes the product; FAQPage answers common questions.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "VideoGame",
+          "name": "Joystick Jammers",
+          "description": "A couch-party arcade game where phones become controllers and the action plays on a shared big screen. Race with weapon pickups or battle in a last-car-standing demolition derby.",
+          "url": "https://jammers.dilger.dev/",
+          "genre": ["Racing", "Party", "Arcade"],
+          "gamePlatform": "Web browser",
+          "applicationCategory": "Game",
+          "operatingSystem": "Any (modern web browser)",
+          "playMode": "MultiPlayer",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Joystick Jammers?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Joystick Jammers is a couch-party arcade game. One screen (a TV or laptop) hosts the action while everyone uses their phone as a controller — race with weapon pickups or wreck rivals in demolition derby."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do I need to install anything?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. There are no apps and no app store. The host opens the game in any modern browser and players join from their phone's browser — nothing to download."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How many players can join?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Up to 16 or more players can join a single game, making it ideal for parties and big group hangs."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I join a game?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Scan the QR code shown on the host screen, or enter the 4-letter room code on your phone. You'll be dropped straight into the lobby."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <!-- ============================================================
+         Header
+         ============================================================ -->
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a class="wordmark" href="/" aria-label="Joystick Jammers home">
+                <!-- Joystick glyph (CSS-drawn via inline SVG, no external asset) -->
+                <svg class="wordmark__glyph" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                    <defs>
+                        <linearGradient id="wmGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#00ff88"/>
+                            <stop offset="1" stop-color="#4cc9f0"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="6" y="20" width="20" height="8" rx="3" fill="#16213e" stroke="url(#wmGrad)" stroke-width="2"/>
+                    <line x1="16" y1="20" x2="16" y2="9" stroke="url(#wmGrad)" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="16" cy="7" r="5" fill="url(#wmGrad)"/>
+                </svg>
+                <span class="wordmark__name">Joystick&nbsp;<b>Jammers</b></span>
+            </a>
+            <nav class="header-actions" aria-label="Primary">
+                <a class="header-link" href="#how">How it works</a>
+                <a class="header-link" href="#modes">Modes</a>
+                <!-- Host CTA in header preserves any incoming query string via JS -->
+                <a class="btn btn--ghost" href="/host" data-cta="host" data-testid="header-host">Host Now</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <!-- ============================================================
+             Hero
+             ============================================================ -->
+        <section class="hero">
+            <div class="container hero__grid">
+                <div class="hero__copy">
+                    <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Couch party game · No installs</span>
+                    <h1 class="hero__title">
+                        <span class="gradient" data-testid="hero-title">Joystick Jammers</span>
+                    </h1>
+                    <p class="hero__tagline" data-testid="tagline">
+                        Your phone is the controller. Your TV is the arena. Race, ram, and wreck your friends — straight from the browser.
+                    </p>
+
+                    <div class="hero__ctas">
+                        <!-- Primary CTA: navigates to /host (big-screen host) -->
+                        <a class="btn btn--primary btn--lg" href="/host" data-cta="host" data-testid="host-cta">
+                            ▶ Host Now
+                        </a>
+
+                        <!-- Join box: 4-letter room code -> /player?room=CODE -->
+                        <form class="join" data-testid="join-form" novalidate>
+                            <label class="visually-hidden" for="room-code">4-letter room code</label>
+                            <input
+                                class="join__input"
+                                id="room-code"
+                                name="room"
+                                type="text"
+                                inputmode="latin"
+                                autocomplete="off"
+                                autocapitalize="characters"
+                                spellcheck="false"
+                                maxlength="4"
+                                pattern="[A-Za-z]{4}"
+                                placeholder="CODE"
+                                aria-label="Enter your 4-letter room code"
+                                data-testid="join-code-input">
+                            <button class="btn btn--ghost" type="submit" data-testid="join-submit">Join Game</button>
+                        </form>
+                    </div>
+
+                    <p class="hero__joinlink">
+                        No code yet? <a href="/player" data-cta="join-plain" data-testid="join-plain">Join a game</a>
+                    </p>
+                </div>
+
+                <!-- Hero visual: self-contained CSS/SVG arcade scene -->
+                <div class="hero__visual" aria-hidden="true">
+                    <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <linearGradient id="screenGlow" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#1a2a4e"/>
+                                <stop offset="1" stop-color="#0d1429"/>
+                            </linearGradient>
+                            <linearGradient id="carCyan" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0" stop-color="#4cc9f0"/>
+                                <stop offset="1" stop-color="#4361ee"/>
+                            </linearGradient>
+                            <linearGradient id="carPink" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0" stop-color="#f72585"/>
+                                <stop offset="1" stop-color="#b5179e"/>
+                            </linearGradient>
+                        </defs>
+
+                        <g class="float">
+                            <!-- Big-screen TV bezel -->
+                            <rect x="40" y="30" width="320" height="200" rx="14" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="2"/>
+                            <rect x="52" y="42" width="296" height="176" rx="8" fill="url(#screenGlow)"/>
+
+                            <!-- Perspective track lines (animated dash = sense of speed) -->
+                            <line class="dash" x1="200" y1="210" x2="120" y2="60" stroke="#4cc9f0" stroke-width="2" opacity="0.5"/>
+                            <line class="dash" x1="200" y1="210" x2="280" y2="60" stroke="#4cc9f0" stroke-width="2" opacity="0.5"/>
+                            <line class="dash" x1="200" y1="210" x2="200" y2="55" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+
+                            <!-- Cyan racer -->
+                            <g transform="translate(120 150) rotate(-8)">
+                                <rect x="-26" y="-12" width="52" height="24" rx="7" fill="url(#carCyan)"/>
+                                <rect x="-12" y="-9" width="24" height="11" rx="3" fill="#0a0f1f" opacity="0.7"/>
+                                <circle cx="-16" cy="14" r="6" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="1.5"/>
+                                <circle cx="16" cy="14" r="6" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="1.5"/>
+                            </g>
+
+                            <!-- Pink racer -->
+                            <g transform="translate(250 175) rotate(6)">
+                                <rect x="-26" y="-12" width="52" height="24" rx="7" fill="url(#carPink)"/>
+                                <rect x="-12" y="-9" width="24" height="11" rx="3" fill="#0a0f1f" opacity="0.7"/>
+                                <circle cx="-16" cy="14" r="6" fill="#0a0f1f" stroke="#f72585" stroke-width="1.5"/>
+                                <circle cx="16" cy="14" r="6" fill="#0a0f1f" stroke="#f72585" stroke-width="1.5"/>
+                            </g>
+
+                            <!-- Floating weapon pickup -->
+                            <g transform="translate(200 90)">
+                                <rect x="-12" y="-12" width="24" height="24" rx="6" fill="#00ff88" opacity="0.9"/>
+                                <text x="0" y="6" font-size="16" text-anchor="middle" fill="#0a0f1f" font-weight="bold">★</text>
+                            </g>
+
+                            <!-- Phone controller in foreground -->
+                            <g transform="translate(300 235) rotate(-12)">
+                                <rect x="-22" y="-40" width="44" height="80" rx="9" fill="#16213e" stroke="#00ff88" stroke-width="2"/>
+                                <rect x="-15" y="-30" width="30" height="44" rx="4" fill="#0a0f1f"/>
+                                <circle cx="0" cy="26" r="7" fill="none" stroke="#00ff88" stroke-width="2"/>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             How it works (3 steps)
+             ============================================================ -->
+        <section class="section" id="how">
+            <div class="container">
+                <div class="section__head">
+                    <p class="section__kicker">Up and running in seconds</p>
+                    <h2 class="section__title">How it works</h2>
+                    <p class="section__sub">No setup, no accounts. From cold to chaos in three steps.</p>
+                </div>
+                <ol class="steps">
+                    <li class="step">
+                        <span class="step__num">1</span>
+                        <h3>Open on a big screen</h3>
+                        <p>Launch the host on a TV or laptop. A room code and QR code pop up instantly.</p>
+                    </li>
+                    <li class="step">
+                        <span class="step__num">2</span>
+                        <h3>Players scan with phones</h3>
+                        <p>Everyone scans the QR or types the 4-letter code. Their phone becomes the controller.</p>
+                    </li>
+                    <li class="step">
+                        <span class="step__num">3</span>
+                        <h3>Race or wreck</h3>
+                        <p>Pick a mode and go. Grab weapons, take corners, and be the last car standing.</p>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Modes
+             ============================================================ -->
+        <section class="section" id="modes">
+            <div class="container">
+                <div class="section__head">
+                    <p class="section__kicker">Two ways to play</p>
+                    <h2 class="section__title">Race or Demolition Derby</h2>
+                    <p class="section__sub">Pick your poison. Both run on procedural arenas with real 3D physics.</p>
+                </div>
+                <div class="modes">
+                    <article class="mode-card mode-card--race">
+                        <span class="mode-card__badge">Race</span>
+                        <h3>Weaponised laps</h3>
+                        <p>Tear around procedurally generated tracks and terrain. Grab pickups, fire on rivals, and chase the fastest lap.</p>
+                        <ul>
+                            <li>Lap timing &amp; live positions</li>
+                            <li>8 weapon &amp; power-up pickups</li>
+                            <li>Procedural tracks every game</li>
+                        </ul>
+                    </article>
+                    <article class="mode-card mode-card--derby">
+                        <span class="mode-card__badge">Demolition Derby</span>
+                        <h3>Last car standing</h3>
+                        <p>Ram, flip, and obliterate everyone else. The arena shrinks and the weapons escalate until one driver survives.</p>
+                        <ul>
+                            <li>Best-of-3 rounds</li>
+                            <li>Shrinking arena pressure</li>
+                            <li>Escalating weapon drops</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Weapons strip
+             ============================================================ -->
+        <section class="section">
+            <div class="container">
+                <div class="section__head">
+                    <p class="section__kicker">Grab &amp; deploy</p>
+                    <h2 class="section__title">8 weapons &amp; power-ups</h2>
+                    <p class="section__sub">Pickups litter every arena. Use them wisely — or just cause mayhem.</p>
+                </div>
+                <div class="weapons">
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">🚀</span> Missile</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">💣</span> Mine</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">⚡</span> Boost</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">🛢️</span> Oil Slick</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">🎯</span> Sniper</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">🛡️</span> Shield</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">📡</span> EMP</span>
+                    <span class="weapon"><span class="weapon__icon" aria-hidden="true">🔥</span> Flamethrower</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Features grid
+             ============================================================ -->
+        <section class="section">
+            <div class="container">
+                <div class="section__head">
+                    <p class="section__kicker">Why it rips</p>
+                    <h2 class="section__title">Built for the couch</h2>
+                </div>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature__icon" aria-hidden="true">📱</div>
+                        <h3>Phone = controller</h3>
+                        <p>Tilt and tap to drive. Every phone is a gamepad — no extra hardware.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon" aria-hidden="true">🎮</div>
+                        <h3>16+ players</h3>
+                        <p>Pile everyone in. Big groups, big screens, bigger chaos.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon" aria-hidden="true">🌐</div>
+                        <h3>Zero installs</h3>
+                        <p>No apps, no app store. Open a browser and you're in.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon" aria-hidden="true">✨</div>
+                        <h3>Real 3D physics</h3>
+                        <p>Three.js visuals with bloom and a proper physics engine under the hood.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             Final CTA band
+             ============================================================ -->
+        <section class="section">
+            <div class="container">
+                <div class="cta-band">
+                    <h2>Ready to jam?</h2>
+                    <p>Fire up the host on the nearest big screen and hand out the code.</p>
+                    <a class="btn btn--primary btn--lg" href="/host" data-cta="host" data-testid="cta-band-host">▶ Host Now</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================================================
+         Footer
+         ============================================================ -->
+    <footer class="site-footer">
+        <div class="container site-footer__inner">
+            <a class="wordmark" href="/" aria-label="Joystick Jammers home">
+                <span class="wordmark__name">Joystick&nbsp;<b>Jammers</b></span>
+            </a>
+            <nav class="site-footer__links" aria-label="Footer">
+                <a href="https://jammers.dilger.dev" target="_blank" rel="noopener">Play live ↗</a>
+                <a href="https://github.com/cdilga/multiplayer-racer" target="_blank" rel="noopener">GitHub ↗</a>
+                <a href="/host" data-cta="host">Host a game</a>
+                <a href="/player" data-cta="join-plain">Join a game</a>
+            </nav>
+            <p class="site-footer__couch">Made for couches, parties, and questionable driving decisions.</p>
+        </div>
+    </footer>
+
+    <!--
+      Landing behaviour (Vite-bundled module).
+      - Host CTAs navigate to /host, preserving any incoming query string.
+      - Join box submits a 4-letter code to /player?room=CODE (uppercased).
+      - DEV BYPASS: ?dev=1 (or localStorage 'jammers_skip_landing'==='1')
+        immediately replaces the landing with /host for fast local testing.
+        ?dev=1 also persists the skip flag; ?dev=0 clears it.
+      - Every CTA click primes sessionStorage 'jammers_engaged'='1'.
+    -->
+    <script type="module">
+        // --- Config constants -----------------------------------------
+        const SKIP_KEY = 'jammers_skip_landing';   // localStorage: persistent dev bypass
+        const ENGAGED_KEY = 'jammers_engaged';     // sessionStorage: harmless priming flag
+        const HOST_PATH = '/host';
+        const PLAYER_PATH = '/player';
+        const CODE_LENGTH = 4;
+
+        const params = new URLSearchParams(window.location.search);
+
+        /**
+         * Build a path with the current query string preserved.
+         * The dev flags (dev/room) are internal and stripped so we don't
+         * leak them onto the host URL.
+         */
+        function withPreservedQuery(path) {
+            const preserved = new URLSearchParams(window.location.search);
+            preserved.delete('dev');
+            preserved.delete('room');
+            const qs = preserved.toString();
+            return qs ? `${path}?${qs}` : path;
+        }
+
+        // --- Dev bypass: clear flag on ?dev=0 -------------------------
+        if (params.get('dev') === '0') {
+            localStorage.removeItem(SKIP_KEY);
+        }
+
+        // --- Dev bypass: skip landing -> /host ------------------------
+        // Triggered by ?dev=1 or a previously-persisted skip flag.
+        const devRequested = params.get('dev') === '1';
+        const skipPersisted = localStorage.getItem(SKIP_KEY) === '1';
+        if (devRequested || skipPersisted) {
+            if (devRequested) {
+                // Persist so future "/" visits also skip.
+                localStorage.setItem(SKIP_KEY, '1');
+            }
+            window.location.replace(withPreservedQuery(HOST_PATH));
+        } else {
+            // Normal landing: wire up interactions once DOM is ready.
+            initLanding();
+        }
+
+        function initLanding() {
+            // Prime the engagement flag + preserve query on every CTA click.
+            document.querySelectorAll('[data-cta]').forEach((el) => {
+                el.addEventListener('click', (event) => {
+                    sessionStorage.setItem(ENGAGED_KEY, '1');
+
+                    // Re-point host links so query strings survive navigation.
+                    const cta = el.getAttribute('data-cta');
+                    if (cta === 'host' && el.tagName === 'A') {
+                        el.setAttribute('href', withPreservedQuery(HOST_PATH));
+                    } else if (cta === 'join-plain' && el.tagName === 'A') {
+                        el.setAttribute('href', PLAYER_PATH);
+                    }
+                });
+            });
+
+            // Join form: 4-letter code -> /player?room=CODE (uppercased).
+            const form = document.querySelector('[data-testid="join-form"]');
+            const input = document.querySelector('[data-testid="join-code-input"]');
+
+            if (form && input) {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    const code = input.value.trim().toUpperCase();
+                    if (code.length === 0) {
+                        input.focus();
+                        return;
+                    }
+                    sessionStorage.setItem(ENGAGED_KEY, '1');
+                    const target = new URLSearchParams({ room: code });
+                    window.location.assign(`${PLAYER_PATH}?${target.toString()}`);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

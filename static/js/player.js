@@ -139,6 +139,32 @@ elements.accelerateBtn.addEventListener('touchend', () => setAcceleration(0));
 elements.brakeBtn.addEventListener('touchstart', () => setBraking(1));
 elements.brakeBtn.addEventListener('touchend', () => setBraking(0));
 
+// Roll a fresh random name when the dice button is tapped
+elements.generateNameBtn?.addEventListener('click', () => {
+    elements.playerNameInput.value = generateRandomName();
+    gameState.nameSet = true;
+    elements.playerNameInput.focus();
+});
+
+// Room codes are 4 letters: force uppercase and drop anything that isn't
+// a letter/number as the player types, so "abcd " becomes "ABCD".
+elements.roomCodeInput.addEventListener('input', function() {
+    const cleaned = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (cleaned !== this.value) {
+        this.value = cleaned;
+    }
+});
+
+// Enter anywhere in the join form submits it (mobile keyboards show "Go")
+[elements.playerNameInput, elements.roomCodeInput].forEach((input) => {
+    input?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            joinGame();
+        }
+    });
+});
+
 // Add input event listener to player name input to track when user sets a custom name
 elements.playerNameInput.addEventListener('input', function() {
     if (this.value.trim() !== '') {
@@ -289,6 +315,12 @@ socket.on('connect', () => {
         roomCode = window.roomCode;
     }
 
+    // Normalize to the canonical 4-letter uppercase form so the field and the
+    // "room detected" banner match what's on the big screen (e.g. ?room=abcd).
+    if (roomCode) {
+        roomCode = roomCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    }
+
     // Fresh page load with no URL room (e.g. typed code earlier, tab restored
     // after the phone slept): pre-fill the room/name from the saved reconnect
     // record so the player can rejoin with one tap. We don't auto-submit here -
@@ -351,10 +383,13 @@ socket.on('disconnect', (reason) => {
 });
 
 socket.on('join_error', (data) => {
-    showError(data.message);
+    setJoinBusy(false);
+    showError(friendlyJoinError(data.message));
+    elements.roomCodeInput?.focus();
 });
 
 socket.on('game_joined', (data) => {
+    setJoinBusy(false);
     gameState.playerId = data.player_id;
     gameState.carColor = data.car_color;
 
@@ -519,7 +554,8 @@ socket.on('name_updated', (data) => {
 
 // Add socket event handler for errors
 socket.on('error', (data) => {
-    showError(data.message);
+    setJoinBusy(false);
+    showError(friendlyJoinError(data.message));
 });
 
 socket.on('car_state_update', (data) => {
@@ -565,7 +601,8 @@ function joinGame() {
         elements.joinTimerDisplay.style.display = 'none';
     }
     
-    // Show a joining message
+    // Show a joining message + busy button
+    setJoinBusy(true);
     showMessage('Joining game...', 1000);
     
     // Check for saved reconnection data
@@ -609,6 +646,29 @@ function showMessage(message, duration = 3000) {
     setTimeout(() => {
         elements.messageDisplay.classList.remove('visible');
     }, duration);
+}
+
+// Toggle the join button between idle and a "Joining…" busy state. The button
+// stays clickable for tests but visually communicates progress to the player.
+function setJoinBusy(busy) {
+    if (!elements.joinButton) return;
+    if (busy) {
+        elements.joinButton.dataset.idleLabel = elements.joinButton.dataset.idleLabel
+            || elements.joinButton.textContent;
+        elements.joinButton.textContent = 'Joining…';
+        elements.joinButton.classList.add('joining');
+    } else {
+        elements.joinButton.textContent = elements.joinButton.dataset.idleLabel || 'Join Race';
+        elements.joinButton.classList.remove('joining');
+    }
+}
+
+// Map raw server errors to friendly, actionable copy for the join screen.
+function friendlyJoinError(message) {
+    if (typeof message === 'string' && /invalid room code/i.test(message)) {
+        return "That room code wasn't found — check the big screen and try again.";
+    }
+    return message || 'Something went wrong. Please try again.';
 }
 
 function showError(message) {

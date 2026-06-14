@@ -26,6 +26,7 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
+        landing: path.resolve(__dirname, 'frontend/landing/index.html'),
         host: path.resolve(__dirname, 'frontend/host/index.html'),
         player: path.resolve(__dirname, 'frontend/player/index.html'),
       },

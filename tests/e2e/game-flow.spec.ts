@@ -220,7 +220,7 @@ test.describe('Multiplayer Racer Game Flow', () => {
 
         try {
             // Host creates room with testMode
-            await hostPage.goto(`${baseURL || 'http://localhost:8000'}/?testMode=1`);
+            await hostPage.goto(`${baseURL || 'http://localhost:8000'}/host?testMode=1`);
             const roomCode = await waitForRoomCode(hostPage);
 
             // Player 1 joins

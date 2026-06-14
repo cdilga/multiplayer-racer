@@ -48,7 +48,8 @@ export { expect } from '@playwright/test';
 
 // Helper to navigate to host page with test mode for faster socket connections
 export async function gotoHost(hostPage: Page): Promise<void> {
-    await hostPage.goto('/?testMode=1');
+    // The landing page now lives at "/"; the host screen moved to "/host".
+    await hostPage.goto('/host?testMode=1');
 }
 
 // Helper to wait for room code to appear on host

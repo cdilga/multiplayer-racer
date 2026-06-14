@@ -247,11 +247,31 @@ h2 {
     color: #f72585;
 }
 
+.join-subtitle {
+    margin: -6px 0 18px;
+    color: #8d99ae;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+}
+
 .join-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+}
+
+/* Room code reads as a 4-letter code: spaced, uppercase, monospace-ish */
+#room-code {
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    font-weight: 700;
+}
+
+/* Busy state while the join request is in flight */
+#join-btn.joining {
+    opacity: 0.75;
+    cursor: progress;
 }
 
 input {

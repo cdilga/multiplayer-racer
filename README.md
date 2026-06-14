@@ -1,30 +1,30 @@
 <div align="center">
 
-# 🏎️ Multiplayer Racer
+# 🎮 Joystick Jammers
 
-> 🎮 **Play it live: [jammers.dilger.dev](https://jammers.dilger.dev)** (alias: [multiplayer-racer.dilger.dev](https://multiplayer-racer.dilger.dev)) — open on a big screen, players join by scanning the QR with their phones.
+> **Play it live: [jammers.dilger.dev](https://jammers.dilger.dev)** — open on a big screen, players join by scanning the QR with their phones. No installs.
 
-### *Real-time browser-based multiplayer racing on the big screen*
+### *Your phone is the controller. Your TV is the arena. Race, ram, and wreck your friends — straight from the browser.*
 
-[![CI](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml/badge.svg)](https://github.com/cdilga/multiplayer-racer/actions/workflows/test.yml)
+[![Fast Tests](https://github.com/cdilga/multiplayer-racer/actions/workflows/test-fast.yml/badge.svg)](https://github.com/cdilga/multiplayer-racer/actions/workflows/test-fast.yml)
+[![E2E Tests](https://github.com/cdilga/multiplayer-racer/actions/workflows/test-e2e.yml/badge.svg)](https://github.com/cdilga/multiplayer-racer/actions/workflows/test-e2e.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
-[![Three.js](https://img.shields.io/badge/Three.js-r128-black?logo=three.js&logoColor=white)](https://threejs.org)
+[![Three.js](https://img.shields.io/badge/Three.js-3D-black?logo=three.js&logoColor=white)](https://threejs.org)
 [![Rapier](https://img.shields.io/badge/Rapier-3D_Physics-orange)](https://rapier.rs)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.5-010101?logo=socket.io&logoColor=white)](https://socket.io)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socket.io&logoColor=white)](https://socket.io)
 
 <br />
 
-<img src="docs/images/gameplay-demo.gif" alt="Multiplayer Racer Demo" width="800" />
+<img src="docs/images/gameplay-jammers.gif" alt="Joystick Jammers gameplay — four cars racing a neon track" width="800" />
 
-*Watch the full game flow: lobby → players join → race!*
+*Open on a big screen → players scan the QR → race or wreck. That's it.*
 
 <br />
 
-**Connect your phone. Race your friends. Party game chaos.**
-
-[Getting Started](#-quick-start) •
+[Play Live](https://jammers.dilger.dev) •
+[Quick Start](#-quick-start) •
 [Features](#-features) •
 [How It Works](#-how-it-works) •
 [Development](#-development) •
@@ -34,25 +34,27 @@
 
 ---
 
-## 🎮 What is Multiplayer Racer?
+## 🎉 What is Joystick Jammers?
 
-Multiplayer Racer is a **Jackbox/Kahoot-style party racing game** where players use their smartphones as controllers while the race displays on a shared screen (TV, projector, or monitor).
+Joystick Jammers is a **Jackbox/Kahoot-style couch party game**. The action plays out on a shared big screen (TV, projector, or laptop), and everyone joins with the device already in their pocket — their phone becomes the controller. No app store, no extra hardware, no installs.
 
-Perfect for:
-- 🎉 **Party nights** - Everyone joins with their phone
-- 🏠 **Living room gaming** - No extra controllers needed
-- 🎊 **Events & gatherings** - Easy setup, instant fun
+Two ways to play:
 
-### Key Highlights
+- 🏁 **Race** — weaponised laps around procedurally generated tracks. Grab pickups, take the racing line, leave your friends in the dust.
+- 💥 **Demolition Derby** — last car standing. The arena shrinks, weapons escalate, and chaos compounds. Best of 3 rounds.
 
-| Feature | Description |
-|---------|-------------|
-| 📱 **Phone as Controller** | Touch controls optimized for mobile |
-| 📺 **Big Screen Display** | 3D racing view on the host screen |
-| 🔗 **Easy Join** | QR code or room code to connect |
-| ⚡ **Real-time** | WebSocket-powered instant response |
-| 🎵 **Dynamic Audio** | Music tracks & sound effects |
-| 🔧 **Physics Tuning** | Built-in debug panels for customization |
+Perfect for party nights, living-room gaming, and questionable driving decisions.
+
+### Why it's fun
+
+| | |
+|---|---|
+| 📱 **Phone as controller** | Touch joystick + buttons. Just scan and play. |
+| 📺 **Big-screen arena** | 3D action with bloom, particles, and a chase cam. |
+| 🔗 **One-tap join** | QR code or a 4-letter room code. |
+| 💣 **8 weapons & pickups** | Missile, Mine, Boost, Oil Slick, Sniper, Shield, EMP, Flamethrower. |
+| 🌍 **Procedural arenas** | New tracks and terrain every game. |
+| 👥 **Built for a crowd** | Plenty of players, one screen, total mayhem. |
 
 ---
 
@@ -62,96 +64,96 @@ Perfect for:
 
 - **Python 3.11+** with pip
 - **Node.js 20+** with npm
-- Modern web browser with WebGL support
+- A modern browser with WebGL
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/cdilga/multiplayer-racer.git
 cd multiplayer-racer
 
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Install Node.js dependencies
-npm install
+pip install -r requirements.txt   # Python deps
+npm install                       # Node deps
+npm run build                     # Build the frontend into dist/
 ```
 
-### Start Racing
+### Run it
 
 ```bash
-# Start the server
 python server/app.py
 ```
 
-Open your browser to **http://localhost:8000** - you're ready to race!
+Open **http://localhost:8000** — you'll land on the start screen.
 
-### Join the Game
+- **Host Now** → the big-screen host (`/host`)
+- **Join Game** → the phone controller (`/player`)
 
-1. **Host** opens the game on a big screen/TV
-2. **Players** scan the QR code or enter the room code on their phones
-3. **Everyone** picks a name and joins the lobby
-4. **Host** clicks "Start Race" when ready
+> 💡 **Dev tip:** append `?dev=1` to the landing URL (`http://localhost:8000/?dev=1`) to skip straight to the host every time — handy for rapid iteration. Use `?dev=0` to turn the bypass back off.
+
+### Join a game
+
+1. **Host** opens the game on a big screen and clicks **Host Now**.
+2. **Players** scan the QR code (or type the 4-letter room code) on their phones.
+3. **Everyone** picks a name and lands in the lobby.
+4. **Host** chooses Race or Derby and starts the game.
 
 ---
 
 ## ✨ Features
 
-### 🏁 Multiplayer Racing
-- **Room-based matchmaking** with 4-character codes
-- **QR code join** - Scan and play instantly
-- **Multiple players** racing simultaneously
-- **Real-time synchronization** via WebSockets
+### 🏁 Two game modes
+- **Race** — configurable laps, weapon pickups, lap timing, live positions.
+- **Demolition Derby** — last-car-standing elimination, best-of-3 rounds, a shrinking arena, and weapons that escalate as the match heats up.
 
-### 🎮 Mobile Controls
-- **Touch joystick** for steering
-- **Accelerate/brake buttons** optimized for thumbs
-- **Full-screen mode** for immersive play
-- **Responsive design** for all screen sizes
+### 💥 Weapons & pickups
+Eight pickups across rarity tiers — **Missile, Mine, Boost, Oil Slick, Sniper, Shield, EMP, Flamethrower** — with rarer drops appearing later in a match. Grab one, hold it, fire at the perfect moment.
 
-### 🚗 3D Racing Experience
-- **Three.js rendering** with smooth 60fps gameplay
-- **Rapier physics engine** for realistic car handling
-- **Dynamic camera** following the action
-- **Multiple track designs** (oval, figure-8)
+### 🚗 3D physics & visuals
+- **Rapier 3D** vehicle physics (WASM) with collision damage and destruction.
+- **Three.js** rendering with bloom, fog, particles, trails, and a dynamic chase camera.
+- **Procedural tracks + terrain** so no two arenas feel the same.
 
-### 🎵 Audio System
-- **6 music tracks** for different game phases
-- **Sound effects** for collisions, engines, UI
-- **Audio ducking** for clear SFX over music
-- **Volume controls** built into the UI
+### 📱 Mobile controls
+- Touch joystick for steering, thumb-friendly accelerate/brake, and a fire button in combat.
+- Full-screen support and a responsive layout tuned for phones.
+- One-tap **Reset My Car** escape hatch when you get stuck or flipped.
 
-### 🔧 Developer Tools
-- **Physics debug panel** (Press F4) - Tune car handling live
-- **Stats overlay** (Press F3) - FPS, physics updates, player info
-- **Keyboard controls** for testing without mobile
-- **Comprehensive test suite** with Playwright
+### 🎵 Audio
+- Multiple music tracks for different phases, synthesised engine sound, and SFX with ducking so effects cut through.
+
+### 🐞 In-game bug reporter
+- A **Report a Bug** button in both the host and player menus captures a screenshot plus a game-state snapshot (room code, mode, players, FPS) and opens a pre-filled email — so reports can be matched to server logs.
+
+### 🔧 Developer tools (host)
+| Key | Action |
+|-----|--------|
+| `D` | Toggle debug info |
+| `F2` | Physics tuning panel |
+| `F3` | Stats overlay (FPS, players, state) |
+| `F4` | Physics debug visualisation |
 
 ---
 
 ## 🔄 How It Works
 
-### System Architecture
-
 ```mermaid
 flowchart TB
-    subgraph HOST["🖥️ HOST (Big Screen)"]
+    subgraph HOST["🖥️ HOST — big screen (/host)"]
         direction LR
-        L["📋 Lobby<br/>QR Code + Players"]
-        R["🏎️ 3D Racing<br/>Physics + Rendering"]
+        L["📋 Lobby<br/>QR + Players"]
+        R["🏎️ Race / 💥 Derby<br/>Physics + Rendering"]
         E["🏆 Results"]
         L --> R --> E
     end
 
-    subgraph SERVER["⚡ Flask + Socket.IO Server"]
-        RM["Room Management"]
+    subgraph SERVER["⚡ Flask + Socket.IO"]
+        RM["Rooms"]
         PS["Player Sync"]
         CR["Control Routing"]
         QR["QR Generation"]
     end
 
-    subgraph PLAYERS["📱 Mobile Controllers"]
+    subgraph PLAYERS["📱 Phone controllers (/player)"]
         P1["Player 1"]
         P2["Player 2"]
         PN["Player N"]
@@ -161,156 +163,120 @@ flowchart TB
     SERVER <-->|"WebSocket"| PLAYERS
 ```
 
-### Game Flow
-
-```mermaid
-sequenceDiagram
-    participant H as 🖥️ Host
-    participant S as ⚡ Server
-    participant P as 📱 Players
-
-    H->>S: Create Room
-    S-->>H: Room Code + QR
-
-    P->>S: Scan QR / Enter Code
-    S-->>H: Player Joined
-    S-->>P: Waiting for Start
-
-    H->>S: Start Game
-    S-->>H: Initialize Physics
-    S-->>P: Show Controls
-
-    loop Racing
-        P->>S: Control Input
-        S->>H: Update State
-        H->>H: Render Frame
-    end
-```
+The host renders the 3D world and runs the physics; phones stream control input over WebSockets. A lightweight landing page at `/` is the shareable front door and routes players to the right screen.
 
 ---
 
 ## 🛠️ Development
 
-### Tech Stack
+### Tech stack
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | Three.js, Vanilla JS, CSS |
+| **Frontend** | Three.js, vanilla JS (ES modules), CSS |
 | **Physics** | Rapier 3D (WASM) |
 | **Backend** | Flask + Flask-SocketIO |
 | **Real-time** | Socket.IO |
-| **Testing** | Playwright E2E |
-| **Build** | Vite |
+| **Build** | Vite (landing / host / player entry points) |
+| **Testing** | Vitest (unit/integration) + Playwright (E2E) |
+| **Deploy** | Docker + Cloudflare Tunnel (jammers.dilger.dev) |
 
-### Project Structure
+### Project structure
 
 ```
 multiplayer-racer/
-├── server/              # Flask backend
-│   └── app.py          # Main server (rooms, WebSocket handling)
-├── frontend/            # HTML templates
-│   ├── host/           # Big screen interface
-│   └── player/         # Mobile controller interface
+├── server/app.py            # Flask + Socket.IO (rooms, QR, routes: / /host /player)
+├── frontend/
+│   ├── landing/             # Marketing landing page (Vite entry)
+│   ├── host/                # Big-screen host (Vite entry)
+│   └── player/              # Phone controller (Vite entry)
+├── src/host/main.js         # Host bootstrap (loads GameHost)
 ├── static/
-│   ├── js/             # Game logic
-│   │   ├── host.js     # Host game loop & rendering
-│   │   ├── player.js   # Mobile controls
-│   │   ├── rapierPhysics.js  # Physics integration
-│   │   ├── audioManager.js   # Sound system
-│   │   ├── carModel.js       # 3D car geometry
-│   │   └── trackBuilder.js   # Track generation
-│   ├── css/            # Stylesheets
-│   └── audio/          # Music & SFX
-├── tests/e2e/          # Playwright test suite
-└── docs/               # Documentation & images
+│   ├── js/
+│   │   ├── GameHost.js      # Host orchestrator
+│   │   ├── engine/          # Engine, GameLoop, EventBus, StateMachine
+│   │   ├── systems/         # Render, Physics, Network, Race, Derby, Weapons, Audio…
+│   │   ├── entities/        # Vehicle, Track
+│   │   ├── resources/       # TrackFactory, terrain, procedural generation
+│   │   ├── ui/              # LobbyUI, RaceUI, GameMenuUI, BugReportUI…
+│   │   ├── input/           # InputManager, TouchController
+│   │   └── player.js        # Phone controller logic
+│   ├── css/                 # host.css, player.css, landing.css
+│   ├── audio/               # Music & SFX
+│   └── og-image.png         # Social share image
+├── tests/                   # Vitest (unit/integration) + Playwright (e2e)
+└── docs/images/             # README media
 ```
 
-### Running Tests
+> ⚠️ **The Flask server serves from `dist/` when it exists.** After changing any
+> JS/CSS, run `npm run build` before testing in the browser. See [CLAUDE.md](CLAUDE.md).
+
+### Tests
 
 ```bash
-# Run all tests
-npm test
-
-# Run with visible browser
-npm run test:headed
-
-# Run with Playwright UI
-npm run test:ui
+npm test                 # unit + integration (Vitest)
+npm run test:e2e         # core 4-player flow (Playwright)
+npm run test:e2e:all     # full E2E suite
+npm run test:headed      # E2E with a visible browser
 ```
-
-### Debug Controls (Host)
-
-| Key | Action |
-|-----|--------|
-| `F3` | Toggle stats overlay |
-| `F4` | Toggle physics parameters panel |
-| `R` | Reset all cars |
-| `Arrow Keys` | Test drive controls |
 
 ---
 
 ## 🗺️ Roadmap
 
-### Current Status: Alpha
+**Playable today:**
+- [x] Landing page + one-tap QR/room-code join
+- [x] Race mode (laps, pickups, timing)
+- [x] Demolition Derby (elimination, shrinking arena, weapon escalation)
+- [x] 8 weapons & pickups
+- [x] Rapier physics, collision damage & destruction
+- [x] Procedural tracks + terrain
+- [x] Audio (music, engine synth, SFX)
+- [x] In-game bug reporter
+- [x] Live deploy at [jammers.dilger.dev](https://jammers.dilger.dev)
 
-The game is fully playable locally with core features working:
-- [x] Room creation & QR code joining
-- [x] Mobile touch controls
-- [x] 3D rendering with Three.js
-- [x] Rapier physics integration
-- [x] Real-time multiplayer sync
-- [x] Audio system with music & SFX
-- [x] Debug/tuning tools
+**Next up:**
 
-### Coming Soon
-
-| Phase | Features |
-|-------|----------|
-| **Phase 1** | Damage system, explosions, improved physics |
-| **Phase 2** | Multiple game modes (Derby, Race) |
-| **Phase 3** | More tracks, obstacles, power-ups |
-| **Phase 4** | Online hosting, public lobbies |
-| **Phase 5** | Steam release, car customization |
-
-> 🌐 **Online Demo** - Coming soon! Currently local network only.
+| Phase | Ideas |
+|-------|-------|
+| **Near term** | More tracks & arena hazards, car customisation, spectator polish |
+| **Later** | Public lobbies, persistent stats/leaderboards, more modes |
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! This project follows Test-Driven Development:
+Contributions welcome — this project follows Test-Driven Development:
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Write tests first** (they should fail)
-4. **Implement** the feature (make tests pass)
-5. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-6. **Push** to the branch (`git push origin feature/amazing-feature`)
-7. **Open** a Pull Request
+1. **Fork** and branch (`git checkout -b feature/amazing-thing`)
+2. **Write a failing test** first
+3. **Implement** until it passes
+4. **`npm run build`** and run the suite
+5. **Open a PR**
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidelines.
+See [CLAUDE.md](CLAUDE.md) for detailed guidelines.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+Licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE).
 
 ---
 
 ## 🙏 Acknowledgments
 
-- [Three.js](https://threejs.org) - 3D graphics library
-- [Rapier](https://rapier.rs) - Physics engine
-- [Flask](https://flask.palletsprojects.com) & [Socket.IO](https://socket.io) - Backend framework
-- [Playwright](https://playwright.dev) - E2E testing
+- [Three.js](https://threejs.org) — 3D graphics
+- [Rapier](https://rapier.rs) — physics
+- [Flask](https://flask.palletsprojects.com) & [Socket.IO](https://socket.io) — backend & real-time
+- [Playwright](https://playwright.dev) & [Vitest](https://vitest.dev) — testing
 
 ---
 
 <div align="center">
 
-**Made with ❤️ for party game nights**
+**Made for couches, parties, and questionable driving decisions.**
 
-[⬆ Back to Top](#️-multiplayer-racer)
+[⬆ Back to Top](#-joystick-jammers)
 
 </div>
