@@ -103,6 +103,17 @@ class VehicleFactory {
         const roof = visual.roof;
         const wheelConfig = visual.wheels;
 
+        // Lightweight randomization for visual variety (if playerId is present)
+        // Uses playerId as seed (stable for reconnects)
+        const seed = options.playerId ? this._hashString(options.playerId) : Math.random();
+        const rand = (min, max) => min + (max - min) * ((seed * 100) % 1); // pseudo-random
+
+        // Randomize body slightly (±10%)
+        const bodyScale = 1.0 + (rand(-0.1, 0.1));
+        const bodyWidth = body.width * (1.0 + rand(-0.05, 0.05));
+        const bodyHeight = body.height * (1.0 + rand(-0.1, 0.1));
+        const bodyLength = body.length * (1.0 + rand(-0.05, 0.05));
+
         // Create group to hold all parts
         const carGroup = new THREE.Group();
         carGroup.userData = { vehicleId: config.id };
@@ -113,7 +124,7 @@ class VehicleFactory {
             : this._parseColor(body.color);
 
         // Create car body
-        const bodyGeometry = new THREE.BoxGeometry(body.width, body.height, body.length);
+        const bodyGeometry = new THREE.BoxGeometry(bodyWidth, bodyHeight, bodyLength);
         const bodyMaterial = new THREE.MeshStandardMaterial({
             color: bodyColor,
             roughness: body.roughness || 0.5,
@@ -121,15 +132,16 @@ class VehicleFactory {
             emissiveIntensity: body.emissiveIntensity || 0
         });
         const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        bodyMesh.position.y = body.height / 2;
+        bodyMesh.position.y = bodyHeight / 2;
         bodyMesh.castShadow = true;
         carGroup.add(bodyMesh);
 
         // Create roof/cabin
         if (roof) {
-            const roofWidth = body.width * (roof.widthScale || 0.75);
-            const roofHeight = body.height * (roof.heightScale || 0.7);
-            const roofLength = body.length * (roof.lengthScale || 0.5);
+            // Randomize roof position and size
+            const roofWidth = bodyWidth * (roof.widthScale || 0.75) * (0.9 + rand(0, 0.2));
+            const roofHeight = bodyHeight * (roof.heightScale || 0.7) * (0.8 + rand(0, 0.4));
+            const roofLength = bodyLength * (roof.lengthScale || 0.5) * (0.9 + rand(0, 0.2));
 
             const roofGeometry = new THREE.BoxGeometry(roofWidth, roofHeight, roofLength);
             const roofMaterial = new THREE.MeshStandardMaterial({
@@ -137,8 +149,8 @@ class VehicleFactory {
                 roughness: roof.roughness || 0.7
             });
             const roofMesh = new THREE.Mesh(roofGeometry, roofMaterial);
-            roofMesh.position.y = body.height + (roofHeight / 2);
-            roofMesh.position.z = body.length * (roof.zOffset || -0.05);
+            roofMesh.position.y = bodyHeight + (roofHeight / 2);
+            roofMesh.position.z = bodyLength * (roof.zOffset || -0.05) + rand(-0.2, 0.2);
             roofMesh.castShadow = true;
             carGroup.add(roofMesh);
         }
@@ -155,8 +167,12 @@ class VehicleFactory {
             roughness: wheelConfig.roughness || 0.8
         });
 
-        // Calculate wheel positions
-        const wheelPositions = this._calculateWheelPositions(body, wheelConfig);
+        // Calculate wheel positions (adjust for body size)
+        const wheelPositions = this._calculateWheelPositions({
+            width: bodyWidth,
+            height: bodyHeight,
+            length: bodyLength
+        }, wheelConfig);
 
         wheelPositions.forEach((pos, index) => {
             const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
@@ -169,15 +185,28 @@ class VehicleFactory {
 
         // Create headlights
         if (visual.headlights) {
-            this._addLights(carGroup, body, visual.headlights, true);
+            this._addLights(carGroup, { width: bodyWidth, height: bodyHeight, length: bodyLength }, visual.headlights, true);
         }
 
         // Create taillights
         if (visual.taillights) {
-            this._addLights(carGroup, body, visual.taillights, false);
+            this._addLights(carGroup, { width: bodyWidth, height: bodyHeight, length: bodyLength }, visual.taillights, false);
         }
 
         return carGroup;
+    }
+
+    /**
+     * Simple string hash for seeding
+     * @private
+     */
+    _hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash) / 2147483647;
     }
 
     /**

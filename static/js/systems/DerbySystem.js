@@ -414,8 +414,8 @@ class DerbySystem {
                 const pushZ = -Math.sin(angle) * pushForce;
 
                 // Apply impulse if physics body available
-                if (vehicle.rigidBody) {
-                    vehicle.rigidBody.applyImpulse(
+                if (vehicle.physicsBody) {
+                    vehicle.physicsBody.applyImpulse(
                         { x: pushX, y: 0, z: pushZ },
                         true
                     );

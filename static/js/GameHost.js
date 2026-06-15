@@ -74,7 +74,8 @@ class GameHost {
             results: null,
             debugOverlay: null,    // F4 - Physics visualization
             statsOverlay: null,    // F3 - Game statistics
-            physicsTuning: null    // F2 - Physics parameter tuning
+            physicsTuning: null,   // F2 - Physics parameter tuning
+            cameraControls: null
         };
 
         // Entities
@@ -83,6 +84,8 @@ class GameHost {
 
         // Game state
         this.roomCode = null;
+        this._lastStateBroadcast = 0;
+        this._stateBroadcastInterval = 100; // 10Hz
         this.settings = {
             mode: 'race',
             laps: 3,
@@ -99,6 +102,7 @@ class GameHost {
         this._onRaceFinished = this._onRaceFinished.bind(this);
         this._onUpdate = this._onUpdate.bind(this);
         this._onRender = this._onRender.bind(this);
+        this._onCameraKeyDown = this._onCameraKeyDown.bind(this);
     }
 
     /**
@@ -260,14 +264,126 @@ class GameHost {
         });
         this.ui.physicsTuning.init();
 
+        this._createCameraControls();
+
         // Expose toggle functions globally for keyboard handlers
         window.togglePhysicsDebug = () => this.ui.debugOverlay?.toggle();
         window.toggleStatsOverlay = () => this.ui.statsOverlay?.toggle();
         window.togglePhysicsPanel = () => this.ui.physicsTuning?.toggle();
+        window.setCameraMode = (mode) => {
+            this._setCameraMode(mode);
+            return this.systems.render.getCameraModeInfo();
+        };
+        window.cycleCameraFocus = (direction = 1) => {
+            this._cycleCameraFocus(direction);
+            return this.systems.render.getCameraModeInfo();
+        };
 
         // Expose reset functions globally for debug UI
         window.resetCarPosition = (vehicleId) => this.resetVehicleToSpawn(vehicleId);
         window.resetAllCars = () => this.resetAllVehicles();
+    }
+
+    /**
+     * Create host camera mode controls.
+     * @private
+     */
+    _createCameraControls() {
+        const root = document.getElementById('camera-controls');
+        if (!root) return;
+
+        const controls = {
+            root,
+            modeButtons: Array.from(root.querySelectorAll('[data-camera-mode]')),
+            focusLabel: root.querySelector('#camera-focus-label'),
+            prevButton: root.querySelector('#camera-focus-prev'),
+            nextButton: root.querySelector('#camera-focus-next')
+        };
+        this.ui.cameraControls = controls;
+
+        const savedMode = localStorage.getItem('jj_camera_mode');
+        if (savedMode) {
+            this.systems.render.setCameraMode(savedMode);
+        }
+
+        controls.modeButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                this._setCameraMode(button.dataset.cameraMode);
+            });
+        });
+        controls.prevButton?.addEventListener('click', () => this._cycleCameraFocus(-1));
+        controls.nextButton?.addEventListener('click', () => this._cycleCameraFocus(1));
+
+        document.addEventListener('keydown', this._onCameraKeyDown);
+        this._updateCameraControls();
+    }
+
+    /**
+     * @private
+     * @param {KeyboardEvent} event
+     */
+    _onCameraKeyDown(event) {
+        const tagName = event.target?.tagName;
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') return;
+
+        if (event.key === 'c' || event.key === 'C') {
+            event.preventDefault();
+            this._cycleCameraMode();
+        } else if (event.key === 'v' || event.key === 'V') {
+            event.preventDefault();
+            this._cycleCameraFocus(1);
+        }
+    }
+
+    /**
+     * @private
+     * @param {string} mode
+     */
+    _setCameraMode(mode) {
+        if (!this.systems.render.setCameraMode(mode)) return;
+        localStorage.setItem('jj_camera_mode', mode);
+        this._updateCameraControls();
+    }
+
+    /**
+     * @private
+     */
+    _cycleCameraMode() {
+        const mode = this.systems.render.cycleCameraMode();
+        localStorage.setItem('jj_camera_mode', mode);
+        this._updateCameraControls();
+    }
+
+    /**
+     * @private
+     * @param {number} direction
+     */
+    _cycleCameraFocus(direction = 1) {
+        this.systems.render.cycleCameraFocus(direction);
+        this._updateCameraControls();
+    }
+
+    /**
+     * @private
+     */
+    _updateCameraControls() {
+        const controls = this.ui.cameraControls;
+        if (!controls) return;
+
+        const info = this.systems.render.getCameraModeInfo();
+        controls.root.classList.toggle('hidden', info.targetCount === 0);
+        controls.modeButtons.forEach((button) => {
+            const isActive = button.dataset.cameraMode === info.mode;
+            button.classList.toggle('active', isActive);
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+
+        const focusText = info.mode === 'party'
+            ? `${info.targetCount || 0} cars`
+            : (info.focusName || 'No car');
+        if (controls.focusLabel) {
+            controls.focusLabel.textContent = focusText;
+        }
     }
 
     /**
@@ -316,6 +432,15 @@ class GameHost {
         });
         this.eventBus.on('damage:respawn', ({ vehicleId }) => {
             this.systems.physics.setVehicleEnabled(vehicleId, true);
+        });
+
+        // Stunt landings should read on the shared screen even when the camera
+        // is not focused tightly on the car.
+        this.eventBus.on('vehicle:stuntLanding', ({ charge = 0 }) => {
+            this.systems.render?.addImpactShake?.(0.16 + Math.min(0.24, charge * 0.2));
+        });
+        this.eventBus.on('vehicle:stuntBadLanding', () => {
+            this.systems.render?.addImpactShake?.(0.28);
         });
 
         // Race respawns drop you at your last checkpoint, facing the next one
@@ -582,6 +707,7 @@ class GameHost {
             const vehicle = new Vehicle({
                 config: vehicleData.config,
                 playerId: playerData.id,
+                playerName: playerData.name,
                 position: spawnPos,
                 rotation: spawnPos.rotation,
                 color: playerData.color
@@ -611,6 +737,7 @@ class GameHost {
 
             // Add vehicle to camera tracking (multi-vehicle camera)
             this.systems.render.addCameraTarget(vehicle);
+            this._updateCameraControls();
 
             // Emit vehicle created event (for TrailSystem and other systems)
             this.eventBus.emit('vehicle:created', { vehicle });
@@ -689,6 +816,7 @@ class GameHost {
             this.systems.physics.removeVehicle(vehicle.id);
             this.systems.render.removeMesh(vehicle.id);
             this.systems.render.removeCameraTarget(vehicle);
+            this._updateCameraControls();
             this.systems.input.unregisterVehicle(vehicle.id);
             this.systems.race.unregisterVehicle(vehicle.id);
             this.systems.damage.unregisterVehicle(vehicle.id);
@@ -843,6 +971,18 @@ class GameHost {
             return 'procedural';
         }
         return requested;
+    }
+
+    /**
+     * Check if the host is running in automated test mode.
+     * @private
+     * @returns {boolean}
+     */
+    _isTestMode() {
+        return typeof window !== 'undefined' && (
+            window._testMode === true ||
+            new URLSearchParams(window.location?.search).get('testMode') === '1'
+        );
     }
 
     /**
@@ -1156,7 +1296,11 @@ class GameHost {
                 }
             }
             if (loudest) {
-                const isAccelerating = (loudest.controls?.acceleration || 0) > 0;
+                const stuntLoaded = loudest.handlingState === 'wheelie' ||
+                    loudest.stuntState === 'charging' ||
+                    (loudest.speedBoost || 1) > 1 ||
+                    (loudest.stuntBoostMultiplier || 1) > 1;
+                const isAccelerating = (loudest.controls?.acceleration || 0) > 0 || stuntLoaded;
                 // maxSpeed must match the car's real top speed (~124 km/h) so the
                 // virtual gearbox spans the full range and audibly shifts through
                 // gears. With the old value of 50 the car was past the ceiling
@@ -1180,7 +1324,48 @@ class GameHost {
                 });
             }
             this.ui.race.updateHealthBars(healthData);
+
+            // Broadcast vehicle states back to players (10Hz)
+            const now = performance.now();
+            if (!this._isTestMode() && now - this._lastStateBroadcast >= this._stateBroadcastInterval) {
+                this._lastStateBroadcast = now;
+                this.systems.network.broadcastVehicleStates(this._buildVehicleStates());
+            }
         }
+    }
+
+    /**
+     * Build the compact vehicle state packet sent back to phone controllers.
+     * @private
+     * @returns {Object[]}
+     */
+    _buildVehicleStates() {
+        const vehicleStates = [];
+        const now = performance.now();
+        for (const [playerId, vehicle] of this.vehicles) {
+            const landingBoostActive = !!vehicle.stuntBoostUntil &&
+                now < vehicle.stuntBoostUntil &&
+                (vehicle.stuntBoostMultiplier || 1) > 1;
+            const badLandingActive = !!vehicle.stuntBadLandingUntil &&
+                now < vehicle.stuntBadLandingUntil;
+            const stuntState = badLandingActive
+                ? 'bad-landing'
+                : (landingBoostActive ? 'reward' : (vehicle.stuntState || 'idle'));
+            vehicleStates.push({
+                id: playerId,
+                speed: vehicle.speed,
+                health: vehicle.health,
+                boost: (vehicle.speedBoost > 1) || landingBoostActive,
+                wheelie: vehicle.handlingState === 'wheelie',
+                handlingState: vehicle.handlingState || 'grounded',
+                stateDuration: vehicle.stateDuration || 0,
+                stuntState,
+                stuntCharge: vehicle.stuntCharge || 0,
+                landingBoost: landingBoostActive,
+                badLanding: badLandingActive
+            });
+        }
+        return vehicleStates;
     }
 
     /**

@@ -77,3 +77,10 @@ playwright/.cache/
 # Temporary files
 test-logs.txt
 image-*.*
+
+# bv (beads viewer) local config and caches
+.bv/
+
+
+# bv (beads viewer) local config and caches
+.bv/

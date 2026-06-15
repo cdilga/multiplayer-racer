@@ -20,6 +20,17 @@ const gameState = window.gameState = {
         braking: 0         // 0 to 1
     },
     speed: 0,
+    health: 100,
+    boostActive: false,
+    wheelieActive: false,
+    landingBoostActive: false,
+    badLandingActive: false,
+    stuntState: 'idle',
+    stuntCharge: 0,
+    wasBoosting: false,
+    wasWheelieActive: false,
+    wasLandingBoostActive: false,
+    wasBadLandingActive: false,
     touchControls: {
         steeringJoystick: null, // Joystick instance
         accelerateTouchId: null, // Touch ID for accelerator
@@ -183,6 +194,42 @@ document.addEventListener('touchmove', (e) => {
 // debug info. Correlation fields (room code, player id, timestamp) let reports
 // be matched against host + server logs later.
 const BUG_REPORT_EMAIL = 'bugs@jammers.dilger.dev';
+const TUTORIAL_STORAGE_KEY = 'jj_player_tutorial_done_v1';
+
+const tutorialState = {
+    active: false,
+    phase: null,
+    stepIndex: 0,
+    replay: false,
+    elements: null,
+    joinStep: {
+        target: '#room-code',
+        title: 'Join from the big screen',
+        body: 'Enter the 4-letter room code from the host screen. Your name is how everyone spots your car.'
+    },
+    gameSteps: [
+        {
+            target: '#steering-area',
+            title: 'Steer on the left',
+            body: 'Drag anywhere on the left side to turn. Let go and the wheel centers.'
+        },
+        {
+            target: '#pedals-area',
+            title: 'Drive on the right',
+            body: 'Hold the up pedal to accelerate. Hold the down pedal to brake or reverse.'
+        },
+        {
+            target: '#game-stats',
+            title: 'Watch speed and status',
+            body: 'Your speed, boost, and wheelie status show here while the race is running.'
+        },
+        {
+            target: '#player-menu-btn',
+            title: 'Recover from trouble',
+            body: 'Open the menu to reset your car, report a bug, leave, or replay this tutorial.'
+        }
+    ]
+};
 
 function collectPlayerDebugInfo() {
     return {
@@ -240,11 +287,190 @@ ${summary}
         `mailto:${BUG_REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+function isTutorialComplete() {
+    try {
+        return localStorage.getItem(TUTORIAL_STORAGE_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function setTutorialComplete(value) {
+    try {
+        if (value) {
+            localStorage.setItem(TUTORIAL_STORAGE_KEY, '1');
+        } else {
+            localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+        }
+    } catch (e) {
+        // localStorage unavailable - tutorial remains session-only
+    }
+}
+
+function initTutorial() {
+    const overlay = document.getElementById('tutorial-overlay');
+    if (!overlay) return;
+
+    tutorialState.elements = {
+        overlay,
+        veil: document.getElementById('tutorial-veil'),
+        spotlight: document.getElementById('tutorial-spotlight'),
+        card: document.getElementById('tutorial-card'),
+        progress: document.getElementById('tutorial-progress'),
+        title: document.getElementById('tutorial-title'),
+        body: document.getElementById('tutorial-body'),
+        next: document.getElementById('tutorial-next'),
+        skip: document.getElementById('tutorial-skip')
+    };
+
+    tutorialState.elements.next?.addEventListener('click', advanceTutorial);
+    tutorialState.elements.skip?.addEventListener('click', () => finishTutorial({ persist: true }));
+    window.addEventListener('resize', () => {
+        if (tutorialState.active) renderTutorialStep();
+    });
+
+    if (!isTutorialComplete()) {
+        setTimeout(() => startJoinTutorial(), 450);
+    }
+}
+
+function startTutorialForCurrentScreen(replay = false) {
+    if (gameState.gameStarted) {
+        startGameplayTutorial({ replay });
+    } else {
+        startJoinTutorial({ replay });
+    }
+}
+
+function startJoinTutorial({ replay = false } = {}) {
+    if (!tutorialState.elements || (!replay && isTutorialComplete())) return;
+    tutorialState.active = true;
+    tutorialState.phase = 'join';
+    tutorialState.stepIndex = 0;
+    tutorialState.replay = replay;
+    renderTutorialStep();
+}
+
+function maybeStartGameplayTutorial() {
+    if (!isTutorialComplete()) {
+        setTimeout(() => startGameplayTutorial(), 300);
+    } else if (tutorialState.active && tutorialState.phase === 'join') {
+        finishTutorial({ persist: false });
+    }
+}
+
+function startGameplayTutorial({ replay = false } = {}) {
+    if (!tutorialState.elements || (!replay && isTutorialComplete())) return;
+    tutorialState.active = true;
+    tutorialState.phase = 'game';
+    tutorialState.stepIndex = 0;
+    tutorialState.replay = replay;
+    renderTutorialStep();
+}
+
+function advanceTutorial() {
+    if (tutorialState.phase === 'join') {
+        finishTutorial({ persist: false });
+        return;
+    }
+
+    tutorialState.stepIndex += 1;
+    if (tutorialState.stepIndex >= tutorialState.gameSteps.length) {
+        finishTutorial({ persist: true });
+        return;
+    }
+    renderTutorialStep();
+}
+
+function finishTutorial({ persist }) {
+    tutorialState.active = false;
+    tutorialState.phase = null;
+    tutorialState.stepIndex = 0;
+    tutorialState.elements?.overlay?.classList.add('hidden');
+    if (persist) {
+        setTutorialComplete(true);
+    }
+}
+
+function getCurrentTutorialStep() {
+    if (tutorialState.phase === 'join') return tutorialState.joinStep;
+    return tutorialState.gameSteps[tutorialState.stepIndex];
+}
+
+function isTutorialTargetVisible(element) {
+    if (!element) return false;
+    if (element.closest('.hidden')) return false;
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+}
+
+function findVisibleGameplayStep(startIndex) {
+    for (let i = startIndex; i < tutorialState.gameSteps.length; i++) {
+        const target = document.querySelector(tutorialState.gameSteps[i].target);
+        if (isTutorialTargetVisible(target)) return i;
+    }
+    return startIndex;
+}
+
+function renderTutorialStep() {
+    const ui = tutorialState.elements;
+    if (!ui || !tutorialState.active) return;
+
+    if (tutorialState.phase === 'game') {
+        tutorialState.stepIndex = findVisibleGameplayStep(tutorialState.stepIndex);
+    }
+
+    const step = getCurrentTutorialStep();
+    const target = document.querySelector(step.target);
+    const targetVisible = isTutorialTargetVisible(target);
+    const rect = targetVisible ? target.getBoundingClientRect() : null;
+
+    ui.overlay.classList.remove('hidden');
+    ui.title.textContent = step.title;
+    ui.body.textContent = step.body;
+
+    const total = tutorialState.phase === 'join' ? 1 : tutorialState.gameSteps.length;
+    const current = tutorialState.phase === 'join' ? 1 : tutorialState.stepIndex + 1;
+    ui.progress.textContent = tutorialState.phase === 'join'
+        ? 'First run'
+        : `Step ${current} of ${total}`;
+    ui.next.textContent = tutorialState.phase === 'join'
+        ? 'Got it'
+        : (current === total ? 'Done' : 'Next');
+
+    if (targetVisible && rect) {
+        const padding = 10;
+        const left = Math.max(6, rect.left - padding);
+        const top = Math.max(6, rect.top - padding);
+        const width = Math.min(window.innerWidth - left - 6, rect.width + padding * 2);
+        const height = Math.min(window.innerHeight - top - 6, rect.height + padding * 2);
+
+        ui.spotlight.style.display = 'block';
+        ui.spotlight.style.left = `${left}px`;
+        ui.spotlight.style.top = `${top}px`;
+        ui.spotlight.style.width = `${width}px`;
+        ui.spotlight.style.height = `${height}px`;
+        ui.veil?.style.setProperty('--spot-x', `${left + width / 2}px`);
+        ui.veil?.style.setProperty('--spot-y', `${top + height / 2}px`);
+
+        const cardShouldMoveAbove = rect.top > window.innerHeight * 0.55;
+        ui.card.classList.toggle('above', cardShouldMoveAbove);
+    } else {
+        ui.spotlight.style.display = 'none';
+        ui.card.classList.remove('above');
+        ui.veil?.style.setProperty('--spot-x', '50%');
+        ui.veil?.style.setProperty('--spot-y', '50%');
+    }
+}
+
 // In-game menu (help / reset car / leave) - escape hatch when stuck
 function initPlayerMenu() {
     const menuBtn = document.getElementById('player-menu-btn');
     const menu = document.getElementById('player-menu');
     const resetBtn = document.getElementById('player-menu-reset');
+    const replayTutorialBtn = document.getElementById('player-menu-replay-tutorial');
     const reportBugBtn = document.getElementById('player-menu-report-bug');
     const leaveBtn = document.getElementById('player-menu-leave');
     const closeBtn = document.getElementById('player-menu-close');
@@ -260,6 +486,11 @@ function initPlayerMenu() {
     reportBugBtn?.addEventListener('click', () => {
         openPlayerBugReport();
         closeMenu();
+    });
+
+    replayTutorialBtn?.addEventListener('click', () => {
+        closeMenu();
+        startTutorialForCurrentScreen(true);
     });
 
     resetBtn?.addEventListener('click', () => {
@@ -282,11 +513,102 @@ function initPlayerMenu() {
     });
 }
 initPlayerMenu();
+initTutorial();
+
+function updateVehicleStatusFeedback() {
+    const statusIcon = document.getElementById('status-icon');
+    if (!statusIcon) return;
+
+    const stateClasses = ['status-boost', 'status-wheelie', 'status-landing', 'status-bad'];
+    statusIcon.classList.remove(...stateClasses);
+
+    let nextStatus = null;
+    if (gameState.badLandingActive) {
+        nextStatus = { icon: '!', className: 'status-bad', label: 'Bad landing' };
+    } else if (gameState.wheelieActive) {
+        nextStatus = { icon: '🚲', className: 'status-wheelie', label: 'Wheelie' };
+    } else if (gameState.landingBoostActive) {
+        nextStatus = { icon: '🔥', className: 'status-landing', label: 'Landing boost' };
+    } else if (gameState.boostActive) {
+        nextStatus = { icon: '🔥', className: 'status-boost', label: 'Boost' };
+    }
+
+    if (nextStatus) {
+        statusIcon.textContent = nextStatus.icon;
+        statusIcon.setAttribute('aria-label', nextStatus.label);
+        statusIcon.classList.add(nextStatus.className);
+        statusIcon.classList.remove('hidden');
+    } else {
+        statusIcon.classList.add('hidden');
+        statusIcon.removeAttribute('aria-label');
+    }
+
+    if (gameState.badLandingActive && !gameState.wasBadLandingActive) {
+        hapticBuzz([60, 30, 60]);
+    } else if (gameState.landingBoostActive && !gameState.wasLandingBoostActive) {
+        hapticBuzz([25, 25, 80]);
+    } else if (gameState.boostActive && !gameState.wasBoosting) {
+        hapticBuzz([20, 20, 20]);
+    } else if (gameState.wheelieActive && !gameState.wasWheelieActive) {
+        hapticBuzz(18);
+    }
+
+    gameState.wasBoosting = gameState.boostActive;
+    gameState.wasWheelieActive = gameState.wheelieActive;
+    gameState.wasLandingBoostActive = gameState.landingBoostActive;
+    gameState.wasBadLandingActive = gameState.badLandingActive;
+}
 
 // Socket event handlers
+// Handle vehicle state updates from server (forwarded from host)
+socket.on('vehicle_states_update', (data) => {
+    if (!gameState.gameStarted || !gameState.playerId) return;
+
+    const myVehicle = data.vehicles.find(v => v.id === gameState.playerId);
+    if (myVehicle) {
+        gameState.speed = myVehicle.speed;
+        gameState.health = myVehicle.health;
+        gameState.boostActive = !!myVehicle.boost;
+        gameState.wheelieActive = !!myVehicle.wheelie || myVehicle.handlingState === 'wheelie';
+        gameState.stuntState = myVehicle.stuntState || 'idle';
+        gameState.stuntCharge = Math.max(0, Math.min(1, myVehicle.stuntCharge || 0));
+        gameState.landingBoostActive = !!myVehicle.landingBoost || gameState.stuntState === 'reward';
+        gameState.badLandingActive = !!myVehicle.badLanding || gameState.stuntState === 'bad-landing';
+
+        // Update speed display
+        if (elements.speedDisplay) {
+            elements.speedDisplay.textContent = `${Math.round(gameState.speed)} km/h`;
+
+            // Visual feedback for speed
+            const speedFactor = Math.min(1, gameState.speed / 120);
+            elements.speedDisplay.style.color = `rgb(255, ${Math.floor(255 * (1 - speedFactor))}, ${Math.floor(255 * (1 - speedFactor))})`;
+        }
+
+        updateVehicleStatusFeedback();
+    }
+});
+
+// Update connection status UI
+function updateConnectionStatus(connected) {
+    gameState.connected = connected;
+    const statusEl = document.getElementById('connection-status');
+    const statusText = document.getElementById('status-text');
+
+    if (statusEl && statusText) {
+        if (connected) {
+            statusEl.className = 'connection-status connected';
+            statusText.textContent = 'Connected';
+        } else {
+            statusEl.className = 'connection-status disconnected';
+            statusText.textContent = 'Reconnecting...';
+        }
+    }
+}
+
 socket.on('connect', () => {
     console.log('Connected to server');
-    gameState.connected = true;
+    updateConnectionStatus(true);
+    // ... rest of connect handler ...
 
     // Initialize error logging if not already initialized
     if (!errorLog.container) {
@@ -299,6 +621,7 @@ socket.on('connect', () => {
     // saved reconnect_id from sessionStorage so the server restores our car.
     if (gameState.roomCode) {
         console.log('Socket reconnected - rejoining room', gameState.roomCode);
+        showMessage('Recovering session...', 2000);
         elements.roomCodeInput.value = gameState.roomCode;
         if (gameState.playerName) {
             elements.playerNameInput.value = gameState.playerName;
@@ -379,7 +702,7 @@ function findSavedReconnect() {
 
 socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);
-    gameState.connected = false;
+    updateConnectionStatus(false);
 });
 
 socket.on('join_error', (data) => {
@@ -418,6 +741,7 @@ socket.on('game_joined', (data) => {
         initGameControls();
         showScreen('game');
         showMessage('Reconnected! You are back in the race.');
+        maybeStartGameplayTutorial();
         return;
     }
 
@@ -428,6 +752,7 @@ socket.on('game_joined', (data) => {
         initGameControls();
         showScreen('game');
         showMessage('Joined the race! Good luck catching up!');
+        maybeStartGameplayTutorial();
         return;
     }
 
@@ -496,6 +821,7 @@ socket.on('game_started', () => {
 
     // Show game screen
     showScreen('game');
+    maybeStartGameplayTutorial();
 
     // Note: The game loop (updateLoop) is already running via requestAnimationFrame
 });
@@ -705,6 +1031,10 @@ function showScreen(screenName) {
         case 'game':
             elements.gameScreen.classList.remove('hidden');
             break;
+    }
+
+    if (tutorialState.active) {
+        setTimeout(renderTutorialStep, 0);
     }
 }
 
@@ -1535,4 +1865,4 @@ function joinRoom(roomCode) {
             car_color: '#' + Math.floor(Math.random()*16777215).toString(16)
         });
     }
-} 
+}

@@ -114,12 +114,53 @@ class PhysicsSystem {
         // Process collision events
         this._processCollisions();
 
-        // Sync vehicle entities from physics
+        // Flag wall contact so applyVehicleControls can drop tyre grip and let
+        // the car slide along a wall instead of the rail-locked tyres pinning
+        // it in place. Polled from the contact graph each step so it self-clears
+        // (no reliance on catching every start/stop collision event).
+        for (const [vehicleId, data] of this.vehicleBodies) {
+            if (!data.entity || !data.chassisCollider) continue;
+            let touchingWall = false;
+            this.world.contactPairsWith(data.chassisCollider, (other) => {
+                if (other?.parent()?.userData?.type === 'barrier') touchingWall = true;
+            });
+            data.entity.inWallContact = touchingWall;
+        }
+
+        // Sync vehicle entities from physics and update state duration
         for (const [vehicleId, data] of this.vehicleBodies) {
             if (data.entity) {
                 data.entity.syncEntityFromPhysics();
+                data.entity.stateDuration += dt;
+                this._updateStuntTimers(data, dt);
             }
         }
+    }
+
+    /**
+     * Convert local position to world position
+     * @private
+     */
+    _localToWorld(localPos, bodyPos, bodyRot) {
+        // Rotate local point by quaternion
+        // q * v * q^-1
+        const x = localPos.x, y = localPos.y, z = localPos.z;
+        const qx = bodyRot.x, qy = bodyRot.y, qz = bodyRot.z, qw = bodyRot.w;
+
+        const ix = qw * x + qy * z - qz * y;
+        const iy = qw * y + qz * x - qx * z;
+        const iz = qw * z + qx * y - qy * x;
+        const iw = -qx * x - qy * y - qz * z;
+
+        const rx = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        const ry = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        const rz = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+
+        return {
+            x: rx + bodyPos.x,
+            y: ry + bodyPos.y,
+            z: rz + bodyPos.z
+        };
     }
 
     /**
@@ -261,6 +302,17 @@ class PhysicsSystem {
             );
 
             if (bowlWall) barriers.push(bowlWall);
+        } else if (geometry.type === 'square') {
+            const size = geometry.diameter || geometry.size || 70;
+            const wallHeight = geometry.wallHeight || geometry.barrierHeight || 12;
+            const wallThickness = geometry.barrierThickness || 1;
+            const squareWall = this._createSquareBarrier(
+                size,
+                wallHeight,
+                wallThickness,
+                physics.barrierRestitution || 0.5
+            );
+            if (squareWall) barriers.push(squareWall);
         } else if (geometry.type === 'dunes') {
             // Tall containment wall at the dunes arena edge
             const radius = geometry.radius || 70;
@@ -283,6 +335,17 @@ class PhysicsSystem {
             if (innerBarrier) barriers.push(innerBarrier);
             if (outerBarrier) barriers.push(outerBarrier);
         }
+
+        // Map-authored ramps use their own static bodies. Dunes create ramp
+        // colliders with the terrain body because their base height is raised;
+        // other tracks add them alongside barrier creation.
+        if (geometry.type !== 'dunes') {
+            const base = geometry.base || 0;
+            (geometry.ramps || []).forEach((ramp, i) => this._createRampCollider(ramp, base, i));
+        }
+
+        // Tag barriers so the wall-slide assist can recognise wall contacts.
+        barriers.forEach((b) => { if (b) b.userData = { type: 'barrier' }; });
 
         return barriers;
     }
@@ -388,6 +451,55 @@ class PhysicsSystem {
     }
 
     /**
+     * Create square arena wall colliders.
+     * @private
+     */
+    _createSquareBarrier(size, height, thickness, restitution) {
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+        const half = size / 2;
+        const wallThickness = Math.max(1, thickness || 1);
+        const wallLength = size + wallThickness * 2;
+        const specs = [
+            {
+                hx: wallLength / 2,
+                hz: wallThickness / 2,
+                x: 0,
+                z: -half
+            },
+            {
+                hx: wallLength / 2,
+                hz: wallThickness / 2,
+                x: 0,
+                z: half
+            },
+            {
+                hx: wallThickness / 2,
+                hz: wallLength / 2,
+                x: -half,
+                z: 0
+            },
+            {
+                hx: wallThickness / 2,
+                hz: wallLength / 2,
+                x: half,
+                z: 0
+            }
+        ];
+
+        specs.forEach((spec) => {
+            const colliderDesc = this.RAPIER.ColliderDesc
+                .cuboid(spec.hx, height / 2, spec.hz)
+                .setTranslation(spec.x, height / 2, spec.z);
+            this._makeWallSlippery(colliderDesc, 0.15, restitution);
+            this.world.createCollider(colliderDesc, body);
+        });
+
+        this.staticBodies.set('barrier_square_wall', body);
+        return body;
+    }
+
+    /**
      * Create a sloped, climbable wall barrier for an arena (bowl / dunes).
      *
      * Each segment is a thin box leaning outward by `slopeDeg` (measured from
@@ -485,8 +597,23 @@ class PhysicsSystem {
         const bodyHeight = vehicle.config?.visual?.body?.height || 1;
         const bodyLength = vehicle.config?.visual?.body?.length || 4;
 
-        const colliderDesc = this.RAPIER.ColliderDesc
-            .cuboid(bodyWidth / 2, bodyHeight / 2, bodyLength / 2)
+        // Rounded chassis edges let the car glance off walls and slide along
+        // them instead of catching a square corner and wedging. roundCuboid's
+        // border radius extends beyond the half-extents, so shrink them to keep
+        // the same overall size.
+        const borderRadius = physicsConfig.colliderBorderRadius || 0;
+        let colliderDesc;
+        if (borderRadius > 0) {
+            colliderDesc = this.RAPIER.ColliderDesc.roundCuboid(
+                Math.max(0.05, bodyWidth / 2 - borderRadius),
+                Math.max(0.05, bodyHeight / 2 - borderRadius),
+                Math.max(0.05, bodyLength / 2 - borderRadius),
+                borderRadius
+            );
+        } else {
+            colliderDesc = this.RAPIER.ColliderDesc.cuboid(bodyWidth / 2, bodyHeight / 2, bodyLength / 2);
+        }
+        colliderDesc
             .setDensity(physicsConfig.density || 4.0)
             .setFriction(physicsConfig.friction || 0.5)
             .setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
@@ -509,7 +636,7 @@ class PhysicsSystem {
             );
         }
 
-        this.world.createCollider(colliderDesc, chassisBody);
+        const chassisCollider = this.world.createCollider(colliderDesc, chassisBody);
 
         // Create vehicle controller
         const controller = this.world.createVehicleController(chassisBody);
@@ -540,8 +667,10 @@ class PhysicsSystem {
         const vehicleData = {
             body: chassisBody,
             controller: controller,
+            chassisCollider: chassisCollider,
             entity: vehicle,
             config: physicsConfig,
+            previousHandlingState: vehicle.handlingState || 'grounded',
             // Reverse state tracking
             brakeStartTime: null,
             isReversing: false,
@@ -601,6 +730,34 @@ class PhysicsSystem {
         const vc = data.controller;
         const entity = data.entity;
 
+        // Detect handling state based on wheel contact
+        const numWheels = vc.numWheels ? vc.numWheels() : 4;
+        const wheels = [];
+        for (let i = 0; i < numWheels; i++) {
+            wheels.push(this._isWheelGrounded(vc, i));
+        }
+
+        const frontGrounded = wheels[0] || wheels[1];
+        const rearGrounded = wheels[2] || wheels[3];
+        const allAirborne = wheels.every(g => !g);
+
+        let newState = 'grounded';
+        if (allAirborne) {
+            newState = 'airborne';
+        } else if (!frontGrounded && rearGrounded) {
+            newState = 'wheelie';
+        } else if (frontGrounded && !rearGrounded) {
+            newState = 'front-light';
+        }
+
+        const oldState = entity?.handlingState || data.previousHandlingState || 'grounded';
+        if (entity && oldState !== newState) {
+            entity.handlingState = newState;
+            entity.stateDuration = 0;
+            this._handleStuntTransition(data, oldState, newState);
+        }
+        data.previousHandlingState = newState;
+
         // Dead cars don't drive
         if (entity?.isDead) {
             vc.setWheelEngineForce(2, 0);
@@ -628,13 +785,19 @@ class PhysicsSystem {
 
         const acceleration = controls.acceleration || 0;
         const braking = controls.braking || 0;
-        // Nitro boost multiplies engine force while the buff is active
-        const boostMultiplier = entity?.speedBoost || 1;
+        // Nitro and stunt landing boosts both multiply engine force. Keep
+        // Nitro's weapon-owned timer intact; stunt boost has its own expiry.
+        const boostMultiplier = this._getEngineBoostMultiplier(entity, config);
         const baseEngineForce = (config.engine?.force || 200) * boostMultiplier;
 
-        // Oil slick: drop tyre grip so the car slides
+        // Tyre grip drops in two cases:
+        // - oil slick: car slides everywhere
+        // - wall contact: car slides ALONG the wall instead of the rail-locked
+        //   tyres pinning it perpendicular (the "sticks to walls" problem)
         const baseFrictionSlip = config.frictionSlip || 1000;
-        const gripMultiplier = entity?.inOilSlick ? (entity.oilFrictionMultiplier || 0.1) : 1;
+        const oilGrip = entity?.inOilSlick ? (entity.oilFrictionMultiplier || 0.1) : 1;
+        const wallGrip = entity?.inWallContact ? (config.wallSlideGrip ?? 0.2) : 1;
+        const gripMultiplier = Math.min(oilGrip, wallGrip);
         if (gripMultiplier !== data.lastGripMultiplier) {
             for (let i = 0; i < 4; i++) {
                 vc.setWheelFrictionSlip(i, baseFrictionSlip * gripMultiplier);
@@ -705,18 +868,269 @@ class PhysicsSystem {
         // currentSpeed is m/s; ease the lock down to (1 - reduction) by ~15 m/s
         const speedFactor = Math.min(1, currentSpeed / 15);
         const effectiveMax = maxAngle * (1 - highSpeedReduction * speedFactor);
-        const targetSteer = -(controls.steering || 0) * effectiveMax;
+
+        // Reduce steering authority when front wheels are off the ground. In a
+        // wheelie the front tyres cannot steer normally; we keep a small body
+        // influence so players can shape the stunt without carving corners.
+        const wheelieCfg = config.wheelie || {};
+        let steeringAuthority = 1.0;
+        if (newState === 'wheelie' || newState === 'airborne') {
+            steeringAuthority = wheelieCfg.steeringAuthority ?? 0.15;
+        }
+        if (this._isBadLandingActive(entity)) {
+            const stuntCfg = this._getStuntConfig(config);
+            steeringAuthority *= stuntCfg.badLandingSteeringMultiplier;
+        }
+
+        const targetSteer = -(controls.steering || 0) * effectiveMax * steeringAuthority;
 
         const prevSteer = data.currentSteer || 0;
         data.currentSteer = prevSteer + (targetSteer - prevSteer) * smoothing;
         vc.setWheelSteering(0, data.currentSteer);
         vc.setWheelSteering(1, data.currentSteer);
 
+        // Apply a short lift pulse for intentional wheelies during high
+        // acceleration. This must not run every tick: repeated impulses turn a
+        // launch pop into a full airborne stall where the tyres lose contact.
+        const wheelieActivationThrottle = wheelieCfg.activationThrottle ?? 0.7;
+        if (acceleration > wheelieActivationThrottle && newState === 'grounded') {
+            const now = performance.now();
+            const liftCooldownMs = wheelieCfg.liftCooldownMs ?? 450;
+            const canPulseLift = !data.lastWheelieLiftAt || now - data.lastWheelieLiftAt >= liftCooldownMs;
+            if (canPulseLift) {
+                data.lastWheelieLiftAt = now;
+
+                const body = data.body;
+                const rot = body.rotation();
+                const pos = body.translation();
+
+                // Front-center offset in local space
+                const bodyLength = config.visual?.body?.length || 4;
+                const localFront = { x: 0, y: 0, z: bodyLength / 2 };
+                const worldFront = this._localToWorld(localFront, pos, rot);
+
+                // Calculate lift: stronger if boosting, weaker at high speed to prevent backflips
+                const speedClamp = Math.max(0.2, 1.0 - (currentSpeed / 25));
+                const liftImpulseScale = wheelieCfg.liftImpulse ?? 8.0;
+                const liftImpulse = acceleration * liftImpulseScale * boostMultiplier * speedClamp;
+
+                body.applyImpulseAtPoint({ x: 0, y: liftImpulse, z: 0 }, worldFront, true);
+            }
+        } else if (acceleration <= wheelieActivationThrottle) {
+            data.lastWheelieLiftAt = 0;
+        }
+
         // Braking on all wheels - don't apply brake when reversing
         const brakeForce = (braking > 0 && !data.isReversing) ? braking * (config.engine?.brakeForce || 50) : 0;
         for (let i = 0; i < 4; i++) {
             vc.setWheelBrake(i, brakeForce);
         }
+    }
+
+    /**
+     * Read wheel contact from the Rapier vehicle controller.
+     *
+     * Rapier exposes this as wheelIsInContact(); older tests and some local
+     * shims used wheelIsGrounded(), so keep a fallback instead of scattering
+     * API-version checks through the drive logic.
+     * @private
+     * @param {Object} controller
+     * @param {number} index
+     * @returns {boolean}
+     */
+    _isWheelGrounded(controller, index) {
+        if (typeof controller?.wheelIsInContact === 'function') {
+            return !!controller.wheelIsInContact(index);
+        }
+        if (typeof controller?.wheelIsGrounded === 'function') {
+            return !!controller.wheelIsGrounded(index);
+        }
+        return true;
+    }
+
+    /**
+     * Config defaults for the wheelie/airtime payoff loop.
+     * @private
+     */
+    _getStuntConfig(config = {}) {
+        const stunt = config.stunt || {};
+        return {
+            maxCharge: stunt.maxCharge ?? 1,
+            wheelieChargeRate: stunt.wheelieChargeRate ?? 0.55,
+            airtimeChargeRate: stunt.airtimeChargeRate ?? 0.75,
+            nitroChargeMultiplier: stunt.nitroChargeMultiplier ?? 1.5,
+            chargeDecayRate: stunt.chargeDecayRate ?? 0.35,
+            minLandingCharge: stunt.minLandingCharge ?? 0.25,
+            landingBoostBonus: stunt.landingBoostBonus ?? 0.55,
+            landingBoostDuration: stunt.landingBoostDuration ?? 1.25,
+            landingRamBonus: stunt.landingRamBonus ?? 18,
+            badLandingAngularSpeed: stunt.badLandingAngularSpeed ?? 8,
+            badLandingVerticalSpeed: stunt.badLandingVerticalSpeed ?? 9,
+            badLandingDuration: stunt.badLandingDuration ?? 0.85,
+            badLandingThrottleMultiplier: stunt.badLandingThrottleMultiplier ?? 0.65,
+            badLandingSteeringMultiplier: stunt.badLandingSteeringMultiplier ?? 0.55
+        };
+    }
+
+    /**
+     * @private
+     */
+    _isStuntState(state) {
+        return state === 'wheelie' || state === 'airborne';
+    }
+
+    /**
+     * @private
+     */
+    _isBadLandingActive(entity) {
+        return !!entity?.stuntBadLandingUntil && performance.now() < entity.stuntBadLandingUntil;
+    }
+
+    /**
+     * @private
+     */
+    _getEngineBoostMultiplier(entity, config = {}) {
+        if (!entity) return 1;
+
+        const stuntCfg = this._getStuntConfig(config);
+        const weaponBoost = entity.speedBoost || 1;
+        const stuntBoost = performance.now() < (entity.stuntBoostUntil || 0)
+            ? (entity.stuntBoostMultiplier || 1)
+            : 1;
+        const landingPenalty = this._isBadLandingActive(entity)
+            ? stuntCfg.badLandingThrottleMultiplier
+            : 1;
+
+        return Math.max(weaponBoost, stuntBoost) * landingPenalty;
+    }
+
+    /**
+     * Build stunt charge while the car is wheelieing or airborne, and expire
+     * landing rewards/penalties without touching Nitro's separate weapon timer.
+     * @private
+     */
+    _updateStuntTimers(data, dt) {
+        const entity = data.entity;
+        if (!entity) return;
+
+        const now = performance.now();
+        const cfg = this._getStuntConfig(data.config);
+
+        if (entity.stunned) {
+            entity.stuntState = 'idle';
+            entity.stuntCharge = 0;
+            entity.stuntAirTime = 0;
+            entity.stuntBoostMultiplier = 1;
+            entity.stuntBoostUntil = 0;
+            entity.stuntRamDamageBonus = 0;
+            entity.stuntBadLandingUntil = 0;
+            return;
+        }
+
+        if (entity.stuntBoostUntil && now >= entity.stuntBoostUntil) {
+            entity.stuntBoostMultiplier = 1;
+            entity.stuntBoostUntil = 0;
+            entity.stuntRamDamageBonus = 0;
+            if (entity.stuntState === 'reward') entity.stuntState = 'idle';
+        }
+
+        if (entity.stuntBadLandingUntil && now >= entity.stuntBadLandingUntil) {
+            entity.stuntBadLandingUntil = 0;
+            if (entity.stuntState === 'bad-landing') entity.stuntState = 'idle';
+        }
+
+        if (this._isStuntState(entity.handlingState)) {
+            const rate = entity.handlingState === 'wheelie'
+                ? cfg.wheelieChargeRate
+                : cfg.airtimeChargeRate;
+            const boostFactor = (entity.speedBoost || 1) > 1 ? cfg.nitroChargeMultiplier : 1;
+            entity.stuntCharge = Math.min(
+                cfg.maxCharge,
+                (entity.stuntCharge || 0) + dt * rate * boostFactor
+            );
+            entity.stuntAirTime = (entity.stuntAirTime || 0) + dt;
+            entity.stuntState = 'charging';
+        } else if (entity.stuntCharge > 0 && entity.stuntState !== 'reward') {
+            entity.stuntCharge = Math.max(0, entity.stuntCharge - dt * cfg.chargeDecayRate);
+            if (entity.stuntCharge === 0 && entity.stuntState === 'charging') {
+                entity.stuntState = 'idle';
+            }
+        }
+    }
+
+    /**
+     * Pay out or penalize the transition from wheelie/airtime back to ground.
+     * @private
+     */
+    _handleStuntTransition(data, oldState, newState) {
+        const entity = data.entity;
+        if (!entity || !this._isStuntState(oldState) || newState !== 'grounded') return;
+
+        const cfg = this._getStuntConfig(data.config);
+        const charge = Math.min(cfg.maxCharge, entity.stuntCharge || 0);
+        const normalizedCharge = cfg.maxCharge > 0 ? charge / cfg.maxCharge : 0;
+
+        if (charge < cfg.minLandingCharge) {
+            entity.stuntCharge = 0;
+            entity.stuntAirTime = 0;
+            entity.stuntState = 'idle';
+            return;
+        }
+
+        const linvel = data.body?.linvel?.() || { x: 0, y: 0, z: 0 };
+        const angvel = data.body?.angvel?.() || { x: 0, y: 0, z: 0 };
+        const angularSpeed = Math.sqrt(
+            angvel.x * angvel.x +
+            angvel.y * angvel.y +
+            angvel.z * angvel.z
+        );
+        const downwardSpeed = Math.max(0, -linvel.y);
+        const badLanding = !entity.invulnerable && (
+            angularSpeed > cfg.badLandingAngularSpeed ||
+            downwardSpeed > cfg.badLandingVerticalSpeed
+        );
+
+        entity.lastStuntLanding = {
+            type: badLanding ? 'bad' : 'clean',
+            charge,
+            airTime: entity.stuntAirTime || 0,
+            angularSpeed,
+            downwardSpeed,
+            at: performance.now()
+        };
+
+        if (badLanding) {
+            entity.stuntState = 'bad-landing';
+            entity.stuntCharge = 0;
+            entity.stuntAirTime = 0;
+            entity.stuntBoostMultiplier = 1;
+            entity.stuntBoostUntil = 0;
+            entity.stuntRamDamageBonus = 0;
+            entity.stuntBadLandingUntil = performance.now() + cfg.badLandingDuration * 1000;
+            this._emit('vehicle:stuntBadLanding', {
+                vehicleId: entity.id,
+                playerId: entity.playerId,
+                charge,
+                angularSpeed,
+                downwardSpeed
+            });
+            return;
+        }
+
+        entity.stuntState = 'reward';
+        entity.stuntCharge = 0;
+        entity.stuntAirTime = 0;
+        entity.stuntBoostMultiplier = 1 + cfg.landingBoostBonus * normalizedCharge;
+        entity.stuntBoostUntil = performance.now() + cfg.landingBoostDuration * 1000;
+        entity.stuntRamDamageBonus = cfg.landingRamBonus * normalizedCharge;
+        entity.stuntBadLandingUntil = 0;
+        this._emit('vehicle:stuntLanding', {
+            vehicleId: entity.id,
+            playerId: entity.playerId,
+            charge,
+            boostMultiplier: entity.stuntBoostMultiplier,
+            ramDamageBonus: entity.stuntRamDamageBonus
+        });
     }
 
     /**
@@ -735,6 +1149,23 @@ class PhysicsSystem {
         body.setRotation(this._eulerToQuat(0, rotation, 0), true);
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
         body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+        data.brakeStartTime = null;
+        data.isReversing = false;
+        data.currentSteer = 0;
+        data.lastWheelieLiftAt = 0;
+        data.previousHandlingState = 'grounded';
+
+        if (data.controller) {
+            data.controller.setWheelEngineForce(2, 0);
+            data.controller.setWheelEngineForce(3, 0);
+            data.controller.setWheelSteering(0, 0);
+            data.controller.setWheelSteering(1, 0);
+            const numWheels = data.controller.numWheels ? data.controller.numWheels() : 4;
+            for (let i = 0; i < numWheels; i++) {
+                data.controller.setWheelBrake(i, 0);
+            }
+        }
     }
 
     /**
@@ -875,6 +1306,50 @@ class PhysicsSystem {
             angularVelocity: { x: angvel.x, y: angvel.y, z: angvel.z },
             speed: speedKmh,
             isReversing: data.isReversing
+        };
+    }
+
+    /**
+     * Get detailed telemetry for a vehicle
+     * @param {string} vehicleId
+     * @returns {Object|null}
+     */
+    getVehicleTelemetry(vehicleId) {
+        const data = this.vehicleBodies.get(vehicleId);
+        if (!data || !data.body || !data.controller) return null;
+
+        const vc = data.controller;
+        const body = data.body;
+        const entity = data.entity;
+
+        const wheels = [];
+        const numWheels = vc.numWheels();
+        for (let i = 0; i < numWheels; i++) {
+            wheels.push({
+                isGrounded: this._isWheelGrounded(vc, i)
+            });
+        }
+
+        const linvel = body.linvel();
+        const speedKmh = Math.sqrt(linvel.x * linvel.x + linvel.y * linvel.y + linvel.z * linvel.z) * 3.6;
+
+        return {
+            speed: speedKmh,
+            steerAngle: data.currentSteer || 0,
+            isReversing: data.isReversing,
+            inWallContact: entity?.inWallContact || false,
+            inOilSlick: entity?.inOilSlick || false,
+            speedBoost: entity?.speedBoost || 1,
+            stuntState: entity?.stuntState || 'idle',
+            stuntCharge: entity?.stuntCharge || 0,
+            stuntBoost: entity?.stuntBoostMultiplier || 1,
+            stuntRamDamageBonus: entity?.stuntRamDamageBonus || 0,
+            badLandingActive: this._isBadLandingActive(entity),
+            wheels: wheels,
+            handlingState: entity?.handlingState || 'grounded',
+            stateDuration: entity?.stateDuration || 0,
+            isAirborne: entity?.handlingState === 'airborne',
+            isWheelie: entity?.handlingState === 'wheelie'
         };
     }
 

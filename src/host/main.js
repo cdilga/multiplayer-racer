@@ -49,6 +49,12 @@ function updateLoading(text) {
 // Initialize game
 async function initGame() {
     try {
+        // Kick off the (large) GameHost chunk download immediately so it
+        // overlaps with WASM init instead of waterfalling after it. window.THREE
+        // and window.io are already set above, which is all its modules need at
+        // evaluation time (RAPIER is only used once we construct the host).
+        const gameHostModulePromise = import('/static/js/GameHost.js');
+
         updateLoading('Loading physics engine...');
 
         // Initialize Rapier WASM
@@ -58,8 +64,7 @@ async function initGame() {
 
         updateLoading('Creating game host...');
 
-        // Dynamic import existing GameHost
-        const { GameHost } = await import('/static/js/GameHost.js');
+        const { GameHost } = await gameHostModulePromise;
 
         // Create and initialize game host
         const game = new GameHost({

@@ -181,6 +181,57 @@
         #fullscreen-toggle:hover {
             opacity: 1;
         }
+
+        .camera-controls {
+            position: fixed;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            z-index: 520;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(8px);
+        }
+        .camera-controls.hidden {
+            display: none;
+        }
+        .camera-controls button {
+            min-width: 44px;
+            min-height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .camera-controls button.active,
+        .camera-controls button:hover {
+            background: #00ff88;
+            border-color: #00ff88;
+            color: #102018;
+        }
+        .camera-focus {
+            min-width: 92px;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+        }
     </style>
 </head>
 <body tabindex="-1">
@@ -210,6 +261,15 @@
     </div>
 
     <!-- Debug UI panels are created dynamically by StatsOverlayUI and PhysicsTuningUI -->
+
+    <div id="camera-controls" class="camera-controls hidden" aria-label="Camera view">
+        <button type="button" data-camera-mode="party" aria-pressed="true">Party</button>
+        <button type="button" data-camera-mode="chase" aria-pressed="false">Chase</button>
+        <button type="button" data-camera-mode="hood" aria-pressed="false">Hood</button>
+        <button type="button" id="camera-focus-prev" aria-label="Previous car">‹</button>
+        <div id="camera-focus-label" class="camera-focus">0 cars</div>
+        <button type="button" id="camera-focus-next" aria-label="Next car">›</button>
+    </div>
 
     <!-- Fullscreen toggle -->
     <button id="fullscreen-toggle">⛶ Fullscreen</button>

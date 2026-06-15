@@ -16,7 +16,13 @@
 
 ## Strategic Priorities (In Order)
 
-### Priority 1: Destruction & Deformation (Core Mechanic)
+### Priority 1: Polishing & Feel (Current Swarm Focus - June 2026)
+- **Wheelie/Boost Loop:** Intentional front-wheel lift during high acceleration, trading steering for raw speed or airtime payoff.
+- **Input Confidence:** Rock-solid phone controller reconnection and host-authoritative input routing.
+- **Identity & Clarity:** Player markers, names, and visual distinctness in a 16-player crowd.
+- **Arena Integrity:** Fixing mesh gaps, collision glitches, and "phantom damage" from terrain.
+
+### Priority 2: Destruction & Deformation (Core Mechanic)
 - Progressive damage visualization (car looks progressively worse)
 - Minor physics changes as car degrades (broken wheels affect handling)
 - Visual spectacle (particles, debris, smoke)

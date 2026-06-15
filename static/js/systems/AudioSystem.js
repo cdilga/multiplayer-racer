@@ -115,6 +115,14 @@ class AudioSystem {
         this.eventBus.on('physics:collision', (data) => {
             this.playCollisionSound(data);
         });
+        this.eventBus.on('vehicle:stuntLanding', () => {
+            this.duckMusic(0.2);
+            this.playSound('engine_rev', { volume: 0.72, cooldown: 180 });
+        });
+        this.eventBus.on('vehicle:stuntBadLanding', () => {
+            this.duckMusic(0.35);
+            this.playSound('collision_hard', { volume: 0.78, cooldown: 180 });
+        });
 
         // Checkpoint events (mapped to loaded sfx - there are no dedicated
         // checkpoint/lap/finish samples yet)

@@ -47,8 +47,10 @@
     "mass": 32,
     "centerOfMass": { "x": 0, "y": -0.2, "z": 0 },
     "linearDamping": 0.2,
-    "angularDamping": 0.5,
+    "angularDamping": 0.4,
     "friction": 0.5,
+    "colliderBorderRadius": 0.25,
+    "wallSlideGrip": 0.2,
     "density": 4.0,
     "engine": {
       "force": 200,
@@ -58,6 +60,28 @@
       "maxAngle": 0.38,
       "highSpeedReduction": 0.45,
       "smoothing": 0.3
+    },
+    "wheelie": {
+      "activationThrottle": 0.7,
+      "steeringAuthority": 0.15,
+      "liftImpulse": 3.0,
+      "liftCooldownMs": 450
+    },
+    "stunt": {
+      "maxCharge": 1.0,
+      "wheelieChargeRate": 0.55,
+      "airtimeChargeRate": 0.75,
+      "nitroChargeMultiplier": 1.5,
+      "chargeDecayRate": 0.35,
+      "minLandingCharge": 0.25,
+      "landingBoostBonus": 0.55,
+      "landingBoostDuration": 1.25,
+      "landingRamBonus": 18,
+      "badLandingAngularSpeed": 8,
+      "badLandingVerticalSpeed": 9,
+      "badLandingDuration": 0.85,
+      "badLandingThrottleMultiplier": 0.65,
+      "badLandingSteeringMultiplier": 0.55
     },
     "wheels": {
       "radius": 0.35,

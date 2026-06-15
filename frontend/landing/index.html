@@ -440,7 +440,33 @@
             initLanding();
         }
 
+        // Warm the host's heavy bundles while the visitor reads the landing,
+        // so clicking "Host Now" loads from cache instead of cold. Gated to
+        // hosting-capable devices on decent connections - we don't burn a
+        // phone's data prefetching a ~3MB host bundle the player won't use.
+        function warmHostAssets() {
+            const conn = navigator.connection;
+            if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return;
+            if (!window.matchMedia('(min-width: 800px)').matches) return;
+
+            fetch('/host-assets.json', { credentials: 'same-origin' })
+                .then((r) => (r.ok ? r.json() : { assets: [] }))
+                .then(({ assets }) => {
+                    for (const href of assets || []) {
+                        const link = document.createElement('link');
+                        link.rel = 'prefetch';
+                        link.as = href.endsWith('.css') ? 'style' : 'script';
+                        link.href = href;
+                        document.head.appendChild(link);
+                    }
+                })
+                .catch(() => { /* prefetch is best-effort; never block the page */ });
+        }
+
         function initLanding() {
+            const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1200));
+            idle(warmHostAssets);
+
             // Prime the engagement flag + preserve query on every CTA click.
             document.querySelectorAll('[data-cta]').forEach((el) => {
                 el.addEventListener('click', (event) => {

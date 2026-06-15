@@ -66,7 +66,7 @@ class PhysicsTuningUI {
             <div class="physics-panel-header">Physics Tuning (F2)</div>
 
             <div class="physics-section">
-                <h4>Engine</h4>
+                <h4>Engine & Physics</h4>
                 <label>
                     <span>Engine Force</span>
                     <input type="range" class="physics-slider" data-param="car.engineForce" min="50" max="500" value="${this.params.car.engineForce}" step="10">
@@ -77,20 +77,59 @@ class PhysicsTuningUI {
                     <input type="range" class="physics-slider" data-param="car.brakeForce" min="10" max="200" value="${this.params.car.brakeForce}" step="5">
                     <span class="physics-value" data-param="car.brakeForce">${this.params.car.brakeForce}</span>
                 </label>
+                <label>
+                    <span>Linear Damping</span>
+                    <input type="range" class="physics-slider" data-param="car.linearDamping" min="0" max="1" value="${this.params.car.linearDamping}" step="0.05">
+                    <span class="physics-value" data-param="car.linearDamping">${this.params.car.linearDamping}</span>
+                </label>
+                <label>
+                    <span>Angular Damping</span>
+                    <input type="range" class="physics-slider" data-param="car.angularDamping" min="0" max="1" value="${this.params.car.angularDamping}" step="0.05">
+                    <span class="physics-value" data-param="car.angularDamping">${this.params.car.angularDamping}</span>
+                </label>
             </div>
 
             <div class="physics-section">
-                <h4>Wheels</h4>
+                <h4>Steering</h4>
+                <label>
+                    <span>Max Angle</span>
+                    <input type="range" class="physics-slider" data-param="steering.maxAngle" min="0.1" max="1.0" value="${this.params.steering.maxAngle}" step="0.02">
+                    <span class="physics-value" data-param="steering.maxAngle">${this.params.steering.maxAngle}</span>
+                </label>
+                <label>
+                    <span>High Speed Red.</span>
+                    <input type="range" class="physics-slider" data-param="steering.highSpeedReduction" min="0" max="1" value="${this.params.steering.highSpeedReduction}" step="0.05">
+                    <span class="physics-value" data-param="steering.highSpeedReduction">${this.params.steering.highSpeedReduction}</span>
+                </label>
+                <label>
+                    <span>Smoothing</span>
+                    <input type="range" class="physics-slider" data-param="steering.smoothing" min="0.05" max="1" value="${this.params.steering.smoothing}" step="0.05">
+                    <span class="physics-value" data-param="steering.smoothing">${this.params.steering.smoothing}</span>
+                </label>
+            </div>
+
+            <div class="physics-section">
+                <h4>Wheels & Grip</h4>
                 <label>
                     <span>Friction Slip</span>
                     <input type="range" class="physics-slider" data-param="wheels.frictionSlip" min="100" max="2000" value="${this.params.wheels.frictionSlip}" step="50">
                     <span class="physics-value" data-param="wheels.frictionSlip">${this.params.wheels.frictionSlip}</span>
                 </label>
                 <label>
-                    <span>Suspension Stiffness</span>
+                    <span>Suspension Stiff.</span>
                     <input type="range" class="physics-slider" data-param="wheels.suspensionStiffness" min="5" max="100" value="${this.params.wheels.suspensionStiffness}" step="5">
                     <span class="physics-value" data-param="wheels.suspensionStiffness">${this.params.wheels.suspensionStiffness}</span>
                 </label>
+                <label>
+                    <span>Wall Slide Grip</span>
+                    <input type="range" class="physics-slider" data-param="wheels.wallSlideGrip" min="0" max="1" value="${this.params.wheels.wallSlideGrip}" step="0.05">
+                    <span class="physics-value" data-param="wheels.wallSlideGrip">${this.params.wheels.wallSlideGrip}</span>
+                </label>
+            </div>
+
+            <div class="physics-section telemetry-section">
+                <h4>Telemetry (Live)</h4>
+                <div id="telemetry-readout">No active vehicle</div>
             </div>
 
             <div class="physics-section">
@@ -222,6 +261,25 @@ class PhysicsTuningUI {
                     background: #006600;
                     color: #00ffaa;
                 }
+
+                .telemetry-section {
+                    background: rgba(0, 40, 0, 0.4);
+                    padding: 8px;
+                    border-radius: 4px;
+                    border: 1px solid #004400;
+                    margin-top: 15px;
+                }
+
+                #telemetry-readout {
+                    font-size: 10px;
+                    line-height: 1.4;
+                    white-space: pre-wrap;
+                    color: #00ff00;
+                }
+
+                .telemetry-value {
+                    color: #ffff00;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -282,6 +340,79 @@ class PhysicsTuningUI {
     toggle() {
         this.visible = !this.visible;
         this.element.classList.toggle('visible', this.visible);
+
+        if (this.visible) {
+            this._startTelemetryLoop();
+        } else {
+            this._stopTelemetryLoop();
+        }
+    }
+
+    /**
+     * Start the telemetry update loop
+     * @private
+     */
+    _startTelemetryLoop() {
+        this._stopTelemetryLoop(); // Clean up existing loop if any
+
+        this.telemetryInterval = setInterval(() => {
+            this._updateTelemetry();
+        }, 100); // 10Hz update
+    }
+
+    /**
+     * Stop the telemetry update loop
+     * @private
+     */
+    _stopTelemetryLoop() {
+        if (this.telemetryInterval) {
+            clearInterval(this.telemetryInterval);
+            this.telemetryInterval = null;
+        }
+    }
+
+    /**
+     * Update the telemetry display
+     * @private
+     */
+    _updateTelemetry() {
+        if (!this.gameHost || !this.gameHost.systems) return;
+
+        const physics = this.gameHost.systems.physics;
+        const telemetryReadout = this.element.querySelector('#telemetry-readout');
+        if (!telemetryReadout) return;
+
+        // Get the first vehicle (or a selected one)
+        const vehicleIds = Array.from(physics.vehicleBodies.keys());
+        if (vehicleIds.length === 0) {
+            telemetryReadout.innerHTML = 'No active vehicles';
+            return;
+        }
+
+        const vehicleId = vehicleIds[0];
+        const tel = physics.getVehicleTelemetry(vehicleId);
+
+        if (!tel) {
+            telemetryReadout.innerHTML = 'Error fetching telemetry';
+            return;
+        }
+
+        const wheelIcons = tel.wheels.map((w, i) => {
+            const color = w.isGrounded ? '#00ff00' : '#ff0000';
+            const pos = ['FL', 'FR', 'RL', 'RR'][i];
+            return `<span style="color: ${color}">${pos}</span>`;
+        }).join(' ');
+
+        telemetryReadout.innerHTML = `
+ID: <span class="telemetry-value">${vehicleId.substring(0, 8)}</span>
+Speed: <span class="telemetry-value">${tel.speed.toFixed(1)} km/h</span>
+Steer: <span class="telemetry-value">${tel.steerAngle.toFixed(2)}</span>
+Wheels: ${wheelIcons}
+State: <span class="telemetry-value">${tel.isAirborne ? 'AIRBORNE' : (tel.isWheelie ? 'WHEELIE' : 'GROUNDED')}</span>
+Env: <span class="telemetry-value">${tel.inWallContact ? 'WALL' : ''} ${tel.inOilSlick ? 'OIL' : ''}</span>
+Boost: <span class="telemetry-value">${tel.speedBoost.toFixed(1)}x</span>
+Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100).toFixed(0)}% ${tel.stuntBoost.toFixed(2)}x</span>
+        `.trim();
     }
 
     /**
@@ -341,12 +472,37 @@ class PhysicsTuningUI {
 
         const physics = this.gameHost.systems.physics;
         for (const [vehicleId, vehicleData] of physics.vehicleBodies) {
-            // Update engine force and brake force in vehicle data
+            // Update config on vehicle data
+            vehicleData.config.physics = {
+                ...vehicleData.config.physics,
+                linearDamping: this.params.car.linearDamping,
+                angularDamping: this.params.car.angularDamping,
+                wallSlideGrip: this.params.wheels.wallSlideGrip,
+                frictionSlip: this.params.wheels.frictionSlip
+            };
+
             vehicleData.config.engine = {
                 ...vehicleData.config.engine,
                 force: this.params.car.engineForce,
                 brakeForce: this.params.car.brakeForce
             };
+
+            vehicleData.config.steering = {
+                ...vehicleData.config.steering,
+                maxAngle: this.params.steering.maxAngle,
+                highSpeedReduction: this.params.steering.highSpeedReduction,
+                smoothing: this.params.steering.smoothing
+            };
+
+            // Apply linear/angular damping directly to rigid body
+            if (vehicleData.body) {
+                if (typeof vehicleData.body.setLinearDamping === 'function') {
+                    vehicleData.body.setLinearDamping(this.params.car.linearDamping);
+                }
+                if (typeof vehicleData.body.setAngularDamping === 'function') {
+                    vehicleData.body.setAngularDamping(this.params.car.angularDamping);
+                }
+            }
 
             // Update suspension parameters if vehicle has controller
             if (vehicleData.controller) {
@@ -389,11 +545,19 @@ class PhysicsTuningUI {
         return {
             car: {
                 engineForce: 200,
-                brakeForce: 50
+                brakeForce: 50,
+                linearDamping: 0.2,
+                angularDamping: 0.4
+            },
+            steering: {
+                maxAngle: 0.38,
+                highSpeedReduction: 0.45,
+                smoothing: 0.3
             },
             wheels: {
                 frictionSlip: 1000,
-                suspensionStiffness: 30
+                suspensionStiffness: 30,
+                wallSlideGrip: 0.2
             },
             damage: {
                 multiplier: 1,
@@ -421,6 +585,7 @@ class PhysicsTuningUI {
             const parsed = JSON.parse(saved);
             return {
                 car: { ...defaults.car, ...parsed.car },
+                steering: { ...defaults.steering, ...parsed.steering },
                 wheels: { ...defaults.wheels, ...parsed.wheels },
                 damage: { ...defaults.damage, ...parsed.damage },
                 audio: { ...defaults.audio, ...parsed.audio }

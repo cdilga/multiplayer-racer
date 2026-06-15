@@ -48,6 +48,32 @@ class RenderSystem {
         this.cameraLookOffset = { x: 0, y: 0, z: -5 };
         this.cameraSmoothing = 0.15;  // Smoothing factor for camera (higher = more responsive)
 
+        // Host camera modes:
+        // - party keeps all cars visible on the shared screen
+        // - chase follows one selected car from behind
+        // - hood sits low and forward on the selected car for a driving view
+        this.cameraMode = this.cameraConfig.mode || 'party';
+        this.cameraModeOrder = ['party', 'chase', 'hood'];
+        this.cameraFocusTarget = null;
+        this.focusCameraConfigs = {
+            chase: {
+                forwardOffset: -11,
+                height: 5,
+                lookAhead: 10,
+                lookHeight: 1.4,
+                fov: 58,
+                smoothing: 0.24
+            },
+            hood: {
+                forwardOffset: 2.2,
+                height: 1.25,
+                lookAhead: 18,
+                lookHeight: 1.1,
+                fov: 68,
+                smoothing: 0.45
+            }
+        };
+
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
@@ -88,6 +114,10 @@ class RenderSystem {
 
         // Tracked meshes
         this.meshes = new Map();  // entityId -> mesh
+        this.nameTags = new Map(); // entityId -> DOMElement
+
+        // Overlay container for name tags
+        this.overlayContainer = null;
 
         // Default camera parameters, restored when leaving special tracks
         // (derby arenas override these to look over the tall walls)
@@ -126,6 +156,90 @@ class RenderSystem {
      */
     resetCameraParams() {
         this.setCameraParams(this._defaultCameraParams);
+    }
+
+    /**
+     * Set host camera mode.
+     * @param {'party'|'chase'|'hood'} mode
+     * @returns {boolean} True if accepted
+     */
+    setCameraMode(mode) {
+        if (!this.cameraModeOrder.includes(mode)) return false;
+        this.cameraMode = mode;
+        return true;
+    }
+
+    /**
+     * Cycle through host camera modes.
+     * @returns {string} Active camera mode
+     */
+    cycleCameraMode() {
+        const currentIndex = this.cameraModeOrder.indexOf(this.cameraMode);
+        const nextIndex = (currentIndex + 1) % this.cameraModeOrder.length;
+        this.cameraMode = this.cameraModeOrder[nextIndex];
+        return this.cameraMode;
+    }
+
+    /**
+     * Set the player-centric camera focus.
+     * @param {Object|string|number|null} targetOrId
+     * @returns {Object|null}
+     */
+    setCameraFocus(targetOrId) {
+        if (!targetOrId) {
+            this.cameraFocusTarget = null;
+            return null;
+        }
+
+        if (typeof targetOrId === 'object') {
+            this.cameraFocusTarget = targetOrId;
+            return this.cameraFocusTarget;
+        }
+
+        const targetId = String(targetOrId);
+        this.cameraFocusTarget = this.cameraTargets.find((target) =>
+            String(target.id) === targetId || String(target.playerId) === targetId
+        ) || null;
+
+        return this.cameraFocusTarget;
+    }
+
+    /**
+     * Cycle the focused player for chase/hood modes.
+     * @param {number} direction
+     * @returns {Object|null}
+     */
+    cycleCameraFocus(direction = 1) {
+        if (this.cameraTargets.length === 0) {
+            this.cameraFocusTarget = null;
+            return null;
+        }
+
+        const current = this._getCameraFocusTarget();
+        const currentIndex = Math.max(0, this.cameraTargets.indexOf(current));
+        const nextIndex = (currentIndex + direction + this.cameraTargets.length) % this.cameraTargets.length;
+        this.cameraFocusTarget = this.cameraTargets[nextIndex];
+        return this.cameraFocusTarget;
+    }
+
+    /**
+     * @returns {Object|null}
+     */
+    getCameraFocusTarget() {
+        return this._getCameraFocusTarget();
+    }
+
+    /**
+     * @returns {Object}
+     */
+    getCameraModeInfo() {
+        const focus = this._getCameraFocusTarget();
+        return {
+            mode: this.cameraMode,
+            focusId: focus ? (focus.id || focus.playerId) : null,
+            focusName: focus ? (focus.playerName || focus.name || `Player ${focus.playerId || focus.id}`) : null,
+            targetCount: this.cameraTargets.length
+        };
     }
 
     /**
@@ -173,6 +287,20 @@ class RenderSystem {
 
         // Add to container
         this.container.appendChild(this.renderer.domElement);
+
+        // Create overlay container for name tags
+        this.overlayContainer = document.createElement('div');
+        this.overlayContainer.id = 'name-tag-overlay';
+        this.overlayContainer.className = 'name-tag-overlay'; // Add class for styling
+        this.overlayContainer.style.position = 'absolute';
+        this.overlayContainer.style.top = '0';
+        this.overlayContainer.style.left = '0';
+        this.overlayContainer.style.width = '100%';
+        this.overlayContainer.style.height = '100%';
+        this.overlayContainer.style.pointerEvents = 'none';
+        this.overlayContainer.style.overflow = 'hidden';
+        this.overlayContainer.style.zIndex = '10';
+        this.container.appendChild(this.overlayContainer);
 
         // Setup default lighting
         this._setupDefaultLighting();
@@ -395,6 +523,9 @@ class RenderSystem {
         // Update camera if following target
         this._updateCamera(dt);
 
+        // Update name tag positions
+        this._updateNameTags();
+
         // Render with post-processing if available and ready, otherwise standard render
         if (this.postProcessing.enabled && this.postProcessing.composer) {
             try {
@@ -410,10 +541,64 @@ class RenderSystem {
     }
 
     /**
+     * Update name tag screen positions
+     * @private
+     */
+    _updateNameTags() {
+        if (!this.overlayContainer || this.nameTags.size === 0) return;
+
+        const widthHalf = window.innerWidth / 2;
+        const heightHalf = window.innerHeight / 2;
+        const vector = new THREE.Vector3();
+
+        for (const [id, tagData] of this.nameTags) {
+            const { element, entity } = tagData;
+
+            // Get world position
+            if (entity.mesh) {
+                vector.setFromMatrixPosition(entity.mesh.matrixWorld);
+            } else if (entity.position) {
+                vector.set(entity.position.x, entity.position.y, entity.position.z);
+            } else {
+                continue;
+            }
+
+            // Offset tag above vehicle (roughly 2.2 meters)
+            vector.y += 2.2;
+
+            // Project to screen
+            vector.project(this.camera);
+
+            // Check if behind camera or outside clip space
+            if (vector.z > 1) {
+                element.style.display = 'none';
+                continue;
+            }
+
+            element.style.display = '';
+            const x = (vector.x * widthHalf) + widthHalf;
+            const y = -(vector.y * heightHalf) + heightHalf;
+
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+
+            // Optional: scale with distance to keep UI readable
+            const distance = this.camera.position.distanceTo(entity.mesh?.position || entity.position);
+            const scale = Math.max(0.6, Math.min(1.2, 35 / distance));
+            element.style.transform = `translate(-50%, -100%) scale(${scale})`;
+            element.style.opacity = Math.max(0.4, Math.min(1, 60 / distance));
+        }
+    }
+
+    /**
      * Update camera position (follow target or multiple targets)
      * @private
      */
     _updateCamera(dt) {
+        if (this.cameraMode !== 'party' && this._updateFocusedCamera(dt)) {
+            return;
+        }
+
         // If we have multiple targets, use multi-vehicle camera
         if (this.cameraTargets.length > 1) {
             this._updateMultiVehicleCamera(dt);
@@ -457,6 +642,41 @@ class RenderSystem {
 
         // Apply camera shake effect
         this._applyCameraShake(dt);
+    }
+
+    /**
+     * Update a player-centric chase or hood camera.
+     * @private
+     * @param {number} dt
+     * @returns {boolean} True when a focused camera was applied
+     */
+    _updateFocusedCamera(dt) {
+        const target = this._getCameraFocusTarget();
+        const config = this.focusCameraConfigs[this.cameraMode];
+        if (!target || !config) return false;
+
+        const targetPos = this._getTargetWorldPosition(target);
+        if (!targetPos) return false;
+
+        const forward = this._getTargetForward(target);
+        const desiredPos = targetPos.clone()
+            .addScaledVector(forward, config.forwardOffset)
+            .add(new THREE.Vector3(0, config.height, 0));
+        const lookAt = targetPos.clone()
+            .addScaledVector(forward, config.lookAhead)
+            .add(new THREE.Vector3(0, config.lookHeight, 0));
+
+        const smoothFactor = Math.min(1, config.smoothing * dt * 60);
+        this.camera.position.lerp(desiredPos, smoothFactor);
+        this.camera.lookAt(lookAt);
+
+        const fovSmoothFactor = Math.min(1, this.fovSmoothing * dt * 60);
+        this.currentFOV += (config.fov - this.currentFOV) * fovSmoothFactor;
+        this.camera.fov = this.currentFOV;
+        this.camera.updateProjectionMatrix();
+
+        this._applyCameraShake(dt);
+        return true;
     }
 
     /**
@@ -591,8 +811,8 @@ class RenderSystem {
                         (this.cameraTarget ? [this.cameraTarget] : []);
 
         for (const target of targets) {
-            if (target.rigidBody) {
-                const vel = target.rigidBody.linvel();
+            if (target.physicsBody) {
+                const vel = target.physicsBody.linvel();
                 const speedMps = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
                 const speedKmh = speedMps * 3.6;
                 maxSpeed = Math.max(maxSpeed, speedKmh);
@@ -723,6 +943,14 @@ class RenderSystem {
     addCameraTarget(target) {
         if (!this.cameraTargets.includes(target)) {
             this.cameraTargets.push(target);
+            if (!this.cameraFocusTarget) {
+                this.cameraFocusTarget = target;
+            }
+
+            // Create name tag if target has a name
+            if (target.playerName && this.overlayContainer) {
+                this._createNameTag(target);
+            }
         }
     }
 
@@ -734,7 +962,44 @@ class RenderSystem {
         const index = this.cameraTargets.indexOf(target);
         if (index !== -1) {
             this.cameraTargets.splice(index, 1);
+
+            // Remove name tag
+            const id = target.id || target.playerId;
+            const tagData = this.nameTags.get(id);
+            if (tagData) {
+                this.overlayContainer.removeChild(tagData.element);
+                this.nameTags.delete(id);
+            }
+
+            if (this.cameraFocusTarget === target) {
+                this.cameraFocusTarget = this.cameraTargets[Math.min(index, this.cameraTargets.length - 1)] || null;
+            }
         }
+    }
+
+    /**
+     * Create a name tag DOM element for an entity
+     * @private
+     */
+    _createNameTag(entity) {
+        const tag = document.createElement('div');
+        tag.className = 'player-name-tag';
+        tag.textContent = entity.playerName;
+        tag.style.position = 'absolute';
+        tag.style.color = entity.color || '#fff';
+        tag.style.padding = '2px 8px';
+        tag.style.background = 'rgba(0,0,0,0.5)';
+        tag.style.borderRadius = '4px';
+        tag.style.fontSize = '12px';
+        tag.style.fontFamily = 'monospace';
+        tag.style.fontWeight = 'bold';
+        tag.style.whiteSpace = 'nowrap';
+        tag.style.transform = 'translate(-50%, -100%)';
+        tag.style.border = `1px solid ${entity.color || '#fff'}`;
+        tag.style.pointerEvents = 'none';
+
+        this.overlayContainer.appendChild(tag);
+        this.nameTags.set(entity.id || entity.playerId, { element: tag, entity });
     }
 
     /**
@@ -742,6 +1007,7 @@ class RenderSystem {
      */
     clearCameraTargets() {
         this.cameraTargets = [];
+        this.cameraFocusTarget = null;
     }
 
     /**
@@ -812,6 +1078,9 @@ class RenderSystem {
      */
     setCameraTarget(target) {
         this.cameraTarget = target;
+        if (!this.cameraFocusTarget) {
+            this.cameraFocusTarget = target;
+        }
     }
 
     /**
@@ -819,6 +1088,73 @@ class RenderSystem {
      */
     clearCameraTarget() {
         this.cameraTarget = null;
+    }
+
+    /**
+     * Pick a valid camera focus, falling back to the primary target.
+     * @private
+     * @returns {Object|null}
+     */
+    _getCameraFocusTarget() {
+        if (this.cameraFocusTarget && this.cameraTargets.includes(this.cameraFocusTarget)) {
+            return this.cameraFocusTarget;
+        }
+
+        if (this.cameraTargets.length > 0) {
+            this.cameraFocusTarget = this.cameraTargets[0];
+            return this.cameraFocusTarget;
+        }
+
+        return this.cameraTarget || null;
+    }
+
+    /**
+     * @private
+     * @param {Object} target
+     * @returns {THREE.Vector3|null}
+     */
+    _getTargetWorldPosition(target) {
+        if (target.mesh) {
+            const position = new THREE.Vector3();
+            if (typeof target.mesh.getWorldPosition === 'function') {
+                target.mesh.getWorldPosition(position);
+                return position;
+            }
+            return new THREE.Vector3(target.mesh.position.x, target.mesh.position.y, target.mesh.position.z);
+        }
+
+        if (target.position) {
+            return new THREE.Vector3(target.position.x, target.position.y, target.position.z);
+        }
+
+        return null;
+    }
+
+    /**
+     * @private
+     * @param {Object} target
+     * @returns {THREE.Vector3}
+     */
+    _getTargetForward(target) {
+        const forward = new THREE.Vector3(0, 0, 1);
+
+        if (target.mesh && typeof target.mesh.getWorldQuaternion === 'function') {
+            const quaternion = new THREE.Quaternion();
+            target.mesh.getWorldQuaternion(quaternion);
+            forward.applyQuaternion(quaternion);
+        } else if (target.physicsBody && typeof target.physicsBody.rotation === 'function') {
+            const rotation = target.physicsBody.rotation();
+            const quaternion = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+            forward.applyQuaternion(quaternion);
+        } else if (target.rotation && target.rotation.y !== undefined) {
+            forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), target.rotation.y);
+        }
+
+        forward.y = 0;
+        if (forward.lengthSq() < 0.0001) {
+            forward.set(0, 0, 1);
+        }
+        return forward.normalize();
     }
 
     /**

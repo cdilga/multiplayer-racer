@@ -226,6 +226,7 @@ npm run test:headed      # E2E with a visible browser
 
 **Playable today:**
 - [x] Landing page + one-tap QR/room-code join
+- [x] Vite-bundled ESM architecture (no CDNs)
 - [x] Race mode (laps, pickups, timing)
 - [x] Demolition Derby (elimination, shrinking arena, weapon escalation)
 - [x] 8 weapons & pickups
@@ -239,6 +240,7 @@ npm run test:headed      # E2E with a visible browser
 
 | Phase | Ideas |
 |-------|-------|
+| **June 2026 Swarm** | **Polishing Pass:** Wheelie mechanics, boost payoff, player identity/markers, controller reconnect stability, and map/collision fixes. |
 | **Near term** | More tracks & arena hazards, car customisation, spectator polish |
 | **Later** | Public lobbies, persistent stats/leaderboards, more modes |
 

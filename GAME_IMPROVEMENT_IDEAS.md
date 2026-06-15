@@ -38,76 +38,23 @@
 ## Active Work
 
 
-### Vite Bundling Migration (CRITICAL - Improves Test Performance Further)
-**Status:** HIGH PRIORITY - Next task to implement
-**Why:** CDN imports make tests slower than they need to be. This migration will:
-- Eliminate all network requests for dependencies
-- Enable hot module reloading (HMR) for fast iteration
-- Unify the build pipeline
+### Polishing Phase (June 2026)
+**Status:** ACTIVE - Current swarm focus
+**Why:** The foundation is solid (Vite, Rapier, Multi-mode), but the "feel" and reliability need a professional pass.
 
-**Current State (broken):**
-- Vite is installed but NOT used for serving
-- Flask serves HTML directly from `frontend/host/index.html`
-- HTML uses CDN import maps (lines 217-222) → slow, flaky
-- Vendor scripts in `/static/vendor/` → duplicates NPM packages
-- NPM packages installed but unused (three, rapier, socket.io-client)
+**Goals:**
+- **Wheelie/Boost Payoff:** [See Design Intent (docs/WHEELIE_DESIGN_INTENT.md)](docs/WHEELIE_DESIGN_INTENT.md). High acceleration can lift front wheels; reduced steering while in wheelie; clean landings create boost payoff.
+- **Identity:** Clear player markers, names, and lightweight car customization.
+- **Reliability:** Fix phone controller reconnection (Socket.IO recovery), map collision bugs (Coliseum walls, ramps), and host input authoritative routing.
+- **Tooling:** Use `br ready` and `bv --robot-triage` to coordinate. Follow the `beads-polishing` graph.
 
-**Target State:**
-```
-Dev:  npm run dev → Vite dev server (port 5173) with HMR
-      Flask only handles /socket.io WebSocket connections
+### Completed: Vite Bundling Migration
+**Status:** ✅ DONE
+- Vite handles multi-page bundling for `/`, `/host`, and `/player`.
+- All CDN dependencies (Three.js, Rapier, Socket.IO) moved to NPM.
+- Docker builds serve from `dist/` via Flask.
+- Playwright tests run against built output.
 
-Prod: npm run build → outputs to dist/
-      Flask serves dist/ as static files
-```
-
-**Implementation Steps:**
-
-1. **Create Vite entry points** (new files)
-   ```
-   src/host/main.ts    - imports GameHost, rapier, three from NPM
-   src/player/main.ts  - imports player code from NPM
-   ```
-
-2. **Update vite.config.js for multi-page**
-   ```js
-   build: {
-     rollupOptions: {
-       input: {
-         host: 'frontend/host/index.html',
-         player: 'frontend/player/index.html'
-       }
-     }
-   }
-   ```
-
-3. **Update HTML files**
-   - Remove import maps (CDN references)
-   - Remove vendor script tags
-   - Add single `<script type="module" src="/src/host/main.ts">`
-   - Vite handles bundling three, rapier, socket.io from NPM
-
-4. **Update Flask to proxy to Vite in dev**
-   ```python
-   # In dev: proxy frontend requests to Vite
-   # In prod: serve from dist/
-   ```
-
-5. **Delete vendor files**
-   - Remove `/static/vendor/socket.io.min.js`
-   - Remove `/static/vendor/three.min.js`
-
-6. **Update playwright config**
-   - Tests should work against either Vite dev server or built output
-   - No more CDN interception needed
-
-**Files to modify:**
-- `vite.config.js` - add build config, proper entry points
-- `frontend/host/index.html` - remove CDN imports, add Vite entry
-- `frontend/player/index.html` - same
-- `server/app.py` - add Vite proxy for dev mode
-- `playwright.config.ts` - update webServer config
-- Delete: `static/vendor/`, `scripts/capture-video.ts` CDN interception
 
 ### Developer Experience
 **Status:** HIGH PRIORITY - do after Vite migration

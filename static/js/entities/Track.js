@@ -272,6 +272,36 @@ class Track extends Entity {
             };
         }
 
+        if (geometry?.type === 'square') {
+            const half = (geometry.diameter || geometry.size || 70) / 2;
+            return {
+                minX: -half,
+                maxX: half,
+                minZ: -half,
+                maxZ: half
+            };
+        }
+
+        if (geometry?.type === 'bowl') {
+            const radius = (geometry.diameter || 80) / 2;
+            return {
+                minX: -radius,
+                maxX: radius,
+                minZ: -radius,
+                maxZ: radius
+            };
+        }
+
+        if (geometry?.type === 'dunes') {
+            const radius = geometry.radius || (geometry.diameter || 140) / 2;
+            return {
+                minX: -radius,
+                maxX: radius,
+                minZ: -radius,
+                maxZ: radius
+            };
+        }
+
         // Default bounds
         return {
             minX: -50,

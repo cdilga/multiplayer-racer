@@ -65,7 +65,7 @@ class WeaponSystem {
         this.maxActivePickups = 3;
         this.arenaRadius = 35; // Default, updated from arena config
 
-        // Where pickups may spawn: { type: 'circle'|'ring'|'points', ... }
+        // Where pickups may spawn: { type: 'circle'|'ring'|'points'|'box', ... }
         this.spawnArea = { type: 'circle', radius: 30 };
 
         // Weapon progression over match time
@@ -332,7 +332,7 @@ class WeaponSystem {
         this.spawnArea = this._computeSpawnArea(config.geometry);
 
         if (config.geometry) {
-            this.arenaRadius = (config.geometry.diameter || 80) / 2 - 5; // Stay away from walls
+            this.arenaRadius = (config.geometry.radius || (config.geometry.diameter || 80) / 2) - 5; // Stay away from walls
         }
     }
 
@@ -352,6 +352,16 @@ class WeaponSystem {
                 return {
                     type: 'circle',
                     radius: (geometry.diameter || 80) / 2 - 8
+                };
+            case 'square':
+                return {
+                    type: 'box',
+                    halfSize: (geometry.diameter || geometry.size || 70) / 2 - 6
+                };
+            case 'dunes':
+                return {
+                    type: 'circle',
+                    radius: (geometry.radius || (geometry.diameter || 140) / 2) - 8
                 };
             case 'oval':
                 // Spawn on the drivable ring between the barriers
@@ -586,6 +596,15 @@ class WeaponSystem {
                 x: point.x + (Math.random() * 2 - 1) * jitter,
                 y: 1.5,
                 z: point.z + (Math.random() * 2 - 1) * jitter
+            };
+        }
+
+        if (area.type === 'box') {
+            const halfSize = Math.max(0, area.halfSize || 30);
+            return {
+                x: (Math.random() * 2 - 1) * halfSize,
+                y: 1.5,
+                z: (Math.random() * 2 - 1) * halfSize
             };
         }
 

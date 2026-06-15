@@ -235,6 +235,11 @@ class NetworkSystem {
         this.socket.on('game_end', (data) => {
             this._emit('network:gameEnd', data);
         });
+
+        // Vehicle states from server (forwarded from host)
+        this.socket.on('vehicle_states_update', (data) => {
+            this._emit('network:vehicleStates', data);
+        });
     }
 
     /**

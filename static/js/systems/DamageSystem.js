@@ -201,9 +201,18 @@ class DamageSystem {
             relVel.z * relVel.z
         );
 
-        // Damage based on relative speed - ramming stays a viable derby tactic
+        // Damage based on relative speed - ramming stays a viable derby tactic.
+        // Nitro and clean stunt landings can add a flat ram bonus; use the
+        // strongest current bonus from either car because this legacy damage
+        // path applies one shared collision impulse to both vehicles.
         const baseDamage = Math.max(0, relSpeed - 5) * 2.5;
-        return baseDamage * this.collisionDamageMultiplier;
+        const ramBonus = Math.max(
+            vehicleA.ramDamageBonus || 0,
+            vehicleB.ramDamageBonus || 0,
+            vehicleA.stuntRamDamageBonus || 0,
+            vehicleB.stuntRamDamageBonus || 0
+        );
+        return (baseDamage + ramBonus) * this.collisionDamageMultiplier;
     }
 
     /**
@@ -312,6 +321,14 @@ class DamageSystem {
         // Reset health and any lingering weapon effects
         vehicle.health = vehicle.maxHealth;
         vehicle.speedBoost = 1;
+        vehicle.stuntState = 'idle';
+        vehicle.stuntCharge = 0;
+        vehicle.stuntAirTime = 0;
+        vehicle.stuntBoostMultiplier = 1;
+        vehicle.stuntBoostUntil = 0;
+        vehicle.stuntRamDamageBonus = 0;
+        vehicle.stuntBadLandingUntil = 0;
+        vehicle.lastStuntLanding = null;
         vehicle.stunned = false;
         vehicle.inOilSlick = false;
 

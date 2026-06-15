@@ -8,7 +8,11 @@
     "outerRadius": 55,
     "trackWidth": 20,
     "barrierHeight": 0.3,
-    "barrierThickness": 0.8
+    "barrierThickness": 0.8,
+    "ramps": [
+      { "x": 16, "z": -45, "heading": 1.5708, "length": 11, "width": 7, "rise": 1.6 },
+      { "x": -16, "z": 45, "heading": -1.5708, "length": 11, "width": 7, "rise": 1.6 }
+    ]
   },
   "visual": {
     "track": {
@@ -27,6 +31,12 @@
       "emissive": "#ff2079",
       "emissiveIntensity": 0.7
     },
+    "ramps": {
+      "color": "#333a4d",
+      "roughness": 0.68,
+      "emissive": "#00e5ff",
+      "emissiveIntensity": 0.35
+    },
     "lineMarkings": {
       "color": "#ffffff",
       "width": 0.3,
@@ -40,8 +50,8 @@
       { "x": 5, "y": 1.5, "z": -45, "rotation": 1.5708 },
       { "x": -5, "y": 1.5, "z": -51, "rotation": 1.5708 },
       { "x": 5, "y": 1.5, "z": -51, "rotation": 1.5708 },
-      { "x": -5, "y": 1.5, "z": -57, "rotation": 1.5708 },
-      { "x": 5, "y": 1.5, "z": -57, "rotation": 1.5708 }
+      { "x": -5, "y": 1.5, "z": -53, "rotation": 1.5708 },
+      { "x": 5, "y": 1.5, "z": -53, "rotation": 1.5708 }
     ],
     "defaultHeight": 1.5
   },

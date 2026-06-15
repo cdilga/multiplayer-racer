@@ -34,10 +34,9 @@ class InputSystem {
         // Key mappings
         this.keys = {
             forward: new Set(['KeyW', 'ArrowUp']),
-            backward: new Set(['KeyS', 'ArrowDown']),
             left: new Set(['KeyA', 'ArrowLeft']),
             right: new Set(['KeyD', 'ArrowRight']),
-            brake: new Set(['Space'])
+            brake: new Set(['Space', 'KeyS', 'ArrowDown'])
         };
 
         // Currently pressed keys
@@ -115,9 +114,6 @@ class InputSystem {
         let accel = 0;
         for (const key of this.keys.forward) {
             if (this.pressedKeys.has(key)) accel = 1;
-        }
-        for (const key of this.keys.backward) {
-            if (this.pressedKeys.has(key)) accel = -1;  // Reverse
         }
         this.keyboardState.acceleration = accel;
 

@@ -43,8 +43,57 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 if os.path.exists(dist_path):
     @app.route('/assets/<path:filename>')
     def serve_assets(filename):
-        """Serve Vite bundled assets from dist/assets/"""
-        return send_from_directory(os.path.join(dist_path, 'assets'), filename)
+        """Serve Vite bundled assets from dist/assets/.
+
+        These filenames are content-hashed by Vite, so any change to a file
+        produces a new name. That makes them safe to cache forever - a rebuild
+        (including a local dev rebuild) invalidates them automatically because
+        the URL changes.
+        """
+        response = send_from_directory(os.path.join(dist_path, 'assets'), filename)
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        return response
+
+    @app.route('/host-assets.json')
+    def host_assets_manifest():
+        """Critical-path host bundles, so the landing page can prefetch them
+        while the visitor reads - making "Host Now" start almost instantly.
+
+        Hash-adaptive: parses the built host HTML for its /assets references
+        and adds the dynamically-imported GameHost chunk (which isn't listed
+        in the HTML). Cheap to compute and never stale because it reflects the
+        current build on disk.
+        """
+        refs = set()
+        host_html = os.path.join(dist_path, 'frontend', 'host', 'index.html')
+        try:
+            with open(host_html, 'r', encoding='utf-8') as f:
+                refs.update(re.findall(r'/assets/[A-Za-z0-9_.\-]+\.(?:js|css)', f.read()))
+        except OSError:
+            pass
+        try:
+            for fn in os.listdir(os.path.join(dist_path, 'assets')):
+                if fn.startswith('GameHost-') and fn.endswith('.js'):
+                    refs.add('/assets/' + fn)
+        except OSError:
+            pass
+        response = jsonify({'assets': sorted(refs)})
+        response.headers['Cache-Control'] = 'no-cache'
+        return response
+
+    @app.after_request
+    def set_cache_headers(response):
+        """Keep caching correct across rebuilds (critical on a local dev box):
+        - hashed /assets/* -> immutable (set in serve_assets above)
+        - HTML documents    -> no-cache, so a new build's hashes are picked up
+        - other /static/*   -> revalidate via ETag (cheap 304s), never stale
+        """
+        if 'Cache-Control' in response.headers:
+            return response
+        content_type = response.headers.get('Content-Type', '')
+        if content_type.startswith('text/html') or request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'no-cache'
+        return response
 
 # Game rooms dictionary
 # Structure: {
@@ -347,7 +396,18 @@ def player_control_update(data):
     if not all([player_sid, room_code, controls, timestamp]):
         logger.info(f"Invalid control update data received: {data}")
         return
-    
+
+    # Validate room existence and host availability
+    if not room_code or room_code not in game_rooms:
+        logger.warning(f"Player {player_sid} sent control update for non-existent room {room_code}")
+        return
+
+    room = game_rooms[room_code]
+    host_sid = room.get('host_sid')
+    if not host_sid:
+        logger.warning(f"No host found for room {room_code}")
+        return
+
     # Validate control values are within expected ranges
     steering = max(-1.0, min(1.0, float(controls.get('steering', 0))))
     acceleration = max(0.0, min(1.0, float(controls.get('acceleration', 0)))) 
@@ -362,13 +422,24 @@ def player_control_update(data):
         'timestamp': timestamp
     }
 
-    # Forward the control update to all clients in the room
-    emit('player_controls_update', control_update, room=room_code)
-        
+    # Forward the control update to the host only
+    emit('player_controls_update', control_update, to=host_sid)
+
+
+@socketio.on('vehicle_states')
+def handle_vehicle_states(data):
+    """
+    Handle vehicle state updates from host.
+    Forward the states to all players in the room so they can update their local HUDs.
+    """
+    room_code = data.get('room_code')
+    vehicles = data.get('vehicles', [])
+
     if not room_code or room_code not in game_rooms:
-        logger.warning(f"Player {player_sid} sent control update for non-existent room {room_code}")
         return
-    
+
+    # Broadcast to everyone in the room (including self/host, but players will filter)
+    emit('vehicle_states_update', {'vehicles': vehicles}, room=room_code)
 
 
 @socketio.on('join_game')
@@ -783,4 +854,4 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     # Debug stays on for local development; deployments set FLASK_DEBUG=0
     debug = os.environ.get('FLASK_DEBUG', '1') == '1'
-    socketio.run(app, host='0.0.0.0', port=port, debug=debug) 
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug)

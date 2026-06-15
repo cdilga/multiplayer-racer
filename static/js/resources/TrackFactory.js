@@ -130,6 +130,8 @@ class TrackFactory {
                 return this._createOvalTrack(geometry, visual);
             case 'rectangle':
                 return this._createRectangleTrack(geometry, visual);
+            case 'square':
+                return this._createSquareArena(geometry, visual);
             case 'bowl':
                 return this._createBowlArena(geometry, visual);
             case 'dunes':
@@ -231,6 +233,32 @@ class TrackFactory {
         trackMesh.userData = { isTrackSurface: true };
 
         return trackMesh;
+    }
+
+    /**
+     * Create square derby arena surface.
+     * @private
+     */
+    _createSquareArena(geometry, visual) {
+        const size = geometry.diameter || geometry.size || 70;
+        const segments = 8;
+
+        const arenaGeometry = new THREE.PlaneGeometry(size, size, segments, segments);
+        const arenaMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.9,
+            side: THREE.DoubleSide,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0
+        });
+
+        const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
+        arenaMesh.rotation.x = -Math.PI / 2;
+        arenaMesh.position.y = 0.02;
+        arenaMesh.receiveShadow = true;
+        arenaMesh.userData = { isTrackSurface: true, isSquareArena: true };
+
+        return arenaMesh;
     }
 
     /**
@@ -533,6 +561,17 @@ class TrackFactory {
                 visual
             );
             barriers.push(outerWall);
+        } else if (geometry.type === 'square') {
+            // Create a single square wall group so derby shrinking can scale it
+            const size = geometry.diameter || geometry.size || 70;
+            const wallHeight = geometry.wallHeight || barrierHeight;
+            const squareWall = this._createSquareWall(
+                size,
+                wallHeight,
+                barrierThickness,
+                visual
+            );
+            barriers.push(squareWall);
         } else if (geometry.type === 'dunes') {
             // Tall containment wall at the arena edge (cars ride up the rolling
             // rim and can catch air, but can't escape the arena)
@@ -540,14 +579,6 @@ class TrackFactory {
             const wallHeight = geometry.wallHeight || 14;
             const wall = this._createBowlWall(radius, wallHeight, 20, visual);
             barriers.push(wall);
-
-            // Launch ramps
-            const ramps = geometry.ramps || [];
-            const rampVisual = config.visual.ramps || {};
-            const base = geometry.base || 0;
-            ramps.forEach(ramp => {
-                barriers.push(this._createRampMesh(ramp, rampVisual, base));
-            });
         } else if (geometry.type === 'spline') {
             // Glowing walls along both edges of the procedural circuit
             const height = geometry.barrierHeight || 1.4;
@@ -559,7 +590,71 @@ class TrackFactory {
             if (startLine) barriers.push(startLine);
         }
 
+        // Optional map-authored stunt ramps. These are returned with the
+        // static track objects so they render with the track, but they are not
+        // tagged as barriers and do not affect wall shrinking.
+        const ramps = geometry.ramps || [];
+        const rampVisual = config.visual.ramps || config.visual.track || {};
+        const base = geometry.base || 0;
+        ramps.forEach(ramp => {
+            barriers.push(this._createRampMesh(ramp, rampVisual, base));
+        });
+
         return barriers;
+    }
+
+    /**
+     * Create square wall group for a derby arena.
+     * @private
+     */
+    _createSquareWall(size, height, thickness, visual) {
+        const wallGroup = new THREE.Group();
+        wallGroup.userData = { isBarrier: true, barrierType: 'square-wall' };
+
+        const material = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.65,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: visual.emissiveIntensity || 0,
+            side: THREE.DoubleSide
+        });
+        const rimMaterial = new THREE.MeshStandardMaterial({
+            color: this._parseColor(visual.color),
+            roughness: visual.roughness || 0.65,
+            emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
+            emissiveIntensity: (visual.emissiveIntensity || 0) * 1.4
+        });
+
+        const half = size / 2;
+        const wallThickness = Math.max(1, thickness || 1);
+        const wallLength = size + wallThickness * 2;
+        const walls = [
+            { width: wallLength, depth: wallThickness, x: 0, z: -half },
+            { width: wallLength, depth: wallThickness, x: 0, z: half },
+            { width: wallThickness, depth: wallLength, x: -half, z: 0 },
+            { width: wallThickness, depth: wallLength, x: half, z: 0 }
+        ];
+
+        walls.forEach((wallSpec) => {
+            const wall = new THREE.Mesh(
+                new THREE.BoxGeometry(wallSpec.width, height, wallSpec.depth),
+                material
+            );
+            wall.position.set(wallSpec.x, height / 2, wallSpec.z);
+            wall.castShadow = true;
+            wall.receiveShadow = true;
+            wallGroup.add(wall);
+
+            const rim = new THREE.Mesh(
+                new THREE.BoxGeometry(wallSpec.width, wallThickness * 0.35, wallSpec.depth),
+                rimMaterial
+            );
+            rim.position.set(wallSpec.x, height + wallThickness * 0.175, wallSpec.z);
+            rim.castShadow = true;
+            wallGroup.add(rim);
+        });
+
+        return wallGroup;
     }
 
     /**

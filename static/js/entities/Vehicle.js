@@ -38,6 +38,7 @@ class Vehicle extends Entity {
         this.config = options.config;
         this.configId = options.config?.id || 'default';
         this.playerId = options.playerId;
+        this.playerName = options.playerName || `Player ${this.playerId}`;
         this.color = options.color;
 
         // Visual component (Three.js mesh)
@@ -79,6 +80,18 @@ class Vehicle extends Entity {
         this.lastUpdateTime = 0;
         this.interpolationBuffer = [];
 
+        // Handling state
+        this.handlingState = 'grounded'; // grounded, front-light, wheelie, airborne, recovering
+        this.stateDuration = 0;
+        this.stuntState = 'idle'; // idle, charging, reward, bad-landing
+        this.stuntCharge = 0;
+        this.stuntAirTime = 0;
+        this.stuntBoostMultiplier = 1;
+        this.stuntBoostUntil = 0;
+        this.stuntRamDamageBonus = 0;
+        this.stuntBadLandingUntil = 0;
+        this.lastStuntLanding = null;
+
         // Spawn position (for reset functionality)
         this.spawnPosition = options.position ? { ...options.position, rotation: options.rotation || 0 } : null;
 
@@ -86,6 +99,21 @@ class Vehicle extends Entity {
         this.smokeEffect = null;
         this.smokeParticles = [];
         this.isSmoking = false;
+        this.stuntEffect = null;
+        this.stuntChargeRing = null;
+        this.stuntBoostFlares = [];
+        this.stuntLandingBurst = null;
+        this.stuntBadCue = null;
+        this._lastRenderedLandingAt = 0;
+        this._landingBurstTime = 0;
+    }
+
+    /**
+     * Get physics body (supporting both legacy and current names)
+     * @returns {RAPIER.RigidBody}
+     */
+    get rigidBody() {
+        return this.physicsBody;
     }
 
     /**
@@ -355,6 +383,14 @@ class Vehicle extends Entity {
         // Clear weapon buff state and any attached effect visuals
         this.speedBoost = 1;
         this.ramDamageBonus = 0;
+        this.stuntState = 'idle';
+        this.stuntCharge = 0;
+        this.stuntAirTime = 0;
+        this.stuntBoostMultiplier = 1;
+        this.stuntBoostUntil = 0;
+        this.stuntRamDamageBonus = 0;
+        this.stuntBadLandingUntil = 0;
+        this.lastStuntLanding = null;
         this.invulnerable = false;
         this.stunned = false;
         this.inOilSlick = false;
@@ -367,6 +403,7 @@ class Vehicle extends Entity {
                 this[meshKey] = null;
             }
         }
+        this._removeStuntEffect();
 
         // Sync mesh
         this.syncMeshToEntity();
@@ -381,6 +418,14 @@ class Vehicle extends Entity {
         this.lapTimes = [];
         this.racePosition = 0;
         this.finished = false;
+        this.stuntState = 'idle';
+        this.stuntCharge = 0;
+        this.stuntAirTime = 0;
+        this.stuntBoostMultiplier = 1;
+        this.stuntBoostUntil = 0;
+        this.stuntRamDamageBonus = 0;
+        this.stuntBadLandingUntil = 0;
+        this.lastStuntLanding = null;
     }
 
     /**
@@ -457,6 +502,213 @@ class Vehicle extends Entity {
         if (this.isSmoking && this.smokeEffect) {
             this._updateSmokeParticles(dt, healthPercent);
         }
+
+        this._updateStuntVisuals(dt);
+    }
+
+    /**
+     * Update wheelie/boost/landing readable effects.
+     * @private
+     */
+    _updateStuntVisuals(dt) {
+        if (!this.mesh || typeof THREE === 'undefined') return;
+
+        const parts = this._ensureStuntEffect();
+        if (!parts) return;
+
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const charge = Math.max(0, Math.min(1, this.stuntCharge || 0));
+        const isCharging = this.stuntState === 'charging' ||
+            this.handlingState === 'wheelie' ||
+            this.handlingState === 'front-light' ||
+            this.handlingState === 'airborne';
+        const isBoosting = (this.speedBoost || 1) > 1 || (this.stuntBoostMultiplier || 1) > 1;
+        const isLandingBoost = (this.stuntBoostMultiplier || 1) > 1;
+        const badLandingActive = !!this.stuntBadLandingUntil && now < this.stuntBadLandingUntil;
+
+        if (parts.chargeRing) {
+            parts.chargeRing.visible = isCharging && !badLandingActive;
+            if (parts.chargeRing.visible) {
+                const pulse = Math.sin(now * 0.012) * 0.04;
+                const scale = 0.62 + charge * 0.5 + pulse;
+                const chargeColor = charge >= 0.75 ? 0xffe066 : 0x00d9ff;
+                parts.chargeRing.scale.setScalar(scale);
+                parts.chargeRing.rotation.z += dt * (2 + charge * 4);
+                parts.chargeRing.material.opacity = 0.35 + charge * 0.5;
+                parts.chargeRing.material.color.setHex(chargeColor);
+            }
+        }
+
+        for (const flare of parts.boostFlares) {
+            flare.visible = isBoosting;
+            if (flare.visible) {
+                const intensity = Math.max(0, Math.min(1, ((this.stuntBoostMultiplier || 1) - 1) * 1.8));
+                const pulse = Math.sin(now * 0.028 + flare.userData.phase) * 0.12;
+                const scale = 0.85 + intensity * 0.45 + pulse;
+                flare.scale.set(scale, scale, 1.1 + intensity * 0.6 + pulse);
+                flare.material.opacity = 0.45 + intensity * 0.35;
+                flare.material.color.setHex(isLandingBoost ? 0xffd24a : 0xff6a1a);
+            }
+        }
+
+        const landing = this.lastStuntLanding;
+        if (landing?.at && landing.at !== this._lastRenderedLandingAt) {
+            this._lastRenderedLandingAt = landing.at;
+            this._landingBurstTime = 0.45;
+            parts.landingBurst.material.color.setHex(landing.type === 'bad' ? 0xff3344 : 0xffe066);
+        }
+
+        if (parts.landingBurst) {
+            if (this._landingBurstTime > 0) {
+                this._landingBurstTime = Math.max(0, this._landingBurstTime - dt);
+                const progress = 1 - (this._landingBurstTime / 0.45);
+                parts.landingBurst.visible = true;
+                parts.landingBurst.scale.setScalar(0.55 + progress * 1.7);
+                parts.landingBurst.material.opacity = (1 - progress) * 0.75;
+            } else {
+                parts.landingBurst.visible = false;
+            }
+        }
+
+        if (parts.badCue) {
+            parts.badCue.visible = badLandingActive;
+            if (badLandingActive) {
+                const wobble = Math.sin(now * 0.045);
+                parts.badCue.scale.setScalar(1 + Math.abs(wobble) * 0.08);
+                parts.badCue.rotation.z = wobble * 0.18;
+                parts.badCue.material.opacity = 0.45 + Math.abs(wobble) * 0.25;
+            }
+        }
+    }
+
+    /**
+     * Lazily create reusable stunt feedback meshes.
+     * @private
+     */
+    _ensureStuntEffect() {
+        if (this.stuntEffect?.userData?.parts) {
+            return this.stuntEffect.userData.parts;
+        }
+        if (!this.mesh || typeof THREE === 'undefined') return null;
+
+        const visual = this.config?.visual || {};
+        const body = visual.body || {};
+        const wheel = visual.wheels || {};
+        const bodyWidth = body.width || 2;
+        const bodyHeight = body.height || 1;
+        const bodyLength = body.length || 4;
+        const wheelRadius = wheel.radius || 0.35;
+
+        const group = new THREE.Group();
+        group.name = 'stunt-feedback';
+        group.visible = true;
+
+        const chargeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00d9ff,
+            transparent: true,
+            opacity: 0.65,
+            depthWrite: false
+        });
+        const chargeRing = new THREE.Mesh(
+            new THREE.TorusGeometry(Math.max(bodyWidth * 0.46, 0.7), 0.035, 8, 48),
+            chargeMaterial
+        );
+        chargeRing.position.set(0, bodyHeight + 0.75, 0.15);
+        chargeRing.rotation.x = Math.PI / 2;
+        chargeRing.visible = false;
+        group.add(chargeRing);
+
+        const flareGeometry = new THREE.ConeGeometry(0.28, 0.95, 12, 1, true);
+        const boostFlares = [-1, 1].map((side, index) => {
+            const flare = new THREE.Mesh(flareGeometry, new THREE.MeshBasicMaterial({
+                color: 0xff6a1a,
+                transparent: true,
+                opacity: 0.65,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            }));
+            flare.position.set(side * bodyWidth * 0.28, wheelRadius * 0.7, -bodyLength * 0.58);
+            flare.rotation.x = -Math.PI / 2;
+            flare.visible = false;
+            flare.userData.phase = index * Math.PI;
+            group.add(flare);
+            return flare;
+        });
+
+        const burstMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffe066,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false
+        });
+        const landingBurst = new THREE.Mesh(
+            new THREE.TorusGeometry(Math.max(bodyWidth * 0.55, 0.8), 0.045, 8, 48),
+            burstMaterial
+        );
+        landingBurst.position.set(0, Math.max(0.05, wheelRadius * 0.25), 0);
+        landingBurst.rotation.x = Math.PI / 2;
+        landingBurst.visible = false;
+        group.add(landingBurst);
+
+        const badCue = new THREE.Mesh(
+            new THREE.TorusGeometry(Math.max(bodyWidth * 0.58, 0.9), 0.04, 8, 36),
+            new THREE.MeshBasicMaterial({
+                color: 0xff3344,
+                transparent: true,
+                opacity: 0.6,
+                depthWrite: false
+            })
+        );
+        badCue.position.set(0, bodyHeight + 0.82, 0.15);
+        badCue.rotation.x = Math.PI / 2;
+        badCue.visible = false;
+        group.add(badCue);
+
+        group.userData.parts = {
+            chargeRing,
+            boostFlares,
+            landingBurst,
+            badCue
+        };
+
+        this.mesh.add(group);
+        this.stuntEffect = group;
+        this.stuntChargeRing = chargeRing;
+        this.stuntBoostFlares = boostFlares;
+        this.stuntLandingBurst = landingBurst;
+        this.stuntBadCue = badCue;
+
+        return group.userData.parts;
+    }
+
+    /**
+     * Remove and dispose the reusable stunt effect group.
+     * @private
+     */
+    _removeStuntEffect() {
+        if (!this.stuntEffect) return;
+
+        const geometries = new Set();
+        const materials = new Set();
+        this.stuntEffect.traverse((child) => {
+            if (child.geometry) geometries.add(child.geometry);
+            if (Array.isArray(child.material)) {
+                child.material.forEach((material) => materials.add(material));
+            } else if (child.material) {
+                materials.add(child.material);
+            }
+        });
+
+        this.mesh?.remove(this.stuntEffect);
+        geometries.forEach((geometry) => geometry.dispose?.());
+        materials.forEach((material) => material.dispose?.());
+
+        this.stuntEffect = null;
+        this.stuntChargeRing = null;
+        this.stuntBoostFlares = [];
+        this.stuntLandingBurst = null;
+        this.stuntBadCue = null;
+        this._landingBurstTime = 0;
     }
 
     /**
