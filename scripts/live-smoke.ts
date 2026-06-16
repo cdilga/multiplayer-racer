@@ -13,7 +13,7 @@ test('live: host creates room, player joins, race starts', async () => {
     // Host on a desktop viewport
     const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
     const host = await hostCtx.newPage();
-    await host.goto(BASE + '/?testMode=1', { waitUntil: 'domcontentloaded' });
+    await host.goto(BASE + '/host?testMode=1', { waitUntil: 'domcontentloaded' });
 
     // Room code appears
     const codeEl = host.locator('#room-code-display');
@@ -32,9 +32,19 @@ test('live: host creates room, player joins, race starts', async () => {
     const playerCtx = await browser.newContext({ ...devices['iPhone 13'] });
     const player = await playerCtx.newPage();
     console.log('Loading player page...');
-    await player.goto(`${BASE}/player?room=${roomCode}`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+    await player.goto(`${BASE}/player?testMode=1`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+    await player.waitForSelector('#join-screen', { state: 'visible', timeout: 30000 });
+    await player.waitForFunction(() => {
+        // @ts-ignore
+        return window.gameState?.connected === true;
+    }, { timeout: 30000 });
     await player.fill('#player-name', 'LiveSmoke');
+    await player.fill('#room-code', roomCode);
     await player.click('#join-btn');
+    await player.waitForFunction(() => {
+        // @ts-ignore
+        return window.gameState?.playerId !== null;
+    }, { timeout: 30000 });
 
     await expect(host.locator('#player-list')).toContainText('LiveSmoke', { timeout: 30000 });
     console.log('Player visible in host lobby');
