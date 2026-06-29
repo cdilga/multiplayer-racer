@@ -1,0 +1,11 @@
+# NTM runtime/session artifacts
+logs/
+summaries/
+rate_limits.json
+spawn-state.json
+*.log
+
+# Keep repo-local swarm instructions trackable.
+!README.md
+!prompts/
+!prompts/*.md

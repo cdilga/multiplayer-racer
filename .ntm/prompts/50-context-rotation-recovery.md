@@ -1,0 +1,16 @@
+Reread `AGENTS.md` and the relevant parts of `README.md` now. Then recover your exact working
+state before touching files.
+
+Recovery steps:
+
+1. Check Agent Mail for this project and read recent messages in your current bead thread.
+2. Run `git status --short` and identify which changes are yours versus pre-existing or other-agent
+   changes.
+3. If you were working a bead, run `br show <bead-id>` and restate its acceptance criteria.
+4. Check your file reservations. Renew them if you are still actively editing; release them if not.
+5. Re-run or inspect the latest evidence before claiming anything is ready.
+6. If you are unsure whether your state is complete, ask for a fresh validator or coordinator
+   dispatch rather than closing the bead.
+
+Reminder: implementation complete is not bead done. A bead closes only after convincing evidence and
+a separate fresh validator PASS.
