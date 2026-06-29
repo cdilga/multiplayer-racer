@@ -20,16 +20,42 @@
 import { EventBus, eventBus } from './EventBus.js';
 import { GameLoop } from './GameLoop.js';
 import { StateMachine, GAME_STATES } from './StateMachine.js';
+import { GameRunContext } from './GameRunContext.js';
 
 class Engine {
     /**
      * @param {Object} options
      * @param {EventBus} [options.eventBus] - Custom EventBus instance
      * @param {number} [options.fixedTimestep] - Physics timestep
+     * @param {GameRunContext} [options.runContext] - Pre-built run context (else one is created at init)
+     * @param {string} [options.buildId] - Build identifier recorded on the run context
+     * @param {number} [options.seed] - Deterministic run seed (generated if omitted)
+     * @param {boolean} [options.deterministic] - Require an explicit seed (test/replay harness)
+     * @param {string} [options.topology] - Room topology (local/remote/mixed)
+     * @param {string|null} [options.ruleset] - Game ruleset (race/derby), if known at startup
+     * @param {string|null} [options.roomCode]
+     * @param {string} [options.tuningProfileId]
+     * @param {Object} [options.tuning]
      */
     constructor(options = {}) {
         this.eventBus = options.eventBus || eventBus;
         this.fixedTimestep = options.fixedTimestep || 1 / 60;
+
+        // Deterministic run context (seed, clocks, RNG streams). Created during
+        // init() so every startup - production or test - records one. May be
+        // supplied pre-built via options.runContext.
+        this.runContext = options.runContext || null;
+        this._runContextOptions = {
+            buildId: options.buildId,
+            seed: options.seed,
+            deterministic: options.deterministic,
+            topology: options.topology,
+            ruleset: options.ruleset,
+            roomCode: options.roomCode,
+            tuningProfileId: options.tuningProfileId,
+            tuning: options.tuning,
+            entropy: options.entropy
+        };
 
         // Core components
         this.gameLoop = null;
@@ -57,6 +83,22 @@ class Engine {
         }
 
         console.log('Engine: Initializing...');
+
+        // Establish the deterministic run context first, so systems can read it
+        // (clocks, seed, RNG streams) during their own init().
+        if (!this.runContext) {
+            this.runContext = GameRunContext.create({
+                ...this._runContextOptions,
+                fixedDt: this.fixedTimestep
+            });
+        }
+        // One-time init log (not per-frame) + event for telemetry/correlation.
+        const ctx = this.runContext.describe();
+        console.log(
+            `Engine: run context build=${ctx.buildId} seed=${ctx.seed} (${ctx.seedSource}) ` +
+            `topology=${ctx.topology} ruleset=${ctx.ruleset} tuningHash=${ctx.tuningHash}`
+        );
+        this.eventBus.emit('engine:runcontext', ctx);
 
         // Create game loop
         this.gameLoop = new GameLoop({
@@ -171,6 +213,15 @@ class Engine {
             system.destroy();
         }
         this.systems.delete(name);
+    }
+
+    /**
+     * Get the deterministic run context (seed, clocks, RNG streams).
+     * Available after init().
+     * @returns {GameRunContext|null}
+     */
+    getRunContext() {
+        return this.runContext;
     }
 
     /**
