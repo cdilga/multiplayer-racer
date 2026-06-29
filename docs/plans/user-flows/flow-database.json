@@ -1,8 +1,9 @@
 {
   "metadata": {
     "id": "jj-user-flow-database",
-    "version": 1,
+    "version": 1.2,
     "created": "2026-06-29",
+    "updated": "2026-06-29",
     "bead": "br-user-flow-database-1vr",
     "purpose": "Reusable indexed database of Joystick Jammers user journeys, contradictions, underspecification, win-condition rules, and acceptance tests.",
     "source_documents": [
@@ -10,7 +11,8 @@
       "README.md",
       "docs/plans/feedback-design-pass.md",
       "docs/plans/game-modes-and-flows.md",
-      "docs/plans/gaps/remote-screen-topology.md"
+      "docs/plans/gaps/remote-screen-topology.md",
+      "docs/plans/map-authoring-and-procedural-generation-2026-06-29.md"
     ],
     "source_code_anchors": [
       "server/app.py",
@@ -248,6 +250,37 @@
       "tests": ["T-DERBY-MIN-PLAYERS", "T-SETTINGS-LOCK-ON-COUNTDOWN"]
     },
     {
+      "id": "UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED",
+      "title": "Host chooses known, random, or seeded map",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "viewer"],
+      "status": "recommended",
+      "entry_points": ["host lobby settings", "rematch setup"],
+      "preconditions": ["Room exists", "Ruleset is selected or selectable"],
+      "happy_path": [
+        "Host chooses Race or Derby.",
+        "Map selector filters known maps and random recipes by compatible ruleset.",
+        "Host chooses a known map, a random preset, or a manually entered seed.",
+        "Random resolves to a visible seed, recipe id, generator version, and params hash.",
+        "Map instance validates for ruleset, player count, and late-join capacity before countdown.",
+        "Resolved map instance is shared with Remote viewers and bug-report metadata."
+      ],
+      "branches": [
+        "Incompatible map selection is blocked rather than silently coerced.",
+        "Validation failure preserves lobby and shows actionable map error.",
+        "Known maps may later include procedural layers under explicit recipe metadata."
+      ],
+      "terminal_states": ["map_ready", "map_invalid_blocked", "lobby"],
+      "known_gaps": ["UF-GAP-025", "UF-GAP-026"],
+      "tests": [
+        "T-MAP-CATALOG-FILTERS-RULESET",
+        "T-RANDOM-MAP-REPRODUCES-SEED",
+        "T-RANDOM-DERBY-NOT-MATH-RANDOM",
+        "T-MAP-VALIDATES-LATE-SPAWNS"
+      ]
+    },
+    {
       "id": "UF-IDENTITY-SEAT-CAR",
       "title": "Name, color, number, and car identity mirrored everywhere",
       "topology": ["local", "remote", "mixed"],
@@ -360,10 +393,10 @@
       ],
       "branches": [
         "Spawn must be safe and on ground.",
-        "Late player may need catch-up or ineligible podium flag.",
+        "Late player may need catch-up, late label, or phase-specific scoring flag.",
         "Remote late join needs seed and current snapshot."
       ],
-      "terminal_states": ["active_racer", "spectator", "rejected"],
+      "terminal_states": ["active_racer", "active_late_racer", "postgame_join", "join_error"],
       "known_gaps": ["UF-GAP-007", "UF-GAP-024"],
       "tests": ["T-LATE-RACE-SAFE-SPAWN", "T-LATE-RACE-PODIUM-ELIGIBILITY"]
     },
@@ -373,21 +406,52 @@
       "topology": ["local", "remote", "mixed"],
       "ruleset": ["race"],
       "roles": ["driver", "viewer", "spectator"],
-      "status": "missing",
+      "status": "recommended",
       "entry_points": ["/player?room=CODE", "/join/CODE"],
       "preconditions": ["First finisher exists or host is on results"],
       "happy_path": [
-        "Joiner is not eligible to affect winner/podium.",
-        "Joiner may spectate results or queue for next race.",
+        "Joiner is admitted to the room.",
+        "If the host is still simulating finish grace, joiner waits as spectator or waiting_next_race.",
+        "Joiner does not spawn into the current race and cannot extend finish grace or change placements already locked by finished racers.",
+        "If results are finalized, joiner lands in results/rematch state.",
         "Server and host agree on room state."
       ],
       "branches": [
+        "A future/custom rules option may allow active finish-grace entrants, but it is not the party default.",
         "If all players returned to lobby, join as normal lobby player.",
         "If host has closed, show ended-room CTA."
       ],
-      "terminal_states": ["queued_next", "spectator_results", "join_error", "lobby"],
+      "terminal_states": ["spectating", "waiting_next_race", "postgame_results", "rematch_lobby", "join_error"],
       "known_gaps": ["UF-GAP-003", "UF-GAP-020", "UF-GAP-024"],
-      "tests": ["T-ROOM-FINISHED-BLOCKS-LATE-JOIN", "T-LATE-JOIN-DURING-FINISH-GRACE"]
+      "tests": ["T-ROOM-FINISHED-ADMITS-LATE-JOIN", "T-LATE-JOIN-DURING-FINISH-GRACE"]
+    },
+    {
+      "id": "UF-LATE-ENTRANT-ACTIVE-OPTION",
+      "title": "Optional active late entrants for full-chaos variants",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "viewer", "spectator"],
+      "status": "planned",
+      "entry_points": ["host ruleset/tuning settings"],
+      "preconditions": [
+        "Safe party default late-join behavior exists",
+        "Map validates dynamic late-spawn candidates",
+        "Host explicitly enables the option"
+      ],
+      "happy_path": [
+        "Host selects a named active-late-entrant policy before start.",
+        "Race finish-grace entrants or Derby combat entrants can spawn only when the map validator proves safe dynamic candidates.",
+        "Late entrants receive clear labels/copy and any shield/ghost grace required by the selected policy.",
+        "Results show late, DNF, ineligible, current-round-credit, or full-chaos credit state explicitly."
+      ],
+      "branches": [
+        "Default party setting stays queue/spectate and must not regress.",
+        "Race option cannot extend finish grace or displace locked finishers.",
+        "Derby option may offer no current-round credit, early-cutoff eligibility, or full-chaos eligibility."
+      ],
+      "terminal_states": ["active_late_racer", "active_late_derby", "spectating", "waiting_next_round", "results"],
+      "known_gaps": ["UF-GAP-024"],
+      "tests": ["T-LATE-ENTRANT-ACTIVE-OPTION"]
     },
     {
       "id": "UF-RACE-FIRST-FINISH-GRACE-DNF",
@@ -409,7 +473,7 @@
         "All vehicles finish before grace expires.",
         "Host loss during grace pauses/resumes timer.",
         "Disconnected players are DNF or away per reconnect policy.",
-        "Late join during grace queues/spectates."
+        "Late join during grace is admitted to spectate or queue for next race and does not extend timer or alter locked placements."
       ],
       "terminal_states": ["results", "paused_host_loss"],
       "known_gaps": ["UF-GAP-002", "UF-GAP-003", "UF-GAP-024"],
@@ -463,8 +527,8 @@
       "tests": ["T-DERBY-MIN-PLAYERS", "T-DERBY-DISCONNECT-NO-IMMORTAL"]
     },
     {
-      "id": "UF-DERBY-LATE-NEXT-ROUND",
-      "title": "Late derby join waits or spectates until next round",
+      "id": "UF-JOIN-LATE-DERBY-NEXT-ROUND",
+      "title": "Late derby join waits for next round",
       "topology": ["local", "remote", "mixed"],
       "ruleset": ["derby"],
       "roles": ["driver", "viewer", "spectator"],
@@ -472,15 +536,16 @@
       "entry_points": ["/player?room=CODE", "/join/CODE"],
       "preconditions": ["Derby round already in combat"],
       "happy_path": [
-        "Late joiner enters as spectator or queued driver.",
-        "They see they will join the next round.",
-        "At next round reset, they spawn with everyone else."
+        "Late joiner is admitted to the room.",
+        "They are assigned a durable seat and marked waiting_next_round/spectator.",
+        "They do not register into DerbySystem or affect current combat scoring.",
+        "At the next round reset they receive a validated spawn and enter active play."
       ],
       "branches": [
-        "Host may allow immediate join only in explicit chaos/practice setting.",
-        "If match is near final result, queue for next match."
+        "Future/custom setting may allow current-combat active late entrants with shield/label and explicit scoring policy, but this is not the party default.",
+        "If match is already on results, joiner enters postgame/rematch state."
       ],
-      "terminal_states": ["spectating_current_round", "queued_next_round", "active_next_round"],
+      "terminal_states": ["waiting_next_round", "spectating", "next_round_driver", "postgame_results", "join_error"],
       "known_gaps": ["UF-GAP-011"],
       "tests": ["T-DERBY-LATE-JOIN-NEXT-ROUND"]
     },
@@ -560,7 +625,7 @@
       "ruleset": ["race", "derby"],
       "roles": ["driver", "viewer", "spectator"],
       "status": "underspecified",
-      "entry_points": ["vehicle finished", "derby eliminated", "late join queued"],
+      "entry_points": ["vehicle finished", "derby eliminated", "postgame late join"],
       "preconditions": ["Player has no active driving agency in current phase"],
       "happy_path": [
         "Finished/eliminated player sees clear status.",
@@ -829,10 +894,10 @@
     {
       "id": "UF-GAP-011",
       "severity": "high",
-      "summary": "Late derby joiners currently enter active combat rounds, which is unfair and hard to explain.",
+      "summary": "Late derby joiners currently enter active combat, but accepted party default is waiting_next_round/spectator until the next round reset.",
       "evidence": ["static/js/GameHost.js:730"],
-      "recommended_resolution": "Queue late derby joiners as spectators until next round unless host explicitly enables chaos join.",
-      "related_flows": ["UF-DERBY-LATE-NEXT-ROUND"]
+      "recommended_resolution": "Keep live Derby room admission, but queue combat joiners for the next round; reserve active current-combat late entrants for a future/custom option with explicit spawn shield, label, and scoring policy.",
+      "related_flows": ["UF-JOIN-LATE-DERBY-NEXT-ROUND"]
     },
     {
       "id": "UF-GAP-012",
@@ -903,7 +968,7 @@
       "severity": "high",
       "summary": "Finished-late-join behavior is important and explicitly skipped in current E2E.",
       "evidence": ["tests/e2e/late-join.spec.ts:152"],
-      "recommended_resolution": "Implement and test join during finish grace/results.",
+      "recommended_resolution": "Implement and test admission during finish grace/results: spectate or queue during finish grace, postgame/rematch if results are finalized, and no effect on the locked timer or placements.",
       "related_flows": ["UF-JOIN-LATE-RACE-FINISH-GRACE"]
     },
     {
@@ -933,10 +998,26 @@
     {
       "id": "UF-GAP-024",
       "severity": "high",
-      "summary": "Late join after first finisher must not affect winner/podium.",
+      "summary": "Late join after first finisher must be admitted without affecting locked placements, finish timer, or winner declaration.",
       "evidence": ["server/app.py:475", "static/js/GameHost.js:688"],
-      "recommended_resolution": "Once finish grace starts, late joiners are spectator/queued and ineligible for current results.",
+      "recommended_resolution": "Spawn late entrants if the race is still live, mark them late/DNF-by-entry-time as needed, and prevent them from extending grace or displacing finished placements.",
       "related_flows": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RACE-FIRST-FINISH-GRACE-DNF"]
+    },
+    {
+      "id": "UF-GAP-025",
+      "severity": "high",
+      "summary": "Known/random map choice is not represented as a seeded choose-time MapInstance.",
+      "evidence": ["static/js/GameHost.js:959", "static/js/resources/ProceduralTrackGenerator.js:145"],
+      "recommended_resolution": "Add a MapCatalogEntry -> MapRecipe -> MapInstance resolver with visible seed, recipe id, generator version, params hash, and validation report.",
+      "related_flows": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED"]
+    },
+    {
+      "id": "UF-GAP-026",
+      "severity": "high",
+      "summary": "Procedural generation only covers flat race splines; Derby terrain, jumps, and hybrid hand-authored/procedural maps are under-specified.",
+      "evidence": ["static/js/resources/ProceduralTrackGenerator.js", "static/js/resources/TrackFactory.js:337", "static/js/resources/terrain.js"],
+      "recommended_resolution": "Create a staged, recipe-driven procedural pipeline for Race and Derby with terrain primitives, feature layers, jump placement rules, late-join spawn generation, and shared visual/physics validation.",
+      "related_flows": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED", "UF-JOIN-LATE-DERBY-NEXT-ROUND", "UF-JOIN-LATE-RACE-ACTIVE"]
     }
   ],
   "tests": [
@@ -989,6 +1070,30 @@
       "assertions": ["Normal Derby cannot start with fewer than two active drivers or is explicitly marked practice"]
     },
     {
+      "id": "T-MAP-CATALOG-FILTERS-RULESET",
+      "type": "unit+e2e",
+      "covers": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED"],
+      "assertions": ["Race selector does not silently start Derby-only maps", "Derby selector does not silently coerce Race-only maps", "Incompatible choices produce clear host-facing copy"]
+    },
+    {
+      "id": "T-RANDOM-MAP-REPRODUCES-SEED",
+      "type": "unit+integration",
+      "covers": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED"],
+      "assertions": ["Same recipe, seed, generator version, and params produce the same geometry hash", "Bug report payload includes seed spec"]
+    },
+    {
+      "id": "T-RANDOM-DERBY-NOT-MATH-RANDOM",
+      "type": "unit",
+      "covers": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED"],
+      "assertions": ["Random Derby resolves through seeded recipe selection", "Resolved map records requested selector and concrete map instance"]
+    },
+    {
+      "id": "T-MAP-VALIDATES-LATE-SPAWNS",
+      "type": "unit+integration",
+      "covers": ["UF-MAP-CHOOSE-KNOWN-RANDOM-SEEDED", "UF-JOIN-LATE-RACE-ACTIVE", "UF-JOIN-LATE-DERBY-NEXT-ROUND"],
+      "assertions": ["Known and generated maps validate initial spawns plus late-join/respawn/reconnect capacity", "Late spawn candidates are on ground, in bounds, non-overlapping, and away from jump landings"]
+    },
+    {
       "id": "T-COUNTDOWN-ALL-ROLES",
       "type": "e2e",
       "covers": ["UF-ROUND-COUNTDOWN-ALL-ROLES"],
@@ -1004,7 +1109,13 @@
       "id": "T-LATE-JOIN-DURING-FINISH-GRACE",
       "type": "e2e",
       "covers": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RACE-FIRST-FINISH-GRACE-DNF"],
-      "assertions": ["Late join during finish grace cannot affect winner/podium", "Joiner becomes spectator or queued for next race"]
+      "assertions": ["Late join during finish grace is admitted", "Joiner waits as spectator or waiting_next_race", "Joiner cannot extend finish timer or displace finished placements"]
+    },
+    {
+      "id": "T-LATE-ENTRANT-ACTIVE-OPTION",
+      "type": "unit+e2e+playtest",
+      "covers": ["UF-LATE-ENTRANT-ACTIVE-OPTION"],
+      "assertions": ["Option is off by default", "Host-visible policy enables active current-phase late entrants only on validated maps", "Race entrants cannot extend grace or displace locked finishers", "Derby entrants receive shield/label and explicit scoring", "Results clearly show late entrant status and credit policy"]
     },
     {
       "id": "T-RACE-DNF-GRACE",
@@ -1019,16 +1130,16 @@
       "assertions": ["Finish-time epsilon produces declared tie or deterministic tiebreak", "DNF cannot outrank finisher"]
     },
     {
-      "id": "T-ROOM-FINISHED-BLOCKS-LATE-JOIN",
+      "id": "T-ROOM-FINISHED-ADMITS-LATE-JOIN",
       "type": "socket+e2e",
       "covers": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RESULTS-REMATCH-RITUAL"],
-      "assertions": ["Host-authorized end_game sets server room finished", "Join after results is rejected, queued, or spectator-only by spec"]
+      "assertions": ["Host-authorized end_game sets server room results/rematch state", "Join after results is admitted into postgame/rematch flow", "Join after results does not reopen finalized match results"]
     },
     {
       "id": "T-DERBY-LATE-JOIN-NEXT-ROUND",
       "type": "e2e",
-      "covers": ["UF-DERBY-LATE-NEXT-ROUND"],
-      "assertions": ["Mid-round derby joiner spectates or waits", "They spawn only at next round reset"]
+      "covers": ["UF-JOIN-LATE-DERBY-NEXT-ROUND"],
+      "assertions": ["Mid-round derby joiner is admitted", "Joiner waits or spectates without affecting current combat", "Joiner enters active play at the next round reset"]
     },
     {
       "id": "T-DERBY-STANDOFF-ENDS",
@@ -1133,6 +1244,18 @@
       "summary": "Should QR joins auto-submit or require first-run confirmation?",
       "recommended": "QR should prefill the room and name, but first run should require an obvious Join confirmation; repeat reconnect can remain one-tap.",
       "blocks": ["UF-JOIN-LOCAL-QR-CODE"]
+    },
+    {
+      "id": "UF-DEC-006",
+      "summary": "Resolved: ship optional active late entrants as a full-chaos/custom rules path.",
+      "recommended": "Admission is always allowed. Accepted party default: Race finish-grace late entrants spectate or queue for the next race; Derby combat late entrants wait/spectate until next round. Also ship an explicitly enabled active current-phase option with shield, label, scoring, spawn-validation, and playtest gates.",
+      "blocks": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-JOIN-LATE-DERBY-NEXT-ROUND", "UF-LATE-ENTRANT-ACTIVE-OPTION"]
+    },
+    {
+      "id": "UF-DEC-007",
+      "summary": "How should known maps, random maps, and seeded procedural maps be represented at match setup?",
+      "recommended": "Use a choose-time MapCatalogEntry -> MapRecipe -> MapInstance flow. Random means visible seed plus recipe and generator version, never unrecorded Math.random. Both known and generated maps must pass the same validation gate for ruleset, player count, and late-join capacity.",
+      "blocks": ["UF-LOBBY-READY-START", "UF-JOIN-LATE-RACE-ACTIVE", "UF-JOIN-LATE-DERBY-NEXT-ROUND"]
     }
   ]
 }
