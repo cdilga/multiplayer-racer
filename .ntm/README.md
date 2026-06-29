@@ -86,6 +86,22 @@ Every close note must include evidence that another engineer can inspect or repr
 "Looks good," "works locally," a green build alone, or a screenshot without identifying what it
 proves is not enough for bead closure.
 
+## Current Product Invariants
+
+Give every worker and validator these invariants when their bead touches joins, results, maps,
+race/derby flow, or room lifecycle:
+
+- Late joins are allowed in every mode and phase. They may be routed to active play, spectator,
+  waiting-next-round, or results/rematch, but the state must be explicit and tested.
+- A late joiner must not auto-win, extend a locked finish timer, or displace locked placements.
+- Race results should not wait forever for last place: first finisher starts a visible finish-grace
+  timer, then unfinished racers become DNF/progress-ranked.
+- Derby needs a deterministic anti-stalemate rule: max duration, no-damage timeout, sudden death,
+  shrink escalation, or score timeout with tiebreaks.
+- Known maps and random maps share the same choose-time validation gate. Random means recorded seed,
+  recipe, generator version, terrain modifiers, spawn candidates, jump/hazard placement, and
+  validation diagnostics, not untracked `Math.random`.
+
 ## Bead Philosophy
 
 Do not stop at a literal bead boundary if the implementation would land awkwardly in the broader

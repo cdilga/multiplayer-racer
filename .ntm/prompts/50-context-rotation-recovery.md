@@ -14,3 +14,7 @@ Recovery steps:
 
 Reminder: implementation complete is not bead done. A bead closes only after convincing evidence and
 a separate fresh validator PASS.
+
+Current invariants after recovery: late joins are allowed in every mode/phase but cannot create
+unfair wins or mutate locked results; race needs a finish-grace/DNF timer; derby needs an
+anti-stalemate/tiebreak rule; known and random maps share recorded seed/recipe validation.

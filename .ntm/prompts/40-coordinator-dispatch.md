@@ -38,6 +38,11 @@ Prefer unblocking foundational beads before broad polish. In this repo that ofte
 room/seat lifecycle, determinism, map validity, debug-lab evidence tooling, and first-run flow
 before cosmetic tuning.
 
+For join/result/map beads, include the current product invariants in the assignment: late joins are
+allowed in every mode/phase; late joiners cannot auto-win or alter locked results; race needs a
+finish-grace/DNF timer instead of waiting for last place; derby needs an anti-stalemate/tiebreak
+rule; known and random maps share recorded seed/recipe validation.
+
 ## Validation Assignment
 
 When a worker posts "ready for fresh validation":
@@ -75,6 +80,8 @@ Before any close:
 - `br show <bead-id>` acceptance criteria are all addressed.
 - The worker evidence package includes commands, artifacts, edge cases, and honest gaps.
 - A fresh validator posted PASS in Agent Mail or a bead comment.
+- The validator checked the current product invariants when the bead touches joins, results, maps,
+  race/derby flow, or room lifecycle.
 - Relevant tests/builds pass after all worker and validator changes.
 - File reservations are released or intentionally renewed for follow-up work.
 

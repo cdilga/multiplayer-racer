@@ -12,7 +12,10 @@ Checklist:
    that it shows the expected state and is not blank, cropped incorrectly, overlapped, or stale.
 5. For numeric evidence, identify the exact assertion/value that proves the behavior. Exit code 0
    alone is not enough for behavior-sensitive work.
-6. Check Agent Mail again in case another agent has reported a conflict.
+6. If the bead touches joins, results, maps, race/derby flow, or room lifecycle, self-check the
+   product invariants: late joins admitted without unfair wins/result mutation, race finish-grace
+   instead of waiting for last place, derby anti-stalemate/tiebreak, and known/random map validation.
+7. Check Agent Mail again in case another agent has reported a conflict.
 
 Evidence package template:
 

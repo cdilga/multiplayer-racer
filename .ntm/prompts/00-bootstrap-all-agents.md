@@ -30,6 +30,19 @@ Completion policy:
   thread.
 - If evidence is weak, missing, hand-wavy, or impossible to reproduce, do not close the bead.
 
+Current product invariants to keep in mind:
+
+- Late joins are allowed in every mode and phase. Route them explicitly to active play, spectator,
+  waiting-next-round, or results/rematch depending on phase and fairness.
+- A late joiner must not auto-win, extend a locked finish timer, or displace locked placements.
+- Race results must not wait indefinitely for last place; first finisher should start a visible
+  finish-grace timer and unfinished racers should become DNF/progress-ranked on expiry.
+- Derby needs a deterministic anti-stalemate rule such as max duration, no-damage timeout, sudden
+  death, shrink escalation, or score timeout with tiebreaks.
+- Known map and random map selection share one validation gate. Random maps need recorded seed,
+  recipe/generator version, terrain modifiers, spawn candidates, jump/hazard placement, and
+  validation diagnostics.
+
 Work philosophy:
 
 Fit each bead elegantly into the broader whole. Update adjacent tests, docs, debug tools, fixtures,

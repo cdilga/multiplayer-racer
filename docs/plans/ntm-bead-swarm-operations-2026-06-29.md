@@ -24,6 +24,30 @@ The matching prompt templates live in `.ntm/prompts/`.
 - Commits and pushes should be handled by a low-cost release-manager pane after validation, not by
   implementation workers opportunistically bundling their own changes.
 
+## Current Product Invariants
+
+These are active planning decisions, not optional flavor. Workers and validators must apply them
+whenever a bead touches joins, results, maps, race/derby flow, or room lifecycle:
+
+- **Late joins are allowed in every mode and phase.** The implementation may route a late joiner to
+  active play, spectator, waiting-next-round, or results/rematch depending on phase and mode, but it
+  must define the state explicitly and test it. A late joiner must not become a winner merely by
+  arriving late, must not extend a locked finish timer, and must not displace already locked
+  placements.
+- **Race results cannot wait indefinitely for last place.** The first finisher should establish the
+  current winner and start a visible finish-grace timer; unfinished racers become DNF/progress-ranked
+  when the timer expires.
+- **Derby cannot run forever by passive survival.** Derby needs a max-duration, no-damage, sudden
+  death, shrink escalation, or score-timeout rule with deterministic tiebreaks.
+- **Known and random maps share one validation gate.** At choose time, the host can select a known
+  map or a random seeded recipe; both must produce a recorded map instance and pass the same
+  ruleset/player-count/late-join spawn validation.
+- **Procedural maps are recipe driven.** Race and derby generation should expose seed, generator
+  version, terrain modifiers, spawn candidates, checkpoints/arena boundary, jump/hazard placements,
+  and validation diagnostics. Derby arenas do not need to be perfectly bowl-shaped, but the chosen
+  geometry must satisfy the derby rules and explain where pressure boundaries, walls, ramps, jumps,
+  and safe late spawns live.
+
 ## Roles
 
 Worker:
@@ -103,9 +127,12 @@ Validators choose the relevant cases rather than every case every time:
 - Remote mode: each participant may render a viewer, with graceful degradation.
 - All players in one room, some remote, mixed viewer/controller roles.
 - Late join before start, during race, after first finisher, during race finish grace, during derby
-  combat, between derby rounds, and on results screens.
+  combat, between derby rounds, and on results screens. Late join must be admitted but may be routed
+  to a non-winning spectator/waiting/results state when active scoring would be unfair.
 - Reconnect, duplicate tab takeover, host loss, room reclaim, and stale seat binding.
 - Random map, known map, derby arena, race track, invalid seed/spec, and procedural modifiers.
+- Procedural map choice-time flow: known map vs random seed, recipe versioning, terrain modifiers,
+  spawn capacity, jump/hazard placement, arena pressure boundary, and validation failure UI.
 - High player count, weak host, weak remote viewer, controller latency, and lost/duplicated input.
 - Ties, timeouts, DNF, stalled last-place player, derby stalemate, and result finalization timer.
 - Malformed client payloads, spoofed roles, unsafe names/model ids, and XSS-like labels.

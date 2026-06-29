@@ -19,6 +19,18 @@ Before editing, write down the acceptance plan in your working notes or Agent Ma
 - The edge cases you will deliberately cover.
 - Which evidence will be visual, numeric, logged, or otherwise independently inspectable.
 
+When relevant, your acceptance plan must explicitly account for these current product invariants:
+
+- Late joins are allowed in every mode and phase, but may be routed to active play, spectator,
+  waiting-next-round, or results/rematch by phase and fairness.
+- Late joiners must not auto-win, extend locked finish timers, or displace locked placements.
+- Race result flow needs first-finisher winner declaration plus visible finish-grace/DNF behavior,
+  not indefinite waiting for last place.
+- Derby result flow needs a deterministic anti-stalemate rule and tiebreak, not endless passive
+  survival.
+- Known and random map choices must share validation: recorded seed/recipe/generator version,
+  terrain modifiers, spawn capacity, jump/hazard placement, and diagnostics.
+
 Implementation rules:
 
 - Respect existing patterns in the codebase.

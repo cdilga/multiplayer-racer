@@ -42,6 +42,9 @@ Only commit a slice when all of these are true:
 - Relevant tests/builds for the slice passed after the final diff.
 - Agent Mail reservations for edited files are released or intentionally renewed by active workers.
 - `git diff --check` passes for the files you will commit.
+- For join/result/map/race/derby lifecycle slices, the validator PASS explicitly addresses the
+  current product invariants: late joins admitted fairly, no late-join auto-win/result mutation,
+  finish-grace/DNF behavior, derby anti-stalemate/tiebreak, and known/random map validation.
 
 If these are not true, post a blocking note in the bead thread and wait. Do not improvise a release.
 

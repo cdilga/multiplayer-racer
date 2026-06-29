@@ -20,6 +20,11 @@ Validation standard:
 - Try to break the change with relevant edge cases: late join, reconnect, duplicate tab, host loss,
   weak renderer, high player count, malformed payload, random seed, known map, random map, race,
   derby, or results timing, as applicable.
+- If the bead touches joins, results, maps, race/derby flow, or room lifecycle, explicitly check the
+  current product invariants: late joins are admitted in every mode/phase; late joiners cannot
+  auto-win, extend locked timers, or displace locked placements; race results do not wait forever
+  for last place; derby has an anti-stalemate rule; known/random maps use recorded seed/recipe data
+  and the same validation gate.
 - Check that the bead fits the broader whole: no orphaned docs, stale tests, hidden policy
   contradiction, or UX hole left behind.
 
