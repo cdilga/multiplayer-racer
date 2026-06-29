@@ -10,8 +10,6 @@
  *   const vehicle = await factory.create('default', { position: { x: 0, y: 1.5, z: 0 } });
  */
 
-import { MaterialFactory } from './MaterialFactory.js';
-
 class VehicleFactory {
     /**
      * @param {Object} options
@@ -26,9 +24,6 @@ class VehicleFactory {
 
         // Cache for vehicle configs
         this.configCache = new Map();
-
-        // Material factory for lo-fi retro materials
-        this.materialFactory = new MaterialFactory();
     }
 
     /**
@@ -130,9 +125,9 @@ class VehicleFactory {
 
         // Create car body
         const bodyGeometry = new THREE.BoxGeometry(bodyWidth, bodyHeight, bodyLength);
-        const bodyMaterial = this.materialFactory.createMaterial({
+        const bodyMaterial = new THREE.MeshStandardMaterial({
             color: bodyColor,
-            type: 'toon',
+            roughness: body.roughness || 0.5,
             emissive: body.emissive ? this._parseColor(body.emissive) : 0x000000,
             emissiveIntensity: body.emissiveIntensity || 0
         });
@@ -149,9 +144,9 @@ class VehicleFactory {
             const roofLength = bodyLength * (roof.lengthScale || 0.5) * (0.9 + rand(0, 0.2));
 
             const roofGeometry = new THREE.BoxGeometry(roofWidth, roofHeight, roofLength);
-            const roofMaterial = this.materialFactory.createMaterial({
+            const roofMaterial = new THREE.MeshStandardMaterial({
                 color: this._parseColor(roof.color),
-                type: 'toon'
+                roughness: roof.roughness || 0.7
             });
             const roofMesh = new THREE.Mesh(roofGeometry, roofMaterial);
             roofMesh.position.y = bodyHeight + (roofHeight / 2);
@@ -167,9 +162,9 @@ class VehicleFactory {
             wheelConfig.thickness,
             wheelConfig.segments || 16
         );
-        const wheelMaterial = this.materialFactory.createMaterial({
+        const wheelMaterial = new THREE.MeshStandardMaterial({
             color: this._parseColor(wheelConfig.color),
-            type: 'toon'
+            roughness: wheelConfig.roughness || 0.8
         });
 
         // Calculate wheel positions (adjust for body size)
@@ -257,9 +252,8 @@ class VehicleFactory {
      */
     _addLights(group, body, lightConfig, isFront) {
         const lightGeometry = new THREE.SphereGeometry(lightConfig.radius || 0.2, 16, 16);
-        const lightMaterial = this.materialFactory.createMaterial({
+        const lightMaterial = new THREE.MeshStandardMaterial({
             color: this._parseColor(lightConfig.color),
-            type: 'flat',
             emissive: lightConfig.emissive ? this._parseColor(lightConfig.emissive) : this._parseColor(lightConfig.color),
             emissiveIntensity: lightConfig.emissiveIntensity || 0.5
         });
