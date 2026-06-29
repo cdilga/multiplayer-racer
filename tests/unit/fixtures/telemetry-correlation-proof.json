@@ -1,0 +1,153 @@
+{
+  "correlationTest": {
+    "release": "abc1234",
+    "roomAnalyticsId": "room-xyz789",
+    "matchId": "550e8400-e29b-41d4-a716-446655440000",
+    "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+    "timestamp": 1719700000000
+  },
+  "hostEvents": [
+    {
+      "eventName": "gameplay:match:started",
+      "timestamp": 1719700000000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "host",
+      "source": "GameHost",
+      "mode": "race",
+      "trackId": "track-v1-2026-06-29",
+      "mapSeed": 12345,
+      "properties": {
+        "playerCount": 4,
+        "mode": "race"
+      }
+    },
+    {
+      "eventName": "gameplay:race:lap_completed",
+      "timestamp": 1719700030000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "host",
+      "source": "GameHost",
+      "mode": "race",
+      "properties": {
+        "lapNumber": 1,
+        "duration_ms": 30000
+      }
+    },
+    {
+      "eventName": "gameplay:weapon:fired",
+      "timestamp": 1719700015000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "host",
+      "source": "GameHost",
+      "properties": {
+        "weaponType": "missile",
+        "hit": true
+      }
+    }
+  ],
+  "controllerEvents": [
+    {
+      "eventName": "error:network:disconnect",
+      "timestamp": 1719700005000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "controller",
+      "source": "Player",
+      "deviceClass": "mobile",
+      "browserFamily": "Chrome",
+      "properties": {
+        "duration_ms": 2500
+      }
+    },
+    {
+      "eventName": "perf:network:latency_sample",
+      "timestamp": 1719700001000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "controller",
+      "source": "Player",
+      "deviceClass": "mobile",
+      "browserFamily": "Chrome",
+      "properties": {
+        "latency_ms": 35
+      }
+    }
+  ],
+  "serverEvents": [
+    {
+      "eventName": "server:room:created",
+      "timestamp": 1719700000000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "server",
+      "source": "Flask",
+      "properties": {
+        "mapSeed": 12345,
+        "mode": "race"
+      }
+    },
+    {
+      "eventName": "server:spawn:validation_failed",
+      "timestamp": 1719700008000,
+      "release": "abc1234",
+      "roomAnalyticsId": "room-xyz789",
+      "matchId": "550e8400-e29b-41d4-a716-446655440000",
+      "playerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+      "env": "production",
+      "role": "server",
+      "source": "Flask",
+      "properties": {
+        "reason": "clearance_below_min",
+        "spawnIndex": 2
+      }
+    }
+  ],
+  "privacyProof": {
+    "notes": [
+      "All events use anonymous playerAnalyticsId, never raw player display names",
+      "All events use opaque roomAnalyticsId, never raw room codes",
+      "No IP addresses, tokens, or unbounded user text in any event",
+      "Properties are bounded (< 500 chars, depth ≤ 2)",
+      "Event names come from allowlist only",
+      "Correlation IDs (release, roomAnalyticsId, matchId, playerAnalyticsId) are consistent across all roles"
+    ]
+  },
+  "correlationVerification": {
+    "allEventsShareRelease": "abc1234",
+    "allEventsShareRoomAnalyticsId": "room-xyz789",
+    "allEventsShareMatchId": "550e8400-e29b-41d4-a716-446655440000",
+    "allEventsSharePlayerAnalyticsId": "a7f2c9e1a7f2c9e1a7f2c9e1a7f2c9e1",
+    "rolesRepresented": [
+      "host",
+      "controller",
+      "server"
+    ],
+    "eventTypesRepresented": [
+      "gameplay",
+      "error",
+      "perf",
+      "server"
+    ]
+  }
+}
