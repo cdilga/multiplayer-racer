@@ -1,0 +1,1138 @@
+{
+  "metadata": {
+    "id": "jj-user-flow-database",
+    "version": 1,
+    "created": "2026-06-29",
+    "bead": "br-user-flow-database-1vr",
+    "purpose": "Reusable indexed database of Joystick Jammers user journeys, contradictions, underspecification, win-condition rules, and acceptance tests.",
+    "source_documents": [
+      "AGENTS.md",
+      "README.md",
+      "docs/plans/feedback-design-pass.md",
+      "docs/plans/game-modes-and-flows.md",
+      "docs/plans/gaps/remote-screen-topology.md"
+    ],
+    "source_code_anchors": [
+      "server/app.py",
+      "static/js/GameHost.js",
+      "static/js/player.js",
+      "static/js/systems/RaceSystem.js",
+      "static/js/systems/DerbySystem.js",
+      "static/js/systems/NetworkSystem.js",
+      "static/js/ui/ResultsUI.js",
+      "static/js/ui/GameMenuUI.js"
+    ]
+  },
+  "taxonomy": {
+    "topology": {
+      "local": "One host/big screen renders the world; phones/keyboards are controllers only.",
+      "remote": "Host remains authoritative; each participant renders a synced viewer on their own device.",
+      "mixed": "A Local couch room also has remote viewers/drivers or paired screen/controller seats."
+    },
+    "ruleset": {
+      "race": "Lap/checkpoint racing.",
+      "derby": "Round-based demolition derby."
+    },
+    "role": {
+      "host": "Authoritative simulator and canonical room owner.",
+      "driver": "Owns a car/seat and sends input.",
+      "controller": "Input-only device for a seat.",
+      "viewer": "Renders synced world state but does not mutate seat state.",
+      "spectator": "Viewer without a car/seat."
+    },
+    "status": {
+      "current": "Implemented today at least partly.",
+      "current_with_gap": "Implemented enough to exist, but has known user-flow or reliability gaps.",
+      "planned": "Designed in plans but not implemented.",
+      "recommended": "Recommended by this database to resolve an underspecified journey.",
+      "missing": "Expected by the target experience, but no meaningful implementation was found.",
+      "gap": "Missing or materially incomplete.",
+      "contradiction": "Current code/docs conflict with desired behavior or with each other.",
+      "underspecified": "A decision is needed before implementation."
+    }
+  },
+  "flows": [
+    {
+      "id": "UF-ENTRY-LOCAL-HOST",
+      "title": "Host creates a Local TV room",
+      "topology": ["local"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "controller"],
+      "status": "current",
+      "entry_points": ["/host", "/?dev=1"],
+      "preconditions": ["Server reachable", "Host browser can run WebGL and Socket.IO"],
+      "happy_path": [
+        "Host opens the host screen.",
+        "Room is created and a 4-character room code plus QR/join URL are displayed.",
+        "Host remains in lobby until players join and settings are chosen."
+      ],
+      "branches": [
+        "Room creation times out.",
+        "Explicit Local/Remote choice is planned but not current.",
+        "Host network blip tries reclaim_room, but current server host-loss semantics conflict."
+      ],
+      "terminal_states": ["lobby", "room_creation_error", "host_closed"],
+      "known_gaps": ["UF-GAP-001", "UF-GAP-004"],
+      "tests": ["T-LOCAL-HOST-CREATES-ROOM", "T-HOST-LOSS-GRACE"]
+    },
+    {
+      "id": "UF-ENTRY-REMOTE-HOST-DRIVER",
+      "title": "Host creates Remote room as driver-viewer",
+      "topology": ["remote"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "viewer"],
+      "status": "planned",
+      "entry_points": ["/host"],
+      "preconditions": ["Game-mode architecture bead exists", "Remote host-as-player decision stays accepted"],
+      "happy_path": [
+        "Host chooses Remote before room creation.",
+        "Server creates a remote topology room.",
+        "Host gets a driver seat and viewer camera.",
+        "Invite panel exposes copy link, share, and QR."
+      ],
+      "branches": [
+        "Fallback to pure host screen if host-as-player is too heavy.",
+        "Public Remote requires security hardening before internet use."
+      ],
+      "terminal_states": ["remote_lobby", "create_error", "host_cancelled"],
+      "known_gaps": ["UF-GAP-001", "UF-GAP-007", "UF-GAP-010", "UF-GAP-022"],
+      "tests": ["T-REMOTE-HOST-AS-PLAYER", "T-SPOOF-REJECTED"]
+    },
+    {
+      "id": "UF-JOIN-LOCAL-QR-CODE",
+      "title": "Same-room phone joins as controller via QR",
+      "topology": ["local"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "driver"],
+      "status": "current_with_gap",
+      "entry_points": ["/player?room=CODE", "/join?room=CODE"],
+      "preconditions": ["Room exists", "Phone can see host screen"],
+      "happy_path": [
+        "Player scans QR or opens prefilled player page.",
+        "Room code is normalized and shown.",
+        "Player confirms or edits name.",
+        "Server joins player to waiting room.",
+        "Phone shows waiting screen and controller later."
+      ],
+      "branches": [
+        "Current auto-join can skip the intended name confirmation.",
+        "Invalid/expired room returns friendly retry state.",
+        "QR for join must be visually and semantically distinct from pair QR."
+      ],
+      "terminal_states": ["waiting_room", "join_error", "host_disconnected"],
+      "known_gaps": ["UF-GAP-006", "UF-GAP-018", "UF-GAP-019"],
+      "tests": ["T-QR-NO-PREMATURE-NAME", "T-INVALID-ROOM-ACTIONS"]
+    },
+    {
+      "id": "UF-JOIN-LOCAL-MANUAL-CODE",
+      "title": "Manual room-code join",
+      "topology": ["local"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "driver"],
+      "status": "current_with_gap",
+      "entry_points": ["/", "/player", "/join"],
+      "preconditions": ["Player has code from host screen"],
+      "happy_path": [
+        "Player types or pastes room code.",
+        "Code is normalized uppercase.",
+        "Player enters or accepts name.",
+        "Join succeeds and waiting screen appears."
+      ],
+      "branches": [
+        "Lowercase and pasted punctuation are normalized.",
+        "Unknown room shows actionable error.",
+        "Path-style /join/CODE is planned but not implemented."
+      ],
+      "terminal_states": ["waiting_room", "join_error"],
+      "known_gaps": ["UF-GAP-018", "UF-GAP-019"],
+      "tests": ["T-INVALID-ROOM-ACTIONS", "T-JOIN-PATH-COMPAT"]
+    },
+    {
+      "id": "UF-JOIN-REMOTE-LINK-CHOOSER",
+      "title": "Invite link chooses controller, remote screen, or spectator",
+      "topology": ["remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["driver", "controller", "viewer", "spectator"],
+      "status": "planned",
+      "entry_points": ["/join/CODE", "/player?room=CODE"],
+      "preconditions": ["Invite route exists", "Room topology/seat model exists"],
+      "happy_path": [
+        "Invitee opens shared link.",
+        "Chooser asks whether they can see the host screen.",
+        "Yes routes to controller-only.",
+        "No routes to viewer/driver or paired-phone flow.",
+        "Optional watch-only routes to spectator if enabled."
+      ],
+      "branches": [
+        "QR scan with via=qr skips chooser to controller-only.",
+        "Desktop defaults to screen-here.",
+        "Phone defaults to controller-only.",
+        "Invalid/expired/finished rooms show useful CTAs."
+      ],
+      "terminal_states": ["controller_join", "remote_viewer_join", "spectator_join", "join_error"],
+      "known_gaps": ["UF-GAP-007", "UF-GAP-008", "UF-GAP-018"],
+      "tests": ["T-QR-VS-LINK-CHOOSER", "T-REMOTE-TWO-SCREENS-SAME-WORLD"]
+    },
+    {
+      "id": "UF-JOIN-MIXED-PAIR-PHONE",
+      "title": "Laptop viewer pairs with phone controller for one seat",
+      "topology": ["mixed", "remote"],
+      "ruleset": ["race", "derby"],
+      "roles": ["viewer", "controller", "driver"],
+      "status": "planned",
+      "entry_points": ["/join/CODE", "/pair/PAIR_CODE"],
+      "preconditions": ["Seat registry", "Pair-code registry", "ViewerGameHost", "Input ownership"],
+      "happy_path": [
+        "Viewer device joins or creates one seat.",
+        "Server mints short-lived pair code.",
+        "Phone scans pair QR or enters pair code.",
+        "Phone becomes sole controller binding for the same seat.",
+        "Viewer renders seat camera and all world state."
+      ],
+      "branches": [
+        "Phone-first pairing is symmetric.",
+        "Pair code expires or is already used.",
+        "Second controller attempts takeover.",
+        "Viewer disconnects while controller remains active."
+      ],
+      "terminal_states": ["paired_driving", "unpaired_waiting", "pair_expired", "controller_takeover"],
+      "known_gaps": ["UF-GAP-008", "UF-GAP-009", "UF-GAP-010"],
+      "tests": ["T-MIXED-PAIR-PHONE-SEAT", "T-SPOOF-REJECTED"]
+    },
+    {
+      "id": "UF-JOIN-SPECTATOR",
+      "title": "Pure viewer or spectator joins",
+      "topology": ["remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["viewer", "spectator"],
+      "status": "underspecified",
+      "entry_points": ["/join/CODE", "/spectate/CODE"],
+      "preconditions": ["Human decision: spectators in v1", "Viewer render path"],
+      "happy_path": [
+        "Viewer joins without a car.",
+        "Server binds viewer role only.",
+        "Viewer receives seeded arena and transforms.",
+        "Camera defaults to auto/free/spectator mode."
+      ],
+      "branches": [
+        "Upgrade to driver if room allows.",
+        "Spectate when room is finished or full.",
+        "Eliminated derby players become spectators."
+      ],
+      "terminal_states": ["watching", "upgraded_to_driver", "left_room", "room_ended"],
+      "known_gaps": ["UF-GAP-007", "UF-GAP-018"],
+      "tests": ["T-SPECTATOR-JOIN", "T-SPECTATOR-UPGRADE"]
+    },
+    {
+      "id": "UF-LOBBY-READY-START",
+      "title": "Lobby readiness, settings, and min-player gates",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "controller", "viewer"],
+      "status": "gap",
+      "entry_points": ["host lobby", "player waiting screen", "remote lobby"],
+      "preconditions": ["Room exists"],
+      "happy_path": [
+        "Players join and see identity.",
+        "Host selects ruleset, track/arena, laps/round settings.",
+        "Settings lock when countdown begins.",
+        "Start is allowed only when ruleset-specific minimums are met."
+      ],
+      "branches": [
+        "Race can support one player for practice.",
+        "Derby should require at least two active drivers or a practice label.",
+        "Late joiners in lobby inherit current settings."
+      ],
+      "terminal_states": ["countdown", "waiting_for_players", "settings_error"],
+      "known_gaps": ["UF-GAP-001", "UF-GAP-023"],
+      "tests": ["T-DERBY-MIN-PLAYERS", "T-SETTINGS-LOCK-ON-COUNTDOWN"]
+    },
+    {
+      "id": "UF-IDENTITY-SEAT-CAR",
+      "title": "Name, color, number, and car identity mirrored everywhere",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["driver", "controller", "viewer", "spectator"],
+      "status": "planned",
+      "entry_points": ["join", "lobby", "spawn", "results"],
+      "preconditions": ["Identity system / FB-carid"],
+      "happy_path": [
+        "Seat receives distinct number/color/name.",
+        "Phone shows the same identity as TV/viewer.",
+        "Host render shows readable label/number/own-car cue.",
+        "Results use identity instead of raw player ID."
+      ],
+      "branches": [
+        "Beyond color-count, number/pattern becomes primary.",
+        "Disconnected seat uses away/ghost visual.",
+        "Spectators see identities without needing a controller."
+      ],
+      "terminal_states": ["identity_assigned", "identity_updated", "identity_conflict_resolved"],
+      "known_gaps": ["UF-GAP-016"],
+      "tests": ["T-RESULTS-SHOW-IDENTITY", "T-PHONE-IDENTITY-MIRROR"]
+    },
+    {
+      "id": "UF-ONBOARD-FIRST-RUN-SCHEME",
+      "title": "First-run tutorial and control scheme choice",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "driver"],
+      "status": "planned",
+      "entry_points": ["first join", "settings", "replay tutorial"],
+      "preconditions": ["ControlScheme abstraction for full version"],
+      "happy_path": [
+        "Player sees scheme-appropriate ghost gestures.",
+        "Tutorial teaches by doing, then fades.",
+        "Completion persists but can be replayed."
+      ],
+      "branches": [
+        "Classic touch controls.",
+        "Keyboard desktop controls.",
+        "Twin-stick or alternate scheme later.",
+        "Reduced-motion users get non-animated affordance."
+      ],
+      "terminal_states": ["tutorial_completed", "tutorial_skipped", "tutorial_replayed"],
+      "known_gaps": ["UF-GAP-006", "UF-GAP-021"],
+      "tests": ["T-QR-NO-PREMATURE-NAME", "T-FIRST-RUN-GHOST-GESTURE"]
+    },
+    {
+      "id": "UF-CONTROLLER-CONFIDENCE",
+      "title": "Controller input confidence and reconnect feel",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "driver"],
+      "status": "current_with_gap",
+      "entry_points": ["game screen", "visibility change", "socket reconnect"],
+      "preconditions": ["Player has joined a room"],
+      "happy_path": [
+        "Controls send at fixed cadence.",
+        "Connection indicator reflects connected/reconnecting.",
+        "Controls zero when tab hides.",
+        "Reconnect attempts to restore seat."
+      ],
+      "branches": [
+        "Input ack/latency not currently visible.",
+        "Wheelie/handling states need clearer reduced-authority cues.",
+        "Keyboard handling should route through canonical mapper."
+      ],
+      "terminal_states": ["driving", "reconnecting", "seat_restored", "seat_lost"],
+      "known_gaps": ["UF-GAP-005", "UF-GAP-021"],
+      "tests": ["T-PLAYER-DROP-GHOST-REJOIN", "T-CONTROLLER-ZERO-ON-BLUR"]
+    },
+    {
+      "id": "UF-ROUND-COUNTDOWN-ALL-ROLES",
+      "title": "Countdown visible to host, controllers, and viewers",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "controller", "viewer", "spectator"],
+      "status": "current_with_gap",
+      "entry_points": ["start game", "next derby round", "play again"],
+      "preconditions": ["Host starts match or round"],
+      "happy_path": [
+        "Host sees countdown.",
+        "Controllers switch to game controls.",
+        "Remote viewers show synchronized countdown.",
+        "Input is ignored or queued until Go."
+      ],
+      "branches": [
+        "Test mode skips countdown.",
+        "Derby has per-round countdown.",
+        "Reconnect during countdown lands in correct screen."
+      ],
+      "terminal_states": ["racing", "combat", "cancelled"],
+      "known_gaps": ["UF-GAP-007", "UF-GAP-015"],
+      "tests": ["T-COUNTDOWN-ALL-ROLES"]
+    },
+    {
+      "id": "UF-JOIN-LATE-RACE-ACTIVE",
+      "title": "Late race join before first finisher",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race"],
+      "roles": ["driver", "controller", "viewer"],
+      "status": "current_with_gap",
+      "entry_points": ["/player?room=CODE", "/join/CODE"],
+      "preconditions": ["Server room is racing", "Race has not entered finish grace"],
+      "happy_path": [
+        "Late player joins.",
+        "Controller skips waiting room.",
+        "Host spawns car near last place or last checkpoint.",
+        "Player is marked late/new."
+      ],
+      "branches": [
+        "Spawn must be safe and on ground.",
+        "Late player may need catch-up or ineligible podium flag.",
+        "Remote late join needs seed and current snapshot."
+      ],
+      "terminal_states": ["active_racer", "spectator", "rejected"],
+      "known_gaps": ["UF-GAP-007", "UF-GAP-024"],
+      "tests": ["T-LATE-RACE-SAFE-SPAWN", "T-LATE-RACE-PODIUM-ELIGIBILITY"]
+    },
+    {
+      "id": "UF-JOIN-LATE-RACE-FINISH-GRACE",
+      "title": "Late race join during finish grace or results",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race"],
+      "roles": ["driver", "viewer", "spectator"],
+      "status": "missing",
+      "entry_points": ["/player?room=CODE", "/join/CODE"],
+      "preconditions": ["First finisher exists or host is on results"],
+      "happy_path": [
+        "Joiner is not eligible to affect winner/podium.",
+        "Joiner may spectate results or queue for next race.",
+        "Server and host agree on room state."
+      ],
+      "branches": [
+        "If all players returned to lobby, join as normal lobby player.",
+        "If host has closed, show ended-room CTA."
+      ],
+      "terminal_states": ["queued_next", "spectator_results", "join_error", "lobby"],
+      "known_gaps": ["UF-GAP-003", "UF-GAP-020", "UF-GAP-024"],
+      "tests": ["T-ROOM-FINISHED-BLOCKS-LATE-JOIN", "T-LATE-JOIN-DURING-FINISH-GRACE"]
+    },
+    {
+      "id": "UF-RACE-FIRST-FINISH-GRACE-DNF",
+      "title": "First finisher starts visible grace timer; DNF resolves results",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race"],
+      "roles": ["driver", "controller", "viewer", "spectator"],
+      "status": "recommended",
+      "entry_points": ["race:vehicleFinished"],
+      "preconditions": ["At least one vehicle finishes"],
+      "happy_path": [
+        "First vehicle finish immediately establishes current winner.",
+        "Visible finish-grace timer starts on host/controllers/viewers.",
+        "Other racers can finish during grace.",
+        "When grace expires, unfinished racers become DNF ranked by progress.",
+        "Results are shown without waiting for last place."
+      ],
+      "branches": [
+        "All vehicles finish before grace expires.",
+        "Host loss during grace pauses/resumes timer.",
+        "Disconnected players are DNF or away per reconnect policy.",
+        "Late join during grace queues/spectates."
+      ],
+      "terminal_states": ["results", "paused_host_loss"],
+      "known_gaps": ["UF-GAP-002", "UF-GAP-003", "UF-GAP-024"],
+      "tests": ["T-RACE-DNF-GRACE", "T-LATE-JOIN-DURING-FINISH-GRACE"]
+    },
+    {
+      "id": "UF-RACE-TIE-DEADHEAT",
+      "title": "Race finish-time ties and dead heats",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race"],
+      "roles": ["driver", "viewer"],
+      "status": "missing",
+      "entry_points": ["race finish"],
+      "preconditions": ["Two or more vehicles finish within tie epsilon"],
+      "happy_path": [
+        "Finish times within epsilon share placement or use a declared deterministic tie-break.",
+        "Results explain the tie clearly.",
+        "Progress/DNF ranking cannot overtake a finisher."
+      ],
+      "branches": [
+        "Network/remote viewer interpolation does not decide authority.",
+        "Photo-finish visual can be added later."
+      ],
+      "terminal_states": ["results_with_tie", "results_with_tiebreak"],
+      "known_gaps": ["UF-GAP-016"],
+      "tests": ["T-RACE-TIE-DEADHEAT"]
+    },
+    {
+      "id": "UF-DERBY-ROUND-ELIMINATION",
+      "title": "Derby elimination round loop",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["derby"],
+      "roles": ["driver", "controller", "viewer"],
+      "status": "current_with_gap",
+      "entry_points": ["derby start", "damage:destroyed"],
+      "preconditions": ["At least two active drivers recommended"],
+      "happy_path": [
+        "Countdown starts round.",
+        "Combat runs until one survivor remains.",
+        "Round scores are assigned.",
+        "Next round starts after inter-round delay.",
+        "Match ends at rounds-to-win or max rounds."
+      ],
+      "branches": [
+        "One-player derby should be blocked or labeled practice.",
+        "All eliminated simultaneously needs tie policy.",
+        "Disconnects need explicit round policy."
+      ],
+      "terminal_states": ["next_round", "match_results", "draw"],
+      "known_gaps": ["UF-GAP-012", "UF-GAP-014", "UF-GAP-023"],
+      "tests": ["T-DERBY-MIN-PLAYERS", "T-DERBY-DISCONNECT-NO-IMMORTAL"]
+    },
+    {
+      "id": "UF-DERBY-LATE-NEXT-ROUND",
+      "title": "Late derby join waits or spectates until next round",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["derby"],
+      "roles": ["driver", "viewer", "spectator"],
+      "status": "recommended",
+      "entry_points": ["/player?room=CODE", "/join/CODE"],
+      "preconditions": ["Derby round already in combat"],
+      "happy_path": [
+        "Late joiner enters as spectator or queued driver.",
+        "They see they will join the next round.",
+        "At next round reset, they spawn with everyone else."
+      ],
+      "branches": [
+        "Host may allow immediate join only in explicit chaos/practice setting.",
+        "If match is near final result, queue for next match."
+      ],
+      "terminal_states": ["spectating_current_round", "queued_next_round", "active_next_round"],
+      "known_gaps": ["UF-GAP-011"],
+      "tests": ["T-DERBY-LATE-JOIN-NEXT-ROUND"]
+    },
+    {
+      "id": "UF-DERBY-STALEMATE-SUDDEN-DEATH",
+      "title": "Derby passive/stuck standoff reaches sudden death",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["derby"],
+      "roles": ["driver", "viewer"],
+      "status": "missing",
+      "entry_points": ["derby combat"],
+      "preconditions": ["Two or more survivors remain too long or no damage occurs"],
+      "happy_path": [
+        "Round has max duration and/or no-damage timer.",
+        "Warning escalates before timeout.",
+        "Arena shrink, hazard, or damage-over-time forces resolution.",
+        "If still unresolved, score by health/damage/position with declared tie rules."
+      ],
+      "branches": [
+        "Accessibility/reduced chaos setting can use score timeout instead of harsh hazard.",
+        "Disconnected cars follow derby disconnect policy."
+      ],
+      "terminal_states": ["round_winner", "draw", "score_timeout"],
+      "known_gaps": ["UF-GAP-013"],
+      "tests": ["T-DERBY-STANDOFF-ENDS"]
+    },
+    {
+      "id": "UF-DERBY-ALL-ELIMINATED-TIE",
+      "title": "Simultaneous derby elimination and tie policy",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["derby"],
+      "roles": ["driver", "viewer"],
+      "status": "missing",
+      "entry_points": ["damage resolution"],
+      "preconditions": ["All remaining cars are destroyed in same resolution window"],
+      "happy_path": [
+        "Game uses a defined simultaneity window.",
+        "Round is draw or winner is chosen by health-before-hit/damage-dealt/tiebreak rule.",
+        "Results explain why."
+      ],
+      "branches": [
+        "Two-player mutual destruction.",
+        "Multi-car explosion chain."
+      ],
+      "terminal_states": ["round_draw", "round_winner_by_tiebreak"],
+      "known_gaps": ["UF-GAP-014"],
+      "tests": ["T-DERBY-ALL-ELIMINATED-TIE"]
+    },
+    {
+      "id": "UF-RESULTS-REMATCH-RITUAL",
+      "title": "Podium, social stats, rematch, and back-to-lobby",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "controller", "viewer", "spectator"],
+      "status": "current_with_gap",
+      "entry_points": ["race results", "derby match end"],
+      "preconditions": ["Match finished"],
+      "happy_path": [
+        "Host and viewers show podium/results.",
+        "Controllers show result state and rematch/lobby status.",
+        "Results include identity, DNF status, and useful stats.",
+        "Host chooses Play Again or Back to Lobby."
+      ],
+      "branches": [
+        "Remote rematch may use vote/ready-up later.",
+        "Disconnected players should be shown as away/DNF, not invisible.",
+        "Back to lobby resets server state and controller screens."
+      ],
+      "terminal_states": ["next_countdown", "lobby", "session_end"],
+      "known_gaps": ["UF-GAP-003", "UF-GAP-015", "UF-GAP-016"],
+      "tests": ["T-PHONE-RESULTS-LOBBY-TRANSITION", "T-RESULTS-SHOW-IDENTITY"]
+    },
+    {
+      "id": "UF-SPECTATOR-ELIMINATED-FINISHED",
+      "title": "Spectating after elimination, finish, or waiting for next round",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["driver", "viewer", "spectator"],
+      "status": "underspecified",
+      "entry_points": ["vehicle finished", "derby eliminated", "late join queued"],
+      "preconditions": ["Player has no active driving agency in current phase"],
+      "happy_path": [
+        "Finished/eliminated player sees clear status.",
+        "They can watch without controlling their car.",
+        "They know when they will drive again."
+      ],
+      "branches": [
+        "Race finisher during grace watches placements resolve.",
+        "Derby eliminated player spectates until next round.",
+        "Pure spectators never get a car."
+      ],
+      "terminal_states": ["spectating", "next_round_driver", "results"],
+      "known_gaps": ["UF-GAP-018"],
+      "tests": ["T-SPECTATOR-AFTER-ELIMINATION", "T-RACE-FINISHER-SPECTATES-GRACE"]
+    },
+    {
+      "id": "UF-FAIL-HOST-LOSS-GRACE",
+      "title": "Host drops, room pauses, host reclaims or room ends cleanly",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "controller", "viewer"],
+      "status": "contradiction",
+      "entry_points": ["host socket disconnect"],
+      "preconditions": ["Room exists"],
+      "happy_path": [
+        "Server marks host lost instead of deleting room.",
+        "Players/viewers see paused host-lost message.",
+        "Host reclaims within grace and room resumes.",
+        "If timeout expires, room ends with useful CTAs."
+      ],
+      "branches": [
+        "Local couch transient Wi-Fi loss.",
+        "Remote host loss during race finish grace.",
+        "Future host migration can build on snapshot."
+      ],
+      "terminal_states": ["resumed", "ended_host_timeout", "left_room"],
+      "known_gaps": ["UF-GAP-004"],
+      "tests": ["T-HOST-LOSS-GRACE"]
+    },
+    {
+      "id": "UF-FAIL-PLAYER-LEAVE-VS-DROP",
+      "title": "Intentional leave is distinct from transient disconnect",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["driver", "controller", "viewer"],
+      "status": "contradiction",
+      "entry_points": ["leave button", "socket disconnect", "tab close"],
+      "preconditions": ["Player has joined a room"],
+      "happy_path": [
+        "Intentional leave confirms removal or DNF.",
+        "Transient drop creates away/ghost seat for timeout window.",
+        "Reconnect restores same seat if within policy."
+      ],
+      "branches": [
+        "Lobby leave removes immediately.",
+        "Race leave during grace becomes DNF.",
+        "Derby leave may eliminate or queue next round.",
+        "Viewer disconnect does not affect controller seat."
+      ],
+      "terminal_states": ["seat_restored", "seat_removed", "dnf", "eliminated", "spectator"],
+      "known_gaps": ["UF-GAP-005", "UF-GAP-012"],
+      "tests": ["T-PLAYER-DROP-GHOST-REJOIN", "T-DERBY-DISCONNECT-NO-IMMORTAL"]
+    },
+    {
+      "id": "UF-FAIL-DUPLICATE-TAB",
+      "title": "Same seat opened in two tabs or devices",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "viewer", "driver"],
+      "status": "missing",
+      "entry_points": ["duplicate /player tab", "copied token", "pair code"],
+      "preconditions": ["Existing seat token or reconnect id is reused"],
+      "happy_path": [
+        "Server allows exactly one active controller binding per seat.",
+        "Second controller is rejected or explicitly takes over.",
+        "Old controller receives clear message if replaced."
+      ],
+      "branches": [
+        "Viewer duplicates are allowed if read-only.",
+        "Controller takeover may require confirmation.",
+        "Expired token cannot claim seat."
+      ],
+      "terminal_states": ["single_controller_active", "takeover_complete", "duplicate_rejected"],
+      "known_gaps": ["UF-GAP-009", "UF-GAP-010"],
+      "tests": ["T-DUPLICATE-TAB-CONTROL-OWNER"]
+    },
+    {
+      "id": "UF-FAIL-INVALID-ROOM",
+      "title": "Invalid, expired, ended, full, or unavailable room handling",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["controller", "viewer", "spectator"],
+      "status": "current_with_gap",
+      "entry_points": ["/player?room=CODE", "/join/CODE"],
+      "preconditions": ["Join attempt fails"],
+      "happy_path": [
+        "Error copy names the state accurately.",
+        "Screen offers retry, create room, or spectate when applicable.",
+        "Join button re-enables and focus returns to useful input."
+      ],
+      "branches": [
+        "Code malformed.",
+        "Room not found.",
+        "Host left.",
+        "Room ended.",
+        "Public Remote throttled."
+      ],
+      "terminal_states": ["join_screen", "create_room", "spectate", "retry"],
+      "known_gaps": ["UF-GAP-018", "UF-GAP-022"],
+      "tests": ["T-INVALID-ROOM-ACTIONS", "T-RATE-LIMIT-JOIN"]
+    },
+    {
+      "id": "UF-GRIEF-MODERATE-ROOM",
+      "title": "Moderation, grief, and public Remote abuse flows",
+      "topology": ["remote", "mixed", "local"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "controller", "viewer"],
+      "status": "missing",
+      "entry_points": ["host menu", "join", "input events"],
+      "preconditions": ["Room has multiple participants"],
+      "happy_path": [
+        "Host can kick or mute a disruptive seat.",
+        "Names are sanitized and length-limited server-side.",
+        "Reset spam and input spoofing are rejected/rate-limited.",
+        "Blocked player sees clear terminal state."
+      ],
+      "branches": [
+        "Local trusted couch can keep shorter code.",
+        "Public Remote needs longer codes and rate limits.",
+        "Spectators should not send driver actions."
+      ],
+      "terminal_states": ["kicked", "throttled", "name_rejected", "spoof_rejected"],
+      "known_gaps": ["UF-GAP-010", "UF-GAP-022"],
+      "tests": ["T-SPOOF-REJECTED", "T-NAME-SANITIZED", "T-RESET-SPAM-RATE-LIMIT"]
+    },
+    {
+      "id": "UF-END-SESSION-ROOM-TTL",
+      "title": "Host closes, room expires, and abandoned rooms are reaped",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "viewer"],
+      "status": "missing",
+      "entry_points": ["host close", "idle room", "finished room", "host lost timeout"],
+      "preconditions": ["Room becomes idle or abandoned"],
+      "happy_path": [
+        "Server tracks created_at and last_activity.",
+        "Empty waiting rooms expire.",
+        "Finished abandoned rooms expire after results grace.",
+        "Later join attempts get expired-room copy."
+      ],
+      "branches": [
+        "Server restart kills in-memory rooms in v1.",
+        "Public Remote may need persistence later."
+      ],
+      "terminal_states": ["room_reaped", "expired_join_error"],
+      "known_gaps": ["UF-GAP-004", "UF-GAP-022"],
+      "tests": ["T-ROOM-TTL-REAP", "T-EXPIRED-ROOM-COPY"]
+    },
+    {
+      "id": "UF-HOST-DESTRUCTIVE-ACTIONS",
+      "title": "Host restart, back-to-lobby, and reset-all are confirmed and announced",
+      "topology": ["local", "remote", "mixed"],
+      "ruleset": ["race", "derby"],
+      "roles": ["host", "driver", "controller", "viewer"],
+      "status": "gap",
+      "entry_points": ["host game menu"],
+      "preconditions": ["Match or lobby is active"],
+      "happy_path": [
+        "Host opens menu.",
+        "Destructive actions require confirm or hold.",
+        "Players/viewers see announcement before state changes.",
+        "Server state transitions match host UI."
+      ],
+      "branches": [
+        "Reset all cars during race.",
+        "Restart current ruleset.",
+        "Back to lobby from results or mid-match.",
+        "Report bug is non-destructive."
+      ],
+      "terminal_states": ["action_cancelled", "restart_countdown", "lobby", "cars_reset"],
+      "known_gaps": ["UF-GAP-017"],
+      "tests": ["T-HOST-DESTRUCTIVE-CONFIRM"]
+    }
+  ],
+  "issues": [
+    {
+      "id": "UF-GAP-001",
+      "severity": "high",
+      "summary": "The term mode is overloaded between Local/Remote topology and Race/Derby ruleset.",
+      "evidence": ["README.md:41", "docs/plans/game-modes-and-flows.md:69", "static/js/ui/LobbyUI.js"],
+      "recommended_resolution": "Use topology_kind for local/remote/mixed and ruleset for race/derby in new docs, events, and tests.",
+      "related_flows": ["UF-ENTRY-LOCAL-HOST", "UF-ENTRY-REMOTE-HOST-DRIVER", "UF-LOBBY-READY-START"]
+    },
+    {
+      "id": "UF-GAP-002",
+      "severity": "critical",
+      "summary": "Race results wait for every registered vehicle to finish, so last place/AFK can block the winner.",
+      "evidence": ["static/js/systems/RaceSystem.js:394"],
+      "recommended_resolution": "First finisher starts a visible grace timer; unfinished players become DNF ranked by progress when it expires.",
+      "related_flows": ["UF-RACE-FIRST-FINISH-GRACE-DNF"]
+    },
+    {
+      "id": "UF-GAP-003",
+      "severity": "critical",
+      "summary": "Host emits end_game but no server handler was found, so server finished-room state is likely not authoritative.",
+      "evidence": ["static/js/systems/NetworkSystem.js:296", "server/app.py:478"],
+      "recommended_resolution": "Add host-authorized end_game handling and define join behavior for finished/finish-grace/results states.",
+      "related_flows": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RESULTS-REMATCH-RITUAL"]
+    },
+    {
+      "id": "UF-GAP-004",
+      "severity": "critical",
+      "summary": "Planned host-loss grace conflicts with current immediate room deletion.",
+      "evidence": ["server/app.py:647", "docs/plans/game-modes-and-flows.md:187"],
+      "recommended_resolution": "Mark host lost, pause room, preserve snapshot and seats, allow timed reclaim, then expire cleanly.",
+      "related_flows": ["UF-FAIL-HOST-LOSS-GRACE", "UF-END-SESSION-ROOM-TTL"]
+    },
+    {
+      "id": "UF-GAP-005",
+      "severity": "high",
+      "summary": "Reconnect claims are stronger than implementation: current flow stores session ID but host removes vehicles on disconnect.",
+      "evidence": ["static/js/player.js:725", "server/app.py:659", "static/js/GameHost.js:807"],
+      "recommended_resolution": "Move to durable seat tokens; show disconnected cars as away/transparent; reconnect restores same seat and live state.",
+      "related_flows": ["UF-CONTROLLER-CONFIDENCE", "UF-FAIL-PLAYER-LEAVE-VS-DROP"]
+    },
+    {
+      "id": "UF-GAP-006",
+      "severity": "high",
+      "summary": "First-run QR/code path can auto-join before the player confirms name, conflicting with the README journey.",
+      "evidence": ["static/js/player.js:661", "README.md:93"],
+      "recommended_resolution": "Prefill room and random name, but require a clear Join confirmation on first run.",
+      "related_flows": ["UF-JOIN-LOCAL-QR-CODE", "UF-ONBOARD-FIRST-RUN-SCHEME"]
+    },
+    {
+      "id": "UF-GAP-007",
+      "severity": "critical",
+      "summary": "Remote viewer path is planned but lacks ViewerGameHost, full transforms, and required seed.",
+      "evidence": ["docs/plans/game-modes-and-flows.md:41", "static/js/GameHost.js:1342", "static/js/player.js:567"],
+      "recommended_resolution": "Implement shared seed, transform payload, separate viewer renderer, and interpolation before Remote play.",
+      "related_flows": ["UF-ENTRY-REMOTE-HOST-DRIVER", "UF-JOIN-REMOTE-LINK-CHOOSER", "UF-JOIN-SPECTATOR"]
+    },
+    {
+      "id": "UF-GAP-008",
+      "severity": "high",
+      "summary": "Mixed Local plus Remote friend conflicts with docs that make Local/Remote a fixed room-wide mode.",
+      "evidence": ["docs/plans/game-modes-and-flows.md:69", "docs/plans/gaps/remote-screen-topology.md"],
+      "recommended_resolution": "Make viewer fanout a seat/room capability decision or explicitly disallow mixed topology in v1.",
+      "related_flows": ["UF-JOIN-MIXED-PAIR-PHONE", "UF-JOIN-REMOTE-LINK-CHOOSER"]
+    },
+    {
+      "id": "UF-GAP-009",
+      "severity": "critical",
+      "summary": "Two-device one-seat requires seat registry; current server model is socket keyed player storage.",
+      "evidence": ["server/app.py:527"],
+      "recommended_resolution": "Introduce seat registry keyed by durable player/seat id with controller_sid and viewer_sids.",
+      "related_flows": ["UF-JOIN-MIXED-PAIR-PHONE", "UF-FAIL-DUPLICATE-TAB"]
+    },
+    {
+      "id": "UF-GAP-010",
+      "severity": "critical",
+      "summary": "Control updates trust client-supplied player_id; public Remote and paired seats are unsafe.",
+      "evidence": ["server/app.py:391"],
+      "recommended_resolution": "Authorize input by request.sid owning the controller binding for that seat; validate host-only state broadcasts.",
+      "related_flows": ["UF-JOIN-MIXED-PAIR-PHONE", "UF-GRIEF-MODERATE-ROOM"]
+    },
+    {
+      "id": "UF-GAP-011",
+      "severity": "high",
+      "summary": "Late derby joiners currently enter active combat rounds, which is unfair and hard to explain.",
+      "evidence": ["static/js/GameHost.js:730"],
+      "recommended_resolution": "Queue late derby joiners as spectators until next round unless host explicitly enables chaos join.",
+      "related_flows": ["UF-DERBY-LATE-NEXT-ROUND"]
+    },
+    {
+      "id": "UF-GAP-012",
+      "severity": "high",
+      "summary": "Derby disconnect policy is inconsistent and may leave stale survivor registration.",
+      "evidence": ["static/js/GameHost.js:807", "static/js/systems/DerbySystem.js:479"],
+      "recommended_resolution": "Define drop policy: ghost timeout, auto-eliminate, or queue next round; ensure derby unregister/eliminate is coherent.",
+      "related_flows": ["UF-DERBY-ROUND-ELIMINATION", "UF-FAIL-PLAYER-LEAVE-VS-DROP"]
+    },
+    {
+      "id": "UF-GAP-013",
+      "severity": "high",
+      "summary": "Derby has no stalemate/no-damage timer; passive survivors can run indefinitely.",
+      "evidence": ["static/js/systems/DerbySystem.js:327"],
+      "recommended_resolution": "Add max round/no-damage timer with sudden death, shrink escalation, or score timeout.",
+      "related_flows": ["UF-DERBY-STALEMATE-SUDDEN-DEATH"]
+    },
+    {
+      "id": "UF-GAP-014",
+      "severity": "medium",
+      "summary": "Derby tie behavior is not fully specified and may pick first iterated player before points tiebreak.",
+      "evidence": ["static/js/systems/DerbySystem.js:600"],
+      "recommended_resolution": "Define deterministic tie order and simultaneous elimination policy.",
+      "related_flows": ["UF-DERBY-ALL-ELIMINATED-TIE", "UF-DERBY-ROUND-ELIMINATION"]
+    },
+    {
+      "id": "UF-GAP-015",
+      "severity": "high",
+      "summary": "Phone/controller clients lack clear game-end and returned-to-lobby transitions.",
+      "evidence": ["static/js/player.js", "static/js/systems/NetworkSystem.js:235"],
+      "recommended_resolution": "Controllers should show results/status/lobby states and reset controls when host transitions.",
+      "related_flows": ["UF-RESULTS-REMATCH-RITUAL", "UF-ROUND-COUNTDOWN-ALL-ROLES"]
+    },
+    {
+      "id": "UF-GAP-016",
+      "severity": "medium",
+      "summary": "Results UI renders player IDs rather than names/colors/numbers, weakening social payoff.",
+      "evidence": ["static/js/ui/ResultsUI.js:428"],
+      "recommended_resolution": "Results payload/UI should include display name, number, color, DNF and relevant stats.",
+      "related_flows": ["UF-RESULTS-REMATCH-RITUAL", "UF-IDENTITY-SEAT-CAR"]
+    },
+    {
+      "id": "UF-GAP-017",
+      "severity": "medium",
+      "summary": "Host restart, back-to-lobby, and reset-all are immediate actions without confirmation or player announcement.",
+      "evidence": ["static/js/ui/GameMenuUI.js:74"],
+      "recommended_resolution": "Require confirm/hold for destructive actions and broadcast pending/complete state to controllers/viewers.",
+      "related_flows": ["UF-HOST-DESTRUCTIVE-ACTIONS"]
+    },
+    {
+      "id": "UF-GAP-018",
+      "severity": "medium",
+      "summary": "Spectator role is implied but not a defined server/client role.",
+      "evidence": ["docs/plans/game-modes-and-flows.md:319"],
+      "recommended_resolution": "Decide whether spectators ship in v1, then define join, camera, upgrade, and result behavior.",
+      "related_flows": ["UF-JOIN-SPECTATOR", "UF-SPECTATOR-ELIMINATED-FINISHED"]
+    },
+    {
+      "id": "UF-GAP-019",
+      "severity": "low",
+      "summary": "Room-code copy alternates between letters-only and alphanumeric.",
+      "evidence": ["README.md:93", "tests/e2e/game-flow.spec.ts"],
+      "recommended_resolution": "Choose copy and validation language that match generated codes.",
+      "related_flows": ["UF-JOIN-LOCAL-QR-CODE", "UF-JOIN-LOCAL-MANUAL-CODE"]
+    },
+    {
+      "id": "UF-GAP-020",
+      "severity": "high",
+      "summary": "Finished-late-join behavior is important and explicitly skipped in current E2E.",
+      "evidence": ["tests/e2e/late-join.spec.ts:152"],
+      "recommended_resolution": "Implement and test join during finish grace/results.",
+      "related_flows": ["UF-JOIN-LATE-RACE-FINISH-GRACE"]
+    },
+    {
+      "id": "UF-GAP-021",
+      "severity": "medium",
+      "summary": "Keyboard/controller handling is duplicated and not a first-class scheme.",
+      "evidence": ["static/js/player.js:1363", "static/js/player.js:1825"],
+      "recommended_resolution": "Route touch and keyboard through ControlMapper/ControlScheme and define focus/legend behavior.",
+      "related_flows": ["UF-CONTROLLER-CONFIDENCE", "UF-ONBOARD-FIRST-RUN-SCHEME"]
+    },
+    {
+      "id": "UF-GAP-022",
+      "severity": "high",
+      "summary": "Public Remote lacks rate limit, name sanitation, and moderation flow.",
+      "evidence": ["server/app.py", "static/js/ui/LobbyUI.js"],
+      "recommended_resolution": "Add join rate limits, longer public codes, server-side name sanitation, and host moderation actions.",
+      "related_flows": ["UF-GRIEF-MODERATE-ROOM", "UF-FAIL-INVALID-ROOM"]
+    },
+    {
+      "id": "UF-GAP-023",
+      "severity": "medium",
+      "summary": "One-player Derby is not gated or explained.",
+      "evidence": ["static/js/systems/DerbySystem.js:327"],
+      "recommended_resolution": "Require two active drivers for normal Derby, or label and handle solo practice explicitly.",
+      "related_flows": ["UF-LOBBY-READY-START", "UF-DERBY-ROUND-ELIMINATION"]
+    },
+    {
+      "id": "UF-GAP-024",
+      "severity": "high",
+      "summary": "Late join after first finisher must not affect winner/podium.",
+      "evidence": ["server/app.py:475", "static/js/GameHost.js:688"],
+      "recommended_resolution": "Once finish grace starts, late joiners are spectator/queued and ineligible for current results.",
+      "related_flows": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RACE-FIRST-FINISH-GRACE-DNF"]
+    }
+  ],
+  "tests": [
+    {
+      "id": "T-LOCAL-HOST-CREATES-ROOM",
+      "type": "e2e",
+      "covers": ["UF-ENTRY-LOCAL-HOST"],
+      "assertions": ["Host receives valid room code", "Join QR/link targets controller-only Local route"]
+    },
+    {
+      "id": "T-QR-NO-PREMATURE-NAME",
+      "type": "e2e",
+      "covers": ["UF-JOIN-LOCAL-QR-CODE", "UF-ONBOARD-FIRST-RUN-SCHEME"],
+      "assertions": ["Room code is prefilled", "Player can confirm/edit name before first join", "No accidental auto-join on first run"]
+    },
+    {
+      "id": "T-INVALID-ROOM-ACTIONS",
+      "type": "e2e",
+      "covers": ["UF-FAIL-INVALID-ROOM"],
+      "assertions": ["Invalid/not-found/expired/ended states use distinct copy", "Retry/create/spectate actions are available when appropriate"]
+    },
+    {
+      "id": "T-QR-VS-LINK-CHOOSER",
+      "type": "e2e",
+      "covers": ["UF-JOIN-REMOTE-LINK-CHOOSER"],
+      "assertions": ["QR path skips chooser to controller-only", "Plain invite link shows can-you-see-host-screen chooser"]
+    },
+    {
+      "id": "T-MIXED-PAIR-PHONE-SEAT",
+      "type": "e2e",
+      "covers": ["UF-JOIN-MIXED-PAIR-PHONE"],
+      "assertions": ["Viewer and phone share one player_id", "Only phone/controller binding can send driving input", "Pair code is single-use and expires"]
+    },
+    {
+      "id": "T-REMOTE-TWO-SCREENS-SAME-WORLD",
+      "type": "e2e",
+      "covers": ["UF-ENTRY-REMOTE-HOST-DRIVER", "UF-JOIN-REMOTE-LINK-CHOOSER"],
+      "assertions": ["Host and viewer use same seed/arena", "Viewer receives all car transforms", "Own car is identifiable"]
+    },
+    {
+      "id": "T-REMOTE-HOST-AS-PLAYER",
+      "type": "e2e",
+      "covers": ["UF-ENTRY-REMOTE-HOST-DRIVER"],
+      "assertions": ["Remote host has a driver seat", "Host keyboard/touch input controls only host seat", "Other viewers see host car move"]
+    },
+    {
+      "id": "T-DERBY-MIN-PLAYERS",
+      "type": "e2e",
+      "covers": ["UF-LOBBY-READY-START", "UF-DERBY-ROUND-ELIMINATION"],
+      "assertions": ["Normal Derby cannot start with fewer than two active drivers or is explicitly marked practice"]
+    },
+    {
+      "id": "T-COUNTDOWN-ALL-ROLES",
+      "type": "e2e",
+      "covers": ["UF-ROUND-COUNTDOWN-ALL-ROLES"],
+      "assertions": ["Host, controllers, and remote viewers see synchronized countdown", "Reconnect during countdown lands in correct state"]
+    },
+    {
+      "id": "T-LATE-RACE-SAFE-SPAWN",
+      "type": "e2e",
+      "covers": ["UF-JOIN-LATE-RACE-ACTIVE"],
+      "assertions": ["Late joiner spawns on drivable ground", "Late joiner is marked late/new", "Existing racers are not disrupted"]
+    },
+    {
+      "id": "T-LATE-JOIN-DURING-FINISH-GRACE",
+      "type": "e2e",
+      "covers": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RACE-FIRST-FINISH-GRACE-DNF"],
+      "assertions": ["Late join during finish grace cannot affect winner/podium", "Joiner becomes spectator or queued for next race"]
+    },
+    {
+      "id": "T-RACE-DNF-GRACE",
+      "type": "unit+e2e",
+      "covers": ["UF-RACE-FIRST-FINISH-GRACE-DNF"],
+      "assertions": ["First finisher starts visible grace", "AFK/stuck last place becomes DNF by progress", "Results do not wait forever"]
+    },
+    {
+      "id": "T-RACE-TIE-DEADHEAT",
+      "type": "unit",
+      "covers": ["UF-RACE-TIE-DEADHEAT"],
+      "assertions": ["Finish-time epsilon produces declared tie or deterministic tiebreak", "DNF cannot outrank finisher"]
+    },
+    {
+      "id": "T-ROOM-FINISHED-BLOCKS-LATE-JOIN",
+      "type": "socket+e2e",
+      "covers": ["UF-JOIN-LATE-RACE-FINISH-GRACE", "UF-RESULTS-REMATCH-RITUAL"],
+      "assertions": ["Host-authorized end_game sets server room finished", "Join after results is rejected, queued, or spectator-only by spec"]
+    },
+    {
+      "id": "T-DERBY-LATE-JOIN-NEXT-ROUND",
+      "type": "e2e",
+      "covers": ["UF-DERBY-LATE-NEXT-ROUND"],
+      "assertions": ["Mid-round derby joiner spectates or waits", "They spawn only at next round reset"]
+    },
+    {
+      "id": "T-DERBY-STANDOFF-ENDS",
+      "type": "sim+e2e",
+      "covers": ["UF-DERBY-STALEMATE-SUDDEN-DEATH"],
+      "assertions": ["Two passive survivors cannot remain in combat forever", "Sudden-death/score-timeout is visible and deterministic"]
+    },
+    {
+      "id": "T-DERBY-ALL-ELIMINATED-TIE",
+      "type": "unit",
+      "covers": ["UF-DERBY-ALL-ELIMINATED-TIE"],
+      "assertions": ["Simultaneous elimination window is deterministic", "Round draw or winner by tiebreak is explicit"]
+    },
+    {
+      "id": "T-DERBY-DISCONNECT-NO-IMMORTAL",
+      "type": "e2e",
+      "covers": ["UF-DERBY-ROUND-ELIMINATION", "UF-FAIL-PLAYER-LEAVE-VS-DROP"],
+      "assertions": ["Disconnected derby player does not remain an unkillable survivor", "Reconnect/eliminate/queue policy is applied"]
+    },
+    {
+      "id": "T-PHONE-RESULTS-LOBBY-TRANSITION",
+      "type": "e2e",
+      "covers": ["UF-RESULTS-REMATCH-RITUAL"],
+      "assertions": ["Controller shows match ended/results status", "Back to lobby returns phone to waiting state", "Play again returns phone to countdown/game state"]
+    },
+    {
+      "id": "T-RESULTS-SHOW-IDENTITY",
+      "type": "visual+e2e",
+      "covers": ["UF-RESULTS-REMATCH-RITUAL", "UF-IDENTITY-SEAT-CAR"],
+      "assertions": ["Results show names, colors, numbers, and DNF status", "Raw playerId is not the primary public label"]
+    },
+    {
+      "id": "T-HOST-LOSS-GRACE",
+      "type": "socket+e2e",
+      "covers": ["UF-FAIL-HOST-LOSS-GRACE"],
+      "assertions": ["Host disconnect pauses room without deleting it", "Host reclaim within grace restores players", "Timeout ends room cleanly"]
+    },
+    {
+      "id": "T-PLAYER-DROP-GHOST-REJOIN",
+      "type": "e2e",
+      "covers": ["UF-FAIL-PLAYER-LEAVE-VS-DROP"],
+      "assertions": ["Mid-race drop shows away/transparent car", "Reconnect restores same seat", "Timeout applies DNF/eliminate/remove policy"]
+    },
+    {
+      "id": "T-DUPLICATE-TAB-CONTROL-OWNER",
+      "type": "socket+e2e",
+      "covers": ["UF-FAIL-DUPLICATE-TAB"],
+      "assertions": ["Two tabs cannot both control the same seat", "Takeover or rejection is explicit"]
+    },
+    {
+      "id": "T-SPOOF-REJECTED",
+      "type": "socket",
+      "covers": ["UF-GRIEF-MODERATE-ROOM", "UF-JOIN-MIXED-PAIR-PHONE"],
+      "assertions": ["Socket cannot drive another player_id", "Viewer cannot send driver input", "Fake host vehicle_states are dropped"]
+    },
+    {
+      "id": "T-NAME-SANITIZED",
+      "type": "unit+socket+e2e",
+      "covers": ["UF-GRIEF-MODERATE-ROOM"],
+      "assertions": ["Server normalizes name length/content", "Lobby/results render names safely", "Rejected names produce friendly copy"]
+    },
+    {
+      "id": "T-HOST-DESTRUCTIVE-CONFIRM",
+      "type": "e2e",
+      "covers": ["UF-HOST-DESTRUCTIVE-ACTIONS"],
+      "assertions": ["Restart/back-to-lobby/reset-all require confirm/hold", "Controllers/viewers receive announcement"]
+    },
+    {
+      "id": "T-ROOM-TTL-REAP",
+      "type": "unit+socket",
+      "covers": ["UF-END-SESSION-ROOM-TTL"],
+      "assertions": ["Idle/finished/host-lost rooms expire by policy", "Late join after reaping gets expired/not-found CTA"]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "UF-DEC-001",
+      "summary": "Should mixed Local plus remote viewer/driver be supported as a seat capability, or should Local/Remote remain mutually exclusive room topologies in v1?",
+      "recommended": "Support it as a seat/viewer capability if Remote is being built anyway; otherwise explicitly defer mixed topology and keep invite copy honest.",
+      "blocks": ["UF-JOIN-MIXED-PAIR-PHONE", "UF-JOIN-REMOTE-LINK-CHOOSER"]
+    },
+    {
+      "id": "UF-DEC-002",
+      "summary": "What is the Race finish-grace duration and DNF ranking formula?",
+      "recommended": "Use a configurable visible grace window, initially 30-45 seconds or a percentage of leader time; rank unfinished by lap, checkpoint, then distance to next checkpoint.",
+      "blocks": ["UF-RACE-FIRST-FINISH-GRACE-DNF", "UF-JOIN-LATE-RACE-FINISH-GRACE"]
+    },
+    {
+      "id": "UF-DEC-003",
+      "summary": "Do spectators ship in Remote v1?",
+      "recommended": "Define spectator role now even if UI is hidden; it is needed for late joins, eliminated derby players, and finish-grace viewers.",
+      "blocks": ["UF-JOIN-SPECTATOR", "UF-SPECTATOR-ELIMINATED-FINISHED"]
+    },
+    {
+      "id": "UF-DEC-004",
+      "summary": "What should happen to a derby player who disconnects mid-round?",
+      "recommended": "Mark away briefly, then auto-eliminate or queue for next round; never leave the seat as a counted immortal survivor.",
+      "blocks": ["UF-DERBY-ROUND-ELIMINATION", "UF-FAIL-PLAYER-LEAVE-VS-DROP"]
+    },
+    {
+      "id": "UF-DEC-005",
+      "summary": "Should QR joins auto-submit or require first-run confirmation?",
+      "recommended": "QR should prefill the room and name, but first run should require an obvious Join confirmation; repeat reconnect can remain one-tap.",
+      "blocks": ["UF-JOIN-LOCAL-QR-CODE"]
+    }
+  ]
+}
