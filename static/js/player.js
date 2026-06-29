@@ -1205,22 +1205,22 @@ function createCarModel(color) {
     
     // Car body
     const bodyGeometry = new THREE.BoxGeometry(2, 1, 4);
-    const bodyMaterial = new THREE.MeshStandardMaterial({ color: color });
+    const bodyMaterial = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.5;
     carGroup.add(body);
-    
+
     // Car roof
     const roofGeometry = new THREE.BoxGeometry(1.5, 0.7, 2);
-    const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.DoubleSide });
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
     roof.position.y = 1.35;
     roof.position.z = -0.2;
     carGroup.add(roof);
-    
+
     // Wheels
     const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
-    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const wheelMaterial = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
     
     // Front left wheel
     const wheelFL = new THREE.Mesh(wheelGeometry, wheelMaterial);
@@ -1556,6 +1556,14 @@ function handleInput() {
     const elapsed = currentTime - lastInputUpdate;
     
     if (elapsed >= INPUT_SEND_INTERVAL) {
+        // Stop streaming control payloads once a build skew is detected: a stale
+        // client must not keep driving a possibly-changed server contract. The
+        // reload banner (buildSkewBanner.js) tells the player how to recover.
+        if (window.__buildStale) {
+            lastInputUpdate = currentTime;
+            return;
+        }
+
         // Get current control states
         const controls = {
             steering: gameState.controls.steering,
