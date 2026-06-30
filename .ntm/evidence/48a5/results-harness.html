@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>48a.5 ResultsUI evidence harness</title>
+  <!-- Load the SHARED design tokens (:root --bg-*, --green, --warn, --danger, ...)
+       that ResultsUI.js now references via var(). -->
+  <link rel="stylesheet" href="../../../static/css/host.css" />
+  <style>
+    html, body { margin: 0; height: 100%; background: var(--bg-deep, #0d1429); }
+  </style>
+</head>
+<body>
+  <!-- Drives the REAL static/js/ui/ResultsUI.js component (no mock of the UI). -->
+  <script type="module">
+    import { ResultsUI } from '../../../static/js/ui/ResultsUI.js';
+
+    const ui = new ResultsUI({ container: document.body, eventBus: { on() {}, emit() {} } });
+    ui.init();
+    window.__ui = ui;
+
+    window.showRace = () => ui.showResults([
+      { position: 1, playerId: 'Ava',  finishTime: 92345,  bestLapTime: 30115 },
+      { position: 2, playerId: 'Bo',   finishTime: 94120,  bestLapTime: 30890 },
+      { position: 3, playerId: 'Cy',   finishTime: 97540,  bestLapTime: 31420 },
+      { position: 4, playerId: 'Dot',  finishTime: 101230, bestLapTime: 32990 },
+    ]);
+
+    window.showDerby = () => ui.showDerbyResults({
+      winnerId: 'Ava',
+      standings: [
+        { position: 1, playerId: 'Ava', roundWins: 2, totalPoints: 26 },
+        { position: 2, playerId: 'Bo',  roundWins: 1, totalPoints: 18 },
+        { position: 3, playerId: 'Cy',  roundWins: 0, totalPoints: 11 },
+        { position: 4, playerId: 'Dot', roundWins: 0, totalPoints: 7 },
+      ],
+    });
+
+    window.__ready = true;
+  </script>
+</body>
+</html>

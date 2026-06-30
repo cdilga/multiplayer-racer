@@ -132,8 +132,29 @@ class ResultsUI {
 
         const style = document.createElement('style');
         style.id = 'results-ui-styles';
+        // Chrome uses the shared design tokens from host.css/landing.css
+        // (--bg-base, --bg-panel, --green, --warn, --danger, --text-muted,
+        // --border, --font-sans, --radius-*). The only non-shared colors are
+        // semantic accents with no token equivalent - podium medal metallics and
+        // the derby "fire" accents - centralized as named local tokens below so
+        // there are no scattered hardcoded hex in the rules. Falls back to the
+        // legacy hex if the shared tokens aren't loaded.
         style.textContent = `
             .results-ui {
+                /* semantic accents (no shared-token equivalent) */
+                --podium-gold: #ffd700;
+                --podium-gold-deep: #b8860b;
+                --podium-silver: #c0c0c0;
+                --podium-silver-deep: #808080;
+                --podium-bronze: #cd7f32;
+                --podium-bronze-deep: #8b4513;
+                --derby-red: var(--danger, #f44336);
+                --derby-orange: #ff8844;
+                --derby-dark: #2a0f0f;
+                /* neutral surfaces derived from shared tokens */
+                --results-btn-secondary: rgba(255, 255, 255, 0.08);
+                --results-btn-secondary-hover: rgba(255, 255, 255, 0.16);
+
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -144,17 +165,17 @@ class ResultsUI {
                 align-items: center;
                 justify-content: center;
                 z-index: 100;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
             }
             .results-ui.hidden {
                 display: none;
             }
             .results-content {
-                background: #1a1a2e;
-                border-radius: 20px;
+                background: var(--bg-base, #1a1a2e);
+                border-radius: var(--radius-lg, 20px);
                 padding: 40px;
                 text-align: center;
-                color: white;
+                color: var(--text, #ffffff);
                 max-width: 600px;
                 width: 90%;
                 max-height: 90vh;
@@ -163,7 +184,7 @@ class ResultsUI {
             .results-title {
                 font-size: 36px;
                 margin: 0 0 30px;
-                color: #00ff88;
+                color: var(--green, #00ff88);
             }
             .results-podium {
                 display: flex;
@@ -177,9 +198,9 @@ class ResultsUI {
                 text-align: center;
             }
             .podium-player {
-                background: #16213e;
+                background: var(--bg-panel, #16213e);
                 padding: 15px 25px;
-                border-radius: 10px;
+                border-radius: var(--radius-md, 10px);
                 margin-bottom: 10px;
             }
             .podium-1 { order: 2; }
@@ -187,15 +208,15 @@ class ResultsUI {
             .podium-3 { order: 3; }
             .podium-1 .podium-stand {
                 height: 100px;
-                background: linear-gradient(#ffd700, #b8860b);
+                background: linear-gradient(var(--podium-gold), var(--podium-gold-deep));
             }
             .podium-2 .podium-stand {
                 height: 70px;
-                background: linear-gradient(#c0c0c0, #808080);
+                background: linear-gradient(var(--podium-silver), var(--podium-silver-deep));
             }
             .podium-3 .podium-stand {
                 height: 50px;
-                background: linear-gradient(#cd7f32, #8b4513);
+                background: linear-gradient(var(--podium-bronze), var(--podium-bronze-deep));
             }
             .podium-stand {
                 width: 80px;
@@ -205,16 +226,16 @@ class ResultsUI {
                 justify-content: center;
                 font-size: 32px;
                 font-weight: bold;
-                color: white;
+                color: var(--text, #ffffff);
                 text-shadow: 0 2px 4px rgba(0,0,0,0.5);
             }
             .podium-name {
                 font-weight: bold;
-                color: white;
+                color: var(--text, #ffffff);
             }
             .podium-time {
                 font-size: 12px;
-                color: #888;
+                color: var(--text-muted, #8d99ae);
                 font-family: monospace;
             }
             .results-table {
@@ -228,10 +249,10 @@ class ResultsUI {
             .results-table td {
                 padding: 12px;
                 text-align: left;
-                border-bottom: 1px solid #333;
+                border-bottom: 1px solid var(--border, rgba(76, 201, 240, 0.18));
             }
             .results-table th {
-                color: #888;
+                color: var(--text-muted, #8d99ae);
                 font-weight: normal;
                 font-size: 14px;
             }
@@ -239,7 +260,7 @@ class ResultsUI {
                 font-size: 16px;
             }
             .results-table tr:first-child td {
-                color: #ffd700;
+                color: var(--warn, #ffd166);
             }
             .results-table .position-cell {
                 font-weight: bold;
@@ -258,64 +279,74 @@ class ResultsUI {
                 font-size: 16px;
                 font-weight: bold;
                 border: none;
-                border-radius: 30px;
+                border-radius: var(--radius-full, 30px);
                 cursor: pointer;
-                transition: all 0.2s;
+                transition: all var(--transition, 0.2s);
             }
             .btn-primary {
-                background: #00ff88;
-                color: #1a1a2e;
+                background: var(--green, #00ff88);
+                color: var(--bg-base, #1a1a2e);
             }
             .btn-primary:hover {
-                background: #00cc6a;
+                background: color-mix(in srgb, var(--green, #00ff88) 82%, #000);
                 transform: scale(1.05);
             }
             .btn-secondary {
-                background: #333;
-                color: white;
+                background: var(--results-btn-secondary);
+                color: var(--text, #ffffff);
             }
             .btn-secondary:hover {
-                background: #444;
+                background: var(--results-btn-secondary-hover);
             }
 
             /* Derby Mode Styles */
             .results-ui.derby-mode .results-content {
-                background: linear-gradient(135deg, #2a0f0f 0%, #1a1a2e 100%);
-                border: 2px solid #FF4444;
-                box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+                background: linear-gradient(135deg, var(--derby-dark) 0%, var(--bg-base, #1a1a2e) 100%);
+                border: 2px solid var(--derby-red);
+                box-shadow: 0 0 30px rgba(244, 67, 54, 0.3);
             }
             .results-ui.derby-mode .results-title,
             .derby-title {
-                color: #FF4444 !important;
-                text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+                color: var(--derby-red) !important;
+                text-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
             }
             .results-ui.derby-mode .btn-primary {
-                background: linear-gradient(135deg, #FF4444, #FF8844);
-                color: white;
+                background: linear-gradient(135deg, var(--derby-red), var(--derby-orange));
+                color: var(--text, #ffffff);
             }
             .results-ui.derby-mode .btn-primary:hover {
-                background: linear-gradient(135deg, #FF6666, #FFAA66);
+                background: linear-gradient(135deg,
+                    color-mix(in srgb, var(--derby-red) 80%, #fff),
+                    color-mix(in srgb, var(--derby-orange) 80%, #fff));
             }
             .results-ui.derby-mode .podium-1 .podium-stand {
-                background: linear-gradient(#FF4444, #CC2222);
+                background: linear-gradient(var(--derby-red), color-mix(in srgb, var(--derby-red) 70%, #000));
             }
             .results-ui.derby-mode .podium-2 .podium-stand {
-                background: linear-gradient(#FF8844, #CC6633);
+                background: linear-gradient(var(--derby-orange), color-mix(in srgb, var(--derby-orange) 70%, #000));
             }
             .results-ui.derby-mode .podium-3 .podium-stand {
-                background: linear-gradient(#FFAA44, #CC8833);
+                background: linear-gradient(
+                    color-mix(in srgb, var(--derby-orange) 85%, var(--warn, #ffd166)),
+                    color-mix(in srgb, var(--derby-orange) 60%, #000));
             }
             .results-ui.derby-mode tr:first-child td {
-                color: #FF4444;
+                color: var(--derby-red);
             }
             .podium-winner .podium-player {
-                border: 2px solid #FF4444;
-                box-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+                border: 2px solid var(--derby-red);
+                box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
                 animation: winner-pulse 1.5s ease-in-out infinite;
             }
             @keyframes winner-pulse {
-                0%, 100% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.5); }
-                50% { box-shadow: 0 0 25px rgba(255, 68, 68, 0.8); }
+                0%, 100% { box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); }
+                50% { box-shadow: 0 0 25px rgba(244, 67, 54, 0.8); }
+            }
+            /* Respect reduced-motion: drop the looping pulse + button scale */
+            @media (prefers-reduced-motion: reduce) {
+                .podium-winner .podium-player { animation: none; }
+                .btn-primary:hover { transform: none; }
+                .results-btn { transition: none; }
             }
             .podium-stats {
                 display: flex;
@@ -324,16 +355,16 @@ class ResultsUI {
                 margin-top: 5px;
             }
             .podium-rounds {
-                color: #FF8844;
+                color: var(--derby-orange);
                 font-weight: bold;
             }
             .podium-points {
-                color: #888;
+                color: var(--text-muted, #8d99ae);
                 font-size: 12px;
             }
             .rounds-cell {
                 font-weight: bold;
-                color: #FF8844;
+                color: var(--derby-orange);
             }
             .points-cell {
                 font-family: monospace;
