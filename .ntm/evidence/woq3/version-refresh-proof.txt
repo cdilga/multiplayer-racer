@@ -1,0 +1,13 @@
+woq.3 long-lived /version refresh proof - 2026-06-30T22:51:12Z
+Demonstrates: a Flask process started against build A serves build B at /version after an IN-PLACE rebuild (version.json changes), WITHOUT a restart. This is the exact stale-client blocker.
+
+[1] Server PID 6544 started against current build.
+    /version (build A): {"buildId":"6e98ec84c166","buildSha":"6e98ec84c166a8015a595ca0188fa1038bb123e5","buildTime":"2026-06-30T22:50:03.853Z","manifest":"jj-build-version"}
+
+[2] Simulate in-place rebuild: overwrite dist/version.json with a NEW buildId + newer mtime (NO server restart).
+    wrote dist/version.json buildId=redeployed-build-XYZ789
+
+[3] /version (after rebuild, SAME process): {"buildId":"redeployed-build-XYZ789","buildSha":"redeployed-build-XYZ789-sha","buildTime":"2026-06-30T22:50:03.853Z","manifest":"jj-build-version"}
+
+RESULT: PASS - long-lived server refreshed /version to the new build without restart.
+    server stopped (PID 6544).

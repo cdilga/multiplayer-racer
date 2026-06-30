@@ -18,6 +18,8 @@
  *   bugReport.open();
  */
 
+import { BUILD_INFO, getSkewState } from '../buildInfo.js';
+
 const REPORT_EMAIL = 'bugs@jammers.dilger.dev';
 
 // The template guides the reporter toward the details that actually help.
@@ -60,6 +62,9 @@ function buildReportSlug(debugInfo = {}) {
  */
 function buildSummaryText(debugInfo = {}) {
     const players = Array.isArray(debugInfo.players) ? debugInfo.players.length : 0;
+    // Build identity + stale flag let a report be matched to the exact deploy
+    // and reveal "this was a stale client" bugs that look like gameplay faults.
+    const skew = getSkewState();
     return [
         `Time: ${debugInfo.timestamp || '-'}`,
         `Room: ${debugInfo.roomCode || '-'}`,
@@ -68,9 +73,28 @@ function buildSummaryText(debugInfo = {}) {
         `State: ${debugInfo.gameState || '-'}`,
         `FPS: ${debugInfo.fps != null ? debugInfo.fps : '-'}`,
         `Players: ${players}`,
+        `Build: ${BUILD_INFO.buildId} (${BUILD_INFO.buildSha.slice(0, 12)}) @ ${BUILD_INFO.buildTime}`,
+        `Stale client: ${skew.stale ? `YES - behind server ${skew.serverBuildId || '?'}` : 'no'}`,
         `URL: ${debugInfo.url || '-'}`,
         `Browser: ${debugInfo.userAgent || '-'}`
     ].join('\n');
+}
+
+/**
+ * Structured build/stale fields for a report payload. Pure (reads frozen build
+ * identity + latest skew state). Lets machine consumers correlate a report to a
+ * deploy and know whether the client was stale at submit time.
+ * @returns {{buildId: string, buildSha: string, buildTime: string, wasStale: boolean, serverBuildId: (string|null)}}
+ */
+function buildReportBuildInfo() {
+    const skew = getSkewState();
+    return {
+        buildId: BUILD_INFO.buildId,
+        buildSha: BUILD_INFO.buildSha,
+        buildTime: BUILD_INFO.buildTime,
+        wasStale: skew.stale === true,
+        serverBuildId: skew.serverBuildId
+    };
 }
 
 /**
@@ -136,6 +160,9 @@ class BugReportUI {
         } catch (e) {
             this.debugInfo = { collectError: String(e) };
         }
+        // Always attach build identity + stale flag so every report (even one
+        // whose game snapshot failed) carries the deploy correlation fields.
+        this.debugInfo.build = buildReportBuildInfo();
 
         try {
             this.screenshotDataUrl = this.captureScreenshot();
@@ -419,7 +446,7 @@ ${JSON.stringify(this.debugInfo, null, 2)}`;
 }
 
 // Export for ES Modules
-export { BugReportUI, REPORT_EMAIL, REPORT_TEMPLATE, buildReportSlug, buildSummaryText, buildMailto };
+export { BugReportUI, REPORT_EMAIL, REPORT_TEMPLATE, buildReportSlug, buildSummaryText, buildMailto, buildReportBuildInfo };
 
 // Export for non-module scripts
 if (typeof window !== 'undefined') {

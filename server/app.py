@@ -120,35 +120,61 @@ if os.path.exists(dist_path):
 # identity is written by the Vite build into dist/version.json; env vars and a
 # 'dev' fallback keep the endpoint working in source/dev mode.
 _BUILD_IDENTITY_CACHE = None
+# mtime of dist/version.json when the cache was populated (None = no manifest was
+# readable, e.g. dev/source mode). The cache is invalidated when this changes.
+_BUILD_IDENTITY_MTIME = None
 
 
 def _read_build_identity():
     """Resolve {buildId, buildSha, buildTime} for the running server.
 
     Precedence: dist/version.json (the built bundle's identity) -> explicit env
-    -> 'dev' fallback. Read once and memoized; a redeploy restarts the process,
-    so there is no stale-cache risk here.
+    -> 'dev' fallback.
+
+    The result is cached, but the cache is invalidated whenever dist/version.json
+    changes on disk (tracked by mtime). A long-lived/self-hosted Flask process
+    that is rebuilt IN PLACE (without a restart) - exactly what the stale-client
+    E2E does, and what an `npm run build` against a running dev server does - must
+    advertise the NEW build at /version, otherwise a freshly built (matching)
+    client is wrongly flagged stale. Steady-state calls still avoid re-reading the
+    file because the mtime is unchanged.
     """
-    global _BUILD_IDENTITY_CACHE
-    if _BUILD_IDENTITY_CACHE is not None:
+    global _BUILD_IDENTITY_CACHE, _BUILD_IDENTITY_MTIME
+
+    version_path = os.path.join(dist_path, 'version.json')
+    try:
+        mtime = os.path.getmtime(version_path)
+    except OSError:
+        mtime = None  # no built manifest -> dev/source mode
+
+    # Serve the cache only while the manifest on disk is unchanged.
+    if _BUILD_IDENTITY_CACHE is not None and mtime == _BUILD_IDENTITY_MTIME:
         return _BUILD_IDENTITY_CACHE
 
     identity = {'buildId': 'dev', 'buildSha': 'unknown', 'buildTime': 'dev'}
-    version_path = os.path.join(dist_path, 'version.json')
-    try:
-        with open(version_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        for key in ('buildId', 'buildSha', 'buildTime'):
-            value = data.get(key)
-            if isinstance(value, str) and value:
-                identity[key] = value
-    except (OSError, ValueError):
-        # No built manifest (dev/source mode) — fall back to env then defaults.
+    manifest_loaded = False
+    if mtime is not None:
+        try:
+            with open(version_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            for key in ('buildId', 'buildSha', 'buildTime'):
+                value = data.get(key)
+                if isinstance(value, str) and value:
+                    identity[key] = value
+            manifest_loaded = True
+        except (OSError, ValueError):
+            manifest_loaded = False
+
+    if not manifest_loaded:
+        # No readable built manifest (dev/source mode) - fall back to env then
+        # defaults. Track mtime as None so a later real build is picked up.
+        mtime = None
         identity['buildId'] = os.environ.get('BUILD_ID', identity['buildId'])
         identity['buildSha'] = os.environ.get('BUILD_SHA', identity['buildSha'])
         identity['buildTime'] = os.environ.get('BUILD_TIME', identity['buildTime'])
 
     _BUILD_IDENTITY_CACHE = identity
+    _BUILD_IDENTITY_MTIME = mtime
     return identity
 
 

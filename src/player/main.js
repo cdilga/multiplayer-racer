@@ -12,12 +12,18 @@ import * as THREE from 'three';
 import { io } from 'socket.io-client';
 import { ControlMapper } from '/static/js/input/ControlMapper.js';
 import { RemapStore } from '/static/js/input/RemapStore.js';
+import { initBuildSkew } from '/static/js/buildSkewBanner.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
 window.io = io;
 window.ControlMapper = ControlMapper;
 window.RemapStore = RemapStore;
+
+// Detect client/server build skew (stale tab after a redeploy) and show a
+// reload prompt; sets window.__buildStale so player.js stops sending control
+// payloads against a possibly-changed contract. Fail-open.
+initBuildSkew();
 
 // Load mobileUtils.js first (player.js depends on it)
 const mobileUtilsScript = document.createElement('script');

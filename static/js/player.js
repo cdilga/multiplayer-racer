@@ -2241,6 +2241,14 @@ function emitControlUpdate(currentTime = performance.now(), options = {}) {
         return null;
     }
 
+    // Stop streaming control payloads once a build skew is detected: a stale
+    // client must not keep driving a possibly-changed server contract. The
+    // reload banner (buildSkewBanner.js) tells the player how to recover.
+    if (window.__buildStale) {
+        lastInputUpdate = now;
+        return null;
+    }
+
     const playerControlUpdate = buildControlPacket(Date.now());
     socket.emit('player_control_update', playerControlUpdate);
 
