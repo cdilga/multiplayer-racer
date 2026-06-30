@@ -12,6 +12,24 @@ from PIL import Image
 import platform
 import subprocess
 import re
+import hmac
+import hashlib
+import time
+
+# Shared session vocabulary (topology / ruleset / role). Dual-import so the
+# module resolves both when run directly (`python server/app.py`, where
+# server/ is on sys.path) and when imported as a package (`server.app`, as the
+# tests do).
+try:
+    from session_vocabulary import (
+        DEFAULT_TOPOLOGY, normalize_topology,
+        DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
+    )
+except ImportError:  # pragma: no cover - import path shim
+    from server.session_vocabulary import (
+        DEFAULT_TOPOLOGY, normalize_topology,
+        DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
+    )
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -95,10 +113,64 @@ if os.path.exists(dist_path):
             response.headers['Cache-Control'] = 'no-cache'
         return response
 
+
+# --- Build identity / deploy versioning (woq.3) -----------------------------
+# The server advertises the exact build it is serving so a browser still running
+# an older bundle can detect the skew after a redeploy and prompt a reload. The
+# identity is written by the Vite build into dist/version.json; env vars and a
+# 'dev' fallback keep the endpoint working in source/dev mode.
+_BUILD_IDENTITY_CACHE = None
+
+
+def _read_build_identity():
+    """Resolve {buildId, buildSha, buildTime} for the running server.
+
+    Precedence: dist/version.json (the built bundle's identity) -> explicit env
+    -> 'dev' fallback. Read once and memoized; a redeploy restarts the process,
+    so there is no stale-cache risk here.
+    """
+    global _BUILD_IDENTITY_CACHE
+    if _BUILD_IDENTITY_CACHE is not None:
+        return _BUILD_IDENTITY_CACHE
+
+    identity = {'buildId': 'dev', 'buildSha': 'unknown', 'buildTime': 'dev'}
+    version_path = os.path.join(dist_path, 'version.json')
+    try:
+        with open(version_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        for key in ('buildId', 'buildSha', 'buildTime'):
+            value = data.get(key)
+            if isinstance(value, str) and value:
+                identity[key] = value
+    except (OSError, ValueError):
+        # No built manifest (dev/source mode) — fall back to env then defaults.
+        identity['buildId'] = os.environ.get('BUILD_ID', identity['buildId'])
+        identity['buildSha'] = os.environ.get('BUILD_SHA', identity['buildSha'])
+        identity['buildTime'] = os.environ.get('BUILD_TIME', identity['buildTime'])
+
+    _BUILD_IDENTITY_CACHE = identity
+    return identity
+
+
+@app.route('/version')
+def version_manifest():
+    """Stable version endpoint for client/server build-skew detection.
+
+    Always no-cache so a redeployed server immediately answers with the new
+    build id; an old client compares it against its baked-in build id and shows
+    a reload prompt instead of silently sending stale-contract payloads.
+    """
+    response = jsonify({'manifest': 'jj-build-version', **_read_build_identity()})
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
 # Game rooms dictionary
 # Structure: {
 #   'room_code': {
 #     'host_sid': host_session_id,
+#     'topology': 'local'|'remote'|'mixed',  # ROOM topology, fixed at creation
+#     'mode': 'race'|'derby',                 # RULESET (legacy key name)
 #     'players': {
 #       player_sid: {
 #         'id': player_id,
@@ -123,6 +195,170 @@ if os.path.exists(dist_path):
 #   }
 # }
 game_rooms = {}
+
+
+def _generate_host_token():
+    """Generate a signed host capability token."""
+    timestamp = str(int(time.time()))
+    nonce = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    message = f"{timestamp}:{nonce}".encode()
+    secret = app.config['SECRET_KEY'].encode()
+    signature = hmac.new(secret, message, hashlib.sha256).hexdigest()
+    return f"{timestamp}:{nonce}:{signature}"
+
+
+def _verify_host_token(token, max_age_seconds=3600):
+    """Verify a host capability token and return True if valid."""
+    if not token or not isinstance(token, str):
+        return False
+
+    parts = token.split(':')
+    if len(parts) != 3:
+        return False
+
+    timestamp_str, nonce, signature = parts
+    try:
+        timestamp = int(timestamp_str)
+    except ValueError:
+        return False
+
+    # Check token age (default 1 hour)
+    if time.time() - timestamp > max_age_seconds:
+        return False
+
+    # Verify signature
+    message = f"{timestamp_str}:{nonce}".encode()
+    secret = app.config['SECRET_KEY'].encode()
+    expected_sig = hmac.new(secret, message, hashlib.sha256).hexdigest()
+
+    return hmac.compare_digest(signature, expected_sig)
+
+
+def _check_host_authority(room_code, host_token, host_epoch):
+    """Validate host authority for a world-state mutation.
+
+    Returns (is_valid, error_message). Only returns True if:
+    - Socket is the current host
+    - Token matches the stored token (not expired)
+    - Epoch matches (rejects stale events from old reclaim)
+    """
+    if room_code not in game_rooms:
+        return False, 'Room not found'
+
+    room = game_rooms[room_code]
+    current_sid = request.sid
+    stored_token = room.get('host_token')
+    stored_epoch = room.get('host_epoch')
+
+    # Socket is not the current host
+    if room.get('host_sid') != current_sid:
+        return False, 'Not the current host'
+
+    # Token or epoch missing/mismatched
+    if not stored_token or not host_token:
+        return False, 'Invalid host token'
+
+    if not hmac.compare_digest(host_token, stored_token):
+        return False, 'Host token mismatch (may have been rotated)'
+
+    if host_epoch is None or host_epoch != stored_epoch:
+        return False, 'Stale host epoch (room may have been reclaimed)'
+
+    return True, None
+
+
+def _new_room_state(host_sid, topology=DEFAULT_TOPOLOGY):
+    """Build a fresh room-state dict with an explicit, validated topology.
+
+    Topology is the room's distribution axis (local/remote/mixed) and is kept
+    separate from the ruleset (race/derby, stored under the legacy ``mode``
+    key). Unknown topology values coerce to the default so the Local path can
+    never be broken by a bad client hint.
+    """
+    return {
+        'host_sid': host_sid,
+        'host_token': _generate_host_token(),
+        'host_epoch': 1,
+        'topology': normalize_topology(topology),
+        'players': {},
+        'game_state': 'waiting',
+        'disconnected_players': {},
+        'next_player_id': 1
+    }
+
+
+def _coerce_non_negative_int(value):
+    """Parse a non-negative integer from int/float/string input."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    if isinstance(value, float):
+        return int(value) if value >= 0 and value.is_integer() else None
+    if isinstance(value, str):
+        candidate = value.strip()
+        return int(candidate) if candidate.isdigit() else None
+    return None
+
+
+def _optional_sequence(data, field='seq'):
+    """Return (is_valid, seq_or_none) for an optional monotonic sequence."""
+    if not isinstance(data, dict) or field not in data:
+        return True, None
+    seq = _coerce_non_negative_int(data.get(field))
+    return seq is not None, seq
+
+
+def _normalize_result_row(entry):
+    """Validate and normalize one host-authored result row."""
+    if not isinstance(entry, dict):
+        return None
+
+    position = _coerce_non_negative_int(entry.get('position'))
+    player_id = _coerce_non_negative_int(entry.get('playerId'))
+    if position is None or position < 1 or player_id is None or player_id < 1:
+        return None
+
+    normalized = {
+        'position': position,
+        'playerId': player_id
+    }
+
+    vehicle_id = entry.get('vehicleId')
+    if vehicle_id is not None:
+        if isinstance(vehicle_id, bool) or not isinstance(vehicle_id, (int, str)):
+            return None
+        normalized['vehicleId'] = vehicle_id
+
+    for key in ('finishTime', 'bestLapTime', 'totalPoints'):
+        value = entry.get(key)
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        normalized[key] = value
+
+    if entry.get('roundWins') is not None:
+        round_wins = _coerce_non_negative_int(entry.get('roundWins'))
+        if round_wins is None:
+            return None
+        normalized['roundWins'] = round_wins
+
+    return normalized
+
+
+def _normalize_results_payload(results):
+    """Validate the reliable end-of-match results snapshot."""
+    if not isinstance(results, list):
+        return None
+
+    normalized = []
+    for entry in results:
+        row = _normalize_result_row(entry)
+        if row is None:
+            return None
+        normalized.append(row)
+    return normalized
 
 # Public base URL when deployed behind a reverse proxy / Cloudflare tunnel.
 # Unset for local development (LAN IP detection is used instead).
@@ -261,6 +497,16 @@ def player():
     room_code = request.args.get('room', '')
     return render_template('player/index.html', room_code=room_code)
 
+@app.route('/weapon-lab')
+def weapon_lab():
+    """Serve the standalone weapon test lab (dev surface).
+
+    Mirrors the host/player/car-viewer surfaces: a Vite-built page that drives
+    the real WeaponSystem through deterministic scenarios for debugging and
+    automated checks. Built into dist/frontend/weapon-lab/ via the Vite input.
+    """
+    return render_template('weapon-lab/index.html')
+
 @app.route('/qrcode/<room_code>')
 def generate_qr_code(room_code):
     """Generate a QR code for joining a specific room."""
@@ -304,22 +550,24 @@ def generate_qr_code(room_code):
 
 @socketio.on('create_room')
 def create_room(data=None):
-    """Host creates a new game room."""
+    """Host creates a new game room.
+
+    The optional ``topology`` field on ``data`` fixes the room as Local
+    (default), Remote, or Mixed for its lifetime. Local preserves today's
+    behaviour exactly: big screen renders, phones are controllers.
+    """
     host_sid = request.sid
+    topology = normalize_topology((data or {}).get('topology'))
     room_code = generate_room_code()
-    
+
     # Ensure room code is unique
     while room_code in game_rooms:
         room_code = generate_room_code()
-    
-    game_rooms[room_code] = {
-        'host_sid': host_sid,
-        'players': {},
-        'game_state': 'waiting',
-        'disconnected_players': {},
-        'next_player_id': 1
-    }
-    
+
+    room_state = _new_room_state(host_sid, topology)
+    game_rooms[room_code] = room_state
+    host_token = room_state['host_token']
+
     join_room(room_code)
 
     # Get join URL with proper IP for display
@@ -331,48 +579,91 @@ def create_room(data=None):
             port = host_parts[1]
     join_url = get_join_url(room_code, local_ip, port)
 
-    emit('room_created', {'room_code': room_code, 'join_url': join_url})
-    logger.info(f"Room created: {room_code}")
+    emit('room_created', {
+        'room_code': room_code,
+        'join_url': join_url,
+        'topology': topology,
+        'host_token': host_token,
+        'host_epoch': room_state['host_epoch']
+    })
+    logger.info(f"Room created: {room_code} (topology={topology})")
 
 @socketio.on('reclaim_room')
 def reclaim_room(data):
     """Host re-binds (or recreates) a room under a known code after a socket
     blip or server recycle, so players using the still-displayed code can
-    still join instead of hitting 'room doesn't exist'."""
+    still join instead of hitting 'room doesn't exist'. Requires valid host
+    capability token; rotates token on successful reclaim."""
+    if not isinstance(data, dict):
+        emit('error', {'message': 'Invalid reclaim payload'})
+        return
+
     host_sid = request.sid
     room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+
     if not room_code:
+        emit('error', {'message': 'Room code required'})
+        return
+
+    if not host_token or not _verify_host_token(host_token):
+        emit('error', {'message': 'Invalid or expired host token'})
+        logger.warning(f"Host reclaim rejected for {room_code}: invalid token")
         return
 
     if room_code in game_rooms:
-        # Existing room: rebind to the reconnected host socket
+        # Existing room: verify the token matches and rebind to the reconnected
+        # host socket. Rotate token on successful reclaim.
+        stored_token = game_rooms[room_code].get('host_token')
+        if not stored_token or not hmac.compare_digest(host_token, stored_token):
+            emit('error', {'message': 'Host token mismatch'})
+            logger.warning(f"Host reclaim rejected for {room_code}: token mismatch")
+            return
+
         game_rooms[room_code]['host_sid'] = host_sid
-        logger.info(f"Host reconnected, rebound room {room_code}")
+        game_rooms[room_code]['host_epoch'] += 1
+        game_rooms[room_code]['host_token'] = _generate_host_token()
+        game_rooms[room_code].setdefault('topology', DEFAULT_TOPOLOGY)
+        new_token = game_rooms[room_code]['host_token']
+        new_epoch = game_rooms[room_code]['host_epoch']
+        logger.info(f"Host reconnected, rebound room {room_code} (epoch={new_epoch})")
     else:
-        # Room was lost - recreate it empty under the same code
-        game_rooms[room_code] = {
-            'host_sid': host_sid,
-            'players': {},
-            'game_state': 'waiting',
-            'disconnected_players': {},
-            'next_player_id': 1
-        }
+        # Room was lost - recreate it empty under the same code. Token must still
+        # be valid (but won't match stored token since room is new).
+        game_rooms[room_code] = _new_room_state(host_sid, data.get('topology'))
+        new_token = game_rooms[room_code]['host_token']
+        new_epoch = game_rooms[room_code]['host_epoch']
         logger.info(f"Host reclaimed missing room {room_code}")
 
     join_room(room_code)
-    emit('room_reclaimed', {'room_code': room_code})
+    emit('room_reclaimed', {
+        'room_code': room_code,
+        'topology': game_rooms[room_code]['topology'],
+        'host_token': new_token,
+        'host_epoch': new_epoch
+    })
 
 
 @socketio.on('return_to_lobby')
 def return_to_lobby(data):
     """Host returned to the lobby: reset room state so subsequent joins are
-    treated as fresh lobby joins, not mid-race late joins."""
-    host_sid = request.sid
-    room_code = (data.get('room_code') or '').upper()
-
-    if not room_code or room_code not in game_rooms:
+    treated as fresh lobby joins, not mid-race late joins. Requires valid host
+    token and epoch."""
+    if not isinstance(data, dict):
+        emit('error', {'message': 'Invalid return_to_lobby payload'})
         return
-    if game_rooms[room_code]['host_sid'] != host_sid:
+
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+
+    if not room_code:
+        emit('error', {'message': 'Room code required'})
+        return
+
+    is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        emit('error', {'message': error_msg})
         return
 
     game_rooms[room_code]['game_state'] = 'waiting'
@@ -387,40 +678,59 @@ def player_control_update(data):
     Handle player control updates.
     Very simple, as all we need to do is some model validation and then pass through the controls as is to the correct room!
     """
-    # Extract data from control update
-    player_sid = data.get('player_id')  # Get player ID from the data payload instead of request.sid
-    room_code = data.get('room_code')
-    controls = data.get('controls', {})
+    if not isinstance(data, dict):
+        return
+
+    # The sending socket is authoritative for controller identity. We still
+    # accept the legacy payload `player_id` field, but only as a consistency
+    # check so a duplicate tab or spoofing client cannot impersonate another
+    # seat.
+    player_sid = request.sid
+    room_code = (data.get('room_code') or '').upper()
+    controls = data.get('controls')
     timestamp = data.get('timestamp')
-    # Validate required fields
-    if not all([player_sid, room_code, controls, timestamp]):
-        logger.info(f"Invalid control update data received: {data}")
+    if not room_code or not isinstance(controls, dict) or timestamp is None:
+        return
+
+    seq_valid, seq = _optional_sequence(data)
+    if not seq_valid:
         return
 
     # Validate room existence and host availability
     if not room_code or room_code not in game_rooms:
-        logger.warning(f"Player {player_sid} sent control update for non-existent room {room_code}")
         return
 
     room = game_rooms[room_code]
     host_sid = room.get('host_sid')
     if not host_sid:
-        logger.warning(f"No host found for room {room_code}")
+        return
+
+    player_data = room.get('players', {}).get(player_sid)
+    if not player_data:
+        return
+
+    declared_player_id = data.get('player_id')
+    if declared_player_id not in (None, player_data['id']):
         return
 
     # Validate control values are within expected ranges
-    steering = max(-1.0, min(1.0, float(controls.get('steering', 0))))
-    acceleration = max(0.0, min(1.0, float(controls.get('acceleration', 0)))) 
-    braking = max(0.0, min(1.0, float(controls.get('braking', 0))))
+    try:
+        steering = max(-1.0, min(1.0, float(controls.get('steering', 0))))
+        acceleration = max(0.0, min(1.0, float(controls.get('acceleration', 0))))
+        braking = max(0.0, min(1.0, float(controls.get('braking', 0))))
+    except (TypeError, ValueError):
+        return
 
     # Create validated control update
     control_update = {
-        'player_id': player_sid,
+        'player_id': player_data['id'],
         'steering': steering,
-        'acceleration': acceleration, 
+        'acceleration': acceleration,
         'braking': braking,
         'timestamp': timestamp
     }
+    if seq is not None:
+        control_update['seq'] = seq
 
     # Forward the control update to the host only
     emit('player_controls_update', control_update, to=host_sid)
@@ -428,18 +738,34 @@ def player_control_update(data):
 
 @socketio.on('vehicle_states')
 def handle_vehicle_states(data):
+    """Handle vehicle state updates from host. Forward to all players in the room.
+    Requires valid host token and epoch; silently drops if invalid (volatile lane policy).
     """
-    Handle vehicle state updates from host.
-    Forward the states to all players in the room so they can update their local HUDs.
-    """
-    room_code = data.get('room_code')
-    vehicles = data.get('vehicles', [])
+    if not isinstance(data, dict):
+        return
 
-    if not room_code or room_code not in game_rooms:
+    room_code = (data.get('room_code') or '').upper()
+    vehicles = data.get('vehicles')
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+    seq_valid, seq = _optional_sequence(data)
+
+    if not room_code or room_code not in game_rooms or not seq_valid or not isinstance(vehicles, list):
+        return
+
+    # Volatile lane: drop silently on invalid token/epoch
+    is_valid, _ = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
         return
 
     # Broadcast to everyone in the room (including self/host, but players will filter)
-    emit('vehicle_states_update', {'vehicles': vehicles}, room=room_code)
+    payload = {
+        'room_code': room_code,
+        'vehicles': vehicles
+    }
+    if seq is not None:
+        payload['seq'] = seq
+    emit('vehicle_states_update', payload, room=room_code)
 
 
 @socketio.on('join_game')
@@ -541,6 +867,18 @@ def on_join_game(data):
     # Join Socket.IO room
     join_room(room_code)
 
+    # Player roles are CAPABILITIES, derived from topology (kept separate from
+    # the ruleset `mode`). A participant may hold more than one:
+    #   * Local  -> ['controller']  (input + HUD only; the host renders the
+    #               shared world -- enforced regardless of any can_render hint).
+    #   * Remote -> ['controller','viewer']  (driver-viewer: drives + renders).
+    #   * Mixed  -> ['controller'] for co-located HUD-only players, or
+    #               ['controller','viewer'] for those that render (can_render).
+    room_topology = room.get('topology', DEFAULT_TOPOLOGY)
+    can_render = bool(data.get('can_render'))
+    player_roles = participant_roles(room_topology, can_render=can_render)
+    player_role = primary_role(room_topology, can_render=can_render)
+
     # Notify player they've joined
     emit('game_joined', {
         'player_id': player_id,
@@ -549,7 +887,10 @@ def on_join_game(data):
         'reconnected': is_reconnecting,
         'is_late_join': is_late_join,
         'game_state': room['game_state'],
-        'mode': room.get('mode', 'race')
+        'mode': room.get('mode', DEFAULT_RULESET),
+        'topology': room_topology,
+        'role': player_role,
+        'roles': player_roles
     })
 
     # Notify everyone in the room about new/reconnected player (including host)
@@ -569,35 +910,98 @@ def on_join_game(data):
 
 @socketio.on('start_game')
 def start_game(data):
-    """Host starts the game in a room."""
-    room_code = data.get('room_code')
-    host_sid = request.sid
-    
-    if room_code not in game_rooms:
-        emit('error', {'message': 'Room not found'})
+    """Host starts the game in a room. Requires valid host token and epoch."""
+    if not isinstance(data, dict):
+        emit('error', {'message': 'Invalid start_game payload'})
         return
-    
-    if game_rooms[room_code]['host_sid'] != host_sid:
-        emit('error', {'message': 'Only the host can start the game'})
+
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+
+    if not room_code:
+        emit('error', {'message': 'Room code required'})
         return
-    
+
+    is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        emit('error', {'message': error_msg})
+        return
+
     game_rooms[room_code]['game_state'] = 'racing'
     emit('game_started', to=room_code)
     logger.info(f"Game started in room {room_code}")
 
-@socketio.on('mode_selected')
-def mode_selected(data):
-    """Host broadcasts mode selection to all players."""
-    room_code = data.get('room_code')
-    mode = data.get('mode')
-    host_sid = request.sid
 
-    if room_code not in game_rooms:
-        emit('error', {'message': 'Room not found'})
+@socketio.on('end_game')
+def end_game(data):
+    """Host publishes the reliable end-of-match results snapshot. Requires valid host token and epoch."""
+    if not isinstance(data, dict):
+        emit('error', {'message': 'Invalid results payload'})
         return
 
-    if game_rooms[room_code]['host_sid'] != host_sid:
-        emit('error', {'message': 'Only the host can select the mode'})
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+
+    if not room_code:
+        emit('error', {'message': 'Room code required'})
+        return
+
+    is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        emit('error', {'message': error_msg})
+        return
+
+    room = game_rooms[room_code]
+
+    seq_valid, seq = _optional_sequence(data)
+    if not seq_valid:
+        emit('error', {'message': 'Invalid results payload'})
+        return
+
+    results = _normalize_results_payload(data.get('results'))
+    if results is None:
+        emit('error', {'message': 'Invalid results payload'})
+        return
+
+    room['game_state'] = 'finished'
+    payload = {
+        'room_code': room_code,
+        'mode': room.get('mode', DEFAULT_RULESET),
+        'topology': room.get('topology', DEFAULT_TOPOLOGY),
+        'results': results
+    }
+    if seq is not None:
+        payload['seq'] = seq
+
+    emit('game_end', payload, room=room_code)
+    logger.info(f"Game ended in room {room_code}")
+
+@socketio.on('mode_selected')
+def mode_selected(data):
+    """Host broadcasts mode selection to all players. Requires valid host token and epoch."""
+    if not isinstance(data, dict):
+        emit('error', {'message': 'Invalid mode_selected payload'})
+        return
+
+    room_code = (data.get('room_code') or '').upper()
+    mode = data.get('mode')
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+
+    if not room_code or not mode:
+        emit('error', {'message': 'Room code and mode required'})
+        return
+
+    # Validate mode is one of the allowed rulesets
+    if mode not in RULESETS:
+        emit('error', {'message': f'Invalid mode: {mode}'})
+        return
+
+    is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        emit('error', {'message': error_msg})
         return
 
     # Store the selected mode
@@ -683,16 +1087,28 @@ def handle_disconnect():
 
 @socketio.on('reset_player_position')
 def handle_reset_position(data):
-    """Handle resetting a player's position."""
-    room_code = data.get('room_code')
+    """Handle resetting a player's position.
+    Requires valid host token and epoch (destructive host action).
+    """
+    if not isinstance(data, dict):
+        return
+
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
     player_id = data.get('player_id')
     position = data.get('position')
     rotation = data.get('rotation')
-    
+
     if not room_code or room_code not in game_rooms:
-        logger.error(f"Reset position: Room {room_code} not found")
         return
-    
+
+    # Validate host authority (token + epoch + SID)
+    is_valid, _ = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        logger.warning(f"reset_player_position rejected for {room_code}: invalid host authority")
+        return
+
     # Find the player in the room
     player_sid = None
     for sid, player_data in game_rooms[room_code]['players'].items():
@@ -702,15 +1118,15 @@ def handle_reset_position(data):
             player_data['position'] = position
             player_data['rotation'] = rotation
             player_data['velocity'] = [0, 0, 0]  # Reset velocity
-            
+
             logger.info(f"Resetting position for player {player_id} in room {room_code} to {position}")
-            
+
             # Notify the player to reset their position
             emit('position_reset', {
                 'position': position,
                 'rotation': rotation
             }, to=sid)
-            
+
             # Also notify the host for visual updates
             emit('player_position_update', {
                 'player_id': player_id,
@@ -762,17 +1178,27 @@ def handle_request_car_reset(data):
 
 @socketio.on('weapon_pickup')
 def handle_weapon_pickup(data):
-    """Handle weapon pickup notification from host to player."""
-    host_sid = request.sid
-    room_code = data.get('room_code')
+    """Handle weapon pickup notification from host to player.
+    Requires valid host token and epoch (not just host SID).
+    """
+    if not isinstance(data, dict):
+        return
+
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
     target_player_id = data.get('player_id')
 
     if not room_code or room_code not in game_rooms:
         return
 
-    room = game_rooms[room_code]
-    if room['host_sid'] != host_sid:
+    # Validate host authority (token + epoch + SID)
+    is_valid, _ = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        logger.warning(f"weapon_pickup rejected for {room_code}: invalid host authority")
         return
+
+    room = game_rooms[room_code]
 
     # Find target player's socket
     for sid, player_data in room['players'].items():
@@ -786,17 +1212,27 @@ def handle_weapon_pickup(data):
 
 @socketio.on('weapon_fired')
 def handle_weapon_fired(data):
-    """Handle weapon fired notification from host to player."""
-    host_sid = request.sid
-    room_code = data.get('room_code')
+    """Handle weapon fired notification from host to player.
+    Requires valid host token and epoch (not just host SID).
+    """
+    if not isinstance(data, dict):
+        return
+
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
     target_player_id = data.get('player_id')
 
     if not room_code or room_code not in game_rooms:
         return
 
-    room = game_rooms[room_code]
-    if room['host_sid'] != host_sid:
+    # Validate host authority (token + epoch + SID)
+    is_valid, _ = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        logger.warning(f"weapon_fired rejected for {room_code}: invalid host authority")
         return
+
+    room = game_rooms[room_code]
 
     # Find target player's socket
     for sid, player_data in room['players'].items():
