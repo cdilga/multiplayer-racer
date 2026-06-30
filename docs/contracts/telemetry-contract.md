@@ -54,7 +54,7 @@ Events are organized by category and must be allowlisted. Format: `category:subc
 | Name | Role | Description | Properties |
 |------|------|-------------|------------|
 | `gameplay:match:started` | host | Match initialization | `playerCount`, `mode` |
-| `gameplay:match:ended` | host | Match conclusion | `winners` (array of playerAnalyticsId), `duration_ms` |
+| `gameplay:match:ended` | host | Match conclusion | `winnerCount`, `winnerPlayerAnalyticsIds` (bounded delimited string of anonymous IDs), `duration_ms` |
 | `gameplay:player:joined` | host | Player joined match | `playerCount` |
 | `gameplay:player:left` | host | Player departed | `playerCount` |
 | `gameplay:race:lap_completed` | host | Lap finished | `lapNumber`, `duration_ms` |
@@ -127,8 +127,8 @@ Events are organized by category and must be allowlisted. Format: `category:subc
 
 ### Enforcement
 
-- Telemetry service MUST redact forbidden fields on emit.
-- Tests MUST detect and fail on forbidden patterns.
+- Telemetry service MUST sanitize events before queueing: forbidden fields or forbidden values are replaced with `[redacted]`.
+- Tests MUST prove queued events do not retain forbidden raw values.
 - Code review checklist includes privacy audit for new event properties.
 
 ## Sampling & Rate Limiting
@@ -201,8 +201,8 @@ if (eventName.startsWith("perf:") || eventName.startsWith("server:")) {
 
 - **Event names**: Validate against allowlist.
 - **Required fields**: Ensure all TelemetryEvent fields present.
-- **Property bounds**: Check property values are string/number/boolean/null; object depth ≤ 2; string length ≤ 500.
-- **Privacy redaction**: Scan for forbidden patterns (raw names, IPs, tokens).
+- **Property bounds**: Check property values are string/number/boolean/null only; arrays/objects are rejected; string length ≤ 500.
+- **Privacy redaction**: Prove forbidden raw values (names, room codes, IPs, query strings, tokens, socket IDs) are replaced before queueing.
 - **Correlation**: Verify matching `release`, `roomAnalyticsId`, `matchId` across host, controller, server events.
 - **Sampling**: Confirm no per-frame event names.
 
@@ -278,7 +278,7 @@ if (eventName.startsWith("perf:") || eventName.startsWith("server:")) {
 }
 ```
 
-### Invalid: Raw Player Name
+### Sanitized: Raw Player Name
 
 ```json
 {
@@ -288,7 +288,7 @@ if (eventName.startsWith("perf:") || eventName.startsWith("server:")) {
     "player2": "Bob"
   }
 }
-// ❌ FAIL: displayNames forbidden; use playerAnalyticsId instead
+// ✅ QUEUED AS: { "player1": "[redacted]", "player2": "[redacted]" }
 ```
 
 ### Invalid: Per-Frame Event

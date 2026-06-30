@@ -21,12 +21,28 @@ const ALLOWED_EVENT_NAMES = new Set([
     'perf:server:request_sample'
 ]);
 
-const FORBIDDEN_PATTERNS = [
-    /\b(Alice|Bob|Charlie|Player\d+)\b/i,
-    /room[-_]?code/i,
-    /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,
-    /token|secret|key|password/i,
-    /socket[._]?id/i
+const REDACTED_VALUE = '[redacted]';
+
+const SENSITIVE_KEY_PATTERNS = [
+    /display[_-]?name/i,
+    /player[_-]?name/i,
+    /nick[_-]?name/i,
+    /^player\d+$/i,
+    /room[_-]?code/i,
+    /join[_-]?code/i,
+    /(^|[_-])query$/i,
+    /(^|[_-])(url|href|referrer|location)$/i,
+    /(^|[_-])(api[_-]?key|auth[_-]?key|access[_-]?key|private[_-]?key)$/i,
+    /token|secret|password/i,
+    /socket[._-]?id/i,
+    /(^|[_-])(client[_-]?ip|ip[_-]?address|remote[_-]?addr)$/i
+];
+
+const SENSITIVE_VALUE_PATTERNS = [
+    /\b\d{1,3}(?:\.\d{1,3}){3}\b/,
+    /(?:^|[?&])(room|code|token|secret|password|api[_-]?key)=/i,
+    /^https?:\/\/\S+\?\S+=\S+/i,
+    /\bBearer\s+[A-Za-z0-9._-]+/i
 ];
 
 const MAX_PROPERTY_VALUE_LENGTH = 500;
@@ -109,13 +125,10 @@ class TelemetryService {
                     err.code = 'PROPERTY_VALUE_TOO_LONG';
                     throw err;
                 }
-                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    if (depth >= MAX_PROPERTY_DEPTH) {
-                        const err = new Error(`Property depth exceeds ${MAX_PROPERTY_DEPTH}`);
-                        err.code = 'PROPERTY_DEPTH_EXCEEDED';
-                        throw err;
-                    }
-                    check(value, depth + 1);
+                if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+                    const err = new Error(`Property value must be string, number, boolean, or null: ${key}`);
+                    err.code = 'INVALID_PROPERTY_VALUE';
+                    throw err;
                 }
             }
         };
@@ -123,22 +136,30 @@ class TelemetryService {
         check(props, 1);
     }
 
-    _checkPrivacy(event) {
-        const serialized = JSON.stringify(event);
-        for (const pattern of FORBIDDEN_PATTERNS) {
-            if (pattern.test(serialized)) {
-                const err = new Error(`Privacy violation detected: forbidden pattern found`);
-                err.code = 'PRIVACY_VIOLATION';
-                err.pattern = pattern.toString();
-                throw err;
+    _shouldRedactKey(key) {
+        return SENSITIVE_KEY_PATTERNS.some((pattern) => pattern.test(key));
+    }
+
+    _shouldRedactValue(value) {
+        return typeof value === 'string' && SENSITIVE_VALUE_PATTERNS.some((pattern) => pattern.test(value));
+    }
+
+    _sanitizeProperties(properties = {}) {
+        const sanitized = {};
+        for (const [key, value] of Object.entries(properties)) {
+            if (this._shouldRedactKey(key) || this._shouldRedactValue(value)) {
+                sanitized[key] = REDACTED_VALUE;
+            } else {
+                sanitized[key] = value;
             }
         }
+        return sanitized;
     }
 
     _sanitize(event) {
         const sanitized = { ...event };
         if (sanitized.properties) {
-            sanitized.properties = JSON.parse(JSON.stringify(sanitized.properties));
+            sanitized.properties = this._sanitizeProperties(sanitized.properties);
         }
         return sanitized;
     }
@@ -164,7 +185,6 @@ class TelemetryService {
 
             this._validateRequiredFields(event);
             this._validateProperties(properties);
-            this._checkPrivacy(event);
 
             const sanitized = this._sanitize(event);
 

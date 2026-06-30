@@ -190,18 +190,27 @@ describe('telemetry contract - property bounds', () => {
 
         expect(() => {
             service.emit('gameplay:match:started', deep);
-        }).toThrow('depth');
+        }).toThrow('must be string, number, boolean, or null');
     });
 
-    it('accepts flat and shallow properties', () => {
+    it('rejects shallow object properties', () => {
         const shallow = {
             level1: {
                 level2: 'ok'
             }
         };
 
-        service.emit('gameplay:match:started', shallow);
-        expect(service.queue.length).toBe(1);
+        expect(() => {
+            service.emit('gameplay:match:started', shallow);
+        }).toThrow('must be string, number, boolean, or null');
+    });
+
+    it('rejects array properties', () => {
+        expect(() => {
+            service.emit('gameplay:match:ended', {
+                winnerPlayerAnalyticsIds: ['player-a', 'player-b']
+            });
+        }).toThrow('must be string, number, boolean, or null');
     });
 
     it('validates property types', () => {
@@ -226,28 +235,62 @@ describe('telemetry contract - privacy', () => {
         service.setPlayerAnalyticsId('player-123');
     });
 
-    it('rejects raw player display names', () => {
-        expect(() => {
-            service.emit('gameplay:match:started', { player1: 'Alice', player2: 'Bob' });
-        }).toThrow('Privacy violation');
+    it('redacts raw player display names', () => {
+        service.emit('gameplay:match:started', {
+            player1: 'Alice',
+            playerDisplayName: 'Speedy McSpeedface',
+            nickname: 'Track Champ'
+        });
+
+        expect(service.queue[0].properties).toEqual({
+            player1: '[redacted]',
+            playerDisplayName: '[redacted]',
+            nickname: '[redacted]'
+        });
     });
 
-    it('rejects raw IP addresses', () => {
-        expect(() => {
-            service.emit('server:room:created', { clientIp: '192.168.1.1' });
-        }).toThrow('Privacy violation');
+    it('redacts raw room codes', () => {
+        service.emit('server:room:created', {
+            roomCode: 'ABCD',
+            join_code: 'WXYZ'
+        });
+
+        expect(service.queue[0].properties).toEqual({
+            roomCode: '[redacted]',
+            join_code: '[redacted]'
+        });
     });
 
-    it('rejects tokens and secrets', () => {
-        expect(() => {
-            service.emit('error:server:crash', { apiToken: 'secret123' });
-        }).toThrow('Privacy violation');
+    it('redacts raw IP addresses', () => {
+        service.emit('server:room:created', { clientIp: '192.168.1.1' });
+        expect(service.queue[0].properties.clientIp).toBe('[redacted]');
     });
 
-    it('rejects socket IDs', () => {
-        expect(() => {
-            service.emit('gameplay:player:joined', { socket_id: 'abc123xyz' });
-        }).toThrow('Privacy violation');
+    it('redacts query strings and URLs with query parameters', () => {
+        service.emit('error:network:disconnect', {
+            url: 'https://jj.example/join?room=ABCD&token=secret',
+            location: '/join?room=ABCD',
+            safeRoute: '/join'
+        });
+
+        expect(service.queue[0].properties.url).toBe('[redacted]');
+        expect(service.queue[0].properties.location).toBe('[redacted]');
+        expect(service.queue[0].properties.safeRoute).toBe('/join');
+    });
+
+    it('redacts tokens and secrets', () => {
+        service.emit('error:server:crash', {
+            apiToken: 'secret123',
+            message: 'Bearer abc123'
+        });
+
+        expect(service.queue[0].properties.apiToken).toBe('[redacted]');
+        expect(service.queue[0].properties.message).toBe('[redacted]');
+    });
+
+    it('redacts socket IDs', () => {
+        service.emit('gameplay:player:joined', { socket_id: 'abc123xyz' });
+        expect(service.queue[0].properties.socket_id).toBe('[redacted]');
     });
 
     it('allows anonymous playerAnalyticsId', () => {
