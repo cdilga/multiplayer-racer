@@ -1,5 +1,32 @@
 import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, sendPlayerControls, releaseAllControls, gotoHost } from './fixtures';
 
+function boxesOverlap(a: null | { left: number, top: number, right: number, bottom: number }, b: null | { left: number, top: number, right: number, bottom: number }) {
+    if (!a || !b) return false;
+    return !(
+        a.right <= b.left ||
+        b.right <= a.left ||
+        a.bottom <= b.top ||
+        b.bottom <= a.top
+    );
+}
+
+async function joinExtraPlayers(browser, roomCode: string, names: string[]) {
+    const contexts: Array<{ context: any; page: any; name: string }> = [];
+
+    for (const name of names) {
+        const context = await browser.newContext({
+            viewport: { width: 375, height: 667 },
+            isMobile: true,
+            hasTouch: true,
+        });
+        const page = await context.newPage();
+        await joinGameAsPlayer(page, roomCode, name);
+        contexts.push({ context, page, name });
+    }
+
+    return contexts;
+}
+
 test.describe('Multiplayer Racer Game Flow', () => {
     test('car should have valid position after game starts', async ({ hostPage, playerPage }) => {
         // Host creates room
@@ -254,6 +281,126 @@ test.describe('Multiplayer Racer Game Flow', () => {
             await hostContext.close();
             await player1Context.close();
             await player2Context.close();
+        }
+    });
+
+    test('host markers keep a 4-car race readable and pulse on respawn and rejoin', async ({ hostPage, playerPage, browser }) => {
+        test.slow();
+        await gotoHost(hostPage);
+        const roomCode = await waitForRoomCode(hostPage);
+
+        await joinGameAsPlayer(playerPage, roomCode, 'PulseOne');
+        const extraPlayers = await joinExtraPlayers(browser, roomCode, ['PulseTwo', 'PulseThree', 'PulseFour']);
+
+        try {
+            await expect(hostPage.locator('#player-list')).toContainText('PulseFour', { timeout: 30000 });
+            await startGameFromHost(hostPage);
+            await hostPage.waitForTimeout(900);
+
+            await expect.poll(async () => hostPage.evaluate(() => {
+                // @ts-ignore - host bootstrap exposes the overlay globally
+                return window.__vehicleIdentityOverlay?.getDebugSnapshot()?.markerCount || 0;
+            })).toBe(4);
+
+            const raceSnapshot = await hostPage.evaluate(() => {
+                // @ts-ignore
+                const overlay = window.__vehicleIdentityOverlay;
+                const markers = overlay?.getDebugSnapshot?.()?.markers || [];
+                return {
+                    markerCount: markers.length,
+                    visibleCount: markers.filter((marker) => marker.visible).length
+                };
+            });
+            expect(raceSnapshot.markerCount).toBe(4);
+            expect(raceSnapshot.visibleCount).toBeGreaterThanOrEqual(3);
+            await hostPage.screenshot({ path: 'test-results/visual/own-car-race-4p.png' });
+
+            await hostPage.evaluate(() => {
+                // @ts-ignore
+                const game = window.game;
+                const target = game.vehicles.get(1) || Array.from(game.vehicles.values())[0];
+                game.systems.damage.applyDamage(target.id, 10000);
+            });
+            await expect.poll(async () => hostPage.evaluate(() => {
+                // @ts-ignore
+                const overlay = window.__vehicleIdentityOverlay;
+                return overlay?.getDebugSnapshot?.()?.markers?.some((marker) => marker.pulsing) || false;
+            }), { timeout: 10000 }).toBe(true);
+            await hostPage.screenshot({ path: 'test-results/visual/own-car-respawn-pulse.png' });
+
+            await playerPage.reload();
+            await joinGameAsPlayer(playerPage, roomCode, 'PulseOne');
+            await expect.poll(async () => hostPage.evaluate(() => {
+                // @ts-ignore
+                const overlay = window.__vehicleIdentityOverlay;
+                const marker = overlay?.getDebugSnapshot?.()?.markers?.find((entry) => entry.playerId === '1');
+                return !!marker?.pulsing;
+            }), { timeout: 10000 }).toBe(true);
+            await hostPage.screenshot({ path: 'test-results/visual/own-car-rejoin-pulse.png' });
+        } finally {
+            for (const extraPlayer of extraPlayers) {
+                await extraPlayer.context.close();
+            }
+        }
+    });
+
+    test('host markers stay visible in 4-car derby without covering HUD or camera controls', async ({ hostPage, playerPage, browser }) => {
+        test.slow();
+        await gotoHost(hostPage);
+        const roomCode = await waitForRoomCode(hostPage);
+
+        await joinGameAsPlayer(playerPage, roomCode, 'DerbyOne');
+        const extraPlayers = await joinExtraPlayers(browser, roomCode, ['DerbyTwo', 'DerbyThree', 'DerbyFour']);
+
+        try {
+            await expect(hostPage.locator('#player-list')).toContainText('DerbyFour', { timeout: 30000 });
+            await hostPage.click('.mode-card[data-mode="derby"]');
+            await startGameFromHost(hostPage);
+            await hostPage.waitForTimeout(1400);
+
+            await expect.poll(async () => hostPage.evaluate(() => {
+                // @ts-ignore
+                const overlay = window.__vehicleIdentityOverlay;
+                return overlay?.getDebugSnapshot?.()?.markerCount || 0;
+            })).toBe(4);
+
+            const overlapState = await hostPage.evaluate(() => {
+                const readBox = (element) => {
+                    if (!element) return null;
+                    const rect = element.getBoundingClientRect();
+                    return {
+                        left: rect.left,
+                        top: rect.top,
+                        right: rect.right,
+                        bottom: rect.bottom
+                    };
+                };
+
+                const markerBoxes = Array.from(document.querySelectorAll('.vehicle-id-marker'))
+                    .filter((element) => getComputedStyle(element).display !== 'none')
+                    .map((element) => readBox(element));
+                const occluders = [
+                    document.getElementById('race-timer'),
+                    document.querySelector('.hud-lap'),
+                    document.querySelector('.hud-health-bars'),
+                    document.querySelector('.hud-speed'),
+                    document.getElementById('camera-controls')
+                ].map((element) => readBox(element));
+
+                return { markerBoxes, occluders };
+            });
+
+            for (const markerBox of overlapState.markerBoxes) {
+                for (const occluderBox of overlapState.occluders) {
+                    expect(boxesOverlap(markerBox, occluderBox)).toBe(false);
+                }
+            }
+
+            await hostPage.screenshot({ path: 'test-results/visual/own-car-derby-4p.png' });
+        } finally {
+            for (const extraPlayer of extraPlayers) {
+                await extraPlayer.context.close();
+            }
         }
     });
 

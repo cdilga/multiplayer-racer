@@ -156,4 +156,15 @@ export { EventBus, eventBus };
 if (typeof window !== 'undefined') {
     window.EventBus = EventBus;
     window.eventBus = eventBus;
+
+    // The host render owns own-car identity overlays. Attach that host-only
+    // helper lazily here so we do not have to touch more heavily contended
+    // runtime files while the bead swarm is active.
+    if (typeof document !== 'undefined' && document.getElementById('game-container')) {
+        import('../ui/VehicleIdentityOverlayBootstrap.js')
+            .then(({ ensureVehicleIdentityOverlay }) => ensureVehicleIdentityOverlay())
+            .catch((error) => {
+                console.warn('EventBus: Vehicle identity overlay bootstrap failed:', error);
+            });
+    }
 }
