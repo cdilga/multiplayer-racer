@@ -1,0 +1,159 @@
+{
+  "failures": [],
+  "frames": {
+    "closed": true,
+    "count": 8,
+    "degenerateIndices": [],
+    "totalLength": 200
+  },
+  "gates": [
+    {
+      "center": {
+        "x": 40,
+        "y": 0,
+        "z": 0
+      },
+      "depth": 4,
+      "heightBand": null,
+      "id": "finish",
+      "isFinishLine": true,
+      "normal": {
+        "x": -1,
+        "y": 0,
+        "z": 0
+      },
+      "tangent": {
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "width": 18
+    },
+    {
+      "center": {
+        "x": -40,
+        "y": 0,
+        "z": 0
+      },
+      "depth": 4,
+      "heightBand": null,
+      "id": "mid",
+      "isFinishLine": false,
+      "normal": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "tangent": {
+        "x": 0,
+        "y": 0,
+        "z": -1
+      },
+      "width": 18
+    }
+  ],
+  "geometryHash": "a87c794f",
+  "pairwiseDistances": [
+    {
+      "aId": "spawn-a",
+      "bId": "spawn-b",
+      "distance": 24
+    },
+    {
+      "aId": "spawn-a",
+      "bId": "spawn-c",
+      "distance": 48
+    },
+    {
+      "aId": "spawn-b",
+      "bId": "spawn-c",
+      "distance": 24
+    }
+  ],
+  "schema": "geometry-kernel/v1",
+  "source": {
+    "generatorVersion": "v1",
+    "mapId": "valid-octagon",
+    "recipe": "unit-test",
+    "seed": 12345
+  },
+  "spawns": [
+    {
+      "clearance": 3.5,
+      "headingRad": 0,
+      "id": "spawn-a",
+      "minPairDistance": 24,
+      "nearestSpawnId": "spawn-b",
+      "position": {
+        "x": -24,
+        "y": 1.5,
+        "z": -10
+      },
+      "reasons": [],
+      "support": {
+        "distance": null,
+        "hit": true,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": null,
+        "y": 0
+      },
+      "valid": true
+    },
+    {
+      "clearance": 3.2,
+      "headingRad": 0,
+      "id": "spawn-b",
+      "minPairDistance": 24,
+      "nearestSpawnId": "spawn-a",
+      "position": {
+        "x": 0,
+        "y": 1.5,
+        "z": -10
+      },
+      "reasons": [],
+      "support": {
+        "distance": null,
+        "hit": true,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": null,
+        "y": 0
+      },
+      "valid": true
+    },
+    {
+      "clearance": 3.1,
+      "headingRad": 0,
+      "id": "spawn-c",
+      "minPairDistance": 24,
+      "nearestSpawnId": "spawn-b",
+      "position": {
+        "x": 24,
+        "y": 1.5,
+        "z": -10
+      },
+      "reasons": [],
+      "support": {
+        "distance": null,
+        "hit": true,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": null,
+        "y": 0
+      },
+      "valid": true
+    }
+  ],
+  "valid": true,
+  "winding": "ccw"
+}

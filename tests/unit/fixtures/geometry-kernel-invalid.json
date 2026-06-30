@@ -1,0 +1,176 @@
+{
+  "failures": [
+    {
+      "code": "gate_frame_missing",
+      "frameIndex": 10,
+      "gateId": "broken-gate"
+    },
+    {
+      "code": "gate_degenerate",
+      "depth": 0,
+      "gateId": "broken-gate",
+      "width": 0
+    },
+    {
+      "actual": false,
+      "code": "support_missing",
+      "expected": true,
+      "spawnId": "spawn-0"
+    },
+    {
+      "actual": 0.5,
+      "code": "clearance_below_min",
+      "minimum": 2,
+      "spawnId": "spawn-0"
+    },
+    {
+      "actual": 3,
+      "code": "pair_distance_below_min",
+      "minimum": 8,
+      "nearestSpawnId": "spawn-1",
+      "spawnId": "spawn-0"
+    },
+    {
+      "actual": 1.2,
+      "code": "clearance_below_min",
+      "minimum": 2,
+      "spawnId": "spawn-1"
+    },
+    {
+      "actual": 3,
+      "code": "pair_distance_below_min",
+      "minimum": 8,
+      "nearestSpawnId": "spawn-0",
+      "spawnId": "spawn-1"
+    }
+  ],
+  "frames": {
+    "closed": true,
+    "count": 4,
+    "degenerateIndices": [],
+    "totalLength": 136.568542
+  },
+  "gates": [
+    {
+      "center": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "depth": 0,
+      "heightBand": null,
+      "id": "broken-gate",
+      "isFinishLine": false,
+      "normal": {
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "tangent": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "width": 0
+    }
+  ],
+  "geometryHash": "5eecdfa5",
+  "pairwiseDistances": [
+    {
+      "aId": "spawn-0",
+      "bId": "spawn-1",
+      "distance": 3
+    }
+  ],
+  "schema": "geometry-kernel/v1",
+  "source": {
+    "generatorVersion": "v1",
+    "mapId": "invalid-square",
+    "recipe": "unit-test",
+    "seed": 999
+  },
+  "spawns": [
+    {
+      "clearance": 0.5,
+      "headingRad": 0,
+      "id": "spawn-0",
+      "minPairDistance": 3,
+      "nearestSpawnId": "spawn-1",
+      "position": {
+        "x": 0,
+        "y": 1.5,
+        "z": 0
+      },
+      "reasons": [
+        {
+          "actual": false,
+          "code": "support_missing",
+          "expected": true,
+          "spawnId": "spawn-0"
+        },
+        {
+          "actual": 0.5,
+          "code": "clearance_below_min",
+          "minimum": 2,
+          "spawnId": "spawn-0"
+        },
+        {
+          "actual": 3,
+          "code": "pair_distance_below_min",
+          "minimum": 8,
+          "nearestSpawnId": "spawn-1",
+          "spawnId": "spawn-0"
+        }
+      ],
+      "support": {
+        "distance": null,
+        "hit": false,
+        "normal": null,
+        "source": null,
+        "y": null
+      },
+      "valid": false
+    },
+    {
+      "clearance": 1.2,
+      "headingRad": 0,
+      "id": "spawn-1",
+      "minPairDistance": 3,
+      "nearestSpawnId": "spawn-0",
+      "position": {
+        "x": 3,
+        "y": 1.5,
+        "z": 0
+      },
+      "reasons": [
+        {
+          "actual": 1.2,
+          "code": "clearance_below_min",
+          "minimum": 2,
+          "spawnId": "spawn-1"
+        },
+        {
+          "actual": 3,
+          "code": "pair_distance_below_min",
+          "minimum": 8,
+          "nearestSpawnId": "spawn-0",
+          "spawnId": "spawn-1"
+        }
+      ],
+      "support": {
+        "distance": null,
+        "hit": true,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": null,
+        "y": 0
+      },
+      "valid": false
+    }
+  ],
+  "valid": false,
+  "winding": "ccw"
+}

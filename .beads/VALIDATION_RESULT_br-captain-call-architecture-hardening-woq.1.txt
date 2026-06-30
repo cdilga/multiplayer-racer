@@ -1,0 +1,225 @@
+FRESH VALIDATION RESULT
+=======================
+
+Bead: br-captain-call-architecture-hardening-woq.1
+Title: ARCH math kernel for spawn, map, and camera guarantees
+Validator: Fresh Validation Agent
+Date: 2026-06-30
+Status: PASS ✓
+
+VALIDATION EVIDENCE CHECKLIST
+==============================
+
+[✓] UNIT TESTS PASS: npx vitest run tests/unit/geometry-kernel.test.js
+    Test Files: 1 passed (1)
+    Tests: 8 passed (8)
+    Duration: 11ms
+
+    Test Coverage:
+    ✓ Canonical loop winding and reversal (CCW normalization)
+    ✓ Frame derivation with arc length and tangent/normal vectors
+    ✓ Degenerate frame detection without input mutation
+    ✓ Edge offset calculations from canonical frame normals
+    ✓ Oriented gate construction from frame data
+    ✓ Point-in-gate membership testing
+    ✓ Segment-gate crossing detection (interpolation-based)
+    ✓ Stable geometry hashing (key order + float quantization invariant)
+    ✓ Diagnostic artifact reproduction (valid and invalid fixtures match)
+    ✓ Machine-readable spawn validation with failure codes
+    ✓ Pure execution without browser globals
+    ✓ No forbidden environment patterns
+
+[✓] PURITY GUARD: Static scan for forbidden patterns
+    Command: grep -rn "Date\.now\|performance\.now\|Math\.random\|window\|document\|THREE\|createElement\|appendChild\|innerWidth\|innerHeight" static/js/geometry/
+    Result: 0 violations found
+
+    Checked patterns:
+    ✓ No Date.now() or performance.now() (wall-clock time)
+    ✓ No Math.random() (non-determinism)
+    ✓ No window or document (browser globals)
+    ✓ No THREE (Three.js scene mutation)
+    ✓ No createElement/appendChild (DOM operations)
+    ✓ No innerWidth/innerHeight (viewport queries)
+
+[✓] DIAGNOSTIC FIXTURES: Valid and invalid machine-readable artifacts
+
+    Valid Fixture (tests/unit/fixtures/geometry-kernel-valid.json):
+    - Schema: geometry-kernel/v1
+    - Source: mapId=valid-octagon, seed=12345, recipe=unit-test
+    - Centerline: 8 points (closed loop, octagon)
+    - Frames: 8 frames, CCW winding, totalLength=200 units
+    - Gates: 2 gates with proper orientation
+      * finish (frameIndex 2): center (40, 0, 0), normal (-1,0,0), tangent (0,0,1)
+      * mid (frameIndex 6): center (-40, 0, 0), normal (1,0,0), tangent (0,0,-1)
+    - Spawns: 3 spawns, all valid
+      * spawn-a: position (-24, 1.5, -10), clearance 3.5, minPairDistance 24
+      * spawn-b: position (0, 1.5, -10), clearance 3.2, minPairDistance 24
+      * spawn-c: position (24, 1.5, -10), clearance 3.1, minPairDistance 24
+    - Pairwise distances: [24, 48, 24] → minDistance 24
+    - Constraints: minPairDistance=10, minClearance=2, requireSupport=true
+    - Result: valid=true, failures=[] (empty)
+    - Geometry hash: a87c794f (stable across runs)
+
+    Invalid Fixture (tests/unit/fixtures/geometry-kernel-invalid.json):
+    - Schema: geometry-kernel/v1
+    - Source: mapId=invalid-square, seed=999, recipe=unit-test
+    - Centerline: 4 points (closed loop with duplicate point, degenerate)
+    - Frames: 4 frames, closed loop, totalLength≈136.57 units
+    - Gates: 1 gate, broken
+      * broken-gate (frameIndex 10): OUT OF BOUNDS (only 4 frames)
+      * width=0, depth=0 (degenerate)
+    - Spawns: 2 spawns, both invalid
+      * spawn-0: position (0, 1.5, 0), clearance 0.5, support.hit=false, minPairDistance 3
+      * spawn-1: position (3, 1.5, 0), clearance 1.2, support.hit=true, minPairDistance 3
+    - Pairwise distances: [3] → minDistance 3
+    - Constraints: minPairDistance=8, minClearance=2, requireSupport=true
+    - Result: valid=false, failures=[7 objects]
+
+    Failure codes (machine-readable):
+    1. gate_frame_missing: frameIndex 10 out of bounds
+    2. gate_degenerate: width 0, depth 0
+    3. support_missing: spawn-0 has support.hit=false but requireSupport=true
+    4. clearance_below_min: spawn-0, actual 0.5 < minimum 2
+    5. clearance_below_min: spawn-1, actual 1.2 < minimum 2
+    6. pair_distance_below_min: spawn-0, actual 3 < minimum 8, nearest spawn-1
+    7. pair_distance_below_min: spawn-1, actual 3 < minimum 8, nearest spawn-0
+
+    - Geometry hash: 5eecdfa5 (different from valid fixture, as expected)
+
+[✓] CONTRACT DOCUMENTATION: docs/contracts/geometry-kernel.md
+
+    Rules documented:
+    ✓ Plain data only: arrays, objects, numbers, booleans, strings
+    ✓ No window, document, THREE, scene mutation, wall-clock, random draws
+    ✓ Consumers provide runtime facts (raycast hits, viewport size)
+    ✓ Kernel normalizes and scores them
+
+    Public API (14 functions exported):
+    ✓ canonicalizeLoop(points) - CCW normalization and winding detection
+    ✓ deriveTrackFrames(centerline, options) - Frame derivation with arc length
+    ✓ deriveEdgesFromFrames(frames, halfWidth) - Left/right edge offsets
+    ✓ makeOrientedGate(frameOrGate, options) - Gate construction
+    ✓ containsPointInGate(point, gate) - Point membership testing
+    ✓ segmentCrossesGate(start, end, gate) - Crossing detection
+    ✓ measurePairwiseSpawnDistances(spawns) - Pairwise metrics
+    ✓ normalizeSupportHit(rawHit) - Support/raycast normalization
+    ✓ validateSpawnSet(spawns, constraints) - Spawn validation with diagnostics
+    ✓ hashGeometryBundle(bundle, options) - Deterministic geometry hash
+    ✓ buildGeometryDiagnostics(input) - Full diagnostic artifact generation
+    Plus: canonicalizeLoop, signedArea2D, stableCanonicalize, stableStringify
+
+    Consumer Boundaries (clear ownership assignments):
+    ✓ ProceduralTrackGenerator.js: Frame derivation, edge offsets, spawn heading,
+      checkpoint tangent/gate assembly, geometry-hash source bundles
+    ✓ Track.js: Oriented checkpoint tests (replaces current world-axis box check)
+    ✓ GameHost.js: Respawn/late-join heading, fail-loud validation reporting
+    ✓ RenderSystem.js: Pure camera-fit/clustering math with explicit viewport inputs
+    ✓ Map validator / debug overlay beads: Diagnostic artifact consumption
+
+    Sequencing Guard (adoption sequenced across beads):
+    ✓ This bead (br-captain-call-architecture-hardening-woq.1) owns:
+      - Pure kernel API and tests
+      - Fixture locks for diagnostic schema
+    ✓ Downstream beads own consumer adoption:
+      - br-fb-spawncap-qi9: Silent 16-spawn cap validation
+      - br-fb-mapvalid-allmodes-n47: Every mode x track map validation
+      - br-captain-call-architecture-hardening-woq.7: FB-camcluster camera grouping
+      - br-map-authoring-tool-j3i.2: MAP validator and diagnostics
+
+    Diagnostic Artifact Schema (geometry-kernel/v1):
+    ✓ source: metadata about generation
+    ✓ geometryHash: stable hash
+    ✓ valid: boolean
+    ✓ winding: 'ccw' | 'cw' | 'degenerate' | 'open'
+    ✓ frames: { count, closed, degenerateIndices, totalLength }
+    ✓ pairwiseDistances: array of { aId, bId, distance }
+    ✓ spawns: array with position, headingRad, clearance, support, minPairDistance, nearestSpawnId, valid, reasons
+    ✓ gates: array with center, tangent, normal, width, depth, heightBand, isFinishLine
+    ✓ failures: array with code, and context-specific fields
+
+ARTIFACTS VALIDATED
+===================
+
+File                                          Purpose                              Status
+────────────────────────────────────────────  ───────────────────────────────────  ──────
+static/js/geometry/GeometryKernel.js          Pure kernel implementation           ✓ 696 lines
+static/js/geometry/index.js                   Public export surface               ✓ 14 functions
+docs/contracts/geometry-kernel.md             Consumer contract specification      ✓ Complete
+tests/unit/geometry-kernel.test.js            Comprehensive unit tests            ✓ 8 tests
+tests/unit/fixtures/geometry-kernel-valid.json   Valid diagnostic fixture        ✓ Locked
+tests/unit/fixtures/geometry-kernel-invalid.json Invalid diagnostic fixture      ✓ Locked
+
+QUALITY PROPERTIES
+===================
+
+[✓] Determinism
+    - Hashing stable across JSON key order variations
+    - Hashing stable across quantized float noise (±1e-6)
+    - No time-based or random elements
+
+[✓] Purity
+    - Zero environmental dependencies (window, Date, Math.random, THREE)
+    - No DOM operations or side effects
+    - Pure functions with plain data I/O
+
+[✓] Immutability
+    - Input arrays never mutated
+    - All outputs are plain data structures
+    - No hidden state or closures
+
+[✓] Diagnostic Clarity
+    - Failure reasons machine-readable (code + context)
+    - All numeric values quantized to 1e-6 for stability
+    - IDs and indices provide traceability
+
+[✓] API Clarity
+    - 14 functions with single clear responsibility
+    - Consistent naming (derive*, make*, validate*, normalize*, etc.)
+    - Well-scoped: geometry and validation only
+
+[✓] Fixture Locks
+    - Valid and invalid fixtures tied to test assertions
+    - Schema version (geometry-kernel/v1) locked
+    - Future changes to kernel detected via fixture mismatch
+
+VALIDATION CONCLUSION
+=====================
+
+STATUS: PASS ✓
+
+All required acceptance criteria met:
+
+1. [✓] Unit CI passes: npx vitest run tests/unit/geometry-kernel.test.js
+        8/8 tests covering frames, gates, hashing, spawns, purity
+
+2. [✓] Purity guard: Static scan shows zero forbidden patterns
+        No Date.now, performance.now, Math.random, window, document, THREE, DOM
+
+3. [✓] API artifact: geometry-kernel.md documents 14 functions + consumer boundaries
+        Clear sequencing: kernel API in this bead, adoption in downstream beads
+
+4. [✓] Evidence artifacts: Valid and invalid diagnostic bundles locked + machine-readable
+        7 failure codes with context for invalid case
+        Full schema compliance for both fixtures
+
+5. [✓] Sequencing guard: Consumer adoption belongs to downstream beads
+        br-fb-spawncap-qi9, br-fb-mapvalid-allmodes-n47, br-captain-call-architecture-hardening-woq.7
+
+QUALITY SUMMARY:
+
+The geometry kernel is production-ready:
+- Pure, deterministic implementation with zero environmental dependencies
+- 14 well-scoped functions covering frame derivation, oriented gates, and spawn validation
+- Comprehensive unit tests with locked diagnostic fixtures
+- Clear consumer contracts with adoption sequenced across beads
+- Machine-readable diagnostics enabling fail-loud map validation
+
+NEXT STEPS:
+
+The kernel is ready for downstream beads to:
+1. Adopt frame derivation in ProceduralTrackGenerator
+2. Use oriented gate logic in Track checkpoint validation
+3. Feed diagnostic artifacts to map validators and debug overlays
+4. Implement fail-loud spawn and map validation in GameHost
+
+Do not close this bead. Post result to SageBasin in thread br-captain-call-architecture-hardening-woq.1.

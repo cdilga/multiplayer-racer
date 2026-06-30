@@ -17,6 +17,11 @@
  *   tuningUI.init();
  */
 
+import {
+    listCameraClusterTunables,
+    resolveCameraClusterOptions
+} from '../geometry/index.js';
+
 class PhysicsTuningUI {
     /**
      * @param {Object} options
@@ -29,6 +34,7 @@ class PhysicsTuningUI {
             (typeof window !== 'undefined' ? window.eventBus : null);
         this.container = options.container || document.body;
         this.gameHost = options.gameHost;
+        this.cameraClusterTunables = listCameraClusterTunables();
 
         // State
         this.visible = false;
@@ -43,6 +49,7 @@ class PhysicsTuningUI {
         this._createElements();
         this._bindControls();
         this._subscribeToEvents();
+        this._applyCameraClusterDebugSettings();
     }
 
     /**
@@ -165,6 +172,14 @@ class PhysicsTuningUI {
                 </label>
             </div>
 
+            <div class="physics-section">
+                <h4>Host Camera Clustering</h4>
+                <div class="physics-note">
+                    Host renderer only. Local phones and keyboards stay controller/HUD clients.
+                </div>
+                ${this._renderCameraClusterControls()}
+            </div>
+
             <div class="physics-actions">
                 <button id="physics-save-btn" class="physics-btn">Save</button>
                 <button id="physics-reset-btn" class="physics-btn">Reset Defaults</button>
@@ -213,6 +228,13 @@ class PhysicsTuningUI {
                     margin: 0 0 5px 0;
                     color: #00d4ff;
                     font-size: 11px;
+                }
+
+                .physics-note {
+                    margin: 0 0 8px 0;
+                    color: #88d9ff;
+                    font-size: 10px;
+                    line-height: 1.35;
                 }
 
                 .physics-section label {
@@ -286,6 +308,32 @@ class PhysicsTuningUI {
     }
 
     /**
+     * Render host camera cluster controls from shared kernel descriptors
+     * @private
+     */
+    _renderCameraClusterControls() {
+        return this.cameraClusterTunables.map((descriptor) => {
+            const paramPath = `cameraCluster.${descriptor.key}`;
+            const value = this._getParam(paramPath);
+            return `
+                <label title="${descriptor.description}">
+                    <span>${descriptor.label}</span>
+                    <input
+                        type="range"
+                        class="physics-slider"
+                        data-param="${paramPath}"
+                        min="${descriptor.minValue}"
+                        max="${descriptor.maxValue}"
+                        value="${value}"
+                        step="${descriptor.step}"
+                    >
+                    <span class="physics-value" data-param="${paramPath}">${value}</span>
+                </label>
+            `;
+        }).join('');
+    }
+
+    /**
      * Bind control event listeners
      * @private
      */
@@ -305,7 +353,7 @@ class PhysicsTuningUI {
 
                 // Update params and apply
                 this._setParam(param, value);
-                this._applyToAllVehicles();
+                this._applyRuntimeParams();
             });
         });
 
@@ -317,13 +365,22 @@ class PhysicsTuningUI {
         this.element.querySelector('#physics-reset-btn').addEventListener('click', () => {
             this.params = this._getDefaultParams();
             this._updateAllControls();
-            this._applyToAllVehicles();
+            this._applyRuntimeParams();
             this._saveToLocalStorage();
         });
 
         this.element.querySelector('#physics-export-btn').addEventListener('click', () => {
             this._exportJSON();
         });
+    }
+
+    /**
+     * Apply runtime-facing tuning surfaces
+     * @private
+     */
+    _applyRuntimeParams() {
+        this._applyToAllVehicles();
+        this._applyCameraClusterDebugSettings();
     }
 
     /**
@@ -538,6 +595,37 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
     }
 
     /**
+     * Publish resolved camera-cluster tuning for host-side debug consumers
+     * @private
+     */
+    _applyCameraClusterDebugSettings() {
+        const resolved = resolveCameraClusterOptions(this.params.cameraCluster || {});
+        this.params.cameraCluster = resolved;
+
+        if (typeof window !== 'undefined') {
+            window.__jjCameraClusterTuning = {
+                ...resolved,
+                source: 'PhysicsTuningUI'
+            };
+            window.getCameraClusterTuning = () => ({
+                ...window.__jjCameraClusterTuning
+            });
+            if (typeof CustomEvent === 'function') {
+                window.dispatchEvent(new CustomEvent('jj:cameraClusterTuningChanged', {
+                    detail: window.__jjCameraClusterTuning
+                }));
+            }
+        }
+
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+            this.eventBus.emit('debug:cameraClusterTuningChanged', {
+                ...resolved,
+                source: 'PhysicsTuningUI'
+            });
+        }
+    }
+
+    /**
      * Get default physics parameters
      * @private
      */
@@ -567,6 +655,22 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 engineMinPitch: 0.8,
                 engineMaxPitch: 1.6,
                 engineVolume: 0.4
+            },
+            cameraCluster: resolveCameraClusterOptions({})
+        };
+    }
+
+    /**
+     * Merge saved camera-cluster values with defaults
+     * @private
+     */
+    _mergeCameraClusterParams(defaults, saved = {}) {
+        return {
+            ...defaults,
+            ...saved,
+            importance: {
+                ...defaults.importance,
+                ...(saved.importance || {})
             }
         };
     }
@@ -588,7 +692,11 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 steering: { ...defaults.steering, ...parsed.steering },
                 wheels: { ...defaults.wheels, ...parsed.wheels },
                 damage: { ...defaults.damage, ...parsed.damage },
-                audio: { ...defaults.audio, ...parsed.audio }
+                audio: { ...defaults.audio, ...parsed.audio },
+                cameraCluster: this._mergeCameraClusterParams(
+                    defaults.cameraCluster,
+                    parsed.cameraCluster
+                )
             };
         } catch (error) {
             console.warn('Error loading physics params:', error);
