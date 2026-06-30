@@ -7,9 +7,9 @@ there is convincing test evidence and a fresh validator has checked that evidenc
 ## Quick Start
 
 ```bash
-SESSION=jj-bead-swarm
+SESSION=multiplayer-racer--bead-swarm
 
-ntm spawn "$SESSION" --cc=3 --cod=2 --agy=1
+ntm spawn "$SESSION" --cc=3 --cod=2
 ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 
 # Add one low-cost release manager pane for commits, pushes, and CI follow-up.
@@ -19,7 +19,8 @@ ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 ntm add multiplayer-racer --label bead-swarm --cc=1:haiku --prompt "$(cat .ntm/prompts/60-release-manager.md)"
 
 # After agents are registered and oriented, keep workers moving:
-ntm send "$SESSION" --all "$(cat .ntm/prompts/10-worker-next-bead.md)"
+ntm send "$SESSION" --cc --panes=<idle-claude-panes> --file .ntm/prompts/10-worker-next-bead.md
+ntm send "$SESSION" --cod --panes=<idle-codex-panes> --file .ntm/prompts/10-worker-next-bead.md
 
 # When one worker says implementation is complete, send one fresh agent a target bead:
 { cat .ntm/prompts/30-fresh-validator.md; printf "\n\nTarget bead: <bead-id>\n"; } > /tmp/jj-validator.md
@@ -42,6 +43,25 @@ br ready --json
 Never run bare `bv`; it opens an interactive TUI and can block an agent pane.
 If NTM reports Agent Mail unavailable for lock listing, fall back to the MCP Agent Mail tools before
 editing; do not treat the failed lock listing as permission to ignore reservations.
+
+## Active Swarm Posture
+
+Keep at least two Claude lanes and two Codex lanes assigned to useful non-blocked beads whenever
+there is ready work. Prefer targeted sends to idle panes over broad rebroadcasts once a swarm is
+already active:
+
+```bash
+ntm status "$SESSION"
+br ready --json
+bv --robot-next --format json
+
+ntm send "$SESSION" --pane=<idle-claude-pane> --file .ntm/prompts/10-worker-next-bead.md
+ntm send "$SESSION" --pane=<idle-codex-pane> --file .ntm/prompts/10-worker-next-bead.md
+```
+
+If all ready beads are blocked by validation findings, dispatch repair prompts to the current
+assignee or claim the smallest concrete unblocker. Do not mark a bead done just because the visible
+title is satisfied; the close gate is the broader player flow working coherently with evidence.
 
 ## Prompt Index
 

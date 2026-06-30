@@ -12,6 +12,8 @@ Start:
 Validation standard:
 
 - Re-run at least the most important command or test from the worker's evidence.
+- Confirm the evidence was produced against the final diff you are validating, not an earlier build,
+  stale `dist/`, stale screenshot, stale diagnostics file, or a different branch of the dirty tree.
 - For visual work, open or regenerate the screenshot/video/diagnostic output and verify it proves
   the claim. Check for blank canvases, stale assets, overlap, illegible text, missing player
   identity, weak device assumptions, and Local-vs-Remote role mistakes.
@@ -34,6 +36,8 @@ Decision:
   and the risk of known edge cases is addressed.
 - BLOCK if tests are missing, evidence is weak, acceptance criteria are unmet, behavior is ambiguous,
   or a broader-system contradiction remains.
+- BLOCK if the worker's slice only satisfies the literal bead title while leaving an obvious broken
+  join, result, map, controller, host/client, or documentation path adjacent to the change.
 - If you make fixes yourself, you become a worker for those fixes. Ask for a new fresh validator
   before closure.
 

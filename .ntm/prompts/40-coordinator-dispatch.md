@@ -5,8 +5,8 @@ Use this when steering an active NTM swarm.
 ## Start
 
 ```bash
-SESSION=jj-bead-swarm
-ntm spawn "$SESSION" --cc=3 --cod=2 --agy=1
+SESSION=multiplayer-racer--bead-swarm
+ntm spawn "$SESSION" --cc=3 --cod=2
 ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 ```
 
@@ -31,8 +31,15 @@ ntm --robot-snapshot
 Send workers:
 
 ```bash
-ntm send "$SESSION" --all "$(cat .ntm/prompts/10-worker-next-bead.md)"
+ntm status "$SESSION"
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/10-worker-next-bead.md
 ```
+
+Maintain at least two Claude workers and two Codex workers on useful non-blocked beads while ready
+work exists. Use Codex and Claude deliberately: Codex lanes are good for implementation/test repair
+loops; Claude lanes are good for requirements synthesis, validation, UI/UX review, and cross-flow
+consistency. Either kind of agent may implement or validate, but a validator must not be the worker
+who produced the slice being validated.
 
 Prefer unblocking foundational beads before broad polish. In this repo that often means protocol,
 room/seat lifecycle, determinism, map validity, debug-lab evidence tooling, and first-run flow
