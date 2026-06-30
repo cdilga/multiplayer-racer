@@ -1,0 +1,818 @@
+{
+  "manifest": "socket-protocol",
+  "version": "2026-06-30",
+  "vocabulary": {
+    "topologies": [
+      "local",
+      "remote",
+      "mixed"
+    ],
+    "rulesets": [
+      "race",
+      "derby"
+    ],
+    "roles": [
+      "host",
+      "controller",
+      "viewer",
+      "spectator"
+    ],
+    "seat": {
+      "definition": "A room-scoped participant identity that survives reconnect and duplicate-tab replacement.",
+      "current_wire_fields": {
+        "join_and_lifecycle": [
+          "player_id",
+          "id"
+        ],
+        "result_rows": [
+          "playerId"
+        ]
+      },
+      "current_invariant": "Within one room, the same seat keeps the same player_id across reconnect and duplicate-tab takeover until the dedicated seat registry lands."
+    }
+  },
+  "lanes": {
+    "reliable": {
+      "delivery": "state-changing or user-visible lifecycle events",
+      "malformed_default": "reject, coerce safely, or emit an error event; never mutate state from a malformed reliable packet"
+    },
+    "volatile": {
+      "delivery": "high-rate input or state snapshots",
+      "malformed_default": "drop silently; do not emit per-packet errors or logs"
+    }
+  },
+  "events": {
+    "create_room": {
+      "lane": "reliable",
+      "sender": "host",
+      "receiver": "server",
+      "sequence": {
+        "field": null,
+        "required": false,
+        "notes": "Topology is fixed at room creation; unknown topology values coerce to local."
+      },
+      "malformed": "Unknown or missing topology coerces to local; room creation still succeeds.",
+      "schema": {
+        "required": {},
+        "optional": {
+          "topology": {
+            "type": "topology"
+          }
+        }
+      }
+    },
+    "room_created": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "host",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "join_url": {
+            "type": "non_empty_string"
+          },
+          "topology": {
+            "type": "topology"
+          }
+        },
+        "optional": {}
+      }
+    },
+    "join_game": {
+      "lane": "reliable",
+      "sender": "joining client before role assignment",
+      "receiver": "server",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Invalid room code emits error; missing or malformed payload is rejected without creating a seat.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "player_name": {
+            "type": "non_empty_string"
+          }
+        },
+        "optional": {
+          "reconnect_id": {
+            "type": "positive_int"
+          },
+          "can_render": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "game_joined": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "one joined seat",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "player_id": {
+            "type": "positive_int"
+          },
+          "name": {
+            "type": "non_empty_string"
+          },
+          "car_color": {
+            "type": "hex_color"
+          },
+          "reconnected": {
+            "type": "boolean"
+          },
+          "is_late_join": {
+            "type": "boolean"
+          },
+          "game_state": {
+            "type": "game_state"
+          },
+          "mode": {
+            "type": "ruleset"
+          },
+          "topology": {
+            "type": "topology"
+          },
+          "role": {
+            "type": "role"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "role"
+            }
+          }
+        },
+        "optional": {}
+      }
+    },
+    "player_joined": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "room",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "id": {
+            "type": "positive_int"
+          },
+          "name": {
+            "type": "non_empty_string"
+          },
+          "car_color": {
+            "type": "hex_color"
+          },
+          "position": {
+            "type": "array",
+            "length": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "rotation": {
+            "type": "array",
+            "length": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "velocity": {
+            "type": "array",
+            "length": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "optional": {}
+      }
+    },
+    "player_left": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "host",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "player_id": {
+            "type": "positive_int"
+          },
+          "player_name": {
+            "type": "non_empty_string"
+          },
+          "can_reconnect": {
+            "type": "boolean"
+          }
+        },
+        "optional": {}
+      }
+    },
+    "player_control_update": {
+      "lane": "volatile",
+      "sender": "controller",
+      "receiver": "server",
+      "sequence": {
+        "field": "seq",
+        "required": false,
+        "notes": "If present, seq is monotonic per seat."
+      },
+      "malformed": "Drop if the socket is not the bound seat, if the declared player_id mismatches the bound seat, if controls are malformed, or if seq is invalid.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "controls": {
+            "type": "object",
+            "required": {
+              "steering": {
+                "type": "number"
+              },
+              "acceleration": {
+                "type": "number"
+              },
+              "braking": {
+                "type": "number"
+              }
+            },
+            "optional": {}
+          },
+          "timestamp": {
+            "type": "number"
+          }
+        },
+        "optional": {
+          "player_id": {
+            "type": "positive_int"
+          },
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "player_controls_update": {
+      "lane": "volatile",
+      "sender": "server",
+      "receiver": "host",
+      "sequence": {
+        "field": "seq",
+        "required": false,
+        "notes": "Mirrors controller seq when present."
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "player_id": {
+            "type": "positive_int"
+          },
+          "steering": {
+            "type": "number"
+          },
+          "acceleration": {
+            "type": "number"
+          },
+          "braking": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "number"
+          }
+        },
+        "optional": {
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "vehicle_states": {
+      "lane": "volatile",
+      "sender": "host",
+      "receiver": "server",
+      "sequence": {
+        "field": "seq",
+        "required": false,
+        "notes": "Snapshot seq is monotonic per room when present."
+      },
+      "malformed": "Drop if sender is not the host, if vehicles is not an array, or if seq is invalid.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": {
+                "id": {
+                  "type": "positive_int"
+                }
+              },
+              "optional": {
+                "speed": {
+                  "type": "number"
+                },
+                "health": {
+                  "type": "number"
+                },
+                "handlingState": {
+                  "type": "non_empty_string"
+                }
+              }
+            }
+          }
+        },
+        "optional": {
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "vehicle_states_update": {
+      "lane": "volatile",
+      "sender": "server",
+      "receiver": "room viewers and controllers",
+      "sequence": {
+        "field": "seq",
+        "required": false,
+        "notes": "Mirrors host snapshot seq when present."
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": {
+                "id": {
+                  "type": "positive_int"
+                }
+              },
+              "optional": {
+                "speed": {
+                  "type": "number"
+                },
+                "health": {
+                  "type": "number"
+                },
+                "handlingState": {
+                  "type": "non_empty_string"
+                }
+              }
+            }
+          }
+        },
+        "optional": {
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "end_game": {
+      "lane": "reliable",
+      "sender": "host",
+      "receiver": "server",
+      "sequence": {
+        "field": "seq",
+        "required": false,
+        "notes": "Optional final snapshot revision."
+      },
+      "malformed": "Reject with error if sender is not the host, if results is not an array of result rows, or if seq is invalid.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": {
+                "position": {
+                  "type": "positive_int"
+                },
+                "playerId": {
+                  "type": "positive_int"
+                }
+              },
+              "optional": {
+                "vehicleId": {
+                  "type": "string_or_int_or_null"
+                },
+                "finishTime": {
+                  "type": "number_or_null"
+                },
+                "bestLapTime": {
+                  "type": "number_or_null"
+                },
+                "totalPoints": {
+                  "type": "number_or_null"
+                },
+                "roundWins": {
+                  "type": "non_negative_int"
+                }
+              }
+            }
+          }
+        },
+        "optional": {
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "game_end": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "room",
+      "sequence": {
+        "field": "seq",
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {
+          "room_code": {
+            "type": "room_code"
+          },
+          "mode": {
+            "type": "ruleset"
+          },
+          "topology": {
+            "type": "topology"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": {
+                "position": {
+                  "type": "positive_int"
+                },
+                "playerId": {
+                  "type": "positive_int"
+                }
+              },
+              "optional": {
+                "vehicleId": {
+                  "type": "string_or_int_or_null"
+                },
+                "finishTime": {
+                  "type": "number_or_null"
+                },
+                "bestLapTime": {
+                  "type": "number_or_null"
+                },
+                "totalPoints": {
+                  "type": "number_or_null"
+                },
+                "roundWins": {
+                  "type": "non_negative_int"
+                }
+              }
+            }
+          }
+        },
+        "optional": {
+          "seq": {
+            "type": "non_negative_int"
+          }
+        }
+      }
+    },
+    "host_disconnected": {
+      "lane": "reliable",
+      "sender": "server",
+      "receiver": "room",
+      "sequence": {
+        "field": null,
+        "required": false
+      },
+      "malformed": "Server-authored event.",
+      "schema": {
+        "required": {},
+        "optional": {}
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "local-room-created",
+      "summary": "Default Local room creation preserves the big-screen host plus phone-controller architecture.",
+      "messages": [
+        {
+          "event": "room_created",
+          "payload": {
+            "room_code": "ABCD",
+            "join_url": "http://192.168.1.10:8000/player?room=ABCD",
+            "topology": "local"
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-controller-join",
+      "summary": "Local phones are controllers and HUD only; they never get a viewer role.",
+      "messages": [
+        {
+          "event": "game_joined",
+          "payload": {
+            "player_id": 1,
+            "name": "Couch1",
+            "car_color": "#11aa44",
+            "reconnected": false,
+            "is_late_join": false,
+            "game_state": "waiting",
+            "mode": "race",
+            "topology": "local",
+            "role": "controller",
+            "roles": [
+              "controller"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "remote-driver-viewer-join",
+      "summary": "Remote participants render and drive on their own device.",
+      "messages": [
+        {
+          "event": "game_joined",
+          "payload": {
+            "player_id": 2,
+            "name": "Remote1",
+            "car_color": "#3366ff",
+            "reconnected": false,
+            "is_late_join": false,
+            "game_state": "waiting",
+            "mode": "race",
+            "topology": "remote",
+            "role": "controller",
+            "roles": [
+              "controller",
+              "viewer"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mixed-rendering-join",
+      "summary": "Mixed topology supports a rendering driver-viewer when can_render is true.",
+      "messages": [
+        {
+          "event": "game_joined",
+          "payload": {
+            "player_id": 3,
+            "name": "MixedView",
+            "car_color": "#ff8844",
+            "reconnected": false,
+            "is_late_join": false,
+            "game_state": "waiting",
+            "mode": "race",
+            "topology": "mixed",
+            "role": "controller",
+            "roles": [
+              "controller",
+              "viewer"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "late-join-racing",
+      "summary": "A late joiner can enter a race already in progress without mutating the room topology.",
+      "messages": [
+        {
+          "event": "game_joined",
+          "payload": {
+            "player_id": 4,
+            "name": "LateJoiner",
+            "car_color": "#ffaa00",
+            "reconnected": false,
+            "is_late_join": true,
+            "game_state": "racing",
+            "mode": "race",
+            "topology": "local",
+            "role": "controller",
+            "roles": [
+              "controller"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-tab-takeover",
+      "summary": "Reloading or opening a duplicate controller tab reuses the same seat identity instead of duplicating the player.",
+      "messages": [
+        {
+          "event": "player_left",
+          "payload": {
+            "player_id": 2,
+            "player_name": "Reloaded",
+            "can_reconnect": false
+          }
+        },
+        {
+          "event": "game_joined",
+          "payload": {
+            "player_id": 2,
+            "name": "Reloaded",
+            "car_color": "#3366ff",
+            "reconnected": false,
+            "is_late_join": false,
+            "game_state": "waiting",
+            "mode": "race",
+            "topology": "local",
+            "role": "controller",
+            "roles": [
+              "controller"
+            ]
+          }
+        },
+        {
+          "event": "player_joined",
+          "payload": {
+            "id": 2,
+            "name": "Reloaded",
+            "car_color": "#3366ff",
+            "position": [
+              0,
+              0.5,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0
+            ],
+            "velocity": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "assertions": [
+        "player_left.player_id == game_joined.player_id == player_joined.id",
+        "The room keeps one logical seat for the player."
+      ]
+    },
+    {
+      "id": "remote-viewer-state",
+      "summary": "Host-authored volatile snapshot for remote or mixed viewers.",
+      "messages": [
+        {
+          "event": "vehicle_states_update",
+          "payload": {
+            "room_code": "ABCD",
+            "seq": 17,
+            "vehicles": [
+              {
+                "id": 1,
+                "speed": 61.2,
+                "health": 100,
+                "handlingState": "grounded"
+              },
+              {
+                "id": 2,
+                "speed": 58.4,
+                "health": 88,
+                "handlingState": "wheelie"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "host-loss",
+      "summary": "If the host disconnects, current server behavior is to broadcast host_disconnected and tear the room down.",
+      "messages": [
+        {
+          "event": "host_disconnected",
+          "payload": {}
+        }
+      ]
+    },
+    {
+      "id": "race-results",
+      "summary": "Reliable race results snapshot keyed by current room-scoped seat ids.",
+      "messages": [
+        {
+          "event": "game_end",
+          "payload": {
+            "room_code": "ABCD",
+            "mode": "race",
+            "topology": "local",
+            "seq": 23,
+            "results": [
+              {
+                "position": 1,
+                "playerId": 1,
+                "vehicleId": "veh-1",
+                "finishTime": 61234,
+                "bestLapTime": 20123
+              },
+              {
+                "position": 2,
+                "playerId": 2,
+                "vehicleId": "veh-2",
+                "finishTime": 64567,
+                "bestLapTime": 20987
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "derby-results",
+      "summary": "Reliable derby results snapshot keeps the same seat identity and carries derby-specific scoring fields.",
+      "messages": [
+        {
+          "event": "game_end",
+          "payload": {
+            "room_code": "ABCD",
+            "mode": "derby",
+            "topology": "remote",
+            "seq": 31,
+            "results": [
+              {
+                "position": 1,
+                "playerId": 1,
+                "vehicleId": "veh-1",
+                "totalPoints": 9,
+                "roundWins": 2
+              },
+              {
+                "position": 2,
+                "playerId": 2,
+                "vehicleId": "veh-2",
+                "totalPoints": 5,
+                "roundWins": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "controller-spoof-rejection",
+      "summary": "A controller cannot spoof another seat's input by forging player_id in the payload.",
+      "messages": [
+        {
+          "event": "player_control_update",
+          "payload": {
+            "room_code": "ABCD",
+            "player_id": 1,
+            "seq": 41,
+            "timestamp": 1719780000123,
+            "controls": {
+              "steering": 0.8,
+              "acceleration": 1,
+              "braking": 0
+            }
+          }
+        }
+      ],
+      "expected_server_effect": "drop_no_broadcast"
+    }
+  ]
+}
