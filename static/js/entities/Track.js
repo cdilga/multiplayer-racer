@@ -63,23 +63,14 @@ class Track extends Entity {
      */
     _initCheckpoints(checkpointConfigs) {
         return checkpointConfigs.map((cp, index) => {
-            // Ensure tangent is normalized and valid
-            let tangent = cp.tangent || { x: 1, z: 0 };
-            const tanLen = Math.sqrt(tangent.x * tangent.x + tangent.z * tangent.z);
-            if (tanLen < 0.001) {
-                // Malformed tangent, use default
-                tangent = { x: 1, z: 0 };
-            } else if (Math.abs(tanLen - 1) > 0.001) {
-                // Normalize if not already unit length
-                tangent = { x: tangent.x / tanLen, z: tangent.z / tanLen };
-            }
+            const tangent = this._resolveCheckpointTangent(checkpointConfigs, index);
 
             return {
                 id: cp.id !== undefined ? cp.id : index,
                 position: cp.position,
                 width: cp.width || 10,
                 tangent,  // Track-flow direction (unit vector for oriented gate)
-                heightBand: cp.heightBand || { min: -1, max: 10 },  // Y-coordinate acceptance range
+                heightBand: this._normalizeHeightBand(cp.heightBand),  // Y-coordinate acceptance range
                 isFinishLine: cp.isFinishLine || false,
                 // Runtime collision mesh (created by PhysicsSystem)
                 triggerBody: null
@@ -98,6 +89,148 @@ class Track extends Entity {
             }
         }
         return 0;  // Default to first checkpoint
+    }
+
+    /**
+     * @private
+     * @param {Object[]} checkpointConfigs
+     * @param {number} index
+     * @returns {{x:number,z:number}}
+     */
+    _resolveCheckpointTangent(checkpointConfigs, index) {
+        const explicit = this._normalizeXZ(checkpointConfigs[index]?.tangent);
+        if (explicit) return explicit;
+
+        const count = checkpointConfigs.length;
+        if (count >= 2) {
+            const current = checkpointConfigs[index]?.position;
+            const prev = checkpointConfigs[(index - 1 + count) % count]?.position;
+            const next = checkpointConfigs[(index + 1) % count]?.position;
+            const derived = this._deriveCheckpointTangent(current, prev, next);
+            if (derived) return derived;
+        }
+
+        return { x: 1, z: 0 };
+    }
+
+    /**
+     * @private
+     * @param {Object|null|undefined} vector
+     * @returns {{x:number,z:number}|null}
+     */
+    _normalizeXZ(vector) {
+        const x = Number(vector?.x);
+        const z = Number(vector?.z);
+        if (!Number.isFinite(x) || !Number.isFinite(z)) return null;
+
+        const length = Math.hypot(x, z);
+        if (length < 1e-3) return null;
+        return { x: x / length, z: z / length };
+    }
+
+    /**
+     * Derive a track-flow tangent from surrounding checkpoints for legacy/simple
+     * configs that never stored tangents explicitly.
+     * @private
+     * @param {Object|null|undefined} current
+     * @param {Object|null|undefined} prev
+     * @param {Object|null|undefined} next
+     * @returns {{x:number,z:number}|null}
+     */
+    _deriveCheckpointTangent(current, prev, next) {
+        const curr = this._normalizePositionXZ(current);
+        const prevPos = this._normalizePositionXZ(prev);
+        const nextPos = this._normalizePositionXZ(next);
+
+        if (prevPos && nextPos) {
+            return this._normalizeXZ({
+                x: nextPos.x - prevPos.x,
+                z: nextPos.z - prevPos.z
+            });
+        }
+        if (curr && nextPos) {
+            return this._normalizeXZ({
+                x: nextPos.x - curr.x,
+                z: nextPos.z - curr.z
+            });
+        }
+        if (prevPos && curr) {
+            return this._normalizeXZ({
+                x: curr.x - prevPos.x,
+                z: curr.z - prevPos.z
+            });
+        }
+        return null;
+    }
+
+    /**
+     * @private
+     * @param {Object|null|undefined} position
+     * @returns {{x:number,z:number}|null}
+     */
+    _normalizePositionXZ(position) {
+        const x = Number(position?.x);
+        const z = Number(position?.z);
+        if (!Number.isFinite(x) || !Number.isFinite(z)) return null;
+        return { x, z };
+    }
+
+    /**
+     * @private
+     * @param {Object|null|undefined} heightBand
+     * @returns {{min:number,max:number}}
+     */
+    _normalizeHeightBand(heightBand) {
+        let min = Number.isFinite(heightBand?.min) ? heightBand.min : -1;
+        let max = Number.isFinite(heightBand?.max) ? heightBand.max : 10;
+        if (min > max) [min, max] = [max, min];
+        if (min === max) max = min + 1e-3;
+        return { min, max };
+    }
+
+    /**
+     * @private
+     * @param {Object|null|undefined} position
+     * @param {{min:number,max:number}} heightBand
+     * @returns {boolean}
+     */
+    _isWithinHeightBand(position, heightBand) {
+        const y = Number(position?.y);
+        if (!Number.isFinite(y)) return false;
+        return y >= heightBand.min && y <= heightBand.max;
+    }
+
+    /**
+     * @private
+     * @param {number} relX
+     * @param {number} relZ
+     * @param {{x:number,z:number}} tangent
+     * @returns {number}
+     */
+    _getGatePlaneDistance(relX, relZ, tangent) {
+        return relX * tangent.x + relZ * tangent.z;
+    }
+
+    /**
+     * @private
+     * @param {number} relX
+     * @param {number} relZ
+     * @param {{x:number,z:number}} tangent
+     * @returns {number}
+     */
+    _getCrossTrackDistance(relX, relZ, tangent) {
+        return relX * -tangent.z + relZ * tangent.x;
+    }
+
+    /**
+     * Current-position helper for diagnostics/tests: is the car on the gate
+     * slice right now, rather than merely somewhere far along the tangent line.
+     * @private
+     * @param {number} width
+     * @returns {number}
+     */
+    _getGatePlaneTolerance(width) {
+        return Math.max(0.5, Math.min(2, (width || 10) * 0.1));
     }
 
     /**
@@ -252,8 +385,7 @@ class Track extends Entity {
     }
 
     /**
-     * Check if a position is within a checkpoint zone (height-aware, oriented gate)
-     * Uses the checkpoint tangent for oriented crossing detection on curved tracks.
+     * Check if a position lies on the checkpoint gate slice right now.
      * @param {Object} position - { x, y, z }
      * @param {number} checkpointIndex
      * @returns {boolean}
@@ -262,45 +394,19 @@ class Track extends Entity {
         const checkpoint = this.getCheckpoint(checkpointIndex);
         if (!checkpoint) return false;
 
-        // Check height band: vehicle must be within acceptable Y range
-        if (position.y < checkpoint.heightBand.min || position.y > checkpoint.heightBand.max) {
-            return false;
-        }
+        if (!this._isWithinHeightBand(position, checkpoint.heightBand)) return false;
 
-        // Compute perpendicular distance to checkpoint gate using tangent vector
         const cpPos = checkpoint.position;
         const tangent = checkpoint.tangent;
         const halfWidth = checkpoint.width / 2;
+        const planeTolerance = this._getGatePlaneTolerance(checkpoint.width);
 
-        // Vector from checkpoint to vehicle
         const dx = position.x - cpPos.x;
         const dz = position.z - cpPos.z;
-
-        // Project onto tangent to get along-track distance
-        const alongTrack = dx * tangent.x + dz * tangent.z;
-
-        // Perpendicular distance is the component perpendicular to tangent
-        // perpDist = |(-tangent.z * dx + tangent.x * dz)|
-        const perpDist = Math.abs(-tangent.z * dx + tangent.x * dz);
-
-        // Vehicle must be within the gate width in perpendicular direction
-        // AND within reasonable along-track distance to avoid false triggers from far away
-        return perpDist < halfWidth && Math.abs(alongTrack) < halfWidth * 2;
-    }
-
-    /**
-     * Helper: Compute perpendicular distance from a point to a gate's perpendicular plane
-     * @private
-     * @param {Object} position - { x, y, z }
-     * @param {Object} checkpoint - checkpoint with position and tangent
-     * @returns {number} perpendicular distance (absolute value)
-     */
-    _getCheckpointPerpDistance(position, checkpoint) {
-        const cpPos = checkpoint.position;
-        const tangent = checkpoint.tangent;
-        const dx = position.x - cpPos.x;
-        const dz = position.z - cpPos.z;
-        return Math.abs(-tangent.z * dx + tangent.x * dz);
+        const planeDistance = this._getGatePlaneDistance(dx, dz, tangent);
+        const crossTrackDistance = this._getCrossTrackDistance(dx, dz, tangent);
+        return Math.abs(planeDistance) <= planeTolerance &&
+            Math.abs(crossTrackDistance) <= halfWidth;
     }
 
     /**
@@ -322,54 +428,47 @@ class Track extends Entity {
         const checkpoint = this.getCheckpoint(checkpointIndex);
         if (!checkpoint) return false;
 
-        // Both positions must be within height band
-        if (prevPosition.y < checkpoint.heightBand.min || prevPosition.y > checkpoint.heightBand.max ||
-            currPosition.y < checkpoint.heightBand.min || currPosition.y > checkpoint.heightBand.max) {
-            return false;
-        }
+        if (!this._isWithinHeightBand(prevPosition, checkpoint.heightBand) ||
+            !this._isWithinHeightBand(currPosition, checkpoint.heightBand)) return false;
 
         const cpPos = checkpoint.position;
         const tangent = checkpoint.tangent;
         const halfWidth = checkpoint.width / 2;
+        const EPSILON = 1e-6;
 
-        // Vector from checkpoint to positions (in X-Z plane)
         const prevDx = prevPosition.x - cpPos.x;
         const prevDz = prevPosition.z - cpPos.z;
         const currDx = currPosition.x - cpPos.x;
         const currDz = currPosition.z - cpPos.z;
 
-        // Perpendicular distances (signed to detect crossing)
-        // perpDist = -tangent.z * dx + tangent.x * dz (no absolute value for crossing detection)
-        const prevPerpDist = -tangent.z * prevDx + tangent.x * prevDz;
-        const currPerpDist = -tangent.z * currDx + tangent.x * currDz;
+        const prevPlaneDistance = this._getGatePlaneDistance(prevDx, prevDz, tangent);
+        const currPlaneDistance = this._getGatePlaneDistance(currDx, currDz, tangent);
 
-        // Check if perpendicular distance changed sign (crossed the gate plane)
-        // The gate plane is at perpDist = 0 (the checkpoint's perpendicular line)
-        const crossedGate = (prevPerpDist < 0 && currPerpDist > 0) || (prevPerpDist > 0 && currPerpDist < 0);
+        // If the last frame already sat on the plane, let the previous frame own
+        // the trigger so we do not double-count while a car rides along the gate.
+        if (Math.abs(prevPlaneDistance) <= EPSILON) return false;
 
-        // If not crossed, return false
-        if (!crossedGate) return false;
+        // Segment never reaches the plane this frame.
+        if ((prevPlaneDistance < -EPSILON && currPlaneDistance < -EPSILON) ||
+            (prevPlaneDistance > EPSILON && currPlaneDistance > EPSILON)) {
+            return false;
+        }
 
-        // Crossed the gate plane. Now check:
-        // 1. The crossing point is within the gate width
-        // 2. The crossing point is within reasonable along-track distance (not far behind/ahead)
+        const denominator = currPlaneDistance - prevPlaneDistance;
+        if (Math.abs(denominator) <= EPSILON) return false;
 
-        // Interpolate to find the crossing point (where perpDist = 0)
-        const t = -prevPerpDist / (currPerpDist - prevPerpDist);
-        if (t < 0 || t > 1) return false; // Crossing outside the segment
+        const t = -prevPlaneDistance / denominator;
+        if (t < -EPSILON || t > 1 + EPSILON) return false;
 
-        // At crossing point, check perpendicular distance is within gate width
-        const crossingPerpDist = prevPerpDist + t * (currPerpDist - prevPerpDist);
-        if (Math.abs(crossingPerpDist) > halfWidth) return false;
+        const crossingT = Math.min(1, Math.max(0, t));
+        const crossingDx = prevDx + crossingT * (currDx - prevDx);
+        const crossingDz = prevDz + crossingT * (currDz - prevDz);
+        const crossingY = prevPosition.y + crossingT * (currPosition.y - prevPosition.y);
+        const crossingCrossTrack = this._getCrossTrackDistance(crossingDx, crossingDz, tangent);
 
-        // Check crossing point's along-track distance is reasonable
-        // This prevents false positives from vehicles far ahead or far behind the gate
-        const crossingDx = prevDx + t * (currDx - prevDx);
-        const crossingDz = prevDz + t * (currDz - prevDz);
-        const crossingAlongTrack = crossingDx * tangent.x + crossingDz * tangent.z;
-        const alongTrackTolerance = halfWidth * 2;
-
-        return Math.abs(crossingAlongTrack) <= alongTrackTolerance;
+        return Math.abs(crossingCrossTrack) <= halfWidth + EPSILON &&
+            crossingY >= checkpoint.heightBand.min - EPSILON &&
+            crossingY <= checkpoint.heightBand.max + EPSILON;
     }
 
     /**

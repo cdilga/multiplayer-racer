@@ -13,6 +13,8 @@
  *   const config = generateTrackConfig(12345);     // reproducible
  */
 
+import { resolveRunContext } from '../engine/determinism.js';
+
 // Neon palettes the generator picks from - keeps random tracks on-theme
 const PALETTES = [
     {
@@ -138,12 +140,21 @@ function computeEdges(centerline, halfWidth) {
 }
 
 /**
- * Generate a random race track config
- * @param {number} [seed] - Optional seed for reproducible tracks
+ * Generate a random race track config.
+ *
+ * Determinism: a track is fully determined by its seed. When no seed is given,
+ * the fallback seed is drawn from the run context's `map` RNG stream (not
+ * Math.random), so map generation is reproducible from the run seed. Pass the
+ * GameRunContext as the second arg to tie generation to a specific run.
+ *
+ * @param {number} [seed] - Optional explicit seed for reproducible tracks
+ * @param {import('../engine/GameRunContext.js').GameRunContext} [ctx] - run context for the fallback seed
  * @returns {Object} Track config (same shape as the JSON track assets)
  */
-function generateTrackConfig(seed) {
-    const actualSeed = seed ?? Math.floor(Math.random() * 0xFFFFFFFF);
+function generateTrackConfig(seed, ctx) {
+    const actualSeed = (seed != null)
+        ? (seed >>> 0)
+        : resolveRunContext(ctx).stream('map').nextU32();
     const rng = mulberry32(actualSeed);
 
     // Radial control points - random radius per angle, gentle angle jitter
@@ -198,15 +209,39 @@ function generateTrackConfig(seed) {
     }
 
     // Checkpoints: finish line at index 0, then evenly spaced around the lap
+    // Each checkpoint stores tangent (track-flow direction) and height band for oriented gate detection
     const checkpointCount = 6;
     const checkpoints = [];
     for (let i = 0; i < checkpointCount; i++) {
         const idx = Math.floor((i / checkpointCount) * centerline.length);
         const point = centerline[idx];
+
+        // Compute tangent as direction to next point (or previous if at end)
+        let tangent = { x: 1, z: 0 };  // Default fallback
+        if (idx < centerline.length - 1) {
+            const next = centerline[idx + 1];
+            const dx = next.x - point.x;
+            const dz = next.z - point.z;
+            const len = Math.sqrt(dx * dx + dz * dz);
+            if (len > 0.001) {
+                tangent = { x: dx / len, z: dz / len };
+            }
+        } else if (idx > 0) {
+            const prev = centerline[idx - 1];
+            const dx = point.x - prev.x;
+            const dz = point.z - prev.z;
+            const len = Math.sqrt(dx * dx + dz * dz);
+            if (len > 0.001) {
+                tangent = { x: dx / len, z: dz / len };
+            }
+        }
+
         checkpoints.push({
             id: i,
             position: { x: point.x, y: 0, z: point.z },
             width: trackWidth * 1.3,
+            tangent,  // NEW: track-flow direction for oriented gate detection
+            heightBand: { min: -1, max: 5 },  // NEW: allow vehicles from below to above track level
             isFinishLine: i === 0
         });
     }

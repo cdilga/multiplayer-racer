@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Track } from '../../static/js/entities/Track.js';
+import { RaceSystem } from '../../static/js/systems/RaceSystem.js';
 
 describe('Checkpoint Gate Orientation', () => {
     let track;
@@ -60,28 +61,19 @@ describe('Checkpoint Gate Orientation', () => {
         });
     });
 
-    describe('Perpendicular gate detection (axis-aligned)', () => {
-        it('accepts vehicles perpendicular to gate (facing +X)', () => {
-            // Gate at (0,0,0) facing +X, width 20 -> perpendicular tolerance is 10
+    describe('Current-position gate slice detection (axis-aligned)', () => {
+        it('accepts vehicles on the gate plane within the gate width', () => {
             const pos = { x: 0, y: 1, z: 5 };
             expect(track.isInCheckpoint(pos, 0)).toBe(true);
         });
 
         it('rejects vehicles beyond perpendicular tolerance', () => {
-            // Beyond width/2 = 10
             const pos = { x: 0, y: 1, z: 15 };
             expect(track.isInCheckpoint(pos, 0)).toBe(false);
         });
 
-        it('accepts vehicles along-track near gate', () => {
-            // Within along-track tolerance (halfWidth * 2 = 20)
-            const pos = { x: 15, y: 1, z: 0 };
-            expect(track.isInCheckpoint(pos, 0)).toBe(true);
-        });
-
-        it('rejects vehicles far along-track', () => {
-            // Beyond along-track tolerance
-            const pos = { x: 50, y: 1, z: 0 };
+        it('rejects vehicles far along the tangent even when centered laterally', () => {
+            const pos = { x: 19.99, y: 1, z: 0 };
             expect(track.isInCheckpoint(pos, 0)).toBe(false);
         });
     });
@@ -112,6 +104,16 @@ describe('Checkpoint Gate Orientation', () => {
             };
             expect(track.isInCheckpoint(pos, 1)).toBe(false);
         });
+
+        it('rejects vehicles far ahead along the tangent on an angled gate', () => {
+            const checkpoint = track.getCheckpoint(1);
+            const pos = {
+                x: 50 + checkpoint.tangent.x * 18,
+                y: 1,
+                z: 0 + checkpoint.tangent.z * 18
+            };
+            expect(track.isInCheckpoint(pos, 1)).toBe(false);
+        });
     });
 
     describe('Airborne rejection', () => {
@@ -134,14 +136,32 @@ describe('Checkpoint Gate Orientation', () => {
             expect(cp.tangent).toEqual({ x: 1, z: 0 });
         });
 
+        it('normalizes non-unit tangent vectors from config', () => {
+            const normalizedTrack = new Track({
+                config: {
+                    id: 'normalized-track',
+                    checkpoints: [{
+                        id: 0,
+                        position: { x: 0, y: 0, z: 0 },
+                        width: 20,
+                        tangent: { x: 10, z: 0 },
+                        isFinishLine: true
+                    }],
+                    spawn: { positions: [] }
+                }
+            });
+            const cp = normalizedTrack.getCheckpoint(0);
+            expect(cp.tangent).toEqual({ x: 1, z: 0 });
+        });
+
         it('stores height band from config', () => {
             const cp = track.getCheckpoint(0);
             expect(cp.heightBand).toEqual({ min: -1, max: 5 });
         });
 
-        it('provides defaults when tangent is missing', () => {
+        it('derives a sane tangent for legacy checkpoints when tangent is missing', () => {
             const configNoTangent = {
-                id: 'test',
+                id: 'legacy-track',
                 checkpoints: [
                     {
                         id: 0,
@@ -157,6 +177,27 @@ describe('Checkpoint Gate Orientation', () => {
             const cp = track2.getCheckpoint(0);
             expect(cp.tangent).toEqual({ x: 1, z: 0 });
             expect(cp.heightBand).toEqual({ min: -1, max: 10 });
+        });
+
+        it('derives tangent from neighboring checkpoints for legacy multi-checkpoint tracks', () => {
+            const legacyTrack = new Track({
+                config: {
+                    id: 'legacy-loop',
+                    checkpoints: [
+                        { id: 0, position: { x: 0, y: 0, z: -10 }, width: 20, isFinishLine: true },
+                        { id: 1, position: { x: 10, y: 0, z: 0 }, width: 20, isFinishLine: false },
+                        { id: 2, position: { x: 0, y: 0, z: 10 }, width: 20, isFinishLine: false },
+                        { id: 3, position: { x: -10, y: 0, z: 0 }, width: 20, isFinishLine: false }
+                    ],
+                    spawn: { positions: [] }
+                }
+            });
+            const cp0 = legacyTrack.getCheckpoint(0);
+            const cp1 = legacyTrack.getCheckpoint(1);
+            expect(cp0.tangent.x).toBeCloseTo(1, 6);
+            expect(cp0.tangent.z).toBeCloseTo(0, 6);
+            expect(cp1.tangent.x).toBeCloseTo(0, 6);
+            expect(cp1.tangent.z).toBeCloseTo(1, 6);
         });
     });
 
@@ -209,71 +250,105 @@ describe('Checkpoint Gate Orientation', () => {
 
     describe('Frame-to-frame crossing detection', () => {
         it('detects vehicle crossing the gate plane', () => {
-            // Checkpoint 0: position (0,0,0), tangent (1,0) facing +X
-            // Perpendicular to tangent is Z direction
-            // Vehicle crosses from negative Z to positive Z
-            const prevPos = { x: 0, y: 0, z: -5 }; // Before (perpendicular direction)
-            const currPos = { x: 0, y: 0, z: 5 };  // After
+            const prevPos = { x: -5, y: 0, z: 0 };
+            const currPos = { x: 5, y: 0, z: 0 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(true);
         });
 
-        it('rejects vehicle moving parallel to gate (no crossing)', () => {
-            // Moving along the tangent direction (X axis for checkpoint 0)
-            // perpDist stays at 0, no sign change
-            const prevPos = { x: -10, y: 0, z: 0 };
-            const currPos = { x: 10, y: 0, z: 0 };
+        it('rejects vehicle moving along the gate line without crossing the plane', () => {
+            const prevPos = { x: 0, y: 0, z: -10 };
+            const currPos = { x: 0, y: 0, z: 10 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(false);
         });
 
         it('rejects vehicle far along the tangent (far-ahead false positive prevention)', () => {
-            // Vehicle far ahead on tangent line, within perpendicular width but never crosses plane
-            const prevPos = { x: 30, y: 0, z: -2 }; // Far along tangent, slightly off perpendicular
-            const currPos = { x: 35, y: 0, z: -2 };
-            // This is beyond the along-track tolerance (halfWidth * 2 = 20)
+            const prevPos = { x: 30, y: 0, z: -2 };
+            const currPos = { x: 35, y: 0, z: 2 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(false);
         });
 
         it('detects high-speed crossing that skips frame', () => {
-            // Vehicle moves very fast from negative Z to positive Z, also moving along X
-            // Still crosses the gate plane perpendicular
-            const prevPos = { x: -100, y: 0, z: -50 };
-            const currPos = { x: 100, y: 0, z: 50 };
+            const prevPos = { x: -100, y: 0, z: 4 };
+            const currPos = { x: 100, y: 0, z: 4 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(true);
         });
 
         it('rejects crossing outside the gate width', () => {
-            // Checkpoint 0 has width 20, so perpendicular tolerance is 10
-            // Vehicle crosses the plane but at Z=-20 (beyond width/2=10)
-            const prevPos = { x: 0, y: 0, z: -20 }; // Outside gate width
-            const currPos = { x: 0, y: 0, z: -15 }; // Still outside (only 5 units from checkpoint center)
+            const prevPos = { x: -5, y: 0, z: 20 };
+            const currPos = { x: 5, y: 0, z: 20 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(false);
         });
 
         it('rejects crossing when height is out of band', () => {
-            const prevPos = { x: 0, y: 10, z: -5 }; // Above band
-            const currPos = { x: 0, y: 10, z: 5 };  // Still above band
+            const prevPos = { x: -5, y: 10, z: 0 };
+            const currPos = { x: 5, y: 10, z: 0 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(false);
         });
 
-        it('prevents double-triggers when vehicle stays in checkpoint region', () => {
-            // First frame: vehicle enters and crosses perpendicular plane
-            let prevPos = { x: 0, y: 0, z: -5 };
-            let currPos = { x: 0, y: 0, z: 5 };
+        it('prevents double-triggers when a vehicle leaves the plane after a crossing', () => {
+            let prevPos = { x: -5, y: 0, z: 0 };
+            let currPos = { x: 0, y: 0, z: 0 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(true);
 
-            // Second frame: vehicle stays past the checkpoint (no plane crossing, stays on positive Z side)
-            prevPos = { x: 2, y: 0, z: 5 };
-            currPos = { x: 4, y: 0, z: 7 };
+            prevPos = { x: 0, y: 0, z: 0 };
+            currPos = { x: 5, y: 0, z: 0 };
             expect(track.checkCrossing(prevPos, currPos, 0)).toBe(false);
         });
 
         it('detects crossing on angled checkpoint (45-degree)', () => {
-            // Checkpoint 1 is at (50, 0, 0) facing 45 degrees (0.707, 0.707)
-            // Perpendicular direction: (-0.707, 0.707)
-            // Vehicle crossing from one side to the other
-            const prevPos = { x: 50, y: 0, z: -5 }; // Before
-            const currPos = { x: 50, y: 0, z: 5 };   // After
+            const checkpoint = track.getCheckpoint(1);
+            const crossAxis = { x: -checkpoint.tangent.z, z: checkpoint.tangent.x };
+            const prevPos = {
+                x: checkpoint.position.x - checkpoint.tangent.x * 5 + crossAxis.x * 3,
+                y: 0,
+                z: checkpoint.position.z - checkpoint.tangent.z * 5 + crossAxis.z * 3
+            };
+            const currPos = {
+                x: checkpoint.position.x + checkpoint.tangent.x * 5 + crossAxis.x * 3,
+                y: 0,
+                z: checkpoint.position.z + checkpoint.tangent.z * 5 + crossAxis.z * 3
+            };
             expect(track.checkCrossing(prevPos, currPos, 1)).toBe(true);
+        });
+    });
+
+    describe('RaceSystem previous-position tracking', () => {
+        it('passes previous and current positions into checkpoint crossing checks and updates the snapshot', () => {
+            const calls = [];
+            const trackStub = {
+                defaultLaps: 3,
+                finishLineIndex: 0,
+                getCheckpointCount: () => 2,
+                getNextCheckpointIndex: (index) => (index + 1) % 2,
+                checkCrossing: (prevPosition, currPosition, checkpointIndex) => {
+                    calls.push({ prevPosition, currPosition, checkpointIndex });
+                    return false;
+                }
+            };
+
+            const race = new RaceSystem({ track: trackStub });
+            race.initialized = true;
+            race.state = 'racing';
+
+            const vehicle = {
+                id: 'vehicle-1',
+                position: { x: 0, y: 0, z: 0 },
+                currentLap: 0,
+                nextCheckpoint: 0,
+                lapTimes: [],
+                finished: false,
+                isDead: false
+            };
+
+            race.registerVehicle(vehicle);
+            vehicle.position = { x: 3, y: 0, z: 1 };
+            race.update(1 / 60);
+
+            expect(calls).toHaveLength(1);
+            expect(calls[0].prevPosition).toEqual({ x: 0, y: 0, z: 0 });
+            expect(calls[0].currPosition).toEqual({ x: 3, y: 0, z: 1 });
+            expect(calls[0].checkpointIndex).toBe(1);
+            expect(race.vehicles.get(vehicle.id).prevPosition).toEqual({ x: 3, y: 0, z: 1 });
         });
     });
 });

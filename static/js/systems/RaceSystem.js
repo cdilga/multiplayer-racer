@@ -119,7 +119,7 @@ class RaceSystem {
      */
     registerVehicle(vehicle) {
         const firstTarget = this._getFirstCheckpointTarget();
-        const pos = vehicle.position || { x: 0, y: 0, z: 0 };
+        const pos = this._getVehiclePosition(vehicle);
         this.vehicles.set(vehicle.id, {
             vehicle: vehicle,
             currentLap: 0,
@@ -150,6 +150,20 @@ class RaceSystem {
     _getFirstCheckpointTarget() {
         if (!this.track || this.track.getCheckpointCount() < 2) return 0;
         return this.track.getNextCheckpointIndex(this.track.finishLineIndex);
+    }
+
+    /**
+     * Snapshot a vehicle position for checkpoint segment tests.
+     * @private
+     * @param {Object} vehicle
+     * @returns {{x:number,y:number,z:number}}
+     */
+    _getVehiclePosition(vehicle) {
+        const source = vehicle?.position || vehicle?.mesh?.position || {};
+        const x = Number.isFinite(source.x) ? source.x : 0;
+        const y = Number.isFinite(source.y) ? source.y : 0;
+        const z = Number.isFinite(source.z) ? source.z : 0;
+        return { x, y, z };
     }
 
     /**
@@ -215,6 +229,7 @@ class RaceSystem {
             data.lastCheckpointTime = this.raceStartTime;
             data.totalTime = 0;
             data.position = 0;
+            data.prevPosition = this._getVehiclePosition(data.vehicle);
             data.finished = false;
             data.finishTime = null;
 
@@ -277,7 +292,7 @@ class RaceSystem {
             if (data.finished || data.vehicle.isDead) continue;
 
             const vehicle = data.vehicle;
-            const currPos = vehicle.position;
+            const currPos = this._getVehiclePosition(vehicle);
 
             // Check if crossed next checkpoint using frame-to-frame gate detection
             if (this.track && this.track.checkCrossing(data.prevPosition, currPos, data.nextCheckpoint)) {
@@ -476,7 +491,7 @@ class RaceSystem {
             if (data.finished || data.vehicle.isDead) continue;
 
             const vehicle = data.vehicle;
-            const currPos = vehicle.position;
+            const currPos = this._getVehiclePosition(vehicle);
 
             if (this.track && this.track.checkCrossing(data.prevPosition, currPos, data.nextCheckpoint)) {
                 this._onCheckpointCrossed(vehicleId, data, now);

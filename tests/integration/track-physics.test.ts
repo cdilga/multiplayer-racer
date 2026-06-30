@@ -4,6 +4,9 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { PhysicsSystem } from '../../static/js/systems/PhysicsSystem.js';
+import { generateTrackConfig } from '../../static/js/resources/ProceduralTrackGenerator.js';
+import { Track } from '../../static/js/entities/Track.js';
+import { GameRunContext } from '../../static/js/engine/GameRunContext.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const trackDir = resolve(__dirname, '../../static/assets/tracks');
@@ -17,6 +20,14 @@ function makePhysics() {
     physics.RAPIER = RAPIER;
     physics.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     return physics;
+}
+
+function makeRunContext(seed: number) {
+    return GameRunContext.create({
+        seed,
+        deterministic: true,
+        ruleset: 'race'
+    });
 }
 
 function rotateVectorByQuat(
@@ -390,6 +401,77 @@ describe('track physics', () => {
                 const spawns = config.spawn?.positions || [];
                 expect(spawns.length).toBeGreaterThan(0);
             });
+        });
+    });
+
+    describe('Checkpoint gate integration (br-fb-checkpt-orient-0d9)', () => {
+        it('derives sane fallback tangents and height bands for legacy oval checkpoints', () => {
+            const track = new Track({ config: loadTrackConfig('oval') });
+            const expectations = [
+                { index: 0, tangent: { x: 1, z: 0 } },
+                { index: 1, tangent: { x: 0, z: 1 } },
+                { index: 2, tangent: { x: -1, z: 0 } },
+                { index: 3, tangent: { x: 0, z: -1 } }
+            ];
+
+            expectations.forEach(({ index, tangent }) => {
+                const checkpoint = track.getCheckpoint(index)!;
+                expect(dotXZ(normalizeXZ(checkpoint.tangent), tangent)).toBeGreaterThan(0.999);
+                expect(checkpoint.heightBand.min).toBeLessThan(checkpoint.heightBand.max);
+            });
+        });
+
+        it('stores unit tangents and height bands for procedural checkpoints across curved seeds', () => {
+            for (const seed of [12345, 54321, 20260630]) {
+                const config = generateTrackConfig(undefined, makeRunContext(seed));
+                expect(config.checkpoints.length).toBeGreaterThan(0);
+
+                let curvedCheckpointCount = 0;
+                for (const checkpoint of config.checkpoints) {
+                    const tangentLength = Math.hypot(checkpoint.tangent.x, checkpoint.tangent.z);
+                    expect(tangentLength).toBeCloseTo(1, 6);
+                    expect(checkpoint.heightBand.min).toBeLessThan(checkpoint.heightBand.max);
+                    if (Math.abs(checkpoint.tangent.x) > 0.1 && Math.abs(checkpoint.tangent.z) > 0.1) {
+                        curvedCheckpointCount++;
+                    }
+                }
+                expect(curvedCheckpointCount).toBeGreaterThan(0);
+            }
+        });
+
+        it('bot following the centerline crosses checkpoints in order across curved procedural seeds', () => {
+            for (const seed of [12345, 24680, 424242]) {
+                const config = generateTrackConfig(undefined, makeRunContext(seed));
+                const track = new Track({ config });
+                const centerline = config.geometry.centerline;
+                const checkpointCount = track.getCheckpointCount();
+
+                expect(centerline.length).toBeGreaterThan(checkpointCount);
+
+                const crossed: number[] = [];
+                let prev = {
+                    x: centerline[centerline.length - 1].x,
+                    y: 1,
+                    z: centerline[centerline.length - 1].z
+                };
+
+                for (const point of centerline) {
+                    const curr = { x: point.x, y: 1, z: point.z };
+                    const hits: number[] = [];
+
+                    for (let checkpointIndex = 0; checkpointIndex < checkpointCount; checkpointIndex++) {
+                        if (track.checkCrossing(prev, curr, checkpointIndex)) {
+                            hits.push(checkpointIndex);
+                        }
+                    }
+
+                    expect(hits.length).toBeLessThanOrEqual(1);
+                    if (hits.length === 1) crossed.push(hits[0]);
+                    prev = curr;
+                }
+
+                expect(crossed).toEqual(Array.from({ length: checkpointCount }, (_, i) => i));
+            }
         });
     });
 });
