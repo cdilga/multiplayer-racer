@@ -1,0 +1,1135 @@
+{
+  "mapperTuning": {
+    "touchAccelerationRampUpMs": 220,
+    "touchAccelerationRampDownMs": 90,
+    "steeringDeadZone": 0,
+    "steeringCurveExponent": 1,
+    "steeringSnapThreshold": 0,
+    "steeringFilterLagMs": 0,
+    "gamepadDeadZone": 0.15
+  },
+  "mapperFrames": [
+    {
+      "label": "touchstart",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0,
+        "braking": 0,
+        "fire": false
+      },
+      "debug": {
+        "touchRaw": {
+          "steering": 0,
+          "acceleration": 1,
+          "braking": 0,
+          "fire": false
+        },
+        "touchShaped": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardTarget": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0
+        },
+        "gamepadRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false,
+          "connected": false,
+          "mapping": null,
+          "sourceId": "standard"
+        },
+        "merged": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "activeSource": "touch",
+        "bindings": {
+          "touch": {
+            "schemeId": "classic",
+            "summary": "Steer left · pedals right"
+          },
+          "keyboard": {
+            "schemeId": "hybrid",
+            "summary": "WASD + Arrows",
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "schemeId": "standard",
+            "sourceId": "standard",
+            "summary": "Left stick · triggers · south button",
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          }
+        },
+        "validation": {
+          "keyboard": {
+            "valid": true,
+            "errors": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          },
+          "touch": {
+            "valid": true,
+            "errors": [],
+            "schemeId": "classic"
+          }
+        },
+        "tuning": {
+          "touchAccelerationRampUpMs": 220,
+          "touchAccelerationRampDownMs": 90,
+          "steeringDeadZone": 0,
+          "steeringCurveExponent": 1,
+          "steeringSnapThreshold": 0,
+          "steeringFilterLagMs": 0,
+          "gamepadDeadZone": 0.15
+        }
+      }
+    },
+    {
+      "label": "110ms hold",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0.5,
+        "braking": 0,
+        "fire": false
+      },
+      "debug": {
+        "touchRaw": {
+          "steering": 0,
+          "acceleration": 1,
+          "braking": 0,
+          "fire": false
+        },
+        "touchShaped": {
+          "steering": 0,
+          "acceleration": 0.5,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardTarget": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0
+        },
+        "gamepadRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false,
+          "connected": false,
+          "mapping": null,
+          "sourceId": "standard"
+        },
+        "merged": {
+          "steering": 0,
+          "acceleration": 0.5,
+          "braking": 0,
+          "fire": false
+        },
+        "activeSource": "touch",
+        "bindings": {
+          "touch": {
+            "schemeId": "classic",
+            "summary": "Steer left · pedals right"
+          },
+          "keyboard": {
+            "schemeId": "hybrid",
+            "summary": "WASD + Arrows",
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "schemeId": "standard",
+            "sourceId": "standard",
+            "summary": "Left stick · triggers · south button",
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          }
+        },
+        "validation": {
+          "keyboard": {
+            "valid": true,
+            "errors": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          },
+          "touch": {
+            "valid": true,
+            "errors": [],
+            "schemeId": "classic"
+          }
+        },
+        "tuning": {
+          "touchAccelerationRampUpMs": 220,
+          "touchAccelerationRampDownMs": 90,
+          "steeringDeadZone": 0,
+          "steeringCurveExponent": 1,
+          "steeringSnapThreshold": 0,
+          "steeringFilterLagMs": 0,
+          "gamepadDeadZone": 0.15
+        }
+      }
+    },
+    {
+      "label": "220ms hold",
+      "controls": {
+        "steering": 0,
+        "acceleration": 1,
+        "braking": 0,
+        "fire": false
+      },
+      "debug": {
+        "touchRaw": {
+          "steering": 0,
+          "acceleration": 1,
+          "braking": 0,
+          "fire": false
+        },
+        "touchShaped": {
+          "steering": 0,
+          "acceleration": 1,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardTarget": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0
+        },
+        "gamepadRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false,
+          "connected": false,
+          "mapping": null,
+          "sourceId": "standard"
+        },
+        "merged": {
+          "steering": 0,
+          "acceleration": 1,
+          "braking": 0,
+          "fire": false
+        },
+        "activeSource": "touch",
+        "bindings": {
+          "touch": {
+            "schemeId": "classic",
+            "summary": "Steer left · pedals right"
+          },
+          "keyboard": {
+            "schemeId": "hybrid",
+            "summary": "WASD + Arrows",
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "schemeId": "standard",
+            "sourceId": "standard",
+            "summary": "Left stick · triggers · south button",
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          }
+        },
+        "validation": {
+          "keyboard": {
+            "valid": true,
+            "errors": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          },
+          "touch": {
+            "valid": true,
+            "errors": [],
+            "schemeId": "classic"
+          }
+        },
+        "tuning": {
+          "touchAccelerationRampUpMs": 220,
+          "touchAccelerationRampDownMs": 90,
+          "steeringDeadZone": 0,
+          "steeringCurveExponent": 1,
+          "steeringSnapThreshold": 0,
+          "steeringFilterLagMs": 0,
+          "gamepadDeadZone": 0.15
+        }
+      }
+    },
+    {
+      "label": "45ms release",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0.5,
+        "braking": 0,
+        "fire": false
+      },
+      "debug": {
+        "touchRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "touchShaped": {
+          "steering": 0,
+          "acceleration": 0.5,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardTarget": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0
+        },
+        "gamepadRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false,
+          "connected": false,
+          "mapping": null,
+          "sourceId": "standard"
+        },
+        "merged": {
+          "steering": 0,
+          "acceleration": 0.5,
+          "braking": 0,
+          "fire": false
+        },
+        "activeSource": "touch",
+        "bindings": {
+          "touch": {
+            "schemeId": "classic",
+            "summary": "Steer left · pedals right"
+          },
+          "keyboard": {
+            "schemeId": "hybrid",
+            "summary": "WASD + Arrows",
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "schemeId": "standard",
+            "sourceId": "standard",
+            "summary": "Left stick · triggers · south button",
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          }
+        },
+        "validation": {
+          "keyboard": {
+            "valid": true,
+            "errors": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          },
+          "touch": {
+            "valid": true,
+            "errors": [],
+            "schemeId": "classic"
+          }
+        },
+        "tuning": {
+          "touchAccelerationRampUpMs": 220,
+          "touchAccelerationRampDownMs": 90,
+          "steeringDeadZone": 0,
+          "steeringCurveExponent": 1,
+          "steeringSnapThreshold": 0,
+          "steeringFilterLagMs": 0,
+          "gamepadDeadZone": 0.15
+        }
+      }
+    },
+    {
+      "label": "90ms release",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0,
+        "braking": 0,
+        "fire": false
+      },
+      "debug": {
+        "touchRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "touchShaped": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "keyboardTarget": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0
+        },
+        "gamepadRaw": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false,
+          "connected": false,
+          "mapping": null,
+          "sourceId": "standard"
+        },
+        "merged": {
+          "steering": 0,
+          "acceleration": 0,
+          "braking": 0,
+          "fire": false
+        },
+        "activeSource": "touch",
+        "bindings": {
+          "touch": {
+            "schemeId": "classic",
+            "summary": "Steer left · pedals right"
+          },
+          "keyboard": {
+            "schemeId": "hybrid",
+            "summary": "WASD + Arrows",
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "schemeId": "standard",
+            "sourceId": "standard",
+            "summary": "Left stick · triggers · south button",
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          }
+        },
+        "validation": {
+          "keyboard": {
+            "valid": true,
+            "errors": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "KeyA",
+                "ArrowLeft"
+              ],
+              "steerRight": [
+                "KeyD",
+                "ArrowRight"
+              ],
+              "accelerate": [
+                "KeyW",
+                "ArrowUp"
+              ],
+              "brake": [
+                "KeyS",
+                "ArrowDown"
+              ],
+              "fire": [
+                "Space"
+              ]
+            }
+          },
+          "gamepad": {
+            "valid": true,
+            "errors": [],
+            "warnings": [],
+            "conflicts": [],
+            "bindings": {
+              "steerLeft": [
+                "axis:left-stick-x:negative",
+                "button:dpad-left"
+              ],
+              "steerRight": [
+                "axis:left-stick-x:positive",
+                "button:dpad-right"
+              ],
+              "accelerate": [
+                "button:rt"
+              ],
+              "brake": [
+                "button:lt"
+              ],
+              "fire": [
+                "button:south"
+              ]
+            }
+          },
+          "touch": {
+            "valid": true,
+            "errors": [],
+            "schemeId": "classic"
+          }
+        },
+        "tuning": {
+          "touchAccelerationRampUpMs": 220,
+          "touchAccelerationRampDownMs": 90,
+          "steeringDeadZone": 0,
+          "steeringCurveExponent": 1,
+          "steeringSnapThreshold": 0,
+          "steeringFilterLagMs": 0,
+          "gamepadDeadZone": 0.15
+        }
+      }
+    }
+  ],
+  "wheelieFrames": [
+    {
+      "label": "100ms",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0.45454545454545453,
+        "braking": 0,
+        "fire": false
+      },
+      "telemetry": {
+        "speed": 0,
+        "steerAngle": 0,
+        "throttle": 0.45454545454545453,
+        "isReversing": false,
+        "inWallContact": false,
+        "inOilSlick": false,
+        "speedBoost": 1,
+        "stuntState": "idle",
+        "stuntCharge": 0,
+        "stuntBoost": 1,
+        "stuntRamDamageBonus": 0,
+        "badLandingActive": false,
+        "wheels": [
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          }
+        ],
+        "handlingState": "grounded",
+        "stateDuration": 0,
+        "isAirborne": false,
+        "isWheelie": false,
+        "wheelieIntent": {
+          "throttle": 0.45454545454545453,
+          "threshold": 0.92,
+          "holdMs": 0,
+          "dwellMs": 280,
+          "progress": 0,
+          "ready": false,
+          "cooldownRemainingMs": 0,
+          "boostMultiplier": 1
+        }
+      },
+      "impulseCount": 0
+    },
+    {
+      "label": "200ms",
+      "controls": {
+        "steering": 0,
+        "acceleration": 0.9090909090909091,
+        "braking": 0,
+        "fire": false
+      },
+      "telemetry": {
+        "speed": 0,
+        "steerAngle": 0,
+        "throttle": 0.9090909090909091,
+        "isReversing": false,
+        "inWallContact": false,
+        "inOilSlick": false,
+        "speedBoost": 1,
+        "stuntState": "idle",
+        "stuntCharge": 0,
+        "stuntBoost": 1,
+        "stuntRamDamageBonus": 0,
+        "badLandingActive": false,
+        "wheels": [
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          }
+        ],
+        "handlingState": "grounded",
+        "stateDuration": 0,
+        "isAirborne": false,
+        "isWheelie": false,
+        "wheelieIntent": {
+          "throttle": 0.9090909090909091,
+          "threshold": 0.92,
+          "holdMs": 0,
+          "dwellMs": 280,
+          "progress": 0,
+          "ready": false,
+          "cooldownRemainingMs": 0,
+          "boostMultiplier": 1
+        }
+      },
+      "impulseCount": 0
+    },
+    {
+      "label": "300ms",
+      "controls": {
+        "steering": 0,
+        "acceleration": 1,
+        "braking": 0,
+        "fire": false
+      },
+      "telemetry": {
+        "speed": 0,
+        "steerAngle": 0,
+        "throttle": 1,
+        "isReversing": false,
+        "inWallContact": false,
+        "inOilSlick": false,
+        "speedBoost": 1,
+        "stuntState": "idle",
+        "stuntCharge": 0,
+        "stuntBoost": 1,
+        "stuntRamDamageBonus": 0,
+        "badLandingActive": false,
+        "wheels": [
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          }
+        ],
+        "handlingState": "grounded",
+        "stateDuration": 0,
+        "isAirborne": false,
+        "isWheelie": false,
+        "wheelieIntent": {
+          "throttle": 1,
+          "threshold": 0.92,
+          "holdMs": 100,
+          "dwellMs": 280,
+          "progress": 0.35714285714285715,
+          "ready": false,
+          "cooldownRemainingMs": 0,
+          "boostMultiplier": 1
+        }
+      },
+      "impulseCount": 0
+    },
+    {
+      "label": "400ms",
+      "controls": {
+        "steering": 0,
+        "acceleration": 1,
+        "braking": 0,
+        "fire": false
+      },
+      "telemetry": {
+        "speed": 0,
+        "steerAngle": 0,
+        "throttle": 1,
+        "isReversing": false,
+        "inWallContact": false,
+        "inOilSlick": false,
+        "speedBoost": 1,
+        "stuntState": "idle",
+        "stuntCharge": 0,
+        "stuntBoost": 1,
+        "stuntRamDamageBonus": 0,
+        "badLandingActive": false,
+        "wheels": [
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          }
+        ],
+        "handlingState": "grounded",
+        "stateDuration": 0,
+        "isAirborne": false,
+        "isWheelie": false,
+        "wheelieIntent": {
+          "throttle": 1,
+          "threshold": 0.92,
+          "holdMs": 200,
+          "dwellMs": 280,
+          "progress": 0.7142857142857143,
+          "ready": false,
+          "cooldownRemainingMs": 0,
+          "boostMultiplier": 1
+        }
+      },
+      "impulseCount": 0
+    },
+    {
+      "label": "500ms",
+      "controls": {
+        "steering": 0,
+        "acceleration": 1,
+        "braking": 0,
+        "fire": false
+      },
+      "telemetry": {
+        "speed": 0,
+        "steerAngle": 0,
+        "throttle": 1,
+        "isReversing": false,
+        "inWallContact": false,
+        "inOilSlick": false,
+        "speedBoost": 1,
+        "stuntState": "idle",
+        "stuntCharge": 0,
+        "stuntBoost": 1,
+        "stuntRamDamageBonus": 0,
+        "badLandingActive": false,
+        "wheels": [
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          },
+          {
+            "isGrounded": true
+          }
+        ],
+        "handlingState": "grounded",
+        "stateDuration": 0,
+        "isAirborne": false,
+        "isWheelie": false,
+        "wheelieIntent": {
+          "throttle": 1,
+          "threshold": 0.92,
+          "holdMs": 0,
+          "dwellMs": 280,
+          "progress": 0,
+          "ready": false,
+          "cooldownRemainingMs": 449.941833,
+          "boostMultiplier": 1
+        }
+      },
+      "impulseCount": 1
+    }
+  ]
+}

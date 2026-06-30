@@ -113,8 +113,8 @@ describe('Vehicle state regressions', () => {
         expect(controller.setWheelSteering).toHaveBeenLastCalledWith(1, -0.5);
     });
 
-    it('uses high acceleration to apply a front lift impulse for intentional wheelies', () => {
-        const physics = new PhysicsSystem();
+    it('uses sustained high acceleration to apply a front lift impulse for intentional wheelies', () => {
+        const physics = new PhysicsSystem({ controlStepSeconds: 0.1 });
         const vehicle = new Vehicle({ playerId: 'p1' });
         const controller = makeController([true, true, true, true]);
         const body = makeBody();
@@ -132,12 +132,20 @@ describe('Vehicle state regressions', () => {
                     smoothing: 1
                 },
                 wheelie: {
-                    activationThrottle: 0.7,
+                    activationThrottle: 0.92,
+                    activationDwellMs: 200,
                     steeringAuthority: 0.15,
                     liftImpulse: 8
                 }
             }
         });
+
+        physics.applyVehicleControls(vehicle.id, {
+            steering: 0,
+            acceleration: 1,
+            braking: 0
+        });
+        expect(body.applyImpulseAtPoint).not.toHaveBeenCalled();
 
         physics.applyVehicleControls(vehicle.id, {
             steering: 0,

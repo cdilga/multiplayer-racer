@@ -1,0 +1,74 @@
+{
+  "tuning": {
+    "touchAccelerationRampUpMs": 220,
+    "touchAccelerationRampDownMs": 90,
+    "steeringDeadZone": 0,
+    "steeringCurveExponent": 1,
+    "steeringSnapThreshold": 0.05,
+    "steeringFilterLagMs": 0,
+    "gamepadDeadZone": 0.15
+  },
+  "belowSnap": {
+    "label": "belowSnap",
+    "input": {
+      "steering": 0.04,
+      "acceleration": 1
+    },
+    "mergedSteering": 0,
+    "mergedAcceleration": 0.5,
+    "touchRaw": {
+      "steering": 0.04,
+      "acceleration": 1,
+      "braking": 0,
+      "fire": false
+    },
+    "touchShaped": {
+      "steering": 0,
+      "acceleration": 0.5,
+      "braking": 0,
+      "fire": false
+    }
+  },
+  "aboveSnap": {
+    "label": "aboveSnap",
+    "input": {
+      "steering": 0.08,
+      "acceleration": 1
+    },
+    "mergedSteering": 0.08,
+    "mergedAcceleration": 1,
+    "touchRaw": {
+      "steering": 0.08,
+      "acceleration": 1,
+      "braking": 0,
+      "fire": false
+    },
+    "touchShaped": {
+      "steering": 0.08,
+      "acceleration": 1,
+      "braking": 0,
+      "fire": false
+    }
+  },
+  "recentered": {
+    "label": "recentered",
+    "input": {
+      "steering": 0.02,
+      "acceleration": 0
+    },
+    "mergedSteering": 0,
+    "mergedAcceleration": 0.5,
+    "touchRaw": {
+      "steering": 0.02,
+      "acceleration": 0,
+      "braking": 0,
+      "fire": false
+    },
+    "touchShaped": {
+      "steering": 0,
+      "acceleration": 0.5,
+      "braking": 0,
+      "fire": false
+    }
+  }
+}

@@ -1,8 +1,54 @@
+:root {
+    /* Shared design tokens — mirror static/css/landing.css :root. The live
+       landing page is the source of truth for the in-game aesthetic
+       (br-modes-remote-play-design-48a.5). Kept self-contained because
+       landing.css is not loaded on the controller page. */
+    --bg-deep: #0d1429;
+    --bg-base: #1a1a2e;
+    --bg-panel: #16213e;
+
+    --cyan: #4cc9f0;
+    --green: #00ff88;
+    --indigo: #4361ee;
+    --pink: #f72585;
+
+    --text: #ffffff;
+    --text-muted: #8d99ae;
+
+    --surface: rgba(22, 33, 62, 0.72);
+    --surface-solid: #16213e;
+    --border: rgba(76, 201, 240, 0.18);
+    --border-strong: rgba(76, 201, 240, 0.45);
+
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+
+    --radius-md: 0.75rem;
+    --radius-lg: 1.25rem;
+    --radius-full: 9999px;
+
+    --glow-cyan: 0 0 24px rgba(76, 201, 240, 0.5);
+    --glow-green: 0 0 24px rgba(0, 255, 136, 0.5);
+    --glow-pink: 0 0 24px rgba(247, 37, 133, 0.5);
+
+    --transition: 200ms ease;
+
+    /* Semantic in-game accents */
+    --race: #00ff88;
+    --derby: #ff4444;
+    --danger: #e63946;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    font-family: var(--font-sans);
     touch-action: manipulation;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -19,13 +65,32 @@ html {
 }
 
 body {
-    background-color: #1a1a2e;
-    color: #fff;
+    background-color: var(--bg-base);
+    color: var(--text);
     overflow: hidden;
     position: fixed;
     width: 100%;
     height: 100%;
     min-height: -webkit-fill-available;
+}
+
+/* Shared keyboard focus ring, matching the landing page. */
+:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Respect reduced-motion: drop non-essential transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 .container {
@@ -156,7 +221,7 @@ body {
     height: 60px;
     border-radius: 50%;
     background-color: rgba(76, 201, 240, 0.3);
-    border: 3px solid #4cc9f0;
+    border: 3px solid var(--cyan);
     position: absolute;
     transform: translate(-50%, -50%);
     opacity: 0;
@@ -168,10 +233,15 @@ body {
     opacity: 1;
 }
 
+/* Full-bleed control surfaces: opt out of the CTA pill decoration so they
+   stay edge-to-edge tap zones, not floating buttons. */
 #accelerate-btn, #brake-btn {
     width: 100%;
     height: 50%;
     border-radius: 0;
+    box-shadow: none;
+    /* Clear the inherited CTA gradient so the per-pedal solid colour shows. */
+    background-image: none;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -179,7 +249,7 @@ body {
     font-weight: bold;
     margin: 0;
     padding: 0;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, filter 0.2s;
     /* Prevent long-press issues on mobile */
     touch-action: none;
     -webkit-touch-callout: none;
@@ -189,19 +259,26 @@ body {
 }
 
 #accelerate-btn {
-    background-color: #4cc9f0;
+    background-color: var(--cyan);
+    color: var(--bg-deep);
 }
 
 #brake-btn {
-    background-color: #f72585;
+    background-color: var(--pink);
+    color: var(--text);
+}
+
+/* Pedals must not lift on hover (would shift the tap zone). */
+#accelerate-btn:hover, #brake-btn:hover {
+    transform: none;
 }
 
 #accelerate-btn:active {
-    background-color: #3a9fc0;
+    filter: brightness(0.8);
 }
 
 #brake-btn:active {
-    background-color: #d61d6d;
+    filter: brightness(0.8);
 }
 
 #game-stats {
@@ -238,18 +315,19 @@ body {
 h1 {
     font-size: 2rem;
     margin-bottom: 20px;
-    color: #4cc9f0;
+    color: var(--cyan);
+    letter-spacing: 0.01em;
 }
 
 h2 {
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: #f72585;
+    color: var(--pink);
 }
 
 .join-subtitle {
     margin: -6px 0 18px;
-    color: #8d99ae;
+    color: var(--text-muted);
     font-size: 1rem;
     letter-spacing: 0.02em;
 }
@@ -276,12 +354,13 @@ h2 {
 
 input {
     padding: 15px;
-    border: none;
-    border-radius: 5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     font-size: 1.2rem;
-    background-color: #16213e;
-    color: #fff;
+    background-color: var(--surface-solid);
+    color: var(--text);
     text-align: center;
+    transition: border-color var(--transition), box-shadow var(--transition);
     -webkit-user-select: text;
     -khtml-user-select: text;
     -moz-user-select: text;
@@ -289,38 +368,84 @@ input {
     user-select: text;
 }
 
-input::placeholder {
-    color: #8d99ae;
+input:focus {
+    border-color: var(--border-strong);
+    box-shadow: var(--glow-cyan);
+    outline: none;
 }
 
+input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Pill buttons matching the landing page: gradient primary with a soft glow
+   and a subtle lift on press. */
 button {
-    background-color: #4361ee;
-    color: white;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    color: var(--bg-deep);
     padding: 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--radius-full);
     font-size: 1.2rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    box-shadow: 0 8px 28px rgba(0, 255, 136, 0.35);
+    transition: transform var(--transition), box-shadow var(--transition);
 }
 
-button:hover, button:active {
-    background-color: #3a0ca3;
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(0, 255, 136, 0.5);
+}
+
+button:active {
+    transform: translateY(0);
 }
 
 .error {
-    color: #e63946;
+    color: var(--danger);
     margin-top: 10px;
     padding: 10px;
     background-color: rgba(230, 57, 70, 0.2);
-    border-radius: 5px;
+    border-radius: var(--radius-md);
+}
+
+.join-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.join-secondary {
+    background: transparent;
+    color: var(--cyan);
+    border: 2px solid var(--border-strong);
+    box-shadow: none;
+}
+
+.join-secondary:hover {
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+.control-remap-summary {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+
+.control-remap-summary-menu {
+    margin: -2px 0 4px;
 }
 
 .player-info {
     margin: 20px 0;
     padding: 20px;
-    background-color: #16213e;
-    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
 }
 
 /* Mode display in waiting room */
@@ -333,17 +458,17 @@ button:hover, button:active {
     padding: 12px 20px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
-    border: 2px solid var(--mode-color, #44FF88);
-    box-shadow: 0 0 15px var(--mode-color, #44FF88);
+    border: 2px solid var(--mode-color, var(--race));
+    box-shadow: 0 0 15px var(--mode-color, var(--race));
     transition: all 0.3s ease;
 }
 
 .mode-display[data-mode="race"] {
-    --mode-color: #44FF88;
+    --mode-color: var(--race);
 }
 
 .mode-display[data-mode="derby"] {
-    --mode-color: #FF4444;
+    --mode-color: var(--derby);
 }
 
 .mode-icon {
@@ -354,7 +479,7 @@ button:hover, button:active {
     font-size: 1.2rem;
     font-weight: bold;
     letter-spacing: 2px;
-    color: var(--mode-color, #44FF88);
+    color: var(--mode-color, var(--race));
 }
 
 .car-preview-container {
@@ -371,7 +496,7 @@ button:hover, button:active {
 
 .waiting-text {
     font-style: italic;
-    color: #8d99ae;
+    color: var(--text-muted);
     margin-top: 20px;
 }
 
@@ -415,7 +540,7 @@ button:hover, button:active {
 /* Name change in waiting room */
 .name-change-container {
     margin-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border);
     padding-top: 15px;
 }
 
@@ -429,18 +554,28 @@ button:hover, button:active {
     flex: 1;
 }
 
+/* Secondary action: ghost pill so it reads below the primary CTA. */
 .name-change-input button {
     padding: 10px 15px;
-    background-color: #4cc9f0;
     font-size: 0.9rem;
+    background: transparent;
+    color: var(--cyan);
+    border: 2px solid var(--border-strong);
+    box-shadow: none;
+}
+
+.name-change-input button:hover {
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
 }
 
 /* For auto-join message */
 .auto-join-message {
-    background-color: #2a6f97;
+    background: var(--surface);
+    border: 1px solid var(--border);
     margin-bottom: 20px;
     padding: 15px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     text-align: center;
 }
 
@@ -453,10 +588,12 @@ button:hover, button:active {
     width: 44px;
     height: 44px;
     padding: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
+    background: rgba(13, 20, 41, 0.6);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     font-size: 1.3rem;
+    box-shadow: none;
     opacity: 0.7;
 }
 
@@ -474,9 +611,9 @@ button:hover, button:active {
 }
 
 .player-menu-content {
-    background: #16213e;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
+    background: var(--surface-solid);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
     padding: 20px;
     width: 90%;
     max-width: 320px;
@@ -485,12 +622,13 @@ button:hover, button:active {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(76, 201, 240, 0.08);
 }
 
 .player-menu-title {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #4cc9f0;
+    color: var(--cyan);
     text-align: center;
 }
 
@@ -499,24 +637,267 @@ button:hover, button:active {
     font-size: 1rem;
 }
 
+/* Dismiss action: neutral ghost pill, subordinate to the primary actions. */
 #player-menu-close {
-    background-color: #333;
+    background: transparent;
+    color: var(--text-muted);
+    border: 2px solid var(--border);
+    box-shadow: none;
+}
+
+#player-menu-close:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+}
+
+.control-remap-content button,
+.control-remap-content select {
+    font-size: 0.98rem;
 }
 
 .player-menu-help {
     font-size: 0.85rem;
-    color: #8d99ae;
+    color: var(--text-muted);
     text-align: left;
     display: flex;
     flex-direction: column;
     gap: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border);
     padding-top: 10px;
 }
 
 .player-menu-help-title {
     font-weight: bold;
-    color: #aaa;
+    color: var(--text-muted);
+}
+
+#control-remap-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2400;
+    background: rgba(4, 9, 22, 0.72);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 14px;
+    backdrop-filter: blur(8px);
+}
+
+.control-remap-content {
+    width: min(560px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(circle at top left, rgba(76, 201, 240, 0.16), transparent 38%),
+        radial-gradient(circle at bottom right, rgba(247, 37, 133, 0.14), transparent 35%),
+        rgba(13, 20, 41, 0.96);
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+}
+
+.control-remap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.control-remap-kicker {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 4px;
+}
+
+.control-remap-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.control-remap-status,
+.control-remap-note,
+.control-remap-section-copy {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+.control-remap-status[data-state="error"] {
+    color: #ff9aa9;
+}
+
+.control-remap-status[data-state="ok"] {
+    color: var(--text-muted);
+}
+
+.control-remap-note[data-state="warn"] {
+    color: #ffd06b;
+}
+
+.control-remap-note[data-state="ok"] {
+    color: var(--green);
+}
+
+.control-remap-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.control-remap-section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.control-remap-section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--cyan);
+}
+
+.control-remap-chip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.control-remap-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 92px;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: rgba(10, 18, 34, 0.85);
+    color: var(--text);
+    box-shadow: none;
+    transform: none;
+}
+
+.control-remap-chip:hover {
+    transform: none;
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 1px rgba(76, 201, 240, 0.12), var(--glow-cyan);
+}
+
+.control-remap-chip.active {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.25), var(--glow-green);
+}
+
+.control-remap-chip-title {
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.control-remap-chip-meta {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--text-muted);
+}
+
+.control-remap-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-remap-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 220px);
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background: rgba(10, 18, 34, 0.76);
+    border: 1px solid var(--border);
+}
+
+.control-remap-row-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.control-remap-bind-btn,
+.control-remap-select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-strong);
+    background: rgba(20, 31, 57, 0.96);
+    color: var(--text);
+    box-shadow: none;
+}
+
+.control-remap-bind-btn:hover {
+    transform: none;
+    box-shadow: var(--glow-cyan);
+}
+
+.control-remap-bind-btn.capturing {
+    border-color: var(--green);
+    box-shadow: var(--glow-green);
+    color: var(--green);
+}
+
+.control-remap-select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--cyan) 50%),
+        linear-gradient(135deg, var(--cyan) 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+}
+
+.control-remap-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#control-remap-close,
+#control-remap-reset {
+    background: transparent;
+    color: var(--text-muted);
+    border: 2px solid var(--border);
+    box-shadow: none;
+}
+
+#control-remap-close:hover,
+#control-remap-reset:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+}
+
+@media (max-width: 520px) {
+    .control-remap-row {
+        grid-template-columns: 1fr;
+    }
+
+    .control-remap-header {
+        flex-direction: column;
+    }
+
+    .control-remap-footer {
+        justify-content: stretch;
+    }
 }
 
 /* Derby mode weapon controls */
@@ -534,12 +915,12 @@ button:hover, button:active {
 }
 
 .weapon-indicator {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(13, 20, 41, 0.7);
     border: 2px solid rgba(255, 68, 68, 0.5);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 8px 16px;
     font-size: 0.9rem;
-    color: #aaa;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -548,8 +929,8 @@ button:hover, button:active {
 }
 
 .weapon-indicator.has-weapon {
-    border-color: #FF4444;
-    color: #fff;
+    border-color: var(--derby);
+    color: var(--text);
     box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
 }
 
@@ -560,7 +941,7 @@ button:hover, button:active {
 .fire-btn {
     width: 100px;
     height: 80px;
-    background: linear-gradient(135deg, #FF4444 0%, #FF6644 100%);
+    background: linear-gradient(135deg, var(--derby) 0%, #ff6644 100%);
     clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     display: flex;
     justify-content: center;
@@ -568,7 +949,7 @@ button:hover, button:active {
     padding-bottom: 15px;
     font-size: 1.2rem;
     font-weight: bold;
-    color: #fff;
+    color: var(--text);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
     touch-action: none;
@@ -587,5 +968,5 @@ button:hover, button:active {
 }
 
 .fire-btn:not(.enabled) {
-    background: linear-gradient(135deg, #666 0%, #888 100%);
+    background: linear-gradient(135deg, #4a5163 0%, #6b7280 100%);
 }

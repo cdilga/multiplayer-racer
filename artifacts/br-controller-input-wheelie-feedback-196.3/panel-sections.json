@@ -1,0 +1,12 @@
+{
+  "panelTitle": "Physics Tuning (F2)",
+  "wheelieSection": {
+    "title": "Wheelie Intent",
+    "text": "Wheelie Intent Lift Threshold 0.92 Lift Dwell (ms) 280"
+  },
+  "telemetrySection": {
+    "title": "Telemetry (Live)",
+    "text": "Telemetry (Live) No active vehicles"
+  },
+  "panelText": "Physics Tuning (F2) Engine & Physics Engine Force 200 Brake Force 50 Linear Damping 0.2 Angular Damping 0.4 Steering Max Angle 0.38 High Speed Red. 0.45 Smoothing 0.3 Wheelie Intent Lift Threshold 0.92 Lift Dwell (ms) 280 Wheels & Grip Friction Slip 1000 Suspension Stiff. 30 Wall Slide Grip 0.2 Telemetry (Live) No active vehicles Damage Damage Multiplier 1 Respawn Delay (s) 3 Audio Engine Min Pitch 0.8 Engine Max Pitch 1.6 Engine Volume 0.4 Host Camera Clustering Host renderer only. Local phones and keyboards stay controller/HUD clients. Merge Distance 28 Split Distance 40 Debounce Frames 10 Max Auto Viewports 4 Importance Car Count Weight 1 Importance Action Weight 0.35 Save Reset Defaults Export JSON"
+}

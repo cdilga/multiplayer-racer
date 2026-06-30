@@ -4,6 +4,78 @@
 const INPUT_SEND_RATE = 60; // Hz
 const INPUT_SEND_INTERVAL = 1000 / INPUT_SEND_RATE;
 let lastInputUpdate = 0;
+let lastControlFrameTime = null;
+const ControlMapperClass = typeof window.ControlMapper === 'function'
+    ? window.ControlMapper
+    : null;
+const RemapStoreClass = typeof window.RemapStore === 'function'
+    ? window.RemapStore
+    : null;
+const remapStore = RemapStoreClass ? new RemapStoreClass() : null;
+const REMAP_SOURCE_IDS = Object.freeze({
+    touch: 'primary',
+    keyboard: 'primary',
+    gamepadFallback: 'standard'
+});
+const KEYBOARD_ACTIONS = Array.isArray(ControlMapperClass?.KEYBOARD_ACTIONS)
+    ? ControlMapperClass.KEYBOARD_ACTIONS
+    : ['steerLeft', 'steerRight', 'accelerate', 'brake', 'fire'];
+const CONTROL_KEY_CODES = new Set(ControlMapperClass?.KEYBOARD_REGION_PRESETS
+    ? Object.values(ControlMapperClass.KEYBOARD_REGION_PRESETS)
+        .flatMap((preset) => Object.values(preset.bindings || {}))
+        .flatMap((codes) => Array.isArray(codes) ? codes : [])
+    : [
+        'ArrowUp',
+        'ArrowDown',
+        'ArrowLeft',
+        'ArrowRight',
+        'KeyW',
+        'KeyA',
+        'KeyS',
+        'KeyD',
+        'Space'
+    ]);
+
+function getStoredRemapSource(kind, sourceId) {
+    if (!remapStore) {
+        return null;
+    }
+
+    try {
+        return remapStore.getSource(kind, sourceId);
+    } catch (e) {
+        return null;
+    }
+}
+
+function buildInitialControlMapperOptions() {
+    const touch = getStoredRemapSource('touch', REMAP_SOURCE_IDS.touch);
+    const keyboard = getStoredRemapSource('keyboard', REMAP_SOURCE_IDS.keyboard);
+    const gamepad = getStoredRemapSource('gamepad', REMAP_SOURCE_IDS.gamepadFallback);
+
+    return {
+        touchSchemeId: touch?.schemeId,
+        keyboardSchemeId: keyboard?.schemeId,
+        keyboardBindings: keyboard?.bindings,
+        gamepadSchemeId: gamepad?.schemeId,
+        gamepadBindings: gamepad?.bindings,
+        gamepadSourceId: gamepad?.sourceId || REMAP_SOURCE_IDS.gamepadFallback
+    };
+}
+
+const controlMapper = ControlMapperClass
+    ? new ControlMapperClass(buildInitialControlMapperOptions())
+    : null;
+const keyboardPressedCodes = new Set();
+let keyboardControlsBound = false;
+let gamepadControlsBound = false;
+let activeGamepadIndex = null;
+let activeGamepadId = REMAP_SOURCE_IDS.gamepadFallback;
+const remapUiState = {
+    active: false,
+    capturingKeyboardAction: null,
+    lastLauncher: null
+};
 
 // Game state - exposed on window for testing
 const gameState = window.gameState = {
@@ -71,6 +143,15 @@ const elements = {
     generateNameBtn: document.getElementById('generate-name-btn'),
     autoJoinMessage: document.getElementById('auto-join-message'),
     detectedRoomCode: document.getElementById('detected-room-code'),
+    joinControlsBtn: document.getElementById('join-controls-btn'),
+    controlSummaryJoin: document.getElementById('control-remap-summary-join'),
+    controlSummaryMenu: document.getElementById('control-remap-summary-menu'),
+    playerMenuControlsBtn: document.getElementById('player-menu-controls'),
+    remapModal: document.getElementById('control-remap-modal'),
+    remapStatus: document.getElementById('control-remap-status'),
+    remapCloseBtn: document.getElementById('control-remap-close'),
+    remapResetBtn: document.getElementById('control-remap-reset'),
+    gamepadMappingNotice: document.getElementById('control-remap-gamepad-notice'),
     joinTimerDisplay: document.createElement('div')
 };
 
@@ -465,6 +546,611 @@ function renderTutorialStep() {
     }
 }
 
+const REMAP_ACTION_LABELS = Object.freeze({
+    steerLeft: 'Steer Left',
+    steerRight: 'Steer Right',
+    accelerate: 'Accelerate',
+    brake: 'Brake / Reverse',
+    fire: 'Fire'
+});
+
+function sanitizeGamepadSourceId(rawId) {
+    if (typeof rawId !== 'string' || !rawId.trim()) {
+        return REMAP_SOURCE_IDS.gamepadFallback;
+    }
+
+    return rawId
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        || REMAP_SOURCE_IDS.gamepadFallback;
+}
+
+function getCurrentGamepadSourceId() {
+    return activeGamepadId || REMAP_SOURCE_IDS.gamepadFallback;
+}
+
+function getCurrentRemapState() {
+    return controlMapper?.getRemapState?.() || {
+        touch: { schemeId: 'classic', summary: 'Steer left · pedals right' },
+        keyboard: { schemeId: 'hybrid', summary: 'WASD + Arrows', bindings: {} },
+        gamepad: { schemeId: 'standard', summary: 'Standard pad', bindings: {}, sourceId: REMAP_SOURCE_IDS.gamepadFallback }
+    };
+}
+
+function persistTouchRemap() {
+    if (!remapStore || !controlMapper) {
+        return;
+    }
+
+    const touch = getCurrentRemapState().touch;
+    remapStore.setSource({
+        kind: 'touch',
+        sourceId: REMAP_SOURCE_IDS.touch,
+        schemeId: touch.schemeId,
+        summary: touch.summary,
+        bindings: {}
+    });
+}
+
+function persistKeyboardRemap() {
+    if (!remapStore || !controlMapper) {
+        return;
+    }
+
+    const keyboard = getCurrentRemapState().keyboard;
+    remapStore.setSource({
+        kind: 'keyboard',
+        sourceId: REMAP_SOURCE_IDS.keyboard,
+        schemeId: keyboard.schemeId,
+        summary: keyboard.summary,
+        bindings: keyboard.bindings
+    });
+}
+
+function persistGamepadRemap(sourceId = getCurrentGamepadSourceId()) {
+    if (!remapStore || !controlMapper) {
+        return;
+    }
+
+    const gamepad = getCurrentRemapState().gamepad;
+    remapStore.setSource({
+        kind: 'gamepad',
+        sourceId,
+        schemeId: gamepad.schemeId,
+        summary: gamepad.summary,
+        bindings: gamepad.bindings
+    });
+}
+
+function applyStoredGamepadRemap(sourceId = getCurrentGamepadSourceId()) {
+    if (!controlMapper) {
+        return null;
+    }
+
+    const specificRemap = getStoredRemapSource('gamepad', sourceId);
+    if (specificRemap?.bindings) {
+        controlMapper.setGamepadBindings(specificRemap.bindings, {
+            schemeId: specificRemap.schemeId || 'custom',
+            sourceId
+        });
+        return specificRemap;
+    }
+
+    const fallbackRemap = sourceId !== REMAP_SOURCE_IDS.gamepadFallback
+        ? getStoredRemapSource('gamepad', REMAP_SOURCE_IDS.gamepadFallback)
+        : null;
+    if (fallbackRemap?.bindings) {
+        controlMapper.setGamepadBindings(fallbackRemap.bindings, {
+            schemeId: fallbackRemap.schemeId || 'custom',
+            sourceId
+        });
+        return fallbackRemap;
+    }
+
+    controlMapper.setGamepadPreset('standard', { sourceId });
+    return null;
+}
+
+function updateControlRemapSummaries() {
+    const state = getCurrentRemapState();
+    const summary = [state.touch.summary, state.keyboard.summary, state.gamepad.summary]
+        .filter(Boolean)
+        .join(' · ');
+
+    if (elements.controlSummaryJoin) {
+        elements.controlSummaryJoin.textContent = summary;
+    }
+    if (elements.controlSummaryMenu) {
+        elements.controlSummaryMenu.textContent = summary;
+    }
+}
+
+function setRemapStatus(message, { error = false } = {}) {
+    if (!elements.remapStatus) {
+        return;
+    }
+
+    elements.remapStatus.textContent = message;
+    elements.remapStatus.dataset.state = error ? 'error' : 'ok';
+}
+
+function updateGamepadMappingNotice() {
+    if (!elements.gamepadMappingNotice) {
+        return;
+    }
+
+    const validation = controlMapper?.getValidationState?.()?.gamepad;
+    if (validation?.warnings?.length) {
+        elements.gamepadMappingNotice.textContent = validation.warnings[0];
+        elements.gamepadMappingNotice.dataset.state = 'warn';
+        return;
+    }
+
+    if (activeGamepadIndex === null) {
+        elements.gamepadMappingNotice.textContent = 'No gamepad detected. Changes still save for the next compatible pad on this device.';
+        elements.gamepadMappingNotice.dataset.state = 'idle';
+        return;
+    }
+
+    elements.gamepadMappingNotice.textContent = `Active pad saved as ${getCurrentGamepadSourceId()}.`;
+    elements.gamepadMappingNotice.dataset.state = 'ok';
+}
+
+function renderTouchSchemeOptions() {
+    const container = document.getElementById('control-remap-touch-options');
+    if (!container || !ControlMapperClass?.TOUCH_SCHEMES) {
+        return;
+    }
+
+    const currentSchemeId = getCurrentRemapState().touch.schemeId;
+    container.innerHTML = '';
+
+    for (const scheme of Object.values(ControlMapperClass.TOUCH_SCHEMES)) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'control-remap-chip';
+        button.dataset.touchScheme = scheme.id;
+        button.setAttribute('aria-pressed', currentSchemeId === scheme.id ? 'true' : 'false');
+        if (currentSchemeId === scheme.id) {
+            button.classList.add('active');
+        }
+        button.innerHTML = `
+            <span class="control-remap-chip-title">${scheme.name}</span>
+            <span class="control-remap-chip-meta">${scheme.summary}</span>
+        `;
+        button.addEventListener('click', () => applyTouchSchemeRemap(scheme.id));
+        container.appendChild(button);
+    }
+}
+
+function renderKeyboardPresetOptions() {
+    const container = document.getElementById('control-remap-keyboard-presets');
+    if (!container || !ControlMapperClass?.KEYBOARD_REGION_PRESETS) {
+        return;
+    }
+
+    const keyboardState = getCurrentRemapState().keyboard;
+    container.innerHTML = '';
+
+    for (const preset of Object.values(ControlMapperClass.KEYBOARD_REGION_PRESETS)) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'control-remap-chip';
+        button.dataset.keyboardPreset = preset.id;
+        button.setAttribute('aria-pressed', keyboardState.schemeId === preset.id ? 'true' : 'false');
+        if (keyboardState.schemeId === preset.id) {
+            button.classList.add('active');
+        }
+        button.innerHTML = `
+            <span class="control-remap-chip-title">${preset.name}</span>
+            <span class="control-remap-chip-meta">${preset.summary}</span>
+        `;
+        button.addEventListener('click', () => applyKeyboardPresetRemap(preset.id));
+        container.appendChild(button);
+    }
+}
+
+function renderKeyboardBindingRows() {
+    const container = document.getElementById('control-remap-keyboard-actions');
+    if (!container || !ControlMapperClass?.describeKeyboardBindingList) {
+        return;
+    }
+
+    const keyboardState = getCurrentRemapState().keyboard;
+    container.innerHTML = '';
+
+    for (const action of KEYBOARD_ACTIONS) {
+        const row = document.createElement('div');
+        row.className = 'control-remap-row';
+
+        const label = document.createElement('span');
+        label.className = 'control-remap-row-label';
+        label.textContent = REMAP_ACTION_LABELS[action] || action;
+
+        const valueButton = document.createElement('button');
+        valueButton.type = 'button';
+        valueButton.className = 'control-remap-bind-btn';
+        valueButton.dataset.keyboardAction = action;
+        if (remapUiState.capturingKeyboardAction === action) {
+            valueButton.classList.add('capturing');
+            valueButton.textContent = 'Press a key…';
+        } else {
+            valueButton.textContent = ControlMapperClass.describeKeyboardBindingList(
+                keyboardState.bindings[action]
+            ) || 'Unbound';
+        }
+        valueButton.addEventListener('click', () => {
+            remapUiState.capturingKeyboardAction = action;
+            renderControlRemapUI();
+            setRemapStatus(`Press a key for ${REMAP_ACTION_LABELS[action]}. Escape cancels.`, {
+                error: false
+            });
+        });
+
+        row.appendChild(label);
+        row.appendChild(valueButton);
+        container.appendChild(row);
+    }
+}
+
+function renderGamepadBindingRows() {
+    const container = document.getElementById('control-remap-gamepad-actions');
+    if (!container || !ControlMapperClass?.GAMEPAD_BINDING_OPTIONS) {
+        return;
+    }
+
+    const gamepadState = getCurrentRemapState().gamepad;
+    container.innerHTML = '';
+
+    for (const action of KEYBOARD_ACTIONS) {
+        const options = ControlMapperClass.GAMEPAD_BINDING_OPTIONS[action] || [];
+        const row = document.createElement('label');
+        row.className = 'control-remap-row';
+
+        const text = document.createElement('span');
+        text.className = 'control-remap-row-label';
+        text.textContent = REMAP_ACTION_LABELS[action] || action;
+
+        const select = document.createElement('select');
+        select.className = 'control-remap-select';
+        select.dataset.gamepadAction = action;
+
+        for (const option of options) {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.label;
+            select.appendChild(optionElement);
+        }
+
+        select.value = gamepadState.bindings[action]?.[0] || options[0]?.value || '';
+        select.addEventListener('change', () => {
+            const result = controlMapper?.setGamepadActionBinding(action, [select.value], {
+                schemeId: 'custom',
+                sourceId: getCurrentGamepadSourceId(),
+                fallbackPresetId: gamepadState.schemeId
+            });
+            if (!result?.valid) {
+                setRemapStatus(result?.errors?.[0] || 'Could not save that gamepad binding.', {
+                    error: true
+                });
+                renderControlRemapUI();
+                return;
+            }
+
+            persistGamepadRemap(getCurrentGamepadSourceId());
+            updateControlRemapSummaries();
+            updateGamepadMappingNotice();
+            renderControlRemapUI();
+            setRemapStatus(`Saved ${REMAP_ACTION_LABELS[action]} for this gamepad source.`, {
+                error: false
+            });
+        });
+
+        row.appendChild(text);
+        row.appendChild(select);
+        container.appendChild(row);
+    }
+}
+
+function renderControlRemapUI() {
+    renderTouchSchemeOptions();
+    renderKeyboardPresetOptions();
+    renderKeyboardBindingRows();
+    renderGamepadBindingRows();
+    updateControlRemapSummaries();
+    updateGamepadMappingNotice();
+}
+
+function applyTouchSchemeRemap(schemeId) {
+    const result = controlMapper?.setTouchScheme(schemeId);
+    if (!result?.valid) {
+        setRemapStatus(result?.errors?.[0] || 'Could not apply that touch layout.', {
+            error: true
+        });
+        return;
+    }
+
+    persistTouchRemap();
+    releaseAllControls();
+    if (gameState.gameStarted) {
+        initGameControls();
+        updateWeaponDisplay();
+    }
+    if (tutorialState.active) {
+        renderTutorialStep();
+    }
+    renderControlRemapUI();
+    setRemapStatus(`Saved ${ControlMapperClass.TOUCH_SCHEMES[schemeId].name} for this device.`, {
+        error: false
+    });
+}
+
+function applyKeyboardPresetRemap(presetId) {
+    const result = controlMapper?.setKeyboardPreset(presetId);
+    if (!result?.valid) {
+        setRemapStatus(result?.errors?.[0] || 'Could not apply that keyboard preset.', {
+            error: true
+        });
+        return;
+    }
+
+    keyboardPressedCodes.clear();
+    controlMapper?.setKeyboardKeys(keyboardPressedCodes);
+    controlMapper?.setKeyboardFire(false);
+    persistKeyboardRemap();
+    syncControlsFromMapper();
+    renderControlRemapUI();
+    setRemapStatus(`Saved ${ControlMapperClass.KEYBOARD_REGION_PRESETS[presetId].name}.`, {
+        error: false
+    });
+}
+
+function resetAllControlRemaps() {
+    remapUiState.capturingKeyboardAction = null;
+    controlMapper?.setTouchScheme('classic');
+    controlMapper?.setKeyboardPreset('hybrid');
+    controlMapper?.setGamepadPreset('standard', {
+        sourceId: getCurrentGamepadSourceId()
+    });
+    controlMapper?.clearGamepadSnapshot();
+    keyboardPressedCodes.clear();
+    controlMapper?.setKeyboardKeys(keyboardPressedCodes);
+    controlMapper?.setKeyboardFire(false);
+
+    remapStore?.removeSource('touch', REMAP_SOURCE_IDS.touch);
+    remapStore?.removeSource('keyboard', REMAP_SOURCE_IDS.keyboard);
+    remapStore?.removeSource('gamepad', REMAP_SOURCE_IDS.gamepadFallback);
+    if (getCurrentGamepadSourceId() !== REMAP_SOURCE_IDS.gamepadFallback) {
+        remapStore?.removeSource('gamepad', getCurrentGamepadSourceId());
+    }
+
+    if (gameState.gameStarted) {
+        releaseAllControls();
+        initGameControls();
+        updateWeaponDisplay();
+    }
+    renderControlRemapUI();
+    setRemapStatus('Reset to the local default control layout.', { error: false });
+}
+
+function normalizeKeyboardBindingCode(event) {
+    if (!event) {
+        return null;
+    }
+
+    if (typeof event.code === 'string' && event.code.trim()) {
+        return event.code;
+    }
+
+    if (event.key === ' ') {
+        return 'Space';
+    }
+
+    if (typeof event.key !== 'string' || !event.key.trim()) {
+        return null;
+    }
+
+    if (event.key.startsWith('Arrow')) {
+        return event.key;
+    }
+
+    if (/^[a-z]$/i.test(event.key)) {
+        return `Key${event.key.toUpperCase()}`;
+    }
+
+    if (/^[0-9]$/.test(event.key)) {
+        return `Digit${event.key}`;
+    }
+
+    return null;
+}
+
+function handleRemapCaptureEvent(event) {
+    if (!remapUiState.active || !remapUiState.capturingKeyboardAction) {
+        return false;
+    }
+
+    event.preventDefault?.();
+    event.stopPropagation?.();
+
+    if (event.key === 'Escape') {
+        remapUiState.capturingKeyboardAction = null;
+        renderControlRemapUI();
+        setRemapStatus('Keyboard remap cancelled.', { error: false });
+        return true;
+    }
+
+    const code = normalizeKeyboardBindingCode(event);
+    if (!code) {
+        setRemapStatus('Only standard keyboard keys can be bound here.', {
+            error: true
+        });
+        return true;
+    }
+
+    const action = remapUiState.capturingKeyboardAction;
+    const result = controlMapper?.setKeyboardActionBinding(
+        action,
+        [code],
+        {
+            schemeId: 'custom',
+            fallbackPresetId: getCurrentRemapState().keyboard.schemeId
+        }
+    );
+
+    if (!result?.valid) {
+        setRemapStatus(result?.errors?.[0] || 'That keyboard binding conflicts with another action.', {
+            error: true
+        });
+        return true;
+    }
+
+    keyboardPressedCodes.clear();
+    controlMapper?.setKeyboardKeys(keyboardPressedCodes);
+    controlMapper?.setKeyboardFire(false);
+    persistKeyboardRemap();
+    remapUiState.capturingKeyboardAction = null;
+    renderControlRemapUI();
+    setRemapStatus(`Saved ${REMAP_ACTION_LABELS[action] || 'keyboard'} binding.`, {
+        error: false
+    });
+    return true;
+}
+
+function openControlRemapModal(launcher = document.activeElement) {
+    if (!elements.remapModal) {
+        return;
+    }
+
+    remapUiState.active = true;
+    remapUiState.lastLauncher = launcher;
+    remapUiState.capturingKeyboardAction = null;
+    elements.remapModal.classList.remove('hidden');
+    renderControlRemapUI();
+    setRemapStatus('Saved locally on this device only. No account or cloud sync.', {
+        error: false
+    });
+
+    const firstButton = elements.remapModal.querySelector('.control-remap-chip, .control-remap-bind-btn, .control-remap-select');
+    firstButton?.focus?.();
+}
+
+function closeControlRemapModal() {
+    if (!elements.remapModal) {
+        return;
+    }
+
+    remapUiState.active = false;
+    remapUiState.capturingKeyboardAction = null;
+    elements.remapModal.classList.add('hidden');
+    remapUiState.lastLauncher?.focus?.();
+}
+
+function bindGamepadControls() {
+    if (gamepadControlsBound) {
+        return;
+    }
+
+    window.addEventListener('gamepadconnected', (event) => {
+        const gamepad = event.gamepad;
+        activeGamepadIndex = gamepad.index;
+        activeGamepadId = sanitizeGamepadSourceId(gamepad.id);
+        applyStoredGamepadRemap(activeGamepadId);
+        renderControlRemapUI();
+    });
+
+    window.addEventListener('gamepaddisconnected', (event) => {
+        if (event.gamepad.index !== activeGamepadIndex) {
+            return;
+        }
+
+        activeGamepadIndex = null;
+        activeGamepadId = REMAP_SOURCE_IDS.gamepadFallback;
+        controlMapper?.clearGamepadSnapshot();
+        applyStoredGamepadRemap(REMAP_SOURCE_IDS.gamepadFallback);
+        renderControlRemapUI();
+    });
+
+    gamepadControlsBound = true;
+}
+
+function pollGamepadControls() {
+    if (!controlMapper || typeof navigator.getGamepads !== 'function') {
+        return;
+    }
+
+    const pads = Array.from(navigator.getGamepads?.() || []);
+    let gamepad = activeGamepadIndex !== null ? pads[activeGamepadIndex] : null;
+
+    if (!gamepad) {
+        gamepad = pads.find(Boolean) || null;
+        if (!gamepad) {
+            activeGamepadIndex = null;
+            activeGamepadId = REMAP_SOURCE_IDS.gamepadFallback;
+            controlMapper.clearGamepadSnapshot();
+            applyStoredGamepadRemap(REMAP_SOURCE_IDS.gamepadFallback);
+            updateGamepadMappingNotice();
+            return;
+        }
+    }
+
+    const nextSourceId = sanitizeGamepadSourceId(gamepad.id);
+    if (activeGamepadIndex !== gamepad.index || activeGamepadId !== nextSourceId) {
+        activeGamepadIndex = gamepad.index;
+        activeGamepadId = nextSourceId;
+        applyStoredGamepadRemap(activeGamepadId);
+    }
+
+    controlMapper.setGamepadSnapshot({
+        connected: true,
+        id: gamepad.id,
+        index: gamepad.index,
+        mapping: gamepad.mapping,
+        axes: Array.from(gamepad.axes || []),
+        buttons: Array.from(gamepad.buttons || []).map((button) => ({
+            pressed: !!button.pressed,
+            value: typeof button.value === 'number' ? button.value : (button.pressed ? 1 : 0)
+        }))
+    });
+    updateGamepadMappingNotice();
+}
+
+function initControlRemapUI() {
+    if (!elements.remapModal) {
+        updateControlRemapSummaries();
+        return;
+    }
+
+    elements.joinControlsBtn?.addEventListener('click', (event) => {
+        openControlRemapModal(event.currentTarget);
+    });
+    elements.playerMenuControlsBtn?.addEventListener('click', (event) => {
+        document.getElementById('player-menu')?.classList.add('hidden');
+        openControlRemapModal(event.currentTarget);
+    });
+    elements.remapCloseBtn?.addEventListener('click', closeControlRemapModal);
+    elements.remapResetBtn?.addEventListener('click', resetAllControlRemaps);
+    elements.remapModal.addEventListener('click', (event) => {
+        if (event.target === elements.remapModal) {
+            closeControlRemapModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (handleRemapCaptureEvent(event)) {
+            return;
+        }
+
+        if (remapUiState.active && event.key === 'Escape') {
+            event.preventDefault?.();
+            closeControlRemapModal();
+        }
+    }, true);
+
+    bindGamepadControls();
+    renderControlRemapUI();
+}
+
 // In-game menu (help / reset car / leave) - escape hatch when stuck
 function initPlayerMenu() {
     const menuBtn = document.getElementById('player-menu-btn');
@@ -513,6 +1199,7 @@ function initPlayerMenu() {
     });
 }
 initPlayerMenu();
+initControlRemapUI();
 initTutorial();
 
 function updateVehicleStatusFeedback() {
@@ -1145,9 +1832,20 @@ function resetGame() {
     gameState.gameStarted = false;
     
     // Reset controls
-    gameState.controls.steering = 0;
-    gameState.controls.acceleration = 0;
-    gameState.controls.braking = 0;
+    keyboardPressedCodes.clear();
+    lastControlFrameTime = null;
+    if (controlMapper) {
+        controlMapper.reset();
+        syncControlsFromMapper();
+    } else {
+        gameState.controls.steering = 0;
+        gameState.controls.acceleration = 0;
+        gameState.controls.braking = 0;
+        updateFireButtonPressedState(false);
+    }
+    gameState.touchControls.accelerateTouchId = null;
+    gameState.touchControls.brakeTouchId = null;
+    gameState.touchControls.fireTouchId = null;
     
     // Reset inputs
     elements.playerNameInput.value = '';
@@ -1205,22 +1903,22 @@ function createCarModel(color) {
     
     // Car body
     const bodyGeometry = new THREE.BoxGeometry(2, 1, 4);
-    const bodyMaterial = new THREE.MeshStandardMaterial({ color: color });
+    const bodyMaterial = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.5;
     carGroup.add(body);
-    
+
     // Car roof
     const roofGeometry = new THREE.BoxGeometry(1.5, 0.7, 2);
-    const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.DoubleSide });
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
     roof.position.y = 1.35;
     roof.position.z = -0.2;
     carGroup.add(roof);
-    
+
     // Wheels
     const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
-    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const wheelMaterial = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
     
     // Front left wheel
     const wheelFL = new THREE.Mesh(wheelGeometry, wheelMaterial);
@@ -1268,6 +1966,15 @@ function initGameControls() {
     pedalsArea.id = 'pedals-area';
     pedalsArea.className = 'control-area';
 
+    const touchSchemeId = controlMapper?.getRemapState?.()?.touch?.schemeId || 'classic';
+    const touchLayout = ControlMapperClass?.TOUCH_SCHEMES?.[touchSchemeId]?.layout || {
+        steeringSide: 'left',
+        pedalsSide: 'right'
+    };
+    elements.controlsContainer.dataset.touchScheme = touchSchemeId;
+    steeringArea.dataset.side = touchLayout.steeringSide;
+    pedalsArea.dataset.side = touchLayout.pedalsSide;
+
     // Add accelerate and brake buttons to pedals area
     const accelerateBtn = document.createElement('div');
     accelerateBtn.id = 'accelerate-btn';
@@ -1280,9 +1987,14 @@ function initGameControls() {
     pedalsArea.appendChild(accelerateBtn);
     pedalsArea.appendChild(brakeBtn);
 
-    // Add areas to container
-    elements.controlsContainer.appendChild(steeringArea);
-    elements.controlsContainer.appendChild(pedalsArea);
+    // Add areas to container in the selected touch layout order.
+    if (touchLayout.steeringSide === 'right') {
+        elements.controlsContainer.appendChild(pedalsArea);
+        elements.controlsContainer.appendChild(steeringArea);
+    } else {
+        elements.controlsContainer.appendChild(steeringArea);
+        elements.controlsContainer.appendChild(pedalsArea);
+    }
 
     // Add fire button and weapon indicator (weapons available in every mode)
     const weaponArea = document.createElement('div');
@@ -1360,38 +2072,7 @@ function initGameControls() {
         }
     });
 
-    // Also support keyboard controls for testing
-    document.addEventListener('keydown', (e) => {
-        switch (e.key) {
-            case 'ArrowLeft':
-                setSteering(-1);
-                break;
-            case 'ArrowRight':
-                setSteering(1);
-                break;
-            case 'ArrowUp':
-                setAcceleration(1);
-                break;
-            case 'ArrowDown':
-                setBraking(1);
-                break;
-        }
-    });
-
-    document.addEventListener('keyup', (e) => {
-        switch (e.key) {
-            case 'ArrowLeft':
-            case 'ArrowRight':
-                setSteering(0);
-                break;
-            case 'ArrowUp':
-                setAcceleration(0);
-                break;
-            case 'ArrowDown':
-                setBraking(0);
-                break;
-        }
-    });
+    bindKeyboardControls();
 }
 
 // Touch handlers for accelerator with touch ID tracking
@@ -1448,21 +2129,14 @@ function handleFireStart(e) {
 
     // Mouse/desktop fallback
     if (!e.changedTouches) {
-        if (elements.fireBtn) {
-            elements.fireBtn.classList.add('pressed');
-        }
-        fireWeapon();
+        setTouchFire(true);
         return;
     }
 
     for (const touch of e.changedTouches) {
         if (gameState.touchControls.fireTouchId === null) {
             gameState.touchControls.fireTouchId = touch.identifier;
-            if (elements.fireBtn) {
-                elements.fireBtn.classList.add('pressed');
-            }
-            // Fire weapon on touch start
-            fireWeapon();
+            setTouchFire(true);
             break;
         }
     }
@@ -1470,18 +2144,14 @@ function handleFireStart(e) {
 
 function handleFireEnd(e) {
     if (!e.changedTouches) {
-        if (elements.fireBtn) {
-            elements.fireBtn.classList.remove('pressed');
-        }
+        setTouchFire(false);
         return;
     }
 
     for (const touch of e.changedTouches) {
         if (touch.identifier === gameState.touchControls.fireTouchId) {
             gameState.touchControls.fireTouchId = null;
-            if (elements.fireBtn) {
-                elements.fireBtn.classList.remove('pressed');
-            }
+            setTouchFire(false);
             break;
         }
     }
@@ -1499,35 +2169,252 @@ function hapticBuzz(pattern) {
 
 // Old steering functions removed - now using Joystick class
 
+function updateFireButtonPressedState(isPressed) {
+    if (elements.fireBtn) {
+        elements.fireBtn.classList.toggle('pressed', !!isPressed);
+    }
+}
+
+function syncControlsFromMapper() {
+    if (!controlMapper) {
+        return {
+            steering: gameState.controls.steering,
+            acceleration: gameState.controls.acceleration,
+            braking: gameState.controls.braking,
+            fire: !!gameState.touchControls.fireTouchId
+        };
+    }
+
+    const mappedControls = controlMapper.getControls();
+    gameState.controls.steering = mappedControls.steering;
+    gameState.controls.acceleration = mappedControls.acceleration;
+    gameState.controls.braking = mappedControls.braking;
+    updateFireButtonPressedState(mappedControls.fire);
+    return mappedControls;
+}
+
+function stepControlMapper(dtMs = 0) {
+    if (!controlMapper) {
+        return syncControlsFromMapper();
+    }
+
+    pollGamepadControls();
+    controlMapper.step(dtMs);
+    return syncControlsFromMapper();
+}
+
+function advanceControlFrame(frameTime = performance.now()) {
+    const currentTime = Number.isFinite(frameTime) ? frameTime : performance.now();
+    const dtMs = lastControlFrameTime === null
+        ? 0
+        : Math.max(0, currentTime - lastControlFrameTime);
+    lastControlFrameTime = currentTime;
+
+    const controls = stepControlMapper(dtMs);
+    if (controlMapper && controlMapper.consumeFirePressed() && gameState.gameStarted) {
+        fireWeapon();
+    }
+
+    return controls;
+}
+
+function buildControlPacket(timestamp = Date.now()) {
+    const controls = syncControlsFromMapper();
+    return {
+        player_id: gameState.playerId,
+        room_code: gameState.roomCode,
+        controls: {
+            steering: controls.steering,
+            acceleration: controls.acceleration,
+            braking: controls.braking
+        },
+        timestamp
+    };
+}
+
+function emitControlUpdate(currentTime = performance.now(), options = {}) {
+    const { force = false } = options;
+    const now = Number.isFinite(currentTime) ? currentTime : performance.now();
+    const elapsed = now - lastInputUpdate;
+
+    if (!force && elapsed < INPUT_SEND_INTERVAL) {
+        return null;
+    }
+
+    const playerControlUpdate = buildControlPacket(Date.now());
+    socket.emit('player_control_update', playerControlUpdate);
+
+    if (!errorLog.info) {
+        errorLog.info = function(message, timeout = 1000) {
+            const infoElement = document.createElement('div');
+            infoElement.className = 'info-log-item';
+            infoElement.style.backgroundColor = 'rgba(0, 100, 0, 0.7)';
+            infoElement.style.color = 'white';
+            infoElement.style.padding = '5px 8px';
+            infoElement.style.marginBottom = '3px';
+            infoElement.style.borderRadius = '4px';
+            infoElement.style.fontFamily = 'monospace';
+            infoElement.style.fontSize = '11px';
+            infoElement.style.opacity = '0.7';
+            infoElement.style.transition = 'opacity 0.3s';
+
+            const time = new Date().toLocaleTimeString();
+            infoElement.textContent = `[${time}] ${message}`;
+
+            if (!this.container) {
+                this.init();
+            }
+
+            this.container.appendChild(infoElement);
+
+            setTimeout(() => {
+                infoElement.style.opacity = '0';
+                setTimeout(() => {
+                    if (infoElement.parentNode) {
+                        infoElement.parentNode.removeChild(infoElement);
+                    }
+                }, 300);
+            }, timeout);
+        };
+    }
+
+    lastInputUpdate = now;
+    return playerControlUpdate;
+}
+
+function normalizeKeyboardControlCode(event) {
+    if (!event) return null;
+
+    const normalized = normalizeKeyboardBindingCode(event);
+    if (!normalized) {
+        return null;
+    }
+
+    if (controlMapper?.getKnownKeyboardCodes?.().has(normalized)) {
+        return normalized;
+    }
+
+    return CONTROL_KEY_CODES.has(normalized) ? normalized : null;
+}
+
+function isEditableControlTarget(target) {
+    if (!target) return false;
+
+    const tagName = typeof target.tagName === 'string'
+        ? target.tagName.toUpperCase()
+        : '';
+
+    return !!target.isContentEditable
+        || tagName === 'INPUT'
+        || tagName === 'TEXTAREA'
+        || tagName === 'SELECT';
+}
+
+function handleKeyboardControlEvent(event) {
+    if (remapUiState.active) {
+        return false;
+    }
+
+    const code = normalizeKeyboardControlCode(event);
+    if (!code || !gameState.gameStarted || isEditableControlTarget(event.target)) {
+        return false;
+    }
+
+    event.preventDefault?.();
+
+    if (controlMapper) {
+        if (!controlMapper.applyKeyboardEvent(event.type, code)) {
+            return false;
+        }
+    } else if (event.type === 'keydown') {
+        keyboardPressedCodes.add(code);
+    } else if (event.type === 'keyup') {
+        keyboardPressedCodes.delete(code);
+    } else {
+        return false;
+    }
+
+    syncControlsFromMapper();
+    return true;
+}
+
+function bindKeyboardControls() {
+    if (keyboardControlsBound) return;
+
+    document.addEventListener('keydown', handleKeyboardControlEvent);
+    document.addEventListener('keyup', handleKeyboardControlEvent);
+    keyboardControlsBound = true;
+}
+
 function setSteering(value) {
+    if (controlMapper) {
+        controlMapper.setTouchSteering(value);
+        syncControlsFromMapper();
+        return;
+    }
+
     gameState.controls.steering = value;
 }
 
 function setAcceleration(value) {
+    if (controlMapper) {
+        controlMapper.setTouchAcceleration(value);
+        syncControlsFromMapper();
+        return;
+    }
+
     gameState.controls.acceleration = value;
 }
 
 function setBraking(value) {
+    if (controlMapper) {
+        controlMapper.setTouchBraking(value);
+        syncControlsFromMapper();
+        return;
+    }
+
     gameState.controls.braking = value;
+}
+
+function setTouchFire(value) {
+    if (controlMapper) {
+        controlMapper.setTouchFire(value);
+        syncControlsFromMapper();
+        return;
+    }
+
+    updateFireButtonPressedState(value);
+    if (value) {
+        fireWeapon();
+    }
 }
 
 // Release all controls and push the zeroed state to the server immediately.
 // Used when the tab is hidden/locked so the car doesn't drive itself.
 function releaseAllControls() {
-    gameState.controls.steering = 0;
-    gameState.controls.acceleration = 0;
-    gameState.controls.braking = 0;
+    keyboardPressedCodes.clear();
+    lastControlFrameTime = null;
     gameState.touchControls.accelerateTouchId = null;
     gameState.touchControls.brakeTouchId = null;
     gameState.touchControls.fireTouchId = null;
 
+    if (gameState.touchControls.steeringJoystick?.setEnabled) {
+        gameState.touchControls.steeringJoystick.setEnabled(false);
+        gameState.touchControls.steeringJoystick.setEnabled(true);
+    }
+
+    if (controlMapper) {
+        controlMapper.reset();
+        syncControlsFromMapper();
+    } else {
+        gameState.controls.steering = 0;
+        gameState.controls.acceleration = 0;
+        gameState.controls.braking = 0;
+        updateFireButtonPressedState(false);
+    }
+
     if (gameState.gameStarted && gameState.playerId) {
-        socket.emit('player_control_update', {
-            player_id: gameState.playerId,
-            room_code: gameState.roomCode,
-            controls: { steering: 0, acceleration: 0, braking: 0 },
-            timestamp: Date.now()
-        });
+        emitControlUpdate(performance.now(), { force: true });
     }
 }
 
@@ -1551,69 +2438,8 @@ function updatePlayerName(name) {
 }
 
 // Input handling
-function handleInput() {
-    const currentTime = performance.now();
-    const elapsed = currentTime - lastInputUpdate;
-    
-    if (elapsed >= INPUT_SEND_INTERVAL) {
-        // Get current control states
-        const controls = {
-            steering: gameState.controls.steering,
-            acceleration: gameState.controls.acceleration,
-            braking: gameState.controls.braking
-        };
-    
-        const player_control_update = {
-            player_id: gameState.playerId,
-            room_code: gameState.roomCode,
-            controls: controls,
-            timestamp: Date.now()
-        };
-        
-        // Send control update to server
-        socket.emit('player_control_update', player_control_update);
-
-        // Add a helper method to errorLog to log info messages (different color)
-        if (!errorLog.info) {
-            errorLog.info = function(message, timeout = 1000) {
-                // Create info element (similar to error but different color)
-                const infoElement = document.createElement('div');
-                infoElement.className = 'info-log-item';
-                infoElement.style.backgroundColor = 'rgba(0, 100, 0, 0.7)'; // Dark green
-                infoElement.style.color = 'white';
-                infoElement.style.padding = '5px 8px';
-                infoElement.style.marginBottom = '3px';
-                infoElement.style.borderRadius = '4px';
-                infoElement.style.fontFamily = 'monospace';
-                infoElement.style.fontSize = '11px';
-                infoElement.style.opacity = '0.7';
-                infoElement.style.transition = 'opacity 0.3s';
-                
-                // Add timestamp
-                const time = new Date().toLocaleTimeString();
-                infoElement.textContent = `[${time}] ${message}`;
-                
-                // Make sure container exists
-                if (!this.container) {
-                    this.init();
-                }
-                
-                // Add to container
-                this.container.appendChild(infoElement);
-                
-                // Schedule removal
-                setTimeout(() => {
-                    infoElement.style.opacity = '0';
-                    setTimeout(() => {
-                        if (infoElement.parentNode) {
-                            infoElement.parentNode.removeChild(infoElement);
-                        }
-                    }, 300);
-                }, timeout);
-            };
-        }               
-        lastInputUpdate = currentTime;
-    }
+function handleInput(currentTime = performance.now()) {
+    return emitControlUpdate(currentTime);
 }
 
 // Create an on-screen error logger for mobile devices
@@ -1805,55 +2631,145 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Error log initialized for mobile debugging');
 });
 
+function registerPlayerControlMapperTestHooks() {
+    window.__playerControlMapperTestHooks = {
+        setSession(nextState = {}) {
+            if ('playerId' in nextState) gameState.playerId = nextState.playerId;
+            if ('roomCode' in nextState) gameState.roomCode = nextState.roomCode;
+            if ('gameStarted' in nextState) gameState.gameStarted = nextState.gameStarted;
+            if ('weapon' in nextState) gameState.weapon = nextState.weapon;
+            return syncControlsFromMapper();
+        },
+        applyTouchIntent(nextControls = {}) {
+            if ('steering' in nextControls) setSteering(nextControls.steering);
+            if ('acceleration' in nextControls) setAcceleration(nextControls.acceleration);
+            if ('braking' in nextControls) setBraking(nextControls.braking);
+            if ('fire' in nextControls) setTouchFire(nextControls.fire);
+            return syncControlsFromMapper();
+        },
+        dispatchKeyboardEvent(type, init = {}) {
+            const event = {
+                type,
+                key: init.key,
+                code: init.code,
+                repeat: !!init.repeat,
+                target: init.target || document.body,
+                defaultPrevented: false,
+                preventDefault() {
+                    this.defaultPrevented = true;
+                }
+            };
+            handleKeyboardControlEvent(event);
+            return event;
+        },
+        advanceFrame(dtMs = 16.667) {
+            if (lastControlFrameTime === null) {
+                lastControlFrameTime = 0;
+            }
+            const nextFrameTime = lastControlFrameTime + dtMs;
+            return advanceControlFrame(nextFrameTime);
+        },
+        buildControlPacket(timestamp = Date.now()) {
+            return buildControlPacket(timestamp);
+        },
+        emitControlUpdate(currentTime = performance.now(), options = {}) {
+            return emitControlUpdate(currentTime, options);
+        },
+        getControls() {
+            return { ...gameState.controls };
+        },
+        getControlDebug() {
+            return controlMapper ? controlMapper.getDebugValues() : null;
+        },
+        getRemapState() {
+            return getCurrentRemapState();
+        },
+        rebuildGameControls() {
+            initGameControls();
+            return this.getTouchLayout();
+        },
+        getTouchLayout() {
+            return {
+                schemeId: elements.controlsContainer?.dataset?.touchScheme || null,
+                childIds: Array.from(elements.controlsContainer?.children || []).map((child) => child.id)
+            };
+        },
+        openRemapModal() {
+            openControlRemapModal();
+            return !elements.remapModal?.classList?.contains('hidden');
+        },
+        closeRemapModal() {
+            closeControlRemapModal();
+            return !elements.remapModal?.classList?.contains('hidden');
+        },
+        applyTouchScheme(schemeId) {
+            applyTouchSchemeRemap(schemeId);
+            return getCurrentRemapState();
+        },
+        applyKeyboardPreset(presetId) {
+            applyKeyboardPresetRemap(presetId);
+            return getCurrentRemapState();
+        },
+        setKeyboardBinding(action, code) {
+            const result = controlMapper?.setKeyboardActionBinding(action, [code], {
+                schemeId: 'custom',
+                fallbackPresetId: getCurrentRemapState().keyboard.schemeId
+            });
+            if (result?.valid) {
+                persistKeyboardRemap();
+                renderControlRemapUI();
+            }
+            return result;
+        },
+        setGamepadBinding(action, token, sourceId = getCurrentGamepadSourceId()) {
+            const result = controlMapper?.setGamepadActionBinding(action, [token], {
+                schemeId: 'custom',
+                sourceId,
+                fallbackPresetId: getCurrentRemapState().gamepad.schemeId
+            });
+            if (result?.valid) {
+                persistGamepadRemap(sourceId);
+                renderControlRemapUI();
+            }
+            return result;
+        },
+        getSocketEmits() {
+            if (typeof socket.getEmittedEvents === 'function') {
+                return socket.getEmittedEvents();
+            }
+            return Array.isArray(socket.emitted) ? [...socket.emitted] : [];
+        },
+        clearSocketEmits() {
+            if (Array.isArray(socket.emitted)) {
+                socket.emitted.length = 0;
+            }
+        },
+        releaseAllControls() {
+            releaseAllControls();
+            return syncControlsFromMapper();
+        }
+    };
+}
+
 // Main game loop for updating UI based on server data and sending controls
-function updateLoop() {
+function updateLoop(frameTime) {
     if (gameState.gameStarted) {
-        // Handle input and send to server
-        handleInput();
-        
-        // Update visual indicators for input status
+        advanceControlFrame(frameTime);
+        handleInput(frameTime);
         updateInputIndicator();
+    } else {
+        lastControlFrameTime = null;
     }
-    
-    // Continue the loop
+
     requestAnimationFrame(updateLoop);
 }
 
+bindKeyboardControls();
+registerPlayerControlMapperTestHooks();
+syncControlsFromMapper();
+
 // Start update loop
 requestAnimationFrame(updateLoop);
-
-// Input event listeners
-document.addEventListener('keydown', (event) => {
-    switch(event.key) {
-        case 'ArrowUp':
-            gameState.controls.acceleration = 1;
-            break;
-        case 'ArrowDown':
-            gameState.controls.braking = 1;
-            break;
-        case 'ArrowLeft':
-            gameState.controls.steering = -1;
-            break;
-        case 'ArrowRight':
-            gameState.controls.steering = 1;
-            break;
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    switch(event.key) {
-        case 'ArrowUp':
-            gameState.controls.acceleration = 0;
-            break;
-        case 'ArrowDown':
-            gameState.controls.braking = 0;
-            break;
-        case 'ArrowLeft':
-        case 'ArrowRight':
-            gameState.controls.steering = 0;
-            break;
-    }
-});
 
 // Room joining function
 function joinRoom(roomCode) {

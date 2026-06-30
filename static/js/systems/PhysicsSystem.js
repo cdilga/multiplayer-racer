@@ -25,6 +25,8 @@ class PhysicsSystem {
     constructor(options = {}) {
         this.eventBus = options.eventBus ||
             (typeof window !== 'undefined' ? window.eventBus : null);
+        this.defaultControlStepSeconds = options.controlStepSeconds ?? (1 / 60);
+        this._lastUpdateDt = this.defaultControlStepSeconds;
 
         // Rapier module reference
         this.RAPIER = null;
@@ -105,6 +107,9 @@ class PhysicsSystem {
      */
     update(dt) {
         if (!this.initialized || this.paused || !this.world) return;
+        if (Number.isFinite(dt) && dt > 0) {
+            this._lastUpdateDt = dt;
+        }
 
         // Update vehicle controllers (skip disabled/dead bodies)
         for (const [vehicleId, data] of this.vehicleBodies) {
@@ -761,7 +766,10 @@ class PhysicsSystem {
             brakeStartTime: null,
             isReversing: false,
             reverseDelayMs: 1000,           // 1 second hold before reverse
-            reverseForceMultiplier: 0.5     // Reverse is 50% of forward power
+            reverseForceMultiplier: 0.5,    // Reverse is 50% of forward power
+            wheelieIntentHoldMs: 0,
+            wheelieIntentReady: false,
+            currentWheelieIntent: null
         };
 
         this.vehicleBodies.set(vehicle.id, vehicleData);
@@ -871,6 +879,8 @@ class PhysicsSystem {
 
         const acceleration = controls.acceleration || 0;
         const braking = controls.braking || 0;
+        const controlDtMs = (this._lastUpdateDt || this.defaultControlStepSeconds) * 1000;
+        const wheelieCfg = this._getWheelieConfig(config);
         // Nitro and stunt landing boosts both multiply engine force. Keep
         // Nitro's weapon-owned timer intact; stunt boost has its own expiry.
         const boostMultiplier = this._getEngineBoostMultiplier(entity, config);
@@ -958,7 +968,6 @@ class PhysicsSystem {
         // Reduce steering authority when front wheels are off the ground. In a
         // wheelie the front tyres cannot steer normally; we keep a small body
         // influence so players can shape the stunt without carving corners.
-        const wheelieCfg = config.wheelie || {};
         let steeringAuthority = 1.0;
         if (newState === 'wheelie' || newState === 'airborne') {
             steeringAuthority = wheelieCfg.steeringAuthority ?? 0.15;
@@ -978,13 +987,29 @@ class PhysicsSystem {
         // Apply a short lift pulse for intentional wheelies during high
         // acceleration. This must not run every tick: repeated impulses turn a
         // launch pop into a full airborne stall where the tyres lose contact.
-        const wheelieActivationThrottle = wheelieCfg.activationThrottle ?? 0.7;
-        if (acceleration > wheelieActivationThrottle && newState === 'grounded') {
+        const wheelieActivationThrottle = wheelieCfg.activationThrottle;
+        const wheelieActivationDwellMs = wheelieCfg.activationDwellMs;
+        if (newState === 'grounded' && acceleration >= wheelieActivationThrottle) {
+            data.wheelieIntentHoldMs = Math.min(
+                wheelieActivationDwellMs,
+                (data.wheelieIntentHoldMs || 0) + controlDtMs
+            );
+        } else {
+            data.wheelieIntentHoldMs = 0;
+            data.wheelieIntentReady = false;
+        }
+
+        const intentReady = (data.wheelieIntentHoldMs || 0) >= wheelieActivationDwellMs;
+        let wheeliePulseTriggered = false;
+        if (intentReady && newState === 'grounded') {
             const now = performance.now();
-            const liftCooldownMs = wheelieCfg.liftCooldownMs ?? 450;
+            const liftCooldownMs = wheelieCfg.liftCooldownMs;
             const canPulseLift = !data.lastWheelieLiftAt || now - data.lastWheelieLiftAt >= liftCooldownMs;
             if (canPulseLift) {
                 data.lastWheelieLiftAt = now;
+                data.wheelieIntentHoldMs = 0;
+                data.wheelieIntentReady = false;
+                wheeliePulseTriggered = true;
 
                 const body = data.body;
                 const rot = body.rotation();
@@ -997,14 +1022,21 @@ class PhysicsSystem {
 
                 // Calculate lift: stronger if boosting, weaker at high speed to prevent backflips
                 const speedClamp = Math.max(0.2, 1.0 - (currentSpeed / 25));
-                const liftImpulseScale = wheelieCfg.liftImpulse ?? 8.0;
+                const liftImpulseScale = wheelieCfg.liftImpulse;
                 const liftImpulse = acceleration * liftImpulseScale * boostMultiplier * speedClamp;
 
                 body.applyImpulseAtPoint({ x: 0, y: liftImpulse, z: 0 }, worldFront, true);
             }
-        } else if (acceleration <= wheelieActivationThrottle) {
+        } else if (acceleration < wheelieActivationThrottle) {
             data.lastWheelieLiftAt = 0;
         }
+
+        data.wheelieIntentReady = intentReady && !wheeliePulseTriggered;
+        data.currentWheelieIntent = this._buildWheelieIntentTelemetry(data, {
+            acceleration,
+            boostMultiplier,
+            wheelieCfg
+        });
 
         // Braking on all wheels - don't apply brake when reversing
         const brakeForce = (braking > 0 && !data.isReversing) ? braking * (config.engine?.brakeForce || 50) : 0;
@@ -1063,6 +1095,47 @@ class PhysicsSystem {
      */
     _isStuntState(state) {
         return state === 'wheelie' || state === 'airborne';
+    }
+
+    /**
+     * Config defaults for throttle-shaped wheelie intent.
+     * @private
+     */
+    _getWheelieConfig(config = {}) {
+        const wheelie = config.wheelie || {};
+        return {
+            activationThrottle: wheelie.activationThrottle ?? 0.92,
+            activationDwellMs: wheelie.activationDwellMs ?? 280,
+            steeringAuthority: wheelie.steeringAuthority ?? 0.15,
+            liftImpulse: wheelie.liftImpulse ?? 8.0,
+            liftCooldownMs: wheelie.liftCooldownMs ?? 450
+        };
+    }
+
+    /**
+     * Build inspectable wheelie-intent telemetry for F2/debug surfaces.
+     * @private
+     */
+    _buildWheelieIntentTelemetry(data, context = {}) {
+        const wheelieCfg = context.wheelieCfg || this._getWheelieConfig(data?.config || {});
+        const holdMs = data?.wheelieIntentHoldMs || 0;
+        const dwellMs = wheelieCfg.activationDwellMs;
+        const lastLiftAt = data?.lastWheelieLiftAt || 0;
+        const now = performance.now();
+        const cooldownRemainingMs = lastLiftAt
+            ? Math.max(0, wheelieCfg.liftCooldownMs - Math.max(0, now - lastLiftAt))
+            : 0;
+
+        return {
+            throttle: context.acceleration || 0,
+            threshold: wheelieCfg.activationThrottle,
+            holdMs,
+            dwellMs,
+            progress: dwellMs > 0 ? Math.min(1, holdMs / dwellMs) : 1,
+            ready: !!data?.wheelieIntentReady,
+            cooldownRemainingMs,
+            boostMultiplier: context.boostMultiplier || 1
+        };
     }
 
     /**
@@ -1240,6 +1313,9 @@ class PhysicsSystem {
         data.isReversing = false;
         data.currentSteer = 0;
         data.lastWheelieLiftAt = 0;
+        data.wheelieIntentHoldMs = 0;
+        data.wheelieIntentReady = false;
+        data.currentWheelieIntent = null;
         data.previousHandlingState = 'grounded';
 
         if (data.controller) {
@@ -1422,6 +1498,7 @@ class PhysicsSystem {
         return {
             speed: speedKmh,
             steerAngle: data.currentSteer || 0,
+            throttle: (data.currentWheelieIntent?.throttle ?? entity?.controls?.acceleration) || 0,
             isReversing: data.isReversing,
             inWallContact: entity?.inWallContact || false,
             inOilSlick: entity?.inOilSlick || false,
@@ -1435,7 +1512,8 @@ class PhysicsSystem {
             handlingState: entity?.handlingState || 'grounded',
             stateDuration: entity?.stateDuration || 0,
             isAirborne: entity?.handlingState === 'airborne',
-            isWheelie: entity?.handlingState === 'wheelie'
+            isWheelie: entity?.handlingState === 'wheelie',
+            wheelieIntent: data.currentWheelieIntent || this._buildWheelieIntentTelemetry(data)
         };
     }
 

@@ -116,6 +116,20 @@ class PhysicsTuningUI {
             </div>
 
             <div class="physics-section">
+                <h4>Wheelie Intent</h4>
+                <label>
+                    <span>Lift Threshold</span>
+                    <input type="range" class="physics-slider" data-param="wheelie.activationThrottle" min="0.7" max="1.0" value="${this.params.wheelie.activationThrottle}" step="0.01">
+                    <span class="physics-value" data-param="wheelie.activationThrottle">${this.params.wheelie.activationThrottle}</span>
+                </label>
+                <label>
+                    <span>Lift Dwell (ms)</span>
+                    <input type="range" class="physics-slider" data-param="wheelie.activationDwellMs" min="0" max="500" value="${this.params.wheelie.activationDwellMs}" step="10">
+                    <span class="physics-value" data-param="wheelie.activationDwellMs">${this.params.wheelie.activationDwellMs}</span>
+                </label>
+            </div>
+
+            <div class="physics-section">
                 <h4>Wheels & Grip</h4>
                 <label>
                     <span>Friction Slip</span>
@@ -464,9 +478,11 @@ class PhysicsTuningUI {
 ID: <span class="telemetry-value">${vehicleId.substring(0, 8)}</span>
 Speed: <span class="telemetry-value">${tel.speed.toFixed(1)} km/h</span>
 Steer: <span class="telemetry-value">${tel.steerAngle.toFixed(2)}</span>
+Throttle: <span class="telemetry-value">${tel.throttle.toFixed(2)}</span>
 Wheels: ${wheelIcons}
 State: <span class="telemetry-value">${tel.isAirborne ? 'AIRBORNE' : (tel.isWheelie ? 'WHEELIE' : 'GROUNDED')}</span>
 Env: <span class="telemetry-value">${tel.inWallContact ? 'WALL' : ''} ${tel.inOilSlick ? 'OIL' : ''}</span>
+Wheelie: <span class="telemetry-value">${(tel.wheelieIntent?.holdMs || 0).toFixed(0)}/${(tel.wheelieIntent?.dwellMs || 0).toFixed(0)}ms @ ${(tel.wheelieIntent?.threshold || 0).toFixed(2)} ${tel.wheelieIntent?.ready ? 'READY' : ''}</span>
 Boost: <span class="telemetry-value">${tel.speedBoost.toFixed(1)}x</span>
 Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100).toFixed(0)}% ${tel.stuntBoost.toFixed(2)}x</span>
         `.trim();
@@ -549,6 +565,12 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 maxAngle: this.params.steering.maxAngle,
                 highSpeedReduction: this.params.steering.highSpeedReduction,
                 smoothing: this.params.steering.smoothing
+            };
+
+            vehicleData.config.wheelie = {
+                ...vehicleData.config.wheelie,
+                activationThrottle: this.params.wheelie.activationThrottle,
+                activationDwellMs: this.params.wheelie.activationDwellMs
             };
 
             // Apply linear/angular damping directly to rigid body
@@ -642,6 +664,10 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 highSpeedReduction: 0.45,
                 smoothing: 0.3
             },
+            wheelie: {
+                activationThrottle: 0.92,
+                activationDwellMs: 280
+            },
             wheels: {
                 frictionSlip: 1000,
                 suspensionStiffness: 30,
@@ -690,6 +716,7 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
             return {
                 car: { ...defaults.car, ...parsed.car },
                 steering: { ...defaults.steering, ...parsed.steering },
+                wheelie: { ...defaults.wheelie, ...parsed.wheelie },
                 wheels: { ...defaults.wheels, ...parsed.wheels },
                 damage: { ...defaults.damage, ...parsed.damage },
                 audio: { ...defaults.audio, ...parsed.audio },

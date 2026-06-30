@@ -10,10 +10,14 @@
 // Import from NPM (Vite bundles these)
 import * as THREE from 'three';
 import { io } from 'socket.io-client';
+import { ControlMapper } from '/static/js/input/ControlMapper.js';
+import { RemapStore } from '/static/js/input/RemapStore.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
 window.io = io;
+window.ControlMapper = ControlMapper;
+window.RemapStore = RemapStore;
 
 // Load mobileUtils.js first (player.js depends on it)
 const mobileUtilsScript = document.createElement('script');

@@ -309,7 +309,13 @@
                 <input type="text" id="room-code" placeholder="ABCD" maxlength="4"
                        inputmode="latin" autocapitalize="characters" autocomplete="off"
                        autocorrect="off" spellcheck="false">
-                <button id="join-btn">Join Race</button>
+                <div class="join-actions">
+                    <button id="join-btn" type="button">Join Race</button>
+                    <button id="join-controls-btn" class="join-secondary" type="button">Controls</button>
+                </div>
+                <div id="control-remap-summary-join" class="control-remap-summary">
+                    Steer left · pedals right · WASD + Arrows · Standard pad
+                </div>
             </div>
             <div id="error-message" class="error hidden"></div>
         </div>
@@ -358,6 +364,10 @@
             <div class="player-menu-title">Menu</div>
             <button id="player-menu-reset">🚗 Reset My Car</button>
             <button id="player-menu-replay-tutorial">Replay Tutorial</button>
+            <button id="player-menu-controls" type="button">🎛 Controls</button>
+            <div id="control-remap-summary-menu" class="control-remap-summary control-remap-summary-menu">
+                Steer left · pedals right · WASD + Arrows · Standard pad
+            </div>
             <button id="player-menu-report-bug">🐞 Report a Bug</button>
             <button id="player-menu-leave">🚪 Leave Game</button>
             <div class="player-menu-help">
@@ -368,6 +378,52 @@
                 <div>Stuck or flipped? Use "Reset My Car".</div>
             </div>
             <button id="player-menu-close">Close</button>
+        </div>
+    </div>
+
+    <div id="control-remap-modal" class="hidden">
+        <div class="control-remap-content" role="dialog" aria-modal="true" aria-labelledby="control-remap-title">
+            <div class="control-remap-header">
+                <div>
+                    <div class="control-remap-kicker">Local only</div>
+                    <div id="control-remap-title" class="control-remap-title">Controls</div>
+                    <div id="control-remap-status" class="control-remap-status" role="status" aria-live="polite">
+                        Saved locally on this device only. No account or cloud sync.
+                    </div>
+                </div>
+                <button id="control-remap-close" type="button">Close</button>
+            </div>
+
+            <section class="control-remap-section" aria-labelledby="control-remap-touch-label">
+                <div class="control-remap-section-head">
+                    <div id="control-remap-touch-label" class="control-remap-section-title">Touch Layout</div>
+                    <div class="control-remap-section-copy">Swap sides without changing the host packet contract.</div>
+                </div>
+                <div id="control-remap-touch-options" class="control-remap-chip-grid"></div>
+            </section>
+
+            <section class="control-remap-section" aria-labelledby="control-remap-keyboard-label">
+                <div class="control-remap-section-head">
+                    <div id="control-remap-keyboard-label" class="control-remap-section-title">Keyboard</div>
+                    <div class="control-remap-section-copy">Choose a region or bind each action directly.</div>
+                </div>
+                <div id="control-remap-keyboard-presets" class="control-remap-chip-grid"></div>
+                <div id="control-remap-keyboard-actions" class="control-remap-stack"></div>
+            </section>
+
+            <section class="control-remap-section" aria-labelledby="control-remap-gamepad-label">
+                <div class="control-remap-section-head">
+                    <div id="control-remap-gamepad-label" class="control-remap-section-title">Gamepad</div>
+                    <div id="control-remap-gamepad-notice" class="control-remap-note" role="status" aria-live="polite">
+                        No gamepad detected. Changes still save for the next compatible pad on this device.
+                    </div>
+                </div>
+                <div id="control-remap-gamepad-actions" class="control-remap-stack"></div>
+            </section>
+
+            <div class="control-remap-footer">
+                <button id="control-remap-reset" type="button">Reset Defaults</button>
+            </div>
         </div>
     </div>
 
