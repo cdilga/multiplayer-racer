@@ -81,7 +81,9 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && python server/app.py"',
+        // Disable Flask's debug reloader during E2E so artifact writes under the
+        // repo do not bounce the server mid-suite.
+        command: 'bash -c "source ~/.pyenv/versions/multiplayer-racer/bin/activate && FLASK_DEBUG=0 python server/app.py"',
         url: 'http://localhost:8000',
         reuseExistingServer: true,
         timeout: 30000,

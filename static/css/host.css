@@ -57,6 +57,16 @@ body {
     width: 100% !important;
     height: 100% !important;
     display: block;
+    /* Skip Bin Arcade lo-fi grade (P1.1): the world renders into a low-res
+       internal target and is blown up CRISP. Nearest-neighbor upscale instead
+       of the browser's default bilinear blur - the chunky pixel-art foundation
+       the posterize/dither passes build on. Cross-browser variants ordered so
+       the most specific wins where supported. */
+    image-rendering: optimizeSpeed;          /* legacy/SVG hint */
+    image-rendering: -moz-crisp-edges;       /* Firefox */
+    image-rendering: -webkit-optimize-contrast; /* old WebKit */
+    image-rendering: crisp-edges;            /* spec name */
+    image-rendering: pixelated;              /* nearest-neighbor (Chromium/WebKit) */
 }
 
 .hidden {

@@ -1,0 +1,54 @@
+{
+  "host-native": {
+    "internalWidth": 2560,
+    "internalHeight": 1440,
+    "displayWidth": 1280,
+    "displayHeight": 720,
+    "resolutionScale": 1,
+    "effectivePixelRatio": 2,
+    "devicePixelRatio": 2,
+    "upscaleFactor": 0.5,
+    "isUpscaled": false,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  },
+  "host-balanced": {
+    "internalWidth": 1088,
+    "internalHeight": 612,
+    "displayWidth": 1280,
+    "displayHeight": 720,
+    "resolutionScale": 0.85,
+    "effectivePixelRatio": 0.85,
+    "devicePixelRatio": 2,
+    "upscaleFactor": 1.1765,
+    "isUpscaled": true,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  },
+  "host-degraded": {
+    "internalWidth": 896,
+    "internalHeight": 503,
+    "displayWidth": 1280,
+    "displayHeight": 720,
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "devicePixelRatio": 2,
+    "upscaleFactor": 1.4286,
+    "isUpscaled": true,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  },
+  "host-fallback": {
+    "internalWidth": 704,
+    "internalHeight": 396,
+    "displayWidth": 1280,
+    "displayHeight": 720,
+    "resolutionScale": 0.55,
+    "effectivePixelRatio": 0.55,
+    "devicePixelRatio": 2,
+    "upscaleFactor": 1.8182,
+    "isUpscaled": true,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  }
+}

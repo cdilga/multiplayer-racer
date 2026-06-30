@@ -1,0 +1,34 @@
+{
+  "host-native": {
+    "resolutionScale": 1,
+    "effectivePixelRatio": 1,
+    "internalPixels": 921600,
+    "frameCount": 91,
+    "avgMs": 1.0868131813112196,
+    "maxMs": 63.5
+  },
+  "host-balanced": {
+    "resolutionScale": 0.85,
+    "effectivePixelRatio": 0.85,
+    "internalPixels": 665856,
+    "frameCount": 145,
+    "avgMs": 0.26249999602635704,
+    "maxMs": 4.399999976158142
+  },
+  "host-degraded": {
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "internalPixels": 450688,
+    "frameCount": 145,
+    "avgMs": 0.2183333267768224,
+    "maxMs": 15.100000023841858
+  },
+  "host-fallback": {
+    "resolutionScale": 0.55,
+    "effectivePixelRatio": 0.55,
+    "internalPixels": 278784,
+    "frameCount": 146,
+    "avgMs": 0.1349999984105428,
+    "maxMs": 12.100000023841858
+  }
+}

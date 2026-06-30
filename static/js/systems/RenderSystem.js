@@ -14,6 +14,94 @@
  *   render.addMesh(vehicle.mesh);
  */
 
+const DEFAULT_FOG_COLOR = 0x1a0f0a;
+const DEFAULT_FOG_DENSITY = 0.008;
+const MAX_RENDER_PIXEL_RATIO = 2;
+const MIN_RENDER_SCALE = 0.5;
+const FRAME_TIMING_WINDOW = 120;
+
+const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
+    'host-native': Object.freeze({
+        label: 'Native full grade',
+        resolutionScale: 1,
+        postProcessing: true,
+        bloomEnabled: true,
+        bloomStrength: 1.5,
+        bloomRadius: 0.4,
+        bloomThreshold: 0.85,
+        colorGradingEnabled: true,
+        gradingIntensity: 0.5,
+        vignetteAmount: 0.3,
+        chromaticAberrationEnabled: true,
+        chromaticAberrationAmount: 0.0015,
+        fogEnabled: true,
+        fogDensity: DEFAULT_FOG_DENSITY,
+        shadowsEnabled: true,
+        shadowMapType: 'pcf-soft'
+    }),
+    'host-balanced': Object.freeze({
+        label: 'Balanced shared-screen host',
+        resolutionScale: 0.85,
+        postProcessing: true,
+        bloomEnabled: true,
+        bloomStrength: 0.9,
+        bloomRadius: 0.25,
+        bloomThreshold: 0.92,
+        colorGradingEnabled: true,
+        gradingIntensity: 0.35,
+        vignetteAmount: 0.22,
+        chromaticAberrationEnabled: false,
+        chromaticAberrationAmount: 0,
+        fogEnabled: true,
+        fogDensity: 0.007,
+        shadowsEnabled: true,
+        shadowMapType: 'pcf-soft'
+    }),
+    'host-degraded': Object.freeze({
+        label: 'Degraded shared-screen host',
+        resolutionScale: 0.7,
+        postProcessing: true,
+        bloomEnabled: false,
+        bloomStrength: 0,
+        bloomRadius: 0,
+        bloomThreshold: 1,
+        colorGradingEnabled: true,
+        gradingIntensity: 0.2,
+        vignetteAmount: 0.16,
+        chromaticAberrationEnabled: false,
+        chromaticAberrationAmount: 0,
+        fogEnabled: true,
+        fogDensity: 0.006,
+        shadowsEnabled: true,
+        shadowMapType: 'basic'
+    }),
+    'host-fallback': Object.freeze({
+        label: 'Fallback no-post host',
+        resolutionScale: 0.55,
+        postProcessing: false,
+        bloomEnabled: false,
+        bloomStrength: 0,
+        bloomRadius: 0,
+        bloomThreshold: 1,
+        colorGradingEnabled: false,
+        gradingIntensity: 0,
+        vignetteAmount: 0,
+        chromaticAberrationEnabled: false,
+        chromaticAberrationAmount: 0,
+        fogEnabled: true,
+        fogDensity: 0.005,
+        shadowsEnabled: false,
+        shadowMapType: 'basic'
+    })
+});
+
+function nowMs() {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        return performance.now();
+    }
+    return Date.now();
+}
+
 class RenderSystem {
     /**
      * @param {Object} options
@@ -36,8 +124,16 @@ class RenderSystem {
         this.postProcessing = {
             enabled: true,
             composer: null,
-            passes: {}
+            passes: {},
+            initError: null
         };
+
+        // Host-grade ladder. Local shared-screen hosts are the performance target;
+        // Local controllers remain HUD-only and are intentionally not modeled here.
+        this.gradeTiers = HOST_GRADE_TIER_DEFINITIONS;
+        this.activeGradeTier = 'host-native';
+        this.resolutionScale = this.gradeTiers[this.activeGradeTier].resolutionScale;
+        this.maxPixelRatio = MAX_RENDER_PIXEL_RATIO;
 
         // Lighting
         this.lights = {};
@@ -118,6 +214,15 @@ class RenderSystem {
 
         // Overlay container for name tags
         this.overlayContainer = null;
+
+        // Rolling render timings for focused perf evidence without per-frame logs.
+        this.frameTiming = {
+            frameCount: 0,
+            lastRenderDurationMs: 0,
+            averageRenderDurationMs: 0,
+            maxRenderDurationMs: 0,
+            sampleWindow: []
+        };
 
         // Default camera parameters, restored when leaving special tracks
         // (derby arenas override these to look over the tall walls)
@@ -243,6 +348,135 @@ class RenderSystem {
     }
 
     /**
+     * Return the named shared-screen host grade tiers.
+     * @returns {Object[]}
+     */
+    listGradeTiers() {
+        return Object.entries(this.gradeTiers).map(([tierName, config]) => ({
+            tierName,
+            ...config
+        }));
+    }
+
+    /**
+     * Apply one of the named host-grade tiers.
+     * @param {string} tierName
+     * @returns {boolean}
+     */
+    setGradeTier(tierName) {
+        if (!this.gradeTiers[tierName]) return false;
+        this.activeGradeTier = tierName;
+        this.resolutionScale = this.gradeTiers[tierName].resolutionScale;
+        this._resetFrameTimingSamples();
+        this._applyGradeTierSettings();
+        this._emit('render:gradeTierChanged', {
+            tierName,
+            diagnostics: this.getGradeDiagnostics()
+        });
+        return true;
+    }
+
+    /**
+     * Override the current render resolution scale for diagnostics or future
+     * adaptive quality control. Scale is clamped to the current native target.
+     * @param {number} scale
+     * @returns {boolean}
+     */
+    setResolutionScale(scale) {
+        if (!Number.isFinite(scale)) return false;
+        this.resolutionScale = Math.max(MIN_RENDER_SCALE, Math.min(1, scale));
+        this._resetFrameTimingSamples();
+        this._applyResolutionScale();
+        return true;
+    }
+
+    /**
+     * Reset rolling frame timing samples.
+     */
+    resetFrameTimingSamples() {
+        this._resetFrameTimingSamples();
+    }
+
+    /**
+     * Return stable renderer metadata for perf/evidence capture.
+     * @returns {Object}
+     */
+    getGradeDiagnostics() {
+        const renderer = this.renderer;
+        const scene = this.scene;
+        const activeTierConfig = this.gradeTiers[this.activeGradeTier] || null;
+        const size = renderer ? renderer.getSize(new THREE.Vector2()) : { x: 0, y: 0 };
+        const renderInfo = renderer?.info?.render || {};
+        const memoryInfo = renderer?.info?.memory || {};
+        const capabilities = renderer?.capabilities || {};
+
+        return {
+            activeTier: this.activeGradeTier,
+            tierConfig: activeTierConfig ? { ...activeTierConfig } : null,
+            resolutionScale: this.resolutionScale,
+            effectivePixelRatio: renderer?.getPixelRatio?.() ?? null,
+            renderTarget: this._getRenderTargetMetrics(),
+            viewport: {
+                width: size.x ?? 0,
+                height: size.y ?? 0
+            },
+            backend: {
+                renderer: renderer?.isWebGLRenderer
+                    ? 'WebGLRenderer'
+                    : renderer?.constructor?.name ?? null,
+                isWebGL2: capabilities?.isWebGL2 ?? null,
+                precision: capabilities?.precision ?? null,
+                maxTextures: capabilities?.maxTextures ?? null,
+                maxTextureSize: capabilities?.maxTextureSize ?? null,
+                maxCubemapSize: capabilities?.maxCubemapSize ?? null
+            },
+            toneMapping: {
+                decision: 'skip-aces',
+                mode: this._getToneMappingName(renderer?.toneMapping)
+            },
+            fog: {
+                enabled: !!scene?.fog,
+                density: scene?.fog?.density ?? null
+            },
+            postProcessing: {
+                enabled: this.postProcessing.enabled,
+                composerReady: !!this.postProcessing.composer,
+                initError: this.postProcessing.initError,
+                bloomEnabled: !!this.postProcessing.passes.bloom?.enabled,
+                bloomStrength: this.postProcessing.passes.bloom?.strength ?? null,
+                colorGradingEnabled: !!this.postProcessing.passes.colorGrading?.enabled,
+                gradingIntensity: this.postProcessing.passes.colorGrading?.uniforms?.gradingIntensity?.value ?? null,
+                vignetteAmount: this.postProcessing.passes.colorGrading?.uniforms?.vignetteAmount?.value ?? null,
+                chromaticAberrationEnabled: !!this.postProcessing.passes.chromaticAberration?.enabled,
+                chromaticAberrationAmount: this.postProcessing.passes.chromaticAberration?.uniforms?.amount?.value ?? null
+            },
+            shadows: {
+                enabled: renderer?.shadowMap?.enabled ?? null,
+                type: this._getShadowMapTypeName(renderer?.shadowMap?.type)
+            },
+            renderInfo: {
+                calls: renderInfo.calls ?? null,
+                triangles: renderInfo.triangles ?? null,
+                lines: renderInfo.lines ?? null,
+                points: renderInfo.points ?? null,
+                frame: renderInfo.frame ?? null,
+                geometries: memoryInfo.geometries ?? null,
+                textures: memoryInfo.textures ?? null,
+                programs: Array.isArray(renderer?.info?.programs) ? renderer.info.programs.length : null
+            },
+            frameTiming: {
+                frameCount: this.frameTiming.frameCount,
+                lastRenderDurationMs: this.frameTiming.lastRenderDurationMs,
+                averageRenderDurationMs: this.frameTiming.averageRenderDurationMs,
+                maxRenderDurationMs: this.frameTiming.maxRenderDurationMs
+            },
+            cameraMode: this.getCameraModeInfo(),
+            trackedVehicles: this.cameraTargets.length || (this.cameraTarget ? 1 : 0),
+            nameTagCount: this.nameTags.size
+        };
+    }
+
+    /**
      * Initialize Three.js
      * @returns {Promise<void>}
      */
@@ -281,9 +515,12 @@ class RenderSystem {
             preserveDrawingBuffer: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.toneMapping = THREE.NoToneMapping;
+        this.renderer.toneMappingExposure = 1;
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this._applyPixelatedUpscale();
+        this._applyResolutionScale();
 
         // Add to container
         this.container.appendChild(this.renderer.domElement);
@@ -304,9 +541,11 @@ class RenderSystem {
 
         // Setup default lighting
         this._setupDefaultLighting();
+        this._applyGradeTierSettings();
 
         // Initialize post-processing (async, but don't block initialization)
         this._initPostProcessing().catch((error) => {
+            this.postProcessing.initError = String(error);
             console.warn('RenderSystem: Post-processing initialization failed, continuing without it:', error);
             this.postProcessing.enabled = false;
         });
@@ -348,8 +587,6 @@ class RenderSystem {
      * @returns {Promise<void>}
      */
     async _initPostProcessing() {
-        if (!this.postProcessing.enabled) return;
-
         try {
             // Import post-processing modules (Vite resolves from node_modules)
             const { EffectComposer } = await import('three/examples/jsm/postprocessing/EffectComposer.js');
@@ -398,6 +635,7 @@ class RenderSystem {
                 console.warn('RenderSystem: Failed to add chromatic aberration, skipping:', error);
             }
 
+            this._applyGradeTierSettings();
             console.log('RenderSystem: Post-processing initialized with all effects');
         } catch (error) {
             console.error('RenderSystem: Error loading post-processing modules:', error);
@@ -526,18 +764,9 @@ class RenderSystem {
         // Update name tag positions
         this._updateNameTags();
 
-        // Render with post-processing if available and ready, otherwise standard render
-        if (this.postProcessing.enabled && this.postProcessing.composer) {
-            try {
-                this.postProcessing.composer.render();
-            } catch (error) {
-                // Fallback to standard render if composer fails
-                console.warn('RenderSystem: Composer render failed, using standard render:', error);
-                this.renderer.render(this.scene, this.camera);
-            }
-        } else {
-            this.renderer.render(this.scene, this.camera);
-        }
+        const renderStartedAt = nowMs();
+        this._renderScene();
+        this._recordFrameTiming(nowMs() - renderStartedAt);
     }
 
     /**
@@ -1229,12 +1458,7 @@ class RenderSystem {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
 
-        this.renderer.setSize(width, height);
-
-        // Update post-processing composer size
-        if (this.postProcessing.composer) {
-            this.postProcessing.composer.setSize(width, height);
-        }
+        this._applyResolutionScale();
     }
 
     /**
@@ -1276,15 +1500,7 @@ class RenderSystem {
 
         try {
             // Render one fresh frame so the buffer reflects the current state.
-            if (this.postProcessing.enabled && this.postProcessing.composer) {
-                try {
-                    this.postProcessing.composer.render();
-                } catch (e) {
-                    this.renderer.render(this.scene, this.camera);
-                }
-            } else {
-                this.renderer.render(this.scene, this.camera);
-            }
+            this._renderScene();
 
             const source = this.renderer.domElement;
             const scale = Math.min(1, maxWidth / source.width);
@@ -1316,6 +1532,285 @@ class RenderSystem {
      */
     resume() {
         this.paused = false;
+    }
+
+    /**
+     * Render the current scene using the active post-processing state.
+     * Falls back to a plain render if the composer is unavailable or errors.
+     * @private
+     */
+    _renderScene() {
+        if (this.postProcessing.enabled && this.postProcessing.composer) {
+            try {
+                this.postProcessing.composer.render();
+                return;
+            } catch (error) {
+                console.warn('RenderSystem: Composer render failed, using standard render:', error);
+            }
+        }
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    /**
+     * Apply the currently selected host-grade tier to the live renderer.
+     * @private
+     */
+    _applyGradeTierSettings() {
+        const tierConfig = this.gradeTiers[this.activeGradeTier];
+        if (!tierConfig) return;
+
+        this.resolutionScale = tierConfig.resolutionScale;
+        this._applyResolutionScale();
+
+        if (this.scene) {
+            if (tierConfig.fogEnabled) {
+                if (!this.scene.fog) {
+                    this.scene.fog = new THREE.FogExp2(DEFAULT_FOG_COLOR, tierConfig.fogDensity);
+                }
+                this.scene.fog.density = tierConfig.fogDensity;
+            } else {
+                this.scene.fog = null;
+            }
+        }
+
+        if (this.renderer) {
+            this.renderer.shadowMap.enabled = tierConfig.shadowsEnabled;
+            this.renderer.shadowMap.type = this._resolveShadowMapType(tierConfig.shadowMapType);
+            this.renderer.shadowMap.needsUpdate = true;
+        }
+
+        const bloomPass = this.postProcessing.passes.bloom;
+        if (bloomPass) {
+            bloomPass.enabled = !!(tierConfig.postProcessing && tierConfig.bloomEnabled);
+            bloomPass.strength = tierConfig.bloomStrength;
+            bloomPass.radius = tierConfig.bloomRadius;
+            bloomPass.threshold = tierConfig.bloomThreshold;
+        }
+
+        const colorGradingPass = this.postProcessing.passes.colorGrading;
+        if (colorGradingPass) {
+            colorGradingPass.enabled = !!(tierConfig.postProcessing && tierConfig.colorGradingEnabled);
+            colorGradingPass.uniforms.gradingIntensity.value = tierConfig.gradingIntensity;
+            colorGradingPass.uniforms.vignetteAmount.value = tierConfig.vignetteAmount;
+        }
+
+        const chromaticAberrationPass = this.postProcessing.passes.chromaticAberration;
+        if (chromaticAberrationPass) {
+            chromaticAberrationPass.enabled = !!(tierConfig.postProcessing && tierConfig.chromaticAberrationEnabled);
+            chromaticAberrationPass.uniforms.amount.value = tierConfig.chromaticAberrationAmount;
+        }
+
+        this.postProcessing.enabled = tierConfig.postProcessing;
+    }
+
+    /**
+     * Resolve the effective renderer pixel ratio for the current resolution
+     * scale.
+     *
+     * The Skip Bin Arcade grade renders the world into a deliberately low-res
+     * internal target and upscales it crisp (nearest-neighbor). For that chunky
+     * floor to read identically on a dpr=1 TV/monitor (the real shared-screen
+     * host) AND a high-DPR dev laptop, a sub-native `resolutionScale` is treated
+     * as a fraction of CSS (logical) pixels, NOT of device pixels. Multiplying
+     * by devicePixelRatio (the old behaviour) left scale=0.7 at 1.4x on a retina
+     * panel — above CSS-native, so it never actually looked low-res there.
+     *
+     * At full scale (>= 1) we render up to native (capped at maxPixelRatio) so
+     * the host can use its display when there is headroom: "the low-res look is
+     * the floor, not a fixed value" (docs/design/02-design-language.md).
+     * @private
+     * @returns {number}
+     */
+    _resolveEffectivePixelRatio() {
+        const devicePixelRatio = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+        const nativePixelRatio = Math.min(this.maxPixelRatio, devicePixelRatio);
+
+        if (this.resolutionScale >= 1) {
+            return nativePixelRatio;
+        }
+
+        // Genuinely sub-native: a fraction of CSS pixels, clamped to the floor.
+        // Never exceed native (a tiny dpr<1 panel still renders crisp at native).
+        return Math.max(MIN_RENDER_SCALE, Math.min(nativePixelRatio, this.resolutionScale));
+    }
+
+    /**
+     * Apply the current resolution scale to the live renderer/composer.
+     * @private
+     */
+    _applyResolutionScale() {
+        if (!this.renderer) return;
+
+        const effectivePixelRatio = this._resolveEffectivePixelRatio();
+
+        this.renderer.setPixelRatio(effectivePixelRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+        if (this.postProcessing.composer) {
+            // EffectComposer caches the pixel ratio it was constructed with, so
+            // its internal render targets ignore later tier changes unless we
+            // push the new ratio here. Without this, the post-processed path
+            // would silently keep the old internal resolution.
+            if (typeof this.postProcessing.composer.setPixelRatio === 'function') {
+                this.postProcessing.composer.setPixelRatio(effectivePixelRatio);
+            }
+            this.postProcessing.composer.setSize(window.innerWidth, window.innerHeight);
+        }
+    }
+
+    /**
+     * Mark the canvas for nearest-neighbor (crisp) upscaling so the low-res
+     * internal target reads as chunky pixel-art rather than a bilinear blur.
+     * Set inline (in addition to host.css) so the grade holds even when the
+     * stylesheet is absent, e.g. in headless test harnesses.
+     * @private
+     */
+    _applyPixelatedUpscale() {
+        const canvas = this.renderer?.domElement;
+        if (!canvas || !canvas.style) return;
+        // Assign the spec value last; browsers keep the final value they parse.
+        canvas.style.imageRendering = 'optimizeSpeed';
+        canvas.style.imageRendering = '-moz-crisp-edges';
+        canvas.style.imageRendering = '-webkit-optimize-contrast';
+        canvas.style.imageRendering = 'crisp-edges';
+        canvas.style.imageRendering = 'pixelated';
+    }
+
+    /**
+     * Report the low-res render target vs the display surface so the crisp
+     * upscale is independently inspectable (evidence/tests/adaptive control).
+     * @private
+     * @returns {Object}
+     */
+    _getRenderTargetMetrics() {
+        const renderer = this.renderer;
+        const displayWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+        const displayHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
+        let internalWidth = 0;
+        let internalHeight = 0;
+
+        if (renderer && typeof renderer.getDrawingBufferSize === 'function') {
+            const buffer = renderer.getDrawingBufferSize(new THREE.Vector2());
+            internalWidth = Math.round(buffer.x);
+            internalHeight = Math.round(buffer.y);
+        }
+
+        const canvas = renderer?.domElement || null;
+        const imageRendering = canvas?.style?.imageRendering || null;
+        const upscaleFactor = internalWidth > 0
+            ? Number((displayWidth / internalWidth).toFixed(4))
+            : null;
+
+        return {
+            internalWidth,
+            internalHeight,
+            displayWidth,
+            displayHeight,
+            // The internal target is display * effectivePixelRatio; resolutionScale
+            // is the requested tier scale before DPR/native resolution. Surfaced
+            // here so the block is self-contained for evidence/adaptive control.
+            resolutionScale: this.resolutionScale,
+            effectivePixelRatio: renderer?.getPixelRatio?.() ?? null,
+            devicePixelRatio: typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+            // > 1 means the internal buffer is smaller than the display and is
+            // being upscaled (the low-res / pixelated regime).
+            upscaleFactor,
+            isUpscaled: upscaleFactor !== null ? upscaleFactor > 1.0001 : null,
+            imageRendering,
+            crispUpscale: imageRendering === 'pixelated' || imageRendering === 'crisp-edges'
+        };
+    }
+
+    /**
+     * Record one render duration into the rolling metrics window.
+     * @private
+     * @param {number} durationMs
+     */
+    _recordFrameTiming(durationMs) {
+        if (!Number.isFinite(durationMs)) return;
+
+        const samples = this.frameTiming.sampleWindow;
+        samples.push(durationMs);
+        if (samples.length > FRAME_TIMING_WINDOW) {
+            samples.shift();
+        }
+
+        this.frameTiming.frameCount += 1;
+        this.frameTiming.lastRenderDurationMs = durationMs;
+        this.frameTiming.maxRenderDurationMs = Math.max(this.frameTiming.maxRenderDurationMs, durationMs);
+        this.frameTiming.averageRenderDurationMs =
+            samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
+    }
+
+    /**
+     * Clear the rolling render metrics.
+     * @private
+     */
+    _resetFrameTimingSamples() {
+        this.frameTiming.frameCount = 0;
+        this.frameTiming.lastRenderDurationMs = 0;
+        this.frameTiming.averageRenderDurationMs = 0;
+        this.frameTiming.maxRenderDurationMs = 0;
+        this.frameTiming.sampleWindow = [];
+    }
+
+    /**
+     * @private
+     * @param {string} shadowMapType
+     * @returns {number}
+     */
+    _resolveShadowMapType(shadowMapType) {
+        switch (shadowMapType) {
+            case 'basic':
+                return THREE.BasicShadowMap;
+            case 'pcf':
+                return THREE.PCFShadowMap;
+            default:
+                return THREE.PCFSoftShadowMap;
+        }
+    }
+
+    /**
+     * @private
+     * @param {number} shadowMapType
+     * @returns {string}
+     */
+    _getShadowMapTypeName(shadowMapType) {
+        switch (shadowMapType) {
+            case THREE.BasicShadowMap:
+                return 'BasicShadowMap';
+            case THREE.PCFShadowMap:
+                return 'PCFShadowMap';
+            case THREE.PCFSoftShadowMap:
+                return 'PCFSoftShadowMap';
+            default:
+                return shadowMapType == null ? 'unknown' : String(shadowMapType);
+        }
+    }
+
+    /**
+     * @private
+     * @param {number} toneMapping
+     * @returns {string}
+     */
+    _getToneMappingName(toneMapping) {
+        switch (toneMapping) {
+            case THREE.NoToneMapping:
+                return 'NoToneMapping';
+            case THREE.LinearToneMapping:
+                return 'LinearToneMapping';
+            case THREE.ReinhardToneMapping:
+                return 'ReinhardToneMapping';
+            case THREE.CineonToneMapping:
+                return 'CineonToneMapping';
+            case THREE.ACESFilmicToneMapping:
+                return 'ACESFilmicToneMapping';
+            case THREE.NeutralToneMapping:
+                return 'NeutralToneMapping';
+            default:
+                return toneMapping == null ? 'unknown' : String(toneMapping);
+        }
     }
 
     /**

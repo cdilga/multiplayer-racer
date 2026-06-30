@@ -1,0 +1,251 @@
+{
+  "host-native": {
+    "activeTier": "host-native",
+    "tierConfig": {
+      "label": "Native full grade",
+      "resolutionScale": 1,
+      "postProcessing": true,
+      "bloomEnabled": true,
+      "bloomStrength": 1.5,
+      "bloomRadius": 0.4,
+      "bloomThreshold": 0.85,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.5,
+      "vignetteAmount": 0.3,
+      "chromaticAberrationEnabled": true,
+      "chromaticAberrationAmount": 0.0015,
+      "fogEnabled": true,
+      "fogDensity": 0.008,
+      "shadowsEnabled": true,
+      "shadowMapType": "pcf-soft"
+    },
+    "resolutionScale": 1,
+    "effectivePixelRatio": 1,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.008
+    },
+    "postProcessing": {
+      "enabled": true,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": true,
+      "bloomStrength": 1.5,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.5,
+      "vignetteAmount": 0.3,
+      "chromaticAberrationEnabled": true,
+      "chromaticAberrationAmount": 0.0015
+    },
+    "shadows": {
+      "enabled": true,
+      "type": "PCFSoftShadowMap"
+    },
+    "renderInfo": {
+      "calls": 1,
+      "triangles": 1,
+      "lines": 0,
+      "points": 0,
+      "frame": 11584,
+      "geometries": 15,
+      "textures": 16,
+      "programs": 16
+    },
+    "frameTiming": {
+      "frameCount": 108,
+      "lastRenderDurationMs": 0.30000007152557373,
+      "averageRenderDurationMs": 0.3518518529556416,
+      "maxRenderDurationMs": 0.8999999761581421
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "GradeRace",
+      "targetCount": 1
+    },
+    "trackedVehicles": 1,
+    "nameTagCount": 0
+  },
+  "host-degraded": {
+    "activeTier": "host-degraded",
+    "tierConfig": {
+      "label": "Degraded shared-screen host",
+      "resolutionScale": 0.7,
+      "postProcessing": true,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "bloomRadius": 0,
+      "bloomThreshold": 1,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.2,
+      "vignetteAmount": 0.16,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0,
+      "fogEnabled": true,
+      "fogDensity": 0.006,
+      "shadowsEnabled": true,
+      "shadowMapType": "basic"
+    },
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.006
+    },
+    "postProcessing": {
+      "enabled": true,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.2,
+      "vignetteAmount": 0.16,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0
+    },
+    "shadows": {
+      "enabled": true,
+      "type": "BasicShadowMap"
+    },
+    "renderInfo": {
+      "calls": 1,
+      "triangles": 1,
+      "lines": 0,
+      "points": 0,
+      "frame": 12132,
+      "geometries": 15,
+      "textures": 16,
+      "programs": 21
+    },
+    "frameTiming": {
+      "frameCount": 107,
+      "lastRenderDurationMs": 0.30000007152557373,
+      "averageRenderDurationMs": 0.27289719002269136,
+      "maxRenderDurationMs": 0.8000000715255737
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "GradeRace",
+      "targetCount": 1
+    },
+    "trackedVehicles": 1,
+    "nameTagCount": 0
+  },
+  "host-fallback": {
+    "activeTier": "host-fallback",
+    "tierConfig": {
+      "label": "Fallback no-post host",
+      "resolutionScale": 0.55,
+      "postProcessing": false,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "bloomRadius": 0,
+      "bloomThreshold": 1,
+      "colorGradingEnabled": false,
+      "gradingIntensity": 0,
+      "vignetteAmount": 0,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0,
+      "fogEnabled": true,
+      "fogDensity": 0.005,
+      "shadowsEnabled": false,
+      "shadowMapType": "basic"
+    },
+    "resolutionScale": 0.55,
+    "effectivePixelRatio": 0.55,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.005
+    },
+    "postProcessing": {
+      "enabled": false,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "colorGradingEnabled": false,
+      "gradingIntensity": 0,
+      "vignetteAmount": 0,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0
+    },
+    "shadows": {
+      "enabled": false,
+      "type": "BasicShadowMap"
+    },
+    "renderInfo": {
+      "calls": 21,
+      "triangles": 6204,
+      "lines": 0,
+      "points": 0,
+      "frame": 12288,
+      "geometries": 15,
+      "textures": 16,
+      "programs": 26
+    },
+    "frameTiming": {
+      "frameCount": 109,
+      "lastRenderDurationMs": 0.20000004768371582,
+      "averageRenderDurationMs": 0.1972476976727127,
+      "maxRenderDurationMs": 3.799999952316284
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "GradeRace",
+      "targetCount": 1
+    },
+    "trackedVehicles": 1,
+    "nameTagCount": 0
+  }
+}

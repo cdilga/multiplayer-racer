@@ -13,6 +13,7 @@ test.describe('Visual Effects', () => {
                 const game = window.game;
                 return game?.systems?.render?.initialized === true;
             },
+            null,
             { timeout: 15000 }
         );
 
@@ -81,6 +82,7 @@ test.describe('Visual Effects', () => {
                 const game = window.game;
                 return game?.systems?.render?.initialized === true;
             },
+            null,
             { timeout: 15000 }
         );
 
@@ -91,6 +93,7 @@ test.describe('Visual Effects', () => {
                 const game = window.game;
                 return game?.systems?.render?.postProcessing?.composer !== null;
             },
+            null,
             { timeout: 10000 }
         ).catch(() => {
             // Post-processing might not initialize in headless - continue anyway
@@ -123,6 +126,40 @@ test.describe('Visual Effects', () => {
         }
     });
 
+    test('should expose host-grade ladder diagnostics with explicit tone-mapping', async ({ hostPage }) => {
+        await gotoHost(hostPage);
+        await waitForRoomCode(hostPage);
+
+        await hostPage.waitForFunction(
+            () => {
+                // @ts-ignore
+                const game = window.game;
+                return game?.systems?.render?.initialized === true;
+            },
+            null,
+            { timeout: 15000 }
+        );
+
+        const diagnostics = await hostPage.evaluate(() => {
+            // @ts-ignore
+            const render = window.game?.systems?.render;
+            return {
+                tiers: render?.listGradeTiers?.() || [],
+                diagnostics: render?.getGradeDiagnostics?.() || null
+            };
+        });
+
+        expect(diagnostics.tiers.map((tier: any) => tier.tierName)).toEqual([
+            'host-native',
+            'host-balanced',
+            'host-degraded',
+            'host-fallback'
+        ]);
+        expect(diagnostics.diagnostics?.toneMapping?.decision).toBe('skip-aces');
+        expect(diagnostics.diagnostics?.toneMapping?.mode).toBe('NoToneMapping');
+        expect(diagnostics.diagnostics?.backend?.renderer).toBe('WebGLRenderer');
+    });
+
     test('should have camera shake config available', async ({ hostPage }) => {
         // Host creates room (this initializes the game)
         await gotoHost(hostPage);
@@ -135,6 +172,7 @@ test.describe('Visual Effects', () => {
                 const game = window.game;
                 return game?.systems?.render?.initialized === true;
             },
+            null,
             { timeout: 15000 }
         );
 

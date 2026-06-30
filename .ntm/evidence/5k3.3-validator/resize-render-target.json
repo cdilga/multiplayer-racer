@@ -1,0 +1,28 @@
+{
+  "before": {
+    "internalWidth": 896,
+    "internalHeight": 503,
+    "displayWidth": 1280,
+    "displayHeight": 720,
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "devicePixelRatio": 1,
+    "upscaleFactor": 1.4286,
+    "isUpscaled": true,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  },
+  "after": {
+    "internalWidth": 630,
+    "internalHeight": 420,
+    "displayWidth": 900,
+    "displayHeight": 600,
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "devicePixelRatio": 1,
+    "upscaleFactor": 1.4286,
+    "isUpscaled": true,
+    "imageRendering": "pixelated",
+    "crispUpscale": true
+  }
+}
