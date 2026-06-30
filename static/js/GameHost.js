@@ -911,6 +911,13 @@ class GameHost {
                 this.systems.derby.setWallMesh(this.track.barriers[0]);
             }
 
+            // Drive the physics wall collider in lockstep with the visual shrink
+            // so cars never hit an invisible old wall or phase through the
+            // shrunk one. No-op for tracks without a resizable arena wall.
+            this.systems.derby.setWallCollider({
+                setRadius: (radius) => this.systems.physics.setArenaWallRadius(radius)
+            });
+
             // Start derby match
             this.engine.setState(GAME_STATES.COUNTDOWN);
             this.systems.derby.startMatch();

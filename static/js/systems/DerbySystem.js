@@ -14,6 +14,8 @@
  *   derby.startMatch();
  */
 
+import { RealClock } from '../engine/Clock.js';
+
 // Derby states
 const DERBY_STATES = {
     IDLE: 'idle',
@@ -33,6 +35,19 @@ const PLACEMENT_POINTS = {
     default: 1
 };
 
+// Inward push tuning. PUSH_ACCEL is the per-second impulse magnitude applied to
+// a vehicle outside the shrinking boundary; the per-frame impulse is
+// PUSH_ACCEL * dt so the shove is frame-rate independent (CLAUDE.md rule). The
+// value is chosen so a 60fps frame delivers the same impulse (~10) the old
+// dt-less code applied every frame, preserving the original feel.
+const PUSH_ACCEL = 600;
+
+// Minimum radius change (world units) before the physics wall collider is
+// rebuilt. Rebuilding 64 colliders every frame is wasteful; throttling to a
+// small step keeps the visual/collider gap well under the wall thickness while
+// avoiding per-frame churn.
+const COLLIDER_SYNC_STEP = 0.25;
+
 class DerbySystem {
     /**
      * @param {Object} options
@@ -43,6 +58,11 @@ class DerbySystem {
     constructor(options = {}) {
         this.eventBus = options.eventBus ||
             (typeof window !== 'undefined' ? window.eventBus : null);
+
+        // Deterministic run context (set by Engine). Round timers read sim time
+        // from it; falls back to wall time only when no context is attached.
+        this.runContext = options.runContext || null;
+        this._realClock = new RealClock();
 
         // Match configuration
         this.roundsToWin = options.roundsToWin || 2;
@@ -80,10 +100,33 @@ class DerbySystem {
 
         // Wall mesh reference (set by GameHost)
         this.wallMesh = null;
+        // Arena wall collider controller (set by GameHost). Exposes
+        // setRadius(radius) so the physics wall is rebuilt in lockstep with the
+        // visual shrink. Null when no physics is wired (e.g. headless tests).
         this.wallCollider = null;
+        // Last radius pushed to the collider controller, for sync throttling.
+        this._lastColliderRadius = null;
 
         // State
         this.initialized = false;
+    }
+
+    /**
+     * Attach the deterministic run context.
+     * @param {import('../engine/GameRunContext.js').GameRunContext} ctx
+     */
+    setRunContext(ctx) {
+        this.runContext = ctx;
+    }
+
+    /**
+     * Current gameplay time in ms: sim time when a run context is attached
+     * (deterministic), else wall time via the allowlisted RealClock adapter.
+     * @returns {number}
+     * @private
+     */
+    _nowMs() {
+        return this.runContext ? this.runContext.clock.nowMs() : this._realClock.nowMs();
     }
 
     /**
@@ -181,11 +224,56 @@ class DerbySystem {
     }
 
     /**
-     * Set the physics collider for walls
-     * @param {Object} collider - The Rapier collider for walls
+     * Wire the arena wall collider controller used to keep the physics wall in
+     * lockstep with the visual shrink.
+     *
+     * @param {{ setRadius: (radius: number) => void } | null} controller -
+     *   Object whose `setRadius(radius)` rebuilds/resizes the Rapier arena wall
+     *   to the given radius (world units). GameHost backs this with
+     *   `PhysicsSystem.setArenaWallRadius`. Pass null to detach.
      */
-    setWallCollider(collider) {
-        this.wallCollider = collider;
+    setWallCollider(controller) {
+        this.wallCollider = controller;
+        this._lastColliderRadius = null;
+        // Snap the freshly wired collider to the current arena radius so there
+        // is no startup gap before the first shrink step.
+        this._syncWallCollider(true);
+    }
+
+    /**
+     * Parse the configured warning colour (e.g. '#FF4444') into a 0xRRGGBB int.
+     * Falls back to a red glow if the value is missing or malformed.
+     * @returns {number}
+     * @private
+     */
+    _warningColorHex() {
+        const raw = typeof this.warningColor === 'string' ? this.warningColor : '';
+        const hex = parseInt(raw.replace('#', ''), 16);
+        return Number.isFinite(hex) ? hex : 0xFF4444;
+    }
+
+    /**
+     * Resize the physics wall collider to match the current visual radius.
+     *
+     * The visual mesh scales every frame; rebuilding 64 colliders that often is
+     * wasteful, so collider rebuilds are throttled to COLLIDER_SYNC_STEP. The
+     * residual gap stays well under the wall thickness, so a car at the visible
+     * wall is always within collider contact.
+     * @param {boolean} [force=false] - Sync even if below the step threshold.
+     * @private
+     */
+    _syncWallCollider(force = false) {
+        const controller = this.wallCollider;
+        if (!controller || typeof controller.setRadius !== 'function') return;
+
+        const radius = this.currentDiameter / 2;
+        if (!force && this._lastColliderRadius !== null &&
+            Math.abs(radius - this._lastColliderRadius) < COLLIDER_SYNC_STEP) {
+            return;
+        }
+
+        controller.setRadius(radius);
+        this._lastColliderRadius = radius;
     }
 
     /**
@@ -252,6 +340,8 @@ class DerbySystem {
         if (this.wallMesh) {
             this.wallMesh.scale.set(1, 1, 1);
         }
+        // Restore the physics wall to full size for the new round.
+        this._syncWallCollider(true);
 
         // Skip countdown in test mode
         if (this._isTestMode()) {
@@ -279,7 +369,7 @@ class DerbySystem {
      */
     _startCombat() {
         this.state = DERBY_STATES.COMBAT;
-        this.roundStartTime = performance.now();
+        this.roundStartTime = this._nowMs();
 
         this._emit('derby:combatStart', {
             round: this.currentRound,
@@ -344,7 +434,7 @@ class DerbySystem {
      * @private
      */
     _updateShrinking(dt) {
-        const combatTime = (performance.now() - this.roundStartTime) / 1000;
+        const combatTime = (this._nowMs() - this.roundStartTime) / 1000;
 
         // Check if we should start shrinking
         if (!this.shrinkingActive && combatTime >= this.shrinkStartTime) {
@@ -365,8 +455,11 @@ class DerbySystem {
             // Update wall visuals
             this._updateWallVisuals();
 
-            // Push vehicles that are outside the shrinking boundary
-            this._pushVehiclesInward();
+            // Keep the physics collider in lockstep with the visual radius.
+            this._syncWallCollider();
+
+            // Push vehicles that are outside the shrinking boundary (dt-scaled).
+            this._pushVehiclesInward(dt);
         }
     }
 
@@ -380,23 +473,55 @@ class DerbySystem {
         const scale = this.currentDiameter / this.originalDiameter;
         this.wallMesh.scale.set(scale, 1, scale);
 
-        // Make walls glow red when shrinking
-        if (this.shrinkingActive && this.wallMesh.material) {
-            const intensity = 0.5 + Math.sin(performance.now() / 200) * 0.3;
-            if (this.wallMesh.material.emissive) {
-                this.wallMesh.material.emissive.setHex(0xFF4444);
-                this.wallMesh.material.emissiveIntensity = intensity;
-            }
+        // Make walls glow when shrinking. The wall is a THREE.Group of child
+        // meshes (track.barriers[0]), so it has no `.material` of its own -
+        // traverse to reach the actual mesh materials.
+        if (this.shrinkingActive) {
+            const intensity = 0.5 + Math.sin(this._nowMs() / 200) * 0.3;
+            this._applyWallGlow(this._warningColorHex(), intensity);
         }
     }
 
     /**
-     * Push vehicles inward if they are outside the current boundary
+     * Apply an emissive glow to every mesh material under the wall object,
+     * whether it is a THREE.Group (traverse children) or a bare THREE.Mesh.
+     * @param {number} hex - 0xRRGGBB emissive colour
+     * @param {number} intensity - Emissive intensity
      * @private
      */
-    _pushVehiclesInward() {
+    _applyWallGlow(hex, intensity) {
+        const mesh = this.wallMesh;
+        if (!mesh) return;
+
+        const applyToMaterial = (material) => {
+            if (!material) return;
+            const materials = Array.isArray(material) ? material : [material];
+            for (const m of materials) {
+                if (m && m.emissive && typeof m.emissive.setHex === 'function') {
+                    m.emissive.setHex(hex);
+                    m.emissiveIntensity = intensity;
+                }
+            }
+        };
+
+        if (typeof mesh.traverse === 'function') {
+            mesh.traverse((obj) => { if (obj && obj.material) applyToMaterial(obj.material); });
+        } else if (mesh.material) {
+            applyToMaterial(mesh.material);
+        }
+    }
+
+    /**
+     * Push vehicles inward if they are outside the current boundary.
+     *
+     * The impulse is dt-scaled (PUSH_ACCEL * dt) so the inward shove delivers
+     * the same momentum per second regardless of frame rate.
+     * @param {number} dt - Delta time in seconds
+     * @private
+     */
+    _pushVehiclesInward(dt) {
         const currentRadius = this.currentDiameter / 2;
-        const pushForce = 10; // Force magnitude
+        const impulseMagnitude = PUSH_ACCEL * dt; // dt-scaled => frame-rate independent
 
         for (const [vehicleId, data] of this.vehicles) {
             if (data.eliminated) continue;
@@ -410,8 +535,8 @@ class DerbySystem {
             // If vehicle is outside the shrinking boundary, push it inward
             if (distanceFromCenter > currentRadius - 2) { // 2 units buffer
                 const angle = Math.atan2(pos.z, pos.x);
-                const pushX = -Math.cos(angle) * pushForce;
-                const pushZ = -Math.sin(angle) * pushForce;
+                const pushX = -Math.cos(angle) * impulseMagnitude;
+                const pushZ = -Math.sin(angle) * impulseMagnitude;
 
                 // Apply impulse if physics body available
                 if (vehicle.physicsBody) {
@@ -507,7 +632,7 @@ class DerbySystem {
             this.roundWins.set(winnerId, currentWins + 1);
         }
 
-        const roundTime = performance.now() - this.roundStartTime;
+        const roundTime = this._nowMs() - this.roundStartTime;
 
         this._emit('derby:roundEnd', {
             round: this.currentRound,
@@ -723,7 +848,7 @@ class DerbySystem {
      */
     getCombatTime() {
         if (this.state !== DERBY_STATES.COMBAT) return 0;
-        return performance.now() - this.roundStartTime;
+        return this._nowMs() - this.roundStartTime;
     }
 
     /**
@@ -744,6 +869,8 @@ class DerbySystem {
         if (this.wallMesh) {
             this.wallMesh.scale.set(1, 1, 1);
         }
+        // Restore the physics wall to full size.
+        this._syncWallCollider(true);
 
         // Reset vehicle data but keep registrations
         for (const [vehicleId, data] of this.vehicles) {

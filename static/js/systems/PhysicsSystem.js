@@ -36,6 +36,11 @@ class PhysicsSystem {
         this.vehicleBodies = new Map();  // vehicleId -> { body, controller }
         this.staticBodies = new Map();   // bodyId -> body
 
+        // Arena wall rebuild spec, captured when the shrinking arena wall is
+        // built so the collider can be resized in lockstep with the derby
+        // shrink. Null when the active track has no resizable arena wall.
+        this._arenaWall = null;
+
         // Collision handling
         this.collisionEvents = [];
         this.eventQueue = null;
@@ -266,6 +271,9 @@ class PhysicsSystem {
         const geometry = trackConfig.geometry;
         const physics = trackConfig.physics || {};
 
+        // Reset any arena-wall resize spec from a previous track.
+        this._arenaWall = null;
+
         if (geometry.type === 'oval') {
             // Create inner and outer circular barriers
             const innerBarrier = this._createCircularBarrier(
@@ -294,36 +302,57 @@ class PhysicsSystem {
             const wallHeight = geometry.wallHeight || 15;
             const wallSlope = geometry.wallSlope || 30;
 
+            const bowlRestitution = physics.barrierRestitution || 0.5;
             const bowlWall = this._createBowlWallBarrier(
                 radius,
                 wallHeight,
                 wallSlope,
-                physics.barrierRestitution || 0.5
+                bowlRestitution
             );
 
-            if (bowlWall) barriers.push(bowlWall);
+            if (bowlWall) {
+                barriers.push(bowlWall);
+                this._arenaWall = {
+                    kind: 'bowl', key: 'barrier_bowl_wall', radius,
+                    height: wallHeight, slope: wallSlope, restitution: bowlRestitution
+                };
+            }
         } else if (geometry.type === 'square') {
             const size = geometry.diameter || geometry.size || 70;
             const wallHeight = geometry.wallHeight || geometry.barrierHeight || 12;
             const wallThickness = geometry.barrierThickness || 1;
+            const squareRestitution = physics.barrierRestitution || 0.5;
             const squareWall = this._createSquareBarrier(
                 size,
                 wallHeight,
                 wallThickness,
-                physics.barrierRestitution || 0.5
+                squareRestitution
             );
-            if (squareWall) barriers.push(squareWall);
+            if (squareWall) {
+                barriers.push(squareWall);
+                this._arenaWall = {
+                    kind: 'square', key: 'barrier_square_wall', size,
+                    height: wallHeight, thickness: wallThickness, restitution: squareRestitution
+                };
+            }
         } else if (geometry.type === 'dunes') {
             // Tall containment wall at the dunes arena edge
             const radius = geometry.radius || 70;
             const wallHeight = geometry.wallHeight || 14;
+            const dunesRestitution = physics.barrierRestitution || 0.4;
             const dunesWall = this._createBowlWallBarrier(
                 radius,
                 wallHeight,
                 20,
-                physics.barrierRestitution || 0.4
+                dunesRestitution
             );
-            if (dunesWall) barriers.push(dunesWall);
+            if (dunesWall) {
+                barriers.push(dunesWall);
+                this._arenaWall = {
+                    kind: 'bowl', key: 'barrier_bowl_wall', radius,
+                    height: wallHeight, slope: 20, restitution: dunesRestitution
+                };
+            }
         } else if (geometry.type === 'spline') {
             // Procedural track: barrier walls along both precomputed edges
             const height = geometry.barrierHeight || 1.5;
@@ -375,8 +404,8 @@ class PhysicsSystem {
 
             const midX = (a.x + b.x) / 2;
             const midZ = (a.z + b.z) / 2;
-            // Yaw so the segment's local X axis aligns with the edge direction
-            const yaw = Math.atan2(-dz, dx);
+            // Yaw so the segment's local X axis aligns with the edge tangent.
+            const yaw = this._yawFromDirection(dx, dz);
 
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(length / 2 + 0.3, height / 2, 0.5)
@@ -432,15 +461,20 @@ class PhysicsSystem {
 
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
+            const radiusLength = Math.hypot(x, z) || 1;
+            const tangentX = -z / radiusLength;
+            const tangentZ = x / radiusLength;
+            const yaw = this._yawFromDirection(tangentX, tangentZ);
 
             // Use a flatter, wider collider for curb-like behavior
             // Cars can drive over but will get rocked
             // Rotation: segment should be tangent to circle (perpendicular to radius)
-            // At angle θ, tangent direction is θ + π/2
+            // Derive yaw from the tangent vector so it stays aligned with this
+            // file's shared local-X / negative-Z yaw convention.
             const colliderDesc = this.RAPIER.ColliderDesc
                 .cuboid(segmentLength / 2, height / 2, thickness / 2)
                 .setTranslation(x, height / 2, z)
-                .setRotation(this._eulerToQuat(0, angle, 0));
+                .setRotation(this._eulerToQuat(0, yaw, 0));
             this._makeWallSlippery(colliderDesc, 0.15, restitution);
 
             this.world.createCollider(colliderDesc, body);
@@ -555,6 +589,57 @@ class PhysicsSystem {
     }
 
     /**
+     * Current radius (world units) of the resizable arena wall, or null when
+     * the active track has no resizable arena wall. For a square arena this is
+     * half the side length, matching the bowl/dunes radius convention.
+     * @returns {number|null}
+     */
+    getArenaWallRadius() {
+        const spec = this._arenaWall;
+        if (!spec) return null;
+        return spec.kind === 'square' ? spec.size / 2 : spec.radius;
+    }
+
+    /**
+     * Resize the shrinking-arena wall collider to a new radius, rebuilding it in
+     * lockstep with the visual shrink so cars never hit an invisible old wall or
+     * phase through the shrunk one.
+     *
+     * Rapier compound colliders cannot be cheaply scaled in place, so the wall
+     * body is removed and rebuilt at the new radius from the spec captured when
+     * the track was built. Returns the new wall body, or null when there is no
+     * resizable arena wall or the radius is non-positive.
+     * @param {number} radius - New arena wall radius in world units.
+     * @returns {Object|null}
+     */
+    setArenaWallRadius(radius) {
+        const spec = this._arenaWall;
+        if (!spec || !this.world || !this.RAPIER) return null;
+        if (!(radius > 0)) return null;
+
+        // Remove the existing wall body before rebuilding under the same key.
+        const existing = this.staticBodies.get(spec.key);
+        if (existing) {
+            this.world.removeRigidBody(existing);
+            this.staticBodies.delete(spec.key);
+        }
+
+        let body = null;
+        if (spec.kind === 'bowl') {
+            body = this._createBowlWallBarrier(radius, spec.height, spec.slope, spec.restitution);
+            spec.radius = radius;
+        } else if (spec.kind === 'square') {
+            const size = radius * 2;
+            body = this._createSquareBarrier(size, spec.height, spec.thickness, spec.restitution);
+            spec.size = size;
+        }
+
+        // Preserve the wall-slide tag the original barrier carried.
+        if (body) body.userData = { type: 'barrier' };
+        return body;
+    }
+
+    /**
      * Remove all static bodies (ground and barriers)
      * Called when switching tracks
      */
@@ -567,6 +652,7 @@ class PhysicsSystem {
             }
         }
         this.staticBodies.clear();
+        this._arenaWall = null;
         console.log('PhysicsSystem: Removed all static bodies');
     }
 
@@ -1386,6 +1472,15 @@ class PhysicsSystem {
             z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
             w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z
         };
+    }
+
+    /**
+     * Convert a world-space XZ direction/tangent into the local-X yaw used by
+     * barrier colliders and start-line-aligned track geometry.
+     * @private
+     */
+    _yawFromDirection(dx, dz) {
+        return Math.atan2(-dz, dx);
     }
 
     /**
