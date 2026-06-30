@@ -16,6 +16,7 @@
  */
 
 import { buildDunesGrid } from '../resources/terrain.js';
+import { buildBowlGrid, bowlCrossSection } from '../resources/bowlProfile.js';
 
 class PhysicsSystem {
     /**
@@ -229,6 +230,60 @@ class PhysicsSystem {
         ramps.forEach((ramp, i) => this._createRampCollider(ramp, base, i));
 
         return body;
+    }
+
+    /**
+     * Create the derby bowl floor as a static trimesh, built from the SAME
+     * vertex grid as the visual mesh (resources/bowlProfile.js) so collision
+     * matches what the player sees. Replaces the old flat cuboid ground that
+     * had no relation to the concave-looking floor. The moving shrink wall
+     * (br-fb-derbywall-shrink-7r5) still owns containment above the rim; this
+     * body is only the static driven surface (the static floor->wall join).
+     * @param {Object} trackConfig - Track configuration (geometry.type === 'bowl')
+     * @returns {Object} Rapier rigid body for the bowl floor
+     */
+    createBowlBody(trackConfig) {
+        if (!this.RAPIER || !this.world) return null;
+
+        const geometry = trackConfig.geometry || {};
+        const physics = trackConfig.physics || {};
+        const { vertices, indices, params } = buildBowlGrid(geometry);
+
+        const bodyDesc = this.RAPIER.RigidBodyDesc.fixed();
+        const body = this.world.createRigidBody(bodyDesc);
+
+        const colliderDesc = this.RAPIER.ColliderDesc
+            .trimesh(vertices, indices)
+            .setFriction(physics.groundFriction || 0.9)
+            .setRestitution(0.0);
+        this.world.createCollider(colliderDesc, body);
+
+        this.staticBodies.set('bowl', body);
+
+        // Inspectable diagnostics for the cross-section / debug overlay.
+        this._bowlDiagnostics = {
+            source: 'bowlProfile.buildBowlGrid',
+            colliderType: 'trimesh',
+            vertexCount: vertices.length / 3,
+            triangleCount: indices.length / 3,
+            radius: params.R,
+            floorConcavity: params.floorConcavity,
+            floorDepth: params.floorDepth,
+            filletRadius: params.filletRadius,
+            seamRadius: params.r1,
+            crossSection: bowlCrossSection(params, 24)
+        };
+
+        return body;
+    }
+
+    /**
+     * Diagnostics for the most recently built bowl floor (collider source,
+     * fillet/concavity knobs, cross-section). Null until a bowl is built.
+     * @returns {Object|null}
+     */
+    getBowlDiagnostics() {
+        return this._bowlDiagnostics || null;
     }
 
     /**

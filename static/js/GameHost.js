@@ -16,6 +16,7 @@ import { Engine, GAME_STATES } from './engine/Engine.js';
 import { getResourceLoader } from './resources/ResourceLoader.js';
 import { VehicleFactory } from './resources/VehicleFactory.js';
 import { TrackFactory } from './resources/TrackFactory.js';
+import { DEFAULT_VALIDATED_CAPACITY, generateSpawnsForTrack } from './resources/SpawnGenerator.js';
 import { PhysicsSystem } from './systems/PhysicsSystem.js';
 import { RenderSystem } from './systems/RenderSystem.js';
 import { NetworkSystem } from './systems/NetworkSystem.js';
@@ -609,6 +610,10 @@ class GameHost {
             if (trackData.config.geometry?.type === 'dunes') {
                 // Rolling trimesh terrain instead of a flat ground plane
                 groundBody = this.systems.physics.createTerrainBody(trackData.config);
+            } else if (trackData.config.geometry?.type === 'bowl') {
+                // Concave bowl floor as a trimesh built from the same revolved
+                // profile as the visual mesh - no flat cuboid, no hard crease.
+                groundBody = this.systems.physics.createBowlBody(trackData.config);
             } else {
                 groundBody = this.systems.physics.createGroundBody({
                     size: trackData.config.visual?.ground?.size || 200,
@@ -631,10 +636,86 @@ class GameHost {
             // don't occlude the cars; open tracks use the default chase view
             this._applyCameraProfile(trackData.config);
 
+            // Pre-generate a validated spawn set so joins, resets, and soak
+            // counts never fall back to stale authored caps or modulo reuse.
+            this._ensureTrackSpawnCapacity(Math.max(DEFAULT_VALIDATED_CAPACITY, this.vehicles.size));
+
             console.log('GameHost: Track created:', trackId);
         } catch (error) {
             console.error('GameHost: Error creating track:', error);
         }
+    }
+
+    /**
+     * @private
+     * @returns {import('./engine/GameRunContext.js').GameRunContext|null}
+     */
+    _getRunContext() {
+        return this.engine?.getRunContext?.() || this.engine?.runContext || null;
+    }
+
+    /**
+     * Ensure the active track has a validated spawn set with at least the
+     * requested capacity. Authored spawns remain valid for small lobbies, but
+     * higher counts always install a generated set first.
+     * @private
+     * @param {number} playerCount
+     * @returns {Object[]|null}
+     */
+    _ensureTrackSpawnCapacity(playerCount) {
+        if (!this.track || !Number.isFinite(playerCount) || playerCount <= 0) return null;
+
+        const authoredCount = Array.isArray(this.track.spawnPositions) ? this.track.spawnPositions.length : 0;
+        const generatedCount = Array.isArray(this.track.generatedSpawns) ? this.track.generatedSpawns.length : 0;
+
+        if (generatedCount >= playerCount) {
+            return this.track.generatedSpawns;
+        }
+
+        if (generatedCount === 0 && playerCount <= authoredCount) {
+            return this.track.spawnPositions;
+        }
+
+        const result = generateSpawnsForTrack(this.track, playerCount, this._getRunContext(), {
+            minPairDistance: 3.5,
+            minClearance: 2.0,
+            requireSupport: true
+        });
+
+        if (!result.valid || result.spawns.length < playerCount) {
+            console.error('GameHost: Spawn generation failed validation', result.diagnostics);
+            return null;
+        }
+
+        this.track.setGeneratedSpawns(result);
+        return result.spawns;
+    }
+
+    /**
+     * @private
+     * @returns {{x:number,y:number,z:number,rotation:number}}
+     */
+    _fallbackSpawnPosition() {
+        return {
+            x: 0,
+            y: this.track?.defaultSpawnHeight || 1.5,
+            z: 0,
+            rotation: 0
+        };
+    }
+
+    /**
+     * @private
+     * @param {number} playerIndex
+     * @returns {{x:number,y:number,z:number,rotation:number}}
+     */
+    _getTrackSpawnPosition(playerIndex) {
+        this._ensureTrackSpawnCapacity(playerIndex + 1);
+        const spawnPos = this.track?.getSpawnPosition(playerIndex);
+        if (spawnPos) return spawnPos;
+
+        console.error(`GameHost: Missing validated spawn for index ${playerIndex}`);
+        return this._fallbackSpawnPosition();
     }
 
     /**
@@ -692,7 +773,7 @@ class GameHost {
             } else {
                 // Normal join: use track spawn positions
                 const spawnIndex = this.vehicles.size;
-                spawnPos = this.track.getSpawnPosition(spawnIndex);
+                spawnPos = this._getTrackSpawnPosition(spawnIndex);
             }
 
             // Create vehicle
@@ -764,7 +845,7 @@ class GameHost {
 
         if (positions.length === 0) {
             // Fallback to default spawn if no positions yet
-            return this.track.getSpawnPosition(0);
+            return this._getTrackSpawnPosition(0);
         }
 
         // Get last place vehicle
@@ -773,7 +854,7 @@ class GameHost {
 
         if (!lastVehicle || !lastVehicle.mesh) {
             // Fallback if vehicle not found
-            return this.track.getSpawnPosition(this.vehicles.size);
+            return this._getTrackSpawnPosition(this.vehicles.size);
         }
 
         // In races, drop the late joiner at last place's last checkpoint -
@@ -870,10 +951,12 @@ class GameHost {
             await this._createTrack(trackId);
         }
 
+        this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
+
         // Reset all vehicles to spawn positions
         let index = 0;
         for (const [playerId, vehicle] of this.vehicles) {
-            const spawnPos = this.track.getSpawnPosition(index);
+            const spawnPos = this._getTrackSpawnPosition(index);
             vehicle.reset(spawnPos);
             vehicle.health = vehicle.maxHealth;
             this.systems.physics.setVehicleEnabled(vehicle.id, true);
@@ -1025,10 +1108,12 @@ class GameHost {
 
         // Auto-start next round after a short delay
         setTimeout(() => {
+            this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
+
             // Reset vehicles for next round
             let index = 0;
             for (const [playerId, vehicle] of this.vehicles) {
-                const spawnPos = this.track.getSpawnPosition(index);
+                const spawnPos = this._getTrackSpawnPosition(index);
                 vehicle.reset(spawnPos);
                 vehicle.health = vehicle.maxHealth;
                 vehicle.isDead = false;
@@ -1080,10 +1165,12 @@ class GameHost {
      * @private
      */
     _startNewRace() {
+        this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
+
         // Reset all vehicles
         let index = 0;
         for (const [playerId, vehicle] of this.vehicles) {
-            const spawnPos = this.track.getSpawnPosition(index);
+            const spawnPos = this._getTrackSpawnPosition(index);
             vehicle.reset(spawnPos);
             vehicle.health = vehicle.maxHealth;
             this.systems.physics.setVehicleEnabled(vehicle.id, true);
@@ -1123,7 +1210,7 @@ class GameHost {
 
         if (!foundVehicle) return;
 
-        const spawnPos = this.track.getSpawnPosition(vehicleIndex);
+        const spawnPos = this._getTrackSpawnPosition(vehicleIndex);
         foundVehicle.reset(spawnPos);
         this.systems.physics.resetVehicle(foundVehicle.id, spawnPos, spawnPos.rotation);
     }
@@ -1134,9 +1221,11 @@ class GameHost {
     resetAllVehicles() {
         if (!this.track) return;
 
+        this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
+
         let index = 0;
         for (const [playerId, vehicle] of this.vehicles) {
-            const spawnPos = this.track.getSpawnPosition(index);
+            const spawnPos = this._getTrackSpawnPosition(index);
             vehicle.reset(spawnPos);
             this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
             index++;
@@ -1206,6 +1295,7 @@ class GameHost {
         } catch (e) {
             info.modeError = String(e);
         }
+
 
         return info;
     }

@@ -12,6 +12,7 @@
 
 import { generateTrackConfig } from './ProceduralTrackGenerator.js';
 import { buildDunesGrid } from './terrain.js';
+import { buildBowlGrid } from './bowlProfile.js';
 
 class TrackFactory {
     /**
@@ -266,25 +267,16 @@ class TrackFactory {
      * @private
      */
     _createBowlArena(geometry, visual) {
-        const diameter = geometry.diameter || 80;
-        const radius = diameter / 2;
-        const concavity = geometry.floorConcavity || 0.1;
-        const segments = 64;
+        // One revolved profile (bowlProfile.js) builds this visual surface from
+        // the same vertex grid the physics trimesh uses, so what you see is
+        // what you collide with. The old path built a CircleGeometry with
+        // setZ(-height); after the -90deg rotation that was an inverted dome
+        // with no matching collider and a hard rim crease.
+        const { vertices, indices } = buildBowlGrid(geometry);
 
-        // Create a slightly concave circular floor
-        const arenaGeometry = new THREE.CircleGeometry(radius, segments);
-
-        // Apply concavity to vertices (bowl shape)
-        const positions = arenaGeometry.attributes.position;
-        for (let i = 0; i < positions.count; i++) {
-            const x = positions.getX(i);
-            const y = positions.getY(i);
-            const distFromCenter = Math.sqrt(x * x + y * y);
-            const normalizedDist = distFromCenter / radius;
-            // Bowl curve: lower at center, higher at edges
-            const height = (normalizedDist * normalizedDist) * concavity * radius;
-            positions.setZ(i, -height);
-        }
+        const arenaGeometry = new THREE.BufferGeometry();
+        arenaGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        arenaGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
         arenaGeometry.computeVertexNormals();
 
         const arenaMaterial = new THREE.MeshStandardMaterial({
@@ -296,7 +288,6 @@ class TrackFactory {
         });
 
         const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
-        arenaMesh.rotation.x = -Math.PI / 2;
         arenaMesh.position.y = 0.02;
         arenaMesh.receiveShadow = true;
         arenaMesh.userData = { isTrackSurface: true, isBowl: true };
@@ -767,15 +758,18 @@ class TrackFactory {
      * @returns {Object} Position { x, y, z, rotation }
      */
     getSpawnPosition(track, playerIndex) {
-        const spawns = track.spawnPositions;
-        const index = playerIndex % spawns.length;
-        const spawn = spawns[index];
+        const spawns = track.generatedSpawns || track.spawnPositions || [];
+        if (!Number.isInteger(playerIndex) || playerIndex < 0 || playerIndex >= spawns.length) {
+            return null;
+        }
+
+        const spawn = spawns[playerIndex];
 
         return {
-            x: spawn.x,
-            y: spawn.y || track.defaultSpawnHeight,
-            z: spawn.z,
-            rotation: spawn.rotation || 0
+            x: spawn.position?.x ?? spawn.x ?? 0,
+            y: spawn.position?.y ?? spawn.y ?? track.defaultSpawnHeight,
+            z: spawn.position?.z ?? spawn.z ?? 0,
+            rotation: spawn.headingRad ?? spawn.rotation ?? 0
         };
     }
 

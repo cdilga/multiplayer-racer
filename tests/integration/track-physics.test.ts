@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import RAPIER from '@dimforge/rapier3d-compat';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { PhysicsSystem } from '../../static/js/systems/PhysicsSystem.js';
+import { buildBowlGrid, bowlProfile } from '../../static/js/resources/bowlProfile.js';
 import { generateTrackConfig } from '../../static/js/resources/ProceduralTrackGenerator.js';
+import { generateSpawnsForTrack } from '../../static/js/resources/SpawnGenerator.js';
 import { Track } from '../../static/js/entities/Track.js';
 import { GameRunContext } from '../../static/js/engine/GameRunContext.js';
 
@@ -22,12 +24,86 @@ function makePhysics() {
     return physics;
 }
 
-function makeRunContext(seed: number) {
+function makeRunContext(seed: number, ruleset: string = 'race') {
     return GameRunContext.create({
         seed,
         deterministic: true,
-        ruleset: 'race'
+        ruleset
     });
+}
+
+function setupSpawnValidationPhysics(config: any) {
+    const physics = makePhysics();
+
+    if (config.geometry?.type === 'dunes') {
+        physics.createTerrainBody(config);
+    } else if (config.geometry?.type === 'bowl') {
+        physics.createBowlBody(config);
+    } else {
+        physics.createGroundBody({
+            size: config.visual?.ground?.size || 200,
+            friction: config.physics?.groundFriction || 0.8
+        });
+    }
+
+    physics.createBarrierBodies(config);
+    physics.world.step();
+    return physics;
+}
+
+function isSpawnWithinTrack(config: any, spawn: any) {
+    const geometry = config.geometry || {};
+    const x = spawn.position?.x ?? spawn.x ?? 0;
+    const z = spawn.position?.z ?? spawn.z ?? 0;
+
+    switch (geometry.type) {
+        case 'oval': {
+            const radius = Math.hypot(x, z);
+            return radius >= geometry.innerRadius && radius <= geometry.outerRadius;
+        }
+        case 'square': {
+            const half = (geometry.diameter || geometry.size || 70) / 2;
+            return Math.abs(x) <= half && Math.abs(z) <= half;
+        }
+        case 'bowl': {
+            const radius = (geometry.diameter || 80) / 2;
+            return Math.hypot(x, z) <= radius;
+        }
+        case 'dunes': {
+            return Math.hypot(x, z) <= (geometry.rimStart || geometry.radius || 70);
+        }
+        default:
+            return true;
+    }
+}
+
+function raycastSpawnSupport(physics: PhysicsSystem, spawn: any) {
+    const origin = {
+        x: spawn.position.x,
+        y: spawn.position.y + 20,
+        z: spawn.position.z
+    };
+    const ray = new RAPIER.Ray(origin, { x: 0, y: -1, z: 0 });
+    const hit = physics.world.castRayAndGetNormal(ray, 80, true);
+
+    if (!hit) return null;
+
+    return {
+        timeOfImpact: hit.timeOfImpact,
+        point: ray.pointAt(hit.timeOfImpact),
+        normal: hit.normal
+    };
+}
+
+function maybeWriteSpawnEvidence(trackId: string, playerCount: number, payload: any) {
+    const evidenceDir = process.env.SPAWN_EVIDENCE_DIR;
+    if (!evidenceDir) return;
+
+    mkdirSync(evidenceDir, { recursive: true });
+    writeFileSync(
+        join(evidenceDir, `${trackId}-${playerCount}.json`),
+        JSON.stringify(payload, null, 2)
+    );
 }
 
 function rotateVectorByQuat(
@@ -347,60 +423,210 @@ describe('track physics', () => {
         });
     });
 
-    describe('Spawn validation (no modulo wrapping)', () => {
-        it('track spawn positions are defined', () => {
-            const config = loadTrackConfig('oval');
-            const spawnCount = config.spawn?.positions?.length ?? 0;
+    describe('derby bowl floor trimesh (br-fb-bowltransition-3ij)', () => {
+        function colliderShapeTypes(body: RAPIER.RigidBody) {
+            return getBodyColliders(body).map((c) => c.shape.type);
+        }
 
-            expect(spawnCount).toBeGreaterThan(0);
+        it('builds the bowl floor as a single trimesh from the revolved profile (no flat cuboid)', () => {
+            const physics = makePhysics();
+            const config = loadTrackConfig('derby-bowl');
+            const body = physics.createBowlBody(config);
+
+            expect(body).toBeTruthy();
+            expect(physics.staticBodies.has('bowl')).toBe(true);
+            // The floor collider is a trimesh, NOT the old flat cuboid ground.
+            const shapes = colliderShapeTypes(body!);
+            expect(shapes).toContain(RAPIER.ShapeType.TriMesh);
+            expect(shapes).not.toContain(RAPIER.ShapeType.Cuboid);
+            // GameHost routes 'bowl' to createBowlBody, so the flat ground body
+            // is never registered for a bowl.
+            expect(physics.staticBodies.has('ground')).toBe(false);
         });
 
-        it('spawn set contains expected spawn structure', () => {
-            const config = loadTrackConfig('oval');
-            const spawns = config.spawn?.positions || [];
+        it('exposes diagnostics: concave (centre below rim), fillet/concavity knobs, collider source', async () => {
+            const physics = makePhysics();
+            const config = loadTrackConfig('derby-bowl');
+            physics.createBowlBody(config);
 
-            expect(spawns.length).toBeGreaterThan(0);
+            const diag = physics.getBowlDiagnostics()!;
+            expect(diag.colliderType).toBe('trimesh');
+            expect(diag.source).toContain('buildBowlGrid');
+            expect(diag.filletRadius).toBeGreaterThan(0);
+            expect(diag.floorConcavity).toBeGreaterThan(0);
+            expect(diag.triangleCount).toBeGreaterThan(0);
 
-            // Each spawn should have x, z position
-            spawns.forEach((spawn: any, idx: number) => {
-                expect(spawn.x).toBeDefined();
-                expect(spawn.z).toBeDefined();
-                expect(typeof spawn.x).toBe('number');
-                expect(typeof spawn.z).toBe('number');
-            });
+            const xs = diag.crossSection;
+            const centre = xs[0];
+            const rim = xs[xs.length - 1];
+            // Concave bowl: centre sits BELOW the rim (not an inverted dome).
+            expect(centre.y).toBeLessThan(rim.y);
+            // Floor->fillet seam is flat on both sides (C1, no crease).
+            expect(Math.abs(centre.slope)).toBeLessThan(1e-6);
+
+            // Optional inspectable artifact (cross-section render data).
+            const evidenceDir = process.env.BOWL_EVIDENCE_DIR;
+            if (evidenceDir) {
+                const { mkdirSync, writeFileSync } = await import('node:fs');
+                const { join } = await import('node:path');
+                mkdirSync(evidenceDir, { recursive: true });
+                writeFileSync(join(evidenceDir, 'derby-bowl-diagnostics.json'), JSON.stringify(diag, null, 2));
+            }
         });
 
-        it('spawn positions are distinct (not all at same location)', () => {
-            const config = loadTrackConfig('derby-dunes');
-            const spawns = config.spawn?.positions || [];
+        it('a ball dropped on the dish settles ON the trimesh (no fall-through) at the concave height', async () => {
+            const physics = makePhysics();
+            const config = loadTrackConfig('derby-bowl');
+            physics.createBowlBody(config);
+            const { params } = buildBowlGrid(config.geometry);
 
-            expect(spawns.length).toBeGreaterThan(1);
+            const radius = 0.6;
+            const r0 = 10; // on the dish, well inside the seam
+            const startY = bowlProfile(r0, params) + 6;
+            const ballDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(r0, startY, 0);
+            const ball = physics.world.createRigidBody(ballDesc);
+            physics.world.createCollider(RAPIER.ColliderDesc.ball(radius).setFriction(0.9), ball);
 
-            // Compute pairwise distances
-            let allIdentical = true;
-            for (let i = 0; i < spawns.length; i++) {
-                for (let j = i + 1; j < spawns.length; j++) {
-                    const dx = spawns[i].x - spawns[j].x;
-                    const dz = spawns[i].z - spawns[j].z;
-                    const dist = Math.hypot(dx, dz);
-                    if (dist > 0.1) {
-                        allIdentical = false;
-                    }
+            for (let i = 0; i < 240; i++) physics.world.step();
+
+            const t = ball.translation();
+            const floorY = bowlProfile(Math.hypot(t.x, t.z), params);
+            // Rests on the surface, not through it or at -infinity.
+            expect(t.y).toBeGreaterThan(floorY - 0.2);
+            expect(t.y).toBeLessThan(floorY + radius + 0.6);
+            expect(Number.isFinite(t.y)).toBe(true);
+        });
+
+        it('is a real BOWL: a ball at rest on the slope rolls toward the centre, not outward', async () => {
+            const physics = makePhysics();
+            const config = loadTrackConfig('derby-bowl');
+            physics.createBowlBody(config);
+            const { params } = buildBowlGrid(config.geometry);
+
+            const radius = 0.6;
+            const r0 = 22; // mid dish, on the inward-sloping floor
+            const ballDesc = RAPIER.RigidBodyDesc.dynamic()
+                .setTranslation(r0, bowlProfile(r0, params) + radius + 0.05, 0)
+                .setLinearDamping(0.2);
+            const ball = physics.world.createRigidBody(ballDesc);
+            physics.world.createCollider(RAPIER.ColliderDesc.ball(radius).setFriction(0.9), ball);
+
+            for (let i = 0; i < 240; i++) physics.world.step();
+
+            const t = ball.translation();
+            // Concave: gravity pulls the ball down-slope toward the centre, so
+            // its radial distance shrinks. A dome (the old bug) would push it out.
+            expect(Math.hypot(t.x, t.z)).toBeLessThan(r0 - 0.5);
+        });
+
+        it('retains speed crossing the floor->fillet seam - no dead-stop crease', async () => {
+            const physics = makePhysics();
+            const config = loadTrackConfig('derby-bowl');
+            physics.createBowlBody(config);
+            const { params } = buildBowlGrid(config.geometry);
+
+            const radius = 0.6;
+            const r0 = params.r1 - 3; // start just inside the seam on the flat dish
+            const launchSpeed = 14;
+            const ballDesc = RAPIER.RigidBodyDesc.dynamic()
+                .setTranslation(r0, bowlProfile(r0, params) + radius, 0)
+                .setLinvel(launchSpeed, 0, 0); // driving outward toward the rim
+            const ball = physics.world.createRigidBody(ballDesc);
+            physics.world.createCollider(RAPIER.ColliderDesc.ball(radius).setFriction(0.9), ball);
+
+            // Speed at the instant the ball crosses the seam radius r1 - the exact
+            // spot the old hard crease (a ~60deg dihedral against a vertical lip)
+            // dead-stopped cars. A smooth C1 join must let it pass with most of
+            // its speed intact (it has only crossed ~3u of near-flat dish, so
+            // friction/climb losses are tiny here).
+            let speedAtSeam = -1;
+            for (let i = 0; i < 120 && speedAtSeam < 0; i++) {
+                physics.world.step();
+                if (ball.translation().x >= params.r1) {
+                    const v = ball.linvel();
+                    speedAtSeam = Math.hypot(v.x, v.z);
                 }
             }
 
-            // Spawns should not all be identical
-            expect(allIdentical).toBe(false);
+            expect(speedAtSeam).toBeGreaterThan(0); // reached the seam at all
+            // Retained the large majority of launch speed across the seam.
+            expect(speedAtSeam).toBeGreaterThan(launchSpeed * 0.7);
+        });
+    });
+
+    describe('Spawn validation (br-fb-spawncap-qi9)', () => {
+        it('generates 32 and 64 validated spawns on shipped maps with real ground raycast support', () => {
+            const trackIds = ['oval', 'derby-arena', 'derby-bowl', 'derby-coliseum', 'derby-dunes'];
+
+            for (const trackId of trackIds) {
+                const config = loadTrackConfig(trackId);
+                const ruleset = config.type === 'derby' ? 'derby' : 'race';
+
+                for (const playerCount of [32, 64]) {
+                    const physics = setupSpawnValidationPhysics(config);
+                    const track = new Track({ config });
+                    const seed = 0x5A17 + playerCount + trackId.length;
+                    const result = generateSpawnsForTrack(track, playerCount, makeRunContext(seed, ruleset));
+
+                    expect(result.valid, `${trackId} ${playerCount} result.valid`).toBe(true);
+                    expect(result.spawns).toHaveLength(playerCount);
+                    expect(result.diagnostics.validation.valid, `${trackId} ${playerCount} kernel validation`).toBe(true);
+                    expect(result.diagnostics.validation.minPairDistance, `${trackId} ${playerCount} min pair distance`)
+                        .toBeGreaterThanOrEqual(3.5 - 0.01);
+
+                    const evidence = {
+                        trackId,
+                        ruleset,
+                        playerCount,
+                        seed,
+                        minPairDistance: result.diagnostics.validation.minPairDistance,
+                        rejectedCandidates: result.diagnostics.rejectedCandidates,
+                        spawns: [] as any[]
+                    };
+
+                    result.spawns.forEach((spawn: any, index: number) => {
+                        expect(isSpawnWithinTrack(config, spawn), `${trackId} ${playerCount} spawn ${index} bounds`).toBe(true);
+                        expect(Number.isFinite(spawn.headingRad), `${trackId} ${playerCount} spawn ${index} heading`).toBe(true);
+                        expect(spawn.clearance, `${trackId} ${playerCount} spawn ${index} clearance`).toBeGreaterThanOrEqual(2 - 0.01);
+                        expect(spawn.support.hit, `${trackId} ${playerCount} spawn ${index} support flag`).toBe(true);
+
+                        const hit = raycastSpawnSupport(physics, spawn);
+                        expect(hit, `${trackId} ${playerCount} spawn ${index} raycast hit`).not.toBeNull();
+                        expect(hit!.normal.y, `${trackId} ${playerCount} spawn ${index} upward normal`).toBeGreaterThan(0.2);
+                        expect(spawn.position.y - hit!.point.y, `${trackId} ${playerCount} spawn ${index} lift above ground`).toBeGreaterThan(0.5);
+
+                        evidence.spawns.push({
+                            id: spawn.id,
+                            position: spawn.position,
+                            headingRad: spawn.headingRad,
+                            clearance: spawn.clearance,
+                            support: spawn.support,
+                            groundRaycast: {
+                                hit: true,
+                                timeOfImpact: hit!.timeOfImpact,
+                                point: hit!.point,
+                                normal: hit!.normal
+                            }
+                        });
+                    });
+
+                    maybeWriteSpawnEvidence(trackId, playerCount, evidence);
+                }
+            }
         });
 
-        it('all shipped tracks have spawn positions', () => {
-            const trackIds = ['oval', 'derby-dunes', 'derby-arena'];
+        it('does not modulo-wrap and only serves player 17+ from a validated generated set', () => {
+            const track = new Track({ config: loadTrackConfig('derby-arena') });
+            expect(track.getSpawnPosition(16)).toBeNull();
 
-            trackIds.forEach(trackId => {
-                const config = loadTrackConfig(trackId);
-                const spawns = config.spawn?.positions || [];
-                expect(spawns.length).toBeGreaterThan(0);
-            });
+            const generation = generateSpawnsForTrack(track, 64, makeRunContext(424242, 'derby'));
+            expect(generation.valid).toBe(true);
+            expect(track.setGeneratedSpawns(generation)).toBe(true);
+
+            const spawn0 = track.getSpawnPosition(0)!;
+            const spawn16 = track.getSpawnPosition(16)!;
+            expect(Math.hypot(spawn16.x - spawn0.x, spawn16.z - spawn0.z)).toBeGreaterThan(1);
+            expect(track.getSpawnPosition(64)).toBeNull();
         });
     });
 

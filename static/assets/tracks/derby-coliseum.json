@@ -8,7 +8,8 @@
     "diameter": 100,
     "wallHeight": 20,
     "wallSlope": 35,
-    "floorConcavity": 0.08
+    "floorConcavity": 0.08,
+    "filletRadius": 10
   },
   "visual": {
     "track": {

@@ -289,51 +289,24 @@ class Track extends Entity {
 
     /**
      * Get spawn position for a player index (no modulo wrapping).
-     * Removed the old modulo behavior that caused player 17 to spawn on player 1.
-     * Now returns null if index exceeds spawn set, or falls back to a default.
-     *
-     * For arbitrary player counts, first call setGeneratedSpawns() with results
-     * from generateSpawnsForTrack() in SpawnGenerator.
+     * Callers are expected to install a validated generated spawn set first when
+     * they need more capacity than the authored list provides.
      *
      * @param {number} playerIndex - 0-based player index
-     * @returns {Object} { x, y, z, rotation } (fallback if out of bounds)
+     * @returns {Object|null} { x, y, z, rotation } or null if out of bounds
      */
     getSpawnPosition(playerIndex) {
-        // Use generated spawns if available (preferred)
         const spawnSet = this.generatedSpawns || this.spawnPositions;
-
-        if (spawnSet.length === 0) {
-            // Default spawn if none defined
-            return {
-                x: 0,
-                y: this.defaultSpawnHeight,
-                z: 0,
-                rotation: 0
-            };
-        }
-
-        // FIXED: No modulo wrapping. Use boundary checking instead.
-        // If caller doesn't generate spawns for high player counts,
-        // fallback to origin (won't overlap) rather than wrapping to player 0.
-        if (playerIndex < 0 || playerIndex >= spawnSet.length) {
-            // Out of bounds: fallback to safe default
-            // Caller SHOULD have called setGeneratedSpawns() first if expecting many players.
-            console.warn(`Track.getSpawnPosition: index ${playerIndex} out of bounds for ${spawnSet.length} spawns. Returning default.`);
-            return {
-                x: 0,
-                y: this.defaultSpawnHeight,
-                z: 0,
-                rotation: 0
-            };
-        }
+        if (!Array.isArray(spawnSet) || spawnSet.length === 0) return null;
+        if (!Number.isInteger(playerIndex) || playerIndex < 0 || playerIndex >= spawnSet.length) return null;
 
         const spawn = spawnSet[playerIndex];
 
         return {
-            x: spawn.x || spawn.position?.x || 0,
-            y: spawn.y || spawn.position?.y || this.defaultSpawnHeight,
-            z: spawn.z || spawn.position?.z || 0,
-            rotation: spawn.rotation || spawn.headingRad || 0
+            x: Number.isFinite(spawn.position?.x) ? spawn.position.x : (spawn.x ?? 0),
+            y: Number.isFinite(spawn.position?.y) ? spawn.position.y : (spawn.y ?? this.defaultSpawnHeight),
+            z: Number.isFinite(spawn.position?.z) ? spawn.position.z : (spawn.z ?? 0),
+            rotation: Number.isFinite(spawn.headingRad) ? spawn.headingRad : (spawn.rotation ?? 0)
         };
     }
 
@@ -355,11 +328,12 @@ class Track extends Entity {
      * @returns {Object[]}
      */
     getAllSpawnPositions() {
-        return this.spawnPositions.map(spawn => ({
-            x: spawn.x,
-            y: spawn.y || this.defaultSpawnHeight,
-            z: spawn.z,
-            rotation: spawn.rotation || 0
+        const spawnSet = this.generatedSpawns || this.spawnPositions;
+        return spawnSet.map(spawn => ({
+            x: spawn.x ?? spawn.position?.x ?? 0,
+            y: spawn.y ?? spawn.position?.y ?? this.defaultSpawnHeight,
+            z: spawn.z ?? spawn.position?.z ?? 0,
+            rotation: spawn.rotation ?? spawn.headingRad ?? 0
         }));
     }
 
@@ -574,12 +548,38 @@ class Track extends Entity {
      * @returns {boolean}
      */
     isOutOfBounds(position, margin = 10) {
+        const geometry = this.config?.geometry || {};
+        const x = Number(position?.x) || 0;
+        const z = Number(position?.z) || 0;
+
+        if (geometry.type === 'oval') {
+            const radius = Math.hypot(x, z);
+            const inner = geometry.innerRadius || 35;
+            const outer = geometry.outerRadius || 55;
+            return radius < inner - margin || radius > outer + margin;
+        }
+
+        if (geometry.type === 'square') {
+            const half = (geometry.diameter || geometry.size || 70) / 2;
+            return Math.abs(x) > half + margin || Math.abs(z) > half + margin;
+        }
+
+        if (geometry.type === 'bowl') {
+            const radius = (geometry.diameter || 80) / 2;
+            return Math.hypot(x, z) > radius + margin;
+        }
+
+        if (geometry.type === 'dunes') {
+            const radius = geometry.radius || (geometry.diameter || 140) / 2;
+            return Math.hypot(x, z) > radius + margin;
+        }
+
         const bounds = this.getBounds();
         return (
-            position.x < bounds.minX - margin ||
-            position.x > bounds.maxX + margin ||
-            position.z < bounds.minZ - margin ||
-            position.z > bounds.maxZ + margin
+            x < bounds.minX - margin ||
+            x > bounds.maxX + margin ||
+            z < bounds.minZ - margin ||
+            z > bounds.maxZ + margin
         );
     }
 

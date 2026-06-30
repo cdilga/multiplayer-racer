@@ -1,0 +1,1648 @@
+{
+  "trackId": "oval",
+  "ruleset": "race",
+  "playerCount": 32,
+  "seed": 23099,
+  "minPairDistance": 3.945041,
+  "rejectedCandidates": {
+    "counts": {
+      "pair_distance_below_min": 32
+    },
+    "samples": [
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -0.541724,
+          "y": 0,
+          "z": -43.396619
+        },
+        "clearance": 8.29173,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 8.29173,
+          "nearestSpawnId": "spawn-0",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -0.62161,
+          "y": 0,
+          "z": -49.79612
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 8.371592,
+          "nearestSpawnId": "spawn-0",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -5.84986,
+          "y": 0,
+          "z": -43.003943
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 13.599867,
+          "nearestSpawnId": "spawn-2",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -6.712512,
+          "y": 0,
+          "z": -49.345539
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 14.462496,
+          "nearestSpawnId": "spawn-2",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -10.036815,
+          "y": 0,
+          "z": -42.223481
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 17.786825,
+          "nearestSpawnId": "spawn-4",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -11.516898,
+          "y": 0,
+          "z": -48.449985
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 19.266885,
+          "nearestSpawnId": "spawn-4",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -14.127109,
+          "y": 0,
+          "z": -41.036384
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 21.877124,
+          "nearestSpawnId": "spawn-6",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -16.21037,
+          "y": 0,
+          "z": -47.087832
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 23.960362,
+          "nearestSpawnId": "spawn-6",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -19.044158,
+          "y": 0,
+          "z": -38.998462
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 26.79418,
+          "nearestSpawnId": "spawn-8",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -21.852514,
+          "y": 0,
+          "z": -44.749387
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 29.602515,
+          "nearestSpawnId": "spawn-8",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -22.774973,
+          "y": 0,
+          "z": -36.94402
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 30.578372,
+          "nearestSpawnId": "spawn-10",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -26.133495,
+          "y": 0,
+          "z": -42.391986
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 33.883504,
+          "nearestSpawnId": "spawn-10",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -27.126037,
+          "y": 0,
+          "z": -33.878284
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 35.214669,
+          "nearestSpawnId": "spawn-12",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -31.12619,
+          "y": 0,
+          "z": -38.87416
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 38.876213,
+          "nearestSpawnId": "spawn-12",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -30.31607,
+          "y": 0,
+          "z": -31.056334
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 38.835802,
+          "nearestSpawnId": "spawn-14",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -34.786643,
+          "y": 0,
+          "z": -35.63607
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 42.65049,
+          "nearestSpawnId": "spawn-14",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -33.889706,
+          "y": 0,
+          "z": -27.111765
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 43.235574,
+          "nearestSpawnId": "spawn-16",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -38.887267,
+          "y": 0,
+          "z": -31.109813
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 47.258954,
+          "nearestSpawnId": "spawn-16",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -36.383936,
+          "y": 0,
+          "z": -23.659442
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 46.642581,
+          "nearestSpawnId": "spawn-18",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -41.749309,
+          "y": 0,
+          "z": -27.148392
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 50.840736,
+          "nearestSpawnId": "spawn-18",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -39.00648,
+          "y": 0,
+          "z": -19.02773
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 50.745811,
+          "nearestSpawnId": "spawn-20",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -44.758588,
+          "y": 0,
+          "z": -21.833663
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 55.166254,
+          "nearestSpawnId": "spawn-20",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -40.683697,
+          "y": 0,
+          "z": -15.112803
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 53.893792,
+          "nearestSpawnId": "spawn-22",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -46.683136,
+          "y": 0,
+          "z": -17.341419
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 58.491836,
+          "nearestSpawnId": "spawn-22",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -42.227705,
+          "y": 0,
+          "z": -10.019029
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 51.977052,
+          "nearestSpawnId": "spawn-24",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -48.454832,
+          "y": 0,
+          "z": -11.496489
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 55.772589,
+          "nearestSpawnId": "spawn-24",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -43.006404,
+          "y": 0,
+          "z": -5.831746
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 48.36665,
+          "nearestSpawnId": "spawn-26",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -49.348362,
+          "y": 0,
+          "z": -6.691726
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 51.912201,
+          "nearestSpawnId": "spawn-26",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -43.396843,
+          "y": 0,
+          "z": -0.523445
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 43.692146,
+          "nearestSpawnId": "spawn-28",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -49.796378,
+          "y": 0,
+          "z": -0.600635
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 46.915762,
+          "nearestSpawnId": "spawn-28",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -43.239182,
+          "y": 0,
+          "z": 3.73271
+        },
+        "clearance": 8.4,
+        "details": {
+          "radius": 43.4,
+          "wallClearance": 8.4,
+          "rampClearance": 39.834638,
+          "nearestSpawnId": "spawn-30",
+          "actualDistance": 3.2
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -49.615467,
+          "y": 0,
+          "z": 4.283155
+        },
+        "clearance": 5.2,
+        "details": {
+          "radius": 49.8,
+          "wallClearance": 5.2,
+          "rampClearance": 42.794502,
+          "nearestSpawnId": "spawn-30",
+          "actualDistance": 3.2
+        }
+      }
+    ]
+  },
+  "spawns": [
+    {
+      "id": "spawn-0",
+      "position": {
+        "x": -0.581667,
+        "y": 1.5,
+        "z": -46.59637
+      },
+      "headingRad": 1.583279,
+      "clearance": 8.331661,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.581667,
+          "y": 0.10000038146972656,
+          "z": -46.59637
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-1",
+      "position": {
+        "x": -0.501781,
+        "y": 1.5,
+        "z": -40.196868
+      },
+      "headingRad": 1.583279,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.501781,
+          "y": 0.10000038146972656,
+          "z": -40.196868
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-2",
+      "position": {
+        "x": -6.281186,
+        "y": 1.5,
+        "z": -46.174741
+      },
+      "headingRad": 1.705997,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -6.281186,
+          "y": 0.10000038146972656,
+          "z": -46.174741
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-3",
+      "position": {
+        "x": -5.418534,
+        "y": 1.5,
+        "z": -39.833146
+      },
+      "headingRad": 1.705997,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -5.418534,
+          "y": 0.10000038146972656,
+          "z": -39.833146
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-4",
+      "position": {
+        "x": -10.776856,
+        "y": 1.5,
+        "z": -45.336733
+      },
+      "headingRad": 1.804172,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -10.776856,
+          "y": 0.10000038146972656,
+          "z": -45.336733
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-5",
+      "position": {
+        "x": -9.296773,
+        "y": 1.5,
+        "z": -39.110229
+      },
+      "headingRad": 1.804172,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -9.296773,
+          "y": 0.10000038146972656,
+          "z": -39.110229
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-6",
+      "position": {
+        "x": -15.16874,
+        "y": 1.5,
+        "z": -44.062108
+      },
+      "headingRad": 1.902347,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -15.16874,
+          "y": 0.10000038146972656,
+          "z": -44.062108
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-7",
+      "position": {
+        "x": -13.085479,
+        "y": 1.5,
+        "z": -38.010659
+      },
+      "headingRad": 1.902347,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -13.085479,
+          "y": 0.10000038146972656,
+          "z": -38.010659
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-8",
+      "position": {
+        "x": -20.448336,
+        "y": 1.5,
+        "z": -41.873925
+      },
+      "headingRad": 2.025065,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -20.448336,
+          "y": 0.10000038146972656,
+          "z": -41.873925
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-9",
+      "position": {
+        "x": -17.639981,
+        "y": 1.5,
+        "z": -36.122999
+      },
+      "headingRad": 2.025065,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -17.639981,
+          "y": 0.10000038146972656,
+          "z": -36.122999
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-10",
+      "position": {
+        "x": -24.454234,
+        "y": 1.5,
+        "z": -39.668003
+      },
+      "headingRad": 2.12324,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -24.454234,
+          "y": 0.10000038146972656,
+          "z": -39.668003
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-11",
+      "position": {
+        "x": -21.095713,
+        "y": 1.5,
+        "z": -34.220037
+      },
+      "headingRad": 2.12324,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -21.095713,
+          "y": 0.10000038146972656,
+          "z": -34.220037
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-12",
+      "position": {
+        "x": -29.126114,
+        "y": 1.5,
+        "z": -36.376222
+      },
+      "headingRad": 2.245958,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -29.126114,
+          "y": 0.10000038146972656,
+          "z": -36.376222
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-13",
+      "position": {
+        "x": -25.125961,
+        "y": 1.5,
+        "z": -31.380346
+      },
+      "headingRad": 2.245958,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -25.125961,
+          "y": 0.10000038146972656,
+          "z": -31.380346
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-14",
+      "position": {
+        "x": -32.551357,
+        "y": 1.5,
+        "z": -33.346202
+      },
+      "headingRad": 2.344133,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -32.551357,
+          "y": 0.10000038146972656,
+          "z": -33.346202
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-15",
+      "position": {
+        "x": -28.080784,
+        "y": 1.5,
+        "z": -28.766466
+      },
+      "headingRad": 2.344133,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -28.080784,
+          "y": 0.10000038146972656,
+          "z": -28.766466
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-16",
+      "position": {
+        "x": -36.388487,
+        "y": 1.5,
+        "z": -29.110789
+      },
+      "headingRad": 2.466852,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -36.388487,
+          "y": 0.10000038146972656,
+          "z": -29.110789
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-17",
+      "position": {
+        "x": -31.390926,
+        "y": 1.5,
+        "z": -25.112741
+      },
+      "headingRad": 2.466852,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -31.390926,
+          "y": 0.10000038146972656,
+          "z": -25.112741
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-18",
+      "position": {
+        "x": -39.066622,
+        "y": 1.5,
+        "z": -25.403917
+      },
+      "headingRad": 2.565026,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -39.066622,
+          "y": 0.10000038146972656,
+          "z": -25.403917
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-19",
+      "position": {
+        "x": -33.701249,
+        "y": 1.5,
+        "z": -21.914967
+      },
+      "headingRad": 2.565026,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -33.701249,
+          "y": 0.10000038146972656,
+          "z": -21.914967
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-20",
+      "position": {
+        "x": -41.882534,
+        "y": 1.5,
+        "z": -20.430697
+      },
+      "headingRad": 2.687745,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -41.882534,
+          "y": 0.10000038146972656,
+          "z": -20.430697
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-21",
+      "position": {
+        "x": -36.130426,
+        "y": 1.5,
+        "z": -17.624764
+      },
+      "headingRad": 2.687745,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -36.130426,
+          "y": 0.10000038146972656,
+          "z": -17.624764
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-22",
+      "position": {
+        "x": -43.683416,
+        "y": 1.5,
+        "z": -16.227111
+      },
+      "headingRad": 2.78592,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -43.683416,
+          "y": 0.10000038146972656,
+          "z": -16.227111
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-23",
+      "position": {
+        "x": -37.683977,
+        "y": 1.5,
+        "z": -13.998495
+      },
+      "headingRad": 2.78592,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -37.683977,
+          "y": 0.10000038146972656,
+          "z": -13.998495
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-24",
+      "position": {
+        "x": -45.341268,
+        "y": 1.5,
+        "z": -10.757759
+      },
+      "headingRad": 2.908638,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -45.341268,
+          "y": 0.10000038146972656,
+          "z": -10.757759
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-25",
+      "position": {
+        "x": -39.114141,
+        "y": 1.5,
+        "z": -9.280299
+      },
+      "headingRad": 2.908638,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -39.114141,
+          "y": 0.10000038146972656,
+          "z": -9.280299
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-26",
+      "position": {
+        "x": -46.177383,
+        "y": 1.5,
+        "z": -6.261736
+      },
+      "headingRad": 3.006813,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -46.177383,
+          "y": 0.10000038146972656,
+          "z": -6.261736
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-27",
+      "position": {
+        "x": -39.835424,
+        "y": 1.5,
+        "z": -5.401755
+      },
+      "headingRad": 3.006813,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -39.835424,
+          "y": 0.10000038146972656,
+          "z": -5.401755
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-28",
+      "position": {
+        "x": -46.596611,
+        "y": 1.5,
+        "z": -0.56204
+      },
+      "headingRad": 3.129531,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -46.596611,
+          "y": 0.10000038146972656,
+          "z": -0.56204
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-29",
+      "position": {
+        "x": -40.197076,
+        "y": 1.5,
+        "z": -0.48485
+      },
+      "headingRad": 3.129531,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -40.197076,
+          "y": 0.10000038146972656,
+          "z": -0.48485
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-30",
+      "position": {
+        "x": -46.427325,
+        "y": 1.5,
+        "z": 4.007933
+      },
+      "headingRad": -3.055479,
+      "clearance": 8.4,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -46.427325,
+          "y": 0.10000038146972656,
+          "z": 4.007933
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-31",
+      "position": {
+        "x": -40.05104,
+        "y": 1.5,
+        "z": 3.457487
+      },
+      "headingRad": -3.055479,
+      "clearance": 5.2,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "oval-track"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -40.05104,
+          "y": 0.10000038146972656,
+          "z": 3.457487
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+Derby bowl cross-section (br-fb-bowltransition-3ij) - radial profile bowlProfile(r)
+R=40  floorDepth=4  filletRadius=8  seam r1=32  collider=trimesh (4032 tris)
+
+   8.0 |                                                        #
+   7.1 |
+   6.3 |
+   5.4 |
+   4.6 |
+   3.7 |
+   2.9 |                                                      #
+   2.0 |
+   1.1 |                                                   #
+   0.3 |                                        * * *  # #
+  -0.6 |                              *  * * *
+  -1.4 |                          * *
+  -2.3 |                   * * *
+  -3.1 |            * * *
+  -4.0 |* *  * * *
+       +---------------------------------------------------------
+        0                                                  r=40
+        (*) concave dish   (#) C1 fillet rising to rim   centre is the LOWEST point (was an inverted dome)
