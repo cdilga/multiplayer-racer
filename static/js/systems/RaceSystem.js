@@ -14,12 +14,15 @@
  *   race.update(dt);
  */
 
+import { RealClock } from '../engine/Clock.js';
+
 class RaceSystem {
     /**
      * @param {Object} options
      * @param {EventBus} [options.eventBus]
      * @param {Track} [options.track] - Track entity
      * @param {number} [options.laps=3] - Number of laps
+     * @param {number} [options.finishGraceMs=30000] - Finish grace duration in ms
      */
     constructor(options = {}) {
         this.eventBus = options.eventBus ||
@@ -27,13 +30,21 @@ class RaceSystem {
         this.track = options.track || null;
         this.totalLaps = options.laps || 3;
         this.mode = options.mode || 'race';
+        this.finishGraceMs = options.finishGraceMs || 30000;
+
+        // Deterministic run context (set by Engine). Race timers read sim time
+        // from it; falls back to wall time only when no context is attached.
+        this.runContext = options.runContext || null;
+        this._realClock = new RealClock();
 
         // Race state
-        this.state = 'idle';  // idle, countdown, racing, finished
+        this.state = 'idle';  // idle, countdown, racing, grace, finished
         this.countdownValue = 3;
         this.countdownTimer = 0;
         this.raceStartTime = 0;
         this.raceEndTime = 0;
+        this.firstFinisherTime = null;
+        this.graceStartTime = null;
 
         // Registered vehicles
         this.vehicles = new Map();  // vehicleId -> raceData
@@ -43,6 +54,24 @@ class RaceSystem {
 
         // State
         this.initialized = false;
+    }
+
+    /**
+     * Attach the deterministic run context.
+     * @param {import('../engine/GameRunContext.js').GameRunContext} ctx
+     */
+    setRunContext(ctx) {
+        this.runContext = ctx;
+    }
+
+    /**
+     * Current gameplay time in ms: sim time when a run context is attached
+     * (deterministic), else wall time via the allowlisted RealClock adapter.
+     * @returns {number}
+     * @private
+     */
+    _nowMs() {
+        return this.runContext ? this.runContext.clock.nowMs() : this._realClock.nowMs();
     }
 
     /**
@@ -90,6 +119,7 @@ class RaceSystem {
      */
     registerVehicle(vehicle) {
         const firstTarget = this._getFirstCheckpointTarget();
+        const pos = vehicle.position || { x: 0, y: 0, z: 0 };
         this.vehicles.set(vehicle.id, {
             vehicle: vehicle,
             currentLap: 0,
@@ -99,6 +129,7 @@ class RaceSystem {
             lastCheckpointTime: 0,
             totalTime: 0,
             position: 0,
+            prevPosition: { x: pos.x, y: pos.y, z: pos.z }, // Track previous frame position for crossing detection
             finished: false,
             finishTime: null
         });
@@ -173,7 +204,7 @@ class RaceSystem {
      */
     startRace() {
         this.state = 'racing';
-        this.raceStartTime = performance.now();
+        this.raceStartTime = this._nowMs();
 
         // Reset all vehicle race data
         const firstTarget = this._getFirstCheckpointTarget();
@@ -210,6 +241,8 @@ class RaceSystem {
             this._updateCountdown(dt);
         } else if (this.state === 'racing') {
             this._updateRace(dt);
+        } else if (this.state === 'grace') {
+            this._updateGrace(dt);
         }
     }
 
@@ -237,27 +270,30 @@ class RaceSystem {
      * @private
      */
     _updateRace(dt) {
-        const now = performance.now();
+        const now = this._nowMs();
 
         // Check checkpoints for each vehicle (dead cars don't progress)
         for (const [vehicleId, data] of this.vehicles) {
             if (data.finished || data.vehicle.isDead) continue;
 
             const vehicle = data.vehicle;
-            const pos = vehicle.position;
+            const currPos = vehicle.position;
 
-            // Check if crossed next checkpoint
-            if (this.track && this.track.isInCheckpoint(pos, data.nextCheckpoint)) {
+            // Check if crossed next checkpoint using frame-to-frame gate detection
+            if (this.track && this.track.checkCrossing(data.prevPosition, currPos, data.nextCheckpoint)) {
                 this._onCheckpointCrossed(vehicleId, data, now);
             }
+
+            // Update previous position for next frame
+            data.prevPosition = { x: currPos.x, y: currPos.y, z: currPos.z };
         }
 
         // Update positions
         this._updatePositions();
 
-        // Check if race is complete
-        if (this._isRaceComplete()) {
-            this._endRace();
+        // Check if first finisher crossed finish line; start grace
+        if (this._hasFirstFinisher() && !this._inGracePhase()) {
+            this._startGrace(now);
         }
     }
 
@@ -334,19 +370,22 @@ class RaceSystem {
         data.finished = true;
         data.finishTime = now - this.raceStartTime;
         data.vehicle.finished = true;
+        data.isLateJoin = data.isLateJoin || false;
 
         this.finishOrder.push({
             vehicleId,
             playerId: data.vehicle.playerId,
             finishTime: data.finishTime,
-            position: this.finishOrder.length + 1
+            position: this.finishOrder.length + 1,
+            isLateJoin: data.isLateJoin
         });
 
         this._emit('race:vehicleFinished', {
             vehicleId,
             position: this.finishOrder.length,
             finishTime: data.finishTime,
-            lapTimes: data.lapTimes
+            lapTimes: data.lapTimes,
+            isLateJoin: data.isLateJoin
         });
     }
 
@@ -388,11 +427,87 @@ class RaceSystem {
     }
 
     /**
-     * Check if race is complete
+     * Check if at least one vehicle has finished
      * @private
      */
-    _isRaceComplete() {
-        // Race complete when all vehicles finished
+    _hasFirstFinisher() {
+        return this.finishOrder.length > 0;
+    }
+
+    /**
+     * Check if in grace phase
+     * @private
+     */
+    _inGracePhase() {
+        return this.state === 'grace';
+    }
+
+    /**
+     * Start finish grace period
+     * @private
+     */
+    _startGrace(now) {
+        this.state = 'grace';
+        this.firstFinisherTime = now - this.raceStartTime;
+        this.graceStartTime = now;
+
+        this._emit('race:graceStarted', {
+            firstFinisherTime: this.firstFinisherTime,
+            graceDurationMs: this.finishGraceMs
+        });
+    }
+
+    /**
+     * Update grace phase
+     * @private
+     */
+    _updateGrace(dt) {
+        const now = this._nowMs();
+        const graceElapsed = now - this.graceStartTime;
+
+        // Check if grace has expired
+        if (graceElapsed >= this.finishGraceMs) {
+            this._endGraceAndRank(now);
+            return;
+        }
+
+        // Continue processing checkpoints during grace (late finishers can still cross)
+        for (const [vehicleId, data] of this.vehicles) {
+            if (data.finished || data.vehicle.isDead) continue;
+
+            const vehicle = data.vehicle;
+            const currPos = vehicle.position;
+
+            if (this.track && this.track.checkCrossing(data.prevPosition, currPos, data.nextCheckpoint)) {
+                this._onCheckpointCrossed(vehicleId, data, now);
+            }
+
+            // Update previous position for next frame
+            data.prevPosition = { x: currPos.x, y: currPos.y, z: currPos.z };
+        }
+
+        // Check if all vehicles finished (early close)
+        if (this._allVehiclesFinished()) {
+            this._endGraceAndRank(now);
+            return;
+        }
+
+        // Update positions for display during grace
+        this._updatePositions();
+
+        // Emit grace update
+        const timeRemaining = this.finishGraceMs - graceElapsed;
+        this._emit('race:graceUpdate', {
+            timeRemainingMs: timeRemaining,
+            unfinishedCount: this._countUnfinished()
+        });
+    }
+
+    /**
+     * Check if all vehicles are finished
+     * @private
+     */
+    _allVehiclesFinished() {
         for (const [id, data] of this.vehicles) {
             if (!data.finished) return false;
         }
@@ -400,13 +515,55 @@ class RaceSystem {
     }
 
     /**
-     * End the race
+     * Count unfinished vehicles
      * @private
      */
-    _endRace() {
-        this.state = 'finished';
-        this.raceEndTime = performance.now();
+    _countUnfinished() {
+        let count = 0;
+        for (const [id, data] of this.vehicles) {
+            if (!data.finished) count++;
+        }
+        return count;
+    }
 
+    /**
+     * End grace and rank remaining vehicles as DNF
+     * @private
+     */
+    _endGraceAndRank(now) {
+        this.state = 'finished';
+        this.raceEndTime = now;
+
+        // Rank unfinished vehicles by progress
+        const unfinished = Array.from(this.vehicles.entries())
+            .filter(([id, data]) => !data.finished)
+            .map(([id, data]) => ({
+                id,
+                data,
+                progress: this._calculateDNFProgress(data),
+                seatId: this._extractSeatId(data.vehicle)
+            }))
+            .sort((a, b) => {
+                if (b.progress !== a.progress) return b.progress - a.progress;
+                return a.seatId - b.seatId;
+            });
+
+        // Add DNF vehicles to results
+        let dnfPosition = this.finishOrder.length + 1;
+        for (const {id, data, seatId} of unfinished) {
+            this.finishOrder.push({
+                vehicleId: id,
+                playerId: data.vehicle.playerId,
+                finishTime: null,
+                position: dnfPosition,
+                isLateJoin: data.isLateJoin || false,
+                isDNF: true,
+                dnfProgress: this._calculateDNFProgress(data)
+            });
+            dnfPosition++;
+        }
+
+        // Emit finished event with full results
         const results = this.finishOrder.map((entry, index) => {
             const data = this.vehicles.get(entry.vehicleId);
             return {
@@ -415,14 +572,41 @@ class RaceSystem {
                 playerId: entry.playerId,
                 finishTime: entry.finishTime,
                 lapTimes: data?.lapTimes || [],
-                bestLapTime: data?.bestLapTime
+                bestLapTime: data?.bestLapTime,
+                isLateJoin: entry.isLateJoin,
+                isDNF: entry.isDNF || false,
+                dnfProgress: entry.dnfProgress
             };
         });
 
         this._emit('race:finished', {
             results,
-            totalTime: this.raceEndTime - this.raceStartTime
+            totalTime: this.raceEndTime - this.raceStartTime,
+            graceExpired: true,
+            graceTimeMs: this.finishGraceMs
         });
+    }
+
+    /**
+     * Calculate DNF progress for ranking (lap, checkpoint, distance estimate, lastProgressTime, seatId)
+     * @private
+     */
+    _calculateDNFProgress(data) {
+        const checkpointCount = this.track?.getCheckpointCount() || 4;
+        return {
+            lap: data.currentLap,
+            checkpoint: data.nextCheckpoint,
+            checkpointRatio: data.nextCheckpoint / checkpointCount,
+            lastProgressTimeMs: data.lastCheckpointTime
+        };
+    }
+
+    /**
+     * Extract or generate stable seat ID for tiebreaker display
+     * @private
+     */
+    _extractSeatId(vehicle) {
+        return vehicle.seatId || vehicle.id?.charCodeAt(0) || 0;
     }
 
     /**
@@ -464,7 +648,7 @@ class RaceSystem {
      */
     getRaceTime() {
         if (this.state !== 'racing') return 0;
-        return performance.now() - this.raceStartTime;
+        return this._nowMs() - this.raceStartTime;
     }
 
     /**
@@ -476,6 +660,71 @@ class RaceSystem {
     }
 
     /**
+     * Mark vehicle as late join
+     * @param {string} vehicleId
+     */
+    markAsLateJoin(vehicleId) {
+        const data = this.vehicles.get(vehicleId);
+        if (data) {
+            data.isLateJoin = true;
+        }
+    }
+
+    /**
+     * Check if vehicle can join active race (before first finisher, before 50% expected duration)
+     * @param {number} elapsedMs - Elapsed race time in ms
+     * @returns {boolean}
+     */
+    canJoinActiveRace(elapsedMs) {
+        if (this.state !== 'racing') return false;
+        if (this._hasFirstFinisher()) return false;
+
+        const expectedRaceDurationMs = this.totalLaps * 60000;
+        const threshold50Percent = expectedRaceDurationMs * 0.5;
+        return elapsedMs < threshold50Percent;
+    }
+
+    /**
+     * Check if late joiners should spectate or queue
+     * @returns {boolean} True if in grace phase or finished
+     */
+    shouldLateJoinSpectate() {
+        return this.state === 'grace' || this.state === 'finished';
+    }
+
+    /**
+     * Get current grace time remaining (for UI display)
+     * @returns {number} Time remaining in ms, or 0 if not in grace phase
+     */
+    getGraceTimeRemaining() {
+        if (this.state !== 'grace' || !this.graceStartTime) return 0;
+        const now = this._nowMs();
+        const elapsed = now - this.graceStartTime;
+        return Math.max(0, this.finishGraceMs - elapsed);
+    }
+
+    /**
+     * Get race results (finishers + DNF ranked by progress)
+     * @returns {Object[]}
+     */
+    getResults() {
+        return this.finishOrder.map((entry, index) => {
+            const data = this.vehicles.get(entry.vehicleId);
+            return {
+                position: index + 1,
+                vehicleId: entry.vehicleId,
+                playerId: entry.playerId,
+                finishTime: entry.finishTime,
+                lapTimes: data?.lapTimes || [],
+                bestLapTime: data?.bestLapTime,
+                isLateJoin: entry.isLateJoin || false,
+                isDNF: entry.isDNF || false,
+                restrictedPodium: entry.isLateJoin || entry.isDNF
+            };
+        });
+    }
+
+    /**
      * Reset race
      */
     reset() {
@@ -483,6 +732,8 @@ class RaceSystem {
         this.countdownValue = 3;
         this.countdownTimer = 0;
         this.finishOrder = [];
+        this.firstFinisherTime = null;
+        this.graceStartTime = null;
 
         for (const [id, data] of this.vehicles) {
             data.currentLap = 0;
@@ -492,8 +743,11 @@ class RaceSystem {
             data.position = 0;
             data.finished = false;
             data.finishTime = null;
+            data.isLateJoin = false;
 
-            data.vehicle.resetRaceState();
+            if (data.vehicle.resetRaceState) {
+                data.vehicle.resetRaceState();
+            }
         }
     }
 
