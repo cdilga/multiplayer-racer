@@ -66,16 +66,28 @@ durable identity, (e) host-loss grace, (f) input authorization + abuse hardening
 
 ---
 
-## 3. Vocabulary: modes & roles
+## 3. Vocabulary: topology, ruleset & roles
 
-**Modes** (a property of the *room*, fixed at creation, never changed mid-session):
-- `local` — one authoritative renderer (big screen); controllers are HUD-only.
+> Implemented by `br-modes-remote-play-design-48a.1`. Single source of truth:
+> `server/session_vocabulary.py` + `static/js/engine/sessionVocabulary.js`.
+> These three axes are **orthogonal** — topology never implies a ruleset, and
+> vice versa. (Earlier drafts called the room field `mode_kind`; it is now
+> `topology`, since the room already carries `mode` for the *ruleset*.)
+
+**Topology** — `room['topology']`, a property of the *room*, fixed at creation,
+never changed mid-session:
+- `local` *(default)* — one authoritative renderer (big screen); controllers are HUD-only.
 - `remote` — one authoritative host + every participant renders their own viewer.
+- `mixed` — some participants co-located on a shared screen, others remote.
 
-**Roles** (a property of a *participant*):
-- **Host** — runs the authoritative sim + canonical render. Exactly one per room.
-- **Driver** — owns a car, sends input. Zero-or-many.
-- **Viewer** — receives synced state and renders locally. In Remote, *everyone* is a Viewer.
+**Ruleset** — `room['mode']` (legacy key name), the game being played: `race` | `derby`.
+Chosen later at start, independent of topology.
+
+**Roles** (a property of a *participant*, sent on `game_joined` as `role`):
+- **host** — runs the authoritative sim + canonical render. Exactly one per room.
+- **controller** — owns a car, sends input. Zero-or-many. (The "Driver" in prose below.)
+- **viewer** — receives synced state and renders locally. In Remote, *everyone* is a viewer.
+- **spectator** — watches only, owns no car.
 
 Combos: Local = Host(screen, not a driver) + N Drivers(phones). Remote = Host-Driver +
 N Driver-Viewers + optional pure Viewers (spectators).
@@ -112,7 +124,7 @@ isn't the first time a user meets the concept.
 
 No UX change; "Local" just becomes an explicit, named codepath.
 
-1. Host opens `/host`, picks **Local** (default) → `create_room` (with `mode_kind:'local'`)
+1. Host opens `/host`, picks **Local** (default) → `create_room` (with `topology:'local'`)
    → code + QR shown.
 2. Players open `/player` (scan QR / type code), set a name → `join_game` → **waiting room**
    (car preview + mode badge). Copy: *"The big screen will show the race. Swipe to try your

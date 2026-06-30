@@ -3,8 +3,13 @@
 > Translates the design language ([02](02-design-language.md)) and the experience gaps
 > ([03](03-experience-flow.md)) into sequenced, dependency-aware work, ready to create as beads.
 >
-> **Status: PROPOSED — not yet created.** Two gates first (see §0). The `br create` block in §3
-> is ready to run on your say-so; I've not injected beads into your tracker unprompted.
+> **Status: ✅ CREATED in `br` 2026-06-29.** Epic **`br-skip-bin-arcade-design-language-5k3`**
+> (label `design-language`); 39 children — `…5k3.1`…`…5k3.38` map to the §2 codes in order (G1=.1,
+> G2=.2, 1.1=.3 … 7.3=.38), plus `…5k3.39` = the later-added **1.9 adaptive quality controller**.
+> All deps wired, no cycles, G1 closed (ratified). **Ready now:** `…5k3.2` (G2 perf spike) and
+> `…5k3.35` (P7.0 rubber-banding — see §0 update). Everything else is blocked behind the grade.
+> `.beads/issues.jsonl` is modified/uncommitted — commit per your workflow. The §3 `br create`
+> block is the original snapshot (pre the 1.9/7.2 reframe) — kept for reference.
 >
 > Doc altitude was "art-direction only" — so this plan names the *engineering shape* of each item
 > but leaves binding shader/library choices to the spike (Phase 0) and the implementing agent.
@@ -19,12 +24,15 @@ These are P0 and block everything downstream.
   neon retained as accent (diegetic signage + reserved loud palette + landing hero accent).
   `docs/design-brief.md` annotated as superseded. Phase 5 landing re-skin (5.3) is therefore
   **in scope** — but keep one neon hero element.
-- **G2 — Perf-budget spike.** The research's #1 open question ([00](00-research-report.md) §7):
-  what does stacking per-material PS1 shaders + a multi-effect post pipeline cost at party
-  framerates on the **host's** GPU (the host renders; phones don't)? Prototype the grade on the
-  worst plausible host (an old laptop / a phone-as-host) and set the internal render resolution +
-  which effects ship + whether vertex-snapping is on. **Also resolves the tone-mapping question**
-  (skip ACES vs not). Everything in Phase 1 inherits this budget.
+- **G2 — Perf spike to calibrate the adaptive ladder.** *(Direction set 2026-06-29: ship the lot,
+  adapt to hardware.)* The grade ships **all** effects; we do **not** cut by default. Instead the
+  spike measures per-effect GPU cost and per-tier fps on the worst plausible host (old laptop /
+  phone-as-host) to **calibrate the adaptive quality controller (1.9)**: a hardware-detection
+  heuristic + **dynamic resolution scaling** (render up to *native* when the host can, drop
+  internal res gracefully to hold target fps) + the order heavier effects shed
+  (vertex-snap/affine first, then grain/dither cost). **Also locks the tone-mapping choice** (skip
+  ACES vs not). Output = cost table + degrade-ladder thresholds + tone-map decision. Phase 1 ships
+  at a sensible default; the adaptive layer (1.9) and manual override (7.2) layer on after.
 
 > ⚠️ Cross-reference: there's an existing bead `br-captain-call-architecture-hardening-woq.2`
 > "ARCH render backend: WebGPU first-class with WebGL fallback." The grade's perf and the post
@@ -79,7 +87,7 @@ Epic: **`Lo-fi retro design language ("Skip Bin Arcade")`** — type `epic`, P1,
 | # | Title | Type | P | → | AC |
 |---|---|---|---|---|---|
 | G1 | Ratify lo-fi-retro pivot; supersede neon design-brief | question | 0 | — | Human decision recorded: full vs 3D-only. `design-brief.md` annotated as superseded. |
-| G2 | Perf/look spike: PS1 grade on worst-case host GPU | task | 0 | G1 | Prototype low-res+posterize+dither+fog+vignette+grain; record fps on old laptop & phone-as-host; decide internal res, shipped effects, vertex-snap on/off, tone-mapping choice. Written findings. |
+| G2 | Perf spike: calibrate adaptive-quality ladder for the grade | task | 0 | G1 | Ship ALL effects; measure per-effect cost + per-tier fps on old laptop & phone-as-host to calibrate 1.9 (HW heuristic + dynamic res scaling to native + shed-order) + lock tone-mapping. Output: cost table + ladder thresholds + tone-map decision. |
 
 ### P1 — Grade
 | # | Title | Type | P | → | AC |
@@ -92,6 +100,12 @@ Epic: **`Lo-fi retro design language ("Skip Bin Arcade")`** — type `epic`, P1,
 | 1.6 | Vignette + animated film grain | task | 2 | 1.2 | Camcorder grain + vignette over the frame; reduce-effects respects it (see 7.2). |
 | 1.7 | Blob/contact shadows replace soft PBR shadow maps | feature | 2 | 1.3 | Per-car dithered contact shadow; PCFSoft maps removed/optional; reads on host screen. |
 | 1.8 | (Optional, gated by G2) per-material vertex snap + affine warp | feature | 3 | 1.3 | Subtle wobble on world; cars likely exempt for readability; toggleable. |
+| 1.9 | Adaptive quality controller (HW detect + dynamic res scaling + effect tiering) | feature | 2 | G2,1.2 | Ship full grade, auto-degrade: HW/fps heuristic; dynamic res scaling (target native, drop gracefully); shed heaviest effects first per G2 ladder. Manual override (7.2) on top. Can be done whenever — not a blocker. |
+
+> **Architectural constraint (from the adaptive direction):** every grade effect in 1.1-1.6 and
+> 1.8 must be **runtime-toggleable with an intensity parameter**, so both the adaptive controller
+> (1.9) and the manual settings (7.2) can scale/disable it live. Build the effects with that hook
+> from the start.
 
 ### P2 — Readability / loud layer
 | # | Title | Type | P | → | AC |
@@ -104,7 +118,7 @@ Epic: **`Lo-fi retro design language ("Skip Bin Arcade")`** — type `epic`, P1,
 ### P3 — Juice
 | # | Title | Type | P | → | AC |
 |---|---|---|---|---|---|
-| 3.1 | Smash hit-stop (sim freeze ~80-120ms) on big impacts | feature | 1 | 1.3,2.3 | Brief freeze on heavy collision/elimination; event-driven (no per-tick log); tuneable. |
+| 3.1 | Smash hit-stop (1-3 frame sim freeze, sub-perceptual) on big impacts | feature | 1 | 1.3,2.3 | 1-3 frame freeze on heavy collision/elimination, in the "sweet spot" (reads as weight not lag); event-driven (no per-tick log); tuneable. NOT global slow-mo (shared screen) — mid-race uses localized camera punch-in. `[R, 00b GAP 1]` |
 | 3.2 | Impact screen-shake curves (tune existing/`three-screenshake`) | task | 1 | 3.1 | Shake scaled to impact, sharp decay; reuses existing camera shake, not a rebuild. |
 | 3.3 | Transient CA/posterize flash on smash (repurpose RGBShift) | feature | 2 | 1.2,3.1 | One-frame chromatic/posterize pulse on kill; reuses retired always-on CA. |
 | 3.4 | Chunky boxy debris on elimination | feature | 2 | 1.3 | Debris matches shape language; restyled from existing `ParticleSystem`. (Coord w/ `...woq.6` debris field.) |
@@ -140,8 +154,9 @@ Epic: **`Lo-fi retro design language ("Skip Bin Arcade")`** — type `epic`, P1,
 ### P7 — Retention & polish
 | # | Title | Type | P | → | AC |
 |---|---|---|---|---|---|
-| 7.1 | Bored-loser fix: fast derby re-entry / spectator-with-agency | feature | 2 | 4.3 | Eliminated players aren't just waiting; short rounds or re-entry. (Coord w/ `...3xv.8` derby late-joins.) |
-| 7.2 | Reduce-effects accessibility toggles (extend existing) | task | 2 | 1.6 | Host can dial dither/grain/scanline/shake; readability path preserved. |
+| 7.0 | Decide rubber-banding philosophy ("keep pack close" vs "no runaway leads") | question | 2 | — | Pick the catch-up model (recommend Mario-Kart "keep close" for non-gamers); define dead-zone + trailing-player tools. `[R, 00b GAP 2]` (Coord w/ `...3xv.9` comeback tuning.) |
+| 7.1 | Bored-loser fix: fast derby re-entry / spectator-with-agency | feature | 2 | 4.3,7.0 | Eliminated players aren't just waiting; short rounds or re-entry; trailing players get strongest catch-up tools, proximity kept. (Coord w/ `...3xv.8` derby late-joins.) |
+| 7.2 | Manual visual-effects settings (override adaptive quality + a11y) | task | 2 | 1.6,1.9 | Host override layer ON TOP of 1.9: force res scale, toggle/intensity each effect (dither/grain/scanline/bloom/fog/shake), reduce-effects a11y path. Manual wins over the auto heuristic. |
 | 7.3 | Lo-fi audio pass (crunchy engines, smash crunch, tape hiss) | feature | 3 | 3.1 | Audio matches the camcorder world; smash audio lands the hit. |
 
 **Cross-references (don't duplicate existing beads):** camera tiling/stability

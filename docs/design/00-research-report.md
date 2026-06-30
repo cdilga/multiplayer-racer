@@ -160,7 +160,7 @@ materials' vertex/fragment shaders**, not in a post pass. *(source: blog.maximeh
 
 ---
 
-## 4. Juice / game-feel for arcade party racers — UNDER-SOURCED
+## 4. Juice / game-feel for arcade party racers — UNDER-SOURCED *(✅ now filled in [00b](00b-research-report-gaps.md) GAP 1)*
 
 The surviving, adversarially-verified claim set did **not** include direct sources for the
 racer-specific juice catalogue (screen shake, speed lines, impact frames, FOV kick, particle
@@ -198,10 +198,10 @@ directly to a host-screen + phone-controller racer.
   takes a paragraph to explain why something is fun, it can probably be streamlined." For this
   racer: *"Drive your car, smash the others, last one rolling wins."* *(gamerant.com) (high)*
 
-**Not covered by verified claims:** win-condition design, comeback/rubber-banding mechanics, ideal
-session length. (A rubber-banding source — `gamedeveloper.com/design/rubber-banding-as-a-design-requirement` —
-was fetched but its claims didn't reach the verified top-25.) Treat those in
-[01](01-what-makes-a-good-game.md) as synthesis.
+**Not covered by verified claims in pass 1:** win-condition design, comeback/rubber-banding
+mechanics, ideal session length. *(✅ comeback/rubber-banding + Jackbox pacing now filled in
+[00b](00b-research-report-gaps.md) GAP 2-3; round-length/best-of-N numbers still did not survive
+verification — remain synthesis.)*
 
 ---
 

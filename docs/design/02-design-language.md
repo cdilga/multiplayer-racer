@@ -167,6 +167,18 @@ Optional, applied in the cars'/world's vertex+fragment shaders, *not* a post pas
 > *world*. Players, HUD, name tags, and danger are pushed the opposite way — kept crisp,
 > high-contrast, saturated. Never dither a health bar into illegibility.
 
+### Ship the lot, then adapt (perf direction, 2026-06-29)
+The grade ships with **all** effects on — we don't pre-cut to be safe. Quality scales at runtime:
+- **Dynamic resolution** — render up to **native** when the host can; drop the internal target
+  *gracefully* to hold framerate (the low-res look is the floor, not a fixed value).
+- **Effect tiering** — a hardware/fps heuristic sheds the heaviest effects first (vertex-snap/
+  affine, then grain/dither cost), calibrated by the G2 spike.
+- **Manual override on top** — host settings can force resolution and toggle/intensity any effect;
+  manual always wins over the auto heuristic, and there's a reduce-effects accessibility path.
+
+Implication for every effect: build it **runtime-toggleable with an intensity param** from the
+start (beads 1.9 + 7.2 in [04](04-implementation-plan.md)).
+
 ---
 
 ## 4. Skyboxes & atmosphere
@@ -208,8 +220,13 @@ Optional, applied in the cars'/world's vertex+fragment shaders, *not* a post pas
 
 ## 6. Typography & UI chrome (one system, all screens)
 
-`[S, research-flagged gap]`. The research is thin on cited UI specifics — this is reasoned from
-"same world everywhere" `[R, cohesion]`. The rule: **the UI lives inside the camcorder too.**
+`[S, research-flagged gap — stayed unverified after pass 2]`. Both research passes failed to
+surface cited UI/typography/transition specifics from named lo-fi indies ([00b](00b-research-report-gaps.md)
+GAP 4); the one robust, transferable finding is **rendering-stack continuity** — apply the same
+low-res / pixelated / dithered / limited-palette / no-AA treatment + bitmap fonts at the same
+internal resolution to the 2D UI. So this section is reasoned from "same world everywhere"
+`[R, cohesion + rendering-stack continuity]`, not from cited UI case studies. The rule: **the UI
+lives inside the camcorder too.**
 
 - **Two typefaces, max.**
   - **Display:** a chunky, slightly-condensed pixel/blocky face for big moments (room code,

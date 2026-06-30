@@ -108,11 +108,15 @@ overhead name tags / color markers always visible; health as **chunky segmented 
 gradients; shrinking-arena wall in DANGER red, pulsing; leader wears an unmistakable marker
 ([01](01-what-makes-a-good-game.md) §6).
 
-**The moment — the smash:** this is the most important second in the product and is currently
-**un-authored** ([01](01-what-makes-a-good-game.md) §3). The treatment:
-hit-stop freeze (~80-120ms) → screen shake scaled to impact → a one-frame CA/posterize **flash**
-(the repurposed neon/chromatic work) → chunky boxy debris → a host-screen **callout stinger**
-("X WRECKED Y") so the *room* reacts together `[R, ICI]`. Layer physical→visual→audio→social.
+**The moment — the smash:** the most important second in the product, currently **un-authored**
+([01](01-what-makes-a-good-game.md) §3). The treatment `[R, see 00b GAP 1]`:
+**1-3 frame hit-stop** (sub-perceptual "sweet spot", not the 80-120ms I first guessed) → screen
+shake scaled to impact → a one-frame CA/posterize **flash** (repurposed neon/chromatic work) →
+chunky boxy debris → a host-screen **callout stinger** ("X WRECKED Y") so the *room* reacts
+together `[R, ICI]`. Layer physical→visual→audio→social.
+⚠️ **Shared-screen rule:** do **not** global-slow-mo the whole TV for one player's smash — Burnout
+disables multiplayer slow-mo for exactly this reason `[R]`. Use a **localized camera punch-in** on
+the smash; save true global slow-mo for the single match-win beat (Beat 5).
 
 **Gaps:**
 - **Smash juice doesn't exist yet** — highest-value addition in the whole project. `[S]`

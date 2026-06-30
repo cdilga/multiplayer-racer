@@ -6,11 +6,13 @@
 | # | Doc | What it is |
 |---|-----|------------|
 | — | [README.md](README.md) | This index + the neon→retro pivot callout |
-| 00 | [00-research-report.md](00-research-report.md) | Cited deep-research: the lo-fi technique set, the "tells", party-game design, with sources + confidence |
+| 00 | [00-research-report.md](00-research-report.md) | Cited deep-research (pass 1): the lo-fi technique set, the "tells", party-game design, with sources + confidence |
+| 00b | [00b-research-report-gaps.md](00b-research-report-gaps.md) | Cited deep-research (pass 2): fills the gaps pass 1 flagged — juice/game-feel, comeback/rubber-banding, session pacing, lo-fi UI |
 | 01 | [01-what-makes-a-good-game.md](01-what-makes-a-good-game.md) | First-principles: what makes *this* party racer good. Goals set **before** visuals. |
 | 02 | [02-design-language.md](02-design-language.md) | **The core artefact.** The lo-fi-retro / boxy visual language across every surface. |
 | 03 | [03-experience-flow.md](03-experience-flow.md) | The whole funnel — landing → join → lobby → countdown → race/derby → results → loop — with the treatment and the gaps at each beat. |
 | 04 | [04-implementation-plan.md](04-implementation-plan.md) | Planning pass + proposed bead graph to wire the language in. |
+| 05 | [05-grade-performance-spike.md](05-grade-performance-spike.md) | G2 evidence note: host-grade ladder, tone-map decision, automated screenshots/metrics, and residual perf risks. |
 
 ---
 
