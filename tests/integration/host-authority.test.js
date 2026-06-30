@@ -1,264 +1,129 @@
 /**
- * Host Authority and Security Tests
+ * Host Authority — CLIENT contract coverage
  *
- * Validates that the host capability token system prevents unauthorized
- * host-only actions from non-hosts or stale host sessions.
+ * The server (server/app.py) rejects host-only events unless they carry the
+ * server-minted host_token + host_epoch (see server/test_socket_security.py for
+ * the server-side enforcement proof). This suite proves the OTHER half of the
+ * contract: that the client (NetworkSystem) actually captures those credentials
+ * from room_created / room_reclaimed and attaches them to every host-only emit.
  *
- * Current hardened endpoints:
- * - weapon_pickup: validates token + epoch
- * - weapon_fired: validates token + epoch
- * - reset_player_position: validates token + epoch
- * - start_game: validates token + epoch (already had this)
- * - end_game: validates token + epoch (already had this)
- * - return_to_lobby: validates token + epoch (already had this)
- * - vehicle_states: validates token + epoch (already had this)
+ * This directly guards the regression where the client sent NO token, so the
+ * server silently rejected the legitimate host (could not start a game / no
+ * state sync). These tests drive the real NetworkSystem code with a recording
+ * mock socket — no tautologies, no duplicated logic.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { NetworkSystem } from '../../static/js/systems/NetworkSystem.js';
 
-describe('Host Authority Validation', () => {
-    let mockHost;
-    let mockRoom;
+function makeMockSocket() {
+    const handlers = {};
+    const emits = [];
+    return {
+        on(ev, fn) { (handlers[ev] = handlers[ev] || []).push(fn); },
+        once(ev, fn) { (handlers[ev] = handlers[ev] || []).push(fn); },
+        emit(ev, payload) { emits.push({ ev, payload }); },
+        disconnect() {},
+        // test helpers
+        _fire(ev, data) { (handlers[ev] || []).forEach((fn) => fn(data)); },
+        _emits: emits,
+        _last(ev) { return [...emits].reverse().find((e) => e.ev === ev); },
+    };
+}
+
+const HOST_ONLY_EVENTS = [
+    'start_game', 'end_game', 'vehicle_states', 'mode_selected',
+    'weapon_pickup', 'weapon_fired', 'return_to_lobby',
+];
+
+describe('Host authority — client attaches token/epoch to host-only emits', () => {
+    let net;
+    let socket;
+    const TOKEN = '1700000000:abc123:deadbeefsignature';
+    const EPOCH = 1;
 
     beforeEach(() => {
-        // Setup mock host and room state
-        mockHost = {
-            sid: 'host_123',
-            token: 'valid_token_abc:xyz:sig',
-            epoch: 1
-        };
-
-        mockRoom = {
-            host_sid: 'host_123',
-            host_token: 'valid_token_abc:xyz:sig',
-            host_epoch: 1,
-            game_state: 'waiting',
-            players: {
-                player_sid_1: { id: 1, name: 'Player1' }
-            }
-        };
-    });
-
-    describe('Token Authority Checks', () => {
-        it('should reject weapon_pickup from wrong SID (not current host)', () => {
-            // Attacker with stale host SID should be rejected even with valid token
-            // (because token-verification includes SID check)
-            const attackerSid = 'attacker_456';
-            const attackerPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                player_id: 1,
-                weaponId: 'missile'
-            };
-
-            // In app.py, _check_host_authority validates:
-            // - room exists
-            // - request.sid matches room['host_sid']
-            // - token matches stored token
-            // - epoch matches stored epoch
-            // An attacker with SID != host_sid will fail at the first check.
-
-            expect(attackerSid).not.toBe(mockRoom.host_sid);
-        });
-
-        it('should reject weapon_pickup from non-host with stale token', () => {
-            const staleToken = 'old_token:nonce:sig';
-            const staleEpoch = mockRoom.host_epoch - 1;
-
-            // Stale epoch indicates the room was reclaimed by another connection
-            expect(staleEpoch).not.toBe(mockRoom.host_epoch);
-        });
-
-        it('should reject reset_player_position from non-host SID', () => {
-            const attackerPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                player_id: 1,
-                position: [0, 0, 0],
-                rotation: 0
-            };
-
-            // reset_player_position now requires host_token and host_epoch
-            // (previously had NO authority check at all!)
-            expect(attackerPayload.host_token).toBe(mockHost.token);
-            expect(attackerPayload.host_epoch).toBe(mockHost.epoch);
+        socket = makeMockSocket();
+        net = new NetworkSystem({ socket, eventBus: { emit() {} } });
+        net._setupSocketHandlers();
+        // Server issues credentials on room creation.
+        socket._fire('room_created', {
+            room_code: 'ABCD',
+            join_url: 'http://x/ABCD',
+            topology: 'local',
+            host_token: TOKEN,
+            host_epoch: EPOCH,
         });
     });
 
-    describe('Epoch Invalidation', () => {
-        it('should prevent stale events after host reclaim', () => {
-            // Host reclaims the room -> epoch increments
-            const oldEpoch = 1;
-            const newEpoch = 2;
-
-            // A stale event with epoch=1 should be rejected once epoch=2 is active
-            expect(oldEpoch).toBeLessThan(newEpoch);
-        });
-
-        it('should prevent out-of-order reclaim events', () => {
-            // If a host loses connection and reconnects:
-            // First reclaim: epoch 1 -> 2
-            // Server recycle before reclaim was delivered
-            // Stale reclaim with epoch=2 arrives after new host set epoch=3
-            // Should be rejected by epoch check
-
-            const firstReclaim = { epoch: 2 };
-            const currentEpoch = 3;
-
-            expect(firstReclaim.epoch).not.toBe(currentEpoch);
-        });
+    it('captures host_token/host_epoch from room_created', () => {
+        expect(net.hostToken).toBe(TOKEN);
+        expect(net.hostEpoch).toBe(EPOCH);
+        expect(net.roomCode).toBe('ABCD');
+        expect(net.isHost).toBe(true);
     });
 
-    describe('Hardened Endpoints', () => {
-        it('weapon_pickup requires token and epoch', () => {
-            // Before hardening: only checked host_sid
-            // After hardening: checks token + epoch via _check_host_authority
+    it('every host-only emit carries the captured token + epoch', () => {
+        net.startGame({ laps: 3 });
+        net.endGame({ results: [] });
+        net.broadcastVehicleStates([{ id: 1 }]);
+        net.broadcastModeSelected('derby');
+        net.sendWeaponPickup(1, { weaponId: 'missile' });
+        net.sendWeaponFired(1, { weaponId: 'missile' });
+        net.returnToLobby();
 
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                player_id: 1,
-                weaponId: 'missile'
-            };
-
-            // Validate payload has required fields
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('weapon_fired requires token and epoch', () => {
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                player_id: 1,
-                weaponId: 'missile'
-            };
-
-            // Same hardening as weapon_pickup
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('reset_player_position requires token and epoch', () => {
-            // CRITICAL: Before hardening, this had NO authority check!
-            // Non-host could reset any player's position!
-
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                player_id: 1,
-                position: [0, 1, 2],
-                rotation: 45
-            };
-
-            // Now requires authority
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('start_game requires token and epoch (already had this)', () => {
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch
-            };
-
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('end_game requires token and epoch (already had this)', () => {
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                results: []
-            };
-
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('return_to_lobby requires token and epoch (already had this)', () => {
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch
-            };
-
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
-
-        it('vehicle_states requires token and epoch (already had this)', () => {
-            const validPayload = {
-                room_code: 'TEST',
-                host_token: mockHost.token,
-                host_epoch: mockHost.epoch,
-                vehicles: []
-            };
-
-            expect(validPayload.host_token).toBeDefined();
-            expect(validPayload.host_epoch).toBeDefined();
-        });
+        for (const ev of HOST_ONLY_EVENTS) {
+            const last = net.socket._last(ev);
+            expect(last, `no emit recorded for ${ev}`).toBeTruthy();
+            expect(last.payload.host_token, `${ev} missing host_token`).toBe(TOKEN);
+            expect(last.payload.host_epoch, `${ev} missing host_epoch`).toBe(EPOCH);
+            expect(last.payload.room_code).toBe('ABCD');
+        }
     });
 
-    describe('Rejection Scenarios', () => {
-        it('rejects host event with invalid token format', () => {
-            const malformedToken = 'invalid:token:format:extra';
-            // Server verifies token format and signature
-            // Malformed tokens should be rejected
-            expect(malformedToken.split(':').length).not.toBe(3);
-        });
-
-        it('rejects host event with missing token', () => {
-            const payload = {
-                room_code: 'TEST',
-                // host_token: undefined,
-                host_epoch: 1
-            };
-
-            // _check_host_authority requires both token and epoch
-            expect(payload.host_token).toBeUndefined();
-        });
-
-        it('rejects host event with missing epoch', () => {
-            const payload = {
-                room_code: 'TEST',
-                host_token: mockHost.token
-                // host_epoch: undefined
-            };
-
-            // _check_host_authority requires both token and epoch
-            expect(payload.host_epoch).toBeUndefined();
-        });
-
-        it('rejects non-dict payloads (malformed messages)', () => {
-            // All hardened endpoints now check `if not isinstance(data, dict):`
-            const malformedPayload = 'not a dict';
-
-            expect(typeof malformedPayload).not.toBe('object');
-        });
+    it('start_game still forwards its own options alongside the auth fields', () => {
+        net.startGame({ laps: 5, mode: 'race' });
+        const p = net.socket._last('start_game').payload;
+        expect(p.host_token).toBe(TOKEN);
+        expect(p.laps).toBe(5);
+        expect(p.mode).toBe('race');
     });
 
-    describe('Logging and Diagnostics', () => {
-        it('logs rejected host authority attempts without leaking secrets', () => {
-            // Diagnostic log should show:
-            // - room code
-            // - reason (SID mismatch, token mismatch, stale epoch)
-            // But NOT:
-            // - actual token values
-            // - actual SIDs
-            // - other secrets
+    it('reclaim_room on reconnect carries the token (so reclaim is authorized)', () => {
+        socket._fire('connect');
+        const reclaim = net.socket._last('reclaim_room');
+        expect(reclaim).toBeTruthy();
+        expect(reclaim.payload.room_code).toBe('ABCD');
+        expect(reclaim.payload.host_token).toBe(TOKEN);
+        expect(reclaim.payload.host_epoch).toBe(EPOCH);
+    });
 
-            // Example log: "weapon_pickup rejected for TEST: invalid host authority"
-            // Good: room code visible, specific rejection reason
-            // Safe: no token/SID in message
+    it('adopts the rotated token/epoch from room_reclaimed', () => {
+        const NEW_TOKEN = '1700000001:xyz789:newsignature';
+        socket._fire('room_reclaimed', {
+            room_code: 'ABCD', topology: 'local',
+            host_token: NEW_TOKEN, host_epoch: 2,
         });
+        expect(net.hostToken).toBe(NEW_TOKEN);
+        expect(net.hostEpoch).toBe(2);
+        net.startGame();
+        const p = net.socket._last('start_game').payload;
+        expect(p.host_token).toBe(NEW_TOKEN);   // uses the rotated token
+        expect(p.host_epoch).toBe(2);
+    });
+});
+
+describe('Host authority — without credentials the client sends none (server will reject)', () => {
+    it('a NetworkSystem that never received room_created emits null auth (the bug guard)', () => {
+        const socket = makeMockSocket();
+        const net = new NetworkSystem({ socket, eventBus: { emit() {} } });
+        net._setupSocketHandlers();
+        net.roomCode = 'ZZZZ'; // pretend we know a code but never got credentials
+        net.startGame();
+        const p = net.socket._last('start_game').payload;
+        // Null token is exactly what the server rejects — proving the credential
+        // capture above is load-bearing, not decorative.
+        expect(p.host_token).toBeNull();
+        expect(p.host_epoch).toBeNull();
     });
 });

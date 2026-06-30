@@ -13,6 +13,8 @@
  *   network.createRoom();
  */
 
+import { DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
+
 class NetworkSystem {
     /**
      * @param {Object} options
@@ -29,6 +31,15 @@ class NetworkSystem {
         // Room state
         this.roomCode = null;
         this.isHost = false;
+        // Host capability token + epoch (server-minted). The server rejects
+        // host-only events (start_game, vehicle_states, weapon_*, end_game,
+        // return_to_lobby, mode_selected, reclaim) unless these accompany them,
+        // so we capture them from room_created/room_reclaimed and attach them to
+        // every host-only emit. Without this the legitimate host is rejected.
+        this.hostToken = null;
+        this.hostEpoch = null;
+        // Room topology (local/remote/mixed), fixed once the room is created.
+        this.topology = DEFAULT_TOPOLOGY;
 
         // Connected players
         this.players = new Map();  // playerId -> playerData
@@ -95,6 +106,29 @@ class NetworkSystem {
     }
 
     /**
+     * Store the server-minted host capability token + epoch from a
+     * room_created/room_reclaimed payload (if present).
+     * @param {Object} data
+     * @private
+     */
+    _captureHostCredentials(data) {
+        if (!data) return;
+        if (data.host_token != null) this.hostToken = data.host_token;
+        if (data.host_epoch != null) this.hostEpoch = data.host_epoch;
+    }
+
+    /**
+     * Host-authority fields to attach to every host-only emit. The server's
+     * _check_host_authority requires both; sending them lets the legitimate
+     * host through and lets the server reject foreign/stale senders.
+     * @returns {{host_token: (string|null), host_epoch: (number|null)}}
+     * @private
+     */
+    _hostAuth() {
+        return { host_token: this.hostToken, host_epoch: this.hostEpoch };
+    }
+
+    /**
      * Setup Socket.IO event handlers
      * @private
      */
@@ -110,7 +144,10 @@ class NetworkSystem {
             // the still-displayed code hit "room doesn't exist". Reclaiming
             // re-binds (or recreates) the room under the same code.
             if (this.isHost && this.roomCode) {
-                this.socket.emit('reclaim_room', { room_code: this.roomCode });
+                // reclaim_room requires the current host token; the server
+                // verifies it and rotates it (we adopt the new one via
+                // room_reclaimed).
+                this.socket.emit('reclaim_room', { room_code: this.roomCode, ...this._hostAuth() });
             }
         });
 
@@ -123,9 +160,28 @@ class NetworkSystem {
         this.socket.on('room_created', (data) => {
             this.roomCode = data.room_code;
             this.isHost = true;
+            // Capture the host capability token/epoch so subsequent host-only
+            // emits are accepted by the server.
+            this._captureHostCredentials(data);
+            // Server is authoritative on topology; carry it to lobby consumers.
+            this.topology = normalizeTopology(data.topology);
             this._emit('network:roomCreated', {
                 roomCode: data.room_code,
-                joinUrl: data.join_url
+                joinUrl: data.join_url,
+                topology: this.topology
+            });
+        });
+
+        // After a reclaim the server ROTATES the token and bumps the epoch;
+        // adopt the new credentials or every later host-only emit is rejected.
+        this.socket.on('room_reclaimed', (data) => {
+            if (data && data.room_code) this.roomCode = data.room_code;
+            this.isHost = true;
+            this._captureHostCredentials(data);
+            this.topology = normalizeTopology(data && data.topology);
+            this._emit('network:roomReclaimed', {
+                roomCode: this.roomCode,
+                topology: this.topology
             });
         });
 
@@ -243,17 +299,22 @@ class NetworkSystem {
     }
 
     /**
-     * Create a new game room
-     * @returns {Promise<string>} Room code
+     * Create a new game room.
+     *
+     * @param {string} [topology='local'] - Room topology fixed at creation:
+     *   'local' (big screen renders, phones are controllers - today's default),
+     *   'remote', or 'mixed'. Unknown values coerce to 'local' server-side.
+     * @returns {Promise<string>} Room code. The room's server-confirmed
+     *   topology is also stored on `this.topology`.
      */
-    createRoom() {
+    createRoom(topology = DEFAULT_TOPOLOGY) {
         return new Promise((resolve, reject) => {
             if (!this.connected) {
                 reject(new Error('Not connected to server'));
                 return;
             }
 
-            this.socket.emit('create_room');
+            this.socket.emit('create_room', { topology: normalizeTopology(topology) });
 
             // Wait for room_created event
             const timeout = setTimeout(() => {
@@ -262,6 +323,12 @@ class NetworkSystem {
 
             this.socket.once('room_created', (data) => {
                 clearTimeout(timeout);
+                // Capture host credentials here too: this `once` can fire before
+                // the persistent on('room_created') handler, and host-only emits
+                // need the token immediately.
+                this._captureHostCredentials(data);
+                // Server is authoritative on the room's topology.
+                this.topology = normalizeTopology(data.topology);
                 resolve(data.room_code);
             });
         });
@@ -274,7 +341,7 @@ class NetworkSystem {
      */
     returnToLobby() {
         if (!this.roomCode) return;
-        this.socket.emit('return_to_lobby', { room_code: this.roomCode });
+        this.socket.emit('return_to_lobby', { room_code: this.roomCode, ...this._hostAuth() });
     }
 
     /**
@@ -284,6 +351,7 @@ class NetworkSystem {
     startGame(options = {}) {
         this.socket.emit('start_game', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             ...options
         });
         this._emit('network:gameStarting');
@@ -296,6 +364,7 @@ class NetworkSystem {
     endGame(results = {}) {
         this.socket.emit('end_game', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             results
         });
     }
@@ -318,6 +387,7 @@ class NetworkSystem {
     broadcastVehicleStates(vehicleStates) {
         this.socket.emit('vehicle_states', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             vehicles: vehicleStates
         });
     }
@@ -340,6 +410,7 @@ class NetworkSystem {
     broadcastModeSelected(mode) {
         this.socket.emit('mode_selected', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             mode
         });
     }
@@ -352,6 +423,7 @@ class NetworkSystem {
     sendWeaponPickup(playerId, weaponData) {
         this.socket.emit('weapon_pickup', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             player_id: playerId,
             ...weaponData
         });
@@ -365,6 +437,7 @@ class NetworkSystem {
     sendWeaponFired(playerId, weaponData) {
         this.socket.emit('weapon_fired', {
             room_code: this.roomCode,
+            ...this._hostAuth(),
             player_id: playerId,
             ...weaponData
         });

@@ -1,18 +1,41 @@
 """
 Host Capability Token and Socket Security Tests
+
+Two layers:
+  1. TestHostCapabilityTokens - unit tests of _generate/_verify/_check helpers.
+     (_check_host_authority reads the Flask `request` proxy, so we patch it with
+     an explicit object — a bare patch('...request') makes mock introspect the
+     werkzeug LocalProxy and raises "Working outside of request context".)
+  2. TestHostAuthoritySocketEnforcement - real Flask-SocketIO test-client tests
+     that drive the actual handlers and prove rejection/acceptance end-to-end
+     (the project pattern from test_socket_routing.py).
 """
 
 import unittest
 import time
-from unittest.mock import patch, MagicMock
+from types import SimpleNamespace
+from unittest.mock import patch
+
 try:
-    from app import app, game_rooms, _generate_host_token, _verify_host_token, _check_host_authority, _new_room_state
+    from app import (
+        app, socketio, game_rooms,
+        _generate_host_token, _verify_host_token, _check_host_authority, _new_room_state,
+    )
 except ImportError:
-    from server.app import app, game_rooms, _generate_host_token, _verify_host_token, _check_host_authority, _new_room_state
+    from server.app import (
+        app, socketio, game_rooms,
+        _generate_host_token, _verify_host_token, _check_host_authority, _new_room_state,
+    )
+
+
+def _patch_request_sid(sid):
+    """Replace server.app.request with a stub exposing .sid (avoids LocalProxy
+    introspection that fails outside a real request context)."""
+    return patch('server.app.request', SimpleNamespace(sid=sid))
 
 
 class TestHostCapabilityTokens(unittest.TestCase):
-    """Test host token generation, verification, and authority checks."""
+    """Unit tests for host token generation, verification, and authority checks."""
 
     def setUp(self):
         game_rooms.clear()
@@ -24,7 +47,6 @@ class TestHostCapabilityTokens(unittest.TestCase):
         """Generated tokens should be valid and unique."""
         token1 = _generate_host_token()
         token2 = _generate_host_token()
-
         self.assertIsInstance(token1, str)
         self.assertIsInstance(token2, str)
         self.assertNotEqual(token1, token2)
@@ -32,8 +54,7 @@ class TestHostCapabilityTokens(unittest.TestCase):
 
     def test_token_verification_valid(self):
         """Valid token should pass verification."""
-        token = _generate_host_token()
-        self.assertTrue(_verify_host_token(token))
+        self.assertTrue(_verify_host_token(_generate_host_token()))
 
     def test_token_verification_invalid_format(self):
         """Malformed token should fail verification."""
@@ -44,73 +65,218 @@ class TestHostCapabilityTokens(unittest.TestCase):
 
     def test_token_verification_expired(self):
         """Expired token should fail verification."""
-        timestamp = int(time.time()) - 7200  # 2 hours ago
-        nonce = 'test'
         import hmac
         import hashlib
+        timestamp = int(time.time()) - 7200  # 2 hours ago
+        nonce = 'test'
         message = f"{timestamp}:{nonce}".encode()
         secret = app.config['SECRET_KEY'].encode()
         signature = hmac.new(secret, message, hashlib.sha256).hexdigest()
         expired_token = f"{timestamp}:{nonce}:{signature}"
-
         self.assertFalse(_verify_host_token(expired_token, max_age_seconds=3600))
 
     def test_check_host_authority_valid(self):
         """Valid host authority check should return True."""
-        room_code = 'TEST'
         room_state = _new_room_state('host_sid_123')
-        game_rooms[room_code] = room_state
-
-        with patch('server.app.request') as mock_request:
-            mock_request.sid = 'host_sid_123'
-            is_valid, msg = _check_host_authority(room_code, room_state['host_token'], room_state['host_epoch'])
-            self.assertTrue(is_valid)
-            self.assertIsNone(msg)
+        game_rooms['TEST'] = room_state
+        with _patch_request_sid('host_sid_123'):
+            is_valid, msg = _check_host_authority('TEST', room_state['host_token'], room_state['host_epoch'])
+        self.assertTrue(is_valid)
+        self.assertIsNone(msg)
 
     def test_check_host_authority_invalid_sid(self):
         """Wrong socket ID should fail authority check."""
-        room_code = 'TEST'
         room_state = _new_room_state('host_sid_123')
-        game_rooms[room_code] = room_state
-
-        with patch('server.app.request') as mock_request:
-            mock_request.sid = 'attacker_sid_456'
-            is_valid, msg = _check_host_authority(room_code, room_state['host_token'], room_state['host_epoch'])
-            self.assertFalse(is_valid)
-            self.assertIn('Not the current host', msg)
+        game_rooms['TEST'] = room_state
+        with _patch_request_sid('attacker_sid_456'):
+            is_valid, msg = _check_host_authority('TEST', room_state['host_token'], room_state['host_epoch'])
+        self.assertFalse(is_valid)
+        self.assertIn('Not the current host', msg)
 
     def test_check_host_authority_invalid_token(self):
         """Wrong token should fail authority check."""
-        room_code = 'TEST'
         room_state = _new_room_state('host_sid_123')
-        game_rooms[room_code] = room_state
-
-        with patch('server.app.request') as mock_request:
-            mock_request.sid = 'host_sid_123'
-            is_valid, msg = _check_host_authority(room_code, 'wrong_token', room_state['host_epoch'])
-            self.assertFalse(is_valid)
-            self.assertIn('mismatch', msg.lower())
+        game_rooms['TEST'] = room_state
+        with _patch_request_sid('host_sid_123'):
+            is_valid, msg = _check_host_authority('TEST', 'wrong_token', room_state['host_epoch'])
+        self.assertFalse(is_valid)
+        self.assertIn('mismatch', msg.lower())
 
     def test_check_host_authority_stale_epoch(self):
         """Stale epoch should fail authority check (prevents old reclaim events)."""
-        room_code = 'TEST'
         room_state = _new_room_state('host_sid_123')
-        game_rooms[room_code] = room_state
+        game_rooms['TEST'] = room_state
         old_epoch = room_state['host_epoch'] - 1
-
-        with patch('server.app.request') as mock_request:
-            mock_request.sid = 'host_sid_123'
-            is_valid, msg = _check_host_authority(room_code, room_state['host_token'], old_epoch)
-            self.assertFalse(is_valid)
-            self.assertIn('Stale host epoch', msg)
+        with _patch_request_sid('host_sid_123'):
+            is_valid, msg = _check_host_authority('TEST', room_state['host_token'], old_epoch)
+        self.assertFalse(is_valid)
+        self.assertIn('Stale host epoch', msg)
 
     def test_check_host_authority_missing_room(self):
         """Missing room should fail authority check."""
-        with patch('server.app.request') as mock_request:
-            mock_request.sid = 'host_sid_123'
+        with _patch_request_sid('host_sid_123'):
             is_valid, msg = _check_host_authority('NONEXISTENT', 'token', 1)
-            self.assertFalse(is_valid)
-            self.assertIn('not found', msg.lower())
+        self.assertFalse(is_valid)
+        self.assertIn('not found', msg.lower())
+
+
+class TestHostAuthoritySocketEnforcement(unittest.TestCase):
+    """End-to-end host-authority enforcement via the Flask-SocketIO test client.
+
+    Proves the bead's real acceptance: a room-code-only attacker cannot reclaim,
+    a valid host can reclaim (token rotates), stale epochs are rejected, and
+    non-host/foreign-sid/malformed host events are rejected — against the actual
+    server handlers, not mocks.
+    """
+
+    def setUp(self):
+        game_rooms.clear()
+        self.clients = []
+
+    def tearDown(self):
+        for c in self.clients:
+            if c.is_connected():
+                c.disconnect()
+        game_rooms.clear()
+
+    def _client(self):
+        c = socketio.test_client(app)
+        self.clients.append(c)
+        return c
+
+    def _create_room(self, host):
+        host.emit('create_room', {})
+        evts = [e for e in host.get_received() if e['name'] == 'room_created']
+        self.assertEqual(len(evts), 1)
+        return evts[0]['args'][0]
+
+    @staticmethod
+    def _errors(client):
+        return [e['args'][0].get('message', '') for e in client.get_received() if e['name'] == 'error']
+
+    @staticmethod
+    def _events(client, name):
+        return [e for e in client.get_received() if e['name'] == name]
+
+    def test_create_room_issues_token_and_epoch(self):
+        evt = self._create_room(self._client())
+        self.assertIsInstance(evt.get('host_token'), str)
+        self.assertEqual(len(evt['host_token'].split(':')), 3)
+        self.assertIsNotNone(evt.get('host_epoch'))
+
+    def test_host_event_without_token_is_rejected(self):
+        """The legitimate host MUST send the token; without it, rejected (this is
+        the regression that bricked the host: the client used to send no token)."""
+        host = self._client()
+        evt = self._create_room(host)
+        host.emit('start_game', {'room_code': evt['room_code']})
+        self.assertTrue(any('token' in m.lower() for m in self._errors(host)))
+        self.assertEqual(len(self._events(host, 'game_started')), 0)
+
+    def test_valid_host_event_with_token_accepted(self):
+        host = self._client()
+        evt = self._create_room(host)
+        host.emit('start_game', {
+            'room_code': evt['room_code'],
+            'host_token': evt['host_token'],
+            'host_epoch': evt['host_epoch'],
+        })
+        self.assertEqual(len(self._events(host, 'game_started')), 1)
+
+    def test_attacker_with_room_code_only_cannot_reclaim(self):
+        host = self._client()
+        evt = self._create_room(host)
+        original_host_sid = game_rooms[evt['room_code']]['host_sid']
+
+        attacker = self._client()
+        attacker.emit('reclaim_room', {'room_code': evt['room_code']})  # no token
+        self.assertTrue(self._errors(attacker))
+        self.assertEqual(len(self._events(attacker, 'room_reclaimed')), 0)
+        # Host binding unchanged by the attacker.
+        self.assertEqual(game_rooms[evt['room_code']]['host_sid'], original_host_sid)
+
+    def test_foreign_sid_with_leaked_token_rejected_on_host_event(self):
+        """Even with the (leaked) token, a different socket is not the host."""
+        host = self._client()
+        evt = self._create_room(host)
+        attacker = self._client()
+        attacker.emit('start_game', {
+            'room_code': evt['room_code'],
+            'host_token': evt['host_token'],
+            'host_epoch': evt['host_epoch'],
+        })
+        self.assertTrue(any('host' in m.lower() for m in self._errors(attacker)))
+        self.assertEqual(len(self._events(attacker, 'game_started')), 0)
+
+    def test_valid_host_reclaim_rotates_token_and_bumps_epoch(self):
+        host = self._client()
+        evt = self._create_room(host)
+        host.emit('reclaim_room', {
+            'room_code': evt['room_code'],
+            'host_token': evt['host_token'],
+            'host_epoch': evt['host_epoch'],
+        })
+        reclaimed = self._events(host, 'room_reclaimed')
+        self.assertEqual(len(reclaimed), 1)
+        new = reclaimed[0]['args'][0]
+        self.assertNotEqual(new['host_token'], evt['host_token'])      # rotated
+        self.assertEqual(new['host_epoch'], evt['host_epoch'] + 1)     # bumped
+
+    def test_stale_epoch_rejected_after_reclaim(self):
+        host = self._client()
+        evt = self._create_room(host)
+        host.emit('reclaim_room', {
+            'room_code': evt['room_code'],
+            'host_token': evt['host_token'],
+            'host_epoch': evt['host_epoch'],
+        })
+        new = self._events(host, 'room_reclaimed')[0]['args'][0]
+        # New token but the OLD epoch -> stale, must be rejected.
+        host.emit('start_game', {
+            'room_code': evt['room_code'],
+            'host_token': new['host_token'],
+            'host_epoch': evt['host_epoch'],  # stale
+        })
+        self.assertTrue(any('epoch' in m.lower() for m in self._errors(host)))
+        self.assertEqual(len(self._events(host, 'game_started')), 0)
+
+    def test_non_host_vehicle_states_not_forwarded(self):
+        host = self._client()
+        evt = self._create_room(host)
+        rc = evt['room_code']
+        watcher = self._client()
+        watcher.emit('join_game', {'room_code': rc, 'player_name': 'Watcher'})
+        watcher.get_received()  # drain join noise
+
+        attacker = self._client()
+        attacker.emit('join_game', {'room_code': rc, 'player_name': 'Atk'})
+        attacker.get_received()
+        # Non-host attempts authoritative state broadcast -> must be dropped.
+        attacker.emit('vehicle_states', {'room_code': rc, 'vehicles': [], 'seq': 1})
+        self.assertEqual(len(self._events(watcher, 'vehicle_states')), 0)
+
+    def test_malformed_payload_is_rejected_not_crash(self):
+        host = self._client()
+        self._create_room(host)
+        host.emit('start_game', 'not-a-dict')  # malformed
+        self.assertTrue(self._errors(host))  # graceful error, server still alive
+        # server still responsive:
+        host.emit('create_room', {})
+        self.assertTrue(self._events(host, 'room_created'))
+
+    def test_rejection_diagnostics_do_not_leak_token(self):
+        host = self._client()
+        evt = self._create_room(host)
+        bogus = 'deadbeef:nonce:badsig'
+        host.emit('start_game', {
+            'room_code': evt['room_code'],
+            'host_token': bogus,
+            'host_epoch': evt['host_epoch'],
+        })
+        msgs = ' '.join(self._errors(host))
+        self.assertTrue(msgs)
+        self.assertNotIn(evt['host_token'], msgs)  # real token never echoed
+        self.assertNotIn(bogus, msgs)              # supplied token never echoed
 
 
 if __name__ == '__main__':
