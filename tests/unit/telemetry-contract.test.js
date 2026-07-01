@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TelemetryService, ALLOWED_EVENT_NAMES, MAX_PROPERTY_VALUE_LENGTH, MAX_PROPERTY_DEPTH } from '../../static/js/telemetry/TelemetryService.js';
+import {
+    TelemetryService,
+    ALLOWED_EVENT_NAMES,
+    DEFAULT_PROJECT,
+    MAX_PROPERTY_VALUE_LENGTH,
+    MAX_PROPERTY_DEPTH,
+    normalizeTelemetryEnv,
+    serviceForRole
+} from '../../static/js/telemetry/TelemetryService.js';
 
 describe('telemetry contract - event names', () => {
     it('enforces allowlisted event names', () => {
@@ -108,7 +116,9 @@ describe('telemetry contract - required fields', () => {
         expect(event.roomAnalyticsId).toBe('room-test123');
         expect(event.matchId).toBe('match-test123');
         expect(event.playerAnalyticsId).toBe('player-test123');
-        expect(event.env).toBe('production');
+        expect(event.project).toBe(DEFAULT_PROJECT);
+        expect(event.service).toBe('host-client');
+        expect(event.env).toBe('prod');
         expect(event.role).toBe('host');
         expect(event.source).toBe('GameHost');
     });
@@ -401,6 +411,40 @@ describe('telemetry contract - correlation', () => {
         expect(hostEvent.properties).not.toHaveProperty('displayName');
         expect(controllerEvent.properties).not.toHaveProperty('displayName');
         expect(serverEvent.properties).not.toHaveProperty('displayName');
+    });
+});
+
+describe('telemetry contract - deployment labels', () => {
+    it('normalizes environment labels to prod/staging/local', () => {
+        expect(normalizeTelemetryEnv('production')).toBe('prod');
+        expect(normalizeTelemetryEnv('prod')).toBe('prod');
+        expect(normalizeTelemetryEnv('staging')).toBe('staging');
+        expect(normalizeTelemetryEnv('dev')).toBe('local');
+        expect(normalizeTelemetryEnv('test')).toBe('local');
+    });
+
+    it('derives service labels from role when not overridden', () => {
+        expect(serviceForRole('host')).toBe('host-client');
+        expect(serviceForRole('controller')).toBe('controller-client');
+        expect(serviceForRole('server')).toBe('game-server');
+        expect(serviceForRole('unknown')).toBe('unknown');
+    });
+
+    it('allows explicit service overrides when needed', () => {
+        const service = new TelemetryService({
+            enabled: true,
+            release: 'test',
+            role: 'host',
+            source: 'GameHost',
+            service: 'custom-host-service'
+        });
+        service.setRoomAnalyticsId('room-123');
+        service.setMatchId('match-123');
+        service.setPlayerAnalyticsId('player-123');
+        service.emit('gameplay:match:started');
+
+        expect(service.queue[0].project).toBe(DEFAULT_PROJECT);
+        expect(service.queue[0].service).toBe('custom-host-service');
     });
 });
 

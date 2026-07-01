@@ -16,6 +16,7 @@ from server.room_seats import (
     reap_room_if_needed,
     reclaim_host,
     redacted_room_snapshot,
+    return_room_to_lobby,
 )
 
 
@@ -42,6 +43,8 @@ class RoomSeatRegistryTest(unittest.TestCase):
         self.assertEqual(reconnect['join_payload']['seat_id'], first_join['join_payload']['seat_id'])
         self.assertIsInstance(reconnect['join_payload']['seat_token'], str)
         self.assertTrue(reconnect['join_payload']['seat_token'])
+        self.assertEqual(reconnect['join_payload']['room_analytics_id'], first_join['join_payload']['room_analytics_id'])
+        self.assertEqual(reconnect['join_payload']['player_analytics_id'], first_join['join_payload']['player_analytics_id'])
 
     def test_active_duplicate_controller_requires_prompt_then_takeover(self):
         room = self.make_room()
@@ -127,9 +130,12 @@ class RoomSeatRegistryTest(unittest.TestCase):
         self.assertEqual(viewer['join_payload']['role'], 'viewer')
         self.assertEqual(controller['seat']['controller_sid'], 'controller-1')
         self.assertIn('viewer-1', controller['seat']['viewer_sids'])
+        self.assertEqual(viewer['join_payload']['room_analytics_id'], controller['join_payload']['room_analytics_id'])
+        self.assertEqual(viewer['join_payload']['player_analytics_id'], controller['join_payload']['player_analytics_id'])
 
     def test_host_loss_grace_reclaim_and_post_grace_resolution(self):
         room = self.make_room()
+        room_analytics_id = room['room_analytics_id']
         begin_room_match(room)
         self.assertEqual(room['phase'], PHASE_ACTIVE)
 
@@ -141,6 +147,7 @@ class RoomSeatRegistryTest(unittest.TestCase):
         self.assertTrue(reclaimed)
         self.assertEqual(room['phase'], PHASE_ACTIVE)
         self.assertEqual(room['host_epoch'], 2)
+        self.assertEqual(room['room_analytics_id'], room_analytics_id)
 
         disconnect_binding(room, 'host-2', now=200)
         resolved = reap_room_if_needed(room, now=200 + HOST_LOSS_GRACE_SECONDS + 1)
@@ -151,18 +158,44 @@ class RoomSeatRegistryTest(unittest.TestCase):
         self.assertTrue(reclaimed_after_grace)
         self.assertEqual(room['phase'], PHASE_RESULTS)
         self.assertEqual(room['host_epoch'], 3)
+        self.assertEqual(room['room_analytics_id'], room_analytics_id)
 
     def test_redacted_snapshot_masks_secrets_and_is_inspectable(self):
         room = self.make_room()
-        join_seat(room, 'controller-1', player_name='Alice', client_instance_id='tab-a')
+        joined = join_seat(room, 'controller-1', player_name='Alice', client_instance_id='tab-a')
         append_room_trace(room, 'manual_trace', when=10)
 
         snapshot = redacted_room_snapshot(room, reason='manual_trace', when=11)
         self.assertEqual(snapshot['reason'], 'manual_trace')
         self.assertEqual(snapshot['phase'], PHASE_WAITING)
+        self.assertEqual(snapshot['roomAnalyticsId'], room['room_analytics_id'])
         self.assertEqual(snapshot['host']['tokenHash'], '[redacted]')
         self.assertEqual(snapshot['seats'][0]['seatTokenHash'], '[redacted]')
         self.assertEqual(snapshot['seats'][0]['roleBindings']['controller'], True)
+        self.assertEqual(snapshot['seats'][0]['playerAnalyticsId'], joined['join_payload']['player_analytics_id'])
+
+    def test_join_payload_carries_analytics_ids_and_match_context(self):
+        room = self.make_room()
+        initial = join_seat(room, 'controller-1', player_name='Alice', client_instance_id='tab-a')
+
+        self.assertTrue(initial['join_payload']['room_analytics_id'].startswith('room-'))
+        self.assertTrue(initial['join_payload']['player_analytics_id'].startswith('player-'))
+        self.assertNotIn(room['room_code'], initial['join_payload']['room_analytics_id'])
+        self.assertIsNone(initial['join_payload']['match_id'])
+        self.assertEqual(initial['lifecycle_payload']['room_analytics_id'], room['room_analytics_id'])
+        self.assertEqual(initial['lifecycle_payload']['player_analytics_id'], initial['join_payload']['player_analytics_id'])
+
+        begin_room_match(room, when=5)
+        late_join = join_seat(room, 'controller-2', player_name='Bob', client_instance_id='tab-b', now=6)
+        self.assertEqual(late_join['join_payload']['room_analytics_id'], room['room_analytics_id'])
+        self.assertEqual(late_join['join_payload']['match_id'], room['match_id'])
+        self.assertEqual(late_join['join_payload']['round_id'], room['round_id'])
+        self.assertTrue(late_join['join_payload']['is_late_join'])
+
+        return_room_to_lobby(room, when=7)
+        self.assertIsNone(room['match_id'])
+        self.assertIsNone(room['round_id'])
+        self.assertEqual(room['room_analytics_id'], initial['join_payload']['room_analytics_id'])
 
 
 if __name__ == '__main__':

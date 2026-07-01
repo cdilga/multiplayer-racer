@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
     BUILD_INFO,
     isBuildSkewed,
+    getReleaseId,
     recordServerBuild,
     getSkewState,
     checkBuildSkew,
@@ -19,6 +20,12 @@ describe('buildInfo: build identity', () => {
         expect(BUILD_INFO.buildId).toBe('dev');
         expect(BUILD_INFO.buildSha).toBe('unknown');
         expect(BUILD_INFO.buildTime).toBe('dev');
+    });
+
+    it('derives telemetry release from buildSha when available', () => {
+        expect(getReleaseId({ buildId: 'build-short', buildSha: 'abcdef1234567890' })).toBe('abcdef1234567890');
+        expect(getReleaseId({ buildId: 'build-short', buildSha: 'unknown' })).toBe('build-short');
+        expect(getReleaseId({ buildId: 'dev', buildSha: 'dev' })).toBe('dev');
     });
 });
 

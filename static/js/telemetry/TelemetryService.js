@@ -47,6 +47,23 @@ const SENSITIVE_VALUE_PATTERNS = [
 
 const MAX_PROPERTY_VALUE_LENGTH = 500;
 const MAX_PROPERTY_DEPTH = 2;
+const DEFAULT_PROJECT = 'joystick-jammers';
+const ROLE_SERVICE_MAP = Object.freeze({
+    host: 'host-client',
+    controller: 'controller-client',
+    server: 'game-server'
+});
+
+function serviceForRole(role) {
+    return ROLE_SERVICE_MAP[role] || 'unknown';
+}
+
+function normalizeTelemetryEnv(env) {
+    const value = String(env || '').trim().toLowerCase();
+    if (value === 'prod' || value === 'production') return 'prod';
+    if (value === 'staging') return 'staging';
+    return 'local';
+}
 
 class TelemetryService {
     constructor(config = {}) {
@@ -56,7 +73,9 @@ class TelemetryService {
         this.release = config.release ?? 'unknown';
         this.role = config.role ?? 'unknown';
         this.source = config.source ?? 'unknown';
-        this.env = config.env ?? 'local';
+        this.project = config.project ?? DEFAULT_PROJECT;
+        this.service = config.service ?? serviceForRole(this.role);
+        this.env = normalizeTelemetryEnv(config.env ?? 'local');
         this.queue = [];
         this.noOpSink = this._createNoOpSink();
     }
@@ -99,7 +118,7 @@ class TelemetryService {
     }
 
     _validateRequiredFields(event) {
-        const required = ['eventName', 'timestamp', 'release', 'roomAnalyticsId', 'matchId', 'playerAnalyticsId', 'env', 'role', 'source'];
+        const required = ['eventName', 'timestamp', 'release', 'roomAnalyticsId', 'matchId', 'playerAnalyticsId', 'project', 'service', 'env', 'role', 'source'];
         for (const field of required) {
             const value = event[field];
             if (value === undefined || value === null || value === '') {
@@ -177,6 +196,8 @@ class TelemetryService {
                 roomAnalyticsId: this.roomAnalyticsId,
                 matchId: this.matchId,
                 playerAnalyticsId: this.playerAnalyticsId,
+                project: this.project,
+                service: this.service,
                 env: this.env,
                 role: this.role,
                 source: this.source,
@@ -245,4 +266,12 @@ class TelemetryService {
     }
 }
 
-export { TelemetryService, ALLOWED_EVENT_NAMES, MAX_PROPERTY_VALUE_LENGTH, MAX_PROPERTY_DEPTH };
+export {
+    ALLOWED_EVENT_NAMES,
+    DEFAULT_PROJECT,
+    MAX_PROPERTY_VALUE_LENGTH,
+    MAX_PROPERTY_DEPTH,
+    TelemetryService,
+    normalizeTelemetryEnv,
+    serviceForRole
+};

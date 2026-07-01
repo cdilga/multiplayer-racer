@@ -1,9 +1,11 @@
 const ACTIVE_PHASES = new Set(['countdown', 'active', 'finish_grace', 'round_end']);
+const hasOwn = (payload, key) => Object.prototype.hasOwnProperty.call(payload, key);
 
 function ensureRoom(registry, roomCode, payload = {}) {
     if (!registry.rooms.has(roomCode)) {
         registry.rooms.set(roomCode, {
             roomCode,
+            roomAnalyticsId: payload.room_analytics_id || null,
             topology: payload.topology || 'local',
             mode: payload.mode || 'race',
             phase: payload.phase || 'waiting',
@@ -23,6 +25,7 @@ function ensureSeat(room, payload = {}) {
         room.seats.set(seatId, {
             seatId,
             playerId: payload.player_id ?? seatId,
+            playerAnalyticsId: payload.player_analytics_id || null,
             seatToken: payload.seat_token || null,
             leaseVersion: payload.lease_version || 1,
             clientInstanceId: payload.client_instance_id || null,
@@ -42,16 +45,18 @@ export function createRoomSeatRegistry() {
 
 export function acceptJoin(registry, payload) {
     const room = ensureRoom(registry, payload.room_code, payload);
+    room.roomAnalyticsId = payload.room_analytics_id || room.roomAnalyticsId;
     room.topology = payload.topology || room.topology;
     room.mode = payload.mode || room.mode;
     room.phase = payload.phase || room.phase;
-    room.matchId = payload.match_id ?? room.matchId;
-    room.roundId = payload.round_id ?? room.roundId;
-    room.hostEpoch = payload.host_epoch ?? room.hostEpoch;
+    if (hasOwn(payload, 'match_id')) room.matchId = payload.match_id;
+    if (hasOwn(payload, 'round_id')) room.roundId = payload.round_id;
+    if (hasOwn(payload, 'host_epoch')) room.hostEpoch = payload.host_epoch;
 
     const seat = ensureSeat(room, payload);
     const viewerOnly = payload.role === 'viewer';
     seat.playerId = payload.player_id ?? seat.playerId;
+    seat.playerAnalyticsId = payload.player_analytics_id || seat.playerAnalyticsId;
     seat.seatToken = payload.seat_token || seat.seatToken;
     seat.leaseVersion = payload.lease_version ?? seat.leaseVersion;
     if (!viewerOnly) {
@@ -79,12 +84,13 @@ export function noteTakeoverRequired(registry, payload) {
 
 export function applyRoomPhase(registry, payload) {
     const room = ensureRoom(registry, payload.room_code, payload);
+    room.roomAnalyticsId = payload.room_analytics_id || room.roomAnalyticsId;
     room.phase = payload.phase || room.phase;
     room.mode = payload.mode || room.mode;
     room.topology = payload.topology || room.topology;
-    room.matchId = payload.match_id ?? room.matchId;
-    room.roundId = payload.round_id ?? room.roundId;
-    room.hostEpoch = payload.host_epoch ?? room.hostEpoch;
+    if (hasOwn(payload, 'match_id')) room.matchId = payload.match_id;
+    if (hasOwn(payload, 'round_id')) room.roundId = payload.round_id;
+    if (hasOwn(payload, 'host_epoch')) room.hostEpoch = payload.host_epoch;
 
     for (const seat of room.seats.values()) {
         seat.phase = room.phase;
@@ -115,6 +121,7 @@ export function getRoomSnapshot(registry, roomCode) {
     }
     return {
         roomCode: room.roomCode,
+        roomAnalyticsId: room.roomAnalyticsId,
         topology: room.topology,
         mode: room.mode,
         phase: room.phase,
@@ -127,6 +134,7 @@ export function getRoomSnapshot(registry, roomCode) {
             .map((seat) => ({
                 seatId: seat.seatId,
                 playerId: seat.playerId,
+                playerAnalyticsId: seat.playerAnalyticsId,
                 seatToken: seat.seatToken,
                 leaseVersion: seat.leaseVersion,
                 clientInstanceId: seat.clientInstanceId,

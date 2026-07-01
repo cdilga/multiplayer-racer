@@ -1,6 +1,6 @@
 import unittest
 
-from server.app import app, game_rooms, socketio
+from server.app import app, game_rooms, socketio, _read_build_identity
 from server.session_vocabulary import (
     TOPOLOGY_LOCAL, TOPOLOGY_REMOTE, TOPOLOGY_MIXED, DEFAULT_TOPOLOGY,
     RULESET_RACE, RULESET_DERBY,
@@ -53,6 +53,16 @@ class SocketRoutingTest(unittest.TestCase):
 
     def event_named(self, client, name):
         return [event for event in client.get_received() if event['name'] == name]
+
+    def assert_release_metadata(self, payload):
+        identity = _read_build_identity()
+        expected_release = identity['buildSha']
+        if expected_release in ('', 'unknown', 'dev'):
+            expected_release = identity['buildId']
+        self.assertEqual(payload['build_id'], identity['buildId'])
+        self.assertEqual(payload['build_sha'], identity['buildSha'])
+        self.assertEqual(payload['build_time'], identity['buildTime'])
+        self.assertEqual(payload['release'], expected_release)
 
     def get_host_auth(self, room_code):
         """Get current host_token and host_epoch for a room."""
@@ -252,8 +262,11 @@ class SocketRoutingTest(unittest.TestCase):
 
         create_event = self.create_room_event(host)
         room_code = create_event['room_code']
+        room_analytics_id = create_event['room_analytics_id']
         token = create_event['host_token']
         epoch = create_event['host_epoch']
+        self.assert_release_metadata(create_event)
+        self.assertEqual(room_analytics_id, game_rooms[room_code]['room_analytics_id'])
         self.join_player(player, room_code, 'GraceDriver')
         host.get_received()
         player.get_received()
@@ -274,6 +287,9 @@ class SocketRoutingTest(unittest.TestCase):
         self.assertEqual(len(host_loss_events), 1)
         self.assertEqual(host_loss_events[0]['args'][0]['phase'], 'host_lost')
         self.assertIn('grace_seconds', host_loss_events[0]['args'][0])
+        self.assertEqual(host_loss_events[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertEqual(host_loss_events[0]['args'][0]['match_id'], game_rooms[room_code]['match_id'])
+        self.assert_release_metadata(host_loss_events[0]['args'][0])
 
         reclaimed_host = self.make_client()
         reclaimed_host.emit('reclaim_room', {
@@ -283,11 +299,89 @@ class SocketRoutingTest(unittest.TestCase):
         reclaimed_events = self.event_named(reclaimed_host, 'room_reclaimed')
         self.assertEqual(len(reclaimed_events), 1)
         self.assertEqual(reclaimed_events[0]['args'][0]['phase'], 'active')
+        self.assertEqual(reclaimed_events[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertEqual(reclaimed_events[0]['args'][0]['match_id'], game_rooms[room_code]['match_id'])
+        self.assert_release_metadata(reclaimed_events[0]['args'][0])
         self.assertEqual(game_rooms[room_code]['phase'], 'active')
         self.assertEqual(game_rooms[room_code]['host_epoch'], epoch + 1)
 
         room_phase_events = self.event_named(player, 'room_phase')
         self.assertTrue(any(event['args'][0]['phase'] == 'active' for event in room_phase_events))
+        self.assertTrue(any(event['args'][0]['room_analytics_id'] == room_analytics_id for event in room_phase_events))
+        self.assertTrue(any(event['args'][0]['match_id'] == game_rooms[room_code]['match_id'] for event in room_phase_events))
+
+    def test_release_and_analytics_ids_propagate_through_join_start_and_return_to_lobby(self):
+        host = self.make_client()
+        player = self.make_client()
+
+        create_event = self.create_room_event(host)
+        room_code = create_event['room_code']
+        room = game_rooms[room_code]
+        room_analytics_id = room['room_analytics_id']
+        token, epoch = self.get_host_auth(room_code)
+
+        self.assertEqual(create_event['room_analytics_id'], room_analytics_id)
+        self.assertIsNone(create_event['match_id'])
+        self.assertIsNone(create_event['round_id'])
+        self.assert_release_metadata(create_event)
+
+        joined = self.join_player_event(player, room_code, 'AnalyticsDriver')
+        self.assertEqual(joined['room_analytics_id'], room_analytics_id)
+        self.assertIsNone(joined['match_id'])
+        self.assertTrue(joined['player_analytics_id'].startswith('player-'))
+        self.assert_release_metadata(joined)
+
+        host_lifecycle = self.event_named(host, 'player_joined')
+        self.assertEqual(len(host_lifecycle), 1)
+        self.assertEqual(host_lifecycle[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertEqual(host_lifecycle[0]['args'][0]['player_analytics_id'], joined['player_analytics_id'])
+        self.assert_release_metadata(host_lifecycle[0]['args'][0])
+
+        host.get_received()
+        player.get_received()
+
+        host.emit('start_game', {
+            'room_code': room_code,
+            'host_token': token,
+            'host_epoch': epoch,
+        })
+
+        self.assertIsNotNone(room['match_id'])
+        self.assertTrue(room['match_id'].startswith('match-'))
+        host_started = self.event_named(host, 'game_started')
+        player_started = self.event_named(player, 'game_started')
+        self.assertEqual(len(host_started), 1)
+        self.assertEqual(len(player_started), 1)
+        self.assertEqual(host_started[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertEqual(player_started[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertEqual(host_started[0]['args'][0]['match_id'], room['match_id'])
+        self.assertEqual(player_started[0]['args'][0]['match_id'], room['match_id'])
+        self.assert_release_metadata(host_started[0]['args'][0])
+        self.assert_release_metadata(player_started[0]['args'][0])
+
+        host.get_received()
+        player.get_received()
+
+        host.emit('return_to_lobby', {
+            'room_code': room_code,
+            'host_token': token,
+            'host_epoch': epoch,
+        })
+
+        player_events = player.get_received()
+        returned = [event for event in player_events if event['name'] == 'returned_to_lobby']
+        self.assertEqual(len(returned), 1)
+        self.assertEqual(returned[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertIsNone(returned[0]['args'][0]['match_id'])
+        self.assertIsNone(returned[0]['args'][0]['round_id'])
+        self.assert_release_metadata(returned[0]['args'][0])
+
+        room_phase = [event for event in player_events if event['name'] == 'room_phase']
+        self.assertEqual(len(room_phase), 1)
+        self.assertEqual(room_phase[0]['args'][0]['phase'], 'waiting')
+        self.assertEqual(room_phase[0]['args'][0]['room_analytics_id'], room_analytics_id)
+        self.assertIsNone(room_phase[0]['args'][0]['match_id'])
+        self.assert_release_metadata(room_phase[0]['args'][0])
 
 
 class RoomTopologyTest(unittest.TestCase):

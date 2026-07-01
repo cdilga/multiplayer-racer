@@ -242,6 +242,46 @@ def _read_build_identity():
     return identity
 
 
+def _build_release(identity=None):
+    """Canonical release string for telemetry/socket correlation.
+
+    Reuses the woq.3 build identity contract: prefer the full buildSha when a
+    real built manifest is present, otherwise fall back to buildId so dev/source
+    mode still has a stable, non-empty release string.
+    """
+    identity = identity or _read_build_identity()
+    build_sha = str(identity.get('buildSha') or '')
+    if build_sha and build_sha not in ('unknown', 'dev'):
+        return build_sha
+    return str(identity.get('buildId') or 'unknown')
+
+
+def _build_identity_payload():
+    identity = _read_build_identity()
+    return {
+        'build_id': identity.get('buildId'),
+        'build_sha': identity.get('buildSha'),
+        'build_time': identity.get('buildTime'),
+        'release': _build_release(identity),
+    }
+
+
+def _room_correlation_payload(room):
+    return {
+        'room_analytics_id': room.get('room_analytics_id'),
+        'match_id': room.get('match_id'),
+        'round_id': room.get('round_id'),
+    }
+
+
+def _with_server_metadata(payload, room=None):
+    enriched = dict(payload or {})
+    if room is not None:
+        enriched.update(_room_correlation_payload(room))
+    enriched.update(_build_identity_payload())
+    return enriched
+
+
 @app.route('/version')
 def version_manifest():
     """Stable version endpoint for client/server build-skew detection.
@@ -393,16 +433,14 @@ def _new_room_state(room_code, host_sid, topology=DEFAULT_TOPOLOGY):
 
 def _room_phase_payload(room_code):
     room = game_rooms[room_code]
-    return {
+    return _with_server_metadata({
         'room_code': room_code,
         'phase': room.get('phase', PHASE_WAITING),
         'game_state': room.get('game_state', phase_to_game_state(PHASE_WAITING)),
         'mode': room.get('mode', DEFAULT_RULESET),
         'topology': room.get('topology', DEFAULT_TOPOLOGY),
-        'match_id': room.get('match_id'),
-        'round_id': room.get('round_id'),
         'host_epoch': room.get('host_epoch'),
-    }
+    }, room)
 
 
 def _emit_room_phase(room_code, *, include_self=True):
@@ -448,8 +486,12 @@ def _emit_zeroed_controls_to_host(room, seat):
 
 def _complete_join(room_code, room, join_result):
     join_room(room_code)
-    emit('game_joined', join_result['join_payload'])
-    emit(join_result['lifecycle_event_name'], join_result['lifecycle_payload'], room=room_code)
+    emit('game_joined', _with_server_metadata(join_result['join_payload'], room))
+    emit(
+        join_result['lifecycle_event_name'],
+        _with_server_metadata(join_result['lifecycle_payload'], room),
+        room=room_code
+    )
 
     stale_sid = join_result.get('old_controller_sid')
     if stale_sid:
@@ -457,11 +499,11 @@ def _complete_join(room_code, room, join_result):
             leave_room(room_code, sid=stale_sid)
         except TypeError:
             pass
-        emit('seat_taken_over', {
+        emit('seat_taken_over', _with_server_metadata({
             'seat_id': join_result['seat']['seat_id'],
             'player_id': join_result['seat']['player_id'],
             'lease_version': join_result['seat']['lease_version'],
-        }, to=stale_sid)
+        }, room), to=stale_sid)
 
     if room.get('phase') in ACTIVE_ROOM_PHASES and join_result['join_payload'].get('role') != 'viewer':
         _emit_zeroed_controls_to_host(room, join_result['seat'])
@@ -766,14 +808,14 @@ def create_room(data=None):
             port = host_parts[1]
     join_url = get_join_url(room_code, local_ip, port)
 
-    emit('room_created', {
+    emit('room_created', _with_server_metadata({
         'room_code': room_code,
         'join_url': join_url,
         'topology': topology,
         'host_token': host_token,
         'host_epoch': room_state['host_epoch'],
         'phase': room_state['phase'],
-    })
+    }, room_state))
     logger.info(f"Room created: {room_code} (topology={topology})")
 
 @socketio.on('reclaim_room')
@@ -828,13 +870,13 @@ def reclaim_room(data):
         logger.info(f"Host reclaimed missing room {room_code}")
 
     join_room(room_code)
-    emit('room_reclaimed', {
+    emit('room_reclaimed', _with_server_metadata({
         'room_code': room_code,
         'topology': game_rooms[room_code]['topology'],
         'host_token': new_token,
         'host_epoch': new_epoch,
         'phase': game_rooms[room_code]['phase'],
-    })
+    }, game_rooms[room_code]))
     if prior_phase == PHASE_HOST_LOST:
         _emit_room_phase(room_code, include_self=False)
 
@@ -863,7 +905,7 @@ def return_to_lobby(data):
         return
 
     return_room_to_lobby(game_rooms[room_code])
-    emit('returned_to_lobby', to=room_code)
+    emit('returned_to_lobby', _room_phase_payload(room_code), to=room_code)
     _emit_room_phase(room_code)
     logger.info(f"Room {room_code} returned to lobby")
 
@@ -1026,7 +1068,7 @@ def on_join_game(data):
     )
 
     if join_result['status'] == 'takeover_required':
-        emit('controller_takeover_required', join_result['payload'])
+        emit('controller_takeover_required', _with_server_metadata(join_result['payload'], room))
         logger.info(
             f"Seat takeover prompt for room {room_code} seat {join_result['payload']['seat_id']}"
         )
@@ -1188,7 +1230,7 @@ def mode_selected(data):
     game_rooms[room_code]['mode'] = mode
 
     # Broadcast to all players in the room (except host)
-    emit('mode_selected', {'mode': mode}, to=room_code, include_self=False)
+    emit('mode_selected', _with_server_metadata({'mode': mode}, game_rooms[room_code]), to=room_code, include_self=False)
     logger.info(f"Mode selected in room {room_code}: {mode}")
 
 @socketio.on('player_update')

@@ -92,6 +92,14 @@ def generate_seat_token():
     return secrets.token_urlsafe(24)
 
 
+def generate_room_analytics_id():
+    return f'room-{secrets.token_hex(6)}'
+
+
+def generate_player_analytics_id():
+    return f'player-{secrets.token_hex(8)}'
+
+
 def generate_match_id():
     return f'match-{uuid.uuid4().hex[:12]}'
 
@@ -138,6 +146,7 @@ def _new_seat(room, seat_id, player_name, can_render=False, viewer_only=False, c
     return {
         'seat_id': seat_id,
         'player_id': seat_id,
+        'player_analytics_id': generate_player_analytics_id(),
         'seat_token_hash': _hash_token(raw_seat_token),
         'appearance': {
             'name': player_name,
@@ -206,6 +215,10 @@ def _seat_payload(room, seat):
     return {
         'id': seat['player_id'],
         'seat_id': seat['seat_id'],
+        'room_analytics_id': room.get('room_analytics_id'),
+        'match_id': room.get('match_id'),
+        'round_id': room.get('round_id'),
+        'player_analytics_id': seat.get('player_analytics_id'),
         'name': seat['appearance']['name'],
         'car_color': seat['appearance']['color'],
         'position': seat['stats']['position'],
@@ -223,6 +236,7 @@ def _sync_legacy_views(room):
     for seat in room['seats'].values():
         player_payload = {
             'id': seat['player_id'],
+            'player_analytics_id': seat.get('player_analytics_id'),
             'name': seat['appearance']['name'],
             'car_color': seat['appearance']['color'],
             'position': seat['stats']['position'],
@@ -251,6 +265,7 @@ def redacted_room_snapshot(room, reason=None, when=None):
         'timestamp': when,
         'reason': reason,
         'roomCode': room.get('room_code'),
+        'roomAnalyticsId': room.get('room_analytics_id'),
         'topology': room.get('topology'),
         'ruleset': room.get('mode', DEFAULT_RULESET),
         'phase': room.get('phase', PHASE_WAITING),
@@ -266,6 +281,7 @@ def redacted_room_snapshot(room, reason=None, when=None):
             {
                 'seatId': seat['seat_id'],
                 'playerId': seat['player_id'],
+                'playerAnalyticsId': seat.get('player_analytics_id'),
                 'state': seat['state'],
                 'leaseVersion': seat['lease_version'],
                 'clientInstanceId': seat['client_instance_id'],
@@ -300,6 +316,7 @@ def new_room_state(room_code, host_sid, host_token, topology=DEFAULT_TOPOLOGY, n
         'host_epoch': 1,
         'host_lost_at': None,
         'phase_before_host_loss': PHASE_WAITING,
+        'room_analytics_id': generate_room_analytics_id(),
         'topology': normalize_topology(topology),
         'mode': DEFAULT_RULESET,
         'phase': PHASE_WAITING,
@@ -502,6 +519,10 @@ def join_seat(
     join_payload = {
         'player_id': seat['player_id'],
         'seat_id': seat['seat_id'],
+        'room_analytics_id': room.get('room_analytics_id'),
+        'match_id': room.get('match_id'),
+        'round_id': room.get('round_id'),
+        'player_analytics_id': seat.get('player_analytics_id'),
         'seat_token': seat_token_value,
         'lease_version': seat['lease_version'],
         'client_instance_id': client_instance_id,
@@ -757,6 +778,8 @@ __all__ = [
     'disconnect_binding',
     'end_room_match',
     'generate_match_id',
+    'generate_player_analytics_id',
+    'generate_room_analytics_id',
     'generate_round_id',
     'generate_seat_token',
     'join_seat',

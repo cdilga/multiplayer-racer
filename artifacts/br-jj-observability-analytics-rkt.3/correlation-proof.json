@@ -1,0 +1,190 @@
+{
+  "generated_for_bead": "br-jj-observability-analytics-rkt.3",
+  "correlation": {
+    "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+    "roomAnalyticsId": "room-bfe301e0fb57",
+    "matchId": "match-a5087924d50b"
+  },
+  "host_payloads": {
+    "room_created": {
+      "room_code": "[redacted]",
+      "join_url": "[redacted]",
+      "topology": "local",
+      "host_token": "[redacted]",
+      "host_epoch": 1,
+      "phase": "waiting",
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": null,
+      "round_id": null,
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689"
+    },
+    "game_started": {
+      "room_code": "[redacted]",
+      "phase": "active",
+      "game_state": "racing",
+      "mode": "race",
+      "topology": "local",
+      "host_epoch": 1,
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": "match-a5087924d50b",
+      "round_id": "round-1",
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689"
+    },
+    "player_joined_during_active_match": {
+      "id": 2,
+      "seat_id": 2,
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": "match-a5087924d50b",
+      "round_id": "round-1",
+      "player_analytics_id": "player-240fbe6f93e70ec0",
+      "name": "[redacted]",
+      "car_color": "#39dd88",
+      "position": [
+        0,
+        0.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "lease_version": 1,
+      "controller_connected": true,
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689"
+    }
+  },
+  "controller_payloads": {
+    "early_game_started": {
+      "room_code": "[redacted]",
+      "phase": "active",
+      "game_state": "racing",
+      "mode": "race",
+      "topology": "local",
+      "host_epoch": 1,
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": "match-a5087924d50b",
+      "round_id": "round-1",
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689"
+    },
+    "late_game_joined": {
+      "player_id": 2,
+      "seat_id": 2,
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": "match-a5087924d50b",
+      "round_id": "round-1",
+      "player_analytics_id": "player-240fbe6f93e70ec0",
+      "seat_token": "[redacted]",
+      "lease_version": 1,
+      "client_instance_id": null,
+      "name": "[redacted]",
+      "car_color": "#39dd88",
+      "reconnected": false,
+      "is_late_join": true,
+      "game_state": "racing",
+      "phase": "active",
+      "mode": "race",
+      "topology": "local",
+      "role": "controller",
+      "roles": [
+        "controller"
+      ],
+      "takeover_kind": null,
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689"
+    },
+    "late_join_player_analytics_id": "player-240fbe6f93e70ec0"
+  },
+  "server_payloads": {
+    "room_snapshot": {
+      "event": "server_room_snapshot",
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_id": "a7242414d4d7",
+      "build_sha": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "build_time": "2026-07-01T09:54:03.787Z",
+      "room_analytics_id": "room-bfe301e0fb57",
+      "match_id": "match-a5087924d50b",
+      "round_id": "round-1",
+      "snapshot": {
+        "timestamp": 1782899706.55472,
+        "reason": "correlation_proof",
+        "roomCode": "[redacted]",
+        "roomAnalyticsId": "room-bfe301e0fb57",
+        "topology": "local",
+        "ruleset": "race",
+        "phase": "active",
+        "matchId": "match-a5087924d50b",
+        "roundId": "round-1",
+        "host": {
+          "epoch": 1,
+          "connected": true,
+          "tokenHash": "[redacted]",
+          "lostAt": null
+        },
+        "seats": [
+          {
+            "seatId": 1,
+            "playerId": 1,
+            "playerAnalyticsId": "player-1fa60a5f286ef96c",
+            "state": "active",
+            "leaseVersion": 1,
+            "clientInstanceId": null,
+            "seatTokenHash": "[redacted]",
+            "appearance": {
+              "name": "[redacted]",
+              "color": "#1af87d"
+            },
+            "roleBindings": {
+              "controller": true,
+              "viewers": 0
+            },
+            "joinedMatchId": null,
+            "joinedRoundId": null
+          },
+          {
+            "seatId": 2,
+            "playerId": 2,
+            "playerAnalyticsId": "player-240fbe6f93e70ec0",
+            "state": "active",
+            "leaseVersion": 1,
+            "clientInstanceId": null,
+            "seatTokenHash": "[redacted]",
+            "appearance": {
+              "name": "[redacted]",
+              "color": "#39dd88"
+            },
+            "roleBindings": {
+              "controller": true,
+              "viewers": 0
+            },
+            "joinedMatchId": "match-a5087924d50b",
+            "joinedRoundId": "round-1"
+          }
+        ]
+      }
+    }
+  },
+  "privacy_notes": [
+    "room_code, join_url, host_token, seat_token, and display-name fields are redacted in this artifact",
+    "roomAnalyticsId, matchId, release, and playerAnalyticsId remain visible because they are the intended correlation identifiers"
+  ]
+}

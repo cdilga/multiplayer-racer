@@ -16,6 +16,8 @@ describe('room seat registry lifecycle', () => {
             room_code: 'ABCD',
             player_id: 1,
             seat_id: 1,
+            room_analytics_id: 'room-abc12345',
+            player_analytics_id: 'player-a1b2c3d4e5f6a7b8',
             seat_token: 'seat-token-a',
             lease_version: 1,
             client_instance_id: 'tab-a',
@@ -46,6 +48,8 @@ describe('room seat registry lifecycle', () => {
             room_code: 'ABCD',
             player_id: 1,
             seat_id: 1,
+            room_analytics_id: 'room-abc12345',
+            player_analytics_id: 'player-a1b2c3d4e5f6a7b8',
             seat_token: 'seat-token-a',
             lease_version: 2,
             client_instance_id: 'tab-b',
@@ -59,10 +63,12 @@ describe('room seat registry lifecycle', () => {
         snapshot = getRoomSnapshot(registry, 'ABCD');
         expect(snapshot.pendingTakeover).toBe(null);
         expect(snapshot.phase).toBe('active');
+        expect(snapshot.roomAnalyticsId).toBe('room-abc12345');
         expect(snapshot.seats).toEqual([
             expect.objectContaining({
                 seatId: 1,
                 playerId: 1,
+                playerAnalyticsId: 'player-a1b2c3d4e5f6a7b8',
                 seatToken: 'seat-token-a',
                 leaseVersion: 2,
                 clientInstanceId: 'tab-b',
@@ -96,6 +102,19 @@ describe('room seat registry lifecycle', () => {
         expect(snapshot.seats[0].controllerActive).toBe(true);
         expect(snapshot.matchId).toBe('match-1');
         expect(snapshot.roundId).toBe('round-1');
+
+        applyRoomPhase(registry, {
+            room_code: 'ABCD',
+            phase: 'waiting',
+            match_id: null,
+            round_id: null,
+            host_epoch: 2,
+        });
+        snapshot = getRoomSnapshot(registry, 'ABCD');
+        expect(snapshot.phase).toBe('waiting');
+        expect(snapshot.matchId).toBe(null);
+        expect(snapshot.roundId).toBe(null);
+        expect(snapshot.roomAnalyticsId).toBe('room-abc12345');
     });
 
     it('allows viewer duplicates without displacing the controller seat', () => {
@@ -105,6 +124,8 @@ describe('room seat registry lifecycle', () => {
             room_code: 'WXYZ',
             player_id: 7,
             seat_id: 7,
+            room_analytics_id: 'room-view9876',
+            player_analytics_id: 'player-seat-view9876',
             seat_token: 'seat-token-b',
             lease_version: 1,
             client_instance_id: 'tab-owner',
@@ -117,6 +138,8 @@ describe('room seat registry lifecycle', () => {
             room_code: 'WXYZ',
             player_id: 7,
             seat_id: 7,
+            room_analytics_id: 'room-view9876',
+            player_analytics_id: 'player-seat-view9876',
             seat_token: 'seat-token-b',
             lease_version: 1,
             client_instance_id: 'viewer-tab',
@@ -127,10 +150,12 @@ describe('room seat registry lifecycle', () => {
         });
 
         const snapshot = getRoomSnapshot(registry, 'WXYZ');
+        expect(snapshot.roomAnalyticsId).toBe('room-view9876');
         expect(snapshot.seats).toEqual([
             expect.objectContaining({
                 seatId: 7,
                 playerId: 7,
+                playerAnalyticsId: 'player-seat-view9876',
                 leaseVersion: 1,
                 controllerActive: true,
                 viewerCount: 1,
@@ -147,6 +172,8 @@ describe('room seat registry lifecycle', () => {
             room_code: 'QWER',
             player_id: 4,
             seat_id: 4,
+            room_analytics_id: 'room-seat0001',
+            player_analytics_id: 'player-seat0001',
             seat_token: 'seat-token-c',
             lease_version: 3,
             client_instance_id: 'tab-a',
@@ -167,6 +194,7 @@ describe('room seat registry lifecycle', () => {
         expect(snapshot.seats[0]).toMatchObject({
             seatId: 4,
             playerId: 4,
+            playerAnalyticsId: 'player-seat0001',
             leaseVersion: 4,
             controllerActive: false,
         });

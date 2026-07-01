@@ -30,6 +30,21 @@ export const BUILD_INFO = Object.freeze({
 });
 
 /**
+ * Canonical telemetry release string derived from the existing woq.3 build
+ * identity contract. Prefer the full sha when known; otherwise fall back to the
+ * shorter build id so dev/source mode still exposes a stable string.
+ * @param {{buildId?: string, buildSha?: string}} [buildInfo=BUILD_INFO]
+ * @returns {string}
+ */
+export function getReleaseId(buildInfo = BUILD_INFO) {
+    const buildSha = String(buildInfo?.buildSha ?? '');
+    if (buildSha && buildSha !== 'unknown' && buildSha !== 'dev') {
+        return buildSha;
+    }
+    return String(buildInfo?.buildId ?? 'unknown');
+}
+
+/**
  * Pure skew test. True only when both ids are known, real (non-dev) builds and
  * they differ. Unknown/missing/dev ids never report skew, so local dev and
  * partial deploys never nag.
