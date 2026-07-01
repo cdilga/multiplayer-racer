@@ -9,22 +9,20 @@ there is convincing test evidence and a fresh validator has checked that evidenc
 ```bash
 SESSION=multiplayer-racer--bead-swarm
 
-ntm spawn "$SESSION" --cc=3 --cod=2
+ntm spawn "$SESSION" --cc=2 --cod=2
 ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 
-# Add one low-cost release manager pane for commits, pushes, and CI follow-up.
-# The current swarm is a labeled session: multiplayer-racer--bead-swarm.
-# Prefer Claude Haiku if the local Claude CLI profile supports it; otherwise use the
-# cheapest configured Codex lane and the same prompt.
-ntm add multiplayer-racer --label bead-swarm --cc=1:haiku --prompt "$(cat .ntm/prompts/60-release-manager.md)"
+# Keep the session small: at most five panes total, including the user pane.
+# Reuse or replace an idle worker pane for release management; do not add a
+# release manager if that would exceed the cap.
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/60-release-manager.md
 
 # After agents are registered and oriented, keep workers moving:
-ntm send "$SESSION" --cc --panes=<idle-claude-panes> --file .ntm/prompts/10-worker-next-bead.md
-ntm send "$SESSION" --cod --panes=<idle-codex-panes> --file .ntm/prompts/10-worker-next-bead.md
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/10-worker-next-bead.md
 
 # When one worker says implementation is complete, send one fresh agent a target bead:
 { cat .ntm/prompts/30-fresh-validator.md; printf "\n\nTarget bead: <bead-id>\n"; } > /tmp/jj-validator.md
-ntm send "$SESSION" --cod "$(cat /tmp/jj-validator.md)"
+ntm send "$SESSION" --pane=<idle-pane> "$(cat /tmp/jj-validator.md)"
 ```
 
 Use robot views for coordination:
@@ -46,17 +44,17 @@ editing; do not treat the failed lock listing as permission to ignore reservatio
 
 ## Active Swarm Posture
 
-Keep at least two Claude lanes and two Codex lanes assigned to useful non-blocked beads whenever
-there is ready work. Prefer targeted sends to idle panes over broad rebroadcasts once a swarm is
-already active:
+Keep the live swarm at no more than five panes total, including the user pane. The normal target is
+four agent panes plus the user. If a different model lane is needed, replace or repurpose an idle
+pane instead of adding capacity. Prefer targeted sends to idle panes over broad rebroadcasts once a
+swarm is already active:
 
 ```bash
 ntm status "$SESSION"
 br ready --json
 bv --robot-next --format json
 
-ntm send "$SESSION" --pane=<idle-claude-pane> --file .ntm/prompts/10-worker-next-bead.md
-ntm send "$SESSION" --pane=<idle-codex-pane> --file .ntm/prompts/10-worker-next-bead.md
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/10-worker-next-bead.md
 ```
 
 If all ready beads are blocked by validation findings, dispatch repair prompts to the current

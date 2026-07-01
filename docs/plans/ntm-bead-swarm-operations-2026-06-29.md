@@ -21,7 +21,9 @@ The matching prompt templates live in `.ntm/prompts/`.
 - No bead closes without evidence that is concrete enough for a different agent to inspect or
   reproduce.
 - A fresh validator must check the work and post PASS before closure.
-- Commits and pushes should be handled by a low-cost release-manager pane after validation, not by
+- Keep the live NTM swarm at no more than five panes total, including the user pane. Reuse or
+  replace idle panes for worker, validator, and release-manager roles instead of growing the swarm.
+- Commits and pushes should be handled by a low-cost release-manager role after validation, not by
   implementation workers opportunistically bundling their own changes.
 
 ## Current Product Invariants
@@ -68,10 +70,13 @@ Fresh validator:
 Coordinator:
 - Spawns NTM sessions, sends prompt templates, watches reservations, and assigns validators.
 - Keeps agents out of communication-only loops by dispatching ready work.
+- Keeps the session at or below the five-pane cap; if a different model lane is needed, scales down
+  or repurposes an idle pane before adding a replacement.
 - Does not allow closure before the evidence gate.
 
 Release manager:
-- Prefer a smaller/cheaper model lane, such as `ntm add multiplayer-racer --label bead-swarm --cc=1:haiku --prompt "$(cat .ntm/prompts/60-release-manager.md)"` when the local Claude CLI supports Haiku. If not, use the cheapest configured Codex lane with the same prompt.
+- Prefer a smaller/cheaper model lane, but stay inside the cap. Reuse an idle pane with
+  `.ntm/prompts/60-release-manager.md`, or replace an idle pane if a different model is required.
 - Does not implement features and does not validate its own work.
 - Waits for fresh-validator PASS or explicit coordinator release approval before packaging a slice.
 - Stages only files belonging to that validated slice, creates a reasonable feature commit, pushes,
@@ -162,21 +167,23 @@ Known gaps:
 1. Spawn a session and send `.ntm/prompts/00-bootstrap-all-agents.md`.
 2. Send `.ntm/prompts/10-worker-next-bead.md` to active workers.
 3. When a worker is nearly done, send `.ntm/prompts/20-worker-completion-self-review.md`.
-4. Assign a different or fresh agent with `.ntm/prompts/30-fresh-validator.md`.
+4. Assign a different or fresh-enough existing agent with `.ntm/prompts/30-fresh-validator.md`.
 5. Close only after validator PASS.
-6. Send `.ntm/prompts/60-release-manager.md` to the low-cost release pane to create scoped commits,
+6. Send `.ntm/prompts/60-release-manager.md` to a low-cost or idle release pane to create scoped commits,
    push validated slices, watch CI, and reopen/create Beads on failure.
 7. Use `.ntm/prompts/50-context-rotation-recovery.md` after compaction or pane restart.
 
 ## Release Manager Lane
 
-Add one low-cost release pane to the grid once workers and validators are active:
+Do not add a dedicated release pane if that would exceed the five-pane session cap. Reuse an idle
+pane when possible:
 
 ```bash
-ntm add multiplayer-racer --label bead-swarm --cc=1:haiku --prompt "$(cat .ntm/prompts/60-release-manager.md)"
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/60-release-manager.md
 ```
 
-Fallback if Haiku is unavailable in this environment:
+If a different model lane is genuinely needed, scale down or retire an idle pane first, then add a
+replacement rather than growing the swarm:
 
 ```bash
 ntm add multiplayer-racer --label bead-swarm --cod=1:<cheapest-configured-model> --prompt "$(cat .ntm/prompts/60-release-manager.md)"

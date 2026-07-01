@@ -6,15 +6,16 @@ Use this when steering an active NTM swarm.
 
 ```bash
 SESSION=multiplayer-racer--bead-swarm
-ntm spawn "$SESSION" --cc=3 --cod=2
+ntm spawn "$SESSION" --cc=2 --cod=2
 ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 ```
 
-Add one low-cost release manager pane after the initial agents are oriented. Prefer Claude Haiku if
-available; otherwise use the cheapest configured Codex lane with the same prompt.
+Keep the session at no more than five panes total, including the user pane. The normal target is
+four agent panes plus the user. Reuse or replace an idle pane for release management; do not add a
+release manager if that would exceed the cap.
 
 ```bash
-ntm add multiplayer-racer --label bead-swarm --cc=1:haiku --prompt "$(cat .ntm/prompts/60-release-manager.md)"
+ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/60-release-manager.md
 ```
 
 After agents register:
@@ -35,11 +36,10 @@ ntm status "$SESSION"
 ntm send "$SESSION" --pane=<idle-pane> --file .ntm/prompts/10-worker-next-bead.md
 ```
 
-Maintain at least two Claude workers and two Codex workers on useful non-blocked beads while ready
-work exists. Use Codex and Claude deliberately: Codex lanes are good for implementation/test repair
-loops; Claude lanes are good for requirements synthesis, validation, UI/UX review, and cross-flow
-consistency. Either kind of agent may implement or validate, but a validator must not be the worker
-who produced the slice being validated.
+Maintain at most four active agent lanes while ready work exists. Use Codex and Claude deliberately:
+Codex lanes are good for implementation/test repair loops; Claude lanes are good for requirements
+synthesis, validation, UI/UX review, and cross-flow consistency. Either kind of agent may implement
+or validate, but a validator must not be the worker who produced the slice being validated.
 
 Prefer unblocking foundational beads before broad polish. In this repo that often means protocol,
 room/seat lifecycle, determinism, map validity, debug-lab evidence tooling, and first-run flow
@@ -55,12 +55,13 @@ rule; known and random maps share recorded seed/recipe validation.
 When a worker posts "ready for fresh validation":
 
 1. Pick an agent that did not implement that bead and has enough context room.
-2. If necessary, add a fresh pane: `ntm add "$SESSION" --cod=1` or `ntm add "$SESSION" --cc=1`.
+2. Prefer an idle existing pane. If a genuinely fresh lane is necessary, scale down or retire an
+   idle pane before adding a replacement so the session stays at the five-pane cap.
 3. Send the validator prompt with the target bead id appended.
 
 ```bash
 printf "\n\nTarget bead: <bead-id>\n" | cat .ntm/prompts/30-fresh-validator.md - > /tmp/validator-prompt.md
-ntm send "$SESSION" --cod "$(cat /tmp/validator-prompt.md)"
+ntm send "$SESSION" --pane=<idle-pane> "$(cat /tmp/validator-prompt.md)"
 ```
 
 Do not let the worker close the bead before validator PASS.

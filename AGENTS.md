@@ -29,6 +29,8 @@ This repository uses `br` (Beads Rust) for task tracking and `bv` for graph-awar
 - Check Agent Mail before claiming work and after each meaningful edit/test cycle.
 - Reserve files with Agent Mail before editing. Use specific paths or globs, not the whole repo.
 - Announce bead claims, file reservations, blockers, and completion in a thread named after the bead ID.
+- Keep NTM swarms small: target at most five panes total, including the user pane. Reuse or replace
+  idle panes for worker, validator, and release-manager roles instead of adding more agents.
 - Do not sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim it, reserve files, announce, and start.
 
 ## Beads
