@@ -7,3 +7,13 @@ export {
     normalizeTelemetryEnv,
     serviceForRole
 } from './TelemetryService.js';
+
+export {
+    TelemetryClient,
+    bootstrapPageTelemetry,
+    getBrowserTelemetry,
+    initBrowserTelemetry,
+    resetBrowserTelemetryForTests,
+    resolveTelemetryConfig,
+    setTelemetryContextFromPayload
+} from './TelemetryClient.js';

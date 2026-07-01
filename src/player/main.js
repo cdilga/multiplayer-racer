@@ -13,12 +13,18 @@ import { io } from 'socket.io-client';
 import { ControlMapper } from '/static/js/input/ControlMapper.js';
 import { RemapStore } from '/static/js/input/RemapStore.js';
 import { initBuildSkew } from '/static/js/buildSkewBanner.js';
+import { bootstrapPageTelemetry } from '/static/js/telemetry/index.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
 window.io = io;
 window.ControlMapper = ControlMapper;
 window.RemapStore = RemapStore;
+
+bootstrapPageTelemetry({
+    role: 'controller',
+    source: 'PlayerEntry'
+});
 
 // Detect client/server build skew (stale tab after a redeploy) and show a
 // reload prompt; sets window.__buildStale so player.js stops sending control

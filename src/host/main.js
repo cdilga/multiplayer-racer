@@ -12,10 +12,16 @@
 import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { io } from 'socket.io-client';
+import { bootstrapPageTelemetry } from '/static/js/telemetry/index.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
 window.io = io;
+
+bootstrapPageTelemetry({
+    role: 'host',
+    source: 'HostEntry'
+});
 
 // UI elements
 const loadingOverlay = document.getElementById('loading-overlay');

@@ -1722,6 +1722,14 @@ function findSavedReconnect() {
     return candidates[0] || null;
 }
 
+function syncTelemetryContextFromPayload(payload) {
+    const telemetry = window.__JJ_TELEMETRY__;
+    if (!telemetry || typeof telemetry.setContextFromPayload !== 'function') {
+        return null;
+    }
+    return telemetry.setContextFromPayload(payload);
+}
+
 socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);
     updateConnectionStatus(false);
@@ -1734,6 +1742,7 @@ socket.on('join_error', (data) => {
 });
 
 function handleSuccessfulJoin(data) {
+    syncTelemetryContextFromPayload(data);
     gameState.playerId = data.player_id;
     gameState.seatId = data.seat_id ?? data.player_id ?? null;
     gameState.seatToken = data.seat_token || gameState.seatToken || null;
@@ -1818,6 +1827,7 @@ socket.on('seat_taken_over', (data) => {
 });
 
 socket.on('room_phase', (data) => {
+    syncTelemetryContextFromPayload(data);
     if (data.mode) {
         gameState.gameMode = data.mode;
         updateModeDisplay(data.mode);
@@ -1826,6 +1836,7 @@ socket.on('room_phase', (data) => {
 });
 
 socket.on('game_started', (data = {}) => {
+    syncTelemetryContextFromPayload(data);
     applyRoomPhaseState(data.phase || 'active');
 });
 
@@ -1854,6 +1865,7 @@ socket.on('weapon_fired', (data) => {
 });
 
 socket.on('host_disconnected', (data = {}) => {
+    syncTelemetryContextFromPayload(data);
     if (data.mode) {
         gameState.gameMode = data.mode;
         updateModeDisplay(data.mode);

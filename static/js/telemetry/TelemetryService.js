@@ -1,4 +1,6 @@
 const ALLOWED_EVENT_NAMES = new Set([
+    'app_boot',
+    'route_view',
     'gameplay:match:started',
     'gameplay:match:ended',
     'gameplay:player:joined',
@@ -184,7 +186,7 @@ class TelemetryService {
     }
 
     emit(eventName, properties = {}) {
-        if (!this.enabled) return;
+        if (!this.enabled) return null;
 
         try {
             this._validateEventName(eventName);
@@ -214,6 +216,7 @@ class TelemetryService {
             }
 
             this.queue.push(sanitized);
+            return sanitized;
         } catch (err) {
             if (this.debug) {
                 console.error('[TELEMETRY ERROR]', err.message, err.code);

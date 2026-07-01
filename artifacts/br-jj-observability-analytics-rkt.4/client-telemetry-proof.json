@@ -1,0 +1,111 @@
+{
+  "disabledMode": {
+    "sink": "noop",
+    "fetchCalls": 0
+  },
+  "host": [
+    {
+      "eventName": "app_boot",
+      "timestamp": 1782902947005,
+      "release": "dev",
+      "roomAnalyticsId": "room-unknown",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "anon-736c853206764a82845da32b",
+      "project": "joystick-jammers",
+      "service": "host-client",
+      "env": "local",
+      "role": "host",
+      "source": "HostEntry",
+      "properties": {
+        "routePath": "/frontend/host/index.html",
+        "role": "host",
+        "entrySource": "HostEntry",
+        "buildId": "dev",
+        "buildTime": "dev"
+      }
+    },
+    {
+      "eventName": "route_view",
+      "timestamp": 1782902947006,
+      "release": "dev",
+      "roomAnalyticsId": "room-unknown",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "anon-736c853206764a82845da32b",
+      "project": "joystick-jammers",
+      "service": "host-client",
+      "env": "local",
+      "role": "host",
+      "source": "HostEntry",
+      "properties": {
+        "routePath": "/frontend/host/index.html",
+        "role": "host"
+      }
+    }
+  ],
+  "controller": [
+    {
+      "eventName": "app_boot",
+      "timestamp": 1782902947006,
+      "release": "dev",
+      "roomAnalyticsId": "room-unknown",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "anon-fc7f75e88df14b88823aef53",
+      "project": "joystick-jammers",
+      "service": "controller-client",
+      "env": "local",
+      "role": "controller",
+      "source": "PlayerEntry",
+      "properties": {
+        "routePath": "/frontend/player/index.html",
+        "role": "controller",
+        "entrySource": "PlayerEntry",
+        "buildId": "dev",
+        "buildTime": "dev"
+      }
+    },
+    {
+      "eventName": "route_view",
+      "timestamp": 1782902947006,
+      "release": "dev",
+      "roomAnalyticsId": "room-unknown",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "anon-fc7f75e88df14b88823aef53",
+      "project": "joystick-jammers",
+      "service": "controller-client",
+      "env": "local",
+      "role": "controller",
+      "source": "PlayerEntry",
+      "properties": {
+        "routePath": "/frontend/player/index.html",
+        "role": "controller"
+      }
+    },
+    {
+      "eventName": "route_view",
+      "timestamp": 1782902947006,
+      "release": "dev",
+      "roomAnalyticsId": "room-analytics-123",
+      "matchId": "match-analytics-456",
+      "playerAnalyticsId": "player-anon-789",
+      "project": "joystick-jammers",
+      "service": "controller-client",
+      "env": "local",
+      "role": "controller",
+      "source": "PlayerEntry",
+      "properties": {
+        "routePath": "[redacted]",
+        "source": "PlayerEntry"
+      }
+    }
+  ],
+  "posthog": {
+    "url": "https://posthog.example/batch/",
+    "options": {
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"api_key\":\"phc_test_key\",\"batch\":[{\"event\":\"app_boot\",\"properties\":{\"distinct_id\":\"player-anon-789\",\"$lib\":\"joystick-jammers-browser-telemetry\",\"release\":\"dev\",\"roomAnalyticsId\":\"room-analytics-123\",\"matchId\":\"match-analytics-456\",\"project\":\"joystick-jammers\",\"service\":\"host-client\",\"env\":\"prod\",\"role\":\"host\",\"source\":\"HostEntry\",\"routePath\":\"/frontend/host/index.html\"},\"timestamp\":\"2026-07-01T10:49:07.006Z\"}],\"sent_at\":\"2026-07-01T10:49:07.007Z\"}"
+    }
+  }
+}

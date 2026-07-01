@@ -14,6 +14,7 @@
  */
 
 import { DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
+import { setTelemetryContextFromPayload } from '../telemetry/index.js';
 
 function resolveSocketTransports(search = '') {
     const params = new URLSearchParams(search || '');
@@ -181,6 +182,7 @@ class NetworkSystem {
             this._captureHostCredentials(data);
             // Server is authoritative on topology; carry it to lobby consumers.
             this.topology = normalizeTopology(data.topology);
+            setTelemetryContextFromPayload(data);
             this._emit('network:roomCreated', {
                 roomCode: data.room_code,
                 joinUrl: data.join_url,
@@ -195,6 +197,7 @@ class NetworkSystem {
             this.isHost = true;
             this._captureHostCredentials(data);
             this.topology = normalizeTopology(data && data.topology);
+            setTelemetryContextFromPayload(data);
             this._emit('network:roomReclaimed', {
                 roomCode: this.roomCode,
                 topology: this.topology
@@ -297,14 +300,17 @@ class NetworkSystem {
 
         // Game events from server (server sends game_started, not game_start)
         this.socket.on('game_started', (data) => {
+            setTelemetryContextFromPayload(data);
             this._emit('network:gameStart', data);
         });
 
         this.socket.on('game_start', (data) => {
+            setTelemetryContextFromPayload(data);
             this._emit('network:gameStart', data);
         });
 
         this.socket.on('game_end', (data) => {
+            setTelemetryContextFromPayload(data);
             this._emit('network:gameEnd', data);
         });
 
