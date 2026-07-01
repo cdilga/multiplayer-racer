@@ -46,6 +46,27 @@ export const test = base.extend<GameTestFixtures>({
 
 export { expect } from '@playwright/test';
 
+type SocketTransportMode = 'polling' | 'hybrid' | 'websocket';
+type NavigationOptions = {
+    testMode?: boolean;
+    socketTransport?: SocketTransportMode;
+};
+
+function buildAppUrl(path: string, options: NavigationOptions = {}): string {
+    const params = new URLSearchParams();
+
+    if (options.testMode !== false) {
+        params.set('testMode', '1');
+    }
+
+    if (options.socketTransport) {
+        params.set('socketTransport', options.socketTransport);
+    }
+
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
+}
+
 export async function resetE2ERooms(request: APIRequestContext): Promise<void> {
     const response = await request.post('/__test__/reset-rooms', {
         headers: {
@@ -59,9 +80,9 @@ export async function resetE2ERooms(request: APIRequestContext): Promise<void> {
 }
 
 // Helper to navigate to host page with test mode for faster socket connections
-export async function gotoHost(hostPage: Page): Promise<void> {
+export async function gotoHost(hostPage: Page, options: NavigationOptions = {}): Promise<void> {
     // The landing page now lives at "/"; the host screen moved to "/host".
-    await hostPage.goto('/host?testMode=1');
+    await hostPage.goto(buildAppUrl('/host', options));
 }
 
 // Helper to wait for room code to appear on host
@@ -87,10 +108,11 @@ export async function waitForRoomCode(hostPage: Page): Promise<string> {
 export async function joinGameAsPlayer(
     playerPage: Page,
     roomCode: string,
-    playerName: string = 'TestPlayer'
+    playerName: string = 'TestPlayer',
+    options: NavigationOptions = {}
 ): Promise<void> {
     // Navigate to player page with testMode flag for faster socket connections
-    await playerPage.goto('/player?testMode=1');
+    await playerPage.goto(buildAppUrl('/player', options));
 
     // Wait for join screen to be visible
     await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 30000 });

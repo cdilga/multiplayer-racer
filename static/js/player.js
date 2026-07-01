@@ -319,10 +319,29 @@ if (elements.autoJoinMessage) {
     elements.autoJoinMessage.appendChild(elements.joinTimerDisplay);
 }
 
-// Socket.io connection - use polling only in test mode to avoid websocket upgrade issues
-const isTestMode = new URLSearchParams(window.location.search).get('testMode') === '1';
+function resolveSocketTransports(search = window.location.search) {
+    const params = new URLSearchParams(search || '');
+    const socketTransport = (params.get('socketTransport') || '').toLowerCase();
+
+    if (socketTransport === 'polling') {
+        return ['polling'];
+    }
+    if (socketTransport === 'websocket') {
+        return ['websocket'];
+    }
+    if (socketTransport === 'hybrid' || socketTransport === 'upgrade') {
+        return ['polling', 'websocket'];
+    }
+
+    // Most E2E specs still pin polling in testMode for stability, but the
+    // large soak can opt back into websocket upgrades explicitly.
+    return params.get('testMode') === '1'
+        ? ['polling']
+        : ['polling', 'websocket'];
+}
+
 const socket = io({
-    transports: isTestMode ? ['polling'] : ['polling', 'websocket']
+    transports: resolveSocketTransports(window.location.search)
 });
 
 // Enable dev mode for faster testing - changed to false to give time to customize name

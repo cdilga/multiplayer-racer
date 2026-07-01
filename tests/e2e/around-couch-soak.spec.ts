@@ -1,6 +1,9 @@
 import { test, expect, gotoHost, joinGameAsPlayer, startGameFromHost, waitForRoomCode } from './fixtures';
 
 const soakPlayers = Number(process.env.JJ_SOAK_PLAYERS || 0);
+const soakSocketOptions = {
+    socketTransport: 'hybrid' as const,
+};
 
 test.describe('Around Couch Soak', () => {
     test.skip(!Number.isFinite(soakPlayers) || soakPlayers < 2, 'Set JJ_SOAK_PLAYERS to run the spawn soak.');
@@ -16,7 +19,9 @@ test.describe('Around Couch Soak', () => {
         const players: Array<{ context: any; page: any }> = [];
 
         try {
-            await gotoHost(hostPage);
+            // Keep testMode shortcuts, but allow websocket upgrades so the
+            // 32-controller soak exercises the production transport path.
+            await gotoHost(hostPage, soakSocketOptions);
             const roomCode = await waitForRoomCode(hostPage);
 
             for (let index = 0; index < soakPlayers; index++) {
@@ -29,7 +34,7 @@ test.describe('Around Couch Soak', () => {
                 const page = await context.newPage();
                 players.push({ context, page });
 
-                await joinGameAsPlayer(page, roomCode, `Soak${index + 1}`);
+                await joinGameAsPlayer(page, roomCode, `Soak${index + 1}`, soakSocketOptions);
                 await hostPage.waitForFunction(
                     (expected) => {
                         // @ts-ignore

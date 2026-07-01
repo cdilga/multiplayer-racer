@@ -15,6 +15,25 @@
 
 import { DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
 
+function resolveSocketTransports(search = '') {
+    const params = new URLSearchParams(search || '');
+    const socketTransport = (params.get('socketTransport') || '').toLowerCase();
+
+    if (socketTransport === 'polling') {
+        return ['polling'];
+    }
+    if (socketTransport === 'websocket') {
+        return ['websocket'];
+    }
+    if (socketTransport === 'hybrid' || socketTransport === 'upgrade') {
+        return ['polling', 'websocket'];
+    }
+
+    return params.get('testMode') === '1'
+        ? ['polling']
+        : ['polling', 'websocket'];
+}
+
 class NetworkSystem {
     /**
      * @param {Object} options
@@ -67,11 +86,8 @@ class NetworkSystem {
                 console.error('NetworkSystem: Socket.IO not loaded');
                 return;
             }
-            // Use polling only in test mode to avoid websocket upgrade issues
-            const isTestMode = typeof window !== 'undefined' &&
-                new URLSearchParams(window.location?.search).get('testMode') === '1';
             this.socket = io({
-                transports: isTestMode ? ['polling'] : ['polling', 'websocket']
+                transports: resolveSocketTransports(window.location?.search || '')
             });
         }
 
