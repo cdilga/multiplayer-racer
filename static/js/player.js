@@ -17,6 +17,11 @@ const REMAP_SOURCE_IDS = Object.freeze({
     keyboard: 'primary',
     gamepadFallback: 'standard'
 });
+const ROOM_SEAT_STORAGE_PREFIX = 'racer_seat_';
+const LEGACY_RECONNECT_PREFIX = 'racer_reconnect_';
+const CLIENT_INSTANCE_STORAGE_KEY = 'racer_client_instance_id';
+const SEAT_HEARTBEAT_INTERVAL_MS = 4000;
+const ACTIVE_ROOM_PHASES = new Set(['countdown', 'active', 'finish_grace', 'round_end']);
 const KEYBOARD_ACTIONS = Array.isArray(ControlMapperClass?.KEYBOARD_ACTIONS)
     ? ControlMapperClass.KEYBOARD_ACTIONS
     : ['steerLeft', 'steerRight', 'accelerate', 'brake', 'fire'];
@@ -82,6 +87,12 @@ const gameState = window.gameState = {
     playerName: '',
     roomCode: null,
     playerId: null,
+    seatId: null,
+    seatToken: null,
+    leaseVersion: null,
+    clientInstanceId: null,
+    roomPhase: 'waiting',
+    role: null,
     carColor: null,
     connected: false,
     gameStarted: false,
@@ -116,6 +127,153 @@ const gameState = window.gameState = {
     lastServerUpdate: 0,
     autoJoinDelayMs: 0 // Delay before auto-joining to give time to set name
 };
+
+let fallbackClientInstanceId = null;
+
+function getLocalStorageHandle() {
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            return window.localStorage;
+        }
+    } catch (e) {}
+    try {
+        if (typeof localStorage !== 'undefined') {
+            return localStorage;
+        }
+    } catch (e) {}
+    return null;
+}
+
+function getSessionStorageHandle() {
+    try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+            return window.sessionStorage;
+        }
+    } catch (e) {}
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            return sessionStorage;
+        }
+    } catch (e) {}
+    return null;
+}
+
+function generateClientInstanceId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return `ci-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function getClientInstanceId() {
+    if (gameState.clientInstanceId) {
+        return gameState.clientInstanceId;
+    }
+
+    const sessionStore = getSessionStorageHandle();
+    try {
+        const existing = sessionStore?.getItem(CLIENT_INSTANCE_STORAGE_KEY);
+        if (existing) {
+            gameState.clientInstanceId = existing;
+            return existing;
+        }
+    } catch (e) {}
+
+    const nextId = fallbackClientInstanceId || generateClientInstanceId();
+    fallbackClientInstanceId = nextId;
+    gameState.clientInstanceId = nextId;
+    try {
+        sessionStore?.setItem(CLIENT_INSTANCE_STORAGE_KEY, nextId);
+    } catch (e) {}
+    return nextId;
+}
+
+function roomSeatStorageKey(roomCode) {
+    return `${ROOM_SEAT_STORAGE_PREFIX}${roomCode}`;
+}
+
+function legacyReconnectKey(roomCode) {
+    return `${LEGACY_RECONNECT_PREFIX}${roomCode}`;
+}
+
+function parseStoredJson(rawValue) {
+    if (!rawValue) return null;
+    try {
+        return JSON.parse(rawValue);
+    } catch (e) {
+        return null;
+    }
+}
+
+function readStoredSeatRecord(roomCode) {
+    if (!roomCode) {
+        return null;
+    }
+
+    const localStore = getLocalStorageHandle();
+    const sessionStore = getSessionStorageHandle();
+    const storedSeat = parseStoredJson(localStore?.getItem(roomSeatStorageKey(roomCode)));
+    if (storedSeat?.room_code === roomCode) {
+        return storedSeat;
+    }
+
+    const legacySeat = parseStoredJson(sessionStore?.getItem(legacyReconnectKey(roomCode)));
+    if (legacySeat?.room_code === roomCode) {
+        return legacySeat;
+    }
+
+    return null;
+}
+
+function writeStoredSeatRecord(record) {
+    if (!record?.room_code) {
+        return;
+    }
+
+    const normalized = {
+        room_code: record.room_code,
+        player_id: record.player_id ?? null,
+        seat_id: record.seat_id ?? null,
+        seat_token: record.seat_token ?? null,
+        lease_version: record.lease_version ?? null,
+        client_instance_id: record.client_instance_id ?? getClientInstanceId(),
+        player_name: record.player_name ?? gameState.playerName ?? '',
+        last_joined_at: Date.now()
+    };
+
+    const localStore = getLocalStorageHandle();
+    const sessionStore = getSessionStorageHandle();
+    const serialized = JSON.stringify(normalized);
+    try {
+        localStore?.setItem(roomSeatStorageKey(record.room_code), serialized);
+    } catch (e) {
+        console.warn('Could not save seat token data:', e);
+    }
+    try {
+        sessionStore?.setItem(legacyReconnectKey(record.room_code), serialized);
+    } catch (e) {
+        console.warn('Could not save reconnect data:', e);
+    }
+}
+
+function clearStoredSeatRecord(roomCode) {
+    if (!roomCode) {
+        return;
+    }
+
+    const localStore = getLocalStorageHandle();
+    const sessionStore = getSessionStorageHandle();
+    try {
+        localStore?.removeItem(roomSeatStorageKey(roomCode));
+    } catch (e) {}
+    try {
+        sessionStore?.removeItem(legacyReconnectKey(roomCode));
+    } catch (e) {}
+}
+
+function phaseFromGameState(gameStateValue) {
+    return gameStateValue === 'racing' ? 'active' : 'waiting';
+}
 
 // Helper function to get URL parameters
 function getUrlParameter(name) {
@@ -320,6 +478,9 @@ function collectPlayerDebugInfo() {
         userAgent: navigator.userAgent,
         roomCode: gameState.roomCode || null,
         playerId: gameState.playerId || null,
+        seatId: gameState.seatId || null,
+        phase: gameState.roomPhase || null,
+        leaseVersion: gameState.leaseVersion || null,
         playerName: gameState.playerName || null,
         connected: gameState.connected,
         gameStarted: gameState.gameStarted,
@@ -1189,11 +1350,7 @@ function initPlayerMenu() {
     });
 
     leaveBtn?.addEventListener('click', () => {
-        try {
-            sessionStorage.removeItem(`racer_reconnect_${gameState.roomCode}`);
-        } catch (e) {
-            // sessionStorage unavailable - nothing to clean up
-        }
+        clearStoredSeatRecord(gameState.roomCode);
         // Reload without ?room so we don't instantly auto-rejoin
         window.location.href = window.location.pathname;
     });
@@ -1246,6 +1403,143 @@ function updateVehicleStatusFeedback() {
     gameState.wasBadLandingActive = gameState.badLandingActive;
 }
 
+function syncCurrentSeatRecord() {
+    if (!gameState.roomCode || !gameState.playerId) {
+        return;
+    }
+
+    writeStoredSeatRecord({
+        room_code: gameState.roomCode,
+        player_id: gameState.playerId,
+        seat_id: gameState.seatId,
+        seat_token: gameState.seatToken,
+        lease_version: gameState.leaseVersion,
+        client_instance_id: gameState.clientInstanceId,
+        player_name: gameState.playerName
+    });
+}
+
+function ensureWaitingRoomIdentityUI() {
+    if (elements.displayName) {
+        elements.displayName.textContent = gameState.playerName;
+    }
+    if (elements.displayRoom) {
+        elements.displayRoom.textContent = gameState.roomCode;
+    }
+
+    initCarPreview();
+
+    const playerInfo = elements.waitingScreen.querySelector('.player-info');
+    const existingNameChange = playerInfo?.querySelector('.name-change-container');
+    if (existingNameChange) {
+        const waitingNameInput = existingNameChange.querySelector('#waiting-name-input');
+        if (waitingNameInput) {
+            waitingNameInput.value = gameState.playerName;
+        }
+        return;
+    }
+
+    if (!playerInfo) {
+        return;
+    }
+
+    const nameChangeContainer = document.createElement('div');
+    nameChangeContainer.className = 'name-change-container';
+    nameChangeContainer.innerHTML = `
+        <p>Want to change your name?</p>
+        <div class="name-change-input">
+            <input type="text" id="waiting-name-input" value="${gameState.playerName}" maxlength="15">
+            <button id="update-name-btn">Update</button>
+        </div>
+    `;
+    playerInfo.appendChild(nameChangeContainer);
+
+    const waitingNameInput = document.getElementById('waiting-name-input');
+    const updateNameBtn = document.getElementById('update-name-btn');
+    if (!waitingNameInput || !updateNameBtn) {
+        return;
+    }
+
+    updateNameBtn.addEventListener('click', () => {
+        const newName = waitingNameInput.value.trim();
+        if (newName && newName !== gameState.playerName) {
+            updatePlayerName(newName);
+        }
+    });
+
+    waitingNameInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            updateNameBtn.click();
+        }
+    });
+}
+
+function applyRoomPhaseState(phase, { message = null, duration = 3000 } = {}) {
+    const nextPhase = typeof phase === 'string' && phase ? phase : phaseFromGameState('waiting');
+    const previousPhase = gameState.roomPhase;
+    gameState.roomPhase = nextPhase;
+
+    if (ACTIVE_ROOM_PHASES.has(nextPhase)) {
+        const shouldRebuildControls = !(gameState.gameStarted && previousPhase === nextPhase);
+        gameState.gameStarted = true;
+        if (shouldRebuildControls) {
+            initGameControls();
+            showScreen('game');
+            maybeStartGameplayTutorial();
+        } else {
+            showScreen('game');
+        }
+        if (message) {
+            showMessage(message, duration);
+        } else if (previousPhase === 'host_lost') {
+            showMessage('Host reconnected. Match resumed.', 2500);
+        }
+        return;
+    }
+
+    if (gameState.gameStarted) {
+        releaseAllControls({ emitPacket: false });
+    }
+    gameState.gameStarted = false;
+
+    if (nextPhase === 'closed') {
+        clearStoredSeatRecord(gameState.roomCode);
+        resetGame();
+        showError(message || 'This room has closed.');
+        return;
+    }
+
+    ensureWaitingRoomIdentityUI();
+    showScreen('waiting');
+
+    if (message) {
+        showMessage(message, duration);
+    } else if (nextPhase === 'host_lost' && previousPhase !== 'host_lost') {
+        showMessage('Host connection lost. Holding your seat while it reconnects.', 3500);
+    } else if (previousPhase === 'host_lost') {
+        showMessage('Host reconnected. Waiting for the next state update.', 2500);
+    }
+}
+
+function sendSeatHeartbeat() {
+    if (!gameState.connected || !gameState.roomCode || !gameState.seatId || !gameState.playerId) {
+        return;
+    }
+    if (window.__buildStale) {
+        return;
+    }
+
+    socket.emit('seat_heartbeat', {
+        room_code: gameState.roomCode,
+        seat_id: gameState.seatId,
+        player_id: gameState.playerId,
+        lease_version: gameState.leaseVersion,
+        client_instance_id: getClientInstanceId()
+    });
+}
+
+(window.setInterval || setInterval)(sendSeatHeartbeat, SEAT_HEARTBEAT_INTERVAL_MS);
+
 // Socket event handlers
 // Handle vehicle state updates from server (forwarded from host)
 socket.on('vehicle_states_update', (data) => {
@@ -1295,6 +1589,7 @@ function updateConnectionStatus(connected) {
 socket.on('connect', () => {
     console.log('Connected to server');
     updateConnectionStatus(true);
+    getClientInstanceId();
     // ... rest of connect handler ...
 
     // Initialize error logging if not already initialized
@@ -1304,8 +1599,8 @@ socket.on('connect', () => {
     }
 
     // Reconnect path: if we were already in a game when the socket dropped
-    // (phone slept, network blip), rejoin automatically. joinGame() pulls the
-    // saved reconnect_id from sessionStorage so the server restores our car.
+    // (phone slept, network blip), rejoin automatically with the stored seat
+    // token + client-instance metadata so the server restores our seat.
     if (gameState.roomCode) {
         console.log('Socket reconnected - rejoining room', gameState.roomCode);
         showMessage('Recovering session...', 2000);
@@ -1343,6 +1638,11 @@ socket.on('connect', () => {
                 elements.playerNameInput.value = saved.player_name;
             }
         }
+    } else {
+        const saved = readStoredSeatRecord(roomCode);
+        if (saved?.player_name && elements.playerNameInput && !elements.playerNameInput.value.trim()) {
+            elements.playerNameInput.value = saved.player_name;
+        }
     }
 
     if (roomCode) {
@@ -1368,23 +1668,39 @@ socket.on('connect', () => {
 
 /**
  * Find the most recent saved reconnect record across all rooms in
- * sessionStorage. Lets a phone that fully reloaded after sleeping rejoin
+ * browser storage. Lets a phone that fully reloaded after sleeping rejoin
  * even when the room code was typed manually (no ?room= in the URL).
- * @returns {{player_id:any, player_name:string, room_code:string}|null}
+ * @returns {{player_id:any, player_name:string, room_code:string, seat_token?:string, lease_version?:number}|null}
  */
 function findSavedReconnect() {
-    try {
-        for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && key.startsWith('racer_reconnect_')) {
-                const parsed = JSON.parse(sessionStorage.getItem(key));
-                if (parsed && parsed.room_code) return parsed;
+    const candidates = [];
+    const readCandidatesFromStorage = (storage, prefix) => {
+        if (!storage) return;
+        try {
+            const entryCount = typeof storage.length === 'number'
+                ? storage.length
+                : Object.keys(storage.snapshot?.() || {}).length;
+            for (let i = 0; i < entryCount; i++) {
+                const key = typeof storage.key === 'function'
+                    ? storage.key(i)
+                    : Object.keys(storage.snapshot?.() || {})[i];
+                if (!key || !key.startsWith(prefix)) {
+                    continue;
+                }
+                const parsed = parseStoredJson(storage.getItem(key));
+                if (parsed?.room_code) {
+                    candidates.push(parsed);
+                }
             }
+        } catch (e) {
+            // storage unavailable / blocked
         }
-    } catch (e) {
-        // sessionStorage unavailable / blocked
-    }
-    return null;
+    };
+
+    readCandidatesFromStorage(getLocalStorageHandle(), ROOM_SEAT_STORAGE_PREFIX);
+    readCandidatesFromStorage(getSessionStorageHandle(), LEGACY_RECONNECT_PREFIX);
+    candidates.sort((a, b) => (b.last_joined_at || 0) - (a.last_joined_at || 0));
+    return candidates[0] || null;
 }
 
 socket.on('disconnect', (reason) => {
@@ -1398,119 +1714,100 @@ socket.on('join_error', (data) => {
     elements.roomCodeInput?.focus();
 });
 
-socket.on('game_joined', (data) => {
-    setJoinBusy(false);
+function handleSuccessfulJoin(data) {
     gameState.playerId = data.player_id;
+    gameState.seatId = data.seat_id ?? data.player_id ?? null;
+    gameState.seatToken = data.seat_token || gameState.seatToken || null;
+    gameState.leaseVersion = data.lease_version ?? gameState.leaseVersion ?? null;
+    gameState.clientInstanceId = data.client_instance_id || getClientInstanceId();
+    gameState.role = data.role || gameState.role || null;
     gameState.carColor = data.car_color;
+    gameState.roomPhase = data.phase || phaseFromGameState(data.game_state);
 
-    // Sync mode chosen before we joined (late join / reconnect)
     if (data.mode) {
         gameState.gameMode = data.mode;
         updateModeDisplay(data.mode);
     }
 
-    // Store player ID for reconnection
-    try {
-        const reconnectKey = `racer_reconnect_${gameState.roomCode}`;
-        sessionStorage.setItem(reconnectKey, JSON.stringify({
-            player_id: data.player_id,
-            player_name: gameState.playerName,
-            room_code: gameState.roomCode
-        }));
-    } catch (e) {
-        console.warn('Could not save reconnect data:', e);
-    }
+    syncCurrentSeatRecord();
+    ensureWaitingRoomIdentityUI();
 
-    // Handle reconnection - if game is already racing, skip to controller
-    if (data.reconnected && data.game_state === 'racing') {
-        console.log('Reconnected to racing game!');
-        gameState.gameStarted = true;
-        initGameControls();
-        showScreen('game');
-        showMessage('Reconnected! You are back in the race.');
-        maybeStartGameplayTutorial();
+    const nextPhase = data.phase || phaseFromGameState(data.game_state);
+    if (ACTIVE_ROOM_PHASES.has(nextPhase)) {
+        const message = data.reconnected
+            ? 'Reconnected! You are back in the race.'
+            : (data.is_late_join ? 'Joined the race! Good luck catching up!' : null);
+        applyRoomPhaseState(nextPhase, {
+            message,
+            duration: data.is_late_join ? 2500 : 2000
+        });
         return;
     }
 
-    // Handle late join - if joining a race in progress, skip to controller
-    if (data.is_late_join && data.game_state === 'racing') {
-        console.log('Late joining racing game!');
-        gameState.gameStarted = true;
-        initGameControls();
-        showScreen('game');
-        showMessage('Joined the race! Good luck catching up!');
-        maybeStartGameplayTutorial();
+    if (nextPhase === 'host_lost') {
+        applyRoomPhaseState(nextPhase, {
+            message: 'Host connection lost. Holding your seat while it reconnects.',
+            duration: 3500
+        });
         return;
     }
 
-    // Update UI (with null checks for DOM elements)
-    if (elements.displayName) {
-        elements.displayName.textContent = gameState.playerName;
-    }
-    if (elements.displayRoom) {
-        elements.displayRoom.textContent = gameState.roomCode;
-    }
-    
-    // Initialize car preview
-    initCarPreview();
-    
-    // Add a name change option in the waiting room (once - rejoining must
-    // not stack duplicate name inputs)
-    const playerInfo = elements.waitingScreen.querySelector('.player-info');
-    const existingNameChange = playerInfo?.querySelector('.name-change-container');
-    if (existingNameChange) {
-        const waitingNameInput = existingNameChange.querySelector('#waiting-name-input');
-        if (waitingNameInput) {
-            waitingNameInput.value = gameState.playerName;
-        }
-    } else if (playerInfo) {
-        const nameChangeContainer = document.createElement('div');
-        nameChangeContainer.className = 'name-change-container';
-        nameChangeContainer.innerHTML = `
-            <p>Want to change your name?</p>
-            <div class="name-change-input">
-                <input type="text" id="waiting-name-input" value="${gameState.playerName}" maxlength="15">
-                <button id="update-name-btn">Update</button>
-            </div>
-        `;
-        playerInfo.appendChild(nameChangeContainer);
+    applyRoomPhaseState(nextPhase);
+}
 
-        // Add event listeners for name change
-        const waitingNameInput = document.getElementById('waiting-name-input');
-        const updateNameBtn = document.getElementById('update-name-btn');
-        
-        if (waitingNameInput && updateNameBtn) {
-            updateNameBtn.addEventListener('click', () => {
-                const newName = waitingNameInput.value.trim();
-                if (newName && newName !== gameState.playerName) {
-                    // Update name
-                    updatePlayerName(newName);
-                }
-            });
-            
-            waitingNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    updateNameBtn.click();
-                }
-            });
-        }
-    }
-    
-    // Show waiting screen
-    showScreen('waiting');
+socket.on('game_joined', (data) => {
+    setJoinBusy(false);
+    handleSuccessfulJoin(data);
 });
 
-socket.on('game_started', () => {
-    gameState.gameStarted = true;
+socket.on('controller_takeover_required', (data) => {
+    setJoinBusy(false);
+    gameState.seatId = data.seat_id ?? gameState.seatId;
+    gameState.playerId = data.player_id ?? gameState.playerId;
+    gameState.leaseVersion = data.lease_version ?? gameState.leaseVersion;
+    gameState.roomPhase = data.phase || gameState.roomPhase;
 
-    // Initialize game controls
-    initGameControls();
+    const confirmTakeover = window.confirm?.(
+        `${data.player_name || gameState.playerName || 'This seat'} is already connected on another controller. Take over this seat here?`
+    );
+    if (!confirmTakeover) {
+        showMessage('Seat takeover cancelled.', 1800);
+        return;
+    }
 
-    // Show game screen
-    showScreen('game');
-    maybeStartGameplayTutorial();
+    const roomCode = gameState.roomCode || elements.roomCodeInput.value.trim().toUpperCase();
+    const savedSeat = readStoredSeatRecord(roomCode);
+    socket.emit('confirm_controller_takeover', {
+        room_code: roomCode,
+        seat_id: data.seat_id,
+        seat_token: gameState.seatToken || savedSeat?.seat_token || null,
+        client_instance_id: getClientInstanceId()
+    });
+    setJoinBusy(true);
+});
 
-    // Note: The game loop (updateLoop) is already running via requestAnimationFrame
+socket.on('seat_taken_over', (data) => {
+    gameState.leaseVersion = data.lease_version ?? gameState.leaseVersion;
+    gameState.roomPhase = 'waiting';
+    if (gameState.gameStarted) {
+        releaseAllControls({ emitPacket: false });
+    }
+    gameState.gameStarted = false;
+    ensureWaitingRoomIdentityUI();
+    showScreen('waiting');
+    showError('This controller was taken over on another device.');
+});
+
+socket.on('room_phase', (data) => {
+    if (data.mode) {
+        gameState.gameMode = data.mode;
+        updateModeDisplay(data.mode);
+    }
+    applyRoomPhaseState(data.phase || phaseFromGameState(data.game_state));
+});
+
+socket.on('game_started', (data = {}) => {
+    applyRoomPhaseState(data.phase || 'active');
 });
 
 // Handle mode selection from host
@@ -1537,9 +1834,15 @@ socket.on('weapon_fired', (data) => {
     updateWeaponDisplay();
 });
 
-socket.on('host_disconnected', () => {
-    showError('Host disconnected. Please join a new game.');
-    resetGame();
+socket.on('host_disconnected', (data = {}) => {
+    if (data.mode) {
+        gameState.gameMode = data.mode;
+        updateModeDisplay(data.mode);
+    }
+    applyRoomPhaseState(data.phase || 'host_lost', {
+        message: `Host disconnected. Holding your seat${data.grace_seconds ? ` for ${data.grace_seconds} seconds` : ''} while the room reconnects.`,
+        duration: 3500
+    });
 });
 
 // Handle position reset from host
@@ -1558,6 +1861,7 @@ socket.on('position_reset', (data) => {
 socket.on('name_updated', (data) => {
     if (data.success) {
         gameState.playerName = data.name;
+        syncCurrentSeatRecord();
         if (elements.displayName) {
             elements.displayName.textContent = data.name;
         }
@@ -1617,28 +1921,23 @@ function joinGame() {
     // Show a joining message + busy button
     setJoinBusy(true);
     showMessage('Joining game...', 1000);
-    
-    // Check for saved reconnection data
-    let reconnectId = null;
-    try {
-        const reconnectKey = `racer_reconnect_${roomCode}`;
-        const savedData = sessionStorage.getItem(reconnectKey);
-        if (savedData) {
-            const parsed = JSON.parse(savedData);
-            if (parsed.room_code === roomCode) {
-                reconnectId = parsed.player_id;
-                console.log('Found reconnection data, attempting to rejoin as player', reconnectId);
-            }
-        }
-    } catch (e) {
-        console.warn('Could not read reconnect data:', e);
+
+    const savedSeat = readStoredSeatRecord(roomCode);
+    const reconnectId = savedSeat?.player_id ?? null;
+    const seatToken = savedSeat?.seat_token ?? gameState.seatToken ?? null;
+    const clientInstanceId = getClientInstanceId();
+    if (savedSeat?.room_code === roomCode) {
+        console.log('Found saved seat data, attempting to rejoin seat', savedSeat.seat_id || reconnectId);
     }
 
     // Join game
     socket.emit('join_game', {
         player_name: playerName,
         room_code: roomCode,
-        reconnect_id: reconnectId
+        reconnect_id: reconnectId,
+        seat_token: seatToken,
+        lease_version: savedSeat?.lease_version ?? gameState.leaseVersion ?? null,
+        client_instance_id: clientInstanceId
     });
 }
 
@@ -1828,6 +2127,11 @@ function resetGame() {
     gameState.playerName = '';
     gameState.roomCode = null;
     gameState.playerId = null;
+    gameState.seatId = null;
+    gameState.seatToken = null;
+    gameState.leaseVersion = null;
+    gameState.roomPhase = 'waiting';
+    gameState.role = null;
     gameState.carColor = null;
     gameState.gameStarted = false;
     
@@ -2222,7 +2526,10 @@ function buildControlPacket(timestamp = Date.now()) {
     const controls = syncControlsFromMapper();
     return {
         player_id: gameState.playerId,
+        seat_id: gameState.seatId,
         room_code: gameState.roomCode,
+        lease_version: gameState.leaseVersion,
+        client_instance_id: getClientInstanceId(),
         controls: {
             steering: controls.steering,
             acceleration: controls.acceleration,
@@ -2399,7 +2706,8 @@ function setTouchFire(value) {
 
 // Release all controls and push the zeroed state to the server immediately.
 // Used when the tab is hidden/locked so the car doesn't drive itself.
-function releaseAllControls() {
+function releaseAllControls(options = {}) {
+    const { emitPacket = gameState.gameStarted } = options;
     keyboardPressedCodes.clear();
     lastControlFrameTime = null;
     gameState.touchControls.accelerateTouchId = null;
@@ -2421,7 +2729,7 @@ function releaseAllControls() {
         updateFireButtonPressedState(false);
     }
 
-    if (gameState.gameStarted && gameState.playerId) {
+    if (emitPacket && gameState.playerId && gameState.roomCode) {
         emitControlUpdate(performance.now(), { force: true });
     }
 }
@@ -2643,6 +2951,10 @@ function registerPlayerControlMapperTestHooks() {
     window.__playerControlMapperTestHooks = {
         setSession(nextState = {}) {
             if ('playerId' in nextState) gameState.playerId = nextState.playerId;
+            if ('seatId' in nextState) gameState.seatId = nextState.seatId;
+            if ('seatToken' in nextState) gameState.seatToken = nextState.seatToken;
+            if ('leaseVersion' in nextState) gameState.leaseVersion = nextState.leaseVersion;
+            if ('clientInstanceId' in nextState) gameState.clientInstanceId = nextState.clientInstanceId;
             if ('roomCode' in nextState) gameState.roomCode = nextState.roomCode;
             if ('gameStarted' in nextState) gameState.gameStarted = nextState.gameStarted;
             if ('weapon' in nextState) gameState.weapon = nextState.weapon;

@@ -1,0 +1,383 @@
+{
+  "bead": "br-around-couch-risk-resolution-3xv.2",
+  "artifact": "room-lifecycle-trace",
+  "trace": [
+    {
+      "timestamp": 0.0,
+      "reason": "room_created",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "waiting",
+      "matchId": null,
+      "roundId": null,
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": []
+    },
+    {
+      "timestamp": 1.0,
+      "reason": "seat_joined",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "waiting",
+      "matchId": null,
+      "roundId": null,
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 1,
+          "clientInstanceId": "tab-a",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 0
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 2.0,
+      "reason": "seat_rebound",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "waiting",
+      "matchId": null,
+      "roundId": null,
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 1,
+          "clientInstanceId": "tab-a",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 10.0,
+      "reason": "phase:active",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "active",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 1,
+          "clientInstanceId": "tab-a",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 11.0,
+      "reason": "takeover_prompted",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "active",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 1,
+          "clientInstanceId": "tab-a",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 12.0,
+      "reason": "seat_rebound",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "active",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 1,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 20.0,
+      "reason": "host_lost",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "host_lost",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 1,
+        "connected": false,
+        "tokenHash": "[redacted]",
+        "lostAt": 20.0
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 25.0,
+      "reason": "host_reclaimed",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "active",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 2,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 40.0,
+      "reason": "phase:results",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "results",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 2,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "active",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": true,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 45.0,
+      "reason": "seat_disconnected",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "results",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 2,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "away",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": false,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    },
+    {
+      "timestamp": 46.0,
+      "reason": "artifact_final",
+      "roomCode": "TRCE",
+      "topology": "local",
+      "ruleset": "race",
+      "phase": "results",
+      "matchId": "match-e80ba273dbbd",
+      "roundId": "round-1",
+      "host": {
+        "epoch": 2,
+        "connected": true,
+        "tokenHash": "[redacted]",
+        "lostAt": null
+      },
+      "seats": [
+        {
+          "seatId": 1,
+          "playerId": 1,
+          "state": "away",
+          "leaseVersion": 2,
+          "clientInstanceId": "tab-b",
+          "seatTokenHash": "[redacted]",
+          "appearance": {
+            "name": "TraceDriver",
+            "color": "#9244d5"
+          },
+          "roleBindings": {
+            "controller": false,
+            "viewers": 1
+          },
+          "joinedMatchId": null,
+          "joinedRoundId": null
+        }
+      ]
+    }
+  ]
+}

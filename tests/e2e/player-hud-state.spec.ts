@@ -1,6 +1,14 @@
-import { test, expect, gotoHost, joinGameAsPlayer, startGameFromHost, waitForRoomCode } from './fixtures';
+import { test, expect, gotoHost, joinGameAsPlayer, resetE2ERooms, startGameFromHost, waitForRoomCode } from './fixtures';
 
 test.describe('Player HUD vehicle state', () => {
+    test.beforeEach(async ({ request }) => {
+        await resetE2ERooms(request);
+    });
+
+    test.afterEach(async ({ request }) => {
+        await resetE2ERooms(request);
+    });
+
     test('shows host-broadcast speed and boost state on the phone controller', async ({ hostPage, playerPage }) => {
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -10,6 +18,10 @@ test.describe('Player HUD vehicle state', () => {
 
         await startGameFromHost(hostPage);
         await expect(playerPage.locator('#game-screen')).not.toHaveClass(/hidden/, { timeout: 10000 });
+        await hostPage.evaluate(() => {
+            // @ts-ignore - explicit test-mode guard keeps host state broadcasts deterministic.
+            window._testMode = true;
+        });
 
         const playerId = await playerPage.evaluate(() => {
             // @ts-ignore - gameState is exposed for tests
@@ -73,6 +85,7 @@ test.describe('Player HUD vehicle state', () => {
             vehicle.stuntState = 'charging';
             vehicle.stuntCharge = 0.42;
             vehicle.stuntBoostMultiplier = 1;
+            vehicle.stuntBoostUntil = 0;
             vehicle.stuntBadLandingUntil = 0;
             return window.game._buildVehicleStates()[0];
         }, playerId);
@@ -90,11 +103,16 @@ test.describe('Player HUD vehicle state', () => {
             badLanding: false
         });
 
-        await hostPage.evaluate(() => {
+        await hostPage.evaluate((state) => {
             // @ts-ignore - game is exposed by the host bootstrap
-            window.game.systems.network.broadcastVehicleStates(window.game._buildVehicleStates());
-        });
+            window.game.systems.network.broadcastVehicleStates([state]);
+        }, hostVehicleState);
 
+        await playerPage.waitForFunction(() => {
+            // @ts-ignore - gameState is exposed for tests
+            const state = window.gameState;
+            return state?.wheelieActive === true && state?.boostActive === false;
+        }, null, { timeout: 10000 });
         await expect(statusIcon).toHaveText('🚲', { timeout: 10000 });
         await expect(statusIcon).toHaveClass(/status-wheelie/);
         const wheelieState = await playerPage.evaluate(() => {

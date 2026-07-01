@@ -25,10 +25,66 @@ try:
         DEFAULT_TOPOLOGY, normalize_topology,
         DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
     )
+    from room_seats import (
+        ACTIVE_ROOM_PHASES,
+        HOST_LOSS_GRACE_SECONDS,
+        PHASE_ACTIVE,
+        PHASE_HOST_LOST,
+        PHASE_RESULTS,
+        PHASE_WAITING,
+        ROOM_TTL_SECONDS,
+        append_room_trace,
+        begin_room_match,
+        confirm_pending_takeover,
+        disconnect_binding,
+        end_room_match,
+        join_seat,
+        lookup_binding_by_sid,
+        lookup_seat_by_id,
+        mark_host_lost,
+        new_room_state,
+        phase_to_game_state,
+        reap_rooms,
+        reclaim_host,
+        redacted_room_snapshot,
+        return_room_to_lobby,
+        touch_controller,
+        update_seat_controls,
+        update_seat_motion,
+        update_seat_name,
+    )
 except ImportError:  # pragma: no cover - import path shim
     from server.session_vocabulary import (
         DEFAULT_TOPOLOGY, normalize_topology,
         DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
+    )
+    from server.room_seats import (
+        ACTIVE_ROOM_PHASES,
+        HOST_LOSS_GRACE_SECONDS,
+        PHASE_ACTIVE,
+        PHASE_HOST_LOST,
+        PHASE_RESULTS,
+        PHASE_WAITING,
+        ROOM_TTL_SECONDS,
+        append_room_trace,
+        begin_room_match,
+        confirm_pending_takeover,
+        disconnect_binding,
+        end_room_match,
+        join_seat,
+        lookup_binding_by_sid,
+        lookup_seat_by_id,
+        mark_host_lost,
+        new_room_state,
+        phase_to_game_state,
+        reap_rooms,
+        reclaim_host,
+        redacted_room_snapshot,
+        return_room_to_lobby,
+        touch_controller,
+        update_seat_controls,
+        update_seat_motion,
+        update_seat_name,
     )
 
 # Configure logging
@@ -223,6 +279,16 @@ def version_manifest():
 game_rooms = {}
 
 
+def _reap_rooms_if_needed():
+    removed = reap_rooms(
+        game_rooms,
+        host_loss_grace=HOST_LOSS_GRACE_SECONDS,
+        room_ttl=ROOM_TTL_SECONDS,
+    )
+    for room_code in removed:
+        logger.info(f"Room {room_code} reaped after TTL expiry")
+
+
 def _generate_host_token():
     """Generate a signed host capability token."""
     timestamp = str(int(time.time()))
@@ -293,7 +359,7 @@ def _check_host_authority(room_code, host_token, host_epoch):
     return True, None
 
 
-def _new_room_state(host_sid, topology=DEFAULT_TOPOLOGY):
+def _new_room_state(room_code, host_sid, topology=DEFAULT_TOPOLOGY):
     """Build a fresh room-state dict with an explicit, validated topology.
 
     Topology is the room's distribution axis (local/remote/mixed) and is kept
@@ -301,16 +367,94 @@ def _new_room_state(host_sid, topology=DEFAULT_TOPOLOGY):
     key). Unknown topology values coerce to the default so the Local path can
     never be broken by a bad client hint.
     """
+    return new_room_state(
+        room_code,
+        host_sid,
+        _generate_host_token(),
+        topology=topology,
+    )
+
+
+def _room_phase_payload(room_code):
+    room = game_rooms[room_code]
     return {
-        'host_sid': host_sid,
-        'host_token': _generate_host_token(),
-        'host_epoch': 1,
-        'topology': normalize_topology(topology),
-        'players': {},
-        'game_state': 'waiting',
-        'disconnected_players': {},
-        'next_player_id': 1
+        'room_code': room_code,
+        'phase': room.get('phase', PHASE_WAITING),
+        'game_state': room.get('game_state', phase_to_game_state(PHASE_WAITING)),
+        'mode': room.get('mode', DEFAULT_RULESET),
+        'topology': room.get('topology', DEFAULT_TOPOLOGY),
+        'match_id': room.get('match_id'),
+        'round_id': room.get('round_id'),
+        'host_epoch': room.get('host_epoch'),
     }
+
+
+def _emit_room_phase(room_code, *, include_self=True):
+    if room_code not in game_rooms:
+        return
+    emit('room_phase', _room_phase_payload(room_code), to=room_code, include_self=include_self)
+
+
+def _seat_binding_sids(seat):
+    if not seat:
+        return []
+    sids = []
+    controller_sid = seat.get('controller_sid')
+    if controller_sid:
+        sids.append(controller_sid)
+    for viewer_sid in seat.get('viewer_sids', []):
+        if viewer_sid and viewer_sid not in sids:
+            sids.append(viewer_sid)
+    return sids
+
+
+def _emit_to_seat_bindings(event_name, payload, seat):
+    for sid in _seat_binding_sids(seat):
+        emit(event_name, payload, to=sid)
+
+
+def _emit_zeroed_controls_to_host(room, seat):
+    host_sid = room.get('host_sid')
+    if not host_sid or not seat:
+        return
+
+    controls = seat.get('stats', {}).get('controls', {})
+    emit('player_controls_update', {
+        'player_id': seat['player_id'],
+        'seat_id': seat['seat_id'],
+        'lease_version': seat['lease_version'],
+        'steering': float(controls.get('steering', 0) or 0),
+        'acceleration': float(controls.get('acceleration', 0) or 0),
+        'braking': float(controls.get('braking', 0) or 0),
+        'timestamp': int(time.time() * 1000),
+    }, to=host_sid)
+
+
+def _complete_join(room_code, room, join_result):
+    join_room(room_code)
+    emit('game_joined', join_result['join_payload'])
+    emit(join_result['lifecycle_event_name'], join_result['lifecycle_payload'], room=room_code)
+
+    stale_sid = join_result.get('old_controller_sid')
+    if stale_sid:
+        try:
+            leave_room(room_code, sid=stale_sid)
+        except TypeError:
+            pass
+        emit('seat_taken_over', {
+            'seat_id': join_result['seat']['seat_id'],
+            'player_id': join_result['seat']['player_id'],
+            'lease_version': join_result['seat']['lease_version'],
+        }, to=stale_sid)
+
+    if room.get('phase') in ACTIVE_ROOM_PHASES and join_result['join_payload'].get('role') != 'viewer':
+        _emit_zeroed_controls_to_host(room, join_result['seat'])
+
+    action = "reconnected to" if join_result['join_payload']['reconnected'] else "joined"
+    logger.info(
+        f"Player {join_result['seat']['appearance']['name']} "
+        f"(ID: {join_result['seat']['player_id']}) {action} room {room_code}"
+    )
 
 
 def _coerce_non_negative_int(value):
@@ -582,6 +726,7 @@ def create_room(data=None):
     (default), Remote, or Mixed for its lifetime. Local preserves today's
     behaviour exactly: big screen renders, phones are controllers.
     """
+    _reap_rooms_if_needed()
     host_sid = request.sid
     topology = normalize_topology((data or {}).get('topology'))
     room_code = generate_room_code()
@@ -590,7 +735,7 @@ def create_room(data=None):
     while room_code in game_rooms:
         room_code = generate_room_code()
 
-    room_state = _new_room_state(host_sid, topology)
+    room_state = _new_room_state(room_code, host_sid, topology)
     game_rooms[room_code] = room_state
     host_token = room_state['host_token']
 
@@ -610,7 +755,8 @@ def create_room(data=None):
         'join_url': join_url,
         'topology': topology,
         'host_token': host_token,
-        'host_epoch': room_state['host_epoch']
+        'host_epoch': room_state['host_epoch'],
+        'phase': room_state['phase'],
     })
     logger.info(f"Room created: {room_code} (topology={topology})")
 
@@ -620,6 +766,7 @@ def reclaim_room(data):
     blip or server recycle, so players using the still-displayed code can
     still join instead of hitting 'room doesn't exist'. Requires valid host
     capability token; rotates token on successful reclaim."""
+    _reap_rooms_if_needed()
     if not isinstance(data, dict):
         emit('error', {'message': 'Invalid reclaim payload'})
         return
@@ -640,23 +787,26 @@ def reclaim_room(data):
     if room_code in game_rooms:
         # Existing room: verify the token matches and rebind to the reconnected
         # host socket. Rotate token on successful reclaim.
-        stored_token = game_rooms[room_code].get('host_token')
+        room = game_rooms[room_code]
+        stored_token = room.get('host_token')
         if not stored_token or not hmac.compare_digest(host_token, stored_token):
             emit('error', {'message': 'Host token mismatch'})
             logger.warning(f"Host reclaim rejected for {room_code}: token mismatch")
             return
 
-        game_rooms[room_code]['host_sid'] = host_sid
-        game_rooms[room_code]['host_epoch'] += 1
-        game_rooms[room_code]['host_token'] = _generate_host_token()
-        game_rooms[room_code].setdefault('topology', DEFAULT_TOPOLOGY)
-        new_token = game_rooms[room_code]['host_token']
-        new_epoch = game_rooms[room_code]['host_epoch']
+        prior_phase = room.get('phase')
+        reclaim_host(room, host_sid, host_token)
+        room['host_token'] = _generate_host_token()
+        room['host_token_hash'] = hashlib.sha256(room['host_token'].encode('utf-8')).hexdigest()
+        room.setdefault('topology', DEFAULT_TOPOLOGY)
+        new_token = room['host_token']
+        new_epoch = room['host_epoch']
         logger.info(f"Host reconnected, rebound room {room_code} (epoch={new_epoch})")
     else:
         # Room was lost - recreate it empty under the same code. Token must still
         # be valid (but won't match stored token since room is new).
-        game_rooms[room_code] = _new_room_state(host_sid, data.get('topology'))
+        prior_phase = None
+        game_rooms[room_code] = _new_room_state(room_code, host_sid, data.get('topology'))
         new_token = game_rooms[room_code]['host_token']
         new_epoch = game_rooms[room_code]['host_epoch']
         logger.info(f"Host reclaimed missing room {room_code}")
@@ -666,8 +816,11 @@ def reclaim_room(data):
         'room_code': room_code,
         'topology': game_rooms[room_code]['topology'],
         'host_token': new_token,
-        'host_epoch': new_epoch
+        'host_epoch': new_epoch,
+        'phase': game_rooms[room_code]['phase'],
     })
+    if prior_phase == PHASE_HOST_LOST:
+        _emit_room_phase(room_code, include_self=False)
 
 
 @socketio.on('return_to_lobby')
@@ -678,6 +831,7 @@ def return_to_lobby(data):
     if not isinstance(data, dict):
         emit('error', {'message': 'Invalid return_to_lobby payload'})
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -692,9 +846,9 @@ def return_to_lobby(data):
         emit('error', {'message': error_msg})
         return
 
-    game_rooms[room_code]['game_state'] = 'waiting'
-    game_rooms[room_code]['disconnected_players'] = {}
+    return_room_to_lobby(game_rooms[room_code])
     emit('returned_to_lobby', to=room_code)
+    _emit_room_phase(room_code)
     logger.info(f"Room {room_code} returned to lobby")
 
 
@@ -706,6 +860,7 @@ def player_control_update(data):
     """
     if not isinstance(data, dict):
         return
+    _reap_rooms_if_needed()
 
     # The sending socket is authoritative for controller identity. We still
     # accept the legacy payload `player_id` field, but only as a consistency
@@ -715,6 +870,8 @@ def player_control_update(data):
     room_code = (data.get('room_code') or '').upper()
     controls = data.get('controls')
     timestamp = data.get('timestamp')
+    lease_version = data.get('lease_version')
+    client_instance_id = data.get('client_instance_id')
     if not room_code or not isinstance(controls, dict) or timestamp is None:
         return
 
@@ -728,15 +885,25 @@ def player_control_update(data):
 
     room = game_rooms[room_code]
     host_sid = room.get('host_sid')
-    if not host_sid:
+    if not host_sid or room.get('phase') == PHASE_HOST_LOST:
         return
 
-    player_data = room.get('players', {}).get(player_sid)
-    if not player_data:
+    seat = update_seat_controls(
+        room,
+        player_sid,
+        {
+            'steering': controls.get('steering', 0),
+            'acceleration': controls.get('acceleration', 0),
+            'braking': controls.get('braking', 0),
+        },
+        lease_version=lease_version,
+        client_instance_id=client_instance_id,
+    )
+    if not seat:
         return
 
     declared_player_id = data.get('player_id')
-    if declared_player_id not in (None, player_data['id']):
+    if declared_player_id not in (None, seat['player_id']):
         return
 
     # Validate control values are within expected ranges
@@ -749,7 +916,9 @@ def player_control_update(data):
 
     # Create validated control update
     control_update = {
-        'player_id': player_data['id'],
+        'player_id': seat['player_id'],
+        'seat_id': seat['seat_id'],
+        'lease_version': seat['lease_version'],
         'steering': steering,
         'acceleration': acceleration,
         'braking': braking,
@@ -784,6 +953,13 @@ def handle_vehicle_states(data):
     if not is_valid:
         return
 
+    room = game_rooms[room_code]
+    room['last_snapshot'] = {
+        'captured_at': time.time(),
+        'seq': seq,
+        'vehicles': vehicles,
+    }
+
     # Broadcast to everyone in the room (including self/host, but players will filter)
     payload = {
         'room_code': room_code,
@@ -797,142 +973,95 @@ def handle_vehicle_states(data):
 @socketio.on('join_game')
 def on_join_game(data):
     """Handle player joining a game room"""
-    import time
+    _reap_rooms_if_needed()
+    if not isinstance(data, dict):
+        emit('join_error', {'message': 'Invalid join payload'})
+        return
 
-    player_name = data.get('player_name', 'Player')
-    room_code = data.get('room_code', '').upper()
-    reconnect_id = data.get('reconnect_id')  # Optional: for reconnection
+    player_name = (data.get('player_name') or 'Player').strip() or 'Player'
+    room_code = (data.get('room_code') or '').upper()
+    reconnect_id = data.get('reconnect_id')  # Legacy fallback only
+    seat_token = data.get('seat_token')
+    client_instance_id = data.get('client_instance_id')
+    can_render = bool(data.get('can_render'))
+    viewer_only = (data.get('role') == 'viewer') or bool(data.get('viewer_only'))
 
     # Validate room code
     if not room_code or room_code not in game_rooms:
-        emit('error', {'message': 'Invalid room code'})
+        emit('join_error', {'message': 'Invalid room code'})
         return
 
     # Get room
     room = game_rooms[room_code]
-
-    # Check for reconnection - allow during racing if player was disconnected
-    is_reconnecting = False
-    reconnect_data = None
-
-    if reconnect_id and reconnect_id in room.get('disconnected_players', {}):
-        # Player is reconnecting
-        reconnect_data = room['disconnected_players'][reconnect_id]
-        # Only allow reconnection within 5 minutes
-        if time.time() - reconnect_data.get('disconnect_time', 0) < 300:
-            is_reconnecting = True
-            del room['disconnected_players'][reconnect_id]
-            logger.info(f"Player {player_name} reconnecting to room {room_code}")
-
-    # Check game state for join eligibility
-    is_late_join = room['game_state'] == 'racing' and not is_reconnecting
-
-    # Block joins only when race is finished (allow late joins during racing)
-    if room['game_state'] == 'finished' and not is_reconnecting:
-        emit('error', {'message': 'Race has ended. Wait for next race.'})
+    if room.get('phase') == 'closed':
+        emit('join_error', {'message': 'Room is closed'})
         return
 
-    # Rejoin while the old socket is still lingering (e.g. page reload before
-    # the disconnect fires): take over the stale entry instead of duplicating
-    # the player in the room
-    stale_sid = None
-    if reconnect_id and not is_reconnecting:
-        for sid, player in room['players'].items():
-            if player['id'] == reconnect_id and sid != request.sid:
-                stale_sid = sid
-                break
+    join_result = join_seat(
+        room,
+        request.sid,
+        player_name=player_name,
+        seat_token=seat_token,
+        reconnect_id=reconnect_id,
+        client_instance_id=client_instance_id,
+        can_render=can_render,
+        viewer_only=viewer_only,
+    )
 
-    if is_reconnecting and reconnect_data:
-        # Restore player with same ID and color
-        player_id = reconnect_id
-        car_color = reconnect_data['car_color']
-        position = reconnect_data['position']
-        rotation = reconnect_data['rotation']
-        velocity = reconnect_data['velocity']
-    elif stale_sid:
-        stale_player = room['players'].pop(stale_sid)
-        # Tell the host to drop the ghost before the rejoin lands
-        emit('player_left', {
-            'player_id': stale_player['id'],
-            'player_name': stale_player['name'],
-            'can_reconnect': False
-        }, to=room['host_sid'])
-        logger.info(f"Player {player_name} rejoined room {room_code}, replacing stale session")
+    if join_result['status'] == 'takeover_required':
+        emit('controller_takeover_required', join_result['payload'])
+        logger.info(
+            f"Seat takeover prompt for room {room_code} seat {join_result['payload']['seat_id']}"
+        )
+        return
 
-        player_id = stale_player['id']
-        car_color = stale_player['car_color']
-        position = stale_player['position']
-        rotation = stale_player['rotation']
-        velocity = [0, 0, 0]
-    else:
-        # Monotonic player ID - counting current players is collision-prone
-        # (a leaver shrinks the count and the next joiner duplicates an ID)
-        player_id = room.get('next_player_id', len(room['players']) + 1)
-        room['next_player_id'] = player_id + 1
-        # Generate random car color
-        car_color = f"#{random.randint(0, 0xFFFFFF):06x}"
-        position = [0, 0.5, 0]
-        rotation = [0, 0, 0]
-        velocity = [0, 0, 0]
+    _complete_join(room_code, room, join_result)
 
-    # Add player to room
-    room['players'][request.sid] = {
-        'id': player_id,
-        'name': player_name,
-        'car_color': car_color,
-        'position': position,
-        'rotation': rotation,
-        'velocity': velocity,
-        'controls': {
-            'steering': 0,
-            'acceleration': 0,
-            'braking': 0
-        }
-    }
 
-    # Join Socket.IO room
-    join_room(room_code)
+@socketio.on('confirm_controller_takeover')
+def confirm_controller_takeover_event(data):
+    if not isinstance(data, dict):
+        emit('join_error', {'message': 'Invalid takeover payload'})
+        return
+    _reap_rooms_if_needed()
 
-    # Player roles are CAPABILITIES, derived from topology (kept separate from
-    # the ruleset `mode`). A participant may hold more than one:
-    #   * Local  -> ['controller']  (input + HUD only; the host renders the
-    #               shared world -- enforced regardless of any can_render hint).
-    #   * Remote -> ['controller','viewer']  (driver-viewer: drives + renders).
-    #   * Mixed  -> ['controller'] for co-located HUD-only players, or
-    #               ['controller','viewer'] for those that render (can_render).
-    room_topology = room.get('topology', DEFAULT_TOPOLOGY)
-    can_render = bool(data.get('can_render'))
-    player_roles = participant_roles(room_topology, can_render=can_render)
-    player_role = primary_role(room_topology, can_render=can_render)
+    room_code = (data.get('room_code') or '').upper()
+    seat_token = data.get('seat_token')
+    client_instance_id = data.get('client_instance_id')
+    if not room_code or room_code not in game_rooms:
+        emit('join_error', {'message': 'Invalid room code'})
+        return
 
-    # Notify player they've joined
-    emit('game_joined', {
-        'player_id': player_id,
-        'name': player_name,
-        'car_color': car_color,
-        'reconnected': is_reconnecting,
-        'is_late_join': is_late_join,
-        'game_state': room['game_state'],
-        'mode': room.get('mode', DEFAULT_RULESET),
-        'topology': room_topology,
-        'role': player_role,
-        'roles': player_roles
-    })
+    room = game_rooms[room_code]
+    join_result = confirm_pending_takeover(
+        room,
+        request.sid,
+        seat_token=seat_token,
+        client_instance_id=client_instance_id,
+    )
+    if join_result.get('status') != 'joined':
+        emit('join_error', {'message': 'Takeover request expired'})
+        return
 
-    # Notify everyone in the room about new/reconnected player (including host)
-    # Using room broadcast instead of direct emit to host_sid for better reliability
-    event_name = 'player_reconnected' if is_reconnecting else 'player_joined'
-    emit(event_name, {
-        'id': player_id,
-        'name': player_name,
-        'car_color': car_color,
-        'position': position,
-        'rotation': rotation,
-        'velocity': velocity
-    }, room=room_code)
+    _complete_join(room_code, room, join_result)
 
-    action = "reconnected to" if is_reconnecting else "joined"
-    logger.info(f"Player {player_name} (ID: {player_id}) {action} room {room_code}")
+
+@socketio.on('seat_heartbeat')
+def seat_heartbeat(data):
+    if not isinstance(data, dict):
+        return
+    _reap_rooms_if_needed()
+
+    room_code = (data.get('room_code') or '').upper()
+    if not room_code or room_code not in game_rooms:
+        return
+
+    touch_controller(
+        game_rooms[room_code],
+        request.sid,
+        lease_version=data.get('lease_version'),
+        client_instance_id=data.get('client_instance_id'),
+    )
 
 @socketio.on('start_game')
 def start_game(data):
@@ -940,6 +1069,7 @@ def start_game(data):
     if not isinstance(data, dict):
         emit('error', {'message': 'Invalid start_game payload'})
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -954,8 +1084,9 @@ def start_game(data):
         emit('error', {'message': error_msg})
         return
 
-    game_rooms[room_code]['game_state'] = 'racing'
-    emit('game_started', to=room_code)
+    begin_room_match(game_rooms[room_code])
+    emit('game_started', _room_phase_payload(room_code), to=room_code)
+    _emit_room_phase(room_code)
     logger.info(f"Game started in room {room_code}")
 
 
@@ -965,6 +1096,7 @@ def end_game(data):
     if not isinstance(data, dict):
         emit('error', {'message': 'Invalid results payload'})
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -991,17 +1123,21 @@ def end_game(data):
         emit('error', {'message': 'Invalid results payload'})
         return
 
-    room['game_state'] = 'finished'
+    end_room_match(room)
     payload = {
         'room_code': room_code,
         'mode': room.get('mode', DEFAULT_RULESET),
         'topology': room.get('topology', DEFAULT_TOPOLOGY),
-        'results': results
+        'results': results,
+        'phase': room.get('phase'),
+        'match_id': room.get('match_id'),
+        'round_id': room.get('round_id'),
     }
     if seq is not None:
         payload['seq'] = seq
 
     emit('game_end', payload, room=room_code)
+    _emit_room_phase(room_code)
     logger.info(f"Game ended in room {room_code}")
 
 @socketio.on('mode_selected')
@@ -1010,6 +1146,7 @@ def mode_selected(data):
     if not isinstance(data, dict):
         emit('error', {'message': 'Invalid mode_selected payload'})
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     mode = data.get('mode')
@@ -1040,26 +1177,26 @@ def mode_selected(data):
 @socketio.on('player_update')
 def player_update(data):
     """Player sends position and rotation updates."""
+    if not isinstance(data, dict):
+        return
+    _reap_rooms_if_needed()
+
     player_sid = request.sid
-    room_code = data.get('room_code')
+    room_code = (data.get('room_code') or '').upper()
     position = data.get('position')
     rotation = data.get('rotation')
     velocity = data.get('velocity')
-    
-    if (room_code not in game_rooms or 
-        player_sid not in game_rooms[room_code]['players'] or
-        game_rooms[room_code]['game_state'] != 'racing'):
+
+    if room_code not in game_rooms:
         return
-    
-    # Update player data
-    player_data = game_rooms[room_code]['players'][player_sid]
-    player_data['position'] = position
-    player_data['rotation'] = rotation
-    player_data['velocity'] = velocity
-    
-    # Send update to host
+
+    seat = update_seat_motion(game_rooms[room_code], player_sid, position, rotation, velocity)
+    if not seat:
+        return
+
     emit('player_position_update', {
-        'player_id': player_data['id'],
+        'player_id': seat['player_id'],
+        'seat_id': seat['seat_id'],
         'position': position,
         'rotation': rotation,
         'velocity': velocity
@@ -1068,48 +1205,41 @@ def player_update(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle client disconnection."""
-    import time
-
+    _reap_rooms_if_needed()
     client_sid = request.sid
 
-    # Check if disconnected client was a host
     for room_code, room_data in list(game_rooms.items()):
-        if room_data['host_sid'] == client_sid:
-            # Host disconnected, notify all players and close the room
-            emit('host_disconnected', to=room_code)
-            del game_rooms[room_code]
-            logger.info(f"Host disconnected, room {room_code} closed")
+        if client_sid not in room_data.get('sid_index', {}):
+            continue
+
+        disconnect_result = disconnect_binding(room_data, client_sid)
+        if disconnect_result['status'] == 'host_lost':
+            payload = _room_phase_payload(room_code)
+            payload['grace_seconds'] = HOST_LOSS_GRACE_SECONDS
+            payload['last_snapshot_at'] = (room_data.get('last_snapshot') or {}).get('captured_at')
+            emit('host_disconnected', payload, to=room_code, include_self=False)
+            _emit_room_phase(room_code, include_self=False)
+            logger.info(f"Host disconnected, room {room_code} entering host-loss grace")
             break
 
-        # Check if disconnected client was a player
-        if client_sid in room_data['players']:
-            player_data = room_data['players'][client_sid]
-            player_id = player_data['id']
+        if disconnect_result['status'] != 'seat_away':
+            continue
 
-            # If game is racing, save player state for reconnection
-            if room_data['game_state'] == 'racing':
-                room_data['disconnected_players'][player_id] = {
-                    'name': player_data['name'],
-                    'car_color': player_data['car_color'],
-                    'position': player_data['position'],
-                    'rotation': player_data['rotation'],
-                    'velocity': player_data['velocity'],
-                    'disconnect_time': time.time()
-                }
-                logger.info(f"Player {player_data['name']} disconnected (can reconnect) from room {room_code}")
-            else:
-                logger.info(f"Player {player_data['name']} disconnected from room {room_code}")
-
-            del room_data['players'][client_sid]
-
-            # Notify host about player disconnect
+        seat = disconnect_result['seat']
+        if room_data.get('phase') in ACTIVE_ROOM_PHASES:
+            _emit_zeroed_controls_to_host(room_data, seat)
+            logger.info(
+                f"Seat {seat['seat_id']} controller disconnected during active phase in room {room_code}"
+            )
+        elif room_data.get('host_sid'):
             emit('player_left', {
-                'player_id': player_id,
-                'player_name': player_data['name'],
-                'can_reconnect': room_data['game_state'] == 'racing'
+                'player_id': seat['player_id'],
+                'seat_id': seat['seat_id'],
+                'player_name': seat['appearance']['name'],
+                'can_reconnect': True,
             }, to=room_data['host_sid'])
-
-            break
+            logger.info(f"Seat {seat['seat_id']} disconnected from room {room_code}")
+        break
 
 @socketio.on('reset_player_position')
 def handle_reset_position(data):
@@ -1118,6 +1248,7 @@ def handle_reset_position(data):
     """
     if not isinstance(data, dict):
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -1135,72 +1266,78 @@ def handle_reset_position(data):
         logger.warning(f"reset_player_position rejected for {room_code}: invalid host authority")
         return
 
-    # Find the player in the room
-    player_sid = None
-    for sid, player_data in game_rooms[room_code]['players'].items():
-        if player_data['id'] == player_id:
-            player_sid = sid
-            # Update player position and rotation
-            player_data['position'] = position
-            player_data['rotation'] = rotation
-            player_data['velocity'] = [0, 0, 0]  # Reset velocity
+    seat = lookup_seat_by_id(game_rooms[room_code], player_id)
+    if not seat:
+        return
 
-            logger.info(f"Resetting position for player {player_id} in room {room_code} to {position}")
+    seat['stats']['position'] = position
+    seat['stats']['rotation'] = rotation
+    seat['stats']['velocity'] = [0, 0, 0]
 
-            # Notify the player to reset their position
-            emit('position_reset', {
-                'position': position,
-                'rotation': rotation
-            }, to=sid)
+    logger.info(f"Resetting position for player {player_id} in room {room_code} to {position}")
 
-            # Also notify the host for visual updates
-            emit('player_position_update', {
-                'player_id': player_id,
-                'position': position,
-                'rotation': rotation,
-                'velocity': [0, 0, 0]
-            }, to=game_rooms[room_code]['host_sid'])
-            break
+    _emit_to_seat_bindings('position_reset', {
+        'position': position,
+        'rotation': rotation
+    }, seat)
+
+    emit('player_position_update', {
+        'player_id': player_id,
+        'seat_id': seat['seat_id'],
+        'position': position,
+        'rotation': rotation,
+        'velocity': [0, 0, 0]
+    }, to=game_rooms[room_code]['host_sid'])
             
 @socketio.on('weapon_fire')
 def handle_weapon_fire(data):
     """Handle weapon fire event from player."""
+    if not isinstance(data, dict):
+        return
+    _reap_rooms_if_needed()
+
     player_sid = request.sid
-    room_code = data.get('room_code')
+    room_code = (data.get('room_code') or '').upper()
 
     if not room_code or room_code not in game_rooms:
         return
 
     room = game_rooms[room_code]
-    if player_sid not in room['players']:
+    binding = lookup_binding_by_sid(room, player_sid)
+    if not binding or not binding.get('seat') or binding['binding'].get('binding') != 'controller':
         return
 
-    player_data = room['players'][player_sid]
-    player_id = player_data['id']
+    seat = binding['seat']
 
     # Forward to host
     emit('weapon_fire', {
-        'player_id': player_id
+        'player_id': seat['player_id'],
+        'seat_id': seat['seat_id'],
     }, to=room['host_sid'])
 
-    logger.debug(f"Player {player_id} fired weapon in room {room_code}")
+    logger.debug(f"Player {seat['player_id']} fired weapon in room {room_code}")
 
 @socketio.on('request_car_reset')
 def handle_request_car_reset(data):
     """Player asks the host to un-stick their car (reset to a safe spot)."""
+    if not isinstance(data, dict):
+        return
+    _reap_rooms_if_needed()
+
     player_sid = request.sid
-    room_code = data.get('room_code')
+    room_code = (data.get('room_code') or '').upper()
 
     if not room_code or room_code not in game_rooms:
         return
 
     room = game_rooms[room_code]
-    if player_sid not in room['players']:
+    binding = lookup_binding_by_sid(room, player_sid)
+    if not binding or not binding.get('seat') or binding['binding'].get('binding') != 'controller':
         return
 
-    player_id = room['players'][player_sid]['id']
-    emit('car_reset_request', {'player_id': player_id}, to=room['host_sid'])
-    logger.info(f"Player {player_id} requested car reset in room {room_code}")
+    seat = binding['seat']
+    emit('car_reset_request', {'player_id': seat['player_id'], 'seat_id': seat['seat_id']}, to=room['host_sid'])
+    logger.info(f"Player {seat['player_id']} requested car reset in room {room_code}")
 
 @socketio.on('weapon_pickup')
 def handle_weapon_pickup(data):
@@ -1209,6 +1346,7 @@ def handle_weapon_pickup(data):
     """
     if not isinstance(data, dict):
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -1226,15 +1364,15 @@ def handle_weapon_pickup(data):
 
     room = game_rooms[room_code]
 
-    # Find target player's socket
-    for sid, player_data in room['players'].items():
-        if player_data['id'] == target_player_id:
-            emit('weapon_pickup', {
-                'weaponId': data.get('weaponId'),
-                'weaponName': data.get('weaponName'),
-                'icon': data.get('icon')
-            }, to=sid)
-            break
+    seat = lookup_seat_by_id(room, target_player_id)
+    if not seat:
+        return
+
+    _emit_to_seat_bindings('weapon_pickup', {
+        'weaponId': data.get('weaponId'),
+        'weaponName': data.get('weaponName'),
+        'icon': data.get('icon')
+    }, seat)
 
 @socketio.on('weapon_fired')
 def handle_weapon_fired(data):
@@ -1243,6 +1381,7 @@ def handle_weapon_fired(data):
     """
     if not isinstance(data, dict):
         return
+    _reap_rooms_if_needed()
 
     room_code = (data.get('room_code') or '').upper()
     host_token = data.get('host_token')
@@ -1260,17 +1399,22 @@ def handle_weapon_fired(data):
 
     room = game_rooms[room_code]
 
-    # Find target player's socket
-    for sid, player_data in room['players'].items():
-        if player_data['id'] == target_player_id:
-            emit('weapon_fired', {
-                'weaponId': data.get('weaponId')
-            }, to=sid)
-            break
+    seat = lookup_seat_by_id(room, target_player_id)
+    if not seat:
+        return
+
+    _emit_to_seat_bindings('weapon_fired', {
+        'weaponId': data.get('weaponId')
+    }, seat)
 
 @socketio.on('update_player_name')
 def update_player_name(data):
     """Handle player name update."""
+    if not isinstance(data, dict):
+        emit('name_updated', {'success': False, 'message': 'Invalid payload'})
+        return
+    _reap_rooms_if_needed()
+
     player_sid = request.sid
     new_name = data.get('name', '').strip()
     
@@ -1278,27 +1422,30 @@ def update_player_name(data):
         emit('name_updated', {'success': False, 'message': 'Invalid name'})
         return
     
-    # Find which room the player is in
     for room_code, room_data in game_rooms.items():
-        if player_sid in room_data['players']:
-            # Update player name
-            old_name = room_data['players'][player_sid]['name']
-            room_data['players'][player_sid]['name'] = new_name
-            
-            # Notify player that name was updated
-            emit('name_updated', {
-                'success': True,
-                'name': new_name
-            })
-            
-            # Notify host about player name change
-            emit('player_name_updated', {
-                'player_id': room_data['players'][player_sid]['id'],
-                'name': new_name
-            }, to=room_data['host_sid'])
-            
-            logger.info(f"Player name changed in room {room_code}: {old_name} -> {new_name}")
-            return
+        binding = lookup_binding_by_sid(room_data, player_sid)
+        if not binding or not binding.get('seat') or binding['binding'].get('binding') != 'controller':
+            continue
+
+        seat = update_seat_name(room_data, player_sid, new_name)
+        if not seat:
+            break
+
+        emit('name_updated', {
+            'success': True,
+            'name': new_name
+        })
+
+        emit('player_name_updated', {
+            'player_id': seat['player_id'],
+            'seat_id': seat['seat_id'],
+            'name': new_name
+        }, to=room_data['host_sid'])
+
+        logger.info(
+            f"Player name changed in room {room_code}: {seat['player_id']} -> {new_name}"
+        )
+        return
     
     # Player not found in any room
     emit('name_updated', {'success': False, 'message': 'Player not in a room'})
@@ -1311,6 +1458,25 @@ def health():
         'status': 'ok',
         'rooms': len(game_rooms)
     })
+
+
+@app.route('/__test__/reset-rooms', methods=['POST'])
+def reset_test_rooms():
+    """Clear in-memory rooms for local E2E isolation.
+
+    This is intentionally narrow: it only works from loopback and only when the
+    caller presents the test header used by Playwright helpers.
+    """
+    if request.remote_addr not in ('127.0.0.1', '::1'):
+        return jsonify({'error': 'not found'}), 404
+    if request.headers.get('X-JJ-E2E-Reset') != '1':
+        return jsonify({'error': 'not found'}), 404
+
+    room_count = len(game_rooms)
+    game_rooms.clear()
+    logger.info(f"E2E reset cleared {room_count} rooms")
+    return jsonify({'status': 'ok', 'rooms_cleared': room_count})
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

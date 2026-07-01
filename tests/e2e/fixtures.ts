@@ -1,4 +1,4 @@
-import { test as base, Browser, BrowserContext, Page } from '@playwright/test';
+import { test as base, APIRequestContext, Browser, BrowserContext, Page } from '@playwright/test';
 
 // Extended test type with host and player contexts
 export type GameTestFixtures = {
@@ -45,6 +45,18 @@ export const test = base.extend<GameTestFixtures>({
 });
 
 export { expect } from '@playwright/test';
+
+export async function resetE2ERooms(request: APIRequestContext): Promise<void> {
+    const response = await request.post('/__test__/reset-rooms', {
+        headers: {
+            'X-JJ-E2E-Reset': '1',
+        },
+    });
+
+    if (!response.ok()) {
+        throw new Error(`E2E room reset failed with HTTP ${response.status()}`);
+    }
+}
 
 // Helper to navigate to host page with test mode for faster socket connections
 export async function gotoHost(hostPage: Page): Promise<void> {
@@ -100,6 +112,7 @@ export async function joinGameAsPlayer(
             const gs = window.gameState;
             return gs && gs.playerId !== null;
         },
+        null,
         { timeout: 30000 }
     );
 }
@@ -113,6 +126,7 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
             const btn = document.querySelector('#start-game-btn') as HTMLButtonElement;
             return btn && !btn.disabled && btn.checkVisibility?.();
         },
+        null,
         { timeout: 60000 }  // Longer timeout for CI with SwiftShader
     );
 
@@ -128,7 +142,7 @@ export async function startGameFromHost(hostPage: Page): Promise<void> {
         // @ts-ignore
         const game = window.game;
         return game?.engine?.initialized && document.querySelector('canvas');
-    }, { timeout: 90000 });
+    }, null, { timeout: 90000 });
 }
 
 // Helper to send control inputs from player
