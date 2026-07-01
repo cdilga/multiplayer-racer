@@ -10,7 +10,10 @@ export {
 
 export {
     TelemetryClient,
+    buildTelemetryFingerprint,
     bootstrapPageTelemetry,
+    captureInitializationFailure,
+    captureSocketConnectError,
     getBrowserTelemetry,
     initBrowserTelemetry,
     resetBrowserTelemetryForTests,

@@ -140,6 +140,34 @@ describe('client telemetry bootstrap integration', () => {
         expect(event.matchId).toBe('match-host123');
     });
 
+    it('host network connect_error flows through telemetry without raw transport text spam', () => {
+        initBrowserTelemetry({
+            role: 'host',
+            source: 'HostEntry',
+            sink: 'test',
+            enabled: true,
+        });
+
+        const socket = new FakeSocket();
+        socket.io = { engine: { transport: { name: 'websocket' } } };
+        const eventBus = { emit: vi.fn() };
+        const network = new NetworkSystem({ socket, eventBus });
+        network._setupSocketHandlers();
+
+        socket.trigger('connect_error', new Error('connect failed for room ABCD with token secret-token'));
+        socket.trigger('connect_error', new Error('connect failed for room ABCD with token secret-token'));
+
+        const telemetry = getBrowserTelemetry();
+        const events = telemetry.getDebugEvents();
+        expect(events).toHaveLength(1);
+        expect(events[0].eventName).toBe('error:network:disconnect');
+        expect(events[0].properties.errorOrigin).toBe('socketio.connect_error');
+        expect(events[0].properties.transport).toBe('websocket');
+        expect(eventBus.emit).toHaveBeenCalledWith('network:connectError', { connected: false });
+        expect(JSON.stringify(events[0])).not.toContain('ABCD');
+        expect(JSON.stringify(events[0])).not.toContain('secret-token');
+    });
+
     it('host and player entrypoints bootstrap through the wrapper and avoid direct vendor references', () => {
         const hostSource = readText('src/host/main.js');
         const playerSource = readText('src/player/main.js');

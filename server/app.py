@@ -324,6 +324,13 @@ def _telemetry_sensitive_values(data=None):
     return tuple(values)
 
 
+def _safe_error_fingerprint(value):
+    text = str(value or '').strip()
+    if re.fullmatch(r'[A-Za-z0-9_.:-]{6,96}', text):
+        return text[:96]
+    return None
+
+
 def _telemetry_request_context():
     payload = request.get_json(silent=True)
     payload_keys = sorted(payload.keys()) if isinstance(payload, dict) else []
@@ -1938,6 +1945,19 @@ def telemetry_report_submission():
     match_id = data.get('match_id') or data.get('matchId')
     player_analytics_id = data.get('player_analytics_id') or data.get('playerAnalyticsId')
     description = data.get('description')
+    error_fingerprint = _safe_error_fingerprint(
+        data.get('fingerprint') or data.get('error_fingerprint') or data.get('errorFingerprint')
+    )
+    properties = {
+        'reportRole': data.get('role') or 'unknown',
+        'reportSource': data.get('source') or 'unknown',
+        'descriptionProvided': bool(description),
+        'descriptionLength': len(str(description or '')),
+        'screenshotAttached': bool(data.get('screenshot_attached') or data.get('screenshotAttached')),
+        'wasStale': bool(data.get('was_stale') or data.get('wasStale')),
+    }
+    if error_fingerprint:
+        properties['fingerprint'] = error_fingerprint
     _telemetry_event(
         'server:report:submitted',
         'telemetry_report_submission',
@@ -1945,14 +1965,7 @@ def telemetry_report_submission():
         match_id=match_id,
         player_analytics_id=player_analytics_id,
         source='Flask',
-        properties={
-            'reportRole': data.get('role') or 'unknown',
-            'reportSource': data.get('source') or 'unknown',
-            'descriptionProvided': bool(description),
-            'descriptionLength': len(str(description or '')),
-            'screenshotAttached': bool(data.get('screenshot_attached') or data.get('screenshotAttached')),
-            'wasStale': bool(data.get('was_stale') or data.get('wasStale')),
-        },
+        properties=properties,
         sensitive_values=_telemetry_sensitive_values(data),
     )
     return jsonify({'status': 'accepted'}), 202

@@ -1,0 +1,75 @@
+{
+  "bead": "br-jj-observability-analytics-rkt.6",
+  "generatedAt": "2026-07-01T21:17:00+10:00",
+  "clientProof": {
+    "command": "node --input-type=module <inline telemetry proof>",
+    "emittedCount": 3,
+    "throttleCountForWindowError": 2,
+    "events": [
+      {
+        "eventName": "error:gameplay:crash",
+        "release": "proof-release",
+        "roomAnalyticsId": "room-proof",
+        "matchId": "match-proof",
+        "playerAnalyticsId": "player-proof",
+        "fingerprint": "jjerr-3edb2d81",
+        "errorOrigin": "window.onerror",
+        "routePath": "/host",
+        "sourcePath": "/assets/host.js",
+        "transport": null,
+        "containsRawSecret": false
+      },
+      {
+        "eventName": "error:network:disconnect",
+        "release": "proof-release",
+        "roomAnalyticsId": "room-proof",
+        "matchId": "match-proof",
+        "playerAnalyticsId": "player-proof",
+        "fingerprint": "jjerr-4303c344",
+        "errorOrigin": "socketio.connect_error",
+        "routePath": "/host",
+        "sourcePath": "/host",
+        "transport": "websocket",
+        "containsRawSecret": false
+      },
+      {
+        "eventName": "error:gameplay:crash",
+        "release": "proof-release",
+        "roomAnalyticsId": "room-proof",
+        "matchId": "match-proof",
+        "playerAnalyticsId": "player-proof",
+        "fingerprint": "jjerr-2f4a7151",
+        "errorOrigin": "initialization",
+        "routePath": "/host",
+        "sourcePath": "/host",
+        "transport": null,
+        "containsRawSecret": false
+      }
+    ]
+  },
+  "serverProof": {
+    "command": "python - <inline server telemetry proof>",
+    "serverEmittedCount": 1,
+    "secondDuplicateReturned": false,
+    "firstFingerprint": "jjerr-6eb6658afdcea13e",
+    "firstMessage": "[redacted] room [redacted] token [redacted] [redacted]",
+    "containsRawSecret": false,
+    "disableGuardReturned": false,
+    "disableGuardQueueSize": 0
+  },
+  "sourceMapProof": {
+    "defaultBuildMapFiles": 0,
+    "sourceMapBuildCommand": "POSTHOG_SOURCEMAP_UPLOAD=1 npm run build",
+    "sourceMapBuildMapFiles": 21,
+    "uploadPathDocumentedIn": "docs/deployment/source-maps-and-error-traces.md",
+    "uploadCommand": "posthog-cli sourcemap inject --directory ./dist && posthog-cli sourcemap upload --directory ./dist --release-name joystick-jammers --release-version \"$BUILD_SHA\" --build \"$BUILD_ID\" --delete-after"
+  },
+  "verification": [
+    "npx vitest run tests/unit/telemetry-client.test.js tests/integration/client-telemetry-bootstrap.test.js",
+    "python -m unittest server.test_telemetry",
+    "python -m py_compile server/app.py server/telemetry.py",
+    "npx vitest run tests/unit/telemetry-contract.test.js tests/unit/build-version.test.js",
+    "npm run build",
+    "POSTHOG_SOURCEMAP_UPLOAD=1 npm run build"
+  ]
+}

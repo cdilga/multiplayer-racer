@@ -27,6 +27,7 @@ UNKNOWN_PLAYER_ID = 'player-unknown'
 REDACTED_VALUE = '[redacted]'
 COMPLEX_VALUE = '[complex]'
 HASH_SALT = os.environ.get('TELEMETRY_HASH_SALT', 'jj-telemetry')
+SAFE_HASH_KEYS = frozenset({'fingerprint', 'error_fingerprint', 'errorFingerprint'})
 
 ALLOWED_EVENT_NAMES = frozenset({
     'server:room:created',
@@ -79,6 +80,7 @@ SENSITIVE_VALUE_PATTERNS = [
 
 MAX_PROPERTY_VALUE_LENGTH = 500
 MAX_QUEUE_SIZE = 1024
+DEFAULT_EXCEPTION_THROTTLE_SECONDS = 60.0
 HISTOGRAM_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0)
 
 METRIC_DEFINITIONS = {
@@ -117,6 +119,28 @@ def _hash_value(value):
     if value in (None, ''):
         return None
     return hashlib.sha256(f'{HASH_SALT}:{value}'.encode('utf-8')).hexdigest()[:16]
+
+
+def _fingerprint_value(parts):
+    stable = json.dumps(parts, sort_keys=True, separators=(',', ':'), default=str)
+    return 'jjerr-' + hashlib.sha256(f'{HASH_SALT}:{stable}'.encode('utf-8')).hexdigest()[:16]
+
+
+def _env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None or value == '':
+        return default
+    return str(value).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_float(name, default):
+    value = os.environ.get(name)
+    if value in (None, ''):
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _status_class(status_code):
@@ -184,6 +208,8 @@ def _sanitize_scalar(key, value, *, sensitive_values=None):
         return COMPLEX_VALUE
 
     text = str(value)
+    if str(key) in SAFE_HASH_KEYS:
+        return text[:MAX_PROPERTY_VALUE_LENGTH]
     for sensitive in sensitive_values or ():
         needle = str(sensitive or '')
         if needle:
@@ -197,7 +223,8 @@ def _sanitize_scalar(key, value, *, sensitive_values=None):
 class ServerTelemetry:
     def __init__(self, *, release='unknown', env='local', role=DEFAULT_ROLE, source=DEFAULT_SOURCE,
                  project=DEFAULT_PROJECT, service=None, debug=False, dispatch_enabled=None,
-                 endpoint=None, posthog_endpoint=None, grafana_endpoint=None):
+                 endpoint=None, posthog_endpoint=None, grafana_endpoint=None,
+                 error_capture_enabled=None, exception_throttle_seconds=None):
         self.release = str(release or 'unknown')
         self.env = normalize_telemetry_env(env)
         self.role = role or DEFAULT_ROLE
@@ -210,14 +237,26 @@ class ServerTelemetry:
         self.endpoint = endpoint or os.environ.get('TELEMETRY_ENDPOINT')
         self.posthog_endpoint = posthog_endpoint or os.environ.get('TELEMETRY_POSTHOG_ENDPOINT')
         self.grafana_endpoint = grafana_endpoint or os.environ.get('TELEMETRY_GRAFANA_ENDPOINT')
+        self.error_capture_enabled = (
+            _env_bool('TELEMETRY_ERROR_CAPTURE_ENABLED', True)
+            if error_capture_enabled is None
+            else bool(error_capture_enabled)
+        )
+        self.exception_throttle_seconds = max(
+            0.0,
+            float(exception_throttle_seconds if exception_throttle_seconds is not None
+                  else _env_float('TELEMETRY_EXCEPTION_THROTTLE_SECONDS', DEFAULT_EXCEPTION_THROTTLE_SECONDS))
+        )
         self.queue = []
         self._counters = defaultdict(float)
         self._histograms = {}
+        self._exception_fingerprints = {}
 
     def clear(self):
         self.queue.clear()
         self._counters.clear()
         self._histograms.clear()
+        self._exception_fingerprints.clear()
 
     def _counter_key(self, metric_name, labels=None):
         return metric_name, _label_tuple(labels)
@@ -346,15 +385,42 @@ class ServerTelemetry:
 
     def record_exception(self, exc, *, handler, kind, room=None, room_analytics_id=None,
                          match_id=None, player_analytics_id=None, source=None, context=None):
+        if not self.error_capture_enabled:
+            return None
+
         ctx = dict(context or {})
         sensitive_values = tuple(ctx.pop('sensitive_values', ()) or ())
         message = _sanitize_message(str(exc), sensitive_values=sensitive_values)
+        fingerprint = _fingerprint_value({
+            'release': self.release,
+            'handler': handler or 'unknown',
+            'kind': kind or 'unknown',
+            'exceptionType': type(exc).__name__,
+            'code': getattr(exc, 'code', None) or type(exc).__name__,
+            'method': ctx.get('method'),
+            'path': ctx.get('path'),
+            'namespace': ctx.get('namespace'),
+            'queryKeys': _stringify_values(ctx.get('query_keys')),
+            'payloadKeys': _stringify_values(ctx.get('payload_keys')),
+        })
+        now = time.monotonic()
+        previous = self._exception_fingerprints.get(fingerprint)
+        if previous and now - previous['last_seen'] < self.exception_throttle_seconds:
+            previous['count'] += 1
+            previous['last_seen'] = now
+            return None
+        self._exception_fingerprints[fingerprint] = {
+            'first_seen': now,
+            'last_seen': now,
+            'count': 1,
+        }
         props = {
             'handler': handler,
             'kind': kind,
             'exceptionType': type(exc).__name__,
             'message': message,
             'code': getattr(exc, 'code', None) or type(exc).__name__,
+            'fingerprint': fingerprint,
             'method': ctx.get('method'),
             'path': ctx.get('path'),
             'namespace': ctx.get('namespace'),

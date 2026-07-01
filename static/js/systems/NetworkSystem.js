@@ -14,7 +14,7 @@
  */
 
 import { DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
-import { setTelemetryContextFromPayload } from '../telemetry/index.js';
+import { captureSocketConnectError, setTelemetryContextFromPayload } from '../telemetry/index.js';
 
 function resolveSocketTransports(search = '') {
     const params = new URLSearchParams(search || '');
@@ -171,6 +171,16 @@ class NetworkSystem {
         this.socket.on('disconnect', () => {
             this.connected = false;
             this._emit('network:disconnected');
+        });
+
+        this.socket.on('connect_error', (error) => {
+            captureSocketConnectError(error, {
+                source: 'NetworkSystem',
+                topology: this.topology,
+                isHost: this.isHost,
+                transport: this.socket?.io?.engine?.transport?.name || 'unknown',
+            });
+            this._emit('network:connectError', { connected: false });
         });
 
         // Room events

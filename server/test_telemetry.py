@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from server.app import app, game_rooms, server_telemetry, socketio
+from server.telemetry import ServerTelemetry
 
 
 class ServerTelemetryTest(unittest.TestCase):
@@ -154,6 +155,8 @@ class ServerTelemetryTest(unittest.TestCase):
             'description': description,
             'screenshotAttached': True,
             'wasStale': True,
+            'errorFingerprint': 'jjerr-clientabc123',
+            'screenshotDataUrl': 'data:image/png;base64,secretpixels',
         })
         self.assertEqual(response.status_code, 202)
 
@@ -164,10 +167,12 @@ class ServerTelemetryTest(unittest.TestCase):
         self.assertEqual(report_event['playerAnalyticsId'], 'player-report123')
         self.assertTrue(report_event['properties']['descriptionProvided'])
         self.assertEqual(report_event['properties']['descriptionLength'], len(description))
+        self.assertEqual(report_event['properties']['fingerprint'], 'jjerr-clientabc123')
         self.assertNotIn(description, report_json)
         self.assertNotIn('Alice', report_json)
         self.assertNotIn('ABCD', report_json)
         self.assertNotIn('supersecrettoken1234567890', report_json)
+        self.assertNotIn('secretpixels', report_json)
 
         health = self.client.get('/health')
         self.assertEqual(health.status_code, 200)
@@ -190,6 +195,7 @@ class ServerTelemetryTest(unittest.TestCase):
         message = exception_event['properties']['message']
         self.assertEqual(exception_event['properties']['kind'], 'http')
         self.assertEqual(exception_event['properties']['handler'], 'host')
+        self.assertTrue(exception_event['properties']['fingerprint'].startswith('jjerr-'))
         self.assertEqual(exception_event['properties']['method'], 'GET')
         self.assertEqual(exception_event['properties']['path'], '/host')
         self.assertEqual(exception_event['properties']['queryKeys'], 'room')
@@ -219,11 +225,56 @@ class ServerTelemetryTest(unittest.TestCase):
         message = exception_event['properties']['message']
         self.assertEqual(exception_event['properties']['kind'], 'socket')
         self.assertEqual(exception_event['properties']['handler'], 'join_game')
+        self.assertTrue(exception_event['properties']['fingerprint'].startswith('jjerr-'))
         self.assertEqual(exception_event['properties']['payloadKeys'], 'client_instance_id,player_name,room_code,seat_token')
         self.assertNotIn(room_code, message)
         self.assertNotIn('Alice', message)
         self.assertNotIn(seat_token, message)
         self.assertNotIn('10.0.0.1', message)
+
+    def test_server_exception_fingerprint_throttles_repeated_spam(self):
+        telemetry = ServerTelemetry(
+            release='release-test',
+            env='local',
+            dispatch_enabled=False,
+            exception_throttle_seconds=60,
+        )
+
+        first = telemetry.record_exception(
+            RuntimeError('same hidden token'),
+            handler='test_handler',
+            kind='http',
+            context={'method': 'GET', 'path': '/test', 'query_keys': ['room']},
+        )
+        second = telemetry.record_exception(
+            RuntimeError('same hidden token'),
+            handler='test_handler',
+            kind='http',
+            context={'method': 'GET', 'path': '/test', 'query_keys': ['room']},
+        )
+
+        self.assertIsNotNone(first)
+        self.assertIsNone(second)
+        self.assertEqual(len(telemetry.queue), 1)
+        self.assertTrue(telemetry.queue[0]['properties']['fingerprint'].startswith('jjerr-'))
+
+    def test_server_error_capture_disable_guard(self):
+        telemetry = ServerTelemetry(
+            release='release-test',
+            env='local',
+            dispatch_enabled=False,
+            error_capture_enabled=False,
+        )
+
+        event = telemetry.record_exception(
+            RuntimeError('disabled boom'),
+            handler='test_handler',
+            kind='http',
+            context={'method': 'GET', 'path': '/test'},
+        )
+
+        self.assertIsNone(event)
+        self.assertEqual(telemetry.queue, [])
 
 
 if __name__ == '__main__':

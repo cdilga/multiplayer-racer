@@ -1,5 +1,21 @@
 # Telemetry Contract
 
+> **STATUS: NOT LIVE - no analytics is sent anywhere yet (as of 2026-07-01).**
+>
+> The telemetry scaffolding described below is implemented (contract, client wrapper,
+> server instrumentation, error traces) but **defaults to a no-op sink and emits nothing**.
+> PostHog/Grafana delivery is deliberately inert until BOTH of these happen:
+>
+> 1. **Env is configured** - the client stays no-op unless `VITE_TELEMETRY_ENABLED=1` *and* a
+>    `VITE_POSTHOG_API_KEY` is present; the server stays no-op unless `TELEMETRY_ENABLED=1` *and*
+>    an endpoint env var is set. No key or endpoint ships in this repo.
+> 2. **The infra decision is made** - bead `br-jj-observability-analytics-rkt.1` (BLOCKED, owned by
+>    cdilga) gates the real PostHog project/host/key and central Grafana path. It must be closed
+>    manually when the shared PPaS infra is ready.
+>
+> The hardcoded `https://us.i.posthog.com` default host is only a fallback for when a key is
+> eventually supplied; without a key the sink never constructs. **Nothing here phones home today.**
+
 Joystick Jammers telemetry defines a shared event schema for client (host, controller) and server analytics. This contract ensures privacy, low volume, and correlation across systems before any vendor (PostHog, Grafana) integration.
 
 ## Core Principles
@@ -65,6 +81,33 @@ Events are organized by category and must be allowlisted. Format: `category:subc
 | `error:gameplay:crash` | host | Game crash | `message`, `code` |
 | `error:network:disconnect` | controller | Connection lost | `duration_ms` |
 | `error:network:reconnect` | controller | Reconnection successful | `attempt` |
+
+### Error Trace Fields
+
+Browser and server exception events add a bounded trace envelope inside
+`properties`:
+
+| Property | Description |
+|----------|-------------|
+| `fingerprint` | Deterministic `jjerr-*` grouping key. Built from release, event kind, handler/origin, exception type, path/source, and stack top; never from raw room code, player text, token, screenshot, or full message. |
+| `errorOrigin` | Browser capture surface such as `window.onerror`, `unhandledrejection`, `webglcontextlost`, `socketio.connect_error`, or `initialization`. |
+| `errorName` / `exceptionType` | Error class/type only. |
+| `errorMessage` / `message` | Redacted or sanitized bounded message. Browser messages are `[redacted]`; server messages pass through redaction for sensitive values. |
+| `routePath` / `path` | Pathname only. Query strings and URLs with sensitive params are redacted. |
+
+Error capture surfaces:
+
+- Browser: `window.onerror`, `unhandledrejection`, WebGL context loss, Socket.IO `connect_error`, and explicit initialization failure capture through the telemetry wrapper.
+- Server: Flask request teardown exceptions, instrumented Socket.IO handler exceptions, and direct `ServerTelemetry.record_exception` calls.
+- Manual bug reports may include the same `fingerprint`, but report analytics still include only booleans/counts and correlation IDs, not raw screenshot data or user-written text.
+
+No-spam requirement: repeated identical browser/server fingerprints are
+throttled before enqueue/dispatch.
+
+Disable guards:
+
+- Browser: `VITE_TELEMETRY_ERROR_CAPTURE_ENABLED=0`
+- Server: `TELEMETRY_ERROR_CAPTURE_ENABLED=0`
 
 ### Server Events
 
@@ -156,6 +199,13 @@ Events are organized by category and must be allowlisted. Format: `category:subc
 
 - Analytics service returns a no-op sink unless `TELEMETRY_ENABLED=1` (env) or `?telemetry=1` (URL param).
 - Rationale: Prevent test/dev data from polluting production analytics.
+
+### Source Maps
+
+- Local builds do not emit source maps by default.
+- Deploy builds set `POSTHOG_SOURCEMAP_UPLOAD=1` or `JJ_BUILD_SOURCEMAPS=1` before `npm run build`.
+- PostHog source-map upload is a separate CI/deploy step using `posthog-cli sourcemap inject --directory ./dist` followed by `posthog-cli sourcemap upload --directory ./dist --release-name joystick-jammers --release-version "$BUILD_SHA" --build "$BUILD_ID" --delete-after`.
+- Details live in `docs/deployment/source-maps-and-error-traces.md`.
 
 ### Debug Sink
 

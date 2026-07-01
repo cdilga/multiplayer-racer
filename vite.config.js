@@ -37,6 +37,8 @@ function resolveBuildIdentity() {
 }
 
 const BUILD = resolveBuildIdentity();
+const SOURCE_MAPS_ENABLED = process.env.POSTHOG_SOURCEMAP_UPLOAD === '1' ||
+  process.env.JJ_BUILD_SOURCEMAPS === '1';
 
 /**
  * Emit dist/version.json after the bundle is written so the server (and any
@@ -89,6 +91,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    sourcemap: SOURCE_MAPS_ENABLED,
     rollupOptions: {
       input: {
         landing: path.resolve(__dirname, 'frontend/landing/index.html'),
@@ -100,4 +103,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['three', '@dimforge/rapier3d-compat', 'socket.io-client'],
   },
-}); 
+});
