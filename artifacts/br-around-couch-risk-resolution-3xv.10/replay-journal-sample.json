@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "context": {
+    "buildId": "sample-build",
+    "seed": 4242,
+    "ruleset": "race",
+    "topology": "local",
+    "tuningProfileId": "arcade",
+    "tuningHash": "33f8aa18",
+    "fixedDt": 0.016666666666666666,
+    "deterministic": true
+  },
+  "roomConfig": {
+    "laps": 3,
+    "host_token": "[REDACTED]"
+  },
+  "entries": [
+    {
+      "seq": 0,
+      "type": "command",
+      "tick": 1,
+      "seatId": "seat-2",
+      "command": {
+        "steering": -0.25,
+        "acceleration": 0.25,
+        "seatToken": "[REDACTED]"
+      }
+    },
+    {
+      "seq": 1,
+      "type": "event",
+      "tick": 1,
+      "name": "race:start",
+      "data": {
+        "laps": 3
+      }
+    },
+    {
+      "seq": 3,
+      "type": "command",
+      "tick": 2,
+      "seatId": "seat-1",
+      "command": {
+        "steering": 0,
+        "acceleration": 0.5,
+        "seatToken": "[REDACTED]"
+      }
+    },
+    {
+      "seq": 5,
+      "type": "command",
+      "tick": 3,
+      "seatId": "seat-2",
+      "command": {
+        "steering": 0.25,
+        "acceleration": 0.75,
+        "seatToken": "[REDACTED]"
+      }
+    },
+    {
+      "seq": 6,
+      "type": "event",
+      "tick": 3,
+      "name": "weapon:pickup",
+      "data": {
+        "weaponId": "missile"
+      }
+    },
+    {
+      "seq": 8,
+      "type": "command",
+      "tick": 4,
+      "seatId": "seat-1",
+      "command": {
+        "steering": 0.5,
+        "acceleration": 1,
+        "seatToken": "[REDACTED]"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "seq": 2,
+      "tick": 1,
+      "stateHash": "fd604da3",
+      "drawCounters": {
+        "gameplay": 1
+      }
+    },
+    {
+      "seq": 4,
+      "tick": 2,
+      "stateHash": "57b043fb",
+      "drawCounters": {
+        "gameplay": 2
+      }
+    },
+    {
+      "seq": 7,
+      "tick": 3,
+      "stateHash": "a428545f",
+      "drawCounters": {
+        "weapons": 1,
+        "gameplay": 3
+      }
+    },
+    {
+      "seq": 9,
+      "tick": 4,
+      "stateHash": "b1d44e06",
+      "drawCounters": {
+        "weapons": 1,
+        "gameplay": 4
+      }
+    }
+  ]
+}
