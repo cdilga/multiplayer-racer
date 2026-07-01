@@ -21,6 +21,10 @@ import time
 # server/ is on sys.path) and when imported as a package (`server.app`, as the
 # tests do).
 try:
+    from input_safety import (
+        validate_finite_controls, canonicalize_name, validate_appearance,
+        resolve_weapon_id, RateLimiter,
+    )
     from session_vocabulary import (
         DEFAULT_TOPOLOGY, normalize_topology,
         DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
@@ -54,6 +58,10 @@ try:
         update_seat_name,
     )
 except ImportError:  # pragma: no cover - import path shim
+    from server.input_safety import (
+        validate_finite_controls, canonicalize_name, validate_appearance,
+        resolve_weapon_id, RateLimiter,
+    )
     from server.session_vocabulary import (
         DEFAULT_TOPOLOGY, normalize_topology,
         DEFAULT_RULESET, RULESETS, participant_roles, primary_role,
@@ -277,6 +285,14 @@ def version_manifest():
 #   }
 # }
 game_rooms = {}
+
+# Abuse controls (3xv.4): per-seat cooldowns for spammable actions. Keyed by
+# "<room>:<seat_id>" so one seat cannot flood the host with fire/reset/name
+# events. Intervals are generous enough for normal play, tight enough to stop
+# floods. Deterministic clock injection is used by the tests.
+_fire_rate_limiter = RateLimiter(0.1)     # <= 10 fire intents/sec per seat
+_reset_rate_limiter = RateLimiter(1.0)    # <= 1 car-reset/sec per seat
+_name_rate_limiter = RateLimiter(2.0)     # <= 1 name change / 2s per seat
 
 
 def _reap_rooms_if_needed():
@@ -888,14 +904,17 @@ def player_control_update(data):
     if not host_sid or room.get('phase') == PHASE_HOST_LOST:
         return
 
+    # Drop non-finite / malformed controls (NaN, Infinity, non-numeric) before
+    # they reach seat state or the host physics loop; finite values are clamped
+    # to their axis ranges.
+    safe_controls = validate_finite_controls(controls)
+    if safe_controls is None:
+        return
+
     seat = update_seat_controls(
         room,
         player_sid,
-        {
-            'steering': controls.get('steering', 0),
-            'acceleration': controls.get('acceleration', 0),
-            'braking': controls.get('braking', 0),
-        },
+        safe_controls,
         lease_version=lease_version,
         client_instance_id=client_instance_id,
     )
@@ -906,13 +925,9 @@ def player_control_update(data):
     if declared_player_id not in (None, seat['player_id']):
         return
 
-    # Validate control values are within expected ranges
-    try:
-        steering = max(-1.0, min(1.0, float(controls.get('steering', 0))))
-        acceleration = max(0.0, min(1.0, float(controls.get('acceleration', 0))))
-        braking = max(0.0, min(1.0, float(controls.get('braking', 0))))
-    except (TypeError, ValueError):
-        return
+    steering = safe_controls['steering']
+    acceleration = safe_controls['acceleration']
+    braking = safe_controls['braking']
 
     # Create validated control update
     control_update = {
@@ -978,7 +993,9 @@ def on_join_game(data):
         emit('join_error', {'message': 'Invalid join payload'})
         return
 
-    player_name = (data.get('player_name') or 'Player').strip() or 'Player'
+    # Server-canonical display name at join (NFKC, strip control chars, cap
+    # length, safe default). Rendered as literal text on host/player (3xv.4).
+    player_name = canonicalize_name(data.get('player_name'))
     room_code = (data.get('room_code') or '').upper()
     reconnect_id = data.get('reconnect_id')  # Legacy fallback only
     seat_token = data.get('seat_token')
@@ -1308,6 +1325,10 @@ def handle_weapon_fire(data):
         return
 
     seat = binding['seat']
+    # Abuse control (3xv.4): cap fire-intent rate per seat so one controller
+    # cannot flood the host with fire events.
+    if not _fire_rate_limiter.allow(f"{room_code}:{seat['seat_id']}"):
+        return
 
     # Forward to host
     emit('weapon_fire', {
@@ -1336,6 +1357,10 @@ def handle_request_car_reset(data):
         return
 
     seat = binding['seat']
+    # Abuse control (3xv.4): cap car-reset rate per seat (a reset can teleport a
+    # car to a safe spot, so spamming it is an exploit).
+    if not _reset_rate_limiter.allow(f"{room_code}:{seat['seat_id']}"):
+        return
     emit('car_reset_request', {'player_id': seat['player_id'], 'seat_id': seat['seat_id']}, to=room['host_sid'])
     logger.info(f"Player {seat['player_id']} requested car reset in room {room_code}")
 
@@ -1368,8 +1393,15 @@ def handle_weapon_pickup(data):
     if not seat:
         return
 
+    # Resolve the wire weapon id against the whitelist; drop unknown ids so a
+    # bad/forged id never reaches the controller (3xv.4).
+    weapon_id = resolve_weapon_id(data.get('weaponId'))
+    if weapon_id is None:
+        logger.warning(f"weapon_pickup dropped for {room_code}: unknown weapon id")
+        return
+
     _emit_to_seat_bindings('weapon_pickup', {
-        'weaponId': data.get('weaponId'),
+        'weaponId': weapon_id,
         'weaponName': data.get('weaponName'),
         'icon': data.get('icon')
     }, seat)
@@ -1403,8 +1435,14 @@ def handle_weapon_fired(data):
     if not seat:
         return
 
+    # Resolve the wire weapon id against the whitelist; drop unknown ids (3xv.4).
+    weapon_id = resolve_weapon_id(data.get('weaponId'))
+    if weapon_id is None:
+        logger.warning(f"weapon_fired dropped for {room_code}: unknown weapon id")
+        return
+
     _emit_to_seat_bindings('weapon_fired', {
-        'weaponId': data.get('weaponId')
+        'weaponId': weapon_id
     }, seat)
 
 @socketio.on('update_player_name')
@@ -1416,16 +1454,24 @@ def update_player_name(data):
     _reap_rooms_if_needed()
 
     player_sid = request.sid
-    new_name = data.get('name', '').strip()
-    
-    if not new_name:
+    raw_name = data.get('name')
+    if not isinstance(raw_name, str) or not raw_name.strip():
         emit('name_updated', {'success': False, 'message': 'Invalid name'})
         return
-    
+    # Server-canonical display name: NFKC, strip control/format chars, collapse
+    # whitespace, cap length. The canonical VALUE is what is stored/broadcast;
+    # clients render it as literal text (SafeTextRenderer), so markup never runs.
+    new_name = canonicalize_name(raw_name)
+
     for room_code, room_data in game_rooms.items():
         binding = lookup_binding_by_sid(room_data, player_sid)
         if not binding or not binding.get('seat') or binding['binding'].get('binding') != 'controller':
             continue
+
+        # Abuse control (3xv.4): rate-limit name changes per seat (anti name-spam).
+        if not _name_rate_limiter.allow(f"{room_code}:{binding['seat']['seat_id']}"):
+            emit('name_updated', {'success': False, 'message': 'Changing name too fast'})
+            return
 
         seat = update_seat_name(room_data, player_sid, new_name)
         if not seat:

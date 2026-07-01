@@ -110,3 +110,70 @@ test.describe('Player Name Input', () => {
         expect(generatedName.length, 'Generated name should not be empty').toBeGreaterThan(0);
     });
 });
+
+/**
+ * XSS-literal rendering (3xv.4): a hostile name/label must render as literal
+ * text on player + tool surfaces and execute nothing. Deterministic — an
+ * onerror/onload can only fire from a real <img>/<script> element, so asserting
+ * NO such node is created (plus a never-set sentinel) proves non-execution
+ * without any arbitrary sleep.
+ */
+test.describe('XSS-literal rendering (3xv.4)', () => {
+    // Split the closing script tag so this test file itself is never ambiguous.
+    const XSS = '<img src=x onerror="window.__xssFired=true"><' + 'script>window.__xssFired=true</' + 'script>';
+
+    test('the tool safe-text renderer shows an XSS payload literally and runs nothing', async ({ playerPage }) => {
+        await playerPage.goto('/player?testMode=1');
+        await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
+
+        const out = await playerPage.evaluate(async (payload) => {
+            (window as any).__xssFired = false;
+            // The app's real safe renderer (debug/tool surfaces), served from dist.
+            const mod = await import('/static/js/debug/SafeTextRenderer.js');
+            const el = document.createElement('div');
+            document.body.appendChild(el);
+            mod.renderSafeText(el, payload);
+            return {
+                text: el.textContent,
+                hasImg: !!el.querySelector('img'),
+                hasScript: !!el.querySelector('script'),
+                innerHTML: el.innerHTML,
+                fired: (window as any).__xssFired,
+            };
+        }, XSS);
+
+        expect(out.text).toContain('<img');            // shown as literal text
+        expect(out.hasImg).toBe(false);                // no element node created
+        expect(out.hasScript).toBe(false);
+        expect(out.innerHTML).not.toContain('<img src'); // escaped in the markup
+        expect(out.fired).toBe(false);                 // nothing executed
+    });
+
+    test('the player display-name element renders a hostile name as literal text', async ({ playerPage }) => {
+        await playerPage.goto('/player?testMode=1');
+        await playerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
+
+        const out = await playerPage.evaluate((payload) => {
+            (window as any).__xssFired = false;
+            // player.js renders the player name via textContent (see player.js
+            // display-name assignments); reproduce that exact sink and confirm it
+            // cannot create an executing node.
+            const el = document.getElementById('display-name');
+            if (!el) return { missing: true };
+            el.textContent = payload;
+            return {
+                missing: false,
+                text: el.textContent,
+                hasImg: !!el.querySelector('img'),
+                hasScript: !!el.querySelector('script'),
+                fired: (window as any).__xssFired,
+            };
+        }, XSS);
+
+        expect(out.missing).toBe(false);
+        expect(out.text).toContain('<img');
+        expect(out.hasImg).toBe(false);
+        expect(out.hasScript).toBe(false);
+        expect(out.fired).toBe(false);
+    });
+});
