@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Viewport Tiling Preview (woq.8)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0d1429; }
+  #stage { display: block; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<script type="module">
+// Renders the REAL ViewportTiling module output to a canvas so Playwright can
+// screenshot the tiling geometry (rectangles + HUD-safe name/own-car markers)
+// at true resolution — without touching the contested RenderSystem/GameHost.
+import {
+  tileViewports, buildWifesGrid, resolveViewportBudget, assignSeatsToViewports,
+} from '../../static/js/geometry/ViewportTiling.js';
+
+const params = new URLSearchParams(location.search);
+const W = parseInt(params.get('w') || '1920', 10);
+const H = parseInt(params.get('h') || '1080', 10);
+const mode = params.get('mode') || 'allcars';   // allcars | cluster | grid
+const players = parseInt(params.get('players') || '8', 10);
+
+const canvas = document.getElementById('stage');
+canvas.width = W;
+canvas.height = H;
+const ctx = canvas.getContext('2d');
+
+const TINTS = ['#12324f', '#123f2f', '#3a1440', '#402a12', '#14313f', '#331436', '#123a3a', '#3a1420'];
+const ACCENTS = ['#4cc9f0', '#00ff88', '#f72585', '#ffd166', '#4361ee', '#ff8844', '#39dd88', '#ff4444'];
+
+let layout;
+let assignment = null;
+let title = '';
+let degraded = false;
+
+if (mode === 'allcars') {
+  layout = tileViewports(1, { width: W, height: H });
+  title = `All-cars (K=1) ${W}x${H}`;
+} else if (mode === 'cluster') {
+  // Cluster director: a handful of camera clusters (readability-bounded).
+  const budget = resolveViewportBudget(players, { width: W, height: H });
+  layout = tileViewports(budget.viewportCount, { width: W, height: H });
+  degraded = budget.degraded;
+  title = `Cluster director K=${budget.viewportCount} (requested ${players}) ${W}x${H}${degraded ? ' [downgraded]' : ''}`;
+} else {
+  // Wife's Grid Mode: per-seat follow grid with stable assignment + downgrade.
+  const seats = Array.from({ length: players }, (_, i) => ({ seatId: i + 1 }));
+  const grid = buildWifesGrid(seats, { width: W, height: H });
+  layout = grid.layout;
+  assignment = grid.assignment;
+  degraded = grid.degraded;
+  title = `Wife's Grid ${players} players -> ${grid.budget.viewportCount} viewports ${W}x${H}${degraded ? ' [downgraded, still readable]' : ''}`;
+}
+
+// Seats assigned to each viewport index (for labels), stable by seatId.
+const seatsByViewport = new Map();
+if (assignment) {
+  for (const [seatId, vp] of assignment.entries()) {
+    if (!seatsByViewport.has(vp)) seatsByViewport.set(vp, []);
+    seatsByViewport.get(vp).push(seatId);
+  }
+  for (const list of seatsByViewport.values()) list.sort((a, b) => a - b);
+}
+
+ctx.fillStyle = '#0d1429';
+ctx.fillRect(0, 0, W, H);
+
+layout.viewports.forEach((v, i) => {
+  const tint = TINTS[i % TINTS.length];
+  const accent = ACCENTS[i % ACCENTS.length];
+
+  // Viewport fill + boundary.
+  ctx.fillStyle = tint;
+  ctx.fillRect(v.x, v.y, v.width, v.height);
+  ctx.strokeStyle = '#0d1429';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(v.x + 2, v.y + 2, v.width - 4, v.height - 4);
+
+  // HUD-safe content inset (dashed) — everything readable must live inside this.
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.setLineDash([10, 8]);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(v.content.x, v.content.y, v.content.width, v.content.height);
+  ctx.setLineDash([]);
+
+  // Name tag (top-left of the content inset — never touches the boundary).
+  const label = seatsByViewport.has(i)
+    ? `P${seatsByViewport.get(i).join(',')}`
+    : `View ${i + 1}`;
+  ctx.font = '600 26px -apple-system, Segoe UI, Roboto, sans-serif';
+  const padX = 12, padY = 8, tw = ctx.measureText(label).width;
+  ctx.fillStyle = 'rgba(13,20,41,0.85)';
+  ctx.fillRect(v.content.x, v.content.y, tw + padX * 2, 40);
+  ctx.fillStyle = accent;
+  ctx.fillText(label, v.content.x + padX, v.content.y + 28);
+
+  // Own-car marker (chevron) centred in the content inset.
+  const cx = v.content.x + v.content.width / 2;
+  const cy = v.content.y + v.content.height / 2;
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 18);
+  ctx.lineTo(cx + 14, cy + 14);
+  ctx.lineTo(cx, cy + 6);
+  ctx.lineTo(cx - 14, cy + 14);
+  ctx.closePath();
+  ctx.fill();
+
+  // Aspect readout, bottom-left of content inset.
+  ctx.font = '400 18px monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText(`${Math.round(v.width)}x${Math.round(v.height)}  ar=${v.aspect.toFixed(2)}`,
+    v.content.x, v.content.y + v.content.height - 8);
+});
+
+// Global caption.
+ctx.font = '600 22px -apple-system, Segoe UI, Roboto, sans-serif';
+ctx.fillStyle = '#ffffff';
+ctx.fillText(title, 20, H - 16);
+
+window.__tilingReady = true;
+window.__tilingInfo = {
+  title, mode, players, width: W, height: H, degraded,
+  viewportCount: layout.viewports.length,
+};
+</script>
+</body>
+</html>
