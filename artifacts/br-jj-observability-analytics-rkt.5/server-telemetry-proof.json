@@ -1,0 +1,152 @@
+{
+  "summary": {
+    "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+    "roomAnalyticsId": "room-86470351140d",
+    "matchId": "match-fcfc576450db",
+    "playerAnalyticsId": "player-43b6969957ce4d83"
+  },
+  "selectedEvents": {
+    "server:room:created": {
+      "eventName": "server:room:created",
+      "timestamp": 1782901635417,
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "roomAnalyticsId": "room-86470351140d",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "player-unknown",
+      "project": "joystick-jammers",
+      "service": "game-server",
+      "env": "local",
+      "role": "server",
+      "source": "SocketIO",
+      "properties": {
+        "topology": "local",
+        "phase": "waiting",
+        "playerCount": 0,
+        "handler": "create_room"
+      },
+      "mode": "race"
+    },
+    "server:player:joined": {
+      "eventName": "server:player:joined",
+      "timestamp": 1782901635418,
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "roomAnalyticsId": "room-86470351140d",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "player-43b6969957ce4d83",
+      "project": "joystick-jammers",
+      "service": "game-server",
+      "env": "local",
+      "role": "server",
+      "source": "SocketIO",
+      "properties": {
+        "role": "controller",
+        "lateJoin": false,
+        "topology": "local",
+        "leaseVersion": 1,
+        "takeoverKind": null,
+        "handler": "join_game"
+      },
+      "mode": "race"
+    },
+    "server:game:started": {
+      "eventName": "server:game:started",
+      "timestamp": 1782901635418,
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "roomAnalyticsId": "room-86470351140d",
+      "matchId": "match-fcfc576450db",
+      "playerAnalyticsId": "player-unknown",
+      "project": "joystick-jammers",
+      "service": "game-server",
+      "env": "local",
+      "role": "server",
+      "source": "SocketIO",
+      "properties": {
+        "topology": "local",
+        "playerCount": 1,
+        "handler": "start_game"
+      },
+      "mode": "race"
+    },
+    "server:report:submitted": {
+      "eventName": "server:report:submitted",
+      "timestamp": 1782901635419,
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "roomAnalyticsId": "room-86470351140d",
+      "matchId": "match-fcfc576450db",
+      "playerAnalyticsId": "player-43b6969957ce4d83",
+      "project": "joystick-jammers",
+      "service": "game-server",
+      "env": "local",
+      "role": "server",
+      "source": "Flask",
+      "properties": {
+        "reportRole": "controller",
+        "reportSource": "BugReportUI",
+        "descriptionProvided": true,
+        "descriptionLength": 71,
+        "screenshotAttached": true,
+        "wasStale": true,
+        "handler": "telemetry_report_submission"
+      }
+    },
+    "error:server:exception": {
+      "eventName": "error:server:exception",
+      "timestamp": 1782901635433,
+      "release": "a7242414d4d7e1ce0de02f233ab48b0b9c9a1689",
+      "roomAnalyticsId": "room-unknown",
+      "matchId": "match-unknown",
+      "playerAnalyticsId": "player-unknown",
+      "project": "joystick-jammers",
+      "service": "game-server",
+      "env": "local",
+      "role": "server",
+      "source": "Flask",
+      "properties": {
+        "handler": "host",
+        "kind": "http",
+        "exceptionType": "RuntimeError",
+        "message": "[redacted]",
+        "code": "RuntimeError",
+        "method": "GET",
+        "path": "/host",
+        "namespace": null,
+        "queryKeys": "room",
+        "payloadKeys": "",
+        "contentType": null,
+        "remoteAddrHash": "2f7d49bc55697dd4"
+      }
+    }
+  },
+  "metricsExcerpt": [
+    "jj_server_active_rooms 1",
+    "jj_server_active_players 1",
+    "jj_server_events_total{event_name=\"server:report:submitted\"} 1",
+    "jj_server_events_total{event_name=\"server:room:created\"} 1",
+    "jj_server_socket_events_total{handler=\"player_control_update\",result=\"ok\"} 1",
+    "jj_server_validation_failures_total{bucket=\"invalid_controls\",handler=\"player_control_update\"} 1",
+    "jj_server_exceptions_total{handler=\"host\",kind=\"http\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.005\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.01\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.025\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.05\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.1\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.25\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"0.5\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"1.0\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"2.5\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"5.0\"} 1",
+    "jj_server_handler_latency_seconds_bucket{handler=\"player_control_update\",kind=\"socket\",le=\"+Inf\"} 1",
+    "jj_server_handler_latency_seconds_sum{handler=\"player_control_update\",kind=\"socket\"} 1.65419e-05",
+    "jj_server_handler_latency_seconds_count{handler=\"player_control_update\",kind=\"socket\"} 1"
+  ],
+  "controlUpdateAggregationProof": {
+    "structuredValidationEventsForPlayerControlUpdate": [],
+    "metricsLinePresent": true
+  },
+  "privacyNotes": [
+    "Selected events use roomAnalyticsId instead of raw room codes.",
+    "Report submission stores description length/flags only, not raw report text.",
+    "HTTP exception sample redacts echoed room code, token, and IP from the message.",
+    "player_control_update validation is counted in metrics, not emitted as per-packet structured events."
+  ]
+}

@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from functools import wraps
 import os
 import random
 import string
@@ -57,6 +58,7 @@ try:
         update_seat_motion,
         update_seat_name,
     )
+    from telemetry import ServerTelemetry
 except ImportError:  # pragma: no cover - import path shim
     from server.input_safety import (
         validate_finite_controls, canonicalize_name, validate_appearance,
@@ -94,6 +96,7 @@ except ImportError:  # pragma: no cover - import path shim
         update_seat_motion,
         update_seat_name,
     )
+    from server.telemetry import ServerTelemetry
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -282,6 +285,179 @@ def _with_server_metadata(payload, room=None):
     return enriched
 
 
+server_telemetry = ServerTelemetry(
+    release=_build_release(),
+    env=os.environ.get('TELEMETRY_ENV') or os.environ.get('FLASK_ENV') or os.environ.get('ENV') or 'local',
+)
+
+
+def _telemetry_room(room_code):
+    if not room_code:
+        return None
+    return game_rooms.get(str(room_code).upper())
+
+
+def _telemetry_player_analytics_id(room, *, sid=None, seat=None):
+    if seat is not None:
+        return seat.get('player_analytics_id')
+    if room is None:
+        return None
+    binding = lookup_binding_by_sid(room, sid or request.sid)
+    if not binding or not binding.get('seat'):
+        return None
+    return binding['seat'].get('player_analytics_id')
+
+
+def _telemetry_sensitive_values(data=None):
+    values = []
+    if isinstance(data, dict):
+        for key in ('room_code', 'player_name', 'seat_token', 'host_token', 'join_url', 'name'):
+            value = data.get(key)
+            if value not in (None, ''):
+                values.append(value)
+    remote_addr = getattr(request, 'remote_addr', None)
+    if remote_addr:
+        values.append(remote_addr)
+    sid = getattr(request, 'sid', None)
+    if sid:
+        values.append(sid)
+    return tuple(values)
+
+
+def _telemetry_request_context():
+    payload = request.get_json(silent=True)
+    payload_keys = sorted(payload.keys()) if isinstance(payload, dict) else []
+    return {
+        'method': request.method,
+        'path': request.path,
+        'query_keys': sorted(request.args.keys()),
+        'payload_keys': payload_keys,
+        'content_type': request.content_type,
+        'remote_addr': request.remote_addr,
+    }
+
+
+def _telemetry_socket_context(data=None):
+    payload_keys = sorted(data.keys()) if isinstance(data, dict) else []
+    return {
+        'method': 'SOCKET',
+        'path': None,
+        'namespace': getattr(request, 'namespace', '/'),
+        'query_keys': [],
+        'payload_keys': payload_keys,
+        'content_type': 'application/json',
+        'remote_addr': getattr(request, 'remote_addr', None) or request.environ.get('REMOTE_ADDR'),
+        'sensitive_values': _telemetry_sensitive_values(data),
+    }
+
+
+def _telemetry_event(event_name, handler, *, room=None, room_analytics_id=None, match_id=None,
+                     player_analytics_id=None, properties=None, source='SocketIO',
+                     sensitive_values=None):
+    return server_telemetry.emit(
+        event_name,
+        handler=handler,
+        room=room,
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source=source,
+        properties=properties,
+        sensitive_values=sensitive_values,
+    )
+
+
+def _telemetry_validation_failure(handler, bucket, *, room=None, room_analytics_id=None,
+                                  match_id=None, player_analytics_id=None, source='SocketIO',
+                                  emit_event=True, sensitive_values=None):
+    return server_telemetry.record_validation_failure(
+        handler=handler,
+        bucket=bucket,
+        room=room,
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source=source,
+        emit_event=emit_event,
+        sensitive_values=sensitive_values,
+    )
+
+
+def _emit_error_message(channel, message, *, handler, bucket, room=None, room_analytics_id=None,
+                        match_id=None, player_analytics_id=None, source='SocketIO',
+                        emit_validation_event=True, sensitive_values=None):
+    _telemetry_validation_failure(
+        handler,
+        bucket,
+        room=room,
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source=source,
+        emit_event=emit_validation_event,
+        sensitive_values=sensitive_values,
+    )
+    emit(channel, {'message': message})
+
+
+def _emit_join_error_message(message, *, handler, bucket, room=None, room_analytics_id=None,
+                             match_id=None, player_analytics_id=None, sensitive_values=None):
+    _telemetry_event(
+        'server:player:join_failed',
+        handler,
+        room=room,
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source='SocketIO',
+        properties={'bucket': bucket},
+        sensitive_values=sensitive_values,
+    )
+    _telemetry_validation_failure(
+        handler,
+        bucket,
+        room=room,
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source='SocketIO',
+        emit_event=False,
+        sensitive_values=sensitive_values,
+    )
+    emit('join_error', {'message': message})
+
+
+def _instrument_socket_handler(handler_name):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapped(*args, **kwargs):
+            started_at = time.perf_counter()
+            data = args[0] if args else None
+            succeeded = False
+            try:
+                result = fn(*args, **kwargs)
+                succeeded = True
+                return result
+            except Exception as exc:
+                room = _telemetry_room((data or {}).get('room_code') if isinstance(data, dict) else None)
+                server_telemetry.record_socket_handler(handler_name, 'exception', time.perf_counter() - started_at)
+                server_telemetry.record_exception(
+                    exc,
+                    handler=handler_name,
+                    kind='socket',
+                    room=room,
+                    player_analytics_id=_telemetry_player_analytics_id(room),
+                    source='SocketIO',
+                    context=_telemetry_socket_context(data),
+                )
+                raise
+            finally:
+                if succeeded:
+                    server_telemetry.record_socket_handler(handler_name, 'ok', time.perf_counter() - started_at)
+        return wrapped
+    return decorator
+
+
 @app.route('/version')
 def version_manifest():
     """Stable version endpoint for client/server build-skew detection.
@@ -293,6 +469,63 @@ def version_manifest():
     response = jsonify({'manifest': 'jj-build-version', **_read_build_identity()})
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     return response
+
+
+@app.before_request
+def _telemetry_before_request():
+    g.telemetry_started_at = time.perf_counter()
+    g.telemetry_request_recorded = False
+
+
+@app.after_request
+def _telemetry_after_request(response):
+    started_at = getattr(g, 'telemetry_started_at', None)
+    if started_at is not None and not getattr(g, 'telemetry_request_recorded', False):
+        server_telemetry.record_request(
+            request.endpoint or request.path or 'unknown',
+            response.status_code,
+            time.perf_counter() - started_at,
+        )
+        g.telemetry_request_recorded = True
+    return response
+
+
+@app.teardown_request
+def _telemetry_teardown_request(exc):
+    if exc is None:
+        return None
+    if request.path.startswith('/socket.io'):
+        return None
+
+    payload = request.get_json(silent=True)
+    room_code = None
+    if isinstance(payload, dict):
+        room_code = payload.get('room_code')
+    if room_code is None and request.view_args:
+        room_code = request.view_args.get('room_code')
+    room = _telemetry_room(room_code)
+    server_telemetry.record_exception(
+        exc,
+        handler=request.endpoint or request.path or 'unknown',
+        kind='http',
+        room=room,
+        player_analytics_id=_telemetry_player_analytics_id(room),
+        source='Flask',
+        context={
+            **_telemetry_request_context(),
+            'sensitive_values': _telemetry_sensitive_values(payload) + tuple(request.args.values()) + tuple((request.view_args or {}).values()),
+        },
+    )
+
+    started_at = getattr(g, 'telemetry_started_at', None)
+    if started_at is not None and not getattr(g, 'telemetry_request_recorded', False):
+        server_telemetry.record_request(
+            request.endpoint or request.path or 'unknown',
+            getattr(exc, 'code', 500),
+            time.perf_counter() - started_at,
+        )
+        g.telemetry_request_recorded = True
+    return None
 
 
 # Game rooms dictionary
@@ -336,12 +569,26 @@ _name_rate_limiter = RateLimiter(2.0)     # <= 1 name change / 2s per seat
 
 
 def _reap_rooms_if_needed():
+    prior_rooms = {room_code: room for room_code, room in game_rooms.items()}
     removed = reap_rooms(
         game_rooms,
         host_loss_grace=HOST_LOSS_GRACE_SECONDS,
         room_ttl=ROOM_TTL_SECONDS,
     )
     for room_code in removed:
+        room = prior_rooms.get(room_code)
+        if room is not None:
+            _telemetry_event(
+                'server:room:closed',
+                'reap_rooms',
+                room=room,
+                source='Flask',
+                properties={
+                    'reason': 'ttl_expired',
+                    'playerCount': len(room.get('seats', {})),
+                    'duration_ms': int(max((time.time() - room.get('created_at', time.time())) * 1000, 0)),
+                },
+            )
         logger.info(f"Room {room_code} reaped after TTL expiry")
 
 
@@ -507,6 +754,23 @@ def _complete_join(room_code, room, join_result):
 
     if room.get('phase') in ACTIVE_ROOM_PHASES and join_result['join_payload'].get('role') != 'viewer':
         _emit_zeroed_controls_to_host(room, join_result['seat'])
+
+    join_event_name = 'server:player:reconnected' if join_result['join_payload']['reconnected'] else 'server:player:joined'
+    _telemetry_event(
+        join_event_name,
+        'join_game',
+        room=room,
+        player_analytics_id=join_result['seat'].get('player_analytics_id'),
+        source='SocketIO',
+        properties={
+            'role': join_result['join_payload'].get('role'),
+            'lateJoin': bool(join_result['join_payload'].get('is_late_join')),
+            'topology': room.get('topology'),
+            'leaseVersion': join_result['seat'].get('lease_version'),
+            'takeoverKind': join_result['join_payload'].get('takeover_kind'),
+        },
+        sensitive_values=_telemetry_sensitive_values(join_result['join_payload']),
+    )
 
     action = "reconnected to" if join_result['join_payload']['reconnected'] else "joined"
     logger.info(
@@ -777,6 +1041,7 @@ def generate_qr_code(room_code):
         return jsonify({"error": str(e)}), 500
 
 @socketio.on('create_room')
+@_instrument_socket_handler('create_room')
 def create_room(data=None):
     """Host creates a new game room.
 
@@ -816,9 +1081,22 @@ def create_room(data=None):
         'host_epoch': room_state['host_epoch'],
         'phase': room_state['phase'],
     }, room_state))
+    _telemetry_event(
+        'server:room:created',
+        'create_room',
+        room=room_state,
+        source='SocketIO',
+        properties={
+            'topology': topology,
+            'phase': room_state['phase'],
+            'playerCount': 0,
+        },
+        sensitive_values=_telemetry_sensitive_values({'room_code': room_code, 'join_url': join_url, 'host_token': host_token}),
+    )
     logger.info(f"Room created: {room_code} (topology={topology})")
 
 @socketio.on('reclaim_room')
+@_instrument_socket_handler('reclaim_room')
 def reclaim_room(data):
     """Host re-binds (or recreates) a room under a known code after a socket
     blip or server recycle, so players using the still-displayed code can
@@ -826,7 +1104,7 @@ def reclaim_room(data):
     capability token; rotates token on successful reclaim."""
     _reap_rooms_if_needed()
     if not isinstance(data, dict):
-        emit('error', {'message': 'Invalid reclaim payload'})
+        _emit_error_message('error', 'Invalid reclaim payload', handler='reclaim_room', bucket='invalid_payload')
         return
 
     host_sid = request.sid
@@ -834,11 +1112,11 @@ def reclaim_room(data):
     host_token = data.get('host_token')
 
     if not room_code:
-        emit('error', {'message': 'Room code required'})
+        _emit_error_message('error', 'Room code required', handler='reclaim_room', bucket='missing_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     if not host_token or not _verify_host_token(host_token):
-        emit('error', {'message': 'Invalid or expired host token'})
+        _emit_error_message('error', 'Invalid or expired host token', handler='reclaim_room', bucket='invalid_host_token', sensitive_values=_telemetry_sensitive_values(data))
         logger.warning(f"Host reclaim rejected for {room_code}: invalid token")
         return
 
@@ -848,7 +1126,7 @@ def reclaim_room(data):
         room = game_rooms[room_code]
         stored_token = room.get('host_token')
         if not stored_token or not hmac.compare_digest(host_token, stored_token):
-            emit('error', {'message': 'Host token mismatch'})
+            _emit_error_message('error', 'Host token mismatch', handler='reclaim_room', bucket='host_token_mismatch', room=room, sensitive_values=_telemetry_sensitive_values(data))
             logger.warning(f"Host reclaim rejected for {room_code}: token mismatch")
             return
 
@@ -877,17 +1155,31 @@ def reclaim_room(data):
         'host_epoch': new_epoch,
         'phase': game_rooms[room_code]['phase'],
     }, game_rooms[room_code]))
+    _telemetry_event(
+        'server:room:reclaimed',
+        'reclaim_room',
+        room=game_rooms[room_code],
+        source='SocketIO',
+        properties={
+            'topology': game_rooms[room_code]['topology'],
+            'phase': game_rooms[room_code]['phase'],
+            'reboundExistingRoom': prior_phase is not None,
+            'priorPhase': prior_phase,
+        },
+        sensitive_values=_telemetry_sensitive_values({'room_code': room_code, 'host_token': new_token}),
+    )
     if prior_phase == PHASE_HOST_LOST:
         _emit_room_phase(room_code, include_self=False)
 
 
 @socketio.on('return_to_lobby')
+@_instrument_socket_handler('return_to_lobby')
 def return_to_lobby(data):
     """Host returned to the lobby: reset room state so subsequent joins are
     treated as fresh lobby joins, not mid-race late joins. Requires valid host
     token and epoch."""
     if not isinstance(data, dict):
-        emit('error', {'message': 'Invalid return_to_lobby payload'})
+        _emit_error_message('error', 'Invalid return_to_lobby payload', handler='return_to_lobby', bucket='invalid_payload')
         return
     _reap_rooms_if_needed()
 
@@ -896,27 +1188,37 @@ def return_to_lobby(data):
     host_epoch = data.get('host_epoch')
 
     if not room_code:
-        emit('error', {'message': 'Room code required'})
+        _emit_error_message('error', 'Room code required', handler='return_to_lobby', bucket='missing_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
     if not is_valid:
-        emit('error', {'message': error_msg})
+        _emit_error_message('error', error_msg, handler='return_to_lobby', bucket='invalid_host_authority', room=_telemetry_room(room_code), sensitive_values=_telemetry_sensitive_values(data))
         return
 
     return_room_to_lobby(game_rooms[room_code])
     emit('returned_to_lobby', _room_phase_payload(room_code), to=room_code)
     _emit_room_phase(room_code)
+    _telemetry_event(
+        'server:room:returned_to_lobby',
+        'return_to_lobby',
+        room=game_rooms[room_code],
+        source='SocketIO',
+        properties={'phase': game_rooms[room_code]['phase']},
+        sensitive_values=_telemetry_sensitive_values(data),
+    )
     logger.info(f"Room {room_code} returned to lobby")
 
 
 @socketio.on('player_control_update')
+@_instrument_socket_handler('player_control_update')
 def player_control_update(data):
     """
     Handle player control updates.
     Very simple, as all we need to do is some model validation and then pass through the controls as is to the correct room!
     """
     if not isinstance(data, dict):
+        _telemetry_validation_failure('player_control_update', 'invalid_payload', source='SocketIO', emit_event=False)
         return
     _reap_rooms_if_needed()
 
@@ -931,19 +1233,23 @@ def player_control_update(data):
     lease_version = data.get('lease_version')
     client_instance_id = data.get('client_instance_id')
     if not room_code or not isinstance(controls, dict) or timestamp is None:
+        _telemetry_validation_failure('player_control_update', 'invalid_payload', room=_telemetry_room(room_code), source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     seq_valid, seq = _optional_sequence(data)
     if not seq_valid:
+        _telemetry_validation_failure('player_control_update', 'invalid_seq', room=_telemetry_room(room_code), source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     # Validate room existence and host availability
     if not room_code or room_code not in game_rooms:
+        _telemetry_validation_failure('player_control_update', 'room_not_found', source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     room = game_rooms[room_code]
     host_sid = room.get('host_sid')
     if not host_sid or room.get('phase') == PHASE_HOST_LOST:
+        _telemetry_validation_failure('player_control_update', 'host_unavailable', room=room, source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     # Drop non-finite / malformed controls (NaN, Infinity, non-numeric) before
@@ -951,6 +1257,7 @@ def player_control_update(data):
     # to their axis ranges.
     safe_controls = validate_finite_controls(controls)
     if safe_controls is None:
+        _telemetry_validation_failure('player_control_update', 'invalid_controls', room=room, source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     seat = update_seat_controls(
@@ -961,10 +1268,12 @@ def player_control_update(data):
         client_instance_id=client_instance_id,
     )
     if not seat:
+        _telemetry_validation_failure('player_control_update', 'binding_rejected', room=room, source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     declared_player_id = data.get('player_id')
     if declared_player_id not in (None, seat['player_id']):
+        _telemetry_validation_failure('player_control_update', 'player_id_mismatch', room=room, player_analytics_id=seat.get('player_analytics_id'), source='SocketIO', emit_event=False, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     steering = safe_controls['steering']
@@ -1028,11 +1337,12 @@ def handle_vehicle_states(data):
 
 
 @socketio.on('join_game')
+@_instrument_socket_handler('join_game')
 def on_join_game(data):
     """Handle player joining a game room"""
     _reap_rooms_if_needed()
     if not isinstance(data, dict):
-        emit('join_error', {'message': 'Invalid join payload'})
+        _emit_join_error_message('Invalid join payload', handler='join_game', bucket='invalid_payload')
         return
 
     # Server-canonical display name at join (NFKC, strip control chars, cap
@@ -1047,13 +1357,13 @@ def on_join_game(data):
 
     # Validate room code
     if not room_code or room_code not in game_rooms:
-        emit('join_error', {'message': 'Invalid room code'})
+        _emit_join_error_message('Invalid room code', handler='join_game', bucket='invalid_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     # Get room
     room = game_rooms[room_code]
     if room.get('phase') == 'closed':
-        emit('join_error', {'message': 'Room is closed'})
+        _emit_join_error_message('Room is closed', handler='join_game', bucket='room_closed', room=room, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     join_result = join_seat(
@@ -1069,6 +1379,17 @@ def on_join_game(data):
 
     if join_result['status'] == 'takeover_required':
         emit('controller_takeover_required', _with_server_metadata(join_result['payload'], room))
+        _telemetry_event(
+            'server:player:takeover_prompted',
+            'join_game',
+            room=room,
+            source='SocketIO',
+            properties={
+                'seatId': join_result['payload']['seat_id'],
+                'phase': room.get('phase'),
+            },
+            sensitive_values=_telemetry_sensitive_values(data),
+        )
         logger.info(
             f"Seat takeover prompt for room {room_code} seat {join_result['payload']['seat_id']}"
         )
@@ -1078,9 +1399,10 @@ def on_join_game(data):
 
 
 @socketio.on('confirm_controller_takeover')
+@_instrument_socket_handler('confirm_controller_takeover')
 def confirm_controller_takeover_event(data):
     if not isinstance(data, dict):
-        emit('join_error', {'message': 'Invalid takeover payload'})
+        _emit_join_error_message('Invalid takeover payload', handler='confirm_controller_takeover', bucket='invalid_payload')
         return
     _reap_rooms_if_needed()
 
@@ -1088,7 +1410,7 @@ def confirm_controller_takeover_event(data):
     seat_token = data.get('seat_token')
     client_instance_id = data.get('client_instance_id')
     if not room_code or room_code not in game_rooms:
-        emit('join_error', {'message': 'Invalid room code'})
+        _emit_join_error_message('Invalid room code', handler='confirm_controller_takeover', bucket='invalid_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     room = game_rooms[room_code]
@@ -1099,7 +1421,7 @@ def confirm_controller_takeover_event(data):
         client_instance_id=client_instance_id,
     )
     if join_result.get('status') != 'joined':
-        emit('join_error', {'message': 'Takeover request expired'})
+        _emit_join_error_message('Takeover request expired', handler='confirm_controller_takeover', bucket='takeover_expired', room=room, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     _complete_join(room_code, room, join_result)
@@ -1123,10 +1445,11 @@ def seat_heartbeat(data):
     )
 
 @socketio.on('start_game')
+@_instrument_socket_handler('start_game')
 def start_game(data):
     """Host starts the game in a room. Requires valid host token and epoch."""
     if not isinstance(data, dict):
-        emit('error', {'message': 'Invalid start_game payload'})
+        _emit_error_message('error', 'Invalid start_game payload', handler='start_game', bucket='invalid_payload')
         return
     _reap_rooms_if_needed()
 
@@ -1135,25 +1458,37 @@ def start_game(data):
     host_epoch = data.get('host_epoch')
 
     if not room_code:
-        emit('error', {'message': 'Room code required'})
+        _emit_error_message('error', 'Room code required', handler='start_game', bucket='missing_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
     if not is_valid:
-        emit('error', {'message': error_msg})
+        _emit_error_message('error', error_msg, handler='start_game', bucket='invalid_host_authority', room=_telemetry_room(room_code), sensitive_values=_telemetry_sensitive_values(data))
         return
 
     begin_room_match(game_rooms[room_code])
     emit('game_started', _room_phase_payload(room_code), to=room_code)
     _emit_room_phase(room_code)
+    _telemetry_event(
+        'server:game:started',
+        'start_game',
+        room=game_rooms[room_code],
+        source='SocketIO',
+        properties={
+            'topology': game_rooms[room_code].get('topology'),
+            'playerCount': len(game_rooms[room_code].get('seats', {})),
+        },
+        sensitive_values=_telemetry_sensitive_values(data),
+    )
     logger.info(f"Game started in room {room_code}")
 
 
 @socketio.on('end_game')
+@_instrument_socket_handler('end_game')
 def end_game(data):
     """Host publishes the reliable end-of-match results snapshot. Requires valid host token and epoch."""
     if not isinstance(data, dict):
-        emit('error', {'message': 'Invalid results payload'})
+        _emit_error_message('error', 'Invalid results payload', handler='end_game', bucket='invalid_payload')
         return
     _reap_rooms_if_needed()
 
@@ -1162,24 +1497,24 @@ def end_game(data):
     host_epoch = data.get('host_epoch')
 
     if not room_code:
-        emit('error', {'message': 'Room code required'})
+        _emit_error_message('error', 'Room code required', handler='end_game', bucket='missing_room_code', sensitive_values=_telemetry_sensitive_values(data))
         return
 
     is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
     if not is_valid:
-        emit('error', {'message': error_msg})
+        _emit_error_message('error', error_msg, handler='end_game', bucket='invalid_host_authority', room=_telemetry_room(room_code), sensitive_values=_telemetry_sensitive_values(data))
         return
 
     room = game_rooms[room_code]
 
     seq_valid, seq = _optional_sequence(data)
     if not seq_valid:
-        emit('error', {'message': 'Invalid results payload'})
+        _emit_error_message('error', 'Invalid results payload', handler='end_game', bucket='invalid_seq', room=room, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     results = _normalize_results_payload(data.get('results'))
     if results is None:
-        emit('error', {'message': 'Invalid results payload'})
+        _emit_error_message('error', 'Invalid results payload', handler='end_game', bucket='invalid_results', room=room, sensitive_values=_telemetry_sensitive_values(data))
         return
 
     end_room_match(room)
@@ -1197,6 +1532,18 @@ def end_game(data):
 
     emit('game_end', payload, room=room_code)
     _emit_room_phase(room_code)
+    _telemetry_event(
+        'server:game:ended',
+        'end_game',
+        room=room,
+        source='SocketIO',
+        properties={
+            'topology': room.get('topology'),
+            'resultsCount': len(results),
+            'phase': room.get('phase'),
+        },
+        sensitive_values=_telemetry_sensitive_values(data),
+    )
     logger.info(f"Game ended in room {room_code}")
 
 @socketio.on('mode_selected')
@@ -1262,6 +1609,7 @@ def player_update(data):
     }, to=game_rooms[room_code]['host_sid'])
 
 @socketio.on('disconnect')
+@_instrument_socket_handler('disconnect')
 def handle_disconnect():
     """Handle client disconnection."""
     _reap_rooms_if_needed()
@@ -1278,6 +1626,17 @@ def handle_disconnect():
             payload['last_snapshot_at'] = (room_data.get('last_snapshot') or {}).get('captured_at')
             emit('host_disconnected', payload, to=room_code, include_self=False)
             _emit_room_phase(room_code, include_self=False)
+            _telemetry_event(
+                'server:host:disconnected',
+                'disconnect',
+                room=room_data,
+                source='SocketIO',
+                properties={
+                    'phase': room_data.get('phase'),
+                    'graceSeconds': HOST_LOSS_GRACE_SECONDS,
+                    'hadSnapshot': bool(room_data.get('last_snapshot')),
+                },
+            )
             logger.info(f"Host disconnected, room {room_code} entering host-loss grace")
             break
 
@@ -1297,6 +1656,19 @@ def handle_disconnect():
                 'player_name': seat['appearance']['name'],
                 'can_reconnect': True,
             }, to=room_data['host_sid'])
+        _telemetry_event(
+            'server:player:left',
+            'disconnect',
+            room=room_data,
+            player_analytics_id=seat.get('player_analytics_id'),
+            source='SocketIO',
+            properties={
+                'phase': room_data.get('phase'),
+                'canReconnect': True,
+                'seatId': seat['seat_id'],
+            },
+        )
+        if room_data.get('phase') in ACTIVE_ROOM_PHASES:
             logger.info(f"Seat {seat['seat_id']} disconnected from room {room_code}")
         break
 
@@ -1539,6 +1911,53 @@ def update_player_name(data):
     emit('name_updated', {'success': False, 'message': 'Player not in a room'})
     logger.warning(f"Failed to update player name: Player not in a room")
 
+
+@app.route('/metrics')
+def metrics():
+    response = app.response_class(
+        server_telemetry.render_metrics(game_rooms),
+        mimetype='text/plain',
+    )
+    response.headers['Content-Type'] = 'text/plain; version=0.0.4; charset=utf-8'
+    return response
+
+
+@app.route('/telemetry/report-submission', methods=['POST'])
+def telemetry_report_submission():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        _telemetry_validation_failure(
+            'telemetry_report_submission',
+            'invalid_payload',
+            source='Flask',
+            sensitive_values=_telemetry_sensitive_values(),
+        )
+        return jsonify({'error': 'invalid payload'}), 400
+
+    room_analytics_id = data.get('room_analytics_id') or data.get('roomAnalyticsId')
+    match_id = data.get('match_id') or data.get('matchId')
+    player_analytics_id = data.get('player_analytics_id') or data.get('playerAnalyticsId')
+    description = data.get('description')
+    _telemetry_event(
+        'server:report:submitted',
+        'telemetry_report_submission',
+        room_analytics_id=room_analytics_id,
+        match_id=match_id,
+        player_analytics_id=player_analytics_id,
+        source='Flask',
+        properties={
+            'reportRole': data.get('role') or 'unknown',
+            'reportSource': data.get('source') or 'unknown',
+            'descriptionProvided': bool(description),
+            'descriptionLength': len(str(description or '')),
+            'screenshotAttached': bool(data.get('screenshot_attached') or data.get('screenshotAttached')),
+            'wasStale': bool(data.get('was_stale') or data.get('wasStale')),
+        },
+        sensitive_values=_telemetry_sensitive_values(data),
+    )
+    return jsonify({'status': 'accepted'}), 202
+
+
 @app.route('/health')
 def health():
     """Liveness endpoint for deploy health checks."""
@@ -1562,6 +1981,7 @@ def reset_test_rooms():
 
     room_count = len(game_rooms)
     game_rooms.clear()
+    server_telemetry.clear()
     logger.info(f"E2E reset cleared {room_count} rooms")
     return jsonify({'status': 'ok', 'rooms_cleared': room_count})
 
