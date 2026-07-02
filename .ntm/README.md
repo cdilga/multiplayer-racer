@@ -10,7 +10,7 @@ there is convincing test evidence and a fresh validator has checked that evidenc
 SESSION=multiplayer-racer--bead-swarm
 
 ntm spawn "$SESSION" --cc=2 --cod=2
-ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
+ntm send "$SESSION" --skip-first "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 
 # Keep the session small: at most five panes total, including the user pane.
 # Reuse or replace an idle worker pane for release management; do not add a
@@ -39,8 +39,66 @@ br ready --json
 ```
 
 Never run bare `bv`; it opens an interactive TUI and can block an agent pane.
+Avoid `ntm send --all` during live coordination unless you explicitly want to type into the user
+shell pane too. For swarm-wide agent prompts, use the default agent targeting or `--skip-first`;
+for bead assignments, prefer `--pane=<agent-pane>`.
 If NTM reports Agent Mail unavailable for lock listing, fall back to the MCP Agent Mail tools before
 editing; do not treat the failed lock listing as permission to ignore reservations.
+
+## Agent Mail Requirement
+
+Agent Mail is available for this repo and is the primary swarm coordination channel. Prefer the MCP
+Agent Mail tools when the pane exposes them. If a Claude/Codex pane does not expose those tools, use
+the local `am` CLI; it talks to the same Agent Mail service and is acceptable for NTM coordination.
+Every NTM assignment should require the receiving pane to do the following before claiming or
+editing:
+
+- Register/check in with Agent Mail for project key `/Users/cdilga/Documents/dev/multiplayer-racer`.
+- Use the exact assigned Agent Mail name if one was provided; otherwise register with an
+  auto-generated name and announce that name back to the coordinator.
+- Check inbox and the target bead thread before claiming work, before editing, and after each
+  meaningful edit/test cycle.
+- Acknowledge any ack-required Agent Mail message with `am mail ack`; do not treat it as handled
+  just because it disappeared from the pane scrollback.
+- Reserve only the paths it expects to edit before touching them. Renew reservations while active
+  and release them when the work is handed off or complete.
+- Post claim, blocker, ready-for-validation, validation PASS/BLOCKED, release, and CI notes to the
+  Agent Mail thread whose `thread_id` is the bead id. A `br` comment may mirror the note, but it is
+  not a substitute while Agent Mail is available.
+- Use the registered Agent Mail name as the `br update --assignee` value.
+
+CLI fallback examples:
+
+```bash
+am macros start-session \
+  --project /Users/cdilga/Documents/dev/multiplayer-racer \
+  --agent-name <AgentMailName> \
+  --program claude-code \
+  --model claude-opus-4-8 \
+  --task "NTM worker check-in" \
+  --json
+
+am mail send \
+  --project /Users/cdilga/Documents/dev/multiplayer-racer \
+  --from <AgentMailName> \
+  --to StormyBeaver \
+  --subject "Agent Mail check-in" \
+  --body "Registered and waiting for scoped assignment." \
+  --thread-id swarm-coordination
+
+am mail ack \
+  --project /Users/cdilga/Documents/dev/multiplayer-racer \
+  --agent <AgentMailName> \
+  <message-id>
+
+am file_reservations reserve \
+  /Users/cdilga/Documents/dev/multiplayer-racer \
+  <AgentMailName> path/to/file.js --exclusive --reason <bead-id>
+```
+
+If an agent cannot access Agent Mail through either MCP tools or `am`, it must say that explicitly
+in the NTM pane output and use `br comments` only as a temporary fallback. The coordinator should
+repair the pane or reassign the work before any substantial edits continue.
 
 ## Active Swarm Posture
 

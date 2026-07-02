@@ -15,7 +15,9 @@ Checklist:
 6. If the bead touches joins, results, maps, race/derby flow, or room lifecycle, self-check the
    product invariants: late joins admitted without unfair wins/result mutation, race finish-grace
    instead of waiting for last place, derby anti-stalemate/tiebreak, and known/random map validation.
-7. Check Agent Mail again in case another agent has reported a conflict.
+7. Check Agent Mail again in case another agent has reported a conflict. Use MCP tools or the `am`
+   CLI. If you cannot access Agent Mail either way, say so in the NTM pane and do not ask for
+   closure until the coordinator has a reliable coordination trail.
 
 Evidence package template:
 
@@ -43,5 +45,8 @@ Files touched:
 - ...
 ```
 
-After posting this, leave the bead in `in_progress` and ask the coordinator for a fresh validator.
-Do not close it until a separate agent posts PASS.
+Post this package to the Agent Mail thread whose `thread_id` is the bead id. The CLI fallback is
+`am mail send --project /Users/cdilga/Documents/dev/multiplayer-racer --from <YourAgentMailName>
+--to StormyBeaver --subject "[<bead-id>] ready for validation" --body "<evidence package>"
+--thread-id <bead-id>`. After posting it, leave the bead in `in_progress` and ask the coordinator
+for a fresh validator. Do not close it until a separate agent posts PASS.

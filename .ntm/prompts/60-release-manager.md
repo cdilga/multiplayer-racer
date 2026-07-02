@@ -19,8 +19,13 @@ into clean commits, push those commits, watch CI, and route failures back into A
 1. Read `AGENTS.md`, `README.md`, `.ntm/README.md`, and
    `docs/plans/ntm-bead-swarm-operations-2026-06-29.md`.
 2. Register with MCP Agent Mail using project key
-   `/Users/cdilga/Documents/dev/multiplayer-racer`.
-3. Check Agent Mail for validator PASS messages and coordinator notes.
+   `/Users/cdilga/Documents/dev/multiplayer-racer`. If MCP tools are not exposed, use
+   `am macros start-session --project /Users/cdilga/Documents/dev/multiplayer-racer --agent-name
+   <YourAgentMailName> --program <claude-code|codex-cli> --model <model> --task "release manager"
+   --json`.
+3. Check Agent Mail for validator PASS messages and coordinator notes. Agent Mail is the primary
+   release coordination record; use `br comments` only as a temporary fallback if both MCP Agent
+   Mail and `am` are unavailable, and say so in the NTM pane before committing.
 4. Run:
 
 ```bash
@@ -43,6 +48,7 @@ Only commit a slice when all of these are true:
 - The files in the commit belong to that slice. Do not sweep unrelated dirty files into a commit.
 - Relevant tests/builds for the slice passed after the final diff.
 - Agent Mail reservations for edited files are released or intentionally renewed by active workers.
+- The Agent Mail bead thread contains the worker evidence package and fresh validator PASS.
 - `git diff --check` passes for the files you will commit.
 - For join/result/map/race/derby lifecycle slices, the validator PASS explicitly addresses the
   current product invariants: late joins admitted fairly, no late-join auto-win/result mutation,

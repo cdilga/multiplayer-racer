@@ -7,7 +7,7 @@ Use this when steering an active NTM swarm.
 ```bash
 SESSION=multiplayer-racer--bead-swarm
 ntm spawn "$SESSION" --cc=2 --cod=2
-ntm send "$SESSION" --all "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
+ntm send "$SESSION" --skip-first "$(cat .ntm/prompts/00-bootstrap-all-agents.md)"
 ```
 
 Keep the session at no more than five panes total, including the user pane. The normal target is
@@ -26,6 +26,19 @@ bv --robot-plan
 ntm --robot-status
 ntm --robot-snapshot
 ```
+
+Before assigning any pane, confirm the prompt tells the agent to register/check in with Agent Mail,
+using MCP tools if exposed or the local `am` CLI otherwise. The agent must use its Agent Mail name
+as the Beads assignee, reserve files before edits, and post all claim, blocker,
+ready-for-validation, validation, release, and CI notes to the Agent Mail thread whose `thread_id`
+is the bead id. Ack-required coordination notes must be acknowledged with `am mail ack` or the MCP
+equivalent before the pane takes new work. If a pane reports both MCP Agent Mail and `am`
+unavailable, treat that as a coordination blocker for substantial edits and repair or reassign the
+lane.
+
+Do not use `ntm send --all` for ordinary live coordination: NTM includes the user shell pane in
+that target set. Use default agent targeting, `--skip-first`, or an explicit `--pane=<agent-pane>`
+instead.
 
 ## Worker Assignment
 

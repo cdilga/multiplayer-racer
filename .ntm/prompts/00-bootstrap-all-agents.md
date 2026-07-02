@@ -2,10 +2,22 @@ First read `AGENTS.md` and `README.md` completely and carefully. Keep the projec
 front of you while working, especially:
 
 - Register with MCP Agent Mail for project key `/Users/cdilga/Documents/dev/multiplayer-racer`.
+  If MCP tools are not exposed in your pane, use the local `am` CLI instead:
+  `am macros start-session --project /Users/cdilga/Documents/dev/multiplayer-racer --agent-name <YourAgentMailName> --program <claude-code|codex-cli> --model <model> --task "<task>" --json`.
 - Use the exact agent name assigned to your pane; if none was assigned, register with an
   auto-generated name and announce it.
-- Check Agent Mail before claiming work and after every meaningful edit/test cycle.
-- Reserve files before editing, with narrow path patterns, and release reservations when finished.
+- Treat Agent Mail as the primary coordination channel. Use `br comments` only as a temporary
+  fallback if both MCP Agent Mail and the `am` CLI are genuinely unavailable from your pane, and say
+  so in your NTM output.
+- Check Agent Mail before claiming work, before editing, and after every meaningful edit/test cycle.
+- Acknowledge ack-required messages with `am mail ack --project
+  /Users/cdilga/Documents/dev/multiplayer-racer --agent <YourAgentMailName> <message-id>` before
+  treating them as handled.
+- Reserve files before editing, with narrow path patterns, and renew or release reservations when
+  finished or handing off.
+- Post all claim, blocker, ready-for-validation, PASS/BLOCKED, release, and CI notes to the Agent
+  Mail thread whose `thread_id` is the bead id. Mirror to `br comments` only when useful.
+- Use your registered Agent Mail name as the Beads assignee.
 - Use `br`, not `bd`; use `bv --robot-triage`, `bv --robot-next`, or `bv --robot-plan`, never bare
   `bv`.
 - The Local-mode host renders the 3D world. Phones and keyboards are controllers with light HUDs.

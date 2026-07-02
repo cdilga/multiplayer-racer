@@ -4,7 +4,10 @@ to decide whether the implementation is actually complete and whether the eviden
 Start:
 
 1. Read `AGENTS.md` and the relevant parts of `README.md`.
-2. Register/check Agent Mail and read the target bead thread.
+2. Register/check Agent Mail and read the target bead thread. Agent Mail is the primary validation
+   record. Prefer MCP tools; if they are not exposed, use the `am` CLI. If both are unavailable in
+   your pane, say so in NTM output and do not post a final decision until the coordinator has a
+   reliable fallback trail.
 3. Run `br show <bead-id>` and read every acceptance criterion and comment.
 4. Inspect `git status --short` and the worker's diff for the files involved.
 5. Read the changed code/docs/tests directly.
@@ -41,7 +44,10 @@ Decision:
 - If you make fixes yourself, you become a worker for those fixes. Ask for a new fresh validator
   before closure.
 
-Post this decision to the bead's Agent Mail thread:
+Post this decision to the bead's Agent Mail thread whose `thread_id` is the bead id. With the CLI,
+use `am mail send --project /Users/cdilga/Documents/dev/multiplayer-racer --from <YourAgentMailName>
+--to StormyBeaver --subject "[<bead-id>] validation PASS|BLOCKED" --body "<decision>"
+--thread-id <bead-id>`. Mirror it to a `br` comment only when useful:
 
 ```markdown
 Validation decision for `<bead-id>`: PASS|BLOCKED

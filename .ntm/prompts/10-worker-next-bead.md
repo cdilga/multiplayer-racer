@@ -1,5 +1,13 @@
-Reread `AGENTS.md` and the relevant parts of `README.md`. Check Agent Mail and respond to anything
-blocking or coordination-relevant.
+Reread `AGENTS.md` and the relevant parts of `README.md`. Register/check in with Agent Mail for
+project key `/Users/cdilga/Documents/dev/multiplayer-racer`, then respond to anything blocking or
+coordination-relevant before claiming work. Prefer MCP Agent Mail tools; if they are not exposed in
+your pane, use `am macros start-session --project /Users/cdilga/Documents/dev/multiplayer-racer
+--agent-name <YourAgentMailName> --program <claude-code|codex-cli> --model <model> --task "<task>"
+--json`. If both MCP Agent Mail and the `am` CLI are unavailable, say so in the NTM output and stop
+before substantial edits so the coordinator can repair or reassign the lane. If any inbox item is
+ack-required, acknowledge it with `am mail ack --project
+/Users/cdilga/Documents/dev/multiplayer-racer --agent <YourAgentMailName> <message-id>` before
+treating it as handled.
 
 Pick and claim work:
 
@@ -7,9 +15,14 @@ Pick and claim work:
 2. Run `bv --robot-next` and, if there are several possible workers, `bv --robot-plan`.
 3. Choose the most useful ready bead you can complete now.
 4. Inspect it with `br show <bead-id>`.
-5. Claim it with `br update <bead-id> --status in_progress --assignee <YourAgentName>`.
-6. Reserve only the files you expect to edit using Agent Mail.
-7. Announce the claim in Agent Mail using `thread_id=<bead-id>`, including reserved paths.
+5. Claim it with `br update <bead-id> --status in_progress --assignee <YourAgentMailName>`.
+6. Reserve only the files you expect to edit using Agent Mail. CLI fallback:
+   `am file_reservations reserve /Users/cdilga/Documents/dev/multiplayer-racer <YourAgentMailName> <paths...> --exclusive --reason <bead-id>`.
+7. Announce the claim in Agent Mail using `thread_id=<bead-id>`, including reserved paths and your
+   exact registered Agent Mail name. CLI fallback: `am mail send --project
+   /Users/cdilga/Documents/dev/multiplayer-racer --from <YourAgentMailName> --to StormyBeaver
+   --subject "[<bead-id>] claim" --body "<summary>" --thread-id <bead-id>`. Mirror to a `br`
+   comment only if useful.
 
 Before editing, write down the acceptance plan in your working notes or Agent Mail thread:
 
@@ -51,4 +64,4 @@ Evidence requirements before asking for validation:
 - Record any untested area honestly with the reason.
 
 Do not close the bead yourself after implementation. Post "ready for fresh validation" with the
-evidence package and wait for a validator PASS.
+evidence package to the Agent Mail bead thread and wait for a validator PASS.
