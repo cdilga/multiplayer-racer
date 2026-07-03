@@ -4,6 +4,7 @@ import {
     computeHighlightState,
     computeMarkerPresentation,
     computeMarkerPriority,
+    computeOffscreenArrow,
     estimateMarkerRect,
     rectsOverlap,
     resolveSafeArea
@@ -194,6 +195,15 @@ class VehicleIdentityOverlay {
                 numberText: identity.numberText,
                 includeYouLabel: isViewerOwned
             });
+            // Off-screen directional arrow: point from the pinned marker toward
+            // the car's true (unclamped) projected position.
+            const arrow = computeOffscreenArrow({
+                rawX: screenX,
+                rawY: screenY - presentation.liftPx,
+                clampedX: clamped.x,
+                clampedY: clamped.y,
+                isEdgeClamped
+            });
 
             staged.push({
                 playerId,
@@ -210,6 +220,7 @@ class VehicleIdentityOverlay {
                 y: clamped.y,
                 rect: clampedRect,
                 isEdgeClamped,
+                arrow,
                 priority: computeMarkerPriority({
                     isPreferred,
                     isViewerOwned,
@@ -249,6 +260,10 @@ class VehicleIdentityOverlay {
                 viewerOwned: marker.root.classList.contains('is-viewer-owned'),
                 leader: marker.root.classList.contains('is-leader'),
                 pulsing: marker.root.classList.contains('is-pulsing'),
+                offscreen: marker.root.dataset.offscreen === '1',
+                arrowAngleDeg: marker.root.dataset.arrowAngleDeg
+                    ? Number(marker.root.dataset.arrowAngleDeg)
+                    : null,
                 numberText: marker.number.textContent,
                 nameText: marker.name.textContent,
                 rect: hidden ? null : {
@@ -307,6 +322,10 @@ class VehicleIdentityOverlay {
         const chevron = document.createElement('div');
         chevron.className = 'vehicle-id-chevron';
 
+        // Off-screen indicator arrow (hidden until the car leaves the frame).
+        const arrow = document.createElement('div');
+        arrow.className = 'vehicle-id-offscreen-arrow';
+
         const badge = document.createElement('div');
         badge.className = 'vehicle-id-badge';
 
@@ -323,11 +342,12 @@ class VehicleIdentityOverlay {
         badge.appendChild(you);
         badge.appendChild(number);
         badge.appendChild(name);
+        root.appendChild(arrow);
         root.appendChild(chevron);
         root.appendChild(badge);
         this.overlayContainer.appendChild(root);
 
-        const marker = { root, chevron, badge, you, number, name, vehicle };
+        const marker = { root, chevron, arrow, badge, you, number, name, vehicle };
         this.markers.set(playerId, marker);
         return marker;
     }
@@ -371,7 +391,8 @@ class VehicleIdentityOverlay {
             presentation,
             x,
             y,
-            isEdgeClamped
+            isEdgeClamped,
+            arrow
         } = entry;
 
         marker.number.textContent = identity.numberText;
@@ -387,6 +408,18 @@ class VehicleIdentityOverlay {
         marker.root.classList.toggle('is-leader', !!isLeader);
         marker.root.classList.toggle('is-pulsing', pulse.active);
         marker.root.classList.toggle('is-edge-clamped', !!isEdgeClamped);
+        // Off-screen arrow: show + rotate toward the car when edge-clamped.
+        const offscreen = !!(arrow && arrow.offscreen);
+        marker.root.classList.toggle('is-offscreen', offscreen);
+        if (marker.arrow) {
+            marker.arrow.style.display = offscreen ? '' : 'none';
+            if (offscreen) {
+                marker.arrow.style.transform = `rotate(${arrow.angleRad}rad)`;
+                marker.arrow.dataset.angleDeg = String(Math.round(arrow.angleDeg));
+            }
+        }
+        marker.root.dataset.offscreen = offscreen ? '1' : '0';
+        marker.root.dataset.arrowAngleDeg = offscreen ? String(Math.round(arrow.angleDeg)) : '';
         marker.root.dataset.playerId = playerId;
         marker.root.dataset.lastPulseReason = marker.root.dataset.lastPulseReason || '';
         marker.root.dataset.preferredPlayerId = preferredPlayerId || '';
@@ -469,6 +502,24 @@ class VehicleIdentityOverlay {
                 background: linear-gradient(180deg, #ffffff 0%, var(--vehicle-accent) 100%);
                 clip-path: polygon(50% 100%, 0 0, 100% 0);
                 box-shadow: 2px 2px 0 color-mix(in srgb, var(--vehicle-accent) 70%, transparent);
+            }
+            .vehicle-id-offscreen-arrow {
+                display: none;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 28px;
+                height: 28px;
+                margin-left: -14px;
+                margin-top: -14px;
+                background: var(--vehicle-accent);
+                /* Rightward-pointing triangle at 0deg; rotated toward the car. */
+                clip-path: polygon(0 20%, 100% 50%, 0 80%);
+                filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.6));
+                z-index: 1;
+            }
+            .vehicle-id-marker.is-offscreen .vehicle-id-chevron {
+                display: none;
             }
             .vehicle-id-badge {
                 display: inline-flex;

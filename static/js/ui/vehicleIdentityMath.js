@@ -203,3 +203,30 @@ export function clampMarkerPosition({
         y: clamp(y, minY, maxY)
     };
 }
+
+/**
+ * br-car-identity-system — when a car is off-screen its marker is pinned to the
+ * safe-area edge; this computes a directional arrow that points from the pinned
+ * marker toward where the car actually is, so "where's my car?" is answerable at
+ * a glance.
+ *
+ * @param {Object} opts
+ * @param {number} opts.rawX - unclamped projected screen X of the car
+ * @param {number} opts.rawY - unclamped projected screen Y of the car
+ * @param {number} opts.clampedX - edge-pinned marker X
+ * @param {number} opts.clampedY - edge-pinned marker Y
+ * @param {boolean} opts.isEdgeClamped - true when the car is off-screen
+ * @returns {{offscreen:boolean, angleRad:number, angleDeg:number}}
+ */
+export function computeOffscreenArrow({ rawX = 0, rawY = 0, clampedX = 0, clampedY = 0, isEdgeClamped = false } = {}) {
+    if (!isEdgeClamped) {
+        return { offscreen: false, angleRad: 0, angleDeg: 0 };
+    }
+    const dx = rawX - clampedX;
+    const dy = rawY - clampedY;
+    // Screen-space (y grows downward). atan2(dy, dx): 0 = pointing right,
+    // +PI/2 = pointing down. Falls back to "up" when the car sits exactly on
+    // the pinned point (degenerate) so the arrow is never NaN.
+    const angleRad = (dx === 0 && dy === 0) ? -Math.PI / 2 : Math.atan2(dy, dx);
+    return { offscreen: true, angleRad, angleDeg: angleRad * 180 / Math.PI };
+}

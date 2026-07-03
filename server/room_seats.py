@@ -37,6 +37,11 @@ except ImportError:  # pragma: no cover - import path shim
         primary_role,
     )
 
+try:
+    from car_palette import color_for_seat, number_for_seat
+except ImportError:  # pragma: no cover - import path shim
+    from server.car_palette import color_for_seat, number_for_seat
+
 
 PHASE_WAITING = 'waiting'
 PHASE_COUNTDOWN = 'countdown'
@@ -137,7 +142,10 @@ def _default_stats():
 
 def _new_seat(room, seat_id, player_name, can_render=False, viewer_only=False, client_instance_id=None, seat_token=None, joined_at=None):
     joined_at = now_seconds(joined_at)
-    car_color = f"#{secrets.randbelow(0x1000000):06x}"
+    # Curated, high-separation palette by seat index (was random 24-bit, which
+    # produced confusable colors). Persistent roof number from the seat id.
+    car_color = color_for_seat(seat_id)
+    roof_number = number_for_seat(seat_id)
     roles = [ROLE_VIEWER] if viewer_only else participant_roles(room['topology'], can_render=can_render)
     primary = ROLE_VIEWER if viewer_only else primary_role(room['topology'], can_render=can_render)
     seat_state = SEAT_STATE_SPECTATOR if viewer_only else SEAT_STATE_ACTIVE
@@ -151,7 +159,7 @@ def _new_seat(room, seat_id, player_name, can_render=False, viewer_only=False, c
         'appearance': {
             'name': player_name,
             'color': car_color,
-            'number': None,
+            'number': roof_number,
             'vehicleId': None,
             'skinId': None,
         },
