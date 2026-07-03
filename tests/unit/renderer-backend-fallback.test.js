@@ -24,6 +24,14 @@ class FakeWebGLRenderer {
     }
 }
 
+const throwingWebGPUModule = async () => ({
+    WebGPURenderer: class ThrowingWebGPURenderer {
+        constructor() {
+            throw new Error('WebGPU renderer not yet implemented');
+        }
+    }
+});
+
 beforeEach(() => {
     globalThis.THREE = { WebGLRenderer: FakeWebGLRenderer };
 });
@@ -35,21 +43,27 @@ afterEach(() => {
 describe('WebGPUBackend.createRenderer creation-time fallback', () => {
     it('does NOT throw when WebGPU is unimplemented; returns a WebGL renderer', async () => {
         const backend = new WebGPUBackend();
-        const renderer = await backend.createRenderer({ antialias: true, preserveDrawingBuffer: true });
+        const renderer = await backend.createRenderer(
+            { antialias: true, preserveDrawingBuffer: true },
+            { loadWebGPUModule: throwingWebGPUModule }
+        );
         expect(renderer).toBeInstanceOf(FakeWebGLRenderer);
         expect(renderer.isWebGLRenderer).toBe(true);
     });
 
     it('forwards renderer options through to the WebGL fallback', async () => {
         const backend = new WebGPUBackend();
-        const renderer = await backend.createRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+        const renderer = await backend.createRenderer(
+            { antialias: true, alpha: false, preserveDrawingBuffer: true },
+            { loadWebGPUModule: throwingWebGPUModule }
+        );
         expect(renderer.options.preserveDrawingBuffer).toBe(true);
         expect(renderer.options.antialias).toBe(true);
     });
 
     it('records the fallback in name + diagnostics so logs/bug-reporter are honest', async () => {
         const backend = new WebGPUBackend();
-        await backend.createRenderer({});
+        await backend.createRenderer({}, { loadWebGPUModule: throwingWebGPUModule });
         expect(backend.name).toMatch(/webgl/i);
         expect(backend.name).toMatch(/fallback/i);
         const diag = backend.getDiagnostics();

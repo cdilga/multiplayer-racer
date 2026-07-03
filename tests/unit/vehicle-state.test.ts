@@ -304,7 +304,13 @@ describe('Vehicle state regressions', () => {
         expect(vehicle.stuntBoostMultiplier).toBe(1);
         expect(vehicle.stuntRamDamageBonus).toBe(0);
         expect(controller.setWheelEngineForce).toHaveBeenLastCalledWith(3, 50);
-        expect(controller.setWheelSteering).toHaveBeenLastCalledWith(1, -0.25);
+        // Bad-landing steering authority ramps back from `badLandingSteeringMultiplier`
+        // over the bad-landing window; at landing start it is 0.5, so full-lock
+        // steering (1) yields ~-0.25. Progress is read from the wall clock, so allow
+        // the sub-microsecond drift between arming the deadline and reading it.
+        const [wheelIdx, steer] = controller.setWheelSteering.mock.calls.at(-1) as [number, number];
+        expect(wheelIdx).toBe(1);
+        expect(steer).toBeCloseTo(-0.25, 4);
     });
 });
 

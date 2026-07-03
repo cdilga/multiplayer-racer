@@ -42,7 +42,24 @@
       "width": 0.3,
       "emissive": "#00e5ff",
       "emissiveIntensity": 1.0
-    }
+    },
+    "palette": {
+      "crate": "#c78c58",
+      "barrel": "#5a3920",
+      "tyres": "#1f1f1f",
+      "cone": "#e08e45",
+      "barrier": "#8ca0b5",
+      "ramp": "#5f9a63",
+      "sign": "#f8f3d3",
+      "husk": "#8a9caf",
+      "drum": "#7c4a37",
+      "default": "#6f7a82"
+    },
+    "props": [
+      { "kind": "crate", "x": 8, "z": -8, "paletteKey": "crate", "size": 1.2 },
+      { "kind": "barrel", "x": -12, "z": 4, "paletteKey": "barrel", "size": 1.1 },
+      { "kind": "cone", "x": 2, "z": 15, "paletteKey": "cone", "size": 0.9 }
+    ]
   },
   "spawn": {
     "positions": [

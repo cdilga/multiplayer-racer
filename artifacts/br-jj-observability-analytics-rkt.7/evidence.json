@@ -1,0 +1,61 @@
+{
+  "bead": "br-jj-observability-analytics-rkt.7",
+  "release_note": "rkt.8 closed; implemented bounded gameplay/product telemetry taxonomy from rkt.7",
+  "timestamp": "2026-07-01T22:16:00+10:00",
+  "checks": {
+    "build": {
+      "command": "npm run build",
+      "log": "artifacts/br-jj-observability-analytics-rkt.7/build.log",
+      "status": "passed",
+      "notes": [
+        "vite build completed successfully",
+        "dist written successfully"
+      ]
+    },
+    "unit": {
+      "command": "npx vitest run tests/unit/telemetry-contract.test.js tests/unit/telemetry-client.test.js",
+      "log": "artifacts/br-jj-observability-analytics-rkt.7/unit-telemetry-tests.log",
+      "status": "passed",
+      "tests": {
+        "files": [
+          "tests/unit/telemetry-contract.test.js",
+          "tests/unit/telemetry-client.test.js"
+        ],
+        "counts": "55 passed",
+        "details": [
+          "allowlist includes bounded rkt.7 event families",
+          "dashboard-readiness matrix assertions added",
+          "captureWithCooldown dedupe transition tests added",
+          "controller transition/state cooldown no-spam tests added"
+        ]
+      }
+    },
+    "e2e": {
+      "command": "npm run test:e2e",
+      "log": "artifacts/br-jj-observability-analytics-rkt.7/e2e-all.log",
+      "status": "passed",
+      "details": "1/1 tests passed: full game join/start/race completes"
+    }
+  },
+  "code_scope": [
+    "static/js/GameHost.js",
+    "static/js/player.js",
+    "docs/contracts/telemetry-contract.md",
+    "tests/unit/telemetry-contract.test.js",
+    "tests/unit/telemetry-client.test.js"
+  ],
+  "behavioral_delta": [
+    "Added map validation and load failure telemetry in track setup path",
+    "Added vehicle telemetry dispatch from GameHost during race ticks",
+    "Added bounded controller telemetry for connect/reconnect/visibility transitions via cooldown map",
+    "Expanded contract event families for join funnel, controller confidence, match flow, wheelie/boost/stunt/map/weapon/map reliability",
+    "Documented explicit no-spam budget guidance"
+  ],
+  "acceptance_checks_in_tests": [
+    "join/onboarding and controller confidence events remain in allowlist",
+    "match/wheelie/boost/stunt/map/weapon event families are documented and validated",
+    "no-spam budgets verified via captureWithCooldown tests",
+    "transition dedupe tested in telemetry-client test coverage",
+    "dashboard-readiness families verified in contract tests"
+  ]
+}

@@ -67,7 +67,38 @@ export default class WebGLBackend extends RendererBackend {
         });
 
         this.renderer = renderer;
+        this._captureRendererDiagnostics(renderer);
         return renderer;
+    }
+
+    _captureRendererDiagnostics(renderer) {
+        const capabilities = renderer?.capabilities || {};
+        const renderContext = renderer?.getContext?.() || null;
+        const isWebGL2 = !!(capabilities.isWebGL2 || renderer?.isWebGL2);
+        this.diagnostics.backend = isWebGL2 ? 'WebGL2' : 'WebGL';
+        this.diagnostics.available = true;
+        this.diagnostics.activeApi = isWebGL2 ? 'webgl2' : 'webgl';
+        this.diagnostics.rendererType = 'WebGLRenderer';
+        this.diagnostics.nativeWebGPU = false;
+        this.diagnostics.adapterInfo = {
+            ...(this.diagnostics.adapterInfo || {}),
+            renderer: this.diagnostics.adapterInfo?.renderer || this.contextInfo?.renderer || 'THREE.WebGLRenderer',
+            vendor: this.diagnostics.adapterInfo?.vendor || this.contextInfo?.vendor || (isWebGL2 ? 'WebGL2' : 'WebGL')
+        };
+        this.diagnostics.deviceLimits = {
+            ...(this.diagnostics.deviceLimits || {}),
+            ...(this.contextInfo?.limits || {}),
+            maxTextures: capabilities.maxTextures ?? null,
+            maxTextureSize: capabilities.maxTextureSize ?? null,
+            maxCubemapSize: capabilities.maxCubemapSize ?? null,
+            maxVertexTextures: capabilities.maxVertexTextures ?? null,
+            maxAttributes: capabilities.maxAttributes ?? null,
+            maxVertexUniforms: capabilities.maxVertexUniforms ?? null,
+            maxVaryings: capabilities.maxVaryings ?? null,
+            maxFragmentUniforms: capabilities.maxFragmentUniforms ?? null,
+            drawingBufferWidth: renderContext?.drawingBufferWidth ?? renderer?.domElement?.width ?? null,
+            drawingBufferHeight: renderContext?.drawingBufferHeight ?? renderer?.domElement?.height ?? null
+        };
     }
 
     /**

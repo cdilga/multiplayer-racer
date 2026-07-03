@@ -71,12 +71,43 @@ Events are organized by category and must be allowlisted. Format: `category:subc
 |------|------|-------------|------------|
 | `gameplay:match:started` | host | Match initialization | `playerCount`, `mode` |
 | `gameplay:match:ended` | host | Match conclusion | `winnerCount`, `winnerPlayerAnalyticsIds` (bounded delimited string of anonymous IDs), `duration_ms` |
+| `gameplay:match:restarted` | host | Match restarted by players/UI | `playerCount`, `mode`, `reason` |
+| `gameplay:match:returned_to_lobby` | host | Match returned to lobby | `playerCount`, `mode`, `reason`, `phase` |
 | `gameplay:player:joined` | host | Player joined match | `playerCount` |
 | `gameplay:player:left` | host | Player departed | `playerCount` |
 | `gameplay:race:lap_completed` | host | Lap finished | `lapNumber`, `duration_ms` |
 | `gameplay:race:finished` | host | Race end | `position`, `duration_ms` |
 | `gameplay:derby:elimination` | host | Player eliminated | `eliminator_playerAnalyticsId`, `round` |
+| `gameplay:join:route_viewed` | controller | Join route first render | `routePath`, `gameMode`, `ruleset` |
+| `gameplay:join:started` | controller | Player initiated join flow | `routePath`, `mode`, `ruleset` |
+| `gameplay:join:completed` | controller | Player join completed | `joinPath`, `mode`, `joinCompleted` |
+| `gameplay:join:failed` | controller | Join rejected | `reason`, `mode`, `ruleset` |
+| `gameplay:join:first_input` | controller | First non-idle control packet sent | `gamePhase`, `routePath` |
+| `gameplay:join:tutorial_viewed` | controller | Tutorial displayed | `phase`, `replay` |
+| `gameplay:join:tutorial_skipped` | controller | Tutorial skipped | `phase` |
+| `gameplay:join:tutorial_completed` | controller | Tutorial completed | `phase` |
+| `gameplay:controller:connected` | controller | Controller/network connected | `mode`, `cause` |
+| `gameplay:controller:disconnected` | controller | Controller/network disconnected | `reason`, `mode` |
+| `gameplay:controller:reconnect_attempted` | controller | Controller/network reconnect attempt | `attempt`, `mode` |
+| `gameplay:controller:reconnect_succeeded` | controller | Controller/network reconnect succeeded | `attempt`, `mode`, `cause` |
+| `gameplay:controller:reconnect_failed` | controller | Controller/network reconnect failed | `reason`, `mode` |
+| `gameplay:controller:visibility_change` | controller | App went foreground/background | `visibilityState`, `mode` |
+| `gameplay:controller:input_stalled` | controller | Player control stream stalled | `reason`, `sinceMs` |
 | `gameplay:weapon:fired` | host | Weapon used | `weaponType`, `hit` |
+| `gameplay:weapon:pickup` | host | Weapon pick-up happened | `weaponType`, `ruleset` |
+| `gameplay:weapon:hit` | host | Weapon hit another player/obstacle | `weaponType`, `hitDamageBucket`, `targetId` |
+| `gameplay:wheelie:entered` | host | Wheelie started | `handlingState`, `vehicleId`, `ruleset` |
+| `gameplay:wheelie:sustained` | host | Wheelie sustained sample bucket | `durationBucket`, `durationMs`, `ruleset` |
+| `gameplay:wheelie:landed` | host | Wheelie ended, with outcome | `durationBucket`, `durationMs`, `badLanding` |
+| `gameplay:wheelie:bad_land` | host | Bad wheelie landing detected | `handlingState`, `ruleset` |
+| `gameplay:boost:used` | host | Boost transition | `vehicleId`, `boostMultiplier`, `ruleset` |
+| `gameplay:car:reset_requested` | host | Player requested car reset | `vehicleId`, `reason`, `playerId`, `ruleset` |
+| `gameplay:car:out_of_bounds` | host | Vehicle out of bounds start | `vehicleId`, `ruleset`, `clusterState` |
+| `gameplay:map:oob_cluster` | host | Out-of-bounds cluster sample | `clusterSize`, `clusterDurationBucket`, `ruleset` |
+| `gameplay:map:reset_cluster` | host | Out-of-bounds cluster reset | `clusterSize`, `clusterDurationMs`, `ruleset` |
+| `gameplay:map:validation_failed` | host | Spawn or map validation failure | `trackId`, `trackType`, `requestedSpawns`, `reason` |
+| `gameplay:map:load_failed` | host | Track load failure | `trackId`, `trackSeedBucket`, `reason` |
+| `gameplay:car:wall_recovery` | host | Vehicle wall recovery context | `mapReliability`, `ruleset` |
 | `gameplay:spawn:respawn` | host | Player respawned | `reason` |
 | `error:gameplay:crash` | host | Game crash | `message`, `code` |
 | `error:network:disconnect` | controller | Connection lost | `duration_ms` |
@@ -101,8 +132,26 @@ Error capture surfaces:
 - Server: Flask request teardown exceptions, instrumented Socket.IO handler exceptions, and direct `ServerTelemetry.record_exception` calls.
 - Manual bug reports may include the same `fingerprint`, but report analytics still include only booleans/counts and correlation IDs, not raw screenshot data or user-written text.
 
-No-spam requirement: repeated identical browser/server fingerprints are
+No-spam requirement: repeated identical browser/server fingerprints and event bursts are
 throttled before enqueue/dispatch.
+
+For rkt.7 product telemetry, apply these bounded emission budgets:
+
+- Join funnel events: emit on explicit transitions (`route_viewed`, `started`, `completed`, `failed`, first input) only.
+- Match lifecycle events: emit once per transition (`started`, `ended`, `returned_to_lobby`, `restarted`).
+- Controller confidence/reconnect:
+  - `gameplay:controller:connected`: 1s minimum cooldown.
+  - `gameplay:controller:disconnected`: 1s minimum cooldown.
+  - `gameplay:controller:reconnect_attempted`: 1.5s minimum cooldown.
+  - `gameplay:controller:reconnect_succeeded`: 3s minimum cooldown.
+  - `gameplay:controller:reconnect_failed`: 2.5s minimum cooldown.
+  - `gameplay:controller:visibility_change`: 1s minimum cooldown.
+- Gameplay feel/map events:
+  - `gameplay:wheelie:entered|landed|bad_land|sustained`: transition/sampling based only.
+  - `gameplay:boost:used`: transition-based only.
+  - `gameplay:map:oob_cluster`: at most 1 sample per 5 seconds while clustered.
+  - `gameplay:map:validation_failed|load_failed`: aggregate + bounded dedupe.
+- Input stall: at most one `gameplay:controller:input_stalled` event per 8 seconds of inactivity and 15 seconds minimum between repeats.
 
 Disable guards:
 
@@ -122,7 +171,7 @@ Disable guards:
 
 | Name | Role | Description | Properties |
 |------|------|-------------|------------|
-| `perf:render:frame_sample` | host | FPS sample (low-rate) | `fps`, `drawCalls`, `triangles` |
+| `perf:render:frame_sample` | host | FPS/frame-time sample (low-rate) | `fps`, `fpsBucket`, `frameTimeMs`, `frameTimeBucket`, `drawCalls`, `triangles` |
 | `perf:physics:step_sample` | host | Physics step time (low-rate) | `step_ms`, `bodies_count` |
 | `perf:network:latency_sample` | controller | Network round-trip (low-rate) | `latency_ms` |
 | `perf:server:request_sample` | server | Request latency (low-rate) | `endpoint`, `latency_ms` |
@@ -216,6 +265,27 @@ Disable guards:
 
 - Use `TELEMETRY_ENDPOINT=http://localhost:9999` to route to a mock server.
 - Mock server logs events and returns 200 without processing.
+
+### Prometheus scrape path
+
+- Local development scraping uses the host API at `http://localhost:8000/metrics`.
+- Staging uses the staging API host plus `/metrics`, for example `https://staging.example.com/metrics`.
+- Production uses the production API host plus `/metrics`, for example `https://api.example.com/metrics`.
+
+- `/metrics` must remain an HTTP GET text endpoint returning only low-cardinality metrics:
+  - `jj_server_active_rooms`
+  - `jj_server_active_players`
+  - `jj_server_disconnected_players`
+  - `jj_server_requests_total`
+  - `jj_server_socket_events_total`
+  - `jj_server_validation_failures_total`
+  - `jj_server_exceptions_total`
+  - `jj_server_handler_latency_seconds`
+  - `jj_server_events_total`
+  - `jj_server_disconnects_total`
+  - `jj_server_uptime_seconds`
+
+- Labels must be coarse enumerations (e.g., handler, result, bucket, cause, status class, kind) and must not include raw values such as room code, seat/player IDs, seeds, raw error messages, or stack traces.
 
 ## PostHog vs Grafana Boundary
 

@@ -1,0 +1,308 @@
+{
+  "derbyNative": {
+    "activeTier": "host-native",
+    "tierConfig": {
+      "label": "Native full grade",
+      "resolutionScale": 1,
+      "postProcessing": true,
+      "bloomEnabled": true,
+      "bloomStrength": 1.5,
+      "bloomRadius": 0.4,
+      "bloomThreshold": 0.85,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.7,
+      "posterizeBandCount": 7,
+      "ditherStrength": 0.55,
+      "vignetteAmount": 0.3,
+      "chromaticAberrationEnabled": true,
+      "chromaticAberrationAmount": 0.0015,
+      "fogEnabled": true,
+      "fogDensity": 0.008,
+      "shadowsEnabled": true,
+      "shadowMapType": "pcf-soft"
+    },
+    "resolutionScale": 1,
+    "effectivePixelRatio": 1,
+    "renderTarget": {
+      "internalWidth": 1280,
+      "internalHeight": 720,
+      "displayWidth": 1280,
+      "displayHeight": 720,
+      "resolutionScale": 1,
+      "effectivePixelRatio": 1,
+      "devicePixelRatio": 1,
+      "upscaleFactor": 1,
+      "isUpscaled": false,
+      "imageRendering": "pixelated",
+      "crispUpscale": true
+    },
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.008
+    },
+    "postProcessing": {
+      "enabled": true,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": true,
+      "bloomStrength": 1.5,
+      "colorGradingEnabled": true,
+      "colorGradingStyle": "skip-bin-arcade-posterize-dither",
+      "gradingIntensity": 0.7,
+      "posterizeBandCount": 7,
+      "ditherStrength": 0.55,
+      "ditherPattern": "bayer-4x4",
+      "vignetteAmount": 0.3,
+      "chromaticAberrationEnabled": true,
+      "chromaticAberrationAmount": 0.0015
+    },
+    "shadows": {
+      "enabled": true,
+      "type": "PCFSoftShadowMap"
+    },
+    "renderInfo": {
+      "calls": 1,
+      "triangles": 1,
+      "lines": 0,
+      "points": 0,
+      "frame": 17840,
+      "geometries": 69,
+      "textures": 16,
+      "programs": 28
+    },
+    "frameTiming": {
+      "frameCount": 108,
+      "lastRenderDurationMs": 0.8000000715255737,
+      "averageRenderDurationMs": 0.786111115305512,
+      "maxRenderDurationMs": 1.5
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "DerbyLead",
+      "targetCount": 6
+    },
+    "trackedVehicles": 6,
+    "nameTagCount": 0
+  },
+  "derbyFallback": {
+    "activeTier": "host-fallback",
+    "tierConfig": {
+      "label": "Fallback no-post host",
+      "resolutionScale": 0.55,
+      "postProcessing": false,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "bloomRadius": 0,
+      "bloomThreshold": 1,
+      "colorGradingEnabled": false,
+      "gradingIntensity": 0,
+      "posterizeBandCount": 0,
+      "ditherStrength": 0,
+      "vignetteAmount": 0,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0,
+      "fogEnabled": true,
+      "fogDensity": 0.005,
+      "shadowsEnabled": false,
+      "shadowMapType": "basic"
+    },
+    "resolutionScale": 0.55,
+    "effectivePixelRatio": 0.55,
+    "renderTarget": {
+      "internalWidth": 704,
+      "internalHeight": 396,
+      "displayWidth": 1280,
+      "displayHeight": 720,
+      "resolutionScale": 0.55,
+      "effectivePixelRatio": 0.55,
+      "devicePixelRatio": 1,
+      "upscaleFactor": 1.8182,
+      "isUpscaled": true,
+      "imageRendering": "pixelated",
+      "crispUpscale": true
+    },
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.005
+    },
+    "postProcessing": {
+      "enabled": false,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "colorGradingEnabled": false,
+      "colorGradingStyle": null,
+      "gradingIntensity": 0,
+      "posterizeBandCount": 0,
+      "ditherStrength": 0,
+      "ditherPattern": null,
+      "vignetteAmount": 0,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0
+    },
+    "shadows": {
+      "enabled": false,
+      "type": "BasicShadowMap"
+    },
+    "renderInfo": {
+      "calls": 77,
+      "triangles": 15410,
+      "lines": 0,
+      "points": 0,
+      "frame": 18172,
+      "geometries": 69,
+      "textures": 3,
+      "programs": 32
+    },
+    "frameTiming": {
+      "frameCount": 109,
+      "lastRenderDurationMs": 0.2999999523162842,
+      "averageRenderDurationMs": 0.3788990897869845,
+      "maxRenderDurationMs": 1.100000023841858
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "DerbyLead",
+      "targetCount": 6
+    },
+    "trackedVehicles": 6,
+    "nameTagCount": 0
+  },
+  "crowdedHostDegraded": {
+    "activeTier": "host-degraded",
+    "tierConfig": {
+      "label": "Degraded shared-screen host",
+      "resolutionScale": 0.7,
+      "postProcessing": true,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "bloomRadius": 0,
+      "bloomThreshold": 1,
+      "colorGradingEnabled": true,
+      "gradingIntensity": 0.5,
+      "posterizeBandCount": 5,
+      "ditherStrength": 0.42,
+      "vignetteAmount": 0.16,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0,
+      "fogEnabled": true,
+      "fogDensity": 0.006,
+      "shadowsEnabled": true,
+      "shadowMapType": "basic"
+    },
+    "resolutionScale": 0.7,
+    "effectivePixelRatio": 0.7,
+    "renderTarget": {
+      "internalWidth": 896,
+      "internalHeight": 503,
+      "displayWidth": 1280,
+      "displayHeight": 720,
+      "resolutionScale": 0.7,
+      "effectivePixelRatio": 0.7,
+      "devicePixelRatio": 1,
+      "upscaleFactor": 1.4286,
+      "isUpscaled": true,
+      "imageRendering": "pixelated",
+      "crispUpscale": true
+    },
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "backend": {
+      "renderer": "WebGLRenderer",
+      "isWebGL2": true,
+      "precision": "highp",
+      "maxTextures": 16,
+      "maxTextureSize": 16384,
+      "maxCubemapSize": 16384
+    },
+    "toneMapping": {
+      "decision": "skip-aces",
+      "mode": "NoToneMapping"
+    },
+    "fog": {
+      "enabled": true,
+      "density": 0.006
+    },
+    "postProcessing": {
+      "enabled": true,
+      "composerReady": true,
+      "initError": null,
+      "bloomEnabled": false,
+      "bloomStrength": 0,
+      "colorGradingEnabled": true,
+      "colorGradingStyle": "skip-bin-arcade-posterize-dither",
+      "gradingIntensity": 0.5,
+      "posterizeBandCount": 5,
+      "ditherStrength": 0.42,
+      "ditherPattern": "bayer-4x4",
+      "vignetteAmount": 0.16,
+      "chromaticAberrationEnabled": false,
+      "chromaticAberrationAmount": 0
+    },
+    "shadows": {
+      "enabled": true,
+      "type": "BasicShadowMap"
+    },
+    "renderInfo": {
+      "calls": 1,
+      "triangles": 1,
+      "lines": 0,
+      "points": 0,
+      "frame": 18455,
+      "geometries": 69,
+      "textures": 5,
+      "programs": 37
+    },
+    "frameTiming": {
+      "frameCount": 108,
+      "lastRenderDurationMs": 0.5,
+      "averageRenderDurationMs": 0.5259259221730409,
+      "maxRenderDurationMs": 1.2000000476837158
+    },
+    "cameraMode": {
+      "mode": "party",
+      "focusId": 1,
+      "focusName": "DerbyLead",
+      "targetCount": 6
+    },
+    "trackedVehicles": 6,
+    "nameTagCount": 0
+  }
+}

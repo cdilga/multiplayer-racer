@@ -1,0 +1,47 @@
+{
+  "bead": "br-jj-observability-analytics-rkt.11",
+  "scope": "tests-docs-artifacts-only",
+  "commands": [
+    {
+      "command": "npx vitest run tests/unit/telemetry-contract.test.js tests/unit/telemetry-client.test.js tests/unit/telemetry-privacy.test.js tests/unit/telemetry-correlation.test.js tests/unit/telemetry-no-spam.test.js",
+      "result": "passed",
+      "testFiles": 5,
+      "tests": 182
+    },
+    {
+      "command": "python -m unittest server.test_telemetry",
+      "result": "passed",
+      "tests": 9
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "notes": "Vite build completed; existing chunk-size warning remains."
+    },
+    {
+      "command": "npx playwright test tests/e2e/telemetry-e2e.spec.ts --reporter=line",
+      "result": "passed",
+      "tests": 1
+    },
+    {
+      "command": "npx playwright test tests/e2e/telemetry-e2e.spec.ts tests/e2e/console-errors.spec.ts --reporter=line --workers=1",
+      "result": "passed",
+      "tests": 4,
+      "notes": "A parallel 2-worker attempt failed from shared server/bootstrap interference; serial run is the stable check for these shared-room flows."
+    }
+  ],
+  "browserCoverage": {
+    "artifact": "artifacts/br-jj-observability-analytics-rkt.11/telemetry-e2e-capture.json",
+    "hostBoot": true,
+    "playerBoot": true,
+    "joinFunnel": true,
+    "firstInput": true,
+    "clientException": true,
+    "disconnect": true,
+    "reconnect": true,
+    "privacyForbiddenRawFound": []
+  },
+  "knownExternalFailures": {
+    "fullVitest": "Not rerun after this tests-only patch; pre-existing unrelated full-vitest failures were documented earlier in this bead thread."
+  }
+}

@@ -33,7 +33,8 @@ const EFFECT_PRESETS = {
         colors: ['#FF4400', '#FFAA00', '#FF6600'],
         gravity: -2,
         fadeOut: true,
-        spread: Math.PI * 2
+        spread: Math.PI * 2,
+        shape: 'chunk'   // chunky low-poly fire cinder, not a soft round glow
     },
     'explosion-large': {
         count: 50,
@@ -43,7 +44,8 @@ const EFFECT_PRESETS = {
         colors: ['#FF2200', '#FF8800', '#FFCC00'],
         gravity: -3,
         fadeOut: true,
-        spread: Math.PI * 2
+        spread: Math.PI * 2,
+        shape: 'chunk'
     },
     'smoke': {
         count: 20,
@@ -53,7 +55,8 @@ const EFFECT_PRESETS = {
         colors: ['#444444', '#666666', '#888888'],
         gravity: 2, // Rises
         fadeOut: true,
-        spread: Math.PI / 4
+        spread: Math.PI / 4,
+        shape: 'chunk'   // blocky smoke puff
     },
     'sparks': {
         count: 15,
@@ -63,7 +66,8 @@ const EFFECT_PRESETS = {
         colors: ['#FFFF00', '#FFFFFF', '#4444FF'],
         gravity: -5,
         fadeOut: true,
-        spread: Math.PI * 2
+        spread: Math.PI * 2,
+        shape: 'shard'   // small boxy spark, hard-edged
     },
     'emp-shockwave': {
         count: 1,
@@ -74,7 +78,8 @@ const EFFECT_PRESETS = {
         gravity: 0,
         fadeOut: true,
         isShockwave: true,
-        expandSpeed: 30
+        expandSpeed: 30,
+        ringSegments: 8   // chunky low-poly ring, not a smooth 32-seg glow
     },
     'vehicle-destroy': {
         count: 40,
@@ -84,7 +89,8 @@ const EFFECT_PRESETS = {
         colors: ['#FF4400', '#222222', '#FFAA00', '#666666'],
         gravity: -8,
         fadeOut: true,
-        spread: Math.PI * 2
+        spread: Math.PI * 2,
+        shape: 'box'
     }
 };
 
@@ -182,6 +188,7 @@ class ParticleSystem {
      * @returns {string} Group ID
      */
     createExplosion(position, options = {}) {
+        if (!this.enabled) return null;
         const preset = EFFECT_PRESETS[options.preset || 'explosion-fire'];
         return this._createParticleGroup(position, { ...preset, ...options });
     }
@@ -193,6 +200,7 @@ class ParticleSystem {
      * @returns {string} Group ID
      */
     createSmoke(position, options = {}) {
+        if (!this.enabled) return null;
         const preset = EFFECT_PRESETS['smoke'];
         return this._createParticleGroup(position, { ...preset, ...options });
     }
@@ -204,6 +212,7 @@ class ParticleSystem {
      * @returns {string} Group ID
      */
     createSparks(position, options = {}) {
+        if (!this.enabled) return null;
         const preset = EFFECT_PRESETS['sparks'];
         return this._createParticleGroup(position, { ...preset, ...options });
     }
@@ -215,6 +224,7 @@ class ParticleSystem {
      * @returns {string} Group ID
      */
     createShockwave(position, options = {}) {
+        if (!this.enabled) return null;
         const preset = EFFECT_PRESETS['emp-shockwave'];
         return this._createShockwaveGroup(position, { ...preset, ...options });
     }
@@ -225,6 +235,7 @@ class ParticleSystem {
      * @returns {string} Group ID
      */
     createVehicleDestruction(position) {
+        if (!this.enabled) return null;
         const preset = EFFECT_PRESETS['vehicle-destroy'];
         return this._createParticleGroup(position, preset);
     }
@@ -269,10 +280,15 @@ class ParticleSystem {
         }
 
         // Create instanced mesh for performance
-        const geometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const geometry = this._particleGeometry(config);
+        // Lo-fi hard-edged material: normal (non-additive) blending so particles
+        // read as chunky sprites, not soft additive glows; dithering on to match
+        // the Skip Bin Arcade posterize/dither language.
         const material = new THREE.MeshBasicMaterial({
             transparent: true,
-            opacity: 1
+            opacity: 1,
+            blending: THREE.NormalBlending,
+            dithering: true
         });
 
         // Create individual meshes for each particle (simpler than instanced for small counts)
@@ -303,6 +319,42 @@ class ParticleSystem {
     }
 
     /**
+     * Build particle geometry from a preset shape key.
+     *
+     * P3.4 preference is boxy debris in elimination events for readability and style.
+     *
+     * @param {Object} config
+     * @returns {THREE.BufferGeometry}
+     */
+    _particleGeometry(config) {
+        if (!config || typeof THREE === 'undefined') {
+            return null;
+        }
+
+        const shape = config.shape;
+        if (shape === 'box') {
+            return new THREE.BoxGeometry(0.6, 0.6, 0.6);
+        }
+
+        if (shape === 'cone') {
+            return new THREE.ConeGeometry(0.25, 0.6, 8);
+        }
+
+        // Chunky low-poly puff (fire/explosion/smoke): a heavily-faceted sphere
+        // reads blocky, not a smooth round glow. Low segment counts are the style.
+        if (shape === 'chunk') {
+            return new THREE.SphereGeometry(0.5, 5, 3);
+        }
+
+        // Hard-edged boxy spark shard.
+        if (shape === 'shard') {
+            return new THREE.BoxGeometry(0.18, 0.18, 0.18);
+        }
+
+        return new THREE.SphereGeometry(0.5, 8, 8);
+    }
+
+    /**
      * Create a shockwave effect (expanding ring)
      * @private
      */
@@ -311,15 +363,19 @@ class ParticleSystem {
 
         const groupId = `shockwave_${++this.groupCounter}`;
 
-        // Create ring geometry
-        const geometry = new THREE.RingGeometry(0.1, 0.5, 32);
+        // Create ring geometry — chunky low-segment ring (config-driven) instead
+        // of a smooth 32-segment glow, per the lo-fi shape language.
+        const ringSegments = config.ringSegments || 8;
+        const geometry = new THREE.RingGeometry(0.1, 0.5, ringSegments);
         geometry.rotateX(-Math.PI / 2); // Flat on ground
 
         const material = new THREE.MeshBasicMaterial({
             color: config.colors[0],
             transparent: true,
             opacity: 0.8,
-            side: THREE.DoubleSide
+            side: THREE.DoubleSide,
+            blending: THREE.NormalBlending,
+            dithering: true
         });
 
         const mesh = new THREE.Mesh(geometry, material);

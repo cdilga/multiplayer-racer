@@ -1,0 +1,25 @@
+{
+  "win": {
+    "visible": true,
+    "active": false,
+    "completed": true,
+    "mode": "derby",
+    "winnerName": "Grace",
+    "durationMs": 80,
+    "tableHidden": false,
+    "winMomentHidden": true
+  },
+  "rematch": {
+    "active": false,
+    "canceled": false,
+    "completed": true,
+    "autoStarted": true,
+    "secondsRemaining": 0,
+    "durationMs": 250,
+    "cancelReason": null,
+    "hidden": true,
+    "label": "starting again",
+    "countText": "0"
+  },
+  "autoStarts": 1
+}

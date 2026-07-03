@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Join a Joystick Jammers game</title>
     <meta name="description" content="Turn your phone into a controller and join a Joystick Jammers party game — race or wreck your friends on the big screen. No installs.">
-    <meta name="theme-color" content="#16213e">
+    <meta name="theme-color" content="#241b16">
     <!-- Open Graph -->
     <meta property="og:title" content="Join a Joystick Jammers game">
     <meta property="og:description" content="Your phone is the controller. Enter the room code from the big screen and jump in.">
@@ -25,12 +25,14 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <style>
         .auto-join-message {
-            background-color: #4CAF50;
-            color: white;
+            background-color: var(--surface-solid, #2a211a);
+            color: var(--text, #fff8df);
             padding: 10px;
-            border-radius: 5px;
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-md, 4px);
             text-align: center;
             margin-bottom: 20px;
+            box-shadow: var(--phone-shadow, 3px 3px 0 #14110f);
         }
         
         .name-generator {
@@ -40,25 +42,27 @@
         }
         
         .name-generator button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
+            background-color: var(--phone-tape, #d5b05f);
+            color: var(--phone-ink, #14110f);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-md, 4px);
             padding: 5px 10px;
             margin-left: 10px;
             cursor: pointer;
             font-size: 0.8em;
+            min-width: 52px;
+            min-height: 52px;
         }
         
         .name-generator button:hover {
-            background-color: #45a049;
+            filter: brightness(1.08);
         }
         
         .join-form label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #333;
+            color: var(--text, #fff8df);
         }
 
         #fullscreen-toggle {
@@ -67,15 +71,17 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            border-radius: 5px;
+            background-color: var(--surface-solid, #2a211a);
+            color: var(--text, #fff8df);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-md, 4px);
             padding: 8px 15px;
+            min-height: 44px;
             font-size: 0.9rem;
             cursor: pointer;
             opacity: 0.7;
             transition: opacity 0.3s;
+            box-shadow: var(--phone-shadow, 3px 3px 0 #14110f);
         }
 
         #fullscreen-toggle:hover {
@@ -89,18 +95,19 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.4);
+            background: var(--surface-solid, #2a211a);
             padding: 5px 12px;
-            border-radius: 20px;
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-md, 4px);
             pointer-events: none;
         }
 
         #speed {
-            font-family: 'monospace';
+            font-family: var(--font-mono, monospace);
             font-weight: bold;
             font-size: 1.2rem;
-            color: #fff;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            color: var(--text, #fff8df);
+            text-shadow: 2px 2px 0 var(--phone-ink, #14110f);
         }
 
         #status-icon {
@@ -115,31 +122,32 @@
             font-weight: 900;
             line-height: 1;
             color: #fff;
-            background: rgba(255, 255, 255, 0.14);
-            box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+            background: var(--phone-cardboard, #3a2b20);
+            border: 2px solid var(--phone-ink, #14110f);
+            box-shadow: 2px 2px 0 var(--phone-ink, #14110f);
             animation: pulse 1s infinite alternate;
         }
 
         #status-icon.status-boost {
             background: rgba(255, 94, 31, 0.35);
-            box-shadow: 0 0 18px rgba(255, 94, 31, 0.62);
+            box-shadow: 2px 2px 0 rgba(255, 94, 31, 0.62);
         }
 
         #status-icon.status-landing {
             background: rgba(255, 212, 74, 0.35);
-            box-shadow: 0 0 24px rgba(255, 212, 74, 0.72);
+            box-shadow: 2px 2px 0 rgba(255, 212, 74, 0.72);
             animation: landingPunch 0.45s ease-out infinite alternate;
         }
 
         #status-icon.status-wheelie {
             background: rgba(0, 217, 255, 0.25);
-            box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+            box-shadow: 2px 2px 0 rgba(0, 217, 255, 0.6);
             animation: wheeliePulse 0.75s ease-in-out infinite alternate;
         }
 
         #status-icon.status-bad {
             background: rgba(255, 51, 68, 0.35);
-            box-shadow: 0 0 20px rgba(255, 51, 68, 0.7);
+            box-shadow: 2px 2px 0 rgba(255, 51, 68, 0.7);
             animation: badLandingShake 0.12s linear infinite;
         }
 
@@ -175,9 +183,11 @@
             font-weight: bold;
             padding: 4px 10px;
             border-radius: 12px;
-            background: rgba(0, 0, 0, 0.4);
+            background: var(--surface-solid, #2a211a);
+            border: var(--border-ink, 2px solid #14110f);
             pointer-events: none;
             transition: all 0.3s;
+            box-shadow: var(--phone-shadow, 3px 3px 0 #14110f);
         }
 
         .connection-status.connected #status-dot { background: #4CAF50; }
@@ -205,7 +215,7 @@
             position: fixed;
             border: 2px solid rgba(0, 255, 136, 0.9);
             border-radius: 14px;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.34), 0 0 28px rgba(0,255,136,0.45);
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.34), 2px 2px 0 rgba(0,255,136,0.45);
             transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s;
         }
         .tutorial-card {
@@ -221,7 +231,7 @@
             padding: 14px;
             box-shadow: 0 14px 40px rgba(0,0,0,0.45);
             pointer-events: auto;
-            backdrop-filter: blur(10px);
+            backdrop-filter: none;
         }
         .tutorial-card.above {
             top: max(18px, env(safe-area-inset-top));
@@ -271,7 +281,7 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            box-shadow: 0 0 5px rgba(255,255,255,0.3);
+            box-shadow: 2px 2px 0 rgba(255,255,255,0.3);
         }
 
         /* Ensure safe areas on iOS (notch only - .container provides its own
@@ -283,6 +293,47 @@
                 padding-top: env(safe-area-inset-top);
                 padding-bottom: env(safe-area-inset-bottom);
             }
+        }
+
+        /* woq.11 entry chooser — sticker chrome (no glass/glow), token fonts. */
+        .entry-chooser {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 0 0 14px;
+            padding: 12px;
+            background: var(--sticker-surface, #16213e);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-sticker, 4px);
+        }
+        .entry-chooser-title {
+            margin: 0 0 4px;
+            font-family: var(--font-body, sans-serif);
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text, #fff);
+        }
+        .entry-choice {
+            font-family: var(--font-body, sans-serif);
+            font-size: 15px;
+            padding: 12px;
+            text-align: left;
+            color: var(--text, #fff);
+            background: var(--sticker-surface-2, #1f2b4d);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-sticker, 4px);
+            box-shadow: var(--shadow-sticker, 2px 2px 0 #14110f);
+            cursor: pointer;
+        }
+        .entry-role-badge {
+            margin: 0 0 12px;
+            padding: 8px 10px;
+            font-family: var(--font-body, sans-serif);
+            font-size: 14px;
+            color: var(--text, #fff);
+            background: var(--sticker-surface, #16213e);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-sticker, 4px);
         }
     </style>
 </head>
@@ -298,6 +349,22 @@
             <div id="auto-join-message" class="auto-join-message" style="display: none;">
                 Room code detected: <strong id="detected-room-code"></strong>
             </div>
+            <!-- woq.11: entry chooser shown only for context-poor invites (no
+                 encoded intent). Host-QR / pair-QR paths skip this and bind
+                 directly. Buttons set the explicit intent, not UA sniffing. -->
+            <div id="entry-chooser" class="entry-chooser" style="display: none;">
+                <p class="entry-chooser-title">How do you want to join?</p>
+                <button id="entry-choose-screen" type="button" class="entry-choice" data-intent="screen">
+                    Use this device as my screen
+                </button>
+                <button id="entry-choose-controller" type="button" class="entry-choice" data-intent="controller">
+                    I can see the game screen
+                </button>
+                <button id="entry-choose-spectator" type="button" class="entry-choice" data-intent="spectator">
+                    Watch only
+                </button>
+            </div>
+            <div id="entry-role-badge" class="entry-role-badge" style="display: none;" aria-live="polite"></div>
             <div class="join-form">
                 <label for="player-name">Your Name:</label>
                 <div class="name-generator">

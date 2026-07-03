@@ -15,6 +15,10 @@
  *   weapons.start();
  */
 
+import { RealClock } from '../engine/Clock.js';
+import { resolveRunContext } from '../engine/determinism.js';
+import { MaterialFactory } from '../resources/MaterialFactory.js';
+
 // Weapon types
 const WEAPON_TYPES = {
     MISSILE: 'missile',
@@ -58,6 +62,17 @@ class WeaponSystem {
         this.physicsSystem = options.physicsSystem || null;
         this.damageSystem = options.damageSystem || null;
 
+        // Deterministic run context (set by Engine). Pickup cadence/selection/
+        // placement and all weapon timers read sim time + the 'weapons' RNG
+        // stream from it; falls back to wall time + fallback streams otherwise.
+        this.runContext = options.runContext || null;
+        this._realClock = new RealClock();
+
+        // Lo-fi retro material factory (flat/toon/matte) for weapon props.
+        // Weapon pickups/projectiles/mines are diegetic "loud/danger" elements:
+        // matte + emissive/full-bright, never PBR plastic spec.
+        this.materialFactory = new MaterialFactory();
+
         // Configuration
         this.arenaConfig = null;
         this.enabled = false;
@@ -99,6 +114,34 @@ class WeaponSystem {
     }
 
     /**
+     * Attach the deterministic run context.
+     * @param {import('../engine/GameRunContext.js').GameRunContext} ctx
+     */
+    setRunContext(ctx) {
+        this.runContext = ctx;
+    }
+
+    /**
+     * Current gameplay time in ms: sim time when a run context is attached
+     * (deterministic), else wall time via the allowlisted RealClock adapter.
+     * @returns {number}
+     * @private
+     */
+    _nowMs() {
+        return this.runContext ? this.runContext.clock.nowMs() : this._realClock.nowMs();
+    }
+
+    /**
+     * The 'weapons' RNG stream for this run (deterministic selection/placement/
+     * cadence). Uses the shared fallback context when none is attached.
+     * @returns {import('../engine/Rng.js').RngStream}
+     * @private
+     */
+    _wrng() {
+        return resolveRunContext(this.runContext).stream('weapons');
+    }
+
+    /**
      * Initialize weapon system
      */
     async init() {
@@ -136,6 +179,13 @@ class WeaponSystem {
             name: 'Homing Missile',
             icon: '\uD83D\uDE80', // rocket emoji
             rarity: 'common',
+            pickupVisual: {
+                geometry: 'cone',
+                materialType: 'flat',
+                geometryScale: [1.2, 1.8, 1.2],
+                yOffset: 0.15,
+                glow: 0xF6B042
+            },
             behavior: {
                 type: 'projectile',
                 speed: 50,
@@ -164,6 +214,12 @@ class WeaponSystem {
             name: 'Proximity Mine',
             icon: '\uD83D\uDCA3', // bomb emoji
             rarity: 'common',
+            pickupVisual: {
+                geometry: 'sphere',
+                materialType: 'toon',
+                geometryScale: [1.15, 1.15, 1.15],
+                glow: 0xFF3A3A
+            },
             behavior: {
                 type: 'deployable',
                 deployBehind: true,
@@ -189,6 +245,13 @@ class WeaponSystem {
             name: 'Nitro Boost',
             icon: '\uD83D\uDD25', // fire emoji
             rarity: 'common',
+            pickupVisual: {
+                geometry: 'cylinder',
+                materialType: 'flat',
+                geometryScale: [0.45, 1.25, 0.45],
+                yOffset: 0.3,
+                glow: 0xFF8800
+            },
             behavior: {
                 type: 'buff',
                 duration: 3,
@@ -211,6 +274,12 @@ class WeaponSystem {
             name: 'Oil Slick',
             icon: '\uD83D\uDEE2\uFE0F', // oil drum emoji
             rarity: 'common',
+            pickupVisual: {
+                geometry: 'torus',
+                materialType: 'flat',
+                geometryScale: [1.35, 1.35, 1.35],
+                yOffset: 0.02
+            },
             behavior: {
                 type: 'zone',
                 deployBehind: true,
@@ -232,6 +301,14 @@ class WeaponSystem {
             name: 'Rail Gun',
             icon: '\u26A1', // lightning emoji
             rarity: 'rare',
+            pickupVisual: {
+                geometry: 'cone',
+                materialType: 'flat',
+                geometryScale: [1.0, 0.85, 1.0],
+                yOffset: 0.2,
+                rotationY: Math.PI,
+                glow: 0x44C7FF
+            },
             behavior: {
                 type: 'hitscan',
                 range: 100,
@@ -252,6 +329,12 @@ class WeaponSystem {
             name: 'Energy Shield',
             icon: '\uD83D\uDEE1\uFE0F', // shield emoji
             rarity: 'uncommon',
+            pickupVisual: {
+                geometry: 'sphere',
+                materialType: 'toon',
+                geometryScale: [1.5, 1.5, 1.5],
+                glow: 0x52E7FF
+            },
             behavior: {
                 type: 'buff',
                 duration: 5,
@@ -271,6 +354,12 @@ class WeaponSystem {
             name: 'EMP Blast',
             icon: '\u26A1', // lightning emoji
             rarity: 'uncommon',
+            pickupVisual: {
+                geometry: 'torus',
+                materialType: 'flat',
+                geometryScale: [1.45, 1.45, 1.45],
+                glow: 0x5A69FF
+            },
             behavior: {
                 type: 'aoe',
                 radius: 15,
@@ -291,6 +380,13 @@ class WeaponSystem {
             name: 'Flamethrower',
             icon: '\uD83D\uDD25', // fire emoji
             rarity: 'uncommon',
+            pickupVisual: {
+                geometry: 'cone',
+                materialType: 'flat',
+                geometryScale: [0.7, 1.2, 0.7],
+                yOffset: 0.35,
+                glow: 0xFF9E3A
+            },
             behavior: {
                 type: 'continuous',
                 duration: 3,
@@ -415,7 +511,7 @@ class WeaponSystem {
         }
 
         this.running = true;
-        this.matchStartTime = performance.now() / 1000;
+        this.matchStartTime = this._nowMs() / 1000;
         this._scheduleNextSpawn();
         console.log('WeaponSystem: Started');
     }
@@ -430,7 +526,7 @@ class WeaponSystem {
             return PROGRESSION_PHASES[0];
         }
 
-        const elapsed = performance.now() / 1000 - this.matchStartTime;
+        const elapsed = this._nowMs() / 1000 - this.matchStartTime;
         let phase = PROGRESSION_PHASES[0];
         for (const candidate of PROGRESSION_PHASES) {
             if (elapsed >= candidate.after) {
@@ -455,7 +551,7 @@ class WeaponSystem {
     update(dt) {
         if (!this.initialized) return;
 
-        const now = performance.now() / 1000;
+        const now = this._nowMs() / 1000;
 
         // Spawn new pickups if running (cap grows with match progression)
         if (this.running && this.enabled && now >= this.nextSpawnTime) {
@@ -483,8 +579,8 @@ class WeaponSystem {
     _scheduleNextSpawn() {
         const [minInterval, maxInterval] = this.spawnInterval;
         const scale = this._getProgressionPhase().intervalScale;
-        const interval = (minInterval + Math.random() * (maxInterval - minInterval)) * scale;
-        this.nextSpawnTime = performance.now() / 1000 + interval;
+        const interval = (minInterval + this._wrng().next() * (maxInterval - minInterval)) * scale;
+        this.nextSpawnTime = this._nowMs() / 1000 + interval;
     }
 
     /**
@@ -517,7 +613,7 @@ class WeaponSystem {
             weapon: weapon,
             position: position,
             mesh: mesh,
-            createdAt: performance.now(),
+            createdAt: this._nowMs(),
             rotation: 0
         });
 
@@ -550,7 +646,7 @@ class WeaponSystem {
         }
 
         // Random selection
-        let random = Math.random() * totalWeight;
+        let random = this._wrng().next() * totalWeight;
 
         for (const [tierName, tier] of Object.entries(RARITY_TIERS)) {
             const availableWeapons = tier.weapons.filter(w => this.weaponDefs.has(w));
@@ -559,7 +655,7 @@ class WeaponSystem {
             const weight = phaseWeights[tierName] ?? tier.weight;
             if (random < weight) {
                 // Select random weapon from this tier
-                const weaponId = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
+                const weaponId = availableWeapons[Math.floor(this._wrng().next() * availableWeapons.length)];
                 return this.weaponDefs.get(weaponId);
             }
             random -= weight;
@@ -579,8 +675,8 @@ class WeaponSystem {
 
         if (area.type === 'ring') {
             // Random position on an annulus (e.g. oval track surface)
-            const angle = Math.random() * Math.PI * 2;
-            const distance = area.innerRadius + Math.random() * (area.outerRadius - area.innerRadius);
+            const angle = this._wrng().next() * Math.PI * 2;
+            const distance = area.innerRadius + this._wrng().next() * (area.outerRadius - area.innerRadius);
             return {
                 x: Math.cos(angle) * distance,
                 y: 1.5,
@@ -590,27 +686,27 @@ class WeaponSystem {
 
         if (area.type === 'points' && area.points?.length > 0) {
             // Random point on the racing line with lateral jitter
-            const point = area.points[Math.floor(Math.random() * area.points.length)];
+            const point = area.points[Math.floor(this._wrng().next() * area.points.length)];
             const jitter = area.jitter || 2;
             return {
-                x: point.x + (Math.random() * 2 - 1) * jitter,
+                x: point.x + (this._wrng().next() * 2 - 1) * jitter,
                 y: 1.5,
-                z: point.z + (Math.random() * 2 - 1) * jitter
+                z: point.z + (this._wrng().next() * 2 - 1) * jitter
             };
         }
 
         if (area.type === 'box') {
             const halfSize = Math.max(0, area.halfSize || 30);
             return {
-                x: (Math.random() * 2 - 1) * halfSize,
+                x: (this._wrng().next() * 2 - 1) * halfSize,
                 y: 1.5,
-                z: (Math.random() * 2 - 1) * halfSize
+                z: (this._wrng().next() * 2 - 1) * halfSize
             };
         }
 
         // Default: random position within arena circle
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * (area.radius || this.arenaRadius) * 0.8;
+        const angle = this._wrng().next() * Math.PI * 2;
+        const distance = this._wrng().next() * (area.radius || this.arenaRadius) * 0.8;
 
         return {
             x: Math.cos(angle) * distance,
@@ -628,21 +724,55 @@ class WeaponSystem {
     _createPickupMesh(weapon) {
         if (typeof THREE === 'undefined') return null;
 
-        // Create a glowing box for the pickup
-        const geometry = new THREE.BoxGeometry(2, 2, 2);
-        const color = weapon.ui?.color || '#FFFF00';
+        const visual = {
+            geometry: 'box',
+            materialType: 'flat',
+            geometryScale: [1, 1, 1],
+            yOffset: 1.5,
+            ...(weapon.pickupVisual || {})
+        };
 
-        const material = new THREE.MeshStandardMaterial({
-            color: color,
-            emissive: color,
-            emissiveIntensity: 0.5,
-            metalness: 0.5,
-            roughness: 0.3
+        const color = weapon.ui?.color || '#FFFF00';
+        const parsedGlow = Number.isFinite(Number.parseInt(String(visual.glow || ''), 16))
+            ? Number.parseInt(String(visual.glow).replace('#', ''), 16)
+            : null;
+
+        const geometry = (() => {
+            switch (visual.geometry) {
+                case 'cone':
+                    return new THREE.ConeGeometry(1.0, 1.6, 8);
+                case 'sphere':
+                    return new THREE.SphereGeometry(0.9, 10, 8);
+                case 'cylinder':
+                    return new THREE.CylinderGeometry(0.55, 0.55, 1.3, 10);
+                case 'torus':
+                    return new THREE.TorusGeometry(1.05, 0.28, 8, 20);
+                default:
+                    return new THREE.BoxGeometry(1.6, 1.6, 1.6);
+            }
+        })();
+
+        const material = this.materialFactory.createMaterial({
+            color,
+            type: visual.materialType || 'flat',
+            emissive: parsedGlow,
+            emissiveIntensity: parsedGlow ? 0.15 : 0
         });
 
         const mesh = new THREE.Mesh(geometry, material);
+        const scale = visual.geometryScale;
+        if (Array.isArray(scale) && scale.length === 3) {
+            mesh.scale.set(scale[0], scale[1], scale[2]);
+        }
+        if (visual.rotationY) {
+            mesh.rotation.y = visual.rotationY;
+        }
+        if (visual.yOffset != null && visual.yOffset !== 0) {
+            mesh.position.y = visual.yOffset;
+        }
         mesh.userData.weaponId = weapon.id;
         mesh.userData.isPickup = true;
+        mesh.userData.pickupVisual = visual;
 
         return mesh;
     }
@@ -813,7 +943,7 @@ class WeaponSystem {
             velocity: weapon.behavior.speed,
             target: target,
             mesh: mesh,
-            createdAt: performance.now(),
+            createdAt: this._nowMs(),
             lifetime: weapon.behavior.lifetime * 1000
         });
 
@@ -855,8 +985,8 @@ class WeaponSystem {
             ownerId: vehicle.playerId,
             position: { ...deployPos },
             mesh: mesh,
-            createdAt: performance.now(),
-            armTime: performance.now() + (weapon.behavior.armDelay || 1) * 1000,
+            createdAt: this._nowMs(),
+            armTime: this._nowMs() + (weapon.behavior.armDelay || 1) * 1000,
             lifetime: weapon.behavior.lifetime * 1000,
             armed: false,
             triggerRadius: weapon.behavior.triggerRadius || 3
@@ -878,7 +1008,7 @@ class WeaponSystem {
             weapon: weapon,
             targetVehicleId: vehicle.id,
             ownerId: vehicle.playerId,
-            createdAt: performance.now(),
+            createdAt: this._nowMs(),
             duration: weapon.behavior.duration * 1000,
             speedMultiplier: weapon.behavior.speedMultiplier || 1,
             ramDamageBonus: weapon.behavior.ramDamageBonus || 0,
@@ -983,7 +1113,7 @@ class WeaponSystem {
             if (distance <= radius) {
                 // Apply stun
                 targetVehicle.stunned = true;
-                targetVehicle.stunEndTime = performance.now() + (weapon.behavior.stunDuration || 3) * 1000;
+                targetVehicle.stunEndTime = this._nowMs() + (weapon.behavior.stunDuration || 3) * 1000;
 
                 this._emit('weapon:stun', {
                     targetId: targetVehicle.playerId,
@@ -1029,7 +1159,7 @@ class WeaponSystem {
             ownerId: vehicle.playerId,
             position: { ...deployPos },
             mesh: mesh,
-            createdAt: performance.now(),
+            createdAt: this._nowMs(),
             lifetime: weapon.behavior.lifetime * 1000,
             radius: weapon.behavior.zoneRadius || 6,
             frictionMultiplier: weapon.behavior.frictionMultiplier || 0.1
@@ -1078,7 +1208,7 @@ class WeaponSystem {
             weapon: weapon,
             ownerId: vehicle.playerId,
             vehicleId: vehicle.id,
-            createdAt: performance.now(),
+            createdAt: this._nowMs(),
             duration: weapon.behavior.duration * 1000,
             coneAngle: weapon.behavior.coneAngle || 30,
             range: weapon.behavior.range || 8,
@@ -1137,7 +1267,7 @@ class WeaponSystem {
      * @private
      */
     _updateProjectiles(dt) {
-        const now = performance.now();
+        const now = this._nowMs();
 
         for (const [projectileId, projectile] of this.projectiles) {
             // Check lifetime
@@ -1239,7 +1369,7 @@ class WeaponSystem {
      * @private
      */
     _updateEffects(dt) {
-        const now = performance.now();
+        const now = this._nowMs();
 
         for (const [effectId, effect] of this.effects) {
             if (effect.type === 'mine') {
@@ -1518,10 +1648,10 @@ class WeaponSystem {
         geometry.rotateX(Math.PI / 2);
 
         const color = weapon.effects?.trail?.color || '#FF4400';
-        const material = new THREE.MeshStandardMaterial({
+        // Flat/matte projectile: full-bright loud color, no PBR spec.
+        const material = this.materialFactory.createMaterial({
             color: color,
-            emissive: color,
-            emissiveIntensity: 0.8
+            type: 'flat'
         });
 
         return new THREE.Mesh(geometry, material);
@@ -1537,8 +1667,10 @@ class WeaponSystem {
         const geometry = new THREE.SphereGeometry(0.8, 16, 16);
         const color = weapon.effects?.idle?.color || '#FF0000';
 
-        const material = new THREE.MeshStandardMaterial({
+        // Dark matte toon body with a diegetic red glow (emissive), no PBR spec.
+        const material = this.materialFactory.createMaterial({
             color: '#333333',
+            type: 'toon',
             emissive: color,
             emissiveIntensity: 0.5
         });

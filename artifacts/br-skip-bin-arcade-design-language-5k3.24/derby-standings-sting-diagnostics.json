@@ -1,0 +1,99 @@
+{
+  "state": {
+    "active": true,
+    "completed": false,
+    "round": 2,
+    "winnerName": "Grace",
+    "standings": [
+      {
+        "playerId": "Grace",
+        "totalPoints": 9,
+        "roundWins": 0,
+        "position": 1
+      },
+      {
+        "playerId": "Ada",
+        "totalPoints": 5,
+        "roundWins": 0,
+        "position": 2
+      },
+      {
+        "playerId": "Linus",
+        "totalPoints": 3,
+        "roundWins": 0,
+        "position": 3
+      }
+    ],
+    "rowCount": 3,
+    "durationMs": 650,
+    "hidden": false,
+    "modalVisible": false
+  },
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "root": {
+      "top": 23.53947639465332,
+      "bottom": 183.75740242004395,
+      "left": 318.9749755859375,
+      "right": 961.0250244140625,
+      "width": 642.050048828125,
+      "height": 160.21792602539062
+    },
+    "card": {
+      "top": 23.53947639465332,
+      "bottom": 183.75740242004395,
+      "left": 318.9749755859375,
+      "right": 961.0250244140625,
+      "width": 642.050048828125,
+      "height": 160.21792602539062,
+      "boxShadow": "rgba(5, 8, 12, 0.92) 6px 6px 0px 0px, rgb(255, 136, 68) 0px 0px 0px 2px, rgba(244, 67, 54, 0.28) 0px 0px 34px 0px",
+      "borderTopWidth": "4px"
+    },
+    "winner": {
+      "text": "Grace wins",
+      "width": 218.38278198242188,
+      "right": 560.12353515625
+    },
+    "badge": {
+      "text": "standings sting",
+      "left": 805.2583618164062,
+      "width": 132.85906982421875
+    },
+    "rowBoxes": [
+      {
+        "top": 126.75621032714844,
+        "bottom": 167.45179748535156,
+        "left": 342.331298828125,
+        "right": 536.171142578125,
+        "width": 193.83984375,
+        "height": 40.695587158203125
+      },
+      {
+        "top": 123.94523620605469,
+        "bottom": 164.64080810546875,
+        "left": 543.6398315429688,
+        "right": 737.4796752929688,
+        "width": 193.83984375,
+        "height": 40.69557189941406
+      },
+      {
+        "top": 121.1342544555664,
+        "bottom": 161.829833984375,
+        "left": 744.9483032226562,
+        "right": 938.7881469726562,
+        "width": 193.83984375,
+        "height": 40.695579528808594
+      }
+    ],
+    "rowCount": 3,
+    "rootInsideViewport": true,
+    "cardInsideRoot": true,
+    "rowsInsideCard": true,
+    "rowOverlapCount": 0,
+    "winnerBadgeOverlap": false
+  },
+  "loadingOverlayVisible": false
+}

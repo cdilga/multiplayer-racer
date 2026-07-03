@@ -96,7 +96,9 @@ class DerbySystem {
         this.minDiameter = 40;
         this.shrinkRate = 0.5; // units per second
         this.shrinkStartTime = 30; // seconds into combat
-        this.warningColor = '#FF4444';
+        this.warningColor = '#FF2E2E'; // 5k3.14: DANGER red
+        this.loserPressureActive = false;
+        this.loserPressureEvents = [];
 
         // Wall mesh reference (set by GameHost)
         this.wallMesh = null;
@@ -209,7 +211,7 @@ class DerbySystem {
             this.shrinkStartTime = shrink.startTime || 30;
             this.shrinkRate = shrink.rate || 0.5;
             this.minDiameter = shrink.minDiameter || 40;
-            this.warningColor = shrink.warningColor || '#FF4444';
+            this.warningColor = shrink.warningColor || '#FF2E2E'; // 5k3.14: DANGER red default
         }
 
         console.log(`DerbySystem: Arena config set. Shrinking: ${this.shrinkingEnabled ? 'enabled' : 'disabled'}`);
@@ -249,7 +251,7 @@ class DerbySystem {
     _warningColorHex() {
         const raw = typeof this.warningColor === 'string' ? this.warningColor : '';
         const hex = parseInt(raw.replace('#', ''), 16);
-        return Number.isFinite(hex) ? hex : 0xFF4444;
+        return Number.isFinite(hex) ? hex : 0xFF2E2E; // 5k3.14: DANGER red
     }
 
     /**
@@ -324,6 +326,7 @@ class DerbySystem {
 
         // Reset round state
         this.eliminationOrder = [];
+        this.loserPressureActive = false;
         for (const [vehicleId, data] of this.vehicles) {
             data.eliminated = false;
             data.eliminationOrder = null;
@@ -593,7 +596,56 @@ class DerbySystem {
             survivorsLeft: survivors.length
         });
 
+        this._triggerLoserPressure({
+            eliminatedVehicleId: data.vehicleId,
+            eliminatedPlayerId: data.playerId,
+            eliminationOrder: vehicleData.eliminationOrder,
+            survivors
+        });
+
         console.log(`DerbySystem: Player ${data.playerId} eliminated. ${survivors.length} survivors remaining.`);
+    }
+
+    /**
+     * Keep eliminated players engaged through visible arena pressure and room-facing context.
+     * This does not reintroduce eliminated players, alter scoring, or adjust survivor speed.
+     * @private
+     */
+    _triggerLoserPressure({ eliminatedVehicleId, eliminatedPlayerId, eliminationOrder, survivors }) {
+        if (!Array.isArray(survivors) || survivors.length <= 1) return;
+
+        const target = survivors[0] || null;
+        const pressureStarted = this.shrinkingEnabled && !this.shrinkingActive;
+        if (pressureStarted) {
+            this.shrinkingActive = true;
+            this._emit('derby:wallsShrinking', {
+                currentDiameter: this.currentDiameter,
+                minDiameter: this.minDiameter,
+                rate: this.shrinkRate,
+                reason: 'loser-pressure',
+                eliminatedPlayerId
+            });
+            this._updateWallVisuals();
+            this._syncWallCollider(true);
+        }
+
+        const event = {
+            eliminatedVehicleId,
+            eliminatedPlayerId,
+            eliminationOrder,
+            survivorsLeft: survivors.length,
+            targetPlayerId: target?.playerId || null,
+            targetVehicleId: target?.vehicle?.id || null,
+            pressureType: pressureStarted ? 'arena-shrink-started' : 'leader-target',
+            arenaPressureActive: !!this.shrinkingActive,
+            reentry: 'next-round',
+            noSpeedAssist: true,
+            noCurrentRoundRespawn: true
+        };
+
+        this.loserPressureActive = true;
+        this.loserPressureEvents.push(event);
+        this._emit('derby:loserPressure', event);
     }
 
     /**
@@ -862,6 +914,8 @@ class DerbySystem {
         this.eliminationOrder = [];
         this.roundWinners = [];
         this.roundScores = [];
+        this.loserPressureActive = false;
+        this.loserPressureEvents = [];
 
         // Reset arena shrinking
         this.shrinkingActive = false;
@@ -896,6 +950,20 @@ class DerbySystem {
     }
 
     /**
+     * Expose deterministic pressure state for tests and validation artifacts.
+     */
+    getLoserPressureDiagnostics() {
+        return {
+            active: this.loserPressureActive,
+            eventCount: this.loserPressureEvents.length,
+            lastEvent: this.loserPressureEvents[this.loserPressureEvents.length - 1] || null,
+            shrinkingActive: this.shrinkingActive,
+            currentDiameter: this.currentDiameter,
+            state: this.state
+        };
+    }
+
+    /**
      * Destroy derby system
      */
     destroy() {
@@ -905,6 +973,8 @@ class DerbySystem {
         this.eliminationOrder = [];
         this.roundWinners = [];
         this.roundScores = [];
+        this.loserPressureActive = false;
+        this.loserPressureEvents = [];
         this.initialized = false;
     }
 }

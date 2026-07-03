@@ -1,0 +1,36 @@
+{
+  "shadowsDiag": {
+    "enabled": false,
+    "type": "BasicShadowMap",
+    "mode": "contact-blob"
+  },
+  "tiers": [
+    {
+      "tierName": "host-native",
+      "shadowsEnabled": false,
+      "shadowMapType": "none"
+    },
+    {
+      "tierName": "host-balanced",
+      "shadowsEnabled": false,
+      "shadowMapType": "none"
+    },
+    {
+      "tierName": "host-degraded",
+      "shadowsEnabled": false,
+      "shadowMapType": "none"
+    },
+    {
+      "tierName": "host-fallback",
+      "shadowsEnabled": false,
+      "shadowMapType": "none"
+    }
+  ],
+  "contactShadowCount": 1,
+  "shadowTransparent": true,
+  "shadowHasTextureMap": true,
+  "shadowCastsReal": false,
+  "shadowReceivesReal": false,
+  "shadowGroundedY": 0.02,
+  "anyPartCastsShadow": false
+}

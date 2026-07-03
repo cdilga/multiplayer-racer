@@ -1,0 +1,452 @@
+{
+  "sharedDiagnostics": {
+    "registeredImpacts": [
+      {
+        "source": "damage:vehicleCollision",
+        "severity": 0.9,
+        "context": "shared-race",
+        "elimination": false,
+        "vehicleIds": [
+          "car-a",
+          "car-b"
+        ],
+        "decision": {
+          "mode": "camera-punch",
+          "frames": 3,
+          "intensity": 0.9,
+          "context": "shared-race"
+        },
+        "physicsTimeScale": 1
+      }
+    ],
+    "timeline": [
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": true,
+          "mode": "camera-punch",
+          "framesRemaining": 3,
+          "framesTotal": 3,
+          "intensity": 0.9,
+          "progress": 1,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": true,
+          "mode": "camera-punch",
+          "framesRemaining": 2,
+          "framesTotal": 3,
+          "intensity": 0.9,
+          "progress": 0.6666666666666666,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": true,
+          "mode": "camera-punch",
+          "framesRemaining": 2,
+          "framesTotal": 3,
+          "intensity": 0.9,
+          "progress": 0.6666666666666666,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": true,
+          "mode": "camera-punch",
+          "framesRemaining": 1,
+          "framesTotal": 3,
+          "intensity": 0.9,
+          "progress": 0.3333333333333333,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": true,
+          "mode": "camera-punch",
+          "framesRemaining": 1,
+          "framesTotal": 3,
+          "intensity": 0.9,
+          "progress": 0.3333333333333333,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      },
+      {
+        "before": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "after": {
+          "active": false,
+          "mode": "none",
+          "framesRemaining": 0,
+          "framesTotal": 0,
+          "intensity": 0,
+          "progress": 0,
+          "physicsTimeScale": 1
+        },
+        "heldVehicleIds": []
+      }
+    ],
+    "physicsTimeScale": 1,
+    "heldVehicleIds": [],
+    "cameraPunchFrames": 3,
+    "meshHoldFrames": 0,
+    "state": {
+      "active": false,
+      "mode": "none",
+      "framesRemaining": 0,
+      "framesTotal": 0,
+      "intensity": 0,
+      "progress": 0,
+      "physicsTimeScale": 1
+    },
+    "render": {
+      "framesRemaining": 0,
+      "framesTotal": 3,
+      "intensity": 0,
+      "lastSource": "damage:vehicleCollision",
+      "appliedFrames": 3,
+      "lastOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "physicsTimeScale": 1
+    }
+  },
+  "holdAtStart": {
+    "carA": true,
+    "carB": false
+  },
+  "freezeFrames": [
+    {
+      "frame": 1,
+      "holdCarA": true,
+      "state": {
+        "active": true,
+        "mode": "freeze",
+        "framesRemaining": 3,
+        "framesTotal": 3,
+        "intensity": 1,
+        "progress": 1,
+        "physicsTimeScale": 1
+      }
+    },
+    {
+      "frame": 2,
+      "holdCarA": true,
+      "state": {
+        "active": true,
+        "mode": "freeze",
+        "framesRemaining": 2,
+        "framesTotal": 3,
+        "intensity": 1,
+        "progress": 0.6666666666666666,
+        "physicsTimeScale": 1
+      }
+    },
+    {
+      "frame": 3,
+      "holdCarA": true,
+      "state": {
+        "active": true,
+        "mode": "freeze",
+        "framesRemaining": 1,
+        "framesTotal": 3,
+        "intensity": 1,
+        "progress": 0.3333333333333333,
+        "physicsTimeScale": 1
+      }
+    }
+  ],
+  "holdAfter": false,
+  "renderDiagnostics": {
+    "framesRemaining": 0,
+    "framesTotal": 3,
+    "intensity": 0,
+    "lastSource": "damage:vehicleCollision",
+    "appliedFrames": 3,
+    "lastOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "physicsTimeScale": 1
+  },
+  "cameraDelta": {
+    "x": 0.4629093212982804,
+    "y": 0.38486747426654233,
+    "z": -1.1397654496953962
+  },
+  "physicsTimeScale": 1
+}

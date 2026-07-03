@@ -2,7 +2,7 @@
  * RenderSystem - Manages Three.js rendering
  *
  * Responsibilities:
- * - Initialize Three.js scene, camera, renderer
+ * - Initialize Three.js scene, camera, renderer (via backend adapter)
  * - Add/remove meshes
  * - Sync mesh positions from physics
  * - Handle camera following
@@ -14,11 +14,41 @@
  *   render.addMesh(vehicle.mesh);
  */
 
+import { selectRendererBackend, createRenderer as createBackendRenderer } from '../rendering/RendererBackend.js';
+import { getBrowserTelemetry, getRuntimeTelemetryContext } from '../telemetry/index.js';
+import { setLoFiWarpIntensity } from '../resources/MaterialFactory.js';
+
 const DEFAULT_FOG_COLOR = 0x1a0f0a;
 const DEFAULT_FOG_DENSITY = 0.008;
+// 5k3.7: deliberately short draw distance (legacy was 1000). Must stay larger
+// than the camera-locked sky-dome radius (500) so the dome never clips.
+const SHORT_DRAW_DISTANCE = 600;
 const MAX_RENDER_PIXEL_RATIO = 2;
 const MIN_RENDER_SCALE = 0.5;
 const FRAME_TIMING_WINDOW = 120;
+const IMPACT_SHAKE_CURVE = Object.freeze({
+    lightThreshold: 0.12,
+    mediumThreshold: 0.42,
+    heavyThreshold: 0.72,
+    baseImpulse: 0.08,
+    mediumImpulse: 0.23,
+    heavyImpulse: 0.48,
+    eliminationImpulse: 0.72,
+    maxImpact: 0.95,
+    decayPerFrame: 0.58,
+    hitStopPunchY: 0.1,
+    hitStopPunchZ: -0.92
+});
+const TRANSIENT_SMASH_FLASH_CURVE = Object.freeze({
+    minSeverity: 0.5,
+    frames: 3,
+    maxFrames: 4,
+    chromaticAmount: 0.006,
+    gradingBoost: 0.22,
+    ditherBoost: 0.22,
+    posterizeBandDrop: 2,
+    maxChromaticAmount: 0.008
+});
 
 const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
     'host-native': Object.freeze({
@@ -30,14 +60,18 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         bloomRadius: 0.4,
         bloomThreshold: 0.85,
         colorGradingEnabled: true,
-        gradingIntensity: 0.5,
+        gradingIntensity: 0.7,
+        posterizeBandCount: 7,
+        ditherStrength: 0.55,
+        scanlineAmount: 0.08,
         vignetteAmount: 0.3,
-        chromaticAberrationEnabled: true,
-        chromaticAberrationAmount: 0.0015,
+        filmGrainAmount: 0.12,
+        chromaticAberrationEnabled: false,
+        chromaticAberrationAmount: 0,
         fogEnabled: true,
         fogDensity: DEFAULT_FOG_DENSITY,
-        shadowsEnabled: true,
-        shadowMapType: 'pcf-soft'
+        shadowsEnabled: false,
+        shadowMapType: 'none'  // 5k3.9: blob contact shadows replace full-scene shadow maps
     }),
     'host-balanced': Object.freeze({
         label: 'Balanced shared-screen host',
@@ -48,14 +82,18 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         bloomRadius: 0.25,
         bloomThreshold: 0.92,
         colorGradingEnabled: true,
-        gradingIntensity: 0.35,
+        gradingIntensity: 0.62,
+        posterizeBandCount: 6,
+        ditherStrength: 0.5,
+        scanlineAmount: 0.05,
         vignetteAmount: 0.22,
+        filmGrainAmount: 0.08,
         chromaticAberrationEnabled: false,
         chromaticAberrationAmount: 0,
         fogEnabled: true,
         fogDensity: 0.007,
-        shadowsEnabled: true,
-        shadowMapType: 'pcf-soft'
+        shadowsEnabled: false,
+        shadowMapType: 'none'  // 5k3.9: blob contact shadows replace full-scene shadow maps
     }),
     'host-degraded': Object.freeze({
         label: 'Degraded shared-screen host',
@@ -66,14 +104,18 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         bloomRadius: 0,
         bloomThreshold: 1,
         colorGradingEnabled: true,
-        gradingIntensity: 0.2,
+        gradingIntensity: 0.5,
+        posterizeBandCount: 5,
+        ditherStrength: 0.42,
+        scanlineAmount: 0.03,
         vignetteAmount: 0.16,
+        filmGrainAmount: 0.05,
         chromaticAberrationEnabled: false,
         chromaticAberrationAmount: 0,
         fogEnabled: true,
         fogDensity: 0.006,
-        shadowsEnabled: true,
-        shadowMapType: 'basic'
+        shadowsEnabled: false,
+        shadowMapType: 'none'  // 5k3.9
     }),
     'host-fallback': Object.freeze({
         label: 'Fallback no-post host',
@@ -85,13 +127,17 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         bloomThreshold: 1,
         colorGradingEnabled: false,
         gradingIntensity: 0,
+        posterizeBandCount: 0,
+        ditherStrength: 0,
+        scanlineAmount: 0,
         vignetteAmount: 0,
+        filmGrainAmount: 0,
         chromaticAberrationEnabled: false,
         chromaticAberrationAmount: 0,
         fogEnabled: true,
         fogDensity: 0.005,
         shadowsEnabled: false,
-        shadowMapType: 'basic'
+        shadowMapType: 'none'  // 5k3.9
     })
 });
 
@@ -100,6 +146,18 @@ function nowMs() {
         return performance.now();
     }
     return Date.now();
+}
+
+function clamp01(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(1, n));
+}
+
+function clampPositive(value, fallback) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return fallback;
+    return n;
 }
 
 class RenderSystem {
@@ -115,17 +173,41 @@ class RenderSystem {
         this.container = options.container || document.body;
         this.cameraConfig = options.cameraConfig || {};
 
+        // Renderer backend (WebGPU-first, WebGL fallback)
+        this.rendererBackend = null;
+        this.rendererBackendPreference = null;
+
         // Three.js core
         this.scene = null;
         this.camera = null;
         this.renderer = null;
+
+        // Render diagnostics for bug reports and performance analysis
+        this.renderDiagnostics = {
+            backend: null,
+            adapterInfo: null,
+            deviceLimits: null,
+            requiredFeatures: [],
+            fallbackReason: null,
+            fallback: null,
+            activeApi: null,
+            rendererType: null,
+            nativeWebGPU: null,
+            selectionPreference: null,
+            frameTimings: [],
+            drawCalls: 0,
+            playerCount: 0,
+            viewportMode: 'host',
+            visualParity: 'verified'
+        };
 
         // Post-processing
         this.postProcessing = {
             enabled: true,
             composer: null,
             passes: {},
-            initError: null
+            initError: null,
+            unsupported: false
         };
 
         // Host-grade ladder. Local shared-screen hosts are the performance target;
@@ -134,6 +216,9 @@ class RenderSystem {
         this.activeGradeTier = 'host-native';
         this.resolutionScale = this.gradeTiers[this.activeGradeTier].resolutionScale;
         this.maxPixelRatio = MAX_RENDER_PIXEL_RATIO;
+        this._filmGrainOverride = null;
+        this._ditherStrengthOverride = null;
+        this._scanlineAmountOverride = null;
 
         // Lighting
         this.lights = {};
@@ -194,10 +279,45 @@ class RenderSystem {
             intensity: 0.15,          // Maximum shake intensity
             speedThreshold: 60,       // km/h - speed above which shake activates
             currentOffset: { x: 0, y: 0, z: 0 },
-            decayRate: 0.9,           // How quickly shake decays
-            collisionIntensity: 0.5,  // Extra shake on collision
+            decayRate: IMPACT_SHAKE_CURVE.decayPerFrame,
+            collisionIntensity: IMPACT_SHAKE_CURVE.heavyImpulse,
+            impactCap: IMPACT_SHAKE_CURVE.maxImpact,
+            impactCurve: IMPACT_SHAKE_CURVE,
             impact: 0,                // Current impact shake (decays to 0)
-            time: 0                   // Internal time counter for noise
+            time: 0,                  // Internal time counter for noise
+            diagnostics: {
+                lastImpulse: 0,
+                lastSeverity: 0,
+                lastSource: null,
+                peakImpact: 0,
+                samples: []
+            }
+        };
+        this.hitStopCameraPunch = {
+            framesRemaining: 0,
+            framesTotal: 0,
+            intensity: 0,
+            lastSource: null,
+            appliedFrames: 0,
+            lastOffset: { x: 0, y: 0, z: 0 }
+        };
+        this.transientSmashFlash = {
+            framesRemaining: 0,
+            framesTotal: 0,
+            intensity: 0,
+            lastSource: null,
+            appliedFrames: 0,
+            lastFrameIndex: 0,
+            lastValues: null,
+            // 5k3.17: accessibility reduce-effects gate. When true, heavy/
+            // elimination smashes never enable the CA/posterize/dither pulse.
+            reduceEffects: false,
+            diagnostics: {
+                triggeredCount: 0,
+                ignoredCount: 0,
+                suppressedCount: 0,
+                samples: []
+            }
         };
 
         // Headlight flicker effect
@@ -377,6 +497,81 @@ class RenderSystem {
     }
 
     /**
+     * Manual/accessibility override for animated film-grain strength — the seam
+     * P7.2 (5k3.37, reduce-effects / manual visual settings) wires into. Pass a
+     * 0..1 amount to force grain (0 = grain off for reduce-effects), or null to
+     * clear the override and follow the auto grade-tier ladder again.
+     * @param {number|null} amount
+     * @returns {RenderSystem}
+     */
+    setFilmGrainAmount(amount) {
+        if (amount === null || amount === undefined) {
+            this._filmGrainOverride = null;
+        } else {
+            this._filmGrainOverride = Math.max(0, Math.min(1, Number(amount) || 0));
+        }
+        this._applyColorGradingManualOverrides();
+        return this;
+    }
+
+    /**
+     * Manual/accessibility override for ordered dither strength. Pass null to
+     * clear the override and follow the active grade tier again.
+     * @param {number|null} amount
+     * @returns {RenderSystem}
+     */
+    setDitherStrength(amount) {
+        if (amount === null || amount === undefined) {
+            this._ditherStrengthOverride = null;
+        } else {
+            this._ditherStrengthOverride = Math.max(0, Math.min(1, Number(amount) || 0));
+        }
+        this._applyColorGradingManualOverrides();
+        return this;
+    }
+
+    /**
+     * Manual/accessibility override for scanline intensity. Pass null to clear
+     * the override and follow the active grade tier again.
+     * @param {number|null} amount
+     * @returns {RenderSystem}
+     */
+    setScanlineAmount(amount) {
+        if (amount === null || amount === undefined) {
+            this._scanlineAmountOverride = null;
+        } else {
+            this._scanlineAmountOverride = Math.max(0, Math.min(1, Number(amount) || 0));
+        }
+        this._applyColorGradingManualOverrides();
+        return this;
+    }
+
+    _applyColorGradingManualOverrides() {
+        const pass = this.postProcessing?.passes?.colorGrading;
+        if (!pass?.uniforms) return;
+
+        const tierConfig = this.gradeTiers[this.activeGradeTier] || this.gradeTiers['host-native'];
+        if (pass.uniforms.filmGrainAmount) {
+            pass.uniforms.filmGrainAmount.value =
+                this._filmGrainOverride != null
+                    ? this._filmGrainOverride
+                    : tierConfig?.filmGrainAmount ?? 0;
+        }
+        if (pass.uniforms.ditherStrength) {
+            pass.uniforms.ditherStrength.value =
+                this._ditherStrengthOverride != null
+                    ? this._ditherStrengthOverride
+                    : tierConfig?.ditherStrength ?? 0;
+        }
+        if (pass.uniforms.scanlineAmount) {
+            pass.uniforms.scanlineAmount.value =
+                this._scanlineAmountOverride != null
+                    ? this._scanlineAmountOverride
+                    : tierConfig?.scanlineAmount ?? 0;
+        }
+    }
+
+    /**
      * Override the current render resolution scale for diagnostics or future
      * adaptive quality control. Scale is clamped to the current native target.
      * @param {number} scale
@@ -397,6 +592,64 @@ class RenderSystem {
         this._resetFrameTimingSamples();
     }
 
+    _syncBackendDiagnostics() {
+        if (!this.rendererBackend) {
+            return { ...this.renderDiagnostics };
+        }
+
+        const backendDiagnostics = this.rendererBackend.getDiagnostics?.() || {};
+        this.renderDiagnostics.backend = backendDiagnostics.backend ?? this.rendererBackend.name ?? null;
+        this.renderDiagnostics.adapterInfo = backendDiagnostics.adapterInfo ?? null;
+        this.renderDiagnostics.deviceLimits = backendDiagnostics.deviceLimits ?? null;
+        this.renderDiagnostics.requiredFeatures = backendDiagnostics.requiredFeatures ?? [];
+        this.renderDiagnostics.supportedFeatures = backendDiagnostics.supportedFeatures ?? [];
+        this.renderDiagnostics.fallback = backendDiagnostics.fallback ?? null;
+        this.renderDiagnostics.fallbackReason =
+            backendDiagnostics.fallback?.reason
+            ?? backendDiagnostics.reason
+            ?? null;
+        this.renderDiagnostics.activeApi = backendDiagnostics.activeApi ?? null;
+        this.renderDiagnostics.rendererType =
+            backendDiagnostics.rendererType
+            ?? this.renderer?.constructor?.name
+            ?? null;
+        this.renderDiagnostics.nativeWebGPU = backendDiagnostics.nativeWebGPU ?? null;
+        this.renderDiagnostics.rendererInitialized =
+            backendDiagnostics.rendererInitialized
+            ?? this.renderer?.initialized
+            ?? null;
+        this.renderDiagnostics.selectionPreference = this.rendererBackendPreference
+            ? { ...this.rendererBackendPreference }
+            : null;
+        return { ...this.renderDiagnostics };
+    }
+
+    /**
+     * Return render diagnostics for bug reports and performance analysis.
+     * Includes backend selection, adapter info, device limits, and frame timing.
+     * @returns {Object}
+     */
+    getRenderDiagnostics() {
+        const diagnostics = this._syncBackendDiagnostics();
+        // Add current frame metrics
+        if (this.renderer?.info?.render) {
+            diagnostics.drawCalls = this.renderer.info.render.calls || 0;
+        }
+        diagnostics.frameTimings = this.frameTiming.averageRenderDurationMs
+            ? [this.frameTiming.averageRenderDurationMs]
+            : [];
+        return diagnostics;
+    }
+
+    /**
+     * Public render diagnostics (tone mapping, fog, grade, backend). Alias of
+     * getGradeDiagnostics used by design-language evidence specs (e.g. 5k3.7).
+     * @returns {Object}
+     */
+    getDiagnostics() {
+        return this.getGradeDiagnostics();
+    }
+
     /**
      * Return stable renderer metadata for perf/evidence capture.
      * @returns {Object}
@@ -409,6 +662,7 @@ class RenderSystem {
         const renderInfo = renderer?.info?.render || {};
         const memoryInfo = renderer?.info?.memory || {};
         const capabilities = renderer?.capabilities || {};
+        const backendDiagnostics = this.getRenderDiagnostics();
 
         return {
             activeTier: this.activeGradeTier,
@@ -421,9 +675,16 @@ class RenderSystem {
                 height: size.y ?? 0
             },
             backend: {
+                backendAdapter: this.rendererBackend?.name ?? 'unknown',
+                backendDiagnostics,
                 renderer: renderer?.isWebGLRenderer
                     ? 'WebGLRenderer'
-                    : renderer?.constructor?.name ?? null,
+                    : renderer?.isWebGPURenderer
+                        ? 'WebGPURenderer'
+                        : renderer?.constructor?.name ?? null,
+                activeApi: backendDiagnostics.activeApi ?? null,
+                nativeWebGPU: backendDiagnostics.nativeWebGPU ?? null,
+                fallback: backendDiagnostics.fallback ?? null,
                 isWebGL2: capabilities?.isWebGL2 ?? null,
                 precision: capabilities?.precision ?? null,
                 maxTextures: capabilities?.maxTextures ?? null,
@@ -436,7 +697,8 @@ class RenderSystem {
             },
             fog: {
                 enabled: !!scene?.fog,
-                density: scene?.fog?.density ?? null
+                density: scene?.fog?.density ?? null,
+                color: scene?.fog?.color?.getHex?.() ?? null
             },
             postProcessing: {
                 enabled: this.postProcessing.enabled,
@@ -445,14 +707,33 @@ class RenderSystem {
                 bloomEnabled: !!this.postProcessing.passes.bloom?.enabled,
                 bloomStrength: this.postProcessing.passes.bloom?.strength ?? null,
                 colorGradingEnabled: !!this.postProcessing.passes.colorGrading?.enabled,
+                colorGradingStyle: this.postProcessing.passes.colorGrading?.enabled
+                    ? 'skip-bin-arcade-posterize-dither'
+                    : null,
                 gradingIntensity: this.postProcessing.passes.colorGrading?.uniforms?.gradingIntensity?.value ?? null,
+                posterizeBandCount: this.postProcessing.passes.colorGrading?.uniforms?.posterizeBandCount?.value ?? null,
+                ditherStrength: this.postProcessing.passes.colorGrading?.uniforms?.ditherStrength?.value ?? null,
+                ditherOverride: this._ditherStrengthOverride ?? null,
+                ditherPattern: this.postProcessing.passes.colorGrading?.enabled ? 'bayer-4x4' : null,
+                scanlineAmount: this.postProcessing.passes.colorGrading?.uniforms?.scanlineAmount?.value ?? null,
+                scanlineOverride: this._scanlineAmountOverride ?? null,
                 vignetteAmount: this.postProcessing.passes.colorGrading?.uniforms?.vignetteAmount?.value ?? null,
+                filmGrainAmount: this.postProcessing.passes.colorGrading?.uniforms?.filmGrainAmount?.value ?? null,
+                filmGrainScale: this.postProcessing.passes.colorGrading?.uniforms?.filmGrainScale?.value ?? null,
+                filmGrainSpeed: this.postProcessing.passes.colorGrading?.uniforms?.filmGrainSpeed?.value ?? null,
+                filmGrainAnimated: !!(this.postProcessing.passes.colorGrading?.enabled
+                    && (this.postProcessing.passes.colorGrading?.uniforms?.filmGrainAmount?.value ?? 0) > 0),
+                filmGrainOverride: this._filmGrainOverride ?? null,
                 chromaticAberrationEnabled: !!this.postProcessing.passes.chromaticAberration?.enabled,
                 chromaticAberrationAmount: this.postProcessing.passes.chromaticAberration?.uniforms?.amount?.value ?? null
             },
             shadows: {
                 enabled: renderer?.shadowMap?.enabled ?? null,
-                type: this._getShadowMapTypeName(renderer?.shadowMap?.type)
+                type: this._getShadowMapTypeName(renderer?.shadowMap?.type),
+                // 5k3.9: full-scene soft shadows are replaced by per-car blob
+                // contact shadows. Report the mode so validators/diagnostics see
+                // contact/disabled, never PCFSoft.
+                mode: renderer?.shadowMap?.enabled ? 'full-scene' : 'contact-blob'
             },
             renderInfo: {
                 calls: renderInfo.calls ?? null,
@@ -477,6 +758,153 @@ class RenderSystem {
     }
 
     /**
+     * Toggle the optional per-material world warp across currently rendered
+     * scene materials. Presentation-only: it does not affect physics, input, or
+     * authoritative game state.
+     * @param {Object} [options]
+     * @returns {Object} material-warp diagnostics after applying the toggle
+     */
+    setMaterialWarpEnabled(options = {}) {
+        const enabled = Boolean(options.enabled);
+        const vertexSnapIntensity = enabled ? clamp01(options.vertexSnapIntensity ?? 0.35) : 0;
+        const affineIntensity = enabled ? clamp01(options.affineIntensity ?? 0.12) : 0;
+        const snapGridSize = clampPositive(options.snapGridSize ?? 0.5, 0.5);
+
+        this._forEachSceneMaterial((material) => {
+            const warp = material.userData?.skipBinWarp;
+            if (!warp || warp.exempt || !warp.eligible) {
+                return;
+            }
+            setLoFiWarpIntensity(material, {
+                ...warp,
+                enabled,
+                vertexSnapIntensity,
+                affineIntensity,
+                snapGridSize
+            });
+        });
+
+        return this.getMaterialWarpDiagnostics();
+    }
+
+    /**
+     * Count and sample material-warp state from the live scene.
+     * @returns {Object}
+     */
+    getMaterialWarpDiagnostics() {
+        const diagnostics = {
+            schema: 'jj.materialWarp.diagnostics.v1',
+            totalMaterials: 0,
+            hookInstalled: 0,
+            eligible: 0,
+            exempt: 0,
+            active: 0,
+            inactiveEligible: 0,
+            roles: {},
+            activeVertexSnapIntensity: 0,
+            activeAffineIntensity: 0,
+            activeSnapGridSize: null,
+            worldVertexDeltaMax: 0,
+            vehicleReadableActive: 0
+        };
+
+        this._forEachSceneMaterial((material, object) => {
+            const warp = material.userData?.skipBinWarp || null;
+            diagnostics.totalMaterials += 1;
+            if (material.userData?.skipBinWarpHookInstalled) {
+                diagnostics.hookInstalled += 1;
+            }
+            if (!warp) return;
+
+            const role = warp.role || 'unclassified';
+            diagnostics.roles[role] = diagnostics.roles[role] || {
+                total: 0,
+                eligible: 0,
+                exempt: 0,
+                active: 0
+            };
+            diagnostics.roles[role].total += 1;
+
+            if (warp.eligible) {
+                diagnostics.eligible += 1;
+                diagnostics.roles[role].eligible += 1;
+            }
+            if (warp.exempt) {
+                diagnostics.exempt += 1;
+                diagnostics.roles[role].exempt += 1;
+            }
+            if (warp.enabled) {
+                diagnostics.active += 1;
+                diagnostics.roles[role].active += 1;
+                diagnostics.activeVertexSnapIntensity = Math.max(
+                    diagnostics.activeVertexSnapIntensity,
+                    Number(warp.vertexSnapIntensity) || 0
+                );
+                diagnostics.activeAffineIntensity = Math.max(
+                    diagnostics.activeAffineIntensity,
+                    Number(warp.affineIntensity) || 0
+                );
+                diagnostics.activeSnapGridSize = Number(warp.snapGridSize) || diagnostics.activeSnapGridSize;
+                if (role === 'world' || role === 'decorative-prop') {
+                    diagnostics.worldVertexDeltaMax = Math.max(
+                        diagnostics.worldVertexDeltaMax,
+                        this._estimateWarpVertexDelta(object, warp)
+                    );
+                }
+                if (role === 'vehicle-readable') {
+                    diagnostics.vehicleReadableActive += 1;
+                }
+            } else if (warp.eligible) {
+                diagnostics.inactiveEligible += 1;
+            }
+        });
+
+        return diagnostics;
+    }
+
+    _forEachSceneMaterial(callback) {
+        if (!this.scene || typeof this.scene.traverse !== 'function') {
+            return;
+        }
+
+        this.scene.traverse((object) => {
+            const materials = object?.material
+                ? (Array.isArray(object.material) ? object.material : [object.material])
+                : [];
+            materials.forEach((material) => {
+                if (material) {
+                    callback(material, object);
+                }
+            });
+        });
+    }
+
+    _estimateWarpVertexDelta(object, warp) {
+        const position = object?.geometry?.attributes?.position;
+        const grid = Number(warp?.snapGridSize) || 0;
+        const intensity = Number(warp?.vertexSnapIntensity) || 0;
+        if (!position || grid <= 0 || intensity <= 0) {
+            return 0;
+        }
+
+        const count = Math.min(position.count || 0, 128);
+        let maxDelta = 0;
+        for (let i = 0; i < count; i++) {
+            const x = position.getX(i);
+            const y = position.getY(i);
+            const z = position.getZ(i);
+            const sx = Math.floor(x / grid + 0.5) * grid;
+            const sy = Math.floor(y / grid + 0.5) * grid;
+            const sz = Math.floor(z / grid + 0.5) * grid;
+            const dx = (sx - x) * intensity;
+            const dy = (sy - y) * intensity;
+            const dz = (sz - z) * intensity;
+            maxDelta = Math.max(maxDelta, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        }
+        return maxDelta;
+    }
+
+    /**
      * Initialize Three.js
      * @returns {Promise<void>}
      */
@@ -485,42 +913,70 @@ class RenderSystem {
 
         console.log('RenderSystem: Initializing...');
 
+        // Select and initialize renderer backend (WebGPU-first, WebGL fallback)
+        try {
+            this.rendererBackendPreference = this._resolveRendererBackendPreference();
+            this.rendererBackend = await selectRendererBackend(this.rendererBackendPreference);
+            console.log(`RenderSystem: Selected backend: ${this.rendererBackend.name}`);
+        } catch (error) {
+            console.error('RenderSystem: Failed to select renderer backend:', error);
+            throw new Error('No compatible renderer backend available');
+        }
+
+        // Capture backend diagnostics
+        this._syncBackendDiagnostics();
+
         // Create scene
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a0f0a);  // Midnight (Sunset Neon theme)
 
-        // Add fog for atmosphere (FogExp2 for exponential density)
-        this.scene.fog = new THREE.FogExp2(0x1a0f0a, 0.008);
-
-        // Create sky dome
+        // Create sky dome first so the fog colour can match its horizon band.
         this._createSkyDome();
 
-        // Create camera
+        // Fog (5k3.7): FogExp2 whose colour equals the sky-dome horizon band, so
+        // the world dissolves into the sky with no hard seam at the draw edge.
+        const horizonColor = this.skyDome?.material?.uniforms?.horizonColor?.value;
+        this.scene.fog = new THREE.FogExp2(horizonColor ? horizonColor.getHex() : 0x4a2510, 0.008);
+
+        // Create camera. Draw distance (5k3.7) is deliberately short — capped well
+        // under the legacy 1000 — but still larger than the camera-locked sky dome
+        // (radius 500) so the dome never clips.
         const aspect = window.innerWidth / window.innerHeight;
+        const cameraFar = Math.min(this.cameraConfig.far || SHORT_DRAW_DISTANCE, SHORT_DRAW_DISTANCE);
         this.camera = new THREE.PerspectiveCamera(
             this.cameraConfig.fov || this.baseFOV,
             aspect,
             this.cameraConfig.near || 0.1,
-            this.cameraConfig.far || 1000
+            cameraFar
         );
         this.camera.position.set(0, 20, 30);
         this.camera.lookAt(0, 0, 0);
 
-        // Create renderer
-        // preserveDrawingBuffer keeps the WebGL back buffer readable so the bug
+        // Create renderer using selected backend
+        // preserveDrawingBuffer keeps the buffer readable so the bug
         // reporter can grab a screenshot via canvas.toDataURL() at any time.
-        this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: false,
-            preserveDrawingBuffer: true
-        });
+        try {
+            this.renderer = await createBackendRenderer(this.rendererBackend, {
+                antialias: true,
+                alpha: false,
+                preserveDrawingBuffer: true
+            });
+            this._syncBackendDiagnostics();
+            console.log(`RenderSystem: Renderer created (${this.rendererBackend.name})`);
+        } catch (error) {
+            console.error('RenderSystem: Failed to create renderer:', error);
+            throw new Error(`Failed to create ${this.rendererBackend.name} renderer: ${error.message}`);
+        }
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.toneMapping = THREE.NoToneMapping;
         this.renderer.toneMappingExposure = 1;
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // 5k3.9: blob contact shadows replace full-scene soft shadow maps.
+        this.renderer.shadowMap.enabled = false;
+        this.renderer.shadowMap.type = THREE.BasicShadowMap;
         this._applyPixelatedUpscale();
         this._applyResolutionScale();
+        this._emitTelemetryWebGLInit();
 
         // Add to container
         this.container.appendChild(this.renderer.domElement);
@@ -553,18 +1009,44 @@ class RenderSystem {
         // Handle window resize (bound once so destroy() can remove it)
         this._boundOnResize = this._onResize.bind(this);
         window.addEventListener('resize', this._boundOnResize);
+        this._boundOnContextLost = this._onContextLost.bind(this);
+        const canvas = this.renderer?.domElement;
+        canvas?.addEventListener?.('webglcontextlost', this._boundOnContextLost, false);
 
         // Impact shake on crashes and explosions
         if (this.eventBus) {
             this.eventBus.on('damage:vehicleCollision', (data) => {
-                const strength = Math.min(1, (data?.damage || 10) / 40);
-                this.addImpactShake(this.cameraShake.collisionIntensity * strength);
+                const severity = clamp01((Number(data?.damage) || 0) / 40);
+                this.addImpactShake({
+                    damage: data?.damage ?? 10,
+                    source: 'damage:vehicleCollision'
+                });
+                this.triggerTransientSmashFlash({
+                    severity,
+                    source: 'damage:vehicleCollision'
+                });
             });
-            this.eventBus.on('weapon:explosion', () => {
-                this.addImpactShake(this.cameraShake.collisionIntensity);
+            this.eventBus.on('weapon:explosion', (data) => {
+                this.addImpactShake({
+                    severity: data?.severity ?? 0.8,
+                    source: 'weapon:explosion'
+                });
+                this.triggerTransientSmashFlash({
+                    severity: data?.severity ?? 0.8,
+                    source: 'weapon:explosion'
+                });
             });
             this.eventBus.on('damage:destroyed', () => {
-                this.addImpactShake(this.cameraShake.collisionIntensity * 1.5);
+                this.addImpactShake({
+                    severity: 1,
+                    elimination: true,
+                    source: 'damage:destroyed'
+                });
+                this.triggerTransientSmashFlash({
+                    severity: 1,
+                    elimination: true,
+                    source: 'damage:destroyed'
+                });
             });
         }
 
@@ -573,12 +1055,310 @@ class RenderSystem {
         console.log('RenderSystem: Ready');
     }
 
+    _emitTelemetryWebGLInit() {
+        const telemetry = getBrowserTelemetry?.();
+        if (!telemetry?.capture) {
+            return;
+        }
+        const backendDiagnostics = this._syncBackendDiagnostics();
+        telemetry.capture('perf:webgl:init', {
+            backend: this.rendererBackend?.name || 'unknown',
+            activeApi: backendDiagnostics.activeApi || null,
+            nativeWebGPU: backendDiagnostics.nativeWebGPU ?? null,
+            backendGrade: this.activeGradeTier || 'host-native',
+            isWebGL2: !!this.renderer?.isWebGL2,
+            drawingBufferWidth: this.renderer?.domElement?.width || null,
+            drawingBufferHeight: this.renderer?.domElement?.height || null,
+            ...(getRuntimeTelemetryContext ? getRuntimeTelemetryContext() : {}),
+        });
+    }
+
+    _resolveRendererBackendPreference() {
+        const preference = {
+            // Keep WebGL as the default host path until the WebGPU compositor has
+            // parity with the existing visual-effects stack. WebGPU remains an
+            // explicit first-class backend via query/localStorage/diagnostics.
+            preferWebGPU: false,
+            forceWebGL: true,
+            killswitch: false,
+            source: 'default-webgl-visual-effects-parity'
+        };
+
+        if (typeof window === 'undefined') {
+            return preference;
+        }
+
+        const params = new URLSearchParams(window.location?.search || '');
+        const queryValue = (
+            params.get('renderer')
+            || params.get('renderBackend')
+            || params.get('backend')
+            || ''
+        ).toLowerCase();
+        const webgpuFlag = (params.get('webgpu') || '').toLowerCase();
+        const forceWebGLFlag = (params.get('forceWebGL') || params.get('force-webgl') || '').toLowerCase();
+        const disableWebGPUFlag = (params.get('disableWebGPU') || params.get('disable-webgpu') || '').toLowerCase();
+        const globalPreference = String(window.__JJ_RENDERER_BACKEND__ || '').toLowerCase();
+        let storedPreference = '';
+        try {
+            storedPreference = String(window.localStorage?.getItem('jjRendererBackend') || '').toLowerCase();
+        } catch (e) {
+            storedPreference = '';
+        }
+
+        const requested = queryValue || webgpuFlag || forceWebGLFlag || disableWebGPUFlag || globalPreference || storedPreference;
+        if (queryValue === 'webgpu' || webgpuFlag === '1' || webgpuFlag === 'true' || globalPreference === 'webgpu' || storedPreference === 'webgpu') {
+            return {
+                preferWebGPU: true,
+                forceWebGL: false,
+                killswitch: false,
+                source: queryValue === 'webgpu' || webgpuFlag ? 'query-webgpu' : 'stored-webgpu'
+            };
+        }
+
+        if (
+            queryValue === 'webgl'
+            || queryValue === 'webgl2'
+            || forceWebGLFlag === '1'
+            || forceWebGLFlag === 'true'
+            || disableWebGPUFlag === '1'
+            || disableWebGPUFlag === 'true'
+            || globalPreference === 'webgl'
+            || storedPreference === 'webgl'
+        ) {
+            return {
+                preferWebGPU: false,
+                forceWebGL: true,
+                killswitch: disableWebGPUFlag === '1' || disableWebGPUFlag === 'true',
+                source: requested ? 'explicit-webgl' : preference.source
+            };
+        }
+
+        return preference;
+    }
+
+    _onContextLost(event = {}) {
+        event.preventDefault?.();
+        const telemetry = getBrowserTelemetry?.();
+        if (telemetry?.capture) {
+            telemetry.capture('perf:webgl:context_lost', {
+                backend: this.rendererBackend?.name || 'unknown',
+                reason: String(event?.reason || 'unknown'),
+                ...(getRuntimeTelemetryContext ? getRuntimeTelemetryContext() : {})
+            });
+        }
+        if (typeof window !== 'undefined' && window.__JJ_TELEMETRY__?.captureWebGLContextLoss) {
+            window.__JJ_TELEMETRY__.captureWebGLContextLoss(event, {
+                source: 'RenderSystem',
+            });
+        }
+    }
+
     /**
-     * Add a one-off impact shake (decays automatically)
-     * @param {number} amount - Shake intensity to add
+     * Add a one-off impact shake (decays automatically). Accepts the legacy
+     * numeric impulse path plus structured impact data for severity diagnostics.
+     * @param {number|Object} impact - Shake impulse or impact descriptor
      */
-    addImpactShake(amount) {
-        this.cameraShake.impact = Math.min(1.2, this.cameraShake.impact + amount);
+    addImpactShake(impact) {
+        const resolved = this._resolveImpactShakeImpulse(impact);
+        if (resolved.impulse <= 0) return resolved;
+        this.cameraShake.impact = Math.min(
+            this.cameraShake.impactCap ?? IMPACT_SHAKE_CURVE.maxImpact,
+            this.cameraShake.impact + resolved.impulse
+        );
+        this.cameraShake.diagnostics.lastImpulse = resolved.impulse;
+        this.cameraShake.diagnostics.lastSeverity = resolved.severity;
+        this.cameraShake.diagnostics.lastSource = resolved.source;
+        this.cameraShake.diagnostics.peakImpact = Math.max(
+            this.cameraShake.diagnostics.peakImpact,
+            this.cameraShake.impact
+        );
+        this._recordImpactShakeSample(this.cameraShake.impact);
+        return resolved;
+    }
+
+    getImpactShakeDiagnostics() {
+        return {
+            enabled: this.cameraShake.enabled,
+            impact: this.cameraShake.impact,
+            decayRate: this.cameraShake.decayRate,
+            impactCap: this.cameraShake.impactCap,
+            curve: { ...this.cameraShake.impactCurve },
+            diagnostics: {
+                ...this.cameraShake.diagnostics,
+                samples: [...this.cameraShake.diagnostics.samples]
+            }
+        };
+    }
+
+    sampleImpactShakeDecay(impact, frameCount = 12) {
+        const resolved = this._resolveImpactShakeImpulse(impact);
+        const samples = [];
+        let value = resolved.impulse;
+        for (let frame = 0; frame <= frameCount; frame++) {
+            samples.push({
+                frame,
+                impact: Number(value.toFixed(6))
+            });
+            value = this._decayImpactShakeValue(value, 1 / 60);
+        }
+        return {
+            resolved,
+            samples
+        };
+    }
+
+    /**
+     * Trigger a short render-only hit-stop camera punch. This is separate from
+     * physics/update timing and never changes global simulation speed.
+     * @param {Object} options
+     * @param {number} options.frames
+     * @param {number} options.intensity
+     * @param {string} [options.source]
+     */
+    triggerHitStopCameraPunch(options = {}) {
+        const frames = Math.max(0, Math.min(3, Math.round(options.frames || 0)));
+        if (frames <= 0) return;
+        const intensity = Math.max(0, Math.min(1, Number(options.intensity) || 0));
+        this.hitStopCameraPunch.framesRemaining = Math.max(
+            this.hitStopCameraPunch.framesRemaining,
+            frames
+        );
+        this.hitStopCameraPunch.framesTotal = Math.max(
+            this.hitStopCameraPunch.framesTotal,
+            frames
+        );
+        this.hitStopCameraPunch.intensity = Math.max(this.hitStopCameraPunch.intensity, intensity);
+        this.hitStopCameraPunch.lastSource = options.source || 'hit-stop';
+    }
+
+    getHitStopRenderDiagnostics() {
+        return {
+            framesRemaining: this.hitStopCameraPunch.framesRemaining,
+            framesTotal: this.hitStopCameraPunch.framesTotal,
+            intensity: this.hitStopCameraPunch.intensity,
+            lastSource: this.hitStopCameraPunch.lastSource,
+            appliedFrames: this.hitStopCameraPunch.appliedFrames,
+            lastOffset: { ...this.hitStopCameraPunch.lastOffset },
+            physicsTimeScale: 1
+        };
+    }
+
+    /**
+     * Enable/disable the accessibility reduce-effects gate for the transient
+     * smash flash (the 5k3.37 manual/a11y seam wires this). When enabled, any
+     * in-flight pulse is cleared to neutral immediately and future triggers are
+     * suppressed. Clearing it restores the normal pulse behavior.
+     * @param {boolean} enabled
+     * @returns {RenderSystem}
+     */
+    setTransientSmashFlashReduceEffects(enabled) {
+        this.transientSmashFlash.reduceEffects = !!enabled;
+        if (this.transientSmashFlash.reduceEffects) {
+            // Force neutral: kill any active pulse so nothing lingers.
+            this.transientSmashFlash.framesRemaining = 0;
+            this.transientSmashFlash.framesTotal = 0;
+            this.transientSmashFlash.intensity = 0;
+        }
+        return this;
+    }
+
+    triggerTransientSmashFlash(options = {}) {
+        const curve = TRANSIENT_SMASH_FLASH_CURVE;
+        const severity = options.elimination ? 1 : clamp01(options.severity);
+
+        // 5k3.17 reduce-effects gate: suppress the flash entirely (even heavy /
+        // elimination). Return triggered=false + reason, and keep the pulse neutral.
+        if (this.transientSmashFlash.reduceEffects) {
+            this.transientSmashFlash.framesRemaining = 0;
+            this.transientSmashFlash.framesTotal = 0;
+            this.transientSmashFlash.intensity = 0;
+            this.transientSmashFlash.diagnostics.suppressedCount += 1;
+            return {
+                triggered: false,
+                severity,
+                reason: 'reduce-effects'
+            };
+        }
+
+        if (severity < curve.minSeverity) {
+            this.transientSmashFlash.diagnostics.ignoredCount += 1;
+            return {
+                triggered: false,
+                severity,
+                reason: 'below-threshold'
+            };
+        }
+
+        const intensity = clamp01(options.intensity ?? severity);
+        const frames = Math.max(1, Math.min(
+            curve.maxFrames,
+            Math.round(options.frames ?? (options.elimination ? curve.maxFrames : curve.frames))
+        ));
+
+        this.transientSmashFlash.framesRemaining = Math.max(
+            this.transientSmashFlash.framesRemaining,
+            frames
+        );
+        this.transientSmashFlash.framesTotal = Math.max(
+            this.transientSmashFlash.framesTotal,
+            frames
+        );
+        this.transientSmashFlash.intensity = Math.max(this.transientSmashFlash.intensity, intensity);
+        this.transientSmashFlash.lastSource = options.source || 'smash-flash';
+        this.transientSmashFlash.diagnostics.triggeredCount += 1;
+
+        return {
+            triggered: true,
+            severity,
+            intensity: this.transientSmashFlash.intensity,
+            frames: this.transientSmashFlash.framesRemaining,
+            source: this.transientSmashFlash.lastSource
+        };
+    }
+
+    getTransientSmashFlashDiagnostics() {
+        return {
+            framesRemaining: this.transientSmashFlash.framesRemaining,
+            framesTotal: this.transientSmashFlash.framesTotal,
+            intensity: this.transientSmashFlash.intensity,
+            lastSource: this.transientSmashFlash.lastSource,
+            appliedFrames: this.transientSmashFlash.appliedFrames,
+            lastFrameIndex: this.transientSmashFlash.lastFrameIndex,
+            lastValues: this.transientSmashFlash.lastValues
+                ? { ...this.transientSmashFlash.lastValues }
+                : null,
+            curve: { ...TRANSIENT_SMASH_FLASH_CURVE },
+            diagnostics: {
+                ...this.transientSmashFlash.diagnostics,
+                samples: this.transientSmashFlash.diagnostics.samples.map((sample) => ({ ...sample }))
+            },
+            physicsTimeScale: 1
+        };
+    }
+
+    sampleTransientSmashFlash(options = {}, frameCount = 5) {
+        const render = new RenderSystem({ eventBus: null, container: this.container || {} });
+        render.postProcessing = {
+            enabled: true,
+            composer: null,
+            passes: this._createTransientSmashFlashTestPasses()
+        };
+        render.activeGradeTier = this.activeGradeTier;
+        render.gradeTiers = this.gradeTiers;
+        // Mirror the reduce-effects gate onto the sampled instance so the
+        // deterministic sampler faithfully reflects this instance's state.
+        render.setTransientSmashFlashReduceEffects(this.transientSmashFlash.reduceEffects);
+        const triggerResult = render.triggerTransientSmashFlash(options);
+        const samples = [];
+        for (let frame = 0; frame < frameCount; frame++) {
+            samples.push(render._applyTransientSmashFlash());
+        }
+        return {
+            triggerResult,
+            trigger: render.getTransientSmashFlashDiagnostics(),
+            samples
+        };
     }
 
     /**
@@ -588,6 +1368,13 @@ class RenderSystem {
      */
     async _initPostProcessing() {
         try {
+            if (this.renderer?.isWebGPURenderer && this.renderer?.isWebGLRenderer !== true) {
+                this.postProcessing.initError = 'Post-processing compositor is WebGL-only for this renderer path';
+                this.postProcessing.unsupported = true;
+                this.postProcessing.enabled = false;
+                return;
+            }
+
             // Import post-processing modules (Vite resolves from node_modules)
             const { EffectComposer } = await import('three/examples/jsm/postprocessing/EffectComposer.js');
             const { RenderPass } = await import('three/examples/jsm/postprocessing/RenderPass.js');
@@ -613,16 +1400,24 @@ class RenderSystem {
             this.postProcessing.composer.addPass(bloomPass);
             this.postProcessing.passes.bloom = bloomPass;
 
-            // Add color grading + vignette pass (after bloom)
+            // Add posterize + ordered dither grade pass (after bloom)
             try {
                 const { ColorGradingShader } = await import('../shaders/ColorGradingShader.js');
                 const colorGradingPass = new ShaderPass(ColorGradingShader);
-                colorGradingPass.uniforms.gradingIntensity.value = 0.5;
+                colorGradingPass.uniforms.gradingIntensity.value = 0.7;
+                colorGradingPass.uniforms.posterizeBandCount.value = 7;
+                colorGradingPass.uniforms.ditherStrength.value = 0.55;
+                colorGradingPass.uniforms.scanlineAmount.value = 0.08;
                 colorGradingPass.uniforms.vignetteAmount.value = 0.3;
+                // Animated film grain seed values; _applyGradeTierSettings sets the
+                // per-tier amount and _renderScene advances `time` each frame.
+                colorGradingPass.uniforms.filmGrainAmount.value = 0.12;
+                colorGradingPass.uniforms.filmGrainScale.value = 1.5;
+                colorGradingPass.uniforms.filmGrainSpeed.value = 12.0;
                 this.postProcessing.composer.addPass(colorGradingPass);
                 this.postProcessing.passes.colorGrading = colorGradingPass;
             } catch (error) {
-                console.warn('RenderSystem: Failed to load ColorGradingShader, skipping color grading:', error);
+                console.warn('RenderSystem: Failed to load ColorGradingShader, skipping posterize grade:', error);
             }
 
             // Add chromatic aberration pass (after color grading)
@@ -683,9 +1478,13 @@ class RenderSystem {
         // Custom shader material for gradient sky
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
-                topColor: { value: new THREE.Color(0x6a3015) },     // Sunset Peak (burnt orange)
-                bottomColor: { value: new THREE.Color(0x0f0a1a) },  // Sky Base (deep indigo)
-                horizonColor: { value: new THREE.Color(0x4a2510) }, // Horizon Glow (warm orange)
+                // Skybox in the world palette (5k3.30): flat gradient dome, no HDRI.
+                // Dusk zenith -> warm rust horizon band -> ink base. The horizon
+                // band doubles as the FogExp2 colour (5k3.7) so world dissolves into
+                // sky with no seam.
+                topColor: { value: new THREE.Color(0x3A3550) },     // DUSK
+                bottomColor: { value: new THREE.Color(0x14110F) },  // INK
+                horizonColor: { value: new THREE.Color(0x7A4A2E) }, // RUST (horizon glow)
                 offset: { value: 33 },
                 exponent: { value: 0.6 }
             },
@@ -760,6 +1559,13 @@ class RenderSystem {
 
         // Update camera if following target
         this._updateCamera(dt);
+
+        // Camera-lock the sky dome (5k3.7): keep its centre on the camera so the
+        // short far-plane always encloses it, even on large procedural circuits
+        // where the camera roams far from the origin.
+        if (this.skyDome) {
+            this.skyDome.position.copy(this.camera.position);
+        }
 
         // Update name tag positions
         this._updateNameTags();
@@ -981,11 +1787,15 @@ class RenderSystem {
      * @param {number} dt - Delta time in seconds
      */
     _applyCameraShake(dt) {
-        if (!this.cameraShake.enabled) return;
+        if (!this.cameraShake.enabled) {
+            this._applyHitStopCameraPunch();
+            return;
+        }
 
-        // Impact shake (collisions/explosions) decays each frame
+        // Impact shake (collisions/explosions) decays each frame.
         if (this.cameraShake.impact > 0.001) {
-            this.cameraShake.impact *= Math.pow(this.cameraShake.decayRate, dt * 60);
+            this.cameraShake.impact = this._decayImpactShakeValue(this.cameraShake.impact, dt);
+            this._recordImpactShakeSample(this.cameraShake.impact);
         } else {
             this.cameraShake.impact = 0;
         }
@@ -999,6 +1809,7 @@ class RenderSystem {
             this.cameraShake.currentOffset.x *= this.cameraShake.decayRate;
             this.cameraShake.currentOffset.y *= this.cameraShake.decayRate;
             this.cameraShake.currentOffset.z *= this.cameraShake.decayRate;
+            this._applyHitStopCameraPunch();
             return;
         }
 
@@ -1027,6 +1838,204 @@ class RenderSystem {
         this.camera.position.x += this.cameraShake.currentOffset.x;
         this.camera.position.y += this.cameraShake.currentOffset.y;
         this.camera.position.z += this.cameraShake.currentOffset.z;
+
+        this._applyHitStopCameraPunch();
+    }
+
+    _resolveImpactShakeImpulse(impact) {
+        const curve = this.cameraShake?.impactCurve || IMPACT_SHAKE_CURVE;
+        if (typeof impact === 'number') {
+            const impulse = Math.max(0, Number(impact) || 0);
+            return {
+                impulse: Math.min(curve.maxImpact, impulse),
+                severity: clamp01(impulse / Math.max(curve.eliminationImpulse, 0.001)),
+                source: 'legacy'
+            };
+        }
+
+        const descriptor = impact || {};
+        const severity = descriptor.elimination
+            ? 1
+            : clamp01(descriptor.severity ?? ((Number(descriptor.damage) || 0) / 40));
+        let impulse = 0;
+        if (descriptor.elimination || severity >= curve.heavyThreshold) {
+            const t = descriptor.elimination
+                ? 1
+                : (severity - curve.heavyThreshold) / Math.max(0.001, 1 - curve.heavyThreshold);
+            impulse = curve.heavyImpulse + (curve.eliminationImpulse - curve.heavyImpulse) * clamp01(t);
+        } else if (severity >= curve.mediumThreshold) {
+            const t = (severity - curve.mediumThreshold) /
+                Math.max(0.001, curve.heavyThreshold - curve.mediumThreshold);
+            impulse = curve.mediumImpulse + (curve.heavyImpulse - curve.mediumImpulse) * clamp01(t);
+        } else if (severity >= curve.lightThreshold) {
+            const t = (severity - curve.lightThreshold) /
+                Math.max(0.001, curve.mediumThreshold - curve.lightThreshold);
+            impulse = curve.baseImpulse + (curve.mediumImpulse - curve.baseImpulse) * clamp01(t);
+        }
+
+        return {
+            impulse: Math.min(curve.maxImpact, Math.max(0, impulse)),
+            severity,
+            source: descriptor.source || 'impact'
+        };
+    }
+
+    _decayImpactShakeValue(value, dt) {
+        if (value <= 0.001) return 0;
+        const decayRate = this.cameraShake?.decayRate ?? IMPACT_SHAKE_CURVE.decayPerFrame;
+        return value * Math.pow(decayRate, Math.max(0, dt) * 60);
+    }
+
+    _recordImpactShakeSample(value) {
+        const samples = this.cameraShake?.diagnostics?.samples;
+        if (!samples) return;
+        samples.push(Number(value.toFixed(6)));
+        if (samples.length > 18) {
+            samples.shift();
+        }
+    }
+
+    _applyHitStopCameraPunch() {
+        if (this.hitStopCameraPunch.framesRemaining <= 0) {
+            this.hitStopCameraPunch.lastOffset = { x: 0, y: 0, z: 0 };
+            return;
+        }
+
+        const progress = this.hitStopCameraPunch.framesRemaining /
+            Math.max(1, this.hitStopCameraPunch.framesTotal);
+        const amount = this.hitStopCameraPunch.intensity * (progress * progress);
+        const offset = {
+            x: 0,
+            y: amount * IMPACT_SHAKE_CURVE.hitStopPunchY,
+            z: amount * IMPACT_SHAKE_CURVE.hitStopPunchZ
+        };
+        this.camera.position.x += offset.x;
+        this.camera.position.y += offset.y;
+        this.camera.position.z += offset.z;
+        this.hitStopCameraPunch.lastOffset = offset;
+        this.hitStopCameraPunch.framesRemaining -= 1;
+        this.hitStopCameraPunch.appliedFrames += 1;
+        if (this.hitStopCameraPunch.framesRemaining <= 0) {
+            this.hitStopCameraPunch.framesRemaining = 0;
+            this.hitStopCameraPunch.intensity = 0;
+        }
+    }
+
+    _applyTransientSmashFlash() {
+        const colorGradingPass = this.postProcessing?.passes?.colorGrading || null;
+        const chromaticAberrationPass = this.postProcessing?.passes?.chromaticAberration || null;
+        const tierConfig = this.gradeTiers[this.activeGradeTier] || this.gradeTiers['host-native'];
+        const baseValues = {
+            chromaticAmount: tierConfig.chromaticAberrationAmount ?? 0,
+            chromaticEnabled: !!(tierConfig.postProcessing && tierConfig.chromaticAberrationEnabled),
+            gradingIntensity: tierConfig.gradingIntensity ?? 0,
+            posterizeBandCount: tierConfig.posterizeBandCount ?? 0,
+            ditherStrength: tierConfig.ditherStrength ?? 0
+        };
+
+        if (this.transientSmashFlash.framesRemaining <= 0) {
+            const frameIndex = this.transientSmashFlash.lastFrameIndex + 1;
+            this._applyTransientSmashFlashValues(baseValues, 0);
+            this.transientSmashFlash.lastValues = {
+                ...baseValues,
+                pulseIntensity: 0
+            };
+            this.transientSmashFlash.lastFrameIndex = frameIndex;
+            return {
+                frameIndex,
+                pulseIntensity: 0,
+                ...baseValues
+            };
+        }
+
+        const curve = TRANSIENT_SMASH_FLASH_CURVE;
+        const frameIndex = this.transientSmashFlash.appliedFrames + 1;
+        const progress = this.transientSmashFlash.framesRemaining /
+            Math.max(1, this.transientSmashFlash.framesTotal);
+        const pulseIntensity = this.transientSmashFlash.intensity * progress;
+        const values = {
+            chromaticEnabled: true,
+            chromaticAmount: Math.min(
+                curve.maxChromaticAmount,
+                Math.max(baseValues.chromaticAmount, curve.chromaticAmount * pulseIntensity)
+            ),
+            gradingIntensity: Math.min(1, baseValues.gradingIntensity + curve.gradingBoost * pulseIntensity),
+            posterizeBandCount: Math.max(
+                2,
+                Math.round(baseValues.posterizeBandCount - curve.posterizeBandDrop * pulseIntensity)
+            ),
+            ditherStrength: Math.min(1, baseValues.ditherStrength + curve.ditherBoost * pulseIntensity),
+            pulseIntensity
+        };
+
+        this._applyTransientSmashFlashValues(values, pulseIntensity);
+        this.transientSmashFlash.framesRemaining -= 1;
+        this.transientSmashFlash.appliedFrames += 1;
+        this.transientSmashFlash.lastFrameIndex = frameIndex;
+        this.transientSmashFlash.lastValues = { ...values };
+        this.transientSmashFlash.diagnostics.samples.push({
+            frameIndex,
+            source: this.transientSmashFlash.lastSource,
+            ...values
+        });
+        if (this.transientSmashFlash.diagnostics.samples.length > 16) {
+            this.transientSmashFlash.diagnostics.samples.shift();
+        }
+        if (this.transientSmashFlash.framesRemaining <= 0) {
+            this.transientSmashFlash.framesRemaining = 0;
+            this.transientSmashFlash.intensity = 0;
+        }
+
+        return {
+            frameIndex,
+            ...values
+        };
+    }
+
+    _applyTransientSmashFlashValues(values, pulseIntensity) {
+        const colorGradingPass = this.postProcessing?.passes?.colorGrading || null;
+        if (colorGradingPass?.uniforms) {
+            if (colorGradingPass.uniforms.gradingIntensity) {
+                colorGradingPass.uniforms.gradingIntensity.value = values.gradingIntensity;
+            }
+            if (colorGradingPass.uniforms.posterizeBandCount) {
+                colorGradingPass.uniforms.posterizeBandCount.value = values.posterizeBandCount;
+            }
+            if (colorGradingPass.uniforms.ditherStrength) {
+                colorGradingPass.uniforms.ditherStrength.value =
+                    this._ditherStrengthOverride != null
+                        ? this._ditherStrengthOverride
+                        : values.ditherStrength;
+            }
+        }
+
+        const chromaticAberrationPass = this.postProcessing?.passes?.chromaticAberration || null;
+        if (chromaticAberrationPass?.uniforms?.amount) {
+            chromaticAberrationPass.enabled = values.chromaticEnabled || pulseIntensity > 0;
+            chromaticAberrationPass.uniforms.amount.value = values.chromaticAmount;
+        }
+    }
+
+    _createTransientSmashFlashTestPasses() {
+        return {
+            colorGrading: {
+                enabled: true,
+                uniforms: {
+                    gradingIntensity: { value: this.gradeTiers[this.activeGradeTier]?.gradingIntensity ?? 0 },
+                    posterizeBandCount: { value: this.gradeTiers[this.activeGradeTier]?.posterizeBandCount ?? 0 },
+                    ditherStrength: { value: this.gradeTiers[this.activeGradeTier]?.ditherStrength ?? 0 },
+                    scanlineAmount: { value: this.gradeTiers[this.activeGradeTier]?.scanlineAmount ?? 0 },
+                    vignetteAmount: { value: this.gradeTiers[this.activeGradeTier]?.vignetteAmount ?? 0 },
+                    filmGrainAmount: { value: this.gradeTiers[this.activeGradeTier]?.filmGrainAmount ?? 0 }
+                }
+            },
+            chromaticAberration: {
+                enabled: false,
+                uniforms: {
+                    amount: { value: 0 }
+                }
+            }
+        };
     }
 
     /**
@@ -1540,8 +2549,14 @@ class RenderSystem {
      * @private
      */
     _renderScene() {
+        this._applyTransientSmashFlash();
         if (this.postProcessing.enabled && this.postProcessing.composer) {
             try {
+                // Advance the film-grain animation clock (seconds). No logging.
+                const grade = this.postProcessing.passes.colorGrading;
+                if (grade && grade.uniforms.time) {
+                    grade.uniforms.time.value = nowMs() / 1000;
+                }
                 this.postProcessing.composer.render();
                 return;
             } catch (error) {
@@ -1566,7 +2581,13 @@ class RenderSystem {
         if (this.scene) {
             if (tierConfig.fogEnabled) {
                 if (!this.scene.fog) {
-                    this.scene.fog = new THREE.FogExp2(DEFAULT_FOG_COLOR, tierConfig.fogDensity);
+                    // Keep fog on the sky-dome horizon band (5k3.7) so a tier
+                    // toggle never reintroduces a hard horizon seam.
+                    const horizonColor = this.skyDome?.material?.uniforms?.horizonColor?.value;
+                    this.scene.fog = new THREE.FogExp2(
+                        horizonColor ? horizonColor.getHex() : DEFAULT_FOG_COLOR,
+                        tierConfig.fogDensity
+                    );
                 }
                 this.scene.fog.density = tierConfig.fogDensity;
             } else {
@@ -1592,7 +2613,9 @@ class RenderSystem {
         if (colorGradingPass) {
             colorGradingPass.enabled = !!(tierConfig.postProcessing && tierConfig.colorGradingEnabled);
             colorGradingPass.uniforms.gradingIntensity.value = tierConfig.gradingIntensity;
+            colorGradingPass.uniforms.posterizeBandCount.value = tierConfig.posterizeBandCount;
             colorGradingPass.uniforms.vignetteAmount.value = tierConfig.vignetteAmount;
+            this._applyColorGradingManualOverrides();
         }
 
         const chromaticAberrationPass = this.postProcessing.passes.chromaticAberration;
@@ -1601,7 +2624,7 @@ class RenderSystem {
             chromaticAberrationPass.uniforms.amount.value = tierConfig.chromaticAberrationAmount;
         }
 
-        this.postProcessing.enabled = tierConfig.postProcessing;
+        this.postProcessing.enabled = !this.postProcessing.unsupported && tierConfig.postProcessing;
     }
 
     /**
@@ -1761,13 +2784,16 @@ class RenderSystem {
      * @returns {number}
      */
     _resolveShadowMapType(shadowMapType) {
+        // 5k3.9: PCFSoft is removed from the Skip Bin grade ladder. Unknown /
+        // 'none' resolve to BasicShadowMap; full-scene shadows are disabled per
+        // tier via shadowsEnabled, and blob contact shadows do the grounding.
         switch (shadowMapType) {
-            case 'basic':
-                return THREE.BasicShadowMap;
             case 'pcf':
                 return THREE.PCFShadowMap;
+            case 'basic':
+            case 'none':
             default:
-                return THREE.PCFSoftShadowMap;
+                return THREE.BasicShadowMap;
         }
     }
 
@@ -1828,6 +2854,10 @@ class RenderSystem {
      */
     destroy() {
         window.removeEventListener('resize', this._boundOnResize);
+        const canvas = this.renderer?.domElement;
+        if (canvas && this._boundOnContextLost) {
+            canvas.removeEventListener('webglcontextlost', this._boundOnContextLost, false);
+        }
 
         // Remove all meshes
         for (const [id, mesh] of this.meshes) {
@@ -1849,7 +2879,7 @@ class RenderSystem {
 }
 
 // Export for ES Modules
-export { RenderSystem };
+export { RenderSystem, HOST_GRADE_TIER_DEFINITIONS };
 
 // Export for non-module scripts
 if (typeof window !== 'undefined') {

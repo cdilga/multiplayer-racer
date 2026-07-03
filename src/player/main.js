@@ -14,12 +14,19 @@ import { ControlMapper } from '/static/js/input/ControlMapper.js';
 import { RemapStore } from '/static/js/input/RemapStore.js';
 import { initBuildSkew } from '/static/js/buildSkewBanner.js';
 import { bootstrapPageTelemetry } from '/static/js/telemetry/index.js';
+import { resolveJoinRoute, VIA, ENTRY_INTENT, ENTRY_KIND } from '/static/js/engine/joinRouteResolver.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
 window.io = io;
 window.ControlMapper = ControlMapper;
 window.RemapStore = RemapStore;
+// Join-route resolver (woq.11): player.js is a plain global script, so the ES
+// entry exposes the pure resolver + typed vocabulary for it to consume.
+window.resolveJoinRoute = resolveJoinRoute;
+window.JOIN_VIA = VIA;
+window.JOIN_INTENT = ENTRY_INTENT;
+window.JOIN_ENTRY_KIND = ENTRY_KIND;
 
 bootstrapPageTelemetry({
     role: 'controller',

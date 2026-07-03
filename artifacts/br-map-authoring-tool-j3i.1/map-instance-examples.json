@@ -1,0 +1,88 @@
+{
+  "bead": "br-map-authoring-tool-j3i.1",
+  "generatorVersion": "jj-mapgen-1",
+  "examples": {
+    "knownRace": {
+      "ruleset": "race",
+      "source": "known",
+      "catalogEntryId": "oval",
+      "recipeId": null,
+      "seed": null,
+      "generatorVersion": "jj-mapgen-1",
+      "params": {},
+      "paramsHash": "213483fc",
+      "resolvedMapId": "oval",
+      "targetPlayers": 8,
+      "lateJoinCapacity": 12
+    },
+    "knownDerby": {
+      "ruleset": "derby",
+      "source": "known",
+      "catalogEntryId": "derby-arena",
+      "recipeId": null,
+      "seed": null,
+      "generatorVersion": "jj-mapgen-1",
+      "params": {},
+      "paramsHash": "213483fc",
+      "resolvedMapId": "derby-arena",
+      "targetPlayers": 8,
+      "lateJoinCapacity": 16
+    },
+    "randomRace": {
+      "ruleset": "race",
+      "source": "procedural",
+      "catalogEntryId": "random-race-classic",
+      "recipeId": "race-classic-v1",
+      "seed": 12345,
+      "generatorVersion": "jj-mapgen-1",
+      "params": {
+        "trackLength": "medium",
+        "corners": "medium",
+        "jumpDensity": "medium",
+        "weaponDensity": "standard"
+      },
+      "paramsHash": "b08b9f26",
+      "resolvedMapId": "random-race-classic",
+      "targetPlayers": 8,
+      "lateJoinCapacity": 12
+    },
+    "randomDerby": {
+      "ruleset": "derby",
+      "source": "procedural",
+      "catalogEntryId": "random-derby-basin",
+      "recipeId": "derby-basin-v1",
+      "seed": 999,
+      "generatorVersion": "jj-mapgen-1",
+      "params": {
+        "arenaSize": "medium",
+        "terrainIntensity": "medium",
+        "jumpDensity": "medium",
+        "weaponDensity": "standard",
+        "symmetry": "loose"
+      },
+      "paramsHash": "581be525",
+      "resolvedMapId": "random-derby-basin",
+      "targetPlayers": 8,
+      "lateJoinCapacity": 16
+    },
+    "pastedSeed": {
+      "ruleset": "derby",
+      "source": "procedural",
+      "catalogEntryId": "random-derby-basin",
+      "recipeId": "derby-basin-v1",
+      "seed": "basin-777",
+      "generatorVersion": "jj-mapgen-1",
+      "params": {
+        "arenaSize": "medium",
+        "terrainIntensity": "medium",
+        "jumpDensity": "medium",
+        "weaponDensity": "standard",
+        "symmetry": "loose"
+      },
+      "paramsHash": "581be525",
+      "resolvedMapId": "random-derby-basin",
+      "targetPlayers": 8,
+      "lateJoinCapacity": 16
+    }
+  }
+}

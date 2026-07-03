@@ -1,0 +1,154 @@
+{
+  "bead": "br-skip-bin-arcade-design-language-5k3.15",
+  "phase": 1,
+  "config": {
+    "heavyThreshold": 0.25,
+    "band1": 0.55,
+    "band2": 0.8,
+    "maxFrames": 3,
+    "eliminationFrames": 3,
+    "eliminationMinIntensity": 0.8
+  },
+  "decisionMatrix": [
+    {
+      "input": {
+        "severity": 0.1,
+        "context": "focused",
+        "elimination": false
+      },
+      "decision": {
+        "mode": "none",
+        "frames": 0,
+        "intensity": 0,
+        "context": "focused"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.25,
+        "context": "focused",
+        "elimination": false
+      },
+      "decision": {
+        "mode": "freeze",
+        "frames": 1,
+        "intensity": 0.25,
+        "context": "focused"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.6,
+        "context": "focused",
+        "elimination": false
+      },
+      "decision": {
+        "mode": "freeze",
+        "frames": 2,
+        "intensity": 0.6,
+        "context": "focused"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.9,
+        "context": "focused",
+        "elimination": false
+      },
+      "decision": {
+        "mode": "freeze",
+        "frames": 3,
+        "intensity": 0.9,
+        "context": "focused"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.9,
+        "context": "shared-race",
+        "elimination": false
+      },
+      "decision": {
+        "mode": "camera-punch",
+        "frames": 3,
+        "intensity": 0.9,
+        "context": "shared-race"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.05,
+        "context": "shared-race",
+        "elimination": true
+      },
+      "decision": {
+        "mode": "camera-punch",
+        "frames": 3,
+        "intensity": 0.8,
+        "context": "shared-race"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.9,
+        "context": "shared-race",
+        "elimination": true
+      },
+      "decision": {
+        "mode": "camera-punch",
+        "frames": 3,
+        "intensity": 0.9,
+        "context": "shared-race"
+      }
+    },
+    {
+      "input": {
+        "severity": 0.9,
+        "elimination": false
+      },
+      "decision": {
+        "mode": "camera-punch",
+        "frames": 3,
+        "intensity": 0.9,
+        "context": "shared-race"
+      }
+    }
+  ],
+  "countdownDemo": [
+    {
+      "active": true,
+      "mode": "freeze",
+      "framesRemaining": 3,
+      "intensity": 0.9,
+      "physicsTimeScale": 1
+    },
+    {
+      "active": true,
+      "mode": "freeze",
+      "framesRemaining": 2,
+      "intensity": 0.9,
+      "physicsTimeScale": 1
+    },
+    {
+      "active": true,
+      "mode": "freeze",
+      "framesRemaining": 1,
+      "intensity": 0.9,
+      "physicsTimeScale": 1
+    },
+    {
+      "active": false,
+      "mode": "none",
+      "framesRemaining": 0,
+      "intensity": 0,
+      "physicsTimeScale": 1
+    },
+    {
+      "active": false,
+      "mode": "none",
+      "framesRemaining": 0,
+      "intensity": 0,
+      "physicsTimeScale": 1
+    }
+  ]
+}

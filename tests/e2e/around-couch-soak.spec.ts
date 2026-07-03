@@ -93,20 +93,44 @@ test.describe('Around Couch Soak', () => {
                     };
                 };
 
+                // No NaN/Inf leaked into any vehicle's live state (3xv.10 soak).
+                let nonFinite = 0;
+                for (const s of snapshots) {
+                    const p = s.currentPosition;
+                    if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isFinite(p.z)) nonFinite += 1;
+                }
+
+                // Host frame/physics + replay-journal metrics for the run context.
+                const render = game?.systems?.render;
+                const metrics = {
+                    fps: Math.round(game?.engine?.getFps?.() || 0),
+                    drawCalls: render?.getRenderDiagnostics?.()?.drawCalls ?? null,
+                    journalSnapshots: game?.replayJournal?.snapshots?.length ?? 0,
+                    journalEntries: game?.replayJournal?.length ?? 0
+                };
+
                 return {
                     vehicleCount: vehicles.length,
                     generatedSpawnCount: game?.track?.generatedSpawns?.length || 0,
                     spawnDiagnostics: game?.track?.spawnGenerationMetadata || null,
                     spawnPairs: pairStats('spawnPosition'),
-                    currentPairs: pairStats('currentPosition')
+                    currentPairs: pairStats('currentPosition'),
+                    nonFinite,
+                    metrics
                 };
             });
 
             expect(result.vehicleCount).toBe(soakPlayers);
             expect(result.generatedSpawnCount).toBeGreaterThanOrEqual(soakPlayers);
             expect(result.spawnDiagnostics?.validation?.valid).toBe(true);
+            // No duplicate/near-duplicate spawns; cars stay separated at runtime.
             expect(result.spawnPairs.minDistance).toBeGreaterThanOrEqual(3.5 - 0.01);
             expect(result.currentPairs.minDistance).toBeGreaterThan(2.0);
+            // No NaN/Inf state; host recorded frame + replay-journal metrics.
+            expect(result.nonFinite).toBe(0);
+            expect(result.metrics.fps).toBeGreaterThan(0);
+            // eslint-disable-next-line no-console
+            console.log(`[soak] ${soakPlayers}p metrics:`, JSON.stringify(result.metrics));
         } finally {
             for (const player of players) {
                 await player.context.close();

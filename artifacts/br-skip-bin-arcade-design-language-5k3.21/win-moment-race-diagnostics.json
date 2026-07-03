@@ -1,0 +1,22 @@
+{
+  "immediate": {
+    "visible": true,
+    "active": true,
+    "completed": false,
+    "mode": "race",
+    "winnerName": "Ada",
+    "durationMs": 850,
+    "tableHidden": true,
+    "winMomentHidden": false
+  },
+  "finalDiagnostics": {
+    "visible": true,
+    "active": false,
+    "completed": true,
+    "mode": "race",
+    "winnerName": "Ada",
+    "durationMs": 850,
+    "tableHidden": false,
+    "winMomentHidden": true
+  }
+}

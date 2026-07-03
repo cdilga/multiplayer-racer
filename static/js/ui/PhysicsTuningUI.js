@@ -21,6 +21,7 @@ import {
     listCameraClusterTunables,
     resolveCameraClusterOptions
 } from '../geometry/index.js';
+import { DEFAULT_STEERING_AUTHORITY_CONFIG } from '../systems/steeringAuthority.js';
 
 class PhysicsTuningUI {
     /**
@@ -112,6 +113,31 @@ class PhysicsTuningUI {
                     <span>Smoothing</span>
                     <input type="range" class="physics-slider" data-param="steering.smoothing" min="0.05" max="1" value="${this.params.steering.smoothing}" step="0.05">
                     <span class="physics-value" data-param="steering.smoothing">${this.params.steering.smoothing}</span>
+                </label>
+                <label>
+                    <span>Front-Light Auth</span>
+                    <input type="range" class="physics-slider" data-param="steeringAuthority.frontLightAuthority" min="0" max="1" value="${this.params.steeringAuthority.frontLightAuthority}" step="0.02">
+                    <span class="physics-value" data-param="steeringAuthority.frontLightAuthority">${this.params.steeringAuthority.frontLightAuthority}</span>
+                </label>
+                <label>
+                    <span>Wheelie Auth</span>
+                    <input type="range" class="physics-slider" data-param="steeringAuthority.wheelieAuthority" min="0" max="0.6" value="${this.params.steeringAuthority.wheelieAuthority}" step="0.02">
+                    <span class="physics-value" data-param="steeringAuthority.wheelieAuthority">${this.params.steeringAuthority.wheelieAuthority}</span>
+                </label>
+                <label>
+                    <span>Air Auth</span>
+                    <input type="range" class="physics-slider" data-param="steeringAuthority.airborneAuthority" min="0" max="0.4" value="${this.params.steeringAuthority.airborneAuthority}" step="0.02">
+                    <span class="physics-value" data-param="steeringAuthority.airborneAuthority">${this.params.steeringAuthority.airborneAuthority}</span>
+                </label>
+                <label>
+                    <span>Side-Tilt Floor</span>
+                    <input type="range" class="physics-slider" data-param="steeringAuthority.sideTiltSteerFloor" min="0" max="0.5" value="${this.params.steeringAuthority.sideTiltSteerFloor}" step="0.02">
+                    <span class="physics-value" data-param="steeringAuthority.sideTiltSteerFloor">${this.params.steeringAuthority.sideTiltSteerFloor}</span>
+                </label>
+                <label>
+                    <span>Recovery Assist</span>
+                    <input type="range" class="physics-slider" data-param="steeringAuthority.recoveryMaxInfluence" min="0" max="0.8" value="${this.params.steeringAuthority.recoveryMaxInfluence}" step="0.05">
+                    <span class="physics-value" data-param="steeringAuthority.recoveryMaxInfluence">${this.params.steeringAuthority.recoveryMaxInfluence}</span>
                 </label>
             </div>
 
@@ -474,6 +500,11 @@ class PhysicsTuningUI {
             return `<span style="color: ${color}">${pos}</span>`;
         }).join(' ');
 
+        const steeringAuth = tel.steeringAuthority || {};
+        const factors = steeringAuth.factors || {};
+        const tuning = steeringAuth.tuning || {};
+        const recovery = tel.steeringRecovery || {};
+
         telemetryReadout.innerHTML = `
 ID: <span class="telemetry-value">${vehicleId.substring(0, 8)}</span>
 Speed: <span class="telemetry-value">${tel.speed.toFixed(1)} km/h</span>
@@ -482,6 +513,10 @@ Throttle: <span class="telemetry-value">${tel.throttle.toFixed(2)}</span>
 Wheels: ${wheelIcons}
 State: <span class="telemetry-value">${tel.isAirborne ? 'AIRBORNE' : (tel.isWheelie ? 'WHEELIE' : 'GROUNDED')}</span>
 Env: <span class="telemetry-value">${tel.inWallContact ? 'WALL' : ''} ${tel.inOilSlick ? 'OIL' : ''}</span>
+Authority: <span class="telemetry-value">${Number(steeringAuth.authority ?? 1).toFixed(2)} (${steeringAuth.dominantLimiter || 'none'})</span>
+Auth factors: <span class="telemetry-value">state ${(factors.state ?? 1).toFixed(2)} / speed ${(factors.speed ?? 1).toFixed(2)} / roll ${(factors.roll ?? 1).toFixed(2)} / land ${(factors.badLanding ?? 1).toFixed(2)}</span>
+Recovery: <span class="telemetry-value">${Number(steeringAuth.recoveryInfluence || 0).toFixed(2)} wall ${Number(steeringAuth.wallPeel || 0).toFixed(2)} last ${Number(recovery.rollImpulse || 0).toFixed(3)}/${Number(recovery.yawImpulse || 0).toFixed(3)}</span>
+Auth tuning: <span class="telemetry-value">FL ${Number(tuning.frontLightAuthority ?? this.params.steeringAuthority.frontLightAuthority).toFixed(2)} / WH ${Number(tuning.wheelieAuthority ?? this.params.steeringAuthority.wheelieAuthority).toFixed(2)} / AIR ${Number(tuning.airborneAuthority ?? this.params.steeringAuthority.airborneAuthority).toFixed(2)}</span>
 Wheelie: <span class="telemetry-value">${(tel.wheelieIntent?.holdMs || 0).toFixed(0)}/${(tel.wheelieIntent?.dwellMs || 0).toFixed(0)}ms @ ${(tel.wheelieIntent?.threshold || 0).toFixed(2)} ${tel.wheelieIntent?.ready ? 'READY' : ''}</span>
 Boost: <span class="telemetry-value">${tel.speedBoost.toFixed(1)}x</span>
 Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100).toFixed(0)}% ${tel.stuntBoost.toFixed(2)}x</span>
@@ -565,6 +600,11 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 maxAngle: this.params.steering.maxAngle,
                 highSpeedReduction: this.params.steering.highSpeedReduction,
                 smoothing: this.params.steering.smoothing
+            };
+
+            vehicleData.config.steeringAuthority = {
+                ...vehicleData.config.steeringAuthority,
+                ...this.params.steeringAuthority
             };
 
             vehicleData.config.wheelie = {
@@ -664,6 +704,13 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
                 highSpeedReduction: 0.45,
                 smoothing: 0.3
             },
+            steeringAuthority: {
+                frontLightAuthority: DEFAULT_STEERING_AUTHORITY_CONFIG.frontLightAuthority,
+                wheelieAuthority: DEFAULT_STEERING_AUTHORITY_CONFIG.wheelieAuthority,
+                airborneAuthority: DEFAULT_STEERING_AUTHORITY_CONFIG.airborneAuthority,
+                sideTiltSteerFloor: DEFAULT_STEERING_AUTHORITY_CONFIG.sideTiltSteerFloor,
+                recoveryMaxInfluence: DEFAULT_STEERING_AUTHORITY_CONFIG.recoveryMaxInfluence
+            },
             wheelie: {
                 activationThrottle: 0.92,
                 activationDwellMs: 280
@@ -716,6 +763,7 @@ Stunt: <span class="telemetry-value">${tel.stuntState} ${(tel.stuntCharge * 100)
             return {
                 car: { ...defaults.car, ...parsed.car },
                 steering: { ...defaults.steering, ...parsed.steering },
+                steeringAuthority: { ...defaults.steeringAuthority, ...parsed.steeringAuthority },
                 wheelie: { ...defaults.wheelie, ...parsed.wheelie },
                 wheels: { ...defaults.wheels, ...parsed.wheels },
                 damage: { ...defaults.damage, ...parsed.damage },

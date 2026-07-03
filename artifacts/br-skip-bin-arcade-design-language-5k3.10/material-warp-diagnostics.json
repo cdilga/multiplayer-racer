@@ -1,0 +1,366 @@
+{
+  "adaptiveManualTimeline": {
+    "tierNames": [
+      "host-native",
+      "host-balanced",
+      "host-degraded",
+      "host-fallback"
+    ],
+    "autoNativePolicy": {
+      "enabled": true,
+      "mode": "auto",
+      "policy": "auto-native",
+      "tier": "native",
+      "vertexSnapIntensity": 0.6,
+      "affineIntensity": 0.2,
+      "snapGridSize": 0.7
+    },
+    "autoNative": {
+      "schema": "jj.materialWarp.diagnostics.v1",
+      "totalMaterials": 20,
+      "hookInstalled": 18,
+      "eligible": 9,
+      "exempt": 6,
+      "active": 9,
+      "inactiveEligible": 0,
+      "roles": {
+        "world": {
+          "total": 9,
+          "eligible": 9,
+          "exempt": 0,
+          "active": 9
+        },
+        "unclassified": {
+          "total": 3,
+          "eligible": 0,
+          "exempt": 0,
+          "active": 0
+        },
+        "vehicle-readable": {
+          "total": 6,
+          "eligible": 0,
+          "exempt": 6,
+          "active": 0
+        }
+      },
+      "activeVertexSnapIntensity": 0.6,
+      "activeAffineIntensity": 0.2,
+      "activeSnapGridSize": 0.7,
+      "worldVertexDeltaMax": 0.2700226596098423,
+      "vehicleReadableActive": 0
+    },
+    "autoDegraded": {
+      "schema": "jj.materialWarp.diagnostics.v1",
+      "totalMaterials": 20,
+      "hookInstalled": 18,
+      "eligible": 9,
+      "exempt": 6,
+      "active": 0,
+      "inactiveEligible": 9,
+      "roles": {
+        "world": {
+          "total": 9,
+          "eligible": 9,
+          "exempt": 0,
+          "active": 0
+        },
+        "unclassified": {
+          "total": 3,
+          "eligible": 0,
+          "exempt": 0,
+          "active": 0
+        },
+        "vehicle-readable": {
+          "total": 6,
+          "eligible": 0,
+          "exempt": 6,
+          "active": 0
+        }
+      },
+      "activeVertexSnapIntensity": 0,
+      "activeAffineIntensity": 0,
+      "activeSnapGridSize": null,
+      "worldVertexDeltaMax": 0,
+      "vehicleReadableActive": 0
+    },
+    "manualOn": {
+      "schema": "jj.materialWarp.diagnostics.v1",
+      "totalMaterials": 20,
+      "hookInstalled": 18,
+      "eligible": 9,
+      "exempt": 6,
+      "active": 9,
+      "inactiveEligible": 0,
+      "roles": {
+        "world": {
+          "total": 9,
+          "eligible": 9,
+          "exempt": 0,
+          "active": 9
+        },
+        "unclassified": {
+          "total": 3,
+          "eligible": 0,
+          "exempt": 0,
+          "active": 0
+        },
+        "vehicle-readable": {
+          "total": 6,
+          "eligible": 0,
+          "exempt": 6,
+          "active": 0
+        }
+      },
+      "activeVertexSnapIntensity": 0.5,
+      "activeAffineIntensity": 0.18,
+      "activeSnapGridSize": 0.8,
+      "worldVertexDeltaMax": 0.27202188900303287,
+      "vehicleReadableActive": 0
+    },
+    "reduceEffectsOff": {
+      "schema": "jj.materialWarp.diagnostics.v1",
+      "totalMaterials": 20,
+      "hookInstalled": 18,
+      "eligible": 9,
+      "exempt": 6,
+      "active": 0,
+      "inactiveEligible": 9,
+      "roles": {
+        "world": {
+          "total": 9,
+          "eligible": 9,
+          "exempt": 0,
+          "active": 0
+        },
+        "unclassified": {
+          "total": 3,
+          "eligible": 0,
+          "exempt": 0,
+          "active": 0
+        },
+        "vehicle-readable": {
+          "total": 6,
+          "eligible": 0,
+          "exempt": 6,
+          "active": 0
+        }
+      },
+      "activeVertexSnapIntensity": 0,
+      "activeAffineIntensity": 0,
+      "activeSnapGridSize": null,
+      "worldVertexDeltaMax": 0,
+      "vehicleReadableActive": 0
+    },
+    "restored": {
+      "schema": "jj.materialWarp.diagnostics.v1",
+      "totalMaterials": 20,
+      "hookInstalled": 18,
+      "eligible": 9,
+      "exempt": 6,
+      "active": 9,
+      "inactiveEligible": 0,
+      "roles": {
+        "world": {
+          "total": 9,
+          "eligible": 9,
+          "exempt": 0,
+          "active": 9
+        },
+        "unclassified": {
+          "total": 3,
+          "eligible": 0,
+          "exempt": 0,
+          "active": 0
+        },
+        "vehicle-readable": {
+          "total": 6,
+          "eligible": 0,
+          "exempt": 6,
+          "active": 0
+        }
+      },
+      "activeVertexSnapIntensity": 0.6,
+      "activeAffineIntensity": 0.2,
+      "activeSnapGridSize": 0.7,
+      "worldVertexDeltaMax": 0.2700226596098423,
+      "vehicleReadableActive": 0
+    },
+    "restoredScreenshotLength": 19871,
+    "savedAfterReduce": {
+      "uiScale": 1.23,
+      "customFutureKey": "keep",
+      "visualQualityMode": "host-fallback",
+      "resolutionScale": null,
+      "reduceEffects": true,
+      "materialWarpMode": "on",
+      "vertexSnapIntensity": 0.5,
+      "affineIntensity": 0.18,
+      "snapGridSize": 0.8,
+      "filmGrain": null,
+      "ditherStrength": null,
+      "scanline": null,
+      "bloom": 1,
+      "fog": 0.008,
+      "shake": 0.15,
+      "postProcessing": true
+    },
+    "grade": {
+      "activeTier": "host-native",
+      "tierConfig": {
+        "label": "Native full grade",
+        "resolutionScale": 1,
+        "postProcessing": true,
+        "bloomEnabled": true,
+        "bloomStrength": 1.5,
+        "bloomRadius": 0.4,
+        "bloomThreshold": 0.85,
+        "colorGradingEnabled": true,
+        "gradingIntensity": 0.7,
+        "posterizeBandCount": 7,
+        "ditherStrength": 0.55,
+        "scanlineAmount": 0.08,
+        "vignetteAmount": 0.3,
+        "filmGrainAmount": 0.12,
+        "chromaticAberrationEnabled": false,
+        "chromaticAberrationAmount": 0,
+        "fogEnabled": true,
+        "fogDensity": 0.008,
+        "shadowsEnabled": false,
+        "shadowMapType": "none"
+      },
+      "resolutionScale": 1,
+      "effectivePixelRatio": 1,
+      "renderTarget": {
+        "internalWidth": 1280,
+        "internalHeight": 720,
+        "displayWidth": 1280,
+        "displayHeight": 720,
+        "resolutionScale": 1,
+        "effectivePixelRatio": 1,
+        "devicePixelRatio": 1,
+        "upscaleFactor": 1,
+        "isUpscaled": false,
+        "imageRendering": "pixelated",
+        "crispUpscale": true
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "backend": {
+        "backendAdapter": "WebGL",
+        "backendDiagnostics": {
+          "backend": "WebGL2",
+          "adapterInfo": {
+            "renderer": "THREE.WebGLRenderer",
+            "vendor": "WebGL2"
+          },
+          "deviceLimits": {
+            "maxTextures": 16,
+            "maxTextureSize": 16384,
+            "maxCubemapSize": 16384,
+            "maxVertexTextures": 16,
+            "maxAttributes": 16,
+            "maxVertexUniforms": 1024,
+            "maxVaryings": 30,
+            "maxFragmentUniforms": 1024,
+            "drawingBufferWidth": 300,
+            "drawingBufferHeight": 150
+          },
+          "requiredFeatures": [],
+          "fallbackReason": null,
+          "fallback": null,
+          "activeApi": "webgl2",
+          "rendererType": "WebGLRenderer",
+          "nativeWebGPU": false,
+          "selectionPreference": {
+            "preferWebGPU": false,
+            "forceWebGL": true,
+            "killswitch": false,
+            "source": "default-webgl-visual-effects-parity"
+          },
+          "frameTimings": [],
+          "drawCalls": 1,
+          "playerCount": 0,
+          "viewportMode": "host",
+          "visualParity": "verified",
+          "supportedFeatures": [],
+          "rendererInitialized": null
+        },
+        "renderer": "WebGLRenderer",
+        "activeApi": "webgl2",
+        "nativeWebGPU": false,
+        "fallback": null,
+        "isWebGL2": true,
+        "precision": "highp",
+        "maxTextures": 16,
+        "maxTextureSize": 16384,
+        "maxCubemapSize": 16384
+      },
+      "toneMapping": {
+        "decision": "skip-aces",
+        "mode": "NoToneMapping"
+      },
+      "fog": {
+        "enabled": true,
+        "density": 0.008,
+        "color": 4859152
+      },
+      "postProcessing": {
+        "enabled": true,
+        "composerReady": true,
+        "initError": null,
+        "bloomEnabled": true,
+        "bloomStrength": 1,
+        "colorGradingEnabled": true,
+        "colorGradingStyle": "skip-bin-arcade-posterize-dither",
+        "gradingIntensity": 0.7,
+        "posterizeBandCount": 7,
+        "ditherStrength": 0.55,
+        "ditherOverride": null,
+        "ditherPattern": "bayer-4x4",
+        "scanlineAmount": 0.08,
+        "scanlineOverride": null,
+        "vignetteAmount": 0.3,
+        "filmGrainAmount": 0.12,
+        "filmGrainScale": 1.5,
+        "filmGrainSpeed": 12,
+        "filmGrainAnimated": true,
+        "filmGrainOverride": null,
+        "chromaticAberrationEnabled": false,
+        "chromaticAberrationAmount": 0
+      },
+      "shadows": {
+        "enabled": false,
+        "type": "BasicShadowMap",
+        "mode": "contact-blob"
+      },
+      "renderInfo": {
+        "calls": 1,
+        "triangles": 1,
+        "lines": 0,
+        "points": 0,
+        "frame": 649,
+        "geometries": 17,
+        "textures": 14,
+        "programs": 14
+      },
+      "frameTiming": {
+        "frameCount": 0,
+        "lastRenderDurationMs": 0,
+        "averageRenderDurationMs": 0,
+        "maxRenderDurationMs": 0
+      },
+      "cameraMode": {
+        "mode": "party",
+        "focusId": null,
+        "focusName": null,
+        "targetCount": 0
+      },
+      "trackedVehicles": 0,
+      "nameTagCount": 0
+    }
+  },
+  "consoleIssues": [],
+  "pageErrors": []
+}

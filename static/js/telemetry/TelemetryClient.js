@@ -7,6 +7,7 @@ const UNKNOWN_PLAYER_ID = 'player-unknown';
 const ANONYMOUS_ID_STORAGE_KEY = 'jj_telemetry_anonymous_id_v1';
 const DEFAULT_POSTHOG_HOST = 'https://us.i.posthog.com';
 const DEFAULT_ERROR_THROTTLE_MS = 60000;
+const DEFAULT_TELEMETRY_COOLDOWN_MS = 1500;
 const MAX_STACK_LINE_COUNT = 200;
 
 let browserTelemetryClient = null;
@@ -200,6 +201,10 @@ function runtimeContextProperties() {
         browserFamily: getBrowserFamily(navigatorLike.userAgent),
         deviceClass: getDeviceClass(runtimeWindow),
     };
+}
+
+export function getRuntimeTelemetryContext() {
+    return runtimeContextProperties();
 }
 
 export function buildTelemetryFingerprint(parts = {}) {
@@ -450,6 +455,8 @@ export class TelemetryClient {
         this.service.setPlayerAnalyticsId(UNKNOWN_PLAYER_ID);
         this.identifyAnonymous(options.anonymousId);
         this.errorThrottle = new Map();
+        this.transitionState = new Map();
+        this.rateLimitState = new Map();
         this._browserErrorCaptureInstalled = false;
         this._removeBrowserErrorCapture = null;
     }
@@ -507,6 +514,61 @@ export class TelemetryClient {
             void this.flush();
         }
         return event;
+    }
+
+    captureWithCooldown(eventName, properties = {}, options = {}) {
+        const cooldownMs = Math.max(0, Number(options.cooldownMs || DEFAULT_TELEMETRY_COOLDOWN_MS));
+        const nowMs = Number(options.nowMs || Date.now());
+        const key = `cooldown:${eventName}:${stableStringify(properties)}`;
+
+        if (cooldownMs > 0 && this._isRateLimited(key, nowMs, cooldownMs)) {
+            return null;
+        }
+
+        return this.capture(eventName, properties);
+    }
+
+    captureStateTransition(eventName, state, properties = {}, options = {}) {
+        const key = `transition:${eventName}`;
+        const previous = this.transitionState.get(key);
+        if (previous === String(state)) {
+            const cooldownMs = Math.max(0, Number(options.cooldownMs || 0));
+            if (cooldownMs <= 0) {
+                return null;
+            }
+
+            const nowMs = Number(options.nowMs || Date.now());
+            const lastEmit = Number(this.rateLimitState.get(key)?.lastAt || 0);
+            if (nowMs - lastEmit < cooldownMs) {
+                return null;
+            }
+        }
+
+        this.transitionState.set(key, String(state));
+        if (!this.rateLimitState.has(key)) {
+            this.rateLimitState.set(key, { lastAt: Number.MIN_SAFE_INTEGER });
+        }
+        this.rateLimitState.get(key).lastAt = Number(options.nowMs || Date.now());
+
+        const transitionedProperties = {
+            ...(properties || {}),
+            state,
+        };
+        return this.capture(eventName, transitionedProperties);
+    }
+
+    _isRateLimited(key, nowMs, cooldownMs) {
+        const existing = this.rateLimitState.get(key);
+        if (existing && nowMs - existing.lastAt < cooldownMs) {
+            existing.lastAt = nowMs;
+            this.rateLimitState.set(key, existing);
+            return true;
+        }
+
+        this.rateLimitState.set(key, {
+            lastAt: nowMs,
+        });
+        return false;
     }
 
     captureException(error, properties = {}, options = {}) {
@@ -634,6 +696,8 @@ export class TelemetryClient {
     clear() {
         this.service.clear();
         this.errorThrottle.clear();
+        this.transitionState.clear();
+        this.rateLimitState.clear();
         if (Array.isArray(this.sink.events)) {
             this.sink.events.length = 0;
         }

@@ -12,7 +12,33 @@
  *   lobby.show();
  */
 
+import { uiScale } from './UiScaleController.js';
+import { ManualVisualSettingsController } from './ManualVisualSettingsController.js';
+import { TOPOLOGY, DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
+
 const VISUAL_SETTINGS_STORAGE_KEY = 'visualSettings';
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
+
+// How each room topology is presented in the lobby badge.
+const TOPOLOGY_BADGE = {
+    [TOPOLOGY.LOCAL]: { icon: '📺', label: 'Local play' },
+    [TOPOLOGY.REMOTE]: { icon: '🌍', label: 'Remote play' },
+    [TOPOLOGY.MIXED]: { icon: '🔀', label: 'Mixed play' }
+};
+
+function safeLobbyColor(value, fallback) {
+    const color = typeof value === 'string' ? value.trim() : '';
+    return HEX_COLOR_RE.test(color) ? color : fallback;
+}
+
+function replaceChildrenSafe(element, children) {
+    if (typeof element.replaceChildren === 'function') {
+        element.replaceChildren(...children);
+        return;
+    }
+    element.textContent = '';
+    children.forEach((child) => element.appendChild(child));
+}
 
 class LobbyUI {
     /**
@@ -28,16 +54,13 @@ class LobbyUI {
         // State
         this.visible = false;
         this.roomCode = '';
+        this.topology = DEFAULT_TOPOLOGY;
         this.players = [];
         this.minPlayersToStart = 1;
 
         // Default visual settings
-        this.visualSettings = {
-            bloom: 1.0,
-            fog: 0.008,
-            shake: 0.15,
-            postProcessing: true
-        };
+        this.visualSettings = { ...ManualVisualSettingsController.DEFAULT_SETTINGS };
+        this.manualVisualSettingsController = null;
 
         // Elements
         this.element = null;
@@ -51,6 +74,8 @@ class LobbyUI {
      * Initialize lobby UI
      */
     init() {
+        uiScale.init();
+        this._ensureManualVisualSettingsController();
         this._loadVisualSettingsFromStorage();
         this._createElements();
         this._subscribeToEvents();
@@ -61,6 +86,10 @@ class LobbyUI {
      * @private
      */
     _loadVisualSettingsFromStorage() {
+        if (this.manualVisualSettingsController) {
+            this.visualSettings = this.manualVisualSettingsController.load();
+            return;
+        }
         try {
             const stored = localStorage.getItem(VISUAL_SETTINGS_STORAGE_KEY);
             if (stored) {
@@ -77,11 +106,48 @@ class LobbyUI {
      * @private
      */
     _saveVisualSettingsToStorage() {
+        if (this.manualVisualSettingsController) {
+            this.visualSettings = this.manualVisualSettingsController.getSettings();
+            return true;
+        }
         try {
             localStorage.setItem(VISUAL_SETTINGS_STORAGE_KEY, JSON.stringify(this.visualSettings));
         } catch (e) {
             console.warn('Failed to save visual settings to localStorage:', e);
         }
+    }
+
+    /**
+     * Create or refresh the manual settings controller against the current host
+     * presentation seams. Local phones/controllers never instantiate this UI.
+     * @private
+     * @returns {ManualVisualSettingsController}
+     */
+    _ensureManualVisualSettingsController() {
+        const game = typeof window !== 'undefined' ? window.game : null;
+        const seams = {
+            render: game?.systems?.render || null,
+            adaptiveQuality: game?.adaptiveQuality || (typeof window !== 'undefined' ? window.__JJ_ADAPTIVE__ : null),
+            grainOverlay: typeof window !== 'undefined' ? window.__sbGrainOverlay || null : null
+        };
+
+        if (!this.manualVisualSettingsController) {
+            this.manualVisualSettingsController = new ManualVisualSettingsController({
+                doc: typeof document !== 'undefined' ? document : null,
+                render: seams.render,
+                adaptiveQuality: seams.adaptiveQuality,
+                grainOverlay: seams.grainOverlay
+            });
+            if (typeof window !== 'undefined') {
+                window.__JJ_MANUAL_VISUAL_SETTINGS__ = this.manualVisualSettingsController;
+            }
+        } else {
+            this.manualVisualSettingsController.render = seams.render;
+            this.manualVisualSettingsController.adaptiveQuality = seams.adaptiveQuality;
+            this.manualVisualSettingsController.grainOverlay = seams.grainOverlay;
+        }
+
+        return this.manualVisualSettingsController;
     }
 
     /**
@@ -108,6 +174,7 @@ class LobbyUI {
                 <div class="lobby-col lobby-col-left">
                 <div class="room-code-section">
                     <p class="room-code-label">Room Code</p>
+                    <div class="topology-badge" id="topology-badge" data-topology="local" title="How players join this room">📺 Local play</div>
                     <div class="room-code" id="room-code-display">----</div>
                     <img id="qr-code" class="qr-code hidden" alt="QR Code to join" />
                     <p class="room-code-hint" id="join-url">Share this code with players</p>
@@ -116,6 +183,7 @@ class LobbyUI {
                 <div class="players-section">
                     <h2>Players (<span id="player-count">0</span>)</h2>
                     <ul class="player-list" id="player-list"></ul>
+                    <div class="lobby-banter" id="lobby-banter" aria-live="polite"></div>
                 </div>
                 </div>
 
@@ -174,6 +242,44 @@ class LobbyUI {
                         Visual Settings <span class="toggle-arrow">▼</span>
                     </h3>
                     <div class="visual-settings-content" id="visual-settings-content">
+                        <div class="select-group">
+                            <label for="visual-quality-select">Quality</label>
+                            <select id="visual-quality-select">
+                                <option value="auto">Auto</option>
+                                <option value="host-native">Native</option>
+                                <option value="host-balanced">Balanced</option>
+                                <option value="host-degraded">Degraded</option>
+                                <option value="host-fallback">Fallback</option>
+                            </select>
+                        </div>
+                        <div class="slider-group">
+                            <label for="resolution-scale-slider">Resolution: <span id="resolution-scale-value">Auto</span></label>
+                            <input type="range" id="resolution-scale-slider" min="0.5" max="1" step="0.05" value="1">
+                        </div>
+                        <div class="toggle-group">
+                            <label for="resolution-auto-toggle">
+                                <input type="checkbox" id="resolution-auto-toggle" checked>
+                                Auto resolution
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <label for="reduce-effects-toggle">
+                                <input type="checkbox" id="reduce-effects-toggle">
+                                Reduce effects
+                            </label>
+                        </div>
+                        <div class="slider-group">
+                            <label for="film-grain-slider">Film Grain: <span id="film-grain-value">Auto</span></label>
+                            <input type="range" id="film-grain-slider" min="0" max="1" step="0.01" value="0.06">
+                        </div>
+                        <div class="slider-group">
+                            <label for="dither-strength-slider">Dither: <span id="dither-value">Auto</span></label>
+                            <input type="range" id="dither-strength-slider" min="0" max="1" step="0.01" value="0.55">
+                        </div>
+                        <div class="slider-group">
+                            <label for="scanline-slider">Scanline: <span id="scanline-value">Auto</span></label>
+                            <input type="range" id="scanline-slider" min="0" max="1" step="0.01" value="0.08">
+                        </div>
                         <div class="slider-group">
                             <label for="bloom-intensity-slider">Bloom: <span id="bloom-value">1.0</span></label>
                             <input type="range" id="bloom-intensity-slider" min="0" max="2" step="0.1" value="1">
@@ -224,10 +330,12 @@ class LobbyUI {
      */
     _bindElements() {
         this.elements.roomCode = this.element.querySelector('#room-code-display');
+        this.elements.topologyBadge = this.element.querySelector('#topology-badge');
         this.elements.qrCode = this.element.querySelector('#qr-code');
         this.elements.joinUrl = this.element.querySelector('#join-url');
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
+        this.elements.lobbyBanter = this.element.querySelector('#lobby-banter');
         this.elements.modeCards = this.element.querySelectorAll('.mode-card');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.trackSelect = this.element.querySelector('#track-select');
@@ -241,6 +349,17 @@ class LobbyUI {
         // Visual settings elements
         this.elements.visualSettingsSection = this.element.querySelector('.visual-settings-section');
         this.elements.visualSettingsToggle = this.element.querySelector('#visual-settings-toggle');
+        this.elements.visualQualitySelect = this.element.querySelector('#visual-quality-select');
+        this.elements.resolutionScaleSlider = this.element.querySelector('#resolution-scale-slider');
+        this.elements.resolutionAutoToggle = this.element.querySelector('#resolution-auto-toggle');
+        this.elements.resolutionScaleValue = this.element.querySelector('#resolution-scale-value');
+        this.elements.reduceEffectsToggle = this.element.querySelector('#reduce-effects-toggle');
+        this.elements.filmGrainSlider = this.element.querySelector('#film-grain-slider');
+        this.elements.ditherStrengthSlider = this.element.querySelector('#dither-strength-slider');
+        this.elements.scanlineSlider = this.element.querySelector('#scanline-slider');
+        this.elements.filmGrainValue = this.element.querySelector('#film-grain-value');
+        this.elements.ditherValue = this.element.querySelector('#dither-value');
+        this.elements.scanlineValue = this.element.querySelector('#scanline-value');
         this.elements.bloomSlider = this.element.querySelector('#bloom-intensity-slider');
         this.elements.fogSlider = this.element.querySelector('#fog-density-slider');
         this.elements.shakeSlider = this.element.querySelector('#camera-shake-slider');
@@ -285,6 +404,7 @@ class LobbyUI {
 
         // Setup audio controls
         this._setupAudioControls();
+        this._setupVisualSettingsControls();
     }
 
     /**
@@ -352,7 +472,13 @@ class LobbyUI {
                 }
             });
         }
+    }
 
+    /**
+     * Setup host visual settings controls independently of audio availability.
+     * @private
+     */
+    _setupVisualSettingsControls() {
         // Setup visual settings toggle (collapse/expand)
         if (this.elements.visualSettingsToggle) {
             this.elements.visualSettingsToggle.addEventListener('click', () => {
@@ -372,6 +498,31 @@ class LobbyUI {
      * @private
      */
     _initializeSliderValues() {
+        this._syncVisualControlsFromSettings();
+        this._applyVisualSettings();
+    }
+
+    _syncVisualControlsFromSettings() {
+        const settings = this.visualSettings || {};
+
+        if (this.elements.visualQualitySelect) {
+            this.elements.visualQualitySelect.value = settings.visualQualityMode || 'auto';
+        }
+        if (this.elements.resolutionScaleSlider) {
+            this.elements.resolutionScaleSlider.value = String(settings.resolutionScale ?? 1);
+        }
+        if (this.elements.resolutionAutoToggle) {
+            this.elements.resolutionAutoToggle.checked = settings.resolutionScale == null;
+        }
+        this._updateResolutionScaleLabel(settings.resolutionScale);
+
+        if (this.elements.reduceEffectsToggle) {
+            this.elements.reduceEffectsToggle.checked = !!settings.reduceEffects;
+        }
+        this._setNullableSliderValue('filmGrain', 'filmGrainSlider', 'filmGrainValue', 0.06, 2);
+        this._setNullableSliderValue('ditherStrength', 'ditherStrengthSlider', 'ditherValue', 0.55, 2);
+        this._setNullableSliderValue('scanline', 'scanlineSlider', 'scanlineValue', 0.08, 2);
+
         if (this.elements.bloomSlider) {
             this.elements.bloomSlider.value = this.visualSettings.bloom.toString();
             if (this.elements.bloomValue) {
@@ -393,9 +544,23 @@ class LobbyUI {
         if (this.elements.postProcessingToggle) {
             this.elements.postProcessingToggle.checked = this.visualSettings.postProcessing;
         }
+    }
 
-        // Apply loaded settings to the RenderSystem
-        this._applyVisualSettings();
+    _setNullableSliderValue(setting, sliderKey, valueKey, fallback, digits) {
+        const value = this.visualSettings[setting];
+        if (this.elements[sliderKey]) {
+            this.elements[sliderKey].value = String(value ?? fallback);
+        }
+        if (this.elements[valueKey]) {
+            this.elements[valueKey].textContent = value == null ? 'Auto' : Number(value).toFixed(digits);
+        }
+    }
+
+    _updateResolutionScaleLabel(value) {
+        if (this.elements.resolutionScaleValue) {
+            this.elements.resolutionScaleValue.textContent =
+                value == null ? 'Auto' : `${Math.round(Number(value) * 100)}%`;
+        }
     }
 
     /**
@@ -403,10 +568,9 @@ class LobbyUI {
      * @private
      */
     _applyVisualSettings() {
-        this._updateVisualSetting('bloom', this.visualSettings.bloom);
-        this._updateVisualSetting('fog', this.visualSettings.fog);
-        this._updateVisualSetting('shake', this.visualSettings.shake);
-        this._updateVisualSetting('postProcessing', this.visualSettings.postProcessing);
+        const controller = this._ensureManualVisualSettingsController();
+        this.visualSettings = controller.update(this.visualSettings);
+        return this.visualSettings;
     }
 
     /**
@@ -414,6 +578,69 @@ class LobbyUI {
      * @private
      */
     _setupVisualSettingsListeners() {
+        if (this.elements.visualQualitySelect) {
+            this.elements.visualQualitySelect.addEventListener('change', (e) => {
+                this._updateVisualSetting('visualQualityMode', e.target.value || 'auto');
+            });
+        }
+
+        if (this.elements.resolutionAutoToggle) {
+            this.elements.resolutionAutoToggle.addEventListener('change', (e) => {
+                const value = e.target.checked
+                    ? null
+                    : parseFloat(this.elements.resolutionScaleSlider?.value || '1');
+                this._updateResolutionScaleLabel(value);
+                this._updateVisualSetting('resolutionScale', value);
+            });
+        }
+
+        if (this.elements.resolutionScaleSlider) {
+            this.elements.resolutionScaleSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.resolutionAutoToggle) {
+                    this.elements.resolutionAutoToggle.checked = false;
+                }
+                this._updateResolutionScaleLabel(value);
+                this._updateVisualSetting('resolutionScale', value);
+            });
+        }
+
+        if (this.elements.reduceEffectsToggle) {
+            this.elements.reduceEffectsToggle.addEventListener('change', (e) => {
+                this._updateVisualSetting('reduceEffects', !!e.target.checked);
+            });
+        }
+
+        if (this.elements.filmGrainSlider) {
+            this.elements.filmGrainSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.filmGrainValue) {
+                    this.elements.filmGrainValue.textContent = value.toFixed(2);
+                }
+                this._updateVisualSetting('filmGrain', value);
+            });
+        }
+
+        if (this.elements.ditherStrengthSlider) {
+            this.elements.ditherStrengthSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.ditherValue) {
+                    this.elements.ditherValue.textContent = value.toFixed(2);
+                }
+                this._updateVisualSetting('ditherStrength', value);
+            });
+        }
+
+        if (this.elements.scanlineSlider) {
+            this.elements.scanlineSlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (this.elements.scanlineValue) {
+                    this.elements.scanlineValue.textContent = value.toFixed(2);
+                }
+                this._updateVisualSetting('scanline', value);
+            });
+        }
+
         // Bloom intensity slider
         if (this.elements.bloomSlider) {
             this.elements.bloomSlider.addEventListener('input', (e) => {
@@ -482,35 +709,8 @@ class LobbyUI {
         // Update internal state
         this.visualSettings[setting] = value;
 
-        // Save to localStorage
-        this._saveVisualSettingsToStorage();
-
-        // Access game through window.game
-        const render = window.game?.systems?.render;
-        if (!render) return;
-
-        switch (setting) {
-            case 'bloom':
-                if (render.postProcessing?.passes?.bloom) {
-                    render.postProcessing.passes.bloom.strength = value;
-                }
-                break;
-            case 'fog':
-                if (render.scene?.fog) {
-                    render.scene.fog.density = value;
-                }
-                break;
-            case 'shake':
-                if (render.cameraShake) {
-                    render.cameraShake.intensity = value;
-                }
-                break;
-            case 'postProcessing':
-                if (render.postProcessing) {
-                    render.postProcessing.enabled = value;
-                }
-                break;
-        }
+        const controller = this._ensureManualVisualSettingsController();
+        this.visualSettings = controller.update({ [setting]: value });
 
         // Emit event for other systems
         if (this.eventBus) {
@@ -530,6 +730,12 @@ class LobbyUI {
             case 'neonMax':
                 // Maximum visual impact - all effects at max
                 preset = {
+                    visualQualityMode: 'host-native',
+                    resolutionScale: 1,
+                    reduceEffects: false,
+                    filmGrain: 0.2,
+                    ditherStrength: 0.7,
+                    scanline: 0.16,
                     bloom: 2.0,
                     fog: 0.012,
                     shake: 0.2,
@@ -539,6 +745,12 @@ class LobbyUI {
             case 'mobileLite':
                 // Performance-optimized settings for mobile
                 preset = {
+                    visualQualityMode: 'host-balanced',
+                    resolutionScale: 0.85,
+                    reduceEffects: false,
+                    filmGrain: 0.05,
+                    ditherStrength: 0.42,
+                    scanline: 0.04,
                     bloom: 0.8,
                     fog: 0.005,
                     shake: 0.1,
@@ -548,6 +760,12 @@ class LobbyUI {
             case 'off':
                 // Minimal effects for maximum performance
                 preset = {
+                    visualQualityMode: 'host-fallback',
+                    resolutionScale: 0.55,
+                    reduceEffects: true,
+                    filmGrain: 0,
+                    ditherStrength: 0,
+                    scanline: 0,
                     bloom: 0,
                     fog: 0,
                     shake: 0,
@@ -563,27 +781,7 @@ class LobbyUI {
         this.visualSettings = { ...this.visualSettings, ...preset };
 
         // Update UI sliders to reflect preset values
-        if (this.elements.bloomSlider) {
-            this.elements.bloomSlider.value = preset.bloom.toString();
-            if (this.elements.bloomValue) {
-                this.elements.bloomValue.textContent = preset.bloom.toFixed(1);
-            }
-        }
-        if (this.elements.fogSlider) {
-            this.elements.fogSlider.value = preset.fog.toString();
-            if (this.elements.fogValue) {
-                this.elements.fogValue.textContent = preset.fog.toFixed(3);
-            }
-        }
-        if (this.elements.shakeSlider) {
-            this.elements.shakeSlider.value = preset.shake.toString();
-            if (this.elements.shakeValue) {
-                this.elements.shakeValue.textContent = preset.shake.toFixed(2);
-            }
-        }
-        if (this.elements.postProcessingToggle) {
-            this.elements.postProcessingToggle.checked = preset.postProcessing;
-        }
+        this._syncVisualControlsFromSettings();
 
         // Apply all settings to render system
         this._applyVisualSettings();
@@ -697,80 +895,88 @@ class LobbyUI {
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.4);
+                background:
+                    linear-gradient(90deg, rgba(20, 17, 15, 0.9) 0%, rgba(20, 17, 15, 0.68) 34%, rgba(20, 17, 15, 0.12) 66%, rgba(20, 17, 15, 0) 100%);
                 display: flex;
-                align-items: center;
-                justify-content: center;
+                align-items: stretch;
+                justify-content: flex-start;
                 z-index: 100;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+                pointer-events: none;
             }
             .lobby-ui.hidden {
                 display: none;
             }
             .lobby-content {
-                background: rgba(26, 26, 46, 0.85);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border-radius: 20px;
-                padding: 18px 30px 24px;
+                /* --u is the lobby's base unit; every size below is calc(var(--u) * N)
+                   so the whole panel scales coherently from one knob. ~16px at 1080p. */
+                --u: calc(var(--ui-scale, 1) * clamp(12px, 1.5vmin, 30px));
+                background: rgba(42, 38, 32, 0.9);
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                border-radius: 0 calc(var(--u) * 0.5) calc(var(--u) * 0.5) 0;
+                border-right: 3px solid #c9bba0;
+                padding: calc(var(--u) * 1.1) calc(var(--u) * 1.9) calc(var(--u) * 1.5);
                 text-align: center;
                 color: white;
-                max-width: 1100px;
-                width: 96%;
-                max-height: 94vh;
+                width: min(48vw, calc(var(--u) * 38));
+                min-width: min(92vw, calc(var(--u) * 24));
+                height: 100vh;
+                max-height: 100vh;
                 overflow-y: auto;
+                pointer-events: auto;
             }
             .lobby-columns {
                 display: flex;
-                gap: 30px;
+                gap: calc(var(--u) * 1.9);
                 justify-content: center;
                 align-items: flex-start;
                 flex-wrap: wrap;
             }
             .lobby-col {
-                min-width: 280px;
+                min-width: calc(var(--u) * 17);
             }
             .lobby-col-left {
-                flex: 0 1 320px;
+                flex: 0 1 calc(var(--u) * 20);
             }
             .lobby-col-right {
-                flex: 1 1 420px;
-                max-width: 560px;
+                flex: 1 1 calc(var(--u) * 26);
+                max-width: calc(var(--u) * 28);
             }
             .lobby-title {
-                font-size: 26px;
-                margin: 0 0 14px;
+                font-size: calc(var(--u) * 1.6);
+                margin: 0 0 calc(var(--u) * 0.9);
                 color: #FFD93D;
             }
             .room-code-section {
-                margin-bottom: 16px;
+                margin-bottom: calc(var(--u) * 1);
             }
             .room-code-label {
                 margin: 0;
                 color: #c9a887;
-                font-size: 14px;
+                font-size: calc(var(--u) * 0.9);
             }
             .room-code {
-                font-size: 40px;
+                font-size: calc(var(--u) * 2.7);
                 font-weight: bold;
-                letter-spacing: 8px;
+                letter-spacing: calc(var(--u) * 0.5);
                 color: #FF6B6B;
-                margin: 6px 0;
-                font-family: monospace;
+                margin: calc(var(--u) * 0.4) 0;
+                font-family: var(--font-mono, monospace);
             }
             .room-code-hint {
                 margin: 0;
                 color: #8a6f5a;
-                font-size: 12px;
+                font-size: calc(var(--u) * 0.75);
             }
             .qr-code {
                 display: block;
-                width: 210px;
-                height: 210px;
-                margin: 10px auto;
-                border-radius: 10px;
+                width: calc(var(--u) * 13);
+                height: calc(var(--u) * 13);
+                margin: calc(var(--u) * 0.6) auto;
+                border-radius: calc(var(--u) * 0.6);
                 background: white;
-                padding: 8px;
+                padding: calc(var(--u) * 0.5);
             }
             .qr-code.hidden {
                 display: none;
@@ -779,34 +985,51 @@ class LobbyUI {
                 margin-bottom: 10px;
             }
             .players-section h2 {
-                font-size: 16px;
-                margin: 0 0 10px;
+                font-size: calc(var(--u) * 1);
+                margin: 0 0 calc(var(--u) * 0.6);
                 color: #c9a887;
             }
             .player-list {
                 list-style: none;
                 padding: 0;
                 margin: 0;
-                max-height: 130px;
+                max-height: calc(var(--u) * 8);
                 overflow-y: auto;
             }
             .player-list li {
-                padding: 7px 12px;
+                padding: calc(var(--u) * 0.45) calc(var(--u) * 0.75);
                 background: #3a2015;
-                border-radius: 8px;
-                margin-bottom: 8px;
+                border-radius: calc(var(--u) * 0.5);
+                margin-bottom: calc(var(--u) * 0.5);
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: calc(var(--u) * 0.6);
+                font-size: calc(var(--u) * 0.9);
             }
             .player-color {
-                width: 20px;
-                height: 20px;
+                width: calc(var(--u) * 1.25);
+                height: calc(var(--u) * 1.25);
                 border-radius: 50%;
             }
             .player-name {
                 flex: 1;
                 text-align: left;
+            }
+            .lobby-banter {
+                display: grid;
+                gap: calc(var(--u) * 0.35);
+                margin-top: calc(var(--u) * 0.65);
+                min-height: calc(var(--u) * 3);
+            }
+            .banter-line {
+                color: #c9bba0;
+                background: rgba(20, 17, 15, 0.74);
+                border-left: 4px solid var(--banter-color, #ffffff);
+                padding: calc(var(--u) * 0.35) calc(var(--u) * 0.5);
+                text-align: left;
+                font-size: calc(var(--u) * 0.72);
+                line-height: 1.2;
+                text-transform: uppercase;
             }
 
             /* Mode Selection Styles */
@@ -814,25 +1037,25 @@ class LobbyUI {
                 margin-bottom: 14px;
             }
             .mode-selection-title {
-                font-size: 14px;
+                font-size: calc(var(--u) * 0.9);
                 color: #c9a887;
-                margin: 0 0 12px;
+                margin: 0 0 calc(var(--u) * 0.75);
                 text-transform: uppercase;
-                letter-spacing: 2px;
+                letter-spacing: calc(var(--u) * 0.12);
             }
             .mode-cards-container {
                 display: flex;
-                gap: 16px;
+                gap: calc(var(--u) * 1);
                 justify-content: center;
                 flex-wrap: wrap;
             }
             .mode-card {
                 --mode-color: #44FF88;
-                background: rgba(26, 26, 46, 0.9);
+                background: rgba(20, 17, 15, 0.88);
                 border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 15px;
-                padding: 14px;
-                width: 180px;
+                border-radius: calc(var(--u) * 0.45);
+                padding: calc(var(--u) * 0.9);
+                width: calc(var(--u) * 11.25);
                 box-sizing: border-box;
                 cursor: pointer;
                 opacity: 0.7;
@@ -849,46 +1072,46 @@ class LobbyUI {
                 opacity: 0.9;
                 transform: scale(0.98);
                 border-color: var(--mode-color);
-                box-shadow: 0 0 20px var(--mode-color);
+                box-shadow: 2px 2px 0 var(--mode-color);
             }
             .mode-card.selected {
                 opacity: 1;
                 transform: scale(1);
                 border: 3px solid var(--mode-color);
-                box-shadow: 0 0 40px var(--mode-color),
-                            inset 0 0 20px rgba(255, 255, 255, 0.05);
+                box-shadow: 2px 2px 0 var(--mode-color),
+                            inset 2px 2px 0 rgba(255, 255, 255, 0.05);
             }
             .mode-card-preview {
-                height: 56px;
+                height: calc(var(--u) * 3.5);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-bottom: 10px;
+                margin-bottom: calc(var(--u) * 0.6);
                 background: rgba(0, 0, 0, 0.3);
-                border-radius: 10px;
+                border-radius: calc(var(--u) * 0.6);
             }
             .mode-card-icon {
-                font-size: 36px;
+                font-size: calc(var(--u) * 2.25);
             }
             .mode-card-content {
                 text-align: center;
             }
             .mode-card-name {
-                font-size: 20px;
+                font-size: calc(var(--u) * 1.25);
                 font-weight: bold;
-                margin: 0 0 6px;
+                margin: 0 0 calc(var(--u) * 0.4);
                 color: var(--mode-color);
             }
             .mode-card-tagline {
-                font-size: 12px;
+                font-size: calc(var(--u) * 0.75);
                 color: #aaa;
-                margin: 0 0 12px;
+                margin: 0 0 calc(var(--u) * 0.75);
                 font-style: italic;
             }
             .mode-card-details {
-                font-size: 11px;
+                font-size: calc(var(--u) * 0.7);
                 color: #888;
-                padding-top: 10px;
+                padding-top: calc(var(--u) * 0.6);
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
 
@@ -902,14 +1125,16 @@ class LobbyUI {
             }
             .settings-section label {
                 color: #c9a887;
+                font-size: calc(var(--u) * 0.85);
             }
             .settings-section select {
                 background: #3a2015;
                 color: white;
                 border: 1px solid #4a2510;
-                padding: 8px 15px;
-                border-radius: 5px;
-                margin-left: 10px;
+                padding: calc(var(--u) * 0.5) calc(var(--u) * 0.9);
+                border-radius: calc(var(--u) * 0.3);
+                margin-left: calc(var(--u) * 0.6);
+                font-size: calc(var(--u) * 0.85);
             }
             .visual-settings-section {
                 margin-bottom: 14px;
@@ -919,8 +1144,8 @@ class LobbyUI {
             }
             .visual-settings-header {
                 margin: 0;
-                padding: 12px 15px;
-                font-size: 14px;
+                padding: calc(var(--u) * 0.75) calc(var(--u) * 0.9);
+                font-size: calc(var(--u) * 0.85);
                 color: #c9a887;
                 cursor: pointer;
                 display: flex;
@@ -944,6 +1169,25 @@ class LobbyUI {
             }
             .visual-settings-section.collapsed .visual-settings-content {
                 display: none;
+            }
+            .select-group {
+                margin-bottom: 15px;
+            }
+            .select-group label {
+                display: flex;
+                justify-content: space-between;
+                color: #c9a887;
+                font-size: 13px;
+                margin-bottom: 5px;
+            }
+            .select-group select {
+                width: 100%;
+                background: #26150f;
+                color: #f5e9d0;
+                border: 1px solid #6a3015;
+                border-radius: 5px;
+                padding: 8px 10px;
+                font-size: 13px;
             }
             .slider-group {
                 margin-bottom: 15px;
@@ -1024,14 +1268,14 @@ class LobbyUI {
                 background: #FF6B6B;
                 color: #1a0f0a;
                 border: none;
-                padding: 14px 40px;
-                font-size: 18px;
+                padding: calc(var(--u) * 0.9) calc(var(--u) * 2.5);
+                font-size: calc(var(--u) * 1.15);
                 font-weight: bold;
-                border-radius: 30px;
+                border-radius: calc(var(--u) * 0.45);
                 cursor: pointer;
                 transition: all 0.2s;
                 width: 100%;
-                max-width: 400px;
+                max-width: calc(var(--u) * 25);
             }
             .start-button:disabled {
                 background: #4a2510;
@@ -1048,7 +1292,7 @@ class LobbyUI {
             }
             .start-button.race-mode:not(:disabled):hover {
                 background: #66FFAA;
-                box-shadow: 0 0 20px #44FF88;
+                box-shadow: 2px 2px 0 #44FF88;
             }
             .start-button.derby-mode:not(:disabled) {
                 background: #FF4444;
@@ -1056,7 +1300,22 @@ class LobbyUI {
             }
             .start-button.derby-mode:not(:disabled):hover {
                 background: #FF6666;
-                box-shadow: 0 0 20px #FF4444;
+                box-shadow: 2px 2px 0 #FF4444;
+            }
+            @media (max-width: 820px) {
+                .lobby-ui {
+                    background: rgba(20, 17, 15, 0.78);
+                    align-items: flex-end;
+                }
+                .lobby-content {
+                    width: 100%;
+                    min-width: 0;
+                    height: auto;
+                    max-height: 58vh;
+                    border-right: none;
+                    border-top: 3px solid #c9bba0;
+                    border-radius: calc(var(--u) * 0.5) calc(var(--u) * 0.5) 0 0;
+                }
             }
             .audio-settings-section {
                 margin-bottom: 30px;
@@ -1116,7 +1375,7 @@ class LobbyUI {
                 min-width: 40px;
                 text-align: right;
                 color: #00ff88;
-                font-family: monospace;
+                font-family: var(--font-mono, monospace);
             }
             .mute-button {
                 background: #333;
@@ -1145,6 +1404,8 @@ class LobbyUI {
 
         this.eventBus.on('network:roomCreated', (data) => {
             this.setRoomCode(data.roomCode, data.joinUrl);
+            // Surface the room's topology (chosen at creation) in the lobby.
+            this.setTopology(data.topology);
             // Also set on RoomCodeOverlayUI if available
             if (window.roomCodeOverlay && window.roomCodeOverlay.setRoomCode) {
                 window.roomCodeOverlay.setRoomCode(data.roomCode);
@@ -1153,6 +1414,10 @@ class LobbyUI {
 
         this.eventBus.on('network:playerJoined', (player) => {
             this.addPlayer(player);
+        });
+
+        this.eventBus.on('lobby:worldBanter', (snapshot) => {
+            this._updateBanter(snapshot?.banter || []);
         });
 
         this.eventBus.on('network:playerLeft', (data) => {
@@ -1188,6 +1453,20 @@ class LobbyUI {
             const displayUrl = joinUrl || `${window.location.origin}/player?room=${code}`;
             this.elements.joinUrl.textContent = displayUrl;
         }
+    }
+
+    /**
+     * Surface the room topology (local/remote/mixed), fixed at room creation,
+     * in the lobby badge. Unknown values coerce to the Local default.
+     * @param {string} topology
+     */
+    setTopology(topology) {
+        this.topology = normalizeTopology(topology);
+        const badge = this.elements.topologyBadge;
+        if (!badge) return;
+        const { icon, label } = TOPOLOGY_BADGE[this.topology] || TOPOLOGY_BADGE[DEFAULT_TOPOLOGY];
+        badge.dataset.topology = this.topology;
+        badge.textContent = `${icon} ${label}`;
     }
 
     /**
@@ -1231,12 +1510,36 @@ class LobbyUI {
 
         this.elements.playerCount.textContent = this.players.length.toString();
 
-        this.elements.playerList.innerHTML = this.players.map(player => `
-            <li>
-                <div class="player-color" style="background: ${player.color || '#888'}"></div>
-                <span class="player-name">${player.name || 'Player'}</span>
-            </li>
-        `).join('');
+        const rows = this.players.map((player) => {
+            const row = document.createElement('li');
+            const color = document.createElement('div');
+            color.className = 'player-color';
+            color.style.background = safeLobbyColor(player.color, '#888');
+
+            const name = document.createElement('span');
+            name.className = 'player-name';
+            name.textContent = player.name || 'Player';
+
+            row.appendChild(color);
+            row.appendChild(name);
+            return row;
+        });
+
+        replaceChildrenSafe(this.elements.playerList, rows);
+    }
+
+    _updateBanter(banter = []) {
+        if (!this.elements.lobbyBanter) return;
+        const latest = banter.slice(-3).reverse();
+        const rows = latest.map((entry) => {
+            const row = document.createElement('div');
+            row.className = 'banter-line';
+            row.style.setProperty('--banter-color', safeLobbyColor(entry.color, '#ffffff'));
+            row.textContent = entry.line || '';
+            return row;
+        });
+
+        replaceChildrenSafe(this.elements.lobbyBanter, rows);
     }
 
     /**

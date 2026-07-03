@@ -12,6 +12,8 @@
  *   damage.init();
  */
 
+import { RealClock } from '../engine/Clock.js';
+
 class DamageSystem {
     /**
      * @param {Object} options
@@ -23,6 +25,11 @@ class DamageSystem {
     constructor(options = {}) {
         this.eventBus = options.eventBus ||
             (typeof window !== 'undefined' ? window.eventBus : null);
+
+        // Deterministic run context (set by Engine). Cooldown/respawn timers
+        // read sim time from it; falls back to wall time when none is attached.
+        this.runContext = options.runContext || null;
+        this._realClock = new RealClock();
 
         this.enabled = options.enabled !== false;
         this.collisionDamageMultiplier = options.collisionDamageMultiplier || 1;
@@ -44,6 +51,24 @@ class DamageSystem {
 
         // State
         this.initialized = false;
+    }
+
+    /**
+     * Attach the deterministic run context.
+     * @param {import('../engine/GameRunContext.js').GameRunContext} ctx
+     */
+    setRunContext(ctx) {
+        this.runContext = ctx;
+    }
+
+    /**
+     * Current gameplay time in ms: sim time when a run context is attached
+     * (deterministic), else wall time via the allowlisted RealClock adapter.
+     * @returns {number}
+     * @private
+     */
+    _nowMs() {
+        return this.runContext ? this.runContext.clock.nowMs() : this._realClock.nowMs();
     }
 
     /**
@@ -88,7 +113,7 @@ class DamageSystem {
     update(dt) {
         if (!this.initialized || !this.enabled) return;
 
-        const now = performance.now();
+        const now = this._nowMs();
 
         // Process respawn queue
         this._processRespawns(now);
@@ -126,7 +151,7 @@ class DamageSystem {
      * @private
      */
     _handleVehicleCollision(vehicleA, vehicleB) {
-        const now = performance.now();
+        const now = this._nowMs();
 
         // Create collision key for cooldown
         const key = [vehicleA.id, vehicleB.id].sort().join('-');
@@ -158,7 +183,7 @@ class DamageSystem {
     _handleBarrierCollision(vehicle) {
         if (!vehicle) return;
 
-        const now = performance.now();
+        const now = this._nowMs();
         const key = `barrier-${vehicle.id}`;
 
         // Check cooldown
@@ -238,7 +263,7 @@ class DamageSystem {
         });
 
         if (died) {
-            this._onVehicleDestroyed(vehicle);
+            this._onVehicleDestroyed(vehicle, source);
         }
     }
 
@@ -265,17 +290,21 @@ class DamageSystem {
      * Handle vehicle destruction
      * @private
      */
-    _onVehicleDestroyed(vehicle) {
+    _onVehicleDestroyed(vehicle, source = null) {
         this._emit('damage:destroyed', {
             vehicleId: vehicle.id,
-            playerId: vehicle.playerId
+            playerId: vehicle.playerId,
+            source,
+            sourcePlayerId: source?.sourcePlayerId ?? source?.playerId ?? null,
+            sourceVehicleId: source?.sourceVehicleId ?? source?.vehicleId ?? null,
+            sourceWeaponId: source?.weaponId ?? null
         });
 
         // Queue respawn (derby is elimination - no respawns there)
         if (this.respawnEnabled) {
             this.respawnQueue.push({
                 vehicleId: vehicle.id,
-                respawnTime: performance.now() + this.respawnDelay
+                respawnTime: this._nowMs() + this.respawnDelay
             });
         }
     }

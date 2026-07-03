@@ -1,8 +1,10 @@
 /**
- * TrailSystem - Manages particle exhaust trails for vehicles
+ * TrailSystem - Manages chunky lo-fi exhaust trails for vehicles
  *
- * Creates glowing particle trails behind vehicles when they're moving fast.
- * Uses Points geometry with additive blending for MAXIMAL visual impact.
+ * Creates blocky, hard-edged particle trails behind vehicles when they're moving
+ * fast. Uses Points geometry with NORMAL (non-additive) blending + dithering and
+ * a quantized/posterized fade so the trail reads as a chunky Skip Bin Arcade
+ * sprite, not a soft additive glow.
  *
  * Usage:
  *   const trailSystem = new TrailSystem({ eventBus, renderSystem });
@@ -24,14 +26,17 @@ class TrailSystem {
         // Trail data per vehicle
         this.trails = new Map(); // vehicleId -> Trail object
 
-        // Configuration
+        // Configuration — lo-fi chunky defaults (no soft additive glow)
         this.config = {
-            density: 200,        // Max particles per trail
+            density: 60,         // Max particles per trail (fewer, chunkier)
             minSpeed: 30,       // km/h threshold to start trail
-            opacity: 0.8,       // Particle opacity
-            particleSize: 0.3,  // Size of each particle
+            opacity: 1.0,       // Hard, not a translucent haze
+            particleSize: 0.5,  // Chunkier blocks
             maxAge: 2.0,        // Particle lifetime in seconds
-            spawnRate: 10       // Particles per second when moving
+            spawnRate: 10,      // Particles per second when moving
+            blending: 'normal', // 'normal' (hard-edged) vs legacy 'additive' glow
+            dithering: true,    // lo-fi dither, matches the posterize/dither grade
+            fadeSteps: 4        // quantized/posterized fade bands, not a smooth gradient
         };
 
         // State
@@ -152,14 +157,18 @@ class Trail {
         this.particles = [];
         this.lastSpawnTime = 0;
 
-        // Create geometry and material
+        // Create geometry and material. NORMAL blending + dithering (not additive)
+        // so the trail reads chunky/hard-edged rather than as a soft glow.
         this.geometry = new THREE.BufferGeometry();
         this.material = new THREE.PointsMaterial({
             color: vehicle.color || 0xff6600,
             size: this.config.particleSize,
             transparent: true,
             opacity: this.config.opacity,
-            blending: THREE.AdditiveBlending,
+            blending: this.config.blending === 'additive'
+                ? THREE.AdditiveBlending
+                : THREE.NormalBlending,
+            dithering: this.config.dithering === true,
             depthWrite: false
         });
 
@@ -250,8 +259,9 @@ class Trail {
             positions[idx + 1] = particle.position.y;
             positions[idx + 2] = particle.position.z;
 
-            // Color with age-based fade
-            const ageFactor = 1.0 - (particle.age / particle.lifetime);
+            // Color with age-based fade, QUANTIZED into hard bands (posterized)
+            // instead of a smooth gradient, so the trail does not read as a glow.
+            const ageFactor = this._quantizeFade(1.0 - (particle.age / particle.lifetime));
             const color = vehicleColor.clone().multiplyScalar(ageFactor);
             colors[idx] = color.r;
             colors[idx + 1] = color.g;
@@ -267,6 +277,18 @@ class Trail {
         if (this.geometry.attributes.color) {
             this.geometry.attributes.color.needsUpdate = true;
         }
+    }
+
+    /**
+     * Quantize a 0..1 fade value into `fadeSteps` hard bands (posterized).
+     * Pure + deterministic; testable without a renderer.
+     * @param {number} raw - smooth fade factor 0..1
+     * @returns {number} banded fade factor 0..1
+     */
+    _quantizeFade(raw) {
+        const clamped = Math.max(0, Math.min(1, raw));
+        const steps = Math.max(1, this.config.fadeSteps || 4);
+        return Math.ceil(clamped * steps) / steps;
     }
 
     /**

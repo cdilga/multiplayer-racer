@@ -1,0 +1,33 @@
+{
+  "navigatorGpu": true,
+  "secureContext": true,
+  "activeApi": "webgpu",
+  "nativeWebGPU": true,
+  "limitation": null,
+  "backend": "WebGPU",
+  "adapterInfo": {
+    "vendor": "apple",
+    "architecture": "metal-3",
+    "device": "",
+    "description": ""
+  },
+  "deviceLimits": {
+    "maxBindGroups": 4,
+    "maxBindingsPerBindGroup": 1000,
+    "maxTextureDimension1D": 8192,
+    "maxTextureDimension2D": 8192,
+    "maxTextureDimension3D": 2048,
+    "maxTextureArrayLayers": 256,
+    "maxSamplersPerShaderStage": 16,
+    "maxStorageTexturesPerShaderStage": 4,
+    "maxStorageBuffersPerShaderStage": 8,
+    "maxUniformBuffersPerShaderStage": 12,
+    "maxUniformBufferBindingSize": 65536,
+    "maxStorageBufferBindingSize": 134217728,
+    "maxComputeWorkgroupStorageSize": 16384,
+    "maxComputeInvocationsPerWorkgroup": 256,
+    "maxComputeWorkgroupSizeX": 256,
+    "maxComputeWorkgroupSizeY": 256,
+    "maxComputeWorkgroupSizeZ": 64
+  }
+}

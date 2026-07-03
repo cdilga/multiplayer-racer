@@ -68,6 +68,18 @@ describe('track validation', () => {
         expect(rampObjects.every((object: THREE.Object3D) => !object.userData?.isBarrier)).toBe(true);
     });
 
+    it.each(reviewedTracks)('adds decorative props as non-barrier entities in %s', async (trackId) => {
+        const factory = makeFactory();
+        const trackData = await factory.create(trackId);
+
+        const props = (trackData.props || []) as THREE.Object3D[];
+        expect(props.length).toBeGreaterThan(0);
+        expect(props.every((prop) => prop.userData?.isPropKitProp)).toBe(true);
+        expect(props.every((prop) => prop.userData?.decorativeOnly)).toBe(true);
+        expect(props.every((prop) => !prop.userData?.isBarrier)).toBe(true);
+        expect(hasUserData(trackData.mesh, 'isPropKitProp', true)).toBe(true);
+    });
+
     it.each(reviewedTracks)('keeps all configured spawns inside %s bounds', (trackId) => {
         const config = loadTrackConfig(trackId);
         const track = new Track({ config });

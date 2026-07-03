@@ -143,6 +143,10 @@ class ServerTelemetryTest(unittest.TestCase):
         self.assertEqual(host_lost['roomAnalyticsId'], game_rooms[room_code]['room_analytics_id'])
         self.assertEqual(host_lost['properties']['handler'], 'disconnect')
         self.assertEqual(host_lost['properties']['graceSeconds'], 30.0)
+        self.assertIn(
+            'jj_server_disconnects_total{cause="host"',
+            self.client.get('/metrics').get_data(as_text=True),
+        )
 
     def test_report_submission_metrics_and_health_are_privacy_safe(self):
         description = 'Alice in room ABCD using token supersecrettoken1234567890 from 10.0.0.1'
@@ -174,17 +178,35 @@ class ServerTelemetryTest(unittest.TestCase):
         self.assertNotIn('supersecrettoken1234567890', report_json)
         self.assertNotIn('secretpixels', report_json)
 
+        metrics_text = self.client.get('/metrics').get_data(as_text=True)
+        self.assertIn('jj_server_events_total{event_name="server:report:submitted"}', metrics_text)
+        self.assertIn('jj_server_exceptions_total', metrics_text)
         health = self.client.get('/health')
         self.assertEqual(health.status_code, 200)
         self.assertEqual(health.get_json(), {'status': 'ok', 'rooms': 0})
 
-        metrics = self.client.get('/metrics')
-        metrics_text = metrics.get_data(as_text=True)
-        self.assertEqual(metrics.status_code, 200)
-        self.assertIn('jj_server_events_total{event_name="server:report:submitted"} 1', metrics_text)
-        self.assertIn('jj_server_active_rooms 0', metrics_text)
-        self.assertNotIn('Alice', metrics_text)
-        self.assertNotIn('ABCD', metrics_text)
+    def test_server_metrics_are_scrape_safe_and_low_cardinality(self):
+        host = self.make_socket_client()
+        room_code = self.create_room_event(host)['room_code']
+        response = self.client.get('/metrics')
+        self.assertEqual(response.status_code, 200)
+        base_metrics = response.get_data(as_text=True)
+        self.assertIn('jj_server_active_rooms 1', base_metrics)
+        self.assertIn('jj_server_active_players 0', base_metrics)
+
+        player = self.make_socket_client()
+        self.join_player_event(player, room_code, 'SeatOwner', client_instance_id='scrape-test')
+        joined_metrics = self.client.get('/metrics').get_data(as_text=True)
+        self.assertIn('jj_server_active_players 1', joined_metrics)
+
+        player.disconnect()
+        host.disconnect()
+        metrics_text = self.client.get('/metrics').get_data(as_text=True)
+        self.assertRegex(metrics_text, r'jj_server_disconnects_total\{[^}]*cause="seat"')
+        self.assertIn('jj_server_socket_events_total{handler="disconnect",result="ok"}', metrics_text)
+        self.assertIn('jj_server_events_total{event_name="server:player:left"', metrics_text)
+        self.assertIn('jj_server_uptime_seconds ', metrics_text)
+        self.assertNotIn(room_code, metrics_text)
 
     def test_http_exception_capture_redacts_query_and_ip(self):
         with patch('server.app.render_template', side_effect=RuntimeError('boom ABCD token-secret 10.0.0.1')):

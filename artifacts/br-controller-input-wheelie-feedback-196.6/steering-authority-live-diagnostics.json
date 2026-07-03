@@ -1,0 +1,77 @@
+{
+  "bead": "br-controller-input-wheelie-feedback-196.6",
+  "capturedAt": "2026-07-02T10:27:00Z",
+  "source": "tests/integration/steering-authority-live.test.js",
+  "livePath": "PhysicsSystem.applyVehicleControls",
+  "steeringSweep": [
+    {
+      "state": "grounded",
+      "authority": 1,
+      "maxAngle": 0.5,
+      "appliedSteer": -0.5,
+      "dominantLimiter": "none"
+    },
+    {
+      "state": "front-light",
+      "authority": 0.7,
+      "maxAngle": 0.5,
+      "appliedSteer": -0.35,
+      "dominantLimiter": "front-light"
+    },
+    {
+      "state": "wheelie",
+      "authority": 0.18,
+      "maxAngle": 0.5,
+      "appliedSteer": -0.09,
+      "dominantLimiter": "wheelie"
+    },
+    {
+      "state": "airborne",
+      "authority": 0.08,
+      "maxAngle": 0.5,
+      "appliedSteer": -0.04,
+      "dominantLimiter": "airborne"
+    }
+  ],
+  "badLanding": {
+    "durationSeconds": 1,
+    "authorityFloor": 0.55,
+    "observedAuthorityRange": [0.54, 0.7],
+    "dominantLimiter": "bad-landing",
+    "telemetryFactorsPresent": ["state", "speed", "roll", "badLanding"]
+  },
+  "sideTiltRecovery": {
+    "rollDeg": 90,
+    "recoveryInfluence": 0.5,
+    "requiresPlayerInput": true,
+    "disabledWhileAirborne": true,
+    "maxAbsRollImpulse": 0.45,
+    "maxAbsYawImpulse": 0.18
+  },
+  "wallContact": {
+    "authorityReduction": 0,
+    "appliedSteerDelta": 0,
+    "wallPeel": 0.15
+  },
+  "f2Telemetry": {
+    "fields": [
+      "authority",
+      "dominantLimiter",
+      "factors.state",
+      "factors.speed",
+      "factors.roll",
+      "factors.badLanding",
+      "recoveryInfluence",
+      "wallPeel",
+      "frontLightAuthority",
+      "wheelieAuthority",
+      "airborneAuthority"
+    ]
+  },
+  "commands": {
+    "focused": "npx vitest run tests/unit/steering-authority.test.js tests/integration/steering-authority-live.test.js",
+    "adjacent": "npx vitest run tests/unit/wheelie-intent.test.js tests/integration/wheelie-intent-sim.test.js",
+    "build": "npm run build",
+    "pythonSyntax": "python -m py_compile server/app.py"
+  }
+}

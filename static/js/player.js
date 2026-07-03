@@ -5,6 +5,22 @@ const INPUT_SEND_RATE = 60; // Hz
 const INPUT_SEND_INTERVAL = 1000 / INPUT_SEND_RATE;
 let lastInputUpdate = 0;
 let lastControlFrameTime = null;
+let lastInputTimestamp = 0;
+let lastInputStallTelemetryAt = 0;
+let hasEmittedJoinStartedTelemetry = false;
+let hasEmittedFirstInputTelemetry = false;
+let hasConnectedControllerTelemetry = false;
+let hasJoinFailedTelemetry = false;
+const playerControllerTelemetryState = new Map();
+const PLAYER_CONTROLLER_TELEMETRY_COOLDOWN_MS = {
+    reconnect_attempted: 1500,
+    reconnect_succeeded: 3000,
+    reconnect_failed: 2500,
+    connected: 1000,
+    disconnected: 1000,
+    visibility_change: 1000,
+    controller_fallback: 1200,
+};
 const ControlMapperClass = typeof window.ControlMapper === 'function'
     ? window.ControlMapper
     : null;
@@ -319,6 +335,121 @@ if (elements.autoJoinMessage) {
     elements.autoJoinMessage.appendChild(elements.joinTimerDisplay);
 }
 
+// ---------------------------------------------------------------------------
+// woq.11 Slice 2: join-route integration. Derive the entry decision from
+// EXPLICIT typed route state (via / intent / pair / reconnect), never from
+// user-agent sniffing, via the validated pure resolver (exposed on window by
+// src/player/main.js). Drives the chooser, the role badge, and the renderer
+// guard. A Local phone is controllers/HUD-only: it NEVER starts a world
+// renderer, so __worldRendererStarted stays false.
+// ---------------------------------------------------------------------------
+window.__worldRendererStarted = false; // renderer guard: phones never render the world
+
+function readJoinEntryFromUrl() {
+    const params = new URLSearchParams(window.location.search || '');
+    let room = params.get('room') || '';
+    const pathMatch = (window.location.pathname || '').match(/^\/join\/([^\/?#]+)/);
+    if (!room && pathMatch) {
+        try { room = decodeURIComponent(pathMatch[1]); } catch (e) { room = pathMatch[1]; }
+    }
+    return {
+        via: (params.get('via') || '').trim(),
+        intent: (params.get('intent') || '').trim(),
+        room: (room || '').toUpperCase(),
+        pairToken: params.get('pair') || null,
+        reconnectToken: params.get('reconnect') || null
+    };
+}
+
+function roleBadgeText(decision) {
+    switch (decision.entryKind) {
+        case 'host_qr_controller':
+        case 'controller_only':
+            return 'Controller — you drive on the visible game screen';
+        case 'remote_screen_viewer':
+            return decision.startRenderer
+                ? 'Screen — pair a phone to drive this seat'
+                : 'Screen (light) — pair a phone to drive; this device shows a HUD';
+        case 'spectator':
+            return 'Spectator — watch only, no driving controls';
+        case 'pair_controller':
+            return 'Controller — paired to an open seat';
+        case 'reconnect_restore':
+            return 'Reconnecting — restoring your seat';
+        default:
+            return decision.role ? `Role: ${decision.role}` : '';
+    }
+}
+
+function computeJoinRoute(overrideIntent) {
+    const entry = readJoinEntryFromUrl();
+    if (overrideIntent) entry.intent = overrideIntent;
+    // Pre-join the client cannot know full room state: assume an open room.
+    // Reconnect prior role comes from any saved seat record.
+    let priorRole = null;
+    try {
+        if (entry.reconnectToken || entry.room) {
+            const rec = findSavedReconnectRecord ? findSavedReconnectRecord(entry.room) : null;
+            priorRole = rec?.role || null;
+        }
+    } catch (e) { priorRole = null; }
+    const roomState = { status: 'open', topology: 'local', priorRole };
+    // Local phone build: controllers only. It cannot render the world, so
+    // screen/spectator intents degrade gracefully (no world renderer here).
+    const capability = { canRenderViewer: false, sameDeviceViewerController: false };
+    const resolver = window.resolveJoinRoute;
+    if (typeof resolver !== 'function') {
+        return { entry, decision: { entryKind: 'unavailable', role: null, showChooser: false, startRenderer: false, usedUserAgentOnly: false } };
+    }
+    return { entry, decision: resolver({ ...entry, roomState, capability }) };
+}
+
+function applyJoinRoute(overrideIntent) {
+    const { entry, decision } = computeJoinRoute(overrideIntent);
+    window.__joinEntry = entry;
+    window.__joinRoute = decision;
+    // Renderer guard reaffirmed: controller/HUD-only, no world renderer.
+    window.__worldRendererStarted = false;
+    if (typeof gameState === 'object' && gameState) {
+        gameState.entryDecision = decision;
+        gameState.entryReadOnly = !!decision.readOnly; // spectator: no driving controls
+    }
+
+    const chooser = document.getElementById('entry-chooser');
+    const badge = document.getElementById('entry-role-badge');
+    if (decision.showChooser) {
+        if (chooser) chooser.style.display = '';
+        if (badge) badge.style.display = 'none';
+    } else {
+        if (chooser) chooser.style.display = 'none';
+        if (badge) {
+            const text = roleBadgeText(decision);
+            badge.textContent = text;
+            badge.style.display = text ? '' : 'none';
+        }
+    }
+
+    // Prefill the room code from a deep-link (does not overwrite user input).
+    if (entry.room && elements.roomCodeInput && !elements.roomCodeInput.value) {
+        elements.roomCodeInput.value = entry.room;
+    }
+    return decision;
+}
+
+function initJoinRouting() {
+    ['screen', 'controller', 'spectator'].forEach((intent) => {
+        const btn = document.getElementById('entry-choose-' + intent);
+        if (btn) btn.addEventListener('click', () => applyJoinRoute(intent));
+    });
+    applyJoinRoute();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initJoinRouting);
+} else {
+    initJoinRouting();
+}
+
 function resolveSocketTransports(search = window.location.search) {
     const params = new URLSearchParams(search || '');
     const socketTransport = (params.get('socketTransport') || '').toLowerCase();
@@ -510,6 +641,67 @@ function collectPlayerDebugInfo() {
     };
 }
 
+function emitPlayerTelemetryEvent(eventName, properties = {}) {
+    const telemetry = window.__JJ_TELEMETRY__;
+    if (!telemetry || typeof telemetry.capture !== 'function') {
+        return null;
+    }
+    return telemetry.capture(eventName, properties);
+}
+
+function emitPlayerControllerTelemetry(eventName, properties = {}) {
+    const nowMs = Date.now();
+    const cooldownMs = Number(
+        PLAYER_CONTROLLER_TELEMETRY_COOLDOWN_MS[eventName] ?? PLAYER_CONTROLLER_TELEMETRY_COOLDOWN_MS.controller_fallback
+    );
+    const lastAt = Number(playerControllerTelemetryState.get(eventName) || 0);
+    if (cooldownMs > 0 && nowMs - lastAt < cooldownMs) {
+        return null;
+    }
+    playerControllerTelemetryState.set(eventName, nowMs);
+    return emitPlayerTelemetryEvent(eventName, {
+        topology: 'remote',
+        playerCount: gameState.playerId ? 1 : 0,
+        ruleset: gameState.gameMode || 'unknown',
+        ...properties,
+    });
+}
+
+function emitInputStallTelemetry(force = false) {
+    if (!gameState.gameStarted || !gameState.playerId || !gameState.roomCode) {
+        return;
+    }
+
+    const now = Date.now();
+    if (!force && now - lastInputTimestamp < 8000) {
+        return;
+    }
+    if (!force && now - lastInputStallTelemetryAt < 15000) {
+        return;
+    }
+
+    lastInputStallTelemetryAt = now;
+    emitPlayerControllerTelemetry('gameplay:controller:input_stalled', {
+        reason: 'no_input_packet',
+        sinceMs: now - lastInputTimestamp
+    });
+}
+
+function emitPlayerVisibilityTelemetry(state) {
+    emitPlayerTelemetryEvent('perf:visibility:state_sample', {
+        visibilityState: state,
+        topology: 'remote',
+        ruleset: gameState.gameMode || 'unknown',
+        playerCount: gameState.playerId ? 1 : 0,
+        deviceClass: window.__JJ_TELEMETRY__?.getContext?.().deviceClass || 'unknown',
+        browserFamily: window.__JJ_TELEMETRY__?.getContext?.().browserFamily || 'unknown',
+    });
+}
+
+setInterval(() => {
+    emitInputStallTelemetry();
+}, 3000);
+
 function openPlayerBugReport() {
     const info = collectPlayerDebugInfo();
     const template =
@@ -544,6 +736,11 @@ What device + browser are you on? (e.g. iPhone 13, Safari)
 Debug info (auto-captured — please leave this in):
 ${summary}
 `;
+    emitPlayerTelemetryEvent('gameplay:player:report_requested', {
+        hasRoomCode: Boolean(info.roomCode),
+        hasSeatId: Boolean(info.seatId),
+        mode: gameState.gameMode || 'unknown',
+    });
     window.location.href =
         `mailto:${BUG_REPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
@@ -605,6 +802,12 @@ function startTutorialForCurrentScreen(replay = false) {
 
 function startJoinTutorial({ replay = false } = {}) {
     if (!tutorialState.elements || (!replay && isTutorialComplete())) return;
+
+    emitPlayerControllerTelemetry('gameplay:join:tutorial_viewed', {
+        replay: Boolean(replay),
+        phase: 'join',
+    });
+
     tutorialState.active = true;
     tutorialState.phase = 'join';
     tutorialState.stepIndex = 0;
@@ -622,6 +825,12 @@ function maybeStartGameplayTutorial() {
 
 function startGameplayTutorial({ replay = false } = {}) {
     if (!tutorialState.elements || (!replay && isTutorialComplete())) return;
+
+    emitPlayerControllerTelemetry('gameplay:join:tutorial_viewed', {
+        replay: Boolean(replay),
+        phase: 'gameplay',
+    });
+
     tutorialState.active = true;
     tutorialState.phase = 'game';
     tutorialState.stepIndex = 0;
@@ -644,10 +853,24 @@ function advanceTutorial() {
 }
 
 function finishTutorial({ persist }) {
+    const tutorialPhase = tutorialState.phase;
+    const shouldSkip = tutorialPhase === 'join' && !persist;
     tutorialState.active = false;
     tutorialState.phase = null;
     tutorialState.stepIndex = 0;
     tutorialState.elements?.overlay?.classList.add('hidden');
+    if (shouldSkip) {
+        emitPlayerControllerTelemetry('gameplay:join:tutorial_skipped', {
+            phase: tutorialPhase
+        });
+    } else {
+        emitPlayerControllerTelemetry('gameplay:join:completed', {
+            phase: tutorialPhase || 'join'
+        });
+        emitPlayerControllerTelemetry('gameplay:join:tutorial_completed', {
+            phase: tutorialPhase || 'join'
+        });
+    }
     if (persist) {
         setTutorialComplete(true);
     }
@@ -1362,6 +1585,10 @@ function initPlayerMenu() {
     resetBtn?.addEventListener('click', () => {
         if (gameState.gameStarted && gameState.roomCode) {
             socket.emit('request_car_reset', { room_code: gameState.roomCode });
+            emitPlayerTelemetryEvent('gameplay:player:reset_requested', {
+                hasPlayerId: Boolean(gameState.playerId),
+                mode: gameState.gameMode || 'unknown'
+            });
             showMessage('Resetting your car...', 1500);
             hapticBuzz(30);
         }
@@ -1608,6 +1835,18 @@ function updateConnectionStatus(connected) {
 socket.on('connect', () => {
     console.log('Connected to server');
     updateConnectionStatus(true);
+    if (!hasConnectedControllerTelemetry) {
+        emitPlayerControllerTelemetry('gameplay:controller:connected', {
+            mode: 'player_connect',
+            cause: 'connect'
+        });
+        hasConnectedControllerTelemetry = true;
+    } else {
+        emitPlayerControllerTelemetry('gameplay:controller:reconnect_succeeded', {
+            mode: gameState.gameMode || 'unknown',
+            cause: 'connect_retry'
+        });
+    }
     getClientInstanceId();
     // ... rest of connect handler ...
 
@@ -1733,10 +1972,65 @@ function syncTelemetryContextFromPayload(payload) {
 socket.on('disconnect', (reason) => {
     console.log('Disconnected from server:', reason);
     updateConnectionStatus(false);
+    emitPlayerControllerTelemetry('gameplay:controller:disconnected', {
+        reason: reason || 'disconnect',
+        mode: gameState.gameMode || 'unknown'
+    });
+    emitPlayerTelemetryEvent('error:network:disconnect', {
+        reason: reason || 'disconnect',
+        mode: gameState.gameMode || 'unknown',
+    });
+});
+
+socket.on('reconnect_attempt', (attempt) => {
+    emitPlayerControllerTelemetry('gameplay:controller:reconnect_attempted', {
+        attempt: Number.isFinite(attempt) ? attempt : 1,
+        mode: gameState.gameMode || 'unknown',
+    });
+});
+
+socket.on('connect_error', (error) => {
+    emitPlayerControllerTelemetry('gameplay:controller:reconnect_failed', {
+        reason: 'connect_error',
+        mode: gameState.gameMode || 'unknown',
+    });
+    emitPlayerTelemetryEvent('error:network:disconnect', {
+        reason: 'connect_error',
+        mode: gameState.gameMode || 'unknown',
+        networkPhase: 'connect',
+    });
+    emitPlayerTelemetryEvent('perf:connectivity:reconnect', {
+        status: 'failed',
+        reason: 'connect_error',
+        mode: gameState.gameMode || 'unknown',
+    });
+});
+
+socket.on('reconnect', (attempt) => {
+    emitPlayerControllerTelemetry('gameplay:controller:reconnect_succeeded', {
+        attempt: Number.isFinite(attempt) ? attempt : 1,
+        mode: gameState.gameMode || 'unknown',
+    });
+    emitPlayerTelemetryEvent('perf:connectivity:reconnect', {
+        status: 'success',
+        attempt: Number.isFinite(attempt) ? attempt : 0,
+        mode: gameState.gameMode || 'unknown',
+    });
 });
 
 socket.on('join_error', (data) => {
+    hasEmittedJoinStartedTelemetry = false;
     setJoinBusy(false);
+    if (!hasJoinFailedTelemetry) {
+        emitPlayerTelemetryEvent('gameplay:join:failed', {
+            reason: data?.message || 'join_failed',
+            mode: gameState.gameMode || 'unknown'
+        });
+        hasJoinFailedTelemetry = true;
+        setTimeout(() => {
+            hasJoinFailedTelemetry = false;
+        }, 1500);
+    }
     showError(friendlyJoinError(data.message));
     elements.roomCodeInput?.focus();
 });
@@ -1751,6 +2045,16 @@ function handleSuccessfulJoin(data) {
     gameState.role = data.role || gameState.role || null;
     gameState.carColor = data.car_color;
     gameState.roomPhase = data.phase || phaseFromGameState(data.game_state);
+    hasEmittedJoinStartedTelemetry = false;
+    hasEmittedFirstInputTelemetry = false;
+    emitPlayerTelemetryEvent('gameplay:join:completed', {
+        mode: gameState.gameMode || 'unknown',
+        joinPath: data.is_late_join ? 'late_join' : 'join_game'
+    });
+    emitPlayerTelemetryEvent('gameplay:player:joined', {
+        mode: gameState.gameMode || 'unknown',
+        joinCompleted: true
+    });
 
     if (data.mode) {
         gameState.gameMode = data.mode;
@@ -1937,6 +2241,18 @@ function joinGame() {
     if (!gameState.connected) {
         showError('Connecting to server...');
         return;
+    }
+
+    if (!hasEmittedJoinStartedTelemetry) {
+        emitPlayerTelemetryEvent('gameplay:join:started', {
+            routePath: window.location.pathname,
+            mode: gameState.gameMode || 'unknown'
+        });
+        hasEmittedJoinStartedTelemetry = true;
+        emitPlayerControllerTelemetry('gameplay:join:route_viewed', {
+            routePath: window.location.pathname,
+            gameMode: gameState.gameMode || 'unknown'
+        });
     }
     
     // Store values
@@ -2590,6 +2906,19 @@ function emitControlUpdate(currentTime = performance.now(), options = {}) {
     const playerControlUpdate = buildControlPacket(Date.now());
     socket.emit('player_control_update', playerControlUpdate);
 
+    lastInputTimestamp = Date.now();
+    if (!hasEmittedFirstInputTelemetry) {
+        const hasNonZeroInput = playerControlUpdate.controls?.steering !== 0
+            || playerControlUpdate.controls?.acceleration !== 0
+            || playerControlUpdate.controls?.braking !== 0;
+        if (hasNonZeroInput) {
+            emitPlayerControllerTelemetry('gameplay:join:first_input', {
+                gamePhase: gameState.roomPhase || 'active'
+            });
+            hasEmittedFirstInputTelemetry = true;
+        }
+    }
+
     if (!errorLog.info) {
         errorLog.info = function(message, timeout = 1000) {
             const infoElement = document.createElement('div');
@@ -2766,8 +3095,17 @@ function releaseAllControls(options = {}) {
 }
 
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+        if (document.hidden) {
         releaseAllControls();
+        emitPlayerVisibilityTelemetry('background');
+        emitPlayerControllerTelemetry('gameplay:controller:visibility_change', {
+            visibilityState: 'background'
+        });
+    } else {
+        emitPlayerVisibilityTelemetry('foreground');
+        emitPlayerControllerTelemetry('gameplay:controller:visibility_change', {
+            visibilityState: 'foreground'
+        });
     }
 });
 

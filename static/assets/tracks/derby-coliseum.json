@@ -33,7 +33,24 @@
       "width": 0.6,
       "emissive": "#FFCC44",
       "emissiveIntensity": 0.75
-    }
+    },
+    "palette": {
+      "crate": "#cda173",
+      "barrel": "#5a3b22",
+      "tyres": "#1c1c1c",
+      "cone": "#ef9a44",
+      "barrier": "#b6b6b6",
+      "ramp": "#5d855f",
+      "sign": "#fff2af",
+      "husk": "#8294a5",
+      "drum": "#6b4a3d",
+      "default": "#8f7d71"
+    },
+    "props": [
+      { "kind": "tyres", "x": 25, "z": 15, "paletteKey": "tyres", "size": 1.0 },
+      { "kind": "barrier", "x": -22, "z": -12, "paletteKey": "barrier", "size": 1.4, "rotationY": 0.55 },
+      { "kind": "sign", "x": 0, "z": 30, "paletteKey": "sign", "size": 1.2, "rotationY": 1.2 }
+    ]
   },
   "spawn": {
     "positions": [
@@ -70,8 +87,7 @@
       "enabled": true,
       "startTime": 40,
       "rate": 0.4,
-      "minDiameter": 50,
-      "warningColor": "#FFAA00"
+      "minDiameter": 50
     }
   },
   "weapons": {
@@ -85,12 +101,13 @@
     "barrierRestitution": 0.45
   },
   "lighting": {
+    "mood": { "id": "vhs-stadium", "name": "VHS Stadium" },
     "ambient": {
-      "color": "#FFAA44",
+      "color": "#2A2620",
       "intensity": 0.45
     },
     "directional": {
-      "color": "#FFCC66",
+      "color": "#C9BBA0",
       "intensity": 0.75,
       "position": { "x": -50, "y": 120, "z": 50 },
       "castShadow": true

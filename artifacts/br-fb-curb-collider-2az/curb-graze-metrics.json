@@ -1,0 +1,846 @@
+{
+  "trackId": "oval",
+  "state": "racing",
+  "cases": [
+    {
+      "name": "inner-east",
+      "barrier": "inner",
+      "angle": 0,
+      "tangentSpeed": 18,
+      "radialSpeed": -5.5,
+      "startRadius": 36.8,
+      "barrierRadius": 34.6,
+      "preTangentSpeed": 17.29536247253418,
+      "minTangentSpeed": 10.15617847442627,
+      "postTangentSpeed": 10.15617847442627,
+      "tangentSpeedLoss": 7.13918399810791,
+      "minDistanceToBarrier": 0.8489839273483284,
+      "wallContactFrames": 3,
+      "stalled": false,
+      "samples": [
+        {
+          "tMs": 50,
+          "radius": 35.894348139313635,
+          "tangentSpeed": 17.29536247253418,
+          "radialSpeed": -5.284693717956543,
+          "inWallContact": false,
+          "speedKmh": 65.4709759759554
+        },
+        {
+          "tMs": 100,
+          "radius": 35.58519844685556,
+          "tangentSpeed": 16.953458786010742,
+          "radialSpeed": -5.180222511291504,
+          "inWallContact": false,
+          "speedKmh": 64.63854460834492
+        },
+        {
+          "tMs": 150,
+          "radius": 35.44898392734833,
+          "tangentSpeed": 16.37407684326172,
+          "radialSpeed": -1.4488502740859985,
+          "inWallContact": false,
+          "speedKmh": 60.4018516897106
+        },
+        {
+          "tMs": 200,
+          "radius": 35.92460655381272,
+          "tangentSpeed": 15.559037208557129,
+          "radialSpeed": 1.1170639991760254,
+          "inWallContact": true,
+          "speedKmh": 56.15674863123161
+        },
+        {
+          "tMs": 250,
+          "radius": 36.480208169377185,
+          "tangentSpeed": 15.219221115112305,
+          "radialSpeed": 1.4890495538711548,
+          "inWallContact": true,
+          "speedKmh": 55.07750997563408
+        },
+        {
+          "tMs": 300,
+          "radius": 37.08743677360436,
+          "tangentSpeed": 14.930499076843262,
+          "radialSpeed": 1.315061092376709,
+          "inWallContact": true,
+          "speedKmh": 53.95920101745802
+        },
+        {
+          "tMs": 350,
+          "radius": 37.694121224459025,
+          "tangentSpeed": 14.661561012268066,
+          "radialSpeed": 0.9685555100440979,
+          "inWallContact": false,
+          "speedKmh": 52.91315955524572
+        },
+        {
+          "tMs": 400,
+          "radius": 38.329384130394764,
+          "tangentSpeed": 14.363917350769043,
+          "radialSpeed": 1.0470917224884033,
+          "inWallContact": false,
+          "speedKmh": 51.858153108538794
+        },
+        {
+          "tMs": 450,
+          "radius": 39.24501416016029,
+          "tangentSpeed": 13.977014541625977,
+          "radialSpeed": 1.139166235923767,
+          "inWallContact": false,
+          "speedKmh": 50.48419444506627
+        },
+        {
+          "tMs": 500,
+          "radius": 39.96468975649075,
+          "tangentSpeed": 13.700875282287598,
+          "radialSpeed": 1.1145708560943604,
+          "inWallContact": false,
+          "speedKmh": 49.486144726765865
+        },
+        {
+          "tMs": 550,
+          "radius": 40.70203500273612,
+          "tangentSpeed": 13.431251525878906,
+          "radialSpeed": 1.077192783355713,
+          "inWallContact": false,
+          "speedKmh": 48.50780662074545
+        },
+        {
+          "tMs": 600,
+          "radius": 41.45448843413458,
+          "tangentSpeed": 13.166242599487305,
+          "radialSpeed": 1.0495308637619019,
+          "inWallContact": false,
+          "speedKmh": 47.54940047341293
+        },
+        {
+          "tMs": 650,
+          "radius": 42.477415652065616,
+          "tangentSpeed": 12.820366859436035,
+          "radialSpeed": 1.021784782409668,
+          "inWallContact": false,
+          "speedKmh": 46.300570238603015
+        },
+        {
+          "tMs": 700,
+          "radius": 43.25620575301701,
+          "tangentSpeed": 12.566817283630371,
+          "radialSpeed": 1.0029689073562622,
+          "inWallContact": false,
+          "speedKmh": 45.38505633342897
+        },
+        {
+          "tMs": 750,
+          "radius": 44.04218117187542,
+          "tangentSpeed": 12.318353652954102,
+          "radialSpeed": 0.9835771918296814,
+          "inWallContact": false,
+          "speedKmh": 44.48769453234267
+        },
+        {
+          "tMs": 800,
+          "radius": 44.833077967907116,
+          "tangentSpeed": 12.074851989746094,
+          "radialSpeed": 0.9639407992362976,
+          "inWallContact": false,
+          "speedKmh": 43.608227220764284
+        },
+        {
+          "tMs": 850,
+          "radius": 45.626965329693626,
+          "tangentSpeed": 11.83616828918457,
+          "radialSpeed": 0.9446861147880554,
+          "inWallContact": false,
+          "speedKmh": 42.74624168626193
+        },
+        {
+          "tMs": 900,
+          "radius": 46.42215871947545,
+          "tangentSpeed": 11.60218334197998,
+          "radialSpeed": 0.9259800910949707,
+          "inWallContact": false,
+          "speedKmh": 41.90127053293493
+        },
+        {
+          "tMs": 950,
+          "radius": 47.48182420264034,
+          "tangentSpeed": 11.297382354736328,
+          "radialSpeed": 0.9017062783241272,
+          "inWallContact": false,
+          "speedKmh": 40.800532069914716
+        },
+        {
+          "tMs": 1000,
+          "radius": 48.27446339293894,
+          "tangentSpeed": 11.07404899597168,
+          "radialSpeed": 0.8838966488838196,
+          "inWallContact": false,
+          "speedKmh": 39.993972928687604
+        },
+        {
+          "tMs": 1050,
+          "radius": 49.06399755648962,
+          "tangentSpeed": 10.85512924194336,
+          "radialSpeed": 0.8664184808731079,
+          "inWallContact": false,
+          "speedKmh": 39.203355754611614
+        },
+        {
+          "tMs": 1100,
+          "radius": 49.84941253977477,
+          "tangentSpeed": 10.640538215637207,
+          "radialSpeed": 0.849283754825592,
+          "inWallContact": false,
+          "speedKmh": 38.42838279198704
+        },
+        {
+          "tMs": 1150,
+          "radius": 50.62983439115369,
+          "tangentSpeed": 10.43018913269043,
+          "radialSpeed": 0.8324934840202332,
+          "inWallContact": false,
+          "speedKmh": 37.66873548472869
+        },
+        {
+          "tMs": 1200,
+          "radius": 51.661284321254925,
+          "tangentSpeed": 10.15617847442627,
+          "radialSpeed": 0.8106247186660767,
+          "inWallContact": false,
+          "speedKmh": 36.67918096586654
+        }
+      ]
+    },
+    {
+      "name": "inner-north",
+      "barrier": "inner",
+      "angle": 1.5707963267948966,
+      "tangentSpeed": 18,
+      "radialSpeed": -5.5,
+      "startRadius": 36.8,
+      "barrierRadius": 34.6,
+      "preTangentSpeed": 17.29536247253418,
+      "minTangentSpeed": 10.156176567077637,
+      "postTangentSpeed": 10.156176567077637,
+      "tangentSpeedLoss": 7.139185905456543,
+      "minDistanceToBarrier": 0.8489839273483284,
+      "wallContactFrames": 3,
+      "stalled": false,
+      "samples": [
+        {
+          "tMs": 50,
+          "radius": 35.894348139313635,
+          "tangentSpeed": 17.29536247253418,
+          "radialSpeed": -5.284693717956544,
+          "inWallContact": false,
+          "speedKmh": 65.4709759759554
+        },
+        {
+          "tMs": 100,
+          "radius": 35.58519844685556,
+          "tangentSpeed": 16.953458786010742,
+          "radialSpeed": -5.180222511291505,
+          "inWallContact": false,
+          "speedKmh": 64.63854460834492
+        },
+        {
+          "tMs": 150,
+          "radius": 35.44898392734833,
+          "tangentSpeed": 16.37407684326172,
+          "radialSpeed": -1.4488508701324474,
+          "inWallContact": false,
+          "speedKmh": 60.401851875003366
+        },
+        {
+          "tMs": 200,
+          "radius": 35.92460655381272,
+          "tangentSpeed": 15.559035301208496,
+          "radialSpeed": 1.1170725822448722,
+          "inWallContact": true,
+          "speedKmh": 56.15674399672845
+        },
+        {
+          "tMs": 250,
+          "radius": 36.480208169377185,
+          "tangentSpeed": 15.219219207763672,
+          "radialSpeed": 1.4890623092651358,
+          "inWallContact": true,
+          "speedKmh": 55.07750762774374
+        },
+        {
+          "tMs": 300,
+          "radius": 37.087451194310276,
+          "tangentSpeed": 14.930497169494629,
+          "radialSpeed": 1.3150789737701407,
+          "inWallContact": true,
+          "speedKmh": 53.9591998248372
+        },
+        {
+          "tMs": 350,
+          "radius": 37.90049647776815,
+          "tangentSpeed": 14.56322956085205,
+          "radialSpeed": 0.975561022758483,
+          "inWallContact": false,
+          "speedKmh": 52.563496338678085
+        },
+        {
+          "tMs": 400,
+          "radius": 38.55183751072853,
+          "tangentSpeed": 14.26513671875,
+          "radialSpeed": 1.0839496850967398,
+          "inWallContact": false,
+          "speedKmh": 51.508631917836446
+        },
+        {
+          "tMs": 450,
+          "radius": 39.24504086325507,
+          "tangentSpeed": 13.977011680603027,
+          "radialSpeed": 1.1392215490341178,
+          "inWallContact": false,
+          "speedKmh": 50.48420035559852
+        },
+        {
+          "tMs": 500,
+          "radius": 39.96472955879153,
+          "tangentSpeed": 13.700872421264648,
+          "radialSpeed": 1.1146204471588126,
+          "inWallContact": false,
+          "speedKmh": 49.486148936714116
+        },
+        {
+          "tMs": 550,
+          "radius": 40.70208749850534,
+          "tangentSpeed": 13.431248664855957,
+          "radialSpeed": 1.0772452354431143,
+          "inWallContact": false,
+          "speedKmh": 48.507811450052216
+        },
+        {
+          "tMs": 600,
+          "radius": 41.45455322381246,
+          "tangentSpeed": 13.166239738464355,
+          "radialSpeed": 1.0495843887329093,
+          "inWallContact": false,
+          "speedKmh": 47.54940551783435
+        },
+        {
+          "tMs": 650,
+          "radius": 41.96349997313438,
+          "tangentSpeed": 12.992212295532227,
+          "radialSpeed": 1.03482961654663,
+          "inWallContact": false,
+          "speedKmh": 46.92096637548707
+        },
+        {
+          "tMs": 700,
+          "radius": 41.96349997313438,
+          "tangentSpeed": 12.992212295532227,
+          "radialSpeed": 1.03482961654663,
+          "inWallContact": false,
+          "speedKmh": 46.92096637548707
+        },
+        {
+          "tMs": 750,
+          "radius": 43.77960132084283,
+          "tangentSpeed": 12.400613784790039,
+          "radialSpeed": 0.9901570081710808,
+          "inWallContact": false,
+          "speedKmh": 44.78481578128749
+        },
+        {
+          "tMs": 800,
+          "radius": 44.833150694087,
+          "tangentSpeed": 12.074849128723145,
+          "radialSpeed": 0.9639903306961052,
+          "inWallContact": false,
+          "speedKmh": 43.60823114337986
+        },
+        {
+          "tMs": 850,
+          "radius": 45.62703693221106,
+          "tangentSpeed": 11.836165428161621,
+          "radialSpeed": 0.9447348713874809,
+          "inWallContact": false,
+          "speedKmh": 42.74624538363247
+        },
+        {
+          "tMs": 900,
+          "radius": 46.68730130051279,
+          "tangentSpeed": 11.52521800994873,
+          "radialSpeed": 0.9198969006538384,
+          "inWallContact": false,
+          "speedKmh": 41.623342544568295
+        },
+        {
+          "tMs": 950,
+          "radius": 47.48190137460213,
+          "tangentSpeed": 11.297379493713379,
+          "radialSpeed": 0.9017527699470513,
+          "inWallContact": false,
+          "speedKmh": 40.800535119836184
+        },
+        {
+          "tMs": 1000,
+          "radius": 48.27453931858853,
+          "tangentSpeed": 11.07404613494873,
+          "radialSpeed": 0.8839424252510064,
+          "inWallContact": false,
+          "speedKmh": 39.99397577338514
+        },
+        {
+          "tMs": 1050,
+          "radius": 49.32638485783634,
+          "tangentSpeed": 10.783119201660156,
+          "radialSpeed": 0.8607127666473382,
+          "inWallContact": false,
+          "speedKmh": 38.94331063897223
+        },
+        {
+          "tMs": 1100,
+          "radius": 50.1102419571284,
+          "tangentSpeed": 10.569952011108398,
+          "radialSpeed": 0.8436927199363702,
+          "inWallContact": false,
+          "speedKmh": 38.1734825167777
+        },
+        {
+          "tMs": 1150,
+          "radius": 50.8888246464912,
+          "tangentSpeed": 10.36099910736084,
+          "radialSpeed": 0.8270142674446099,
+          "inWallContact": false,
+          "speedKmh": 37.418877327573995
+        },
+        {
+          "tMs": 1200,
+          "radius": 51.66137716693753,
+          "tangentSpeed": 10.156176567077637,
+          "radialSpeed": 0.8106667399406426,
+          "inWallContact": false,
+          "speedKmh": 36.679186156916906
+        }
+      ]
+    },
+    {
+      "name": "outer-west",
+      "barrier": "outer",
+      "angle": 3.141592653589793,
+      "tangentSpeed": 18,
+      "radialSpeed": 5.5,
+      "startRadius": 53.2,
+      "barrierRadius": 55.4,
+      "preTangentSpeed": 17.29536247253418,
+      "minTangentSpeed": 8.943034172058105,
+      "postTangentSpeed": 8.943034172058105,
+      "tangentSpeedLoss": 8.352328300476074,
+      "minDistanceToBarrier": 0.30164590962622384,
+      "wallContactFrames": 5,
+      "stalled": false,
+      "samples": [
+        {
+          "tMs": 50,
+          "radius": 54.39512307646224,
+          "tangentSpeed": 17.29536247253418,
+          "radialSpeed": 5.284693717956541,
+          "inWallContact": false,
+          "speedKmh": 65.4709759759554
+        },
+        {
+          "tMs": 100,
+          "radius": 55.055139521089785,
+          "tangentSpeed": 16.953458786010742,
+          "radialSpeed": 5.180222511291502,
+          "inWallContact": false,
+          "speedKmh": 64.63854460834492
+        },
+        {
+          "tMs": 150,
+          "radius": 55.70164590962622,
+          "tangentSpeed": 16.598953247070312,
+          "radialSpeed": 2.7519457340240456,
+          "inWallContact": false,
+          "speedKmh": 61.784108256110564
+        },
+        {
+          "tMs": 200,
+          "radius": 56.035751031762466,
+          "tangentSpeed": 16.214828491210938,
+          "radialSpeed": 0.13069739937782088,
+          "inWallContact": true,
+          "speedKmh": 58.509721804764
+        },
+        {
+          "tMs": 250,
+          "radius": 56.28316688558104,
+          "tangentSpeed": 15.882018089294434,
+          "radialSpeed": -0.4611085355281849,
+          "inWallContact": true,
+          "speedKmh": 57.24634958951692
+        },
+        {
+          "tMs": 300,
+          "radius": 56.603022886835305,
+          "tangentSpeed": 15.461610794067383,
+          "radialSpeed": -0.6165677905082722,
+          "inWallContact": true,
+          "speedKmh": 55.72288372073883
+        },
+        {
+          "tMs": 350,
+          "radius": 56.7699782876855,
+          "tangentSpeed": 12.767938613891602,
+          "radialSpeed": -1.6321517229080216,
+          "inWallContact": true,
+          "speedKmh": 46.37466443793926
+        },
+        {
+          "tMs": 400,
+          "radius": 56.97542960251167,
+          "tangentSpeed": 12.571653366088867,
+          "radialSpeed": -0.7979185581207291,
+          "inWallContact": true,
+          "speedKmh": 45.35028772576112
+        },
+        {
+          "tMs": 450,
+          "radius": 57.26962465859832,
+          "tangentSpeed": 12.336539268493652,
+          "radialSpeed": -0.602049350738527,
+          "inWallContact": false,
+          "speedKmh": 44.464783843709995
+        },
+        {
+          "tMs": 500,
+          "radius": 57.560888917238024,
+          "tangentSpeed": 12.072739601135254,
+          "radialSpeed": -0.8469163775444045,
+          "inWallContact": false,
+          "speedKmh": 43.56868120356439
+        },
+        {
+          "tMs": 550,
+          "radius": 57.84518584307067,
+          "tangentSpeed": 11.824886322021484,
+          "radialSpeed": -0.9486323595047012,
+          "inWallContact": false,
+          "speedKmh": 42.70635972079492
+        },
+        {
+          "tMs": 600,
+          "radius": 58.14134956623848,
+          "tangentSpeed": 11.590954780578613,
+          "radialSpeed": -0.9320836067199721,
+          "inWallContact": false,
+          "speedKmh": 41.86242333350018
+        },
+        {
+          "tMs": 650,
+          "radius": 58.56407599800347,
+          "tangentSpeed": 11.288729667663574,
+          "radialSpeed": -0.8782389760017408,
+          "inWallContact": false,
+          "speedKmh": 40.7631619432031
+        },
+        {
+          "tMs": 700,
+          "radius": 58.899578939480534,
+          "tangentSpeed": 11.066168785095215,
+          "radialSpeed": -0.8531175851821913,
+          "inWallContact": false,
+          "speedKmh": 39.95728482815273
+        },
+        {
+          "tMs": 750,
+          "radius": 59.247320683623656,
+          "tangentSpeed": 10.847190856933594,
+          "radialSpeed": -0.8390087485313429,
+          "inWallContact": false,
+          "speedKmh": 39.16716890445631
+        },
+        {
+          "tMs": 800,
+          "radius": 59.60549696507462,
+          "tangentSpeed": 10.632508277893066,
+          "radialSpeed": -0.8256819248199476,
+          "inWallContact": false,
+          "speedKmh": 38.392818012358084
+        },
+        {
+          "tMs": 850,
+          "radius": 59.97312114414016,
+          "tangentSpeed": 10.422268867492676,
+          "radialSpeed": -0.8099827766418469,
+          "inWallContact": false,
+          "speedKmh": 37.63388260118683
+        },
+        {
+          "tMs": 900,
+          "radius": 60.47649815228283,
+          "tangentSpeed": 10.14852237701416,
+          "radialSpeed": -0.7878842353820813,
+          "inWallContact": false,
+          "speedKmh": 36.645285734192946
+        },
+        {
+          "tMs": 950,
+          "radius": 60.862546652629185,
+          "tangentSpeed": 9.947922706604004,
+          "radialSpeed": -0.7720365524292004,
+          "inWallContact": false,
+          "speedKmh": 35.92090869606377
+        },
+        {
+          "tMs": 1000,
+          "radius": 61.25476964526189,
+          "tangentSpeed": 9.751264572143555,
+          "radialSpeed": -0.7568397521972668,
+          "inWallContact": false,
+          "speedKmh": 35.210829601207436
+        },
+        {
+          "tMs": 1050,
+          "radius": 61.652197897766,
+          "tangentSpeed": 9.55849552154541,
+          "radialSpeed": -0.7419782280921948,
+          "inWallContact": false,
+          "speedKmh": 34.51479973702381
+        },
+        {
+          "tMs": 1100,
+          "radius": 62.1888044113288,
+          "tangentSpeed": 9.307384490966797,
+          "radialSpeed": -0.7225067019462597,
+          "inWallContact": false,
+          "speedKmh": 33.60810097765697
+        },
+        {
+          "tMs": 1150,
+          "radius": 62.5952478268964,
+          "tangentSpeed": 9.123391151428223,
+          "radialSpeed": -0.7082053422927868,
+          "inWallContact": false,
+          "speedKmh": 32.943746257774535
+        },
+        {
+          "tMs": 1200,
+          "radius": 63.004318853930315,
+          "tangentSpeed": 8.943034172058105,
+          "radialSpeed": -0.6941956877708446,
+          "inWallContact": false,
+          "speedKmh": 32.29252373252562
+        }
+      ]
+    },
+    {
+      "name": "outer-south",
+      "barrier": "outer",
+      "angle": 4.71238898038469,
+      "tangentSpeed": 18,
+      "radialSpeed": 5.5,
+      "startRadius": 53.2,
+      "barrierRadius": 55.4,
+      "preTangentSpeed": 17.29536247253418,
+      "minTangentSpeed": 8.883711814880371,
+      "postTangentSpeed": 8.883711814880371,
+      "tangentSpeedLoss": 8.411650657653809,
+      "minDistanceToBarrier": 0.11677831498641211,
+      "wallContactFrames": 5,
+      "stalled": false,
+      "samples": [
+        {
+          "tMs": 50,
+          "radius": 54.39512307646224,
+          "tangentSpeed": 17.29536247253418,
+          "radialSpeed": 5.284693717956539,
+          "inWallContact": false,
+          "speedKmh": 65.4709759759554
+        },
+        {
+          "tMs": 100,
+          "radius": 55.28322168501359,
+          "tangentSpeed": 16.84099769592285,
+          "radialSpeed": 5.145859718322751,
+          "inWallContact": false,
+          "speedKmh": 64.40619285187535
+        },
+        {
+          "tMs": 150,
+          "radius": 55.83511834484046,
+          "tangentSpeed": 16.45359230041504,
+          "radialSpeed": 1.1312612295150726,
+          "inWallContact": false,
+          "speedKmh": 60.35115353587224
+        },
+        {
+          "tMs": 200,
+          "radius": 56.12301221342447,
+          "tangentSpeed": 16.10227394104004,
+          "radialSpeed": -0.10777083039284048,
+          "inWallContact": true,
+          "speedKmh": 57.97689502404288
+        },
+        {
+          "tMs": 250,
+          "radius": 56.35914268279709,
+          "tangentSpeed": 15.77434253692627,
+          "radialSpeed": -0.5788729786872893,
+          "inWallContact": true,
+          "speedKmh": 56.8839755844961
+        },
+        {
+          "tMs": 300,
+          "radius": 56.603022886835305,
+          "tangentSpeed": 15.46160888671875,
+          "radialSpeed": -0.6165865659713774,
+          "inWallContact": true,
+          "speedKmh": 55.72287958856587
+        },
+        {
+          "tMs": 350,
+          "radius": 56.7699782876855,
+          "tangentSpeed": 12.767937660217285,
+          "radialSpeed": -1.6321724653244043,
+          "inWallContact": true,
+          "speedKmh": 46.374670530122735
+        },
+        {
+          "tMs": 400,
+          "radius": 56.97541487256614,
+          "tangentSpeed": 12.571653366088867,
+          "radialSpeed": -0.7979363799095177,
+          "inWallContact": true,
+          "speedKmh": 45.35029168791208
+        },
+        {
+          "tMs": 450,
+          "radius": 57.368628572638094,
+          "tangentSpeed": 12.247827529907227,
+          "radialSpeed": -0.6867679953575156,
+          "inWallContact": false,
+          "speedKmh": 44.161544764165384
+        },
+        {
+          "tMs": 500,
+          "radius": 57.655318065074006,
+          "tangentSpeed": 11.988019943237305,
+          "radialSpeed": -0.901035547256472,
+          "inWallContact": false,
+          "speedKmh": 43.27863564038937
+        },
+        {
+          "tMs": 550,
+          "radius": 57.94201641386414,
+          "tangentSpeed": 11.745854377746582,
+          "radialSpeed": -0.949982523918154,
+          "inWallContact": false,
+          "speedKmh": 42.42316526469184
+        },
+        {
+          "tMs": 600,
+          "radius": 58.244032903293316,
+          "tangentSpeed": 11.514629364013672,
+          "radialSpeed": -0.9186273813247702,
+          "inWallContact": false,
+          "speedKmh": 41.58486494220814
+        },
+        {
+          "tMs": 650,
+          "radius": 58.564061778659116,
+          "tangentSpeed": 11.28873062133789,
+          "radialSpeed": -0.8782309293746969,
+          "inWallContact": false,
+          "speedKmh": 40.763163098871466
+        },
+        {
+          "tMs": 700,
+          "radius": 58.8995648235043,
+          "tangentSpeed": 11.066169738769531,
+          "radialSpeed": -0.8531092405319234,
+          "inWallContact": false,
+          "speedKmh": 39.95728593029985
+        },
+        {
+          "tMs": 750,
+          "radius": 59.36559443382719,
+          "tangentSpeed": 10.775135040283203,
+          "radialSpeed": -0.8347824215888997,
+          "inWallContact": false,
+          "speedKmh": 38.90731725528051
+        },
+        {
+          "tMs": 800,
+          "radius": 59.849565169000776,
+          "tangentSpeed": 10.491863250732422,
+          "radialSpeed": -0.815414786338808,
+          "inWallContact": false,
+          "speedKmh": 37.885165104482844
+        },
+        {
+          "tMs": 850,
+          "radius": 60.223019065765186,
+          "tangentSpeed": 10.284482955932617,
+          "radialSpeed": -0.7988705039024372,
+          "inWallContact": false,
+          "speedKmh": 37.13629360007082
+        },
+        {
+          "tMs": 900,
+          "radius": 60.60442233929053,
+          "tangentSpeed": 10.081214904785156,
+          "radialSpeed": -0.7825030684471149,
+          "inWallContact": false,
+          "speedKmh": 36.402221469574975
+        },
+        {
+          "tMs": 950,
+          "radius": 60.99264256246105,
+          "tangentSpeed": 9.88193416595459,
+          "radialSpeed": -0.7669089436531085,
+          "inWallContact": false,
+          "speedKmh": 35.68263609423138
+        },
+        {
+          "tMs": 1000,
+          "radius": 61.38669285464058,
+          "tangentSpeed": 9.686580657958984,
+          "radialSpeed": -0.7518510818481463,
+          "inWallContact": false,
+          "speedKmh": 34.97727452927522
+        },
+        {
+          "tMs": 1050,
+          "radius": 61.785680136755104,
+          "tangentSpeed": 9.49509048461914,
+          "radialSpeed": -0.7370658516883868,
+          "inWallContact": false,
+          "speedKmh": 34.28585924999407
+        },
+        {
+          "tMs": 1100,
+          "radius": 62.32393612548712,
+          "tangentSpeed": 9.245645523071289,
+          "radialSpeed": -0.7177011966705339,
+          "inWallContact": false,
+          "speedKmh": 33.38517455271802
+        },
+        {
+          "tMs": 1150,
+          "radius": 62.731328126555375,
+          "tangentSpeed": 9.062872886657715,
+          "radialSpeed": -0.7034958600997941,
+          "inWallContact": false,
+          "speedKmh": 32.72522828174825
+        },
+        {
+          "tMs": 1200,
+          "radius": 63.14113216166176,
+          "tangentSpeed": 8.883711814880371,
+          "radialSpeed": -0.6895835399627702,
+          "inWallContact": false,
+          "speedKmh": 32.07832423802791
+        }
+      ]
+    }
+  ]
+}

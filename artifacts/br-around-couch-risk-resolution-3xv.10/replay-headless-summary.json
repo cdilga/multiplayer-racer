@@ -1,0 +1,275 @@
+{
+  "bead": "br-around-couch-risk-resolution-3xv.10",
+  "context": {
+    "buildId": "replay-headless-test",
+    "seed": 90210,
+    "ruleset": "race",
+    "topology": "local",
+    "tuningProfileId": "arcade",
+    "tuningHash": "33f8aa18",
+    "fixedDt": 0.016666666666666666,
+    "deterministic": true
+  },
+  "roomConfig": {
+    "laps": 3,
+    "players": 4,
+    "ruleset": "race"
+  },
+  "ticks": 600,
+  "snapshots": 20,
+  "finalSnapshot": {
+    "tick": 570,
+    "stateHash": "bcf29227",
+    "drawCounters": {
+      "weapons": 0,
+      "gameplay": 599
+    }
+  },
+  "journalEntries": 2429,
+  "excerpt": {
+    "schemaVersion": 1,
+    "context": {
+      "buildId": "replay-headless-test",
+      "seed": 90210,
+      "ruleset": "race",
+      "topology": "local",
+      "tuningProfileId": "arcade",
+      "tuningHash": "33f8aa18",
+      "fixedDt": 0.016666666666666666,
+      "deterministic": true
+    },
+    "recentEntries": [
+      {
+        "seq": 2429,
+        "type": "command",
+        "tick": 595,
+        "seatId": 1,
+        "command": {
+          "steering": 0.3253893144606401,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2430,
+        "type": "command",
+        "tick": 595,
+        "seatId": 2,
+        "command": {
+          "steering": 0.7128052193506943,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2431,
+        "type": "command",
+        "tick": 595,
+        "seatId": 3,
+        "command": {
+          "steering": 0.7825180805870446,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2432,
+        "type": "command",
+        "tick": 595,
+        "seatId": 4,
+        "command": {
+          "steering": 0.5034563128398699,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2433,
+        "type": "command",
+        "tick": 596,
+        "seatId": 1,
+        "command": {
+          "steering": 0.3631923997916375,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2434,
+        "type": "command",
+        "tick": 596,
+        "seatId": 2,
+        "command": {
+          "steering": 0.7308363661140808,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2435,
+        "type": "command",
+        "tick": 596,
+        "seatId": 3,
+        "command": {
+          "steering": 0.7727406610312547,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2436,
+        "type": "command",
+        "tick": 596,
+        "seatId": 4,
+        "command": {
+          "steering": 0.4702282018339786,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2437,
+        "type": "command",
+        "tick": 597,
+        "seatId": 1,
+        "command": {
+          "steering": 0.39999999999999997,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2438,
+        "type": "command",
+        "tick": 597,
+        "seatId": 2,
+        "command": {
+          "steering": 0.7468643411977615,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2439,
+        "type": "command",
+        "tick": 597,
+        "seatId": 3,
+        "command": {
+          "steering": 0.760845213036123,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2440,
+        "type": "command",
+        "tick": 597,
+        "seatId": 4,
+        "command": {
+          "steering": 0.4357112280120219,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2441,
+        "type": "command",
+        "tick": 598,
+        "seatId": 1,
+        "command": {
+          "steering": 0.4357112280120216,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2442,
+        "type": "command",
+        "tick": 598,
+        "seatId": 2,
+        "command": {
+          "steering": 0.7608452130361228,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2443,
+        "type": "command",
+        "tick": 598,
+        "seatId": 3,
+        "command": {
+          "steering": 0.7468643411977615,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2444,
+        "type": "command",
+        "tick": 598,
+        "seatId": 4,
+        "command": {
+          "steering": 0.39999999999999997,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2445,
+        "type": "command",
+        "tick": 599,
+        "seatId": 1,
+        "command": {
+          "steering": 0.4702282018339785,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2446,
+        "type": "command",
+        "tick": 599,
+        "seatId": 2,
+        "command": {
+          "steering": 0.7727406610312547,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2447,
+        "type": "command",
+        "tick": 599,
+        "seatId": 3,
+        "command": {
+          "steering": 0.7308363661140809,
+          "acceleration": 1,
+          "braking": 0
+        }
+      },
+      {
+        "seq": 2448,
+        "type": "command",
+        "tick": 599,
+        "seatId": 4,
+        "command": {
+          "steering": 0.36319239979163753,
+          "acceleration": 1,
+          "braking": 0
+        }
+      }
+    ],
+    "latestSnapshot": {
+      "seq": 2331,
+      "tick": 570,
+      "stateHash": "bcf29227",
+      "drawCounters": {
+        "weapons": 0,
+        "gameplay": 599
+      }
+    },
+    "totalEntries": 2429,
+    "totalSnapshots": 20
+  }
+}

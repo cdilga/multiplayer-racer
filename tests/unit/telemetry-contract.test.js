@@ -27,14 +27,44 @@ describe('telemetry contract - event names', () => {
 
     it('contains all documented product event names', () => {
         const productEvents = [
-            'gameplay:match:started',
-            'gameplay:match:ended',
+            'gameplay:join:route_viewed',
+            'gameplay:join:started',
+            'gameplay:join:failed',
+            'gameplay:join:first_input',
+            'gameplay:join:tutorial_viewed',
+            'gameplay:join:tutorial_skipped',
+            'gameplay:join:tutorial_completed',
             'gameplay:player:joined',
             'gameplay:player:left',
+            'gameplay:match:started',
+            'gameplay:match:ended',
+            'gameplay:match:returned_to_lobby',
+            'gameplay:match:restarted',
             'gameplay:race:lap_completed',
             'gameplay:race:finished',
             'gameplay:derby:elimination',
+            'gameplay:wheelie:entered',
+            'gameplay:wheelie:sustained',
+            'gameplay:wheelie:landed',
+            'gameplay:wheelie:bad_land',
+            'gameplay:boost:used',
+            'gameplay:car:reset_requested',
+            'gameplay:car:out_of_bounds',
+            'gameplay:car:wall_recovery',
+            'gameplay:map:validation_failed',
+            'gameplay:map:oob_cluster',
+            'gameplay:map:reset_cluster',
+            'gameplay:map:load_failed',
+            'gameplay:controller:connected',
+            'gameplay:controller:disconnected',
+            'gameplay:controller:reconnect_attempted',
+            'gameplay:controller:reconnect_succeeded',
+            'gameplay:controller:reconnect_failed',
+            'gameplay:controller:visibility_change',
+            'gameplay:controller:input_stalled',
             'gameplay:weapon:fired',
+            'gameplay:weapon:pickup',
+            'gameplay:weapon:hit',
             'gameplay:spawn:respawn',
             'error:gameplay:crash',
             'error:network:disconnect',
@@ -62,6 +92,10 @@ describe('telemetry contract - event names', () => {
     it('contains all documented perf event names', () => {
         const perfEvents = [
             'perf:render:frame_sample',
+            'perf:visibility:state_sample',
+            'perf:webgl:init',
+            'perf:webgl:context_lost',
+            'perf:connectivity:reconnect',
             'perf:physics:step_sample',
             'perf:network:latency_sample',
             'perf:server:request_sample'
@@ -70,6 +104,120 @@ describe('telemetry contract - event names', () => {
         for (const name of perfEvents) {
             expect(ALLOWED_EVENT_NAMES.has(name), `${name} should be allowlisted`).toBe(true);
         }
+    });
+
+    it('covers dashboard readiness families for join/controller/map/match telemetry', () => {
+        const families = {
+            joinFunnel: [
+                'gameplay:join:route_viewed',
+                'gameplay:join:started',
+                'gameplay:join:completed',
+                'gameplay:join:first_input',
+                'gameplay:join:tutorial_viewed',
+                'gameplay:join:failed'
+            ],
+            controllerConfidence: [
+                'gameplay:controller:connected',
+                'gameplay:controller:disconnected',
+                'gameplay:controller:reconnect_attempted',
+                'gameplay:controller:reconnect_succeeded',
+                'gameplay:controller:reconnect_failed',
+                'gameplay:controller:visibility_change',
+                'gameplay:controller:input_stalled'
+            ],
+            matchFlow: [
+                'gameplay:match:started',
+                'gameplay:match:ended',
+                'gameplay:match:restarted',
+                'gameplay:match:returned_to_lobby'
+            ],
+            gameplayFeel: [
+                'gameplay:wheelie:entered',
+                'gameplay:wheelie:sustained',
+                'gameplay:wheelie:landed',
+                'gameplay:wheelie:bad_land',
+                'gameplay:boost:used',
+                'gameplay:car:out_of_bounds',
+                'gameplay:map:oob_cluster',
+                'gameplay:map:reset_cluster',
+                'gameplay:car:wall_recovery',
+                'gameplay:car:reset_requested',
+                'gameplay:vehicle:respawned',
+                'gameplay:weapon:pickup',
+                'gameplay:weapon:fired',
+                'gameplay:weapon:hit',
+            ],
+            mapReliability: [
+                'gameplay:map:load_failed',
+                'gameplay:map:validation_failed',
+            ]
+        };
+
+        Object.entries(families).forEach(([name, eventNames]) => {
+            expect(eventNames.length, `${name} should be non-empty`).toBeGreaterThan(0);
+            eventNames.forEach((eventName) => {
+                expect(ALLOWED_EVENT_NAMES.has(eventName), `${name} requires allowlist entry ${eventName}`).toBe(true);
+            });
+        });
+    });
+
+    it('documents low-cardinality perf properties for browser correlation', () => {
+        const service = new TelemetryService({
+            enabled: true,
+            release: 'test',
+            role: 'host',
+            source: 'GameHost',
+            deviceClass: 'desktop',
+            browserFamily: 'Chrome'
+        });
+        service.setRoomAnalyticsId('room-123');
+        service.setMatchId('match-123');
+        service.setPlayerAnalyticsId('player-123');
+
+        service.emit('perf:render:frame_sample', {
+            fps: 58,
+            fpsBucket: '55_plus',
+            frameTimeMs: 16.67,
+            frameTimeBucket: '16_20',
+            topology: 'local',
+            ruleset: 'race',
+            cameraMode: 'third_person',
+            deviceClass: 'desktop',
+            browserFamily: 'Chrome',
+        });
+
+        const event = service.queue[0];
+        expect(event.properties.fpsBucket).toBe('55_plus');
+        expect(event.properties.frameTimeBucket).toBe('16_20');
+        expect(event.properties.topology).toBe('local');
+        expect(event.properties.ruleset).toBe('race');
+        expect(event.properties.cameraMode).toBe('third_person');
+        expect(event.properties.deviceClass).toBe('desktop');
+        expect(event.properties.browserFamily).toBe('Chrome');
+    });
+
+    it('keeps RUM/perf labels low-cardinality', () => {
+        const service = new TelemetryService({
+            enabled: true,
+            release: 'test',
+            role: 'host',
+            source: 'GameHost'
+        });
+        service.setRoomAnalyticsId('room-abc');
+        service.setMatchId('match-abc');
+        service.setPlayerAnalyticsId('player-abc');
+
+        service.emit('perf:visibility:state_sample', {
+            visibilityState: 'background',
+            topology: 'local',
+            ruleset: 'race',
+            cameraMode: 'third_person'
+        });
+
+        const event = service.queue[0];
+        const payloadText = JSON.stringify(event);
+        expect(payloadText).not.toContain('session');
+        expect(JSON.stringify(event.properties)).not.toContain('room-abc');
     });
 
     it('rejects per-frame and per-tick event names', () => {

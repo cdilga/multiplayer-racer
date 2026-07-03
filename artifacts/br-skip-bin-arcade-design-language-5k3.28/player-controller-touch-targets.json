@@ -1,0 +1,80 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "boxes": [
+    {
+      "selector": "#steering-area",
+      "x": 0,
+      "y": 0,
+      "width": 195,
+      "height": 844,
+      "touchAction": "none",
+      "visible": true
+    },
+    {
+      "selector": "#pedals-area",
+      "x": 195,
+      "y": 0,
+      "width": 195,
+      "height": 844,
+      "touchAction": "none",
+      "visible": true
+    },
+    {
+      "selector": "#accelerate-btn",
+      "x": 195,
+      "y": 0,
+      "width": 195,
+      "height": 422,
+      "touchAction": "none",
+      "visible": true
+    },
+    {
+      "selector": "#brake-btn",
+      "x": 195,
+      "y": 422,
+      "width": 195,
+      "height": 422,
+      "touchAction": "none",
+      "visible": true
+    },
+    {
+      "selector": "#player-menu-btn",
+      "x": 10,
+      "y": 10,
+      "width": 44,
+      "height": 52,
+      "touchAction": "manipulation",
+      "visible": true
+    },
+    {
+      "selector": "#game-stats",
+      "x": 207,
+      "y": 12,
+      "width": 113,
+      "height": 46,
+      "touchAction": "manipulation",
+      "visible": true
+    }
+  ],
+  "noWorldRenderer": {
+    "canvasCount": 0,
+    "gameHostGlobal": "undefined",
+    "renderSystemGlobal": "undefined",
+    "webglCanvas": false,
+    "scripts": [
+      "/assets/player-PjmcOyac.js",
+      "inline",
+      "inline",
+      "/static/js/mobileUtils.js",
+      "/static/js/Joystick.js",
+      "/static/js/player.js"
+    ]
+  },
+  "overlaps": {
+    "steeringPedals": false,
+    "accelerateBrake": false
+  }
+}

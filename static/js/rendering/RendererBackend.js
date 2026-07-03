@@ -64,15 +64,16 @@ export class RendererBackend {
  * Detect and select the best available renderer backend.
  * Prefers WebGPU, falls back to WebGL2, then WebGL.
  * @param {Object} options - Selection options
+ * @param {boolean} [options.preferWebGPU] - Try WebGPU before WebGL
  * @param {boolean} [options.forceWebGL] - Skip WebGPU, use WebGL
  * @param {boolean} [options.killswitch] - Disable all WebGPU
  * @returns {Promise<RendererBackend>}
  */
 export async function selectRendererBackend(options = {}) {
-    const { forceWebGL = false, killswitch = false } = options;
+    const { preferWebGPU = true, forceWebGL = false, killswitch = false } = options;
 
     // If WebGPU is killed or forced off, skip to WebGL
-    if (!forceWebGL && !killswitch) {
+    if (preferWebGPU && !forceWebGL && !killswitch) {
         const webgpuBackend = (await import('./WebGPUBackend.js')).default;
         const backend = new webgpuBackend();
         if (await backend.isAvailable()) {
@@ -118,6 +119,23 @@ export async function createRenderer(backend, options = {}, deps = {}) {
             || (async () => (await import('./WebGLBackend.js')).default);
         const WebGLBackend = await loadWebGLBackend();
         const webgl = new WebGLBackend();
-        return await webgl.createRenderer(options);
+        const renderer = await webgl.createRenderer(options);
+        backend.fallbackBackend = webgl;
+        backend.renderer = renderer;
+        if (backend.diagnostics) {
+            backend.diagnostics.backend = webgl.diagnostics?.backend || webgl.name;
+            backend.diagnostics.activeApi = webgl.diagnostics?.activeApi || 'webgl';
+            backend.diagnostics.rendererType = webgl.diagnostics?.rendererType || 'WebGLRenderer';
+            backend.diagnostics.nativeWebGPU = false;
+            backend.diagnostics.fallback = {
+                from: backend.name,
+                to: webgl.diagnostics?.backend || webgl.name,
+                reason: error?.message || String(error)
+            };
+            backend.diagnostics.adapterInfo = webgl.diagnostics?.adapterInfo || backend.diagnostics.adapterInfo;
+            backend.diagnostics.deviceLimits = webgl.diagnostics?.deviceLimits || backend.diagnostics.deviceLimits;
+        }
+        backend.name = `${webgl.name} (${backend.name} fallback)`;
+        return renderer;
     }
 }

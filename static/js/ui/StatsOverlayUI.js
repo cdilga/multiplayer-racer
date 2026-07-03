@@ -79,7 +79,7 @@ class StatsOverlayUI {
                     left: 20px;
                     background: rgba(0, 0, 0, 0.8);
                     color: #00ff88;
-                    font-family: monospace;
+                    font-family: var(--font-mono, monospace);
                     font-size: 12px;
                     padding: 15px;
                     border-radius: 5px;
@@ -134,7 +134,7 @@ class StatsOverlayUI {
                     padding: 4px 8px;
                     border-radius: 3px;
                     cursor: pointer;
-                    font-family: monospace;
+                    font-family: var(--font-mono, monospace);
                     font-size: 11px;
                     margin-top: 5px;
                     margin-right: 5px;
@@ -151,7 +151,7 @@ class StatsOverlayUI {
                     padding: 6px 12px;
                     border-radius: 3px;
                     cursor: pointer;
-                    font-family: monospace;
+                    font-family: var(--font-mono, monospace);
                     font-size: 12px;
                     margin-top: 10px;
                     width: 100%;

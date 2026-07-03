@@ -3,22 +3,22 @@
        landing page is the source of truth for the in-game aesthetic
        (br-modes-remote-play-design-48a.5). Kept self-contained because
        landing.css is not loaded on the controller page. */
-    --bg-deep: #0d1429;
-    --bg-base: #1a1a2e;
-    --bg-panel: #16213e;
+    --bg-deep: #18110d;
+    --bg-base: #241b16;
+    --bg-panel: #2f231b;
 
-    --cyan: #4cc9f0;
-    --green: #00ff88;
+    --cyan: #5fd3d0;
+    --green: #c7ff4a;
     --indigo: #4361ee;
-    --pink: #f72585;
+    --pink: #ff4f7d;
 
-    --text: #ffffff;
-    --text-muted: #8d99ae;
+    --text: #fff8df;
+    --text-muted: #c6b99b;
 
-    --surface: rgba(22, 33, 62, 0.72);
-    --surface-solid: #16213e;
-    --border: rgba(76, 201, 240, 0.18);
-    --border-strong: rgba(76, 201, 240, 0.45);
+    --surface: #32251c;
+    --surface-solid: #2a211a;
+    --border: rgba(20, 17, 15, 0.86);
+    --border-strong: #14110f;
 
     --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
@@ -28,20 +28,29 @@
     --space-5: 1.5rem;
     --space-6: 2rem;
 
-    --radius-md: 0.75rem;
-    --radius-lg: 1.25rem;
+    --radius-md: 4px;
+    --radius-lg: 6px;
     --radius-full: 9999px;
 
-    --glow-cyan: 0 0 24px rgba(76, 201, 240, 0.5);
-    --glow-green: 0 0 24px rgba(0, 255, 136, 0.5);
-    --glow-pink: 0 0 24px rgba(247, 37, 133, 0.5);
+    --glow-cyan: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
+    --glow-green: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
+    --glow-pink: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
 
     --transition: 200ms ease;
 
     /* Semantic in-game accents */
-    --race: #00ff88;
-    --derby: #ff4444;
-    --danger: #e63946;
+    --race: #c7ff4a;
+    --derby: #ff4f33;
+    --danger: #ff3344;
+    --phone-cardboard: #3a2b20;
+    --phone-tape: #d5b05f;
+    --phone-ink: #14110f;
+    --phone-shadow: 3px 3px 0 var(--phone-ink);
+    --phone-scuffed-edge: repeating-linear-gradient(
+        90deg,
+        rgba(255, 248, 223, 0.08) 0 2px,
+        transparent 2px 8px
+    );
 }
 
 * {
@@ -65,13 +74,28 @@ html {
 }
 
 body {
-    background-color: var(--bg-base);
+    background:
+        radial-gradient(circle at 18% 14%, rgba(95, 211, 208, 0.12), transparent 28%),
+        linear-gradient(135deg, #18110d 0%, #241b16 58%, #111816 100%);
     color: var(--text);
     overflow: hidden;
     position: fixed;
     width: 100%;
     height: 100%;
     min-height: -webkit-fill-available;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.12;
+    background-image:
+        linear-gradient(rgba(255, 248, 223, 0.08) 1px, transparent 1px),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+    background-size: 100% 4px, 120px 120px;
 }
 
 /* Shared keyboard focus ring, matching the landing page. */
@@ -94,6 +118,8 @@ body {
 }
 
 .container {
+    position: relative;
+    z-index: 2;
     width: 100%;
     height: 100%;
     display: flex;
@@ -115,6 +141,9 @@ body {
     left: 0;
     display: flex;
     flex-direction: column;
+    background:
+        linear-gradient(90deg, rgba(95, 211, 208, 0.08), transparent 28%, transparent 72%, rgba(255, 79, 51, 0.1)),
+        var(--bg-base);
 }
 
 /* Portrait suggestion overlay */
@@ -124,14 +153,16 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
+    background-color: var(--surface-solid);
+    color: var(--text);
     padding: 15px 25px;
-    border-radius: 8px;
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    border-radius: var(--radius-md);
     text-align: center;
     pointer-events: none;
     z-index: 2000;
     transition: opacity 0.3s;
+    box-shadow: var(--phone-shadow);
 }
 
 .portrait-message::before {
@@ -156,10 +187,10 @@ body {
     }
 
     #game-stats {
-        /* Adjust stats position for portrait */
-        top: auto;
-        bottom: 20px;
-        right: 20px;
+        top: max(12px, env(safe-area-inset-top));
+        right: 70px;
+        bottom: auto;
+        transform: none;
     }
 }
 
@@ -184,6 +215,9 @@ body {
     justify-content: space-between;
     padding: 0;
     z-index: 100;
+    background:
+        linear-gradient(90deg, rgba(20, 17, 15, 0.28) 0 50%, rgba(255, 248, 223, 0.035) 50% 100%),
+        var(--phone-scuffed-edge);
 }
 
 .control-area {
@@ -204,8 +238,23 @@ body {
 
 #steering-area {
     width: 50%;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(58, 43, 32, 0.68);
     position: relative;
+    border-right: 3px dashed rgba(255, 248, 223, 0.22);
+}
+
+#steering-area::after {
+    content: "STEER";
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    color: rgba(255, 248, 223, 0.72);
+    font-family: var(--font-display, var(--font-sans));
+    font-size: clamp(1.1rem, 5vw, 2rem);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-shadow: 2px 2px 0 var(--phone-ink);
+    pointer-events: none;
 }
 
 #pedals-area {
@@ -220,13 +269,14 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: rgba(76, 201, 240, 0.3);
-    border: 3px solid var(--cyan);
+    background-color: rgba(95, 211, 208, 0.28);
+    border: 3px solid var(--phone-ink);
     position: absolute;
     transform: translate(-50%, -50%);
     opacity: 0;
     transition: opacity 0.1s;
     pointer-events: none;
+    box-shadow: inset 0 0 0 4px var(--cyan), var(--phone-shadow);
 }
 
 #steering-indicator.active {
@@ -245,11 +295,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
-    font-weight: bold;
+    min-height: 50%;
+    border: 0;
+    border-left: 3px solid var(--phone-ink);
+    font-family: var(--font-display, var(--font-sans));
+    font-size: clamp(2.2rem, 12vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: 0;
     margin: 0;
     padding: 0;
-    transition: background-color 0.2s, filter 0.2s;
+    transition: background-color 0.08s, filter 0.08s;
     /* Prevent long-press issues on mobile */
     touch-action: none;
     -webkit-touch-callout: none;
@@ -259,13 +314,19 @@ body {
 }
 
 #accelerate-btn {
-    background-color: var(--cyan);
-    color: var(--bg-deep);
+    background:
+        linear-gradient(rgba(255, 248, 223, 0.16), rgba(255, 248, 223, 0)),
+        var(--race);
+    color: var(--phone-ink);
+    border-bottom: 3px solid var(--phone-ink);
 }
 
 #brake-btn {
-    background-color: var(--pink);
+    background:
+        linear-gradient(rgba(255, 248, 223, 0.12), rgba(255, 248, 223, 0)),
+        var(--derby);
     color: var(--text);
+    text-shadow: 2px 2px 0 var(--phone-ink);
 }
 
 /* Pedals must not lift on hover (would shift the tap zone). */
@@ -286,14 +347,25 @@ body {
     top: 20px;
     right: 20px;
     padding: 10px 20px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 5px;
+    background-color: var(--surface-solid);
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    border-radius: var(--radius-md);
     z-index: 100;
     transform: rotate(-90deg);
+    box-shadow: var(--phone-shadow);
 }
 
 @media (orientation: landscape) {
     #game-stats {
+        transform: none;
+    }
+}
+
+@media screen and (orientation: portrait) {
+    #game-stats {
+        top: max(12px, env(safe-area-inset-top));
+        right: 70px;
+        bottom: auto;
         transform: none;
     }
 }
@@ -313,16 +385,20 @@ body {
 }
 
 h1 {
+    font-family: var(--font-display, var(--font-sans));
     font-size: 2rem;
     margin-bottom: 20px;
-    color: var(--cyan);
-    letter-spacing: 0.01em;
+    color: var(--text);
+    letter-spacing: 0.03em;
+    text-shadow: 3px 3px 0 var(--phone-ink);
 }
 
 h2 {
+    font-family: var(--font-display, var(--font-sans));
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: var(--pink);
+    color: var(--phone-tape);
+    text-shadow: 2px 2px 0 var(--phone-ink);
 }
 
 .join-subtitle {
@@ -354,12 +430,14 @@ h2 {
 
 input {
     padding: 15px;
-    border: 1px solid var(--border);
+    min-height: 52px;
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-md);
     font-size: 1.2rem;
     background-color: var(--surface-solid);
     color: var(--text);
     text-align: center;
+    box-shadow: var(--phone-shadow);
     transition: border-color var(--transition), box-shadow var(--transition);
     -webkit-user-select: text;
     -khtml-user-select: text;
@@ -381,21 +459,22 @@ input::placeholder {
 /* Pill buttons matching the landing page: gradient primary with a soft glow
    and a subtle lift on press. */
 button {
-    background: linear-gradient(135deg, var(--green), var(--cyan));
-    color: var(--bg-deep);
+    background: var(--race);
+    color: var(--phone-ink);
     padding: 15px;
-    border: none;
-    border-radius: var(--radius-full);
+    min-height: 52px;
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    border-radius: var(--radius-md);
     font-size: 1.2rem;
-    font-weight: 700;
+    font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 8px 28px rgba(0, 255, 136, 0.35);
-    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: var(--phone-shadow);
+    transition: transform 80ms ease, filter 80ms ease;
 }
 
 button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 36px rgba(0, 255, 136, 0.5);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--phone-ink);
 }
 
 button:active {
@@ -406,7 +485,8 @@ button:active {
     color: var(--danger);
     margin-top: 10px;
     padding: 10px;
-    background-color: rgba(230, 57, 70, 0.2);
+    background-color: rgba(255, 51, 68, 0.14);
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-md);
 }
 
@@ -417,10 +497,10 @@ button:active {
 }
 
 .join-secondary {
-    background: transparent;
-    color: var(--cyan);
-    border: 2px solid var(--border-strong);
-    box-shadow: none;
+    background: var(--surface-solid);
+    color: var(--text);
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    box-shadow: var(--phone-shadow);
 }
 
 .join-secondary:hover {
@@ -444,8 +524,9 @@ button:active {
     margin: 20px 0;
     padding: 20px;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-lg);
+    box-shadow: var(--phone-shadow);
 }
 
 /* Mode display in waiting room */
@@ -459,7 +540,7 @@ button:active {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     border: 2px solid var(--mode-color, var(--race));
-    box-shadow: 0 0 15px var(--mode-color, var(--race));
+    box-shadow: 2px 2px 0 var(--mode-color, var(--race));
     transition: all 0.3s ease;
 }
 
@@ -588,13 +669,13 @@ button:active {
     width: 44px;
     height: 44px;
     padding: 0;
-    background: rgba(13, 20, 41, 0.6);
+    background: var(--surface-solid);
     color: var(--text);
-    border: 1px solid var(--border);
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-md);
     font-size: 1.3rem;
-    box-shadow: none;
-    opacity: 0.7;
+    box-shadow: var(--phone-shadow);
+    opacity: 0.92;
 }
 
 #player-menu {
@@ -603,7 +684,7 @@ button:active {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(20, 17, 15, 0.78);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -612,7 +693,7 @@ button:active {
 
 .player-menu-content {
     background: var(--surface-solid);
-    border: 1px solid var(--border-strong);
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-lg);
     padding: 20px;
     width: 90%;
@@ -622,14 +703,16 @@ button:active {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(76, 201, 240, 0.08);
+    box-shadow: var(--phone-shadow), inset 0 0 0 3px rgba(255, 248, 223, 0.05);
 }
 
 .player-menu-title {
+    font-family: var(--font-display, var(--font-sans));
     font-size: 1.3rem;
     font-weight: bold;
-    color: var(--cyan);
+    color: var(--phone-tape);
     text-align: center;
+    text-shadow: 2px 2px 0 var(--phone-ink);
 }
 
 .player-menu-content button {
@@ -639,10 +722,10 @@ button:active {
 
 /* Dismiss action: neutral ghost pill, subordinate to the primary actions. */
 #player-menu-close {
-    background: transparent;
+    background: var(--surface);
     color: var(--text-muted);
-    border: 2px solid var(--border);
-    box-shadow: none;
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    box-shadow: var(--phone-shadow);
 }
 
 #player-menu-close:hover {
@@ -675,12 +758,12 @@ button:active {
     position: fixed;
     inset: 0;
     z-index: 2400;
-    background: rgba(4, 9, 22, 0.72);
+    background: rgba(20, 17, 15, 0.78);
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px 14px;
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
 }
 
 .control-remap-content {
@@ -693,11 +776,10 @@ button:active {
     padding: 18px;
     border-radius: var(--radius-lg);
     background:
-        radial-gradient(circle at top left, rgba(76, 201, 240, 0.16), transparent 38%),
-        radial-gradient(circle at bottom right, rgba(247, 37, 133, 0.14), transparent 35%),
-        rgba(13, 20, 41, 0.96);
-    border: 1px solid var(--border-strong);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+        linear-gradient(rgba(255, 248, 223, 0.04), rgba(255, 248, 223, 0)),
+        var(--surface-solid);
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    box-shadow: var(--phone-shadow);
 }
 
 .control-remap-header {
@@ -712,11 +794,12 @@ button:active {
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--phone-tape);
     margin-bottom: 4px;
 }
 
 .control-remap-title {
+    font-family: var(--font-display, var(--font-sans));
     font-size: 1.35rem;
     font-weight: 800;
     color: var(--text);
@@ -763,7 +846,7 @@ button:active {
 .control-remap-section-title {
     font-size: 1rem;
     font-weight: 800;
-    color: var(--cyan);
+    color: var(--phone-tape);
 }
 
 .control-remap-chip-grid {
@@ -780,22 +863,23 @@ button:active {
     min-height: 92px;
     padding: 14px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    background: rgba(10, 18, 34, 0.85);
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    background: var(--phone-cardboard);
     color: var(--text);
-    box-shadow: none;
+    box-shadow: var(--phone-shadow);
     transform: none;
 }
 
 .control-remap-chip:hover {
     transform: none;
     border-color: var(--border-strong);
-    box-shadow: 0 0 0 1px rgba(76, 201, 240, 0.12), var(--glow-cyan);
+    box-shadow: 4px 4px 0 var(--phone-ink);
 }
 
 .control-remap-chip.active {
-    border-color: var(--green);
-    box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.25), var(--glow-green);
+    background: var(--race);
+    color: var(--phone-ink);
+    box-shadow: var(--phone-shadow);
 }
 
 .control-remap-chip-title {
@@ -822,8 +906,8 @@ button:active {
     align-items: center;
     padding: 12px;
     border-radius: var(--radius-md);
-    background: rgba(10, 18, 34, 0.76);
-    border: 1px solid var(--border);
+    background: var(--phone-cardboard);
+    border: var(--border-ink, 2px solid var(--phone-ink));
 }
 
 .control-remap-row-label {
@@ -838,10 +922,10 @@ button:active {
     min-height: 44px;
     padding: 10px 12px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-strong);
-    background: rgba(20, 31, 57, 0.96);
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    background: var(--surface-solid);
     color: var(--text);
-    box-shadow: none;
+    box-shadow: var(--phone-shadow);
 }
 
 .control-remap-bind-btn:hover {
@@ -874,10 +958,10 @@ button:active {
 
 #control-remap-close,
 #control-remap-reset {
-    background: transparent;
+    background: var(--surface);
     color: var(--text-muted);
-    border: 2px solid var(--border);
-    box-shadow: none;
+    border: var(--border-ink, 2px solid var(--phone-ink));
+    box-shadow: var(--phone-shadow);
 }
 
 #control-remap-close:hover,
@@ -915,8 +999,8 @@ button:active {
 }
 
 .weapon-indicator {
-    background: rgba(13, 20, 41, 0.7);
-    border: 2px solid rgba(255, 68, 68, 0.5);
+    background: var(--surface-solid);
+    border: var(--border-ink, 2px solid var(--phone-ink));
     border-radius: var(--radius-md);
     padding: 8px 16px;
     font-size: 0.9rem;
@@ -931,7 +1015,7 @@ button:active {
 .weapon-indicator.has-weapon {
     border-color: var(--derby);
     color: var(--text);
-    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+    box-shadow: 2px 2px 0 rgba(255, 68, 68, 0.4);
 }
 
 .weapon-indicator.has-weapon span {
@@ -941,7 +1025,7 @@ button:active {
 .fire-btn {
     width: 100px;
     height: 80px;
-    background: linear-gradient(135deg, var(--derby) 0%, #ff6644 100%);
+    background: var(--derby);
     clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
     display: flex;
     justify-content: center;
@@ -950,8 +1034,8 @@ button:active {
     font-size: 1.2rem;
     font-weight: bold;
     color: var(--text);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+    text-shadow: 2px 2px 0 var(--phone-ink);
+    transition: transform 0.08s, opacity 0.08s, box-shadow 0.08s;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -960,7 +1044,7 @@ button:active {
 }
 
 .fire-btn.enabled {
-    box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+    box-shadow: var(--phone-shadow);
 }
 
 .fire-btn.pressed {
@@ -968,5 +1052,92 @@ button:active {
 }
 
 .fire-btn:not(.enabled) {
-    background: linear-gradient(135deg, #4a5163 0%, #6b7280 100%);
+    background: #6b6253;
 }
+
+/* ==========================================================================
+   Skip Bin Arcade shared UI foundation (br-skip-bin-arcade-design-language-5k3.25, slice A)
+   Type system (2 typefaces) + sticker-chrome tokens + shared grain overlay.
+   Mirrored across host.css / player.css / landing.css by the repo's token
+   convention. Additive only — existing tokens are untouched so nothing breaks;
+   component adoption + de-glass is the deferred slice C.
+   ========================================================================== */
+
+/* --- 2 typefaces, self-hosted (no CDN). local()-only sources = zero network
+   fetch and no 404s. To ship exact bundled faces, drop woff2 into
+   /static/assets/fonts and add url('/static/assets/fonts/<file>.woff2')
+   BEFORE the local() fallbacks. See static/assets/fonts/README.md. --- */
+@font-face {
+    font-family: 'SkipBinDisplay';   /* chunky condensed camcorder display face */
+    src: url('/static/assets/fonts/skip-bin-display.woff2') format('woff2'),
+         local('Oswald'), local('Bebas Neue'), local('Anton'),
+         local('Arial Narrow Bold'), local('Impact');
+    font-weight: 700;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SkipBinBody';      /* legible HUD/body face */
+    src: url('/static/assets/fonts/skip-bin-body.woff2') format('woff2'),
+         local('Inter'), local('Helvetica Neue'), local('Segoe UI'), local('Roboto');
+    font-weight: 400;
+    font-display: swap;
+}
+
+:root {
+    /* The two brand typefaces (the "one type system"). */
+    --font-display: 'SkipBinDisplay', 'Arial Narrow', 'Segoe UI', sans-serif;
+    --font-body: 'SkipBinBody', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* Functional companion for tabular HUD numerals (part of the body role,
+       not a third brand face). */
+    --font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', 'Consolas', monospace;
+    /* Minimum legible body size (readability law). */
+    --font-body-min-size: 14px;
+
+    /* Sticker chrome: flat, matte, hard ink borders, tightened radii, hard
+       (non-blur) offset shadow. Replaces glass/soft-glow for the lo-fi look. */
+    --ink: #14110f;
+    --sticker-surface: #16213e;      /* opaque matte panel (not translucent) */
+    --sticker-surface-2: #1f2b4d;
+    --border-ink: 2px solid var(--ink);
+    --radius-sticker: 4px;           /* tightened from --radius-md 0.75rem */
+    --shadow-sticker: 2px 2px 0 var(--ink);
+    --glow-soft: none;               /* de-emphasized soft glow (was --glow-cyan) */
+
+    /* Shared grain overlay knobs. */
+    --sb-grain-opacity: 0.06;
+}
+
+/* --- Shared camcorder grain overlay. Full-frame, never steals input, sits
+   above the world canvas but below interactive HUD (which uses higher z).
+   Procedural SVG noise (data: URI, no fetch) matching the 5k3.8 grain language.
+   Animated in discrete steps() ticks (camcorder), off under reduce-effects. --- */
+.sb-grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: var(--sb-grain-opacity, 0.06);
+    mix-blend-mode: overlay;
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation: sb-grain-shift 0.5s steps(1) infinite;
+}
+@keyframes sb-grain-shift {
+    0%   { background-position: 0 0; }
+    25%  { background-position: -40px 30px; }
+    50%  { background-position: 60px -20px; }
+    75%  { background-position: -30px -50px; }
+    100% { background-position: 20px 40px; }
+}
+/* Reduce-effects / a11y: no animation, and fully removable via the JS module. */
+@media (prefers-reduced-motion: reduce) {
+    .sb-grain-overlay { animation: none; }
+}
+.sb-grain-overlay[data-enabled="false"],
+.reduce-effects .sb-grain-overlay {
+    display: none;
+}
+
+/* 5k3.25: unify legacy token onto the brand body face (one type system). */
+:root { --font-sans: var(--font-body); }

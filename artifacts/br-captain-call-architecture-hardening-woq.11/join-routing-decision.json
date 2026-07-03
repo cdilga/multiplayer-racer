@@ -1,0 +1,15 @@
+{
+  "entryKind": "controller_only",
+  "role": "controller",
+  "startRenderer": false,
+  "showChooser": false,
+  "pairPrompt": false,
+  "bindToExistingSeat": false,
+  "readOnly": false,
+  "recovery": false,
+  "recoveryKind": null,
+  "capacityStress": false,
+  "degrade": false,
+  "reason": "controller_only_other_screen",
+  "usedUserAgentOnly": false
+}

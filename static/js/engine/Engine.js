@@ -118,6 +118,9 @@ class Engine {
 
         // Initialize all registered systems
         for (const [name, system] of this.systems) {
+            // Give every system the deterministic run context before it inits,
+            // so gameplay timers/RNG read from SimClock + named streams.
+            this._attachRunContext(system);
             if (typeof system.init === 'function') {
                 console.log(`Engine: Initializing system '${name}'...`);
                 await system.init();
@@ -188,9 +191,30 @@ class Engine {
             system.setEventBus(this.eventBus);
         }
 
+        // Provide the run context (if it already exists) so late-registered
+        // systems are also deterministic.
+        if (this.runContext) {
+            this._attachRunContext(system);
+        }
+
         // If already initialized, init the new system immediately
         if (this.initialized && typeof system.init === 'function') {
             system.init();
+        }
+    }
+
+    /**
+     * Attach the run context to a system, via setRunContext() if present,
+     * otherwise by setting a `runContext` field.
+     * @param {Object} system
+     * @private
+     */
+    _attachRunContext(system) {
+        if (!system || !this.runContext) return;
+        if (typeof system.setRunContext === 'function') {
+            system.setRunContext(this.runContext);
+        } else {
+            system.runContext = this.runContext;
         }
     }
 
@@ -262,6 +286,14 @@ class Engine {
      * @private
      */
     _onUpdate({ dt, time }) {
+        // Advance the deterministic sim clock exactly one fixed step per fixed
+        // update. loop:update fires once per fixed timestep, so sim time tracks
+        // ticks regardless of render fps - this is what makes gameplay timers
+        // deterministic across 30/60/120 fps.
+        if (this.runContext) {
+            this.runContext.clock.step(1);
+        }
+
         // Update state machine
         this.stateMachine.update(dt);
 

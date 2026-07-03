@@ -17,6 +17,9 @@ import { getResourceLoader } from './resources/ResourceLoader.js';
 import { VehicleFactory } from './resources/VehicleFactory.js';
 import { TrackFactory } from './resources/TrackFactory.js';
 import { DEFAULT_VALIDATED_CAPACITY, generateSpawnsForTrack } from './resources/SpawnGenerator.js';
+import { validateMapData } from './resources/mapValidator.js';
+import { createSpawnAllocator } from './resources/SpawnAllocator.js';
+import { ReplayJournal } from './engine/replayJournal.js';
 import { PhysicsSystem } from './systems/PhysicsSystem.js';
 import { RenderSystem } from './systems/RenderSystem.js';
 import { NetworkSystem } from './systems/NetworkSystem.js';
@@ -26,8 +29,10 @@ import { RaceSystem } from './systems/RaceSystem.js';
 import { DamageSystem } from './systems/DamageSystem.js';
 import { DerbySystem } from './systems/DerbySystem.js';
 import { WeaponSystem } from './systems/WeaponSystem.js';
+import { HitStopSystem } from './systems/HitStopSystem.js';
 import { TrailSystem } from './systems/TrailSystem.js';
 import { ParticleSystem } from './systems/ParticleSystem.js';
+import { AdaptiveQualityController } from './engine/AdaptiveQualityController.js';
 import { Vehicle } from './entities/Vehicle.js';
 import { Track } from './entities/Track.js';
 import { LobbyUI } from './ui/LobbyUI.js';
@@ -39,6 +44,7 @@ import { BugReportUI } from './ui/BugReportUI.js';
 import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
 import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
+import { getRuntimeTelemetryContext, getBrowserTelemetry } from './telemetry/index.js';
 
 class GameHost {
     constructor(options = {}) {
@@ -59,6 +65,7 @@ class GameHost {
             damage: null,
             derby: null,
             weapons: null,
+            hitStop: null,
             trails: null,
             particles: null
         };
@@ -87,12 +94,26 @@ class GameHost {
         this.roomCode = null;
         this._lastStateBroadcast = 0;
         this._stateBroadcastInterval = 100; // 10Hz
+        this._matchStartAt = null;
+        this._currentMatchId = null;
+        this._currentMatchState = null;
+        this._oobClusterState = {
+            count: 0,
+            startedAt: null,
+            lastEmitAt: 0,
+        };
+        this._vehicleThrottleState = new Map();
         this.settings = {
             mode: 'race',
             laps: 3,
             damageEnabled: true,
             track: 'oval',
             vehicle: 'default'
+        };
+        this.lobbyWorld = {
+            enabled: true,
+            lastUpdateAt: 0,
+            banter: []
         };
 
         // Bind methods
@@ -104,6 +125,276 @@ class GameHost {
         this._onUpdate = this._onUpdate.bind(this);
         this._onRender = this._onRender.bind(this);
         this._onCameraKeyDown = this._onCameraKeyDown.bind(this);
+        this._lastVisibilitySampleAt = 0;
+        this._lastFrameSampleAt = 0;
+        this._frameSamplePeriodMs = 1000;
+        this._vehicleTelemetryState = new Map();
+    }
+
+    _emitGameplayTelemetry(eventName, properties = {}, options = {}) {
+        const telemetry = getBrowserTelemetry?.();
+        if (!telemetry) {
+            return null;
+        }
+
+        if (typeof telemetry.captureStateTransition === 'function' && options.transitionState !== undefined) {
+            return telemetry.captureStateTransition(eventName, options.transitionState, properties, options);
+        }
+
+        if (typeof telemetry.captureWithCooldown === 'function' && options.cooldownMs) {
+            return telemetry.captureWithCooldown(eventName, properties, { cooldownMs: options.cooldownMs });
+        }
+
+        if (typeof telemetry.capture === 'function') {
+            return telemetry.capture(eventName, properties);
+        }
+
+        return null;
+    }
+
+    _isOutOfBounds(position = {}) {
+        const x = Number(position.x);
+        const y = Number(position.y);
+        const z = Number(position.z);
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+            return false;
+        }
+        return Math.abs(x) > 220 || Math.abs(z) > 220 || y < -20;
+    }
+
+    _safeTelemetryContext() {
+        return {
+            trackId: this.track?.configId || this.track?.config?.id || 'unknown',
+            ruleset: this.settings?.mode || 'unknown',
+            topology: this.systems.network?.topology || 'local',
+        };
+    }
+
+    _withMatchContext(props = {}) {
+        return {
+            ...this._safeTelemetryContext(),
+            playerCount: this.vehicles?.size || 0,
+            matchId: this._currentMatchId || 'match-unknown',
+            ...props
+        };
+    }
+
+    _trackSeedBucket(seed) {
+        const numericSeed = Number(seed);
+        if (!Number.isFinite(numericSeed)) {
+            return 'n/a';
+        }
+        if (numericSeed < 1000) {
+            return '0_999';
+        }
+        if (numericSeed < 10000) {
+            return '1k_10k';
+        }
+        if (numericSeed < 100000) {
+            return '10k_100k';
+        }
+        return '100k_plus';
+    }
+
+    _generateMatchId() {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return `match-${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
+        }
+        return `match-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    _setMatchId(matchId) {
+        const sanitized = typeof matchId === 'string' && matchId.length > 0
+            ? matchId
+            : this._generateMatchId();
+        this._currentMatchId = sanitized;
+        const telemetry = getBrowserTelemetry?.();
+        if (telemetry?.setContext) {
+            telemetry.setContext({ matchId: sanitized });
+        }
+        if (telemetry?.setContextFromPayload) {
+            telemetry.setContextFromPayload({ matchId: sanitized });
+        }
+        return sanitized;
+    }
+
+    _emitMatchTelemetry(eventName, state, properties = {}, options = {}) {
+        if (this._currentMatchState === state && eventName === 'gameplay:match:started') {
+            return null;
+        }
+        this._currentMatchState = state;
+        return this._emitGameplayTelemetry(eventName, this._withMatchContext(properties), {
+            ...options,
+            transitionState: state
+        });
+    }
+
+    _emitTelemetryWithThrottle(eventName, properties = {}, options = {}) {
+        return this._emitGameplayTelemetry(eventName, properties, options);
+    }
+
+    _coarseDurationBucket(durationMs) {
+        const duration = Number(durationMs);
+        if (!Number.isFinite(duration) || duration < 0) {
+            return 'n/a';
+        }
+        return duration >= 120000
+            ? '2m+'
+            : duration >= 60000
+                ? '1m_to_2m'
+                : duration >= 30000
+                    ? '30s_to_1m'
+                    : duration >= 10000
+                        ? '10s_to_30s'
+                        : 'lt_10s';
+    }
+
+    _trackVehicleTelemetry(vehicle = {}) {
+        const vehicleId = vehicle.id;
+        const lastState = this._vehicleTelemetryState.get(vehicleId) || {};
+        const now = Number.isFinite(performance.now()) ? performance.now() : Date.now();
+
+        const handlingState = vehicle.handlingState || 'grounded';
+        const isWheelie = handlingState === 'wheelie';
+        const wasWheelie = Boolean(lastState.isWheelie);
+        const isBoosting = (vehicle.speedBoost || 1) > 1 || (vehicle.stuntBoostMultiplier || 1) > 1;
+        const wasBoosting = Boolean(lastState.isBoosting);
+        const inWallContact = !!vehicle.inWallContact;
+        const isOob = this._isOutOfBounds(vehicle.position || vehicle.mesh?.position || {});
+        const wasOob = Boolean(lastState.isOutOfBounds);
+        const badLandingActive = !!vehicle.stuntBadLandingUntil && now < vehicle.stuntBadLandingUntil;
+        const wasBadLanding = Boolean(lastState.badLanding);
+
+        if (lastState.isWheelie !== isWheelie) {
+            if (isWheelie) {
+                this._emitTelemetryWithThrottle('gameplay:wheelie:entered', {
+                    vehicleId,
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown',
+                    handlingState,
+                    wheeliePhase: 'entered',
+                    speed: vehicle.speed,
+                });
+                lastState.wheelieStartAt = now;
+            } else if (wasWheelie) {
+                const wheelieDurationMs = Number.isFinite(lastState.wheelieStartAt)
+                    ? now - lastState.wheelieStartAt
+                    : null;
+                this._emitTelemetryWithThrottle('gameplay:wheelie:landed', {
+                    vehicleId,
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown',
+                    handlingState,
+                    durationBucket: this._coarseDurationBucket(wheelieDurationMs),
+                    speed: vehicle.speed,
+                    durationMs: wheelieDurationMs == null ? null : Math.round(wheelieDurationMs),
+                    badLanding: wasBadLanding
+                });
+            }
+            delete lastState.wheelieStartAt;
+        }
+
+        if (wasBadLanding && !badLandingActive) {
+            this._emitTelemetryWithThrottle('gameplay:wheelie:bad_land', {
+                vehicleId,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                handlingState: handlingState
+            }, { cooldownMs: 1000 });
+        }
+
+        if (!wasWheelie && isWheelie) {
+            this._vehicleThrottleState.set(`${vehicleId}:wheelie`, now);
+        }
+
+        if (isWheelie) {
+            const lastWheelieTick = Number(lastState.wheelieSampleAt || 0);
+            if (!lastWheelieTick || now - lastWheelieTick >= 3000) {
+                const durationMs = Number.isFinite(lastState.wheelieStartAt)
+                    ? Math.max(0, now - lastState.wheelieStartAt)
+                    : null;
+                this._emitTelemetryWithThrottle('gameplay:wheelie:sustained', {
+                    vehicleId,
+                    durationBucket: this._coarseDurationBucket(durationMs),
+                    durationMs: durationMs == null ? null : Math.round(durationMs),
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown'
+                }, { cooldownMs: 3000 });
+                lastState.wheelieSampleAt = now;
+            }
+        }
+
+        if (wasBoosting !== isBoosting) {
+            this._emitTelemetryWithThrottle('gameplay:boost:used', {
+                vehicleId,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                boostMultiplier: Math.max(
+                    Number(vehicle.speedBoost || 1),
+                    Number(vehicle.stuntBoostMultiplier || 1)
+                )
+            }, {
+                cooldownMs: 1500,
+                transitionState: isBoosting ? 'used' : 'ended'
+            });
+        }
+
+        if (!wasOob && isOob) {
+            this._oobClusterState.startedAt = now;
+            this._oobClusterState.count = 1;
+            this._oobClusterState.lastEmitAt = now;
+            this._emitTelemetryWithThrottle('gameplay:car:out_of_bounds', {
+                vehicleId,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                count: this.vehicles.size
+            });
+        } else if (wasOob && isOob) {
+            this._oobClusterState.count += 1;
+            if (now - this._oobClusterState.lastEmitAt >= 3000) {
+                this._oobClusterState.lastEmitAt = now;
+                this._emitTelemetryWithThrottle('gameplay:map:oob_cluster', {
+                    clusterSize: this._oobClusterState.count,
+                    clusterDurationBucket: this._coarseDurationBucket(now - this._oobClusterState.startedAt),
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown'
+                }, { cooldownMs: 5000 });
+            }
+        } else if (wasOob && !isOob) {
+            const clusterDurationMs = Number.isFinite(this._oobClusterState.startedAt)
+                ? Math.max(0, now - this._oobClusterState.startedAt)
+                : null;
+            if (clusterDurationMs > 0 && this._oobClusterState.count > 0) {
+                this._emitTelemetryWithThrottle('gameplay:map:reset_cluster', {
+                    clusterSize: this._oobClusterState.count,
+                    clusterDurationMs: Math.round(clusterDurationMs),
+                    clusterDurationBucket: this._coarseDurationBucket(clusterDurationMs),
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown'
+                });
+            }
+            this._oobClusterState = { count: 0, startedAt: null, lastEmitAt: 0 };
+        }
+
+        if (!lastState.inWallContact && inWallContact) {
+            this._emitTelemetryWithThrottle('gameplay:car:wall_recovery', {
+                vehicleId,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                mapReliability: 'wall_touch'
+            }, { cooldownMs: 5000 });
+        }
+
+        this._vehicleTelemetryState.set(vehicleId, {
+            isWheelie,
+            isBoosting,
+            inWallContact,
+            isOutOfBounds: isOob,
+            badLanding: badLandingActive,
+            badLandingAt: badLandingActive ? now : null,
+            wheelieStartAt: lastState.wheelieStartAt,
+            wheelieSampleAt: lastState.wheelieSampleAt
+        });
     }
 
     /**
@@ -144,6 +435,10 @@ class GameHost {
         this.systems.damage = new DamageSystem({ eventBus: this.eventBus });
         this.systems.derby = new DerbySystem({ eventBus: this.eventBus });
         this.systems.weapons = new WeaponSystem({ eventBus: this.eventBus });
+        this.systems.hitStop = new HitStopSystem({
+            eventBus: this.eventBus,
+            renderSystem: this.systems.render
+        });
 
         // TrailSystem needs renderSystem, so create after render is initialized
         // But we'll create it after engine.init() so renderSystem is ready
@@ -177,6 +472,11 @@ class GameHost {
         // Configure WeaponSystem with render and damage systems
         this.systems.weapons.renderSystem = this.systems.render;
         this.systems.weapons.damageSystem = this.systems.damage;
+
+        // Adaptive quality controller (5k3.39): drives the render grade tier +
+        // resolution scale from a hardware heuristic + runtime fps, using the
+        // render system's existing public API. Fed each frame in _onRender.
+        this._attachAdaptiveQuality();
 
         // Create UI
         this._createUI();
@@ -396,6 +696,18 @@ class GameHost {
         this.eventBus.on('network:playerJoined', this._onPlayerJoined);
         this.eventBus.on('network:playerLeft', this._onPlayerLeft);
         this.eventBus.on('network:playerInput', this._onPlayerInput);
+        this.eventBus.on('network:gameStart', this._onNetworkGameStart.bind(this));
+        this.eventBus.on('network:gameEnd', this._onNetworkGameEnd.bind(this));
+        this.eventBus.on('network:roomCreated', (data) => {
+            const mapSeed = data?.seed ?? data?.track_seed ?? data?.mapSeed;
+            this._setMatchId(this._currentMatchId || this._generateMatchId());
+            this._emitTelemetryWithThrottle('gameplay:match:returned_to_lobby', {
+                phase: 'room_created',
+                trackSeedBucket: this._trackSeedBucket(mapSeed),
+                trackId: data?.track_id || data?.trackId || this.track?.configId || 'unknown',
+                playerCount: this.vehicles.size
+            });
+        });
 
         // Player-requested car reset (stuck car escape hatch)
         this.eventBus.on('network:carResetRequest', ({ playerId }) => {
@@ -409,6 +721,13 @@ class GameHost {
             } else {
                 this._rightVehicle(vehicle);
             }
+            this._emitGameplayTelemetry('gameplay:car:reset_requested', {
+                vehicleId: vehicle.id,
+                playerId,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                reason: 'player_request'
+            }, { cooldownMs: 1200 });
         });
 
         // Race events
@@ -430,18 +749,29 @@ class GameHost {
         // Dead cars become non-solid until they respawn
         this.eventBus.on('damage:destroyed', ({ vehicleId }) => {
             this.systems.physics.setVehicleEnabled(vehicleId, false);
+            this._journalEvent('destroyed', { vehicleId });
         });
         this.eventBus.on('damage:respawn', ({ vehicleId }) => {
             this.systems.physics.setVehicleEnabled(vehicleId, true);
+            this._journalEvent('respawn', { vehicleId });
         });
 
         // Stunt landings should read on the shared screen even when the camera
         // is not focused tightly on the car.
         this.eventBus.on('vehicle:stuntLanding', ({ charge = 0 }) => {
             this.systems.render?.addImpactShake?.(0.16 + Math.min(0.24, charge * 0.2));
+            this._emitGameplayTelemetry('gameplay:wheelie:landed', {
+                charge: Number.isFinite(charge) ? Math.round(charge * 100) / 100 : null,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown'
+            }, { cooldownMs: 750 });
         });
         this.eventBus.on('vehicle:stuntBadLanding', () => {
             this.systems.render?.addImpactShake?.(0.28);
+            this._emitGameplayTelemetry('gameplay:wheelie:bad_land', {
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown'
+            }, { cooldownMs: 750 });
         });
 
         // Race respawns drop you at your last checkpoint, facing the next one
@@ -456,12 +786,42 @@ class GameHost {
                     weaponName: data.weaponName || weapon?.name,
                     icon: weapon?.icon
                 });
+                this._emitGameplayTelemetry('gameplay:weapon:pickup', {
+                    weaponType: data.weaponId || 'unknown',
+                    playerId: data.playerId,
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown'
+                }, { cooldownMs: 750 });
             }
         });
         this.eventBus.on('weapon:fired', (data) => {
             if (this.systems.network && data.playerId) {
                 this.systems.network.sendWeaponFired(data.playerId, {
                     weaponId: data.weaponId
+                });
+                this._emitGameplayTelemetry('gameplay:weapon:fired', {
+                    weaponType: data.weaponId || 'unknown',
+                    playerId: data.playerId,
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown',
+                }, { cooldownMs: 500 });
+            }
+        });
+        this.eventBus.on('weapon:hit', ({ shooterId, targetId, weaponId, damage }) => {
+            const now = Number(performance.now());
+            const key = `weapon_hit:${shooterId || 'unknown'}:${targetId || 'unknown'}:${weaponId || 'unknown'}`;
+            const lastAt = Number(this._vehicleThrottleState.get(key) || 0);
+            if (!lastAt || now - lastAt >= 1000) {
+                this._vehicleThrottleState.set(key, now);
+                this._emitGameplayTelemetry('gameplay:weapon:hit', {
+                    weaponType: weaponId || 'unknown',
+                    shooterId: shooterId || null,
+                    targetId: targetId || null,
+                    topology: this.systems.network?.topology || 'local',
+                    ruleset: this.settings?.mode || 'unknown',
+                    hitDamageBucket: Number.isFinite(damage)
+                        ? (damage <= 20 ? 'lt_20' : damage <= 60 ? '20_60' : '60_plus')
+                        : 'n/a'
                 });
             }
         });
@@ -489,9 +849,11 @@ class GameHost {
                 this.engine.gameLoop.pause();
                 this.systems.physics.pause();
                 this.systems.audio?.stopEngineSound?.();
+                this._emitVisibilitySample('background');
             } else {
                 this.systems.physics.resume();
                 this.engine.gameLoop.resume();
+                this._emitVisibilitySample('foreground');
                 if (this.engine.getState() === GAME_STATES.RACING) {
                     this.systems.audio?.startEngineSound?.();
                 }
@@ -624,6 +986,13 @@ class GameHost {
 
             this.track.setPhysicsBodies(groundBody, barrierBodies);
 
+            // Fail-loud arena validation (n47 / j3i.2): the shared MapInstance
+            // validator proves the built map is playable BEFORE any car spawns.
+            // Shipped specs always validate; a failure here means a real map/spec
+            // bug and is surfaced via telemetry + logging rather than dropping
+            // players into a void.
+            this._validateArena(trackData.config, trackId);
+
             // Configure race system
             this.systems.race.setTrack(this.track);
             this.systems.race.setLaps(this.settings.laps);
@@ -643,7 +1012,166 @@ class GameHost {
             console.log('GameHost: Track created:', trackId);
         } catch (error) {
             console.error('GameHost: Error creating track:', error);
+            this._emitGameplayTelemetry('gameplay:map:load_failed', {
+                trackId: trackId || 'unknown',
+                trackSeedBucket: this._trackSeedBucket(this.settings?.mapSeed ?? this.track?.config?.seed ?? 0),
+                status: 'failed',
+                reason: 'exception',
+                message: String(error?.message || 'track_create_error')
+            }, { cooldownMs: 10000 });
+            // A build failure (unknown/incompatible id, loader 404, bad JSON) is an
+            // invalid map: mark it so _onStartGame fails loud and stays in the lobby
+            // instead of spawning onto a null/stale track (n47). No hidden fallback.
+            this.track = null;
+            this.lastArenaValidation = {
+                ok: false,
+                requestedTrackId: trackId ?? 'unknown',
+                resolvedMapId: null,
+                ruleset: this.settings?.mode === 'derby' ? 'derby' : 'race',
+                seed: this.settings?.mapSeed ?? null,
+                validatorVersion: 'build',
+                reasons: [{ code: 'track_build_failed', detail: String(error?.message || 'track_create_error') }]
+            };
         }
+    }
+
+    /**
+     * Validate the built arena against the shared MapInstance validator before
+     * spawns. Consumes the single shared validator (br-map-authoring-tool-j3i.2)
+     * instead of scattered ad-hoc checks. On failure it fails loud (structured
+     * telemetry + console error) and records the report on `this.lastArenaValidation`
+     * so the host UI / debug lab / bug reports can surface a blocked-start reason.
+     * @private
+     * @param {Object} config - loaded track config
+     * @param {string} trackId
+     * @returns {Object} ValidationReport
+     */
+    _validateArena(config, trackId) {
+        // Validate each arena against its OWN ruleset (derived by the validator
+        // from the config): _resolveTrackId already guarantees the mode -> track
+        // mapping, so this gate is a structural-validity tripwire (geometry,
+        // colliders, closed derby walls / ordered race checkpoints, valid spawns),
+        // not a mode-compatibility check.
+        const report = validateMapData(config, {
+            playerCount: Math.max(1, this.vehicles?.size || 1),
+            requestedTrackId: trackId,
+            seed: this.settings?.mapSeed ?? config?.seed ?? null
+        });
+        // Runtime on-ground DIAGNOSTIC (n47): downward-raycast each authored spawn
+        // against the just-built colliders and record any that miss ground. This is
+        // observability, NOT a blocking gate — spawn ground-support is already
+        // authoritatively enforced at generation by SpawnGenerator.validateSpawnSet
+        // (requireSupport), and a runtime raycast is too coarse (trimesh terrain,
+        // collider-registration timing) to safely block a valid shipped start.
+        report.spawnGround = this._checkSpawnsOnGround();
+
+        // Test-only hook: force an invalid verdict so the blocked-start path is
+        // exercisable by E2E without shipping a broken track file.
+        if (typeof window !== 'undefined' && window.__jjForceMapInvalid && this._isTestMode()) {
+            report.ok = false;
+            report.reasons = [...(report.reasons || []), { code: 'forced_invalid_test' }];
+        }
+        this.lastArenaValidation = report;
+
+        if (!report.ok) {
+            console.error(
+                `GameHost: Arena validation FAILED for ${trackId} (${report.ruleset}):`,
+                report.reasons
+            );
+            this._emitGameplayTelemetry('gameplay:map:invalid', {
+                mode: report.ruleset,
+                requestedTrackId: report.requestedTrackId,
+                resolvedTrackId: report.resolvedMapId,
+                seed: report.seed,
+                playerCount: report.playerCount,
+                reasons: report.reasons.map((r) => r.code),
+                validatorVersion: report.validatorVersion,
+                status: 'blocked'
+            }, { cooldownMs: 10000 });
+        }
+        return report;
+    }
+
+    /**
+     * Downward-raycast every authored spawn against the built colliders to prove
+     * each has ground beneath it (n47). Returns a structured result; a spawn with
+     * no hit within range is "off ground".
+     * @private
+     * @returns {{ok:boolean, checked:number, offGround:Object[]}}
+     */
+    _checkSpawnsOnGround() {
+        const result = { ok: true, checked: 0, offGround: [] };
+        const spawns = (this.track && typeof this.track.getAllSpawnPositions === 'function')
+            ? this.track.getAllSpawnPositions()
+            : [];
+        if (!spawns || spawns.length === 0) return result;
+        if (typeof this.systems?.physics?.raycastDown !== 'function') return result;
+
+        for (let i = 0; i < spawns.length; i += 1) {
+            const spawn = spawns[i];
+            const hit = this.systems.physics.raycastDown(spawn);
+            result.checked += 1;
+            // A missing raycast capability (null) is not a failure; only an actual
+            // "no ground hit" is.
+            if (hit && hit.hit === false) {
+                result.ok = false;
+                result.offGround.push({ index: i, x: spawn.x, z: spawn.z });
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Fail-loud blocked start for an invalid arena (n47): halt the round before any
+     * spawn, stay in the lobby, and emit a structured diagnostic with stayedInLobby.
+     * @private
+     * @param {string} trackId
+     */
+    _blockStartInvalidMap(trackId) {
+        this.mapStartBlocked = true;
+        const report = this.lastArenaValidation || {};
+        const reasons = (report.reasons || []).map((r) => r.code || r);
+        const exceptionHash = this._hashReasons(reasons);
+        console.error(`GameHost: BLOCKED start — invalid arena "${trackId}":`, reasons);
+        this._emitGameplayTelemetry('gameplay:map:invalid', {
+            mode: this.settings?.mode ?? null,
+            requestedTrackId: report.requestedTrackId ?? trackId,
+            resolvedTrackId: report.resolvedMapId ?? trackId,
+            seed: report.seed ?? null,
+            playerCount: this.vehicles?.size ?? 0,
+            reasons,
+            validatorVersion: report.validatorVersion ?? null,
+            exceptionHash,
+            stayedInLobby: true,
+            debugArtifactPaths: Array.isArray(report.debugArtifactPaths) ? report.debugArtifactPaths : [],
+            spawnGround: report.spawnGround ?? null,
+            status: 'blocked_start'
+        });
+        // Best-effort debug screenshot for the bug-report/debug-lab evidence bundle.
+        try {
+            Promise.resolve(this.captureScreenshot?.()).then((shot) => {
+                if (shot) this.lastMapBlockArtifact = { at: Date.now(), reasons, screenshot: shot };
+            }).catch(() => {});
+        } catch (_) { /* screenshot is best-effort */ }
+        // Stay in the lobby; never enter the spawn loop or notify the network start.
+        if (this.engine?.getState?.() !== GAME_STATES.LOBBY) {
+            this.engine.setState(GAME_STATES.LOBBY);
+        }
+        this.eventBus?.emit?.('host:map_blocked', { trackId, reasons, stayedInLobby: true });
+    }
+
+    /**
+     * Stable 8-hex hash of the failure reasons (for exceptionHash grouping).
+     * @private
+     */
+    _hashReasons(reasons = []) {
+        const s = reasons.join('|');
+        let h = 2166136261;
+        for (let i = 0; i < s.length; i += 1) {
+            h ^= s.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0).toString(16).padStart(8, '0');
     }
 
     /**
@@ -652,6 +1180,51 @@ class GameHost {
      */
     _getRunContext() {
         return this.engine?.getRunContext?.() || this.engine?.runContext || null;
+    }
+
+    /**
+     * Begin a runtime replay journal for the current match (3xv.10).
+     * @private
+     */
+    _startReplayJournal() {
+        this._journalTick = 0;
+        this._journalSnapshotEvery = 60; // ~1 snapshot/sec at 60 Hz (not per-frame)
+        try {
+            this.replayJournal = new ReplayJournal(this._getRunContext(), {
+                roomConfig: {
+                    mode: this.settings?.mode ?? null,
+                    laps: this.settings?.laps ?? null,
+                    players: this.vehicles?.size ?? 0,
+                    track: this.track?.configId ?? null
+                }
+            });
+        } catch (_) {
+            this.replayJournal = null;
+        }
+    }
+
+    /**
+     * Record a game event into the runtime journal (no-op when none is active).
+     * @private
+     */
+    _journalEvent(name, data = {}) {
+        this.replayJournal?.recordEvent?.(this._journalTick ?? 0, name, data);
+    }
+
+    /**
+     * Throttled per-match state snapshot into the journal (1/sec, never per-frame).
+     * @private
+     */
+    _journalSnapshot() {
+        if (!this.replayJournal) return;
+        this._journalTick = (this._journalTick ?? 0) + 1;
+        if (this._journalTick % (this._journalSnapshotEvery || 60) !== 0) return;
+        const vehicles = [];
+        for (const [, vehicle] of this.vehicles) {
+            const p = vehicle?.mesh?.position || vehicle?.position || {};
+            vehicles.push({ id: vehicle.id, x: p.x ?? null, z: p.z ?? null, health: vehicle.health ?? null, alive: vehicle.isDead !== true });
+        }
+        this.replayJournal.snapshot(this._journalTick, { vehicles });
     }
 
     /**
@@ -684,6 +1257,16 @@ class GameHost {
 
         if (!result.valid || result.spawns.length < playerCount) {
             console.error('GameHost: Spawn generation failed validation', result.diagnostics);
+            const diagnostics = result?.diagnostics || {};
+            this._emitTelemetryWithThrottle('gameplay:map:validation_failed', {
+                trackId: this.track?.configId || this.track?.config?.id || 'unknown',
+                trackSeedBucket: this._trackSeedBucket(diagnostics?.seed ?? this.track?.config?.seed),
+                trackType: this.track?.config?.geometry?.type || 'unknown',
+                playerCount: this.vehicles.size,
+                requestedSpawns: Number(result?.spawnCount || 0),
+                availableSpawns: Number(this.track?.spawnPositions?.length || 0),
+                reason: result.valid ? 'insufficient_spawns' : 'validation_failed',
+            }, { cooldownMs: 1000 });
             return null;
         }
 
@@ -712,10 +1295,124 @@ class GameHost {
     _getTrackSpawnPosition(playerIndex) {
         this._ensureTrackSpawnCapacity(playerIndex + 1);
         const spawnPos = this.track?.getSpawnPosition(playerIndex);
+        // Full-grid (initial/regrid) placement uses the pre-validated, separated
+        // spawn set from SpawnGenerator (validateSpawnSet), so it already upholds
+        // the separation invariant. Single-car entry paths (respawn, late-join)
+        // route through the runtime allocator via _safePose instead.
         if (spawnPos) return spawnPos;
 
         console.error(`GameHost: Missing validated spawn for index ${playerIndex}`);
         return this._fallbackSpawnPosition();
+    }
+
+    /**
+     * Lazily-built shared spawn/respawn allocator (3xv.15). Randomness is drawn
+     * from the deterministic run-context RNG so seeded replays place cars
+     * identically; falls back to a fixed rotation when no context is attached.
+     * @private
+     */
+    _getSpawnAllocator() {
+        if (!this._spawnAllocator) {
+            const ctx = this._getRunContext();
+            const rng = ctx?.rng?.stream?.('spawn') || ctx?.rng?.('spawn') || null;
+            const nextFloat = rng && typeof rng.nextFloat === 'function'
+                ? () => rng.nextFloat()
+                : (typeof rng === 'function' ? () => rng() : undefined);
+            this._spawnAllocator = createSpawnAllocator({
+                minSeparation: 3,
+                footprintRadius: 1.2,
+                nextFloat,
+                now: () => (this._getRunContext()?.clock?.nowMs?.() ?? 0)
+            });
+        }
+        return this._spawnAllocator;
+    }
+
+    /**
+     * Live car positions (excluding the requester), used as allocator blockers so
+     * a placement never lands on an occupied footprint.
+     * @private
+     */
+    _liveVehiclePositions(excludeId = null) {
+        const positions = [];
+        for (const [id, vehicle] of this.vehicles) {
+            if (id === excludeId) continue;
+            const p = vehicle?.mesh?.position || vehicle?.position;
+            if (p && Number.isFinite(p.x) && Number.isFinite(p.z)) {
+                positions.push({ id, x: p.x, z: p.z });
+            }
+        }
+        return positions;
+    }
+
+    /**
+     * Run a preferred pose through the shared allocator so no two cars ever enter
+     * the same point/footprint (3xv.15). Preserves the preferred y/rotation; only
+     * x/z may shift on a fallback. Returns the preferred pose unchanged when the
+     * allocator has nothing to correct (the common case for a valid grid).
+     * @private
+     * @param {Object} preferred - {x,y,z,rotation}
+     * @param {string|null} requesterId
+     * @param {string} phase - 'spawn' | 'respawn'
+     * @param {number|null} index
+     * @returns {Object}
+     */
+    _safePose(preferred, requesterId, phase, index = null) {
+        if (!preferred) return preferred;
+        const allocator = this._getSpawnAllocator();
+        const occupied = this._liveVehiclePositions(requesterId);
+        const footprint = 1.2;
+        const inBounds = (this.track && typeof this.track.isOutOfBounds === 'function')
+            ? (p) => !this.track.isOutOfBounds(p, footprint)
+            : null;
+
+        const result = allocator.allocate([preferred], {
+            occupied,
+            inBounds,
+            meta: {
+                requesterId,
+                mapId: this.track?.configId ?? null,
+                seed: this.settings?.mapSeed ?? this.track?.config?.seed ?? null,
+                ruleset: this.settings?.mode === 'derby' ? 'derby' : 'race',
+                phase,
+                playerCount: this.vehicles?.size ?? 0
+            }
+        });
+
+        // Record rejected candidates + fallback outcomes for bug-report / debug
+        // observability (3xv.15). Keep a short ring buffer.
+        if (result.fallback || (result.diagnostics?.rejectedCount ?? 0) > 0) {
+            if (!this._spawnDiagnostics) this._spawnDiagnostics = [];
+            this._spawnDiagnostics.push({
+                phase,
+                requesterId: requesterId ?? null,
+                reason: result.reason,
+                fallback: !!result.fallback,
+                rejected: result.diagnostics?.rejected ?? [],
+                mapId: result.diagnostics?.mapId ?? null,
+                seed: result.diagnostics?.seed ?? null,
+                ruleset: result.diagnostics?.ruleset ?? null,
+                playerCount: result.diagnostics?.playerCount ?? null,
+                minSeparation: result.diagnostics?.minSeparation ?? null
+            });
+            if (this._spawnDiagnostics.length > 20) this._spawnDiagnostics.shift();
+        }
+
+        if (!result.ok || !result.position) {
+            return preferred;
+        }
+        if (result.fallback) {
+            this._emitGameplayTelemetry('gameplay:spawn:reallocated', {
+                phase,
+                requesterId: requesterId ?? 'unknown',
+                index: index ?? null,
+                reason: result.reason,
+                minSeparation: result.diagnostics?.minSeparation ?? null,
+                rejected: result.diagnostics?.rejectedCount ?? 0
+            }, { cooldownMs: 2000 });
+        }
+        // Keep the authored height + heading; only accept the corrected x/z.
+        return { ...preferred, x: result.position.x, z: result.position.z };
     }
 
     /**
@@ -767,8 +1464,9 @@ class GameHost {
             const isRacing = currentState === GAME_STATES.RACING || currentState === GAME_STATES.COUNTDOWN;
 
             if (isRacing && this.vehicles.size > 0) {
-                // Late join: spawn near last place vehicle
-                spawnPos = this._getLateJoinSpawnPosition();
+                // Late join: spawn near last place vehicle, run through the shared
+                // allocator so the entrant never lands on a live car (3xv.15).
+                spawnPos = this._safePose(this._getLateJoinSpawnPosition(), playerData.id, 'late_join');
                 console.log('GameHost: Late join spawn position:', spawnPos);
             } else {
                 // Normal join: use track spawn positions
@@ -819,6 +1517,8 @@ class GameHost {
             // Add vehicle to camera tracking (multi-vehicle camera)
             this.systems.render.addCameraTarget(vehicle);
             this._updateCameraControls();
+            this._prepareLobbyWorldVehicle(vehicle);
+            this._recordLobbyBanter(playerData);
 
             // Emit vehicle created event (for TrailSystem and other systems)
             this.eventBus.emit('vehicle:created', { vehicle });
@@ -827,6 +1527,13 @@ class GameHost {
             if (this.vehicles.size === 1) {
                 this.systems.render.setCameraTarget(vehicle);
             }
+
+            this._emitGameplayTelemetry('gameplay:player:joined', {
+                playerCount: this.vehicles.size,
+                trackSeedBucket: this._trackSeedBucket(this.track?.seed),
+                trackId: this.track?.configId || this.track?.config?.id || 'unknown',
+                mode: this.settings?.mode || 'unknown'
+            });
 
             console.log('GameHost: Vehicle created for player:', playerData.id);
         } catch (error) {
@@ -905,6 +1612,17 @@ class GameHost {
 
             // Remove from map
             this.vehicles.delete(data.playerId);
+            this._recordLobbyBanter({
+                id: data.playerId,
+                name: vehicle.playerName || `Player ${data.playerId}`,
+                color: vehicle.color,
+                action: 'left'
+            });
+
+            this._emitGameplayTelemetry('gameplay:player:left', {
+                playerCount: this.vehicles.size,
+                mode: this.settings?.mode || 'unknown'
+            });
         }
     }
 
@@ -921,7 +1639,48 @@ class GameHost {
         const vehicle = this.vehicles.get(data.playerId);
         if (vehicle) {
             vehicle.setControls(data.controls);
+            // Ordered command record for the replay journal (redacted at record time).
+            this.replayJournal?.recordCommand?.(this._journalTick ?? 0, data.playerId, data.controls || {});
         }
+    }
+
+    _onNetworkGameStart(data = {}) {
+        const matchId = this._setMatchId(data.matchId || data.match_id || this._generateMatchId());
+        const trackId = data.track_id || data.trackId || this.track?.configId || 'unknown';
+
+        this._matchStartAt = Date.now();
+        this._currentMatchState = 'started';
+        this._vehicleTelemetryState.clear();
+        this._oobClusterState = {
+            count: 0,
+            startedAt: null,
+            lastEmitAt: 0,
+        };
+
+        this._emitMatchTelemetry('gameplay:match:started', 'started', {
+            trackId,
+            trackSeedBucket: this._trackSeedBucket(data.seed || data.track_seed || data.mapSeed),
+            mode: data.mode || this.settings?.mode || 'unknown',
+            playerCount: this.vehicles.size,
+            matchId
+        }, { cooldownMs: 0 });
+    }
+
+    _onNetworkGameEnd(data = {}) {
+        const now = Date.now();
+        const durationMs = Number.isFinite(this._matchStartAt) ? Math.max(0, now - this._matchStartAt) : null;
+        const endedMode = data.mode || this.settings?.mode || 'unknown';
+
+        this._matchStartAt = null;
+        this._currentMatchState = 'ended';
+
+        this._emitMatchTelemetry('gameplay:match:ended', 'ended', {
+            durationMs: durationMs == null ? null : Math.round(durationMs),
+            winnerCount: data.winnerCount ?? null,
+            winnerPlayerAnalyticsIds: data.winnerPlayerAnalyticsIds || null,
+            reason: data.reason || 'completed',
+            mode: endedMode
+        }, { cooldownMs: 5000 });
     }
 
     /**
@@ -930,6 +1689,7 @@ class GameHost {
      */
     async _onStartGame(options) {
         console.log('GameHost: Starting game with options:', options);
+        this.mapStartBlocked = false;
 
         if (options.mode) {
             this.settings.mode = options.mode;
@@ -951,6 +1711,14 @@ class GameHost {
             await this._createTrack(trackId);
         }
 
+        // Fail-loud blocked start (n47): an invalid arena must NEVER enter the
+        // spawn loop. Stay in the lobby with structured telemetry instead of
+        // dropping players into a void.
+        if (this.lastArenaValidation && this.lastArenaValidation.ok === false) {
+            this._blockStartInvalidMap(trackId);
+            return;
+        }
+
         this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
 
         // Reset all vehicles to spawn positions
@@ -963,6 +1731,11 @@ class GameHost {
             this.systems.physics.resetVehicle(vehicle.id, spawnPos, spawnPos.rotation);
             index++;
         }
+
+        // Start a runtime replay journal for this match (3xv.10): deterministic
+        // run identity + ordered commands/events + throttled state snapshots, so a
+        // bug report can carry an actionable, privacy-safe replay excerpt.
+        this._startReplayJournal();
 
         // Derby is elimination: no auto-respawns there
         this.systems.damage.setRespawnEnabled(this.settings.mode !== 'derby');
@@ -1037,7 +1810,13 @@ class GameHost {
             next.position.x - last.position.x,
             next.position.z - last.position.z
         );
-        return { x: last.position.x, y: 1.5, z: last.position.z, rotation };
+        // Route through the shared allocator so a respawn never lands on another
+        // car sitting on the checkpoint (3xv.15).
+        return this._safePose(
+            { x: last.position.x, y: 1.5, z: last.position.z, rotation },
+            vehicle?.id ?? null,
+            'respawn'
+        );
     }
 
     /**
@@ -1051,16 +1830,45 @@ class GameHost {
 
         if (this.settings.mode === 'derby') {
             if (requested === 'random' || !requested || requested === 'oval' || requested === 'procedural') {
-                return DERBY_ARENAS[Math.floor(Math.random() * DERBY_ARENAS.length)];
+                // Seeded random pick (n47/3xv.6): draw from the run-context RNG so
+                // replays are deterministic, and RECORD the selector + resolved
+                // arena so "random" is never an unrecorded Math.random.
+                const pick = this._pickRandomArena(DERBY_ARENAS);
+                this.lastTrackResolution = { requested: requested ?? 'random', resolved: pick, random: true };
+                return pick;
             }
+            this.lastTrackResolution = { requested, resolved: requested, random: false };
             return requested;
         }
 
         // Race mode
         if (!requested || requested === 'random' || DERBY_ARENAS.includes(requested)) {
+            this.lastTrackResolution = { requested: requested ?? 'random', resolved: 'procedural', random: requested === 'random' || !requested };
             return 'procedural';
         }
+        this.lastTrackResolution = { requested, resolved: requested, random: false };
         return requested;
+    }
+
+    /**
+     * Deterministic arena pick from the run-context RNG (no ungoverned RNG). Falls
+     * back to a run-seeded index when no context/RNG is attached.
+     * @private
+     */
+    _pickRandomArena(arenas) {
+        const ctx = this._getRunContext();
+        const rng = ctx?.rng?.stream?.('map') || ctx?.rng?.('map') || null;
+        let unit;
+        if (rng && typeof rng.nextFloat === 'function') unit = rng.nextFloat();
+        else if (typeof rng === 'function') unit = rng();
+        else {
+            // No RNG stream: derive a stable index from the run seed rather than
+            // Math.random so a given seed always resolves the same arena.
+            const seed = Number(ctx?.describe?.().seed ?? this.settings?.mapSeed ?? 0) || 0;
+            unit = ((seed % 1000) / 1000);
+        }
+        const index = Math.min(arenas.length - 1, Math.max(0, Math.floor(unit * arenas.length)));
+        return arenas[index];
     }
 
     /**
@@ -1165,6 +1973,11 @@ class GameHost {
      * @private
      */
     _startNewRace() {
+        this._emitMatchTelemetry('gameplay:match:restarted', 'restarted', {
+            reason: 'manual_restart',
+            playerCount: this.vehicles.size,
+            mode: this.settings?.mode || 'unknown'
+        });
         this._ensureTrackSpawnCapacity(Math.max(this.vehicles.size, DEFAULT_VALIDATED_CAPACITY));
 
         // Reset all vehicles
@@ -1257,8 +2070,42 @@ class GameHost {
             settings: { ...this.settings },
             track: this.track?.configId || null,
             playerCount: this.vehicles?.size || 0,
-            players: []
+            players: [],
+            // Map validity (n47) + spawn separation observability (3xv.15).
+            mapValidation: this.lastArenaValidation
+                ? {
+                    ok: this.lastArenaValidation.ok,
+                    resolvedMapId: this.lastArenaValidation.resolvedMapId,
+                    ruleset: this.lastArenaValidation.ruleset,
+                    validatorVersion: this.lastArenaValidation.validatorVersion,
+                    reasons: (this.lastArenaValidation.reasons || []).map((r) => r.code || r)
+                }
+                : null,
+            spawnDiagnostics: Array.isArray(this._spawnDiagnostics) ? this._spawnDiagnostics.slice(-10) : [],
+            trackResolution: this.lastTrackResolution || null
         };
+
+        // Deterministic run identity + replay journal excerpt (3xv.10): buildId,
+        // seed, tuningHash, current tick, recent command/event excerpt, and latest
+        // snapshot hash — everything a replay needs, privacy-safe (redacted).
+        try {
+            const ctx = this._getRunContext();
+            const described = ctx && typeof ctx.describe === 'function' ? ctx.describe() : null;
+            if (described) {
+                info.runContext = {
+                    buildId: described.buildId ?? null,
+                    seed: described.seed ?? null,
+                    ruleset: described.ruleset ?? null,
+                    topology: described.topology ?? null,
+                    tuningHash: described.tuningHash ?? null,
+                    tick: described.tick ?? null,
+                    simTimeMs: described.simTimeMs ?? null
+                };
+            }
+            info.replayJournal = this.replayJournal ? this.replayJournal.excerpt(20) : null;
+        } catch (e) {
+            info.runContextError = String(e);
+        }
 
         try {
             for (const [playerId, vehicle] of this.vehicles) {
@@ -1296,6 +2143,16 @@ class GameHost {
             info.modeError = String(e);
         }
 
+        // Capture render backend diagnostics for evidence and debugging
+        try {
+            if (this.systems.render) {
+                info.renderDiagnostics = this.systems.render.getRenderDiagnostics?.() ?? null;
+                // Also include the full grade diagnostics for context
+                info.gradeInfo = this.systems.render.getGradeDiagnostics?.() ?? null;
+            }
+        } catch (e) {
+            info.renderError = String(e);
+        }
 
         return info;
     }
@@ -1332,6 +2189,11 @@ class GameHost {
         }
 
         this.engine.setState(GAME_STATES.LOBBY);
+        this._emitMatchTelemetry('gameplay:match:returned_to_lobby', 'lobby', {
+            reason: 'explicit_return',
+            playerCount: this.vehicles.size,
+            mode: this.settings?.mode || 'unknown'
+        }, { cooldownMs: 3000 });
     }
 
     /**
@@ -1340,6 +2202,11 @@ class GameHost {
      */
     _onUpdate({ dt, time }) {
         const state = this.engine.getState();
+
+        // Throttled replay snapshot (3xv.10) — 1/sec, never per-frame.
+        if (state === GAME_STATES.RACING) {
+            this._journalSnapshot();
+        }
 
         // Apply controls to physics
         if (state === GAME_STATES.RACING) {
@@ -1354,10 +2221,22 @@ class GameHost {
         // Step physics world
         this.systems.physics.update(dt);
 
+        if (state === GAME_STATES.RACING) {
+            for (const [playerId, vehicle] of this.vehicles) {
+                this._trackVehicleTelemetry(vehicle);
+            }
+        }
+
         // Sync vehicle meshes from physics and update effects
         for (const [playerId, vehicle] of this.vehicles) {
-            vehicle.syncMeshFromPhysics();
+            if (!this.systems.hitStop?.shouldHoldVehicleMesh?.(vehicle.id)) {
+                vehicle.syncMeshFromPhysics();
+            }
             vehicle.updateEffects(dt);
+        }
+
+        if (state === GAME_STATES.LOBBY) {
+            this._updateLobbyWorld(dt, time);
         }
 
         // Auto-right flipped cars (critical in derby where respawn is off)
@@ -1429,6 +2308,89 @@ class GameHost {
                 this.systems.network.broadcastVehicleStates(this._buildVehicleStates());
             }
         }
+    }
+
+    _prepareLobbyWorldVehicle(vehicle) {
+        if (!vehicle) return;
+        vehicle.controls = { steering: 0, acceleration: 0, braking: 0 };
+        vehicle.isLobbyWorldVehicle = true;
+        vehicle.lobbyIdlePhase = (this.vehicles.size % 6) * 0.9;
+        if (vehicle.mesh) {
+            vehicle.mesh.visible = true;
+            vehicle.mesh.userData.lobbyWorld = true;
+            vehicle.mesh.userData.lobbyIdlePhase = vehicle.lobbyIdlePhase;
+        }
+    }
+
+    _recordLobbyBanter(playerData = {}) {
+        const action = playerData.action === 'left' ? 'left' : 'joined';
+        const name = playerData.name || `Player ${playerData.id ?? '?'}`;
+        const color = playerData.color || '#ffffff';
+        const line = action === 'left'
+            ? `${name} rolled out`
+            : `${name} rolled into the yard`;
+        this.lobbyWorld.banter.push({
+            playerId: playerData.id ?? playerData.playerId ?? null,
+            name,
+            color,
+            action,
+            line,
+            at: Date.now()
+        });
+        if (this.lobbyWorld.banter.length > 5) {
+            this.lobbyWorld.banter.shift();
+        }
+        this.eventBus.emit('lobby:worldBanter', this.getLobbyWorldDiagnostics());
+    }
+
+    _updateLobbyWorld(dt = 0, time = 0) {
+        if (!this.lobbyWorld.enabled) return;
+
+        let index = 0;
+        for (const vehicle of this.vehicles.values()) {
+            this._prepareLobbyWorldVehicle(vehicle);
+            const phase = (vehicle.lobbyIdlePhase || 0) + (time || 0) * 1.8;
+            if (vehicle.mesh) {
+                const baseY = vehicle.position?.y ?? vehicle.spawnPosition?.y ?? vehicle.mesh.position.y;
+                vehicle.mesh.position.y = baseY + Math.sin(phase) * 0.035;
+                vehicle.mesh.rotation.y += Math.sin(phase * 0.7) * 0.002;
+            }
+            for (const wheel of vehicle.wheelMeshes || []) {
+                wheel.rotation.x += dt * (1.4 + index * 0.15);
+            }
+            index++;
+        }
+
+        this.lobbyWorld.lastUpdateAt = Date.now();
+    }
+
+    getLobbyWorldDiagnostics() {
+        const overlay = typeof window !== 'undefined' ? window.__vehicleIdentityOverlay : null;
+        const markerSnapshot = overlay?.getDebugSnapshot?.() || null;
+        const vehicles = Array.from(this.vehicles.values()).map((vehicle) => ({
+            playerId: vehicle.playerId,
+            name: vehicle.playerName,
+            visible: vehicle.mesh?.visible !== false,
+            lobbyWorld: vehicle.mesh?.userData?.lobbyWorld === true,
+            hasMesh: !!vehicle.mesh,
+            hasPhysicsBody: !!vehicle.physicsBody,
+            position: vehicle.mesh?.position ? {
+                x: Math.round(vehicle.mesh.position.x * 100) / 100,
+                y: Math.round(vehicle.mesh.position.y * 100) / 100,
+                z: Math.round(vehicle.mesh.position.z * 100) / 100
+            } : null
+        }));
+
+        return {
+            enabled: this.lobbyWorld.enabled,
+            state: this.engine?.getState?.() || null,
+            vehicleCount: vehicles.length,
+            visibleVehicleCount: vehicles.filter((vehicle) => vehicle.visible && vehicle.hasMesh).length,
+            markerCount: markerSnapshot?.markerCount || 0,
+            visibleMarkerCount: markerSnapshot?.visibleCount || 0,
+            banter: this.lobbyWorld.banter.slice(-5),
+            vehicles
+        };
     }
 
     /**
@@ -1534,10 +2496,135 @@ class GameHost {
      * @private
      */
     _onRender({ dt, interpolation, fps }) {
+        this.systems.hitStop?.tick?.();
         // Render system handles actual rendering
         // Update debug overlay visualization each frame
         if (this.ui.debugOverlay?.visible) {
             this.ui.debugOverlay.update();
+        }
+        // Feed the adaptive quality controller real runtime fps (no logging).
+        if (this.adaptiveQuality && Number.isFinite(fps) && fps > 0) {
+            this.adaptiveQuality.sample(fps);
+        }
+        this._samplePerfFrame({ fps, dt });
+    }
+
+    /**
+     * Instantiate + attach the AdaptiveQualityController to the live render
+     * system using its public grade-tier/resolution API. No-op if the render
+     * system does not expose the ladder API (fallback/no-post safety).
+     * @private
+     */
+    _attachAdaptiveQuality() {
+        const render = this.systems.render;
+        const hasLadderApi = render && typeof render.setGradeTier === 'function'
+            && (typeof render.listGradeTiers === 'function' || typeof render.getHostGradeTiers === 'function');
+        if (!hasLadderApi) {
+            return;
+        }
+        this.adaptiveQuality = new AdaptiveQualityController();
+        this.adaptiveQuality.attach(render, this._detectRenderCaps());
+        // Expose for diagnostics / e2e evidence and future 5k3.37 settings.
+        if (typeof window !== 'undefined') {
+            window.__JJ_ADAPTIVE__ = this.adaptiveQuality;
+        }
+    }
+
+    /**
+     * Collect device capabilities from safe browser/runtime sources for the
+     * initial quality tier. All fields are optional; unknowns stay undefined.
+     * @private
+     * @returns {Object}
+     */
+    _detectRenderCaps() {
+        const nav = (typeof navigator !== 'undefined') ? navigator : {};
+        const caps = {
+            cores: Number.isFinite(Number(nav.hardwareConcurrency)) ? Number(nav.hardwareConcurrency) : undefined,
+            deviceMemory: Number.isFinite(Number(nav.deviceMemory)) ? Number(nav.deviceMemory) : undefined,
+            devicePixelRatio: (typeof window !== 'undefined' && Number.isFinite(window.devicePixelRatio))
+                ? window.devicePixelRatio : undefined,
+            remote: !!(this.systems.network?.topology && this.systems.network.topology !== 'local'),
+            softwareGpu: false
+        };
+        try {
+            const diag = this.systems.render?.getRenderDiagnostics?.() || {};
+            const info = JSON.stringify(diag.adapterInfo || '').toLowerCase();
+            caps.softwareGpu = /swiftshader|llvmpipe|software|basic render|microsoft basic/.test(info);
+        } catch (e) {
+            // best-effort only; leave softwareGpu false
+        }
+        return caps;
+    }
+
+    _samplePerfFrame({ fps, dt }) {
+        const now = performance.now();
+        if (!Number.isFinite(fps) || now - this._lastFrameSampleAt < this._frameSamplePeriodMs) {
+            return;
+        }
+        this._lastFrameSampleAt = now;
+        const diagnostics = this.systems.render?.getRenderDiagnostics?.() || {};
+        const cameraMode = this.systems.render?.getCameraModeInfo?.().mode || 'unknown';
+        const playerCount = this.systems.network?.getPlayerCount?.() || 0;
+        const frameTimeMs = Number.isFinite(dt) ? Number((dt * 1000).toFixed(2)) : null;
+        const frameTimeBucket = frameTimeMs == null
+            ? 'unknown'
+            : frameTimeMs < 10
+                ? 'lt_10'
+                : frameTimeMs < 16
+                    ? '10_16'
+                    : frameTimeMs < 20
+                        ? '16_20'
+                        : frameTimeMs < 30
+                            ? '20_30'
+                            : frameTimeMs < 50
+                                ? '30_50'
+                                : '50_plus';
+        const fpsRounded = Number.isFinite(fps) ? Math.round(fps) : null;
+        const fpsBucket = fpsRounded == null
+            ? 'unknown'
+            : fpsRounded >= 55
+                ? '55_plus'
+                : fpsRounded >= 40
+                    ? '40_55'
+                    : fpsRounded >= 30
+                        ? '30_40'
+                        : fpsRounded >= 20
+                            ? '20_30'
+                            : 'lt_20';
+        const runtimeContext = getRuntimeTelemetryContext ? getRuntimeTelemetryContext() : {};
+        const telemetry = getBrowserTelemetry?.();
+        if (telemetry?.capture) {
+            telemetry.capture('perf:render:frame_sample', {
+                fps: fpsRounded,
+                fpsBucket,
+                frameTimeMs,
+                frameTimeBucket,
+                drawCalls: diagnostics.frameTiming?.drawCalls || diagnostics.drawCalls || null,
+                triangleCount: diagnostics.renderInfo?.triangles || diagnostics.triangles || null,
+                playerCount,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                cameraMode,
+                ...runtimeContext
+            });
+        }
+    }
+
+    _emitVisibilitySample(state) {
+        const now = performance.now();
+        if (now - this._lastVisibilitySampleAt < 1000) {
+            return;
+        }
+        this._lastVisibilitySampleAt = now;
+        const telemetry = getBrowserTelemetry?.();
+        if (telemetry?.capture) {
+            telemetry.capture('perf:visibility:state_sample', {
+                visibilityState: state,
+                topology: this.systems.network?.topology || 'local',
+                ruleset: this.settings?.mode || 'unknown',
+                playerCount: this.systems.network?.getPlayerCount?.() || 0,
+                ...getRuntimeTelemetryContext?.(),
+            });
         }
     }
 

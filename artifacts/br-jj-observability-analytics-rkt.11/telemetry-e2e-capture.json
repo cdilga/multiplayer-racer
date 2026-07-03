@@ -1,0 +1,40 @@
+{
+  "bead": "br-jj-observability-analytics-rkt.11",
+  "sink": "test",
+  "roomCodePresentInEvents": false,
+  "coverage": {
+    "hostBoot": true,
+    "playerBoot": true,
+    "joinFunnel": true,
+    "firstInput": true,
+    "clientException": true,
+    "disconnect": true,
+    "reconnect": true
+  },
+  "capturedEventNames": [
+    "app_boot",
+    "error:gameplay:crash",
+    "error:network:disconnect",
+    "gameplay:controller:connected",
+    "gameplay:controller:disconnected",
+    "gameplay:controller:reconnect_failed",
+    "gameplay:join:completed",
+    "gameplay:join:first_input",
+    "gameplay:join:route_viewed",
+    "gameplay:join:started",
+    "gameplay:join:tutorial_viewed",
+    "gameplay:match:returned_to_lobby",
+    "gameplay:player:joined",
+    "gameplay:player:left",
+    "perf:connectivity:reconnect",
+    "perf:render:frame_sample",
+    "perf:webgl:init",
+    "route_view"
+  ],
+  "totalCaptured": 25,
+  "privacyScan": {
+    "forbiddenRawFound": [],
+    "rawRoomCodeFound": false,
+    "rawPlayerNameFound": false
+  }
+}

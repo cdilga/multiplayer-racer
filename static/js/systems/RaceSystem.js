@@ -217,6 +217,9 @@ class RaceSystem {
      * Start the race immediately
      */
     startRace() {
+        // A started race is active: allow update() (checkpoints, grace, DNF) to run
+        // even when init() was never awaited (init() only emits the ready event).
+        this.initialized = true;
         this.state = 'racing';
         this.raceStartTime = this._nowMs();
 

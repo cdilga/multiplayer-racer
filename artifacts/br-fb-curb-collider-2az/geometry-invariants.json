@@ -1,0 +1,14 @@
+{
+  "ovalSummary": {
+    "barrier_inner": {
+      "maxAbsRadiusDot": 5.585030726784623e-8,
+      "minAbsTangentDot": 0.9999999999999984,
+      "colliderCount": 48
+    },
+    "barrier_outer": {
+      "maxAbsRadiusDot": 6.114309580862454e-8,
+      "minAbsTangentDot": 0.999999999999998,
+      "colliderCount": 48
+    }
+  }
+}

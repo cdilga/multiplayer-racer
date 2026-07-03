@@ -87,6 +87,8 @@ METRIC_DEFINITIONS = {
     'jj_server_active_rooms': ('gauge', 'Active in-memory rooms.'),
     'jj_server_active_players': ('gauge', 'Connected controller seats across all rooms.'),
     'jj_server_disconnected_players': ('gauge', 'Disconnected controller seats eligible to reconnect.'),
+    'jj_server_uptime_seconds': ('gauge', 'Process uptime in seconds since server boot.'),
+    'jj_server_disconnects_total': ('counter', 'Socket disconnect events by source and phase.'),
     'jj_server_events_total': ('counter', 'Structured server telemetry events emitted.'),
     'jj_server_requests_total': ('counter', 'HTTP requests handled, labeled by handler and status class.'),
     'jj_server_socket_events_total': ('counter', 'Socket.IO handler executions, labeled by handler and result.'),
@@ -242,6 +244,7 @@ class ServerTelemetry:
             if error_capture_enabled is None
             else bool(error_capture_enabled)
         )
+        self.started_at = time.time()
         self.exception_throttle_seconds = max(
             0.0,
             float(exception_throttle_seconds if exception_throttle_seconds is not None
@@ -446,6 +449,7 @@ class ServerTelemetry:
         )
 
     def build_runtime_gauges(self, game_rooms):
+        uptime_seconds = max(0.0, time.time() - self.started_at)
         active_rooms = len(game_rooms or {})
         active_players = 0
         disconnected_players = 0
@@ -459,6 +463,7 @@ class ServerTelemetry:
             'jj_server_active_rooms': active_rooms,
             'jj_server_active_players': active_players,
             'jj_server_disconnected_players': disconnected_players,
+            'jj_server_uptime_seconds': uptime_seconds,
         }
 
     def render_metrics(self, game_rooms):

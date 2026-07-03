@@ -4,7 +4,7 @@ test.describe('Late Join', () => {
     // Late join tests are slow due to multiple player setup and race progression
     test.slow();
 
-    test('player should be able to join a race in progress', async ({ hostPage, playerPage, playerContext }) => {
+    test('player should be able to join a race in progress', async ({ hostPage, playerPage, browser }) => {
         // Host creates room
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -27,8 +27,11 @@ test.describe('Late Join', () => {
         });
         expect(isRacing, 'Race should be running').toBe(true);
 
-        // Create second player and try to join mid-race
-        const lateJoinerPage = await playerContext.newPage();
+        // Create second player and try to join mid-race. Distinct device => its
+        // own browser context (own localStorage/client_instance_id), otherwise the
+        // seat-identity layer treats it as a same-device rejoin of EarlyBird.
+        const lateJoinerContext = await browser.newContext();
+        const lateJoinerPage = await lateJoinerContext.newPage();
         await lateJoinerPage.goto('/player?testMode=1');
         await lateJoinerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
         await lateJoinerPage.fill('#player-name', 'LateJoiner');
@@ -49,7 +52,7 @@ test.describe('Late Join', () => {
         await lateJoinerPage.close();
     });
 
-    test('late joiner should spawn near last place', async ({ hostPage, playerPage, playerContext }) => {
+    test('late joiner should spawn near last place', async ({ hostPage, playerPage, browser }) => {
         // Host creates room
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -92,8 +95,9 @@ test.describe('Late Join', () => {
         });
         expect(firstPlayerPos, 'First player should have a position').not.toBeNull();
 
-        // Late joiner joins
-        const lateJoinerPage = await playerContext.newPage();
+        // Late joiner joins as a distinct device (own context => own client id).
+        const lateJoinerContext = await browser.newContext();
+        const lateJoinerPage = await lateJoinerContext.newPage();
         await lateJoinerPage.goto('/player?testMode=1');
         await lateJoinerPage.waitForSelector('#join-screen', { state: 'visible', timeout: 10000 });
         await lateJoinerPage.fill('#player-name', 'LateJoiner');

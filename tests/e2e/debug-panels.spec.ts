@@ -1,6 +1,88 @@
 import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, gotoHost } from './fixtures';
 
 test.describe('Debug Panels', () => {
+    test('debug lab contract hooks should be available', async ({ hostPage, playerPage }) => {
+        // Verify __debugLab hooks exist (for Playwright automation)
+        await gotoHost(hostPage);
+        const roomCode = await waitForRoomCode(hostPage);
+        await joinGameAsPlayer(playerPage, roomCode, 'HooksTest');
+        await expect(hostPage.locator('#player-list')).toContainText('HooksTest', { timeout: 30000 });
+        await startGameFromHost(hostPage);
+
+        await hostPage.waitForFunction(() => {
+            const hooks = window as any;
+            return Boolean(
+                hooks.__debugLab &&
+                hooks.__labTools &&
+                typeof hooks.__debugLab.reset === 'function' &&
+                typeof hooks.__debugLab.stepFrame === 'function' &&
+                typeof hooks.__debugLab.stepSecond === 'function' &&
+                typeof hooks.__debugLab.playPause === 'function' &&
+                typeof hooks.__debugLab.takeScreenshot === 'function' &&
+                typeof hooks.__debugLab.getDiagnostics === 'function' &&
+                typeof hooks.__debugLab.getConsoleLogs === 'function' &&
+                typeof hooks.__debugLab.exportScenario === 'function' &&
+                typeof hooks.__debugLab.importScenario === 'function' &&
+                typeof hooks.__labTools.renderHostileLabel === 'function' &&
+                document.querySelector('canvas')
+            );
+        }, null, { timeout: 30000 });
+
+        const hookProof = await hostPage.evaluate(async () => {
+            const hooks = window as any;
+            const lab = hooks.__debugLab;
+            const tools = hooks.__labTools;
+            const before = lab.getDiagnostics();
+            const frame = lab.stepFrame();
+            const second = lab.stepSecond();
+            const screenshot = await lab.takeScreenshot();
+            const pauseState = lab.playPause();
+            const playState = lab.playPause();
+            const scenario = lab.exportScenario();
+            const imported = lab.importScenario(scenario);
+            const afterImport = lab.getDiagnostics();
+            const hostile = '<img src=x onerror=alert("XSS")>';
+            const safeText = tools.renderHostileLabel(hostile);
+            const logs = lab.getConsoleLogs();
+            const canvas = tools.getCanvasElement();
+
+            return {
+                hasCanvas: !!canvas,
+                schema: before.schema,
+                beforeTick: before.tick,
+                frameTick: frame.tick,
+                secondTick: second.tick,
+                imported,
+                afterImportTick: afterImport.tick,
+                screenshot,
+                pauseState,
+                playState,
+                scenario,
+                safeText,
+                logs,
+                state: tools.getState(),
+            };
+        });
+
+        expect(hookProof.hasCanvas).toBe(true);
+        expect(hookProof.schema).toBe('jj.debugLab.diagnostics.v1');
+        expect(hookProof.frameTick).toBe(hookProof.beforeTick + 1);
+        expect(hookProof.secondTick).toBe(hookProof.frameTick + 60);
+        expect(hookProof.screenshot.success).toBe(true);
+        expect(hookProof.screenshot.fileSizeBytes).toBeGreaterThan(1000);
+        expect(hookProof.pauseState.playing).toBe(false);
+        expect(hookProof.playState.playing).toBe(true);
+        expect(hookProof.scenario.schema).toBe('jj.debugLab.v1');
+        expect(hookProof.imported.success).toBe(true);
+        expect(hookProof.afterImportTick).toBe(0);
+        expect(hookProof.safeText.textContent).toBe('<img src=x onerror=alert("XSS")>');
+        expect(hookProof.safeText.innerHTML).toContain('&lt;img');
+        expect(hookProof.safeText.childElementCount).toBe(0);
+        expect(hookProof.logs.warns).toEqual([]);
+        expect(hookProof.logs.errors).toEqual([]);
+        expect(hookProof.state.hasCanvas).toBe(true);
+    });
+
     test('F2 should toggle physics parameters panel', async ({ hostPage, playerPage }) => {
         // Setup game
         await gotoHost(hostPage);

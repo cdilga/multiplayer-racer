@@ -11,6 +11,7 @@ export {
 export {
     TelemetryClient,
     buildTelemetryFingerprint,
+    getRuntimeTelemetryContext,
     bootstrapPageTelemetry,
     captureInitializationFailure,
     captureSocketConnectError,

@@ -435,7 +435,10 @@ describe('player control routing', () => {
         let packet = hooks.buildControlPacket(222);
         expect(packet).toEqual({
             player_id: 9,
+            seat_id: null,
             room_code: 'WXYZ',
+            lease_version: null,
+            client_instance_id: expect.any(String),
             controls: {
                 steering: shapedTouch.steering,
                 acceleration: shapedTouch.acceleration,
@@ -574,7 +577,10 @@ describe('player control routing', () => {
         expect(lastEmit.event).toBe('player_control_update');
         expect(lastEmit.payload).toEqual({
             player_id: 5,
+            seat_id: null,
             room_code: 'RACE',
+            lease_version: null,
+            client_instance_id: expect.any(String),
             controls: { steering: 0, acceleration: 0, braking: 0 },
             timestamp: expect.any(Number)
         });
@@ -632,7 +638,10 @@ describe('player control routing', () => {
         const packet = hooks.buildControlPacket(777);
         expect(packet).toEqual({
             player_id: 12,
+            seat_id: null,
             room_code: 'SWAP',
+            lease_version: null,
+            client_instance_id: expect.any(String),
             controls: {
                 steering: 0.5,
                 acceleration: 0,
@@ -711,7 +720,10 @@ describe('player control routing', () => {
         const packet = hooks.buildControlPacket(909);
         expect(packet).toEqual({
             player_id: 21,
+            seat_id: null,
             room_code: 'PAD1',
+            lease_version: null,
+            client_instance_id: expect.any(String),
             controls: {
                 steering: -1,
                 acceleration: 1,

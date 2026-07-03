@@ -1,0 +1,14 @@
+{
+  "visible": true,
+  "queueLength": 0,
+  "eventCount": 1,
+  "lastCallout": {
+    "text": "Ada WRECKED Grace",
+    "attackerName": "Ada",
+    "victimName": "Grace",
+    "sourcePlayerId": "attacker-player",
+    "playerId": "victim-player",
+    "weaponId": "rocket"
+  },
+  "text": "Ada WRECKED Grace"
+}

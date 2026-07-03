@@ -21,6 +21,14 @@ test.describe('Landing page', () => {
 
         // Hero brand title is visible.
         await expect(page.getByTestId('hero-title')).toHaveText('Joystick Jammers');
+        await expect(page.getByTestId('gameplay-visual')).toBeVisible();
+        await expect(page.getByTestId('gameplay-image')).toHaveJSProperty('complete', true);
+        const visualSize = await page.getByTestId('gameplay-image').evaluate((img: HTMLImageElement) => ({
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+        }));
+        expect(visualSize.width).toBeGreaterThan(100);
+        expect(visualSize.height).toBeGreaterThan(100);
 
         // The host-only room code display must NOT exist on the landing.
         await expect(page.locator('#room-code-display')).toHaveCount(0);
@@ -54,5 +62,26 @@ test.describe('Landing page', () => {
 
         await page.waitForURL(/\/host/);
         expect(page.url()).toContain('/host');
+    });
+
+    test('captures first-viewport evidence on desktop and mobile', async ({ page }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto('/?dev=0');
+        await expect(page.getByTestId('host-cta')).toBeVisible();
+        await expect(page.getByTestId('join-form')).toBeVisible();
+        await page.screenshot({
+            path: 'artifacts/br-skip-bin-arcade-design-language-5k3.27/landing-desktop.png',
+            fullPage: false,
+        });
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto('/?dev=0');
+        await expect(page.getByTestId('host-cta')).toBeVisible();
+        await expect(page.getByTestId('join-form')).toBeVisible();
+        await expect(page.getByTestId('gameplay-visual')).toBeVisible();
+        await page.screenshot({
+            path: 'artifacts/br-skip-bin-arcade-design-language-5k3.27/landing-mobile.png',
+            fullPage: false,
+        });
     });
 });

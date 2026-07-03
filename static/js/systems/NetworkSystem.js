@@ -70,6 +70,29 @@ class NetworkSystem {
         // State
         this.initialized = false;
         this.connected = false;
+        this._reconnectAttempt = 0;
+        this._lastReconnectStartMs = null;
+        this._lastConnectivityTelemetryAt = new Map();
+    }
+
+    _emitControllerTelemetry(eventName, payload = {}, options = {}) {
+        const cooldownMs = Math.max(0, Number(options.cooldownMs || 0));
+        const nowMs = Number(options.nowMs || Date.now());
+        const key = `network:${eventName}`;
+        if (cooldownMs > 0) {
+            const lastAt = Number(this._lastConnectivityTelemetryAt.get(key) || 0);
+            if (nowMs - lastAt < cooldownMs) {
+                return;
+            }
+        }
+
+        this._lastConnectivityTelemetryAt.set(key, nowMs);
+        if (typeof window !== 'undefined' && window.__JJ_TELEMETRY__?.capture) {
+            window.__JJ_TELEMETRY__.capture(eventName, {
+                topology: this.topology,
+                ...payload
+            });
+        }
     }
 
     /**
@@ -154,6 +177,28 @@ class NetworkSystem {
         this.socket.on('connect', () => {
             this.connected = true;
             this._emit('network:connected');
+            if (this._reconnectAttempt > 0) {
+                const now = Date.now();
+                const durationMs = this._lastReconnectStartMs == null
+                    ? null
+                    : Math.max(0, now - this._lastReconnectStartMs);
+                if (typeof window !== 'undefined' && window.__JJ_TELEMETRY__?.capture) {
+                    window.__JJ_TELEMETRY__.capture('perf:connectivity:reconnect', {
+                        status: 'success',
+                        attempt: this._reconnectAttempt,
+                        topology: this.topology,
+                        topologyClass: this.topology || 'local',
+                        durationMs
+                    });
+                }
+                this._reconnectAttempt = 0;
+                this._lastReconnectStartMs = null;
+                this._emitControllerTelemetry('gameplay:controller:reconnect_succeeded', {
+                    attempt: typeof this._reconnectAttempt === 'number' ? this._reconnectAttempt : 0,
+                    status: 'success',
+                    cause: 'socket_reconnect'
+                }, { cooldownMs: 5000 });
+            }
 
             // If we already hosted a room, reclaim it on reconnect. The room
             // may have been dropped server-side (host socket blip or a server
@@ -166,11 +211,61 @@ class NetworkSystem {
                 // room_reclaimed).
                 this.socket.emit('reclaim_room', { room_code: this.roomCode, ...this._hostAuth() });
             }
+
+            this._emitControllerTelemetry('gameplay:controller:connected', {
+                mode: 'host_network_connected',
+                host: true,
+            }, { cooldownMs: 1000 });
         });
 
         this.socket.on('disconnect', () => {
             this.connected = false;
             this._emit('network:disconnected');
+            this._emitControllerTelemetry('gameplay:controller:disconnected', {
+                topology: this.topology,
+                mode: 'host_network_disconnected',
+                cause: 'disconnect'
+            }, { cooldownMs: 1000 });
+        });
+
+        this.socket.on('reconnect_attempt', (attempt) => {
+            this._reconnectAttempt = Number.isFinite(attempt) ? attempt : (this._reconnectAttempt + 1);
+            if (this._lastReconnectStartMs == null) {
+                this._lastReconnectStartMs = Date.now();
+            }
+            this._emitControllerTelemetry('gameplay:controller:reconnect_attempted', {
+                attempt: this._reconnectAttempt,
+                topology: this.topology,
+            }, { cooldownMs: 1500 });
+            if (typeof window !== 'undefined' && window.__JJ_TELEMETRY__?.capture) {
+                window.__JJ_TELEMETRY__.capture('perf:connectivity:reconnect', {
+                    status: 'attempt',
+                    attempt: this._reconnectAttempt,
+                    topology: this.topology
+                });
+            }
+        });
+
+        this.socket.on('reconnect_error', (error) => {
+            captureSocketConnectError(error, {
+                source: 'NetworkSystem',
+                topology: this.topology,
+                isHost: this.isHost,
+                transport: this.socket?.io?.engine?.transport?.name || 'unknown',
+            });
+            this._emitControllerTelemetry('gameplay:controller:reconnect_failed', {
+                reason: 'reconnect_error',
+                attempt: this._reconnectAttempt,
+                topology: this.topology
+            }, { cooldownMs: 2000 });
+            if (typeof window !== 'undefined' && window.__JJ_TELEMETRY__?.capture) {
+                window.__JJ_TELEMETRY__.capture('error:network:reconnect', {
+                    status: 'failed',
+                    topology: this.topology,
+                    attempt: this._reconnectAttempt,
+                    transport: this.socket?.io?.engine?.transport?.name || 'unknown'
+                });
+            }
         });
 
         this.socket.on('connect_error', (error) => {

@@ -1,0 +1,25 @@
+{
+  "attachedToLiveRender": true,
+  "hostFedFps": 109,
+  "tierNames": [
+    "host-native",
+    "host-balanced",
+    "host-degraded",
+    "host-fallback"
+  ],
+  "baseline": {
+    "tierIndex": 0,
+    "tier": "host-native",
+    "resolutionScale": 1
+  },
+  "underLoad": {
+    "tierIndex": 3,
+    "tier": "host-fallback",
+    "resolutionScale": 0.5
+  },
+  "recovered": {
+    "tierIndex": 0,
+    "tier": "host-native",
+    "resolutionScale": 1
+  }
+}

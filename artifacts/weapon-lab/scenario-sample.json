@@ -1,0 +1,153 @@
+{
+  "schema": "jj.weaponLabScenario.v1",
+  "toolName": "weapon-lab",
+  "version": 1,
+  "preset": "missile-chase",
+  "seed": 7,
+  "buildId": "dev-local",
+  "track": {
+    "source": "TrackFactory-backed",
+    "trackId": "derby-bowl",
+    "trackName": "The Pit",
+    "mode": "derby",
+    "geometryType": "bowl",
+    "assetPath": "static/assets/tracks/derby-bowl.json",
+    "spawnCount": 16,
+    "weaponConfig": {
+      "enabled": true,
+      "maxActive": 3,
+      "spawnHeight": 1.5,
+      "spawnInterval": [
+        8,
+        12
+      ]
+    }
+  },
+  "mapContext": {
+    "source": "TrackFactory-backed",
+    "trackId": "derby-bowl",
+    "trackName": "The Pit",
+    "mode": "derby",
+    "geometryType": "bowl",
+    "assetPath": "static/assets/tracks/derby-bowl.json",
+    "spawnCount": 16,
+    "weaponConfig": {
+      "enabled": true,
+      "maxActive": 3,
+      "spawnHeight": 1.5,
+      "spawnInterval": [
+        8,
+        12
+      ]
+    }
+  },
+  "overrides": {
+    "arenaConfigPatch": {},
+    "weaponOverrides": {
+      "missile": {
+        "behavior": {
+          "speed": 50,
+          "lifetime": 5,
+          "tracking": {
+            "enabled": true,
+            "turnRate": 3,
+            "lockRange": 30,
+            "lockAngle": 45
+          }
+        }
+      },
+      "mine": {
+        "behavior": {
+          "lifetime": 60,
+          "armDelay": 1,
+          "triggerRadius": 3
+        }
+      },
+      "boost": {
+        "behavior": {
+          "duration": 3,
+          "speedMultiplier": 2,
+          "ramDamageBonus": 25
+        }
+      },
+      "sniper": {
+        "behavior": {
+          "range": 100,
+          "lockAngle": 0.3
+        }
+      },
+      "emp": {
+        "behavior": {
+          "radius": 15,
+          "stunDuration": 3
+        }
+      },
+      "oil-slick": {
+        "behavior": {
+          "zoneRadius": 6,
+          "frictionMultiplier": 0.1,
+          "lifetime": 15
+        }
+      },
+      "flamethrower": {
+        "behavior": {
+          "coneAngle": 30,
+          "range": 8,
+          "tickRate": 0.1
+        },
+        "damage": {
+          "amount": 10
+        }
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "shooter",
+      "playerId": 1,
+      "position": {
+        "x": 0,
+        "y": 0.5,
+        "z": 0
+      },
+      "heading": 0,
+      "isDead": false,
+      "invulnerable": false,
+      "stunned": false,
+      "inOilSlick": false
+    },
+    {
+      "id": "target",
+      "playerId": 2,
+      "position": {
+        "x": 0,
+        "y": 0.5,
+        "z": 15
+      },
+      "heading": 0,
+      "isDead": false,
+      "invulnerable": false,
+      "stunned": false,
+      "inOilSlick": false
+    }
+  ],
+  "camera": {
+    "position": {
+      "x": 0,
+      "y": 42,
+      "z": 58
+    },
+    "lookAt": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "overlay": {
+    "assumptions": true,
+    "diagnostics": true,
+    "geometry": true,
+    "picking": false
+  },
+  "diagnosticsHash": "a5527673"
+}

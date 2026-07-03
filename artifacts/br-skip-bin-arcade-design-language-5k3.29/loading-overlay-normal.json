@@ -1,0 +1,17 @@
+{
+  "roomCode": "AYHJ",
+  "elapsedMs": 1682,
+  "state": {
+    "wasShown": true,
+    "dismissed": false,
+    "timedOut": false,
+    "completed": true,
+    "lastText": "Rolling to the lobby...",
+    "lastStep": "Step 5 of 5",
+    "loadingVisible": false,
+    "errorVisible": false,
+    "showDelayMs": 0,
+    "timeoutMs": 8000,
+    "loadingStepNumber": 5
+  }
+}

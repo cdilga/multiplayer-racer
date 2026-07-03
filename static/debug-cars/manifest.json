@@ -1,0 +1,271 @@
+{
+ "starter": [
+  "hatchback-sports",
+  "sedan-sports",
+  "truck",
+  "race-future",
+  "kart-ooli"
+ ],
+ "items": [
+  {
+   "name": "hatchback-sports",
+   "file": "/debug-cars/hatchback-sports.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "race-future",
+   "file": "/debug-cars/race-future.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "sedan-sports",
+   "file": "/debug-cars/sedan-sports.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "truck",
+   "file": "/debug-cars/truck.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "kart-ooli",
+   "file": "/debug-cars/kart-ooli.glb",
+   "group": "Karts"
+  },
+  {
+   "name": "ambulance",
+   "file": "/debug-cars/ambulance.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "delivery",
+   "file": "/debug-cars/delivery.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "delivery-flat",
+   "file": "/debug-cars/delivery-flat.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "firetruck",
+   "file": "/debug-cars/firetruck.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "garbage-truck",
+   "file": "/debug-cars/garbage-truck.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "police",
+   "file": "/debug-cars/police.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "race",
+   "file": "/debug-cars/race.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "sedan",
+   "file": "/debug-cars/sedan.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "suv",
+   "file": "/debug-cars/suv.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "suv-luxury",
+   "file": "/debug-cars/suv-luxury.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "taxi",
+   "file": "/debug-cars/taxi.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "tractor",
+   "file": "/debug-cars/tractor.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "tractor-police",
+   "file": "/debug-cars/tractor-police.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "tractor-shovel",
+   "file": "/debug-cars/tractor-shovel.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "truck-flat",
+   "file": "/debug-cars/truck-flat.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "van",
+   "file": "/debug-cars/van.glb",
+   "group": "Cars (Kenney)"
+  },
+  {
+   "name": "debris-bolt",
+   "file": "/debug-cars/debris-bolt.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-bumper",
+   "file": "/debug-cars/debris-bumper.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-door",
+   "file": "/debug-cars/debris-door.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-door-window",
+   "file": "/debug-cars/debris-door-window.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-drivetrain",
+   "file": "/debug-cars/debris-drivetrain.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-drivetrain-axle",
+   "file": "/debug-cars/debris-drivetrain-axle.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-nut",
+   "file": "/debug-cars/debris-nut.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-plate-a",
+   "file": "/debug-cars/debris-plate-a.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-plate-b",
+   "file": "/debug-cars/debris-plate-b.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-plate-small-a",
+   "file": "/debug-cars/debris-plate-small-a.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-plate-small-b",
+   "file": "/debug-cars/debris-plate-small-b.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-spoiler-a",
+   "file": "/debug-cars/debris-spoiler-a.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-spoiler-b",
+   "file": "/debug-cars/debris-spoiler-b.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "debris-tire",
+   "file": "/debug-cars/debris-tire.glb",
+   "group": "Debris (damage parts)"
+  },
+  {
+   "name": "kart-oobi",
+   "file": "/debug-cars/kart-oobi.glb",
+   "group": "Karts"
+  },
+  {
+   "name": "kart-oodi",
+   "file": "/debug-cars/kart-oodi.glb",
+   "group": "Karts"
+  },
+  {
+   "name": "kart-oopi",
+   "file": "/debug-cars/kart-oopi.glb",
+   "group": "Karts"
+  },
+  {
+   "name": "kart-oozi",
+   "file": "/debug-cars/kart-oozi.glb",
+   "group": "Karts"
+  },
+  {
+   "name": "box",
+   "file": "/debug-cars/box.glb",
+   "group": "Props"
+  },
+  {
+   "name": "cone",
+   "file": "/debug-cars/cone.glb",
+   "group": "Props"
+  },
+  {
+   "name": "cone-flat",
+   "file": "/debug-cars/cone-flat.glb",
+   "group": "Props"
+  },
+  {
+   "name": "quaternius-police",
+   "file": "/debug-cars/quaternius-police.glb",
+   "group": "Quaternius"
+  },
+  {
+   "name": "quaternius-truck",
+   "file": "/debug-cars/quaternius-truck.glb",
+   "group": "Quaternius"
+  },
+  {
+   "name": "wheel-dark",
+   "file": "/debug-cars/wheel-dark.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-default",
+   "file": "/debug-cars/wheel-default.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-racing",
+   "file": "/debug-cars/wheel-racing.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-tractor-back",
+   "file": "/debug-cars/wheel-tractor-back.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-tractor-dark-back",
+   "file": "/debug-cars/wheel-tractor-dark-back.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-tractor-dark-front",
+   "file": "/debug-cars/wheel-tractor-dark-front.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-tractor-front",
+   "file": "/debug-cars/wheel-tractor-front.glb",
+   "group": "Wheels"
+  },
+  {
+   "name": "wheel-truck",
+   "file": "/debug-cars/wheel-truck.glb",
+   "group": "Wheels"
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+  "bead": "br-map-authoring-tool-j3i.2",
+  "validatorVersion": "jj-mapvalidator-1",
+  "valid": {
+    "ok": true,
+    "requestedTrackId": "derby-arena",
+    "resolvedMapId": "derby-arena",
+    "ruleset": "derby",
+    "seed": null,
+    "playerCount": 8,
+    "lateJoinCapacity": 16,
+    "validatorVersion": "jj-mapvalidator-1",
+    "debugArtifactPaths": [],
+    "reasons": []
+  },
+  "invalid": {
+    "ok": false,
+    "requestedTrackId": "oval",
+    "resolvedMapId": "oval",
+    "ruleset": "derby",
+    "seed": null,
+    "playerCount": 32,
+    "lateJoinCapacity": null,
+    "validatorVersion": "jj-mapvalidator-1",
+    "debugArtifactPaths": [],
+    "reasons": [
+      {
+        "code": "incompatible_ruleset",
+        "detail": {
+          "requested": "derby",
+          "mapRuleset": "race"
+        }
+      },
+      {
+        "code": "insufficient_spawn_capacity",
+        "detail": {
+          "available": 6,
+          "required": 32
+        }
+      }
+    ]
+  }
+}

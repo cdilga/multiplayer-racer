@@ -1,0 +1,66 @@
+{
+  "schema": "jj.debugLab.v1",
+  "scenario": {
+    "schema": "jj.debugLab.v1",
+    "seed": 12345,
+    "preset": "weapon-lab-missile",
+    "toolName": "weapon-lab",
+    "timestamp": "2026-06-30T07:48:00.000Z",
+    "buildId": "build-2026-06-30-001",
+    "screenshotBase64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+    "tuningOverrides": {
+      "weaponSpawnInterval": 5,
+      "maxActiveWeapons": 4
+    }
+  },
+  "diagnostics": {
+    "schema": "jj.debugLab.diagnostics.v1",
+    "timestamp": 1719739680000,
+    "tick": 3600,
+    "state": {
+      "toolName": "weapon-lab",
+      "isRunning": true,
+      "activeWeapons": 2,
+      "activePlatforms": 1,
+      "selectedPreset": "missile",
+      "cameraMode": "orbit"
+    },
+    "metrics": {
+      "fps": 59.8,
+      "memoryMb": 145.2,
+      "renderTimeMs": 1.2,
+      "physicsTimeMs": 0.8
+    },
+    "overlays": {
+      "assumptions": true,
+      "diagnostics": false,
+      "geometry": true,
+      "picking": false
+    },
+    "warnings": [
+      "Weapon spawn interval below recommended minimum (5 < 8)",
+      "Memory usage above 100MB threshold"
+    ],
+    "errors": [],
+    "textRenderingSafe": true,
+    "consoleSpyActive": true,
+    "hooksAvailable": {
+      "reset": true,
+      "stepFrame": true,
+      "stepSecond": true,
+      "playPause": true,
+      "takeScreenshot": true,
+      "getDiagnostics": true,
+      "exportScenario": true
+    }
+  },
+  "evidence": {
+    "canvasVisible": true,
+    "inspectorPanelExposed": true,
+    "overlayLayers": ["assumptions", "geometry"],
+    "noConsoleSpam": true,
+    "scenarioExportableAsJson": true,
+    "safeLabelRendering": true,
+    "xssPayloadsRenderedLiterally": true
+  }
+}

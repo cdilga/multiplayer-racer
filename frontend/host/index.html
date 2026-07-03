@@ -44,33 +44,205 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: #1a1a2e;
+            background:
+                radial-gradient(circle at 50% 42%, rgba(254, 217, 93, 0.13), transparent 28rem),
+                linear-gradient(135deg, #14161f 0%, #1f2430 54%, #12131a 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff8df;
+            padding: 24px;
+            text-align: center;
+            font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+            overflow: hidden;
         }
         .loading-overlay.hidden {
             display: none;
         }
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #333;
-            border-top-color: #00ff88;
+        .loading-panel {
+            position: relative;
+            width: min(520px, 92vw);
+            padding: 24px;
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+                rgba(21, 24, 34, 0.96);
+            border: 2px solid rgba(255, 248, 223, 0.18);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            backdrop-filter: none;
+        }
+        .loading-panel::before {
+            content: "REC";
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            color: #ff5a52;
+            font-family: var(--font-mono, monospace);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+        .loading-rig {
+            display: grid;
+            grid-template-columns: 1fr 72px 1fr;
+            align-items: end;
+            gap: 10px;
+            width: min(320px, 72vw);
+            min-height: 88px;
+            margin: 4px auto 18px;
+            color: #fff8df;
+        }
+        .loading-car {
+            position: relative;
+            height: 34px;
+            border: 2px solid rgba(255, 248, 223, 0.82);
+            border-radius: 8px 14px 6px 6px;
+            background: linear-gradient(135deg, #f15b42, #fed95d 68%, #fff8df);
+            box-shadow: 0 12px 0 -8px rgba(0, 0, 0, 0.55);
+            animation: loading-car-nudge 1.4s steps(2, end) infinite;
+        }
+        .loading-car::before,
+        .loading-car::after {
+            content: "";
+            position: absolute;
+            bottom: -9px;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #151822;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            background: #fff8df;
+            box-shadow: inset 0 0 0 3px #273142;
+        }
+        .loading-car::before {
+            left: 12px;
+        }
+        .loading-car::after {
+            right: 12px;
+        }
+        .loading-car.part {
+            opacity: 0.72;
+            transform: translateY(9px) rotate(-2deg);
+            animation-delay: -0.35s;
+        }
+        .loading-camera {
+            position: relative;
+            align-self: center;
+            height: 48px;
+            border: 2px solid rgba(255, 248, 223, 0.82);
+            border-radius: 7px;
+            background: #242936;
+            box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.18);
+        }
+        .loading-camera::before {
+            content: "";
+            position: absolute;
+            left: 16px;
+            top: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #7ee6ff 0 28%, #111722 30% 100%);
+            border: 2px solid #fff8df;
+        }
+        .loading-camera::after {
+            content: "";
+            position: absolute;
+            right: -13px;
+            top: 14px;
+            width: 14px;
+            height: 20px;
+            background: #fed95d;
+            clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 85%);
+        }
+        .loading-track {
+            grid-column: 1 / -1;
+            height: 3px;
+            border-radius: 999px;
+            background: repeating-linear-gradient(90deg, rgba(255, 248, 223, 0.75) 0 18px, transparent 18px 30px);
+            animation: loading-track-roll 0.8s linear infinite;
+        }
+        .loading-title {
+            margin-top: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #fed95d;
         }
         .loading-text {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #888;
+            margin-top: 14px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff8df;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .loading-step {
+            margin-top: 10px;
+            font-size: 14px;
+            color: rgba(255, 248, 223, 0.68);
+        }
+        .loading-pips {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .loading-pips span {
+            width: 34px;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(255, 248, 223, 0.18);
+        }
+        .loading-overlay[data-loading-step="1"] .loading-pips span:nth-child(-n + 1),
+        .loading-overlay[data-loading-step="2"] .loading-pips span:nth-child(-n + 2),
+        .loading-overlay[data-loading-step="3"] .loading-pips span:nth-child(-n + 3),
+        .loading-overlay[data-loading-step="4"] .loading-pips span:nth-child(-n + 4),
+        .loading-overlay[data-loading-step="5"] .loading-pips span:nth-child(-n + 5) {
+            background: #fed95d;
+            box-shadow: 2px 2px 0 rgba(20, 17, 15, 0.45);
+        }
+        .loading-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .loading-action,
+        .error-retry {
+            padding: 12px 22px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .loading-action:focus-visible,
+        .error-retry:focus-visible {
+            outline: 2px solid #ffffff;
+            outline-offset: 3px;
+        }
+        .loading-action:hover,
+        .error-retry:hover {
+            transform: translateY(-1px);
+        }
+        .loading-action.secondary {
+            background: transparent;
+            color: #fff8df;
+            border: 1px solid rgba(255, 248, 223, 0.28);
+            box-shadow: inset 0 2px 2px 0 rgba(255, 255, 255, 0.04);
+        }
+        @keyframes loading-car-nudge {
+            50% { transform: translateY(-2px) rotate(1deg); }
+        }
+        @keyframes loading-track-roll {
+            to { background-position-x: 30px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .loading-car,
+            .loading-track {
+                animation: none;
+            }
         }
 
         /* Error display */
@@ -104,14 +276,9 @@
         }
         .error-retry {
             margin-top: 20px;
-            padding: 15px 30px;
             background: #00ff88;
             color: #1a1a2e;
             border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
         }
 
         /* Debug info */
@@ -122,7 +289,7 @@
             background: rgba(0, 0, 0, 0.7);
             color: #00ff88;
             padding: 10px;
-            font-family: monospace;
+            font-family: var(--font-mono, monospace);
             font-size: 12px;
             z-index: 100;
             border-radius: 5px;
@@ -140,7 +307,7 @@
             color: white;
             padding: 15px;
             border-radius: 8px;
-            font-family: monospace;
+            font-family: var(--font-mono, monospace);
             font-size: 12px;
             z-index: 200;
             min-width: 200px;
@@ -196,9 +363,9 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 8px;
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-            backdrop-filter: blur(8px);
+            backdrop-filter: none;
         }
         .camera-controls.hidden {
             display: none;
@@ -240,16 +407,31 @@
     <div id="game-screen" class="hidden"></div>
 
     <!-- Loading overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text" id="loading-text">Initializing game engine...</div>
+    <div id="loading-overlay" class="loading-overlay hidden" aria-live="polite" data-loading-step="1">
+        <div class="loading-panel">
+            <div class="loading-rig" aria-hidden="true">
+                <div class="loading-car part"></div>
+                <div class="loading-camera"></div>
+                <div class="loading-car"></div>
+                <div class="loading-track"></div>
+            </div>
+            <div class="loading-title">Camcorder warming</div>
+            <div class="loading-text" id="loading-text" role="status">Bolting the wheels on...</div>
+            <div class="loading-step" id="loading-step">Step 1 of 5</div>
+            <div class="loading-pips" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="loading-actions">
+                <button id="loading-skip-btn" class="loading-action secondary" type="button">Skip warm-up</button>
+            </div>
+        </div>
     </div>
 
     <!-- Error overlay -->
     <div id="error-overlay" class="error-overlay hidden">
-        <div class="error-title">Something went wrong</div>
+        <div class="error-title" id="error-title">Something went wrong</div>
         <div class="error-message" id="error-message"></div>
-        <button class="error-retry" onclick="location.reload()">Retry</button>
+        <button id="error-retry-btn" class="error-retry" type="button" onclick="location.reload()">Retry</button>
     </div>
 
     <!-- Debug info (press D to toggle) -->

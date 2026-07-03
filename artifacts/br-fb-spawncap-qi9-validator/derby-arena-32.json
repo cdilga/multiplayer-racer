@@ -1,0 +1,1164 @@
+{
+  "trackId": "derby-arena",
+  "ruleset": "derby",
+  "playerCount": 32,
+  "seed": 23106,
+  "minPairDistance": 7.499999,
+  "rejectedCandidates": {
+    "counts": {
+      "pair_distance_below_min": 2
+    },
+    "samples": [
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": 0.851724,
+          "y": 0,
+          "z": -29.987907
+        },
+        "clearance": 5.012093,
+        "details": {
+          "wallClearance": 5.012093,
+          "nearestSpawnId": "spawn-6",
+          "actualDistance": 0
+        }
+      },
+      {
+        "reason": "pair_distance_below_min",
+        "position": {
+          "x": -0.851724,
+          "y": 0,
+          "z": 29.987907
+        },
+        "clearance": 5.012093,
+        "details": {
+          "wallClearance": 5.012093,
+          "nearestSpawnId": "spawn-14",
+          "actualDistance": 0
+        }
+      }
+    ]
+  },
+  "spawns": [
+    {
+      "id": "spawn-0",
+      "position": {
+        "x": 29.136183,
+        "y": 1.5,
+        "z": 30.839631
+      },
+      "headingRad": -2.384589,
+      "clearance": 4.160369,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 29.136183,
+          "y": 0.10000038146972656,
+          "z": 30.839631
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-1",
+      "position": {
+        "x": 29.562045,
+        "y": 1.5,
+        "z": 15.845678
+      },
+      "headingRad": -2.062839,
+      "clearance": 5.437955,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 29.562045,
+          "y": 0.10000038146972656,
+          "z": 15.845678
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-2",
+      "position": {
+        "x": 29.987907,
+        "y": 1.5,
+        "z": 0.851724
+      },
+      "headingRad": -1.599191,
+      "clearance": 5.012093,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 29.987907,
+          "y": 0.10000038146972656,
+          "z": 0.851724
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-3",
+      "position": {
+        "x": 30.413769,
+        "y": 1.5,
+        "z": -14.142229
+      },
+      "headingRad": -1.135543,
+      "clearance": 4.586231,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 30.413769,
+          "y": 0.10000038146972656,
+          "z": -14.142229
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-4",
+      "position": {
+        "x": 30.839631,
+        "y": 1.5,
+        "z": -29.136183
+      },
+      "headingRad": -0.813793,
+      "clearance": 4.160369,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 30.839631,
+          "y": 0.10000038146972656,
+          "z": -29.136183
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-5",
+      "position": {
+        "x": 15.845678,
+        "y": 1.5,
+        "z": -29.562045
+      },
+      "headingRad": -0.492042,
+      "clearance": 5.437955,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 15.845678,
+          "y": 0.10000038146972656,
+          "z": -29.562045
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-6",
+      "position": {
+        "x": 0.851724,
+        "y": 1.5,
+        "z": -29.987907
+      },
+      "headingRad": -0.028395,
+      "clearance": 5.012093,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 0.851724,
+          "y": 0.10000038146972656,
+          "z": -29.987907
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-7",
+      "position": {
+        "x": -14.142229,
+        "y": 1.5,
+        "z": -30.413769
+      },
+      "headingRad": 0.435253,
+      "clearance": 4.586231,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -14.142229,
+          "y": 0.10000038146972656,
+          "z": -30.413769
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-8",
+      "position": {
+        "x": -29.136183,
+        "y": 1.5,
+        "z": -30.839631
+      },
+      "headingRad": 0.757004,
+      "clearance": 4.160369,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -29.136183,
+          "y": 0.10000038146972656,
+          "z": -30.839631
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-9",
+      "position": {
+        "x": -29.562045,
+        "y": 1.5,
+        "z": -15.845678
+      },
+      "headingRad": 1.078754,
+      "clearance": 5.437955,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -29.562045,
+          "y": 0.10000038146972656,
+          "z": -15.845678
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-10",
+      "position": {
+        "x": -29.987907,
+        "y": 1.5,
+        "z": -0.851724
+      },
+      "headingRad": 1.542402,
+      "clearance": 5.012093,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -29.987907,
+          "y": 0.10000038146972656,
+          "z": -0.851724
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-11",
+      "position": {
+        "x": -30.413769,
+        "y": 1.5,
+        "z": 14.142229
+      },
+      "headingRad": 2.006049,
+      "clearance": 4.586231,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -30.413769,
+          "y": 0.10000038146972656,
+          "z": 14.142229
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-12",
+      "position": {
+        "x": -30.839631,
+        "y": 1.5,
+        "z": 29.136183
+      },
+      "headingRad": 2.3278,
+      "clearance": 4.160369,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -30.839631,
+          "y": 0.10000038146972656,
+          "z": 29.136183
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-13",
+      "position": {
+        "x": -15.845678,
+        "y": 1.5,
+        "z": 29.562045
+      },
+      "headingRad": 2.64955,
+      "clearance": 5.437955,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -15.845678,
+          "y": 0.10000038146972656,
+          "z": 29.562045
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-14",
+      "position": {
+        "x": -0.851724,
+        "y": 1.5,
+        "z": 29.987907
+      },
+      "headingRad": 3.113198,
+      "clearance": 5.012093,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.851724,
+          "y": 0.10000038146972656,
+          "z": 29.987907
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-15",
+      "position": {
+        "x": 14.142229,
+        "y": 1.5,
+        "z": 30.413769
+      },
+      "headingRad": -2.70634,
+      "clearance": 4.586231,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 14.142229,
+          "y": 0.10000038146972656,
+          "z": 30.413769
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-16",
+      "position": {
+        "x": 0,
+        "y": 1.5,
+        "z": 0
+      },
+      "headingRad": 0,
+      "clearance": 35,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 0,
+          "y": 0.10000038146972656,
+          "z": 0
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-17",
+      "position": {
+        "x": 0.212931,
+        "y": 1.5,
+        "z": -7.496977
+      },
+      "headingRad": -0.028395,
+      "clearance": 27.503023,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 0.212931,
+          "y": 0.10000038146972656,
+          "z": -7.496977
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-18",
+      "position": {
+        "x": -0.212931,
+        "y": 1.5,
+        "z": 7.496977
+      },
+      "headingRad": 3.113198,
+      "clearance": 27.503023,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.212931,
+          "y": 0.10000038146972656,
+          "z": 7.496977
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-19",
+      "position": {
+        "x": 0.425862,
+        "y": 1.5,
+        "z": -14.993953
+      },
+      "headingRad": -0.028395,
+      "clearance": 20.006047,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 0.425862,
+          "y": 0.10000038146972656,
+          "z": -14.993953
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-20",
+      "position": {
+        "x": -0.425862,
+        "y": 1.5,
+        "z": 14.993953
+      },
+      "headingRad": 3.113198,
+      "clearance": 20.006047,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.425862,
+          "y": 0.10000038146972656,
+          "z": 14.993953
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-21",
+      "position": {
+        "x": 0.638793,
+        "y": 1.5,
+        "z": -22.49093
+      },
+      "headingRad": -0.028395,
+      "clearance": 12.50907,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": 0.638793,
+          "y": 0.10000038146972656,
+          "z": -22.49093
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-22",
+      "position": {
+        "x": -0.638793,
+        "y": 1.5,
+        "z": 22.49093
+      },
+      "headingRad": 3.113198,
+      "clearance": 12.50907,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -0.638793,
+          "y": 0.10000038146972656,
+          "z": 22.49093
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-23",
+      "position": {
+        "x": -7.496977,
+        "y": 1.5,
+        "z": -0.212931
+      },
+      "headingRad": 1.542402,
+      "clearance": 27.503023,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -7.496977,
+          "y": 0.10000038146972656,
+          "z": -0.212931
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-24",
+      "position": {
+        "x": -7.284046,
+        "y": 1.5,
+        "z": -7.709908
+      },
+      "headingRad": 0.757004,
+      "clearance": 27.290092,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -7.284046,
+          "y": 0.10000038146972656,
+          "z": -7.709908
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-25",
+      "position": {
+        "x": -7.709908,
+        "y": 1.5,
+        "z": 7.284046
+      },
+      "headingRad": 2.3278,
+      "clearance": 27.290092,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -7.709908,
+          "y": 0.10000038146972656,
+          "z": 7.284046
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-26",
+      "position": {
+        "x": -7.071115,
+        "y": 1.5,
+        "z": -15.206885
+      },
+      "headingRad": 0.435253,
+      "clearance": 19.793115,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -7.071115,
+          "y": 0.10000038146972656,
+          "z": -15.206885
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-27",
+      "position": {
+        "x": -7.922839,
+        "y": 1.5,
+        "z": 14.781022
+      },
+      "headingRad": 2.64955,
+      "clearance": 20.218978,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -7.922839,
+          "y": 0.10000038146972656,
+          "z": 14.781022
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-28",
+      "position": {
+        "x": -6.858184,
+        "y": 1.5,
+        "z": -22.703861
+      },
+      "headingRad": 0.293356,
+      "clearance": 12.296139,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -6.858184,
+          "y": 0.10000038146972656,
+          "z": -22.703861
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-29",
+      "position": {
+        "x": -8.13577,
+        "y": 1.5,
+        "z": 22.277999
+      },
+      "headingRad": 2.791447,
+      "clearance": 12.722001,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -8.13577,
+          "y": 0.10000038146972656,
+          "z": 22.277999
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-30",
+      "position": {
+        "x": -6.645253,
+        "y": 1.5,
+        "z": -30.200838
+      },
+      "headingRad": 0.216584,
+      "clearance": 4.799162,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -6.645253,
+          "y": 0.10000038146972656,
+          "z": -30.200838
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "spawn-31",
+      "position": {
+        "x": -8.348701,
+        "y": 1.5,
+        "z": 29.774976
+      },
+      "headingRad": 2.868219,
+      "clearance": 5.225024,
+      "support": {
+        "hit": true,
+        "y": 0,
+        "distance": null,
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "source": "square-arena"
+      },
+      "groundRaycast": {
+        "hit": true,
+        "timeOfImpact": 21.399999618530273,
+        "point": {
+          "x": -8.348701,
+          "y": 0.10000038146972656,
+          "z": 29.774976
+        },
+        "normal": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    }
+  ]
+}

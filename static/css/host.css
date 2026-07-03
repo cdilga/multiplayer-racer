@@ -30,9 +30,9 @@
     --radius-lg: 1.25rem;
     --radius-full: 9999px;
 
-    --glow-cyan: 0 0 24px rgba(76, 201, 240, 0.5);
-    --glow-green: 0 0 24px rgba(0, 255, 136, 0.5);
-    --glow-pink: 0 0 24px rgba(247, 37, 133, 0.5);
+    --glow-cyan: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
+    --glow-green: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
+    --glow-pink: var(--shadow-sticker, 2px 2px 0 #14110f); /* de-neon 5k3.25 */
 
     --transition: 200ms ease;
 
@@ -346,7 +346,7 @@ button:disabled {
     color: white;
     padding: 15px;
     border-radius: 5px;
-    font-family: monospace;
+    font-family: var(--font-mono, monospace);
     font-size: 12px;
     max-height: 90vh;
     overflow-y: auto;
@@ -494,7 +494,7 @@ button:disabled {
     overflow-y: auto;
     box-sizing: border-box;
     display: none;
-    font-family: monospace;
+    font-family: var(--font-mono, monospace);
     font-size: 12px;
     border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -702,3 +702,90 @@ button:disabled {
 .profile-input::placeholder {
     color: rgba(255, 255, 255, 0.5);
 } 
+
+/* ==========================================================================
+   Skip Bin Arcade shared UI foundation (br-skip-bin-arcade-design-language-5k3.25, slice A)
+   Type system (2 typefaces) + sticker-chrome tokens + shared grain overlay.
+   Mirrored across host.css / player.css / landing.css by the repo's token
+   convention. Additive only — existing tokens are untouched so nothing breaks;
+   component adoption + de-glass is the deferred slice C.
+   ========================================================================== */
+
+/* --- 2 typefaces, self-hosted (no CDN). local()-only sources = zero network
+   fetch and no 404s. To ship exact bundled faces, drop woff2 into
+   /static/assets/fonts and add url('/static/assets/fonts/<file>.woff2')
+   BEFORE the local() fallbacks. See static/assets/fonts/README.md. --- */
+@font-face {
+    font-family: 'SkipBinDisplay';   /* chunky condensed camcorder display face */
+    src: url('/static/assets/fonts/skip-bin-display.woff2') format('woff2'),
+         local('Oswald'), local('Bebas Neue'), local('Anton'),
+         local('Arial Narrow Bold'), local('Impact');
+    font-weight: 700;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'SkipBinBody';      /* legible HUD/body face */
+    src: url('/static/assets/fonts/skip-bin-body.woff2') format('woff2'),
+         local('Inter'), local('Helvetica Neue'), local('Segoe UI'), local('Roboto');
+    font-weight: 400;
+    font-display: swap;
+}
+
+:root {
+    /* The two brand typefaces (the "one type system"). */
+    --font-display: 'SkipBinDisplay', 'Arial Narrow', 'Segoe UI', sans-serif;
+    --font-body: 'SkipBinBody', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* Functional companion for tabular HUD numerals (part of the body role,
+       not a third brand face). */
+    --font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', 'Consolas', monospace;
+    /* Minimum legible body size (readability law). */
+    --font-body-min-size: 14px;
+
+    /* Sticker chrome: flat, matte, hard ink borders, tightened radii, hard
+       (non-blur) offset shadow. Replaces glass/soft-glow for the lo-fi look. */
+    --ink: #14110f;
+    --sticker-surface: #16213e;      /* opaque matte panel (not translucent) */
+    --sticker-surface-2: #1f2b4d;
+    --border-ink: 2px solid var(--ink);
+    --radius-sticker: 4px;           /* tightened from --radius-md 0.75rem */
+    --shadow-sticker: 2px 2px 0 var(--ink);
+    --glow-soft: none;               /* de-emphasized soft glow (was --glow-cyan) */
+
+    /* Shared grain overlay knobs. */
+    --sb-grain-opacity: 0.06;
+}
+
+/* --- Shared camcorder grain overlay. Full-frame, never steals input, sits
+   above the world canvas but below interactive HUD (which uses higher z).
+   Procedural SVG noise (data: URI, no fetch) matching the 5k3.8 grain language.
+   Animated in discrete steps() ticks (camcorder), off under reduce-effects. --- */
+.sb-grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: var(--sb-grain-opacity, 0.06);
+    mix-blend-mode: overlay;
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation: sb-grain-shift 0.5s steps(1) infinite;
+}
+@keyframes sb-grain-shift {
+    0%   { background-position: 0 0; }
+    25%  { background-position: -40px 30px; }
+    50%  { background-position: 60px -20px; }
+    75%  { background-position: -30px -50px; }
+    100% { background-position: 20px 40px; }
+}
+/* Reduce-effects / a11y: no animation, and fully removable via the JS module. */
+@media (prefers-reduced-motion: reduce) {
+    .sb-grain-overlay { animation: none; }
+}
+.sb-grain-overlay[data-enabled="false"],
+.reduce-effects .sb-grain-overlay {
+    display: none;
+}
+
+/* 5k3.25: unify legacy token onto the brand body face (one type system). */
+:root { --font-sans: var(--font-body); }

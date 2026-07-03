@@ -1,0 +1,133 @@
+{
+  "bead": "br-skip-bin-arcade-design-language-5k3.39",
+  "config": {
+    "targetFps": 60,
+    "downFps": 50,
+    "upFps": 58,
+    "downDebounce": 6,
+    "upDebounce": 12,
+    "resStep": 0.1,
+    "minResolutionScale": 0.5
+  },
+  "tiers": [
+    {
+      "name": "native",
+      "resolutionScale": 1
+    },
+    {
+      "name": "balanced",
+      "resolutionScale": 0.85
+    },
+    {
+      "name": "degraded",
+      "resolutionScale": 0.7
+    },
+    {
+      "name": "fallback",
+      "resolutionScale": 0.55
+    }
+  ],
+  "hardwareMatrix": [
+    {
+      "caps": {
+        "cores": 8,
+        "deviceMemory": 8
+      },
+      "tierIndex": 0
+    },
+    {
+      "caps": {
+        "cores": 4,
+        "deviceMemory": 4
+      },
+      "tierIndex": 1
+    },
+    {
+      "caps": {
+        "cores": 4,
+        "deviceMemory": 4,
+        "remote": true
+      },
+      "tierIndex": 2
+    },
+    {
+      "caps": {
+        "cores": 2,
+        "deviceMemory": 2
+      },
+      "tierIndex": 3
+    },
+    {
+      "caps": {
+        "softwareGpu": true
+      },
+      "tierIndex": 3
+    }
+  ],
+  "timeline": [
+    {
+      "i": 0,
+      "fps": 120,
+      "action": "fast_pending",
+      "tier": "native",
+      "tierIndex": 0,
+      "resolutionScale": 1
+    },
+    {
+      "i": 15,
+      "fps": 22,
+      "action": "tier_down",
+      "tier": "balanced",
+      "tierIndex": 1,
+      "resolutionScale": 0.85
+    },
+    {
+      "i": 21,
+      "fps": 22,
+      "action": "tier_down",
+      "tier": "degraded",
+      "tierIndex": 2,
+      "resolutionScale": 0.7
+    },
+    {
+      "i": 27,
+      "fps": 22,
+      "action": "tier_down",
+      "tier": "fallback",
+      "tierIndex": 3,
+      "resolutionScale": 0.55
+    },
+    {
+      "i": 33,
+      "fps": 22,
+      "action": "res_down",
+      "tier": "fallback",
+      "tierIndex": 3,
+      "resolutionScale": 0.5
+    },
+    {
+      "i": 53,
+      "fps": 130,
+      "action": "res_up",
+      "tier": "fallback",
+      "tierIndex": 3,
+      "resolutionScale": 0.55
+    },
+    {
+      "i": 65,
+      "fps": 130,
+      "action": "tier_up",
+      "tier": "degraded",
+      "tierIndex": 2,
+      "resolutionScale": 0.7
+    },
+    {
+      "i": 77,
+      "fps": 130,
+      "action": "tier_up",
+      "tier": "balanced",
+      "tierIndex": 1,
+      "resolutionScale": 0.85
+    }
+  ]
+}

@@ -94,6 +94,7 @@
     </script>
 </head>
 <body>
+    <div class="sb-grain-overlay" aria-hidden="true"></div>
     <a class="skip-link" href="#main">Skip to main content</a>
 
     <!-- ============================================================
@@ -132,18 +133,18 @@
         <section class="hero">
             <div class="container hero__grid">
                 <div class="hero__copy">
-                    <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Couch party game · No installs</span>
+                    <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Skip Bin Arcade · No installs</span>
                     <h1 class="hero__title">
                         <span class="gradient" data-testid="hero-title">Joystick Jammers</span>
                     </h1>
                     <p class="hero__tagline" data-testid="tagline">
-                        Your phone is the controller. Your TV is the arena. Race, ram, and wreck your friends — straight from the browser.
+                        Your TV is the grimy arena. Phones are the controllers. Open a room, scan in, and start racing before the couch gets cold.
                     </p>
 
                     <div class="hero__ctas">
                         <!-- Primary CTA: navigates to /host (big-screen host) -->
                         <a class="btn btn--primary btn--lg" href="/host" data-cta="host" data-testid="host-cta">
-                            ▶ Host Now
+                            Host Now
                         </a>
 
                         <!-- Join box: 4-letter room code -> /player?room=CODE -->
@@ -172,65 +173,13 @@
                     </p>
                 </div>
 
-                <!-- Hero visual: self-contained CSS/SVG arcade scene -->
-                <div class="hero__visual" aria-hidden="true">
-                    <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
-                        <defs>
-                            <linearGradient id="screenGlow" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0" stop-color="#1a2a4e"/>
-                                <stop offset="1" stop-color="#0d1429"/>
-                            </linearGradient>
-                            <linearGradient id="carCyan" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0" stop-color="#4cc9f0"/>
-                                <stop offset="1" stop-color="#4361ee"/>
-                            </linearGradient>
-                            <linearGradient id="carPink" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0" stop-color="#f72585"/>
-                                <stop offset="1" stop-color="#b5179e"/>
-                            </linearGradient>
-                        </defs>
-
-                        <g class="float">
-                            <!-- Big-screen TV bezel -->
-                            <rect x="40" y="30" width="320" height="200" rx="14" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="2"/>
-                            <rect x="52" y="42" width="296" height="176" rx="8" fill="url(#screenGlow)"/>
-
-                            <!-- Perspective track lines (animated dash = sense of speed) -->
-                            <line class="dash" x1="200" y1="210" x2="120" y2="60" stroke="#4cc9f0" stroke-width="2" opacity="0.5"/>
-                            <line class="dash" x1="200" y1="210" x2="280" y2="60" stroke="#4cc9f0" stroke-width="2" opacity="0.5"/>
-                            <line class="dash" x1="200" y1="210" x2="200" y2="55" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
-
-                            <!-- Cyan racer -->
-                            <g transform="translate(120 150) rotate(-8)">
-                                <rect x="-26" y="-12" width="52" height="24" rx="7" fill="url(#carCyan)"/>
-                                <rect x="-12" y="-9" width="24" height="11" rx="3" fill="#0a0f1f" opacity="0.7"/>
-                                <circle cx="-16" cy="14" r="6" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="1.5"/>
-                                <circle cx="16" cy="14" r="6" fill="#0a0f1f" stroke="#4cc9f0" stroke-width="1.5"/>
-                            </g>
-
-                            <!-- Pink racer -->
-                            <g transform="translate(250 175) rotate(6)">
-                                <rect x="-26" y="-12" width="52" height="24" rx="7" fill="url(#carPink)"/>
-                                <rect x="-12" y="-9" width="24" height="11" rx="3" fill="#0a0f1f" opacity="0.7"/>
-                                <circle cx="-16" cy="14" r="6" fill="#0a0f1f" stroke="#f72585" stroke-width="1.5"/>
-                                <circle cx="16" cy="14" r="6" fill="#0a0f1f" stroke="#f72585" stroke-width="1.5"/>
-                            </g>
-
-                            <!-- Floating weapon pickup -->
-                            <g transform="translate(200 90)">
-                                <rect x="-12" y="-12" width="24" height="24" rx="6" fill="#00ff88" opacity="0.9"/>
-                                <text x="0" y="6" font-size="16" text-anchor="middle" fill="#0a0f1f" font-weight="bold">★</text>
-                            </g>
-
-                            <!-- Phone controller in foreground -->
-                            <g transform="translate(300 235) rotate(-12)">
-                                <rect x="-22" y="-40" width="44" height="80" rx="9" fill="#16213e" stroke="#00ff88" stroke-width="2"/>
-                                <rect x="-15" y="-30" width="30" height="44" rx="4" fill="#0a0f1f"/>
-                                <circle cx="0" cy="26" r="7" fill="none" stroke="#00ff88" stroke-width="2"/>
-                            </g>
-                        </g>
-                    </svg>
-                </div>
+                <figure class="hero__visual" data-testid="gameplay-visual">
+                    <img src="/static/assets/landing-gameplay.gif" alt="Joystick Jammers gameplay with cars racing on the shared host screen" data-testid="gameplay-image">
+                    <figcaption>
+                        <span class="rec-dot" aria-hidden="true"></span>
+                        Actual host-screen gameplay
+                    </figcaption>
+                </figure>
             </div>
         </section>
 
@@ -242,17 +191,17 @@
                 <div class="section__head">
                     <p class="section__kicker">Up and running in seconds</p>
                     <h2 class="section__title">How it works</h2>
-                    <p class="section__sub">No setup, no accounts. From cold to chaos in three steps.</p>
+                    <p class="section__sub">No setup, no accounts. One host screen, phones as controllers, straight into the lobby.</p>
                 </div>
                 <ol class="steps">
                     <li class="step">
                         <span class="step__num">1</span>
-                        <h3>Open on a big screen</h3>
+                        <h3>Open the host</h3>
                         <p>Launch the host on a TV or laptop. A room code and QR code pop up instantly.</p>
                     </li>
                     <li class="step">
                         <span class="step__num">2</span>
-                        <h3>Players scan with phones</h3>
+                        <h3>Scan with phones</h3>
                         <p>Everyone scans the QR or types the 4-letter code. Their phone becomes the controller.</p>
                     </li>
                     <li class="step">
@@ -272,7 +221,7 @@
                 <div class="section__head">
                     <p class="section__kicker">Two ways to play</p>
                     <h2 class="section__title">Race or Demolition Derby</h2>
-                    <p class="section__sub">Pick your poison. Both run on procedural arenas with real 3D physics.</p>
+                    <p class="section__sub">Two battered VHS boxes, one room full of bad driving decisions.</p>
                 </div>
                 <div class="modes">
                     <article class="mode-card mode-card--race">
@@ -282,7 +231,7 @@
                         <ul>
                             <li>Lap timing &amp; live positions</li>
                             <li>8 weapon &amp; power-up pickups</li>
-                            <li>Procedural tracks every game</li>
+                            <li>Foggy procedural tracks</li>
                         </ul>
                     </article>
                     <article class="mode-card mode-card--derby">
@@ -291,7 +240,7 @@
                         <p>Ram, flip, and obliterate everyone else. The arena shrinks and the weapons escalate until one driver survives.</p>
                         <ul>
                             <li>Best-of-3 rounds</li>
-                            <li>Shrinking arena pressure</li>
+                            <li>Shrinking danger wall</li>
                             <li>Escalating weapon drops</li>
                         </ul>
                     </article>
@@ -307,7 +256,7 @@
                 <div class="section__head">
                     <p class="section__kicker">Grab &amp; deploy</p>
                     <h2 class="section__title">8 weapons &amp; power-ups</h2>
-                    <p class="section__sub">Pickups litter every arena. Use them wisely — or just cause mayhem.</p>
+                    <p class="section__sub">Loud pickups against a grimy world. Use them wisely, or just cause mayhem.</p>
                 </div>
                 <div class="weapons">
                     <span class="weapon"><span class="weapon__icon" aria-hidden="true">🚀</span> Missile</span>
@@ -349,8 +298,8 @@
                     </div>
                     <div class="feature">
                         <div class="feature__icon" aria-hidden="true">✨</div>
-                        <h3>Real 3D physics</h3>
-                        <p>Three.js visuals with bloom and a proper physics engine under the hood.</p>
+                        <h3>Lo-fi 3D chaos</h3>
+                        <p>Chunky cars, foggy arenas, and a proper physics engine under the hood.</p>
                     </div>
                 </div>
             </div>
@@ -362,9 +311,9 @@
         <section class="section">
             <div class="container">
                 <div class="cta-band">
-                    <h2>Ready to jam?</h2>
+                    <h2>Start the host</h2>
                     <p>Fire up the host on the nearest big screen and hand out the code.</p>
-                    <a class="btn btn--primary btn--lg" href="/host" data-cta="host" data-testid="cta-band-host">▶ Host Now</a>
+                    <a class="btn btn--primary btn--lg" href="/host" data-cta="host" data-testid="cta-band-host">Host Now</a>
                 </div>
             </div>
         </section>

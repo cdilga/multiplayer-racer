@@ -2,7 +2,7 @@ import { test, expect, waitForRoomCode, joinGameAsPlayer, startGameFromHost, got
 
 test.describe('Dynamic Camera Zoom', () => {
 
-    test('should keep both vehicles visible when positioned far apart', async ({ hostPage, playerPage, playerContext }) => {
+    test('should keep both vehicles visible when positioned far apart', async ({ hostPage, playerPage, browser }) => {
         // Host creates room
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -11,8 +11,12 @@ test.describe('Dynamic Camera Zoom', () => {
         await joinGameAsPlayer(playerPage, roomCode, 'Player1');
         await expect(hostPage.locator('#player-list')).toContainText('Player1', { timeout: 30000 });
 
-        // Create a second player page for Player 2
-        const player2Page = await playerContext.newPage();
+        // Player 2 must be a DISTINCT device: its own browser context so it gets
+        // its own localStorage (and thus a distinct client_instance_id). Sharing a
+        // context reuses Player1's client instance, which the seat-identity layer
+        // correctly treats as a same-device rejoin of Player1's seat.
+        const player2Context = await browser.newContext();
+        const player2Page = await player2Context.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'Player2');
         await expect(hostPage.locator('#player-list')).toContainText('Player2', { timeout: 30000 });
 
@@ -100,7 +104,7 @@ test.describe('Dynamic Camera Zoom', () => {
         await player2Page.close();
     });
 
-    test('should adjust camera FOV/zoom when vehicles spread apart', async ({ hostPage, playerPage, playerContext }) => {
+    test('should adjust camera FOV/zoom when vehicles spread apart', async ({ hostPage, playerPage, browser }) => {
         // Host creates room
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -110,7 +114,8 @@ test.describe('Dynamic Camera Zoom', () => {
         await expect(hostPage.locator('#player-list')).toContainText('ZoomTest1', { timeout: 30000 });
 
         // Create a second player
-        const player2Page = await playerContext.newPage();
+        const player2Context = await browser.newContext();
+        const player2Page = await player2Context.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'ZoomTest2');
         await expect(hostPage.locator('#player-list')).toContainText('ZoomTest2', { timeout: 30000 });
 
@@ -190,7 +195,7 @@ test.describe('Dynamic Camera Zoom', () => {
         await player2Page.close();
     });
 
-    test('should center camera on average position of all vehicles', async ({ hostPage, playerPage, playerContext }) => {
+    test('should center camera on average position of all vehicles', async ({ hostPage, playerPage, browser }) => {
         // Host creates room
         await gotoHost(hostPage);
         const roomCode = await waitForRoomCode(hostPage);
@@ -200,7 +205,8 @@ test.describe('Dynamic Camera Zoom', () => {
         await expect(hostPage.locator('#player-list')).toContainText('CenterTest1', { timeout: 30000 });
 
         // Create a second player
-        const player2Page = await playerContext.newPage();
+        const player2Context = await browser.newContext();
+        const player2Page = await player2Context.newPage();
         await joinGameAsPlayer(player2Page, roomCode, 'CenterTest2');
         await expect(hostPage.locator('#player-list')).toContainText('CenterTest2', { timeout: 30000 });
 

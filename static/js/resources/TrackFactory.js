@@ -13,6 +13,8 @@
 import { generateTrackConfig } from './ProceduralTrackGenerator.js';
 import { buildDunesGrid } from './terrain.js';
 import { buildBowlGrid } from './bowlProfile.js';
+import { MaterialFactory } from './MaterialFactory.js';
+import { PropKit } from './PropKit.js';
 
 class TrackFactory {
     /**
@@ -28,6 +30,10 @@ class TrackFactory {
 
         // Cache for track configs
         this.configCache = new Map();
+
+        // Material factory for lo-fi retro materials
+        this.materialFactory = new MaterialFactory();
+        this.propKit = new PropKit(this.materialFactory);
     }
 
     /**
@@ -68,6 +74,10 @@ class TrackFactory {
         const barriers = this._createBarriers(config);
         barriers.forEach(barrier => trackGroup.add(barrier));
 
+        // Create decorative props
+        const decorativeProps = this._createVisualProps(config);
+        decorativeProps.forEach(prop => trackGroup.add(prop));
+
         // Create track data object
         const track = {
             id: config.id,
@@ -75,6 +85,7 @@ class TrackFactory {
             mesh: trackGroup,
             ground: ground,
             barriers: barriers,
+            props: decorativeProps,
 
             // Spawn points
             spawnPositions: config.spawn.positions,
@@ -103,10 +114,9 @@ class TrackFactory {
         const size = visual.size || 200;
 
         const geometry = new THREE.PlaneGeometry(size, size);
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: 0.9,
-            side: THREE.DoubleSide
+            type: 'toon'
         });
 
         const ground = new THREE.Mesh(geometry, material);
@@ -168,10 +178,9 @@ class TrackFactory {
         trackShape.holes.push(holePath);
 
         const trackGeometry = new THREE.ShapeGeometry(trackShape, segments);
-        const trackMaterial = new THREE.MeshStandardMaterial({
+        const trackMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.9,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
         });
@@ -219,10 +228,9 @@ class TrackFactory {
         trackShape.holes.push(holePath);
 
         const trackGeometry = new THREE.ShapeGeometry(trackShape);
-        const trackMaterial = new THREE.MeshStandardMaterial({
+        const trackMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.9,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
         });
@@ -245,12 +253,12 @@ class TrackFactory {
         const segments = 8;
 
         const arenaGeometry = new THREE.PlaneGeometry(size, size, segments, segments);
-        const arenaMaterial = new THREE.MeshStandardMaterial({
+        const arenaMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.9,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
+        
         });
 
         const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
@@ -267,27 +275,28 @@ class TrackFactory {
      * @private
      */
     _createBowlArena(geometry, visual) {
-        // One revolved profile (bowlProfile.js) builds this visual surface from
-        // the same vertex grid the physics trimesh uses, so what you see is
-        // what you collide with. The old path built a CircleGeometry with
-        // setZ(-height); after the -90deg rotation that was an inverted dome
-        // with no matching collider and a hard rim crease.
+        // ONE revolved profile (bowlProfile.js) builds this visual surface from
+        // the SAME vertex grid the physics trimesh uses, so what you see is what
+        // you collide with. The old path built a CircleGeometry with
+        // `setZ(-height)` -> after the -90deg rotation that was an inverted DOME
+        // (raised centre) with no matching collider, and its rim dropped below
+        // the separate cylinder wall, leaving a hard crease that caught cars.
+        // The grid is already world-space (y up), so no axis rotation is needed.
         const { vertices, indices } = buildBowlGrid(geometry);
 
-        const arenaGeometry = new THREE.BufferGeometry();
-        arenaGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        arenaGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
-        arenaGeometry.computeVertexNormals();
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geo.setIndex(new THREE.BufferAttribute(indices, 1));
+        geo.computeVertexNormals();
 
-        const arenaMaterial = new THREE.MeshStandardMaterial({
+        const arenaMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.85,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
         });
 
-        const arenaMesh = new THREE.Mesh(arenaGeometry, arenaMaterial);
+        const arenaMesh = new THREE.Mesh(geo, arenaMaterial);
         arenaMesh.position.y = 0.02;
         arenaMesh.receiveShadow = true;
         arenaMesh.userData = { isTrackSurface: true, isBowl: true };
@@ -308,12 +317,12 @@ class TrackFactory {
         geo.setIndex(new THREE.BufferAttribute(indices, 1));
         geo.computeVertexNormals();
 
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.95,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
+        
         });
 
         const mesh = new THREE.Mesh(geo, material);
@@ -337,8 +346,9 @@ class TrackFactory {
         const slantLen = Math.sqrt(length * length + rise * rise);
 
         const geo = new THREE.BoxGeometry(width, thickness, slantLen);
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color || '#888066'),
+            type: 'toon',
             roughness: visual.roughness || 0.7,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
@@ -404,12 +414,12 @@ class TrackFactory {
         trackGeometry.setIndex(indices);
         trackGeometry.computeVertexNormals();
 
-        const trackMaterial = new THREE.MeshStandardMaterial({
+        const trackMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.85,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
+        
         });
 
         const trackMesh = new THREE.Mesh(trackGeometry, trackMaterial);
@@ -451,12 +461,12 @@ class TrackFactory {
         wallGeometry.setIndex(indices);
         wallGeometry.computeVertexNormals();
 
-        const wallMaterial = new THREE.MeshStandardMaterial({
+        const wallMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
-            roughness: visual.roughness || 0.6,
-            side: THREE.DoubleSide,
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0.5
+        
         });
 
         const wall = new THREE.Mesh(wallGeometry, wallMaterial);
@@ -482,8 +492,9 @@ class TrackFactory {
 
         const lineGeometry = new THREE.PlaneGeometry(length, 2);
         lineGeometry.rotateX(-Math.PI / 2);
-        const lineMaterial = new THREE.MeshStandardMaterial({
+        const lineMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color || '#ffffff'),
+            type: 'toon',
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0xffffff,
             emissiveIntensity: visual.emissiveIntensity || 0.8,
             side: THREE.DoubleSide
@@ -595,6 +606,32 @@ class TrackFactory {
     }
 
     /**
+     * Create decorative props from visual.props entries.
+     * @private
+     */
+    _createVisualProps(config) {
+        const visual = config?.visual || {};
+        const propsConfig = visual.props;
+
+        if (!Array.isArray(propsConfig)) {
+            return [];
+        }
+
+        const palette = visual.palette || {};
+        const props = this.propKit.createPropsList(propsConfig, palette);
+        return props.map((prop) => {
+            if (!prop) return null;
+            prop.userData = {
+                ...prop.userData,
+                palette: palette,
+                source: 'PropKit',
+                isVisualProp: true
+            };
+            return prop;
+        }).filter((prop) => prop);
+    }
+
+    /**
      * Create square wall group for a derby arena.
      * @private
      */
@@ -602,15 +639,17 @@ class TrackFactory {
         const wallGroup = new THREE.Group();
         wallGroup.userData = { isBarrier: true, barrierType: 'square-wall' };
 
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.65,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0,
             side: THREE.DoubleSide
         });
-        const rimMaterial = new THREE.MeshStandardMaterial({
+        const rimMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.65,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: (visual.emissiveIntensity || 0) * 1.4
@@ -656,8 +695,9 @@ class TrackFactory {
         const wallGroup = new THREE.Group();
         wallGroup.userData = { isBarrier: true, barrierType: 'bowl-wall' };
 
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.7,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0,
@@ -688,8 +728,9 @@ class TrackFactory {
 
         // Add a rim at the top for visibility
         const rimGeometry = new THREE.TorusGeometry(topRadius, thickness / 2, 8, segments);
-        const rimMaterial = new THREE.MeshStandardMaterial({
+        const rimMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.7,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: (visual.emissiveIntensity || 0) * 1.5
@@ -710,8 +751,9 @@ class TrackFactory {
         const barrierGroup = new THREE.Group();
         barrierGroup.userData = { isBarrier: true, barrierType: type };
 
-        const material = new THREE.MeshStandardMaterial({
+        const material = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.7,
             emissive: visual.emissive ? this._parseColor(visual.emissive) : 0x000000,
             emissiveIntensity: visual.emissiveIntensity || 0
@@ -737,8 +779,9 @@ class TrackFactory {
             radius + thickness / 2,
             64
         );
-        const topMaterial = new THREE.MeshStandardMaterial({
+        const topMaterial = this._createWorldMaterial({
             color: this._parseColor(visual.color),
+            type: 'toon',
             roughness: visual.roughness || 0.7,
             side: THREE.DoubleSide
         });
@@ -785,6 +828,20 @@ class TrackFactory {
             this.configCache.set(trackId, config);
         }
         return config.physics;
+    }
+
+    _createWorldMaterial(options = {}, role = 'world') {
+        return this.materialFactory.createMaterial({
+            ...options,
+            loFiWarp: {
+                role,
+                eligible: true,
+                enabled: false,
+                vertexSnapIntensity: 0,
+                affineIntensity: 0,
+                snapGridSize: 0.5
+            }
+        });
     }
 
     /**

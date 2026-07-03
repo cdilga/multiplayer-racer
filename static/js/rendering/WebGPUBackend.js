@@ -74,10 +74,13 @@ export default class WebGPUBackend extends RendererBackend {
             // Capture required features if using any
             if (adapter.features) {
                 this.diagnostics.requiredFeatures = Array.from(adapter.features);
+                this.diagnostics.supportedFeatures = Array.from(adapter.features);
             }
 
             this.diagnostics.available = true;
             this.diagnostics.reason = null;
+            this.diagnostics.activeApi = 'webgpu';
+            this.diagnostics.nativeWebGPU = true;
             return true;
         } catch (error) {
             this.setUnavailableReason(`WebGPU detection error: ${error.message}`);
@@ -88,38 +91,48 @@ export default class WebGPUBackend extends RendererBackend {
     /**
      * Create a renderer.
      *
-     * WebGPU is detected as *available* on Chrome, but the WebGPU-native path
-     * below is not implemented yet. Rather than throw (which previously killed
-     * the host with a blank "Something went wrong" screen — the "falling back to
-     * WebGL" message was a lie, no fallback happened), we perform a real
-     * creation-time fallback: construct a WebGLBackend and use its renderer.
-     *
-     * When the native WebGPU path is enabled (uncomment below), the same
-     * try/catch keeps the WebGL safety net for adapter/device/runtime failures.
-     *
      * @param {Object} options - Three.js renderer options
      * @param {Object} [deps] - injectable deps for testing
+     * @param {Function} [deps.loadWebGPUModule] - async () => three/webgpu module
      * @param {Function} [deps.loadWebGLBackend] - async () => WebGLBackend class
      * @returns {Promise<THREE.Renderer>}
      */
     async createRenderer(options = {}, deps = {}) {
         try {
-            // TODO: enable when Three.js WebGPURenderer is stable + well-tested.
-            /*
-            if (!this.device) {
-                throw new Error('WebGPU device not initialized');
+            const loadWebGPUModule = deps.loadWebGPUModule || (async () => import('three/webgpu'));
+            const webgpuModule = await loadWebGPUModule();
+            const WebGPURenderer = webgpuModule.WebGPURenderer || webgpuModule.default;
+            if (!WebGPURenderer) {
+                throw new Error('three/webgpu did not export WebGPURenderer');
             }
-            const { WebGPURenderer } = await import('three/examples/jsm/renderers/webgpu/WebGPURenderer.js');
-            const renderer = new WebGPURenderer({ device: this.device, ...options });
-            this.renderer = renderer;
-            return renderer;
-            */
 
-            throw new Error('WebGPU renderer not yet implemented');
+            const renderer = new WebGPURenderer({
+                ...options,
+                forceWebGL: false,
+                ...(this.device ? { device: this.device } : {})
+            });
+            if (typeof renderer.init === 'function') {
+                await renderer.init();
+            }
+
+            if (renderer.backend && renderer.backend.isWebGPUBackend !== true) {
+                throw new Error('Three WebGPURenderer initialized a non-WebGPU fallback backend');
+            }
+
+            this.renderer = renderer;
+            this.name = 'WebGPU';
+            this.diagnostics.backend = 'WebGPU';
+            this.diagnostics.available = true;
+            this.diagnostics.reason = null;
+            this.diagnostics.fallback = null;
+            this.diagnostics.activeApi = 'webgpu';
+            this.diagnostics.nativeWebGPU = true;
+            this.diagnostics.rendererType = renderer?.isWebGPURenderer
+                ? 'WebGPURenderer'
+                : renderer?.constructor?.name || 'WebGPURenderer';
+            this.diagnostics.rendererInitialized = renderer?.initialized ?? true;
+            return renderer;
         } catch (error) {
-            // Creation-time fallback to WebGL. WebGPU was detected (isAvailable)
-            // but cannot actually produce a renderer here, so swap to WebGL2/WebGL
-            // so the host renders instead of crashing.
             return this._fallbackToWebGL(options, error, deps);
         }
     }
@@ -147,10 +160,13 @@ export default class WebGPUBackend extends RendererBackend {
         // Reflect the real active backend in name + diagnostics (RenderSystem
         // logs `${backend.name}` and the bug reporter reads diagnostics).
         this.name = 'WebGL (WebGPU fallback)';
-        this.diagnostics.backend = webgl.name;
+        this.diagnostics.backend = webgl.diagnostics?.backend || webgl.name;
+        this.diagnostics.activeApi = webgl.diagnostics?.activeApi || 'webgl';
+        this.diagnostics.rendererType = webgl.diagnostics?.rendererType || renderer?.constructor?.name || null;
+        this.diagnostics.nativeWebGPU = false;
         this.diagnostics.fallback = {
             from: 'WebGPU',
-            to: webgl.name,
+            to: webgl.diagnostics?.backend || webgl.name,
             reason: reason && reason.message ? reason.message : String(reason)
         };
         if (webgl.diagnostics) {

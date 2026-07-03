@@ -1,0 +1,32 @@
+{
+  "cases": {
+    "light": {
+      "resolved": { "impulse": 0.12000000000000002, "severity": 0.2, "source": "light" },
+      "samples": [0.12, 0.0696, 0.040368, 0.023413, 0.01358, 0.007876, 0.004568, 0.00265, 0.001537, 0.000891, 0]
+    },
+    "medium": {
+      "resolved": { "impulse": 0.3383333333333334, "severity": 0.55, "source": "medium" },
+      "samples": [0.338333, 0.196233, 0.113815, 0.066013, 0.038287, 0.022207, 0.01288, 0.00747, 0.004333, 0.002513, 0.001458]
+    },
+    "heavy": {
+      "resolved": { "impulse": 0.6342857142857143, "severity": 0.9, "source": "heavy" },
+      "samples": [0.634286, 0.367886, 0.213374, 0.123757, 0.071779, 0.041632, 0.024146, 0.014005, 0.008123, 0.004711, 0.002733]
+    },
+    "elimination": {
+      "resolved": { "impulse": 0.72, "severity": 1, "source": "elimination" },
+      "samples": [0.72, 0.4176, 0.242208, 0.140481, 0.081479, 0.047258, 0.027409, 0.015897, 0.009221, 0.005348, 0.003102]
+    }
+  },
+  "accumulationCap": {
+    "impact": 0.95,
+    "peakImpact": 0.95,
+    "impactCap": 0.95,
+    "lastSource": "destroyed"
+  },
+  "hitStopPunchSamples": [
+    { "frame": 1, "z": -0.8280000000000001, "y": 0.09000000000000001, "physicsTimeScale": 1 },
+    { "frame": 2, "z": -0.368, "y": 0.04, "physicsTimeScale": 1 },
+    { "frame": 3, "z": -0.092, "y": 0.01, "physicsTimeScale": 1 },
+    { "frame": 4, "z": 0, "y": 0, "physicsTimeScale": 1 }
+  ]
+}

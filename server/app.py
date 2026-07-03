@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, g
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, g, make_response
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from functools import wraps
 import os
@@ -97,6 +97,19 @@ except ImportError:  # pragma: no cover - import path shim
         update_seat_name,
     )
     from server.telemetry import ServerTelemetry
+
+# Central bug-report store (woq.4). The public request path only sanitizes +
+# appends; it never imports or invokes the maintainer drainer (triage.py).
+try:
+    from report_store import (
+        sanitize_report, validate_report, is_honeypot, append_report,
+        MAX_TOTAL_PAYLOAD_BYTES,
+    )
+except ImportError:  # pragma: no cover - package import path shim
+    from server.report_store import (
+        sanitize_report, validate_report, is_honeypot, append_report,
+        MAX_TOTAL_PAYLOAD_BYTES,
+    )
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -996,6 +1009,19 @@ def player():
     room_code = request.args.get('room', '')
     return render_template('player/index.html', room_code=room_code)
 
+
+@app.route('/join/<room_code>')
+def join_room_deeplink(room_code):
+    """Deep-link join with the room in the path (woq.11).
+
+    The room lives in the path; ``via``/``intent``/``pair``/``reconnect`` query
+    params carry the explicit entry intent that the client-side
+    ``joinRouteResolver`` consumes — the join role is derived from typed route
+    state, never from user-agent sniffing. Serving the same player template keeps
+    Local phones controller/HUD-only; the resolver decides chooser vs direct bind.
+    """
+    return render_template('player/index.html', room_code=(room_code or '').upper())
+
 @app.route('/weapon-lab')
 def weapon_lab():
     """Serve the standalone weapon test lab (dev surface).
@@ -1554,6 +1580,7 @@ def end_game(data):
     logger.info(f"Game ended in room {room_code}")
 
 @socketio.on('mode_selected')
+@_instrument_socket_handler('mode_selected')
 def mode_selected(data):
     """Host broadcasts mode selection to all players. Requires valid host token and epoch."""
     if not isinstance(data, dict):
@@ -1628,6 +1655,7 @@ def handle_disconnect():
 
         disconnect_result = disconnect_binding(room_data, client_sid)
         if disconnect_result['status'] == 'host_lost':
+            server_telemetry.increment('jj_server_disconnects_total', labels={'cause': 'host', 'phase': room_data.get('phase', 'unknown')})
             payload = _room_phase_payload(room_code)
             payload['grace_seconds'] = HOST_LOSS_GRACE_SECONDS
             payload['last_snapshot_at'] = (room_data.get('last_snapshot') or {}).get('captured_at')
@@ -1649,6 +1677,14 @@ def handle_disconnect():
 
         if disconnect_result['status'] != 'seat_away':
             continue
+
+        server_telemetry.increment(
+            'jj_server_disconnects_total',
+            labels={
+                'cause': 'seat',
+                'can_reconnect': str(room_data.get('phase') in ACTIVE_ROOM_PHASES).lower(),
+            },
+        )
 
         seat = disconnect_result['seat']
         if room_data.get('phase') in ACTIVE_ROOM_PHASES:
@@ -1680,6 +1716,7 @@ def handle_disconnect():
         break
 
 @socketio.on('reset_player_position')
+@_instrument_socket_handler('reset_player_position')
 def handle_reset_position(data):
     """Handle resetting a player's position.
     Requires valid host token and epoch (destructive host action).
@@ -1728,6 +1765,7 @@ def handle_reset_position(data):
     }, to=game_rooms[room_code]['host_sid'])
             
 @socketio.on('weapon_fire')
+@_instrument_socket_handler('weapon_fire')
 def handle_weapon_fire(data):
     """Handle weapon fire event from player."""
     if not isinstance(data, dict):
@@ -1760,6 +1798,7 @@ def handle_weapon_fire(data):
     logger.debug(f"Player {seat['player_id']} fired weapon in room {room_code}")
 
 @socketio.on('request_car_reset')
+@_instrument_socket_handler('request_car_reset')
 def handle_request_car_reset(data):
     """Player asks the host to un-stick their car (reset to a safe spot)."""
     if not isinstance(data, dict):
@@ -1786,6 +1825,7 @@ def handle_request_car_reset(data):
     logger.info(f"Player {seat['player_id']} requested car reset in room {room_code}")
 
 @socketio.on('weapon_pickup')
+@_instrument_socket_handler('weapon_pickup')
 def handle_weapon_pickup(data):
     """Handle weapon pickup notification from host to player.
     Requires valid host token and epoch (not just host SID).
@@ -1828,6 +1868,7 @@ def handle_weapon_pickup(data):
     }, seat)
 
 @socketio.on('weapon_fired')
+@_instrument_socket_handler('weapon_fired')
 def handle_weapon_fired(data):
     """Handle weapon fired notification from host to player.
     Requires valid host token and epoch (not just host SID).
@@ -1867,6 +1908,7 @@ def handle_weapon_fired(data):
     }, seat)
 
 @socketio.on('update_player_name')
+@_instrument_socket_handler('update_player_name')
 def update_player_name(data):
     """Handle player name update."""
     if not isinstance(data, dict):
@@ -1978,6 +2020,55 @@ def health():
         'status': 'ok',
         'rooms': len(game_rooms)
     })
+
+
+# Central bug-report intake (woq.4). Public, sanitizing, and deliberately dumb:
+# it validates, scrubs, rate-limits, and appends to a bounded ndjson store. It
+# NEVER touches br/gh/shell — the maintainer drainer (triage.py) does that.
+REPORTS_STORE_PATH = os.environ.get(
+    'JJ_REPORTS_PATH',
+    os.path.join(os.path.dirname(__file__), '..', '.reports', 'reports.ndjson'),
+)
+REPORT_ALLOWED_ORIGIN = os.environ.get('JJ_REPORT_ALLOWED_ORIGIN', '*')
+_report_rate_limiter = RateLimiter(min_interval=2.0)  # per-IP, 1 report / 2s
+
+
+def _report_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = REPORT_ALLOWED_ORIGIN
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+
+@app.route('/report', methods=['POST', 'OPTIONS'])
+def submit_report():
+    if request.method == 'OPTIONS':
+        return _report_cors_headers(make_response('', 204))
+
+    if request.content_length and request.content_length > MAX_TOTAL_PAYLOAD_BYTES:
+        return _report_cors_headers(make_response(jsonify({'error': 'too_large'}), 413))
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return _report_cors_headers(make_response(jsonify({'error': 'invalid_payload'}), 400))
+
+    # Honeypot: silently accept (never store) a bot submission.
+    if is_honeypot(data):
+        return _report_cors_headers(make_response(jsonify({'status': 'ok'}), 200))
+
+    # Per-IP rate limit.
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr) or 'unknown'
+    if not _report_rate_limiter.allow(client_ip):
+        return _report_cors_headers(make_response(jsonify({'error': 'rate_limited'}), 429))
+
+    ok, reason = validate_report(data)
+    if not ok:
+        return _report_cors_headers(make_response(jsonify({'error': reason}), 400))
+
+    row = append_report(data, REPORTS_STORE_PATH, client_ip=client_ip)
+    return _report_cors_headers(
+        make_response(jsonify({'status': 'stored', 'clientReportId': row['clientReportId']}), 200)
+    )
 
 
 @app.route('/__test__/reset-rooms', methods=['POST'])

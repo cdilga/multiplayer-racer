@@ -20,6 +20,7 @@ class RoomCodeOverlayUI {
         this.roomCode = '';
         this.minimized = false;
         this.visible = false;
+        this.gameState = 'lobby';
 
         // Elements
         this.element = null;
@@ -74,14 +75,15 @@ class RoomCodeOverlayUI {
                 position: fixed;
                 bottom: 20px;
                 left: 20px;
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(5, 11, 24, 0.82);
                 border-radius: 12px;
-                padding: 15px;
+                padding: 14px 16px;
                 text-align: center;
-                z-index: 1000;
+                z-index: 40;
                 transition: all 0.3s ease;
-                border: 2px solid #4cc9f0;
-                opacity: 0.5;
+                border: 1px solid rgba(76, 201, 240, 0.55);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+                opacity: 0.78;
             }
 
             .room-code-overlay:hover {
@@ -93,8 +95,9 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay.minimized {
-                padding: 10px;
-                opacity: 0.4;
+                padding: 10px 12px;
+                border-radius: 10px;
+                opacity: 0.72;
             }
 
             .room-code-overlay.minimized:hover {
@@ -102,8 +105,8 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay .overlay-qr {
-                width: 120px;
-                height: 120px;
+                width: 108px;
+                height: 108px;
                 border-radius: 8px;
                 background: white;
                 display: block;
@@ -111,20 +114,21 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay.minimized .overlay-qr {
-                width: 100px;
-                height: 100px;
+                width: 72px;
+                height: 72px;
+                margin-bottom: 6px;
             }
 
             .room-code-overlay .overlay-code {
-                font-size: 1.4rem;
+                font-size: 1.1rem;
                 font-weight: bold;
                 color: #4cc9f0;
-                letter-spacing: 3px;
-                font-family: monospace;
+                letter-spacing: 0.18em;
+                font-family: var(--font-mono, monospace);
             }
 
             .room-code-overlay.minimized .overlay-code {
-                font-size: 1.1rem;
+                font-size: 0.95rem;
             }
 
             .room-code-overlay .overlay-label {
@@ -134,7 +138,7 @@ class RoomCodeOverlayUI {
             }
 
             .room-code-overlay.minimized .overlay-label {
-                font-size: 0.7rem;
+                font-size: 0.68rem;
                 color: #6d7a8e;
             }
         `;
@@ -148,24 +152,20 @@ class RoomCodeOverlayUI {
     _subscribeToEvents() {
         if (!this.eventBus) return;
 
-        // Hide during lobby - the lobby panel already shows a large QR code
         this.eventBus.on('game:lobby', () => {
-            this.hide();
+            this._setGameState('lobby');
         });
 
-        // Minimize during countdown/racing
         this.eventBus.on('game:countdown', () => {
-            this.minimize();
+            this._setGameState('countdown');
         });
 
         this.eventBus.on('game:racing', () => {
-            this.show();
-            this.minimize();
+            this._setGameState('racing');
         });
 
-        // Hide during results
         this.eventBus.on('game:results', () => {
-            this.hide();
+            this._setGameState('results');
         });
     }
 
@@ -181,7 +181,38 @@ class RoomCodeOverlayUI {
         if (this.qrImage) {
             this.qrImage.src = `/qrcode/${code}`;
         }
+        this._syncPresentation();
+    }
+
+    /**
+     * Track the host game state so the overlay only appears in active play.
+     * @private
+     * @param {string} state
+     */
+    _setGameState(state) {
+        this.gameState = state;
+        this._syncPresentation();
+    }
+
+    /**
+     * Apply the overlay state machine:
+     * lobby/results => hidden, countdown/racing => visible + minimized.
+     * @private
+     */
+    _syncPresentation() {
+        const shouldShow = this.roomCode && (
+            this.gameState === 'countdown' ||
+            this.gameState === 'racing'
+        );
+
+        if (!shouldShow) {
+            this.expand();
+            this.hide();
+            return;
+        }
+
         this.show();
+        this.minimize();
     }
 
     /**

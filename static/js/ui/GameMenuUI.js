@@ -151,7 +151,7 @@ class GameMenuUI {
                 padding: 15px;
                 min-width: 220px;
                 color: white;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
                 display: flex;
                 flex-direction: column;
                 gap: 8px;

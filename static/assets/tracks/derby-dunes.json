@@ -47,7 +47,24 @@
       "width": 0.5,
       "emissive": "#FFCC66",
       "emissiveIntensity": 0.6
-    }
+    },
+    "palette": {
+      "crate": "#cba77d",
+      "barrel": "#5d3f28",
+      "tyres": "#2a2a2a",
+      "cone": "#f4a45f",
+      "barrier": "#8f9396",
+      "ramp": "#5f8d67",
+      "sign": "#ffedc7",
+      "husk": "#76879b",
+      "drum": "#704d45",
+      "default": "#74624f"
+    },
+    "props": [
+      { "kind": "ramp", "x": 18, "z": -10, "paletteKey": "ramp", "size": 1.1, "rotationY": -0.3 },
+      { "kind": "husk", "x": -18, "z": 22, "paletteKey": "husk", "size": 1.2 },
+      { "kind": "drum", "x": 34, "z": -28, "paletteKey": "drum", "size": 1.0 }
+    ]
   },
   "spawn": {
     "positions": [
@@ -84,8 +101,7 @@
       "enabled": true,
       "startTime": 40,
       "rate": 0.6,
-      "minDiameter": 90,
-      "warningColor": "#FFAA44"
+      "minDiameter": 90
     }
   },
   "weapons": {
@@ -99,12 +115,13 @@
     "barrierRestitution": 0.4
   },
   "lighting": {
+    "mood": { "id": "toxic-dunes", "name": "Toxic Dunes" },
     "ambient": {
-      "color": "#FFE8C0",
+      "color": "#4B5A3A",
       "intensity": 0.45
     },
     "directional": {
-      "color": "#FFD9A0",
+      "color": "#7A4A2E",
       "intensity": 0.9,
       "position": { "x": 40, "y": 100, "z": 30 },
       "castShadow": true

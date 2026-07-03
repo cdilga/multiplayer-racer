@@ -392,4 +392,117 @@ describe('TelemetryClient', () => {
         expect(JSON.stringify(event)).not.toContain('ABCD');
         expect(JSON.stringify(event)).not.toContain('secret-token');
     });
+
+    it('captures player report/reset/reconnect signals for PostHog correlation with release/match ids', () => {
+        installWindow({ pathname: '/player', search: '?room=ABCD' });
+        const client = new TelemetryClient({
+            role: 'controller',
+            source: 'PlayerEntry',
+            sink: 'test',
+            enabled: true,
+            release: 'release-2026',
+        });
+
+        client.setContext({
+            roomAnalyticsId: 'room-analytics-123',
+            matchId: 'match-analytics-456',
+            playerAnalyticsId: 'player-analytics-789',
+        });
+        client.capture('gameplay:player:report_requested', {
+            mode: 'race',
+            reason: 'bug_report',
+            hasRoomCode: true,
+            hasPlayerId: true,
+            deviceClass: 'mobile',
+            browserFamily: 'Safari',
+        });
+        client.capture('gameplay:player:reset_requested', {
+            mode: 'race',
+            hasPlayerId: true,
+            reason: 'input_stall',
+            deviceClass: 'mobile',
+            browserFamily: 'Safari',
+        });
+        client.capture('error:network:disconnect', {
+            reason: 'connect_error',
+            mode: 'race',
+            deviceClass: 'mobile',
+            browserFamily: 'Safari',
+        });
+
+        const events = client.getDebugEvents();
+        expect(events).toHaveLength(3);
+        for (const event of events) {
+            expect(event.release).toBe('release-2026');
+            expect(event.matchId).toBe('match-analytics-456');
+            expect(event.playerAnalyticsId).toBe('player-analytics-789');
+            expect(event.properties.deviceClass).toBe('mobile');
+            expect(event.properties.browserFamily).toBe('Safari');
+            expect(JSON.stringify(event)).not.toContain('ABCD');
+        }
+    });
+
+    it('dedupes repeated controller spam through captureWithCooldown', () => {
+        installWindow({ pathname: '/player' });
+        const client = new TelemetryClient({
+            role: 'controller',
+            source: 'PlayerEntry',
+            sink: 'test',
+            enabled: true,
+        });
+
+        const now = Date.now();
+        const first = client.captureWithCooldown('gameplay:controller:input_stalled', { reason: 'no_input_packet' }, {
+            cooldownMs: 5000,
+            nowMs: now
+        });
+        const second = client.captureWithCooldown('gameplay:controller:input_stalled', { reason: 'no_input_packet' }, {
+            cooldownMs: 5000,
+            nowMs: now + 1000
+        });
+        const third = client.captureWithCooldown('gameplay:controller:input_stalled', { reason: 'no_input_packet' }, {
+            cooldownMs: 5000,
+            nowMs: now + 6000
+        });
+
+        expect(first).not.toBeNull();
+        expect(second).toBeNull();
+        expect(third).not.toBeNull();
+        expect(client.getDebugEvents()).toHaveLength(2);
+    });
+
+    it('dedupes transition state spam with bounded cooldown', () => {
+        installWindow({ pathname: '/player' });
+        const client = new TelemetryClient({
+            role: 'controller',
+            source: 'PlayerEntry',
+            sink: 'test',
+            enabled: true,
+        });
+
+        const now = Date.now();
+        const enter = client.captureStateTransition(
+            'gameplay:controller:reconnect_succeeded',
+            'started',
+            { attempt: 1 },
+            { cooldownMs: 10000, nowMs: now }
+        );
+        const duplicate = client.captureStateTransition(
+            'gameplay:controller:reconnect_succeeded',
+            'started',
+            { attempt: 2 },
+            { cooldownMs: 10000, nowMs: now + 1000 }
+        );
+        const changed = client.captureStateTransition(
+            'gameplay:controller:reconnect_succeeded',
+            'waiting',
+            { reason: 'backoff' },
+            { cooldownMs: 10000, nowMs: now + 12000 }
+        );
+
+        expect(enter).not.toBeNull();
+        expect(duplicate).toBeNull();
+        expect(changed).not.toBeNull();
+        expect(changed.properties.state).toBe('waiting');
+    });
 });

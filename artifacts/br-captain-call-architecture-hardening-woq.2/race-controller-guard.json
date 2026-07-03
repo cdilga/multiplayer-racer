@@ -1,0 +1,103 @@
+{
+  "controllerState": {
+    "hasHostWorldRender": false,
+    "hasGameWorldRender": false,
+    "canvasCount": 1,
+    "path": "/player"
+  },
+  "raceBackend": {
+    "backend": "WebGPU",
+    "adapterInfo": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": ""
+    },
+    "deviceLimits": {
+      "maxBindGroups": 4,
+      "maxBindingsPerBindGroup": 1000,
+      "maxTextureDimension1D": 8192,
+      "maxTextureDimension2D": 8192,
+      "maxTextureDimension3D": 2048,
+      "maxTextureArrayLayers": 256,
+      "maxSamplersPerShaderStage": 16,
+      "maxStorageTexturesPerShaderStage": 4,
+      "maxStorageBuffersPerShaderStage": 8,
+      "maxUniformBuffersPerShaderStage": 12,
+      "maxUniformBufferBindingSize": 65536,
+      "maxStorageBufferBindingSize": 134217728,
+      "maxComputeWorkgroupStorageSize": 16384,
+      "maxComputeInvocationsPerWorkgroup": 256,
+      "maxComputeWorkgroupSizeX": 256,
+      "maxComputeWorkgroupSizeY": 256,
+      "maxComputeWorkgroupSizeZ": 64
+    },
+    "requiredFeatures": [
+      "depth32float-stencil8",
+      "rg11b10ufloat-renderable",
+      "texture-formats-tier1",
+      "bgra8unorm-storage",
+      "texture-compression-bc",
+      "dual-source-blending",
+      "core-features-and-limits",
+      "float32-filterable",
+      "indirect-first-instance",
+      "texture-compression-astc-sliced-3d",
+      "float32-blendable",
+      "texture-compression-astc",
+      "texture-compression-etc2",
+      "depth-clip-control",
+      "texture-compression-bc-sliced-3d",
+      "clip-distances",
+      "shader-f16",
+      "texture-formats-tier2",
+      "timestamp-query",
+      "primitive-index",
+      "texture-component-swizzle",
+      "subgroups"
+    ],
+    "fallbackReason": null,
+    "fallback": null,
+    "activeApi": "webgpu",
+    "rendererType": "WebGPURenderer",
+    "nativeWebGPU": true,
+    "selectionPreference": {
+      "preferWebGPU": true,
+      "forceWebGL": false,
+      "killswitch": false,
+      "source": "query-webgpu"
+    },
+    "frameTimings": [
+      0.3437499950329463
+    ],
+    "drawCalls": 870,
+    "playerCount": 0,
+    "viewportMode": "host",
+    "visualParity": "verified",
+    "supportedFeatures": [
+      "depth32float-stencil8",
+      "rg11b10ufloat-renderable",
+      "texture-formats-tier1",
+      "bgra8unorm-storage",
+      "texture-compression-bc",
+      "dual-source-blending",
+      "core-features-and-limits",
+      "float32-filterable",
+      "indirect-first-instance",
+      "texture-compression-astc-sliced-3d",
+      "float32-blendable",
+      "texture-compression-astc",
+      "texture-compression-etc2",
+      "depth-clip-control",
+      "texture-compression-bc-sliced-3d",
+      "clip-distances",
+      "shader-f16",
+      "texture-formats-tier2",
+      "timestamp-query",
+      "primitive-index",
+      "texture-component-swizzle",
+      "subgroups"
+    ],
+    "rendererInitialized": true
+  }
+}

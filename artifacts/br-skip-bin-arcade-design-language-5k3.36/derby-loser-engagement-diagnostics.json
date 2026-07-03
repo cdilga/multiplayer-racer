@@ -1,0 +1,96 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "state": {
+    "visible": true,
+    "active": true,
+    "completed": false,
+    "eliminatedPlayerId": "Linus",
+    "targetPlayerId": "Ada",
+    "pressureType": "arena-shrink-started",
+    "durationMs": 1200,
+    "hidden": false,
+    "text": {
+      "player": "Linus is out",
+      "target": "Ada is target",
+      "pressure": "Arena pressure active"
+    }
+  },
+  "boxes": {
+    "banner": {
+      "top": 89.27991485595703,
+      "bottom": 188.7200927734375,
+      "left": 379.5220947265625,
+      "right": 900.4779052734375,
+      "width": 520.955810546875,
+      "height": 99.44017791748047,
+      "visible": true
+    },
+    "hudTop": {
+      "top": 20,
+      "bottom": 20,
+      "left": 20,
+      "right": 1260,
+      "width": 1240,
+      "height": 0,
+      "visible": false
+    },
+    "health": {
+      "top": 96,
+      "bottom": 254,
+      "left": 20,
+      "right": 320,
+      "width": 300,
+      "height": 158,
+      "visible": true
+    },
+    "speed": {
+      "top": 615,
+      "bottom": 700,
+      "left": 1125.65625,
+      "right": 1260,
+      "width": 134.34375,
+      "height": 85,
+      "visible": true
+    },
+    "cameraControls": {
+      "top": 0,
+      "bottom": 0,
+      "left": 0,
+      "right": 0,
+      "width": 0,
+      "height": 0,
+      "visible": false
+    },
+    "fullscreen": null,
+    "canvas": {
+      "top": 0,
+      "bottom": 720,
+      "left": 0,
+      "right": 1280,
+      "width": 1280,
+      "height": 720,
+      "visible": true
+    }
+  },
+  "hiddenChromeCount": 9,
+  "visibleLobbyChrome": [],
+  "canvasVisible": true,
+  "bannerInsideViewport": true,
+  "overlaps": {
+    "hudTop": false,
+    "health": false,
+    "speed": false,
+    "cameraControls": false,
+    "fullscreen": false
+  },
+  "styles": {
+    "bannerDisplay": "block",
+    "bannerPosition": "absolute",
+    "pointerEvents": "none",
+    "boxShadow": "rgba(0, 0, 0, 0.82) 5px 5px 0px 0px, rgb(255, 59, 59) 0px 0px 0px 2px"
+  },
+  "loadingOverlayVisible": false
+}

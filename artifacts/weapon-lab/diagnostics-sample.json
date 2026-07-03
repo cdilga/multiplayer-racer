@@ -1,0 +1,418 @@
+{
+  "schema": "jj.weaponLabEvidence.v1",
+  "generatedBy": "tests/e2e/weapon-lab.spec.ts",
+  "scenario": {
+    "schema": "jj.weaponLabScenario.v1",
+    "toolName": "weapon-lab",
+    "version": 1,
+    "preset": "missile-chase",
+    "seed": 7,
+    "buildId": "dev-local",
+    "track": {
+      "source": "TrackFactory-backed",
+      "trackId": "derby-bowl",
+      "trackName": "The Pit",
+      "mode": "derby",
+      "geometryType": "bowl",
+      "assetPath": "static/assets/tracks/derby-bowl.json",
+      "spawnCount": 16,
+      "weaponConfig": {
+        "enabled": true,
+        "maxActive": 3,
+        "spawnHeight": 1.5,
+        "spawnInterval": [
+          8,
+          12
+        ]
+      }
+    },
+    "mapContext": {
+      "source": "TrackFactory-backed",
+      "trackId": "derby-bowl",
+      "trackName": "The Pit",
+      "mode": "derby",
+      "geometryType": "bowl",
+      "assetPath": "static/assets/tracks/derby-bowl.json",
+      "spawnCount": 16,
+      "weaponConfig": {
+        "enabled": true,
+        "maxActive": 3,
+        "spawnHeight": 1.5,
+        "spawnInterval": [
+          8,
+          12
+        ]
+      }
+    },
+    "overrides": {
+      "arenaConfigPatch": {},
+      "weaponOverrides": {
+        "missile": {
+          "behavior": {
+            "speed": 50,
+            "lifetime": 5,
+            "tracking": {
+              "enabled": true,
+              "turnRate": 3,
+              "lockRange": 30,
+              "lockAngle": 45
+            }
+          }
+        },
+        "mine": {
+          "behavior": {
+            "lifetime": 60,
+            "armDelay": 1,
+            "triggerRadius": 3
+          }
+        },
+        "boost": {
+          "behavior": {
+            "duration": 3,
+            "speedMultiplier": 2,
+            "ramDamageBonus": 25
+          }
+        },
+        "sniper": {
+          "behavior": {
+            "range": 100,
+            "lockAngle": 0.3
+          }
+        },
+        "emp": {
+          "behavior": {
+            "radius": 15,
+            "stunDuration": 3
+          }
+        },
+        "oil-slick": {
+          "behavior": {
+            "zoneRadius": 6,
+            "frictionMultiplier": 0.1,
+            "lifetime": 15
+          }
+        },
+        "flamethrower": {
+          "behavior": {
+            "coneAngle": 30,
+            "range": 8,
+            "tickRate": 0.1
+          },
+          "damage": {
+            "amount": 10
+          }
+        }
+      }
+    },
+    "actors": [
+      {
+        "id": "shooter",
+        "playerId": 1,
+        "position": {
+          "x": 0,
+          "y": 0.5,
+          "z": 0
+        },
+        "heading": 0,
+        "isDead": false,
+        "invulnerable": false,
+        "stunned": false,
+        "inOilSlick": false
+      },
+      {
+        "id": "target",
+        "playerId": 2,
+        "position": {
+          "x": 0,
+          "y": 0.5,
+          "z": 15
+        },
+        "heading": 0,
+        "isDead": false,
+        "invulnerable": false,
+        "stunned": false,
+        "inOilSlick": false
+      }
+    ],
+    "camera": {
+      "position": {
+        "x": 0,
+        "y": 42,
+        "z": 58
+      },
+      "lookAt": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "overlay": {
+      "assumptions": true,
+      "diagnostics": true,
+      "geometry": true,
+      "picking": false
+    },
+    "diagnosticsHash": "a5527673"
+  },
+  "diagnostics": {
+    "schema": "jj.debugLab.diagnostics.v1",
+    "version": "jj.weaponLab.diagnostics.v1",
+    "toolName": "weapon-lab",
+    "preset": "missile-chase",
+    "seed": 7,
+    "timestamp": 1783069829422,
+    "tick": 12,
+    "simTimeMs": 2000,
+    "live": {
+      "pickups": 0,
+      "projectiles": 0,
+      "effects": 0
+    },
+    "state": {
+      "seed": 7,
+      "preset": "missile-chase",
+      "trackContext": {
+        "source": "TrackFactory-backed",
+        "trackId": "derby-bowl",
+        "trackName": "The Pit",
+        "mode": "derby",
+        "geometryType": "bowl",
+        "assetPath": "static/assets/tracks/derby-bowl.json",
+        "spawnCount": 16,
+        "weaponConfig": {
+          "enabled": true,
+          "maxActive": 3,
+          "spawnHeight": 1.5,
+          "spawnInterval": [
+            8,
+            12
+          ]
+        }
+      },
+      "live": {
+        "pickups": 0,
+        "projectiles": 0,
+        "effects": 0
+      },
+      "actors": [
+        {
+          "id": "shooter",
+          "playerId": 1,
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "heading": 0,
+          "isDead": false,
+          "invulnerable": false,
+          "stunned": false,
+          "inOilSlick": false
+        },
+        {
+          "id": "target",
+          "playerId": 2,
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 15
+          },
+          "heading": 0,
+          "isDead": false,
+          "invulnerable": false,
+          "stunned": false,
+          "inOilSlick": false
+        }
+      ],
+      "selectedScenario": "missile-chase",
+      "playing": true,
+      "hasCanvas": true,
+      "overlay": {
+        "assumptions": true,
+        "diagnostics": true,
+        "geometry": true,
+        "picking": false
+      },
+      "tuning": {
+        "missile": {
+          "behavior": {
+            "speed": 50,
+            "lifetime": 5,
+            "tracking": {
+              "enabled": true,
+              "turnRate": 3,
+              "lockRange": 30,
+              "lockAngle": 45
+            }
+          }
+        },
+        "mine": {
+          "behavior": {
+            "lifetime": 60,
+            "armDelay": 1,
+            "triggerRadius": 3
+          }
+        },
+        "boost": {
+          "behavior": {
+            "duration": 3,
+            "speedMultiplier": 2,
+            "ramDamageBonus": 25
+          }
+        },
+        "sniper": {
+          "behavior": {
+            "range": 100,
+            "lockAngle": 0.3
+          }
+        },
+        "emp": {
+          "behavior": {
+            "radius": 15,
+            "stunDuration": 3
+          }
+        },
+        "oil-slick": {
+          "behavior": {
+            "zoneRadius": 6,
+            "frictionMultiplier": 0.1,
+            "lifetime": 15
+          }
+        },
+        "flamethrower": {
+          "behavior": {
+            "coneAngle": 30,
+            "range": 8,
+            "tickRate": 0.1
+          },
+          "damage": {
+            "amount": 10
+          }
+        }
+      },
+      "activeScenario": "missile-chase",
+      "harnessPreset": "missile-chase"
+    },
+    "warnings": [],
+    "errors": [],
+    "metrics": {
+      "fixedDtMs": 16.667,
+      "simTimeMs": 2000,
+      "live": {
+        "pickups": 0,
+        "projectiles": 0,
+        "effects": 0
+      },
+      "canvasWidth": 1280,
+      "canvasHeight": 720,
+      "previewAnimationMs": 200
+    },
+    "productionPaths": [
+      "static/js/systems/WeaponSystem.js",
+      "static/js/engine/GameRunContext.js",
+      "static/js/resources/TrackFactory.js",
+      "static/assets/tracks/derby-bowl.json"
+    ],
+    "trackContext": {
+      "source": "TrackFactory-backed",
+      "trackId": "derby-bowl",
+      "trackName": "The Pit",
+      "mode": "derby",
+      "geometryType": "bowl",
+      "assetPath": "static/assets/tracks/derby-bowl.json",
+      "spawnCount": 16,
+      "weaponConfig": {
+        "enabled": true,
+        "maxActive": 3,
+        "spawnHeight": 1.5,
+        "spawnInterval": [
+          8,
+          12
+        ]
+      }
+    },
+    "spawnedWeapons": [],
+    "damage": [
+      {
+        "atMs": 200,
+        "vehicleId": "target",
+        "amount": 70,
+        "type": "weapon",
+        "weaponId": "missile",
+        "sourcePlayerId": 1
+      }
+    ],
+    "events": [
+      {
+        "type": "weapon:ready",
+        "atMs": 0,
+        "data": {}
+      },
+      {
+        "type": "weapon:fired",
+        "atMs": 0,
+        "data": {
+          "playerId": 1,
+          "vehicleId": "shooter",
+          "weaponId": "missile",
+          "weaponName": "Homing Missile"
+        }
+      },
+      {
+        "type": "weapon:hit",
+        "atMs": 200,
+        "data": {
+          "damage": 70,
+          "position": {
+            "x": 0,
+            "y": 1,
+            "z": 13
+          },
+          "projectileId": "proj_1",
+          "shooterId": 1,
+          "targetId": 2,
+          "weaponId": "missile"
+        }
+      },
+      {
+        "type": "weapon:explosion",
+        "atMs": 200,
+        "data": {
+          "position": {
+            "x": 0,
+            "y": 1,
+            "z": 13
+          },
+          "weaponId": "missile"
+        }
+      }
+    ],
+    "determinism": {
+      "hash": "a5527673",
+      "canonicalJsonLength": 2062,
+      "equalityArtifact": "missile-chase:7:a5527673"
+    },
+    "hooksAvailable": {
+      "reset": true,
+      "stepFrame": true,
+      "stepSecond": true,
+      "playPause": true,
+      "takeScreenshot": true,
+      "getDiagnostics": true,
+      "getConsoleLogs": true,
+      "exportScenario": true,
+      "importScenario": true,
+      "runChecks": true
+    },
+    "textRenderingSafe": true,
+    "consoleSpyActive": true,
+    "scenarioSchema": "jj.weaponLabScenario.v1"
+  },
+  "determinism": {
+    "sameSeedHashA": "af380905",
+    "sameSeedHashB": "af380905",
+    "sameSeedEqual": true,
+    "differentSeedHash": "a5527673",
+    "differentSeedChanged": true
+  }
+}

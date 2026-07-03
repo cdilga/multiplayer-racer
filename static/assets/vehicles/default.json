@@ -62,7 +62,8 @@
       "smoothing": 0.3
     },
     "wheelie": {
-      "activationThrottle": 0.7,
+      "activationThrottle": 0.92,
+      "activationDwellMs": 280,
       "steeringAuthority": 0.15,
       "liftImpulse": 3.0,
       "liftCooldownMs": 450

@@ -10,6 +10,8 @@
  *   const vehicle = await factory.create('default', { position: { x: 0, y: 1.5, z: 0 } });
  */
 
+import { MaterialFactory } from './MaterialFactory.js';
+
 class VehicleFactory {
     /**
      * @param {Object} options
@@ -24,6 +26,9 @@ class VehicleFactory {
 
         // Cache for vehicle configs
         this.configCache = new Map();
+
+        // Material factory for lo-fi retro materials
+        this.materialFactory = new MaterialFactory();
     }
 
     /**
@@ -125,15 +130,15 @@ class VehicleFactory {
 
         // Create car body
         const bodyGeometry = new THREE.BoxGeometry(bodyWidth, bodyHeight, bodyLength);
-        const bodyMaterial = new THREE.MeshStandardMaterial({
+        const bodyMaterial = this._createVehicleReadableMaterial({
             color: bodyColor,
-            roughness: body.roughness || 0.5,
+            type: 'toon',
             emissive: body.emissive ? this._parseColor(body.emissive) : 0x000000,
             emissiveIntensity: body.emissiveIntensity || 0
         });
         const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
         bodyMesh.position.y = bodyHeight / 2;
-        bodyMesh.castShadow = true;
+        bodyMesh.castShadow = false;  // 5k3.9: blob contact shadow replaces real cast shadows
         carGroup.add(bodyMesh);
 
         // Create roof/cabin
@@ -144,14 +149,14 @@ class VehicleFactory {
             const roofLength = bodyLength * (roof.lengthScale || 0.5) * (0.9 + rand(0, 0.2));
 
             const roofGeometry = new THREE.BoxGeometry(roofWidth, roofHeight, roofLength);
-            const roofMaterial = new THREE.MeshStandardMaterial({
+            const roofMaterial = this._createVehicleReadableMaterial({
                 color: this._parseColor(roof.color),
-                roughness: roof.roughness || 0.7
+                type: 'toon'
             });
             const roofMesh = new THREE.Mesh(roofGeometry, roofMaterial);
             roofMesh.position.y = bodyHeight + (roofHeight / 2);
             roofMesh.position.z = bodyLength * (roof.zOffset || -0.05) + rand(-0.2, 0.2);
-            roofMesh.castShadow = true;
+            roofMesh.castShadow = false;  // 5k3.9
             carGroup.add(roofMesh);
         }
 
@@ -162,9 +167,9 @@ class VehicleFactory {
             wheelConfig.thickness,
             wheelConfig.segments || 16
         );
-        const wheelMaterial = new THREE.MeshStandardMaterial({
+        const wheelMaterial = this._createVehicleReadableMaterial({
             color: this._parseColor(wheelConfig.color),
-            roughness: wheelConfig.roughness || 0.8
+            type: 'toon'
         });
 
         // Calculate wheel positions (adjust for body size)
@@ -178,7 +183,7 @@ class VehicleFactory {
             const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
             wheel.position.set(pos.x, pos.y, pos.z);
             wheel.rotation.z = Math.PI / 2;  // Rotate to align with axle
-            wheel.castShadow = true;
+            wheel.castShadow = false;  // 5k3.9
             wheel.userData = { isWheel: true, wheelIndex: index };
             carGroup.add(wheel);
         });
@@ -193,7 +198,108 @@ class VehicleFactory {
             this._addLights(carGroup, { width: bodyWidth, height: bodyHeight, length: bodyLength }, visual.taillights, false);
         }
 
+        // 5k3.9: cheap per-car dithered contact-shadow blob grounded under the
+        // car. Replaces expensive full-scene soft shadow casting; reads on the
+        // host screen. Exactly one simple mesh, no real shadow cast/receive.
+        const contactShadow = this._createContactShadow(bodyWidth, bodyLength);
+        if (contactShadow) {
+            carGroup.add(contactShadow);
+        }
+
         return carGroup;
+    }
+
+    /**
+     * Create a single cheap dithered blob contact shadow that sits flat under
+     * the car. Transparent + grounded, never casts or receives real shadows.
+     * Uses a nearest-filtered dithered CanvasTexture in the browser; falls back
+     * to a plain transparent dark blob where no canvas is available (tests).
+     * @param {number} width - car body width
+     * @param {number} length - car body length
+     * @returns {THREE.Mesh|null}
+     * @private
+     */
+    _createContactShadow(width, length) {
+        if (typeof THREE === 'undefined') return null;
+
+        // Flat quad on the ground plane, a little larger than the footprint.
+        const geometry = new THREE.PlaneGeometry(width * 1.5, length * 1.6);
+        geometry.rotateX(-Math.PI / 2); // lay flat (facing up)
+
+        const material = this._createContactShadowMaterial();
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.y = 0.02;        // just above ground to avoid z-fighting
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        mesh.renderOrder = -1;         // draw under the car parts
+        mesh.userData = { isContactShadow: true };
+        return mesh;
+    }
+
+    /**
+     * Build the contact-shadow material. Dithered radial blob via CanvasTexture
+     * in the browser; a plain transparent dark material in headless/test envs.
+     * @returns {THREE.Material}
+     * @private
+     */
+    _createContactShadowMaterial() {
+        const texture = this._createContactShadowTexture();
+        if (texture) {
+            return new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false,
+                color: 0xffffff
+            });
+        }
+        // Headless fallback (no canvas): plain transparent dark blob.
+        return new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.35,
+            depthWrite: false
+        });
+    }
+
+    /**
+     * Nearest-filtered dithered radial blob texture (dark centre -> transparent
+     * edge). Browser only; returns null without a document/canvas.
+     * @returns {THREE.CanvasTexture|null}
+     * @private
+     */
+    _createContactShadowTexture() {
+        if (typeof document === 'undefined') return null;
+        const size = 64;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        g.addColorStop(0, 'rgba(0,0,0,0.55)');
+        g.addColorStop(0.6, 'rgba(0,0,0,0.30)');
+        g.addColorStop(1, 'rgba(0,0,0,0.0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, size, size);
+
+        // Ordered checkerboard dither on the alpha -> lo-fi, dither-safe edge.
+        const img = ctx.getImageData(0, 0, size, size);
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                if (((x + y) & 1) === 0) {
+                    const a = (y * size + x) * 4 + 3;
+                    img.data[a] = Math.floor(img.data[a] * 0.6);
+                }
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.NearestFilter;
+        return texture;
     }
 
     /**
@@ -252,8 +358,9 @@ class VehicleFactory {
      */
     _addLights(group, body, lightConfig, isFront) {
         const lightGeometry = new THREE.SphereGeometry(lightConfig.radius || 0.2, 16, 16);
-        const lightMaterial = new THREE.MeshStandardMaterial({
+        const lightMaterial = this._createVehicleReadableMaterial({
             color: this._parseColor(lightConfig.color),
+            type: 'flat',
             emissive: lightConfig.emissive ? this._parseColor(lightConfig.emissive) : this._parseColor(lightConfig.color),
             emissiveIntensity: lightConfig.emissiveIntensity || 0.5
         });
@@ -311,6 +418,21 @@ class VehicleFactory {
             return new THREE.Color(colorValue).getHex();
         }
         return 0xff0000;  // Default red
+    }
+
+    _createVehicleReadableMaterial(options = {}) {
+        return this.materialFactory.createMaterial({
+            ...options,
+            loFiWarp: {
+                role: 'vehicle-readable',
+                eligible: false,
+                exempt: true,
+                enabled: false,
+                vertexSnapIntensity: 0,
+                affineIntensity: 0,
+                snapGridSize: 0.5
+            }
+        });
     }
 
     /**

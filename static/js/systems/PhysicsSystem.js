@@ -17,6 +17,10 @@
 
 import { buildDunesGrid } from '../resources/terrain.js';
 import { buildBowlGrid, bowlCrossSection } from '../resources/bowlProfile.js';
+import {
+    computeSteeringAuthority,
+    DEFAULT_STEERING_AUTHORITY_CONFIG
+} from './steeringAuthority.js';
 
 class PhysicsSystem {
     /**
@@ -179,6 +183,29 @@ class PhysicsSystem {
      * @param {Object} config - Ground configuration
      * @returns {Object} Rapier rigid body
      */
+    /**
+     * Cast a ray straight down from above a point and report the first static hit.
+     * Used by host-start arena validation (n47) to prove every spawn has ground
+     * beneath it before any car is placed.
+     * @param {{x:number,y:number,z:number}} position
+     * @param {number} [maxDistance] - how far below the start to accept a hit
+     * @param {number} [startAbove] - how far above the point to originate the ray
+     * @returns {{hit:boolean, distance:(number|null), point:(Object|null)}|null}
+     */
+    raycastDown(position, maxDistance = 50, startAbove = 5) {
+        if (!this.RAPIER || !this.world) return null;
+        const origin = { x: position.x ?? 0, y: (position.y ?? 0) + startAbove, z: position.z ?? 0 };
+        const ray = new this.RAPIER.Ray(origin, { x: 0, y: -1, z: 0 });
+        const hit = this.world.castRay(ray, maxDistance + startAbove, true);
+        if (!hit) return { hit: false, distance: null, point: null };
+        const toi = hit.timeOfImpact ?? hit.toi;
+        return {
+            hit: true,
+            distance: toi,
+            point: { x: origin.x, y: origin.y - toi, z: origin.z }
+        };
+    }
+
     createGroundBody(config = {}) {
         if (!this.RAPIER || !this.world) return null;
 
@@ -1016,28 +1043,46 @@ class PhysicsSystem {
         const highSpeedReduction = steerCfg.highSpeedReduction ?? 0;
         const smoothing = steerCfg.smoothing ?? 1;
 
-        // currentSpeed is m/s; ease the lock down to (1 - reduction) by ~15 m/s
-        const speedFactor = Math.min(1, currentSpeed / 15);
-        const effectiveMax = maxAngle * (1 - highSpeedReduction * speedFactor);
+        const authorityCfg = this._getSteeringAuthorityConfig(config);
 
-        // Reduce steering authority when front wheels are off the ground. In a
-        // wheelie the front tyres cannot steer normally; we keep a small body
-        // influence so players can shape the stunt without carving corners.
-        let steeringAuthority = 1.0;
-        if (newState === 'wheelie' || newState === 'airborne') {
-            steeringAuthority = wheelieCfg.steeringAuthority ?? 0.15;
-        }
-        if (this._isBadLandingActive(entity)) {
-            const stuntCfg = this._getStuntConfig(config);
-            steeringAuthority *= stuntCfg.badLandingSteeringMultiplier;
-        }
+        // Speed reduction now lives in the authority helper so the live value,
+        // F2 telemetry, and tests all describe the same steering limit.
+        authorityCfg.highSpeedAuthorityFloor = authorityCfg.highSpeedAuthorityFloor ??
+            Math.max(0, Math.min(1, 1 - highSpeedReduction));
+        const effectiveMax = maxAngle;
 
-        const targetSteer = -(controls.steering || 0) * effectiveMax * steeringAuthority;
+        const rollDeg = this._getBodyTiltDeg(data.body);
+        const authority = computeSteeringAuthority({
+            handlingState: newState,
+            speedMps: currentSpeed,
+            rollDeg,
+            wallContact: !!entity?.inWallContact,
+            badLanding: this._getBadLandingAuthorityState(entity, config)
+        }, authorityCfg);
+
+        const targetSteer = -(controls.steering || 0) * effectiveMax * authority.authority;
 
         const prevSteer = data.currentSteer || 0;
         data.currentSteer = prevSteer + (targetSteer - prevSteer) * smoothing;
         vc.setWheelSteering(0, data.currentSteer);
         vc.setWheelSteering(1, data.currentSteer);
+        data.currentSteeringAuthority = {
+            ...authority,
+            tuning: authorityCfg,
+            effectiveMax,
+            inputSteering: controls.steering || 0,
+            appliedSteer: data.currentSteer,
+            rollDeg,
+            handlingState: newState
+        };
+        this._applyRecoveryInfluence(data, {
+            authority,
+            steeringInput: controls.steering || 0,
+            acceleration,
+            braking,
+            allAirborne,
+            rollDeg
+        });
 
         // Apply a short lift pulse for intentional wheelies during high
         // acceleration. This must not run every tick: repeated impulses turn a
@@ -1164,6 +1209,163 @@ class PhysicsSystem {
             steeringAuthority: wheelie.steeringAuthority ?? 0.15,
             liftImpulse: wheelie.liftImpulse ?? 8.0,
             liftCooldownMs: wheelie.liftCooldownMs ?? 450
+        };
+    }
+
+    /**
+     * Merge legacy steering/wheelie/stunt knobs into the progressive authority
+     * model so existing vehicle configs keep their familiar extremes.
+     * @private
+     */
+    _getSteeringAuthorityConfig(config = {}) {
+        const steering = config.steering || {};
+        const wheelie = this._getWheelieConfig(config);
+        const stunt = this._getStuntConfig(config);
+        const overrides = config.steeringAuthority || {};
+        const clamp01 = (value, fallback) => {
+            const n = Number(value);
+            if (!Number.isFinite(n)) return fallback;
+            return Math.max(0, Math.min(1, n));
+        };
+
+        return {
+            ...DEFAULT_STEERING_AUTHORITY_CONFIG,
+            speedRefMps: overrides.speedRefMps ?? steering.speedRefMps ?? 15,
+            highSpeedAuthorityFloor: clamp01(
+                overrides.highSpeedAuthorityFloor,
+                Math.max(0, Math.min(1, 1 - (steering.highSpeedReduction ?? 0)))
+            ),
+            frontLightAuthority: clamp01(
+                overrides.frontLightAuthority,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.frontLightAuthority
+            ),
+            wheelieAuthority: clamp01(
+                overrides.wheelieAuthority ?? wheelie.steeringAuthority,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.wheelieAuthority
+            ),
+            airborneAuthority: clamp01(
+                overrides.airborneAuthority ?? config.wheelie?.airborneAuthority,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.airborneAuthority
+            ),
+            rollFullAuthorityDeg: overrides.rollFullAuthorityDeg ??
+                DEFAULT_STEERING_AUTHORITY_CONFIG.rollFullAuthorityDeg,
+            rollDeadDeg: overrides.rollDeadDeg ??
+                DEFAULT_STEERING_AUTHORITY_CONFIG.rollDeadDeg,
+            sideTiltSteerFloor: clamp01(
+                overrides.sideTiltSteerFloor,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.sideTiltSteerFloor
+            ),
+            badLandingAuthority: clamp01(
+                overrides.badLandingAuthority ?? stunt.badLandingSteeringMultiplier,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.badLandingAuthority
+            ),
+            recoveryMaxInfluence: clamp01(
+                overrides.recoveryMaxInfluence,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.recoveryMaxInfluence
+            ),
+            recoveryTorqueImpulse: overrides.recoveryTorqueImpulse ?? 0.45,
+            recoveryYawImpulse: overrides.recoveryYawImpulse ?? 0.18,
+            recoveryCooldownMs: overrides.recoveryCooldownMs ?? 120,
+            wallPeelBias: clamp01(
+                overrides.wallPeelBias,
+                DEFAULT_STEERING_AUTHORITY_CONFIG.wallPeelBias
+            )
+        };
+    }
+
+    /**
+     * Absolute body tilt from upright in degrees, derived from local up vs
+     * world up. This catches two-wheel and on-side states without needing a
+     * Rapier-specific helper.
+     * @private
+     */
+    _getBodyTiltDeg(body) {
+        if (!body?.rotation) return 0;
+        const q = body.rotation();
+        if (!q) return 0;
+        const upY = 1 - 2 * ((q.x || 0) * (q.x || 0) + (q.z || 0) * (q.z || 0));
+        const clamped = Math.max(-1, Math.min(1, upY));
+        return Math.acos(clamped) * 180 / Math.PI;
+    }
+
+    /**
+     * Signed side tilt. Positive/negative only selects the recovery torque
+     * direction; magnitude comes from the pure authority helper.
+     * @private
+     */
+    _getBodyTiltSign(body) {
+        if (!body?.rotation) return 0;
+        const q = body.rotation();
+        if (!q) return 0;
+        const upX = 2 * ((q.x || 0) * (q.y || 0) - (q.w || 1) * (q.z || 0));
+        if (Math.abs(upX) < 1e-6) return 0;
+        return upX > 0 ? 1 : -1;
+    }
+
+    /**
+     * Bad-landing progress for steering authority. Physics only stores the end
+     * time, so progress is inferred from configured duration.
+     * @private
+     */
+    _getBadLandingAuthorityState(entity, config = {}) {
+        if (!this._isBadLandingActive(entity)) {
+            return { active: false, progress: 1 };
+        }
+        const now = performance.now();
+        const stunt = this._getStuntConfig(config);
+        const durationMs = Math.max(1, (stunt.badLandingDuration || 0.85) * 1000);
+        const remainingMs = Math.max(0, (entity.stuntBadLandingUntil || now) - now);
+        const progress = Math.max(0, Math.min(1, 1 - remainingMs / durationMs));
+        return { active: true, progress };
+    }
+
+    /**
+     * Limited player-shaped recovery for tilted/bad-landing cars. It is capped,
+     * rate-limited, disabled while fully airborne, and requires player input.
+     * @private
+     */
+    _applyRecoveryInfluence(data, context = {}) {
+        const body = data?.body;
+        if (!body?.applyTorqueImpulse || context.allAirborne) return;
+        const authority = context.authority || {};
+        const influence = Number(authority.recoveryInfluence || 0);
+        if (influence <= 0) return;
+
+        const input = Math.min(1,
+            Math.abs(context.steeringInput || 0) +
+            Math.max(0, context.acceleration || 0) * 0.35 +
+            Math.max(0, context.braking || 0) * 0.25
+        );
+        if (input <= 0.05) return;
+
+        const tuning = authority.tuning || this._getSteeringAuthorityConfig(data.config || {});
+        const now = performance.now();
+        const cooldownMs = Math.max(0, tuning.recoveryCooldownMs ?? 120);
+        if (data.lastSteeringRecoveryAt && now - data.lastSteeringRecoveryAt < cooldownMs) return;
+
+        const tiltSign = this._getBodyTiltSign(body);
+        const rightingDirection = tiltSign === 0
+            ? -Math.sign(context.steeringInput || 0)
+            : -tiltSign;
+        const rollImpulse = (rightingDirection || 0) *
+            influence * input * (tuning.recoveryTorqueImpulse ?? 0.45);
+        const yawImpulse = (context.steeringInput || 0) *
+            influence * (tuning.recoveryYawImpulse ?? 0.18);
+
+        if (Math.abs(rollImpulse) < 1e-5 && Math.abs(yawImpulse) < 1e-5) return;
+
+        body.applyTorqueImpulse({
+            x: rollImpulse,
+            y: yawImpulse,
+            z: 0
+        }, true);
+        data.lastSteeringRecoveryAt = now;
+        data.currentSteeringRecovery = {
+            influence,
+            input,
+            rollImpulse,
+            yawImpulse,
+            cooldownMs
         };
     }
 
@@ -1568,6 +1770,8 @@ class PhysicsSystem {
             stateDuration: entity?.stateDuration || 0,
             isAirborne: entity?.handlingState === 'airborne',
             isWheelie: entity?.handlingState === 'wheelie',
+            steeringAuthority: data.currentSteeringAuthority || null,
+            steeringRecovery: data.currentSteeringRecovery || null,
             wheelieIntent: data.currentWheelieIntent || this._buildWheelieIntentTelemetry(data)
         };
     }

@@ -1,0 +1,115 @@
+{
+  "canceled": {
+    "rematch": {
+      "active": false,
+      "canceled": true,
+      "completed": false,
+      "autoStarted": false,
+      "secondsRemaining": 3,
+      "durationMs": 3000,
+      "cancelReason": "cancel-button",
+      "hidden": false,
+      "label": "",
+      "countText": "Canceled"
+    },
+    "autoStarts": 0
+  },
+  "layout": {
+    "kickerText": "Rematch canceled",
+    "countText": "Canceled",
+    "labelText": "",
+    "labelHidden": true,
+    "panelWithinCard": true,
+    "kickerButtonOverlap": false,
+    "countButtonOverlap": false,
+    "labelButtonOverlap": false
+  },
+  "diagnostics": {
+    "rects": {
+      "podium": {
+        "top": 162.140625,
+        "bottom": 321.140625,
+        "left": 356,
+        "right": 924,
+        "width": 568,
+        "height": 159,
+        "visible": true
+      },
+      "table": {
+        "top": 337.140625,
+        "bottom": 491.140625,
+        "left": 356,
+        "right": 924,
+        "width": 568,
+        "height": 154,
+        "visible": true
+      },
+      "actions": {
+        "top": 507.140625,
+        "bottom": 562.140625,
+        "left": 356,
+        "right": 924,
+        "width": 568,
+        "height": 55,
+        "visible": true
+      },
+      "rematch": {
+        "top": 576.140625,
+        "bottom": 656.859375,
+        "left": 380,
+        "right": 900,
+        "width": 520,
+        "height": 80.71875,
+        "visible": true
+      },
+      "label": {
+        "top": 67.140625,
+        "bottom": 95.140625,
+        "left": 547.9375,
+        "right": 732.0625,
+        "width": 184.125,
+        "height": 28,
+        "visible": true
+      },
+      "title": {
+        "top": 103.140625,
+        "bottom": 144.140625,
+        "left": 356,
+        "right": 924,
+        "width": 568,
+        "height": 41,
+        "visible": true
+      }
+    },
+    "withinCard": {
+      "podium": true,
+      "table": true,
+      "actions": true,
+      "rematch": true,
+      "label": true,
+      "title": true
+    },
+    "card": {
+      "width": 640,
+      "height": 645.71875,
+      "maxHeight": "648px",
+      "overflowY": "auto",
+      "borderTopWidth": "4px",
+      "borderRadius": "12px",
+      "boxShadow": "rgba(5, 8, 12, 0.92) 7px 7px 0px 0px, rgb(244, 67, 54) 0px 0px 0px 2px, rgba(244, 67, 54, 0.18) 0px 0px 45px 0px"
+    },
+    "title": {
+      "text": "Derby Complete!",
+      "textShadow": "rgba(244, 67, 54, 0.5) 2px 2px 0px",
+      "textTransform": "uppercase"
+    },
+    "chromeLabel": {
+      "text": "Skip Bin Arcade Results",
+      "textTransform": "uppercase"
+    },
+    "scanline": {
+      "content": "\"\"",
+      "opacity": "0.42"
+    }
+  }
+}

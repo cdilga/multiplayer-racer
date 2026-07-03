@@ -1,0 +1,88 @@
+{
+  "rects": {
+    "podium": {
+      "top": 166,
+      "bottom": 317,
+      "left": 356,
+      "right": 924,
+      "width": 568,
+      "height": 151,
+      "visible": true
+    },
+    "table": {
+      "top": 333,
+      "bottom": 487,
+      "left": 356,
+      "right": 924,
+      "width": 568,
+      "height": 154,
+      "visible": true
+    },
+    "actions": {
+      "top": 503,
+      "bottom": 558,
+      "left": 356,
+      "right": 924,
+      "width": 568,
+      "height": 55,
+      "visible": true
+    },
+    "rematch": {
+      "top": 572,
+      "bottom": 653,
+      "left": 380,
+      "right": 900,
+      "width": 520,
+      "height": 81,
+      "visible": true
+    },
+    "label": {
+      "top": 71,
+      "bottom": 99,
+      "left": 547.9375,
+      "right": 732.0625,
+      "width": 184.125,
+      "height": 28,
+      "visible": true
+    },
+    "title": {
+      "top": 107,
+      "bottom": 148,
+      "left": 356,
+      "right": 924,
+      "width": 568,
+      "height": 41,
+      "visible": true
+    }
+  },
+  "withinCard": {
+    "podium": true,
+    "table": true,
+    "actions": true,
+    "rematch": true,
+    "label": true,
+    "title": true
+  },
+  "card": {
+    "width": 640,
+    "height": 638,
+    "maxHeight": "648px",
+    "overflowY": "auto",
+    "borderTopWidth": "4px",
+    "borderRadius": "12px",
+    "boxShadow": "rgba(5, 8, 12, 0.92) 7px 7px 0px 0px, rgb(255, 209, 102) 0px 0px 0px 2px, rgba(0, 255, 136, 0.12) 0px 0px 45px 0px"
+  },
+  "title": {
+    "text": "Race Complete!",
+    "textShadow": "rgba(5, 8, 12, 0.92) 3px 3px 0px, rgb(244, 67, 54) -2px 2px 0px",
+    "textTransform": "uppercase"
+  },
+  "chromeLabel": {
+    "text": "Skip Bin Arcade Results",
+    "textTransform": "uppercase"
+  },
+  "scanline": {
+    "content": "\"\"",
+    "opacity": "0.42"
+  }
+}

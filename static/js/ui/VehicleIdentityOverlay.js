@@ -143,6 +143,9 @@ class VehicleIdentityOverlay {
             const isViewerOwned = preferredPlayerId != null && preferredPlayerId === playerId && this.viewerPlayerId != null;
             const isPreferred = preferredPlayerId != null && preferredPlayerId === playerId;
             const isEdgeClamped = isDepthClamped || Math.abs(vector.x) > 1 || Math.abs(vector.y) > 1;
+            // 5k3.14: unmistakable leader marker. Race leader = racePosition 1
+            // (set by RaceSystem._updatePositions); other modes may set vehicle.isLeader.
+            const isLeader = vehicle.racePosition === 1 || vehicle.isLeader === true;
 
             const marker = this._ensureMarker(vehicle);
             const identity = buildMarkerIdentity({
@@ -200,6 +203,7 @@ class VehicleIdentityOverlay {
                 distance,
                 isViewerOwned,
                 isPreferred,
+                isLeader,
                 pulse,
                 presentation,
                 x: clamped.x,
@@ -243,6 +247,7 @@ class VehicleIdentityOverlay {
                 visible: !hidden,
                 preferred: marker.root.classList.contains('is-preferred'),
                 viewerOwned: marker.root.classList.contains('is-viewer-owned'),
+                leader: marker.root.classList.contains('is-leader'),
                 pulsing: marker.root.classList.contains('is-pulsing'),
                 numberText: marker.number.textContent,
                 nameText: marker.name.textContent,
@@ -361,6 +366,7 @@ class VehicleIdentityOverlay {
             identity,
             isPreferred,
             isViewerOwned,
+            isLeader,
             pulse,
             presentation,
             x,
@@ -378,6 +384,7 @@ class VehicleIdentityOverlay {
         marker.root.style.display = '';
         marker.root.classList.toggle('is-preferred', isPreferred);
         marker.root.classList.toggle('is-viewer-owned', isViewerOwned);
+        marker.root.classList.toggle('is-leader', !!isLeader);
         marker.root.classList.toggle('is-pulsing', pulse.active);
         marker.root.classList.toggle('is-edge-clamped', !!isEdgeClamped);
         marker.root.dataset.playerId = playerId;
@@ -461,7 +468,7 @@ class VehicleIdentityOverlay {
                 height: 12px;
                 background: linear-gradient(180deg, #ffffff 0%, var(--vehicle-accent) 100%);
                 clip-path: polygon(50% 100%, 0 0, 100% 0);
-                box-shadow: 0 0 14px color-mix(in srgb, var(--vehicle-accent) 70%, transparent);
+                box-shadow: 2px 2px 0 color-mix(in srgb, var(--vehicle-accent) 70%, transparent);
             }
             .vehicle-id-badge {
                 display: inline-flex;
@@ -473,11 +480,11 @@ class VehicleIdentityOverlay {
                 border: 2px solid color-mix(in srgb, var(--vehicle-accent) 88%, #ffffff);
                 background: rgba(8, 10, 18, 0.86);
                 color: #f5f8ff;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-family: var(--font-body, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
                 font-size: 13px;
                 font-weight: 800;
                 letter-spacing: 0.01em;
-                box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+                box-shadow: 0 2px 2px 0 rgba(255, 255, 255, 0.06);
             }
             .vehicle-id-you {
                 display: none;
@@ -504,8 +511,8 @@ class VehicleIdentityOverlay {
             .vehicle-id-marker.is-preferred .vehicle-id-badge {
                 border-color: color-mix(in srgb, var(--vehicle-accent) 92%, #ffffff);
                 box-shadow:
-                    0 0 0 1px rgba(255, 255, 255, 0.12),
-                    0 0 18px color-mix(in srgb, var(--vehicle-accent) 40%, transparent);
+                    0 2px 2px 0 rgba(255, 255, 255, 0.12),
+                    2px 2px 0 color-mix(in srgb, var(--vehicle-accent) 40%, transparent);
             }
             .vehicle-id-marker.is-preferred .vehicle-id-chevron {
                 height: 14px;
@@ -528,6 +535,26 @@ class VehicleIdentityOverlay {
                     transform: scale(1.08);
                     filter: brightness(1.16);
                 }
+            }
+            /* 5k3.14: unmistakable leader marker — gold crown + gold sticker ring
+               (loud yellow #FFD23E), distinct from own-car/pulse states. */
+            .vehicle-id-marker.is-leader .vehicle-id-badge {
+                border-color: #FFD23E;
+                color: #FFF6C2;
+                box-shadow:
+                    0 0 0 2px #14110F,
+                    3px 3px 0 rgba(20, 17, 15, 0.85),
+                    0 0 14px rgba(255, 210, 62, 0.55);
+            }
+            .vehicle-id-marker.is-leader .vehicle-id-chevron {
+                background: linear-gradient(180deg, #FFF6C2 0%, #FFD23E 100%);
+                height: 16px;
+            }
+            .vehicle-id-marker.is-leader .vehicle-id-badge::before {
+                content: '\\1F451';
+                margin-right: 2px;
+                font-size: 13px;
+                filter: drop-shadow(1px 1px 0 #14110F);
             }
         `;
         document.head.appendChild(style);

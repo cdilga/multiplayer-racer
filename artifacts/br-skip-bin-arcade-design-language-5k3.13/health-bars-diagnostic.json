@@ -1,0 +1,77 @@
+{
+  "bars": [
+    {
+      "playerId": "p1",
+      "healthPercent": 100,
+      "segmentsLitAttr": 10,
+      "tier": "high",
+      "segTotal": 10,
+      "segLit": 10,
+      "trackWidth": 130,
+      "trackHeight": 26,
+      "litBackgroundImage": "none",
+      "litBackgroundColor": "rgb(92, 255, 106)"
+    },
+    {
+      "playerId": "p2",
+      "healthPercent": 70,
+      "segmentsLitAttr": 7,
+      "tier": "high",
+      "segTotal": 10,
+      "segLit": 7,
+      "trackWidth": 130,
+      "trackHeight": 26,
+      "litBackgroundImage": "none",
+      "litBackgroundColor": "rgb(92, 255, 106)"
+    },
+    {
+      "playerId": "p3",
+      "healthPercent": 40,
+      "segmentsLitAttr": 4,
+      "tier": "medium",
+      "segTotal": 10,
+      "segLit": 4,
+      "trackWidth": 130,
+      "trackHeight": 26,
+      "litBackgroundImage": "none",
+      "litBackgroundColor": "rgb(255, 210, 62)"
+    },
+    {
+      "playerId": "p4",
+      "healthPercent": 15,
+      "segmentsLitAttr": 2,
+      "tier": "low",
+      "segTotal": 10,
+      "segLit": 2,
+      "trackWidth": 130,
+      "trackHeight": 26,
+      "litBackgroundImage": "none",
+      "litBackgroundColor": "rgb(255, 59, 59)"
+    },
+    {
+      "playerId": "p5",
+      "healthPercent": 0,
+      "segmentsLitAttr": 0,
+      "tier": "low",
+      "segTotal": 10,
+      "segLit": 0,
+      "trackWidth": 130,
+      "trackHeight": 26,
+      "litBackgroundImage": "none",
+      "litBackgroundColor": ""
+    }
+  ],
+  "panel": {
+    "left": 20,
+    "top": 96,
+    "right": 320,
+    "bottom": 366,
+    "width": 300
+  },
+  "hudTopBottom": 82,
+  "viewport": {
+    "w": 1280,
+    "h": 720
+  },
+  "segmentCountConst": 10
+}

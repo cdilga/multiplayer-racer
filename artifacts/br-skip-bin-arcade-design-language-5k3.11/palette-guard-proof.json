@@ -1,0 +1,68 @@
+{
+  "bead": "br-skip-bin-arcade-design-language-5k3.11",
+  "generatedAt": "2026-07-03T10:32:31.589Z",
+  "policy": {
+    "environmentForbiddenHexes": [
+      "#FF2E88",
+      "#2EE8FF",
+      "#FFD23E",
+      "#FF3B3B",
+      "#5CFF6A",
+      "#FF8A2E",
+      "#B14CFF",
+      "#FF2E2E"
+    ],
+    "environmentSources": [
+      "static/js/resources/TrackFactory.js",
+      "static/js/resources/ProceduralTrackGenerator.js",
+      "static/js/resources/terrain.js",
+      "static/js/resources/bowlProfile.js",
+      "static/assets/tracks/derby-arena.json",
+      "static/assets/tracks/derby-bowl.json",
+      "static/assets/tracks/derby-coliseum.json",
+      "static/assets/tracks/derby-dunes.json",
+      "static/assets/tracks/oval.json"
+    ]
+  },
+  "result": {
+    "totalForbiddenHits": 0,
+    "perFile": {
+      "static/js/resources/TrackFactory.js": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/js/resources/ProceduralTrackGenerator.js": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/js/resources/terrain.js": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/js/resources/bowlProfile.js": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/assets/tracks/derby-arena.json": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/assets/tracks/derby-bowl.json": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/assets/tracks/derby-coliseum.json": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/assets/tracks/derby-dunes.json": {
+        "hitCount": 0,
+        "hits": []
+      },
+      "static/assets/tracks/oval.json": {
+        "hitCount": 0,
+        "hits": []
+      }
+    }
+  }
+}

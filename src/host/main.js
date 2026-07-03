@@ -13,6 +13,8 @@ import * as THREE from 'three';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { io } from 'socket.io-client';
 import { bootstrapPageTelemetry } from '/static/js/telemetry/index.js';
+import { GrainOverlay } from '/static/js/ui/GrainOverlay.js';
+import { installHostDebugLab } from '/static/js/debug/HostDebugLabAdapter.js';
 
 // Expose globally for existing code compatibility
 window.THREE = THREE;
@@ -23,12 +25,185 @@ bootstrapPageTelemetry({
     source: 'HostEntry'
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+
 // UI elements
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.getElementById('loading-text');
+const loadingStep = document.getElementById('loading-step');
+const loadingSkipButton = document.getElementById('loading-skip-btn');
 const errorOverlay = document.getElementById('error-overlay');
+const errorTitle = document.getElementById('error-title');
 const errorMessage = document.getElementById('error-message');
 const debugInfo = document.getElementById('debug-info');
+
+const INIT_TOTAL_STEPS = 5;
+
+function readDurationParam(name, fallbackMs) {
+    const raw = urlParams.get(name);
+    if (raw === null || raw === '') return fallbackMs;
+
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return fallbackMs;
+    return Math.max(0, parsed);
+}
+
+function delay(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function createNeverResolvingPromise() {
+    return new Promise(() => {});
+}
+
+function createLoadingOverlayController() {
+    const config = {
+        showDelayMs: readDurationParam('loadingOverlayShowDelayMs', 450),
+        timeoutMs: readDurationParam('loadingOverlayTimeoutMs', 15000),
+        testInitDelayMs: readDurationParam('testInitDelayMs', 0),
+        testInitDelayAt: urlParams.get('testInitDelayAt') || 'before-rapier',
+        testInitStallAt: urlParams.get('testInitStallAt') || ''
+    };
+
+    const debugState = {
+        wasShown: false,
+        dismissed: false,
+        timedOut: false,
+        completed: false,
+        lastText: '',
+        lastStep: '',
+        loadingVisible: false,
+        errorVisible: false,
+        showDelayMs: config.showDelayMs,
+        timeoutMs: config.timeoutMs
+    };
+    window.__hostLoadingOverlay = debugState;
+
+    let completed = false;
+    let dismissed = false;
+    let showTimer = null;
+    let timeoutTimer = null;
+
+    function syncDebugState(extra = {}) {
+        Object.assign(debugState, extra, {
+            loadingVisible: !loadingOverlay.classList.contains('hidden'),
+            errorVisible: !errorOverlay.classList.contains('hidden')
+        });
+    }
+
+    function clearTimers() {
+        if (showTimer !== null) {
+            window.clearTimeout(showTimer);
+            showTimer = null;
+        }
+        if (timeoutTimer !== null) {
+            window.clearTimeout(timeoutTimer);
+            timeoutTimer = null;
+        }
+    }
+
+    function hideLoadingOverlay() {
+        loadingOverlay.classList.add('hidden');
+        syncDebugState();
+    }
+
+    function hideErrorOverlay() {
+        errorOverlay.classList.add('hidden');
+        if (errorTitle) errorTitle.textContent = 'Something went wrong';
+        errorMessage.textContent = '';
+        syncDebugState();
+    }
+
+    function showLoadingOverlay() {
+        if (completed || dismissed || debugState.timedOut) return;
+        loadingOverlay.classList.remove('hidden');
+        syncDebugState({ wasShown: true });
+    }
+
+    function showErrorOverlay(message, title = 'Something went wrong', { timedOut = false } = {}) {
+        loadingOverlay.classList.add('hidden');
+        if (errorTitle) errorTitle.textContent = title;
+        errorMessage.textContent = message;
+        errorOverlay.classList.remove('hidden');
+        syncDebugState({ timedOut, errorMessage: message });
+    }
+
+    function updateStep(text, stepNumber) {
+        loadingText.textContent = text;
+        if (loadingStep) {
+            const boundedStep = Math.max(1, Math.min(INIT_TOTAL_STEPS, stepNumber));
+            loadingStep.textContent = `Step ${boundedStep} of ${INIT_TOTAL_STEPS}`;
+            loadingOverlay.dataset.loadingStep = String(boundedStep);
+        }
+        syncDebugState({
+            lastText: text,
+            lastStep: loadingStep?.textContent || '',
+            loadingStepNumber: Number(loadingOverlay.dataset.loadingStep || stepNumber)
+        });
+    }
+
+    loadingSkipButton?.addEventListener('click', () => {
+        dismissed = true;
+        hideLoadingOverlay();
+        syncDebugState({ dismissed: true });
+    });
+
+    return {
+        start() {
+            completed = false;
+            dismissed = false;
+            clearTimers();
+            hideErrorOverlay();
+            hideLoadingOverlay();
+            updateStep('Bolting the wheels on...', 1);
+
+            showTimer = window.setTimeout(() => {
+                showLoadingOverlay();
+            }, config.showDelayMs);
+
+            timeoutTimer = window.setTimeout(() => {
+                if (completed) return;
+
+                debugState.timedOut = true;
+                showErrorOverlay(
+                    'Host startup is taking longer than expected. Retry to start over, or wait a little longer if your browser is still warming up.',
+                    'Still starting up',
+                    { timedOut: true }
+                );
+            }, config.timeoutMs);
+        },
+
+        setStep(text, stepNumber) {
+            updateStep(text, stepNumber);
+        },
+
+        async maybePause(stageName) {
+            if (config.testInitStallAt === stageName) {
+                await createNeverResolvingPromise();
+            }
+            if (config.testInitDelayMs > 0 && config.testInitDelayAt === stageName) {
+                await delay(config.testInitDelayMs);
+            }
+        },
+
+        finish() {
+            completed = true;
+            clearTimers();
+            hideLoadingOverlay();
+            hideErrorOverlay();
+            syncDebugState({ completed: true });
+        },
+
+        fail(message) {
+            completed = true;
+            clearTimers();
+            showErrorOverlay(message);
+            syncDebugState({ completed: true });
+        }
+    };
+}
+
+const loadingUi = createLoadingOverlayController();
 
 // Debug display (D key handler)
 let showDebug = false;
@@ -40,20 +215,10 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Show error
-function showError(message) {
-    errorMessage.textContent = message;
-    errorOverlay.classList.remove('hidden');
-    loadingOverlay.classList.add('hidden');
-}
-
-// Update loading text
-function updateLoading(text) {
-    loadingText.textContent = text;
-}
-
 // Initialize game
 async function initGame() {
+    loadingUi.start();
+
     try {
         // Kick off the (large) GameHost chunk download immediately so it
         // overlaps with WASM init instead of waterfalling after it. window.THREE
@@ -61,14 +226,16 @@ async function initGame() {
         // evaluation time (RAPIER is only used once we construct the host).
         const gameHostModulePromise = import('/static/js/GameHost.js');
 
-        updateLoading('Loading physics engine...');
+        loadingUi.setStep('Spinning up the physics tape...', 2);
+        await loadingUi.maybePause('before-rapier');
 
         // Initialize Rapier WASM
         await RAPIER.init();
         window.RAPIER = RAPIER;
         window.rapierLoaded = true;
 
-        updateLoading('Creating game host...');
+        loadingUi.setStep('Warming the host camcorder...', 3);
+        await loadingUi.maybePause('before-game-host');
 
         const { GameHost } = await gameHostModulePromise;
 
@@ -79,6 +246,21 @@ async function initGame() {
 
         // Make game accessible globally for debugging
         window.game = game;
+
+        import('/static/js/ui/SmashCalloutOverlayBootstrap.js')
+            .then(({ ensureSmashCalloutOverlay }) => ensureSmashCalloutOverlay())
+            .catch(() => {});
+
+        // 5k3.25: attach the shared camcorder film-grain DOM overlay so the host
+        // UI reads as "inside the camcorder" (DOM counterpart of the 5k3.8 WebGL
+        // grain). pointer-events:none is enforced by the overlay + CSS; it never
+        // steals input. Reduce-effects / prefers-reduced-motion disables it.
+        const grainOverlay = new GrainOverlay();
+        grainOverlay.attach();
+        if (GrainOverlay.prefersReducedMotion()) {
+            grainOverlay.setEnabled(false);
+        }
+        window.__sbGrainOverlay = grainOverlay;
 
         // Expose rapierPhysics for test compatibility (upside-down detection)
         window.rapierPhysics = {
@@ -177,14 +359,24 @@ async function initGame() {
             }
         };
 
-        updateLoading('Initializing systems...');
+        loadingUi.setStep('Snapping the arena together...', 4);
+        await loadingUi.maybePause('before-game-init');
         await game.init();
 
-        updateLoading('Starting game...');
+        // Expose the debug-lab contract hooks (window.__debugLab / __labTools) for
+        // Playwright automation and lab tooling. Defensive: a lab failure must
+        // never block the host from reaching the lobby.
+        try {
+            installHostDebugLab(game);
+        } catch (labError) {
+            console.warn('Debug lab install failed:', labError);
+        }
+
+        loadingUi.setStep('Rolling to the lobby...', 5);
+        await loadingUi.maybePause('before-game-start');
         await game.start();
 
-        // Hide loading overlay
-        loadingOverlay.classList.add('hidden');
+        loadingUi.finish();
 
         // Setup debug display updates
         setInterval(() => {
@@ -214,7 +406,7 @@ async function initGame() {
 
     } catch (error) {
         console.error('Failed to initialize game:', error);
-        showError(error.message || 'Failed to initialize game. Please refresh and try again.');
+        loadingUi.fail(error.message || 'Failed to initialize game. Please refresh and try again.');
     }
 }
 
