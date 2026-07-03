@@ -5,6 +5,7 @@ import {
     bowlProfile,
     bowlProfileSlope,
     bowlCrossSection,
+    bowlContainmentProfile,
     buildBowlGrid
 } from '../../static/js/resources/bowlProfile.js';
 
@@ -74,7 +75,9 @@ describe('bowlProfile (br-fb-bowltransition-3ij)', () => {
             const { vertices, indices, params } = buildBowlGrid(BOWL);
             const vertexCount = vertices.length / 3;
 
-            expect(vertexCount).toBe(1 + params.radialSegments * params.angularSegments);
+            // Rings = dish+fillet floor + vertical wall + flat lip (containment).
+            const ringCount = bowlContainmentProfile(params).length;
+            expect(vertexCount).toBe(1 + ringCount * params.angularSegments);
             expect(indices.length % 3).toBe(0);
             for (const v of vertices) expect(Number.isFinite(v)).toBe(true);
             for (const i of indices) {
@@ -83,21 +86,29 @@ describe('bowlProfile (br-fb-bowltransition-3ij)', () => {
             }
         });
 
-        it('places the centre vertex at the lowest point and the rim ring at radius R', () => {
+        it('centre is the lowest point; the outermost ring is the flat lip past the rim', () => {
             const { vertices, params } = buildBowlGrid(BOWL);
             const vertexCount = vertices.length / 3;
 
             // Centre (index 0) is the global minimum height.
             const centreY = vertices[1];
             let minY = Infinity;
-            for (let k = 0; k < vertexCount; k++) minY = Math.min(minY, vertices[k * 3 + 1]);
+            let maxY = -Infinity;
+            for (let k = 0; k < vertexCount; k++) {
+                minY = Math.min(minY, vertices[k * 3 + 1]);
+                maxY = Math.max(maxY, vertices[k * 3 + 1]);
+            }
             expect(centreY).toBeCloseTo(minY, 6);
             expect(centreY).toBeCloseTo(-BOWL.floorConcavity * params.R, 5);
 
-            // Outermost ring vertices sit on the rim circle of radius R.
+            // The containment wall rises well above the rim (cars can't ride out).
+            const rimY = bowlProfile(params.R, params);
+            expect(maxY).toBeCloseTo(rimY + params.wallHeight, 4);
+
+            // The outermost ring is the flat lip cap, past the rim circle.
             const last = vertexCount - 1;
-            const rimR = Math.hypot(vertices[last * 3], vertices[last * 3 + 2]);
-            expect(rimR).toBeCloseTo(params.R, 4);
+            const lipR = Math.hypot(vertices[last * 3], vertices[last * 3 + 2]);
+            expect(lipR).toBeCloseTo(params.R + params.lipWidth, 4);
         });
 
         it('is deterministic (same params -> identical arrays)', () => {
@@ -125,11 +136,14 @@ describe('bowlProfile (br-fb-bowltransition-3ij)', () => {
                 return [nx, ny, nz];
             };
 
-            // Walk consecutive triangles; the largest angle between neighbouring
-            // face normals on this smooth surface must stay small (no crease).
+            // Walk consecutive FLOOR triangles (centre fan + dish/fillet strips);
+            // the wall + lip beyond intentionally have sharp corners, so only the
+            // floor is checked for the seam-smoothness the 3ij fix guarantees.
+            const na = params.angularSegments;
+            const floorIndexEnd = na * 3 + (params.radialSegments - 1) * na * 6;
             let maxAngleDeg = 0;
             let prev = null;
-            for (let t = 0; t + 5 < indices.length; t += 3) {
+            for (let t = 0; t + 5 < floorIndexEnd; t += 3) {
                 const n = faceNormal(indices[t], indices[t + 1], indices[t + 2]);
                 if (prev) {
                     const dot = Math.min(1, Math.max(-1, prev[0] * n[0] + prev[1] * n[1] + prev[2] * n[2]));

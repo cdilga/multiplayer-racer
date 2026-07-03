@@ -25,7 +25,9 @@ export const BOWL_DEFAULTS = {
     filletRadius: 8,    // radius of the floor->rim fillet arc (world units)
     radialSegments: 32, // rings from centre to rim
     angularSegments: 64, // sectors around (matches the 64-segment wall ring)
-    wallHeight: 15      // containment wall height (informational; wall is a separate body)
+    wallHeight: 15,     // vertical containment wall height above the rim
+    wallRings: 4,       // ring subdivisions of the vertical wall
+    lipWidth: 2.5       // flat horizontal lip cap width past the rim (containment)
 };
 
 /**
@@ -46,8 +48,38 @@ export function resolveBowlParams(params = {}) {
         floorDepth,
         r1: R - filletRadius,
         radialSegments: Math.max(4, Math.floor(p.radialSegments)),
-        angularSegments: Math.max(8, Math.floor(p.angularSegments))
+        angularSegments: Math.max(8, Math.floor(p.angularSegments)),
+        wallHeight: Math.max(0, p.wallHeight ?? BOWL_DEFAULTS.wallHeight),
+        wallRings: Math.max(1, Math.floor(p.wallRings ?? BOWL_DEFAULTS.wallRings)),
+        lipWidth: Math.max(0, p.lipWidth ?? BOWL_DEFAULTS.lipWidth)
     };
+}
+
+/**
+ * Radial cross-section as ordered (r, y) rings: the concave dish + fillet floor,
+ * then a VERTICAL containment wall at the rim, then a FLAT horizontal lip cap
+ * (br-bowl-containment-lip). Revolving this makes both the visual mesh and the
+ * physics trimesh share one containment profile, so cars hit a vertical wall +
+ * lip instead of riding a shallow fillet out the sides.
+ * @param {Object} rp - resolved params
+ * @returns {Array<{r:number,y:number,zone:string}>}
+ */
+export function bowlContainmentProfile(rp) {
+    const rings = [];
+    for (let i = 1; i <= rp.radialSegments; i++) {
+        const r = (i / rp.radialSegments) * rp.R;
+        rings.push({ r, y: bowlProfile(r, rp), zone: r <= rp.r1 ? 'dish' : 'fillet' });
+    }
+    const rimY = bowlProfile(rp.R, rp);
+    // Vertical wall: constant r = R, rising by wallHeight.
+    for (let k = 1; k <= rp.wallRings; k++) {
+        rings.push({ r: rp.R, y: rimY + (rp.wallHeight * k) / rp.wallRings, zone: 'wall' });
+    }
+    // Flat lip cap: horizontal segment past the rim at the wall top.
+    if (rp.lipWidth > 0) {
+        rings.push({ r: rp.R + rp.lipWidth, y: rimY + rp.wallHeight, zone: 'lip' });
+    }
+    return rings;
 }
 
 /**
@@ -119,8 +151,11 @@ export function bowlCrossSection(rp, samples = 32) {
  */
 export function buildBowlGrid(params = {}) {
     const rp = resolveBowlParams(params);
-    const nr = rp.radialSegments;
     const na = rp.angularSegments;
+    // Ordered rings: dish + fillet floor, then the vertical containment wall,
+    // then the flat lip cap. Revolving all of them feeds mesh AND trimesh.
+    const rings = bowlContainmentProfile(rp);
+    const nr = rings.length;
 
     const vertexCount = 1 + nr * na;
     const vertices = new Float32Array(vertexCount * 3);
@@ -134,8 +169,7 @@ export function buildBowlGrid(params = {}) {
     const idx = (i, j) => 1 + (i - 1) * na + (j % na);
 
     for (let i = 1; i <= nr; i++) {
-        const r = (i / nr) * rp.R;
-        const y = bowlProfile(r, rp);
+        const { r, y } = rings[i - 1];
         for (let j = 0; j < na; j++) {
             const theta = (j / na) * Math.PI * 2;
             const v = idx(i, j) * 3;
@@ -166,5 +200,5 @@ export function buildBowlGrid(params = {}) {
 
 // Expose globally for any non-module consumer (mirrors terrain.js).
 if (typeof window !== 'undefined') {
-    window.MR_bowl = { bowlProfile, bowlProfileSlope, buildBowlGrid, bowlCrossSection, resolveBowlParams, BOWL_DEFAULTS };
+    window.MR_bowl = { bowlProfile, bowlProfileSlope, buildBowlGrid, bowlCrossSection, bowlContainmentProfile, resolveBowlParams, BOWL_DEFAULTS };
 }
