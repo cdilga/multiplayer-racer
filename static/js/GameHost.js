@@ -47,6 +47,12 @@ import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
 import { getRuntimeTelemetryContext, getBrowserTelemetry } from './telemetry/index.js';
 
+// Out-of-bounds recovery (br-oob-death-reset): below this Y a car has clearly
+// fallen through the world (immediate recovery); a car past the horizontal
+// boundary is recovered after a short grace so a brief clip doesn't kill it.
+const OOB_KILL_PLANE_Y = -30;
+const OOB_RECOVERY_GRACE_MS = 1500;
+
 class GameHost {
     constructor(options = {}) {
         this.container = options.container || document.getElementById('game-container') || document.body;
@@ -163,6 +169,56 @@ class GameHost {
         return Math.abs(x) > 220 || Math.abs(z) > 220 || y < -20;
     }
 
+    /**
+     * Out-of-bounds / kill-plane recovery state machine (br-oob-death-reset).
+     * Below the kill-plane -> immediate; past the boundary -> after a short grace
+     * (so a brief clip doesn't kill a car). Either way routes lethal damage through
+     * the shared path: race -> destroy+respawn, derby -> elimination.
+     * @private
+     */
+    _updateOobRecovery(vehicle, isOob, now, lastState) {
+        if (!vehicle || vehicle.isDead || vehicle.invulnerable) {
+            if (lastState) lastState.oobSince = null;
+            return;
+        }
+        const pos = vehicle.mesh?.position || vehicle.position || {};
+        const y = Number(pos.y);
+        if (Number.isFinite(y) && y < OOB_KILL_PLANE_Y) {
+            lastState.oobSince = null;
+            this._triggerOobRecovery(vehicle, 'kill_plane');
+            return;
+        }
+        if (isOob) {
+            if (!lastState.oobSince) {
+                lastState.oobSince = now;
+            } else if (now - lastState.oobSince >= OOB_RECOVERY_GRACE_MS) {
+                lastState.oobSince = null;
+                this._triggerOobRecovery(vehicle, 'out_of_bounds');
+            }
+        } else {
+            lastState.oobSince = null;
+        }
+    }
+
+    /**
+     * Destroy an off-map car so the shared damage path recovers it (respawn in
+     * race, elimination in derby). Idempotent for an already-dead car.
+     * @private
+     */
+    _triggerOobRecovery(vehicle, reason) {
+        if (!vehicle || vehicle.isDead) return;
+        this._journalEvent?.('out_of_bounds', { vehicleId: vehicle.id, reason });
+        this._emitGameplayTelemetry?.('gameplay:car:out_of_bounds', {
+            vehicleId: vehicle.id,
+            reason,
+            mode: this.settings?.mode ?? null,
+            topology: this.systems.network?.topology || 'local'
+        }, { cooldownMs: 2000 });
+        if (this.systems?.damage?.applyDamage) {
+            this.systems.damage.applyDamage(vehicle.id, 1e6, 'out-of-bounds');
+        }
+    }
+
     _safeTelemetryContext() {
         return {
             trackId: this.track?.configId || this.track?.config?.id || 'unknown',
@@ -263,6 +319,12 @@ class GameHost {
         const inWallContact = !!vehicle.inWallContact;
         const isOob = this._isOutOfBounds(vehicle.position || vehicle.mesh?.position || {});
         const wasOob = Boolean(lastState.isOutOfBounds);
+
+        // Out-of-bounds / kill-plane recovery (br-oob-death-reset): a car pushed
+        // past the boundary (for a bounded grace) or below the kill-plane is
+        // destroyed -> respawned (race) or eliminated (derby) via the shared damage
+        // path, so it never sits frozen off-map.
+        this._updateOobRecovery(vehicle, isOob, now, lastState);
         const badLandingActive = !!vehicle.stuntBadLandingUntil && now < vehicle.stuntBadLandingUntil;
         const wasBadLanding = Boolean(lastState.badLanding);
 
