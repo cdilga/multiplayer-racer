@@ -1,0 +1,38 @@
+{
+  "bead": "br-captain-call-architecture-hardening-woq.4",
+  "sampleStoredRowRedacted": {
+    "clientIpHash": null,
+    "clientReportId": "r-1000000",
+    "receivedAt": 1000.0,
+    "report": {
+      "buildId": "b7",
+      "description": "car fell through the derby floor",
+      "mode": "derby",
+      "runContext": {
+        "host_token": "[REDACTED]",
+        "seed": 42
+      },
+      "severity": "high"
+    }
+  },
+  "secretLeaked": false,
+  "drainPlan_dryRun": [
+    {
+      "action": "create",
+      "fingerprint": "508cbf056eb94fab",
+      "priority": 0,
+      "count": 2,
+      "reportSample": {
+        "buildId": "b7",
+        "description": "car fell through the derby floor",
+        "mode": "derby",
+        "runContext": {
+          "host_token": "[REDACTED]",
+          "seed": 42
+        },
+        "severity": "high"
+      }
+    }
+  ],
+  "note": "Public path sanitizes+stores (no br/gh). Drainer dedupes by fingerprint, maps severity->priority, would create/comment Beads via br only on --apply."
+}

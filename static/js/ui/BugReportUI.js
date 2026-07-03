@@ -121,6 +121,59 @@ ${buildSummaryText(debugInfo)}
     return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+/**
+ * Build the allowlisted JSON payload for POST /report (woq.4). Pure function.
+ * Carries build/run-context fields (buildId/seed/tuningHash) + the redacted
+ * replay excerpt + map/spawn diagnostics so a maintainer can reproduce.
+ * @param {Object} opts
+ * @returns {Object}
+ */
+export function buildReportPayload({ debugInfo = {}, description = '', screenshot = null, role = 'host', clientReportId = null } = {}) {
+    const rc = debugInfo.runContext || {};
+    const payload = {
+        clientReportId: clientReportId || `cr-${Date.now()}-${Math.floor((typeof performance !== 'undefined' ? performance.now() : 0) % 1e6)}`,
+        description: String(description || ''),
+        role,
+        mode: debugInfo.settings?.mode ?? debugInfo.mode ?? null,
+        roomCode: debugInfo.roomCode ?? null,
+        buildId: rc.buildId ?? debugInfo.buildId ?? null,
+        seed: rc.seed ?? null,
+        tuningHash: rc.tuningHash ?? null,
+        ruleset: rc.ruleset ?? null,
+        topology: rc.topology ?? null,
+        runContext: rc,
+        replayExcerpt: debugInfo.replayJournal ?? null,
+        mapValidation: debugInfo.mapValidation ?? null,
+        spawnDiagnostics: debugInfo.spawnDiagnostics ?? null,
+        trackResolution: debugInfo.trackResolution ?? null,
+        userAgent: debugInfo.userAgent ?? null
+    };
+    if (screenshot) payload.screenshot = screenshot;
+    return payload;
+}
+
+/**
+ * POST a report to the central store, returning true on success. Never throws;
+ * a network error / non-2xx means "fall back to mailto". Pure of br/gh/tooling.
+ * @param {Object} payload
+ * @param {typeof fetch} [fetchImpl]
+ * @returns {Promise<boolean>}
+ */
+export async function postReport(payload, fetchImpl) {
+    const doFetch = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null);
+    if (!doFetch) return false;
+    try {
+        const resp = await doFetch('/report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        return !!(resp && resp.ok);
+    } catch (_) {
+        return false;
+    }
+}
+
 class BugReportUI {
     /**
      * @param {Object} options
@@ -213,7 +266,23 @@ class BugReportUI {
      * Submit: download screenshot + open the email client.
      * @private
      */
-    _submit() {
+    async _submit() {
+        // Try the central store first (woq.4); fall back to mailto only when the
+        // endpoint is unreachable. The client never invokes br/gh/tooling.
+        this.elements.status.textContent = 'Submitting report…';
+        const payload = buildReportPayload({
+            debugInfo: this.debugInfo,
+            description: this.elements.textarea.value,
+            screenshot: this.screenshotDataUrl,
+            role: this.debugInfo?.role || 'host'
+        });
+        const posted = await postReport(payload);
+        if (posted) {
+            this.elements.status.textContent = 'Report submitted — thank you! (no email needed)';
+            return;
+        }
+
+        // Fallback: download screenshot + open the email client.
         const screenshotFilename = this._downloadScreenshot();
         const mailto = buildMailto({
             email: this.reportEmail,
@@ -223,8 +292,8 @@ class BugReportUI {
         });
         window.location.href = mailto;
         this.elements.status.textContent = screenshotFilename
-            ? 'Opening your email app… your screenshot downloaded — attach it before sending.'
-            : 'Opening your email app…';
+            ? 'Could not reach the report server — opening email; your screenshot downloaded, attach it before sending.'
+            : 'Could not reach the report server — opening your email app…';
     }
 
     /**
