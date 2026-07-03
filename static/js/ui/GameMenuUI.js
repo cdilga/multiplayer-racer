@@ -81,6 +81,7 @@ class GameMenuUI {
                 <div>Flipped cars auto-recover after a few seconds.</div>
                 <div class="game-menu-shortcuts">
                     <div><b>D</b> debug info</div>
+                    <div><b>F1</b> debug menu <span style="opacity:.6">(needs ?debug=1)</span></div>
                     <div><b>F2</b> physics tuning</div>
                     <div><b>F3</b> stats</div>
                     <div><b>F4</b> physics debug</div>

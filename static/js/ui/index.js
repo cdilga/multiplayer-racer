@@ -9,3 +9,4 @@ export { DebugOverlayUI } from './DebugOverlayUI.js';
 export { StatsOverlayUI } from './StatsOverlayUI.js';
 export { PhysicsTuningUI } from './PhysicsTuningUI.js';
 export { GameMenuUI } from './GameMenuUI.js';
+export { DebugMenuUI, isDebugEnabled } from './DebugMenuUI.js';

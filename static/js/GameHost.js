@@ -45,6 +45,7 @@ import { BugReportUI } from './ui/BugReportUI.js';
 import { DebugOverlayUI } from './ui/DebugOverlayUI.js';
 import { StatsOverlayUI } from './ui/StatsOverlayUI.js';
 import { PhysicsTuningUI } from './ui/PhysicsTuningUI.js';
+import { DebugMenuUI } from './ui/DebugMenuUI.js';
 import { getRuntimeTelemetryContext, getBrowserTelemetry } from './telemetry/index.js';
 
 // Out-of-bounds recovery (br-oob-death-reset): below this Y a car has clearly
@@ -90,6 +91,7 @@ class GameHost {
             debugOverlay: null,    // F4 - Physics visualization
             statsOverlay: null,    // F3 - Game statistics
             physicsTuning: null,   // F2 - Physics parameter tuning
+            debugMenu: null,       // F1 - Debug menu (gated behind debug-enable flag)
             cameraControls: null
         };
 
@@ -628,6 +630,27 @@ class GameHost {
             gameHost: this
         });
         this.ui.physicsTuning.init();
+
+        // Debug menu (F1) — one gated place to flip every debug overlay. Each
+        // overlay exposes `.visible` + `.toggle()`; wrap that as isOn/setOn so the
+        // menu stays decoupled from the overlays it drives.
+        const overlayToggle = (getOverlay) => ({
+            isOn: () => !!getOverlay()?.visible,
+            setOn: (on) => {
+                const o = getOverlay();
+                if (o && !!o.visible !== !!on) o.toggle();
+            }
+        });
+        this.ui.debugMenu = new DebugMenuUI({
+            container: this.container,
+            toggles: [
+                { id: 'physics-tuning', label: 'Physics Tuning (F2)', ...overlayToggle(() => this.ui.physicsTuning) },
+                { id: 'stats-overlay', label: 'Game Stats (F3)', ...overlayToggle(() => this.ui.statsOverlay) },
+                { id: 'collider-debug', label: 'Physics/Collider Debug (F4)', ...overlayToggle(() => this.ui.debugOverlay) }
+            ]
+        });
+        this.ui.debugMenu.init();
+        window.toggleDebugMenu = () => this.ui.debugMenu?.toggleMenu();
 
         this._createCameraControls();
 

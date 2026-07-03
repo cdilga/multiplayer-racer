@@ -50,6 +50,7 @@ type SocketTransportMode = 'polling' | 'hybrid' | 'websocket';
 type NavigationOptions = {
     testMode?: boolean;
     socketTransport?: SocketTransportMode;
+    debug?: boolean;
 };
 
 function buildAppUrl(path: string, options: NavigationOptions = {}): string {
@@ -61,6 +62,10 @@ function buildAppUrl(path: string, options: NavigationOptions = {}): string {
 
     if (options.socketTransport) {
         params.set('socketTransport', options.socketTransport);
+    }
+
+    if (options.debug) {
+        params.set('debug', '1');
     }
 
     const query = params.toString();
