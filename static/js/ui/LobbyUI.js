@@ -345,6 +345,26 @@ class LobbyUI {
         this.elements.topologyBadge = this.element.querySelector('#topology-badge');
         this.elements.qrCode = this.element.querySelector('#qr-code');
         this.elements.joinUrl = this.element.querySelector('#join-url');
+
+        // Click-to-copy the join link on the lobby code + QR (br-copy-room-code-flol).
+        const copyOnClick = (el) => {
+            if (!el) return;
+            el.style.cursor = 'pointer';
+            el.title = 'Click to copy join link';
+            el.addEventListener('click', () => this._copyJoinLink());
+        };
+        copyOnClick(this.elements.roomCode);
+        copyOnClick(this.elements.qrCode);
+        // Cmd/Ctrl+C copies the join link in the lobby when nothing else is selected.
+        this._boundLobbyCopyKey = (e) => {
+            if (!(e.key === 'c' || e.key === 'C') || !(e.metaKey || e.ctrlKey)) return;
+            if (!this.roomCode) return;
+            const sel = window.getSelection?.();
+            if (sel && String(sel).length > 0) return;
+            e.preventDefault();
+            this._copyJoinLink();
+        };
+        document.addEventListener('keydown', this._boundLobbyCopyKey);
         this.elements.playerCount = this.element.querySelector('#player-count');
         this.elements.playerList = this.element.querySelector('#player-list');
         this.elements.lobbyBanter = this.element.querySelector('#lobby-banter');
@@ -858,6 +878,45 @@ class LobbyUI {
             `<option value="${track.id}" data-seedable="${SEEDABLE_TRACK_IDS.has(track.id) ? '1' : '0'}">${track.name}</option>`
         ).join('');
         this._updateSeedVisibility();
+    }
+
+    /** @returns {string} the full join URL for the current room. */
+    joinLink() {
+        const origin = (typeof window !== 'undefined' && window.location?.origin) || '';
+        return `${origin}/join/${this.roomCode}`;
+    }
+
+    /**
+     * Copy the join link to the clipboard and flash 'Copied!' feedback in the hint
+     * line (br-copy-room-code-flol).
+     * @private
+     */
+    async _copyJoinLink() {
+        if (!this.roomCode) return;
+        const link = this.joinLink();
+        let ok = false;
+        try {
+            if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(link); ok = true; }
+        } catch (_) { ok = false; }
+        if (!ok) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select(); document.execCommand?.('copy');
+                document.body.removeChild(ta); ok = true;
+            } catch (_) { ok = false; }
+        }
+        if (ok && this.elements.joinUrl) {
+            this.element?.classList.add('room-copied');
+            const hint = this.elements.joinUrl;
+            if (this._joinHintOriginal == null) this._joinHintOriginal = hint.textContent;
+            hint.textContent = '✓ Copied join link!';
+            clearTimeout(this._copyHintTimer);
+            this._copyHintTimer = setTimeout(() => {
+                hint.textContent = this._joinHintOriginal ?? 'Share this code with players';
+                this.element?.classList.remove('room-copied');
+            }, 2000);
+        }
     }
 
     /**

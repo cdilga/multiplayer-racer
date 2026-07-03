@@ -45,20 +45,93 @@ class RoomCodeOverlayUI {
         this.element = document.createElement('div');
         this.element.className = 'room-code-overlay hidden';
         this.element.innerHTML = `
-            <img class="overlay-qr" alt="Join QR Code" />
-            <div class="overlay-code"></div>
+            <img class="overlay-qr" alt="Join QR Code — click to copy join link" title="Click to copy join link" />
+            <div class="overlay-code" title="Click to copy join link" role="button" tabindex="0"></div>
             <div class="overlay-label">Scan to join!</div>
+            <div class="overlay-copied" aria-live="polite">Copied!</div>
         `;
 
         // Cache elements
         this.qrImage = this.element.querySelector('.overlay-qr');
         this.codeText = this.element.querySelector('.overlay-code');
+        this.copiedFeedback = this.element.querySelector('.overlay-copied');
+
+        // Click-to-copy the join link on both the QR image and the code text (flol).
+        this.qrImage?.addEventListener('click', () => this._copyJoinLink());
+        this.codeText?.addEventListener('click', () => this._copyJoinLink());
+        this.codeText?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._copyJoinLink(); }
+        });
+
+        // Cmd/Ctrl+C copies the join link when the overlay is visible and the user
+        // has not selected other text (so normal copy still works elsewhere).
+        this._boundCopyKey = (e) => {
+            if (!(e.key === 'c' || e.key === 'C') || !(e.metaKey || e.ctrlKey)) return;
+            if (!this.roomCode || this._isHidden()) return;
+            const sel = typeof window !== 'undefined' ? window.getSelection?.() : null;
+            if (sel && String(sel).length > 0) return; // respect an explicit selection
+            e.preventDefault();
+            this._copyJoinLink();
+        };
+        document.addEventListener('keydown', this._boundCopyKey);
 
         // Add styles
         this._injectStyles();
 
         // Add to container
         this.container.appendChild(this.element);
+    }
+
+    /** @returns {string} the full join URL the QR encodes (origin-based). */
+    joinLink() {
+        const origin = (typeof window !== 'undefined' && window.location?.origin) || '';
+        return `${origin}/join/${this.roomCode}`;
+    }
+
+    /** @private */
+    _isHidden() {
+        return !this.element || this.element.classList.contains('hidden');
+    }
+
+    /**
+     * Copy the join link to the clipboard and flash 'Copied!' feedback (flol).
+     * @private
+     */
+    async _copyJoinLink() {
+        if (!this.roomCode) return;
+        const link = this.joinLink();
+        let ok = false;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(link);
+                ok = true;
+            }
+        } catch (_) { ok = false; }
+        if (!ok) {
+            // Fallback for browsers without async clipboard: a temporary textarea.
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = link;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand?.('copy');
+                document.body.removeChild(ta);
+                ok = true;
+            } catch (_) { ok = false; }
+        }
+        if (ok) this._showCopiedFeedback();
+    }
+
+    /** @private Flash the 'Copied!' feedback for ~2s. */
+    _showCopiedFeedback() {
+        if (!this.copiedFeedback) return;
+        this.element.classList.add('show-copied');
+        clearTimeout(this._copiedTimer);
+        this._copiedTimer = setTimeout(() => {
+            this.element?.classList.remove('show-copied');
+        }, 2000);
     }
 
     /**
@@ -111,6 +184,32 @@ class RoomCodeOverlayUI {
                 background: white;
                 display: block;
                 margin: 0 auto 8px;
+                cursor: pointer;
+            }
+
+            .room-code-overlay .overlay-code {
+                cursor: pointer;
+            }
+
+            .room-code-overlay .overlay-copied {
+                position: absolute;
+                left: 50%;
+                bottom: 8px;
+                transform: translateX(-50%);
+                background: #14110f;
+                color: #C9BBA0;
+                border: 2px solid #C9BBA0;
+                border-radius: 6px;
+                padding: 3px 10px;
+                font-weight: 700;
+                font-size: 13px;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 90ms ease-out;
+            }
+
+            .room-code-overlay.show-copied .overlay-copied {
+                opacity: 1;
             }
 
             .room-code-overlay.minimized .overlay-qr {
