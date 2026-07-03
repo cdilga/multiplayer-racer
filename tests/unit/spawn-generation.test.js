@@ -7,6 +7,7 @@ import {
     DEFAULT_MIN_CLEARANCE,
     DEFAULT_MIN_PAIR_DISTANCE,
     generateSpawnsForTrack,
+    generateSpawns,
     getSpawnPosition
 } from '../../static/js/resources/SpawnGenerator.js';
 import { GameRunContext } from '../../static/js/engine/GameRunContext.js';
@@ -149,5 +150,35 @@ describe('spawn generation', () => {
         expect(track.spawnGenerationMetadata.playerCount).toBe(32);
         expect(track.spawnGenerationMetadata.validation.valid).toBe(true);
         expect(track.getAllSpawnPositions()).toHaveLength(32);
+    });
+});
+
+describe('nocap spawn generator (br-nocap-spawn-generator)', () => {
+    // The promoted no-cap public seam: generateSpawns(track, N) for arbitrary N.
+    it.each(['oval', 'derby-arena', 'derby-bowl'])('generateSpawns(%s, N) yields N valid non-overlapping on-ground spawns at high N', (trackId) => {
+        const track = makeTrack(trackId);
+        for (const n of [48, 60, 100]) {
+            const result = generateSpawns(track, n, { seed: 777 });
+            expect(result.valid, `${trackId} ${n} valid`).toBe(true);
+            expect(result.spawns, `${trackId} ${n} count`).toHaveLength(n);
+
+            const reports = result.diagnostics.validation.spawns;
+            reports.forEach((report, i) => {
+                expect(report.support.hit, `${trackId} ${n} spawn ${i} on-ground`).toBe(true);
+                expect(Number.isFinite(report.headingRad), `${trackId} ${n} spawn ${i} heading`).toBe(true);
+                expect(isWithinTrack(track.config, result.spawns[i]), `${trackId} ${n} spawn ${i} in bounds`).toBe(true);
+            });
+            // No overlap: nearest pair clears the minimum (no player-17-on-player-1).
+            expect(result.diagnostics.validation.minPairDistance).toBeGreaterThanOrEqual(DEFAULT_MIN_PAIR_DISTANCE - 0.01);
+        }
+    });
+
+    it('is deterministic: same track + N + seed -> identical spawn set', () => {
+        const track = makeTrack('derby-arena');
+        const a = generateSpawns(track, 64, { seed: 'sweep-1' });
+        const b = generateSpawns(track, 64, { seed: 'sweep-1' });
+        const c = generateSpawns(track, 64, { seed: 'sweep-2' });
+        expect(JSON.stringify(a.spawns)).toBe(JSON.stringify(b.spawns));
+        expect(JSON.stringify(a.spawns)).not.toBe(JSON.stringify(c.spawns));
     });
 });

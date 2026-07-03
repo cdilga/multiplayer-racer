@@ -12,6 +12,7 @@ import {
 } from '../geometry/GeometryKernel.js';
 import { dunesHeight } from './terrain.js';
 import { bowlProfile, bowlProfileSlope, resolveBowlParams } from './bowlProfile.js';
+import { RngStream, hashSeed } from '../engine/Rng.js';
 
 const DEFAULT_MIN_PAIR_DISTANCE = 3.5;
 const DEFAULT_MIN_CLEARANCE = 2.0;
@@ -951,6 +952,29 @@ export function getSpawnPosition(spawns, playerIndex) {
         z: finiteNumber(spawn.position?.z, finiteNumber(spawn.z)),
         rotation: finiteNumber(spawn.headingRad, finiteNumber(spawn.rotation, DEFAULT_HEADING))
     };
+}
+
+/**
+ * Promoted no-cap spawn generator (br-nocap-spawn-generator): produce N valid
+ * spawns for ARBITRARY N on any track — no player cap. Non-overlap, on-ground,
+ * sane headings, and derby ring layouts are guaranteed by generateSpawnsForTrack;
+ * this is the clean public seam that late-join, respawn, and the map-validity
+ * gate share (no player-17-on-player-1 modulo reuse).
+ *
+ * @param {Object} track - resolved track/entity
+ * @param {number} n - number of spawns to generate (any N >= 0)
+ * @param {Object} [options]
+ * @param {number|string} [options.seed] - deterministic seed (same seed -> same set)
+ * @param {Object} [options.context] - an existing GameRunContext (overrides seed)
+ * @returns {{spawns: Object[], validation: Object, metadata: Object}}
+ */
+export function generateSpawns(track, n, options = {}) {
+    let context = options.context || null;
+    if (!context && options.seed != null) {
+        const root = new RngStream(hashSeed(String(options.seed)), 'spawn');
+        context = { stream: () => root };
+    }
+    return generateSpawnsForTrack(track, Math.max(0, Math.floor(n || 0)), context, options);
 }
 
 export {
