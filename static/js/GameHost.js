@@ -20,6 +20,7 @@ import { DEFAULT_VALIDATED_CAPACITY, generateSpawnsForTrack } from './resources/
 import { validateMapData } from './resources/mapValidator.js';
 import { createSpawnAllocator } from './resources/SpawnAllocator.js';
 import { ReplayJournal } from './engine/replayJournal.js';
+import { GENERATOR_VERSION, computeParamsHash } from './resources/mapCatalog.js';
 import { PhysicsSystem } from './systems/PhysicsSystem.js';
 import { RenderSystem } from './systems/RenderSystem.js';
 import { NetworkSystem } from './systems/NetworkSystem.js';
@@ -1702,6 +1703,11 @@ class GameHost {
             this.systems.race.setLaps(options.laps);
         }
 
+        // A host-entered map seed (j3i.1): recorded so "random" is reproducible.
+        if (options.seed !== undefined) {
+            this.settings.mapSeed = options.seed;
+        }
+
         // Resolve which track/arena to load
         const trackId = this._resolveTrackId(options.track);
         this.settings.track = trackId;
@@ -1834,7 +1840,7 @@ class GameHost {
                 // replays are deterministic, and RECORD the selector + resolved
                 // arena so "random" is never an unrecorded Math.random.
                 const pick = this._pickRandomArena(DERBY_ARENAS);
-                this.lastTrackResolution = { requested: requested ?? 'random', resolved: pick, random: true };
+                this.lastTrackResolution = { requested: requested ?? 'random', resolved: pick, random: true, generatorVersion: GENERATOR_VERSION, seed: this.settings?.mapSeed ?? null, paramsHash: computeParamsHash({ seed: this.settings?.mapSeed ?? null }) };
                 return pick;
             }
             this.lastTrackResolution = { requested, resolved: requested, random: false };
@@ -1843,7 +1849,7 @@ class GameHost {
 
         // Race mode
         if (!requested || requested === 'random' || DERBY_ARENAS.includes(requested)) {
-            this.lastTrackResolution = { requested: requested ?? 'random', resolved: 'procedural', random: requested === 'random' || !requested };
+            this.lastTrackResolution = { requested: requested ?? 'random', resolved: 'procedural', random: requested === 'random' || !requested, generatorVersion: GENERATOR_VERSION, seed: this.settings?.mapSeed ?? null, paramsHash: computeParamsHash({ seed: this.settings?.mapSeed ?? null }) };
             return 'procedural';
         }
         this.lastTrackResolution = { requested, resolved: requested, random: false };

@@ -15,6 +15,10 @@
 import { uiScale } from './UiScaleController.js';
 import { ManualVisualSettingsController } from './ManualVisualSettingsController.js';
 import { TOPOLOGY, DEFAULT_TOPOLOGY, normalizeTopology } from '../engine/sessionVocabulary.js';
+import { normalizeSeed } from '../resources/mapCatalog.js';
+
+// Which lobby track ids are seedable presets (visible seeded generation, j3i.1).
+const SEEDABLE_TRACK_IDS = new Set(['procedural', 'random']);
 
 const VISUAL_SETTINGS_STORAGE_KEY = 'visualSettings';
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
@@ -235,6 +239,14 @@ class LobbyUI {
                         Track:
                         <select id="track-select"></select>
                     </label>
+                    <div class="seed-entry-row" id="seed-entry-row" style="display:none;">
+                        <label for="map-seed">
+                            Seed:
+                            <input type="text" id="map-seed" maxlength="64" placeholder="random"
+                                   autocomplete="off" spellcheck="false" />
+                        </label>
+                        <button type="button" id="seed-randomize" class="seed-randomize-btn" title="New random seed">🎲</button>
+                    </div>
                 </div>
 
                 <div class="visual-settings-section collapsed">
@@ -339,6 +351,9 @@ class LobbyUI {
         this.elements.modeCards = this.element.querySelectorAll('.mode-card');
         this.elements.lapsSelect = this.element.querySelector('#laps-select');
         this.elements.trackSelect = this.element.querySelector('#track-select');
+        this.elements.seedRow = this.element.querySelector('#seed-entry-row');
+        this.elements.seedInput = this.element.querySelector('#map-seed');
+        this.elements.seedRandomize = this.element.querySelector('#seed-randomize');
         this.elements.raceSettings = this.element.querySelector('#race-settings');
         this.elements.raceLapsDisplay = this.element.querySelector('#race-laps-display');
         this.elements.startButton = this.element.querySelector('#start-game-btn');
@@ -384,8 +399,19 @@ class LobbyUI {
                     const mode = this.selectedMode || 'race';
                     const laps = parseInt(this.elements.lapsSelect?.value || '3', 10);
                     const track = this.elements.trackSelect?.value || null;
-                    this.onStartGame({ mode, laps, track });
+                    this.onStartGame({ mode, laps, track, seed: this._getSelectedSeed() });
                 }
+            });
+        }
+
+        // Seed entry (j3i.1): the seed field appears only for seedable presets,
+        // and a randomize button records a fresh visible seed.
+        if (this.elements.trackSelect) {
+            this.elements.trackSelect.addEventListener('change', () => this._updateSeedVisibility());
+        }
+        if (this.elements.seedRandomize) {
+            this.elements.seedRandomize.addEventListener('click', () => {
+                if (this.elements.seedInput) this.elements.seedInput.value = String(this._generateVisibleSeed());
             });
         }
 
@@ -394,6 +420,7 @@ class LobbyUI {
 
         // Populate track options for the default mode
         this._updateTrackOptions(this.selectedMode);
+        this._updateSeedVisibility();
 
         // Setup laps select to update display
         if (this.elements.lapsSelect) {
@@ -825,9 +852,46 @@ class LobbyUI {
         };
 
         const options = TRACKS[mode] || TRACKS.race;
+        // Curated presets first (random/seeded presets lead each list), then the
+        // named known maps — the j3i.1 UX rule: presets + seed entry are primary.
         this.elements.trackSelect.innerHTML = options.map(track =>
-            `<option value="${track.id}">${track.name}</option>`
+            `<option value="${track.id}" data-seedable="${SEEDABLE_TRACK_IDS.has(track.id) ? '1' : '0'}">${track.name}</option>`
         ).join('');
+        this._updateSeedVisibility();
+    }
+
+    /**
+     * The seed field is shown only for seedable (random/procedural) presets, so
+     * "random" always resolves to a VISIBLE, recorded seed — never an unrecorded
+     * Math.random (j3i.1 product rule).
+     * @private
+     */
+    _updateSeedVisibility() {
+        if (!this.elements.seedRow) return;
+        const seedable = SEEDABLE_TRACK_IDS.has(this.elements.trackSelect?.value);
+        this.elements.seedRow.style.display = seedable ? '' : 'none';
+    }
+
+    /**
+     * The normalized seed the host chose, or null (procedural auto-seeds at start).
+     * @private
+     * @returns {number|string|null}
+     */
+    _getSelectedSeed() {
+        if (!SEEDABLE_TRACK_IDS.has(this.elements.trackSelect?.value)) return null;
+        const raw = (this.elements.seedInput?.value || '').trim();
+        if (!raw) return null;
+        return normalizeSeed(raw);
+    }
+
+    /**
+     * A short, human-typeable visible seed (base-36). No gameplay RNG here.
+     * @private
+     * @returns {string}
+     */
+    _generateVisibleSeed() {
+        const t = (typeof performance !== 'undefined' ? performance.now() : 0);
+        return Math.abs(Math.floor(t * 1000) ^ (Date.now() & 0xffff)).toString(36).slice(0, 8);
     }
 
     /**
