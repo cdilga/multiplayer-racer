@@ -18,6 +18,7 @@ import { selectRendererBackend, createRenderer as createBackendRenderer } from '
 import { getBrowserTelemetry, getRuntimeTelemetryContext } from '../telemetry/index.js';
 import { setLoFiWarpIntensity } from '../resources/MaterialFactory.js';
 import { tileViewports, buildWifesGrid, assignSeatsToViewports } from '../geometry/ViewportTiling.js';
+import { BLOOM_LAYER, isBloomEligible, enableBloom } from '../resources/bloomLayer.js';
 
 const DEFAULT_FOG_COLOR = 0x1a0f0a;
 const DEFAULT_FOG_DENSITY = 0.008;
@@ -715,6 +716,11 @@ class RenderSystem {
                 initError: this.postProcessing.initError,
                 bloomEnabled: !!this.postProcessing.passes.bloom?.enabled,
                 bloomStrength: this.postProcessing.passes.bloom?.strength ?? null,
+                // 5k3.6: full-frame bloom is inverted into an emissive-only glow.
+                selectiveBloom: !!this.postProcessing.selectiveBloom,
+                fullFrameBloom: !this.postProcessing.selectiveBloom && !!this.postProcessing.passes.bloom,
+                bloomLayer: BLOOM_LAYER,
+                bloomEligibleCount: this._countBloomEligible(),
                 colorGradingEnabled: !!this.postProcessing.passes.colorGrading?.enabled,
                 colorGradingStyle: this.postProcessing.passes.colorGrading?.enabled
                     ? 'skip-bin-arcade-posterize-dither'
@@ -1391,25 +1397,43 @@ class RenderSystem {
             const { ShaderPass } = await import('three/examples/jsm/postprocessing/ShaderPass.js');
             const { RGBShiftShader } = await import('three/examples/jsm/shaders/RGBShiftShader.js');
 
-            // Create composer
-            this.postProcessing.composer = new EffectComposer(this.renderer);
-
-            // Add render pass
+            const size = new THREE.Vector2(window.innerWidth, window.innerHeight);
             const renderPass = new RenderPass(this.scene, this.camera);
-            this.postProcessing.composer.addPass(renderPass);
             this.postProcessing.passes.render = renderPass;
 
-            // Add bloom pass with MAXIMAL settings
-            const bloomPass = new UnrealBloomPass(
-                new THREE.Vector2(window.innerWidth, window.innerHeight),
-                1.5,  // strength - MAXIMAL!
-                0.4,  // radius
-                0.85  // threshold
-            );
-            this.postProcessing.composer.addPass(bloomPass);
+            // --- Bloom composer (off-screen): only BLOOM_LAYER objects survive ---
+            // Full-frame bloom is INVERTED into an emissive-only diegetic glow
+            // (5k3.6): before this composer renders, every non-bloom mesh is swapped
+            // to black, so only neon signage / headlights / pickups bleed.
+            const bloomComposer = new EffectComposer(this.renderer);
+            bloomComposer.renderToScreen = false;
+            bloomComposer.addPass(new RenderPass(this.scene, this.camera));
+            const bloomPass = new UnrealBloomPass(size, 0.8, 0.4, 0.0); // threshold 0: layer pre-filters
+            bloomComposer.addPass(bloomPass);
+            this.postProcessing.bloomComposer = bloomComposer;
             this.postProcessing.passes.bloom = bloomPass;
 
-            // Add posterize + ordered dither grade pass (after bloom)
+            // Shared black material used to mask non-bloom meshes during the bloom pass.
+            this._bloomDarkMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            this._bloomMaterialCache = new Map();
+
+            // --- Final composer (to screen): base scene + additive bloom + grade ---
+            const finalComposer = new EffectComposer(this.renderer);
+            finalComposer.addPass(renderPass);
+
+            const mixPass = new ShaderPass(new THREE.ShaderMaterial({
+                uniforms: {
+                    baseTexture: { value: null },
+                    bloomTexture: { value: bloomComposer.renderTarget2.texture }
+                },
+                vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+                fragmentShader: 'uniform sampler2D baseTexture; uniform sampler2D bloomTexture; varying vec2 vUv; void main(){ gl_FragColor = texture2D(baseTexture, vUv) + texture2D(bloomTexture, vUv); }',
+                defines: {}
+            }), 'baseTexture');
+            mixPass.needsSwap = true;
+            finalComposer.addPass(mixPass);
+            this.postProcessing.passes.bloomMix = mixPass;
+
             try {
                 const { ColorGradingShader } = await import('../shaders/ColorGradingShader.js');
                 const colorGradingPass = new ShaderPass(ColorGradingShader);
@@ -1418,29 +1442,30 @@ class RenderSystem {
                 colorGradingPass.uniforms.ditherStrength.value = 0.55;
                 colorGradingPass.uniforms.scanlineAmount.value = 0.08;
                 colorGradingPass.uniforms.vignetteAmount.value = 0.3;
-                // Animated film grain seed values; _applyGradeTierSettings sets the
-                // per-tier amount and _renderScene advances `time` each frame.
                 colorGradingPass.uniforms.filmGrainAmount.value = 0.12;
                 colorGradingPass.uniforms.filmGrainScale.value = 1.5;
                 colorGradingPass.uniforms.filmGrainSpeed.value = 12.0;
-                this.postProcessing.composer.addPass(colorGradingPass);
+                finalComposer.addPass(colorGradingPass);
                 this.postProcessing.passes.colorGrading = colorGradingPass;
             } catch (error) {
                 console.warn('RenderSystem: Failed to load ColorGradingShader, skipping posterize grade:', error);
             }
 
-            // Add chromatic aberration pass (after color grading)
             try {
                 const rgbShiftPass = new ShaderPass(RGBShiftShader);
-                rgbShiftPass.uniforms.amount.value = 0.0015; // Subtle speed warp
-                this.postProcessing.composer.addPass(rgbShiftPass);
+                rgbShiftPass.uniforms.amount.value = 0.0015;
+                finalComposer.addPass(rgbShiftPass);
                 this.postProcessing.passes.chromaticAberration = rgbShiftPass;
             } catch (error) {
                 console.warn('RenderSystem: Failed to add chromatic aberration, skipping:', error);
             }
 
+            // The primary composer used by resize/diagnostics is the final one.
+            this.postProcessing.composer = finalComposer;
+            this.postProcessing.selectiveBloom = true;
+
             this._applyGradeTierSettings();
-            console.log('RenderSystem: Post-processing initialized with all effects');
+            console.log('RenderSystem: Post-processing initialized (selective bloom)');
         } catch (error) {
             console.error('RenderSystem: Error loading post-processing modules:', error);
             throw error; // Re-throw so caller can handle
@@ -2365,6 +2390,17 @@ class RenderSystem {
     addMesh(mesh, entityId) {
         this.scene.add(mesh);
 
+        // Selective bloom (5k3.6): flag emissive / opted-in props onto BLOOM_LAYER
+        // at the single registration choke point, so factories don't spray layer
+        // calls. Everything else stays out of the bloom pass.
+        if (mesh && typeof mesh.traverse === 'function') {
+            mesh.traverse((node) => {
+                if (node.isMesh && isBloomEligible(node)) enableBloom(node);
+            });
+        } else if (isBloomEligible(mesh)) {
+            enableBloom(mesh);
+        }
+
         if (entityId) {
             this.meshes.set(entityId, mesh);
         }
@@ -2666,6 +2702,18 @@ class RenderSystem {
                 if (grade && grade.uniforms.time) {
                     grade.uniforms.time.value = nowMs() / 1000;
                 }
+                if (this.postProcessing.bloomComposer && this._bloomEnabledForTier()) {
+                    // Selective bloom (5k3.6): render ONLY bloom-eligible objects to
+                    // the off-screen bloom target, then composite it additively over
+                    // the full scene. Restore in a finally so a throw never leaves
+                    // the scene stuck in black masks.
+                    this._darkenNonBloomed();
+                    try {
+                        this.postProcessing.bloomComposer.render();
+                    } finally {
+                        this._restoreMaterials();
+                    }
+                }
                 this.postProcessing.composer.render();
                 return;
             } catch (error) {
@@ -2674,6 +2722,57 @@ class RenderSystem {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    /** @private Whether the active grade tier keeps bloom on. */
+    _bloomEnabledForTier() {
+        const pass = this.postProcessing?.passes?.bloom;
+        return !!pass && pass.enabled !== false;
+    }
+
+    /**
+     * Swap every non-bloom mesh to a shared black material so only BLOOM_LAYER /
+     * emissive objects contribute to the bloom pass (5k3.6).
+     * @private
+     */
+    _darkenNonBloomed() {
+        if (!this.scene || !this._bloomDarkMaterial) return;
+        const cache = this._bloomMaterialCache;
+        cache.clear();
+        this.scene.traverse((obj) => {
+            if (!obj.isMesh || !obj.material) return;
+            const eligible = isBloomEligible(obj) || (obj.layers && obj.layers.test && obj.layers.test(this._bloomTestLayers()));
+            if (!eligible) {
+                cache.set(obj, obj.material);
+                obj.material = this._bloomDarkMaterial;
+            }
+        });
+    }
+
+    /** @private Restore materials swapped by _darkenNonBloomed. */
+    _restoreMaterials() {
+        if (!this._bloomMaterialCache) return;
+        for (const [obj, material] of this._bloomMaterialCache) {
+            obj.material = material;
+        }
+        this._bloomMaterialCache.clear();
+    }
+
+    /** @private Count bloom-eligible meshes currently in the scene (diagnostics). */
+    _countBloomEligible() {
+        if (!this.scene || typeof this.scene.traverse !== 'function') return 0;
+        let count = 0;
+        this.scene.traverse((obj) => { if (obj.isMesh && isBloomEligible(obj)) count += 1; });
+        return count;
+    }
+
+    /** @private A camera-layers mask matching only BLOOM_LAYER (memoized). */
+    _bloomTestLayers() {
+        if (!this._bloomLayerMask) {
+            this._bloomLayerMask = new THREE.Layers();
+            this._bloomLayerMask.set(BLOOM_LAYER);
+        }
+        return this._bloomLayerMask;
     }
 
     /**
@@ -2788,6 +2887,13 @@ class RenderSystem {
                 this.postProcessing.composer.setPixelRatio(effectivePixelRatio);
             }
             this.postProcessing.composer.setSize(window.innerWidth, window.innerHeight);
+        }
+        // Keep the off-screen bloom composer in lockstep (5k3.6).
+        if (this.postProcessing.bloomComposer) {
+            if (typeof this.postProcessing.bloomComposer.setPixelRatio === 'function') {
+                this.postProcessing.bloomComposer.setPixelRatio(effectivePixelRatio);
+            }
+            this.postProcessing.bloomComposer.setSize(window.innerWidth, window.innerHeight);
         }
     }
 

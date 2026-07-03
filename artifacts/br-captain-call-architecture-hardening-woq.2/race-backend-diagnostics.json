@@ -5,8 +5,8 @@
     "width": 1280,
     "height": 720,
     "sampledPixels": 3600,
-    "lumaMean": 35.08843244444409,
-    "lumaStddev": 42.77556748086923
+    "lumaMean": 43.104988611110585,
+    "lumaStddev": 38.96554647310002
   },
   "visualParityNotes": "Host scene rendered nonblank; backend diagnostics captured from the live RenderSystem.",
   "navigatorGpu": true,
@@ -54,10 +54,10 @@
       "texture-compression-etc2",
       "depth-clip-control",
       "texture-compression-bc-sliced-3d",
-      "clip-distances",
       "shader-f16",
-      "texture-formats-tier2",
       "timestamp-query",
+      "clip-distances",
+      "texture-formats-tier2",
       "primitive-index",
       "texture-component-swizzle",
       "subgroups"
@@ -74,9 +74,9 @@
       "source": "query-webgpu"
     },
     "frameTimings": [
-      0.3437499950329463
+      0.373195869406474
     ],
-    "drawCalls": 870,
+    "drawCalls": 836,
     "playerCount": 0,
     "viewportMode": "host",
     "visualParity": "verified",
@@ -96,10 +96,10 @@
       "texture-compression-etc2",
       "depth-clip-control",
       "texture-compression-bc-sliced-3d",
-      "clip-distances",
       "shader-f16",
-      "texture-formats-tier2",
       "timestamp-query",
+      "clip-distances",
+      "texture-formats-tier2",
       "primitive-index",
       "texture-component-swizzle",
       "subgroups"
@@ -194,10 +194,10 @@
           "texture-compression-etc2",
           "depth-clip-control",
           "texture-compression-bc-sliced-3d",
-          "clip-distances",
           "shader-f16",
-          "texture-formats-tier2",
           "timestamp-query",
+          "clip-distances",
+          "texture-formats-tier2",
           "primitive-index",
           "texture-component-swizzle",
           "subgroups"
@@ -214,9 +214,9 @@
           "source": "query-webgpu"
         },
         "frameTimings": [
-          0.3437499950329463
+          0.373195869406474
         ],
-        "drawCalls": 870,
+        "drawCalls": 836,
         "playerCount": 0,
         "viewportMode": "host",
         "visualParity": "verified",
@@ -236,10 +236,10 @@
           "texture-compression-etc2",
           "depth-clip-control",
           "texture-compression-bc-sliced-3d",
-          "clip-distances",
           "shader-f16",
-          "texture-formats-tier2",
           "timestamp-query",
+          "clip-distances",
+          "texture-formats-tier2",
           "primitive-index",
           "texture-component-swizzle",
           "subgroups"
@@ -263,7 +263,13 @@
     "fog": {
       "enabled": true,
       "density": 0.008,
-      "color": 4859152
+      "color": 8014382
+    },
+    "viewportTiling": {
+      "enabled": false,
+      "mode": "grid",
+      "viewportCount": 0,
+      "rows": null
     },
     "postProcessing": {
       "enabled": true,
@@ -271,6 +277,10 @@
       "initError": "Post-processing compositor is WebGL-only for this renderer path",
       "bloomEnabled": false,
       "bloomStrength": null,
+      "selectiveBloom": false,
+      "fullFrameBloom": false,
+      "bloomLayer": 1,
+      "bloomEligibleCount": 5,
       "colorGradingEnabled": false,
       "colorGradingStyle": null,
       "gradingIntensity": null,
@@ -295,8 +305,8 @@
       "mode": "contact-blob"
     },
     "renderInfo": {
-      "calls": 870,
-      "triangles": 10686,
+      "calls": 836,
+      "triangles": 10758,
       "lines": 0,
       "points": 0,
       "frame": null,
@@ -305,10 +315,10 @@
       "programs": null
     },
     "frameTiming": {
-      "frameCount": 96,
-      "lastRenderDurationMs": 0.30000007152557373,
-      "averageRenderDurationMs": 0.3437499950329463,
-      "maxRenderDurationMs": 0.6999999284744263
+      "frameCount": 97,
+      "lastRenderDurationMs": 0.3999999761581421,
+      "averageRenderDurationMs": 0.373195869406474,
+      "maxRenderDurationMs": 0.6000000238418579
     },
     "cameraMode": {
       "mode": "party",
@@ -319,5 +329,5 @@
     "trackedVehicles": 1,
     "nameTagCount": 0
   },
-  "screenshotLength": 43627
+  "screenshotLength": 44123
 }

@@ -48,10 +48,10 @@
       "texture-compression-etc2",
       "depth-clip-control",
       "texture-compression-bc-sliced-3d",
-      "clip-distances",
       "shader-f16",
-      "texture-formats-tier2",
       "timestamp-query",
+      "clip-distances",
+      "texture-formats-tier2",
       "primitive-index",
       "texture-component-swizzle",
       "subgroups"
@@ -68,9 +68,9 @@
       "source": "query-webgpu"
     },
     "frameTimings": [
-      0.3437499950329463
+      0.373195869406474
     ],
-    "drawCalls": 870,
+    "drawCalls": 836,
     "playerCount": 0,
     "viewportMode": "host",
     "visualParity": "verified",
@@ -90,10 +90,10 @@
       "texture-compression-etc2",
       "depth-clip-control",
       "texture-compression-bc-sliced-3d",
-      "clip-distances",
       "shader-f16",
-      "texture-formats-tier2",
       "timestamp-query",
+      "clip-distances",
+      "texture-formats-tier2",
       "primitive-index",
       "texture-component-swizzle",
       "subgroups"

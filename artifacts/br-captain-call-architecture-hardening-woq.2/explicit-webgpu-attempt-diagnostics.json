@@ -5,8 +5,8 @@
     "width": 1280,
     "height": 720,
     "sampledPixels": 3600,
-    "lumaMean": 30.56726672222262,
-    "lumaStddev": 35.98086397983104
+    "lumaMean": 38.05883677777857,
+    "lumaStddev": 37.83435676799551
   },
   "visualParityNotes": "Host scene rendered nonblank; backend diagnostics captured from the live RenderSystem.",
   "navigatorGpu": true,
@@ -75,9 +75,9 @@
       "source": "query-webgpu"
     },
     "frameTimings": [
-      0.3385416641831398
+      0.3645833370586236
     ],
-    "drawCalls": 414,
+    "drawCalls": 416,
     "playerCount": 0,
     "viewportMode": "host",
     "visualParity": "verified",
@@ -217,9 +217,9 @@
           "source": "query-webgpu"
         },
         "frameTimings": [
-          0.3385416641831398
+          0.3645833370586236
         ],
-        "drawCalls": 414,
+        "drawCalls": 416,
         "playerCount": 0,
         "viewportMode": "host",
         "visualParity": "verified",
@@ -267,7 +267,13 @@
     "fog": {
       "enabled": true,
       "density": 0.008,
-      "color": 4859152
+      "color": 8014382
+    },
+    "viewportTiling": {
+      "enabled": false,
+      "mode": "grid",
+      "viewportCount": 0,
+      "rows": null
     },
     "postProcessing": {
       "enabled": true,
@@ -275,6 +281,10 @@
       "initError": "Post-processing compositor is WebGL-only for this renderer path",
       "bloomEnabled": false,
       "bloomStrength": null,
+      "selectiveBloom": false,
+      "fullFrameBloom": false,
+      "bloomLayer": 1,
+      "bloomEligibleCount": 5,
       "colorGradingEnabled": false,
       "colorGradingStyle": null,
       "gradingIntensity": null,
@@ -299,7 +309,7 @@
       "mode": "contact-blob"
     },
     "renderInfo": {
-      "calls": 414,
+      "calls": 416,
       "triangles": 9242,
       "lines": 0,
       "points": 0,
@@ -310,9 +320,9 @@
     },
     "frameTiming": {
       "frameCount": 96,
-      "lastRenderDurationMs": 0.5,
-      "averageRenderDurationMs": 0.3385416641831398,
-      "maxRenderDurationMs": 0.9000000953674316
+      "lastRenderDurationMs": 0.3999999761581421,
+      "averageRenderDurationMs": 0.3645833370586236,
+      "maxRenderDurationMs": 0.7000000476837158
     },
     "cameraMode": {
       "mode": "party",
@@ -323,5 +333,5 @@
     "trackedVehicles": 0,
     "nameTagCount": 0
   },
-  "screenshotLength": 29455
+  "screenshotLength": 30259
 }
