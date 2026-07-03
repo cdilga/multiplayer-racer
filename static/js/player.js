@@ -2130,6 +2130,22 @@ socket.on('seat_taken_over', (data) => {
     showError('This controller was taken over on another device.');
 });
 
+socket.on('player_kicked', (data = {}) => {
+    // Host removed this car (br-kick-car): bounce to the join flow, not frozen.
+    if (gameState.gameStarted) {
+        releaseAllControls({ emitPacket: false });
+    }
+    // Clear the saved seat so the phone rejoins fresh (no ghost reconnect).
+    clearStoredSeatRecord(gameState.roomCode);
+    gameState.gameStarted = false;
+    gameState.playerId = null;
+    gameState.seatId = null;
+    gameState.seatToken = null;
+    gameState.roomPhase = 'idle';
+    showScreen('join');
+    showError('You were removed by the host — you can rejoin.');
+});
+
 socket.on('room_phase', (data) => {
     syncTelemetryContextFromPayload(data);
     if (data.mode) {

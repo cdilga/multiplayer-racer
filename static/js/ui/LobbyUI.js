@@ -72,6 +72,7 @@ class LobbyUI {
 
         // Callbacks
         this.onStartGame = null;
+        this.onKick = null;
     }
 
     /**
@@ -1129,6 +1130,20 @@ class LobbyUI {
                 gap: calc(var(--u) * 0.6);
                 font-size: calc(var(--u) * 0.9);
             }
+            .player-name { flex: 1; }
+            .player-kick-btn {
+                margin-left: auto;
+                background: #7A4A2E;
+                color: #C9BBA0;
+                border: 2px solid #14110f;
+                border-radius: calc(var(--u) * 0.4);
+                width: calc(var(--u) * 1.4);
+                height: calc(var(--u) * 1.4);
+                line-height: 1;
+                font-weight: 700;
+                cursor: pointer;
+            }
+            .player-kick-btn:hover { background: #FF2E2E; color: #14110f; }
             .player-color {
                 width: calc(var(--u) * 1.25);
                 height: calc(var(--u) * 1.25);
@@ -1645,6 +1660,21 @@ class LobbyUI {
 
             row.appendChild(color);
             row.appendChild(name);
+
+            // Host kick affordance (br-kick-car): one click removes the car and
+            // sends that phone back to the rejoin flow.
+            const kick = document.createElement('button');
+            kick.className = 'player-kick-btn';
+            kick.type = 'button';
+            kick.textContent = '✕';
+            kick.title = `Kick ${player.name || 'player'}`;
+            if (typeof kick.setAttribute === 'function') {
+                kick.setAttribute('aria-label', `Kick ${player.name || 'player'}`);
+            }
+            kick.addEventListener('click', () => {
+                if (this.onKick) this.onKick(player.id);
+            });
+            row.appendChild(kick);
             return row;
         });
 
@@ -1725,6 +1755,11 @@ class LobbyUI {
      */
     setOnStartGame(callback) {
         this.onStartGame = callback;
+    }
+
+    /** Register the host kick handler (br-kick-car). @param {(playerId:any)=>void} callback */
+    setOnKick(callback) {
+        this.onKick = callback;
     }
 
     /**

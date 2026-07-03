@@ -42,6 +42,7 @@ try:
         begin_room_match,
         confirm_pending_takeover,
         disconnect_binding,
+        kick_seat,
         end_room_match,
         join_seat,
         lookup_binding_by_sid,
@@ -80,6 +81,7 @@ except ImportError:  # pragma: no cover - import path shim
         begin_room_match,
         confirm_pending_takeover,
         disconnect_binding,
+        kick_seat,
         end_room_match,
         join_seat,
         lookup_binding_by_sid,
@@ -1578,6 +1580,69 @@ def end_game(data):
         sensitive_values=_telemetry_sensitive_values(data),
     )
     logger.info(f"Game ended in room {room_code}")
+
+
+@socketio.on('kick_player')
+@_instrument_socket_handler('kick_player')
+def kick_player(data):
+    """Host-authoritative kick (br-kick-car): remove a seat, bounce that phone to
+    the rejoin flow, despawn the car on the host, and free the seat for re-join."""
+    if not isinstance(data, dict):
+        _emit_error_message('error', 'Invalid kick payload', handler='kick_player', bucket='invalid_payload')
+        return
+    room_code = (data.get('room_code') or '').upper()
+    host_token = data.get('host_token')
+    host_epoch = data.get('host_epoch')
+    target_player_id = data.get('player_id')
+    if target_player_id is None:
+        target_player_id = data.get('target_player_id')
+
+    if not room_code:
+        _emit_error_message('error', 'Room code required', handler='kick_player', bucket='missing_room_code')
+        return
+
+    is_valid, error_msg = _check_host_authority(room_code, host_token, host_epoch)
+    if not is_valid:
+        _emit_error_message('error', error_msg, handler='kick_player', bucket='invalid_host_authority', room=_telemetry_room(room_code))
+        return
+
+    room = game_rooms.get(room_code)
+    if not room or target_player_id is None:
+        return
+
+    result = kick_seat(room, target_player_id)
+    if result.get('status') != 'kicked':
+        return
+
+    seat = result['seat']
+    kicked_sid = result.get('kicked_sid')
+    seat_id = result.get('seat_id')
+
+    # Bounce the kicked controller to the join/rejoin flow, then drop it from the room.
+    if kicked_sid:
+        emit('player_kicked', {
+            'room_code': room_code,
+            'seat_id': seat_id,
+            'reason': 'kicked_by_host',
+        }, to=kicked_sid)
+        try:
+            leave_room(room_code, sid=kicked_sid)
+        except Exception:  # pragma: no cover - defensive; SID may already be gone
+            pass
+
+    # Despawn on the host via the existing player_left path (no reconnect: it's a kick).
+    host_sid = room.get('host_sid')
+    if host_sid:
+        emit('player_left', {
+            'player_id': seat.get('player_id'),
+            'seat_id': seat_id,
+            'player_name': seat.get('appearance', {}).get('name'),
+            'can_reconnect': False,
+            'kicked': True,
+        }, to=host_sid)
+
+    logger.info(f"Player {seat.get('player_id')} kicked from room {room_code}")
+
 
 @socketio.on('mode_selected')
 @_instrument_socket_handler('mode_selected')

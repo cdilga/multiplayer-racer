@@ -57,6 +57,9 @@ function makeElement(tagName = 'div') {
         className: '',
         textContent: '',
         innerHTML: '',
+        title: '',
+        type: '',
+        attributes: {},
         style: makeStyle(),
         appendChild(child) {
             this.children.push(child);
@@ -68,7 +71,9 @@ function makeElement(tagName = 'div') {
             children.forEach((child) => {
                 child.parentNode = this;
             });
-        }
+        },
+        setAttribute(name, value) { this.attributes[name] = value; },
+        addEventListener() {}
     };
 }
 

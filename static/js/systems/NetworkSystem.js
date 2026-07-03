@@ -497,6 +497,18 @@ class NetworkSystem {
     }
 
     /**
+     * Host-authoritative kick of a player/car (br-kick-car).
+     * @param {string|number} playerId
+     */
+    kickPlayer(playerId) {
+        this.socket.emit('kick_player', {
+            room_code: this.roomCode,
+            ...this._hostAuth(),
+            player_id: playerId
+        });
+    }
+
+    /**
      * Send game state to all players
      * @param {Object} state - Game state to broadcast
      */

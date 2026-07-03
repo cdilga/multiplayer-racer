@@ -721,6 +721,42 @@ def disconnect_binding(room, sid, now=None):
     }
 
 
+def kick_seat(room, target_player_id, now=None):
+    """Host-authoritative kick (br-kick-car): fully REMOVE a seat by player id so it
+    is immediately re-joinable with no ghost left behind. Returns the removed seat +
+    the kicked controller's sid (for the server to notify + despawn)."""
+    current_time = now_seconds(now)
+    seat = None
+    for candidate in room['seats'].values():
+        if str(candidate.get('player_id')) == str(target_player_id):
+            seat = candidate
+            break
+    if seat is None:
+        return {'status': 'missing'}
+
+    seat_id = seat['seat_id']
+    kicked_sid = seat.get('controller_sid')
+    viewer_sids = list(seat.get('viewer_sids', []))
+
+    # Drop the seat and every sid bound to it so the seat id is free again.
+    room['seats'].pop(seat_id, None)
+    for sid, binding in list(room.get('sid_index', {}).items()):
+        if binding.get('seat_id') == seat_id:
+            room['sid_index'].pop(sid, None)
+    room.get('disconnected_players', {}).pop(seat.get('player_id'), None)
+
+    _sync_legacy_views(room)
+    _touch_room(room, current_time)
+    append_room_trace(room, 'seat_kicked', current_time)
+    return {
+        'status': 'kicked',
+        'seat': seat,
+        'seat_id': seat_id,
+        'kicked_sid': kicked_sid,
+        'viewer_sids': viewer_sids,
+    }
+
+
 def reap_room_if_needed(room, now=None, host_loss_grace=HOST_LOSS_GRACE_SECONDS, room_ttl=ROOM_TTL_SECONDS):
     current_time = now_seconds(now)
     if room['phase'] == PHASE_HOST_LOST and room.get('host_lost_at') is not None:
@@ -776,6 +812,7 @@ __all__ = [
     'begin_room_match',
     'confirm_pending_takeover',
     'disconnect_binding',
+    'kick_seat',
     'end_room_match',
     'generate_match_id',
     'generate_player_analytics_id',

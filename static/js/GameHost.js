@@ -564,6 +564,7 @@ class GameHost {
         });
         this.ui.lobby.init();
         this.ui.lobby.setOnStartGame(this._onStartGame);
+        this.ui.lobby.setOnKick((playerId) => this.kickPlayer(playerId));
 
         this.ui.race = new RaceUI({
             eventBus: this.eventBus,
@@ -1655,6 +1656,17 @@ class GameHost {
      * Handle player left
      * @private
      */
+    /**
+     * Host kicks a player/car (br-kick-car). The server removes the seat, bounces
+     * that phone to the rejoin flow, and despawns the car here via player_left.
+     * @param {string|number} playerId
+     */
+    kickPlayer(playerId) {
+        if (playerId == null) return;
+        console.log('GameHost: Kicking player', playerId);
+        this.systems.network?.kickPlayer?.(playerId);
+    }
+
     _onPlayerLeft(data) {
         console.log('GameHost: Player left:', data.playerId);
 
