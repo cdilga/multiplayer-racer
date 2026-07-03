@@ -19,6 +19,7 @@ import { getBrowserTelemetry, getRuntimeTelemetryContext } from '../telemetry/in
 import { setLoFiWarpIntensity } from '../resources/MaterialFactory.js';
 import { tileViewports, buildWifesGrid, assignSeatsToViewports } from '../geometry/ViewportTiling.js';
 import { BLOOM_LAYER, isBloomEligible, enableBloom } from '../resources/bloomLayer.js';
+import { CameraLayoutStabilizer } from './cameraHysteresis.js';
 
 const DEFAULT_FOG_COLOR = 0x1a0f0a;
 const DEFAULT_FOG_DENSITY = 0.008;
@@ -261,6 +262,9 @@ class RenderSystem {
         this.cameraTargets = [];  // Array of entities to track
         // Opt-in viewport tiling (woq.8): off by default (single-view render).
         this.viewportTiling = { enabled: false, mode: 'grid', lastLayout: null };
+        // Temporal coherence for the tiled-cluster count (woq.9): hysteresis +
+        // debounce so brief position noise never retiles / thrashes the layout.
+        this._cameraStabilizer = new CameraLayoutStabilizer({ debounceMs: 500 });
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
         this.baseFOV = 50;  // Base field of view (reduced for tighter framing)
         this.targetFOV = 50;  // Target field of view
@@ -708,7 +712,10 @@ class RenderSystem {
                 enabled: !!this.viewportTiling?.enabled,
                 mode: this.viewportTiling?.mode ?? null,
                 viewportCount: this.viewportTiling?.lastLayout?.viewports?.length ?? 0,
-                rows: this.viewportTiling?.lastLayout?.rows ?? null
+                rows: this.viewportTiling?.lastLayout?.rows ?? null,
+                // Temporal-coherence counters (woq.9): committed transitions vs
+                // suppressed thrash, for the camera debug panel.
+                hysteresis: this._cameraStabilizer ? this._cameraStabilizer.diagnostics() : null
             },
             postProcessing: {
                 enabled: this.postProcessing.enabled,
@@ -1655,7 +1662,9 @@ class RenderSystem {
             layout = grid.layout;
             assignment = grid.assignment;
         } else {
-            const k = Math.min(seats.length, 6);
+            // Stabilize the desired cluster count (woq.9) so noise doesn't retile.
+            const desiredK = Math.min(seats.length, 6);
+            const k = this._cameraStabilizer.update(desiredK, nowMs());
             layout = tileViewports(k, { width: size.x, height: size.y });
             assignment = assignSeatsToViewports(seats.map((s) => s.seatId), layout.viewports.length);
         }
