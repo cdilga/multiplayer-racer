@@ -21,6 +21,7 @@ import {
     computeSteeringAuthority,
     DEFAULT_STEERING_AUTHORITY_CONFIG
 } from './steeringAuthority.js';
+import { computeSteeringAssist } from './steeringAssist.js';
 
 class PhysicsSystem {
     /**
@@ -1060,7 +1061,31 @@ class PhysicsSystem {
             badLanding: this._getBadLandingAuthorityState(entity, config)
         }, authorityCfg);
 
-        const targetSteer = -(controls.steering || 0) * effectiveMax * authority.authority;
+        // Optional steering assist (br-steering-assist-experiment): DEFAULT OFF.
+        // When enabled it eases the car toward its travel direction (counters
+        // slide / smooths cornering). Guarded so the default path is unchanged.
+        let steeringInput = controls.steering || 0;
+        const assistCfg = config.steeringAssist;
+        if (assistCfg?.enabled) {
+            const heading = this._getBodyHeading(data.body);
+            const lv = data.body?.linvel?.() || { x: 0, z: 0 };
+            const targetHeading = Math.atan2(lv.x, lv.z);
+            const prevHeading = data._assistPrevHeading ?? heading;
+            const dtSec = Math.max(1e-3, (this._lastUpdateDt || this.defaultControlStepSeconds));
+            const headingRate = ((heading - prevHeading + Math.PI) % (2 * Math.PI) - Math.PI) / dtSec;
+            data._assistPrevHeading = heading;
+            const assisted = computeSteeringAssist({
+                playerSteer: steeringInput,
+                headingRad: heading,
+                targetHeadingRad: targetHeading,
+                speedMps: currentSpeed,
+                headingRateRadPerSec: headingRate
+            }, assistCfg);
+            steeringInput = assisted.steer;
+            data._lastSteeringAssist = assisted;
+        }
+
+        const targetSteer = -steeringInput * effectiveMax * authority.authority;
 
         const prevSteer = data.currentSteer || 0;
         data.currentSteer = prevSteer + (targetSteer - prevSteer) * smoothing;
@@ -1286,6 +1311,20 @@ class PhysicsSystem {
         const upY = 1 - 2 * ((q.x || 0) * (q.x || 0) + (q.z || 0) * (q.z || 0));
         const clamped = Math.max(-1, Math.min(1, upY));
         return Math.acos(clamped) * 180 / Math.PI;
+    }
+
+    /**
+     * Yaw heading (radians) from the body's forward vector (local -Z), measured
+     * as atan2(forwardX, forwardZ). Used by the optional steering assist.
+     * @private
+     */
+    _getBodyHeading(body) {
+        if (!body?.rotation) return 0;
+        const q = body.rotation();
+        if (!q) return 0;
+        const fx = 2 * ((q.x || 0) * (q.z || 0) + (q.w || 1) * (q.y || 0));
+        const fz = 1 - 2 * ((q.x || 0) * (q.x || 0) + (q.y || 0) * (q.y || 0));
+        return Math.atan2(fx, fz);
     }
 
     /**

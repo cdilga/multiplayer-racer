@@ -9,6 +9,7 @@
  * seeded scripts), so a sweep is reproducible.
  */
 import { PhysicsRuntime, SimVehicleAdapter } from './PhysicsRuntime.js';
+import { computeSteeringAssist, wrapAngle } from './steeringAssist.js';
 
 /** Scripted bot drivers: (tick) => controls. Pure, deterministic. */
 export const DRIVERS = {
@@ -113,4 +114,84 @@ export function compareToBaseline(table, baseline, tolerance = 0.05) {
     return { ok: rows.every((r) => r.withinTol), rows };
 }
 
-export default { DRIVERS, runScenario, sweep, compareToBaseline };
+/**
+ * br-steering-assist-experiment — drive a bot that starts off-heading (models a
+ * bump / entering a corner off the line) straight ahead, and measure how far it
+ * drifts off the centerline. With the steering assist ON it should hold the line
+ * (less lateral deviation, smaller final heading error) than with it OFF.
+ *
+ * Runs on the REAL Rapier PhysicsRuntime.
+ *
+ * @returns {{maxLateral:number, finalX:number, finalHeadingErr:number, avgHeadingErr:number}}
+ */
+export function runSteeringScenario({
+    RAPIER, assistConfig, steps = 180, initialHeadingRad = 0.35, targetHeadingRad = 0, vehicle = {}
+}) {
+    const runtime = new PhysicsRuntime({ RAPIER, fixedDt: 1 / 60 });
+    const ground = runtime.world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+    runtime.world.createCollider(RAPIER.ColliderDesc.cuboid(400, 0.5, 400).setTranslation(0, -0.5, 0), ground);
+
+    const car = new SimVehicleAdapter(runtime, { position: { x: 0, y: 1, z: 0 }, ...vehicle });
+    // Kick the car off-heading before it sets off (a bump / off-line corner entry).
+    const half = initialHeadingRad / 2;
+    car.body.setRotation({ x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) }, true);
+
+    const dt = 1 / 60;
+    let maxLateral = 0;
+    let headingErrSum = 0;
+    let prevHeading = car.getHeading();
+    for (let t = 0; t < steps; t++) {
+        const heading = car.getHeading();
+        const headingRate = wrapAngle(heading - prevHeading) / dt;
+        prevHeading = heading;
+        const st = car.getState();
+        const speed = Math.hypot(st.vx, st.vz);
+        const result = computeSteeringAssist(
+            { playerSteer: 0, headingRad: heading, targetHeadingRad, speedMps: speed, headingRateRadPerSec: headingRate },
+            assistConfig
+        );
+        // The assist convention is "positive steer increases heading"; the sim's
+        // yaw torque makes positive steer DECREASE heading, so map by negating.
+        car.applyControls({ acceleration: 1, braking: 0, steering: -result.steer });
+        runtime.step();
+        const p = car.getState();
+        maxLateral = Math.max(maxLateral, Math.abs(p.x));
+        headingErrSum += Math.abs(wrapAngle(targetHeadingRad - car.getHeading()));
+    }
+
+    const lastHeading = car.getHeading();
+    const end = car.getState();
+    const round = (n) => Math.round(n * 1000) / 1000;
+    runtime.free();
+    return {
+        maxLateral: round(maxLateral),
+        finalX: round(end.x),
+        finalHeadingErr: round(Math.abs(wrapAngle(targetHeadingRad - lastHeading))),
+        avgHeadingErr: round(headingErrSum / steps)
+    };
+}
+
+/**
+ * Run the steering scenario with assist OFF and ON and report the improvement.
+ * @returns {{off:Object, on:Object, lateralImprovement:number, headingImprovement:number}}
+ */
+export function compareSteeringAssist({ RAPIER, onConfig, steps = 180, initialHeadingRad = 0.35, engineForce = 400 } = {}) {
+    const vehicle = { engineForce };
+    const off = runSteeringScenario({ RAPIER, assistConfig: { enabled: false }, steps, initialHeadingRad, vehicle });
+    const on = runSteeringScenario({
+        RAPIER,
+        assistConfig: { enabled: true, ...(onConfig || {}) },
+        steps,
+        initialHeadingRad,
+        vehicle
+    });
+    const ratio = (a, b) => (b > 0 ? (b - a) / b : 0);
+    return {
+        off,
+        on,
+        lateralImprovement: Math.round(ratio(on.maxLateral, off.maxLateral) * 1000) / 1000,
+        headingImprovement: Math.round(ratio(on.finalHeadingErr, off.finalHeadingErr) * 1000) / 1000
+    };
+}
+
+export default { DRIVERS, runScenario, sweep, compareToBaseline, runSteeringScenario, compareSteeringAssist };

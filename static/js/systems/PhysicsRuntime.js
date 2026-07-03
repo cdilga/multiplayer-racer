@@ -98,6 +98,18 @@ export class SimVehicleAdapter {
         }
     }
 
+    /**
+     * Heading (radians) derived from the body's forward vector (local -Z),
+     * measured as atan2(forwardX, forwardZ). Matches the steering convention so
+     * a steering aid can correct toward a target heading.
+     */
+    getHeading() {
+        const rot = this.body.rotation();
+        const fx = 2 * (rot.x * rot.z + rot.w * rot.y);
+        const fz = 1 - 2 * (rot.x * rot.x + rot.y * rot.y);
+        return Math.atan2(fx, fz);
+    }
+
     /** Quantized position/velocity state (for trajectory hashing). */
     getState() {
         const p = this.body.translation();

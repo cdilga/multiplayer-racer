@@ -1,0 +1,16 @@
+{
+  "off": {
+    "maxLateral": 3553.032,
+    "finalX": 3553.032,
+    "finalHeadingErr": 0.35,
+    "avgHeadingErr": 0.35
+  },
+  "on": {
+    "maxLateral": 2402.803,
+    "finalX": 2402.803,
+    "finalHeadingErr": 0.009,
+    "avgHeadingErr": 0.16
+  },
+  "lateralImprovement": 0.324,
+  "headingImprovement": 0.974
+}

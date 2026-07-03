@@ -51,6 +51,14 @@
     "friction": 0.5,
     "colliderBorderRadius": 0.25,
     "wallSlideGrip": 0.2,
+    "steeringAssist": {
+      "enabled": false,
+      "strength": 0.4,
+      "damping": 0.6,
+      "maxAssistSteer": 0.8,
+      "engageSpeedMps": 3.0,
+      "headingDeadbandRad": 0.03
+    },
     "density": 4.0,
     "engine": {
       "force": 200,
