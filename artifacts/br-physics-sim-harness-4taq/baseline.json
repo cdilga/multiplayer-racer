@@ -1,0 +1,88 @@
+{
+  "engineForceSweep": {
+    "param": "engineForce",
+    "driver": "fullThrottle",
+    "steps": 180,
+    "rows": [
+      {
+        "value": 400,
+        "metrics": {
+          "peakSpeed": 9418.128,
+          "finalSpeed": 9418.128,
+          "speedRetention": 1,
+          "distance": 10364.079,
+          "deflectionAngle": 0,
+          "minSpeedAfterPeak": 9418.128,
+          "recoverTicks": null
+        }
+      },
+      {
+        "value": 800,
+        "metrics": {
+          "peakSpeed": 18838.463,
+          "finalSpeed": 18838.463,
+          "speedRetention": 1,
+          "distance": 20737.738,
+          "deflectionAngle": 0,
+          "minSpeedAfterPeak": 18838.463,
+          "recoverTicks": null
+        }
+      },
+      {
+        "value": 1200,
+        "metrics": {
+          "peakSpeed": 28258.012,
+          "finalSpeed": 28258.012,
+          "speedRetention": 1,
+          "distance": 31110.395,
+          "deflectionAngle": 0,
+          "minSpeedAfterPeak": 28258.012,
+          "recoverTicks": null
+        }
+      },
+      {
+        "value": 1600,
+        "metrics": {
+          "peakSpeed": 37675.191,
+          "finalSpeed": 37675.191,
+          "speedRetention": 1,
+          "distance": 41481.336,
+          "deflectionAngle": 0,
+          "minSpeedAfterPeak": 37675.191,
+          "recoverTicks": null
+        }
+      }
+    ]
+  },
+  "wallChargeSweep": {
+    "param": "engineForce",
+    "driver": "wallCharge",
+    "steps": 150,
+    "rows": [
+      {
+        "value": 800,
+        "metrics": {
+          "peakSpeed": 272.764,
+          "finalSpeed": 0.009,
+          "speedRetention": 0,
+          "distance": 27.684,
+          "deflectionAngle": -2.82,
+          "minSpeedAfterPeak": 0.008,
+          "recoverTicks": null
+        }
+      },
+      {
+        "value": 1600,
+        "metrics": {
+          "peakSpeed": 337.9,
+          "finalSpeed": 0.048,
+          "speedRetention": 0,
+          "distance": 27.861,
+          "deflectionAngle": -1.361,
+          "minSpeedAfterPeak": 0.001,
+          "recoverTicks": null
+        }
+      }
+    ]
+  }
+}
