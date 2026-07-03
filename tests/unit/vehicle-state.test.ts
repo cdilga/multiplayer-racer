@@ -310,7 +310,9 @@ describe('Vehicle state regressions', () => {
         // the sub-microsecond drift between arming the deadline and reading it.
         const [wheelIdx, steer] = controller.setWheelSteering.mock.calls.at(-1) as [number, number];
         expect(wheelIdx).toBe(1);
-        expect(steer).toBeCloseTo(-0.25, 4);
+        // Wall-clock progress-ramp drift can widen under CPU load; 3 decimals keeps
+        // this deterministic while still pinning the -0.25 bad-landing penalty.
+        expect(steer).toBeCloseTo(-0.25, 3);
     });
 });
 

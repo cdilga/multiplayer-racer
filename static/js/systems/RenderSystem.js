@@ -17,6 +17,7 @@
 import { selectRendererBackend, createRenderer as createBackendRenderer } from '../rendering/RendererBackend.js';
 import { getBrowserTelemetry, getRuntimeTelemetryContext } from '../telemetry/index.js';
 import { setLoFiWarpIntensity } from '../resources/MaterialFactory.js';
+import { tileViewports, buildWifesGrid, assignSeatsToViewports } from '../geometry/ViewportTiling.js';
 
 const DEFAULT_FOG_COLOR = 0x1a0f0a;
 const DEFAULT_FOG_DENSITY = 0.008;
@@ -257,6 +258,8 @@ class RenderSystem {
 
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
+        // Opt-in viewport tiling (woq.8): off by default (single-view render).
+        this.viewportTiling = { enabled: false, mode: 'grid', lastLayout: null };
         this.cameraLookTarget = { x: 0, y: 0, z: 0 };  // Current look-at point
         this.baseFOV = 50;  // Base field of view (reduced for tighter framing)
         this.targetFOV = 50;  // Target field of view
@@ -699,6 +702,12 @@ class RenderSystem {
                 enabled: !!scene?.fog,
                 density: scene?.fog?.density ?? null,
                 color: scene?.fog?.color?.getHex?.() ?? null
+            },
+            viewportTiling: {
+                enabled: !!this.viewportTiling?.enabled,
+                mode: this.viewportTiling?.mode ?? null,
+                viewportCount: this.viewportTiling?.lastLayout?.viewports?.length ?? 0,
+                rows: this.viewportTiling?.lastLayout?.rows ?? null
             },
             postProcessing: {
                 enabled: this.postProcessing.enabled,
@@ -1571,8 +1580,108 @@ class RenderSystem {
         this._updateNameTags();
 
         const renderStartedAt = nowMs();
-        this._renderScene();
+        // Opt-in viewport tiling (woq.8): render one tile per camera cluster / seat
+        // group. Off by default, so the normal single-view path is untouched.
+        if (this.viewportTiling?.enabled && this.cameraTargets.length > 0) {
+            this._renderTiledScene();
+        } else {
+            this._renderScene();
+        }
         this._recordFrameTiming(nowMs() - renderStartedAt);
+    }
+
+    /**
+     * Enable/disable viewport tiling (woq.8). mode: 'grid' = Wife's Grid (one tile
+     * per seat, readability-downgraded); 'cluster' = compact rectangular tiling.
+     * @param {boolean} enabled
+     * @param {string} [mode]
+     */
+    setViewportTiling(enabled, mode = 'grid') {
+        if (!this.viewportTiling) this.viewportTiling = { enabled: false, mode: 'grid', lastLayout: null };
+        this.viewportTiling.enabled = !!enabled;
+        this.viewportTiling.mode = mode;
+        if (!enabled && this.renderer) {
+            // Restore the full-frame viewport / scissor when leaving tiled mode.
+            const size = this.renderer.getSize(new THREE.Vector2());
+            this.renderer.setViewport(0, 0, size.x, size.y);
+            this.renderer.setScissorTest(false);
+            this.camera.aspect = size.x / size.y;
+            this.camera.updateProjectionMatrix();
+        }
+        return this.viewportTiling.enabled;
+    }
+
+    /**
+     * Render the scene once per tile: each tile frames its assigned cars from an
+     * overhead follow, tiling the screen with no gaps/overlap (woq.8).
+     * @private
+     */
+    _renderTiledScene() {
+        const size = this.renderer.getSize(new THREE.Vector2());
+        const pr = this.renderer.getPixelRatio ? this.renderer.getPixelRatio() : 1;
+        const seats = this.cameraTargets.map((entity, i) => ({ seatId: i + 1, entity }));
+
+        // Resolve tiles (Wife's Grid downgrades to a readable count; cluster uses a
+        // compact K). Both share the same gapless, HUD-safe tiling invariants.
+        let layout;
+        let assignment;
+        if (this.viewportTiling.mode === 'grid') {
+            const grid = buildWifesGrid(seats.map((s) => s.seatId), { width: size.x, height: size.y });
+            layout = grid.layout;
+            assignment = grid.assignment;
+        } else {
+            const k = Math.min(seats.length, 6);
+            layout = tileViewports(k, { width: size.x, height: size.y });
+            assignment = assignSeatsToViewports(seats.map((s) => s.seatId), layout.viewports.length);
+        }
+        this.viewportTiling.lastLayout = layout;
+
+        // Group entities by their assigned viewport index.
+        const groups = new Map();
+        for (const seat of seats) {
+            const vp = assignment.get(seat.seatId);
+            if (vp == null) continue;
+            if (!groups.has(vp)) groups.set(vp, []);
+            groups.get(vp).push(seat.entity);
+        }
+
+        const restoreAspect = this.camera.aspect;
+        const restorePos = this.camera.position.clone();
+        const tmp = new THREE.Vector3();
+        this.renderer.setScissorTest(true);
+
+        for (const vp of layout.viewports) {
+            // WebGL viewport origin is bottom-left; tiling y is top-down -> flip.
+            const glX = Math.round(vp.x * pr);
+            const glY = Math.round((size.y - vp.y - vp.height) * pr);
+            const glW = Math.round(vp.width * pr);
+            const glH = Math.round(vp.height * pr);
+            this.renderer.setViewport(glX, glY, glW, glH);
+            this.renderer.setScissor(glX, glY, glW, glH);
+
+            const members = groups.get(vp.index) || this.cameraTargets;
+            tmp.set(0, 0, 0);
+            let n = 0;
+            for (const e of members) {
+                const p = e.mesh?.position || e.position;
+                if (p) { tmp.x += p.x; tmp.y += p.y; tmp.z += p.z; n += 1; }
+            }
+            if (n > 0) tmp.multiplyScalar(1 / n);
+
+            this.camera.aspect = Math.max(0.0001, glW / Math.max(1, glH));
+            this.camera.position.set(tmp.x, tmp.y + 40, tmp.z + 30);
+            this.camera.up.set(0, 1, 0);
+            this.camera.lookAt(tmp.x, tmp.y, tmp.z);
+            this.camera.updateProjectionMatrix();
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        // Restore full-frame state for the next non-tiled frame / HUD.
+        this.renderer.setScissorTest(false);
+        this.renderer.setViewport(0, 0, size.x * pr, size.y * pr);
+        this.camera.aspect = restoreAspect;
+        this.camera.position.copy(restorePos);
+        this.camera.updateProjectionMatrix();
     }
 
     /**
