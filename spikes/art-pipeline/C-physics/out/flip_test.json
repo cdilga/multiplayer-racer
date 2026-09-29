@@ -1,0 +1,421 @@
+{
+  "threshold": {
+    "uprightDot": 0.85,
+    "settleSpeed": 0.15
+  },
+  "summary": {
+    "round": {
+      "n": 10,
+      "recovered": 0,
+      "pct": 0
+    },
+    "box": {
+      "n": 10,
+      "recovered": 0,
+      "pct": 0
+    },
+    "none": {
+      "n": 10,
+      "recovered": 0,
+      "pct": 0
+    }
+  },
+  "results": {
+    "round": [
+      {
+        "pose": "upside_down_flat",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": -1.0000000945609464,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.00009055435657501221,
+          "y": 0.7538894414901733,
+          "z": -0.000058263540267944336
+        }
+      },
+      {
+        "pose": "on_left_side",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": 0.0016981354080858324,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.011667892336845398,
+          "y": 0.9242902994155884,
+          "z": 0.0018464475870132446
+        }
+      },
+      {
+        "pose": "on_right_side",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": 0.0016977045521091583,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.01143510639667511,
+          "y": 0.9242899417877197,
+          "z": -0.0030504539608955383
+        }
+      },
+      {
+        "pose": "nose_down_90",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": 0.00016654262505161332,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.0000841096043586731,
+          "y": 1.9988847970962524,
+          "z": -0.00044061243534088135
+        }
+      },
+      {
+        "pose": "tail_down_90",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": 0.0001662735167897167,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.00014735013246536255,
+          "y": 1.9988856315612793,
+          "z": 0.0005094558000564575
+        }
+      },
+      {
+        "pose": "upside_down_nose_tilt",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": -0.9999999661619572,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.10922691971063614,
+          "y": 0.7538667321205139,
+          "z": -0.5332046151161194
+        }
+      },
+      {
+        "pose": "corner_balance_A",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": -1.000000063206259,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.49035757780075073,
+          "y": 0.7539006471633911,
+          "z": 0.725291907787323
+        }
+      },
+      {
+        "pose": "corner_balance_B",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": -1.000000098317877,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.7526828050613403,
+          "y": 0.7539005279541016,
+          "z": 0.4777980446815491
+        }
+      },
+      {
+        "pose": "upside_down_roll_tilt",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": -1.0000000681464134,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.24734728038311005,
+          "y": 0.7538673877716064,
+          "z": 0.24258582293987274
+        }
+      },
+      {
+        "pose": "on_left_side_pitched",
+        "cabinShape": "round",
+        "finalUpDotWorldUp": 0.0016981743316506481,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.01002577692270279,
+          "y": 0.9242901802062988,
+          "z": 0.006229758262634277
+        }
+      }
+    ],
+    "box": [
+      {
+        "pose": "upside_down_flat",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": -1.0000000994593397,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.0004312777891755104,
+          "y": 0.7537689208984375,
+          "z": -0.0034686215221881866
+        }
+      },
+      {
+        "pose": "on_left_side",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": 0.0016981354080858324,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.011667892336845398,
+          "y": 0.9242902994155884,
+          "z": 0.0018464475870132446
+        }
+      },
+      {
+        "pose": "on_right_side",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": 0.0016977045521091583,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.01143510639667511,
+          "y": 0.9242899417877197,
+          "z": -0.0030504539608955383
+        }
+      },
+      {
+        "pose": "nose_down_90",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": 0.00016654262505161332,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.0000841096043586731,
+          "y": 1.9988847970962524,
+          "z": -0.00044061243534088135
+        }
+      },
+      {
+        "pose": "tail_down_90",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": 0.0001662735167897167,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.00014735013246536255,
+          "y": 1.9988856315612793,
+          "z": 0.0005094558000564575
+        }
+      },
+      {
+        "pose": "upside_down_nose_tilt",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": -1.0000000424561295,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.11127636581659317,
+          "y": 0.7537685632705688,
+          "z": -0.5359954833984375
+        }
+      },
+      {
+        "pose": "corner_balance_A",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": -1.0000000334711978,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.453931987285614,
+          "y": 0.7537683248519897,
+          "z": 0.6130291819572449
+        }
+      },
+      {
+        "pose": "corner_balance_B",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": -0.9999999579732045,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.6639589667320251,
+          "y": 0.7537680268287659,
+          "z": 0.3755720257759094
+        }
+      },
+      {
+        "pose": "upside_down_roll_tilt",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": -0.999999969359389,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.18604303896427155,
+          "y": 0.7537681460380554,
+          "z": 0.2905518710613251
+        }
+      },
+      {
+        "pose": "on_left_side_pitched",
+        "cabinShape": "box",
+        "finalUpDotWorldUp": 0.0016981743316506481,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.01002577692270279,
+          "y": 0.9242901802062988,
+          "z": 0.006229758262634277
+        }
+      }
+    ],
+    "none": [
+      {
+        "pose": "upside_down_flat",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": -1.0000000312156603,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.00044669490307569504,
+          "y": 0.3785487413406372,
+          "z": -0.0002894476056098938
+        }
+      },
+      {
+        "pose": "on_left_side",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": 0.0016981354080858324,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.011667892336845398,
+          "y": 0.9242902994155884,
+          "z": 0.0018464475870132446
+        }
+      },
+      {
+        "pose": "on_right_side",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": 0.0016977045521091583,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.01143510639667511,
+          "y": 0.9242899417877197,
+          "z": -0.0030504539608955383
+        }
+      },
+      {
+        "pose": "nose_down_90",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": 0.00016654262505161332,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.0000841096043586731,
+          "y": 1.9988847970962524,
+          "z": -0.00044061243534088135
+        }
+      },
+      {
+        "pose": "tail_down_90",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": 0.0001662735167897167,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.00014735013246536255,
+          "y": 1.9988856315612793,
+          "z": 0.0005094558000564575
+        }
+      },
+      {
+        "pose": "upside_down_nose_tilt",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": -1.0000000805218523,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.11237300932407379,
+          "y": 0.37854981422424316,
+          "z": -0.5863311290740967
+        }
+      },
+      {
+        "pose": "corner_balance_A",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": -0.9999999792262124,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.5103907585144043,
+          "y": 0.37854859232902527,
+          "z": 0.13717475533485413
+        }
+      },
+      {
+        "pose": "corner_balance_B",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": -0.9999999994659493,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": 0.5228705406188965,
+          "y": 0.3785484731197357,
+          "z": -0.08170779794454575
+        }
+      },
+      {
+        "pose": "upside_down_roll_tilt",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": -1.0000000953548513,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.020446322858333588,
+          "y": 0.37854984402656555,
+          "z": 0.21944360435009003
+        }
+      },
+      {
+        "pose": "on_left_side_pitched",
+        "cabinShape": "none",
+        "finalUpDotWorldUp": 0.0016981743316506481,
+        "upright": false,
+        "settled": true,
+        "recoveredWithinS": null,
+        "finalPos": {
+          "x": -0.01002577692270279,
+          "y": 0.9242901802062988,
+          "z": 0.006229758262634277
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Art spike in-game</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike: load the contract GLB through its sidecar, apply toon semantic materials + identity paint +
+// inverted-hull ink, drive dent morphs, render a dynamic grid of N tiles. ?n=24&dent=0.8&w=3840&h=2160
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const q = new URLSearchParams(location.search);
+const N = +(q.get('n') || 4), W = +(q.get('w') || 1920), H = +(q.get('h') || 1080), DENT = +(q.get('dent') || 0);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1); renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+const IDENTITY = ['#ff3b30', '#1e6bff', '#ffcc00', '#22c55e', '#a855f7', '#ff7a00', '#00c2c7', '#ff4fa3',
+                  '#8b5a2b', '#ffffff', '#111827', '#84cc16'];
+const ramp = (() => { const d = new Uint8Array([60, 150, 255]); const t = new THREE.DataTexture(d, 3, 1, THREE.RedFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
+const sidecar = await (await fetch('out/cruz_missile.asset.json')).json();
+const gltf = await new GLTFLoader().loadAsync('out/cruz_missile.glb');
+
+function semanticMaterial(src, paint) {
+  const name = src.name;
+  const base = { gradientMap: ramp };
+  if (name === 'jj_paint') return new THREE.MeshToonMaterial({ ...base, color: paint });
+  if (name === 'jj_decal') return new THREE.MeshToonMaterial({ ...base, map: src.map, transparent: true, alphaTest: 0.3 });
+  if (name === 'jj_headlight' || name === 'jj_brakelight') return new THREE.MeshBasicMaterial({ color: src.emissive.clone().multiplyScalar(1.2) });
+  if (name === 'jj_glass') return new THREE.MeshToonMaterial({ ...base, color: '#7fb8d6' });
+  return new THREE.MeshToonMaterial({ ...base, color: src.color });
+}
+const ink = new THREE.MeshBasicMaterial({ color: '#111', side: THREE.BackSide });
+
+function makeCar(i) {
+  const car = gltf.scene.clone(true);
+  const paint = new THREE.Color(IDENTITY[i % IDENTITY.length]);
+  const hulls = [];
+  car.traverse(o => {
+    if (!o.isMesh) return;
+    if (o.name.startsWith('col_')) { o.visible = false; return; }        // colliders never render
+    o.material = semanticMaterial(o.material, paint);
+    if (o.morphTargetInfluences) o.morphTargetInfluences.fill(DENT);   // R68 dents
+    if (!o.name.startsWith('decal_')) {                                   // inverted-hull ink outline
+      const h = new THREE.Mesh(o.geometry, ink); h.scale.setScalar(1.04);
+      if (o.morphTargetInfluences) { h.morphTargetInfluences = o.morphTargetInfluences; h.morphTargetDictionary = o.morphTargetDictionary; }
+      hulls.push([o, h]);
+    }
+  });
+  hulls.forEach(([o, h]) => o.add(h));
+  // roof number from the contract marker
+  const marker = car.getObjectByName('roof_number');
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#111'; g.stroke();
+  g.fillStyle = '#111'; g.font = 'bold 76px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(i + 1), 64, 68);
+  const num = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+  num.position.z = 0.02; marker.add(num);
+  return car;
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3d9b1');
+scene.add(new THREE.HemisphereLight('#fff7e6', '#8a4b2a', 1.2));
+const sun = new THREE.DirectionalLight('#ffffff', 2.2); sun.position.set(20, 40, 10); scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshToonMaterial({ color: '#c8622e', gradientMap: ramp }));
+ground.rotation.x = -Math.PI / 2; scene.add(ground);
+// the GLB is Z-up +Y-forward from Blender; the glTF exporter converts to Y-up (+Y fwd -> -Z)
+const cars = [];
+for (let i = 0; i < N; i++) {
+  const car = makeCar(i);
+  car.position.set((i % 6) * 5 - 12, 0, -Math.floor(i / 6) * 8);
+  car.rotation.y = (i * 0.37) % 1 - 0.5;
+  scene.add(car); cars.push(car);
+}
+
+// dynamic grid layout (plan §6.2), aspect-aware
+let best = null;
+for (let r = 1; r <= N; r++) { const c = Math.ceil(N / r); const tw = W / c, th = H / r, a = tw / th;
+  const score = (r * c - N) * 10 + Math.abs(Math.log(a / 1.6)); if (!best || score < best.s) best = { r, c, s: score }; }
+const tw = Math.floor(W / best.c), th = Math.floor(H / best.r);
+const cam = new THREE.PerspectiveCamera(55, tw / th, 0.1, 500);
+const bbox = new THREE.Box3(), v = new THREE.Vector3(), report = [];
+cars.forEach((car, i) => {
+  const x = (i % best.c) * tw, y = H - (Math.floor(i / best.c) + 1) * th;
+  // chase cam behind the car (-Z is forward after glTF conversion)
+  const back = new THREE.Vector3(0, 0, 1).applyQuaternion(car.quaternion);
+  cam.position.copy(car.position).addScaledVector(back, 7.5).add(new THREE.Vector3(0, 3.2, 0));
+  cam.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0))); cam.updateMatrixWorld();
+  renderer.setViewport(x, y, tw, th); renderer.setScissor(x, y, tw, th); renderer.render(scene, cam);
+  // own-car screen height in this tile (plan budget: >= 40 px)
+  bbox.setFromObject(car); let minY = 1e9, maxY = -1e9;
+  for (const px of [bbox.min.x, bbox.max.x]) for (const py of [bbox.min.y, bbox.max.y]) for (const pz of [bbox.min.z, bbox.max.z]) {
+    v.set(px, py, pz).project(cam); minY = Math.min(minY, v.y); maxY = Math.max(maxY, v.y); }
+  report.push(Math.round((maxY - minY) / 2 * th));
+});
+window.__report = { n: N, grid: `${best.r}x${best.c}`, tile: `${tw}x${th}`, ownCarPx: report,
+  tris: renderer.info.render.triangles, calls: renderer.info.render.calls, sidecarParts: Object.keys(sidecar.parts).length };
+document.title = 'READY';
+</script></body></html>

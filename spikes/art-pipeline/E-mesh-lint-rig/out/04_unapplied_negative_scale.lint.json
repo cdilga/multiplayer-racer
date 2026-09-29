@@ -1,0 +1,36 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/E-mesh-lint-rig/broken/04_unapplied_negative_scale.blend",
+  "objects_checked": 1,
+  "triangles": 12,
+  "elapsed_sec": 0.001,
+  "ok": false,
+  "error_count": 2,
+  "warn_count": 0,
+  "findings": [
+    {
+      "id": "unapplied_scale",
+      "severity": "error",
+      "message": "Object scale is not (1,1,1) \u2014 apply scale before export",
+      "count": 1,
+      "objects": [
+        "negative_scale_cube"
+      ]
+    },
+    {
+      "id": "negative_scale",
+      "severity": "error",
+      "message": "Object has a negative scale component (flips normals on export)",
+      "count": 1,
+      "objects": [
+        "negative_scale_cube"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 12 vs budget 10000",
+      "count": 12,
+      "objects": []
+    }
+  ]
+}

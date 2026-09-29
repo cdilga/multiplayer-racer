@@ -1,0 +1,23 @@
+{
+  "contract": "jj.surface_set.v0-draft",
+  "id": "sand_soft",
+  "display_name": "Soft desert sand",
+  "surface_id": "sand_soft",
+  "texture": "textures/surface_sand_soft.png",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "tileable": true,
+  "tileability_check": "out/tile3x3_sand_soft.png (visual inspection, no seam algorithm run)",
+  "gameplay": {
+    "grip": 0.45,
+    "rolling_resistance": 0.85,
+    "particle_color": "#e8c878",
+    "tyre_sound_id": "sfx_tyre_sand_soft"
+  },
+  "provenance": {
+    "source": "codex exec image_generation 2026-09-29",
+    "prompt_constraints": "no real landmarks, no Indigenous motifs, no real brands/logos"
+  }
+}

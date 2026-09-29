@@ -1,0 +1,145 @@
+{
+  "elapsed_sec": 0.013,
+  "steps": 9,
+  "tol": 0.01,
+  "hinge_clear_radius_m": 0.12,
+  "joints_tested": [
+    "steer_front",
+    "wheel_front",
+    "wheel_rear"
+  ],
+  "ok": false,
+  "fail_count": 4,
+  "results": [
+    {
+      "part": "steer_front",
+      "check": "steer_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "steer_front",
+      "check": "steer_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          -40.0,
+          -30.0,
+          -20.0,
+          -10.0,
+          10.0,
+          20.0,
+          30.0,
+          40.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "steer_front",
+      "check": "steer_axis_vertical",
+      "ok": true,
+      "detail": {
+        "dot_with_world_up": 0.906
+      }
+    },
+    {
+      "part": "steer_front",
+      "check": "steer_full_lock_clearance",
+      "ok": false,
+      "detail": {
+        "lock_angle_deg": 40.0,
+        "arch_overlap": true,
+        "note": "overlap()=triangle-pair test; True means the moving geometry intersects the declared body mesh at full lock"
+      }
+    },
+    {
+      "part": "wheel_front",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_front",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_front",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.2996,
+          0.2996
+        ]
+      }
+    },
+    {
+      "part": "wheel_rear",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_rear",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_rear",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.2996,
+          0.2996
+        ]
+      }
+    }
+  ]
+}

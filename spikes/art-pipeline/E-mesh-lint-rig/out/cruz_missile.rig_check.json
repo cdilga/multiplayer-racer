@@ -1,0 +1,385 @@
+{
+  "elapsed_sec": 0.044,
+  "steps": 9,
+  "tol": 0.01,
+  "hinge_clear_radius_m": 0.12,
+  "joints_tested": [
+    "bonnet",
+    "boot",
+    "door_L",
+    "door_R",
+    "wheel_FL",
+    "wheel_FR",
+    "wheel_RL",
+    "wheel_RR"
+  ],
+  "ok": false,
+  "fail_count": 11,
+  "results": [
+    {
+      "part": "bonnet",
+      "check": "hinge_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "bonnet",
+      "check": "hinge_no_interpenetration",
+      "ok": true,
+      "detail": {
+        "offending_angles_deg": [],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "boot",
+      "check": "hinge_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "boot",
+      "check": "hinge_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          7.5,
+          15.0,
+          22.5,
+          30.0,
+          37.5,
+          45.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "door_L",
+      "check": "hinge_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "door_L",
+      "check": "hinge_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          8.8,
+          17.5,
+          26.2,
+          35.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "door_L",
+      "check": "hinge_swings_outward",
+      "ok": true,
+      "detail": {
+        "x0": -0.974,
+        "x1": -2.18,
+        "expected_sign": -1
+      }
+    },
+    {
+      "part": "door_R",
+      "check": "hinge_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "door_R",
+      "check": "hinge_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          8.8,
+          17.5,
+          26.2,
+          35.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "door_R",
+      "check": "hinge_swings_outward",
+      "ok": true,
+      "detail": {
+        "x0": 0.926,
+        "x1": 2.163,
+        "expected_sign": 1
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "steer_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "steer_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          -35.0,
+          -26.2,
+          -17.5,
+          -8.8,
+          8.8,
+          17.5,
+          26.2,
+          35.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "steer_axis_vertical",
+      "ok": true,
+      "detail": {
+        "dot_with_world_up": 1.0
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "steer_full_lock_clearance",
+      "ok": false,
+      "detail": {
+        "lock_angle_deg": 35.0,
+        "arch_overlap": true,
+        "note": "overlap()=triangle-pair test; True means the tyre intersects the declared body mesh at full lock"
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_FL",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.3984,
+          0.3984
+        ]
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "steer_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "steer_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          -35.0,
+          -26.2,
+          -17.5,
+          -8.8,
+          8.8,
+          17.5,
+          26.2,
+          35.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "steer_axis_vertical",
+      "ok": true,
+      "detail": {
+        "dot_with_world_up": 1.0
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "steer_full_lock_clearance",
+      "ok": false,
+      "detail": {
+        "lock_angle_deg": 35.0,
+        "arch_overlap": true,
+        "note": "overlap()=triangle-pair test; True means the tyre intersects the declared body mesh at full lock"
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_FR",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.3984,
+          0.3984
+        ]
+      }
+    },
+    {
+      "part": "wheel_RL",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_RL",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_RL",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.3984,
+          0.3984
+        ]
+      }
+    },
+    {
+      "part": "wheel_RR",
+      "check": "spin_pivot_fixed",
+      "ok": true,
+      "detail": {
+        "max_drift_m": 0.0
+      }
+    },
+    {
+      "part": "wheel_RR",
+      "check": "spin_no_interpenetration",
+      "ok": false,
+      "detail": {
+        "offending_angles_deg": [
+          0.0,
+          45.0,
+          90.0,
+          135.0,
+          180.0,
+          225.0,
+          270.0,
+          315.0,
+          360.0
+        ],
+        "hinge_clear_radius_m": 0.12
+      }
+    },
+    {
+      "part": "wheel_RR",
+      "check": "spin_radius_constant",
+      "ok": true,
+      "detail": {
+        "object_scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sample_radius_range_m": [
+          0.3984,
+          0.3984
+        ]
+      }
+    }
+  ]
+}

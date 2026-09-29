@@ -1,0 +1,59 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/E-mesh-lint-rig/out/dirtbike.blend",
+  "objects_checked": 13,
+  "triangles": 1516,
+  "elapsed_sec": 0.013,
+  "ok": true,
+  "error_count": 0,
+  "warn_count": 3,
+  "findings": [
+    {
+      "id": "ngons",
+      "severity": "warn",
+      "message": "Faces with > 4 sides",
+      "count": 8,
+      "objects": [
+        "wheel_front",
+        "wheel_front_rim",
+        "wheel_rear",
+        "wheel_rear_rim"
+      ]
+    },
+    {
+      "id": "nonplanar_quads",
+      "severity": "warn",
+      "message": "Non-planar quads (deviation > 1% of diagonal)",
+      "count": 216,
+      "objects": [
+        "downtube",
+        "fender_front",
+        "fork_L",
+        "fork_R",
+        "frame",
+        "handlebar",
+        "seat",
+        "swingarm",
+        "tank"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 1516 vs budget 10000",
+      "count": 1516,
+      "objects": []
+    },
+    {
+      "id": "part_interpenetration_at_rest",
+      "severity": "warn",
+      "message": "Sibling parts overlap at rest (excluding parent/child designed contacts)",
+      "count": 4,
+      "objects": [
+        "downtube x wheel_front (30 tri pairs)",
+        "fender_front x tank (20 tri pairs)",
+        "frame x wheel_front (16 tri pairs)",
+        "swingarm x wheel_rear (10 tri pairs)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+ "length": 4.6,
+ "profile": [
+  {
+   "x": 0.013,
+   "top": 0.602,
+   "bottom": 0.288,
+   "belt": null,
+   "halfwidth": 0.664
+  },
+  {
+   "x": 0.1,
+   "top": 0.815,
+   "bottom": 0.226,
+   "belt": null,
+   "halfwidth": 0.664
+  },
+  {
+   "x": 0.188,
+   "top": 0.865,
+   "bottom": 0.213,
+   "belt": null,
+   "halfwidth": 0.751
+  },
+  {
+   "x": 0.288,
+   "top": 0.902,
+   "bottom": 0.201,
+   "belt": null,
+   "halfwidth": 0.751
+  },
+  {
+   "x": 0.389,
+   "top": 0.928,
+   "bottom": 0.188,
+   "belt": null,
+   "halfwidth": 0.798
+  },
+  {
+   "x": 0.476,
+   "top": 0.953,
+   "bottom": 0.414,
+   "belt": null,
+   "halfwidth": 0.825
+  },
+  {
+   "x": 0.577,
+   "top": 0.965,
+   "bottom": 0.614,
+   "belt": null,
+   "halfwidth": 0.845
+  },
+  {
+   "x": 0.677,
+   "top": 0.99,
+   "bottom": 0.702,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 0.765,
+   "top": 1.003,
+   "bottom": 0.727,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 0.865,
+   "top": 1.015,
+   "bottom": 0.74,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 0.953,
+   "top": 1.028,
+   "bottom": 0.727,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.053,
+   "top": 1.04,
+   "bottom": 1.053,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.153,
+   "top": 1.065,
+   "bottom": 0.602,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.241,
+   "top": 1.116,
+   "bottom": 0.188,
+   "belt": null,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.341,
+   "top": 1.166,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.441,
+   "top": 1.228,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.529,
+   "top": 1.266,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.629,
+   "top": 1.316,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.73,
+   "top": 1.354,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.817,
+   "top": 1.391,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 1.918,
+   "top": 1.429,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.018,
+   "top": 1.454,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.106,
+   "top": 1.479,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.206,
+   "top": 1.492,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.306,
+   "top": 1.492,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.394,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.494,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.582,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.682,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.783,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.87,
+   "top": 1.504,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 2.971,
+   "top": 1.492,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 3.071,
+   "top": 1.479,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 3.159,
+   "top": 1.466,
+   "bottom": 0.201,
+   "belt": 0.965,
+   "halfwidth": 0.858
+  },
+  {
+   "x": 3.259,
+   "top": 1.441,
+   "bottom": 0.526,
+   "belt": 0.965,
+   "halfwidth": 0.858
+  },
+  {
+   "x": 3.359,
+   "top": 1.416,
+   "bottom": 0.652,
+   "belt": 0.965,
+   "halfwidth": 0.858
+  },
+  {
+   "x": 3.447,
+   "top": 1.391,
+   "bottom": 0.702,
+   "belt": 0.965,
+   "halfwidth": 0.858
+  },
+  {
+   "x": 3.547,
+   "top": 1.341,
+   "bottom": 0.727,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 3.647,
+   "top": 1.304,
+   "bottom": 0.727,
+   "belt": 0.965,
+   "halfwidth": 0.852
+  },
+  {
+   "x": 3.735,
+   "top": 1.253,
+   "bottom": 0.702,
+   "belt": 0.965,
+   "halfwidth": 0.845
+  },
+  {
+   "x": 3.835,
+   "top": 1.203,
+   "bottom": 0.639,
+   "belt": 0.965,
+   "halfwidth": 0.831
+  },
+  {
+   "x": 3.923,
+   "top": 1.153,
+   "bottom": 0.526,
+   "belt": 0.965,
+   "halfwidth": 0.825
+  },
+  {
+   "x": 4.023,
+   "top": 1.103,
+   "bottom": 0.226,
+   "belt": null,
+   "halfwidth": 0.811
+  },
+  {
+   "x": 4.124,
+   "top": 1.09,
+   "bottom": 0.251,
+   "belt": null,
+   "halfwidth": 0.798
+  },
+  {
+   "x": 4.211,
+   "top": 1.09,
+   "bottom": 0.263,
+   "belt": null,
+   "halfwidth": 0.785
+  },
+  {
+   "x": 4.312,
+   "top": 1.078,
+   "bottom": 0.288,
+   "belt": null,
+   "halfwidth": 0.764
+  },
+  {
+   "x": 4.412,
+   "top": 1.065,
+   "bottom": 0.313,
+   "belt": null,
+   "halfwidth": 0.764
+  },
+  {
+   "x": 4.5,
+   "top": 0.902,
+   "bottom": 0.326,
+   "belt": null,
+   "halfwidth": 0.717
+  },
+  {
+   "x": 4.587,
+   "top": 0.652,
+   "bottom": 0.414,
+   "belt": null,
+   "halfwidth": 0.717
+  }
+ ],
+ "wheel_x": [
+  1.09,
+  3.835
+ ],
+ "wheel_radius": 0.32,
+ "front": "x=0 (car faces -x in refs)"
+}

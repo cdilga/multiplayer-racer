@@ -1,0 +1,61 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>compress test</title>
+<style>html,body{margin:0;background:#333}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike B, task 3: load a KTX2/Basis + meshopt-compressed GLB with a SELF-HOSTED transcoder/decoder
+// (no runtime CDN, per R70) and confirm it round-trips into a normal Three.js scene.
+// ?glb=out/cruz_missile.lod0.etc1s.meshopt.glb
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+const q = new URLSearchParams(location.search);
+const GLB = q.get('glb') || 'out/cruz_missile.lod0.glb';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(800, 800, false);
+document.body.appendChild(renderer.domElement);
+
+const ktx2 = new KTX2Loader()
+  .setTranscoderPath('/node_modules/three/examples/jsm/libs/basis/') // self-hosted, served by our own http.server
+  .detectSupport(renderer);
+
+const draco = new DRACOLoader().setDecoderPath('/node_modules/three/examples/jsm/libs/draco/'); // self-hosted
+
+const loader = new GLTFLoader();
+loader.setKTX2Loader(ktx2);
+loader.setDRACOLoader(draco);
+loader.setMeshoptDecoder(MeshoptDecoder);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#e8d8bd');
+scene.add(new THREE.HemisphereLight('#fff7e6', '#8a4b2a', 1.4));
+const sun = new THREE.DirectionalLight('#ffffff', 2.0);
+sun.position.set(20, 40, 10);
+scene.add(sun);
+
+const cam = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+window.__status = 'loading';
+try {
+  const gltf = await loader.loadAsync(GLB);
+  scene.add(gltf.scene);
+  const box = new THREE.Box3().setFromObject(gltf.scene);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3()).length();
+  cam.position.copy(center).add(new THREE.Vector3(size * 0.5, size * 0.35, size * 0.6));
+  cam.lookAt(center);
+  renderer.render(scene, cam);
+  let usesBasisu = false, usesMeshopt = false;
+  gltf.scene.traverse(o => {
+    if (o.isMesh && o.material && o.material.map && o.material.map.isCompressedTexture) usesBasisu = true;
+  });
+  window.__report = { status: 'ok', glb: GLB, usesBasisu, triangles: renderer.info.render.triangles };
+} catch (e) {
+  window.__report = { status: 'error', glb: GLB, error: String(e && e.stack || e) };
+}
+document.title = 'READY';
+</script></body></html>

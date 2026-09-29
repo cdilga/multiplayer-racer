@@ -1,0 +1,84 @@
+{
+  "contract": "jj.kit_piece.v0-draft",
+  "id": "track_piece_bend90",
+  "display_name": "Red Centre dirt road - 90 deg bend",
+  "units": "m",
+  "forward": "+Y",
+  "up": "+Z",
+  "asset": "track_piece_bend90.glb",
+  "render_nodes": [
+    "track_piece_bend90",
+    "track_barrier_rocks"
+  ],
+  "colliders": [
+    "col_track_piece_bend90",
+    "col_track_barrier_rocks"
+  ],
+  "snap_points": {
+    "snap_start": {
+      "position": [
+        0.0,
+        0.0,
+        0.03999999910593033
+      ],
+      "forward": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "up": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "snap_end": {
+      "position": [
+        9.0,
+        9.0,
+        0.03999999910593033
+      ],
+      "forward": [
+        6.123234262925839e-17,
+        1.0,
+        0.0
+      ],
+      "up": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "surface_map": {
+    "slots": [
+      "jj_surface_dirt_packed",
+      "jj_surface_off_track",
+      "jj_surface_rock"
+    ],
+    "slot_0": "dirt_packed",
+    "slot_1": "off_track",
+    "slot_2": "rock"
+  },
+  "vertex_color_ao": [
+    "track_piece_bend90",
+    "track_barrier_rocks"
+  ],
+  "road_width_m": 6.0,
+  "bend_angle_deg": 90,
+  "bend_radius_m": 9.0,
+  "triangles": 224,
+  "materials": [
+    "jj_surface_dirt_packed",
+    "jj_surface_off_track",
+    "jj_surface_rock"
+  ],
+  "cultural_review": {
+    "barrier_type": "fictional eroded-mesa procedural rock formation",
+    "note": "generated procedurally (stacked scaled boxes, random seed), not modelled on or named after any real sacred site or landmark, per docs/policies/owner-direction-2026-09-29.md"
+  },
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/D-props-kit-surfaces/build_track_kit_piece.py"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jj.surface_set.v0-draft",
+  "title": "Surface texture set sidecar (draft)",
+  "type": "object",
+  "required": ["contract", "id", "surface_id", "texture", "resolution", "tileable", "gameplay"],
+  "properties": {
+    "contract": { "type": "string", "enum": ["jj.surface_set.v0-draft"] },
+    "id": { "type": "string", "minLength": 1 },
+    "surface_id": { "type": "string", "enum": ["dirt_packed", "sand_soft", "tarmac", "off_track", "rock", "gravel", "wet_sand", "mud", "grass", "shallow_water"] },
+    "texture": { "type": "string", "minLength": 1 },
+    "resolution": { "type": "array", "minItems": 2, "maxItems": 2 },
+    "tileable": { "type": "boolean" },
+    "tileability_check": { "type": "string" },
+    "gameplay": {
+      "type": "object",
+      "required": ["grip", "rolling_resistance", "particle_color", "tyre_sound_id"],
+      "properties": {
+        "grip": { "type": "number", "minimum": 0, "maximum": 1.5 },
+        "rolling_resistance": { "type": "number", "minimum": 0, "maximum": 1.5 },
+        "particle_color": { "type": "string", "minLength": 4 },
+        "tyre_sound_id": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

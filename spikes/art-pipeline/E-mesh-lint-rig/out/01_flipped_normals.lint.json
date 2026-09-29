@@ -1,0 +1,36 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/E-mesh-lint-rig/broken/01_flipped_normals.blend",
+  "objects_checked": 1,
+  "triangles": 12,
+  "elapsed_sec": 0.0,
+  "ok": false,
+  "error_count": 2,
+  "warn_count": 0,
+  "findings": [
+    {
+      "id": "inverted_normals_volume",
+      "severity": "error",
+      "message": "Closed mesh has negative signed volume (net inward-facing normals)",
+      "count": 1,
+      "objects": [
+        "flipped_normals_cube"
+      ]
+    },
+    {
+      "id": "inconsistent_normals",
+      "severity": "error",
+      "message": "Faces with winding inconsistent with a recalculated-outward pass",
+      "count": 6,
+      "objects": [
+        "flipped_normals_cube"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 12 vs budget 10000",
+      "count": 12,
+      "objects": []
+    }
+  ]
+}

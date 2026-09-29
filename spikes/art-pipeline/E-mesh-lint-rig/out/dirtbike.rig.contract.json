@@ -1,0 +1,48 @@
+{
+  "asset": "dirt-zed",
+  "up": "+Z",
+  "forward": "+Y",
+  "joints": {
+    "wheel_rear": {
+      "type": "spin",
+      "axis_local": [
+        1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        360
+      ],
+      "attach": "frame"
+    },
+    "steer_front": {
+      "type": "steer",
+      "axis_local": [
+        0.0,
+        0.4226182699203491,
+        0.9063078165054321
+      ],
+      "range_deg": [
+        -40,
+        40
+      ],
+      "attach": "frame",
+      "note": "head-tube rake 25.0 deg from vertical"
+    },
+    "wheel_front": {
+      "type": "spin",
+      "axis_local": [
+        1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        360
+      ],
+      "attach": "steer_front",
+      "note": "spins inside the steer group; composes with steer_front's rotation"
+    }
+  }
+}

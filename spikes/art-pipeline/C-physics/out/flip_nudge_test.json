@@ -1,0 +1,254 @@
+[
+  {
+    "axisName": "X",
+    "cabinShape": "round",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -0.9999999979854719,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "round",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -0.9999999894014686,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "round",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -1.0000001278400223,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "round",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -0.9999999991719968,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "round",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -1.0000000773332842,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "round",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -0.9999999984634431,
+    "finalUpDot": -1.0000000455167366,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "box",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -0.9999999992842707,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "box",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -0.9999999994727867,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "box",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -1.0000000867516408,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "box",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -0.9999999992974332,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "box",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -0.9999999934313749,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "box",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -0.9999999992813285,
+    "finalUpDot": -1.0000001336299418,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "none",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000010945846,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "none",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000680075873,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "X",
+    "cabinShape": "none",
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000630415553,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "none",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 1.5,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000000003864,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "none",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 3,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000000000886,
+    "upright": false,
+    "recoveredWithinS": null
+  },
+  {
+    "axisName": "Z",
+    "cabinShape": "none",
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "omega": 5,
+    "restUpDotBeforeNudge": -1.000000000001126,
+    "finalUpDot": -1.0000000009424654,
+    "upright": false,
+    "recoveredWithinS": null
+  }
+]

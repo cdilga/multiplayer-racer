@@ -1,0 +1,143 @@
+{
+  "asset": "cruz-missile",
+  "up": "+Z",
+  "forward": "+Y",
+  "joints": {
+    "door_L": {
+      "type": "hinge",
+      "axis_local": [
+        0,
+        0,
+        -1
+      ],
+      "range_deg": [
+        0,
+        70
+      ],
+      "attach": "chassis",
+      "note": "front-hinged, swings outward (-X)"
+    },
+    "door_R": {
+      "type": "hinge",
+      "axis_local": [
+        0,
+        0,
+        1
+      ],
+      "range_deg": [
+        0,
+        70
+      ],
+      "attach": "chassis",
+      "note": "front-hinged, swings outward (+X)"
+    },
+    "bonnet": {
+      "type": "hinge",
+      "axis_local": [
+        1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        60
+      ],
+      "attach": "chassis",
+      "note": "rear-hinged at scuttle, nose lifts (+Z)"
+    },
+    "boot": {
+      "type": "hinge",
+      "axis_local": [
+        -1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        60
+      ],
+      "attach": "chassis",
+      "note": "front-hinged at cabin edge, lid lifts (+Z)"
+    },
+    "wheel_RL": {
+      "type": "spin",
+      "axis_local": [
+        1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        360
+      ],
+      "attach": "chassis"
+    },
+    "wheel_RR": {
+      "type": "spin",
+      "axis_local": [
+        1,
+        0,
+        0
+      ],
+      "range_deg": [
+        0,
+        360
+      ],
+      "attach": "chassis"
+    },
+    "wheel_FL": {
+      "type": "compound",
+      "steer": {
+        "axis_local": [
+          0,
+          0,
+          1
+        ],
+        "range_deg": [
+          -35,
+          35
+        ]
+      },
+      "spin": {
+        "axis_local": [
+          1,
+          0,
+          0
+        ],
+        "range_deg": [
+          0,
+          360
+        ]
+      },
+      "attach": "chassis",
+      "arch_clearance_target": "chassis"
+    },
+    "wheel_FR": {
+      "type": "compound",
+      "steer": {
+        "axis_local": [
+          0,
+          0,
+          1
+        ],
+        "range_deg": [
+          -35,
+          35
+        ]
+      },
+      "spin": {
+        "axis_local": [
+          1,
+          0,
+          0
+        ],
+        "range_deg": [
+          0,
+          360
+        ]
+      },
+      "attach": "chassis",
+      "arch_clearance_target": "chassis"
+    }
+  }
+}

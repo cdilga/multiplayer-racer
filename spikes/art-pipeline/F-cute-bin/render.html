@@ -1,0 +1,235 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Spike F render harness</title>
+<style>html,body{margin:0;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike F render harness: loads out/bin.glb (+ out/debris.glb for the broken state) via its own
+// bin.asset.json sidecar (never hardcoded knowledge beyond "which sidecar/GLB exist" -- same
+// discipline as D-props-kit-surfaces/ingame.html), converts the PBR materials Blender exported
+// into toon materials with a 3-step gradient ramp + an inverted-hull ink outline, and renders
+// whichever `view` the query string asks for: 3q | front | side | back | top | squish | silhouette.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const BASE = 'out/';
+const params = new URLSearchParams(location.search);
+const VIEW = params.get('view') || '3q';
+const W = parseInt(params.get('w') || '900', 10);
+const H = parseInt(params.get('h') || '900', 10);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+renderer.setSize(W, H, false);
+renderer.setClearColor(0xf3e3c3, VIEW === 'silhouette' ? 0 : 1); // sun-cream, per MASTER_PROMPTS palette
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+// ---------------------------------------------------------------- 3-step toon ramp
+function makeRamp() {
+  const c = document.createElement('canvas'); c.width = 4; c.height = 1;
+  const g = c.getContext('2d');
+  g.fillStyle = '#5b5f4a'; g.fillRect(0, 0, 1, 1);   // shadow band (cool-tinted dark)
+  g.fillStyle = '#9aa06e'; g.fillRect(1, 0, 2, 1);   // mid band
+  g.fillStyle = '#ffffff'; g.fillRect(3, 0, 1, 1);   // lit band
+  const tex = new THREE.CanvasTexture(c);
+  tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+  return tex;
+}
+const RAMP = makeRamp();
+
+function toToon(stdMat) {
+  const m = new THREE.MeshToonMaterial({
+    color: stdMat.color ? stdMat.color.clone() : new THREE.Color(0xffffff),
+    vertexColors: !!stdMat.vertexColors,
+    gradientMap: RAMP,
+  });
+  return m;
+}
+
+// Inverted-hull ink outline: for each mesh, build a BackSide-black clone whose vertices are
+// pushed outward along their OWN vertex normal by a fixed distance (not a uniform object-scale --
+// that distorts non-convex bits like the panel inset/handle bump into zigzag artifacts, tried
+// first and visibly wrong on the lid in round1). Morph attributes are shared by reference (not
+// cloned) with the source geometry, and morphTargetInfluences is the SAME array object, so the
+// outline tracks crush-shape-key deformation instead of freezing at the intact pose.
+function addInkOutlines(root, outlineColor = 0x1a1710, thickness = 0.012) {
+  const meshes = [];
+  root.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  for (const o of meshes) {
+    o.material = toToon(o.material);
+    if (thickness <= 0) continue;
+    const srcGeom = o.geometry;
+    const hullGeom = srcGeom.clone();
+    const pos = hullGeom.attributes.position;
+    const nrm = hullGeom.attributes.normal;
+    if (nrm) {
+      const p = new THREE.Vector3(), n = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        p.fromBufferAttribute(pos, i);
+        n.fromBufferAttribute(nrm, i);
+        p.addScaledVector(n, thickness);
+        pos.setXYZ(i, p.x, p.y, p.z);
+      }
+      pos.needsUpdate = true;
+    }
+    hullGeom.morphAttributes = srcGeom.morphAttributes; // share, not clone -- see note above
+    const hullMat = new THREE.MeshBasicMaterial({ color: outlineColor, side: THREE.BackSide });
+    if (o.morphTargetDictionary) hullMat.morphTargets = true;
+    const hull = new THREE.Mesh(hullGeom, hullMat);
+    hull.morphTargetDictionary = o.morphTargetDictionary;
+    hull.morphTargetInfluences = o.morphTargetInfluences; // same array reference -- see note above
+    o.add(hull);
+  }
+}
+
+function isCollider(o) { return o.name.startsWith('col_') || o.userData?.jj_collider; }
+function stripColliders(root) {
+  const dead = [];
+  root.traverse((o) => { if (isCollider(o)) dead.push(o); });
+  dead.forEach((o) => o.parent && o.parent.remove(o));
+}
+
+// ---------------------------------------------------------------- lights: warm key + cool fill
+scene.add(new THREE.HemisphereLight(0xfff3d0, 0x36405a, 1.1));
+const key = new THREE.DirectionalLight(0xffe3b0, 2.2); key.position.set(3.2, 4.5, 3.0); scene.add(key);
+const fill = new THREE.DirectionalLight(0x8fb3ff, 0.6); fill.position.set(-3, 2, -2); scene.add(fill);
+
+const CACHE_BUST = Date.now();
+async function loadJSON(rel) { return (await fetch(BASE + rel + '?v=' + CACHE_BUST, { cache: 'no-store' })).json(); }
+const loader = new GLTFLoader();
+async function loadGLTF(rel) { return (await loader.loadAsync(BASE + rel + '?v=' + CACHE_BUST)).scene; }
+
+function frameCamera(cam, objs, opts = {}) {
+  const { elevDeg = 22, azimDeg = -50, distMul = 1.7, target = null, ortho = false } = opts;
+  const box = new THREE.Box3();
+  objs.forEach((o) => box.expandByObject(o));
+  const center = target || box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const span = Math.max(size.x, size.y, size.z, 0.05);
+  const dist = span * distMul;
+  const ae = THREE.MathUtils.degToRad(elevDeg), aa = THREE.MathUtils.degToRad(azimDeg);
+  cam.position.set(
+    center.x + Math.cos(aa) * Math.cos(ae) * dist,
+    center.y + Math.sin(ae) * dist,
+    center.z + Math.sin(aa) * Math.cos(ae) * dist,
+  );
+  cam.lookAt(center);
+  if (ortho) {
+    // round3 bug found here: changing `distMul` for an ORTHOGRAPHIC camera only moves it further
+    // away along the view direction -- it does NOT change the visible frustum size (that's purely
+    // left/right/top/bottom), so the turnaround views stayed small in-frame no matter what distMul
+    // was set to. Zoom is controlled by the half-height factor below; also size left/right by the
+    // viewport's own aspect ratio instead of reusing the same half-extent for both axes, so a
+    // portrait 700x900 capture isn't needlessly letterboxed on the sides.
+    const halfH = span * 0.56;
+    const aspect = cam.userData.aspect || 1;
+    const halfW = halfH * aspect;
+    cam.left = -halfW; cam.right = halfW;
+    cam.top = halfH; cam.bottom = -halfH;
+    cam.updateProjectionMatrix();
+  }
+  return { center, span };
+}
+
+function groundContact(objs, y = -0.002) {
+  const g = new THREE.Mesh(
+    new THREE.CircleGeometry(1.6, 32),
+    new THREE.MeshBasicMaterial({ color: 0xc9a876, transparent: true, opacity: 0.28 }),
+  );
+  g.rotation.x = -Math.PI / 2; g.position.y = y;
+  return g;
+}
+
+async function setCrush(root, morphName, value) {
+  root.traverse((o) => {
+    if (o.isMesh && o.morphTargetDictionary && morphName in o.morphTargetDictionary) {
+      o.morphTargetInfluences[o.morphTargetDictionary[morphName]] = value;
+    }
+  });
+}
+
+const report = { view: VIEW };
+
+if (VIEW === '3q' || VIEW === 'silhouette') {
+  const bin = await loadGLTF('bin.glb');
+  stripColliders(bin);
+  addInkOutlines(bin, VIEW === 'silhouette' ? 0x000000 : 0x1a1710, VIEW === 'silhouette' ? 0.0 : 0.014);
+  if (VIEW === 'silhouette') {
+    bin.traverse((o) => { if (o.isMesh) o.material = new THREE.MeshBasicMaterial({ color: 0x000000 }); });
+  }
+  scene.add(bin);
+  const cam = new THREE.PerspectiveCamera(32, W / H, 0.05, 100);
+  const { center, span } = frameCamera(cam, [bin], { elevDeg: 16, azimDeg: 40, distMul: 1.18 });
+  if (VIEW !== 'silhouette') scene.add(groundContact([bin], center.y - span * 0.001));
+  renderer.render(scene, cam);
+  report.ok = true;
+}
+
+if (['front', 'side', 'back', 'top'].includes(VIEW)) {
+  const bin = await loadGLTF('bin.glb');
+  stripColliders(bin);
+  addInkOutlines(bin, 0x1a1710, 0.012);
+  scene.add(bin);
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 100);
+  cam.userData.aspect = W / H;
+  // NOTE: bug found here -- with Blender's front face at local -Y, the glTF/three.js axis swap
+  // (bx,by,bz) -> (bx,bz,-by) puts the front at +Z in this scene, so a camera at azim=-90 (which
+  // sits at -Z) was actually looking at the BACK of the bin (round1's "front" turnaround showed
+  // the handle bar, not the recessed panel). azim=+90 sits at +Z and looks back toward -Z, i.e.
+  // at the true front.
+  const azimByView = { front: 90, side: 0, back: -90, top: 90 };
+  const elevByView = { front: 0, side: 0, back: 0, top: 89.9 };
+  frameCamera(cam, [bin], { elevDeg: elevByView[VIEW], azimDeg: azimByView[VIEW], distMul: 1.35, ortho: true });
+  renderer.setClearColor(0xffffff, 1);
+  renderer.render(scene, cam);
+  report.ok = true;
+}
+
+if (VIEW === 'squish') {
+  const sidecar = await loadJSON('bin.asset.json');
+  const states = [
+    { label: 'intact', morph: null, value: 0 },
+    { label: 'dented (top 0.5)', morph: 'crush_top', value: 0.5 },
+    { label: 'squished (top 1.0)', morph: 'crush_top', value: 1.0 },
+    { label: 'squished (side 1.0)', morph: 'crush_side', value: 1.0 },
+    { label: 'broken + rubbish', morph: 'BROKEN', value: 1.0 },
+  ];
+  const SPACING = 1.9;
+  for (let i = 0; i < states.length; i++) {
+    const { morph, value } = states[i];
+    const x = (i - (states.length - 1) / 2) * SPACING;
+    if (morph === 'BROKEN') {
+      const debris = await loadGLTF('debris.glb');
+      addInkOutlines(debris, 0x1a1710, 0.012);
+      debris.position.set(x, 0, 0);
+      debris.scale.setScalar(1.6);
+      scene.add(debris);
+      // a squashed bin under the pile, matching the reference's flattened-carcass framing
+      const flat = await loadGLTF('bin.glb');
+      stripColliders(flat);
+      addInkOutlines(flat, 0x1a1710, 0.012);
+      await setCrush(flat, 'crush_top', 1.0);
+      flat.position.set(x, 0, 0);
+      flat.rotation.z = Math.PI * 0.5;
+      flat.position.y -= 0.1;
+      scene.add(flat);
+    } else {
+      const bin = await loadGLTF('bin.glb');
+      stripColliders(bin);
+      addInkOutlines(bin, 0x1a1710, 0.012);
+      if (morph) await setCrush(bin, morph, value);
+      bin.position.set(x, 0, 0);
+      scene.add(bin);
+    }
+  }
+  const cam = new THREE.PerspectiveCamera(35, W / H, 0.05, 100);
+  frameCamera(cam, [scene], { elevDeg: 20, azimDeg: 40, distMul: 1.15, target: new THREE.Vector3(0, 0.35, 0) });
+  cam.position.y += 0.3;
+  renderer.render(scene, cam);
+  report.ok = true; report.states = states.map((s) => s.label);
+}
+
+window.__report = report;
+document.title = 'READY';
+</script></body></html>

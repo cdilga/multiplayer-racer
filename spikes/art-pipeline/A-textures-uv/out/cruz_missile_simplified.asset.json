@@ -1,0 +1,31 @@
+{
+  "contract": "jj.vehicle.v0-spike.textures-uv.simplified",
+  "id": "cruz-missile-simplified",
+  "display_name": "Cruz Missile (simplified stylised)",
+  "approach": "flat semantic colours + identity paint tint + vertex-colour AO + one small decal texture; no UV atlas, no bake images, no normal/curvature maps",
+  "materials": [
+    "jj_brakelight",
+    "jj_decal",
+    "jj_glass",
+    "jj_headlight",
+    "jj_paint",
+    "jj_plastic",
+    "jj_tyre",
+    "jj_underside",
+    "jj_wheel"
+  ],
+  "triangles_total": 5802,
+  "textures": [
+    "roof_number_badge.png"
+  ],
+  "timings_s": {
+    "build_geometry": 0.09,
+    "bake_ao_vertex_colors": 0.2,
+    "bakes": 0.29,
+    "export": 0.55
+  },
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/A-textures-uv/build_simplified_car.py"
+  }
+}

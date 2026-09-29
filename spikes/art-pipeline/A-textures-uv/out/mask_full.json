@@ -1,0 +1,24 @@
+{
+  "mask_texture": "mask_full.png",
+  "size": [
+    1024,
+    1024
+  ],
+  "channels": {
+    "R": "paint mask (1=paint body panel)",
+    "G": "pattern mask (procedural diagonal stripe)",
+    "B": "dirt/damage (AO+curvature transferred UV1->UV0)",
+    "A": "emissive accent (procedural pinstripe glow)"
+  },
+  "uv_set": "UV0 (TEXCOORD_0)",
+  "stats": {
+    "paint_triangles": 2888,
+    "paint_px": 458614,
+    "timing_s": 0.98
+  },
+  "source_bakes": {
+    "ao_uv1": "bake_ao_uv1.png",
+    "curvature_uv1": "bake_curvature_uv1.png",
+    "normal_uv0": "normal_map_uv0.png"
+  }
+}

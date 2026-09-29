@@ -1,0 +1,18 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/E-mesh-lint-rig/broken/00_clean_cube.blend",
+  "objects_checked": 1,
+  "triangles": 12,
+  "elapsed_sec": 0.001,
+  "ok": true,
+  "error_count": 0,
+  "warn_count": 0,
+  "findings": [
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 12 vs budget 10000",
+      "count": 12,
+      "objects": []
+    }
+  ]
+}

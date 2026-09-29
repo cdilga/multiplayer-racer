@@ -1,0 +1,23 @@
+{
+  "contract": "jj.surface_set.v0-draft",
+  "id": "dirt_packed",
+  "display_name": "Packed red outback dirt",
+  "surface_id": "dirt_packed",
+  "texture": "textures/surface_dirt_packed.png",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "tileable": true,
+  "tileability_check": "out/tile3x3_dirt_packed.png (visual inspection, no seam algorithm run)",
+  "gameplay": {
+    "grip": 0.78,
+    "rolling_resistance": 0.35,
+    "particle_color": "#a8552a",
+    "tyre_sound_id": "sfx_tyre_dirt_packed"
+  },
+  "provenance": {
+    "source": "codex exec image_generation 2026-09-29",
+    "prompt_constraints": "no real landmarks, no Indigenous motifs, no real brands/logos"
+  }
+}

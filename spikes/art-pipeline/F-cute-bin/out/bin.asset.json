@@ -1,0 +1,229 @@
+{
+  "contract": "jj.destructible_prop.v0-draft",
+  "id": "bin_cute",
+  "display_name": "Wheelie Bin (cute rebuild, spike F)",
+  "units": "m",
+  "forward": "-Y",
+  "up": "+Z",
+  "assets": {
+    "intact": "bin.glb",
+    "debris": "debris.glb"
+  },
+  "intact_root": "bin_body",
+  "measurements_source": "out/measurements.json",
+  "lid": {
+    "node": "bin_lid",
+    "hinge_axis_local": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "hinge_point_local": [
+      0.0,
+      0.31756,
+      0.01
+    ],
+    "hinge_space": "lid object-local space (NOT world/Blender-raw -- consumers must read the lid node's own local axes after the standard glTF Y-up conversion)",
+    "open_angle_deg": 110
+  },
+  "wheels": [
+    {
+      "node": "bin_wheel_L",
+      "spin_axis_local": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "node": "bin_wheel_R",
+      "spin_axis_local": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "collider": "col_bin_body",
+  "com_marker": "bin_com",
+  "crush_morphs": {
+    "crush_top": {
+      "nodes": [
+        "bin_body",
+        "bin_lid",
+        "bin_wheel_L",
+        "bin_wheel_R"
+      ],
+      "description": "squashed flat from above (~34% height), body bulges outward, lid pops open bent back past vertical"
+    },
+    "crush_side": {
+      "nodes": [
+        "bin_body",
+        "bin_lid",
+        "bin_wheel_L",
+        "bin_wheel_R"
+      ],
+      "description": "caved in from one side, opposite face bulges, lid knocked ajar, wheels splayed"
+    }
+  },
+  "damage_ladder": [
+    {
+      "state": "intact",
+      "morph": null,
+      "influence": 0.0,
+      "impulse_threshold_ns": 0
+    },
+    {
+      "state": "dented",
+      "morph": "crush_top",
+      "influence": 0.5,
+      "impulse_threshold_ns": 180
+    },
+    {
+      "state": "squished",
+      "morph": "crush_top",
+      "influence": 1.0,
+      "impulse_threshold_ns": 320
+    },
+    {
+      "state": "squished_side",
+      "morph": "crush_side",
+      "influence": 1.0,
+      "impulse_threshold_ns": 300
+    },
+    {
+      "state": "fractured",
+      "morph": null,
+      "influence": null,
+      "impulse_threshold_ns": 450,
+      "spawns": "rubbish_spawn"
+    }
+  ],
+  "destruction": {
+    "break_threshold_impulse_ns": 450,
+    "damage_to_car_factor": 0.1,
+    "note": "no fracture-piece GLB in this spike (out of scope: F is squish + debris, not shatter); reuse D-props-kit-surfaces' bisection method if fracture pieces are wanted later"
+  },
+  "rubbish_spawn": {
+    "on_break": true,
+    "max_count": 6,
+    "items": [
+      {
+        "name": "debris_can_01",
+        "offset": [
+          0.45,
+          0.0,
+          0.04
+        ]
+      },
+      {
+        "name": "debris_pizza_box_01",
+        "offset": [
+          0.285,
+          0.494,
+          0.04
+        ]
+      },
+      {
+        "name": "debris_banana_peel_01",
+        "offset": [
+          -0.225,
+          0.39,
+          0.04
+        ]
+      },
+      {
+        "name": "debris_nappy_01",
+        "offset": [
+          -0.57,
+          0.0,
+          0.04
+        ]
+      },
+      {
+        "name": "debris_paper_01",
+        "offset": [
+          -0.225,
+          -0.39,
+          0.04
+        ]
+      },
+      {
+        "name": "debris_cup_01",
+        "offset": [
+          0.285,
+          -0.494,
+          0.04
+        ]
+      }
+    ]
+  },
+  "debris_catalog": {
+    "debris_can_01": {
+      "kind": "can",
+      "material": "jj_debris_can"
+    },
+    "debris_pizza_box_01": {
+      "kind": "pizza_box",
+      "material": "jj_debris_pizza"
+    },
+    "debris_banana_peel_01": {
+      "kind": "banana_peel",
+      "material": "jj_debris_banana"
+    },
+    "debris_nappy_01": {
+      "kind": "nappy",
+      "material": "jj_debris_nappy"
+    },
+    "debris_paper_01": {
+      "kind": "crumpled_paper",
+      "material": "jj_debris_paper"
+    },
+    "debris_cup_01": {
+      "kind": "paper_cup",
+      "material": "jj_debris_cup"
+    }
+  },
+  "tri_counts": {
+    "body": 540,
+    "lid_incl_hinge_hardware": 528,
+    "wheels_incl_hubs_axle": 380,
+    "handle_bar": 36,
+    "prop_total_excl_collider": 1484,
+    "budget": 1500,
+    "debris_per_prop": {
+      "debris_can_01": 72,
+      "debris_pizza_box_01": 132,
+      "debris_banana_peel_01": 8,
+      "debris_nappy_01": 120,
+      "debris_paper_01": 20,
+      "debris_cup_01": 116
+    },
+    "debris_budget_each": 300
+  },
+  "materials": {
+    "jj_paint_green": "body paint",
+    "jj_paint_green_dark": "rim lip / handle / hinge knob trim",
+    "jj_plastic_red": "lid + hinge barrel",
+    "jj_tyre": "wheel tyre",
+    "jj_hub": "wheel hubcap",
+    "jj_axle_metal": "axle rod",
+    "jj_debris_can": "can body",
+    "jj_debris_can_label": "can label band",
+    "jj_debris_pizza": "pizza box base",
+    "jj_debris_pizza_top": "pizza box greasy lid underside",
+    "jj_debris_pizza_check": "pizza box trim stripe",
+    "jj_debris_banana": "banana peel outside",
+    "jj_debris_nappy": "nappy pad",
+    "jj_debris_nappy_tape": "nappy tape tab",
+    "jj_debris_paper": "crumpled paper",
+    "jj_debris_cup": "paper cup body",
+    "jj_debris_cup_stripe": "paper cup stripe"
+  },
+  "texturing": "flat base colours + baked vertex-colour AO (Blender dirty-vertex-colour op) + procedural vertex-colour grime blotches; no image texture maps",
+  "style_notes": "cute/chunky/toy-like per art/style/MASTER_PROMPTS.md; comic ink outline + cel shading applied in-engine (Three.js), not baked",
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/F-cute-bin/build_bin.py"
+  }
+}

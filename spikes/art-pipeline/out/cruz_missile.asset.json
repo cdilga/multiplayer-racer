@@ -1,0 +1,185 @@
+{
+  "contract": "jj.vehicle.v0-spike",
+  "id": "cruz-missile",
+  "display_name": "Cruz Missile",
+  "units": "m",
+  "forward": "+Y",
+  "up": "+Z",
+  "archetype": "baseline",
+  "parts": {
+    "chassis": {
+      "kind": "chassis",
+      "hp": 400,
+      "attach": "core",
+      "mass_fraction": 0.55
+    },
+    "cabin": {
+      "kind": "roof",
+      "hp": 150,
+      "attach": "fixed",
+      "mass_fraction": 0.08,
+      "protects_zone": "roof"
+    },
+    "glass": {
+      "kind": "glass",
+      "hp": 20,
+      "attach": "shatter",
+      "mass_fraction": 0.01
+    },
+    "bonnet": {
+      "kind": "bonnet",
+      "hp": 60,
+      "attach": "hinged",
+      "mass_fraction": 0.03,
+      "protects_zone": "front",
+      "hinge_axis": [
+        1,
+        0,
+        0
+      ]
+    },
+    "boot": {
+      "kind": "boot",
+      "hp": 50,
+      "attach": "hinged",
+      "mass_fraction": 0.02,
+      "protects_zone": "rear",
+      "hinge_axis": [
+        1,
+        0,
+        0
+      ]
+    },
+    "door_L": {
+      "kind": "door",
+      "hp": 70,
+      "attach": "hinged",
+      "mass_fraction": 0.03,
+      "protects_zone": "side_L",
+      "hinge_axis": [
+        0,
+        0,
+        1
+      ]
+    },
+    "door_R": {
+      "kind": "door",
+      "hp": 70,
+      "attach": "hinged",
+      "mass_fraction": 0.03,
+      "protects_zone": "side_R",
+      "hinge_axis": [
+        0,
+        0,
+        1
+      ]
+    },
+    "bumper_front": {
+      "kind": "bumper",
+      "hp": 90,
+      "attach": "detachable",
+      "mass_fraction": 0.03,
+      "protects_zone": "front"
+    },
+    "bumper_rear": {
+      "kind": "bumper",
+      "hp": 80,
+      "attach": "detachable",
+      "mass_fraction": 0.03,
+      "protects_zone": "rear"
+    },
+    "spoiler": {
+      "kind": "spoiler",
+      "hp": 25,
+      "attach": "detachable",
+      "mass_fraction": 0.01
+    },
+    "wheel_FL": {
+      "kind": "wheel",
+      "hp": 120,
+      "attach": "detachable",
+      "mass_fraction": 0.025
+    },
+    "wheel_FR": {
+      "kind": "wheel",
+      "hp": 120,
+      "attach": "detachable",
+      "mass_fraction": 0.025
+    },
+    "wheel_RL": {
+      "kind": "wheel",
+      "hp": 120,
+      "attach": "detachable",
+      "mass_fraction": 0.025
+    },
+    "wheel_RR": {
+      "kind": "wheel",
+      "hp": 120,
+      "attach": "detachable",
+      "mass_fraction": 0.025
+    }
+  },
+  "markers": [
+    "lplate_front",
+    "lplate_rear",
+    "cam_fp",
+    "cam_tp_target",
+    "com",
+    "exhaust_0",
+    "roof_number"
+  ],
+  "colliders": [
+    "col_chassis",
+    "col_cabin_round"
+  ],
+  "materials": [
+    "jj_brakelight",
+    "jj_decal",
+    "jj_glass",
+    "jj_headlight",
+    "jj_lplate",
+    "jj_metal",
+    "jj_paint",
+    "jj_plastic",
+    "jj_tyre",
+    "jj_underside",
+    "jj_wheel"
+  ],
+  "triangles_lod0": 9152,
+  "ao_baked": [
+    "chassis",
+    "underside",
+    "cabin",
+    "glass",
+    "bonnet",
+    "boot",
+    "door_L",
+    "door_R",
+    "bumper_front",
+    "bumper_rear",
+    "spoiler",
+    "spoiler_strut_-1",
+    "spoiler_strut_+1",
+    "light_head_0",
+    "light_brake_0",
+    "light_head_1",
+    "light_brake_1",
+    "wheel_FL",
+    "wheel_FL_rim",
+    "wheel_FR",
+    "wheel_FR_rim",
+    "wheel_RL",
+    "wheel_RL_rim",
+    "wheel_RR",
+    "wheel_RR_rim"
+  ],
+  "bake_errors": {},
+  "textures": [
+    "textures/decal_sheet.png"
+  ],
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/build_cruz_missile.py",
+    "decal_source": "codex image_generation 2026-09-29"
+  }
+}

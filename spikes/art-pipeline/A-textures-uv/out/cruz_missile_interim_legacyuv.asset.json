@@ -1,0 +1,201 @@
+{
+  "contract": "jj.vehicle.v0-spike.textures-uv",
+  "id": "cruz-missile_legacyuv",
+  "display_name": "Cruz Missile (textures/UV spike)",
+  "units": "m",
+  "forward": "+Y",
+  "up": "+Z",
+  "broken_overlap_variant": false,
+  "paint_parts": [
+    "chassis",
+    "cabin",
+    "bonnet",
+    "boot",
+    "door_L",
+    "door_R"
+  ],
+  "uv0_atlas_report": [
+    {
+      "part": "chassis",
+      "area_m2": 17.8131,
+      "rect": [
+        0.0,
+        0.0,
+        0.62763,
+        0.57866
+      ],
+      "uv_bbox_aspect": 1.085,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "cabin",
+      "area_m2": 7.5754,
+      "rect": [
+        0.0,
+        0.57866,
+        0.38009,
+        0.40636
+      ],
+      "uv_bbox_aspect": 0.935,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "bonnet",
+      "area_m2": 3.5945,
+      "rect": [
+        0.62763,
+        0.0,
+        0.27031,
+        0.27112
+      ],
+      "uv_bbox_aspect": 0.997,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "boot",
+      "area_m2": 2.3553,
+      "rect": [
+        0.62763,
+        0.27112,
+        0.20491,
+        0.23436
+      ],
+      "uv_bbox_aspect": 0.874,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "door_L",
+      "area_m2": 1.4973,
+      "rect": [
+        0.38009,
+        0.57866,
+        0.1715,
+        0.178
+      ],
+      "uv_bbox_aspect": 0.964,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "door_R",
+      "area_m2": 1.4973,
+      "rect": [
+        0.38009,
+        0.75666,
+        0.1715,
+        0.178
+      ],
+      "uv_bbox_aspect": 0.964,
+      "texel_density_px_per_m": 146.2
+    }
+  ],
+  "uv1_atlas_report": [
+    {
+      "part": "chassis",
+      "area_m2": 17.8131,
+      "rect": [
+        0.0,
+        0.0,
+        0.62763,
+        0.57866
+      ],
+      "uv_bbox_aspect": 1.085,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "cabin",
+      "area_m2": 7.5754,
+      "rect": [
+        0.0,
+        0.57866,
+        0.38009,
+        0.40636
+      ],
+      "uv_bbox_aspect": 0.935,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "bonnet",
+      "area_m2": 3.5945,
+      "rect": [
+        0.62763,
+        0.0,
+        0.27031,
+        0.27112
+      ],
+      "uv_bbox_aspect": 0.997,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "boot",
+      "area_m2": 2.3553,
+      "rect": [
+        0.62763,
+        0.27112,
+        0.20491,
+        0.23436
+      ],
+      "uv_bbox_aspect": 0.874,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "door_L",
+      "area_m2": 1.4973,
+      "rect": [
+        0.38009,
+        0.57866,
+        0.1715,
+        0.178
+      ],
+      "uv_bbox_aspect": 0.964,
+      "texel_density_px_per_m": 146.2
+    },
+    {
+      "part": "door_R",
+      "area_m2": 1.4973,
+      "rect": [
+        0.38009,
+        0.75666,
+        0.1715,
+        0.178
+      ],
+      "uv_bbox_aspect": 0.964,
+      "texel_density_px_per_m": 146.2
+    }
+  ],
+  "texel_density_consistency": {
+    "uv0_min": 146.2,
+    "uv0_max": 146.2,
+    "uv0_ratio_max_over_min": 1.0
+  },
+  "atlas_resolution": 1024,
+  "materials": [
+    "jj_brakelight",
+    "jj_glass",
+    "jj_headlight",
+    "jj_paint",
+    "jj_plastic",
+    "jj_tyre",
+    "jj_underside",
+    "jj_wheel"
+  ],
+  "triangles_total": 5800,
+  "bake_images": {
+    "ao_uv1": "bake_ao_uv1_legacyuv.png",
+    "curvature_uv1": "bake_curvature_uv1_legacyuv.png",
+    "normal_uv0": "normal_map_uv0_legacyuv.png"
+  },
+  "bake_errors": {},
+  "timings_s": {
+    "build_geometry": 0.08,
+    "uv_pack": 0.12,
+    "bake_ao": 6.72,
+    "bake_curvature": 7.63,
+    "bake_normal": 1.62,
+    "bakes": 16.26,
+    "export": 16.41
+  },
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/A-textures-uv/build_textured_car.py"
+  }
+}

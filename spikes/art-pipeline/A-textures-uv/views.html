@@ -1,0 +1,126 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Art spike A: fixed 4-view render</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Fixed 4-view render (3/4 front, 3/4 rear, side, top) of a single car, independent of any
+// chase-cam logic. ?mode=checker|full|simple ?glb=... ?paint=%23ff3b30 ?pattern=%23ffffff ?dirt=0.4
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const q = new URLSearchParams(location.search);
+const MODE = q.get('mode') || 'checker';
+const GLB = q.get('glb') || 'out/cruz_missile_textured.glb';
+const PAINT = q.get('paint') || '#ff3b30';
+const PATTERN = q.get('pattern') || '#ffffff';
+const DIRT = +(q.get('dirt') || 0.3);
+const TILE = 640, GRID_W = TILE * 2, GRID_H = TILE * 2;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(GRID_W, GRID_H, false); renderer.setPixelRatio(1); renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+const VERT = `
+varying vec2 vUv;
+varying vec3 vNormalW;
+void main() { vUv = uv; vNormalW = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const FRAG = `
+uniform sampler2D maskMap;
+uniform vec3 paintColor; uniform vec3 patternColor; uniform vec3 emissiveColor;
+uniform float dirtAmount; uniform float emissiveStrength; uniform vec3 lightDir;
+varying vec2 vUv; varying vec3 vNormalW;
+void main() {
+  vec4 mask = texture2D(maskMap, vUv);
+  vec3 base = vec3(0.72);
+  vec3 col = mix(base, paintColor, mask.r);
+  col = mix(col, patternColor, mask.g);
+  float dirt = clamp(mask.b * dirtAmount, 0.0, 1.0);
+  col *= mix(1.0, 0.45, dirt);
+  col = mix(col, col * 0.5 + vec3(0.05, 0.03, 0.0), dirt);
+  float ndotl = max(dot(normalize(vNormalW), normalize(lightDir)), 0.0);
+  float toon = ndotl > 0.55 ? 1.0 : (ndotl > 0.2 ? 0.72 : 0.5);
+  gl_FragColor = vec4(col * toon + emissiveColor * mask.a * emissiveStrength, 1.0);
+}`;
+const VERT_VC = `
+varying vec3 vColor; varying vec3 vNormalW;
+void main() { vColor = color.rgb; vNormalW = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const FRAG_VC = `
+uniform vec3 paintColor; uniform vec3 lightDir;
+varying vec3 vColor; varying vec3 vNormalW;
+void main() {
+  float ao = dot(vColor, vec3(0.333));
+  vec3 col = paintColor * mix(0.5, 1.0, ao);
+  float ndotl = max(dot(normalize(vNormalW), normalize(lightDir)), 0.0);
+  float toon = ndotl > 0.55 ? 1.0 : (ndotl > 0.2 ? 0.72 : 0.5);
+  gl_FragColor = vec4(col * toon, 1.0);
+}`;
+
+let checkerTex = null; // preloaded + awaited below, before any render() call
+
+function paintMaterial(src) {
+  if (MODE === 'checker') {
+    return new THREE.MeshBasicMaterial({ map: checkerTex });
+  }
+  if (MODE === 'simple') {
+    return new THREE.ShaderMaterial({
+      vertexShader: VERT_VC, fragmentShader: FRAG_VC, vertexColors: true,
+      uniforms: { paintColor: { value: new THREE.Color(PAINT) }, lightDir: { value: new THREE.Vector3(0.4, 1, 0.3).normalize() } },
+    });
+  }
+  // full
+  const m = new THREE.ShaderMaterial({
+    vertexShader: VERT, fragmentShader: FRAG,
+    uniforms: {
+      maskMap: { value: src.map || null }, paintColor: { value: new THREE.Color(PAINT) },
+      patternColor: { value: new THREE.Color(PATTERN) }, emissiveColor: { value: new THREE.Color(PAINT) },
+      dirtAmount: { value: DIRT }, emissiveStrength: { value: 1.6 },
+      lightDir: { value: new THREE.Vector3(0.4, 1, 0.3).normalize() },
+    },
+  });
+  return m;
+}
+
+function otherMaterial(src) {
+  const name = src.name;
+  if (name === 'jj_headlight' || name === 'jj_brakelight') return new THREE.MeshBasicMaterial({ color: src.emissive.clone().multiplyScalar(1.2) });
+  if (name === 'jj_glass') return new THREE.MeshBasicMaterial({ color: '#7fb8d6', transparent: true, opacity: 0.7 });
+  if (name === 'jj_decal') return new THREE.MeshBasicMaterial({ map: src.map || null, transparent: true, alphaTest: 0.3 });
+  if (MODE === 'checker') { return new THREE.MeshBasicMaterial({ map: checkerTex }); }
+  return new THREE.MeshBasicMaterial({ color: src.color || '#888' });
+}
+
+if (MODE === 'checker') {
+  checkerTex = await new THREE.TextureLoader().loadAsync('out/uv_checker.png');
+  checkerTex.colorSpace = THREE.SRGBColorSpace;
+  checkerTex.flipY = false; // match glTF/GLTFLoader UV convention (top-origin) used everywhere else
+  checkerTex.needsUpdate = true;
+}
+const gltf = await new GLTFLoader().loadAsync(GLB);
+const car = gltf.scene;
+car.traverse(o => {
+  if (!o.isMesh) return;
+  o.material = (o.material.name === 'jj_paint') ? paintMaterial(o.material) : otherMaterial(o.material);
+});
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3d9b1');
+scene.add(car);
+
+// forward is -Z, right is +X (Blender +Y-forward -> glTF -Z after export)
+const views = [
+  { name: '3q_front', pos: [2.6, 1.9, -4.6], up: [0, 1, 0] },
+  { name: '3q_rear', pos: [-2.6, 1.9, 4.6], up: [0, 1, 0] },
+  { name: 'side', pos: [5.2, 1.3, 0], up: [0, 1, 0] },
+  { name: 'top', pos: [0.15, 7.2, 0.3], up: [0, 0, -1] },
+];
+const target = new THREE.Vector3(0, 0.75, 0);
+views.forEach((v, i) => {
+  const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
+  cam.position.set(...v.pos); cam.up.set(...v.up); cam.lookAt(target); cam.updateMatrixWorld();
+  const x = (i % 2) * TILE, y = GRID_H - (Math.floor(i / 2) + 1) * TILE;
+  renderer.setViewport(x, y, TILE, TILE); renderer.setScissor(x, y, TILE, TILE);
+  renderer.render(scene, cam);
+});
+window.__report = { mode: MODE, glb: GLB, views: views.map(v => v.name) };
+document.title = 'READY';
+</script></body></html>

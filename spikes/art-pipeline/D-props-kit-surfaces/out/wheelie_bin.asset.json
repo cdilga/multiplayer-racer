@@ -1,0 +1,202 @@
+{
+  "contract": "jj.destructible_prop.v0-draft",
+  "id": "wheelie_bin",
+  "display_name": "Wheelie Bin",
+  "units": "m",
+  "forward": "+Y",
+  "up": "+Z",
+  "assets": {
+    "intact": "wheelie_bin_intact.glb",
+    "fractured": "wheelie_bin_fractured.glb",
+    "debris": "wheelie_bin_debris.glb"
+  },
+  "intact_root": "bin_body",
+  "lid": {
+    "node": "bin_lid",
+    "hinge_axis": [
+      1,
+      0,
+      0
+    ],
+    "hinge_point": [
+      0.0,
+      0.21999999463558198,
+      1.090000023841858
+    ],
+    "open_angle_deg": 110
+  },
+  "wheels": [
+    "bin_wheel_L",
+    "bin_wheel_R"
+  ],
+  "collider": "col_bin_body",
+  "com_marker": "bin_com",
+  "crush_morphs": {
+    "bin_crush_top": {
+      "nodes": [
+        "bin_body",
+        "bin_lid",
+        "bin_wheel_L",
+        "bin_wheel_R"
+      ],
+      "description": "squashed from above, ~45% height, body bulges outward, lid pressed down"
+    },
+    "bin_crush_side": {
+      "nodes": [
+        "bin_body",
+        "bin_lid",
+        "bin_wheel_L",
+        "bin_wheel_R"
+      ],
+      "description": "caved in from one side, opposite face bulges, lid knocked ajar, wheels splayed"
+    }
+  },
+  "damage_ladder": [
+    {
+      "state": "intact",
+      "morph": null,
+      "influence": 0.0,
+      "impulse_threshold_ns": 0
+    },
+    {
+      "state": "dented",
+      "morph": "bin_crush_top",
+      "influence": 0.5,
+      "impulse_threshold_ns": 180
+    },
+    {
+      "state": "squished",
+      "morph": "bin_crush_top",
+      "influence": 1.0,
+      "impulse_threshold_ns": 320
+    },
+    {
+      "state": "squished_side",
+      "morph": "bin_crush_side",
+      "influence": 1.0,
+      "impulse_threshold_ns": 300
+    },
+    {
+      "state": "fractured",
+      "morph": null,
+      "influence": null,
+      "impulse_threshold_ns": 450,
+      "spawns": "rubbish_spawn"
+    }
+  ],
+  "destruction": {
+    "break_threshold_impulse_ns": 450,
+    "damage_to_car_factor": 0.12,
+    "pieces": {
+      "bin_piece_00": {
+        "volume_m3": 0.02139,
+        "mass_kg": 8.129
+      },
+      "bin_piece_01": {
+        "volume_m3": 0.02307,
+        "mass_kg": 8.767
+      },
+      "bin_piece_02": {
+        "volume_m3": 0.00033,
+        "mass_kg": 0.126
+      },
+      "bin_piece_03": {
+        "volume_m3": 0.08173,
+        "mass_kg": 31.056
+      },
+      "bin_piece_04": {
+        "volume_m3": 0.01691,
+        "mass_kg": 6.427
+      },
+      "bin_piece_05": {
+        "volume_m3": 0.08074,
+        "mass_kg": 30.681
+      },
+      "bin_piece_06": {
+        "volume_m3": 0.01387,
+        "mass_kg": 5.269
+      },
+      "bin_lid_piece": {
+        "volume_m3": 0.01957,
+        "mass_kg": 7.438
+      }
+    },
+    "piece_count": 8,
+    "intact_volume_m3": 0.25761,
+    "fractured_volume_m3": 0.25761,
+    "volume_conservation_ratio": 1.0,
+    "fracture_method": "iterative_random_plane_bisection (no cell-fracture addon available headless)"
+  },
+  "rubbish_spawn": {
+    "on_break": true,
+    "max_count": 4,
+    "items": [
+      {
+        "name": "debris_can_01",
+        "offset": [
+          0.5,
+          0.0,
+          0.03
+        ]
+      },
+      {
+        "name": "debris_pizza_box_01",
+        "offset": [
+          3.9801020972288984e-17,
+          0.65,
+          0.03
+        ]
+      },
+      {
+        "name": "debris_banana_peel_01",
+        "offset": [
+          -0.5,
+          6.123233995736766e-17,
+          0.03
+        ]
+      },
+      {
+        "name": "debris_nappy_01",
+        "offset": [
+          -1.1940306291686693e-16,
+          -0.65,
+          0.03
+        ]
+      }
+    ]
+  },
+  "debris_catalog": {
+    "debris_can_01": {
+      "kind": "can",
+      "crush_morph": "debris_can_01_crushed"
+    },
+    "debris_pizza_box_01": {
+      "kind": "pizza_box"
+    },
+    "debris_banana_peel_01": {
+      "kind": "banana_peel"
+    },
+    "debris_nappy_01": {
+      "kind": "nappy"
+    }
+  },
+  "style_notes": "comic/cartoon chunky proportions, no gross-out detail (plan 8.4)",
+  "materials": [
+    "jj_bin_axle",
+    "jj_bin_body",
+    "jj_bin_lid",
+    "jj_bin_wheel",
+    "jj_debris_banana",
+    "jj_debris_banana_in",
+    "jj_debris_can",
+    "jj_debris_can_label",
+    "jj_debris_nappy",
+    "jj_debris_nappy_tape",
+    "jj_debris_pizza",
+    "jj_debris_pizza_top"
+  ],
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/D-props-kit-surfaces/build_wheelie_bin.py"
+  }
+}

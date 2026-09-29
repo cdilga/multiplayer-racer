@@ -1,0 +1,68 @@
+{
+  "source": "art/style/refs/wheelie_bin_turnaround.png",
+  "method": "grid-overlay manual pixel reads (see module docstring); front+side share scale/ground line",
+  "assumed_total_height_m": 1.05,
+  "raw_px": {
+    "front": {
+      "lid_hinge_tab_top_y": 205,
+      "lid_dome_top_y": 225,
+      "lid_body_boundary_y": 300,
+      "rim_flare_end_y": 345,
+      "body_bottom_y": 685,
+      "wheel_top_y": 555,
+      "wheel_bottom_y": 685,
+      "top_rim_width_x": [
+        25,
+        360
+      ],
+      "mid_body_width_x": [
+        55,
+        330
+      ]
+    },
+    "side": {
+      "hinge_knob_x": [
+        30,
+        80
+      ],
+      "hinge_barrel_x": [
+        70,
+        195
+      ],
+      "lid_body_boundary_y": 300,
+      "rim_depth_x": [
+        75,
+        350
+      ],
+      "body_front_edge_x": 345,
+      "wheel_x": [
+        75,
+        205
+      ],
+      "wheel_y": [
+        555,
+        685
+      ]
+    }
+  },
+  "scale_m_per_px": 0.002188,
+  "ratios": {
+    "taper_bottom_over_top": 0.821,
+    "depth_over_top_width": 0.821,
+    "wheel_diam_over_total_height": 0.271,
+    "lid_dome_over_total_height": 0.156,
+    "body_over_total_height": 0.802,
+    "wheel_diam_front_vs_side_agreement": 1.0
+  },
+  "derived_metres": {
+    "total_height_m": 1.05,
+    "lid_dome_thickness_m": 0.164,
+    "hinge_tab_rise_above_dome_m": 0.044,
+    "body_height_under_rim_m": 0.842,
+    "top_rim_width_m": 0.733,
+    "bottom_body_width_m": 0.602,
+    "depth_m": 0.602,
+    "wheel_diam_m": 0.284,
+    "hinge_barrel_diam_m": 0.109
+  }
+}

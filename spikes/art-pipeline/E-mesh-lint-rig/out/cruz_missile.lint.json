@@ -1,0 +1,114 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/out/cruz_missile.blend",
+  "objects_checked": 29,
+  "triangles": 9152,
+  "elapsed_sec": 0.075,
+  "ok": false,
+  "error_count": 1,
+  "warn_count": 4,
+  "findings": [
+    {
+      "id": "zero_area_faces",
+      "severity": "error",
+      "message": "Zero-area / degenerate faces",
+      "count": 346,
+      "objects": [
+        "bonnet",
+        "boot",
+        "bumper_front",
+        "bumper_rear",
+        "cabin",
+        "chassis",
+        "door_L",
+        "door_R"
+      ]
+    },
+    {
+      "id": "duplicate_verts",
+      "severity": "warn",
+      "message": "Coincident verts within merge distance 0.0001",
+      "count": 528,
+      "objects": [
+        "bonnet",
+        "boot",
+        "bumper_front",
+        "bumper_rear",
+        "cabin",
+        "chassis",
+        "door_L",
+        "door_R"
+      ]
+    },
+    {
+      "id": "ngons",
+      "severity": "warn",
+      "message": "Faces with > 4 sides",
+      "count": 16,
+      "objects": [
+        "wheel_FL",
+        "wheel_FL_rim",
+        "wheel_FR",
+        "wheel_FR_rim",
+        "wheel_RL",
+        "wheel_RL_rim",
+        "wheel_RR",
+        "wheel_RR_rim"
+      ]
+    },
+    {
+      "id": "nonplanar_quads",
+      "severity": "warn",
+      "message": "Non-planar quads (deviation > 1% of diagonal)",
+      "count": 48,
+      "objects": [
+        "cabin",
+        "chassis"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 9152 vs budget 10000",
+      "count": 9152,
+      "objects": []
+    },
+    {
+      "id": "chassis_origin_height",
+      "severity": "info",
+      "message": "Chassis origin world Z (0 = ground between axles is the contract target)",
+      "count": 0,
+      "objects": [
+        "chassis z=0.72"
+      ]
+    },
+    {
+      "id": "part_interpenetration_at_rest",
+      "severity": "warn",
+      "message": "Sibling parts overlap at rest (excluding parent/child designed contacts)",
+      "count": 21,
+      "objects": [
+        "boot x spoiler_strut_+1 (17 tri pairs)",
+        "boot x spoiler_strut_-1 (17 tri pairs)",
+        "bumper_front x light_head_0 (34 tri pairs)",
+        "bumper_front x light_head_1 (34 tri pairs)",
+        "bumper_rear x light_brake_0 (18 tri pairs)",
+        "bumper_rear x light_brake_1 (18 tri pairs)",
+        "cabin x glass (56 tri pairs)",
+        "chassis x wheel_FL_rim (27 tri pairs)",
+        "chassis x wheel_FR_rim (25 tri pairs)",
+        "chassis x wheel_RL_rim (27 tri pairs)",
+        "chassis x wheel_RR_rim (25 tri pairs)",
+        "door_L x wheel_RL (22 tri pairs)",
+        "door_R x wheel_RR (22 tri pairs)",
+        "underside x wheel_FL (29 tri pairs)",
+        "underside x wheel_FL_rim (22 tri pairs)",
+        "underside x wheel_FR (28 tri pairs)",
+        "underside x wheel_FR_rim (22 tri pairs)",
+        "underside x wheel_RL (28 tri pairs)",
+        "underside x wheel_RL_rim (22 tri pairs)",
+        "underside x wheel_RR (29 tri pairs)",
+        "underside x wheel_RR_rim (22 tri pairs)"
+      ]
+    }
+  ]
+}

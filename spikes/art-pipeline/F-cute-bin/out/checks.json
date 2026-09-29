@@ -1,0 +1,178 @@
+{
+  "objects": {
+    "bin_body": {
+      "tris": 540,
+      "non_manifold_edges": 16,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {
+        "Basis": 1.0,
+        "crush_top": 0.0,
+        "crush_side": 0.0
+      },
+      "shape_keys_default_zero": true
+    },
+    "bin_lid": {
+      "tris": 108,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {
+        "Basis": 1.0,
+        "crush_top": 0.0,
+        "crush_side": 0.0
+      },
+      "shape_keys_default_zero": true
+    },
+    "bin_lid_hinge_barrel": {
+      "tris": 52,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_lid_hinge_knob": {
+      "tris": 44,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_lid_handle_bump": {
+      "tris": 108,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_lid_hinge_lug_L": {
+      "tris": 108,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_lid_hinge_lug_R": {
+      "tris": 108,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_wheel_L": {
+      "tris": 140,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {
+        "Basis": 1.0,
+        "crush_top": 0.0,
+        "crush_side": 0.0
+      },
+      "shape_keys_default_zero": true
+    },
+    "bin_wheel_L_hub": {
+      "tris": 36,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_wheel_R": {
+      "tris": 140,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {
+        "Basis": 1.0,
+        "crush_top": 0.0,
+        "crush_side": 0.0
+      },
+      "shape_keys_default_zero": true
+    },
+    "bin_wheel_R_hub": {
+      "tris": 36,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_axle": {
+      "tris": 28,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "bin_handle_bar": {
+      "tris": 36,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    },
+    "col_bin_body": {
+      "tris": 12,
+      "non_manifold_edges": 0,
+      "loose_verts": 0,
+      "zero_area_faces": 0,
+      "shape_keys": {},
+      "shape_keys_default_zero": true
+    }
+  },
+  "hinge_sweep": [
+    {
+      "angle_deg": 0,
+      "hinge_point_unchanged": true,
+      "lid_min_y_local": -0.3207
+    },
+    {
+      "angle_deg": 30,
+      "hinge_point_unchanged": true,
+      "lid_min_y_local": -0.2402
+    },
+    {
+      "angle_deg": 60,
+      "hinge_point_unchanged": true,
+      "lid_min_y_local": -0.0102
+    },
+    {
+      "angle_deg": 90,
+      "hinge_point_unchanged": true,
+      "lid_min_y_local": 0.3076
+    },
+    {
+      "angle_deg": 110,
+      "hinge_point_unchanged": true,
+      "lid_min_y_local": 0.3071
+    }
+  ],
+  "hinge_point_local": [
+    0.0,
+    0.31756,
+    0.01
+  ],
+  "hinge_axis_local": [
+    1.0,
+    0.0,
+    0.0
+  ],
+  "debris_tris_per_prop": {
+    "debris_can_01": 72,
+    "debris_pizza_box_01": 132,
+    "debris_banana_peel_01": 8,
+    "debris_nappy_01": 120,
+    "debris_paper_01": 20,
+    "debris_cup_01": 116
+  },
+  "debris_over_budget": {}
+}

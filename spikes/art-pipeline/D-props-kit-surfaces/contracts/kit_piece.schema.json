@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jj.kit_piece.v0-draft",
+  "title": "Track kit piece sidecar (draft)",
+  "type": "object",
+  "required": ["contract", "id", "asset", "render_nodes", "colliders", "snap_points", "surface_map"],
+  "properties": {
+    "contract": { "type": "string", "enum": ["jj.kit_piece.v0-draft"] },
+    "id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string" },
+    "units": { "type": "string", "enum": ["m"] },
+    "forward": { "type": "string" },
+    "up": { "type": "string" },
+    "asset": { "type": "string", "minLength": 1 },
+    "render_nodes": { "type": "array", "minItems": 1 },
+    "colliders": { "type": "array", "minItems": 1 },
+    "snap_points": {
+      "type": "object",
+      "minProperties": 2,
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "required": ["position", "forward", "up"],
+          "properties": {
+            "position": { "type": "array", "minItems": 3, "maxItems": 3 },
+            "forward": { "type": "array", "minItems": 3, "maxItems": 3 },
+            "up": { "type": "array", "minItems": 3, "maxItems": 3 }
+          }
+        }
+      }
+    },
+    "surface_map": {
+      "type": "object",
+      "required": ["slots"],
+      "properties": {
+        "slots": { "type": "array", "minItems": 1 }
+      }
+    },
+    "vertex_color_ao": { "type": "array" },
+    "triangles": { "type": "integer", "minimum": 0 },
+    "cultural_review": {
+      "type": "object",
+      "required": ["note"],
+      "properties": {
+        "note": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

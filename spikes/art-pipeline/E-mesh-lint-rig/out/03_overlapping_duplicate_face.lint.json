@@ -1,0 +1,54 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/E-mesh-lint-rig/broken/03_overlapping_duplicate_face.blend",
+  "objects_checked": 1,
+  "triangles": 14,
+  "elapsed_sec": 0.0,
+  "ok": false,
+  "error_count": 2,
+  "warn_count": 2,
+  "findings": [
+    {
+      "id": "nonmanifold_edges",
+      "severity": "error",
+      "message": "Non-manifold edges present",
+      "count": 4,
+      "objects": [
+        "dup_face_cube"
+      ]
+    },
+    {
+      "id": "boundary_edges",
+      "severity": "warn",
+      "message": "Open boundary edges on a part not allowlisted as a decal",
+      "count": 4,
+      "objects": [
+        "dup_face_cube"
+      ]
+    },
+    {
+      "id": "duplicate_verts",
+      "severity": "warn",
+      "message": "Coincident verts within merge distance 0.0001",
+      "count": 4,
+      "objects": [
+        "dup_face_cube"
+      ]
+    },
+    {
+      "id": "overlapping_faces",
+      "severity": "error",
+      "message": "Coincident/overlapping faces (z-fighting risk)",
+      "count": 1,
+      "objects": [
+        "dup_face_cube"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 14 vs budget 10000",
+      "count": 14,
+      "objects": []
+    }
+  ]
+}

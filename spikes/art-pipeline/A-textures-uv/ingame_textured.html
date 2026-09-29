@@ -1,0 +1,124 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Art spike A: textures/UV in-game</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike A proof: a custom shader reads the contract mask texture (RGBA = paint/pattern/dirt/emissive)
+// at UV0 and drives per-player identity colour + a dirty/damaged state. ?dirt=0.85 for the damaged tile.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const q = new URLSearchParams(location.search);
+const N = +(q.get('n') || 6), W = +(q.get('w') || 1920), H = +(q.get('h') || 1080);
+const GLB = q.get('glb') || 'out/cruz_missile_textured.glb';
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1); renderer.setScissorTest(true);
+document.body.appendChild(renderer.domElement);
+
+const IDENTITY = ['#ff3b30', '#1e6bff', '#ffcc00', '#22c55e', '#a855f7', '#ff7a00', '#00c2c7', '#ff4fa3'];
+const PATTERN = ['#ffffff', '#ffe14d', '#ffffff', '#c8f26d', '#ffd6f0', '#ffffff', '#bfefff', '#ffcf9e'];
+// per-tile dirt amount: ?dirt=a,b,c... overrides per index; ?dirt=0.8 applies to all
+const dirtArg = q.get('dirt');
+const dirtList = dirtArg ? dirtArg.split(',').map(Number) : null;
+
+const VERT = `
+varying vec2 vUv;
+varying vec3 vNormalW;
+void main() {
+  vUv = uv;
+  vNormalW = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const FRAG = `
+uniform sampler2D maskMap;
+uniform vec3 paintColor;
+uniform vec3 patternColor;
+uniform vec3 emissiveColor;
+uniform float dirtAmount;
+uniform float emissiveStrength;
+uniform vec3 lightDir;
+varying vec2 vUv;
+varying vec3 vNormalW;
+void main() {
+  vec4 mask = texture2D(maskMap, vUv);           // R=paint G=pattern B=dirt A=emissive
+  vec3 base = vec3(0.72);                         // neutral primer where R==0 (non-paint UV space, unused here)
+  vec3 col = mix(base, paintColor, mask.r);
+  col = mix(col, patternColor, mask.g);
+  float dirt = clamp(mask.b * dirtAmount, 0.0, 1.0);
+  col *= mix(1.0, 0.45, dirt);                    // dirt/damage darkens
+  col = mix(col, col * 0.5 + vec3(0.05, 0.03, 0.0), dirt); // scorch tint at high damage
+  float ndotl = max(dot(normalize(vNormalW), normalize(lightDir)), 0.0);
+  float toon = ndotl > 0.55 ? 1.0 : (ndotl > 0.2 ? 0.72 : 0.5); // 3-tone ramp
+  vec3 lit = col * toon;
+  vec3 emissive = emissiveColor * mask.a * emissiveStrength;
+  gl_FragColor = vec4(lit + emissive, 1.0);
+}`;
+
+function paintShaderMaterial(paint, pattern) {
+  return new THREE.ShaderMaterial({
+    vertexShader: VERT, fragmentShader: FRAG,
+    uniforms: {
+      maskMap: { value: null }, paintColor: { value: new THREE.Color(paint) },
+      patternColor: { value: new THREE.Color(pattern) }, emissiveColor: { value: new THREE.Color(paint) },
+      dirtAmount: { value: 0.15 }, emissiveStrength: { value: 1.6 },
+      lightDir: { value: new THREE.Vector3(0.4, 1, 0.3).normalize() },
+    },
+  });
+}
+
+function semanticMaterial(src, paint, pattern) {
+  const name = src.name;
+  if (name === 'jj_paint') {
+    const m = paintShaderMaterial(paint, pattern);
+    if (src.map) m.uniforms.maskMap.value = src.map;
+    return m;
+  }
+  if (name === 'jj_headlight' || name === 'jj_brakelight') return new THREE.MeshBasicMaterial({ color: src.emissive.clone().multiplyScalar(1.2) });
+  if (name === 'jj_glass') return new THREE.MeshBasicMaterial({ color: '#7fb8d6', transparent: true, opacity: 0.7 });
+  return new THREE.MeshBasicMaterial({ color: src.color || '#888' });
+}
+
+const gltf = await new GLTFLoader().loadAsync(GLB);
+
+function makeCar(i) {
+  const car = gltf.scene.clone(true);
+  const paint = IDENTITY[i % IDENTITY.length];
+  const pattern = PATTERN[i % PATTERN.length];
+  const dirt = dirtList ? (dirtList[i % dirtList.length] ?? 0.15) : (dirtArg ? +dirtArg : 0.15);
+  car.traverse(o => {
+    if (!o.isMesh) return;
+    o.material = semanticMaterial(o.material, paint, pattern);
+    if (o.material.uniforms) o.material.uniforms.dirtAmount.value = dirt;
+  });
+  return car;
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3d9b1');
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: '#c8622e' }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; scene.add(ground);
+const cars = [];
+for (let i = 0; i < N; i++) {
+  const car = makeCar(i);
+  car.position.set((i % 3) * 22 - 22, 0, -Math.floor(i / 3) * 22);
+  car.rotation.y = +(q.get('angle') || 0.5);
+  scene.add(car); cars.push(car);
+}
+
+let best = null;
+for (let r = 1; r <= N; r++) { const c = Math.ceil(N / r); const tw = W / c, th = H / r, a = tw / th;
+  const score = (r * c - N) * 10 + Math.abs(Math.log(a / 1.6)); if (!best || score < best.s) best = { r, c, s: score }; }
+const tw = Math.floor(W / best.c), th = Math.floor(H / best.r);
+const cam = new THREE.PerspectiveCamera(45, tw / th, 0.1, 500);
+cars.forEach((car, i) => {
+  const x = (i % best.c) * tw, y = H - (Math.floor(i / best.c) + 1) * th;
+  const back = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), car.rotation.y);
+  cam.position.copy(car.position).addScaledVector(back, 5.5).add(new THREE.Vector3(0, 2.2, 0));
+  cam.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0))); cam.updateMatrixWorld();
+  renderer.setViewport(x, y, tw, th); renderer.setScissor(x, y, tw, th); renderer.render(scene, cam);
+});
+window.__report = { n: N, grid: `${best.r}x${best.c}`, tile: `${tw}x${th}`,
+  tris: renderer.info.render.triangles, calls: renderer.info.render.calls };
+document.title = 'READY';
+</script></body></html>

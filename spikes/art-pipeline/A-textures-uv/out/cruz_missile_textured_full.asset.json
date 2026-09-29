@@ -1,0 +1,250 @@
+{
+  "contract": "jj.vehicle.v0-spike.textures-uv",
+  "id": "cruz-missile-textured_full",
+  "display_name": "Cruz Missile (textures/UV spike)",
+  "units": "m",
+  "forward": "+Y",
+  "up": "+Z",
+  "broken_overlap_variant": false,
+  "paint_parts": [
+    "chassis",
+    "cabin",
+    "bonnet",
+    "boot",
+    "door_L",
+    "door_R"
+  ],
+  "uv0_atlas_report": [
+    {
+      "part": "chassis",
+      "area_m2": 17.8131,
+      "rect": [
+        0.0,
+        0.0,
+        0.68679,
+        0.58057
+      ],
+      "uv_bbox_aspect": 1.183,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "cabin",
+      "area_m2": 7.5754,
+      "rect": [
+        0.0,
+        0.58057,
+        0.42701,
+        0.39711
+      ],
+      "uv_bbox_aspect": 1.075,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "bonnet",
+      "area_m2": 3.5945,
+      "rect": [
+        0.68679,
+        0.0,
+        0.24165,
+        0.33296
+      ],
+      "uv_bbox_aspect": 0.726,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "boot",
+      "area_m2": 2.3553,
+      "rect": [
+        0.68679,
+        0.33296,
+        0.24333,
+        0.21667
+      ],
+      "uv_bbox_aspect": 1.123,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "door_L",
+      "area_m2": 1.4973,
+      "rect": [
+        0.42701,
+        0.58057,
+        0.1449,
+        0.2313
+      ],
+      "uv_bbox_aspect": 0.626,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "door_R",
+      "area_m2": 1.4973,
+      "rect": [
+        0.57191,
+        0.58057,
+        0.1449,
+        0.2313
+      ],
+      "uv_bbox_aspect": 0.626,
+      "texel_density_px_per_m": 153.2
+    }
+  ],
+  "uv1_atlas_report": [
+    {
+      "part": "chassis",
+      "area_m2": 17.8131,
+      "rect": [
+        0.0,
+        0.0,
+        0.68679,
+        0.58057
+      ],
+      "uv_bbox_aspect": 1.183,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "cabin",
+      "area_m2": 7.5754,
+      "rect": [
+        0.0,
+        0.58057,
+        0.42701,
+        0.39711
+      ],
+      "uv_bbox_aspect": 1.075,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "bonnet",
+      "area_m2": 3.5945,
+      "rect": [
+        0.68679,
+        0.0,
+        0.24165,
+        0.33296
+      ],
+      "uv_bbox_aspect": 0.726,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "boot",
+      "area_m2": 2.3553,
+      "rect": [
+        0.68679,
+        0.33296,
+        0.24333,
+        0.21667
+      ],
+      "uv_bbox_aspect": 1.123,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "door_L",
+      "area_m2": 1.4973,
+      "rect": [
+        0.42701,
+        0.58057,
+        0.1449,
+        0.2313
+      ],
+      "uv_bbox_aspect": 0.626,
+      "texel_density_px_per_m": 153.2
+    },
+    {
+      "part": "door_R",
+      "area_m2": 1.4973,
+      "rect": [
+        0.57191,
+        0.58057,
+        0.1449,
+        0.2313
+      ],
+      "uv_bbox_aspect": 0.626,
+      "texel_density_px_per_m": 153.2
+    }
+  ],
+  "texel_density_consistency": {
+    "uv0_min": 153.2,
+    "uv0_max": 153.2,
+    "uv0_ratio_max_over_min": 1.0
+  },
+  "atlas_resolution": 1024,
+  "materials": [
+    "jj_brakelight",
+    "jj_glass",
+    "jj_headlight",
+    "jj_paint",
+    "jj_plastic",
+    "jj_tyre",
+    "jj_underside",
+    "jj_wheel"
+  ],
+  "triangles_total": 5800,
+  "bake_images": {
+    "ao_uv1": "bake_ao_uv1.png",
+    "curvature_uv1": "bake_curvature_uv1.png",
+    "normal_uv0": "normal_map_uv0.png"
+  },
+  "bake_errors": {},
+  "timings_s": {
+    "build_geometry": 0.08,
+    "uv_pack": 0.12,
+    "bake_ao": 6.65,
+    "bake_curvature": 7.09,
+    "bake_normal": 1.54,
+    "bakes": 15.54,
+    "export": 15.71
+  },
+  "provenance": {
+    "blender": "5.2.2 LTS",
+    "script": "spikes/art-pipeline/A-textures-uv/build_textured_car.py"
+  },
+  "mask_texture": {
+    "mask_texture": "mask_full.png",
+    "size": [
+      1024,
+      1024
+    ],
+    "channels": {
+      "R": "paint mask (1=paint body panel)",
+      "G": "pattern mask (procedural diagonal stripe)",
+      "B": "dirt/damage (AO+curvature transferred UV1->UV0)",
+      "A": "emissive accent (procedural pinstripe glow)"
+    },
+    "uv_set": "UV0 (TEXCOORD_0)",
+    "stats": {
+      "paint_triangles": 2888,
+      "paint_px": 458614,
+      "timing_s": 0.98
+    },
+    "source_bakes": {
+      "ao_uv1": "bake_ao_uv1.png",
+      "curvature_uv1": "bake_curvature_uv1.png",
+      "normal_uv0": "normal_map_uv0.png"
+    }
+  },
+  "textures": {
+    "mask": {
+      "file": "mask_full.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "uv_set": "UV0",
+      "channels": {
+        "R": "paint mask (1=paint body panel)",
+        "G": "pattern mask (procedural diagonal stripe)",
+        "B": "dirt/damage (AO+curvature transferred UV1->UV0)",
+        "A": "emissive accent (procedural pinstripe glow)"
+      }
+    },
+    "normal": {
+      "file": "normal_map_uv0_full.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "uv_set": "UV0",
+      "note": "baked directly at UV0 (not transferred from UV1) -- tangent-space vectors aren't safe to resample between two different UV parameterizations without re-deriving the tangent basis; scalar AO/curvature (the mask's B channel) are."
+    }
+  }
+}

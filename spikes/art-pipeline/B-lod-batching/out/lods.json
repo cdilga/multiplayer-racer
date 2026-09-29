@@ -1,0 +1,254 @@
+{
+  "id": "cruz-missile",
+  "contract": "jj.vehicle.v0-spike",
+  "lods": [
+    {
+      "level": 0,
+      "ratio": 1.0,
+      "dropped_meshes": [],
+      "triangles_total": 9152,
+      "triangles_before_decimate": 9152,
+      "per_mesh": {},
+      "glb": "cruz_missile.lod0.glb",
+      "note": "unchanged Part-A export; dent shape key intact"
+    },
+    {
+      "level": 1,
+      "ratio": 0.4,
+      "dropped_meshes": [],
+      "triangles_total": 3630,
+      "triangles_before_decimate": 9152,
+      "per_mesh": {
+        "chassis": {
+          "before": 972,
+          "after": 388
+        },
+        "underside": {
+          "before": 188,
+          "after": 74
+        },
+        "cabin": {
+          "before": 972,
+          "after": 388
+        },
+        "glass": {
+          "before": 188,
+          "after": 74
+        },
+        "bonnet": {
+          "before": 764,
+          "after": 304
+        },
+        "boot": {
+          "before": 764,
+          "after": 304
+        },
+        "door_L": {
+          "before": 764,
+          "after": 304
+        },
+        "decal_word_L": {
+          "before": 2,
+          "after": 2
+        },
+        "door_R": {
+          "before": 764,
+          "after": 304
+        },
+        "decal_word_R": {
+          "before": 2,
+          "after": 2
+        },
+        "bumper_front": {
+          "before": 764,
+          "after": 304
+        },
+        "bumper_rear": {
+          "before": 764,
+          "after": 304
+        },
+        "spoiler": {
+          "before": 188,
+          "after": 74
+        },
+        "spoiler_strut_-1": {
+          "before": 188,
+          "after": 74
+        },
+        "spoiler_strut_+1": {
+          "before": 188,
+          "after": 74
+        },
+        "light_head_0": {
+          "before": 188,
+          "after": 74
+        },
+        "light_brake_0": {
+          "before": 188,
+          "after": 74
+        },
+        "light_head_1": {
+          "before": 188,
+          "after": 74
+        },
+        "light_brake_1": {
+          "before": 188,
+          "after": 74
+        },
+        "wheel_FL": {
+          "before": 188,
+          "after": 74
+        },
+        "wheel_FL_rim": {
+          "before": 44,
+          "after": 16
+        },
+        "wheel_FR": {
+          "before": 188,
+          "after": 74
+        },
+        "wheel_FR_rim": {
+          "before": 44,
+          "after": 16
+        },
+        "wheel_RL": {
+          "before": 188,
+          "after": 74
+        },
+        "wheel_RL_rim": {
+          "before": 44,
+          "after": 16
+        },
+        "wheel_RR": {
+          "before": 188,
+          "after": 74
+        },
+        "wheel_RR_rim": {
+          "before": 44,
+          "after": 16
+        }
+      },
+      "glb": "cruz_missile.lod1.glb",
+      "note": "dent shape key removed (see module docstring); decals kept"
+    },
+    {
+      "level": 2,
+      "ratio": 0.14,
+      "dropped_meshes": [
+        "decal_word_L",
+        "decal_word_R"
+      ],
+      "triangles_total": 1270,
+      "triangles_before_decimate": 9148,
+      "per_mesh": {
+        "chassis": {
+          "before": 972,
+          "after": 136
+        },
+        "underside": {
+          "before": 188,
+          "after": 26
+        },
+        "cabin": {
+          "before": 972,
+          "after": 136
+        },
+        "glass": {
+          "before": 188,
+          "after": 26
+        },
+        "bonnet": {
+          "before": 764,
+          "after": 106
+        },
+        "boot": {
+          "before": 764,
+          "after": 106
+        },
+        "door_L": {
+          "before": 764,
+          "after": 106
+        },
+        "door_R": {
+          "before": 764,
+          "after": 106
+        },
+        "bumper_front": {
+          "before": 764,
+          "after": 106
+        },
+        "bumper_rear": {
+          "before": 764,
+          "after": 106
+        },
+        "spoiler": {
+          "before": 188,
+          "after": 26
+        },
+        "spoiler_strut_-1": {
+          "before": 188,
+          "after": 26
+        },
+        "spoiler_strut_+1": {
+          "before": 188,
+          "after": 26
+        },
+        "light_head_0": {
+          "before": 188,
+          "after": 26
+        },
+        "light_brake_0": {
+          "before": 188,
+          "after": 26
+        },
+        "light_head_1": {
+          "before": 188,
+          "after": 26
+        },
+        "light_brake_1": {
+          "before": 188,
+          "after": 26
+        },
+        "wheel_FL": {
+          "before": 188,
+          "after": 26
+        },
+        "wheel_FL_rim": {
+          "before": 44,
+          "after": 6
+        },
+        "wheel_FR": {
+          "before": 188,
+          "after": 26
+        },
+        "wheel_FR_rim": {
+          "before": 44,
+          "after": 6
+        },
+        "wheel_RL": {
+          "before": 188,
+          "after": 26
+        },
+        "wheel_RL_rim": {
+          "before": 44,
+          "after": 6
+        },
+        "wheel_RR": {
+          "before": 188,
+          "after": 26
+        },
+        "wheel_RR_rim": {
+          "before": 44,
+          "after": 6
+        }
+      },
+      "glb": "cruz_missile.lod2.glb",
+      "note": "dent shape key removed; decal meshes dropped (unreadable at this size)"
+    }
+  ],
+  "budget_hypothesis_tris": {
+    "lod0_close": "1000-3000 (measured 9152; see Part-A finding #2)",
+    "lod1_medium": "500-1000",
+    "lod2_distant": "150-400"
+  }
+}

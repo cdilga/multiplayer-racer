@@ -1,0 +1,42 @@
+{
+  "impact": {},
+  "detach": {
+    "colliderKind": "convexHull",
+    "doorMassKg": 36,
+    "carMassBeforeKg": 1200,
+    "carMassAfterKg": 1164,
+    "doorWorldPos": [
+      0.9892181286730634,
+      0.5843683377384215,
+      0.1260692341433509
+    ],
+    "debrisLinvel": [
+      2.342428268357077,
+      -0.9902335257396169,
+      -0.2401281662674052
+    ],
+    "debrisAngvel": {
+      "x": -0.02366197481751442,
+      "y": 0.24621248245239258,
+      "z": -0.984918475151062
+    },
+    "bodyTypeAfterCreate": 0
+  },
+  "sleepWake": {
+    "sleptAtSeconds": 1.2666666666666666,
+    "bodyTypesObserved": [
+      0
+    ],
+    "stillDynamicAfterSleep": true,
+    "isSleepingBeforeHit": true,
+    "wokeAfterCarContact": true,
+    "wokeAtSeconds": 0.4166666666666667,
+    "finalDoorBodyType": 0
+  },
+  "dent": {
+    "targetName": "door_R_dent",
+    "vertexCount": 1353,
+    "movedVerts": 305,
+    "maxDisplacementM": 0.12716005742549896
+  }
+}

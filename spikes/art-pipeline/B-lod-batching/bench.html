@@ -1,0 +1,309 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>batching bench</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike B, task 2: draw-call/triangle/frame-time bench for 3 batching strategies across N tiles.
+// ?strategy=separate|merged|batched & n=4|12|24 & w=3840&h=2160 & lod=auto|0|1|2 & frames=120
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
+
+const q = new URLSearchParams(location.search);
+const STRATEGY = q.get('strategy') || 'separate';
+const N = +(q.get('n') || 4);
+const W = +(q.get('w') || 3840), H = +(q.get('h') || 2160);
+const LOD_PARAM = q.get('lod') || 'auto';
+const FRAMES = +(q.get('frames') || 120);
+const MODE = q.get('mode') || 'grid'; // 'grid' (N tiles/cameras, own-car chase cams) or 'overview'
+                                       // (one shared camera framing all cars -- plan §6.4 arena mode)
+
+const IDENTITY = ['#ff3b30', '#1e6bff', '#ffcc00', '#22c55e', '#a855f7', '#ff7a00', '#00c2c7', '#ff4fa3',
+                  '#8b5a2b', '#ffffff', '#111827', '#84cc16'];
+
+// ---- dynamic grid layout (plan §6.2), identical approach to ingame.html ----
+function gridLayout(n, w, h) {
+  let best = null;
+  for (let r = 1; r <= n; r++) {
+    const c = Math.ceil(n / r), tw = w / c, th = h / r, a = tw / th;
+    const score = (r * c - n) * 10 + Math.abs(Math.log(a / 1.6));
+    if (!best || score < best.s) best = { r, c, s: score };
+  }
+  return { rows: best.r, cols: best.c, tw: Math.floor(w / best.c), th: Math.floor(h / best.r) };
+}
+const grid = gridLayout(N, W, H);
+
+// ---- per-tile LOD selection by projected size (own car fills ~0.46 of tile height; calibrated
+// against the Part-A capture: 640x540 tile -> 220-270px own-car height at that fixed chase distance) ----
+function pickLod(th) {
+  const ownPx = th * 0.46;
+  if (ownPx >= 300) return 0;
+  if (ownPx >= 100) return 1;
+  return 2;
+}
+const LOD = LOD_PARAM === 'auto' ? pickLod(grid.th) : +LOD_PARAM;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false);
+renderer.setPixelRatio(1);
+renderer.setScissorTest(true);
+renderer.info.autoReset = false;
+document.body.appendChild(renderer.domElement);
+
+const gl = renderer.getContext();
+const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+const gpuInfo = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+const vendorInfo = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#f3d9b1');
+scene.add(new THREE.HemisphereLight('#fff7e6', '#8a4b2a', 1.2));
+const sun = new THREE.DirectionalLight('#ffffff', 2.2);
+sun.position.set(20, 40, 10);
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ color: '#c8622e' }));
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const ink = new THREE.MeshBasicMaterial({ color: '#111111', side: THREE.BackSide });
+
+const gltf = await new GLTFLoader().loadAsync(`out/cruz_missile.lod${LOD}.glb`);
+gltf.scene.updateMatrixWorld(true); // root has identity transform -> child matrixWorld == car-local transform
+
+// ---- collect renderable (non-collider) mesh nodes from the loaded GLB, in car-local space ----
+function collectParts() {
+  const parts = [];
+  gltf.scene.traverse(o => {
+    if (!o.isMesh || o.name.startsWith('col_')) return;
+    parts.push(o);
+  });
+  return parts;
+}
+const PARTS = collectParts();
+
+// Normalize a geometry to a safe common attribute set (position, normal, uv only) and non-indexed,
+// so heterogeneous part meshes (some with vertex-color AO layers, some without) can be concatenated
+// with mergeGeometries. Trade-off (noted in REPORT.md): merged/batched strategies drop the baked
+// AO vertex-color pass used by the Part-A "toon" material; a production pipeline would need a
+// consistent per-LOD attribute layout across parts before batching.
+function normalize(geom) {
+  const g = geom.index ? geom.toNonIndexed() : geom.clone();
+  const keep = ['position', 'normal', 'uv'];
+  for (const name of Object.keys(g.attributes)) if (!keep.includes(name)) g.deleteAttribute(name);
+  g.morphAttributes = {};        // LOD0's dent shape key would otherwise block mergeGeometries
+  g.morphTargetsRelative = false;
+  return g;
+}
+
+function bakedGeometry(mesh, scaleForHull) {
+  let g = normalize(mesh.geometry);
+  if (scaleForHull) {
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) pos.setXYZ(i, pos.getX(i) * 1.04, pos.getY(i) * 1.04, pos.getZ(i) * 1.04);
+    pos.needsUpdate = true;
+  }
+  g.applyMatrix4(mesh.matrixWorld);
+  return g;
+}
+
+// ---- one-time (car-local) merges shared by 'merged' and 'batched' strategies ----
+function buildMergedByMaterial() {
+  const byMat = new Map(); // materialName -> {material, geoms:[]}
+  for (const o of PARTS) {
+    const matName = o.material.name || 'default';
+    if (!byMat.has(matName)) byMat.set(matName, { material: o.material, geoms: [] });
+    byMat.get(matName).geoms.push(bakedGeometry(o, false));
+  }
+  const out = new Map();
+  for (const [name, { material, geoms }] of byMat) {
+    out.set(name, { material, geometry: geoms.length > 1 ? BGU.mergeGeometries(geoms, false) : geoms[0] });
+  }
+  return out;
+}
+function buildMergedHull() {
+  const geoms = PARTS.filter(o => !o.name.startsWith('decal_')).map(o => bakedGeometry(o, true));
+  return geoms.length > 1 ? BGU.mergeGeometries(geoms, false) : geoms[0];
+}
+const MERGED_BY_MATERIAL = STRATEGY === 'separate' ? null : buildMergedByMaterial();
+const MERGED_HULL = STRATEGY === 'separate' ? null : buildMergedHull();
+
+// ---- car placement: spread around a large circuit (not the Part-A hero-shot cluster) so each
+// tile's own chase camera predominantly sees its own car, like cars spaced around a real track,
+// rather than every tile seeing all N cars at point-blank range (which would flatter every
+// strategy equally, but unrealistically, and hide the O(N) vs O(1) difference batching buys). ----
+const RADIUS = 180;
+const carXform = [];
+for (let i = 0; i < N; i++) {
+  const theta = (i / N) * Math.PI * 2;
+  const pos = new THREE.Vector3(Math.sin(theta) * RADIUS, 0, -Math.cos(theta) * RADIUS);
+  const quat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), theta + Math.PI);
+  const m = new THREE.Matrix4().compose(pos, quat, new THREE.Vector3(1, 1, 1));
+  carXform.push({ pos, quat, m });
+}
+
+const carRoots = []; // Object3D per car, used for the chase camera regardless of strategy
+
+// ---- strategy (a): all parts as separate meshes + per-part ink hull (current in-game approach) ----
+function buildSeparate() {
+  for (let i = 0; i < N; i++) {
+    const root = new THREE.Group();
+    root.position.copy(carXform[i].pos);
+    root.quaternion.copy(carXform[i].quat);
+    const paint = new THREE.Color(IDENTITY[i % IDENTITY.length]);
+    for (const o of PARTS) {
+      const mat = o.material.name === 'jj_paint' ? o.material.clone() : o.material;
+      if (o.material.name === 'jj_paint') mat.color.copy(paint);
+      const mesh = new THREE.Mesh(o.geometry, mat);
+      mesh.matrix.copy(o.matrixWorld);
+      mesh.matrixAutoUpdate = false;
+      root.add(mesh);
+      if (!o.name.startsWith('decal_')) {
+        const hull = new THREE.Mesh(o.geometry, ink);
+        hull.matrix.copy(o.matrixWorld).scale(new THREE.Vector3(1.04, 1.04, 1.04));
+        hull.matrixAutoUpdate = false;
+        root.add(hull);
+      }
+    }
+    scene.add(root);
+    carRoots.push(root);
+  }
+}
+
+// ---- strategy (b): intact car merged into one mesh per material + one merged hull mesh ----
+function buildMerged() {
+  for (let i = 0; i < N; i++) {
+    const root = new THREE.Group();
+    root.position.copy(carXform[i].pos);
+    root.quaternion.copy(carXform[i].quat);
+    const paint = new THREE.Color(IDENTITY[i % IDENTITY.length]);
+    for (const [name, { material, geometry }] of MERGED_BY_MATERIAL) {
+      const mat = name === 'jj_paint' ? material.clone() : material;
+      if (name === 'jj_paint') mat.color.copy(paint);
+      root.add(new THREE.Mesh(geometry, mat)); // shared geometry across all N cars
+    }
+    root.add(new THREE.Mesh(MERGED_HULL, ink)); // shared hull geometry
+    scene.add(root);
+    carRoots.push(root);
+  }
+}
+
+// ---- strategy (c): BatchedMesh across cars, one batch per material + one for the hull ----
+function buildBatched() {
+  const batches = [];
+  for (const [name, { material, geometry }] of MERGED_BY_MATERIAL) {
+    const mat = material.clone();
+    let geomForBatch = geometry;
+    if (name === 'jj_paint') {
+      // BatchedMesh.setColorAt only has a visible effect once the material takes the USE_COLOR path
+      // (material.vertexColors = true), and that path does `vColor *= color` from a real geometry
+      // 'color' attribute *before* multiplying by the per-instance batching color. Without that
+      // attribute WebGL feeds the disabled generic attribute's default (0,0,0,1) -- i.e. every
+      // vertex renders BLACK regardless of the instance tint. Fix: give this geometry an explicit
+      // white 'color' attribute so vColor's first multiply is a no-op, then instance color carries
+      // the real per-car paint tint. (Caught via the overview screenshot showing solid black cars.)
+      mat.vertexColors = true;
+      mat.color.set('#ffffff');
+      geomForBatch = geometry.clone();
+      const count = geomForBatch.attributes.position.count;
+      geomForBatch.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(count * 3).fill(1), 3));
+    }
+    const vtx = geomForBatch.attributes.position.count;
+    const bm = new THREE.BatchedMesh(N, vtx, vtx, mat);
+    const gid = bm.addGeometry(geomForBatch);
+    for (let i = 0; i < N; i++) {
+      const iid = bm.addInstance(gid);
+      bm.setMatrixAt(iid, carXform[i].m);
+      if (name === 'jj_paint') bm.setColorAt(iid, new THREE.Color(IDENTITY[i % IDENTITY.length]));
+    }
+    scene.add(bm);
+    batches.push(bm);
+  }
+  {
+    const mat = ink.clone();
+    const vtx = MERGED_HULL.attributes.position.count;
+    const bm = new THREE.BatchedMesh(N, vtx, vtx, mat);
+    const gid = bm.addGeometry(MERGED_HULL);
+    for (let i = 0; i < N; i++) {
+      const iid = bm.addInstance(gid);
+      bm.setMatrixAt(iid, carXform[i].m);
+    }
+    scene.add(bm);
+    batches.push(bm);
+  }
+  // fabricate lightweight "car root" stand-ins for the chase camera (no render cost; transform only)
+  for (let i = 0; i < N; i++) {
+    const root = new THREE.Object3D();
+    root.position.copy(carXform[i].pos);
+    root.quaternion.copy(carXform[i].quat);
+    carRoots.push(root);
+  }
+  return batches;
+}
+
+if (STRATEGY === 'separate') buildSeparate();
+else if (STRATEGY === 'merged') buildMerged();
+else if (STRATEGY === 'batched') buildBatched();
+else throw new Error('unknown strategy ' + STRATEGY);
+
+// ---- per-tile chase cameras (identical composition to ingame.html) ----
+const cam = new THREE.PerspectiveCamera(55, grid.tw / grid.th, 0.1, 500);
+// ---- shared Overview camera (plan §6.4): one elevated camera framing the whole circuit/all cars.
+// Isolates the batching win from the per-tile-camera-pass cost: Grid mode always needs N render()
+// calls (one per tile) no matter the strategy; Overview needs exactly one, so it is the case where
+// BatchedMesh's flat draw-call count (independent of car count) should actually show up.
+const overviewCam = new THREE.PerspectiveCamera(50, W / H, 1, 2000);
+overviewCam.position.set(0, RADIUS * 1.6, RADIUS * 0.15);
+overviewCam.lookAt(0, 0, 0);
+overviewCam.updateMatrixWorld();
+
+function renderFrame() {
+  renderer.info.reset();
+  if (MODE === 'overview') {
+    renderer.setViewport(0, 0, W, H);
+    renderer.setScissor(0, 0, W, H);
+    renderer.render(scene, overviewCam);
+  } else {
+    for (let i = 0; i < N; i++) {
+      const car = carRoots[i];
+      const x = (i % grid.cols) * grid.tw, y = H - (Math.floor(i / grid.cols) + 1) * grid.th;
+      const back = new THREE.Vector3(0, 0, 1).applyQuaternion(car.quaternion);
+      cam.position.copy(car.position).addScaledVector(back, 7.5).add(new THREE.Vector3(0, 3.2, 0));
+      cam.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 0)));
+      cam.updateMatrixWorld();
+      renderer.setViewport(x, y, grid.tw, grid.th);
+      renderer.setScissor(x, y, grid.tw, grid.th);
+      renderer.render(scene, cam);
+    }
+  }
+  return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+}
+
+// warm-up (shader compile, first-frame costs) then measured frames
+renderFrame();
+const frameTimes = [];
+let lastReport = null;
+function tick() {
+  const t0 = performance.now();
+  lastReport = renderFrame();
+  frameTimes.push(performance.now() - t0);
+  if (frameTimes.length < FRAMES) requestAnimationFrame(tick);
+  else finish();
+}
+function finish() {
+  frameTimes.sort((a, b) => a - b);
+  const avg = frameTimes.reduce((s, v) => s + v, 0) / frameTimes.length;
+  const p50 = frameTimes[Math.floor(frameTimes.length * 0.5)];
+  const p95 = frameTimes[Math.floor(frameTimes.length * 0.95)];
+  window.__report = {
+    strategy: STRATEGY, mode: MODE, n: N, lod: LOD,
+    grid: MODE === 'overview' ? 'shared-1cam' : `${grid.rows}x${grid.cols}`,
+    tile: MODE === 'overview' ? `${W}x${H}` : `${grid.tw}x${grid.th}`,
+    drawCallsPerFrame: lastReport.calls, trianglesPerFrame: lastReport.triangles,
+    frameMs: { avg: +avg.toFixed(3), p50: +p50.toFixed(3), p95: +p95.toFixed(3) },
+    frames: FRAMES, gpu: gpuInfo, vendor: vendorInfo, w: W, h: H,
+  };
+  document.title = 'READY';
+}
+requestAnimationFrame(tick);
+</script></body></html>

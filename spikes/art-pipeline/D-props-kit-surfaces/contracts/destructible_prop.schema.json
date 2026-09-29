@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jj.destructible_prop.v0-draft",
+  "title": "Destructible prop sidecar (draft)",
+  "type": "object",
+  "required": ["contract", "id", "assets", "intact_root", "collider", "destruction"],
+  "properties": {
+    "contract": { "type": "string", "enum": ["jj.destructible_prop.v0-draft"] },
+    "id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string" },
+    "units": { "type": "string", "enum": ["m"] },
+    "forward": { "type": "string" },
+    "up": { "type": "string" },
+    "assets": {
+      "type": "object",
+      "required": ["intact", "fractured"],
+      "properties": {
+        "intact": { "type": "string" },
+        "fractured": { "type": "string" },
+        "debris": { "type": "string" }
+      }
+    },
+    "intact_root": { "type": "string", "minLength": 1 },
+    "lid": {
+      "type": "object",
+      "properties": {
+        "node": { "type": "string" },
+        "hinge_axis": { "type": "array", "minItems": 3, "maxItems": 3 },
+        "hinge_point": { "type": "array", "minItems": 3, "maxItems": 3 },
+        "open_angle_deg": { "type": "number", "minimum": 0, "maximum": 180 }
+      }
+    },
+    "collider": { "type": "string", "minLength": 1 },
+    "com_marker": { "type": "string" },
+    "crush_morphs": {
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "required": ["nodes"],
+          "properties": {
+            "nodes": { "type": "array", "minItems": 1 },
+            "description": { "type": "string" }
+          }
+        }
+      }
+    },
+    "damage_ladder": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["state", "impulse_threshold_ns"],
+        "properties": {
+          "state": { "type": "string", "minLength": 1 },
+          "impulse_threshold_ns": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "destruction": {
+      "type": "object",
+      "required": ["break_threshold_impulse_ns", "damage_to_car_factor", "pieces", "piece_count"],
+      "properties": {
+        "break_threshold_impulse_ns": { "type": "number", "minimum": 0 },
+        "damage_to_car_factor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "pieces": { "type": "object" },
+        "piece_count": { "type": "integer", "minimum": 1 },
+        "intact_volume_m3": { "type": "number", "minimum": 0 },
+        "fractured_volume_m3": { "type": "number", "minimum": 0 },
+        "volume_conservation_ratio": { "type": "number", "minimum": 0.9, "maximum": 1.1 }
+      }
+    },
+    "rubbish_spawn": {
+      "type": "object",
+      "properties": {
+        "on_break": { "type": "boolean" },
+        "max_count": { "type": "integer", "minimum": 0 },
+        "items": { "type": "array" }
+      }
+    },
+    "style_notes": { "type": "string" }
+  }
+}

@@ -85,3 +85,6 @@ image-*.*
 # bv (beads viewer) local config and caches
 .bv/
 .claude/settings.local.json
+
+# Blender auto-backups
+*.blend1

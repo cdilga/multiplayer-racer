@@ -1,0 +1,250 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Spike D in-game proof</title>
+<style>html,body{margin:0;background:#cfd6dc;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+// Spike D, task 5: load destructible_prop / kit_piece / surface_set assets *only* via their
+// sidecar JSON (asset paths, node names, snap points, surface-id -> material-name mapping all come
+// from the sidecar, never hardcoded beyond "which sidecar files exist"). Lays out 4 track kit-piece
+// instances chained end-to-end by their snap points, applies the dirt_packed surface texture to the
+// matching jj_surface_* material by surface id, and places 3 wheelie-bin damage states: intact
+// (lid closed), lid open (hinge driven from sidecar data), and broken (fractured pieces + rubbish
+// debris scattered using the sidecar's spawn offsets).
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const BASE = 'out/';
+const loader = new GLTFLoader();
+const texLoader = new THREE.TextureLoader();
+
+async function loadJSON(rel) { return (await fetch(BASE + rel)).json(); }
+async function loadGLTF(rel) { return (await loader.loadAsync(BASE + rel)).scene; }
+
+function isCollider(o) { return o.name.startsWith('col_') || o.userData?.jj_collider; }
+function stripColliders(root) {
+  const dead = [];
+  root.traverse(o => { if (isCollider(o)) dead.push(o); });
+  dead.forEach(o => o.parent && o.parent.remove(o));
+}
+
+function placeLabel(text, x, y, z, width = 4.2) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 512, 96);
+  g.fillStyle = '#111'; g.font = 'bold 40px sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 256, 50);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: false }));
+  spr.position.set(x, y, z); spr.scale.set(width, width * 96 / 512, 1); scene.add(spr);
+}
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+const W = 1600, H = 1000;
+renderer.setSize(W, H, false);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#cfd6dc');
+scene.add(new THREE.HemisphereLight('#ffffff', '#556070', 1.3));
+const sun = new THREE.DirectionalLight('#ffffff', 2.0); sun.position.set(15, 30, 10); scene.add(sun);
+
+const qEarly = new URLSearchParams(location.search);
+const VIEW = qEarly.get('view') || 'track';
+
+// ---------------------------------------------------------------- owner-requested: squish damage ladder
+// Drives crush morph-target influences straight from the sidecar's crush_morphs (node names) and
+// damage_ladder (which morph + influence each named state uses) -- no hardcoded knowledge of the
+// bin's geometry beyond those two sidecar fields.
+if (VIEW === 'squish') {
+  const binSidecar = await loadJSON('wheelie_bin.asset.json');
+  const ladderStates = [
+    { label: 'intact', state: 'intact' },
+    { label: 'half-squished (top)', state: 'dented' },
+    { label: 'fully squished (top)', state: 'squished' },
+    { label: 'fully squished (side)', state: 'squished_side' },
+    { label: 'fractured + debris', special: 'fractured' },
+  ];
+  const SPACING = 3.6;
+  for (let i = 0; i < ladderStates.length; i++) {
+    const { label, state, special } = ladderStates[i];
+    const x = (i - (ladderStates.length - 1) / 2) * SPACING;
+    if (special === 'fractured') {
+      const frac = await loadGLTF(binSidecar.assets.fractured);
+      stripColliders(frac);
+      frac.position.set(x, 0, 0);
+      let k = 0;
+      frac.traverse(o => { if (o.isMesh) { k++; const ang = k * 1.7, r = 0.15 + 0.05 * k;
+        o.position.x += Math.cos(ang) * r; o.position.z += Math.sin(ang) * r; o.position.y += 0.02 * k; o.rotation.y += ang; } });
+      scene.add(frac);
+      const debris = await loadGLTF(binSidecar.assets.debris);
+      stripColliders(debris);
+      debris.position.set(x, 0, 0);
+      scene.add(debris);
+    } else {
+      const step = binSidecar.damage_ladder.find(s => s.state === state);
+      const bin = await loadGLTF(binSidecar.assets.intact);
+      stripColliders(bin);
+      bin.position.set(x, 0, 0);
+      if (step && step.morph) {
+        bin.traverse(o => {
+          if (o.isMesh && o.morphTargetDictionary && step.morph in o.morphTargetDictionary) {
+            o.morphTargetInfluences[o.morphTargetDictionary[step.morph]] = step.influence;
+          }
+        });
+      }
+      scene.add(bin);
+    }
+    placeLabel(label, x, 1.9, 0, 3.4);
+  }
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshStandardMaterial({ color: '#9aa3ab' }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.01; scene.add(ground);
+  const cam = new THREE.PerspectiveCamera(50, W / H, 0.1, 300);
+  cam.position.set(0, 4.2, 15);
+  cam.lookAt(new THREE.Vector3(0, 0.5, 0));
+  renderer.render(scene, cam);
+  window.__report = { squishStates: ladderStates.map(s => s.label) };
+  document.title = 'READY';
+}
+
+// ---------------------------------------------------------------- Task 2+3: kit piece chain + surfaces
+if (VIEW === 'track' || VIEW === 'bin') {
+const trackSidecar = await loadJSON('track_piece_bend90.asset.json');
+const surfaceIdsUsed = new Set(Object.values(trackSidecar.surface_map).filter(v => typeof v === 'string' && v !== trackSidecar.surface_map.slots));
+const surfaceCache = {};
+async function surfaceFor(materialName) {
+  // surface_map maps slot_N -> surface_id; find which slot_N this material's slot index corresponds to
+  const slotIdx = trackSidecar.surface_map.slots.indexOf(materialName);
+  const surfaceId = trackSidecar.surface_map[`slot_${slotIdx}`];
+  if (!surfaceId) return null;
+  if (!(surfaceId in surfaceCache)) {
+    try {
+      const sc = await loadJSON(`${surfaceId}.surface.json`);
+      const tex = await texLoader.loadAsync(BASE + '../' + sc.texture);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      surfaceCache[surfaceId] = { sidecar: sc, texture: tex };
+    } catch (e) { surfaceCache[surfaceId] = null; } // no generated texture for this surface id (honest gap)
+  }
+  return surfaceCache[surfaceId];
+}
+
+function frameMatrixWorld(root, nodeName) {
+  const n = root.getObjectByName(nodeName);
+  n.updateWorldMatrix(true, false);
+  return n.matrixWorld.clone();
+}
+
+const trackPieces = [];
+let prevEndWorld = null;
+for (let i = 0; i < 4; i++) {
+  const piece = await loadGLTF('track_piece_bend90.glb');
+  stripColliders(piece);
+  piece.updateMatrixWorld(true); // piece currently at identity -> matrixWorld == local frame
+  const startLocal = frameMatrixWorld(piece, 'snap_start');
+  if (prevEndWorld) {
+    const T = new THREE.Matrix4().multiplyMatrices(prevEndWorld, startLocal.clone().invert());
+    T.decompose(piece.position, piece.quaternion, piece.scale);
+  }
+  scene.add(piece);
+  piece.updateMatrixWorld(true);
+  prevEndWorld = frameMatrixWorld(piece, 'snap_end');
+
+  // apply surface textures by surface id (declared in the sidecar's surface_map, keyed by material name)
+  const applied = [];
+  for (const matName of trackSidecar.surface_map.slots) {
+    const surf = await surfaceFor(matName);
+    piece.traverse(o => {
+      if (o.isMesh && o.material && o.material.name === matName) {
+        if (surf) {
+          const tex = surf.texture.clone(); tex.needsUpdate = true;
+          tex.repeat.set(4, 4);
+          o.material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 });
+          applied.push(matName);
+        }
+      }
+    });
+  }
+  trackPieces.push({ piece, applied });
+}
+window.__trackSurfacesApplied = [...new Set(trackPieces.flatMap(t => t.applied))];
+
+// ---------------------------------------------------------------- Task 1: wheelie bin, 3 damage states
+const binSidecar = await loadJSON('wheelie_bin.asset.json');
+
+const BIN_X = -30, BIN_SPACING = 4.5;
+// State A: intact, lid closed
+{
+  const bin = await loadGLTF(binSidecar.assets.intact);
+  stripColliders(bin);
+  bin.position.set(BIN_X, 0, BIN_SPACING);
+  scene.add(bin);
+  placeLabel('intact (closed)', BIN_X, 2.6, BIN_SPACING);
+}
+// State B: intact body, lid opened via sidecar hinge data (hinge_axis/open_angle_deg/hinge_point)
+{
+  const bin = await loadGLTF(binSidecar.assets.intact);
+  stripColliders(bin);
+  bin.position.set(BIN_X, 0, 0);
+  const lid = bin.getObjectByName(binSidecar.lid.node);
+  // BUG FOUND HERE (kept as a documented fix, see REPORT.md): binSidecar.lid.hinge_point/hinge_axis
+  // were recorded straight from Blender's Python API (Z-up, +Y-forward). The exported GLB -- and
+  // this Three.js scene -- use glTF's Y-up convention. Applying the raw sidecar vectors as
+  // (x, y, z) in Three.js put the hinge pivot in the wrong place and made the lid rotate off to an
+  // incorrect position (it visually vanished off-frame). Convert Blender (bx,by,bz) -> glTF
+  // (bx, bz, -by) before using any raw sidecar vector as a Three.js-space point/axis.
+  const blenderToGltf = (v) => new THREE.Vector3(v[0], v[2], -v[1]);
+  const axis = blenderToGltf(binSidecar.lid.hinge_axis).normalize();
+  const angle = THREE.MathUtils.degToRad(binSidecar.lid.open_angle_deg);
+  const pivot = blenderToGltf(binSidecar.lid.hinge_point);
+  const q = new THREE.Quaternion().setFromAxisAngle(axis, -angle);
+  const rel = lid.position.clone().sub(pivot);
+  rel.applyQuaternion(q);
+  lid.position.copy(pivot.clone().add(rel));
+  lid.quaternion.premultiply(q);
+  scene.add(bin);
+  placeLabel('lid open (hinge data)', BIN_X, 2.6, 0);
+}
+// State C: broken -- fractured pieces scattered + rubbish debris spawned from sidecar offsets
+{
+  const frac = await loadGLTF(binSidecar.assets.fractured);
+  stripColliders(frac);
+  frac.position.set(BIN_X, 0, -BIN_SPACING);
+  let i = 0;
+  frac.traverse(o => {
+    if (o.isMesh) {
+      i++;
+      const ang = i * 1.7, r = 0.25 + 0.08 * i;
+      o.position.x += Math.cos(ang) * r; o.position.z += Math.sin(ang) * r; o.position.y += 0.02 * i;
+      o.rotation.y += ang;
+    }
+  });
+  scene.add(frac);
+  const debris = await loadGLTF(binSidecar.assets.debris);
+  stripColliders(debris);
+  debris.position.set(BIN_X, 0, -BIN_SPACING);
+  debris.scale.setScalar(1.8);
+  scene.add(debris);
+  placeLabel('broken + debris', BIN_X, 2.6, -BIN_SPACING);
+}
+
+// ---------------------------------------------------------------- ground + two camera views
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: '#9aa3ab' }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.01; scene.add(ground);
+
+const cam = new THREE.PerspectiveCamera(50, W / H, 0.1, 300);
+if (VIEW === 'bin') {
+  cam.position.set(BIN_X + 6, 4.5, BIN_SPACING + 5);
+  cam.lookAt(new THREE.Vector3(BIN_X + 1, 0.7, 0));
+} else {
+  cam.position.set(2, 14, 22);
+  cam.lookAt(new THREE.Vector3(4, 0, 3));
+}
+renderer.render(scene, cam);
+
+window.__report = {
+  trackPiecesChained: trackPieces.length,
+  surfacesApplied: window.__trackSurfacesApplied,
+  surfacesAvailable: Object.keys(surfaceCache).filter(k => surfaceCache[k]),
+  binStates: ['intact_closed', 'lid_open', 'broken_debris'],
+};
+document.title = 'READY';
+}
+</script></body></html>

@@ -1,0 +1,16 @@
+import { chromium } from 'playwright';
+const PORT = process.env.PORT || 8211;
+const BASE = `http://localhost:${PORT}/spikes/art-pipeline/A-textures-uv`;
+const args = process.argv.slice(2);
+const params = Object.fromEntries(args.map(a => a.split('=')));
+const url = `${BASE}/views.html?${new URLSearchParams(params).toString()}`;
+const browser = await chromium.launch({ channel: 'chrome' });
+const page = await browser.newPage({ viewport: { width: 1280, height: 1280 } });
+page.on('pageerror', e => console.log('PAGEERR', e.message)); page.on('console', m => console.log('['+m.type()+']', m.text()));
+await page.goto(url);
+await page.waitForFunction(() => document.title === 'READY', null, { timeout: 60000 });
+const rep = await page.evaluate(() => window.__report);
+const out = params.out || 'out/views_debug.png';
+await page.screenshot({ path: `spikes/art-pipeline/A-textures-uv/${out}` });
+console.log(JSON.stringify(rep));
+await browser.close();

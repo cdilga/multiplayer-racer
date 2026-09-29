@@ -1,0 +1,136 @@
+{
+  "asset": "/Users/cdilga/Documents/dev/multiplayer-racer/spikes/art-pipeline/D-props-kit-surfaces/out/wheelie_bin.blend",
+  "objects_checked": 21,
+  "triangles": 1100,
+  "elapsed_sec": 0.006,
+  "ok": false,
+  "error_count": 2,
+  "warn_count": 4,
+  "findings": [
+    {
+      "id": "nonmanifold_edges",
+      "severity": "error",
+      "message": "Non-manifold edges present",
+      "count": 16,
+      "objects": [
+        "debris_banana_peel_01"
+      ]
+    },
+    {
+      "id": "boundary_edges",
+      "severity": "warn",
+      "message": "Open boundary edges on a part not allowlisted as a decal",
+      "count": 16,
+      "objects": [
+        "debris_banana_peel_01"
+      ]
+    },
+    {
+      "id": "ngons",
+      "severity": "warn",
+      "message": "Faces with > 4 sides",
+      "count": 65,
+      "objects": [
+        "bin_axle",
+        "bin_piece_00",
+        "bin_piece_01",
+        "bin_piece_02",
+        "bin_piece_03",
+        "bin_piece_04",
+        "bin_piece_05",
+        "bin_piece_06",
+        "bin_wheel_L",
+        "bin_wheel_R",
+        "debris_can_01",
+        "debris_nappy_01"
+      ]
+    },
+    {
+      "id": "nonplanar_quads",
+      "severity": "warn",
+      "message": "Non-planar quads (deviation > 1% of diagonal)",
+      "count": 24,
+      "objects": [
+        "debris_nappy_01"
+      ]
+    },
+    {
+      "id": "missing_uv0",
+      "severity": "error",
+      "message": "Mesh has no UV0 layer",
+      "count": 20,
+      "objects": [
+        "bin_axle",
+        "bin_body",
+        "bin_lid",
+        "bin_lid_piece",
+        "bin_piece_00",
+        "bin_piece_01",
+        "bin_piece_02",
+        "bin_piece_03",
+        "bin_piece_04",
+        "bin_piece_05",
+        "bin_piece_06",
+        "bin_wheel_L",
+        "bin_wheel_R",
+        "debris_banana_peel_01",
+        "debris_can_01",
+        "debris_can_01_label",
+        "debris_nappy_01",
+        "debris_nappy_01_tape",
+        "debris_pizza_box_01",
+        "debris_pizza_box_01_lid"
+      ]
+    },
+    {
+      "id": "triangle_budget",
+      "severity": "info",
+      "message": "Total triangles 1100 vs budget 10000",
+      "count": 1100,
+      "objects": []
+    },
+    {
+      "id": "part_interpenetration_at_rest",
+      "severity": "warn",
+      "message": "Sibling parts overlap at rest (excluding parent/child designed contacts)",
+      "count": 35,
+      "objects": [
+        "bin_axle x bin_piece_00 (10 tri pairs)",
+        "bin_axle x bin_piece_01 (11 tri pairs)",
+        "bin_axle x bin_piece_03 (19 tri pairs)",
+        "bin_axle x bin_wheel_L (32 tri pairs)",
+        "bin_axle x bin_wheel_R (32 tri pairs)",
+        "bin_body x bin_lid_piece (10 tri pairs)",
+        "bin_body x bin_piece_00 (13 tri pairs)",
+        "bin_body x bin_piece_01 (22 tri pairs)",
+        "bin_body x bin_piece_02 (7 tri pairs)",
+        "bin_body x bin_piece_03 (19 tri pairs)",
+        "bin_body x bin_piece_04 (17 tri pairs)",
+        "bin_body x bin_piece_05 (20 tri pairs)",
+        "bin_body x bin_piece_06 (14 tri pairs)",
+        "bin_lid x bin_piece_03 (5 tri pairs)",
+        "bin_lid x bin_piece_05 (8 tri pairs)",
+        "bin_lid_piece x bin_piece_03 (5 tri pairs)",
+        "bin_lid_piece x bin_piece_05 (8 tri pairs)",
+        "bin_piece_00 x bin_piece_01 (8 tri pairs)",
+        "bin_piece_00 x bin_piece_03 (3 tri pairs)",
+        "bin_piece_00 x bin_piece_04 (4 tri pairs)",
+        "bin_piece_00 x bin_piece_06 (5 tri pairs)",
+        "bin_piece_00 x bin_wheel_R (8 tri pairs)",
+        "bin_piece_01 x bin_piece_03 (10 tri pairs)",
+        "bin_piece_01 x bin_piece_04 (5 tri pairs)",
+        "bin_piece_01 x bin_piece_05 (4 tri pairs)",
+        "bin_piece_01 x bin_piece_06 (4 tri pairs)",
+        "bin_piece_01 x bin_wheel_R (8 tri pairs)",
+        "bin_piece_02 x bin_piece_04 (1 tri pairs)",
+        "bin_piece_02 x bin_piece_06 (4 tri pairs)",
+        "bin_piece_03 x bin_piece_04 (1 tri pairs)",
+        "bin_piece_03 x bin_piece_05 (7 tri pairs)",
+        "bin_piece_03 x bin_piece_06 (4 tri pairs)",
+        "bin_piece_03 x bin_wheel_L (10 tri pairs)",
+        "bin_piece_04 x bin_piece_06 (8 tri pairs)",
+        "bin_piece_05 x bin_piece_06 (2 tri pairs)"
+      ]
+    }
+  ]
+}
