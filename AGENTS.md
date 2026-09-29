@@ -33,14 +33,27 @@ This repository uses `br` (Beads Rust) for task tracking and `bv` for graph-awar
   idle panes for worker, validator, and release-manager roles instead of adding more agents.
 - Do not sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim it, reserve files, announce, and start.
 
-## Beads
+## Beads (code-first / batch-verify)
 
-- Use `br`, not `bd`.
-- Find ready work with `br ready --json` and graph priorities with `bv --robot-triage` or `bv --robot-next`.
-- Never run bare `bv`; it launches an interactive TUI. Always use robot flags.
-- Claim work with `br update <id> --status in_progress --assignee <AgentName>`.
-- Close work only when the implementation is done, tests/builds relevant to the change pass, and you have posted a completion note.
-- For the current polishing swarm, prefer beads under the `beads-polishing` label.
+`.beads/policy.yaml` enforces this workflow. Read `docs/process/code-first-batch-verify.md` before
+your first claim.
+
+- Use `br` 0.7.1 or newer, not `bd`.
+- Find ready work with `br ready --json` (it includes `rework` beads returned to you) and graph
+  priorities with `bv --robot-triage` or `bv --robot-next`. Never run bare `bv`: it launches an
+  interactive TUI.
+- Claim with `br update <id> --claim --actor <AgentMailName>`. You can hold one claimed bead at a time,
+  and the bead must have acceptance criteria.
+- **Workers never close, delete, reopen or gate beads, and never run test suites or full builds.**
+  Write the code and its tests, run at most a syntax gate (`cargo check -p <crate>`, `npm run build`,
+  `tsc --noEmit`), and commit with the bead ID. Then run
+  `br update <id> --status batch_pending --transition-comment "commit:<sha> <test that covers each acceptance item>"`
+  and take the next bead.
+- The batch verifier runs the tests once per wave (`scripts/beads/batch-verify.sh`). It closes green
+  beads with a `receipt:` reference, or returns failures to the same assignee as `rework` with the
+  failing assertion.
+- Pre-0.2 beads were closed on 2026-09-30 (label `superseded-v0_1`). Don't reopen them to implement
+  0.1 scope.
 
 ## Current High-Level Goal
 
@@ -158,10 +171,11 @@ br sync --flush-only  # Export DB to JSONL
 ### Workflow Pattern
 
 1. **Triage**: Run `bv --robot-triage` to find the highest-impact actionable work
-2. **Claim**: Use `br update <id> --status=in_progress`
-3. **Work**: Implement the task
-4. **Complete**: Use `br close <id>`
-5. **Sync**: Always run `br sync --flush-only` at session end
+2. **Claim**: `br update <id> --claim --actor <AgentMailName>`
+3. **Work**: Write the code and its tests, run the syntax gate only, and commit with the bead ID
+4. **Hand off**: `br update <id> --status batch_pending --transition-comment "commit:<sha> ..."`
+5. **Verify** (batch verifier only): `scripts/beads/batch-verify.sh run`, then `close` or `rework`
+6. **Sync**: Always run `br sync --flush-only` at session end
 
 ### Key Concepts
 

@@ -53,3 +53,6 @@ redirect
 *.fsqlite-migration-state
 # quarantined stale WAL-index (shm) snapshots written by br's open-time recovery
 .br-wal-index-*/
+
+# batch-verify: receipts (wave-NNN.json) are committed evidence; raw logs stay local
+receipts/logs/

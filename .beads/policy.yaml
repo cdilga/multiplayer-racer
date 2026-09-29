@@ -1,0 +1,90 @@
+# Code-first / batch-verify doctrine for Joystick Jammers 0.2 (br >= 0.7.1).
+# Human-readable version: docs/process/code-first-batch-verify.md
+#
+#   open/rework -> in_progress -> batch_pending -> closed
+#                      ^               |
+#                      +--- rework <---+   (failures go back to the SAME assignee)
+#
+# Workers implement code + tests, commit, and move to batch_pending. Only the
+# batch verifier closes, after one central verification run over the wave,
+# by reporting the `batch_verify` gate and citing its receipt.
+# Prove enforcement with scripts/beads/canary.sh after any edit to this file.
+
+allow_bypass: false            # `br close --bypass-policy` is rejected
+
+close_policy:
+  require_close_reason:
+    enabled: true
+    min_length: 40
+  # Every close must cite evidence, e.g. `receipt:.beads/receipts/wave-003.json`.
+  require_typed_references:
+    enabled: true
+    required_kinds: [receipt]
+  # The actor who claimed the bead can never be the one who closes it.
+  forbid_self_close_after_in_progress:
+    enabled: true
+  forbid_close_with_deferred_dependents:
+    enabled: true
+
+workflow:
+  strict: true
+  statuses: [open, in_progress, batch_pending, rework, blocked, deferred, closed, tombstone]
+
+  transitions:
+    initial: [open, deferred, blocked]
+    open: [in_progress, blocked, deferred]
+    rework: [in_progress, blocked, deferred]
+    in_progress: [batch_pending, open, rework, blocked]   # open/rework = unclaim
+    batch_pending: [closed, rework]                       # the ONLY route to closed
+    blocked: [open]
+    deferred: [open]
+    closed: [open]                                        # reopen (with --reason)
+
+  # Epics aggregate children and never enter batch_pending themselves. They
+  # close once every child is closed (br refuses otherwise without --force).
+  class_transitions:
+    - {issue_type: epic, from: open, to: closed}
+    - {issue_type: epic, from: in_progress, to: closed}
+
+  status_groups:
+    ready: [open, rework]
+
+  required_fields:
+    "open -> in_progress": [acceptance_criteria_present]
+    "rework -> in_progress": [acceptance_criteria_present]
+    # Hand-off note: commit SHA(s) + which test covers each acceptance item.
+    "in_progress -> batch_pending": [acceptance_criteria_present, transition_comment]
+    # Failure note: exact failing assertion + file:line, for the same assignee.
+    "batch_pending -> rework": [transition_comment]
+    # Verifier ticks every acceptance box it saw exercised; none may stay open.
+    "batch_pending -> closed": [acceptance_criteria, transition_comment]
+    "closed -> open": [transition_comment]                # `br reopen --reason`
+
+  gates:
+    "batch_pending -> closed":
+      require_all:
+        - batch_verify
+    # Epic close routes (only epics may take them). `--force` never bypasses
+    # gates, so an epic can't be force-closed over open children without the
+    # verifier's batch_verify pass.
+    "open -> closed":
+      require_all:
+        - batch_verify
+    "in_progress -> closed":
+      require_all:
+        - batch_verify
+
+  capacity:
+    statuses:
+      in_progress:
+        hard: 4              # <= 5 NTM panes including the user and the verifier
+    groups:
+      verification_debt:     # unverified work in flight; trigger a batch at soft
+        statuses: [in_progress, batch_pending, rework]
+        soft: 8
+        hard: 12
+    scopes:
+      assignee:
+        statuses:
+          in_progress:
+            hard: 1          # one claimed bead per agent at a time
