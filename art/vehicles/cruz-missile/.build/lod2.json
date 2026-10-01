@@ -1,0 +1,746 @@
+{
+ "lod": 2,
+ "file": "cruz_missile.lod2.glb",
+ "triangles": 1210,
+ "draw_calls": 46,
+ "materials": 12,
+ "mask_px": 256,
+ "bounds": {
+  "min": [
+   -1.055,
+   0.0,
+   -1.84
+  ],
+  "max": [
+   1.055,
+   1.95,
+   1.82
+  ]
+ },
+ "parts": {
+  "bonnet": {
+   "node": "bonnet",
+   "mass_fraction": 0.04,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    1.33,
+    -0.82
+   ],
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    60
+   ],
+   "collider": "col_bonnet",
+   "dents": [
+    "bonnet_dent"
+   ]
+  },
+  "boot": {
+   "node": "boot",
+   "mass_fraction": 0.03,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    1.51,
+    1.21
+   ],
+   "axis": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    60
+   ],
+   "collider": "col_boot",
+   "dents": [
+    "boot_dent"
+   ]
+  },
+  "door_L": {
+   "node": "door_L",
+   "mass_fraction": 0.025,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    -1.02873,
+    1.00874,
+    -0.61
+   ],
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    70
+   ],
+   "collider": "col_door_L",
+   "dents": [
+    "door_L_dent"
+   ]
+  },
+  "door_R": {
+   "node": "door_R",
+   "mass_fraction": 0.025,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    1.02873,
+    1.00874,
+    -0.61
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    70
+   ],
+   "collider": "col_door_R",
+   "dents": [
+    "door_R_dent"
+   ]
+  },
+  "door_rear_L": {
+   "node": "door_rear_L",
+   "mass_fraction": 0.022,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    -1.02873,
+    1.01874,
+    0.04
+   ],
+   "axis": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    70
+   ],
+   "collider": "col_door_rear_L",
+   "dents": [
+    "door_rear_L_dent"
+   ]
+  },
+  "door_rear_R": {
+   "node": "door_rear_R",
+   "mass_fraction": 0.022,
+   "joint": "hinge",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    1.02873,
+    1.01874,
+    0.04
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    0,
+    70
+   ],
+   "collider": "col_door_rear_R",
+   "dents": [
+    "door_rear_R_dent"
+   ]
+  },
+  "bumper_front": {
+   "node": "bumper_front",
+   "mass_fraction": 0.03,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "collider": "col_bumper_front",
+   "dents": [
+    "bumper_front_dent"
+   ]
+  },
+  "bumper_rear": {
+   "node": "bumper_rear",
+   "mass_fraction": 0.025,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "collider": "col_bumper_rear",
+   "dents": [
+    "bumper_rear_dent"
+   ]
+  },
+  "glass": {
+   "node": "glass",
+   "mass_fraction": 0.02,
+   "joint": "fixed",
+   "detachable": false,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "wheel_FL": {
+   "node": "wheel_FL",
+   "mass_fraction": 0.03,
+   "joint": "compound",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    -0.8,
+    0.44,
+    -1.12
+   ],
+   "axis_steer": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_steer_deg": [
+    -35,
+    35
+   ],
+   "axis_spin": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "collider": "col_wheel_FL"
+  },
+  "wheel_FR": {
+   "node": "wheel_FR",
+   "mass_fraction": 0.03,
+   "joint": "compound",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.8,
+    0.44,
+    -1.12
+   ],
+   "axis_steer": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_steer_deg": [
+    -35,
+    35
+   ],
+   "axis_spin": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "collider": "col_wheel_FR"
+  },
+  "wheel_RL": {
+   "node": "wheel_RL",
+   "mass_fraction": 0.03,
+   "joint": "spin",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    -0.8,
+    0.44,
+    1.12
+   ],
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "collider": "col_wheel_RL"
+  },
+  "wheel_RR": {
+   "node": "wheel_RR",
+   "mass_fraction": 0.03,
+   "joint": "spin",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.8,
+    0.44,
+    1.12
+   ],
+   "axis": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "collider": "col_wheel_RR"
+  },
+  "light_head_L": {
+   "node": "light_head_L",
+   "mass_fraction": 0.004,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "light_head_R": {
+   "node": "light_head_R",
+   "mass_fraction": 0.004,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "light_brake_L": {
+   "node": "light_brake_L",
+   "mass_fraction": 0.004,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "light_brake_R": {
+   "node": "light_brake_R",
+   "mass_fraction": 0.004,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "chassis",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "mirror_L": {
+   "node": "mirror_L",
+   "mass_fraction": 0.003,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "door_L",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "mirror_R": {
+   "node": "mirror_R",
+   "mass_fraction": 0.003,
+   "joint": "fixed",
+   "detachable": true,
+   "attach": "door_R",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ]
+  },
+  "susp_FL": {
+   "node": "susp_FL",
+   "mass_fraction": 0.01,
+   "joint": "suspension",
+   "detachable": false,
+   "attach": "chassis",
+   "origin": [
+    -0.55,
+    0.96,
+    -1.12
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    -0.1,
+    0.12
+   ]
+  },
+  "susp_FR": {
+   "node": "susp_FR",
+   "mass_fraction": 0.01,
+   "joint": "suspension",
+   "detachable": false,
+   "attach": "chassis",
+   "origin": [
+    0.55,
+    0.96,
+    -1.12
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    -0.1,
+    0.12
+   ]
+  },
+  "susp_RL": {
+   "node": "susp_RL",
+   "mass_fraction": 0.01,
+   "joint": "suspension",
+   "detachable": false,
+   "attach": "chassis",
+   "origin": [
+    -0.55,
+    0.96,
+    1.12
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    -0.1,
+    0.12
+   ]
+  },
+  "susp_RR": {
+   "node": "susp_RR",
+   "mass_fraction": 0.01,
+   "joint": "suspension",
+   "detachable": false,
+   "attach": "chassis",
+   "origin": [
+    0.55,
+    0.96,
+    1.12
+   ],
+   "axis": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "range_deg": [
+    -0.1,
+    0.12
+   ]
+  },
+  "chassis": {
+   "node": "chassis",
+   "mass_fraction": 0.579,
+   "joint": "fixed",
+   "detachable": false,
+   "attach": "",
+   "origin": [
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "collider": [
+    "col_chassis",
+    "col_cabin"
+   ],
+   "dents": [
+    "chassis_dent_FL",
+    "chassis_dent_FR",
+    "chassis_dent_RL",
+    "chassis_dent_RR",
+    "chassis_dent_roof"
+   ]
+  }
+ },
+ "wheels": {
+  "wheel_FL": {
+   "hub": [
+    -0.8,
+    0.44,
+    -1.12
+   ],
+   "radius": 0.44,
+   "width": 0.42,
+   "steer": true,
+   "driven": true
+  },
+  "wheel_FR": {
+   "hub": [
+    0.8,
+    0.44,
+    -1.12
+   ],
+   "radius": 0.44,
+   "width": 0.42,
+   "steer": true,
+   "driven": true
+  },
+  "wheel_RL": {
+   "hub": [
+    -0.8,
+    0.44,
+    1.12
+   ],
+   "radius": 0.44,
+   "width": 0.42,
+   "steer": false,
+   "driven": false
+  },
+  "wheel_RR": {
+   "hub": [
+    0.8,
+    0.44,
+    1.12
+   ],
+   "radius": 0.44,
+   "width": 0.42,
+   "steer": false,
+   "driven": false
+  }
+ },
+ "suspension": {
+  "wheel_FL": {
+   "top_mount": [
+    -0.55,
+    0.96,
+    -1.12
+   ],
+   "hub": [
+    -0.8,
+    0.44,
+    -1.12
+   ],
+   "rest_length": 0.52,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_FR": {
+   "top_mount": [
+    0.55,
+    0.96,
+    -1.12
+   ],
+   "hub": [
+    0.8,
+    0.44,
+    -1.12
+   ],
+   "rest_length": 0.52,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_RL": {
+   "top_mount": [
+    -0.55,
+    0.96,
+    1.12
+   ],
+   "hub": [
+    -0.8,
+    0.44,
+    1.12
+   ],
+   "rest_length": 0.52,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_RR": {
+   "top_mount": [
+    0.55,
+    0.96,
+    1.12
+   ],
+   "hub": [
+    0.8,
+    0.44,
+    1.12
+   ],
+   "rest_length": 0.52,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  }
+ },
+ "anchors": {
+  "cam_fp": [
+   0.35,
+   1.62,
+   -0.1
+  ],
+  "cam_tp_target": [
+   0.0,
+   1.2,
+   -0.0
+  ],
+  "com": [
+   0.0,
+   0.6,
+   -0.05
+  ],
+  "roof_number": [
+   0.0,
+   1.955,
+   0.15
+  ],
+  "lplate_front": [
+   0.0,
+   0.56,
+   -1.83
+  ],
+  "lplate_rear": [
+   0.0,
+   0.92,
+   1.83
+  ],
+  "exhaust_0": [
+   -0.45,
+   0.6,
+   1.76
+  ]
+ },
+ "materials_map": {
+  "jj_accent_spring": "accent",
+  "jj_brakelight": "brakelight",
+  "jj_brakelight_lens": "brakelight",
+  "jj_glass": "glass",
+  "jj_headlight": "headlight",
+  "jj_indicator": "indicator",
+  "jj_metal": "metal",
+  "jj_paint": "paint",
+  "jj_plastic": "plastic",
+  "jj_tyre": "tyre",
+  "jj_underside": "underside",
+  "jj_wheel": "wheel"
+ },
+ "colliders": {
+  "col_wheel_FL": {
+   "shape": "cylinder",
+   "part": "wheel_FL",
+   "verts": 24
+  },
+  "col_wheel_FR": {
+   "shape": "cylinder",
+   "part": "wheel_FR",
+   "verts": 24
+  },
+  "col_wheel_RL": {
+   "shape": "cylinder",
+   "part": "wheel_RL",
+   "verts": 24
+  },
+  "col_wheel_RR": {
+   "shape": "cylinder",
+   "part": "wheel_RR",
+   "verts": 24
+  },
+  "col_chassis": {
+   "shape": "convex",
+   "part": "chassis",
+   "verts": 58
+  },
+  "col_cabin": {
+   "shape": "convex",
+   "part": "chassis",
+   "verts": 47
+  },
+  "col_bumper_front": {
+   "shape": "convex",
+   "part": "bumper_front",
+   "verts": 27
+  },
+  "col_bumper_rear": {
+   "shape": "convex",
+   "part": "bumper_rear",
+   "verts": 27
+  },
+  "col_bonnet": {
+   "shape": "box",
+   "part": "bonnet",
+   "verts": 8
+  },
+  "col_boot": {
+   "shape": "box",
+   "part": "boot",
+   "verts": 8
+  },
+  "col_door_L": {
+   "shape": "box",
+   "part": "door_L",
+   "verts": 8
+  },
+  "col_door_R": {
+   "shape": "box",
+   "part": "door_R",
+   "verts": 8
+  },
+  "col_door_rear_L": {
+   "shape": "box",
+   "part": "door_rear_L",
+   "verts": 8
+  },
+  "col_door_rear_R": {
+   "shape": "box",
+   "part": "door_rear_R",
+   "verts": 8
+  }
+ },
+ "dents": {
+  "bonnet_dent": 7,
+  "boot_dent": 7,
+  "door_L_dent": 25,
+  "door_R_dent": 25,
+  "door_rear_L_dent": 13,
+  "door_rear_R_dent": 13,
+  "bumper_front_dent": 23,
+  "bumper_rear_dent": 7,
+  "chassis_dent_FL": 8,
+  "chassis_dent_FR": 8,
+  "chassis_dent_RL": 11,
+  "chassis_dent_RR": 11,
+  "chassis_dent_roof": 3
+ },
+ "mass_kg": 1250.0,
+ "com": [
+  0.0,
+  0.6,
+  -0.05
+ ],
+ "file_bytes": 259400
+}

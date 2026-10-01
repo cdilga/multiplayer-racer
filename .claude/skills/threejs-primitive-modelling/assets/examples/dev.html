@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>H dev</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/","@dimforge/rapier3d-compat":"/node_modules/@dimforge/rapier3d-compat/rapier.mjs"}}</script>
+</head><body><canvas id="c"></canvas>
+<script type="module">
+// Dev harness: ?model=cruze|bin&w=&h=&az=&el=&dist=&lod=&sheet=1
+import { createStage } from './kit/stage.js';
+const q = new URLSearchParams(location.search);
+const W = +(q.get('w') || 1280), H = +(q.get('h') || 720);
+const stage = createStage({ canvas: document.getElementById('c'), width: W, height: H });
+const model = q.get('model') || 'cruze';
+const mod = await import(`./${model}.js`);
+const car = await mod.build({ lod: +(q.get('lod') || 0), ...(q.get('paint') ? { paint: '#' + q.get('paint') } : {}), ...(q.get('accent') ? { accent: '#' + q.get('accent') } : {}) });
+stage.scene.add(car);
+window.__stage = stage; window.__car = car;
+const tgt = model === 'bin' ? [0, 0.55, 0] : [0, 0.75, 0];
+if (q.get('sheet')) {
+  const cw = W / 3, ch = H / 2, d = model === 'bin' ? 4.2 : 9;
+  stage.renderViews([
+    { x: 0, y: 0, w: cw, h: ch, target: tgt, az: 35, el: 18, dist: d, fov: 30 },
+    { x: cw, y: 0, w: cw, h: ch, target: tgt, az: 90, el: 2, dist: d * 1.5, fov: 15 },
+    { x: 2 * cw, y: 0, w: cw, h: ch, target: tgt, az: 180 - 35, el: 18, dist: d, fov: 30 },
+    { x: 0, y: ch, w: cw, h: ch, target: tgt, az: 0, el: 2, dist: d * 1.5, fov: 15 },
+    { x: cw, y: ch, w: cw, h: ch, target: tgt, az: 0, el: 89, dist: d * 1.5, fov: 15 },
+    { x: 2 * cw, y: ch, w: cw, h: ch, target: tgt, az: 180, el: 2, dist: d * 1.5, fov: 15 },
+  ]);
+} else {
+  stage.look(tgt, +(q.get('az') || 35), +(q.get('el') || 18), +(q.get('dist') || (model === 'bin' ? 4.2 : 8.5)), +(q.get('fov') || 30));
+  stage.render();
+}
+window.__report = mod.report ? mod.report(car) : {};
+document.title = 'READY';
+</script></body></html>

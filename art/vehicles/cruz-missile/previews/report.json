@@ -1,0 +1,4887 @@
+{
+  "generatedAt": "2026-09-30T00:57:15.673Z",
+  "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+  "outDir": "/Users/cdilga/Documents/dev/multiplayer-racer/art/vehicles/cruz-missile/previews",
+  "captures": [
+    {
+      "name": "neutral_q_front.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23c9ccd1&num=1",
+      "w": 1200,
+      "h": 800,
+      "errors": [
+        "console: Failed to load resource: the server responded with a status of 404 (File not found)"
+      ],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    },
+    {
+      "name": "recolor_red_q_front.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23e53935&pattern=%23ffd400&num=2",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    },
+    {
+      "name": "recolor_blue_q_rear.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_rear&paint=%231e63d6&pattern=%23ffffff&num=3",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_rear",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            3.9051767379045486
+          ]
+        }
+      }
+    },
+    {
+      "name": "recolor_green_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=side&paint=%2322c55e&pattern=%23ffffff&num=4",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.916725283691204,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        }
+      }
+    },
+    {
+      "name": "tyre_black_proof.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23ff2bd6&pattern=%23ffffff&zoom=1.3&num=5",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.3852453948213506,
+            2.482582139968872,
+            -3.0473468945576596
+          ]
+        }
+      }
+    },
+    {
+      "name": "orbit_front.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=front&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "front",
+          "position": [
+            0,
+            1.03440922498703,
+            -4.941235816308773
+          ]
+        }
+      }
+    },
+    {
+      "name": "orbit_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=side&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.916725283691204,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        }
+      }
+    },
+    {
+      "name": "orbit_rear.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=rear&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "rear",
+          "position": [
+            0,
+            1.03440922498703,
+            4.892214751073635
+          ]
+        }
+      }
+    },
+    {
+      "name": "orbit_top.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=top&paint=%23c9ccd1&num=7",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "top",
+          "position": [
+            0,
+            5.951134508678234,
+            -0.02451053261756897
+          ]
+        }
+      }
+    },
+    {
+      "name": "colliders_q_front.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&colliders=1&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 5948,
+        "drawCalls": 117,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    },
+    {
+      "name": "colliders_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=side&colliders=1&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 5948,
+        "drawCalls": 117,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.916725283691204,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        }
+      }
+    },
+    {
+      "name": "rig_steer_spin_susp.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&steer=25&spin=40&susp=0.08&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    },
+    {
+      "name": "rig_open_panels.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front_left&open=door_L%2Cdoor_rear_R%2Cbonnet%2Cboot&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            3.125035801977297,
+            2.1752793954516716,
+            3.9085806425446252
+          ],
+          "center": [
+            -0.00012915523611689572,
+            1.0876396977258358,
+            0.023025563162266227
+          ]
+        },
+        "camera": {
+          "type": "q_front_left",
+          "position": [
+            -3.819212328073845,
+            2.610335274542006,
+            -4.22896613408891
+          ]
+        }
+      }
+    },
+    {
+      "name": "dents.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&dent=1&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    },
+    {
+      "name": "dents_rear.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_rear&dent=1&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_rear",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            3.9051767379045486
+          ]
+        }
+      }
+    },
+    {
+      "name": "light_damage.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=front&lightdmg=light_head_L&paint=%23c9ccd1",
+      "w": 1200,
+      "h": 800,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3588,
+        "drawCalls": 54,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "front",
+          "position": [
+            0,
+            1.03440922498703,
+            -4.941235816308773
+          ]
+        }
+      }
+    },
+    {
+      "name": "lod0_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod0.glb&cam=side&paint=%23c9ccd1",
+      "w": 560,
+      "h": 420,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod0.glb",
+        "triangles": 6538,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3081713914871216,
+            2.0368553400039673,
+            3.788879156112671
+          ],
+          "center": [
+            0,
+            1.0184276700019836,
+            -0.007938265800476074
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.881807053561963,
+            1.0184276700019836,
+            -0.007938265800476074
+          ]
+        }
+      }
+    },
+    {
+      "name": "lod1_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=side&paint=%23c9ccd1",
+      "w": 560,
+      "h": 420,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.916725283691204,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        }
+      }
+    },
+    {
+      "name": "lod2_side.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod2.glb&cam=side&paint=%23c9ccd1",
+      "w": 560,
+      "h": 420,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod2.glb",
+        "triangles": 1214,
+        "drawCalls": 48,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.27465558052063,
+            2.041519284248352,
+            3.779774248600006
+          ],
+          "center": [
+            0,
+            1.020759642124176,
+            -0.0263042151927948
+          ]
+        },
+        "camera": {
+          "type": "side",
+          "position": [
+            4.860920938292588,
+            1.020759642124176,
+            -0.0263042151927948
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_0.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23e53935&pattern=%23ffd400&num=1&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_1.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%231e63d6&pattern=%23ffffff&num=2&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_2.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23ffcc00&pattern=%23141414&num=3&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_3.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%2322c55e&pattern=%23ffffff&num=4&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_4.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23a855f7&pattern=%23ffe14d&num=5&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_tile_5.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23ff7a00&pattern=%23ffffff&num=6&zoom=1.15",
+      "w": 640,
+      "h": 540,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            2.696364359363266,
+            2.482582139968872,
+            -3.441629898288976
+          ]
+        }
+      }
+    },
+    {
+      "name": "identity_40px_raw.png",
+      "url": "http://localhost:8231/spikes/art-pipeline/G-cruze-v2/viewer/index.html?glb=%2Fart%2Fvehicles%2Fcruz-missile%2Fcruz_missile.lod1.glb&cam=q_front&paint=%23e53935&pattern=%23ffd400&num=1",
+      "w": 70,
+      "h": 50,
+      "errors": [],
+      "report": {
+        "glb": "/art/vehicles/cruz-missile/cruz_missile.lod1.glb",
+        "triangles": 3712,
+        "drawCalls": 58,
+        "nodes": [
+          "Scene",
+          "chassis",
+          "chassis_1",
+          "chassis_2",
+          "chassis_3",
+          "bonnet",
+          "col_bonnet",
+          "boot",
+          "boot_trim",
+          "col_boot",
+          "bumper_front",
+          "bumper_front_1",
+          "bumper_front_2",
+          "bumper_front_3",
+          "bumper_front_trim",
+          "bumper_front_trim_1",
+          "bumper_front_trim_2",
+          "bumper_front_trim_3",
+          "col_bumper_front",
+          "bumper_rear",
+          "bumper_rear_1",
+          "bumper_rear_2",
+          "bumper_rear_3",
+          "col_bumper_rear",
+          "cam_fp",
+          "cam_tp_target",
+          "col_cabin",
+          "col_chassis",
+          "com",
+          "door_L",
+          "col_door_L",
+          "mirror_L",
+          "door_R",
+          "col_door_R",
+          "mirror_R",
+          "door_rear_L",
+          "col_door_rear_L",
+          "door_rear_R",
+          "col_door_rear_R",
+          "exhaust_0",
+          "glass",
+          "light_brake_L",
+          "light_brake_L_1",
+          "light_brake_L_2",
+          "light_brake_L_3",
+          "light_brake_R",
+          "light_brake_R_1",
+          "light_brake_R_2",
+          "light_brake_R_3",
+          "light_head_L",
+          "light_head_L_1",
+          "light_head_L_2",
+          "light_head_L_3",
+          "light_head_L_4",
+          "light_head_R",
+          "light_head_R_1",
+          "light_head_R_2",
+          "light_head_R_3",
+          "light_head_R_4",
+          "lplate_front",
+          "lplate_rear",
+          "roof_number",
+          "susp_FL",
+          "susp_FL_1",
+          "susp_FL_2",
+          "susp_FR",
+          "susp_FR_1",
+          "susp_FR_2",
+          "susp_RL",
+          "susp_RL_1",
+          "susp_RL_2",
+          "susp_RR",
+          "susp_RR_1",
+          "susp_RR_2",
+          "wheel_FL",
+          "wheel_FL_1",
+          "wheel_FL_2",
+          "wheel_FL_3",
+          "col_wheel_FL",
+          "wheel_FR",
+          "wheel_FR_1",
+          "wheel_FR_2",
+          "wheel_FR_3",
+          "col_wheel_FR",
+          "wheel_RL",
+          "wheel_RL_1",
+          "wheel_RL_2",
+          "wheel_RL_3",
+          "col_wheel_RL",
+          "wheel_RR",
+          "wheel_RR_1",
+          "wheel_RR_2",
+          "wheel_RR_3",
+          "col_wheel_RR"
+        ],
+        "morphs": {
+          "chassis_1": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_2": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "chassis_3": [
+            "chassis_dent_FL",
+            "chassis_dent_FR",
+            "chassis_dent_RL",
+            "chassis_dent_RR",
+            "chassis_dent_roof"
+          ],
+          "bonnet": [
+            "bonnet_dent"
+          ],
+          "boot": [
+            "boot_dent"
+          ],
+          "bumper_front_1": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_2": [
+            "bumper_front_dent"
+          ],
+          "bumper_front_3": [
+            "bumper_front_dent"
+          ],
+          "bumper_rear_1": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_2": [
+            "bumper_rear_dent"
+          ],
+          "bumper_rear_3": [
+            "bumper_rear_dent"
+          ],
+          "door_L": [
+            "door_L_dent"
+          ],
+          "door_R": [
+            "door_R_dent"
+          ],
+          "door_rear_L": [
+            "door_rear_L_dent"
+          ],
+          "door_rear_R": [
+            "door_rear_R_dent"
+          ]
+        },
+        "missing": [],
+        "bbox": {
+          "size": [
+            2.3132944107055664,
+            2.06881844997406,
+            3.813508450984955
+          ],
+          "center": [
+            0,
+            1.03440922498703,
+            -0.02451053261756897
+          ]
+        },
+        "camera": {
+          "type": "q_front",
+          "position": [
+            3.1008190132677553,
+            2.482582139968872,
+            -3.9541978031396865
+          ]
+        }
+      }
+    }
+  ]
+}

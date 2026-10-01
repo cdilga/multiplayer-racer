@@ -83,6 +83,70 @@ instead), flat-disc rims, no mirrors/door lines, doors split as one strip per si
 - Practical workflow: write modelling as data-API scripts, run them **headless** for builds/CI/renders, and use
   live MCP for interactive inspection and tweaks when someone is at the machine.
 
+## Part 3: Cruz Missile v2, the first game-ready car (2026-09-30)
+
+The owner accepted the look, and it is exported as a contract asset in `art/vehicles/cruz-missile/`.
+Code and notes are in `G-cruze-v2/`. `build_all.sh` rebuilds everything headless in about a minute.
+
+**Modelling method that worked (after the pixel loft and a "box toy" were rejected):**
+- The body is one continuous shell lofted through ~23 hand-chosen stations (`STATIONS` in
+  `build_cruze_v2.py`).
+- Each station ring runs sill → shoulder → belt → window top → roof edge → centre. It lies flat on
+  the deck over the bonnet and boot, and rises into the cabin between the screens.
+- Panel seams, windows and screens are ring points and station loops, so parts split along clean
+  edges by construction. Glass is shell faces.
+- Plan-view proportions come from the stock car as ratios, not traced pixels:
+  - windscreen base at ~25% of length
+  - roof from 35% to 72% of length
+  - roof ~73% of body width; side glass reaches ~95% of it
+- Recognition comes from exaggerated front and rear anchors, built two ways:
+  - projected panels (a convex outline clipped from a grid, ray-cast onto the body, with a lip)
+  - lamp "pucks" (crisp round lamps aligned to the surface)
+- The bubbly toy look comes from barrel cross-sections, a domed bonnet and boot, and soft creases.
+
+**Asset (validated, 0 FAIL):**
+
+| LOD | Role | Tris (from GLB) | Draws | Mask |
+|---|---|---|---|---|
+| 0 | hero/close-up | 6,534 | 56 | 1024² |
+| 1 | baseline gameplay | 3,708 | 56 | 512² |
+| 2 | medium/distant | 1,210 | 46 | 256² |
+
+- **Parts, dents and rig:** 27 parts, 13 localised dent morphs, hub and hinge pivots.
+- **Physics data:** 14 collision proxies (convex chassis and cabin hulls, boxes or hulls per panel,
+  wheel cylinders), and mass fractions that sum to 1.0.
+- **Surfaces:** semantic materials, an RGBA mask (paint, stripes, AO dirt, emissive) on a shared UV0
+  atlas, and a 1.6× texel boost on paint.
+- **Identity:** a `roof_number` anchor.
+
+**Checks:**
+- `validator/validate_asset.py`: 24 rules, 70 PASS. `test_validator.sh` proves each rule fails on
+  its own broken fixture.
+- Blender round trip: identical 47-node sets and dent names across LODs, no cameras or lights,
+  tyres on y=0.
+- Three.js evidence: 26 captures in `previews/`.
+- Rapier physics fit (`physics/REPORT.md`): settles, drives, detaches a door, deterministic.
+
+**Findings:**
+- Validators must aggregate over every primitive of a node, because parts split into one primitive
+  per material. First-primitive-only logic produced false "zero dent" and "collider overshoot" failures.
+- Flat cage panels need interior vertices for localised dents. A door on a 6-triangle panel moved
+  2 vertices. Targeted flat subdivision (panels plus chassis crumple zones) fixed it: that's where the
+  baseline LOD's triangles above the 1–3k test range go.
+- The CoM must be authored for handling, not the visual centre. At 0.85 m the lifted car rolled from
+  58 km/h at full lock; at 0.60 m it did not roll in any tested run (up to 62.5 km/h).
+- The chassis hull must exclude parts that carry their own collider (bumpers), or the car keeps
+  colliding with parts it has lost.
+- Evidence renderers: an inverted-hull outline made by scaling about the part origin corrupts parts
+  whose origin is far from their geometry. Use screen-space outlines, as plan §12.1 already specifies.
+
+**Open for the game (not asset blockers):**
+- a detach no-collide grace window
+- a flip-assist torque
+- a 150–400-triangle distant LOD3 impostor
+- per-car draw calls (56) need instancing/batching measured in G-PERF
+- contract proposals for V2-61: `indicator`/`accent` semantics, `door_rear_*`, `susp_*`
+
 ## Not covered (next spike steps, if wanted)
 
 - Interactive Blender MCP session (open Blender → Start MCP Server → new Claude session).

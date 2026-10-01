@@ -1,0 +1,64 @@
+{
+  "_comment": "Project-supplied thresholds, archetypes, and budgets the generic skill consumes. Copy + fill per project.",
+  "budgets": {
+    "maxTriangles": 3500,
+    "maxMaterials": 8,
+    "maxTextureSize": 1024,
+    "maxGlbBytes": 500000
+  },
+  "normalization": {
+    "targetLength": 4.0,
+    "forwardAxisDefault": "z",
+    "groundY": 0.0
+  },
+  "rigging": {
+    "perpOffsetEpsilon": 0.05
+  },
+  "collider": {
+    "visualCoverageMin": 0.92,
+    "comBelowCenter": true
+  },
+  "color": {
+    "deltaE": 12,
+    "tyreMaxLuminance": 0.15
+  },
+  "balance": {
+    "winRateTolerance": 0.10,
+    "pointBudget": 60,
+    "archetypes": [
+      { "id": "balanced",       "speed": 12, "acceleration": 12, "weight": 10, "handling": 12, "traction": 12 },
+      { "id": "speed",          "speed": 18, "acceleration": 8,  "weight": 14, "handling": 8,  "traction": 10 },
+      { "id": "heavy",          "speed": 14, "acceleration": 6,  "weight": 18, "handling": 6,  "traction": 14 },
+      { "id": "accel-handling", "speed": 10, "acceleration": 16, "weight": 6,  "handling": 16, "traction": 10 },
+      { "id": "twitchy-light",  "speed": 9,  "acceleration": 18, "weight": 4,  "handling": 18, "traction": 8 },
+      { "id": "gimmick",        "speed": 8,  "acceleration": 8,  "weight": 16, "handling": 8,  "traction": 16 }
+    ]
+  },
+  "destruction": {
+    "ttlSecondsMin": 3,
+    "ttlSecondsMax": 6,
+    "poolCap": 48,
+    "minDebrisParts": 3,
+    "fireInModes": ["race", "derby"]
+  },
+  "visualQa": {
+    "renderEngine": "project-three-js",
+    "angles": ["turntable8", "front", "rear", "topdown", "steer-left", "steer-right", "mid-suspension", "post-destruction"],
+    "rubricItems": [
+      "wheels_present_and_grounded",
+      "no_wheel_orbit",
+      "upright_not_inverted",
+      "single_coherent_vehicle",
+      "no_black_or_inverted_faces",
+      "color_matches_manifest",
+      "tyres_neutral",
+      "number_legible_topdown",
+      "reads_as_archetype",
+      "on_brand_neon"
+    ],
+    "verdictSchema": {
+      "items": "array of {id, pass:boolean, confidence:number, note:string}",
+      "verdict": "pass | fail | needs-human"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "model-prep manifest",
+  "description": "Per-model record accumulated by the game-model-prep pipeline (Stages A-H).",
+  "type": "object",
+  "required": ["modelId", "source", "stages"],
+  "properties": {
+    "modelId": { "type": "string" },
+    "source": { "type": "string", "description": "path to the source GLB" },
+    "archetype": { "type": "string", "description": "balance archetype id (from rubric.balance)" },
+    "normalization": {
+      "type": "object",
+      "properties": {
+        "forwardAxis": { "enum": ["x", "y", "z", "-x", "-y", "-z"] },
+        "scale": { "type": "number" },
+        "originOffset": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "targetLength": { "type": "number" }
+      }
+    },
+    "materials": {
+      "type": "object",
+      "properties": {
+        "paint": { "type": "array", "items": { "type": "string" } },
+        "tyre": { "type": "array", "items": { "type": "string" } },
+        "glass": { "type": "array", "items": { "type": "string" } },
+        "metal": { "type": "array", "items": { "type": "string" } },
+        "light": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "wheels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "node": { "type": "string" },
+          "wheelIndex": { "type": "integer" },
+          "isFront": { "type": "boolean" },
+          "perpOffset": { "type": "number", "description": "offset perpendicular to spin axis" }
+        }
+      }
+    },
+    "physics": {
+      "type": "object",
+      "description": "engine params derived from the archetype stat block",
+      "properties": {
+        "mass": { "type": "number" },
+        "centerOfMass": { "type": "object" },
+        "engineForce": { "type": "number" },
+        "topSpeedCap": { "type": ["number", "null"] },
+        "steeringMaxAngle": { "type": "number" },
+        "frictionSlip": { "type": "number" },
+        "sideFrictionStiffness": { "type": "number" },
+        "suspension": { "type": "object" }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "fine-grained int stats (e.g. 0-20) per visible + hidden stat",
+      "properties": {
+        "speed": { "type": "integer" },
+        "acceleration": { "type": "integer" },
+        "weight": { "type": "integer" },
+        "handling": { "type": "integer" },
+        "traction": { "type": "integer" },
+        "hiddenBoost": { "type": "integer" }
+      }
+    },
+    "debris": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "part": { "type": "string", "description": "debris asset id" },
+          "from": { "type": "array", "items": { "type": "number" }, "description": "local mount point" }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "measured by the headless sim (Stage D)",
+      "properties": {
+        "topSpeed": { "type": "number" },
+        "accelTime": { "type": "number" },
+        "stopTime": { "type": "number" },
+        "minTurnRadius": { "type": "number" },
+        "settleTime": { "type": "number" },
+        "rolloverResist": { "type": "number" },
+        "wallGrazeRetention": { "type": "number" },
+        "winRate": { "type": "number" }
+      }
+    },
+    "stages": {
+      "type": "object",
+      "description": "gate status per stage A-H",
+      "additionalProperties": { "enum": ["pending", "pass", "fail"] }
+    },
+    "qa": {
+      "type": "object",
+      "properties": {
+        "cv": { "type": "object" },
+        "rubricVerdict": { "enum": ["pass", "fail", "needs-human"] },
+        "renders": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "status": { "enum": ["pending", "in-progress", "accepted", "needs-author-fix", "deferred"] }
+  }
+}

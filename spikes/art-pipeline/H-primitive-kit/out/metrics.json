@@ -1,0 +1,59 @@
+{
+ "cruze_lod0": {
+  "tris": 20774,
+  "draws": 80,
+  "materials": 13,
+  "geometryKB": 889,
+  "buildMs": 333
+ },
+ "cruze_lod1": {
+  "tris": 4652,
+  "draws": 58,
+  "materials": 13,
+  "geometryKB": 211,
+  "buildMs": 133
+ },
+ "cruze_lod2": {
+  "tris": 2094,
+  "draws": 48,
+  "materials": 12,
+  "geometryKB": 97,
+  "buildMs": 93
+ },
+ "cruze_lod3": {
+  "tris": 1022,
+  "draws": 47,
+  "materials": 12,
+  "geometryKB": 54,
+  "buildMs": 54
+ },
+ "bin_lod0": {
+  "tris": 18404,
+  "draws": 15,
+  "materials": 8,
+  "geometryKB": 759,
+  "buildMs": 44
+ },
+ "bin_lod1": {
+  "tris": 5952,
+  "draws": 15,
+  "materials": 8,
+  "geometryKB": 404,
+  "buildMs": 30
+ },
+ "bin_lod2": {
+  "tris": 2354,
+  "draws": 15,
+  "materials": 8,
+  "geometryKB": 162,
+  "buildMs": 24
+ },
+ "cruze_intact": {
+  "draws": 36,
+  "tris": 20838,
+  "bake": {
+   "meshes": 11,
+   "parts": 19
+  }
+ }
+}

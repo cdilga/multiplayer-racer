@@ -1,0 +1,122 @@
+{
+  "glb_parse_camera": {
+    "dir": "glb_parse_camera",
+    "rule_id": "glb.parse",
+    "description": "adds a camera to lod0"
+  },
+  "nodes_required_drop_wheel": {
+    "dir": "nodes_required_drop_wheel",
+    "rule_id": "nodes.required",
+    "description": "renames wheel_FL away in lod0"
+  },
+  "nodes_same_across_lods": {
+    "dir": "nodes_same_across_lods",
+    "rule_id": "nodes.same_across_lods",
+    "description": "renames door_L only in lod1"
+  },
+  "space_origin_wheel_float": {
+    "dir": "space_origin_wheel_float",
+    "rule_id": "space.origin",
+    "description": "lifts wheel_FL 5cm off the ground"
+  },
+  "space_forward_swap": {
+    "dir": "space_forward_swap",
+    "rule_id": "space.forward",
+    "description": "moves a headlight to the rear"
+  },
+  "pivots_wheels_off_hub": {
+    "dir": "pivots_wheels_off_hub",
+    "rule_id": "pivots.wheels",
+    "description": "slides wheel_FL mesh along its axle"
+  },
+  "pivots_hinges_recentred": {
+    "dir": "pivots_hinges_recentred",
+    "rule_id": "pivots.hinges",
+    "description": "recentres bonnet's pivot mid-panel"
+  },
+  "extras_parts_missing_joint": {
+    "dir": "extras_parts_missing_joint",
+    "rule_id": "extras.parts",
+    "description": "drops jj_joint from wheel_FL"
+  },
+  "mass_sum_92": {
+    "dir": "mass_sum_92",
+    "rule_id": "mass.sum",
+    "description": "mass fractions sum to ~0.92"
+  },
+  "colliders_present_drop": {
+    "dir": "colliders_present_drop",
+    "rule_id": "colliders.present",
+    "description": "renames col_chassis away"
+  },
+  "colliders_no_material_violation": {
+    "dir": "colliders_no_material_violation",
+    "rule_id": "colliders.no_material",
+    "description": "gives col_bonnet a material"
+  },
+  "colliders_shape_cabin_box": {
+    "dir": "colliders_shape_cabin_box",
+    "rule_id": "colliders.shape",
+    "description": "col_cabin becomes an 8-vertex box"
+  },
+  "colliders_fit_oversized": {
+    "dir": "colliders_fit_oversized",
+    "rule_id": "colliders.fit",
+    "description": "col_wheel_FL becomes chassis-sized"
+  },
+  "materials_semantic_bad": {
+    "dir": "materials_semantic_bad",
+    "rule_id": "materials.semantic",
+    "description": "jj_paint gets an invalid semantic"
+  },
+  "materials_emissive_missing": {
+    "dir": "materials_emissive_missing",
+    "rule_id": "materials.emissive",
+    "description": "headlight loses its emissive"
+  },
+  "materials_paint_mask_missing": {
+    "dir": "materials_paint_mask_missing",
+    "rule_id": "materials.paint_mask",
+    "description": "jj_paint loses its baseColorTexture"
+  },
+  "uv_present_missing_texcoord1": {
+    "dir": "uv_present_missing_texcoord1",
+    "rule_id": "uv.present",
+    "description": "chassis loses TEXCOORD_1"
+  },
+  "uv_overlap_shared_island": {
+    "dir": "uv_overlap_shared_island",
+    "rule_id": "uv.overlap",
+    "description": "bonnet reuses chassis's UV0 island"
+  },
+  "uv_bounds_out_of_range": {
+    "dir": "uv_bounds_out_of_range",
+    "rule_id": "uv.bounds",
+    "description": "one bonnet UV0 coord goes to u=1.6"
+  },
+  "morphs_present_renamed": {
+    "dir": "morphs_present_renamed",
+    "rule_id": "morphs.present",
+    "description": "bonnet_dent renamed to an unexpected name"
+  },
+  "morphs_nonzero_flat": {
+    "dir": "morphs_nonzero_flat",
+    "rule_id": "morphs.nonzero",
+    "description": "bonnet_dent target zeroed out"
+  },
+  "anchors_roof_number_low": {
+    "dir": "anchors_roof_number_low",
+    "rule_id": "anchors",
+    "description": "roof_number dropped below the cabin roof"
+  },
+  "budget_triangles_sidecar_lies": {
+    "dir": "budget_triangles_sidecar_lies",
+    "rule_id": "budget.triangles",
+    "description": "sidecar lod0 triangle count is wrong"
+  },
+  "sidecar_agreement_bad_anchor": {
+    "dir": "sidecar_agreement_bad_anchor",
+    "rule_id": "sidecar.agreement",
+    "description": "sidecar com anchor moved 0.5m"
+  }
+}

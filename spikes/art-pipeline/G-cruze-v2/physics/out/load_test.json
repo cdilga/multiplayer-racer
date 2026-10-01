@@ -1,0 +1,404 @@
+{
+  "totalMassKg": 1250,
+  "massFractionSum": 1,
+  "massFractionSumOk": true,
+  "groundOffsetY": 0,
+  "groundOffsetYOk": true,
+  "com": [
+    0,
+    0.6000000238418579,
+    -0.05000000074505806
+  ],
+  "anchorMismatches": [],
+  "colliders": {
+    "col_bonnet": {
+      "shape": "box",
+      "part": "bonnet",
+      "vertCount": 8,
+      "halfExtents": [
+        0.86,
+        0.19,
+        0.51
+      ],
+      "centerRel": [
+        0,
+        1.14,
+        -1.33
+      ]
+    },
+    "col_boot": {
+      "shape": "box",
+      "part": "boot",
+      "vertCount": 8,
+      "halfExtents": [
+        0.86,
+        0.165,
+        0.305
+      ],
+      "centerRel": [
+        0,
+        1.365,
+        1.515
+      ]
+    },
+    "col_bumper_front": {
+      "shape": "convex",
+      "part": "bumper_front",
+      "vertCount": 33,
+      "halfExtents": [
+        0.9587,
+        0.32,
+        0.1151
+      ],
+      "centerRel": [
+        0,
+        0.8,
+        -1.7249
+      ]
+    },
+    "col_bumper_rear": {
+      "shape": "convex",
+      "part": "bumper_rear",
+      "vertCount": 33,
+      "halfExtents": [
+        0.9987,
+        0.415,
+        0.095
+      ],
+      "centerRel": [
+        0,
+        0.955,
+        1.725
+      ]
+    },
+    "col_cabin": {
+      "shape": "convex",
+      "part": "chassis",
+      "vertCount": 52,
+      "halfExtents": [
+        0.865,
+        0.36,
+        1.095
+      ],
+      "centerRel": [
+        0,
+        1.59,
+        0.175
+      ]
+    },
+    "col_chassis": {
+      "shape": "convex",
+      "part": "chassis",
+      "vertCount": 78,
+      "halfExtents": [
+        1.055,
+        0.44,
+        1.6277
+      ],
+      "centerRel": [
+        0,
+        0.96,
+        0.0023
+      ]
+    },
+    "col_door_L": {
+      "shape": "box",
+      "part": "door_L",
+      "vertCount": 8,
+      "halfExtents": [
+        0.0844,
+        0.3513,
+        0.285
+      ],
+      "centerRel": [
+        -0.9444,
+        1.0087,
+        -0.325
+      ]
+    },
+    "col_door_R": {
+      "shape": "box",
+      "part": "door_R",
+      "vertCount": 8,
+      "halfExtents": [
+        0.0844,
+        0.3513,
+        0.285
+      ],
+      "centerRel": [
+        0.9444,
+        1.0087,
+        -0.325
+      ]
+    },
+    "col_door_rear_L": {
+      "shape": "box",
+      "part": "door_rear_L",
+      "vertCount": 8,
+      "halfExtents": [
+        0.0844,
+        0.3613,
+        0.285
+      ],
+      "centerRel": [
+        -0.9444,
+        1.0187,
+        0.325
+      ]
+    },
+    "col_door_rear_R": {
+      "shape": "box",
+      "part": "door_rear_R",
+      "vertCount": 8,
+      "halfExtents": [
+        0.0844,
+        0.3613,
+        0.285
+      ],
+      "centerRel": [
+        0.9444,
+        1.0187,
+        0.325
+      ]
+    },
+    "col_wheel_FL": {
+      "shape": "cylinder",
+      "part": "wheel_FL",
+      "vertCount": 24,
+      "halfExtents": [
+        0.21,
+        0.44,
+        0.44
+      ],
+      "centerRel": [
+        -0.8,
+        0.44,
+        -1.12
+      ]
+    },
+    "col_wheel_FR": {
+      "shape": "cylinder",
+      "part": "wheel_FR",
+      "vertCount": 24,
+      "halfExtents": [
+        0.21,
+        0.44,
+        0.44
+      ],
+      "centerRel": [
+        0.8,
+        0.44,
+        -1.12
+      ]
+    },
+    "col_wheel_RL": {
+      "shape": "cylinder",
+      "part": "wheel_RL",
+      "vertCount": 24,
+      "halfExtents": [
+        0.21,
+        0.44,
+        0.44
+      ],
+      "centerRel": [
+        -0.8,
+        0.44,
+        1.12
+      ]
+    },
+    "col_wheel_RR": {
+      "shape": "cylinder",
+      "part": "wheel_RR",
+      "vertCount": 24,
+      "halfExtents": [
+        0.21,
+        0.44,
+        0.44
+      ],
+      "centerRel": [
+        0.8,
+        0.44,
+        1.12
+      ]
+    }
+  },
+  "convexityChecks": {
+    "col_bumper_front": {
+      "hullBuilt": true,
+      "vertCountFromMesh": 33,
+      "vertCountFromSidecar": 33,
+      "vertCountMatches": true
+    },
+    "col_bumper_rear": {
+      "hullBuilt": true,
+      "vertCountFromMesh": 33,
+      "vertCountFromSidecar": 33,
+      "vertCountMatches": true
+    },
+    "col_cabin": {
+      "hullBuilt": true,
+      "vertCountFromMesh": 52,
+      "vertCountFromSidecar": 52,
+      "vertCountMatches": true
+    },
+    "col_chassis": {
+      "hullBuilt": true,
+      "vertCountFromMesh": 78,
+      "vertCountFromSidecar": 78,
+      "vertCountMatches": true
+    }
+  },
+  "boxSanity": {
+    "col_bonnet": {
+      "halfExtents": [
+        0.86,
+        0.19,
+        0.51
+      ],
+      "degenerate": false
+    },
+    "col_boot": {
+      "halfExtents": [
+        0.86,
+        0.165,
+        0.305
+      ],
+      "degenerate": false
+    },
+    "col_door_L": {
+      "halfExtents": [
+        0.0844,
+        0.3513,
+        0.285
+      ],
+      "degenerate": false
+    },
+    "col_door_R": {
+      "halfExtents": [
+        0.0844,
+        0.3513,
+        0.285
+      ],
+      "degenerate": false
+    },
+    "col_door_rear_L": {
+      "halfExtents": [
+        0.0844,
+        0.3613,
+        0.285
+      ],
+      "degenerate": false
+    },
+    "col_door_rear_R": {
+      "halfExtents": [
+        0.0844,
+        0.3613,
+        0.285
+      ],
+      "degenerate": false
+    }
+  },
+  "wheelHardpoints": {
+    "wheel_FL": {
+      "hubRel": [
+        -0.8,
+        0.44,
+        -1.12
+      ],
+      "radius": 0.44,
+      "width": 0.42,
+      "steer": true,
+      "driven": true,
+      "cylinderCollider": {
+        "halfExtents": [
+          0.21,
+          0.44,
+          0.44
+        ],
+        "centerRel": [
+          -0.8,
+          0.44,
+          -1.12
+        ],
+        "impliedRadius": 0.44,
+        "hubVsCylinderCenterDeltaM": 0
+      }
+    },
+    "wheel_FR": {
+      "hubRel": [
+        0.8,
+        0.44,
+        -1.12
+      ],
+      "radius": 0.44,
+      "width": 0.42,
+      "steer": true,
+      "driven": true,
+      "cylinderCollider": {
+        "halfExtents": [
+          0.21,
+          0.44,
+          0.44
+        ],
+        "centerRel": [
+          0.8,
+          0.44,
+          -1.12
+        ],
+        "impliedRadius": 0.44,
+        "hubVsCylinderCenterDeltaM": 0
+      }
+    },
+    "wheel_RL": {
+      "hubRel": [
+        -0.8,
+        0.44,
+        1.12
+      ],
+      "radius": 0.44,
+      "width": 0.42,
+      "steer": false,
+      "driven": false,
+      "cylinderCollider": {
+        "halfExtents": [
+          0.21,
+          0.44,
+          0.44
+        ],
+        "centerRel": [
+          -0.8,
+          0.44,
+          1.12
+        ],
+        "impliedRadius": 0.44,
+        "hubVsCylinderCenterDeltaM": 0
+      }
+    },
+    "wheel_RR": {
+      "hubRel": [
+        0.8,
+        0.44,
+        1.12
+      ],
+      "radius": 0.44,
+      "width": 0.42,
+      "steer": false,
+      "driven": false,
+      "cylinderCollider": {
+        "halfExtents": [
+          0.21,
+          0.44,
+          0.44
+        ],
+        "centerRel": [
+          0.8,
+          0.44,
+          1.12
+        ],
+        "impliedRadius": 0.44,
+        "hubVsCylinderCenterDeltaM": 0
+      }
+    }
+  },
+  "partCount": 24
+}

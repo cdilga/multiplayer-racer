@@ -1,0 +1,414 @@
+{
+  "contract": "jj.vehicle.v0.2-synthetic-fixture",
+  "asset_id": "cruz-missile-synthetic-good",
+  "archetype": "sedan",
+  "display_name": "Synthetic conformance fixture",
+  "space": "gltf",
+  "units": "m",
+  "origin": "ground-between-axles",
+  "lods": [
+    {
+      "lod": 0,
+      "file": "good.lod0.glb",
+      "triangles": 549,
+      "materials": 7,
+      "draw_calls": 7,
+      "mask_px": [
+        32,
+        32
+      ],
+      "role": "close"
+    },
+    {
+      "lod": 1,
+      "file": "good.lod1.glb",
+      "triangles": 412,
+      "materials": 7,
+      "draw_calls": 7,
+      "mask_px": [
+        16,
+        16
+      ],
+      "role": "medium"
+    },
+    {
+      "lod": 2,
+      "file": "good.lod2.glb",
+      "triangles": 412,
+      "materials": 7,
+      "draw_calls": 7,
+      "mask_px": [
+        8,
+        8
+      ],
+      "role": "distant"
+    }
+  ],
+  "parts": {
+    "chassis": {
+      "node": "chassis",
+      "mass_fraction": 0.43,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": [
+        "chassis_dent_FL",
+        "chassis_dent_FR",
+        "chassis_dent_RL",
+        "chassis_dent_RR",
+        "chassis_dent_roof"
+      ],
+      "collider": [
+        "col_chassis",
+        "col_cabin"
+      ]
+    },
+    "bonnet": {
+      "node": "bonnet",
+      "mass_fraction": 0.05,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "bonnet_dent"
+      ],
+      "collider": "col_bonnet"
+    },
+    "boot": {
+      "node": "boot",
+      "mass_fraction": 0.05,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "boot_dent"
+      ],
+      "collider": "col_boot"
+    },
+    "door_L": {
+      "node": "door_L",
+      "mass_fraction": 0.05,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "door_L_dent"
+      ],
+      "collider": "col_door_L"
+    },
+    "door_R": {
+      "node": "door_R",
+      "mass_fraction": 0.05,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "door_R_dent"
+      ],
+      "collider": "col_door_R"
+    },
+    "door_rear_L": {
+      "node": "door_rear_L",
+      "mass_fraction": 0.04,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "door_rear_L_dent"
+      ],
+      "collider": "col_door_rear_L"
+    },
+    "door_rear_R": {
+      "node": "door_rear_R",
+      "mass_fraction": 0.04,
+      "joint": "hinge",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "door_rear_R_dent"
+      ],
+      "collider": "col_door_rear_R"
+    },
+    "bumper_front": {
+      "node": "bumper_front",
+      "mass_fraction": 0.03,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "bumper_front_dent"
+      ],
+      "collider": "col_bumper_front"
+    },
+    "bumper_rear": {
+      "node": "bumper_rear",
+      "mass_fraction": 0.03,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": true,
+      "dents": [
+        "bumper_rear_dent"
+      ],
+      "collider": "col_bumper_rear"
+    },
+    "glass": {
+      "node": "glass",
+      "mass_fraction": 0.04,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "light_head_L": {
+      "node": "light_head_L",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "light_head_R": {
+      "node": "light_head_R",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "light_brake_L": {
+      "node": "light_brake_L",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "light_brake_R": {
+      "node": "light_brake_R",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "mirror_L": {
+      "node": "mirror_L",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "mirror_R": {
+      "node": "mirror_R",
+      "mass_fraction": 0.005,
+      "joint": "fixed",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "wheel_FL": {
+      "node": "wheel_FL",
+      "mass_fraction": 0.03,
+      "joint": "compound",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": [],
+      "collider": "col_wheel_FL"
+    },
+    "wheel_FR": {
+      "node": "wheel_FR",
+      "mass_fraction": 0.03,
+      "joint": "compound",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": [],
+      "collider": "col_wheel_FR"
+    },
+    "wheel_RL": {
+      "node": "wheel_RL",
+      "mass_fraction": 0.03,
+      "joint": "spin",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": [],
+      "collider": "col_wheel_RL"
+    },
+    "wheel_RR": {
+      "node": "wheel_RR",
+      "mass_fraction": 0.03,
+      "joint": "spin",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": [],
+      "collider": "col_wheel_RR"
+    },
+    "susp_FL": {
+      "node": "susp_FL",
+      "mass_fraction": 0.01,
+      "joint": "suspension",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "susp_FR": {
+      "node": "susp_FR",
+      "mass_fraction": 0.01,
+      "joint": "suspension",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "susp_RL": {
+      "node": "susp_RL",
+      "mass_fraction": 0.01,
+      "joint": "suspension",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    },
+    "susp_RR": {
+      "node": "susp_RR",
+      "mass_fraction": 0.01,
+      "joint": "suspension",
+      "attach": "chassis",
+      "detachable": false,
+      "dents": []
+    }
+  },
+  "wheels": {
+    "FL": {
+      "hub_node": "wheel_FL",
+      "hub": [
+        -0.95,
+        0.35,
+        -1.25
+      ],
+      "radius": 0.35,
+      "width": 0.24,
+      "steer": true,
+      "driven": true
+    },
+    "FR": {
+      "hub_node": "wheel_FR",
+      "hub": [
+        0.95,
+        0.35,
+        -1.25
+      ],
+      "radius": 0.35,
+      "width": 0.24,
+      "steer": true,
+      "driven": true
+    },
+    "RL": {
+      "hub_node": "wheel_RL",
+      "hub": [
+        -0.95,
+        0.35,
+        1.25
+      ],
+      "radius": 0.35,
+      "width": 0.24,
+      "steer": false,
+      "driven": true
+    },
+    "RR": {
+      "hub_node": "wheel_RR",
+      "hub": [
+        0.95,
+        0.35,
+        1.25
+      ],
+      "radius": 0.35,
+      "width": 0.24,
+      "steer": false,
+      "driven": true
+    }
+  },
+  "physics": {
+    "mass_kg": 1200,
+    "com": [
+      0,
+      0.5,
+      0
+    ],
+    "profile": "balanced"
+  },
+  "anchors": {
+    "cam_fp": [
+      0.0,
+      0.9,
+      -0.3
+    ],
+    "cam_tp_target": [
+      0.0,
+      0.6,
+      0.3
+    ],
+    "com": [
+      0.0,
+      0.5,
+      0.0
+    ],
+    "exhaust_0": [
+      0.3,
+      0.2,
+      2.1
+    ],
+    "roof_number": [
+      0.0,
+      1.3,
+      0.1
+    ],
+    "lplate_front": [
+      0.0,
+      0.25,
+      -2.14
+    ],
+    "lplate_rear": [
+      0.0,
+      0.25,
+      2.14
+    ]
+  },
+  "materials": {
+    "jj_paint": "paint",
+    "jj_plastic": "plastic",
+    "jj_glass": "glass",
+    "jj_headlight": "headlight",
+    "jj_brakelight": "brakelight",
+    "jj_tyre": "tyre",
+    "jj_metal": "metal"
+  },
+  "textures": {
+    "mask": {
+      "channels": {
+        "r": "paint",
+        "g": "pattern",
+        "b": "dirt",
+        "a": "emissive"
+      },
+      "per_lod_px": {
+        "0": [
+          32,
+          32
+        ],
+        "1": [
+          16,
+          16
+        ],
+        "2": [
+          8,
+          8
+        ]
+      }
+    }
+  },
+  "identity": {
+    "roof_number_anchor": "roof_number",
+    "roof_number_size_m": 0.3,
+    "paint_semantic": "paint",
+    "pattern_channel": "g"
+  }
+}

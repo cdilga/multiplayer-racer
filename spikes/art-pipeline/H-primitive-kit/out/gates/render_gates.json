@@ -1,0 +1,246 @@
+{
+ "silhouette": {
+  "lod": {
+   "1": {
+    "side": 0.9873464513193813,
+    "top": 0.9936781609195402,
+    "front": 0.9833732700865568
+   },
+   "2": {
+    "side": 0.9743176354122473,
+    "top": 0.9830056784403763,
+    "front": 0.9694064261143234
+   },
+   "3": {
+    "side": 0.9539132882882883,
+    "top": 0.9609096496619545,
+    "front": 0.9391985596457507
+   }
+  },
+  "ref": {
+   "side": 0.7603940886699507,
+   "top": 0.8129085748907809,
+   "front": 0.8261058423224499
+  }
+ },
+ "perf": {
+  "LOD1": {
+   "intact": {
+    "intact": true,
+    "bakedMeshes": 11,
+    "instantiateMs": 13,
+    "calls": 628,
+    "tris": 130658,
+    "frameMs": 10
+   },
+   "parts": {
+    "intact": false,
+    "instantiateMs": 8.8,
+    "calls": 1416,
+    "tris": 113184,
+    "frameMs": 10.6
+   }
+  },
+  "LOD2": {
+   "intact": {
+    "intact": true,
+    "bakedMeshes": 10,
+    "instantiateMs": 17.3,
+    "calls": 501,
+    "tris": 59016,
+    "frameMs": 9.6
+   },
+   "parts": {
+    "intact": false,
+    "instantiateMs": 9,
+    "calls": 1176,
+    "tris": 51792,
+    "frameMs": 14.8
+   }
+  },
+  "LOD3": {
+   "intact": {
+    "intact": true,
+    "bakedMeshes": 10,
+    "instantiateMs": 11.7,
+    "calls": 500,
+    "tris": 29038,
+    "frameMs": 11.9
+   },
+   "parts": {
+    "intact": false,
+    "instantiateMs": 10.7,
+    "calls": 1152,
+    "tris": 26064,
+    "frameMs": 14.5
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "silhouette.lod_stable.LOD1",
+   "ok": true,
+   "detail": "IoU vs LOD0: side 0.987 top 0.994 front 0.983"
+  },
+  {
+   "id": "silhouette.lod_stable.LOD2",
+   "ok": true,
+   "detail": "IoU vs LOD0: side 0.974 top 0.983 front 0.969"
+  },
+  {
+   "id": "silhouette.lod_stable.LOD3",
+   "ok": true,
+   "detail": "IoU vs LOD0: side 0.954 top 0.961 front 0.939"
+  },
+  {
+   "id": "silhouette.reference",
+   "ok": true,
+   "detail": "shape IoU vs the real-Cruze orthographic refs (LOD1, normalised): side 0.760 top 0.813 front 0.826 (min {\"side\":0.66,\"top\":0.6,\"front\":0.66})"
+  },
+  {
+   "id": "rig.smoke.steer.LOD1",
+   "ok": true,
+   "detail": "front wheels yaw left by 22.9°, rear wheels untouched"
+  },
+  {
+   "id": "rig.smoke.spin.LOD1",
+   "ok": true,
+   "detail": "positive spin moves the tyre top forward (dz=-0.23)"
+  },
+  {
+   "id": "rig.smoke.door_opens.LOD1",
+   "ok": true,
+   "detail": "left door swings outward by 0.83 m at full open"
+  },
+  {
+   "id": "rig.smoke.bonnet_opens.LOD1",
+   "ok": true,
+   "detail": "bonnet lifts 0.41 m"
+  },
+  {
+   "id": "rig.smoke.boot_opens.LOD1",
+   "ok": true,
+   "detail": "boot lifts 0.31 m"
+  },
+  {
+   "id": "rig.smoke.suspension.LOD1",
+   "ok": true,
+   "detail": "travel clamped to the sidecar range (+0.12 m of a 0.5 request)"
+  },
+  {
+   "id": "rig.smoke.lights.LOD1",
+   "ok": true,
+   "detail": "brake light emissive 0.2 → 1.6"
+  },
+  {
+   "id": "rig.smoke.paint.LOD1",
+   "ok": true,
+   "detail": "paint tint applies to 1 jj_paint material(s)"
+  },
+  {
+   "id": "rig.smoke.intact_fastpath.LOD1",
+   "ok": true,
+   "detail": "58 part meshes → 23 merged draws while intact (wakes on first motion/dent/detach)"
+  },
+  {
+   "id": "rig.smoke.lod_select.LOD1",
+   "ok": true,
+   "detail": "pickLod maps 500/150/70/20 px → LOD0/1/2/3 and a boundary-hugging path flips 2× (picks 0000111112222)"
+  },
+  {
+   "id": "rig.smoke.dent.LOD1",
+   "ok": true,
+   "detail": "dent moved vertices (hash changed) and recorded {part,pos,dir,radius,depth,severity}"
+  },
+  {
+   "id": "rig.smoke.dent_reset.LOD1",
+   "ok": true,
+   "detail": "reset restores the pristine vertices exactly"
+  },
+  {
+   "id": "rig.smoke.detach.LOD1",
+   "ok": true,
+   "detail": "door_L hands physics 21.6 kg + a box collider (24 verts)"
+  },
+  {
+   "id": "rig.smoke.steer.LOD2",
+   "ok": true,
+   "detail": "front wheels yaw left by 22.9°, rear wheels untouched"
+  },
+  {
+   "id": "rig.smoke.spin.LOD2",
+   "ok": true,
+   "detail": "positive spin moves the tyre top forward (dz=-0.23)"
+  },
+  {
+   "id": "rig.smoke.door_opens.LOD2",
+   "ok": true,
+   "detail": "left door swings outward by 0.84 m at full open"
+  },
+  {
+   "id": "rig.smoke.bonnet_opens.LOD2",
+   "ok": true,
+   "detail": "bonnet lifts 0.40 m"
+  },
+  {
+   "id": "rig.smoke.boot_opens.LOD2",
+   "ok": true,
+   "detail": "boot lifts 0.31 m"
+  },
+  {
+   "id": "rig.smoke.suspension.LOD2",
+   "ok": true,
+   "detail": "travel clamped to the sidecar range (+0.12 m of a 0.5 request)"
+  },
+  {
+   "id": "rig.smoke.lights.LOD2",
+   "ok": true,
+   "detail": "brake light emissive 0.2 → 1.6"
+  },
+  {
+   "id": "rig.smoke.paint.LOD2",
+   "ok": true,
+   "detail": "paint tint applies to 1 jj_paint material(s)"
+  },
+  {
+   "id": "rig.smoke.intact_fastpath.LOD2",
+   "ok": true,
+   "detail": "48 part meshes → 18 merged draws while intact (wakes on first motion/dent/detach)"
+  },
+  {
+   "id": "rig.smoke.lod_select.LOD2",
+   "ok": true,
+   "detail": "pickLod maps 500/150/70/20 px → LOD0/1/2/3 and a boundary-hugging path flips 2× (picks 0000111112222)"
+  },
+  {
+   "id": "rig.smoke.dent.LOD2",
+   "ok": true,
+   "detail": "dent moved vertices (hash changed) and recorded {part,pos,dir,radius,depth,severity}"
+  },
+  {
+   "id": "rig.smoke.dent_reset.LOD2",
+   "ok": true,
+   "detail": "reset restores the pristine vertices exactly"
+  },
+  {
+   "id": "rig.smoke.detach.LOD2",
+   "ok": true,
+   "detail": "door_L hands physics 21.6 kg + a box collider (24 verts)"
+  },
+  {
+   "id": "perf.grid24.LOD1",
+   "ok": true,
+   "detail": "24 cars × LOD1 at 3840×2160 from the GLB, intact fast path: 628 draw calls (1416 with parts), 130,658 tris, 10 ms/frame (gate < 33 ms, < 1000 calls)"
+  },
+  {
+   "id": "perf.grid24.LOD2",
+   "ok": true,
+   "detail": "24 cars × LOD2 at 3840×2160 from the GLB, intact fast path: 501 draw calls (1176 with parts), 59,016 tris, 9.6 ms/frame (gate < 33 ms, < 1000 calls)"
+  },
+  {
+   "id": "perf.grid24.LOD3",
+   "ok": true,
+   "detail": "24 cars × LOD3 at 3840×2160 from the GLB, intact fast path: 500 draw calls (1152 with parts), 29,038 tris, 11.9 ms/frame (gate < 33 ms, < 1000 calls)"
+  }
+ ]
+}

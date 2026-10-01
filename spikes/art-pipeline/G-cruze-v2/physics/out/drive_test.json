@@ -1,0 +1,203 @@
+{
+  "settle": {
+    "settledAtStep": 61,
+    "settledAtSeconds": 0.5083333333333333,
+    "restingBodyY": -0.06749433279037476,
+    "restingHubY": 0.37250566720962525,
+    "authoredHubY": 0.44,
+    "rideHeightDeltaM": -0.06749433279037476,
+    "restingSuspLens": [
+      0.4491184949874878,
+      0.4491184949874878,
+      0.45589202642440796,
+      0.45589202642440796
+    ],
+    "allWheelsGrounded": true,
+    "noChassisPenetration": true
+  },
+  "throttle": {
+    "durationSteps": 360,
+    "engineForcePerDrivenWheel": 4200,
+    "drivenWheelCount": 2,
+    "distanceM": 55.0362683981657,
+    "speedAt3sMS": 17.369239807128906,
+    "speedAt3sKmh": 62.52926330566407,
+    "stillAccelerating": true,
+    "speedSamples": [
+      {
+        "t": 0.1,
+        "speed": 0.6156625151634216
+      },
+      {
+        "t": 0.2,
+        "speed": 1.2766846418380737
+      },
+      {
+        "t": 0.3,
+        "speed": 1.9318795204162598
+      },
+      {
+        "t": 0.4,
+        "speed": 2.580794334411621
+      },
+      {
+        "t": 0.5,
+        "speed": 3.223365306854248
+      },
+      {
+        "t": 0.6,
+        "speed": 3.859591007232666
+      },
+      {
+        "t": 0.7,
+        "speed": 4.489510536193848
+      },
+      {
+        "t": 0.8,
+        "speed": 5.113179683685303
+      },
+      {
+        "t": 0.9,
+        "speed": 5.730656147003174
+      },
+      {
+        "t": 1,
+        "speed": 6.341999053955078
+      },
+      {
+        "t": 1.1,
+        "speed": 6.947266578674316
+      },
+      {
+        "t": 1.2,
+        "speed": 7.5465168952941895
+      },
+      {
+        "t": 1.3,
+        "speed": 8.139811515808105
+      },
+      {
+        "t": 1.4,
+        "speed": 8.727206230163574
+      },
+      {
+        "t": 1.5,
+        "speed": 9.308760643005371
+      },
+      {
+        "t": 1.6,
+        "speed": 9.88453197479248
+      },
+      {
+        "t": 1.7,
+        "speed": 10.454577445983887
+      },
+      {
+        "t": 1.8,
+        "speed": 11.018954277038574
+      },
+      {
+        "t": 1.9,
+        "speed": 11.577717781066895
+      },
+      {
+        "t": 2,
+        "speed": 12.130925178527832
+      },
+      {
+        "t": 2.1,
+        "speed": 12.678629875183105
+      },
+      {
+        "t": 2.2,
+        "speed": 13.220888137817383
+      },
+      {
+        "t": 2.3,
+        "speed": 13.7577543258667
+      },
+      {
+        "t": 2.4,
+        "speed": 14.28927993774414
+      },
+      {
+        "t": 2.5,
+        "speed": 14.815520286560059
+      },
+      {
+        "t": 2.6,
+        "speed": 15.336524963378906
+      },
+      {
+        "t": 2.7,
+        "speed": 15.852347373962402
+      },
+      {
+        "t": 2.8,
+        "speed": 16.363040924072266
+      },
+      {
+        "t": 2.9,
+        "speed": 16.868654251098633
+      },
+      {
+        "t": 3,
+        "speed": 17.369239807128906
+      }
+    ]
+  },
+  "turn": {
+    "targetSpeedMS": 11.11,
+    "speedAtTurnStartMS": 11.112468719482422,
+    "speedAtTurnStartKmh": 40.00488739013672,
+    "steerAngleRad": 0.6108652381980153,
+    "steerAngleDeg": 35,
+    "steerRampSteps": 60,
+    "engineForcePerDrivenWheel": 1500,
+    "turningRadiusM_fromYawRate": 3.7416105839647673,
+    "turningRadiusM_geometric": 3.635862911578868,
+    "avgSpeedMS": 3.4142059961954754,
+    "avgYawRateRadS": 0.9124963487188021,
+    "rolledOver": false,
+    "drivenWheels": [
+      0,
+      1
+    ],
+    "steerWheels": [
+      0,
+      1
+    ]
+  },
+  "brake": {
+    "brakeStartSpeedMS": 17.369239807128906,
+    "brakeForcePerWheel": 80,
+    "stopTimeS": 0.7416666666666667,
+    "stopDistanceM": 9.335739135742188
+  },
+  "rollover": [
+    {
+      "targetKmh": 30,
+      "rolled": false
+    },
+    {
+      "targetKmh": 40,
+      "rolled": false
+    },
+    {
+      "targetKmh": 48.6,
+      "rolled": false
+    },
+    {
+      "targetKmh": 53.3,
+      "rolled": false
+    },
+    {
+      "targetKmh": 58,
+      "rolled": false
+    },
+    {
+      "targetKmh": 62.5,
+      "rolled": false
+    }
+  ]
+}

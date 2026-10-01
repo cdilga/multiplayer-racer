@@ -1,0 +1,42 @@
+{
+ "L0_parts": {
+  "templateMs": 287,
+  "instantiate24Ms": 14.8,
+  "calls": 2211,
+  "tris": 580146,
+  "frameMs": 14.8,
+  "meshesPerCar": 80
+ },
+ "L1_parts": {
+  "templateMs": 110,
+  "instantiate24Ms": 13.1,
+  "calls": 1607,
+  "tris": 131358,
+  "frameMs": 10.8,
+  "meshesPerCar": 58
+ },
+ "L2_parts": {
+  "templateMs": 68,
+  "instantiate24Ms": 10.6,
+  "calls": 1333,
+  "tris": 59796,
+  "frameMs": 9.7,
+  "meshesPerCar": 48
+ },
+ "L2_intact": {
+  "templateMs": 70,
+  "instantiate24Ms": 12.5,
+  "calls": 525,
+  "tris": 60438,
+  "frameMs": 8.3,
+  "meshesPerCar": 18
+ },
+ "L3_intact": {
+  "templateMs": 40,
+  "instantiate24Ms": 11.3,
+  "calls": 525,
+  "tris": 30198,
+  "frameMs": 8.2,
+  "meshesPerCar": 18
+ }
+}

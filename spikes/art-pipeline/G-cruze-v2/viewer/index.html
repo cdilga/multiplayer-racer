@@ -1,0 +1,522 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>JJ Vehicle Viewer</title>
+<style>
+  html,body{margin:0;background:#0b0d10;overflow:hidden}
+  canvas{display:block}
+</style>
+<script type="importmap">
+{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}
+</script>
+</head>
+<body>
+<script type="module">
+// Joystick Jammers 0.2 -- visual-evidence viewer for G-cruze-v2.
+// Contract: spikes/art-pipeline/G-cruze-v2/ASSET-CONTRACT.md
+// No CDN/network imports -- three comes from the repo's own node_modules via the importmap above.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const q = new URLSearchParams(location.search);
+const qs = (k, d) => (q.has(k) ? q.get(k) : d);
+const qn = (k, d) => (q.has(k) ? Number(q.get(k)) : d);
+
+const W = qn('w', innerWidth);
+const H = qn('h', innerHeight);
+
+// ---------------------------------------------------------------------------
+// Nodes the contract promises to exist (ASSET-CONTRACT.md "Nodes" section).
+// The older spike GLB (A-textures-uv/out/cruz_missile_textured.glb) predates
+// the contract and is missing most of these -- that is expected and reported,
+// not fatal.
+// ---------------------------------------------------------------------------
+const REQUIRED_NODES = [
+  'chassis', 'bonnet', 'boot', 'door_L', 'door_R', 'door_rear_L', 'door_rear_R',
+  'bumper_front', 'bumper_rear', 'glass',
+  'light_head_L', 'light_head_R', 'light_brake_L', 'light_brake_R',
+  'mirror_L', 'mirror_R',
+  'wheel_FL', 'wheel_FR', 'wheel_RL', 'wheel_RR',
+  'susp_FL', 'susp_FR', 'susp_RL', 'susp_RR',
+  'cam_fp', 'cam_tp_target', 'com', 'exhaust_0',
+  'lplate_front', 'lplate_rear', 'roof_number',
+];
+
+// ---------------------------------------------------------------------------
+// Renderer / scene / lights
+// ---------------------------------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
+document.body.appendChild(renderer.domElement);
+
+const BG = {
+  cream: '#f2e9da',
+}[qs('bg', '')] || '#cfd6dd';
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(BG);
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(60, 60),
+  new THREE.MeshBasicMaterial({ color: new THREE.Color(BG).multiplyScalar(0.86) }),
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = 0;
+scene.add(ground);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x606870, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+const LIGHT_DIR = new THREE.Vector3(0.45, 1, 0.35).normalize();
+sun.position.copy(LIGHT_DIR).multiplyScalar(20);
+scene.add(sun);
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+function readVec3(userData, key, fallback) {
+  const v = userData && userData[key];
+  if (Array.isArray(v) && v.length === 3) return new THREE.Vector3(v[0], v[1], v[2]).normalize();
+  return fallback.clone();
+}
+function readNum(userData, key, fallback) {
+  const v = userData && userData[key];
+  return (typeof v === 'number' && !Number.isNaN(v)) ? v : fallback;
+}
+// jj_range_deg (and the suspension travel that reuses the same key) is stored
+// as a [min, max] tuple per ASSET-CONTRACT.md, not a bare scalar.
+function readRangeMax(userData, key, fallback) {
+  const v = userData && userData[key];
+  if (Array.isArray(v) && v.length === 2) return Math.max(Math.abs(v[0]), Math.abs(v[1]));
+  if (typeof v === 'number' && !Number.isNaN(v)) return v;
+  return fallback;
+}
+function findNode(root, name) {
+  let found = null;
+  root.traverse((o) => { if (!found && o.name === name) found = o; });
+  return found;
+}
+
+// ---------------------------------------------------------------------------
+// JJ paint shader: mask RGBA (R=paint, G=pattern, B=dirt/damage, A=emissive)
+// read from jj_paint's baseColorTexture (UV0), per ASSET-CONTRACT.md.
+// 3-band toon lighting + a fresnel rim so silhouette/shape reads clearly.
+// ---------------------------------------------------------------------------
+const PAINT_VERT = `
+varying vec2 vUv;
+varying vec3 vNormalW;
+varying vec3 vPosW;
+void main() {
+  vUv = uv;
+  vNormalW = normalize(mat3(modelMatrix) * normal);
+  vec4 worldPos = modelMatrix * vec4(position, 1.0);
+  vPosW = worldPos.xyz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const PAINT_FRAG = `
+uniform sampler2D maskMap;
+uniform bool hasMask;
+uniform vec3 paintColor;
+uniform vec3 patternColor;
+uniform vec3 emissiveColor;
+uniform float dirtAmount;
+uniform float emissiveStrength;
+uniform float opacity;
+uniform vec3 lightDir;
+varying vec2 vUv;
+varying vec3 vNormalW;
+varying vec3 vPosW;
+void main() {
+  vec4 mask = hasMask ? texture2D(maskMap, vUv) : vec4(1.0, 0.0, 0.0, 0.0);
+  vec3 base = vec3(0.72);
+  vec3 col = mix(base, paintColor, mask.r);
+  col = mix(col, patternColor, mask.g);
+  float dirt = clamp(mask.b * dirtAmount, 0.0, 1.0);
+  col *= mix(1.0, 0.45, dirt);
+  col = mix(col, col * 0.5 + vec3(0.05, 0.03, 0.0), dirt);
+  vec3 n = normalize(vNormalW);
+  float ndotl = max(dot(n, normalize(lightDir)), 0.0);
+  float toon = ndotl > 0.55 ? 1.0 : (ndotl > 0.2 ? 0.72 : 0.5);
+  vec3 lit = col * toon;
+  vec3 viewDir = normalize(cameraPosition - vPosW);
+  float fresnel = pow(1.0 - clamp(dot(n, viewDir), 0.0, 1.0), 2.4);
+  vec3 rim = vec3(1.0) * fresnel * 0.35;
+  vec3 emissive = emissiveColor * mask.a * emissiveStrength;
+  gl_FragColor = vec4(lit + rim + emissive, opacity);
+}`;
+
+function makePaintMaterial(srcMat, paint, pattern, dirt) {
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: PAINT_VERT,
+    fragmentShader: PAINT_FRAG,
+    transparent: true,
+    uniforms: {
+      maskMap: { value: srcMat && srcMat.map ? srcMat.map : null },
+      hasMask: { value: !!(srcMat && srcMat.map) },
+      paintColor: { value: new THREE.Color(paint) },
+      patternColor: { value: new THREE.Color(pattern) },
+      emissiveColor: { value: new THREE.Color(paint) },
+      dirtAmount: { value: dirt },
+      emissiveStrength: { value: 1.4 },
+      opacity: { value: 1.0 },
+      lightDir: { value: LIGHT_DIR.clone() },
+    },
+  });
+  mat.name = 'jj_paint(shader)';
+  return mat;
+}
+
+// ---------------------------------------------------------------------------
+// Load
+// ---------------------------------------------------------------------------
+let glbPath = qs('glb', '/art/vehicles/cruz-missile/cruz_missile.lod1.glb');
+const lodParam = qs('lod', null);
+if (lodParam !== null && /\.lod\d+\./.test(glbPath)) {
+  glbPath = glbPath.replace(/\.lod\d+\./, `.lod${lodParam}.`);
+}
+
+const report = { glb: glbPath, triangles: 0, drawCalls: 0, nodes: [], morphs: {}, missing: [] };
+
+let gltf;
+try {
+  gltf = await new GLTFLoader().loadAsync(glbPath);
+} catch (err) {
+  document.title = 'LOAD_ERROR';
+  window.__report = { ...report, error: String(err && err.message || err) };
+  throw err;
+}
+const root = gltf.scene;
+scene.add(root);
+root.updateMatrixWorld(true);
+
+// ---------------------------------------------------------------------------
+// Material pass: jj_paint -> shader, damage lights boosted, colliders hidden,
+// keep everything else as loaded.
+// ---------------------------------------------------------------------------
+const paint = qs('paint', '#c9ccd1');
+const pattern = qs('pattern', '#ffffff');
+const dirt = qn('dirt', 0.15);
+const showColliders = qs('colliders', '0') === '1';
+
+const outlineTargets = [];
+const foundNames = new Set();
+const morphMeshes = [];
+
+root.traverse((o) => {
+  if (o.name) foundNames.add(o.name);
+  if (!o.isMesh) return;
+
+  const isCollider = o.name.startsWith('col_');
+  if (isCollider) {
+    o.visible = showColliders;
+    if (showColliders) {
+      const shape = (o.userData.jj_collider && o.userData.jj_collider.shape) || '';
+      let color = 0xffee33; // box (panels) default
+      if (shape === 'cylinder' || /wheel/.test(o.name)) color = 0xff33cc;
+      else if (shape === 'convex' || /chassis|cabin/.test(o.name)) color = 0x33e6ff;
+      o.material = new THREE.MeshBasicMaterial({ color, wireframe: true, depthTest: true });
+    }
+    return; // colliders never get outlines/report morphs
+  }
+
+  const srcName = o.material && o.material.name;
+  const semantic = (o.material && o.material.userData && o.material.userData.jj_semantic) || '';
+  if (srcName === 'jj_paint' || semantic === 'paint') {
+    o.material = makePaintMaterial(o.material, paint, pattern, dirt);
+  } else if (o.material) {
+    // Keep as loaded; just make headlight/brakelight/indicator emissive pop
+    // without adding per-car point lights.
+    if (/^(headlight|brakelight|indicator)$/.test(semantic) || /light|indicator/i.test(srcName || '')) {
+      if ('emissiveIntensity' in o.material) o.material.emissiveIntensity = 2.4;
+      o.material.toneMapped = false;
+    }
+    if (showColliders) {
+      o.material = o.material.clone();
+      o.material.transparent = true;
+      o.material.opacity = 0.35;
+      o.material.depthWrite = false;
+    }
+  }
+
+  if (o.geometry && o.geometry.morphAttributes && o.geometry.morphAttributes.position) {
+    morphMeshes.push(o);
+    const names = o.morphTargetDictionary ? Object.keys(o.morphTargetDictionary) : [];
+    report.morphs[o.name || o.uuid] = names;
+  }
+
+  if (o.name === 'roof_number') o.userData.isRoofPlane = true;
+  outlineTargets.push(o);
+});
+
+report.nodes = [...foundNames];
+report.missing = REQUIRED_NODES.filter((n) => !foundNames.has(n));
+
+// ---------------------------------------------------------------------------
+// Comic outline pass (inverted hull) -- optional per spec, cheap to add.
+// ---------------------------------------------------------------------------
+// Opt-in (?outline=1): uniform scaling about each part's origin misplaces the hull on parts whose
+// origin is far from their geometry (bumpers/lights sit at the car origin), so evidence captures
+// render without it. The game's ink outline is a screen-space post pass (plan §12.1), not a hull.
+const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x1a1410, side: THREE.BackSide });
+for (const mesh of (qs('outline', '0') === '1' ? outlineTargets : [])) {
+  if (mesh.userData.isRoofPlane) continue;
+  if (mesh.name.startsWith('col_')) continue;
+  const outline = new THREE.Mesh(mesh.geometry, OUTLINE_MAT);
+  // Parent to the mesh itself (identity local transform + a small uniform
+  // scale-up) rather than copying position/quaternion as a one-off sibling:
+  // hinge rotation (open=), wheel steer/spin/suspension, and dent morphs are
+  // all applied to nodes AFTER this pass, so a copied transform would freeze
+  // the outline at the pre-rig pose and visibly detach it. Reparenting means
+  // the scene graph carries every later transform through automatically.
+  outline.scale.setScalar(1.025);
+  outline.userData.isOutline = true;
+  outline.renderOrder = -1;
+  if (mesh.morphTargetInfluences) outline.morphTargetInfluences = mesh.morphTargetInfluences;
+  mesh.add(outline);
+}
+
+// ---------------------------------------------------------------------------
+// Rig: steer / spin / suspension / open panels / dent / light damage
+// ---------------------------------------------------------------------------
+function baseState(node) {
+  if (!node.userData.__base) {
+    node.userData.__base = {
+      pos: node.position.clone(),
+      quat: node.quaternion.clone(),
+    };
+  }
+  return node.userData.__base;
+}
+
+const WHEELS = {
+  FL: findNode(root, 'wheel_FL'),
+  FR: findNode(root, 'wheel_FR'),
+  RL: findNode(root, 'wheel_RL'),
+  RR: findNode(root, 'wheel_RR'),
+};
+const SUSP = {
+  FL: findNode(root, 'susp_FL'),
+  FR: findNode(root, 'susp_FR'),
+  RL: findNode(root, 'susp_RL'),
+  RR: findNode(root, 'susp_RR'),
+};
+
+const steerDeg = qn('steer', 0);
+const spinDeg = qn('spin', 0);
+const suspM = qn('susp', 0);
+
+for (const [key, node] of Object.entries(WHEELS)) {
+  if (!node) continue;
+  const isFront = key === 'FL' || key === 'FR';
+  const base = baseState(node);
+  let quat = base.quat.clone();
+  if (isFront && steerDeg) {
+    const axis = readVec3(node.userData, 'jj_axis_steer', new THREE.Vector3(0, 1, 0));
+    quat.multiply(new THREE.Quaternion().setFromAxisAngle(axis, THREE.MathUtils.degToRad(steerDeg)));
+  }
+  if (spinDeg) {
+    const axisKey = isFront ? 'jj_axis_spin' : 'jj_axis';
+    const axis = readVec3(node.userData, axisKey, new THREE.Vector3(1, 0, 0));
+    const sign = (key === 'FR' || key === 'RR') ? -1 : 1; // opposite sides visually spin "forward" the same way
+    quat.multiply(new THREE.Quaternion().setFromAxisAngle(axis, sign * THREE.MathUtils.degToRad(spinDeg)));
+  }
+  node.quaternion.copy(quat);
+
+  if (suspM) {
+    const suspAxis = readVec3(node.userData, 'jj_axis', new THREE.Vector3(0, 1, 0));
+    const sign = (key === 'FL' || key === 'RR') ? 1 : -1; // diagonal articulation, sign choice is arbitrary
+    node.position.copy(base.pos).addScaledVector(suspAxis, sign * suspM);
+    const suspNode = SUSP[key];
+    if (suspNode) {
+      const sBase = baseState(suspNode);
+      suspNode.position.copy(sBase.pos).addScaledVector(suspAxis, sign * suspM);
+    }
+  }
+}
+
+// Fallback axis/range for the pre-contract spike asset, which has no
+// jj_axis/jj_range_deg extras at all. The real asset's extras already encode
+// per-side hinge handedness in the axis sign (door_L=-Y, door_R=+Y, etc; see
+// ASSET-CONTRACT.md), so a single positive angle about whatever axis is
+// found is always correct -- no extra per-side sign flip needed here.
+const HINGE_DEFAULTS = {
+  bonnet: { axis: new THREE.Vector3(1, 0, 0), range: 60 },
+  boot: { axis: new THREE.Vector3(-1, 0, 0), range: 60 },
+  door_L: { axis: new THREE.Vector3(0, -1, 0), range: 70 },
+  door_R: { axis: new THREE.Vector3(0, 1, 0), range: 70 },
+  door_rear_L: { axis: new THREE.Vector3(0, -1, 0), range: 70 },
+  door_rear_R: { axis: new THREE.Vector3(0, 1, 0), range: 70 },
+};
+const openList = (qs('open', '') || '').split(',').map((s) => s.trim()).filter(Boolean);
+for (const partName of openList) {
+  const node = findNode(root, partName);
+  if (!node) { console.warn('open= requested missing part', partName); continue; }
+  const base = baseState(node);
+  const defaults = HINGE_DEFAULTS[partName] || { axis: new THREE.Vector3(0, 1, 0), range: 60 };
+  const axis = readVec3(node.userData, 'jj_axis', defaults.axis);
+  const rangeDeg = readRangeMax(node.userData, 'jj_range_deg', defaults.range);
+  const angle = THREE.MathUtils.degToRad(rangeDeg * 0.8);
+  node.quaternion.copy(base.quat).multiply(
+    new THREE.Quaternion().setFromAxisAngle(axis, angle),
+  );
+}
+
+if (qs('dent', '0') === '1') {
+  for (const mesh of morphMeshes) {
+    if (!mesh.morphTargetInfluences) continue;
+    for (let i = 0; i < mesh.morphTargetInfluences.length; i++) mesh.morphTargetInfluences[i] = 1;
+  }
+}
+
+const lightdmg = qs('lightdmg', '');
+if (lightdmg) {
+  const node = findNode(root, lightdmg);
+  if (node) node.visible = false;
+  else console.warn('lightdmg= requested missing node', lightdmg);
+}
+
+// ---------------------------------------------------------------------------
+// Roof number: canvas texture, white roundel + black digits, aligned to the
+// roof_number anchor's local +Y (its documented roof normal).
+// ---------------------------------------------------------------------------
+const roofAnchor = findNode(root, 'roof_number');
+if (roofAnchor) {
+  const num = qs('num', '7');
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(size / 2, size / 2, size * 0.46, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = size * 0.045;
+  ctx.strokeStyle = '#141414';
+  ctx.stroke();
+  ctx.fillStyle = '#141414';
+  ctx.font = `bold ${Math.floor(size * (num.length > 1 ? 0.5 : 0.62))}px "Arial Black", Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(num, size / 2, size * 0.54);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  // ASSET-CONTRACT.md identity.roof_number_size_m documents 0.9m for this asset.
+  const roofSize = qn('numsize', 0.9);
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(roofSize, roofSize),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }),
+  );
+  plane.rotateX(-Math.PI / 2); // plane normal +Z -> local +Y (the anchor's documented roof normal)
+  plane.position.y = 0.002;
+  plane.userData.isRoofPlane = true;
+  plane.renderOrder = 10;
+  roofAnchor.add(plane);
+} else {
+  console.warn('roof_number anchor not found -- cannot place roof number');
+}
+
+// ---------------------------------------------------------------------------
+// Camera
+// ---------------------------------------------------------------------------
+function visualBBox() {
+  const box = new THREE.Box3();
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.name.startsWith('col_')) return;
+    if (o.userData.isOutline) return;
+    if (o.userData.isRoofPlane) return;
+    if (!o.visible) return;
+    box.expandByObject(o);
+  });
+  if (box.isEmpty()) box.setFromCenterAndSize(new THREE.Vector3(0, 0.4, 0), new THREE.Vector3(2, 1, 4));
+  return box;
+}
+function fitOrtho(halfW, halfH, aspect) {
+  let hh = halfH, hw = hh * aspect;
+  if (hw < halfW) { hw = halfW; hh = hw / aspect; }
+  return { hw, hh };
+}
+
+const box = visualBBox();
+const size = new THREE.Vector3(); box.getSize(size);
+const center = new THREE.Vector3(); box.getCenter(center);
+const aspect = W / H;
+const zoom = qn('zoom', 1);
+const M = 1.3; // margin multiplier
+
+let camera;
+const camType = qs('cam', 'q_front');
+
+function orthoCam(halfW, halfH, position, up) {
+  const c = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, 0.05, 1000);
+  c.position.copy(position);
+  c.up.copy(up);
+  c.lookAt(center);
+  return c;
+}
+function perspCam(sideSign, frontSign, elevRatio) {
+  // Offset scales with the car's own half-extents on each axis (not a single
+  // diagonal distance) so the near corner/wheel doesn't dominate the frame
+  // under perspective foreshortening -- a uniform dirXZ*dist blend put the
+  // camera too close to the near-side wheel for a ~4m x ~2.4m car.
+  const halfW = size.x / 2, halfL = size.z / 2;
+  const pull = 1.7 / zoom;
+  const c = new THREE.PerspectiveCamera(40, aspect, 0.05, 1000);
+  const offset = new THREE.Vector3(
+    sideSign * (halfW + halfL * 0.35) * pull,
+    size.y * elevRatio,
+    frontSign * (halfL + halfW * 0.35) * pull,
+  );
+  c.position.copy(center).add(offset);
+  c.lookAt(center.clone().add(new THREE.Vector3(0, size.y * 0.12, 0)));
+  return c;
+}
+
+switch (camType) {
+  case 'front': {
+    const { hw, hh } = fitOrtho((size.x / 2) * M / zoom, (size.y / 2) * M / zoom, aspect);
+    camera = orthoCam(hw, hh, center.clone().add(new THREE.Vector3(0, 0, -size.length())), new THREE.Vector3(0, 1, 0));
+    break;
+  }
+  case 'rear': {
+    const { hw, hh } = fitOrtho((size.x / 2) * M / zoom, (size.y / 2) * M / zoom, aspect);
+    camera = orthoCam(hw, hh, center.clone().add(new THREE.Vector3(0, 0, size.length())), new THREE.Vector3(0, 1, 0));
+    break;
+  }
+  case 'side': {
+    const { hw, hh } = fitOrtho((size.z / 2) * M / zoom, (size.y / 2) * M / zoom, aspect);
+    camera = orthoCam(hw, hh, center.clone().add(new THREE.Vector3(size.length(), 0, 0)), new THREE.Vector3(0, 1, 0));
+    break;
+  }
+  case 'top': {
+    const { hw, hh } = fitOrtho((size.x / 2) * M / zoom, (size.z / 2) * M / zoom, aspect);
+    camera = orthoCam(hw, hh, center.clone().add(new THREE.Vector3(0, size.length(), 0)), new THREE.Vector3(0, 0, -1));
+    break;
+  }
+  case 'q_rear':
+    camera = perspCam(1, 1, 0.7);
+    break;
+  case 'q_front_left':
+    camera = perspCam(-1, -1, 0.7);
+    break;
+  case 'q_front':
+  default:
+    camera = perspCam(1, -1, 0.7);
+    break;
+}
+
+// ---------------------------------------------------------------------------
+// Render + report
+// ---------------------------------------------------------------------------
+renderer.render(scene, camera);
+report.triangles = renderer.info.render.triangles;
+report.drawCalls = renderer.info.render.calls;
+report.bbox = { size: size.toArray(), center: center.toArray() };
+report.camera = { type: camType, position: camera.position.toArray() };
+window.__report = report;
+window.__root = root; // debug convenience; harmless for capture scripts
+document.title = 'READY';
+</script>
+</body>
+</html>

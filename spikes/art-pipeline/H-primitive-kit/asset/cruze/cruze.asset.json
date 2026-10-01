@@ -1,0 +1,630 @@
+{
+ "contract": "jj-vehicle/0.1-draft+procedural",
+ "asset_id": "cruze-primitive",
+ "archetype": "small_sedan",
+ "display_name": "Cruze (primitives)",
+ "inspired_by": "early-2010s Australian small sedan (generic roundel badge; no real marque, no lettering)",
+ "space": {
+  "up": "+Y",
+  "forward": "-Z",
+  "right": "+X",
+  "handedness": "right"
+ },
+ "units": "m",
+ "origin": "ground plane, midway between the axles, on the centreline",
+ "bounds": {
+  "min": [
+   -0.97,
+   0,
+   -1.9216
+  ],
+  "max": [
+   0.97,
+   1.4993,
+   2.038
+  ]
+ },
+ "lods": [
+  {
+   "lod": 0,
+   "file": "cruze.lod0.glb",
+   "role": "hero / close-up (optional richer variant)",
+   "triangles": 20774,
+   "draw_calls": 80,
+   "materials": 13,
+   "bytes": 880924,
+   "build_ms": 281,
+   "triangle_hypothesis": null
+  },
+  {
+   "lod": 1,
+   "file": "cruze.lod1.glb",
+   "role": "baseline close gameplay mesh (always loaded)",
+   "triangles": 4652,
+   "draw_calls": 58,
+   "materials": 13,
+   "bytes": 288188,
+   "build_ms": 105,
+   "triangle_hypothesis": [
+    1000,
+    3000
+   ]
+  },
+  {
+   "lod": 2,
+   "file": "cruze.lod2.glb",
+   "role": "medium",
+   "triangles": 2094,
+   "draw_calls": 48,
+   "materials": 12,
+   "bytes": 182540,
+   "build_ms": 67,
+   "triangle_hypothesis": [
+    500,
+    1000
+   ]
+  },
+  {
+   "lod": 3,
+   "file": "cruze.lod3.glb",
+   "role": "distant / small",
+   "triangles": 1022,
+   "draw_calls": 47,
+   "materials": 12,
+   "bytes": 140208,
+   "build_ms": 38,
+   "triangle_hypothesis": [
+    150,
+    400
+   ]
+  }
+ ],
+ "baseline_lod": 1,
+ "parts": {
+  "door_L": {
+   "node": "door_L",
+   "mass_fraction": 0.018,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "door_L_dent"
+   ],
+   "collider": "col_door_L"
+  },
+  "door_R": {
+   "node": "door_R",
+   "mass_fraction": 0.018,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "door_R_dent"
+   ],
+   "collider": "col_door_R"
+  },
+  "door_rear_L": {
+   "node": "door_rear_L",
+   "mass_fraction": 0.016,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "door_rear_L_dent"
+   ],
+   "collider": "col_door_rear_L"
+  },
+  "door_rear_R": {
+   "node": "door_rear_R",
+   "mass_fraction": 0.016,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "door_rear_R_dent"
+   ],
+   "collider": "col_door_rear_R"
+  },
+  "bonnet": {
+   "node": "bonnet",
+   "mass_fraction": 0.015,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "bonnet_dent"
+   ],
+   "collider": "col_bonnet"
+  },
+  "boot": {
+   "node": "boot",
+   "mass_fraction": 0.014,
+   "joint": "hinge",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "boot_dent"
+   ],
+   "collider": "col_boot"
+  },
+  "bumper_front": {
+   "node": "bumper_front",
+   "mass_fraction": 0.014,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "bumper_front_dent"
+   ],
+   "collider": "col_bumper_front"
+  },
+  "bumper_rear": {
+   "node": "bumper_rear",
+   "mass_fraction": 0.012,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [
+    "bumper_rear_dent"
+   ],
+   "collider": "col_bumper_rear"
+  },
+  "light_head_L": {
+   "node": "light_head_L",
+   "mass_fraction": 0.002,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": []
+  },
+  "light_brake_L": {
+   "node": "light_brake_L",
+   "mass_fraction": 0.001,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": []
+  },
+  "light_head_R": {
+   "node": "light_head_R",
+   "mass_fraction": 0.002,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": []
+  },
+  "light_brake_R": {
+   "node": "light_brake_R",
+   "mass_fraction": 0.001,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": []
+  },
+  "glass": {
+   "node": "glass",
+   "mass_fraction": 0.012,
+   "joint": "fixed",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": []
+  },
+  "spoiler": {
+   "node": "spoiler",
+   "mass_fraction": 0,
+   "joint": "fixed",
+   "attach": "boot",
+   "detachable": true,
+   "dents": []
+  },
+  "wheel_FL": {
+   "node": "wheel_FL",
+   "mass_fraction": 0.024,
+   "joint": "compound",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [],
+   "collider": "col_wheel_FL"
+  },
+  "susp_FL": {
+   "node": "susp_FL",
+   "mass_fraction": 0.004,
+   "joint": "suspension",
+   "attach": "chassis",
+   "detachable": false,
+   "dents": []
+  },
+  "wheel_FR": {
+   "node": "wheel_FR",
+   "mass_fraction": 0.024,
+   "joint": "compound",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [],
+   "collider": "col_wheel_FR"
+  },
+  "susp_FR": {
+   "node": "susp_FR",
+   "mass_fraction": 0.004,
+   "joint": "suspension",
+   "attach": "chassis",
+   "detachable": false,
+   "dents": []
+  },
+  "wheel_RL": {
+   "node": "wheel_RL",
+   "mass_fraction": 0.024,
+   "joint": "spin",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [],
+   "collider": "col_wheel_RL"
+  },
+  "susp_RL": {
+   "node": "susp_RL",
+   "mass_fraction": 0.004,
+   "joint": "suspension",
+   "attach": "chassis",
+   "detachable": false,
+   "dents": []
+  },
+  "wheel_RR": {
+   "node": "wheel_RR",
+   "mass_fraction": 0.024,
+   "joint": "spin",
+   "attach": "chassis",
+   "detachable": true,
+   "dents": [],
+   "collider": "col_wheel_RR"
+  },
+  "susp_RR": {
+   "node": "susp_RR",
+   "mass_fraction": 0.004,
+   "joint": "suspension",
+   "attach": "chassis",
+   "detachable": false,
+   "dents": []
+  },
+  "mirror_L": {
+   "node": "mirror_L",
+   "mass_fraction": 0.001,
+   "joint": "fixed",
+   "attach": "door_L",
+   "detachable": true,
+   "dents": []
+  },
+  "mirror_R": {
+   "node": "mirror_R",
+   "mass_fraction": 0.001,
+   "joint": "fixed",
+   "attach": "door_R",
+   "detachable": true,
+   "dents": []
+  },
+  "chassis": {
+   "node": "chassis",
+   "mass_fraction": 0.745,
+   "joint": "fixed",
+   "attach": null,
+   "detachable": false,
+   "dents": [
+    "chassis_dent"
+   ],
+   "collider": "col_chassis"
+  }
+ },
+ "trims": {},
+ "wheels": {
+  "wheel_FL": {
+   "hub": [
+    -0.82,
+    0.41,
+    -1.15
+   ],
+   "radius": 0.41,
+   "width": 0.3,
+   "steer": true,
+   "driven": true,
+   "hub_node": "wheel_FL",
+   "steer_node": "wheel_FL_steer"
+  },
+  "wheel_FR": {
+   "hub": [
+    0.82,
+    0.41,
+    -1.15
+   ],
+   "radius": 0.41,
+   "width": 0.3,
+   "steer": true,
+   "driven": true,
+   "hub_node": "wheel_FR",
+   "steer_node": "wheel_FR_steer"
+  },
+  "wheel_RL": {
+   "hub": [
+    -0.82,
+    0.41,
+    1.15
+   ],
+   "radius": 0.41,
+   "width": 0.3,
+   "steer": false,
+   "driven": false,
+   "hub_node": "wheel_RL",
+   "steer_node": null
+  },
+  "wheel_RR": {
+   "hub": [
+    0.82,
+    0.41,
+    1.15
+   ],
+   "radius": 0.41,
+   "width": 0.3,
+   "steer": false,
+   "driven": false,
+   "hub_node": "wheel_RR",
+   "steer_node": null
+  }
+ },
+ "drive": "FWD",
+ "suspension": {
+  "wheel_FL": {
+   "top_mount": [
+    -0.76,
+    0.91,
+    -1.15
+   ],
+   "hub": [
+    -0.82,
+    0.41,
+    -1.15
+   ],
+   "rest_length": 0.5,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_FR": {
+   "top_mount": [
+    0.76,
+    0.91,
+    -1.15
+   ],
+   "hub": [
+    0.82,
+    0.41,
+    -1.15
+   ],
+   "rest_length": 0.5,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_RL": {
+   "top_mount": [
+    -0.76,
+    0.91,
+    1.15
+   ],
+   "hub": [
+    -0.82,
+    0.41,
+    1.15
+   ],
+   "rest_length": 0.5,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  },
+  "wheel_RR": {
+   "top_mount": [
+    0.76,
+    0.91,
+    1.15
+   ],
+   "hub": [
+    0.82,
+    0.41,
+    1.15
+   ],
+   "rest_length": 0.5,
+   "travel": [
+    -0.1,
+    0.12
+   ]
+  }
+ },
+ "physics": {
+  "mass_kg": 1200,
+  "com": [
+   0,
+   0.6,
+   0
+  ],
+  "profile": "profiles/vehicles/cruze-primitive.json (pending jj-sim)",
+  "colliders": {
+   "col_door_L": {
+    "shape": "box",
+    "part": "door_L",
+    "verts": 8
+   },
+   "col_door_R": {
+    "shape": "box",
+    "part": "door_R",
+    "verts": 8
+   },
+   "col_door_rear_L": {
+    "shape": "box",
+    "part": "door_rear_L",
+    "verts": 8
+   },
+   "col_door_rear_R": {
+    "shape": "box",
+    "part": "door_rear_R",
+    "verts": 8
+   },
+   "col_bonnet": {
+    "shape": "box",
+    "part": "bonnet",
+    "verts": 8
+   },
+   "col_boot": {
+    "shape": "box",
+    "part": "boot",
+    "verts": 8
+   },
+   "col_bumper_front": {
+    "shape": "convex",
+    "part": "bumper_front",
+    "verts": 26
+   },
+   "col_bumper_rear": {
+    "shape": "convex",
+    "part": "bumper_rear",
+    "verts": 20
+   },
+   "col_wheel_FL": {
+    "shape": "cylinder",
+    "part": "wheel_FL",
+    "verts": 34
+   },
+   "col_wheel_FR": {
+    "shape": "cylinder",
+    "part": "wheel_FR",
+    "verts": 34
+   },
+   "col_wheel_RL": {
+    "shape": "cylinder",
+    "part": "wheel_RL",
+    "verts": 34
+   },
+   "col_wheel_RR": {
+    "shape": "cylinder",
+    "part": "wheel_RR",
+    "verts": 34
+   },
+   "col_chassis": {
+    "shape": "convex",
+    "part": "chassis",
+    "verts": 47
+   },
+   "col_cabin": {
+    "shape": "convex",
+    "part": "chassis",
+    "verts": 31
+   }
+  }
+ },
+ "anchors": {
+  "lplate_front": [
+   0,
+   0.53,
+   -1.86
+  ],
+  "lplate_rear": [
+   0,
+   0.74,
+   2
+  ],
+  "cam_fp": [
+   0,
+   1.26,
+   -0.06
+  ],
+  "cam_tp_target": [
+   0,
+   0.95,
+   0
+  ],
+  "com": [
+   0,
+   0.6,
+   0
+  ],
+  "exhaust_0": [
+   -0.5,
+   0.4,
+   2
+  ],
+  "roof_number": [
+   0,
+   1.56,
+   0.3
+  ]
+ },
+ "materials": {
+  "jj_paint": "paint",
+  "jj_underside": "underside",
+  "jj_plastic": "plastic",
+  "jj_glass": "glass",
+  "jj_metal_chrome": "metal",
+  "jj_plastic_trim": "plastic",
+  "jj_plastic_gloss": "plastic",
+  "jj_headlight": "headlight",
+  "jj_metal": "metal",
+  "jj_indicator": "indicator",
+  "jj_brakelight": "brakelight",
+  "jj_tyre": "tyre",
+  "jj_wheel": "wheel"
+ },
+ "textures": {
+  "mode": "vertex-colour",
+  "note": "paint = tint × COLOR_0 (baked dirt/AO). No paint mask.",
+  "trim": {
+   "file": "embedded in jj_plastic_trim",
+   "px": [
+    256,
+    128
+   ],
+   "use": "grille honeycomb (top half) + slats (bottom half) via UV sub-rects"
+  }
+ },
+ "deformation": {
+  "mode": "runtime-vertex",
+  "dentable": [
+   "door_L",
+   "door_R",
+   "door_rear_L",
+   "door_rear_R",
+   "bonnet",
+   "boot",
+   "bumper_front",
+   "bumper_rear",
+   "chassis"
+  ],
+  "note": "Dents are applied to the LOD mesh vertices from hit records {part,pos,dir,radius,depth,severity}; no authored morph targets. Replay is bit-identical.",
+  "min_vertex_spacing_m": {
+   "0": 0.11,
+   "1": 0.2,
+   "2": 0.32,
+   "3": 0.55
+  }
+ },
+ "identity": {
+  "roof_number_anchor": "roof_number",
+  "roof_number_size_m": 0.9,
+  "paint_semantic": "paint",
+  "tint": "multiply jj_paint baseColor by identity colour; COLOR_0 keeps the baked shading",
+  "plates": [
+   "lplate_front",
+   "lplate_rear"
+  ]
+ },
+ "procedural": {
+  "module": "cruze.js",
+  "kit": "kit/*.js",
+  "deterministic": true,
+  "note": "GLBs are a bake of the code; regenerate with tools/bake.mjs. The code is the source of truth."
+ },
+ "contract_profile_differences": [
+  "no morph targets (runtime vertex dents)",
+  "no paint mask texture (vertex colours + tint)",
+  "wheel_XX has child wheel_XX_spin (spin) under the steer node",
+  "extra parts spoiler and glass split (windscreen/rear/quarters in `glass`, door glass in doors)"
+ ]
+}

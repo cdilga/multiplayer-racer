@@ -1,0 +1,58 @@
+{
+ "lods": [
+  {
+   "lod": 0,
+   "file": "cruze.lod0.glb",
+   "role": "hero / close-up (optional richer variant)",
+   "triangles": 20774,
+   "draw_calls": 80,
+   "materials": 13,
+   "bytes": 880924,
+   "build_ms": 281,
+   "triangle_hypothesis": null
+  },
+  {
+   "lod": 1,
+   "file": "cruze.lod1.glb",
+   "role": "baseline close gameplay mesh (always loaded)",
+   "triangles": 4652,
+   "draw_calls": 58,
+   "materials": 13,
+   "bytes": 288188,
+   "build_ms": 105,
+   "triangle_hypothesis": [
+    1000,
+    3000
+   ]
+  },
+  {
+   "lod": 2,
+   "file": "cruze.lod2.glb",
+   "role": "medium",
+   "triangles": 2094,
+   "draw_calls": 48,
+   "materials": 12,
+   "bytes": 182540,
+   "build_ms": 67,
+   "triangle_hypothesis": [
+    500,
+    1000
+   ]
+  },
+  {
+   "lod": 3,
+   "file": "cruze.lod3.glb",
+   "role": "distant / small",
+   "triangles": 1022,
+   "draw_calls": 47,
+   "materials": 12,
+   "bytes": 140208,
+   "build_ms": 38,
+   "triangle_hypothesis": [
+    150,
+    400
+   ]
+  }
+ ],
+ "when": "2026-09-30T06:18:31.446Z"
+}

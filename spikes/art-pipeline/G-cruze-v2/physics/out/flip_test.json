@@ -1,0 +1,213 @@
+{
+  "threshold": {
+    "uprightDot": 0.85,
+    "settleSpeed": 0.15
+  },
+  "summary": {
+    "n": 10,
+    "recovered": 0,
+    "pct": 0
+  },
+  "results": [
+    {
+      "pose": "upside_down_flat",
+      "finalUpDotWorldUp": -0.9852050203364817,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -0.2898685932159424,
+        "y": 1.9245541095733643,
+        "z": -0.1647338569164276
+      }
+    },
+    {
+      "pose": "on_left_side",
+      "finalUpDotWorldUp": 0.3309821918467455,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": 0.3366389870643616,
+        "y": 0.7520886063575745,
+        "z": 0.14392440021038055
+      }
+    },
+    {
+      "pose": "on_right_side",
+      "finalUpDotWorldUp": 0.3319507079659819,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -0.28091856837272644,
+        "y": 0.7516128420829773,
+        "z": 0.14824700355529785
+      }
+    },
+    {
+      "pose": "nose_down_90",
+      "finalUpDotWorldUp": 0.016554500505352676,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -0.006776675581932068,
+        "y": 1.7987977266311646,
+        "z": -0.030085384845733643
+      }
+    },
+    {
+      "pose": "tail_down_90",
+      "finalUpDotWorldUp": 0.0015823165191111155,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": 0.0006056427955627441,
+        "y": 1.8373807668685913,
+        "z": 0.0028263330459594727
+      }
+    },
+    {
+      "pose": "upside_down_nose_tilt",
+      "finalUpDotWorldUp": -0.9338281510549042,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -0.36749789118766785,
+        "y": 1.8991377353668213,
+        "z": -1.7383562326431274
+      }
+    },
+    {
+      "pose": "corner_balance_A",
+      "finalUpDotWorldUp": -0.9480597124409575,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -1.3355412483215332,
+        "y": 1.9058917760849,
+        "z": 0.9704176783561707
+      }
+    },
+    {
+      "pose": "corner_balance_B",
+      "finalUpDotWorldUp": -0.933828057723098,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": 1.534792423248291,
+        "y": 1.899139165878296,
+        "z": 0.06305927038192749
+      }
+    },
+    {
+      "pose": "upside_down_roll_tilt",
+      "finalUpDotWorldUp": -0.948059594863242,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": -0.8685503005981445,
+        "y": 1.905893087387085,
+        "z": 0.03525480628013611
+      }
+    },
+    {
+      "pose": "on_left_side_pitched",
+      "finalUpDotWorldUp": 0.331830748865511,
+      "upright": false,
+      "settled": true,
+      "recoveredWithinS": null,
+      "finalPos": {
+        "x": 0.24372851848602295,
+        "y": 0.7517317533493042,
+        "z": -0.16629813611507416
+      }
+    }
+  ],
+  "nudgeResults": [
+    {
+      "axisName": "X",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "omega": 1.5,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999953927143571,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    },
+    {
+      "axisName": "X",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "omega": 3,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999954042806926,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    },
+    {
+      "axisName": "X",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "omega": 5,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999954200962933,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    },
+    {
+      "axisName": "Z",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "omega": 1.5,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999953853347426,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    },
+    {
+      "axisName": "Z",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "omega": 3,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999954295368197,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    },
+    {
+      "axisName": "Z",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "omega": 5,
+      "restUpDotBeforeNudge": 0.9999954136660677,
+      "finalUpDot": 0.9999953864389873,
+      "upright": true,
+      "recoveredWithinS": 0.008333333333333333
+    }
+  ]
+}

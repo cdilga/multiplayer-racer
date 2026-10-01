@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Primitive Kit Garage</title>
+<style>
+  :root{--ink:#2a2622;--cream:#f7ecd6;--card:#fffaf0;--accent:#e0392f}
+  html,body{margin:0;height:100%;background:#f3e6cf;font:14px/1.35 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);overflow:hidden}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #ui{position:fixed;left:14px;top:14px;width:250px;max-height:calc(100% - 28px);overflow:auto;background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:12px;box-shadow:4px 4px 0 var(--ink)}
+  #ui.hide{display:none}
+  h1{font-size:15px;margin:0 0 2px;letter-spacing:.02em} .sub{font-size:12px;opacity:.7;margin-bottom:8px}
+  .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0} .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin-top:10px}
+  button{font:inherit;border:2px solid var(--ink);background:#fff;border-radius:9px;padding:5px 8px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+  button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)} button.on{background:#ffd23f}
+  .sw{width:26px;height:26px;padding:0;border-radius:50%}
+  input[type=range]{width:100%} #stats{font-size:12px;font-variant-numeric:tabular-nums;margin-top:8px;padding:6px 8px;background:#f0e4c8;border-radius:8px}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:99px;opacity:0;transition:opacity .2s;pointer-events:none}
+  #hint{position:fixed;right:16px;bottom:14px;font-size:12px;opacity:.7;text-align:right}
+</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/","@dimforge/rapier3d-compat":"/node_modules/@dimforge/rapier3d-compat/rapier.mjs"}}</script>
+</head><body>
+<canvas id="c"></canvas>
+<div id="ui" class="hide">
+  <h1>Primitive Kit Garage</h1><div class="sub">Cruze-flavoured car &amp; wheelie bin, code-only geometry</div>
+  <div class="lbl">Model</div><div class="row"><button id="m-cruze" class="on">Cruze</button><button id="m-bin">Wheelie bin</button></div>
+  <div class="lbl">Paint</div><div class="row" id="sw"></div>
+  <div class="lbl">Impact power <span id="pv">0.7</span></div><input id="pw" type="range" min="0.2" max="1.4" step="0.05" value="0.7">
+  <div class="lbl">Smash it</div><div class="row"><button id="seq">▶ Smash sequence</button><button id="rst">↺ Reset</button></div>
+  <div class="row" id="quick"></div>
+  <div class="row"><button id="sq" style="display:none">🚗 Drive over it</button></div>
+  <div class="lbl">Look</div><div class="row"><button id="wire">Wireframe</button><button id="expl">Explode</button><button id="lod">LOD0</button><button id="ink">Ink</button></div>
+  <div id="stats">—</div>
+</div>
+<div id="toast"></div><div id="hint">click a part to hit it · drag to orbit</div>
+<script type="module" src="./app.js"></script>
+<script type="module">
+  addEventListener('demo-ready', () => {
+    const { api, ui, startSequence, reset, load, refreshStats, hitPart, setPaint, setLod } = window.__ui;
+    const $ = (id) => document.getElementById(id);
+    const COLORS = [['#e0a520', '#d8362f'], ['#e0392f', '#ffd23f'], ['#1e88e5', '#ffd23f'], ['#2bb673', '#fff3dc'], ['#8e44ad', '#ffd23f'], ['#b6bac3', '#e0392f']];
+    COLORS.forEach(([p, a]) => { const b = document.createElement('button'); b.className = 'sw'; b.style.background = p; b.onclick = () => setPaint(p, a); $('sw').appendChild(b); });
+    $('pw').oninput = (e) => { ui.power = +e.target.value; $('pv').textContent = ui.power.toFixed(2); };
+    $('seq').onclick = startSequence; $('rst').onclick = reset;
+    [['Door', 'door_L'], ['Bonnet', 'bonnet'], ['Boot', 'boot'], ['Bumper', 'bumper_front'], ['Wheel', 'wheel_FL'], ['Lamp', 'light_head_L']].forEach(([n, id]) => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => { const r = hitPart(id); if (r) window.__ui.flash(`${id}: ${r.state}`); }; $('quick').appendChild(b); });
+    $('sq').onclick = () => api.squish(1);
+    $('m-cruze').onclick = async () => { await load('cruze'); $('sq').style.display = 'none'; $('m-cruze').classList.add('on'); $('m-bin').classList.remove('on'); };
+    $('m-bin').onclick = async () => { await load('bin'); $('sq').style.display = ''; $('quick').innerHTML = ''; [['Lid', 'lid'], ['Side', 'chassis'], ['Wheel', 'wheel_R']].forEach(([n, id]) => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => { const r = hitPart(id); if (r) window.__ui.flash(`${id}: ${r.state}`); }; $('quick').appendChild(b); }); $('m-bin').classList.add('on'); $('m-cruze').classList.remove('on'); };
+    let wire = false; $('wire').onclick = () => { wire = !wire; $('wire').classList.toggle('on', wire); api.car.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((m) => (m.wireframe = wire)); } }); };
+    let inkOn = false; $('ink').onclick = () => { inkOn = !inkOn; $('ink').classList.toggle('on', inkOn); api.setInk(inkOn); };
+    let ex = 0; $('expl').onclick = () => { ex = ex ? 0 : 1; $('expl').classList.toggle('on', !!ex); api.explode(ex ? 1.1 : 0); };
+    let lod = 0; $('lod').onclick = async () => { lod = (lod + 1) % 3; $('lod').textContent = 'LOD' + lod; await setLod(lod); };
+    refreshStats();
+  });
+</script>
+</body></html>

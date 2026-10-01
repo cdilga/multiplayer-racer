@@ -1,0 +1,63 @@
+{
+  "detach": {
+    "colliderKind": "box (col_door_L authored half-extents)",
+    "halfExtents": [
+      0.08436530828475952,
+      0.3512588143348694,
+      0.2849999964237213
+    ],
+    "doorMassKg": 31.25,
+    "carMassBeforeKg": 1250,
+    "carMassAfterKg": 1218.75,
+    "doorWorldPos": [
+      -1.0705986941718584,
+      0.9291004985056253,
+      -0.5949660859930467
+    ],
+    "debrisLinvel": [
+      -2.5387887106102256,
+      -0.5341773196192503,
+      0.9414880412597642
+    ],
+    "debrisAngvel": {
+      "x": 0.09473436325788498,
+      "y": 0.8934440612792969,
+      "z": 0.3461564779281616
+    },
+    "bodyTypeAfterCreate": 0
+  },
+  "sleepWake": {
+    "restPos": {
+      "x": -2.379788398742676,
+      "y": -0.0014551803469657898,
+      "z": -0.15824389457702637
+    },
+    "sleptAtSeconds": 1.3416666666666666,
+    "bodyTypesObserved": [
+      0
+    ],
+    "stillDynamicAfterSleep": true,
+    "isSleepingBeforeHit": true,
+    "wokeAfterCarContact": true,
+    "wokeAtSeconds": 0.4,
+    "finalDoorBodyType": 0
+  },
+  "assetProblems": {
+    "doorColliderOverlapsChassisHull": {
+      "description": "col_door_L's box AABB (closed pose) is fully inside col_chassis's convex-hull AABB",
+      "overlapPopSpeedMS": 0.22094073952919113,
+      "workaround": "grace period of 20 steps (~0.167s) excluding GROUP_CAR from the debris collider's filter"
+    },
+    "chassisColliderDoesNotReachGround": {
+      "description": "col_chassis's collider AABB bottom sits above the ground plane even though the visual mesh/wheels reach y=0",
+      "colChassisBottomRelM": 0.5199999809265137,
+      "colBumperFrontBottomRelM": 0.47999998927116394
+    }
+  },
+  "dent": {
+    "targetName": "door_L_dent",
+    "vertexCount": 35,
+    "movedVerts": 25,
+    "maxDisplacementM": 0.09725669669437034
+  }
+}
