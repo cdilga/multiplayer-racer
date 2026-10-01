@@ -357,40 +357,100 @@
             z-index: 520;
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px;
-            background: rgba(0, 0, 0, 0.62);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 8px;
+            gap: 8px;
+            padding: 7px 9px;
+            background: var(--sticker-surface, #16213e);
+            border: var(--border-ink, 2px solid #14110f);
+            border-radius: var(--radius-sticker, 4px);
             color: white;
             font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+            box-shadow: 4px 4px 0 var(--ink, #14110f);
             backdrop-filter: none;
         }
         .camera-controls.hidden {
             display: none;
         }
+        .camera-mode-group,
+        .camera-focus-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .camera-mode-group {
+            position: relative;
+            padding-top: 14px;
+        }
+        .camera-mode-group-label {
+            position: absolute;
+            top: 0;
+            left: 2px;
+            color: var(--text-muted, #8d99ae);
+            font-family: var(--font-mono, monospace);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        .camera-mode-divider {
+            align-self: stretch;
+            width: 2px;
+            background: var(--ink, #14110f);
+        }
         .camera-controls button {
-            min-width: 44px;
+            min-width: 48px;
             min-height: 34px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 9px;
+            border: 2px solid var(--ink, #14110f);
+            border-radius: 3px;
+            background: var(--sticker-surface-2, #1f2b4d);
             color: white;
             font: inherit;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 2px 2px 0 var(--ink, #14110f);
+            transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
         }
         .camera-controls button.active,
         .camera-controls button:hover {
-            background: #00ff88;
-            border-color: #00ff88;
-            color: #102018;
+            background: var(--green, #00ff88);
+            border-color: var(--ink, #14110f);
+            color: var(--ink, #14110f);
+            box-shadow: 3px 3px 0 var(--ink, #14110f);
+            transform: translate(-1px, -1px);
+        }
+        .camera-controls button[data-camera-mode="party"] {
+            min-width: 118px;
+        }
+        .camera-controls.multiplayer button[data-camera-mode="party"]:not(.active) {
+            border-color: var(--cyan, #4cc9f0);
+            color: var(--cyan, #4cc9f0);
+        }
+        .camera-layout-glyph {
+            display: inline-block;
+            width: 15px;
+            height: 11px;
+            margin-right: 5px;
+            border: 2px solid currentColor;
+            vertical-align: -1px;
+        }
+        .camera-layout-glyph.voronoi {
+            background:
+                linear-gradient(145deg, transparent 43%, currentColor 43% 57%, transparent 57%),
+                linear-gradient(35deg, transparent 46%, currentColor 46% 56%, transparent 56%);
+        }
+        .camera-layout-glyph.grid {
+            background:
+                linear-gradient(90deg, transparent 43%, currentColor 43% 57%, transparent 57%),
+                linear-gradient(transparent 40%, currentColor 40% 60%, transparent 60%);
+        }
+        .camera-focus-controls.hidden {
+            display: none;
         }
         .camera-focus {
-            min-width: 92px;
-            max-width: 180px;
+            min-width: 82px;
+            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -398,6 +458,80 @@
             font-size: 13px;
             font-weight: 700;
             color: rgba(255, 255, 255, 0.9);
+        }
+        .camera-viewport-frames {
+            position: fixed;
+            inset: 0;
+            z-index: 72;
+            pointer-events: none;
+        }
+        .camera-viewport-frame {
+            position: absolute;
+            border: 2px solid rgba(76, 201, 240, 0.72);
+            box-shadow: inset 0 0 0 1px rgba(20, 17, 15, 0.9);
+        }
+        .camera-viewport-frame:nth-child(2n) {
+            border-color: rgba(0, 255, 136, 0.72);
+        }
+        .camera-voronoi-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .camera-voronoi-cell {
+            fill: transparent;
+            stroke: rgba(76, 201, 240, 0.94);
+            stroke-width: 4;
+            vector-effect: non-scaling-stroke;
+        }
+        .camera-voronoi-cell-alt {
+            stroke: rgba(0, 255, 136, 0.94);
+        }
+        .camera-mode-tiled .vehicle-id-marker {
+            display: none !important;
+        }
+        .camera-viewport-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            max-width: calc(100% - 16px);
+            overflow: hidden;
+            padding: 3px 7px;
+            border: 2px solid var(--ink, #14110f);
+            border-radius: 3px;
+            background: var(--sticker-surface, #16213e);
+            color: white;
+            font-family: var(--font-mono, monospace);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-shadow: 2px 2px 0 var(--ink, #14110f);
+        }
+        .camera-voronoi-label {
+            transform: translate(-50%, -50%) rotate(-1deg);
+            text-align: center;
+        }
+        @media (max-width: 900px) {
+            .camera-mode-group-label,
+            .camera-mode-divider {
+                display: none;
+            }
+            .camera-mode-group {
+                padding-top: 0;
+            }
+            .camera-controls {
+                max-width: calc(100vw - 24px);
+            }
+            .camera-controls button {
+                min-width: 40px;
+                padding-inline: 7px;
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -444,13 +578,29 @@
 
     <!-- Debug UI panels are created dynamically by StatsOverlayUI and PhysicsTuningUI -->
 
-    <div id="camera-controls" class="camera-controls hidden" aria-label="Camera view">
-        <button type="button" data-camera-mode="party" aria-pressed="true">Party</button>
-        <button type="button" data-camera-mode="chase" aria-pressed="false">Chase</button>
-        <button type="button" data-camera-mode="hood" aria-pressed="false">Hood</button>
-        <button type="button" id="camera-focus-prev" aria-label="Previous car">‹</button>
-        <div id="camera-focus-label" class="camera-focus">0 cars</div>
-        <button type="button" id="camera-focus-next" aria-label="Next car">›</button>
+    <div id="camera-viewport-frames" class="camera-viewport-frames hidden" aria-hidden="true"></div>
+
+    <div id="camera-controls" class="camera-controls hidden" aria-label="Big-screen camera view">
+        <div class="camera-mode-group" role="group" aria-label="Everyone views">
+            <span class="camera-mode-group-label" aria-hidden="true">Everyone</span>
+            <button type="button" data-camera-mode="party" aria-pressed="true" title="Fuse into one view nearby; open angled camera cells as groups separate">
+                <span class="camera-layout-glyph voronoi" aria-hidden="true"></span>Voronoi party
+            </button>
+            <button type="button" data-camera-mode="grid" aria-pressed="false" title="Give each player a stable camera tile">
+                <span class="camera-layout-glyph grid" aria-hidden="true"></span>Player grid
+            </button>
+        </div>
+        <div class="camera-mode-divider" aria-hidden="true"></div>
+        <div class="camera-mode-group" role="group" aria-label="One car views">
+            <span class="camera-mode-group-label" aria-hidden="true">One car</span>
+            <button type="button" data-camera-mode="chase" aria-pressed="false">Chase</button>
+            <button type="button" data-camera-mode="hood" aria-pressed="false">Hood</button>
+        </div>
+        <div class="camera-focus-controls hidden" data-camera-focus-controls aria-hidden="true">
+            <button type="button" id="camera-focus-prev" aria-label="Previous car">‹</button>
+            <div id="camera-focus-label" class="camera-focus" aria-live="polite">0 cars</div>
+            <button type="button" id="camera-focus-next" aria-label="Next car">›</button>
+        </div>
     </div>
 
     <!-- Fullscreen toggle -->

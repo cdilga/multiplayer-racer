@@ -17,8 +17,15 @@
 import { selectRendererBackend, createRenderer as createBackendRenderer } from '../rendering/RendererBackend.js';
 import { getBrowserTelemetry, getRuntimeTelemetryContext } from '../telemetry/index.js';
 import { setLoFiWarpIntensity } from '../resources/MaterialFactory.js';
+import { buildCameraClusters, CAMERA_CLUSTER_MODES } from '../geometry/CameraClusterKernel.js';
+import { buildVoronoiLayout, projectGroupCentroids } from '../geometry/VoronoiCameraLayout.js';
 import { tileViewports, buildWifesGrid, assignSeatsToViewports } from '../geometry/ViewportTiling.js';
 import { BLOOM_LAYER, isBloomEligible, enableBloom } from '../resources/bloomLayer.js';
+import {
+    MAX_VORONOI_CAMERA_CELLS,
+    VoronoiCameraCompositor,
+    renderVoronoiCameraTarget
+} from '../rendering/VoronoiCameraCompositor.js';
 import { CameraLayoutStabilizer } from './cameraHysteresis.js';
 
 const DEFAULT_FOG_COLOR = 0x1a0f0a;
@@ -53,6 +60,13 @@ const TRANSIENT_SMASH_FLASH_CURVE = Object.freeze({
     maxChromaticAmount: 0.008
 });
 
+const HOST_CAMERA_TILING_MODES = Object.freeze({
+    party: 'voronoi',
+    grid: 'grid'
+});
+
+const DEFAULT_VORONOI_VIEWPORT_BUDGET = 6;
+
 const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
     'host-native': Object.freeze({
         label: 'Native full grade',
@@ -66,7 +80,7 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         gradingIntensity: 0.7,
         posterizeBandCount: 7,
         ditherStrength: 0.55,
-        scanlineAmount: 0.08,
+        scanlineAmount: 0,  // br-remove-glitch-overlay-vjyx: scanlines off by default (slider re-enables)
         vignetteAmount: 0.3,
         filmGrainAmount: 0.12,
         chromaticAberrationEnabled: false,
@@ -88,7 +102,7 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         gradingIntensity: 0.62,
         posterizeBandCount: 6,
         ditherStrength: 0.5,
-        scanlineAmount: 0.05,
+        scanlineAmount: 0,  // br-remove-glitch-overlay-vjyx: scanlines off by default (slider re-enables)
         vignetteAmount: 0.22,
         filmGrainAmount: 0.08,
         chromaticAberrationEnabled: false,
@@ -110,7 +124,7 @@ const HOST_GRADE_TIER_DEFINITIONS = Object.freeze({
         gradingIntensity: 0.5,
         posterizeBandCount: 5,
         ditherStrength: 0.42,
-        scanlineAmount: 0.03,
+        scanlineAmount: 0,  // br-remove-glitch-overlay-vjyx: scanlines off by default (slider re-enables)
         vignetteAmount: 0.16,
         filmGrainAmount: 0.05,
         chromaticAberrationEnabled: false,
@@ -233,11 +247,15 @@ class RenderSystem {
         this.cameraSmoothing = 0.15;  // Smoothing factor for camera (higher = more responsive)
 
         // Host camera modes:
-        // - party keeps all cars visible on the shared screen
+        // - party fuses nearby cars into one view and opens angled Voronoi cells
+        //   only as groups drive apart
+        // - grid gives each player a stable view (within the readability budget)
         // - chase follows one selected car from behind
         // - hood sits low and forward on the selected car for a driving view
-        this.cameraMode = this.cameraConfig.mode || 'party';
-        this.cameraModeOrder = ['party', 'chase', 'hood'];
+        this.cameraMode = this.cameraConfig.mode === 'split'
+            ? 'party'
+            : (this.cameraConfig.mode || 'party');
+        this.cameraModeOrder = ['party', 'grid', 'chase', 'hood'];
         this.cameraFocusTarget = null;
         this.focusCameraConfigs = {
             chase: {
@@ -261,7 +279,22 @@ class RenderSystem {
         // Multi-vehicle camera (keeps all vehicles in view)
         this.cameraTargets = [];  // Array of entities to track
         // Opt-in viewport tiling (woq.8): off by default (single-view render).
-        this.viewportTiling = { enabled: false, mode: 'grid', lastLayout: null };
+        const initialTilingMode = HOST_CAMERA_TILING_MODES[this.cameraMode] || null;
+        this.viewportTiling = {
+            enabled: !!initialTilingMode,
+            mode: initialTilingMode || 'grid',
+            lastLayout: null,
+            lastClusterResult: null,
+            committedClusterGroups: [],
+            voronoiDiagnostics: {
+                active: false,
+                cellCount: 1,
+                fusion: 0,
+                targetWidth: 0,
+                targetHeight: 0
+            }
+        };
+        this._voronoiCompositor = null;
         // Temporal coherence for the tiled-cluster count (woq.9): hysteresis +
         // debounce so brief position noise never retiles / thrashes the layout.
         this._cameraStabilizer = new CameraLayoutStabilizer({ debounceMs: 500 });
@@ -393,12 +426,19 @@ class RenderSystem {
 
     /**
      * Set host camera mode.
-     * @param {'party'|'chase'|'hood'} mode
+     * @param {'party'|'split'|'grid'|'chase'|'hood'} mode
      * @returns {boolean} True if accepted
      */
     setCameraMode(mode) {
-        if (!this.cameraModeOrder.includes(mode)) return false;
-        this.cameraMode = mode;
+        // `split` was briefly persisted by the rectangular prototype. Migrate it
+        // to the intended Party director rather than stranding existing hosts in
+        // a hidden legacy mode.
+        const normalizedMode = mode === 'split' ? 'party' : mode;
+        if (!this.cameraModeOrder.includes(normalizedMode)) return false;
+
+        this.cameraMode = normalizedMode;
+        const tilingMode = HOST_CAMERA_TILING_MODES[normalizedMode] || null;
+        this.setViewportTiling(!!tilingMode, tilingMode || this.viewportTiling?.mode || 'grid');
         return true;
     }
 
@@ -409,8 +449,9 @@ class RenderSystem {
     cycleCameraMode() {
         const currentIndex = this.cameraModeOrder.indexOf(this.cameraMode);
         const nextIndex = (currentIndex + 1) % this.cameraModeOrder.length;
-        this.cameraMode = this.cameraModeOrder[nextIndex];
-        return this.cameraMode;
+        const nextMode = this.cameraModeOrder[nextIndex];
+        this.setCameraMode(nextMode);
+        return nextMode;
     }
 
     /**
@@ -469,6 +510,9 @@ class RenderSystem {
         const focus = this._getCameraFocusTarget();
         return {
             mode: this.cameraMode,
+            tiled: !!this.viewportTiling?.enabled,
+            tilingMode: this.viewportTiling?.enabled ? this.viewportTiling.mode : null,
+            activeViewportCount: this.viewportTiling?.lastLayout?.viewports?.length ?? 1,
             focusId: focus ? (focus.id || focus.playerId) : null,
             focusName: focus ? (focus.playerName || focus.name || `Player ${focus.playerId || focus.id}`) : null,
             targetCount: this.cameraTargets.length
@@ -713,6 +757,16 @@ class RenderSystem {
                 mode: this.viewportTiling?.mode ?? null,
                 viewportCount: this.viewportTiling?.lastLayout?.viewports?.length ?? 0,
                 rows: this.viewportTiling?.lastLayout?.rows ?? null,
+                cluster: this.viewportTiling?.lastClusterResult &&
+                    (this.viewportTiling?.mode === 'cluster' || this.viewportTiling?.mode === 'voronoi') ? {
+                    naturalClusterCount: this.viewportTiling.lastClusterResult.diagnostics.naturalClusterCount,
+                    finalClusterCount: this.viewportTiling.lastClusterResult.diagnostics.finalClusterCount,
+                    groupSizes: this.viewportTiling.lastClusterResult.diagnostics.finalGroupSizes,
+                    droppedCarIds: this.viewportTiling.lastClusterResult.diagnostics.droppedCarIds
+                } : null,
+                voronoi: this.viewportTiling?.mode === 'voronoi'
+                    ? { ...this.viewportTiling.voronoiDiagnostics }
+                    : null,
                 // Temporal-coherence counters (woq.9): committed transitions vs
                 // suppressed thrash, for the camera debug panel.
                 hysteresis: this._cameraStabilizer ? this._cameraStabilizer.diagnostics() : null
@@ -1617,21 +1671,46 @@ class RenderSystem {
         if (this.viewportTiling?.enabled && this.cameraTargets.length > 0) {
             this._renderTiledScene();
         } else {
+            this._setTiledPresentationActive(false);
+            this._hideViewportFrameOverlay();
             this._renderScene();
         }
         this._recordFrameTiming(nowMs() - renderStartedAt);
     }
 
     /**
-     * Enable/disable viewport tiling (woq.8). mode: 'grid' = Wife's Grid (one tile
-     * per seat, readability-downgraded); 'cluster' = compact rectangular tiling.
+     * Enable/disable shared-screen multi-camera rendering. `grid` uses readable
+     * rectangles; `cluster` retains the legacy compact rectangles; `voronoi`
+     * composites Party cameras through direction-indicating angled cells.
      * @param {boolean} enabled
      * @param {string} [mode]
      */
     setViewportTiling(enabled, mode = 'grid') {
-        if (!this.viewportTiling) this.viewportTiling = { enabled: false, mode: 'grid', lastLayout: null };
+        if (!this.viewportTiling) {
+            this.viewportTiling = {
+                enabled: false,
+                mode: 'grid',
+                lastLayout: null,
+                lastClusterResult: null,
+                committedClusterGroups: [],
+                voronoiDiagnostics: {
+                    active: false,
+                    cellCount: 1,
+                    fusion: 0,
+                    targetWidth: 0,
+                    targetHeight: 0
+                }
+            };
+        }
+        const enteringDynamicMode = !!enabled && (mode === 'cluster' || mode === 'voronoi') &&
+            (!this.viewportTiling.enabled || this.viewportTiling.mode !== mode);
         this.viewportTiling.enabled = !!enabled;
         this.viewportTiling.mode = mode;
+        if (enteringDynamicMode) {
+            this._cameraStabilizer.reset(1);
+            this.viewportTiling.lastClusterResult = null;
+            this.viewportTiling.committedClusterGroups = [];
+        }
         if (!enabled && this.renderer) {
             // Restore the full-frame viewport / scissor when leaving tiled mode.
             const size = this.renderer.getSize(new THREE.Vector2());
@@ -1640,7 +1719,385 @@ class RenderSystem {
             this.camera.aspect = size.x / size.y;
             this.camera.updateProjectionMatrix();
         }
+        if (!enabled) {
+            this._hideViewportFrameOverlay();
+            this._setTiledPresentationActive(false);
+        }
         return this.viewportTiling.enabled;
+    }
+
+    /**
+     * Toggle host overlays that are only valid while multiple cameras are
+     * visibly composited. A merged K=1 Party view restores normal identity tags.
+     * @private
+     */
+    _setTiledPresentationActive(active) {
+        if (typeof document === 'undefined') return;
+        document.body?.classList.toggle('camera-mode-tiled', !!active);
+    }
+
+    /**
+     * Hide and clear the host-only tiled-camera frame overlay.
+     * @private
+     */
+    _hideViewportFrameOverlay() {
+        if (typeof document === 'undefined') return;
+        const root = document.getElementById('camera-viewport-frames');
+        if (!root || root.classList.contains('hidden')) return;
+        root.classList.add('hidden');
+        root.replaceChildren();
+        this._viewportFrameSignature = '';
+    }
+
+    /**
+     * Draw stable, labelled viewport frames above the canvas. DOM is rebuilt only
+     * when layout or group membership changes, never on every render tick.
+     * @private
+     */
+    _syncViewportFrameOverlay(layout, groups) {
+        if (typeof document === 'undefined') return;
+        const root = document.getElementById('camera-viewport-frames');
+        if (!root) return;
+
+        const descriptors = layout.viewports.map((viewport) => {
+            const members = groups.get(viewport.index) || this.cameraTargets;
+            const names = members.map((entity) =>
+                entity.playerName || entity.name || `Player ${entity.playerId || entity.id}`
+            );
+            return { viewport, names };
+        });
+        const signature = JSON.stringify({
+            mode: this.viewportTiling.mode,
+            size: [layout.width, layout.height],
+            cells: descriptors.map(({ viewport, names }) => [
+                viewport.x,
+                viewport.y,
+                viewport.width,
+                viewport.height,
+                names
+            ])
+        });
+        if (signature === this._viewportFrameSignature) return;
+
+        root.replaceChildren();
+        root.dataset.cameraViewportMode = this.viewportTiling.mode;
+        descriptors.forEach(({ viewport, names }, index) => {
+            const frame = document.createElement('div');
+            frame.className = 'camera-viewport-frame';
+            frame.dataset.cameraViewportFrame = String(index + 1);
+            frame.style.left = `${(viewport.x / layout.width) * 100}%`;
+            frame.style.top = `${(viewport.y / layout.height) * 100}%`;
+            frame.style.width = `${(viewport.width / layout.width) * 100}%`;
+            frame.style.height = `${(viewport.height / layout.height) * 100}%`;
+
+            const label = document.createElement('span');
+            label.className = 'camera-viewport-label';
+            label.textContent = names.join(' + ') || `View ${index + 1}`;
+            frame.appendChild(label);
+            root.appendChild(frame);
+        });
+        root.classList.remove('hidden');
+        this._setTiledPresentationActive(layout.viewports.length > 1);
+        this._viewportFrameSignature = signature;
+    }
+
+    /**
+     * Overlay the exact Voronoi polygons and group labels above the shader. The
+     * SVG is presentation-only; the WebGL compositor independently uses the same
+     * seeds, so borders remain truthful to the rendered camera ownership.
+     * @private
+     */
+    _syncVoronoiFrameOverlay(layout, groups) {
+        if (typeof document === 'undefined') return;
+        const root = document.getElementById('camera-viewport-frames');
+        if (!root) return;
+
+        const descriptors = layout.cells.map((cell) => {
+            const members = groups.get(cell.index) || this.cameraTargets;
+            const names = members.map((entity) =>
+                entity.playerName || entity.name || `Player ${entity.playerId || entity.id}`
+            );
+            return { cell, names };
+        });
+        const signature = JSON.stringify({
+            mode: 'voronoi',
+            size: [layout.width, layout.height],
+            cells: descriptors.map(({ cell, names }) => [cell.polygon, names])
+        });
+        if (signature === this._viewportFrameSignature) {
+            this._setTiledPresentationActive(layout.cells.length > 1);
+            return;
+        }
+
+        root.replaceChildren();
+        root.dataset.cameraViewportMode = 'voronoi';
+        const svgNamespace = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNamespace, 'svg');
+        svg.classList.add('camera-voronoi-overlay');
+        svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('aria-hidden', 'true');
+
+        descriptors.forEach(({ cell, names }, index) => {
+            const polygon = document.createElementNS(svgNamespace, 'polygon');
+            polygon.dataset.cameraVoronoiCell = String(index + 1);
+            polygon.setAttribute('points', cell.polygon.map((point) => `${point.x},${point.y}`).join(' '));
+            polygon.classList.add('camera-voronoi-cell');
+            if (index % 2 === 1) polygon.classList.add('camera-voronoi-cell-alt');
+            svg.appendChild(polygon);
+
+            const label = document.createElement('span');
+            label.className = 'camera-viewport-label camera-voronoi-label';
+            label.style.left = `${(cell.centroid.x / layout.width) * 100}%`;
+            label.style.top = `${(cell.centroid.y / layout.height) * 100}%`;
+            label.textContent = names.join(' + ') || `View ${index + 1}`;
+            root.appendChild(label);
+        });
+        root.prepend(svg);
+        root.classList.remove('hidden');
+        this._setTiledPresentationActive(layout.cells.length > 1);
+        this._viewportFrameSignature = signature;
+    }
+
+    /**
+     * Resolve natural ground-plane camera clusters and map their cars to the
+     * debounced viewport count. Nearby cars share a view; separated groups split
+     * up to the configured host viewport budget.
+     * @private
+     * @param {Array<{seatId:number, clusterId:string, entity:Object}>} seats
+     * @param {number} timestamp
+     * @returns {{viewportCount:number, assignment:Map, clusterResult:Object}}
+     */
+    _resolveClusterCameraGroups(seats, timestamp = nowMs()) {
+        const previousGroups = this.viewportTiling.lastClusterResult?.groups || [];
+        const configuredBudget = this.viewportTiling.mode === 'voronoi'
+            ? (this.cameraConfig.voronoi?.maxAutoViewports ?? DEFAULT_VORONOI_VIEWPORT_BUDGET)
+            : this.cameraConfig.cluster?.maxAutoViewports;
+        const clusterResult = buildCameraClusters(seats.map((seat) => {
+            const position = seat.entity.mesh?.position || seat.entity.position || {};
+            return {
+                id: seat.clusterId,
+                position,
+                actionScore: seat.entity.recentActionScore || 0
+            };
+        }), {
+            ...this.cameraConfig.cluster,
+            ...(Number.isFinite(configuredBudget) ? {
+                maxAutoViewports: Math.min(MAX_VORONOI_CAMERA_CELLS, configuredBudget)
+            } : {}),
+            mode: CAMERA_CLUSTER_MODES.CLUSTER_DIRECTOR,
+            previousGroups
+        });
+
+        const desiredCount = Math.max(1, clusterResult.groups.length);
+        const viewportCount = this._cameraStabilizer.update(desiredCount, timestamp);
+        let activeGroups = this.viewportTiling.committedClusterGroups || [];
+
+        if (viewportCount === desiredCount) {
+            activeGroups = clusterResult.groups;
+            this.viewportTiling.committedClusterGroups = clusterResult.groups;
+        } else if (activeGroups.length !== viewportCount) {
+            activeGroups = [];
+        }
+
+        const assignment = new Map();
+        const seatsByClusterId = new Map(seats.map((seat) => [String(seat.clusterId), seat]));
+        activeGroups.forEach((group, groupIndex) => {
+            const viewportIndex = groupIndex % viewportCount;
+            group.carIds.forEach((carId) => {
+                const seat = seatsByClusterId.get(String(carId));
+                if (seat) assignment.set(seat.seatId, viewportIndex);
+            });
+        });
+
+        // The first debounced frame and a join/leave transition may not have a
+        // committed group set yet. Keep every seat visible while the new grouping
+        // settles instead of producing empty tiles.
+        const fallbackAssignment = assignSeatsToViewports(
+            seats.map((seat) => seat.seatId),
+            viewportCount
+        );
+        seats.forEach((seat) => {
+            if (!assignment.has(seat.seatId)) {
+                assignment.set(seat.seatId, fallbackAssignment.get(seat.seatId));
+            }
+        });
+
+        this.viewportTiling.lastClusterResult = clusterResult;
+        return { viewportCount, assignment, clusterResult };
+    }
+
+    /**
+     * Convert the top-down tiling rectangle to Three.js renderer coordinates.
+     * WebGL uses a bottom-left origin, but `setViewport`/`setScissor` accept
+     * renderer-logical pixels and apply the renderer pixel ratio internally.
+     * @private
+     */
+    _toRendererViewport(viewport, size) {
+        return {
+            x: Math.round(viewport.x),
+            y: Math.round(size.height - viewport.y - viewport.height),
+            width: Math.round(viewport.width),
+            height: Math.round(viewport.height)
+        };
+    }
+
+    /** @private */
+    _getCameraGroupCentroid(members) {
+        const centroid = new THREE.Vector3();
+        let count = 0;
+        for (const entity of members) {
+            const position = entity.mesh?.position || entity.position;
+            if (!position) continue;
+            centroid.x += Number(position.x) || 0;
+            centroid.y += Number(position.y) || 0;
+            centroid.z += Number(position.z) || 0;
+            count += 1;
+        }
+        if (count > 0) centroid.multiplyScalar(1 / count);
+        return centroid;
+    }
+
+    /**
+     * 0 means every cell camera has converged on the shared Party camera; 1
+     * means groups have earned fully independent views. This makes the final
+     * merge to K=1 visually continuous even though the debounced count changes.
+     * @private
+     */
+    _calculateVoronoiFusion(groupDescriptors) {
+        let maximumDistance = 0;
+        for (let left = 0; left < groupDescriptors.length; left += 1) {
+            for (let right = left + 1; right < groupDescriptors.length; right += 1) {
+                const a = groupDescriptors[left].centroid;
+                const b = groupDescriptors[right].centroid;
+                const dx = a.x - b.x;
+                const dz = a.z - b.z;
+                maximumDistance = Math.max(maximumDistance, Math.sqrt(dx * dx + dz * dz));
+            }
+        }
+        const mergeDistance = this.cameraConfig.cluster?.mergeDist ?? 28;
+        const splitDistance = Math.max(
+            mergeDistance + 1,
+            this.cameraConfig.cluster?.splitDist ?? 40
+        );
+        return clamp01((maximumDistance - mergeDistance) / (splitDistance - mergeDistance));
+    }
+
+    /**
+     * Render one full-screen texture per active group, then assign every output
+     * pixel to its nearest directional seed in a full-screen shader.
+     * @private
+     */
+    _renderVoronoiScene(size, groups) {
+        const groupDescriptors = [...groups.entries()]
+            .sort(([left], [right]) => left - right)
+            .map(([index, members]) => ({
+                id: String(index),
+                index,
+                members,
+                centroid: this._getCameraGroupCentroid(members)
+            }));
+        const seeds = projectGroupCentroids(groupDescriptors, {
+            width: size.x,
+            height: size.y,
+            paddingRatio: this.cameraConfig.voronoi?.seedPaddingRatio ?? 0.14
+        });
+        const layout = buildVoronoiLayout(seeds, { width: size.x, height: size.y });
+        this.viewportTiling.lastLayout = {
+            width: layout.width,
+            height: layout.height,
+            count: layout.count,
+            rows: null,
+            cells: layout.cells,
+            viewports: layout.cells.map((cell) => ({
+                index: cell.index,
+                ...cell.bounds
+            }))
+        };
+
+        if (layout.cells.length <= 1) {
+            this.viewportTiling.voronoiDiagnostics = {
+                active: false,
+                cellCount: 1,
+                fusion: 0,
+                targetWidth: 0,
+                targetHeight: 0
+            };
+            this._setTiledPresentationActive(false);
+            this._hideViewportFrameOverlay();
+            this._renderScene();
+            return;
+        }
+
+        if (!this._voronoiCompositor) {
+            this._voronoiCompositor = new VoronoiCameraCompositor({
+                maxCells: this.cameraConfig.voronoi?.maxAutoViewports ?? DEFAULT_VORONOI_VIEWPORT_BUDGET
+            });
+        }
+        const targets = this._voronoiCompositor.ensureTargets(layout.cells.length, size.x, size.y);
+        const fusion = this._calculateVoronoiFusion(groupDescriptors);
+        this._syncVoronoiFrameOverlay(layout, groups);
+
+        const restore = {
+            position: this.camera.position.clone(),
+            quaternion: this.camera.quaternion.clone(),
+            up: this.camera.up.clone(),
+            aspect: this.camera.aspect,
+            fov: this.camera.fov,
+            skyPosition: this.skyDome?.position.clone() || null
+        };
+        const sharedLook = new THREE.Vector3(
+            this.cameraLookTarget.x + this.cameraLookOffset.x,
+            this.cameraLookTarget.y + this.cameraLookOffset.y,
+            this.cameraLookTarget.z + this.cameraLookOffset.z
+        );
+        const focusPosition = new THREE.Vector3();
+        const focusLook = new THREE.Vector3();
+
+        groupDescriptors.forEach((descriptor, index) => {
+            let radius = 0;
+            descriptor.members.forEach((entity) => {
+                const position = entity.mesh?.position || entity.position;
+                if (!position) return;
+                const dx = (Number(position.x) || 0) - descriptor.centroid.x;
+                const dz = (Number(position.z) || 0) - descriptor.centroid.z;
+                radius = Math.max(radius, Math.sqrt(dx * dx + dz * dz));
+            });
+            const cameraHeight = Math.max(27, 25 + radius * 0.55);
+            const cameraDepth = Math.max(17, 15 + radius * 0.45);
+            focusPosition.set(
+                descriptor.centroid.x,
+                descriptor.centroid.y + cameraHeight,
+                descriptor.centroid.z + cameraDepth
+            );
+            focusLook.copy(sharedLook).lerp(descriptor.centroid, fusion);
+
+            this.camera.position.copy(restore.position).lerp(focusPosition, fusion);
+            this.camera.up.set(0, 1, 0);
+            this.camera.lookAt(focusLook);
+            this.camera.aspect = size.x / Math.max(1, size.y);
+            this.camera.fov = THREE.MathUtils.lerp(restore.fov, this.baseFOV, fusion);
+            this.camera.updateProjectionMatrix();
+            if (this.skyDome) this.skyDome.position.copy(this.camera.position);
+
+            const target = targets[index];
+            renderVoronoiCameraTarget(this.renderer, target, this.scene, this.camera);
+        });
+
+        this.camera.position.copy(restore.position);
+        this.camera.quaternion.copy(restore.quaternion);
+        this.camera.up.copy(restore.up);
+        this.camera.aspect = restore.aspect;
+        this.camera.fov = restore.fov;
+        this.camera.updateProjectionMatrix();
+        if (this.skyDome && restore.skyPosition) this.skyDome.position.copy(restore.skyPosition);
+
+        this._voronoiCompositor.compose(this.renderer, layout, { fusion });
+        this.viewportTiling.voronoiDiagnostics = {
+            ...this._voronoiCompositor.getDiagnostics(),
+            polygonPointCounts: layout.cells.map((cell) => cell.polygon.length)
+        };
+        this._setTiledPresentationActive(true);
     }
 
     /**
@@ -1650,11 +2107,15 @@ class RenderSystem {
      */
     _renderTiledScene() {
         const size = this.renderer.getSize(new THREE.Vector2());
-        const pr = this.renderer.getPixelRatio ? this.renderer.getPixelRatio() : 1;
-        const seats = this.cameraTargets.map((entity, i) => ({ seatId: i + 1, entity }));
+        const seats = this.cameraTargets.map((entity, index) => {
+            const rawSeatId = entity.seatId ?? entity.playerId ?? entity.id ?? (index + 1);
+            const numericSeatId = Number(rawSeatId);
+            const seatId = Number.isFinite(numericSeatId) ? numericSeatId : index + 1;
+            return { seatId, clusterId: String(rawSeatId), entity };
+        });
 
-        // Resolve tiles (Wife's Grid downgrades to a readable count; cluster uses a
-        // compact K). Both share the same gapless, HUD-safe tiling invariants.
+        // Resolve seats first. Grid/legacy cluster use rectangular viewports;
+        // Party feeds the same stable grouping into the Voronoi compositor.
         let layout;
         let assignment;
         if (this.viewportTiling.mode === 'grid') {
@@ -1662,11 +2123,9 @@ class RenderSystem {
             layout = grid.layout;
             assignment = grid.assignment;
         } else {
-            // Stabilize the desired cluster count (woq.9) so noise doesn't retile.
-            const desiredK = Math.min(seats.length, 6);
-            const k = this._cameraStabilizer.update(desiredK, nowMs());
-            layout = tileViewports(k, { width: size.x, height: size.y });
-            assignment = assignSeatsToViewports(seats.map((s) => s.seatId), layout.viewports.length);
+            const cluster = this._resolveClusterCameraGroups(seats, nowMs());
+            layout = tileViewports(cluster.viewportCount, { width: size.x, height: size.y });
+            assignment = cluster.assignment;
         }
         this.viewportTiling.lastLayout = layout;
 
@@ -1679,19 +2138,22 @@ class RenderSystem {
             groups.get(vp).push(seat.entity);
         }
 
+        if (this.viewportTiling.mode === 'voronoi') {
+            this._renderVoronoiScene(size, groups);
+            return;
+        }
+
+        this._syncViewportFrameOverlay(layout, groups);
+
         const restoreAspect = this.camera.aspect;
         const restorePos = this.camera.position.clone();
         const tmp = new THREE.Vector3();
         this.renderer.setScissorTest(true);
 
         for (const vp of layout.viewports) {
-            // WebGL viewport origin is bottom-left; tiling y is top-down -> flip.
-            const glX = Math.round(vp.x * pr);
-            const glY = Math.round((size.y - vp.y - vp.height) * pr);
-            const glW = Math.round(vp.width * pr);
-            const glH = Math.round(vp.height * pr);
-            this.renderer.setViewport(glX, glY, glW, glH);
-            this.renderer.setScissor(glX, glY, glW, glH);
+            const rect = this._toRendererViewport(vp, { width: size.x, height: size.y });
+            this.renderer.setViewport(rect.x, rect.y, rect.width, rect.height);
+            this.renderer.setScissor(rect.x, rect.y, rect.width, rect.height);
 
             const members = groups.get(vp.index) || this.cameraTargets;
             tmp.set(0, 0, 0);
@@ -1702,7 +2164,7 @@ class RenderSystem {
             }
             if (n > 0) tmp.multiplyScalar(1 / n);
 
-            this.camera.aspect = Math.max(0.0001, glW / Math.max(1, glH));
+            this.camera.aspect = Math.max(0.0001, rect.width / Math.max(1, rect.height));
             this.camera.position.set(tmp.x, tmp.y + 40, tmp.z + 30);
             this.camera.up.set(0, 1, 0);
             this.camera.lookAt(tmp.x, tmp.y, tmp.z);
@@ -1712,7 +2174,7 @@ class RenderSystem {
 
         // Restore full-frame state for the next non-tiled frame / HUD.
         this.renderer.setScissorTest(false);
-        this.renderer.setViewport(0, 0, size.x * pr, size.y * pr);
+        this.renderer.setViewport(0, 0, size.x, size.y);
         this.camera.aspect = restoreAspect;
         this.camera.position.copy(restorePos);
         this.camera.updateProjectionMatrix();
@@ -3088,6 +3550,11 @@ class RenderSystem {
             this.removeMesh(mesh);
         }
         this.meshes.clear();
+
+        this._voronoiCompositor?.dispose();
+        this._voronoiCompositor = null;
+        this._hideViewportFrameOverlay();
+        this._setTiledPresentationActive(false);
 
         // Dispose renderer
         if (this.renderer) {

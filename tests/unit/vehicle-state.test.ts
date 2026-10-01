@@ -333,13 +333,14 @@ describe('Damage regressions', () => {
 });
 
 describe('Camera mode regressions', () => {
-    it('cycles party, chase, and hood modes without accepting invalid modes', () => {
+    it('cycles Voronoi Party, grid, chase, and hood modes without accepting invalid modes', () => {
         const render = new RenderSystem({ container: {} });
 
         expect(render.getCameraModeInfo().mode).toBe('party');
         expect(render.setCameraMode('banana')).toBe(false);
         expect(render.getCameraModeInfo().mode).toBe('party');
 
+        expect(render.cycleCameraMode()).toBe('grid');
         expect(render.cycleCameraMode()).toBe('chase');
         expect(render.cycleCameraMode()).toBe('hood');
         expect(render.cycleCameraMode()).toBe('party');

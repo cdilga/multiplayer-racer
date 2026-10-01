@@ -683,6 +683,7 @@ class GameHost {
         const controls = {
             root,
             modeButtons: Array.from(root.querySelectorAll('[data-camera-mode]')),
+            focusControls: root.querySelector('[data-camera-focus-controls]'),
             focusLabel: root.querySelector('#camera-focus-label'),
             prevButton: root.querySelector('#camera-focus-prev'),
             nextButton: root.querySelector('#camera-focus-next')
@@ -692,6 +693,7 @@ class GameHost {
         const savedMode = localStorage.getItem('jj_camera_mode');
         if (savedMode) {
             this.systems.render.setCameraMode(savedMode);
+            localStorage.setItem('jj_camera_mode', this.systems.render.getCameraModeInfo().mode);
         }
 
         controls.modeButtons.forEach((button) => {
@@ -729,7 +731,7 @@ class GameHost {
      */
     _setCameraMode(mode) {
         if (!this.systems.render.setCameraMode(mode)) return;
-        localStorage.setItem('jj_camera_mode', mode);
+        localStorage.setItem('jj_camera_mode', this.systems.render.getCameraModeInfo().mode);
         this._updateCameraControls();
     }
 
@@ -760,15 +762,24 @@ class GameHost {
 
         const info = this.systems.render.getCameraModeInfo();
         controls.root.classList.toggle('hidden', info.targetCount === 0);
+        controls.root.classList.toggle('multiplayer', info.targetCount > 1);
         controls.modeButtons.forEach((button) => {
             const isActive = button.dataset.cameraMode === info.mode;
             button.classList.toggle('active', isActive);
             button.setAttribute('aria-pressed', String(isActive));
         });
 
-        const focusText = info.mode === 'party'
-            ? `${info.targetCount || 0} cars`
-            : (info.focusName || 'No car');
+        const isFocusedMode = info.mode === 'chase' || info.mode === 'hood';
+        controls.focusControls?.classList.toggle('hidden', !isFocusedMode);
+        controls.focusControls?.setAttribute('aria-hidden', String(!isFocusedMode));
+        if (controls.prevButton) controls.prevButton.disabled = !isFocusedMode;
+        if (controls.nextButton) controls.nextButton.disabled = !isFocusedMode;
+
+        const sharedViewLabels = {
+            party: `${info.targetCount || 0} cars · auto-fuse`,
+            grid: `${info.targetCount || 0} player views`
+        };
+        const focusText = sharedViewLabels[info.mode] || info.focusName || 'No car';
         if (controls.focusLabel) {
             controls.focusLabel.textContent = focusText;
         }
