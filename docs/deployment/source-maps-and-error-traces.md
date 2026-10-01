@@ -1,3 +1,6 @@
+> **0.1 code documentation.** Describes the current 0.1 implementation, not 0.2 direction. For 0.2 see
+> `docs/policies/owner-direction-2026-09-29.md` and `docs/plans/v0.2-revamp-plan-2026-09-28.md`.
+
 # Source Maps and Error Traces
 
 Joystick Jammers keeps local builds credential-free. Error capture can run in

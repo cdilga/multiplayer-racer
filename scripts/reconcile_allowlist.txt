@@ -1,0 +1,38 @@
+# Promised beads that are INTENTIONALLY not cut into `br` yet.
+# One token per line. `--gate` ignores these. Everything else that is MISSING
+# is treated as an accidental design->bead drop and fails the gate.
+# Add a reason after each so future readers know it was a choice, not a miss.
+
+# --- Identity / monetization strand: explicitly Deferred in feedback-design-pass.md section 11.6 ---
+FB-account    # no login/account UI this phase
+FB-acct       # "
+FB-monetize   # no paid accounts/subscriptions/storefront this phase
+FB-sub        # "
+FB-buy        # "
+FB-online     # "
+FB-ent        # "
+
+# --- RE-HOMED under a different bead name (not dropped; the detector can't see
+#     the rename, so we pin the pointer here). Verify scope when touching them. ---
+FB-camdir       # camera director -> br-captain-call-architecture-hardening-woq.7/8/9
+FB-camgrid      # -> woq.8 (FB-camtile viewport tiling + Wife's Grid)
+FB-wifes        # Wife's Grid Mode -> woq.8
+FB-invite       # controller-vs-viewer join chooser -> woq.11 (FB-joinroute)
+FB-seat         # room-seat topology -> woq.11/12/13 + br-around-couch-risk-resolution-3xv.2
+FB-viewergate   # viewer routing -> woq.11
+FB-gamepad      # gamepad input -> br-controller-input-wheelie-feedback-196 epic
+FB-perf         # degradation ladder -> feeds camera perf (woq) / 5k3.2 grade perf
+FB-assetcatalog # vehicle catalog/manifest -> br-modes-remote-play-design-48a.11 epic
+FB-assetnorm    # Blender normalization -> 48a.11 epic
+FB-assets       # GLTFLoader path + silhouettes -> 48a.11 epic
+FB-carselect    # vehicle selection/persistence -> 48a.11 epic
+FB-instperf     # 60-car recolor vs InstancedMesh perf -> 48a.11 epic
+FB-lightdamage  # damageable head/tail-lights -> 48a.11 epic
+FB-debrisdefault # -> br-captain-call-architecture-hardening-woq.6 (FB-debris)
+FB-debrisnorm   # -> woq.6
+FB-debrisperf   # -> woq.6
+FB-trackprops   # boxy prop kit -> 5k3.32 (closed) / woq.6
+FB-weaponart    # restyle weapon pickups -> 5k3.33
+
+# All camera/OOB/controller/scale/physics-feel/support drops were CUT on 2026-07-03
+# (21 beads). Nothing gameplay-relevant remains silently dropped. `--gate` now passes.

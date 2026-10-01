@@ -34,6 +34,34 @@
 
 ---
 
+## 🚧 0.2 rebuild in progress
+
+The live game is **0.1**. We're rebuilding it from first principles as **0.2**: a house-party car
+game where you throw it on the TV and anyone can jump in and have a laugh.
+
+- **Anyone, any time:** drop in mid-round with no slot limits; phones get two big joysticks, and
+  gamepads/keyboards work plugged into anything.
+- **Find your car:** big numbers, colours and patterns, an Identify button, and a dynamic grid (or a
+  shared Overview for derby) that grows as people join.
+- **Physical chaos:** suspension-forward driving, cars that dent and shed parts, debris that stays
+  on the track, weapons, chaos events (flash floods, cyclones, roo stampedes).
+- **Procedural Australian tracks** generated in the browser, starting with the Red Centre.
+- **Bold comic look** with a hint of Mad Max, an Australian announcer and end-of-round highlight reels.
+- **New tech:** Rust server and Rust/WASM simulation, Three.js rendering, Gitea CI with isolated
+  rainbow previews.
+- **Responsive controllers:** native WebRTC from the first 0.2 multiplayer slice, direct over the
+  local network where possible with Cloudflare STUN/TURN initially. Compact input and hub batching;
+  Rust handles discovery/session setup rather than forwarding every control update.
+- **One big screen first:** additional consuming screens are a separate deferred project requiring
+  explicit owner approval; playtests and extra arenas/modes do not automatically unlock them.
+
+Read: [0.2 plan](docs/plans/v0.2-revamp-plan-2026-09-28.md) ·
+[experience direction](docs/plans/v0.2-experience-direction.md) ·
+[owner rules](docs/policies/owner-direction-2026-09-29.md) · [docs index](docs/README.md).
+Everything below describes **the current 0.1 build** until 0.2 replaces it.
+
+---
+
 ## 🎉 What is Joystick Jammers?
 
 Joystick Jammers is a **Jackbox/Kahoot-style couch party game**. The action plays out on a shared big screen (TV, projector, or laptop), and everyone joins with the device already in their pocket — their phone becomes the controller. No app store, no extra hardware, no installs.
@@ -62,31 +90,59 @@ Perfect for party nights, living-room gaming, and questionable driving decisions
 
 ### Prerequisites
 
-- **Python 3.11+** with pip
-- **Node.js 20+** with npm
+- **Python 3.11.7** — pinned in [`.python-version`](.python-version)
+- **Node 18.20.8 / npm 10+** — pinned in [`.nvmrc`](.nvmrc) and `engines`
 - A modern browser with WebGL
+
+The exact versions are pinned in-repo, so the version managers do the work for you (see below). These are the *current* baseline — an upgrade to the latest Python/Node/deps is tracked as a bead.
+
+### Version setup (one time)
+
+Uses [pyenv](https://github.com/pyenv/pyenv) + [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) for Python and [nvm](https://github.com/nvm-sh/nvm) for Node. Both read the pin files automatically.
+
+```bash
+# Node: nvm reads .nvmrc
+nvm install            # installs the version in .nvmrc (18.20.8)
+nvm use                # switch to it (auto-selected on cd if you add the nvm shell hook)
+
+# Python: create the named virtualenv once; .python-version auto-activates it on cd
+pyenv install 3.11.7
+pyenv virtualenv 3.11.7 multiplayer-racer
+```
+
+> `.python-version` holds the **env name** (`multiplayer-racer`), so `cd`ing into the repo activates the right env automatically — no manual `pyenv activate`. (asdf / mise users: both pin files are respected too.)
 
 ### Installation
 
 ```bash
 git clone https://github.com/cdilga/multiplayer-racer.git
-cd multiplayer-racer
+cd multiplayer-racer                 # version managers auto-select Node + Python here
 
-pip install -r requirements.txt   # Python deps
-npm install                       # Node deps
-npm run build                     # Build the frontend into dist/
+pip install -r requirements.txt      # Python deps
+npm install                          # Node deps
+npm run build                        # Build the frontend into dist/
 ```
 
 ### Run it
 
+For a quick one-off, build then start the server:
+
 ```bash
-python server/app.py
+npm run build && python server/app.py
+```
+
+For day-to-day development, use a one-command stack that **auto-rebuilds the frontend and reloads the backend**:
+
+```bash
+npm run dev:local     # Vite rebuilds dist/ on save  +  Flask auto-restarts on .py changes
 ```
 
 Open **http://localhost:8000** — you'll land on the start screen.
 
 - **Host Now** → the big-screen host (`/host`)
 - **Join Game** → the phone controller (`/player`)
+
+> ⚠️ **Playtesting with real phones?** Use `npm run play:local` instead. It runs the same frontend watch but starts Flask with the auto-reload **off** (`FLASK_DEBUG=0`). Because room state is in-memory, an auto-restart mid-game would wipe the room and disconnect every player — `play:local` keeps the server stable so you restart it deliberately (between rounds) when you have a backend change. Frontend edits still hot-rebuild; just refresh the browser (Cmd+Shift+R).
 
 > 💡 **Dev tip:** append `?dev=1` to the landing URL (`http://localhost:8000/?dev=1`) to skip straight to the host every time — handy for rapid iteration. Use `?dev=0` to turn the bypass back off.
 
@@ -209,7 +265,19 @@ multiplayer-racer/
 ```
 
 > ⚠️ **The Flask server serves from `dist/` when it exists.** After changing any
-> JS/CSS, run `npm run build` before testing in the browser. See [CLAUDE.md](CLAUDE.md).
+> JS/CSS you must rebuild `dist/`. The easiest way is `npm run dev:local` (or
+> `npm run play:local` for playtests), which keeps `dist/` rebuilt on every save;
+> otherwise run `npm run build` manually before testing in the browser. Python
+> changes auto-restart the server under `dev:local`. See [CLAUDE.md](CLAUDE.md).
+
+**Local dev scripts:**
+
+| Command | What it does |
+|---|---|
+| `npm run dev:local` | Vite `build:watch` + Flask (auto-restart on `.py`). Everyday dev. |
+| `npm run play:local` | Same, but Flask reload **off** (`FLASK_DEBUG=0`) — stable server for live playtests. |
+| `npm run build:watch` | Just the frontend auto-rebuild, no server. |
+| `npm run build` | One-off production build into `dist/`. |
 
 ### Tests
 
@@ -236,13 +304,10 @@ npm run test:headed      # E2E with a visible browser
 - [x] In-game bug reporter
 - [x] Live deploy at [jammers.dilger.dev](https://jammers.dilger.dev)
 
-**Next up:**
-
-| Phase | Ideas |
-|-------|-------|
-| **June 2026 Swarm** | **Polishing Pass:** Wheelie mechanics, boost payoff, player identity/markers, controller reconnect stability, and map/collision fixes. |
-| **Near term** | More tracks & arena hazards, car customisation, spectator polish |
-| **Later** | Public lobbies, persistent stats/leaderboards, more modes |
+**Next up: 0.2.** See the [0.2 plan](docs/plans/v0.2-revamp-plan-2026-09-28.md). It ships in three
+tiers: a **Minimum build** (one Blender-made car, Race, Red Centre, the whole join→play→highlights loop
+on a real couch), the **Full build** (roster, derby and party modes, destruction, weapons, comic look,
+audio, six themes) and **Stretch** (extra screens and more).
 
 ---
 

@@ -1,3 +1,6 @@
+> **0.1 code documentation.** Describes the current 0.1 implementation, not 0.2 direction. For 0.2 see
+> `docs/policies/owner-direction-2026-09-29.md` and `docs/plans/v0.2-revamp-plan-2026-09-28.md`.
+
 # Debug Lab Contract
 
 Shared local QA/debug labs (`/car-viewer`, `/weapon-lab`, and map authoring) must expose the same evidence-oriented contract so a bead can be validated from deterministic state, screenshots, and machine-readable diagnostics rather than manual narration.

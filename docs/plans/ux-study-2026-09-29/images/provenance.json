@@ -1,0 +1,21 @@
+{
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-09-29",
+  "files": {
+    "H1-host-landing-v1.png": "exec-f32c5f42-a0b4-40fd-bfae-1ac702614491.png",
+    "H2-host-lobby-v1.png": "exec-7e944f09-f647-42ba-91c2-3ac5062a6f74.png",
+    "H3-host-pause-settings-v1.png": "exec-31a60bc4-1a6d-490c-8d00-de0a8e77e9c5.png",
+    "H4-host-round-results-v1.png": "exec-d542a216-35e8-4ea7-bf41-7a85eaafb762.png",
+    "H5-host-two-screens-v1.png": "exec-3867d9b5-7f67-44c0-8f5a-930409af704a.png",
+    "M1-mobile-join-v1.png": "exec-11692fa5-76e6-4800-b0ec-317052d2b7f6.png",
+    "M2-mobile-control-settings-v1.png": "exec-3427347a-f843-4dab-9cce-429d76c557e1.png",
+    "M3-mobile-round-results-v1.png": "exec-1755ba48-9c39-4a23-80b0-23eb1c3a5f39.png",
+    "H2-host-lobby-v2.png": "exec-c55c546d-4141-4be9-87e8-9830ac46c2ac.png",
+    "H3-host-pause-settings-v2.png": "exec-573ccf08-cd8f-4b58-b272-e9fd3af8a0e9.png",
+    "H4-host-round-results-v2.png": "exec-f8304f34-aa99-41cd-92b9-930c214007b8.png",
+    "H5-host-two-screens-v2.png": "exec-51138a22-195a-4953-bc04-d8b2e9e73136.png",
+    "M1-mobile-join-v2.png": "exec-b66e7e83-6a33-4acb-a07f-5f67c20cb9fa.png",
+    "M2-mobile-control-settings-v2.png": "exec-55c8f6c8-eb23-4393-b6d5-fcceaa468e09.png",
+    "M3-mobile-round-results-v2.png": "exec-00cfa7be-0742-4bca-8b6d-3e5e093f2085.png"
+  }
+}

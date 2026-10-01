@@ -1,3 +1,6 @@
+> **0.1 code documentation.** Describes the current 0.1 implementation, not 0.2 direction. For 0.2 see
+> `docs/policies/owner-direction-2026-09-29.md` and `docs/plans/v0.2-revamp-plan-2026-09-28.md`.
+
 # Join Route Matrix (woq.11 Slice 1)
 
 Contract for `resolveJoinRoute(...)` in `static/js/engine/joinRouteResolver.js`. This is
