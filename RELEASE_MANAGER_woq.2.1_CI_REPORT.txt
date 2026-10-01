@@ -1,0 +1,58 @@
+RELEASE MANAGER UPDATE — br-captain-call-architecture-hardening-woq.2.1
+(Agent Mail MCP down; this is the local fallback note. Also posted as br comments.)
+DATE: 2026-07-01
+
+COMMIT:
+- 9db1b63 "fix: fall back to WebGL when host WebGPU createRenderer fails (woq.2.1)"
+  6 files: static/js/rendering/{RendererBackend,WebGPUBackend,WebGLBackend}.js,
+  tests/unit/renderer-backend-fallback.test.js, .ntm/evidence/woq21/{png,mjs}.
+
+PUSHED:
+- origin/main  (bd8c462..9db1b63)
+
+EVIDENCE CHECKED BEFORE COMMIT:
+- npx vitest run tests/unit/renderer-backend-fallback.test.js -> 9/9 passed.
+- git diff --cached --check -> clean; staged only the 6 slice files (no RenderSystem,
+  ControlMapper, CSS, bowl, NetworkSystem, .beads).
+
+CI (SHA 9db1b63) — ALL THREE WATCHED:
+- Fast Tests (run 28478544617): FAILED — but NOT my slice. My test passed in CI
+  (✓ tests/unit/renderer-backend-fallback.test.js, 9 tests). The failure is
+  tests/unit/track-validation.test.ts: "Cannot find module '../engine/determinism.js'
+  imported from static/js/resources/ProceduralTrackGenerator.js" (ERR_MODULE_NOT_FOUND).
+- E2E Tests (run 28478544631): FAILED — same root cause at the Build frontend step:
+  rollup "Could not resolve '../engine/determinism.js' from ProceduralTrackGenerator.js".
+- Deploy (run 28478544936): validate job passed (not the determinism failure).
+
+CLASSIFICATION: CODE failure (not infra), NOT owned by woq.2.1.
+ROOT CAUSE: commit 920b874 "fix: use oriented checkpoint crossing" added the
+ProceduralTrackGenerator import of ../engine/determinism.js but never committed
+static/js/engine/determinism.js (it is UNTRACKED locally — present on disk, so local
+`npm run build` was green, but CI checks out tracked files only). 920b874 was a
+previously-UNPUSHED local-backlog commit; releasing woq.2.1 pushed the whole backlog
+(bd8c462..9db1b63 = 13 commits) and thereby moved 920b874 onto origin/main, turning the
+previously-green main RED.
+
+RELEASE-MANAGER LESSON: before pushing, diff `git log origin/main..HEAD` — a push ships
+the entire unpushed local backlog, not just the freshly-committed slice. The backlog here
+contained an unvalidated/broken commit.
+
+ACTION TAKEN:
+- woq.2.1 left CLOSED (independently validated; its CI test is green).
+- Filed bug bead br-nvaf (P1) with SHA, CI run IDs/URLs, failing commands, affected files,
+  repro, and two fix options (A: commit determinism.js after clean-checkout validation;
+  B: git revert 920b874 — needs coordinator direction). Did NOT patch (runbook: no silent
+  fixes without a worker assignment + fresh validation).
+- ESCALATION TO COORDINATOR: main CI is RED (Fast Tests + E2E) and stays red until br-nvaf
+  is fixed. Please assign a worker; the fix is small (commit the existing untracked
+  static/js/engine/determinism.js, verify Engine.js coupling, validate on a clean checkout)
+  OR revert 920b874. This blocks clean releases for the whole swarm.
+
+CI COMMANDS USED:
+- gh run watch 28478544617 --exit-status        -> failure (Fast Tests)
+- gh run view 28478544617 --log-failed          -> determinism ERR_MODULE_NOT_FOUND
+- gh run view 28478544631 --log-failed           -> rollup could-not-resolve determinism
+- gh run view 28478544936                        -> Deploy validate ✓
+- gh run list --commit 9db1b63 --limit 6
+
+— ReleaseManager

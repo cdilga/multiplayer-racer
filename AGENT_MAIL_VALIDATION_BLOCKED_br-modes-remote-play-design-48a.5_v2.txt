@@ -1,0 +1,84 @@
+TO: Coordinator / Worker StormyBeaver / next Fresh Validator
+FROM: Fresh Validator (independent; NOT the worker on this repair)
+BEAD: br-modes-remote-play-design-48a.5 — Align in-game UI with the front-page aesthetic
+STATUS: 🔴 BLOCKED (narrow) — two of the three prior blockers CLEARED; one durable-screenshot gap remains
+DATE: 2026-07-01
+Re: repair in comment 44, after my BLOCK in comment 38.
+
+Validation decision: BLOCKED (narrow). This is a near-pass: the ResultsUI repair is excellent and
+fully validated, build is green, and the E2E smoke is all-green. I am blocking ONLY because the bead's
+acceptance explicitly requires SCREENSHOT evidence for the phone-join / controller-in-game-HUD /
+waiting-room surfaces, and those durable screenshots still do not exist (the coordinator instructed:
+"if prior evidence remains ephemeral or missing, BLOCK and state exactly what evidence is missing").
+
+CLEARED SINCE comment 38
+========================
+1) BUILD (was RED on ControlMapper ENOENT) -> RESOLVED.
+   `npm run build` -> built OK, exit 0. ControlMapper.js restored by the 196.x line (not by this repair).
+2) RESULTS/SCOREBOARD/OVERLAYS surface (was unaddressed + unevidenced) -> RESOLVED.
+   - static/js/ui/ResultsUI.js migrated to the shared token system: 41 var(--…) uses; scattered-hex
+     grep (excluding var()/named tokens) is EMPTY. Medal/derby colors with no shared equivalent are
+     centralized as named tokens on .results-ui (--podium-gold/silver/bronze, --derby-red=var(--danger),
+     --derby-orange, --derby-dark) -> zero scattered hardcoded hex.
+   - Added a real reduced-motion guard: ResultsUI.js:346 `@media (prefers-reduced-motion: reduce){
+     .podium-winner .podium-player{ animation:none } }` (suppresses the winner-pulse loop).
+   - DURABLE, REGENERABLE evidence under .ntm/evidence/48a5/ (in-repo, not ephemeral scratch).
+3) EVIDENCE durability (results portion) -> RESOLVED for results + reduced-motion.
+
+EVIDENCE I REPRODUCED (current working tree)
+============================================
+- `npm run build` -> exit 0 (green).
+- `python3 -m http.server 8011` + `node .ntm/evidence/48a5/capture.mjs` -> regenerated all 3 results
+  shots against the CURRENT ResultsUI. Probes (real computed styles, no blank canvas):
+    results-race.png  -> titleColor rgb(0,255,136)=var(--green); contentBg rgb(26,26,46)=var(--bg-base); pageErrors=[]
+    results-derby.png -> titleColor rgb(244,67,54)=var(--danger); visible; pageErrors=[]
+    results-derby-reduced-motion.png -> captured under reducedMotion=reduce; visible; pageErrors=[]
+  Stopped the static server after capture (no lingering process).
+- VISUALLY inspected the screenshots: results-race shows green "Race Complete!", gold/silver/bronze
+  podium, full Pos/Player/Time/BestLap scoreboard with gold winner row, green pill "Play Again" +
+  ghost "Back to Lobby". results-derby shows danger-red "Derby Complete!" with red glow, red-bordered
+  winner, fire-orange podium, Rounds/Points standings, red-orange "Play Again". Both genuinely
+  token-driven and on-brand. NOT blank.
+- `npx playwright test tests/e2e/landing-page.spec.ts tests/e2e/join-flow.spec.ts
+   tests/e2e/game-flow.spec.ts tests/e2e/console-errors.spec.ts --workers=1`
+   -> 23 passed, 1 skipped. host/player/lobby/results surfaces LOAD without console errors and are
+   usable; game-flow host render works (build green + WebGPU->WebGL fallback). join-flow exercises the
+   phone join screen + late-join overlay.
+
+WHY STILL BLOCKED — exact missing evidence
+==========================================
+The acceptance requires: "Screenshot evidence … cover phone join/controller/waiting HUD, host lobby,
+scoreboard/overlays/results, and at least one reduced-motion state." Durable inventory under
+.ntm/evidence/:
+  - scoreboard/overlays/results : ✓ DURABLE (48a5/results-race.png, results-derby.png)
+  - reduced-motion              : ✓ DURABLE (48a5/results-derby-reduced-motion.png)
+  - host lobby                  : ~ durable PROXY only (woq21/host-webgpu-fallback.png shows the
+                                   tokenized host lobby, but it was captured for woq.2.1, not filed as
+                                   48a.5 evidence)
+  - phone JOIN screen           : ✗ MISSING (durable). Only ephemeral in another session's scratch.
+  - phone CONTROLLER / in-game HUD : ✗ MISSING (durable).
+  - WAITING ROOM                : ✗ MISSING (durable).
+The repair was deliberately scoped to ResultsUI; its own note flags these player.css/host.css surfaces
+as a "separate evidence task." They remain ephemeral/missing, so per the coordinator's explicit gate I
+must BLOCK and name them.
+
+PATH TO PASS (small, well-defined)
+==================================
+Capture DURABLE screenshots of the player/lobby surfaces into .ntm/evidence/48a5/ (the E2E already
+renders them error-free, so this is a capture step, not a code fix):
+  - phone join screen, phone controller/in-game HUD, waiting room (player.css), and a host-lobby frame
+    filed as 48a.5 evidence (or reference woq21's as the host-lobby artifact explicitly).
+A tiny Playwright capture (like 48a5/capture.mjs, or screenshots within the existing join-flow/
+game-flow specs) suffices. Then request a fresh validator. NOTE: the player.css/host.css token work
+itself was already validated good in comment 38 — only the durable screenshots are outstanding.
+
+RESIDUAL RISK (non-blocking)
+============================
+- ResultsUI podium/derby named tokens (medal gold/silver/bronze, derby orange/dark) have no shared
+  landing equivalent; centralizing them locally is reasonable and leaves zero scattered hex.
+- Topology/session work elsewhere in the tree is out of scope for this design bead.
+
+I made NO edits (did not touch ResultsUI/CSS, did not capture the missing surfaces — that is the
+worker's evidence step). I am NOT self-closing.
+
+— Fresh Validator

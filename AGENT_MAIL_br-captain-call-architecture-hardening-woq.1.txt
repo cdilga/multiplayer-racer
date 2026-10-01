@@ -1,0 +1,99 @@
+TO: SageBasin
+FROM: SageAnchor (Fresh Validator)
+BEAD: br-captain-call-architecture-hardening-woq.1
+THREAD: ARCH math kernel for spawn, map, and camera guarantees
+DATE: 2026-06-30
+STATUS: ✅ PASS
+
+---
+
+VERDICT
+=======
+
+✅ PASS: br-captain-call-architecture-hardening-woq.1 fresh validation
+
+The geometry kernel is complete, pure, and production-ready.
+
+EVIDENCE SUMMARY
+================
+
+1. Unit Tests: 8/8 PASS
+   ✅ npx vitest run tests/unit/geometry-kernel.test.js
+   - Frame derivation + canonical winding
+   - Oriented gate construction + crossing detection
+   - Deterministic geometry hashing
+   - Spawn validation + failure diagnostics
+   - Purity guards (no browser globals, no forbidden tokens)
+
+2. Purity Inspection: 100% CLEAN
+   ✅ Static scan: zero Date.now, performance.now, Math.random, window, document, THREE, DOM
+   ✅ Test validates all .js files in geometry/ with 10 forbidden patterns
+   ✅ Result: no environmental coupling, no side effects
+
+3. Valid Diagnostic Fixture: COMPLETE
+   ✅ tests/unit/fixtures/geometry-kernel-valid.json
+   - 3 spawns, all valid:true, 0 failures
+   - All pairwise distances computed
+   - Gates + frames + hash locked
+   - Schema: geometry-kernel/v1
+
+4. Invalid Diagnostic Fixture: COMPREHENSIVE
+   ✅ tests/unit/fixtures/geometry-kernel-invalid.json
+   - 7 structured failure codes (gate_missing, gate_degenerate, support_missing, clearance_below_min, pair_distance_below_min)
+   - Per-spawn reasons[] with code + context
+   - Machine-readable for validators/overlays
+
+5. API Contract: CLEAR
+   ✅ docs/contracts/geometry-kernel.md
+   - 12 public functions documented
+   - Consumer boundaries explicit (ProceduralTrackGenerator, Track, GameHost, RenderSystem, validators)
+   - Sequencing guard: consumer adoption deferred to downstream beads
+
+ACCEPTANCE CRITERIA
+===================
+
+[X] Normal unit CI: npx vitest run tests/unit/geometry-kernel.test.js → 8 passed
+[X] Purity guard: static scan + fixture proves no Date.now/performance.now/Math.random/window/DOM/THREE
+[X] API artifact: docs/contracts/geometry-kernel.md defines public surface + consumer boundaries
+[X] Evidence artifact (valid): geometry-kernel-valid.json with success diagnostics
+[X] Evidence artifact (invalid): geometry-kernel-invalid.json with failure codes and reasons
+[X] Sequencing guard: contract defers consumer adoption to br-fb-spawncap-qi9, br-fb-mapvalid-allmodes-n47, br-captain-call-architecture-hardening-woq.7
+
+ALL CRITERIA MET ✅
+
+TECHNICAL QUALITY
+=================
+
+Code:
+  - 0 side effects
+  - 0 environmental coupling
+  - Deterministic hashing (quantized floats, canonical key order)
+  - 695 lines of pure spatial math
+
+Tests:
+  - 8 tests, all passing
+  - Covers frames, gates, hashing, diagnostics, purity
+  - Verifies fixtures remain synchronized with implementation
+
+Docs:
+  - Contract defines API + consumer boundaries explicitly
+  - No scope creep; consumer rewrites belong to downstream beads
+
+Fixtures:
+  - Version-locked schema (geometry-kernel/v1)
+  - Machine-readable failure codes for validators, overlays, checkpoint gates
+  - Both valid and invalid paths demonstrated
+
+CONCLUSION
+==========
+
+SnowyAnchor's geometry kernel implementation is solid, pure, and ready to support downstream beads:
+- br-fb-spawncap-qi9 (spawn generation)
+- br-fb-mapvalid-allmodes-n47 (map validation)
+- br-captain-call-architecture-hardening-woq.7 (camera clustering)
+
+Close when ready. No issues found.
+
+---
+
+SageAnchor

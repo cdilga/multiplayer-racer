@@ -1,0 +1,194 @@
+TO: DustyFern (Bead Assignee)
+FROM: NavyStone (Auditor)
+SUBJECT: AUDIT RESULT br-fb-spawncap-qi9
+THREAD: br-fb-spawncap-qi9
+DATE: 2026-06-30
+
+---
+
+STATUS: READY-SHAPED BUT NEEDS WORKER EVIDENCE
+
+The bead implementation is architecturally sound and well-tested in isolation. All unit/integration tests pass (25+13). However, the critical E2E soak test evidence is missing—this blocks PASS.
+
+---
+
+TESTS EXECUTED
+==============
+
+✅ npx vitest run tests/unit/spawn-cap-regression.test.js
+   Result: 6/6 PASS (13ms)
+   - Player 17 no longer spawns on player 1 (gets safe default instead)
+   - No modulo wrapping even for N=32 and N=64
+   - Generated spawns provide distinct positions
+   - Metadata correctly preserved
+
+✅ npx vitest run tests/unit/spawn-generation.test.js
+   Result: 19/19 PASS (22ms)
+   - Deterministic generation with seeded RNG
+   - Non-overlapping spawn validation
+   - Geometry kernel integration
+
+✅ npx vitest run tests/integration/track-physics.test.ts
+   Result: 13/13 PASS (163ms)
+   - Track physics integration smoke test
+
+---
+
+CODE INSPECTION SUMMARY
+=======================
+
+Track.js (static/js/entities/Track.js):
+  ✅ FIXED: modulo wrapping REMOVED (line ~165-176)
+     - Old: playerIndex % spawnPositions.length
+     - New: boundary check, returns safe default (0,0,0) for out-of-bounds
+  ✅ NEW: setGeneratedSpawns() method
+  ✅ IMPROVED: Checkpoint crossing detection (checkCrossing method)
+  ✅ IMPROVED: Oriented gate support (tangent, heightBand)
+
+SpawnGenerator.js (static/js/resources/SpawnGenerator.js):
+  ✅ Deterministic generation for arbitrary N
+  ✅ Seeded RNG from GameRunContext (not Math.random)
+  ✅ GeometryKernel integration (validateSpawnSetKernel)
+  ✅ Non-overlapping validation (minPairDistance 3.5 units)
+  ✅ Diagnostics output (seed, constraints, validation)
+
+ProceduralTrackGenerator.js:
+  ✅ Base 16-spawn grid still exists (as fallback)
+  ✅ Now extends via SpawnGenerator for arbitrary N
+
+---
+
+EDGE CASES COVERED
+==================
+
+✅ No Modulo Wrap (Player 17):
+   Player 17 gets default (0,0,0), NOT player 0's spawn.
+   Distance > 1 unit verified.
+
+✅ N=32 Unique Spawns:
+   32 spawns generated without collision.
+   Player 32 correctly out-of-bounds → default.
+
+✅ N=64 No Wrapping:
+   64 spawns linear; player 64 is default, not wrap to 0.
+   Distance spawn63 → spawn0 > 0 (all unique).
+
+✅ Deterministic Seeding:
+   GameRunContext seed=12345 produces reproducible spawns.
+   Seed stored in diagnostics.
+
+---
+
+WHAT'S MISSING (BLOCKER FOR PASS)
+==================================
+
+❌ E2E Soak Test NOT Run
+
+Acceptance criterion: "JJ_SOAK_PLAYERS=32 npx playwright test tests/e2e/around-couch-soak.spec.ts"
+
+Status: No evidence that this test was executed with 32+ controllers.
+
+Why it matters:
+- Unit tests pass in isolation
+- Real multiplayer load under 32 controllers is the final validation
+- Would catch: RNG stream collision, physics penetration under load, concurrent race conditions
+
+Risk if skipped:
+- Claim "no player caps" unsupported by load evidence
+- Dependents (.9 soak gate, .13 map experience gate) have no proof of scale
+
+❌ Diagnostics JSON Artifact NOT Provided
+
+Acceptance criterion: "spawn diagnostics report min pair distance, ground raycast success, wall/void clearance, heading, track/ruleset, seed, and any rejected candidates."
+
+What exists: generationResult.diagnostics object structure.
+What's missing: Sample JSON showing actual output.
+
+---
+
+ACCEPTANCE CRITERIA CHECKLIST
+=============================
+
+[✓] Unit tests pass (spawn-cap-regression, spawn-generation)
+[✓] Integration tests pass (track-physics)
+[✓] No modulo wrapping (player 17 ≠ player 0)
+[✓] N=64 spawns non-overlapping
+[✓] Deterministic seeding (GameRunContext + GeometryKernel)
+[✓] Metadata preservation (playerCount, generatedCount, baseCount)
+[✓] GeometryKernel adoption (validateSpawnSetKernel imports confirmed)
+[✓] GameRunContext adoption (seeded RNG streams used)
+[✗] E2E soak: 32+ controllers distinct spawns
+[✗] Diagnostics artifact (JSON sample)
+
+---
+
+ARCHITECTURE ASSESSMENT
+=======================
+
+✅ Coherent Diff:
+   - Single clear fix (remove modulo, add generation)
+   - Related changes fit together logically
+   - No extraneous edits
+   - Backward compatible
+
+✅ Blocked Dependencies Met:
+   - GeometryKernel (br-captain-call-architecture-hardening-woq.1) CLOSED
+   - GameRunContext (br-around-couch-risk-resolution-3xv.5) CLOSED
+
+⚠️ Downstream Dependencies:
+   - br-around-couch-risk-resolution-3xv.9 (soak gate) — waiting for this
+   - br-fb-mapvalid-allmodes-n47 (map validity) — waiting for this
+
+---
+
+IMPLEMENTATION QUALITY NOTES
+=============================
+
+Strengths:
+  - Clear separation: Track handles access, SpawnGenerator handles creation
+  - Deterministic by design (seeded RNG, no implicit randomness)
+  - Graceful fallback (out-of-bounds → safe default, not wrapped)
+  - Comprehensive unit testing (25 tests)
+  - Well-documented code
+
+Minor concerns:
+  - console.warn() on fallback will fire every frame during soak (consider conditional)
+  - Support/clearance checks deferred (no explicit raycast proof in tests)
+
+---
+
+RECOMMENDATION
+==============
+
+Status: READY-SHAPED BUT NEEDS WORKER EVIDENCE
+
+The implementation is ARCHITECTURALLY SOUND and WELL-TESTED IN ISOLATION.
+
+To reach PASS, worker must:
+1. Run soak test: JJ_SOAK_PLAYERS=32 npx playwright test tests/e2e/around-couch-soak.spec.ts
+   (or create one if it doesn't exist)
+2. Provide sample JSON diagnostic output
+3. Confirm 32+ players each have distinct spawns in actual game scenario
+
+If soak test doesn't exist: This is BLOCKER. Create a minimal E2E that connects 32 players,
+verifies spawn positions in game state, asserts no overlaps. This is table-stakes for
+"no player caps" claim.
+
+---
+
+FILES INSPECTED
+===============
+
+✅ static/js/entities/Track.js
+✅ static/js/resources/SpawnGenerator.js
+✅ static/js/resources/ProceduralTrackGenerator.js
+✅ tests/unit/spawn-cap-regression.test.js
+✅ tests/unit/spawn-generation.test.js
+✅ tests/integration/track-physics.test.ts
+
+---
+
+Full audit report: /Users/cdilga/Documents/dev/multiplayer-racer/AUDIT_br-fb-spawncap-qi9.md
+
+NavyStone
+Audit complete. Awaiting worker response.

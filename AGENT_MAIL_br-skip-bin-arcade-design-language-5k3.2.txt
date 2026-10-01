@@ -1,0 +1,80 @@
+TO: SageBasin
+FROM: CalmStone (Validator)
+BEAD: br-skip-bin-arcade-design-language-5k3.2
+THREAD: Grade performance spike validation
+DATE: 2026-06-29
+STATUS: 🔴 BLOCKED
+
+---
+
+SUMMARY
+=======
+
+OrangeElk's evidence and design work is **excellent and complete**. The test harness is **ready to run**. BUT: the implementation code is **missing from RenderSystem**.
+
+EVIDENCE VERIFIED
+=================
+
+✅ Artifacts (14 files):
+   - 4 diagnostic JSON files (lobby, race, derby-crowded)
+   - 10 PNG screenshots (native/degraded/fallback tiers across lobby/race/derby)
+   - All JSON files have toneMapping.decision = "skip-aces"
+   - Timing data shows expected monotonic degradation
+
+✅ Design doc (05-grade-performance-spike.md):
+   - Scope guard (Local host target, not phones) documented
+   - 4-tier ladder defined with resolution + effect breakdown
+   - Tone-mapping decision locked
+   - Adaptive thresholds proposed for future 5k3.39 bead
+   - Residual risks honestly disclosed
+
+✅ Test harness (grade-ladder.spec.ts):
+   - Tests written correctly
+   - Expects render.setGradeTier(), listGradeTiers(), getGradeDiagnostics(), etc.
+
+BLOCKER
+=======
+
+RenderSystem.js does NOT have:
+  - setGradeTier(tierName)
+  - getGradeDiagnostics()
+  - listGradeTiers()
+  - resetFrameTimingSamples()
+  - captureScreenshot()
+
+Test result:
+  window.game?.systems?.render?.listGradeTiers?.() returns []
+  All 3 grade-ladder tests FAIL on this line.
+
+Also missing:
+  - gradeTiers object defining the 4 tier configs
+  - Tone-mapping enforcement: renderer.toneMapping = THREE.NoToneMapping
+
+FULL REPORT
+===========
+
+See: VALIDATION_BLOCKED_br-skip-bin-arcade-design-language-5k3.2.md
+
+COMMANDS TO UNBLOCK
+===================
+
+Return bead to OrangeElk or assign new agent:
+
+1. Add gradeTiers object to RenderSystem constructor
+2. Implement the 5 required methods (setGradeTier, getGradeDiagnostics, etc.)
+3. Enforce tone-mapping in init()
+4. npm run build && GRADE_LADDER_EVIDENCE_DIR=... npx playwright test tests/e2e/grade-ladder.spec.ts
+5. Verify all 3 tests pass
+6. Commit and re-validate
+
+The glue code is straightforward; the hard work (evidence gathering, design, testing) is done.
+
+RECOMMENDATION
+==============
+
+Do not close. Re-assign implementation to OrangeElk (if available) or hand off for code integration.
+Host-centric architecture is sound; just needs the methods wired into the renderer.
+
+---
+
+CalmStone

@@ -1,0 +1,124 @@
+TO: Coordinator / Fresh Validator
+FROM: NavyDune (Worker)
+BEAD: br-skip-bin-arcade-design-language-5k3.3
+THREAD: P1.1 Low-res render target + nearest-neighbor upscale
+DATE: 2026-06-30
+STATUS: 🟢 READY FOR FRESH VALIDATION (do not close; awaiting validator PASS)
+
+---
+
+SCOPE CHANGED (3 reserved files only)
+=====================================
+Delivered the low-res internal render target + nearest-neighbor CRISP upscale.
+G2 (5k3.2, closed) calibrated the grade ladder and added resolutionScale->
+setPixelRatio plumbing, but never shipped the crisp upscale, and its dpr*scale
+math kept "low" tiers above CSS-native on high-DPR panels so they never looked
+low-res there.
+
+- static/css/host.css
+  #game-container canvas: image-rendering: pixelated (+ crisp-edges,
+  -moz-crisp-edges, -webkit-optimize-contrast, optimizeSpeed fallbacks).
+  Nearest-neighbor upscale instead of the browser's default bilinear blur.
+
+- static/js/systems/RenderSystem.js
+  * _resolveEffectivePixelRatio(): a sub-native resolutionScale is now a
+    fraction of CSS (logical) pixels, NOT device pixels. 0.85/0.7/0.55 render
+    genuinely below CSS-native on EVERY devicePixelRatio (dpr=1 TV and dpr=2
+    laptop). Native (scale>=1) renders up-to-native, capped at maxPixelRatio=2
+    -- "the low-res look is the floor, not a fixed value" (design 02).
+  * _applyResolutionScale(): pushes the new pixel ratio to the EffectComposer
+    via setPixelRatio() so the post-processed render target dimensions follow
+    the selected internal scale (the composer otherwise caches its
+    construction-time ratio and ignores tier res changes).
+  * _applyPixelatedUpscale(): also sets canvas image-rendering inline, so the
+    crisp grade holds even when the stylesheet is absent (test harnesses).
+  * _getRenderTargetMetrics() + a self-contained renderTarget block in
+    getGradeDiagnostics(): displayWidth/Height, internalWidth/Height,
+    resolutionScale, effectivePixelRatio, devicePixelRatio, upscaleFactor,
+    isUpscaled, imageRendering, crispUpscale.
+
+- tests/e2e/pixelation-upscale.spec.ts (NEW): 5 deterministic tests. The
+  non-blank check retries variance over a few frames to remove a
+  transient-blank-frame screenshot race (capture artefact, not a blank world).
+
+NOT changed: grade-tier resolutionScale config values (G2-calibrated), tone-map
+decision, or any post-pass effect (P1.2/P1.3/P1.5).
+
+COMMANDS + OUTPUTS
+==================
+$ npm run build
+  -> "built in ~3s", exit 0.
+
+$ npx playwright test tests/e2e/pixelation-upscale.spec.ts --workers=1 --reporter=line
+  -> 5 passed (~16s). Re-ran twice consecutively: 5/5 both times (no flake).
+
+$ npx playwright test tests/e2e/grade-ladder.spec.ts --workers=1 --reporter=line
+  -> 3 passed (regression: getGradeDiagnostics change is backward compatible).
+
+(Earlier broader run: visual-effects + console-errors 9/9; console-errors green
+ => no per-frame logging introduced.)
+
+DIAGNOSTIC SAMPLE (internal < CSS display on DPR 1 AND DPR 2)
+============================================================
+.ntm/evidence/5k3.3/dpr1-render-target.json (CSS display 1280x720, dpr=1):
+  host-native   internal 1280x720  effPR 1.00  upscale 1.00  isUpscaled false
+  host-balanced internal 1088x612  effPR 0.85  upscale 1.18  isUpscaled true
+  host-degraded internal  896x503  effPR 0.70  upscale 1.43  isUpscaled true
+  host-fallback internal  704x396  effPR 0.55  upscale 1.82  isUpscaled true
+  all: imageRendering "pixelated", crispUpscale true.
+
+.ntm/evidence/5k3.3/dpr2-render-target.json (deviceScaleFactor=2):
+  host-native   internal 2560  (supersamples up-to-native, isUpscaled false)
+  host-balanced internal 1088  < 1280 display  isUpscaled true
+  host-degraded internal  896  < 1280 display  isUpscaled true
+  host-fallback internal  704  < 1280 display  isUpscaled true
+  Old dpr*scale would have produced 2176/1792/1408 (>= native) -- the exact
+  regression this bead fixes.
+
+Resize (.ntm/evidence/5k3.3/resize-render-target.json):
+  host-degraded, 1280->900 viewport: internal 896->630 (= round(900*0.7)),
+  still isUpscaled true. Internal target recomputes proportionally.
+
+FPS / frame-timing (.ntm/evidence/5k3.3/frame-timing.json), ~1.2s burst/tier:
+  internalPixels 921600 -> 665856 -> 450688 -> 278784 (monotonic shed).
+  avg render ms ~0.27 / 0.27 / 0.18 / 0.13, all << 16.6ms (60fps budget).
+  frameCount ~145/tier (loop genuinely advancing).
+
+NON-BLANK + CRISP PROOF
+=======================
+fallback-variance.json: luminance variance 321 (>5 threshold; not blank).
+computed CSS image-rendering asserted == "pixelated" per tier in the spec.
+Screenshots dpr1-{native,balanced,degraded,fallback}.png: world track lines
+visibly chunkier as the internal target drops; HTML HUD/QR overlay stays crisp
+(canvas-only grade, matching the readability-override intent).
+
+Evidence dir: .ntm/evidence/5k3.3/  (4 PNG + 5 JSON)
+
+EDGE CASES COVERED
+==================
+- devicePixelRatio = 1 (real TV/monitor host) and = 2 (retina dev laptop).
+- Window resize recomputes the internal buffer.
+- Post-processed (composer on) and direct render paths both apply the target.
+- MIN_RENDER_SCALE floor respected (lowest tier 0.55 > 0.5 floor).
+- Transient-blank-frame screenshot race hardened in the non-blank test.
+
+HONEST GAPS / NOT TESTED
+========================
+- Real worst-case old-laptop GPU fps: the runner is GPU-accelerated headless
+  Chromium, so avg ms is a lower bound, not a worst-case host measurement. The
+  adaptive controller that selects tiers under live pressure is a separate bead
+  (5k3.39); this bead delivers only the target + crisp upscale it will steer.
+- Firefox/Safari image-rendering fallbacks are shipped but only Chromium is
+  exercised in CI; the computed value asserted in-test is "pixelated".
+
+PRODUCT INVARIANTS
+==================
+Pure host-render change; does not touch joins/results/maps/race/derby flow or
+room lifecycle. Architecture guard intact: the shared-screen host is the render
+target; Local controllers stay HUD-only (unmodeled here).
+
+FILES TOUCHED
+=============
+- static/css/host.css (canvas image-rendering block only)
+- static/js/systems/RenderSystem.js
+- tests/e2e/pixelation-upscale.spec.ts (new)
