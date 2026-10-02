@@ -41,7 +41,9 @@ Most important rules:
 
 - **Phase:** building **Playtest 1**: the new stack (Rust server, WebRTC/TURN controllers, Rust/WASM
   sim in a host worker) plus one car (the Cruz Missile) racing generated four-biome tracks. Scope,
-  architecture, protocols and the task graph are in `docs/plans/v0.2-playtest-1-plan.md`.
+  architecture, protocols and the task graph are in `docs/plans/v0.2-playtest-1-plan.md`. A design
+  POC (§3a, owner-gated) settles the UI look, grid layouts and phone controller first; the UI tasks
+  wait for its verdict, everything else runs in parallel.
 - **Code:** the 0.2 code doesn't exist yet. The first bead (P1-F01) creates the Rust workspace and
   `web/` packages. The 0.1 game was **removed from this branch** (R87); it still runs in production
   from `main`. Read old code with `git show v0.1-final:<path>`, as evidence only. Never restore it.
@@ -171,7 +173,8 @@ your first claim.
   beads reproduce first; stop after 2–3 identical remote failures and reproduce locally; record traps
   in `docs/learnings/<area>.md`. Every feature earns its keep: add a tool, flag or helper only when a
   named task needs it now. Never block on the owner: proceed on the best evidence-backed candidate and
-  let playtests judge it.
+  let playtests judge it. The two exceptions are gates the owner set: the design POC verdict
+  (G-DESIGN, plan §3a), which the UI tasks wait for, and the Playtest-1 qualification.
 
 ## Code rules
 
