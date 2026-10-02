@@ -22,8 +22,10 @@ git -C "$SEEDVC" log -1 --format='seed-vc revision %H %cs'
 if [[ ! -x "$SEEDVC/.venv/bin/python" ]]; then
   uv venv --python 3.10 "$SEEDVC/.venv"
 fi
-uv pip install --python "$SEEDVC/.venv/bin/python" --index-url https://download.pytorch.org/whl/cu128 torch torchaudio
-grep -viE '^(torch|torchaudio)([=<> ]|$)' "$SEEDVC/requirements.txt" > "$SEEDVC/requirements.no-torch.txt"
+# torch 2.8: from 2.9 torchaudio.save (used by Seed-VC) requires torchcodec.
+uv pip install --python "$SEEDVC/.venv/bin/python" --index-url https://download.pytorch.org/whl/cu128 \
+  torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
+grep -viE '^(torch|torchvision|torchaudio)([=<> ]|$)' "$SEEDVC/requirements.txt" > "$SEEDVC/requirements.no-torch.txt"
 uv pip install --python "$SEEDVC/.venv/bin/python" -r "$SEEDVC/requirements.no-torch.txt"
 "$SEEDVC/.venv/bin/python" -c "import torch; print('seed-vc torch', torch.__version__, torch.cuda.is_available())"
 echo "voice-energy tooling ready"
