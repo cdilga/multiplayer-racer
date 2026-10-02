@@ -59,3 +59,6 @@ scratch-assets/
 /*.wav
 /*.mp3
 private/
+
+# FrankenWhisper local state (transcripts, sqlite)
+.franken_whisper/

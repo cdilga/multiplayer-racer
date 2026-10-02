@@ -31,6 +31,11 @@ Most important rules:
   no denting (R86).
 - **Host recovery is deferred** (R84): a dead host ends the room.
 - **Previews never freeze** (R85): a playtest is a pinned rainbow preview; development continues.
+- **Validation in the loop** (R90): every part of the game must be introspectable as data, settable,
+  steppable/replayable and fixture-testable by agents. How is your call; that it exists is not
+  optional (Playtest-1 plan §13a).
+- **TURN** (R88): self-hosted coturn at `turn.dilger.dev` first, Cloudflare TURN as fallback; only TURN
+  has a WAN hole, everything else rides Cloudflare tunnels (`docs/infra/turn-and-previews.md`).
 
 ## Where we are now (2026-10-02)
 
@@ -40,6 +45,9 @@ Most important rules:
 - **Code:** the 0.2 code doesn't exist yet. The first bead (P1-F01) creates the Rust workspace and
   `web/` packages. The 0.1 game was **removed from this branch** (R87); it still runs in production
   from `main`. Read old code with `git show v0.1-final:<path>`, as evidence only. Never restore it.
+- **Infra:** `https://jammers-preview.dilger.dev/` is live (placeholder index until P1-D03/D05);
+  coturn runs on TrueNAS. Audio is generated on **eris** (GPU box: `ssh eris`, workspace
+  `~/Work/dev/jammers-audio`), never in this repo (R89).
 - **Tracker:** the 0.2 beads are cut from the Playtest-1 plan §15. Pre-0.2 beads were closed on
   2026-09-30 (`superseded-v0_1`); don't reopen them.
 - **Canonical vehicle evidence:** `spikes/art-pipeline/J-cruze-lowpoly/` (see `spikes/README.md` for
@@ -84,8 +92,9 @@ Most important rules:
 - Check Agent Mail before claiming work and after each meaningful edit/test cycle.
 - Reserve files with Agent Mail before editing. Use specific paths or globs, not the whole repo.
 - Announce bead claims, file reservations, blockers, and completion in a thread named after the bead ID.
-- Keep NTM swarms small: at most five panes total, including the user pane. Reuse or replace idle
-  panes for worker, validator, and release-manager roles instead of adding more agents.
+- **NTM is paused (R91).** Run multi-agent work as native Claude Code agents with native messaging
+  (SendMessage); keep it to at most five agents including the coordinator. Agent Mail stays for
+  file reservations and the commit guard.
 - Don't sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim
   it, reserve files, announce, and start.
 

@@ -1,6 +1,10 @@
 # Code-first / batch-verify
 
-How a small swarm (at most 5 NTM panes, including you and the verifier) ships 0.2 work without
+> **2026-10-02 (R91):** NTM is paused. The same roles run as native Claude Code agents coordinating
+> with native messaging; "pane" below means "agent". Agent Mail still handles file reservations and
+> the commit guard. The worker hook applies to any Claude agent started with `JJ_ROLE=worker`.
+
+How a small swarm (at most 5 agents, including you and the verifier) ships 0.2 work without
 re-running the same expensive pipelines for every bead. Adopted 2026-09-30.
 
 **Writing code is cheap and parallel; building and testing is expensive and serial.** So workers

@@ -1,7 +1,7 @@
 # Owner direction for Joystick Jammers 0.2 (2026-09-29)
 
 **Status:** normative. Implementation agents, bead authors and reviewers must follow this document.
-The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R87). What the
+The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R91). What the
 first playtest builds, and in what order, is `docs/plans/v0.2-playtest-1-plan.md` (the bead source
 for the Minimum build). The design brief is `docs/plans/v0.2-experience-direction.md`.
 
@@ -41,6 +41,10 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; the rest is core. **Each part goes intact → loose → detached; no denting** (R86 amends R82). Loose = visibly hanging/wobbling on its hinge while still attached; detached = a dynamic body left on the track for the round. In Playtest 1. The fuller §8.1/§8.2 anatomy is a later target. (R82, R86) |
 | Host recovery (deferred) | Emergency host replacement, recovery export/import, registration CAS, credential revision, host checkpoint/restore after host death, explicit device handoff and the paired host-control phone are **deferred, possibly forever**. A dead host ends the room. A controller still resumes its own seat on the same device, and a host re-registers its room after a server restart. Possible drive-by only if G-SCREENS is ever approved. (R84) |
 | Continuous previews | **No dev freeze for playtests.** Rainbow previews ship from the first deployable slice and keep shipping; a playtest is a preview the owner **pins**. A preview index at `https://jammers-preview.dilger.dev/` lists every preview newest first, with what changed, smoke status, pin/expiry and Host/Join links. (R85) |
+| TURN (R88) | Self-hosted coturn at `turn.dilger.dev` first (UDP only, REST credentials, private peers denied) behind a narrow geo-restricted FortiGate UDP VIP; Cloudflare TURN is the TCP/TLS and overflow fallback. Everything else stays on Cloudflare tunnels. `docs/infra/turn-and-previews.md`. (R88 amends R79) |
+| Audio (R89) | Announcer = the owner's voice cloned with Qwen3-TTS 1.7B on eris (FrankenWhisper transcripts); music = YuE2 at full precision on eris, instrumental only. Highest quality wins; weights/recordings never in the repo. (R89 amends R13/R19/R55) |
+| **Validation in the loop** | Every part of the game is introspectable as structured data, settable, steppable/replayable and fixture-testable by agents. Capability required; design is the implementer's call. (R90) |
+| Coordination | NTM paused; native Claude Code agents and messaging; Agent Mail for reservations and the commit guard. (R91) |
 | 0.1 code | The 0.1 code was removed from the `v0.2-revamp` branch on 2026-10-02; read it with `git show v0.1-final:<path>` (tag on `main` @ `bbadc3e`). Production stays 0.1 on `main` until 0.2 is promoted. Nothing is ported as code; useful cases are re-expressed as 0.2 tests (Playtest-1 plan §14). (R87) |
 | Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Signs: Wikipedia *Road signs in Australia* is the style source; new/joke signs are allowed if they follow a real sign family's grammar (e.g. yellow diamond "BLOODY BIG JUMPS AHEAD"). Plan §11.5a. |
 
