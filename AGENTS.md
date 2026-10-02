@@ -48,8 +48,12 @@ Most important rules:
 - **Infra:** `https://jammers-preview.dilger.dev/` is live (placeholder index until P1-D03/D05);
   coturn runs on TrueNAS. Audio is generated on **eris** (GPU box: `ssh eris`, workspace
   `~/Work/dev/jammers-audio`), never in this repo (R89).
-- **Tracker:** the 0.2 beads are cut from the Playtest-1 plan §15. Pre-0.2 beads were closed on
-  2026-09-30 (`superseded-v0_1`); don't reopen them.
+- **Tracker:** the 0.2 beads are cut from the Playtest-1 plan §15 using its §15.0 template. Pre-0.2
+  beads were closed on 2026-09-30 (`superseded-v0_1`); don't reopen them. Beads close on CI,
+  emulators and Playwright; the owner playtests the lot (P1-Q02 checklist) and failures come back as
+  bug beads.
+- **Machines:** the working tree, `br` and Agent Mail live on the Mac; builds, tests and browsers run
+  on eris (plan §15.2). Gitea (`tea`, login `gitea-lan`) is primary; GitHub is a passive mirror.
 - **Canonical vehicle evidence:** `spikes/art-pipeline/J-cruze-lowpoly/` (see `spikes/README.md` for
   which spikes are canonical and which are reference only).
 
@@ -145,7 +149,16 @@ your first claim.
   one-time logs.
 - **Data over code:** profiles, rules, maps and asset contracts are versioned data with validators.
 - **Evidence:** behavioural acceptance in the running game, not just unit assertions; receipts name
-  hardware, browser, build and cohort.
+  hardware, browser, build and cohort. Label honestly: Playwright WebKit is "WebKit", not Safari; a
+  simulator/emulator run is not a device; a number copied from a spike or another codebase is a
+  reference until measured. Per-bead evidence goes in `docs/evidence/<P1-ID>/`.
+- **Builds:** never run bare `cargo` on the Mac for Linux-capable work; use `rch exec -- cargo …` or
+  `scripts/remote/eris.sh` (a bare `cargo check` once filled a Mac's disk). Mac-only lanes (emulators,
+  Mac GPU captures) are the exception.
+- **Working method:** plan §13a–§13b: see state as data, set it up, step/replay, assert with fixtures;
+  reach the game through the `jj` CLI; one bead per fresh agent session; name what you reuse; repair
+  beads reproduce first; stop after 2–3 identical remote failures and reproduce locally; record traps
+  in `docs/learnings/<area>.md`.
 
 ## Code rules
 
