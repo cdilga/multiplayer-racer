@@ -38,7 +38,7 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Builds | Use RCH for heavy builds/tests/sweeps; record receipts. (R35) |
 | **Vehicle modelling** | Canonical method: per-tier reference sheets → silhouette masks/measurement → three.js model script (faceted at every tier, one code-drawn atlas, very lean triangle budget) → silhouette-IoU scoring + regularised optimiser → by-eye cue pass → bake to the contract. Skill `lowpoly-model-from-refs`; evidence `spikes/art-pipeline/J-cruze-lowpoly/`. Blender is not the vehicle path. (R81, amends R54) |
 | Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; intact → dented → detached; the rest is core. The fuller §8.1/§8.2 anatomy is a later target. (R82) |
-| Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Real signs: Wikipedia *Road signs in Australia*. Plan §11.5a. |
+| Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Signs: Wikipedia *Road signs in Australia* is the style source; new/joke signs are allowed if they follow a real sign family's grammar (e.g. yellow diamond "BLOODY BIG JUMPS AHEAD"). Plan §11.5a. |
 
 ## Superseded guidance
 
