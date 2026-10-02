@@ -94,6 +94,7 @@ usage**. Usage is queryable per credential tag through GraphQL
 | Revoke a credential (key alive, API returned 204) | Kept allocating for 14+ minutes afterwards |
 | Credential TTL (`credentials/generate`, `ttl` 600 and 120) | Still allocating 8+ and 4+ minutes **after** expiry |
 | Credential TTL (`generate-ice-servers`, `ttl` 120) | Still allocating 4 minutes after expiry |
+| Lifetime probe (`generate-ice-servers`, `ttl` 120, minted 06:56Z) | Still allocating at 08:47Z, ~1 h 50 min later (probe stopped at its 2 h limit). Assume a leaked credential stays usable for **hours**, not minutes |
 
 So the guard can stop **new** credentials (by deleting keys) but cannot stop a credential already
 handed out, for an unknown period. Players join with public room codes, so any credential we give
