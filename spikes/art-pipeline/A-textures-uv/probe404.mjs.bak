@@ -1,8 +1,0 @@
-import { chromium } from 'playwright';
-const browser = await chromium.launch({ channel: 'chrome' });
-const page = await browser.newPage({ viewport: { width: 1280, height: 1280 } });
-page.on('response', r => { if (r.status() >= 400) console.log('BAD', r.status(), r.url()); });
-page.on('pageerror', e => console.log('PAGEERR', e.message));
-await page.goto('http://localhost:8211/spikes/art-pipeline/A-textures-uv/views.html?mode=checker&glb=out/cruz_missile_interim.glb');
-await page.waitForFunction(() => document.title === 'READY', null, { timeout: 60000 });
-await browser.close();

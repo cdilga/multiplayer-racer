@@ -1,46 +1,15 @@
 {
-  "name": "multiplayer-racer",
-  "version": "1.0.0",
-  "description": "A multiplayer racing game with physics",
-  "main": "server/app.py",
-  "scripts": {
-    "start": "python server/app.py",
-    "dev": "vite",
-    "build": "vite build",
-    "build:watch": "vite build --watch",
-    "dev:local": "concurrently -n vite,flask -c cyan,green \"npm run build:watch\" \"python server/app.py\"",
-    "play:local": "concurrently -n vite,flask -c cyan,green \"npm run build:watch\" \"FLASK_DEBUG=0 python server/app.py\"",
-    "test": "npm run test:unit && npm run test:integration && npm run test:server",
-    "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
-    "test:server": "bash -lc 'if [ -f ~/.pyenv/versions/multiplayer-racer/bin/activate ]; then source ~/.pyenv/versions/multiplayer-racer/bin/activate; fi; python -m unittest server.test_socket_routing'",
-    "test:e2e": "playwright test tests/e2e/full-game.spec.ts",
-    "test:e2e:all": "playwright test tests/e2e",
-    "test:e2e:headed": "playwright test tests/e2e --headed",
-    "test:ci": "npm run test:unit && npm run test:integration && npm run test:server",
-    "test:ci:e2e": "playwright test tests/e2e/full-game.spec.ts",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
-  },
-  "dependencies": {
-    "@dimforge/rapier3d-compat": "^0.19.3",
-    "socket.io-client": "^4.5.4",
-    "three": "^0.182.0"
-  },
+  "name": "joystick-jammers-tooling",
+  "private": true,
+  "description": "Root tooling only: spikes/ and .claude/skills/ import three, Rapier (JS), Playwright and pngjs from the repo-root node_modules (served by each spike's serve.mjs). Pins match the versions the spikes were measured with. The 0.2 game's own web packages get their own manifests, created by the workspace bead (Playtest-1 plan, P1-F01) with freshly qualified versions.",
+  "type": "module",
   "engines": {
-    "node": ">=18.20.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.18"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "@types/node": "^25.0.3",
-    "@types/pngjs": "^6.0.5",
-    "concurrently": "^9.2.3",
-    "pngjs": "^7.0.0",
-    "vite": "^5.4.21",
-    "vite-plugin-top-level-await": "^1.3.1",
-    "vite-plugin-wasm": "^3.2.2",
-    "vitest": "^3.2.4",
-    "wait-on": "^7.2.0"
+    "@dimforge/rapier3d-compat": "0.19.3",
+    "playwright": "1.57.0",
+    "pngjs": "7.0.0",
+    "three": "0.182.0"
   }
 }

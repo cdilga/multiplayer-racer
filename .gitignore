@@ -1,99 +1,61 @@
-# Python specific
+# Rust / WASM (0.2 workspace)
+target/
+pkg/
+*.wasm.map
+
+# Node / web builds
+node_modules/
+dist/
+coverage/
+test-results/
+test-artifacts/
+playwright-report/
+playwright/.cache/
+
+# Python (Blender/offline tools and spikes)
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-invoke-claude.sh
-
-# Virtual Environment
-venv/
 .venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+venv/
+.pytest_cache/
 
-# IDE specific files
+# OS / editors
+.DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Logs
+# Logs and local environment
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Node specific
-node_modules/
-jspm_packages/
-bower_components/
-static/vendor/
-
-# Coverage directory
-coverage/
-.coverage
-htmlcov/
-
-# Playwright test artifacts
-test-results/
-test-artifacts/
-playwright-report/
-playwright/.cache/ 
-
-# Temporary files
-test-logs.txt
-image-*.*
-
-# bv (beads viewer) local config and caches
+# Beads viewer local state
 .bv/
 
-
-# bv (beads viewer) local config and caches
-.bv/
-.claude/settings.local.json
-
-# Blender auto-backups
+# Blender auto-backups and scratch files
 *.blend1
+Untitled.blend
 
-# Local agent-tool configs and scratch
+# Local agent-tool configs (the Agent Mail bearer token lives in these) and scratch
 *.mcp.json
 opencode.json
+.claude/settings.local.json
 .claude/*.bak
 scratch-assets/
-Untitled.blend
+
+# Personal, never commit to this public repo
+.claude/skills/idea-engine/
+.claude/workflows/idea-engine.mjs
+
+# Third-party reference photos (licence unknown)
 *reference images*.zip
-.DS_Store
+
+# Personal recordings and private audio work (owner voice, enrollment packs, auditions)
+/*.m4a
+/*.wav
+/*.mp3
+private/
