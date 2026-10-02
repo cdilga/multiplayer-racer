@@ -32,9 +32,9 @@ ported as code.
 | Removed | When | Recover from | Superseded by |
 |---|---|---|---|
 | 0.1 contracts (`docs/contracts/*`: debug lab, geometry kernel, join routes, socket protocol, telemetry) and deployment notes (`docs/deployment/*`) | 2026-10-02 | `v0.1-final` | Playtest-1 plan §5, §12; master §13, §16, §17.3 |
-| 0.1 reports (`docs/reports/*`), `docs/images/gameplay-jammers.gif` | 2026-10-02 | `c6bfd3f` (reports), `v0.1-final` (gif) | — |
-| `docs/JOYSTICK_JAMMERS_ART_PIPELINE.md` (Blender-centred pipeline) | 2026-10-02 | `c6bfd3f` | R81 code-built method; master §12; `lowpoly-model-from-refs` skill |
-| `docs/plans/ntm-bead-swarm-operations-2026-06-29.md`, `.ntm/prompts/*` (fresh-validator swarm) | 2026-10-02 | `c6bfd3f` | `process/code-first-batch-verify.md` |
+| 0.1 reports (`docs/reports/*`), `docs/images/gameplay-jammers.gif` | 2026-10-02 | `v0.2-pre-cleanup` (reports), `v0.1-final` (gif) | — |
+| `docs/JOYSTICK_JAMMERS_ART_PIPELINE.md` (Blender-centred pipeline) | 2026-10-02 | `v0.2-pre-cleanup` | R81 code-built method; master §12; `lowpoly-model-from-refs` skill |
+| `docs/plans/ntm-bead-swarm-operations-2026-06-29.md`, `.ntm/prompts/*` (fresh-validator swarm) | 2026-10-02 | `v0.2-pre-cleanup` | `process/code-first-batch-verify.md` |
 | `docs/design-brief.md`, `docs/design/*` (neon → lo-fi retro direction) | 2026-09-29 | `bbadc3e` | Master §12, `v0.2-experience-direction.md` |
 | `docs/plans/feedback-design-pass.md`, `docs/plans/gaps/*` | 2026-09-29 | `bbadc3e` | Master §4–§8 |
 | `docs/plans/game-modes-and-flows.md`, `user-flows/*`, `captains-calls-*`, `architecture-findings-*`, `around-couch-*` | 2026-09-29 | `bbadc3e` | Master §3, §10, §13 |
