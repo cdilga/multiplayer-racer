@@ -69,6 +69,43 @@ Mirrors the existing Minecraft pattern (`DILGERCRAFT-TCP-25565`, policy `WAN-to-
 **Undo:** disable or delete policy `WAN-to-JAMMERS-TURN` (closes the hole immediately); then delete
 the DoS policy, VIPs, service and `geo-AU` if no longer wanted.
 
+## Cloudflare TURN fallback: never get billed (spend guard)
+
+Facts (Cloudflare docs, checked 2026-10-02): Realtime TURN bills **$0.05/GB of egress** (bytes sent
+from Cloudflare to TURN clients, including TURN overhead), after a **1,000 GB/month free allowance
+shared with the SFU**; STUN is free. Cloudflare's own budget alerts are **email-only, fire a day
+late and never cap usage**. Per-credential revocation exists; usage is queryable per credential tag
+through GraphQL `callsTurnUsageAdaptiveGroups.sum.egressBytes` (adaptive sampling). So the only way
+to *guarantee* no charge is our own guard, and Cloudflare credentials aren't issued until it runs.
+
+Defence in depth, cheapest first:
+
+1. **Fewer credentials.** The ICE list starts with coturn only. `jj-server` issues Cloudflare
+   credentials only on an explicit relay-fallback request from an authenticated endpoint of an
+   active room whose coturn/direct attempt failed (for example UDP-blocked networks). Credentials
+   carry a `customIdentifier` (room + endpoint), a short TTL (30 min, refreshed by live clients) and
+   per-room/per-IP issuance rate limits. These are abuse limits, not player caps: without a
+   Cloudflare credential a client still has direct paths and coturn.
+2. **Watch usage.** A guard polls the GraphQL dataset every 5 minutes for (a) total egress this
+   billing cycle and (b) the top `customIdentifier`s in the last hour.
+3. **Cut off early.** Thresholds (defaults, owner-tunable): at **25 %** of the free allowance
+   (250 GB) notify the owner; at **50 %** (500 GB) pull the kill switch. Any single identifier above
+   **2 GB/hour** (a controller uses ~7 MB/hour) gets that credential revoked at once. 500 GB of
+   headroom means an attacker would need sustained hundreds of MB/s for longer than the guard's
+   detection lag before a cent is billable.
+4. **Kill switch.** Delete the TURN key (invalidates its credentials; verified by test, see below)
+   and revoke every credential `jj-server` issued from it; `jj-server` then fails Cloudflare
+   issuance and answers coturn-only. **Re-enabling is a manual owner action** (create a new key), so
+   it can't oscillate.
+5. **Independent alarm.** Owner sets a Cloudflare budget alert at $1 (O1b) as a second, slower
+   signal that fires even if the guard is broken.
+
+Guard acceptance (Playtest-1 plan P1-N04b): a deleted key stops an existing credential from
+allocating within a measured time (if it doesn't, revoke-each-credential becomes the primary kill
+path); a synthetic threshold breach triggers notification and kill; the guard alerting on its own
+failure (stale analytics, API errors) is part of done. Cloudflare TURN stays disabled until the
+guard passes these tests.
+
 ## Verifying
 
 ```bash
