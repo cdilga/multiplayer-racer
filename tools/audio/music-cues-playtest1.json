@@ -1,0 +1,23 @@
+[
+  {
+    "id": "lobby",
+    "ref": "TRACK 1_ MAIN MENU _ LOBBY THEME.mp3",
+    "duration": 90,
+    "style": "instrumental, lo-fi electronic, ambient, 95 BPM, chill, dark synth pads, pulsing bass, warm rhodes, vinyl crackle, inviting",
+    "fresh_style": "instrumental, lo-fi electronic, 95 BPM, chill, warm rhodes, pulsing bass, laid-back twangy guitar, sunny, inviting, arcade"
+  },
+  {
+    "id": "race",
+    "ref": "TRACK 2_ RACE THEME - HIGH ENERGY.mp3",
+    "duration": 90,
+    "style": "instrumental, synthwave, upbeat racing music, 140 BPM, energetic, driving electronic beats, soaring synth leads, pulsing bass, arcade energy",
+    "fresh_style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway"
+  },
+  {
+    "id": "results",
+    "ref": "TRACK 4_ VICTORY_PODIUM THEME.mp3",
+    "duration": 60,
+    "style": "instrumental, triumphant electronic, arcade victory fanfare, 125 BPM, euphoric, bright synths, major key, celebratory drums",
+    "fresh_style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival"
+  }
+]
