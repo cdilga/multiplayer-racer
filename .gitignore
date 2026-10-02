@@ -88,3 +88,12 @@ image-*.*
 
 # Blender auto-backups
 *.blend1
+
+# Local agent-tool configs and scratch
+*.mcp.json
+opencode.json
+.claude/*.bak
+scratch-assets/
+Untitled.blend
+*reference images*.zip
+.DS_Store

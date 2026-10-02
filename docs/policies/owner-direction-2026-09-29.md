@@ -1,7 +1,7 @@
 # Owner direction for Joystick Jammers 0.2 (2026-09-29)
 
 **Status:** normative. Implementation agents, bead authors and reviewers must follow this document.
-The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R82). The
+The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R83). The
 design brief is `docs/plans/v0.2-experience-direction.md`.
 
 ## Precedence
@@ -38,6 +38,7 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Builds | Use RCH for heavy builds/tests/sweeps; record receipts. (R35) |
 | **Vehicle modelling** | Canonical method: per-tier reference sheets → silhouette masks/measurement → three.js model script (faceted at every tier, one code-drawn atlas, very lean triangle budget) → silhouette-IoU scoring + regularised optimiser → by-eye cue pass → bake to the contract. Skill `lowpoly-model-from-refs`; evidence `spikes/art-pipeline/J-cruze-lowpoly/`. Blender is not the vehicle path. (R81, amends R54) |
 | Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; intact → dented → detached; the rest is core. The fuller §8.1/§8.2 anatomy is a later target. (R82) |
+| Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Real signs: Wikipedia *Road signs in Australia*. Plan §11.5a. |
 
 ## Superseded guidance
 
