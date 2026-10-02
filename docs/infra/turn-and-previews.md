@@ -12,7 +12,7 @@ Secrets are never in this repo; their **locations** are listed so agents know wh
 | FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `geo-AU`), DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
 | Preview origin `jammers-preview.dilger.dev` | `homelab-tunnel` ingress → `http://192.168.11.12:30290` | Live |
 | Preview edge | TrueNAS custom app `jammers-preview-edge` (Caddy 2.11.4) on `:30290` | Placeholder index; P1-D03 replaces it with `/p/<id>/` routing + generated index |
-| Cloudflare TURN | Cloudflare Realtime (fallback provider) | Needs a TURN key (owner action O1); fallback only |
+| Cloudflare TURN | Cloudflare Realtime (fallback provider) | **Disabled** pending owner decision (credentials can't be revoked; see below). Spend guard + alerts already running |
 
 Infra-as-code for the two TrueNAS apps lives in the owner's private homelab folder
 `~/Documents/dev/system-administration/jammers-turn/` and `.../jammers-preview-edge/` (payload
@@ -75,40 +75,49 @@ The old `codex-audit` admin (still trusting the key retired as compromised on 20
 
 ## Cloudflare TURN fallback: never get billed (spend guard)
 
+**Status 2026-10-02: Cloudflare TURN is disabled (no TURN keys exist) pending an owner decision**,
+because testing showed we can't take a Cloudflare TURN credential back once it's issued.
+
 Facts (Cloudflare docs, checked 2026-10-02): Realtime TURN bills **$0.05/GB of egress** (bytes sent
-from Cloudflare to TURN clients, including TURN overhead), after a **1,000 GB/month free allowance
-shared with the SFU**; STUN is free. Cloudflare's own budget alerts are **email-only, fire a day
-late and never cap usage**. Per-credential revocation exists; usage is queryable per credential tag
-through GraphQL `callsTurnUsageAdaptiveGroups.sum.egressBytes` (adaptive sampling). So the only way
-to *guarantee* no charge is our own guard, and Cloudflare credentials aren't issued until it runs.
+from Cloudflare to TURN clients, including TURN overhead) after a **1,000 GB/month free allowance
+shared with the SFU**; STUN is free. Budget alerts are **email-only, a day late and never cap
+usage**. Usage is queryable per credential tag through GraphQL
+`callsTurnUsageAdaptiveGroups.sum.egressBytes` (adaptive sampling).
 
-Defence in depth, cheapest first:
+**What we measured** (2026-10-02, `tools/net/turn_probe.py` against `turn.cloudflare.com:3478`):
 
-1. **Fewer credentials.** The ICE list starts with coturn only. `jj-server` issues Cloudflare
-   credentials only on an explicit relay-fallback request from an authenticated endpoint of an
-   active room whose coturn/direct attempt failed (for example UDP-blocked networks). Credentials
-   carry a `customIdentifier` (room + endpoint), a short TTL (30 min, refreshed by live clients) and
-   per-room/per-IP issuance rate limits. These are abuse limits, not player caps: without a
-   Cloudflare credential a client still has direct paths and coturn.
-2. **Watch usage.** A guard polls the GraphQL dataset every 5 minutes for (a) total egress this
-   billing cycle and (b) the top `customIdentifier`s in the last hour.
-3. **Cut off early.** Thresholds (defaults, owner-tunable): at **25 %** of the free allowance
-   (250 GB) notify the owner; at **50 %** (500 GB) pull the kill switch. Any single identifier above
-   **2 GB/hour** (a controller uses ~7 MB/hour) gets that credential revoked at once. 500 GB of
-   headroom means an attacker would need sustained hundreds of MB/s for longer than the guard's
-   detection lag before a cent is billable.
-4. **Kill switch.** Delete the TURN key (invalidates its credentials; verified by test, see below)
-   and revoke every credential `jj-server` issued from it; `jj-server` then fails Cloudflare
-   issuance and answers coturn-only. **Re-enabling is a manual owner action** (create a new key), so
-   it can't oscillate.
-5. **Independent alarm.** Owner sets a Cloudflare budget alert at $1 (O1b) as a second, slower
-   signal that fires even if the guard is broken.
+| Lever | Result |
+|---|---|
+| Delete the TURN key | Existing credentials kept allocating for 18+ minutes afterwards; revoking is then impossible (404) |
+| Revoke a credential (key alive, API returned 204) | Kept allocating for 14+ minutes afterwards |
+| Credential TTL (`credentials/generate`, `ttl` 600 and 120) | Still allocating 8+ and 4+ minutes **after** expiry |
+| Credential TTL (`generate-ice-servers`, `ttl` 120) | Still allocating 4 minutes after expiry |
 
-Guard acceptance (Playtest-1 plan P1-N04b): a deleted key stops an existing credential from
-allocating within a measured time (if it doesn't, revoke-each-credential becomes the primary kill
-path); a synthetic threshold breach triggers notification and kill; the guard alerting on its own
-failure (stale analytics, API errors) is part of done. Cloudflare TURN stays disabled until the
-guard passes these tests.
+So the guard can stop **new** credentials (by deleting keys) but cannot stop a credential already
+handed out, for an unknown period. Players join with public room codes, so any credential we give
+them must be assumed leakable. A hard "never charged" guarantee therefore can't rest on revocation.
+
+**What exists now** (safe to keep; it protects any future key from minute one):
+
+- `jammers-turn-guard` TrueNAS app (code `tools/turn-guard/guard.py`): every 5 min reads 31-day
+  TURN egress and the top credential tags; pushes an alert at 25 % of the free allowance; at 50 %,
+  or any tag above 2 GB/hour, deletes every `jammers-` key and pushes an alert; never re-enables;
+  alerts when blind for 15 min. Scoped token (Calls Write + Account Analytics Read) in
+  `~/.config/jammers/cf-turn-guard.env`.
+- Alerts: a local-only Home Assistant webhook automation (`automation.jammers_turn_guard_alert`,
+  approved by the owner for this one use only; nothing else in the game may depend on HA) plus
+  Cloudflare's own in-band email budget alerts at **$1** and $10.
+
+**Options for the owner** (until one is chosen, `jj-server` issues self-hosted coturn credentials only):
+
+1. **No Cloudflare TURN.** Self-hosted coturn covers UDP; add TURN over TLS on coturn (a second,
+   cert-backed WAN port such as TCP 5349) for UDP-blocked networks. Zero billing risk; some very
+   locked-down networks may still fail.
+2. **A separate Cloudflare account with no payment method** used only for TURN, so overage can't be
+   billed at all (check first whether Realtime works on such an account and what happens at the free
+   limit).
+3. **Accept a bounded, monitored risk**: Cloudflare credentials only on an authenticated relay-fallback
+   request, per-room/IP issuance limits, the guard and alerts above. Not a guarantee.
 
 ## Verifying
 

@@ -20,6 +20,8 @@ fi
 # 2080's Turing GPU, so attention runs on PyTorch SDPA.
 uv pip install --python "$VENV/bin/python" -U qwen-tts faster-whisper soundfile numpy \
   "huggingface_hub[hf_xet]"
+# Note: faster-whisper 1.2.1 passes metadata_errors= to av.open, which PyAV 15+ removed, so the
+# scripts decode audio with soundfile + torchaudio and pass arrays to Whisper instead.
 uv pip install --python "$VENV/bin/python" --reinstall --index-url https://download.pytorch.org/whl/cu130 \
   torch torchaudio
 

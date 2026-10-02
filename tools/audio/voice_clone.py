@@ -58,6 +58,19 @@ def load_model(dtype_name):
     raise RuntimeError(f"could not load {MODEL_ID} in {order}: {last}")
 
 
+
+def load_16k(path):
+    """Decode audio for Whisper without PyAV (faster-whisper's av.open breaks on PyAV 15+)."""
+    import soundfile as _sf
+    import torch as _torch
+    import torchaudio.functional as _F
+
+    audio, sr = _sf.read(str(path), dtype="float32", always_2d=True)
+    mono = _torch.from_numpy(audio.mean(axis=1))
+    if sr != 16000:
+        mono = _F.resample(mono, sr, 16000)
+    return mono.numpy()
+
 def words(text):
     return re.findall(r"[a-z0-9']+", text.lower())
 
@@ -73,7 +86,10 @@ def wer(ref, hyp):
     return d[len(h)] / max(1, len(r))
 
 
-def spk_embedding(model, audio, sr):
+def spk_embedding(model, audio, sr, max_seconds=8.0):
+    # The prompt builder runs the codec over the whole clip; a runaway take can be long enough to
+    # exhaust 8 GB, and 8 s is plenty to compare voices.
+    audio = audio[: int(max_seconds * sr)]
     item = model.create_voice_clone_prompt(ref_audio=(audio, sr), x_vector_only_mode=True)[0]
     emb = getattr(item, "ref_spk_embedding", None)
     if emb is None:  # fall back to whatever tensor field the installed version uses
@@ -119,10 +135,18 @@ def main():
             audio = np.asarray(wavs[0], dtype=np.float32)
             path = out / "takes" / f"{cue_id}.s{seed}.wav"
             sf.write(path, audio, sr)
-            emb = spk_embedding(model, audio, sr)
-            sim = float(torch.nn.functional.cosine_similarity(emb, ref_emb, dim=0))
+            seconds = len(audio) / sr
+            # A take far longer than its text can need is a runaway generation: keep it for the
+            # record but never pick it.
+            runaway = seconds > 2.0 + 0.6 * len(words(text))
+            try:
+                emb = spk_embedding(model, audio, sr)
+                sim = float(torch.nn.functional.cosine_similarity(emb, ref_emb, dim=0))
+            except torch.cuda.OutOfMemoryError:
+                torch.cuda.empty_cache()
+                sim = 0.0
             takes.append({"seed": seed, "file": str(path), "speaker_sim": round(sim, 4),
-                          "seconds": round(len(audio) / sr, 2)})
+                          "seconds": round(seconds, 2), "runaway": runaway})
             print(f"rendered {cue_id} seed {seed} sim {sim:.3f}", flush=True)
         manifest["cues"].append({"cue": cue_id, "text": text, "takes": takes})
 
@@ -138,11 +162,13 @@ def main():
     asr = WhisperModel("large-v3", device="cuda", compute_type="float16")
     for cue in manifest["cues"]:
         for take in cue["takes"]:
-            segs, _ = asr.transcribe(take["file"], language="en", beam_size=5)
+            segs, _ = asr.transcribe(load_16k(take["file"]), language="en", beam_size=5)
             take["heard"] = " ".join(s.text.strip() for s in segs)
             take["wer"] = round(wer(cue["text"], take["heard"]), 3)
             # Word accuracy first (a wrong word is unusable), then voice match.
             take["score"] = round((1.0 - min(take["wer"], 1.0)) * 0.6 + max(take["speaker_sim"], 0.0) * 0.4, 4)
+            if take.get("runaway"):
+                take["score"] = 0.0
         best = max(cue["takes"], key=lambda t: t["score"])
         cue["best"] = best
         shutil.copyfile(best["file"], out / "best" / f"{cue['cue']}.wav")
