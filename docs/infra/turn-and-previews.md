@@ -9,7 +9,7 @@ Secrets are never in this repo; their **locations** are listed so agents know wh
 |---|---|---|
 | Self-hosted TURN (coturn 4.18.0) | TrueNAS custom app `jammers-turn`, host network, `192.168.11.12` | Running; local allocation test passed |
 | `turn.dilger.dev` | Cloudflare DNS-only CNAME → `triton.dilger.dev` (A record kept on the WAN IP by triton's DDNS timer) | Live |
-| FortiGate hole for TURN | VIP + policy + DoS policy, UDP only (below) | **Pending** (needs the management VLAN) |
+| FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `geo-AU`), DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
 | Preview origin `jammers-preview.dilger.dev` | `homelab-tunnel` ingress → `http://192.168.11.12:30290` | Live |
 | Preview edge | TrueNAS custom app `jammers-preview-edge` (Caddy 2.11.4) on `:30290` | Placeholder index; P1-D03 replaces it with `/p/<id>/` routing + generated index |
 | Cloudflare TURN | Cloudflare Realtime (fallback provider) | Needs a TURN key (owner action O1); fallback only |
@@ -40,7 +40,7 @@ builders; the TURN one reads its secret from `~/.config/jammers/turn.env`).
 
 ## coturn settings (no secret)
 
-Listening `192.168.11.12:3478/udp`, relay `49160–49359/udp` (200 ports), realm/server-name
+Listening `192.168.11.12:3479/udp`, relay `49160–49359/udp` (200 ports), realm/server-name
 `turn.dilger.dev`, `fingerprint`, `stale-nonce=600`, `no-tcp`, `no-tls`, `no-tcp-relay`, `no-cli`,
 `no-software-attribute`, `no-multicast-peers`, denied-peer-ip for 0/8, 10/8, 100.64/10, 127/8,
 169.254/16, 172.16/12, 192.0.0/24, 192.0.2/24, 192.88.99/24, 192.168/16, 198.18/15, 198.51.100/24,
@@ -50,12 +50,12 @@ Secret: `TURN_STATIC_AUTH_SECRET` in `~/.config/jammers/turn.env` on the owner's
 in the `jammers-turn` app's compose config on TrueNAS. The jj-server deploy gets it as a deploy
 secret (P1-N04/P1-D04), never from this repo.
 
-## FortiGate change (to apply from the management VLAN)
+## FortiGate change (applied 2026-10-02 as `claude-admin`, full-config backup `~/.local/state/fortigate-backups/Falcon_Root-20261002T061500Z-pre-jammers-turn-full-configuration.txt`)
 
 Mirrors the existing Minecraft pattern (`DILGERCRAFT-TCP-25565`, policy `WAN-to-DILGERCRAFT`):
 
-- Service `JJ-TURN-UDP`: UDP 3478 and 49160–49359.
-- VIPs on the WAN interface → `192.168.11.12`: `JJ-TURN-UDP-3478` (3478→3478) and
+- Service `JJ-TURN-UDP`: UDP 3479 and 49160–49359. (UDP 3478 was already forwarded to another host by the existing `codbox3` VIP, so TURN uses 3479; browsers accept any port.)
+- VIPs on the WAN interface → `192.168.11.12`: `JJ-TURN-UDP-3479` (3479→3479) and
   `JJ-TURN-UDP-RELAY` (49160–49359 → same).
 - Address `geo-AU` (type geography, AU) as the source: the parties are in Australia; remote
   players abroad fall back to Cloudflare TURN. Easy to widen later.
@@ -66,8 +66,12 @@ Mirrors the existing Minecraft pattern (`DILGERCRAFT-TCP-25565`, policy `WAN-to-
 - No `cfg-save revert` (on some builds the revert path is a reboot); a full config backup is taken
   first under `~/.local/state/fortigate-backups/`.
 
-**Undo:** disable or delete policy `WAN-to-JAMMERS-TURN` (closes the hole immediately); then delete
-the DoS policy, VIPs, service and `geo-AU` if no longer wanted.
+**Undo:** `config firewall policy` → `edit 32` → `set status disable` closes the hole immediately. Full
+removal: `delete 32` (policy), `config firewall DoS-policy` → `delete 1`, then delete the VIPs
+`JJ-TURN-UDP-3479`/`JJ-TURN-UDP-RELAY`, service `JJ-TURN-UDP` and address `geo-AU`.
+
+Management access: `ssh claude-admin@192.168.50.1` (super_admin, key auth, trusted host VLAN 50 only).
+The old `codex-audit` admin (still trusting the key retired as compromised on 2026-08-18) was deleted.
 
 ## Cloudflare TURN fallback: never get billed (spend guard)
 
@@ -114,8 +118,10 @@ curl -s https://jammers-preview.dilger.dev/ | head -5
 ssh truenas 'sudo -n docker logs --tail 20 $(sudo -n docker ps -q --filter name=jammers-turn)'
 ```
 
-From outside the LAN (after the VIP lands): a TURN allocation with REST credentials against
-`turn.dilger.dev:3478` must succeed, and a relay candidate must appear in a WebRTC trickle-ICE test.
+From outside the LAN, from an Australian source (the policy is AU-only): `python3 tools/net/turn_probe.py
+--host turn.dilger.dev --port 3479 --secret-env TURN_STATIC_AUTH_SECRET --relay-test` must report STUN OK,
+allocate OK and both relay directions OK (`--relay-test` needs a host whose public IP is its own; on a
+phone use a WebRTC trickle-ICE page and look for a `relay` candidate). A non-AU source is dropped by design.
 
 ## Undo everything
 
