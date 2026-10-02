@@ -34,3 +34,6 @@ art/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 spikes/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 art/**/*.obj filter=lfs diff=lfs merge=lfs -text
 spikes/**/*.obj filter=lfs diff=lfs merge=lfs -text
+assets/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+assets/**/*.wav filter=lfs diff=lfs merge=lfs -text
+assets/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
