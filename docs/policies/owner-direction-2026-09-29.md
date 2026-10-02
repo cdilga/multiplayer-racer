@@ -1,7 +1,7 @@
 # Owner direction for Joystick Jammers 0.2 (2026-09-29)
 
 **Status:** normative. Implementation agents, bead authors and reviewers must follow this document.
-The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R91). What the
+The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R92). What the
 first playtest builds, and in what order, is `docs/plans/v0.2-playtest-1-plan.md` (the bead source
 for the Minimum build). The design brief is `docs/plans/v0.2-experience-direction.md`.
 
@@ -45,6 +45,7 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Audio (R89) | Announcer = the owner's voice cloned with Qwen3-TTS 1.7B on eris (FrankenWhisper transcripts); music = YuE2 at full precision on eris, instrumental only. Highest quality wins; weights/recordings never in the repo. (R89 amends R13/R19/R55) |
 | **Validation in the loop** | Every part of the game is introspectable as structured data, settable, steppable/replayable and fixture-testable by agents. Capability required; design is the implementer's call. (R90) |
 | Coordination | NTM paused; native Claude Code agents and messaging; Agent Mail for reservations and the commit guard. (R91) |
+| Cloudflare TURN (R92) | Fallback enabled with an **accepted, bounded** billing risk: lazy issuance on relay-fallback requests with per-room/IP limits, spend guard (alert 10 %, delete keys at 25 % of the free 1,000 GB), CF budget emails. Issued credentials can't be revoked, so no zero-charge guarantee. HA push approved for this alert only; nothing else may depend on Home Assistant. (R92) |
 | 0.1 code | The 0.1 code was removed from the `v0.2-revamp` branch on 2026-10-02; read it with `git show v0.1-final:<path>` (tag on `main` @ `bbadc3e`). Production stays 0.1 on `main` until 0.2 is promoted. Nothing is ported as code; useful cases are re-expressed as 0.2 tests (Playtest-1 plan §14). (R87) |
 | Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Signs: Wikipedia *Road signs in Australia* is the style source; new/joke signs are allowed if they follow a real sign family's grammar (e.g. yellow diamond "BLOODY BIG JUMPS AHEAD"). Plan §11.5a. |
 

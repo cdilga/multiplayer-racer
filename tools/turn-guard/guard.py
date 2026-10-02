@@ -11,7 +11,7 @@ owner action. Details: docs/infra/turn-and-previews.md ("never get billed").
 Environment:
   CF_ACCOUNT_ID, CF_TURN_GUARD_TOKEN   scoped token: Calls Write + Account Analytics Read
   HA_WEBHOOK_URL                       local-only Home Assistant webhook that pushes to the owner
-  FREE_GB=1000  NOTIFY_FRACTION=0.25  KILL_FRACTION=0.5  PER_IDENTIFIER_GB_PER_HOUR=2
+  FREE_GB=1000  NOTIFY_FRACTION=0.10  KILL_FRACTION=0.25  PER_IDENTIFIER_GB_PER_HOUR=2
   INTERVAL_SECONDS=300  KEY_PREFIX=jammers-  STATE_DIR=/state  DRY_RUN=0
 Usage: guard.py            run forever
        guard.py --once     one check, print the status JSON, exit (for tests)
@@ -31,8 +31,8 @@ ACC = ENV["CF_ACCOUNT_ID"]
 TOKEN = ENV["CF_TURN_GUARD_TOKEN"]
 HOOK = ENV.get("HA_WEBHOOK_URL", "")
 FREE_BYTES = float(ENV.get("FREE_GB", "1000")) * 1e9
-NOTIFY_AT = float(ENV.get("NOTIFY_FRACTION", "0.25")) * FREE_BYTES
-KILL_AT = float(ENV.get("KILL_FRACTION", "0.5")) * FREE_BYTES
+NOTIFY_AT = float(ENV.get("NOTIFY_FRACTION", "0.10")) * FREE_BYTES
+KILL_AT = float(ENV.get("KILL_FRACTION", "0.25")) * FREE_BYTES
 PER_ID_HOURLY = float(ENV.get("PER_IDENTIFIER_GB_PER_HOUR", "2")) * 1e9
 INTERVAL = int(ENV.get("INTERVAL_SECONDS", "300"))
 PREFIX = ENV.get("KEY_PREFIX", "jammers-")

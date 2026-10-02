@@ -12,7 +12,7 @@ Secrets are never in this repo; their **locations** are listed so agents know wh
 | FortiGate hole for TURN | VIPs `JJ-TURN-UDP-3479` + `JJ-TURN-UDP-RELAY`, policy 32 `WAN-to-JAMMERS-TURN` (src `geo-AU`), DoS policy 1 `JJ-TURN-DOS` | **Live 2026-10-02**; verified from outside: STUN, authenticated allocation, data both ways through the relay |
 | Preview origin `jammers-preview.dilger.dev` | `homelab-tunnel` ingress → `http://192.168.11.12:30290` | Live |
 | Preview edge | TrueNAS custom app `jammers-preview-edge` (Caddy 2.11.4) on `:30290` | Placeholder index; P1-D03 replaces it with `/p/<id>/` routing + generated index |
-| Cloudflare TURN | Cloudflare Realtime (fallback provider) | **Disabled** pending owner decision (credentials can't be revoked; see below). Spend guard + alerts already running |
+| Cloudflare TURN | Cloudflare Realtime (fallback provider), key `jammers-fallback` | Enabled with accepted bounded risk (R92); nothing issues credentials until P1-N04b. Guard alerts at 10 %, deletes keys at 25 % |
 
 Infra-as-code for the two TrueNAS apps lives in the owner's private homelab folder
 `~/Documents/dev/system-administration/jammers-turn/` and `.../jammers-preview-edge/` (payload
@@ -75,8 +75,10 @@ The old `codex-audit` admin (still trusting the key retired as compromised on 20
 
 ## Cloudflare TURN fallback: never get billed (spend guard)
 
-**Status 2026-10-02: Cloudflare TURN is disabled (no TURN keys exist) pending an owner decision**,
-because testing showed we can't take a Cloudflare TURN credential back once it's issued.
+**Status 2026-10-02 (R92): the owner accepted a bounded risk (option 3 below).** Key `jammers-fallback`
+exists (secret in `~/.config/jammers/cf-turn-key.env`, for the `jj-server` deploy only); nothing issues
+credentials until P1-N04b's lazy, rate-limited issuance lands. Testing showed we can't take a
+Cloudflare TURN credential back once it's issued, hence the early thresholds.
 
 Facts (Cloudflare docs, checked 2026-10-02): Realtime TURN bills **$0.05/GB of egress** (bytes sent
 from Cloudflare to TURN clients, including TURN overhead) after a **1,000 GB/month free allowance
@@ -100,7 +102,7 @@ them must be assumed leakable. A hard "never charged" guarantee therefore can't 
 **What exists now** (safe to keep; it protects any future key from minute one):
 
 - `jammers-turn-guard` TrueNAS app (code `tools/turn-guard/guard.py`): every 5 min reads 31-day
-  TURN egress and the top credential tags; pushes an alert at 25 % of the free allowance; at 50 %,
+  TURN egress and the top credential tags; pushes an alert at 10 % (100 GB) of the free allowance; at 25 % (250 GB),
   or any tag above 2 GB/hour, deletes every `jammers-` key and pushes an alert; never re-enables;
   alerts when blind for 15 min. Scoped token (Calls Write + Account Analytics Read) in
   `~/.config/jammers/cf-turn-guard.env`.
@@ -108,7 +110,7 @@ them must be assumed leakable. A hard "never charged" guarantee therefore can't 
   approved by the owner for this one use only; nothing else in the game may depend on HA) plus
   Cloudflare's own in-band email budget alerts at **$1** and $10.
 
-**Options for the owner** (until one is chosen, `jj-server` issues self-hosted coturn credentials only):
+**Options considered** (option 3 chosen 2026-10-02):
 
 1. **No Cloudflare TURN.** Self-hosted coturn covers UDP; add TURN over TLS on coturn (a second,
    cert-backed WAN port such as TCP 5349) for UDP-blocked networks. Zero billing risk; some very
