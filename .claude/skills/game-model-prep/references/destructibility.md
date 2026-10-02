@@ -11,14 +11,18 @@ Model panels/bumper/doors/wheels separately (many CC0 car kits ship a `debris-*`
 3. **Transfer the vehicle's velocity** (`setLinvel`) + an explosion kick (`applyImpulse` /
    `applyTorqueImpulse`) — or parts "pop" and drop straight down.
 
-## Lifecycle
-spawn (with TTL) → simulate (bodies auto-sleep when settled → nearly free) → after TTL fade
-`material.opacity` (needs `transparent:true`) → `world.removeRigidBody(body)` (auto-removes its
-colliders) → **return mesh + slot to a pool**.
+## Lifecycle (project policy decides; read the adapter)
+Default, and the **only** option for Joystick Jammers (owner rulings R58/R66): spawn → simulate
+→ bodies auto-sleep when settled (nearly free) → wake on contact → still present and dynamic at
+round end. No TTL, fade-out, count cap, FIFO recycling, static conversion or merging.
+
+Only where a project's policy explicitly allows expiry: after a TTL fade `material.opacity`
+(needs `transparent:true`) → `world.removeRigidBody(body)` (auto-removes its colliders) → return
+mesh + slot to a pool. Never import that pattern into JJ.
 
 ## Performance
-- **Cap concurrent debris** (e.g. 30–60); FIFO-recycle the oldest past the cap.
-- **Pooling is the headline win** — avoids physics-WASM alloc/GC churn.
+- Sleeping is the main win: a settled pile costs almost nothing until something hits it.
+- **Reuse allocation slots** to avoid physics-WASM alloc/GC churn (reuse is not removal).
 - Prefer cuboid/ball/convexHull over trimesh colliders.
 - CCD only on small/fast fragments (tunneling vs cost).
 - `InstancedMesh`/`BatchedMesh` to cut draw calls (note: per-instance opacity isn't supported on a

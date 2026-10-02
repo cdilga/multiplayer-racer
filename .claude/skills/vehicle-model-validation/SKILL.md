@@ -1,199 +1,121 @@
 ---
 name: vehicle-model-validation
-description: Validate Joystick Jammers vehicle model imports, replacements, and asset-normalization work before calling them done. Use when adding or changing car/vehicle GLB assets, vehicle manifests/catalog entries, recolor/material conventions, wheel rigging, collider fit, model previews, asset viewer behavior, or any bead involving FB-assetcatalog, FB-assetnorm, FB-assets, FB-carselect, vehicle selection, or car model visual polish.
+description: Acceptance gate for Joystick Jammers 0.2 vehicle models (code-built per R81). Use before calling any vehicle model, LOD, damage-part, paint/identity, contract sidecar, loader or in-game vehicle-rendering task done, including the Cruz Missile and any later roster car.
 ---
 
-# Vehicle Model Validation
+# Vehicle Model Validation (0.2)
 
-Use this skill as the final gate for any vehicle model import or normalization task. It is separate
-from gameplay tuning: the question is not "does the car drive well?" but "is this model import
-production-ready for the game to render, identify, recolor, rig, validate, and debug?"
+The final gate for vehicle model work. It answers "is this car production-ready for the game to
+render, identify, damage, load and simulate?", not "does it drive well?" (that's G-FEEL). Don't
+call a vehicle task done without visual evidence, check output and a written PASS/FAIL report.
 
-Do not mark a model task done without visual evidence, test/check output, and a written pass/fail
-summary against the active requirements.
+0.1's GLB-pack import pipeline (`static/assets/vehicles/`, `VehicleFactory`, per-mesh material
+cloning) was deleted from this branch. It's readable at `git show v0.1-final:<path>` as history
+only. Don't rebuild it.
 
-## Relationship to `game-model-prep` (the generic skill)
+## First: derive the active requirements
 
-This skill is the **Joystick Jammers acceptance gate (Stage H)** and project adapter for the
-engine-generic `game-model-prep` skill (`.claude/skills/game-model-prep/`). Run `game-model-prep`
-for the *workflow* (normalize → rig → collider/CoM → balance → destruct → color → visual QA); run
-*this* for JJ wiring and the final gate before a per-model bead can close. The per-model plan is
-`docs/plans/per-model-game-readiness-and-balance-2026-06-28.md`.
+Read, in this order, and only then validate:
 
-### Verified codebase facts (2026-06-28) — build on these
-- **No glTF loader yet.** `VehicleFactory._createVisualMesh` (`VehicleFactory.js:100`) is primitives
-  only; `ResourceLoader` is JSON-only. First adapter task = a glTF path (wheels stay tagged
-  `userData.isWheel`/`wheelIndex`, synced by index).
-- **CoM already works** — `PhysicsSystem.createVehicleBody:631` `colliderDesc.setMassProperties(...)`
-  overrides `setDensity(4.0)`; `physics.centerOfMass` is honored (tuning, not plumbing).
-- **No top-speed cap** — `applyVehicleControls:817` = `accel * engine.force` vs `linearDamping`;
-  `vc.currentVehicleSpeed()` available if you add a cap.
-- **`setWheelSideFrictionStiffness` unused** — only `frictionSlip` is set; adding side-friction is
-  net-new (cleaner wall-slide than today's `wallSlideGrip`).
-- **Destruction fires in both modes** — `DamageSystem:269` always emits `damage:destroyed`; hook debris there.
-- **Rigging is bimodal** — Kenney passes natively
-  (`node .claude/skills/game-model-prep/scripts/inspect-wheel-pivots.mjs <glb>` → exit 0); Quaternius
-  Poly-Pizza models fuse/mis-pivot wheels (exit 1) → Blender fix or defer.
-- **Tooling:** Playwright installed; Blender + gltf-transform not (use `npx` for gltf-transform/validator).
+1. `docs/policies/owner-direction-2026-09-29.md`: R81 (code-built, faceted at every tier, lean
+   triangle budget) and R86 (damage = intact → loose → detached; no denting).
+2. `docs/plans/v0.2-playtest-1-plan.md` §6 (vehicle and damage contract) for the Playtest-1 car,
+   and `docs/plans/v0.2-revamp-plan-2026-09-28.md` §12.3–§12.5 for the general contract.
+3. The modelling method: `.claude/skills/lowpoly-model-from-refs/`. Reference implementation and
+   evidence: `spikes/art-pipeline/J-cruze-lowpoly/REPORT.md`.
+4. The changed files: model script + params, atlas, sidecar, baked GLB, loader/renderer code and
+   tests touched by the task.
 
-## First: Derive Current Requirements
+Don't invent scope, and don't skip a state the active plan requires just because the task didn't
+name it.
 
-Before validating, read the current project context instead of assuming a fixed checklist:
+## Gates
 
-1. Read `AGENTS.md` for architecture/perf constraints.
-2. Read `docs/plans/asset-spike-2026-06-28.md`, especially the second-pass vehicle-selection
-   pipeline.
-3. Read `docs/plans/feedback-design-pass.md` §11.5 and the bead table rows for `FB-assetcatalog`,
-   `FB-assetnorm`, `FB-assets`, `FB-carselect`, and `FB-instperf`.
-4. Inspect the changed files: vehicle GLBs, vehicle manifests/catalog entries, normalization scripts,
-   `VehicleFactory`, `ResourceLoader`, `frontend/car-viewer`, and tests touched by the task.
-5. Identify which states the current model is expected to support from the active plan/code. Do not
-   invent scope, but do not ignore required states because the user did not name them.
+### 1. Source and contract
+- The model comes from its **model script + parameter file + reference sheets** (R81), not a
+  hand-edited mesh. Re-running the script reproduces the shipped geometry byte-for-byte.
+- Baked output (GLB + `*.asset.json` sidecar) passes the contract validator with no waivers.
+- Units are metres, one documented forward axis, **origin on the ground between the axles**.
+- Part IDs are exactly the active set (Playtest 1: `core`, `front`, `back`, `door_FL/FR/RL/RR`,
+  `wheel_FL/FR/RL/RR`), identical at every LOD, each with pivot/hinge, mass fraction and collider
+  proxy. **Mass fractions sum to 1 ± 0.01** (Spike C found 0.92).
+- Required anchors: `cam_fp`, `cam_tp_target`, `com`, roof-number mount, L-plate mounts.
+- No real badges, logos or trademarked names in geometry, atlas or names.
 
-Typical current requirements include:
+### 2. Geometry and budget
+- Faceted/polygonal look at every tier; no smooth shading creeping in.
+- Triangles per LOD are within the qualified budget (starting point from Spike J:
+  ≤ ~1.3k / 0.9k / 0.6k). Report each part's count.
+- Silhouette IoU against the reference sheets meets the skill's target (~0.95 weighted), with the
+  by-eye cue pass recorded (lamps, grille, livery, accessories).
+- Mesh hygiene: finite values, valid indices, no zero-area triangles.
 
-- normalized materials: `paint`, `tyre`, `glass`, `metal`, `light`
-- stable wheel nodes: `wheel_fl`, `wheel_fr`, `wheel_rl`, `wheel_rr`
-- declared forward axis, scale, ground offset, roof-number mount, and collider-fit metadata
-- emissive headlights/taillights and under-glow when the current asset bead includes them
-- visual support for steer/spin wheels, suspension travel, wheelie/airborne/landing readability,
-  damageable lights, and player color/number identity when those systems are in scope
+### 3. Paint, identity and draw cost
+- **One material for all cars.** Player colour comes from `instanceColor` through the atlas
+  **paint key** (pure-white texels tint; glass, lamps and livery keep their colours). Per-car
+  material clones fail this gate.
+- Instanced rendering: one InstancedMesh per part type across all cars, so draws per tile stay
+  constant as N grows. Report draws/frame for 24 cars × 24 tiles (Spike J: 216).
+- Roof number legible in the smallest reference tile (24 tiles at 1080p, car ~100 px tall).
+- Tyres stay dark/neutral under every player colour.
 
-## Validation Pipeline
+### 4. Damage states (R86)
+- Each part shows **intact → loose → detached**. Loose is a visible hang/wobble about the part's
+  hinge while still attached. Detached becomes a dynamic body with its own collider and mass,
+  inheriting velocity, and stays on the track for the round (R58: no TTL, cap, static conversion).
+- A missing part reads as a dark opening (the core holds dark bays); no see-through holes into
+  the void.
+- Wheel loss is visible and the car stays recoverable (limp/wreck rule in the Playtest-1 plan).
 
-### 1. Source and Catalog Gate
+### 5. Physics fit
+- Collider proxies are convex/cuboid/capsule, never render-mesh trimesh. The cabin proxy is
+  genuinely rounded (Spike C: a "round" proxy that was really a box).
+- Loads into `jj-sim` (native) and settles: no NaN, no ground penetration, ride height within the
+  profile's band. Flip recovery is handled by the sim's assist, not assumed from the shape.
 
-Confirm the model is a cataloged local asset, not an ad hoc file:
+### 6. Visual evidence (from the real loader and renderer, not a DCC viewport)
+Minimum set: default colour; two bright player colours; tyre-neutral proof; front/side/rear/top
+and 3/4; LOD ladder at its switch sizes; damage strip intact → loose → each part detached; 1, 4
+and 24-tile grid captures with own-car identity visible; collider overlay. Use reproducible
+Playwright captures and say which commit they came from.
 
-- GLB path is under `static/assets/vehicles/`.
-- `vehicles/catalog.json` or the current equivalent references the model by ID.
-- The player-facing payload uses sanitized appearance fields such as `vehicleId`, `color`, `number`,
-  and `skinId`; it must not send arbitrary asset URLs.
-- License/source is recorded in the planning note or manifest when the asset is imported.
-- The primitive fallback path still exists for CI/headless use.
+### 7. Automated checks
+Run the narrowest checks that prove the change, then broaden with risk: contract validator,
+model-script reproducibility, `jj-sim` load/settle scenario, renderer capture test, and the N×N
+instancing bench when materials/batching/loader changed. If a check doesn't exist yet, say so
+and name the bead that adds it. A screenshot is not an automated check.
 
-### 2. Geometry and Scale Gate
-
-Check the model after normalization, not just the raw downloaded GLB:
-
-- glTF parses cleanly as GLB/glTF 2.0.
-- Triangle count, material count, texture size, and file size are within the manifest budget.
-- AABB dimensions after manifest scale match the intended physics body within tolerance.
-- Bottom Y/ground contact is sane after normalization.
-- Forward axis is declared and verified with lights, heading marker, or debug cone.
-- No embedded cameras, animations, or point lights ship in v1 selectable vehicles unless the active
-  plan explicitly allows them.
-
-Technique that has worked here: use an oriented collider/debug proxy in the viewer, not only an
-axis-aligned bounding box. The current screenshot-style failure to catch includes collider/visual
-mismatch around karts, driver heads, and protruding wheels.
-
-### 3. Material and Recolor Gate
-
-Reject "single-color whole model" results. The current failure mode is a car where body, wheels, and
-trim all inherit the same flat color.
-
-Required checks:
-
-- `paint` tints to the player color.
-- `tyre` stays black/neutral when `paint` changes.
-- `glass`, `metal`, and `light` stay readable and distinct.
-- Headlights/taillights use emissive materials or added emissive geometry, not per-car point lights
-  for the normal multiplayer path.
-- Bloom/under-glow, if present, follows player color without washing the whole model.
-
-Techniques shown successful in this project:
-
-- clone materials per mesh before tinting so shared pack materials do not recolor wheels and glass
-- normalize raw pack semantics offline to `paint`/`tyre`/`glass`/`metal`/`light`
-- keep a dominant-material fallback only for debug tools, not as the production contract
-- force tyres/wheels to black or dark neutral after body tinting
-
-### 4. Rigging and State Gate
-
-Validate the visual rig required by the current game state pipeline:
-
-- four wheel meshes resolve and have stable indices
-- front axle is identifiable
-- wheel pivots are close enough to wheel centers for spin and steer
-- wheel spin, front-wheel steering, and suspension bob are visually plausible in the model viewer
-- body effects, light cones, under-glow, and number plates remain attached during suspension/wheelie
-  preview states
-- roof number mount remains readable from the expected camera angles
-- if damageable lights are in scope, light parts can be individually targeted/hidden/dimmed without
-  recoloring the whole car
-
-Do not require skeletal animation for v1 vehicle selection unless the active bead explicitly asks for
-rigged avatars or animated drivers. If the model includes a driver, validate collider fit and color
-separation, but keep full avatar rigging as a separate plan.
-
-### 5. Visual Evidence Gate
-
-Every model import needs screenshots before it is called done. Save or link evidence from the actual
-viewer/game path, not only a DCC viewport.
-
-Minimum evidence:
-
-- neutral/default color
-- bright player color recolor
-- wheel/tyre-black proof after recolor
-- front/side/rear or orbit views
-- top-down or high-angle view showing roof number/readability
-- collider/debug proxy overlay
-- rig/state preview: wheel spin, front steer, and suspension bob when supported
-- any known problematic state from the task, such as wheelie, light damage, boost under-glow, or
-  camera-facing identity marker
-
-Prefer Playwright screenshots or reproducible browser screenshots. If a human screenshot is used,
-state how it was produced and which commit/files it corresponds to.
-
-### 6. Automated Checks Gate
-
-Run the relevant checks for the files touched. Choose the narrowest checks that actually validate the
-change, then broaden if risk is higher.
-
-Expected checks for model imports:
-
-- asset validator or equivalent script for catalog/manifest/model contract
-- unit/integration tests for catalog loading or manifest parsing when present
-- `npm run build` if browser code, loaders, or viewer code changed
-- Playwright/visual smoke for the model viewer or in-game host path when rendering changed
-- perf smoke for 4/24/60 cars only when the change touches batching, materials, lights, or loader
-  behavior
-
-If a planned validator does not exist yet, say that explicitly and replace it with a manual inspection
-plus a concrete follow-up bead. Do not pretend a screenshot is an automated check.
-
-## Done Report Format
-
-Use this structure in the final note for any vehicle model validation:
+## Done report
 
 ```markdown
 Vehicle Model Validation: PASS/FAIL
 
-Model/catalog IDs:
+Vehicle/part IDs:            Commit:
 Changed files:
-
-Requirement source:
-- docs/plans/...
-- code/manifests inspected...
+Requirement source: (policy rulings, plan sections)
 
 Visual evidence:
-- screenshot/path: what it proves
-- screenshot/path: what it proves
+- path: what it proves
 
 Checks run:
 - command: result
 
 Findings:
-- PASS/FAIL material separation
-- PASS/FAIL wheel rig/state preview
-- PASS/FAIL collider fit
-- PASS/FAIL scale/origin/forward axis
-- PASS/FAIL identity/readability
+- PASS/FAIL contract + reproducibility
+- PASS/FAIL budget + silhouette
+- PASS/FAIL paint key / one material / draws per tile
+- PASS/FAIL damage states (intact → loose → detached, dark openings)
+- PASS/FAIL physics fit (mass sum, origin, rounded proxy, settle)
+- PASS/FAIL identity/readability at the smallest tile
 
-Remaining blockers before done:
-- none / list exact blockers
+Remaining blockers:
+- none / exact list
 ```
 
-Only report `PASS` when there are no blockers against the active model-import scope.
+Only report PASS when nothing blocks the active scope.
+
+## Relationship to other skills
+- `lowpoly-model-from-refs`: the canonical **build** method (R81). This skill is its gate.
+- `game-model-prep`: engine-generic background (rigging, collider fit, visual QA rubric). Its
+  debris-lifetime section defers to project policy; JJ debris persists (R58/R66).
+- `threejs-primitive-modelling`: Spike H/I method, reference only for vehicles since R81.

@@ -13,7 +13,8 @@ Computed from the model + fixed-camera renders:
 - Collider visual coverage ≥ threshold; CoM below chassis center; rollover sim passes.
 - Paint hue match (ΔE) on sampled body pixels; tyres near-neutral; left/right symmetry.
 - Identity number inside AABB, above roof, legible at camera distance.
-- Destruction: ≥N debris bodies, velocity inherited, gone after TTL; pool cap respected.
+- Destruction: ≥N debris bodies, velocity inherited; lifetime per project policy (JJ: still
+  present, dynamic and wakeable at round end; no TTL/cap, R58/R66).
 
 ## Layer 3 — vision-LLM rubric judge (calibrated)
 - **Render harness:** prefer **custom headless three.js + Playwright/Puppeteer** over

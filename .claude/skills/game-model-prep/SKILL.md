@@ -125,21 +125,26 @@ engine force, brake, steering (radians). **Order of ops:** set controls → `upd
 - **Gate:** metrics within the archetype's target band; **Monte-Carlo win-rate spread across all
   models within `rubric.balance.winRateTolerance`**.
 
-## Stage E — Destructibility  (gate: debris spawns, inherits velocity, despawns, capped)
+## Stage E — Destructibility  (gate: debris spawns, inherits velocity, follows the project's lifetime policy)
 
 Pattern A (recommended for vehicles): **pre-authored detachable parts**.
 
 - On destruction: reparent each declared debris part to the scene (keep world transform); create a
   dynamic rigid body + cheap cuboid/convexHull collider at that transform; **transfer the vehicle's
   velocity** + apply an explosion impulse/torque (or parts "pop" and drop straight down).
-- **Lifecycle:** spawn with TTL → simulate (let bodies sleep when settled — nearly free) → after
-  the TTL fade opacity (`transparent:true`) → remove body (auto-removes its colliders) → **return
-  mesh + slot to a pool**.
-- **Performance:** cap concurrent debris (FIFO recycle oldest); pooling is the headline win
-  (avoids physics-WASM alloc/GC churn); prefer cuboid/ball/convexHull over trimesh; CCD only on
-  small/fast fragments. Never revive a removed physics handle — pool the *slot/data*, recreate it.
-- **Gate:** ≥N debris bodies move away from the wreck and are gone after TTL; body count never
-  exceeds the cap in a worst-case brawl sim. Details: `references/destructibility.md`.
+- **Lifetime is a project policy, read it from the adapter first.** The safe default is
+  **persistent**: debris stays a dynamic body, sleeps when settled (nearly free) and wakes on
+  contact. Fading/removing after a TTL or capping concurrent debris is only allowed when the
+  project policy explicitly permits it. **Joystick Jammers forbids TTL, caps, FIFO recycling,
+  static conversion and merging of live debris (owner rulings R58/R66)**; JJ debris persists for
+  the whole round.
+- **Performance (no lifetime tricks needed):** sleeping, cheap colliders (cuboid/ball/convexHull,
+  never trimesh), CCD only on small/fast fragments, instanced rendering (a detached part is an
+  instance with a physics-driven matrix) and reusing allocation slots. Never revive a removed
+  physics handle; recreate the desc.
+- **Gate:** ≥N debris bodies move away from the wreck with inherited velocity, then behave as the
+  project policy says (JJ: still present, dynamic and wakeable at round end in a worst-case brawl
+  sim). Details: `references/destructibility.md`.
 
 ## Stage F — Color & on-brand look  (gate: paint coverage, neutral tyres, legible number)
 
