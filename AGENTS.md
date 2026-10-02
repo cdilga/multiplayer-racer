@@ -113,9 +113,11 @@ your first claim.
   interactive TUI.
 - Claim with `br update <id> --claim --actor <AgentMailName>`. You can hold one claimed bead at a
   time, and the bead must have acceptance criteria.
-- **Workers never close, delete, reopen or gate beads, and never run test suites or full builds.**
-  Write the code and its tests, run at most a syntax gate (`cargo check -p <crate>`, `npm run build`,
-  `tsc --noEmit`), and commit with the bead ID. Then run
+- **Workers get the full development loop but never run the batched verification or close beads**
+  (owner ruling 2026-10-02). Run servers, multi-controller/device sessions, emulators, `jj` probes,
+  debuggers, captures, and the scenarios and journeys for your area, preferably on eris; iterate on
+  mechanics or models until they work. Don't run workspace-wide `cargo test`, whole Playwright suites
+  or `batch-verify.sh` (the hook blocks them), and don't wait on CI. Commit with the bead ID. Then run
   `br update <id> --status batch_pending --transition-comment "commit:<sha> <test that covers each acceptance item>"`
   and take the next bead.
 - The batch verifier runs the tests once per wave (`scripts/beads/batch-verify.sh`). It closes green
@@ -152,9 +154,14 @@ your first claim.
   hardware, browser, build and cohort. Label honestly: Playwright WebKit is "WebKit", not Safari; a
   simulator/emulator run is not a device; a number copied from a spike or another codebase is a
   reference until measured. Per-bead evidence goes in `docs/evidence/<P1-ID>/`.
-- **Builds:** never run bare `cargo` on the Mac for Linux-capable work; use `rch exec -- cargo …` or
-  `scripts/remote/eris.sh` (a bare `cargo check` once filled a Mac's disk). Mac-only lanes (emulators,
-  Mac GPU captures) are the exception.
+- **Builds:** prefer eris for Rust work (`rch exec -- cargo …` or `scripts/remote/eris.sh`); never
+  run workspace-wide cargo on the Mac itself (a whole-workspace local build once filled a Mac's disk;
+  the hook blocks it). Per-crate local builds for a local server or a Mac-only lane are fine within
+  the 15 GiB `target/` budget.
+- **Tests:** follow Physical Soccer's shape: scenario banks (versioned fixtures replayed bit for bit,
+  asserting outcome envelopes and stating known gaps) and Playwright journeys (real host + controller
+  contexts through the real join path). Unit tests only where the unit is the lowest level that shows
+  the behaviour.
 - **Working method:** plan §13a–§13b: see state as data, set it up, step/replay, assert with fixtures;
   reach the game through the `jj` CLI; one bead per fresh agent session; name what you reuse; repair
   beads reproduce first; stop after 2–3 identical remote failures and reproduce locally; record traps
@@ -244,7 +251,7 @@ Closing is the batch verifier's job (`scripts/beads/batch-verify.sh close`), nev
 
 1. **Triage**: Run `bv --robot-triage` to find the highest-impact actionable work
 2. **Claim**: `br update <id> --claim --actor <AgentMailName>`
-3. **Work**: Write the code and its tests, run the syntax gate only, and commit with the bead ID
+3. **Work**: Write the code and its tests (scenario banks and journeys over unit tests), develop with focused runs of your own area, and commit with the bead ID
 4. **Hand off**: `br update <id> --status batch_pending --transition-comment "commit:<sha> ..."`
 5. **Verify** (batch verifier only): `scripts/beads/batch-verify.sh run`, then `close` or `rework`
 6. **Sync**: Always run `br sync --flush-only` at session end

@@ -5,11 +5,22 @@
 > the commit guard. The worker hook applies to any Claude agent started with `JJ_ROLE=worker`.
 
 How a small swarm (at most 5 agents, including you and the verifier) ships 0.2 work without
-re-running the same expensive pipelines for every bead. Adopted 2026-09-30.
+re-running the same expensive pipelines for every bead. Adopted 2026-09-30; worker loop widened
+2026-10-02 (owner ruling, below).
 
-**Writing code is cheap and parallel; building and testing is expensive and serial.** So workers
-write real code and real tests at full speed, and the expensive verification runs once per *wave* of
-beads, centrally. "Committed", "verified" and "delivered" stay separate: a bead only counts as done
+> **2026-10-02 (owner ruling): workers get the full development loop.** A worker may do whatever its
+> bead needs to get the behaviour right: run local or eris-hosted servers, set up multi-device and
+> multi-controller sessions, use the emulators, debug, inspect game state through `jj`, write and run
+> the e2e journeys and scenario banks for its area, and loop on game mechanics or on a model with
+> visual inspection until it works. What workers **don't** do is the full CI matrix: workspace-wide
+> test runs and whole Playwright suites are batched by the verifier across many submitted changes,
+> because running them per bead would bury our CPUs. A batch failure keeps the bead open and sends it
+> back to its agent with a note. Favour Physical Soccer's style of tests (scenario banks and
+> journeys) over piles of unit tests; see the Playtest-1 plan §13 and §13b.
+
+**Verification of the whole is expensive and serial; developing a feature is not.** So workers build,
+run and test their own area as much as they need, and the expensive full verification runs once per
+*wave* of beads, centrally. "Committed", "verified" and "delivered" stay separate: a bead only counts as done
 when a green, revision-bound run exercised its behaviour.
 
 ## The loop
@@ -28,7 +39,7 @@ citing `receipt:<file>`, and a closer who didn't claim the bead.
 
 | Role | Who | Environment |
 |---|---|---|
-| Worker | NTM worker panes | `JJ_ROLE=worker`; the project hook blocks tests, full builds and tracker closes |
+| Worker | Claude agents (one bead per fresh session) | `JJ_ROLE=worker`; the project hook blocks only the batched verification (workspace-wide test runs, whole Playwright suites, workspace-wide local cargo on the Mac, `batch-verify.sh`) and tracker closes |
 | Batch verifier | One pane (or the coordinator) | `JJ_ROLE=verifier` plus `AGENT_NAME=<its Agent Mail name>` |
 | Owner | You | Rulings and gates (G-FEEL, G-LOOK, ...); never needs a role |
 
@@ -36,9 +47,17 @@ citing `receipt:<file>`, and a closer who didn't claim the bead.
 
 1. `br ready --json`, then claim the top bead: `br update <id> --claim --actor <AgentMailName>`.
    You can hold one bead at a time, and it must already have acceptance criteria.
-2. Write the **real code and its real tests** in the same bead. Placeholder tests don't count.
-3. Run at most a syntax gate: `cargo check -p <crate>` (via RCH), `npm run build` or `tsc --noEmit`.
-   Don't run `cargo test`, Playwright, vitest or pytest, and don't wait for remote proof.
+2. Write the **real code and its real tests** in the same bead. Placeholder tests don't count. Prefer
+   behaviour-level tests: scenario-bank cases (versioned fixtures, replayed bit for bit, asserting
+   outcome envelopes) for the sim, and Playwright journeys (a real host plus controller contexts
+   through the real join path) for anything a player touches. Add a unit test only where the unit
+   is the lowest level that shows the behaviour (codecs, goldens, a pure layout kernel).
+3. **Develop with the full loop.** Run what the bead needs, preferably on eris (`scripts/remote/eris.sh`,
+   `rch exec -- cargo …`): local servers, multi-controller and multi-device sessions, emulators,
+   `jj sim`/`jj play` probes, the scenarios and journeys for your area, debuggers, captures and
+   visual inspection loops; iterate on mechanics or a model until it meets the bead's goal. Run
+   focused checks for what you changed. **Don't** run the batched verification: workspace-wide
+   `cargo test`, whole Playwright suites, `batch-verify.sh`. Never wait on remote CI before handing off.
 4. Commit immediately. Put the bead ID in the message, e.g. `feat(sim): … (br-xxxx)`.
 5. Hand off:
    `br update <id> --status batch_pending --transition-comment "commit:<sha> AC1: tests/…::name, AC2: …"`.
@@ -93,7 +112,7 @@ waves keep the swarm fed; one giant end-of-day pass starves it.
 |---|---|---|
 | br policy | self-close, skipping `batch_pending`, closing without the gate/receipt/ticked criteria, stale passes after rework, `--bypass-policy`, second claims, claims without criteria | `.beads/policy.yaml` |
 | Canary | policy edits or br upgrades that silently stop enforcing | `scripts/beads/canary.sh` (27 checks); run at swarm start and after any change |
-| Worker hook | test runs, full builds, `br close/delete/reopen/gate` from worker panes | `.claude/hooks/worker-guard.sh` (Claude Code panes) |
+| Worker hook | the batched verification (workspace-wide `cargo test`, whole Playwright suites, workspace-wide local cargo on the Mac, `batch-verify.sh`) and `br close/delete/reopen/gate` from workers | `.claude/hooks/worker-guard.sh` (Claude Code panes) |
 | Verifier audit | everything self-reported | every wave, see below |
 
 Every wave, the verifier audits:
@@ -102,8 +121,8 @@ Every wave, the verifier audits:
   deletes. The hook blocks this for Claude panes, but not for Codex or other harnesses.
 - gate results whose provider isn't `batch-verifier`, since gate reporting is self-attested
 - closes by anyone other than the verifier: reopen those with an incident note
-- Codex/Gemini panes don't load the Claude hook, so their shell history has to be checked for test
-  runs
+- Codex/Gemini agents don't load the Claude hook, so check their shell history for workspace-wide
+  test runs and whole-suite Playwright runs (focused runs of their own area are expected)
 
 ## Honest credit
 
