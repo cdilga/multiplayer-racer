@@ -89,6 +89,10 @@ Most important rules:
 
 ## Coordination
 
+- **One shared working tree.** Never create git worktrees or extra clones for agents (they caused an
+  integration nightmare). All agents edit the same tree and coordinate through native Claude
+  messaging and Agent Mail file reservations. Remote per-run directories are only for outputs,
+  browser profiles and server state, never code.
 - Register with MCP Agent Mail at the start of every session using this project key:
   `/Users/cdilga/Documents/dev/multiplayer-racer`
 - Use the exact Agent Mail name assigned in your prompt. If no name was assigned, register with an
@@ -165,7 +169,9 @@ your first claim.
 - **Working method:** plan §13a–§13b: see state as data, set it up, step/replay, assert with fixtures;
   reach the game through the `jj` CLI; one bead per fresh agent session; name what you reuse; repair
   beads reproduce first; stop after 2–3 identical remote failures and reproduce locally; record traps
-  in `docs/learnings/<area>.md`.
+  in `docs/learnings/<area>.md`. Every feature earns its keep: add a tool, flag or helper only when a
+  named task needs it now. Never block on the owner: proceed on the best evidence-backed candidate and
+  let playtests judge it.
 
 ## Code rules
 

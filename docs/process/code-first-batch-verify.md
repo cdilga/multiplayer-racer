@@ -54,7 +54,7 @@ citing `receipt:<file>`, and a closer who didn't claim the bead.
    is the lowest level that shows the behaviour (codecs, goldens, a pure layout kernel).
 3. **Develop with the full loop.** Run what the bead needs, preferably on eris (`scripts/remote/eris.sh`,
    `rch exec -- cargo …`): local servers, multi-controller and multi-device sessions, emulators,
-   `jj sim`/`jj play` probes, the scenarios and journeys for your area, debuggers, captures and
+   `jj sim` probes and the Playwright harness helpers, the scenarios and journeys for your area, debuggers, captures and
    visual inspection loops; iterate on mechanics or a model until it meets the bead's goal. Run
    focused checks for what you changed. **Don't** run the batched verification: workspace-wide
    `cargo test`, whole Playwright suites, `batch-verify.sh`. Never wait on remote CI before handing off.
