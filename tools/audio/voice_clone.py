@@ -131,7 +131,12 @@ def main():
         for k in range(args.candidates):
             seed = 1000 + k
             torch.manual_seed(seed)
-            wavs, sr = model.generate_voice_clone(text=text, language=args.language, voice_clone_prompt=prompt)
+            # The checkpoint defaults to max_new_tokens=8192 (~11 minutes at 12.5 codec frames/s), so a
+            # take that never emits end-of-speech runs on and can exhaust the GPU. Cap it at ~1.3x the
+            # longest plausible length for the line.
+            cap = int((2.0 + 0.6 * len(words(text))) * 12.5 * 1.3) + 24
+            wavs, sr = model.generate_voice_clone(text=text, language=args.language, voice_clone_prompt=prompt,
+                                                  max_new_tokens=cap)
             audio = np.asarray(wavs[0], dtype=np.float32)
             path = out / "takes" / f"{cue_id}.s{seed}.wav"
             sf.write(path, audio, sr)
