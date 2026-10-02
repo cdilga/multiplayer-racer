@@ -97,6 +97,9 @@ autopilot, end-of-round highlights and auto-next, and scripted isolated previews
 
 ## Skills
 
+- **`lowpoly-model-from-refs`** (`.claude/skills/lowpoly-model-from-refs/`) — **the canonical vehicle modelling
+  method (R81)**: per-tier reference sheets → silhouette masks → three.js model script → IoU score + optimiser →
+  bake to contract. Use it for any new or redone roster vehicle; the skills below are for validation and reference.
 - **`game-model-prep`** (`.claude/skills/game-model-prep/`) — engine-generic pipeline for making a
   vehicle model good to play and balanced (normalize → rig → collider/CoM → balance → destruct →
   color → visual QA). Use for any add/replace/re-rig/re-tune/balance of a car/kart model, debris

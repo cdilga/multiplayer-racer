@@ -1,0 +1,182 @@
+{
+ "lod1_hero": {
+  "sheet": "lod1",
+  "view": "hero",
+  "x": 55,
+  "y": 80,
+  "w": 1177,
+  "h": 528,
+  "aspect": 2.2292
+ },
+ "lod1_top": {
+  "sheet": "lod1",
+  "view": "top",
+  "x": 1305,
+  "y": 23,
+  "w": 313,
+  "h": 637,
+  "aspect": 0.4914
+ },
+ "lod1_front": {
+  "sheet": "lod1",
+  "view": "front",
+  "x": 49,
+  "y": 655,
+  "w": 338,
+  "h": 249,
+  "aspect": 1.3574
+ },
+ "lod1_side": {
+  "sheet": "lod1",
+  "view": "side",
+  "x": 437,
+  "y": 645,
+  "w": 740,
+  "h": 262,
+  "aspect": 2.8244
+ },
+ "lod1_rear": {
+  "sheet": "lod1",
+  "view": "rear",
+  "x": 1269,
+  "y": 677,
+  "w": 321,
+  "h": 231,
+  "aspect": 1.3896
+ },
+ "lowest_hero": {
+  "sheet": "lowest",
+  "view": "hero",
+  "x": 55,
+  "y": 32,
+  "w": 1179,
+  "h": 574,
+  "aspect": 2.054
+ },
+ "lowest_top": {
+  "sheet": "lowest",
+  "view": "top",
+  "x": 1292,
+  "y": 24,
+  "w": 316,
+  "h": 629,
+  "aspect": 0.5024
+ },
+ "lowest_front": {
+  "sheet": "lowest",
+  "view": "front",
+  "x": 48,
+  "y": 654,
+  "w": 336,
+  "h": 251,
+  "aspect": 1.3386
+ },
+ "lowest_side": {
+  "sheet": "lowest",
+  "view": "side",
+  "x": 430,
+  "y": 645,
+  "w": 752,
+  "h": 262,
+  "aspect": 2.8702
+ },
+ "lowest_rear": {
+  "sheet": "lowest",
+  "view": "rear",
+  "x": 1259,
+  "y": 672,
+  "w": 326,
+  "h": 235,
+  "aspect": 1.3872
+ },
+ "lod2_hero": {
+  "sheet": "lod2",
+  "view": "hero",
+  "x": 42,
+  "y": 80,
+  "w": 1199,
+  "h": 523,
+  "aspect": 2.2925
+ },
+ "lod2_top": {
+  "sheet": "lod2",
+  "view": "top",
+  "x": 1306,
+  "y": 17,
+  "w": 310,
+  "h": 643,
+  "aspect": 0.4821
+ },
+ "lod2_front": {
+  "sheet": "lod2",
+  "view": "front",
+  "x": 44,
+  "y": 658,
+  "w": 339,
+  "h": 246,
+  "aspect": 1.378
+ },
+ "lod2_side": {
+  "sheet": "lod2",
+  "view": "side",
+  "x": 430,
+  "y": 645,
+  "w": 751,
+  "h": 256,
+  "aspect": 2.9336
+ },
+ "lod2_rear": {
+  "sheet": "lod2",
+  "view": "rear",
+  "x": 1258,
+  "y": 680,
+  "w": 331,
+  "h": 228,
+  "aspect": 1.4518
+ },
+ "max_hero": {
+  "sheet": "max",
+  "view": "hero",
+  "x": 49,
+  "y": 84,
+  "w": 1202,
+  "h": 518,
+  "aspect": 2.3205
+ },
+ "max_top": {
+  "sheet": "max",
+  "view": "top",
+  "x": 1302,
+  "y": 17,
+  "w": 322,
+  "h": 651,
+  "aspect": 0.4946
+ },
+ "max_front": {
+  "sheet": "max",
+  "view": "front",
+  "x": 45,
+  "y": 659,
+  "w": 339,
+  "h": 246,
+  "aspect": 1.378
+ },
+ "max_side": {
+  "sheet": "max",
+  "view": "side",
+  "x": 427,
+  "y": 643,
+  "w": 736,
+  "h": 246,
+  "aspect": 2.9919
+ },
+ "max_rear": {
+  "sheet": "max",
+  "view": "rear",
+  "x": 1220,
+  "y": 640,
+  "w": 348,
+  "h": 264,
+  "aspect": 1.3182
+ }
+}

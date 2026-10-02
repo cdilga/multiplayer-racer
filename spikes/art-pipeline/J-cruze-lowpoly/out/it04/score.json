@@ -1,0 +1,49 @@
+{
+ "lod": 0,
+ "sheet": "lod1",
+ "stats": {
+  "tris": 1318,
+  "draws": 11,
+  "breakdown": {
+   "front": 420,
+   "core": 192,
+   "door_FR": 24,
+   "door_RR": 18,
+   "back": 318,
+   "door_FL": 24,
+   "door_RL": 18,
+   "wheel_FR": 76,
+   "wheel_FL": 76,
+   "wheel_RR": 76,
+   "wheel_RL": 76
+  },
+  "stations": 29
+ },
+ "views": {
+  "side": {
+   "iou": 0.9682,
+   "aspect": 1.012,
+   "miss": 0.0148,
+   "extra": 0.0171
+  },
+  "top": {
+   "iou": 0.9352,
+   "aspect": 1.051,
+   "miss": 0.0084,
+   "extra": 0.0564
+  },
+  "front": {
+   "iou": 0.9632,
+   "aspect": 0.994,
+   "miss": 0.027,
+   "extra": 0.0099
+  },
+  "rear": {
+   "iou": 0.9523,
+   "aspect": 0.991,
+   "miss": 0.0328,
+   "extra": 0.015
+  }
+ },
+ "score": 0.9563
+}

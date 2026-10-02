@@ -1,0 +1,293 @@
+{
+ "parts": [
+  "door_L",
+  "door_rear_L",
+  "bonnet",
+  "boot",
+  "bumper_front",
+  "bumper_rear",
+  "light_head_L",
+  "wheel_FL",
+  "mirror_L"
+ ],
+ "checks": [
+  "door_exterior_up",
+  "door_interior_up",
+  "bonnet_upside_down",
+  "bumper_from_behind",
+  "max_FL_crush",
+  "max_roof_crush",
+  "FL_plus_left_door",
+  "detached_keeps_damage",
+  "cavity_door_removed",
+  "cavity_bonnet_removed",
+  "wheel_detached",
+  "complete_wreck"
+ ],
+ "swap": [
+  {
+   "lod": 0,
+   "az": 34,
+   "pctPixelsOver12": 0.0365,
+   "maxDelta": 128
+  },
+  {
+   "lod": 0,
+   "az": 148,
+   "pctPixelsOver12": 0.0663,
+   "maxDelta": 194
+  },
+  {
+   "lod": 0,
+   "az": 90,
+   "pctPixelsOver12": 0.0441,
+   "maxDelta": 150
+  },
+  {
+   "lod": 1,
+   "az": 34,
+   "pctPixelsOver12": 0.0663,
+   "maxDelta": 159
+  },
+  {
+   "lod": 1,
+   "az": 148,
+   "pctPixelsOver12": 0.066,
+   "maxDelta": 191
+  },
+  {
+   "lod": 1,
+   "az": 90,
+   "pctPixelsOver12": 0.1175,
+   "maxDelta": 173
+  },
+  {
+   "lod": 2,
+   "az": 34,
+   "pctPixelsOver12": 0.06,
+   "maxDelta": 172
+  },
+  {
+   "lod": 2,
+   "az": 148,
+   "pctPixelsOver12": 0.2079,
+   "maxDelta": 175
+  },
+  {
+   "lod": 2,
+   "az": 90,
+   "pctPixelsOver12": 0.0413,
+   "maxDelta": 193
+  },
+  {
+   "lod": 3,
+   "az": 34,
+   "pctPixelsOver12": 0.2549,
+   "maxDelta": 178
+  },
+  {
+   "lod": 3,
+   "az": 148,
+   "pctPixelsOver12": 0.2505,
+   "maxDelta": 207
+  },
+  {
+   "lod": 3,
+   "az": 90,
+   "pctPixelsOver12": 0.2235,
+   "maxDelta": 171
+  }
+ ],
+ "ladder": [
+  {
+   "state": "intact",
+   "px": 520,
+   "lod": 0,
+   "pair": [
+    0,
+    1
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 520,
+   "lod": 1,
+   "pair": [
+    0,
+    1
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 190,
+   "lod": 1,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 190,
+   "lod": 2,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 70,
+   "lod": 2,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 70,
+   "lod": 3,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 120,
+   "lod": 1,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 120,
+   "lod": 2,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 40,
+   "lod": 2,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "intact",
+   "px": 40,
+   "lod": 3,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 520,
+   "lod": 0,
+   "pair": [
+    0,
+    1
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 520,
+   "lod": 1,
+   "pair": [
+    0,
+    1
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 190,
+   "lod": 1,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 190,
+   "lod": 2,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 70,
+   "lod": 2,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 70,
+   "lod": 3,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 120,
+   "lod": 1,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 120,
+   "lod": 2,
+   "pair": [
+    1,
+    2
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 40,
+   "lod": 2,
+   "pair": [
+    2,
+    3
+   ]
+  },
+  {
+   "state": "damaged",
+   "px": 40,
+   "lod": 3,
+   "pair": [
+    2,
+    3
+   ]
+  }
+ ],
+ "field": {
+  "dynamicBodies": 60,
+  "sleeping": 33,
+  "active": 27,
+  "colliders": 237,
+  "cars": 16,
+  "wrecks": 10,
+  "debris": 34,
+  "shards": 520
+ }
+}

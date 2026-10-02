@@ -1,7 +1,7 @@
 # Owner direction for Joystick Jammers 0.2 (2026-09-29)
 
 **Status:** normative. Implementation agents, bead authors and reviewers must follow this document.
-The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R80). The
+The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R82). The
 design brief is `docs/plans/v0.2-experience-direction.md`.
 
 ## Precedence
@@ -36,8 +36,14 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | **One screen first** | Minimum and Full focus on one excellent shared display. Additional consuming screens are a **high-effort, low-near-term-reward, separately owner-gated project** (G-SCREENS), not ordinary Stretch or automatic post-playtest work. Extra arenas/modes/themes and release do not depend on it or authorise it. No multi-screen implementation or replication spikes until the owner explicitly approves that scope. Preserve small boundaries, not speculative infrastructure. (R78) |
 | Previews | Production on `jammers.dilger.dev`; all rainbow previews on `jammers-preview.dilger.dev/p/<id>/`, each with its own backend. Keep latest + pinned; unpinned expire after 24 h; at most 3 unpinned. (R52, R72, R73) |
 | Builds | Use RCH for heavy builds/tests/sweeps; record receipts. (R35) |
+| **Vehicle modelling** | Canonical method: per-tier reference sheets → silhouette masks/measurement → three.js model script (faceted at every tier, one code-drawn atlas, very lean triangle budget) → silhouette-IoU scoring + regularised optimiser → by-eye cue pass → bake to the contract. Skill `lowpoly-model-from-refs`; evidence `spikes/art-pipeline/J-cruze-lowpoly/`. Blender is not the vehicle path. (R81, amends R54) |
+| Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; intact → dented → detached; the rest is core. The fuller §8.1/§8.2 anatomy is a later target. (R82) |
 
 ## Superseded guidance
+
+**2026-10-02 modelling amendment:** R81 supersedes R54's Blender requirement and the Blender-based vehicle steps
+in plan §12.4–12.5 and V2-82/82a. Older vehicle-modelling skills and spikes (G Blender, H primitive kit, I destruction)
+are reference material, not the method.
 
 **2026-09-30 transport/display amendment:** R77 supersedes the WSS gameplay requirement and the
 deferral of controller WebRTC. R78 supersedes the ordinary Stretch scheduling of extra screens.

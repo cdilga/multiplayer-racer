@@ -1,0 +1,214 @@
+{
+ "lods": {
+  "0": {
+   "tris": 1252,
+   "draws": 11,
+   "breakdown": {
+    "front": 426,
+    "core": 176,
+    "door_FR": 18,
+    "door_RR": 12,
+    "back": 286,
+    "door_FL": 18,
+    "door_RL": 12,
+    "wheel_FR": 76,
+    "wheel_FL": 76,
+    "wheel_RR": 76,
+    "wheel_RL": 76
+   },
+   "stations": 25,
+   "eval_lod1": {
+    "side": {
+     "iou": 0.9684,
+     "aspect": 1.004,
+     "miss": 0.012,
+     "extra": 0.0196
+    },
+    "top": {
+     "iou": 0.9471,
+     "aspect": 1.035,
+     "miss": 0.0069,
+     "extra": 0.046
+    },
+    "front": {
+     "iou": 0.9086,
+     "aspect": 0.917,
+     "miss": 0.083,
+     "extra": 0.0084
+    },
+    "rear": {
+     "iou": 0.9312,
+     "aspect": 0.972,
+     "miss": 0.0572,
+     "extra": 0.0116
+    }
+   },
+   "eval_lowest": {
+    "side": {
+     "iou": 0.9592,
+     "aspect": 0.988,
+     "miss": 0.0221,
+     "extra": 0.0188
+    },
+    "top": {
+     "iou": 0.9499,
+     "aspect": 1.013,
+     "miss": 0.0202,
+     "extra": 0.0298
+    },
+    "front": {
+     "iou": 0.919,
+     "aspect": 0.926,
+     "miss": 0.0681,
+     "extra": 0.013
+    },
+    "rear": {
+     "iou": 0.9376,
+     "aspect": 0.982,
+     "miss": 0.0412,
+     "extra": 0.0212
+    }
+   }
+  },
+  "1": {
+   "tris": 878,
+   "draws": 11,
+   "breakdown": {
+    "front": 228,
+    "core": 156,
+    "door_FR": 12,
+    "door_RR": 12,
+    "back": 206,
+    "door_FL": 12,
+    "door_RL": 12,
+    "wheel_FR": 60,
+    "wheel_FL": 60,
+    "wheel_RR": 60,
+    "wheel_RL": 60
+   },
+   "stations": 17,
+   "eval_lod1": {
+    "side": {
+     "iou": 0.9631,
+     "aspect": 1.015,
+     "miss": 0.0111,
+     "extra": 0.0259
+    },
+    "top": {
+     "iou": 0.9467,
+     "aspect": 1.035,
+     "miss": 0.0072,
+     "extra": 0.046
+    },
+    "front": {
+     "iou": 0.9032,
+     "aspect": 0.905,
+     "miss": 0.0885,
+     "extra": 0.0083
+    },
+    "rear": {
+     "iou": 0.9277,
+     "aspect": 0.966,
+     "miss": 0.0621,
+     "extra": 0.0102
+    }
+   },
+   "eval_lowest": {
+    "side": {
+     "iou": 0.9637,
+     "aspect": 0.999,
+     "miss": 0.0162,
+     "extra": 0.0201
+    },
+    "top": {
+     "iou": 0.9495,
+     "aspect": 1.013,
+     "miss": 0.0206,
+     "extra": 0.0299
+    },
+    "front": {
+     "iou": 0.9182,
+     "aspect": 0.92,
+     "miss": 0.0675,
+     "extra": 0.0143
+    },
+    "rear": {
+     "iou": 0.9348,
+     "aspect": 0.963,
+     "miss": 0.0481,
+     "extra": 0.0171
+    }
+   }
+  },
+  "2": {
+   "tris": 538,
+   "draws": 11,
+   "breakdown": {
+    "front": 120,
+    "core": 140,
+    "door_FR": 6,
+    "door_RR": 6,
+    "back": 142,
+    "door_FL": 6,
+    "door_RL": 6,
+    "wheel_FR": 28,
+    "wheel_FL": 28,
+    "wheel_RR": 28,
+    "wheel_RL": 28
+   },
+   "stations": 11,
+   "eval_lod1": {
+    "side": {
+     "iou": 0.9456,
+     "aspect": 0.977,
+     "miss": 0.0388,
+     "extra": 0.0156
+    },
+    "top": {
+     "iou": 0.9272,
+     "aspect": 1.058,
+     "miss": 0.0063,
+     "extra": 0.0665
+    },
+    "front": {
+     "iou": 0.8982,
+     "aspect": 0.908,
+     "miss": 0.0935,
+     "extra": 0.0083
+    },
+    "rear": {
+     "iou": 0.9229,
+     "aspect": 0.963,
+     "miss": 0.0683,
+     "extra": 0.0087
+    }
+   },
+   "eval_lowest": {
+    "side": {
+     "iou": 0.9436,
+     "aspect": 0.961,
+     "miss": 0.0452,
+     "extra": 0.0112
+    },
+    "top": {
+     "iou": 0.9479,
+     "aspect": 1.035,
+     "miss": 0.0109,
+     "extra": 0.0412
+    },
+    "front": {
+     "iou": 0.9123,
+     "aspect": 0.92,
+     "miss": 0.0754,
+     "extra": 0.0123
+    },
+    "rear": {
+     "iou": 0.9341,
+     "aspect": 0.963,
+     "miss": 0.0528,
+     "extra": 0.0131
+    }
+   }
+  }
+ }
+}

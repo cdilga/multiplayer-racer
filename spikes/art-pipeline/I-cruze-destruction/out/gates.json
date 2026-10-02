@@ -1,0 +1,290 @@
+{
+ "summary": {
+  "pass": 38,
+  "fail": 0,
+  "stats": [
+   {
+    "lod": 0,
+    "intactTris": 14066,
+    "assemblyTris": 20870,
+    "intactDraws": 8,
+    "assemblyDraws": 40,
+    "bytes": 7160552
+   },
+   {
+    "lod": 1,
+    "intactTris": 4667,
+    "assemblyTris": 7383,
+    "intactDraws": 8,
+    "assemblyDraws": 40,
+    "bytes": 3035856
+   },
+   {
+    "lod": 2,
+    "intactTris": 1788,
+    "assemblyTris": 2292,
+    "intactDraws": 8,
+    "assemblyDraws": 39,
+    "bytes": 623372
+   },
+   {
+    "lod": 3,
+    "intactTris": 704,
+    "assemblyTris": 1352,
+    "intactDraws": 8,
+    "assemblyDraws": 39,
+    "bytes": 437364
+   }
+  ],
+  "build": [
+   {
+    "lod": 0,
+    "buildMs": 194.4,
+    "morphMs": 131.4
+   },
+   {
+    "lod": 1,
+    "buildMs": 58.2,
+    "morphMs": 47.7
+   },
+   {
+    "lod": 2,
+    "buildMs": 26.5,
+    "morphMs": 13.4
+   },
+   {
+    "lod": 3,
+    "buildMs": 16.6,
+    "morphMs": 10.6
+   }
+  ]
+ },
+ "results": [
+  {
+   "id": "build.probes.L0",
+   "ok": true,
+   "detail": "failed surface probes: 0"
+  },
+  {
+   "id": "build.probes.L1",
+   "ok": true,
+   "detail": "failed surface probes: 0"
+  },
+  {
+   "id": "build.probes.L2",
+   "ok": true,
+   "detail": "failed surface probes: 0"
+  },
+  {
+   "id": "build.probes.L3",
+   "ok": true,
+   "detail": "failed surface probes: 0"
+  },
+  {
+   "id": "mesh.hygiene.L0",
+   "ok": true,
+   "detail": {
+    "bad": 0,
+    "zero": 0,
+    "nan": 0,
+    "tris": 32184
+   }
+  },
+  {
+   "id": "mesh.hygiene.L1",
+   "ok": true,
+   "detail": {
+    "bad": 0,
+    "zero": 0,
+    "nan": 0,
+    "tris": 11106
+   }
+  },
+  {
+   "id": "mesh.hygiene.L2",
+   "ok": true,
+   "detail": {
+    "bad": 0,
+    "zero": 0,
+    "nan": 0,
+    "tris": 3568
+   }
+  },
+  {
+   "id": "mesh.hygiene.L3",
+   "ok": true,
+   "detail": {
+    "bad": 0,
+    "zero": 0,
+    "nan": 0,
+    "tris": 1928
+   }
+  },
+  {
+   "id": "shell.closed.L0",
+   "ok": true,
+   "detail": "12 parts, 14 shells, thickness 0.02/0.022/0.04/0.03 m"
+  },
+  {
+   "id": "shell.closed.L1",
+   "ok": true,
+   "detail": "12 parts, 14 shells, thickness 0.02/0.022/0.04/0.03 m"
+  },
+  {
+   "id": "shell.closed.L2",
+   "ok": true,
+   "detail": "12 parts, 14 shells, thickness 0.02/0.022/0.04/0.03 m"
+  },
+  {
+   "id": "shell.closed.L3",
+   "ok": true,
+   "detail": "12 parts, 14 shells, thickness 0.02/0.022/0.04/0.03 m"
+  },
+  {
+   "id": "warp.injective",
+   "ok": true,
+   "detail": {
+    "worstMinDet": 0.384,
+    "damage_FL": 0.423,
+    "damage_FR": 0.462,
+    "damage_RL": 0.459,
+    "damage_RR": 0.482,
+    "damage_ROOF": 0.384,
+    "ALL_ZONES": 0.384,
+    "dent_door_L": 1,
+    "dent_door_R": 1,
+    "dent_door_rear_L": 1,
+    "dent_door_rear_R": 1,
+    "dent_bonnet": 0.883,
+    "dent_boot": 1,
+    "dent_bumper_front": 0.539,
+    "dent_bumper_rear": 0.456
+   }
+  },
+  {
+   "id": "shell.thickness_under_damage.L0",
+   "ok": true,
+   "detail": "worst outer–inner separation (must stay on the outer side of the deformed normal) = 0.52 × declared thickness "
+  },
+  {
+   "id": "shell.thickness_under_damage.L1",
+   "ok": true,
+   "detail": "worst outer–inner separation (must stay on the outer side of the deformed normal) = 0.55 × declared thickness "
+  },
+  {
+   "id": "shell.thickness_under_damage.L2",
+   "ok": true,
+   "detail": "worst outer–inner separation (must stay on the outer side of the deformed normal) = 0.62 × declared thickness "
+  },
+  {
+   "id": "shell.thickness_under_damage.L3",
+   "ok": true,
+   "detail": "worst outer–inner separation (must stay on the outer side of the deformed normal) = 0.62 × declared thickness "
+  },
+  {
+   "id": "cavity.clearance.L0",
+   "ok": true,
+   "detail": "doors clear the seats, bumpers clear the crash bars at full dent"
+  },
+  {
+   "id": "cavity.clearance.L1",
+   "ok": true,
+   "detail": "doors clear the seats, bumpers clear the crash bars at full dent"
+  },
+  {
+   "id": "panels.not_buried.L0",
+   "ok": true,
+   "detail": "1086 inner-skin vertices at full dent, none inside chassis geometry"
+  },
+  {
+   "id": "panels.not_buried.L1",
+   "ok": true,
+   "detail": "298 inner-skin vertices at full dent, none inside chassis geometry"
+  },
+  {
+   "id": "openings.no_see_through.L0",
+   "ok": true,
+   "detail": "8245/8245 rays entering the bare openings hit chassis geometry"
+  },
+  {
+   "id": "openings.no_see_through.L1",
+   "ok": true,
+   "detail": "8245/8245 rays entering the bare openings hit chassis geometry"
+  },
+  {
+   "id": "openings.no_see_through.L2",
+   "ok": true,
+   "detail": "8245/8245 rays entering the bare openings hit chassis geometry"
+  },
+  {
+   "id": "openings.no_see_through.L3",
+   "ok": true,
+   "detail": "8245/8245 rays entering the bare openings hit chassis geometry"
+  },
+  {
+   "id": "lod.budget.L0",
+   "ok": true,
+   "detail": "intact 14066 tris (target 10000–15000), assembly 20870, intact draws 8, assembly meshes 40, 6993 KB"
+  },
+  {
+   "id": "lod.budget.L1",
+   "ok": true,
+   "detail": "intact 4667 tris (target 3000–5000), assembly 7383, intact draws 8, assembly meshes 40, 2965 KB"
+  },
+  {
+   "id": "lod.budget.L2",
+   "ok": true,
+   "detail": "intact 1788 tris (target 1200–2000), assembly 2292, intact draws 8, assembly meshes 39, 609 KB"
+  },
+  {
+   "id": "lod.budget.L3",
+   "ok": true,
+   "detail": "intact 704 tris (target 450–800), assembly 1352, intact draws 8, assembly meshes 39, 427 KB"
+  },
+  {
+   "id": "lod.ratio.L0/L1",
+   "ok": true,
+   "detail": "3.01× intact, 2.83× assembly"
+  },
+  {
+   "id": "lod.ratio.L1/L2",
+   "ok": true,
+   "detail": "2.61× intact, 3.22× assembly"
+  },
+  {
+   "id": "lod.ratio.L2/L3",
+   "ok": true,
+   "detail": "2.54× intact, 1.70× assembly"
+  },
+  {
+   "id": "draws.intact",
+   "ok": true,
+   "detail": "8/8/8/8"
+  },
+  {
+   "id": "lod.semantics_identical",
+   "ok": true,
+   "detail": "20 parts, 13 channels, 4 chassis proxies identical on every LOD"
+  },
+  {
+   "id": "rig.pivots_on_hinges",
+   "ok": true,
+   "detail": "every hinged part has its origin on its hinge point"
+  },
+  {
+   "id": "mass.accounting",
+   "ok": true,
+   "detail": "parts sum to 1200.00 kg of 1200"
+  },
+  {
+   "id": "physics.authored_proxies",
+   "ok": true,
+   "detail": "all colliders are authored cuboids/cylinders; none is hulled from render vertices"
+  },
+  {
+   "id": "warp.above_ground",
+   "ok": true,
+   "detail": "lowest chassis vertex at full damage y = 0.307 m"
+  }
+ ]
+}
