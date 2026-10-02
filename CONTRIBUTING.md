@@ -1,4 +1,4 @@
-# Contributing to Multiplayer Racing Game
+# Contributing to Joystick Jammers
 
 Thank you for your interest in contributing to this project! By contributing, you agree that your contributions will be licensed under the project's [GNU General Public License v3.0](LICENSE).
 
@@ -24,7 +24,7 @@ Please be respectful to other contributors and maintain a positive atmosphere fo
 
 ## Development Setup
 
-Please see the README.md file for instructions on setting up the development environment.
+The 0.2 rebuild is planned in `docs/plans/v0.2-playtest-1-plan.md`; agents and contributors start with `AGENTS.md`. Setup instructions arrive with the first workspace bead (P1-F01).
 
 ## Reporting Bugs
 

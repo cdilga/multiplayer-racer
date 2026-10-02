@@ -1,8 +1,9 @@
 # Owner direction for Joystick Jammers 0.2 (2026-09-29)
 
 **Status:** normative. Implementation agents, bead authors and reviewers must follow this document.
-The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R83). The
-design brief is `docs/plans/v0.2-experience-direction.md`.
+The full rationale lives in `docs/plans/v0.2-revamp-plan-2026-09-28.md` (rulings R1–R87). What the
+first playtest builds, and in what order, is `docs/plans/v0.2-playtest-1-plan.md` (the bead source
+for the Minimum build). The design brief is `docs/plans/v0.2-experience-direction.md`.
 
 ## Precedence
 
@@ -37,10 +38,19 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Previews | Production on `jammers.dilger.dev`; all rainbow previews on `jammers-preview.dilger.dev/p/<id>/`, each with its own backend. Keep latest + pinned; unpinned expire after 24 h; at most 3 unpinned. (R52, R72, R73) |
 | Builds | Use RCH for heavy builds/tests/sweeps; record receipts. (R35) |
 | **Vehicle modelling** | Canonical method: per-tier reference sheets → silhouette masks/measurement → three.js model script (faceted at every tier, one code-drawn atlas, very lean triangle budget) → silhouette-IoU scoring + regularised optimiser → by-eye cue pass → bake to the contract. Skill `lowpoly-model-from-refs`; evidence `spikes/art-pipeline/J-cruze-lowpoly/`. Blender is not the vehicle path. (R81, amends R54) |
-| Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; intact → dented → detached; the rest is core. The fuller §8.1/§8.2 anatomy is a later target. (R82) |
+| Damage parts (interim) | For now: `front`, `back`, four doors, four wheels; the rest is core. **Each part goes intact → loose → detached; no denting** (R86 amends R82). Loose = visibly hanging/wobbling on its hinge while still attached; detached = a dynamic body left on the track for the round. In Playtest 1. The fuller §8.1/§8.2 anatomy is a later target. (R82, R86) |
+| Host recovery (deferred) | Emergency host replacement, recovery export/import, registration CAS, credential revision, host checkpoint/restore after host death, explicit device handoff and the paired host-control phone are **deferred, possibly forever**. A dead host ends the room. A controller still resumes its own seat on the same device, and a host re-registers its room after a server restart. Possible drive-by only if G-SCREENS is ever approved. (R84) |
+| Continuous previews | **No dev freeze for playtests.** Rainbow previews ship from the first deployable slice and keep shipping; a playtest is a preview the owner **pins**. A preview index at `https://jammers-preview.dilger.dev/` lists every preview newest first, with what changed, smoke status, pin/expiry and Host/Join links. (R85) |
+| 0.1 code | The 0.1 code was removed from the `v0.2-revamp` branch on 2026-10-02; read it with `git show v0.1-final:<path>` (tag on `main` @ `bbadc3e`). Production stays 0.1 on `main` until 0.2 is promoted. Nothing is ported as code; useful cases are re-expressed as 0.2 tests (Playtest-1 plan §14). (R87) |
 | Procedural biomes (R83) | First playtest has all four biomes (town, rocks, outback dirt, outback bitumen) at deliberately minimal variation; breadth comes after the playtest. One seed/terrain core cut, then four parallel biome cuts; derby is separate with rocks vibes. Signs: Wikipedia *Road signs in Australia* is the style source; new/joke signs are allowed if they follow a real sign family's grammar (e.g. yellow diamond "BLOODY BIG JUMPS AHEAD"). Plan §11.5a. |
 
 ## Superseded guidance
+
+**2026-10-02 playtest-scope amendment:** R84 removes host recovery, the host-control phone and
+device handoff from the Minimum build (master plan §3.4, most of §3.6, J08, J09, G-RECOVER, V2-120's
+recovery parts, V2-122). R85 makes previews continuous and adds the preview index. R86 replaces the
+dented stage with a loose stage. R87 removes the 0.1 code from the 0.2 branch. The Minimum build is
+now specified by `docs/plans/v0.2-playtest-1-plan.md`.
 
 **2026-10-02 modelling amendment:** R81 supersedes R54's Blender requirement and the Blender-based vehicle steps
 in plan §12.4–12.5 and V2-82/82a. Older vehicle-modelling skills and spikes (G Blender, H primitive kit, I destruction)
@@ -59,7 +69,7 @@ simulation and "never change suspension implementation" rules, Flask/Socket.IO s
 Voronoi/split camera plans, the neon/lo-fi art direction, tap-to-fire controls, split-phone play,
 static/merged debris, player caps and the `beads-polishing` goal list. Superseded plans/design/spec
 docs were removed on 2026-09-29 (recoverable at commit `bbadc3e`, listed in `docs/README.md`). The
-remaining 0.1 code docs carry a banner and are rewritten as 0.2 replaces the code.
+remaining 0.1 code and its docs were removed from this branch on 2026-10-02 (R87; tag `v0.1-final`).
 
 ## Tracker clean slate (ruling, 2026-09-30)
 
