@@ -98,7 +98,8 @@ Most important rules:
 - **One shared working tree.** Never create git worktrees or extra clones for agents (they caused an
   integration nightmare). All agents edit the same tree and coordinate through native Claude
   messaging and Agent Mail file reservations. Remote per-run directories are only for outputs,
-  browser profiles and server state, never code.
+  browser profiles and server state, never code. eris keeps a clean clone kept in sync by `ru` (Jeffrey
+  Emanuel's Repo Updater) from pushed commits; nobody edits there (`scripts/remote/eris.sh` runs things in it).
 - Register with MCP Agent Mail at the start of every session using this project key:
   `/Users/cdilga/Documents/dev/multiplayer-racer`
 - Use the exact Agent Mail name assigned in your prompt. If no name was assigned, register with an
@@ -126,6 +127,18 @@ Most important rules:
   the bead is the contract, so don't read the whole plan, only the sections a bead cites; keep command
   output small (focused tests, long logs to files); a bead that proves bigger than one session is
   split into child beads (`br create --parent <id>`) with its acceptance moved over verbatim.
+- **Token hygiene** (owner, 2026-10-03):
+  - **Plans:** read them only through `scripts/plan-ref.sh`: a task (`P1-N03`), a section (`13b.2`),
+    `--master 10.6`/`V2-16`, `--rulings R93`, or `--toc`. `br show <id>` is the contract and the bead map
+    is the requirement index. Never cat, sed or grep the plan files.
+  - **Tools:** use Read, Grep, Glob and Edit for files and logs; the shell is for running things.
+    Commands start in the repo root, so don't prefix them with `cd` to it.
+  - **Environment:** Claude Code sessions get the pinned Node from a SessionStart hook
+    (`.claude/hooks/session-env.sh`), so don't source nvm. Rust follows `rust-toolchain.toml`. Tools
+    read their secrets from `~/.config/jammers/*.env` themselves; never source those files into a shell.
+    Version checks are `scripts/doctor.sh`, run by CI and at machine setup, not mid-session.
+  - **Memory:** durable notes go in Claude Code's project memory: one fact per file plus the `MEMORY.md`
+    index, written with Write or Edit. `cm` isn't used in this project.
 - Don't sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim
   it, reserve files, announce, and start.
 
@@ -142,16 +155,13 @@ Most important rules:
   mechanics or models until they work. Before committing, check the paths you changed (affected crates
   through RCH, the specs and scenarios you touched); leave the workspace-wide matrix to CI unless you
   changed a shared contract (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core).
-- Commit with the P1 ID and bead ID, push to Gitea (`git lfs push --all` after), run
-  `scripts/ci-status.sh --wait` in the background, and **close your own bead when CI is green** on a
-  commit containing it: tick the covered acceptance items, `br gate report <id> --gate batch_verify
-  --provider gitea-ci --status pass --to closed --note "run:<url> commit:<sha>"`, then `br close <id>
-  --reason "receipt:<run url> AC1: <test> …" --transition-comment "<one line>"`. A red lane on your
-  change is yours to fix. To move on instead, set `batch_pending` with the commit and tests; the
-  verifier closes it. Before CI exists (P1-D01, P1-F02), close on your local checks with a committed
-  receipt under `docs/evidence/<P1-ID>/`.
-- Owner, deploy-repo and hardware evidence close with `receipt:docs/evidence/<P1-ID>/…` (the evidence
-  close, P1-F02).
+- Commit with the P1 ID and bead ID, then **close your own bead with one command**:
+  `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`. It pushes the commit and its LFS
+  objects, waits for green CI (`scripts/ci-status.sh --wait`), ticks the acceptance boxes, records the
+  `batch_verify` gate and closes with the run as the receipt. A red lane on your change is yours to fix.
+  `--pending` hands off to the verifier instead (`batch_pending`). `--receipt docs/evidence/<P1-ID>/<file>`
+  covers owner, deploy-repo and hardware evidence, and every close before CI exists (P1-D01, P1-F02):
+  the receipt is a committed record of the commands and their output.
 - `br sync --flush-only` exports the DB to `.beads/issues.jsonl` (mutations usually auto-flush). More
   `br`/`bv` usage: `br robot-docs guide`, `br <cmd> --help`, `bv --help` (robot flags only).
 - Each bead carries its task's contract, acceptance and evidence from the Playtest-1 plan §15, plus the
@@ -207,7 +217,10 @@ Most important rules:
 
 - Preserve user and other-agent changes. Don't revert unfamiliar edits.
 - Keep file reservations narrow and release them when done.
-- Don't commit or push unless the human coordinator explicitly asks (bead sessions commit and push per
-  `docs/process/bead-workflow.md`). `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>`
-  afterwards. Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
-  (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.
+- **Commit and push your own finished work without asking** (owner, 2026-10-03), bead or not.
+  - Stage specific paths, and commit with `git commit -- <paths>` so another session's staged files stay
+    out. Set `AGENT_NAME` for the commit guard and the pre-push hook.
+  - `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>` afterwards.
+  - Ask first only before force-pushing, rewriting history, or committing another session's files.
+  - Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
+    (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.

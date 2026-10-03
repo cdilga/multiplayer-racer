@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Run a command on eris against the commit the Mac has checked out (P1-F06, plan §15.2).
+#
+# Usage: scripts/remote/eris.sh [--run <id>] <cmd...>
+#   One argument is run as a shell snippet ('cd web && npm test'); several are quoted as one command.
+#   --run <id>  gives the command ~/Work/runs/<id> (created) as $JJ_RUN_DIR for outputs, evidence,
+#               browser profiles and server state. Only non-code goes there.
+#
+# Steps: `ru sync` on eris (ff-only; ru skips a dirty clone), then refuse unless eris's clone sits at
+# the Mac's HEAD with a clean tree (unpushed commits: push first), then run the command in
+# ~/Work/dev/multiplayer-racer with output streamed back. Uncommitted Mac changes never reach eris;
+# uncommitted Rust work goes through RCH instead. This script never edits anything in the clone.
+#
+# Exit: the command's own status, or 2 usage, 3 refused (not in sync), 4 eris unreachable.
+# Env: ERIS_HOST (default eris; eris-remote works off the LAN).
+set -euo pipefail
+
+host=${ERIS_HOST:-eris}
+clone='~/Work/dev/multiplayer-racer'
+lock='~/Work/runs/.eris-clone.lock' # syncs take it exclusively, runs share it
+
+die() { echo "eris.sh: $*" >&2; exit "${code:-3}"; }
+
+run_id=""
+if [[ ${1:-} == --run ]]; then
+    run_id=${2:-}
+    shift 2 || true
+    [[ $run_id =~ ^[A-Za-z0-9._-]+$ ]] || code=2 die "--run needs an id made of [A-Za-z0-9._-]"
+fi
+[[ $# -gt 0 ]] || code=2 die "usage: scripts/remote/eris.sh [--run <id>] <cmd...>"
+if [[ $# -eq 1 ]]; then cmd=$1; else cmd=$(printf '%q ' "$@"); fi
+
+repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")/../.." rev-parse --show-toplevel)
+mac_head=$(git -C "$repo" rev-parse HEAD)
+mac_branch=$(git -C "$repo" symbolic-ref --short -q HEAD || echo "(detached)")
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=8)
+
+# 1. Sync. If runs hold the clone and it is already at the Mac's HEAD, there is nothing to sync.
+rc=0
+sync_out=$(ssh "${ssh_opts[@]}" "$host" bash -s -- "$mac_head" 2>&1 <<EOF
+mkdir -p ~/Work/runs && exec 9>>$lock
+at_head() { [ "\$(git -C $clone rev-parse HEAD)" = "\$1" ]; }
+if flock -n -x 9; then ru sync --non-interactive --quiet || echo "RU_SYNC_EXIT=\$?"
+elif at_head "\$1"; then echo "RU_SYNC=skipped (runs in progress; clone already at \${1:0:12})"
+else echo "eris.sh: waiting for runs on eris to finish before syncing" >&2
+     flock -w 3600 -x 9 && { ru sync --non-interactive --quiet || echo "RU_SYNC_EXIT=\$?"; }
+fi
+echo "ERIS_HEAD=\$(git -C $clone rev-parse HEAD)"
+echo "ERIS_BRANCH=\$(git -C $clone symbolic-ref --short -q HEAD)"
+echo "ERIS_DIRTY=\$(git -C $clone status --porcelain | head -3 | tr '\n' ' ')"
+EOF
+) || rc=$?
+if [[ $rc -eq 255 ]]; then
+    code=4 die "can't reach $host (off or asleep). Rust: rch exec -- cargo … falls back to devbox;" \
+        "otherwise run per-crate on the Mac (docs/process/dev-topology.md)."
+fi
+field() { sed -n "s/^$1=//p" <<<"$sync_out" | tail -1; }
+eris_head=$(field ERIS_HEAD) eris_branch=$(field ERIS_BRANCH) eris_dirty=$(field ERIS_DIRTY)
+[[ -n $eris_head ]] || die "sync step failed on $host:"$'\n'"$sync_out"
+grep -E '^(RU_SYNC|eris.sh)' <<<"$sync_out" >&2 || true
+
+# 2. Refuse unless eris is exactly at the Mac's HEAD and clean.
+if [[ -n ${eris_dirty// /} ]]; then
+    die "eris's clone has local changes ($eris_dirty). Nobody edits on eris: tell the owner, don't run."
+fi
+if [[ $eris_head != "$mac_head" ]]; then
+    tip=$(git -C "$repo" ls-remote origin "refs/heads/$mac_branch" | cut -f1)
+    if [[ $mac_branch != "$eris_branch" ]]; then
+        why="eris tracks $eris_branch but the Mac is on $mac_branch"
+    elif [[ -z $tip ]]; then
+        why="$mac_branch isn't on origin: push first"
+    elif [[ $tip == "$mac_head" ]]; then
+        why="the Mac's HEAD is pushed but eris's sync didn't reach it (ru output above)"
+    elif git -C "$repo" merge-base --is-ancestor "$tip" HEAD 2>/dev/null; then
+        why="the Mac has unpushed commits ($(git -C "$repo" rev-list --count "$tip"..HEAD) ahead of origin): push first"
+    elif git -C "$repo" merge-base --is-ancestor HEAD "$tip" 2>/dev/null; then
+        why="origin/$mac_branch is ahead of the Mac: pull first"
+    else
+        why="the Mac and origin/$mac_branch differ (fetch, then push or pull)"
+    fi
+    die "refusing: eris is at ${eris_head:0:12}, the Mac at ${mac_head:0:12}; $why."
+fi
+if [[ -n $(git -C "$repo" status --porcelain --untracked-files=no) ]]; then
+    echo "eris.sh: note: uncommitted Mac changes don't reach eris; it runs ${mac_head:0:12}." >&2
+fi
+
+# 3. Run under a shared lock, so no sync moves the clone mid-run. The command doesn't inherit the
+#    lock fd, so anything it leaves running in the background can't block later syncs.
+setup="cd $clone && exec 9>>$lock && flock -s 9"
+setup+=" && { [ \"\$(git rev-parse HEAD)\" = $mac_head ] || { echo 'eris.sh: eris moved during the sync wait; rerun' >&2; exit 3; }; }"
+setup+=' && export PATH="$HOME/.cargo/bin:$PATH"'
+if [[ -n $run_id ]]; then
+    setup+=" && mkdir -p ~/Work/runs/$run_id && export JJ_RUN_DIR=\$HOME/Work/runs/$run_id"
+fi
+tty=(-T)
+[[ -t 0 && -t 1 ]] && tty=(-t)
+exec ssh "${ssh_opts[@]}" "${tty[@]}" "$host" "$setup && bash -c $(printf %q "$cmd") 9>&-"

@@ -19,25 +19,25 @@
    of the feature: affected crates through RCH (`rch exec -- cargo test -p <crate>`), the specs and
    scenarios you touched. Leave the workspace-wide matrix to CI, unless you changed a shared contract
    (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core): then also run the workspace check through RCH.
-4. **Commit and push.** Commit with the P1 ID and the bead ID in the message; push to Gitea, then
-   `git lfs push --all <remote> <branch>`.
-5. **Close on green.** Run `scripts/ci-status.sh --wait` in the background (exit 0 pass, 1 fail,
-   2 pending) and keep working. When CI is green on a commit containing your bead: tick the acceptance
-   items the tests covered (`br update <id> --acceptance-criteria '- [x] …'`), record the gate
-   (`br gate report <id> --gate batch_verify --provider gitea-ci --status pass --to closed --note "run:<url> commit:<sha>"`)
-   and close (`br close <id> --reason "receipt:<CI run url> AC1: <test> …" --transition-comment "<one line>"`).
-   A red lane on your change is yours to fix. To move on without waiting, set the bead to
-   `batch_pending` with `--transition-comment "commit:<sha> AC1: <test> …"`; the verifier closes it
-   when CI goes green.
+4. **Commit.** Commit with the P1 ID and the bead ID in the message.
+5. **Close on green, in one command:** `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`
+   (run it in the background and keep working). It pushes the commit and `git lfs push --all`, waits on
+   `scripts/ci-status.sh --wait`, ticks the acceptance boxes, records the gate
+   (`br gate report <id> --gate batch_verify --provider gitea-ci --status pass --to closed`) and closes
+   with the CI run as the receipt. Exit 1 means CI is red: a red lane on your change is yours to fix.
+   To move on without waiting, add `--pending`: the bead goes to `batch_pending` with the commit and
+   tests, and the verifier closes it when CI goes green.
 6. **Evidence that isn't a CI run** (`ev:owner`, `ev:deploy-repo`, `ev:hardware`): commit an evidence
-   record under `docs/evidence/<P1-ID>/` and close with `receipt:<that file>` (the evidence close,
+   record under `docs/evidence/<P1-ID>/` and close with
+   `scripts/beads/close.sh <id> --tests "…" --receipt docs/evidence/<P1-ID>/<file>` (the evidence close,
    P1-F02).
 7. **Repair beads reproduce first:** a probe that fails before the fix, then the same probe passing.
    After 2–3 identical remote or CI failures, stop retrying and reproduce in the smallest local harness.
 
 **Before CI exists** (until P1-D01 and P1-F02 land), close on the local check with a committed receipt
-(the exact commands and their output) under `docs/evidence/<P1-ID>/`, gate provider `local`. The
-bootstrap beads F01, D01 and F02 close that way.
+(the exact commands and their output) under `docs/evidence/<P1-ID>/`:
+`scripts/beads/close.sh <id> --tests "…" --receipt docs/evidence/<P1-ID>/<file>` (gate provider `local`).
+The bootstrap beads F01, D01 and F02 close that way.
 
 ## The verifier on call
 
@@ -84,8 +84,9 @@ With one agent, skip Agent Mail reservations and announcements; register only fo
 
 - No routine review rounds: CI and the bead's tests are the check. Review only when the same area fails
   twice or the owner asks.
-- The bead is the contract. Don't read the whole plan; open only the sections a bead cites
-  (`scripts/plan-ref.sh P1-XXX` once P1-F04 lands).
+- The bead is the contract. Don't read the whole plan; open only what a bead cites, and only through
+  `scripts/plan-ref.sh` (`P1-XXX` for a task and its cited sections, `13b.2` for a section,
+  `--rulings R93`, `--master 10.6`, `--toc`).
 - Keep output small: focused tests, long logs to files, read summaries.
 - Commit only the evidence the acceptance names; recapture only what changed.
 - **Split a bead that's too big for a session**, Physical Soccer style: child beads with

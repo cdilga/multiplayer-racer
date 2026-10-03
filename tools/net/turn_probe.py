@@ -7,8 +7,10 @@
 
 Credentials: pass --username/--credential directly, or --secret to mint a short-lived REST
 credential (username "<expiry>:<label>", credential base64(HMAC-SHA1(secret, username))). Never
-print or log the secret. Example:
+print or log the secret. --secret-env NAME reads NAME from the environment, or else from the owner's
+~/.config/jammers/*.env, so nothing needs sourcing first. Examples:
   python3 turn_probe.py --host turn.dilger.dev --port 3479 --username U --credential C
+  python3 turn_probe.py --host turn.dilger.dev --port 3479 --secret-env TURN_STATIC_AUTH_SECRET
 """
 import argparse
 import base64
@@ -119,6 +121,18 @@ def relay_data_test(sock, addr, key, username, realm, nonce, relayed, mapped, ti
         print("relay test: client -> relay -> peer FAILED (timeout)")
 
 
+def local_secret(name):
+    """Read NAME from the owner's local env files (~/.config/jammers/*.env) so callers needn't export secrets."""
+    d = os.path.expanduser("~/.config/jammers")
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if f.endswith(".env"):
+            for line in open(os.path.join(d, f)):
+                k, _, v = line.strip().removeprefix("export ").partition("=")
+                if k == name and v:
+                    return v.strip().strip("'\"")
+    sys.exit(f"turn_probe: {name} is neither in the environment nor in ~/.config/jammers/*.env")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--host", required=True)
@@ -131,7 +145,7 @@ def main():
     a = ap.parse_args()
 
     if a.secret_env:
-        secret = os.environ[a.secret_env].encode()
+        secret = (os.environ.get(a.secret_env) or local_secret(a.secret_env)).encode()
         a.username = f"{int(time.time()) + 600}:probe"
         a.credential = base64.b64encode(hmac.new(secret, a.username.encode(), hashlib.sha1).digest()).decode()
 

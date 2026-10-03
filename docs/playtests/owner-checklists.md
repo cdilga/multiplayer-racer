@@ -27,6 +27,8 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
       (strewth, crikey, stone the crows); the 26 shipped terms and the ones left out (with reasons) read right to you.
 - [ ] **"Room" or "game":** plan §11's phone states say "Finding game ROO7…", "No game with code…", "That game has
       ended"; the design guide calls the party a "room". The mocks follow the plan; pick one word.
+- [ ] **Shader skill licence:** `webgpu-threejs-tsl` declares MIT upstream but ships no LICENSE file; we vendored it with the
+      standard MIT text and a note (`.claude/skills/webgpu-threejs-tsl/VENDORED.md`). OK, or ask upstream / drop it?
 - [ ] **Style frames:** they're written but couldn't be generated (no image tool on the Codex account on 2026-10-03). Either
       restore an image-capable Codex model or OK the `OPENAI_API_KEY` fallback, then the session generates and reviews them.
 - [ ] Record the verdict and any changes (the session writes `docs/playtests/poc-<date>.md`).

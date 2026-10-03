@@ -21,7 +21,11 @@ Usage:
     scripts/reconcile_plans_to_beads.py --jsonl FILE     read beads from a JSONL copy instead of br
     scripts/reconcile_plans_to_beads.py --json           machine-readable report
     scripts/reconcile_plans_to_beads.py --plan-ref ID…   print tasks' §15 blocks and the plan
-                                                         sections they cite (scripts/plan-ref.sh)
+                                                         sections they cite, or sections (13b.2),
+                                                         rulings (R93) and register rows (V2-16)
+                                                         from --doc plan|master|direction|rulings;
+                                                         --toc lists a document's section IDs
+                                                         (all through scripts/plan-ref.sh)
 
 Intentional deferrals go in scripts/reconcile_allowlist.txt, one ID per line with a reason.
 """
@@ -38,9 +42,16 @@ import sys
 REPO = pathlib.Path(__file__).resolve().parent.parent
 PLAN = REPO / "docs" / "plans" / "v0.2-playtest-1-plan.md"
 ALLOWLIST = REPO / "scripts" / "reconcile_allowlist.txt"
+DOCS = {
+    "plan": PLAN,
+    "master": REPO / "docs" / "plans" / "v0.2-revamp-plan-2026-09-28.md",
+    "direction": REPO / "docs" / "plans" / "v0.2-experience-direction.md",
+    "rulings": REPO / "docs" / "policies" / "owner-direction-2026-09-29.md",
+}
 
 TASK_RE = re.compile(r"^(?:- )?\*\*(P1-[A-Z]+\d+[a-z]?) · ")
-HEADING_RE = re.compile(r"^(#{2,3}) (\S+?)\.? ")
+HEADING_RE = re.compile(r"^(#{2,4}) (\S+?)\.? ")
+ROW_ID_RE = re.compile(r"^(R\d+|V2-\d+[a-z]?)$")  # a ruling (R93) or a master-plan register row (V2-16)
 # A plan-local section citation: §5.3, §13b.2, §3a, §15.0. "master §…" / "experience direction §…"
 # point at other documents and are skipped.
 CITE_RE = re.compile(r"(?<![\w])(master |direction |brief )?§(\d+[a-z]?(?:\.\d+[a-z]?)?)")
@@ -161,13 +172,57 @@ def section_block(lines: list[str], ref: str) -> list[str] | None:
     return None
 
 
-def plan_ref(ids: list[str]) -> int:
+def table_rows(lines: list[str], ref: str) -> list[str]:
+    """Table rows whose first cell is exactly ref (a ruling like R93, a register row like V2-16)."""
+    return [l for l in lines if re.match(rf"^\|\s*\**{re.escape(ref)}\**\s*\|", l)]
+
+
+def doc_ref(doc: str, ref: str) -> bool:
+    """Print one section, ruling or register row of a document; False when it isn't there."""
+    ref = ref.lstrip("§")
+    if doc == "rulings" and re.match(r"^R\d+$", ref):
+        # The numbered ruling lives in the master plan's rulings table; the owner-direction policy's topic
+        # rows that cite it carry the short form.
+        master = DOCS["master"].read_text(encoding="utf-8").splitlines()
+        policy = DOCS["rulings"].read_text(encoding="utf-8").splitlines()
+        block = table_rows(master, ref) + [l for l in policy if l.startswith("|") and re.search(rf"\b{ref}\b", l)]
+        path = DOCS["master"] if table_rows(master, ref) else DOCS["rulings"]
+    else:
+        path = DOCS[doc]
+        lines = path.read_text(encoding="utf-8").splitlines()
+        block = table_rows(lines, ref) if ROW_ID_RE.match(ref) else section_block(lines, ref)
+    if not block:
+        print(f"plan-ref: no {ref} in {path.relative_to(REPO)} (scripts/plan-ref.sh --toc lists the sections)",
+              file=sys.stderr)
+        return False
+    print(f"===== {ref} ({path.relative_to(REPO)}) =====")
+    print("\n".join(block).rstrip())
+    print()
+    return True
+
+
+def toc(doc: str) -> int:
+    """Every section heading with its ID and line, so a section can be asked for by ID."""
+    path = DOCS[doc]
+    for i, l in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        m = HEADING_RE.match(l)
+        if m:
+            print(f"{i:6d}  {'  ' * (len(m.group(1)) - 2)}{l.lstrip('#').strip()}")
+    return 0
+
+
+def plan_ref(ids: list[str], doc: str = "plan") -> int:
+    if doc != "plan":
+        return 0 if all([doc_ref(doc, r) for r in ids]) else 1
     lines = plan_lines()
     tasks = plan_tasks(lines)
     start, end = section15(lines)
     order = sorted(tasks.values())
     status = 0
     for raw in ids:
+        if raw.startswith("§") or raw[:1].isdigit():
+            status |= 0 if doc_ref("plan", raw) else 1
+            continue
         tid = raw if raw.startswith("P1-") else f"P1-{raw}"
         if tid not in tasks:
             print(f"plan-ref: {tid} is not a §15 task in {PLAN.relative_to(REPO)}", file=sys.stderr)
@@ -209,10 +264,14 @@ def main() -> int:
     ap.add_argument("--gate", action="store_true")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--jsonl", help="read beads from this JSONL copy instead of br")
-    ap.add_argument("--plan-ref", nargs="+", metavar="ID")
+    ap.add_argument("--plan-ref", nargs="*", metavar="ID")
+    ap.add_argument("--doc", choices=sorted(DOCS), default="plan")
+    ap.add_argument("--toc", action="store_true")
     a = ap.parse_args()
+    if a.toc:
+        return toc(a.doc)
     if a.plan_ref:
-        return plan_ref(a.plan_ref)
+        return plan_ref(a.plan_ref, a.doc)
     r = reconcile(a.jsonl)
     if a.json:
         print(json.dumps(r, indent=2))
