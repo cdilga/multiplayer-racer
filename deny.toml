@@ -3,6 +3,10 @@
 
 [graph]
 all-features = true
+# The targets 0.2 builds: CI and the RCH workers (x86_64 Linux), the Mac (aarch64 macOS) and the WASM facades. Without the
+# list, cargo-deny walks every target, and wasm-bindgen-futures' emscripten-only optional Tokio (behind an unstable cfg,
+# reached only from the test-only wasm-bindgen-test) fails R2 for code that's never built.
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "wasm32-unknown-unknown"]
 
 [advisories]
 yanked = "deny"
