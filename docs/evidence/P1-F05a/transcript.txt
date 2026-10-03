@@ -1,0 +1,24 @@
+# P1-F05a transcript (2026-10-03T06:40:25Z, Mac arm64 local build)
+# commit A = 484ef03 (jj sim, trace rows without events); commit B = ca49ed6 (trace rows with events) ; commit C = HEAD (compare lists every differing key) = the binary below
+
+$ jj sim --json crates/jj-tools/tests/fixtures/sim/three-seats.json > three-seats.json
+exit 0
+ok=True ticks=600 replayMatches=True
+stateHash  512ba1ef40d36755e42b989aae0513e2f5de2f2300072c064f38db09077416a1
+replayHash 512ba1ef40d36755e42b989aae0513e2f5de2f2300072c064f38db09077416a1
+observed ticks: [0, 300, 600]; phase Running, driving Racing, round 1
+  car 0: pos (97.61, 0.822, -4.00)  speed 20.49 m/s  progress 97.61 m (pt 39, lateral -4.00)  input {'brake': 0.0, 'steer': 0.0, 'throttle': 1.0}
+  car 1: pos (68.81, 0.822, 0.00)  speed 10.24 m/s  progress 68.81 m (pt 27, lateral 0.00)  input {'brake': 0.0, 'steer': 0.0, 'throttle': 0.5000152587890625}
+  car 2: pos (40.00, 0.822, 4.00)  speed 0.03 m/s  progress 40.00 m (pt 15, lateral 4.00)  input {'brake': 0.0, 'steer': 0.0, 'throttle': 0.0}
+  seat 1 #1 Ava: Active, connected True, car 0, hasCar True, ready False
+  seat 2 #2 Bo: Active, connected True, car 1, hasCar True, ready False
+  seat 3 #3 Cy: Active, connected True, car 2, hasCar True, ready False
+
+$ jj sim crates/jj-tools/tests/fixtures/sim/failing-envelope.json
+FAIL failing-envelope (240 ticks, state 76a6da70b1bc…, replay matches) → run-failing
+  observed vs envelope:
+    BAD car 0 @   end maxSpeed = 10.038 NOT in [100, 200]
+    ok  car 0 @   end upY = 1.000 in [0.95, 1.001]
+  outcome signature at the end:
+    car 0: airtimeS 0.008, forwardSpeed 10.034, headingChangeDeg 0.000, height 0.822, lateralDrift 0.000, maxSlipDeg 0.000, maxSpeed 10.038, maxYawRateDegS 0.000, minUpY 1.000, progressM 10.548, speed 10.038, travel 10.548, upY 1.000, wheelsInContact 4.000
+exit 1

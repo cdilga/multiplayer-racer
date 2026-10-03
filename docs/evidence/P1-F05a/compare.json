@@ -1,0 +1,429 @@
+{
+  "accepted": "run-commitA/trace.jsonl",
+  "current": "run-commitB/trace.jsonl",
+  "divergence": [
+    {
+      "accepted": "—",
+      "current": "0",
+      "key": "events[0].at",
+      "tick": 0,
+      "tuned": "0"
+    },
+    {
+      "accepted": "—",
+      "current": "0",
+      "key": "events[0].setup.SpawnCar.car",
+      "tick": 0,
+      "tuned": "0"
+    },
+    {
+      "accepted": "—",
+      "current": "1.5707963705062866",
+      "key": "events[0].setup.SpawnCar.pose.heading",
+      "tick": 0,
+      "tuned": "1.5707963705062866"
+    },
+    {
+      "accepted": "—",
+      "current": "40.0",
+      "key": "events[0].setup.SpawnCar.pose.x",
+      "tick": 0,
+      "tuned": "40.0"
+    },
+    {
+      "accepted": "—",
+      "current": "0.6000000238418579",
+      "key": "events[0].setup.SpawnCar.pose.y",
+      "tick": 0,
+      "tuned": "0.6000000238418579"
+    },
+    {
+      "accepted": "—",
+      "current": "0.0",
+      "key": "events[0].setup.SpawnCar.pose.z",
+      "tick": 0,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "—",
+      "current": "0.0",
+      "key": "events[0].input.brake",
+      "tick": 1,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "—",
+      "current": "0",
+      "key": "events[0].input.car",
+      "tick": 1,
+      "tuned": "0"
+    },
+    {
+      "accepted": "—",
+      "current": "0.0",
+      "key": "events[0].input.steer",
+      "tick": 1,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "—",
+      "current": "1.0",
+      "key": "events[0].input.throttle",
+      "tick": 1,
+      "tuned": "1.0"
+    },
+    {
+      "accepted": "-9.097332664964597e-9",
+      "current": "-9.097332664964597e-9",
+      "key": "cars[0].angvel[0]",
+      "tick": 2,
+      "tuned": "-3.898855904793663e-9"
+    },
+    {
+      "accepted": "-9.034715792340108e-13",
+      "current": "-9.034715792340108e-13",
+      "key": "cars[0].angvel[1]",
+      "tick": 2,
+      "tuned": "-1.8351767046113912e-13"
+    },
+    {
+      "accepted": "0.018221264705061913",
+      "current": "0.018221264705061913",
+      "key": "cars[0].angvel[2]",
+      "tick": 2,
+      "tuned": "0.007809113245457411"
+    },
+    {
+      "accepted": "0.04857295006513595",
+      "current": "0.04857295006513595",
+      "key": "cars[0].forwardSpeed",
+      "tick": 2,
+      "tuned": "0.020816978067159653"
+    },
+    {
+      "accepted": "0.048550426959991455",
+      "current": "0.048550426959991455",
+      "key": "cars[0].linvel[0]",
+      "tick": 2,
+      "tuned": "0.020807325839996334"
+    },
+    {
+      "accepted": "40.00041198730469",
+      "current": "40.00041198730469",
+      "key": "cars[0].position[0]",
+      "tick": 2,
+      "tuned": "40.00016784667969"
+    },
+    {
+      "accepted": "40.00041198730469",
+      "current": "40.00041198730469",
+      "key": "cars[0].progress.distanceM",
+      "tick": 2,
+      "tuned": "40.00016784667969"
+    },
+    {
+      "accepted": "0.06501194583413349",
+      "current": "0.06501194583413349",
+      "key": "cars[0].progress.fraction",
+      "tick": 2,
+      "tuned": "0.06501154903679315"
+    },
+    {
+      "accepted": "-0.00005404282273957506",
+      "current": "-0.00005404282273957506",
+      "key": "cars[0].rotation[0]",
+      "tick": 2,
+      "tuned": "-0.00002316121208423283"
+    },
+    {
+      "accepted": "0.00005404276816989295",
+      "current": "0.00005404276816989295",
+      "key": "cars[0].rotation[2]",
+      "tick": 2,
+      "tuned": "0.000023161188437370583"
+    },
+    {
+      "accepted": "0.15509895980358124",
+      "current": "0.15509895980358124",
+      "key": "cars[0].speed",
+      "tick": 2,
+      "tuned": "0.14876654744148254"
+    },
+    {
+      "accepted": "29.166667938232425",
+      "current": "29.166667938232425",
+      "key": "cars[0].wheels[2].forwardImpulse",
+      "tick": 2,
+      "tuned": "12.500000953674316"
+    },
+    {
+      "accepted": "29.166667938232425",
+      "current": "29.166667938232425",
+      "key": "cars[0].wheels[3].forwardImpulse",
+      "tick": 2,
+      "tuned": "12.500000953674316"
+    },
+    {
+      "accepted": "0.3419721722602844",
+      "current": "0.3419721722602844",
+      "key": "cars[0].linvel[1]",
+      "tick": 3,
+      "tuned": "0.3419724106788635"
+    },
+    {
+      "accepted": "-1.3708887358632182e-8",
+      "current": "-1.3708887358632182e-8",
+      "key": "cars[0].linvel[2]",
+      "tick": 3,
+      "tuned": "4.3390475240601134e-11"
+    },
+    {
+      "accepted": "-1.1438353736403784e-10",
+      "current": "-1.1438353736403784e-10",
+      "key": "cars[0].position[2]",
+      "tick": 3,
+      "tuned": "3.6203931020641067e-13"
+    },
+    {
+      "accepted": "-1.1438353736403784e-10",
+      "current": "-1.1438353736403784e-10",
+      "key": "cars[0].progress.lateralM",
+      "tick": 3,
+      "tuned": "3.6203931020641067e-13"
+    },
+    {
+      "accepted": "-4.203565822535893e-6",
+      "current": "-4.203565822535893e-6",
+      "key": "cars[0].wheels[0].sideImpulse",
+      "tick": 3,
+      "tuned": "6.327887103196872e-9"
+    },
+    {
+      "accepted": "9827.2119140625",
+      "current": "9827.2119140625",
+      "key": "cars[0].wheels[0].suspensionForce",
+      "tick": 3,
+      "tuned": "9906.77734375"
+    },
+    {
+      "accepted": "0.0512634813785553",
+      "current": "0.0512634813785553",
+      "key": "cars[0].wheels[0].suspensionLength",
+      "tick": 3,
+      "tuned": "0.05114641785621643"
+    },
+    {
+      "accepted": "-4.203565822535893e-6",
+      "current": "-4.203565822535893e-6",
+      "key": "cars[0].wheels[1].sideImpulse",
+      "tick": 3,
+      "tuned": "6.327887103196872e-9"
+    },
+    {
+      "accepted": "9827.2119140625",
+      "current": "9827.2119140625",
+      "key": "cars[0].wheels[1].suspensionForce",
+      "tick": 3,
+      "tuned": "9906.77734375"
+    },
+    {
+      "accepted": "0.0512634813785553",
+      "current": "0.0512634813785553",
+      "key": "cars[0].wheels[1].suspensionLength",
+      "tick": 3,
+      "tuned": "0.05114641785621643"
+    },
+    {
+      "accepted": "-4.202418494969606e-6",
+      "current": "-4.202418494969606e-6",
+      "key": "cars[0].wheels[2].sideImpulse",
+      "tick": 3,
+      "tuned": "6.327899537694748e-9"
+    },
+    {
+      "accepted": "10105.658203125",
+      "current": "10105.658203125",
+      "key": "cars[0].wheels[2].suspensionForce",
+      "tick": 3,
+      "tuned": "10026.1103515625"
+    },
+    {
+      "accepted": "0.05085381865501404",
+      "current": "0.05085381865501404",
+      "key": "cars[0].wheels[2].suspensionLength",
+      "tick": 3,
+      "tuned": "0.05097082257270813"
+    },
+    {
+      "accepted": "-4.202418494969606e-6",
+      "current": "-4.202418494969606e-6",
+      "key": "cars[0].wheels[3].sideImpulse",
+      "tick": 3,
+      "tuned": "6.327899537694748e-9"
+    },
+    {
+      "accepted": "10105.658203125",
+      "current": "10105.658203125",
+      "key": "cars[0].wheels[3].suspensionForce",
+      "tick": 3,
+      "tuned": "10026.1103515625"
+    },
+    {
+      "accepted": "0.05085381865501404",
+      "current": "0.05085381865501404",
+      "key": "cars[0].wheels[3].suspensionLength",
+      "tick": 3,
+      "tuned": "0.05097082257270813"
+    },
+    {
+      "accepted": "0.7071067690849304",
+      "current": "0.7071067690849304",
+      "key": "cars[0].rotation[1]",
+      "tick": 4,
+      "tuned": "0.7071068286895752"
+    },
+    {
+      "accepted": "0.7071067690849304",
+      "current": "0.7071067690849304",
+      "key": "cars[0].rotation[3]",
+      "tick": 4,
+      "tuned": "0.7071068286895752"
+    },
+    {
+      "accepted": "0.9999997615814208",
+      "current": "0.9999997615814208",
+      "key": "cars[0].upY",
+      "tick": 4,
+      "tuned": "1.0000001192092896"
+    },
+    {
+      "accepted": "0.6142025589942932",
+      "current": "0.6142025589942932",
+      "key": "cars[0].position[1]",
+      "tick": 5,
+      "tuned": "0.614202618598938"
+    },
+    {
+      "accepted": "-2.3016218619886786e-6",
+      "current": "-2.3016218619886786e-6",
+      "key": "cars[0].wheels[0].slipDeg",
+      "tick": 11,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "-2.3016218619886786e-6",
+      "current": "-2.3016218619886786e-6",
+      "key": "cars[0].wheels[1].slipDeg",
+      "tick": 11,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "-2.5077711143239867e-6",
+      "current": "-2.5077711143239867e-6",
+      "key": "cars[0].wheels[2].slipDeg",
+      "tick": 11,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "-2.5077711143239867e-6",
+      "current": "-2.5077711143239867e-6",
+      "key": "cars[0].wheels[3].slipDeg",
+      "tick": 11,
+      "tuned": "0.0"
+    },
+    {
+      "accepted": "17",
+      "current": "17",
+      "key": "cars[0].progress.routePoint",
+      "tick": 115,
+      "tuned": "16"
+    }
+  ],
+  "identical": false,
+  "summary": [
+    {
+      "accepted": "23.041860580444336",
+      "current": "23.041860580444336",
+      "key": "signature[0].forwardSpeed",
+      "tuned": "9.877367973327637"
+    },
+    {
+      "accepted": "0.822172999382019",
+      "current": "0.822172999382019",
+      "key": "signature[0].height",
+      "tuned": "0.822334349155426"
+    },
+    {
+      "accepted": "1.6465000121667666e-8",
+      "current": "1.6465000121667666e-8",
+      "key": "signature[0].lateralDrift",
+      "tuned": "2.3677220801220132e-6"
+    },
+    {
+      "accepted": "4.511847691901494e-6",
+      "current": "4.511847691901494e-6",
+      "key": "signature[0].maxSlipDeg",
+      "tuned": "6.132149337645387e-6"
+    },
+    {
+      "accepted": "23.048738479614254",
+      "current": "23.048738479614254",
+      "key": "signature[0].maxSpeed",
+      "tuned": "9.878203392028809"
+    },
+    {
+      "accepted": "2.529502008166047e-7",
+      "current": "2.529502008166047e-7",
+      "key": "signature[0].maxYawRateDegS",
+      "tuned": "7.381704196332199e-8"
+    },
+    {
+      "accepted": "0.999732255935669",
+      "current": "0.999732255935669",
+      "key": "signature[0].minUpY",
+      "tuned": "0.9999508857727052"
+    },
+    {
+      "accepted": "79.44636535644531",
+      "current": "79.44636535644531",
+      "key": "signature[0].progressM",
+      "tuned": "34.04832458496094"
+    },
+    {
+      "accepted": "23.048738479614254",
+      "current": "23.048738479614254",
+      "key": "signature[0].speed",
+      "tuned": "9.878203392028809"
+    },
+    {
+      "accepted": "79.44636535644538",
+      "current": "79.44636535644538",
+      "key": "signature[0].travel",
+      "tuned": "34.048324584960945"
+    },
+    {
+      "accepted": "0.9997330904006958",
+      "current": "0.9997330904006958",
+      "key": "signature[0].upY",
+      "tuned": "0.9999510049819946"
+    },
+    {
+      "accepted": "bd515c3be584d80fda46c208cf3bb3331ecb52885dbddac3505262e13e6a2052",
+      "current": "bd515c3be584d80fda46c208cf3bb3331ecb52885dbddac3505262e13e6a2052",
+      "key": "stateHash",
+      "tuned": "286229b614dbfb5f08e553d5140362c231f90a09b3183c7c5323d80e6961204f"
+    },
+    {
+      "accepted": "—",
+      "current": "—",
+      "key": "tuned[0]",
+      "tuned": "max_engine_force=3000"
+    }
+  ],
+  "ticks": {
+    "accepted": 721,
+    "current": 721,
+    "tuned": 721
+  },
+  "tuned": "run-commitB-tuned/trace.jsonl"
+}
