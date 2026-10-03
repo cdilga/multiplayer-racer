@@ -41,9 +41,9 @@ bodywork-off	2	part.detached.bodywork	Bodywork's gone! She'll be apples!	Bodywor
 bodywork-off	3	part.detached.bodywork	That's a big chunk of bodywork gone!	That's a big chunk of bodywork gone!	hype	-	yes
 bodywork-off	4	part.detached.bodywork	There goes the bumper! Proper smash!	There goes the bumper! Proper smash!	hype	-	yes
 big-air	1	car.air_time	Look at that air! Strewth!	Look at that air! Strewth!	hype	strewth	yes
-big-air	3	car.air_time	Starve the lizards, someone's flying!	Starve the lizards, someone's flying!	hype	starve the lizards	yes
-big-air	4	car.air_time	Mind the clouds! Huge air!	Mind the clouds! Huge air!	hype	-	yes
-big-air	5	car.air_time	That jump was a pearler!	That jump was a pearler!	hype	pearler	yes
+big-air	2	car.air_time	Starve the lizards, someone's flying!	Starve the lizards, someone's flying!	hype	starve the lizards	yes
+big-air	3	car.air_time	Mind the clouds! Huge air!	Mind the clouds! Huge air!	hype	-	yes
+big-air	4	car.air_time	That jump was a pearler!	That jump was a pearler!	hype	pearler	yes
 wreck	1	car.wrecked	That one's carked it!	That one's carked it!	hype	cark it	yes
 wreck	2	car.wrecked	What a bingle! They'll be back in a tick.	What a bingle! They'll be back in a tick.	hype	bingle	yes
 wreck	3	car.wrecked	She's cactus! Better luck next lap.	She's cactus! Better luck next lap.	hype	cactus	yes
