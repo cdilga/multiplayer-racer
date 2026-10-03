@@ -115,14 +115,14 @@ the top still apply: a slang term sits beside plain words that carry the meaning
 | fair dinkum | Genuine, true, the real thing. | Photo finish, big wins, "fair dinkum finish". | Already in the table above (verified). |
 | nah / yeah nah / nah yeah | Casual no; "yeah nah" is a polite no, "nah yeah" a yes. | Playful reactions and banter where the literal meaning doesn't matter (e.g. a near miss: "Yeah nah, not today!"). | **Confusing to non-Australian players** (the two-way meaning): never use in anything that carries information, a warning, a choice or a confirmation; only where the line still reads correctly if taken literally either way. |
 | scallop | A potato cake (battered, fried potato slice) in some states, a sea creature in others. | Flavour text on pickups or scenery only. | Regional and ambiguous: pair it with a plain word or art that settles which, or leave it out. |
-| cruiser | A Toyota Landcruiser. | Car names/blurbs, commentary on big 4WDs. | Product-name adjacent: keep to the shortened word, never the brand name or logo. |
-| going walkabout | Wandering off, gone missing; a car that has strayed. | A car that has left the track, a missing/respawning car. | Walkabout has a specific Aboriginal cultural meaning, so keep it light, about cars only, never about people or places. |
+| cruiser | A Toyota Landcruiser. | Car names, blurbs and commentary on big 4WDs. | Owner-supplied. |
+| going walkabout | Wandering off, gone missing; a car that has strayed. | A car that has left the track, a missing/respawning car. | Owner-supplied: use it freely for cars wandering off. Supersedes the older walkabout row below. |
 | out past whoop whoop | Very far away in the middle of nowhere. | **The out-of-bounds message** when we need one ("You're out past whoop whoop!") with the plain instruction beside it. | Plain words must carry the instruction (return to the track). |
-| sheila / sheilas | Dated slang for a woman. | Not in the announcer or UI by default. | Dated and some players hear it as sexist: owner-supplied, use only after the owner picks a specific, friendly context. Keep out of auto-generated lines. |
-| blokes | Men, fellas. | Group address ("good on ya, blokes") in banter. | Gendered; prefer "everyone" in room-wide lines and keep "blokes" for flavour, never to address a mixed room. |
+| sheila / sheilas | Slang for women. | Banter and flavour lines where the owner wants it. | Owner-supplied. Use per the owner's direction; no pre-emptive disclaimers. |
+| blokes | Men, fellas. | Group address and banter ("good on ya, blokes"). | Owner-supplied. |
 | sanga | Sandwich, specifically sausage in bread (the game's sausage-on-bread item, R-items). | The sanga item, its pickup and callouts. | Already the item's name. |
 | cheers | Thanks (also a toast). | Thank-yous in UI copy, sign-offs ("Cheers!"), the round-complete thanks. | Plain and safe. |
-| the institution | A pub (a tongue-in-cheek name for the local). | Flavour on signs and scenery, where a pub would be. | Alcohol reference: fine as scenery and a one-off line, never encouraging drinking. |
+| the institution | A pub. | Signs, scenery, banter. | Owner-supplied. |
 | servo | A petrol station / fuel station. | Scenery and signs, pit/repair spots, the Aussie roadside. | Plain and safe. |
 | arvo / arvy | Afternoon. | Time-of-day banter, "this arvo's racing". | Plain and safe. |
 
