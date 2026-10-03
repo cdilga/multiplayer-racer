@@ -8,13 +8,13 @@ viewport before and after the full-screen-style resize), all looked at as full i
 owner's devices.
 
 ## Looked at
-- `matrix-all.jpg`: all 30: three routes × five viewports × before/after resize. Checked: canvas filled edge to edge,
+- `self-review/matrix-all.jpg`: all 30: three routes × five viewports × before/after resize. Checked: canvas filled edge to edge,
   nothing blank, every car on screen, chip readable and naming the true backing-store size.
-- `host_synthetic_24_1920x1080.jpg` (TV, 24 cars): whole field in frame, cars distinct, shadows under them.
-- `host_synthetic_24_412x915.jpg` (phone portrait): field spans the width; chip says `412×915 native` at DPR 1.
-- `host_synthetic_24_915x412_after-resize.jpg` (phone landscape after resize): re-framed, no stretching.
-- `host_1920x1080.jpg` (the sim worker, nobody joined): the greybox's five cones on a gridded ground.
-- `host_synthetic_24_res_0_5_1366x768.jpg` (laptop at 50 %): chip says `683×384 50 %`, image upscaled, not cropped.
+- `self-review/host_synthetic_24_1920x1080.jpg` (TV, 24 cars): whole field in frame, cars distinct, shadows under them.
+- `self-review/host_synthetic_24_412x915.jpg` (phone portrait): field spans the width; chip says `412×915 native` at DPR 1.
+- `self-review/host_synthetic_24_915x412_after-resize.jpg` (phone landscape after resize): re-framed, no stretching.
+- `self-review/host_1920x1080.jpg` (the sim worker, nobody joined): the greybox's five cones on a gridded ground.
+- `self-review/host_synthetic_24_res_0_5_1366x768.jpg` (laptop at 50 %): chip says `683×384 50 %`, image upscaled, not cropped.
 - `frame-webgl.png` / `frame-webgl2-fallback.png` (CI captures): the same frame through both backends.
 - `unsupported.png`: the capability refusal: heading, reason, next step and a Join button, readable.
 
