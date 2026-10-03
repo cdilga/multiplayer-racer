@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cruz Missile comic look test</title>
+<style>html,body{margin:0;background:#15203A}canvas{display:block}</style>
+<!-- region: importmap -->
+<!-- Self-hosted only (R70): three comes from the repo-root node_modules, served from the repo root. 'three' and 'three/webgpu' MUST be
+     the same URL, so Spike J's model.js (which imports 'three') and look.js (which imports 'three/webgpu') share one module instance. -->
+<script type="importmap">{"imports":{
+  "three":"/node_modules/three/build/three.webgpu.js",
+  "three/webgpu":"/node_modules/three/build/three.webgpu.js",
+  "three/tsl":"/node_modules/three/build/three.tsl.js",
+  "three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<!-- endregion -->
+</head><body><canvas id="c"></canvas><script type="module" src="./main.js"></script></body></html>

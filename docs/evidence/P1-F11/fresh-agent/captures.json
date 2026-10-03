@@ -1,0 +1,40 @@
+{
+  "port": 54121,
+  "webgl": false,
+  "views": {
+    "hero": {
+      "name": "hero",
+      "info": {
+        "backend": "webgpu",
+        "view": "hero",
+        "tier": "L",
+        "inkPx": 2.6666666666666665,
+        "cell": 8
+      },
+      "errors": [],
+      "frames": 72,
+      "logs": [
+        "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "side": {
+      "name": "side",
+      "info": {
+        "backend": "webgpu",
+        "view": "side",
+        "tier": "L",
+        "inkPx": 2.6666666666666665,
+        "cell": 8
+      },
+      "errors": [],
+      "frames": 72,
+      "logs": []
+    }
+  },
+  "gpuAdapter": {
+    "vendor": "apple",
+    "architecture": "metal-3",
+    "description": ""
+  },
+  "browser": "151.0.7922.34"
+}

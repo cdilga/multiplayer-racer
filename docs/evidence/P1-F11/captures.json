@@ -1,0 +1,366 @@
+{
+  "when": "2026-10-03T02:19:54.123Z",
+  "chromium": "151.0.7922.34",
+  "shots": {
+    "before-hero.png": {
+      "query": "look=off&view=hero",
+      "size": "1600x900",
+      "note": "plain MeshStandardMaterial, MSAA, same camera and lights",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": false,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "hero.png": {
+      "query": "look=on&view=hero&grainAmt=0",
+      "size": "1600x900",
+      "note": "three-quarter hero, tier L",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "before-side.png": {
+      "query": "look=off&view=side",
+      "size": "1600x900",
+      "note": "plain, side",
+      "backend": "WebGPU",
+      "view": "side",
+      "on": false,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "side.png": {
+      "query": "look=on&view=side&grainAmt=0",
+      "size": "1600x900",
+      "note": "side view, tier L",
+      "backend": "WebGPU",
+      "view": "side",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "before-thumb-40px.png": {
+      "query": "look=off&view=thumb",
+      "size": "128x72",
+      "note": "plain, car about 40 px tall",
+      "backend": "WebGPU",
+      "view": "thumb",
+      "on": false,
+      "W": 128,
+      "H": 72,
+      "tier": "XS",
+      "bench": null
+    },
+    "thumb-40px.png": {
+      "query": "look=on&view=thumb&grainAmt=0",
+      "size": "128x72",
+      "note": "car about 40 px tall, tier XS (toon + 1 px ink only)",
+      "backend": "WebGPU",
+      "view": "thumb",
+      "on": true,
+      "W": 128,
+      "H": 72,
+      "tier": "XS",
+      "bench": null
+    },
+    "pack.png": {
+      "query": "look=on&view=pack&grainAmt=0",
+      "size": "1600x900",
+      "note": "four cars, one material: paint key, damage creep, dust",
+      "backend": "WebGPU",
+      "view": "pack",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "speedlines.png": {
+      "query": "look=on&view=hero&grainAmt=0&speed=0.9",
+      "size": "1600x900",
+      "note": "speed lines at 0.9 speed",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "hero-fringe.png": {
+      "query": "look=on&view=hero&grainAmt=0&fringe=30",
+      "size": "1600x900",
+      "note": "chromatic fringe, look.fringe = 30, the big-hit effect",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "glsl-hero.png": {
+      "query": "view=hero&grainAmt=0",
+      "size": "1600x900",
+      "note": "GLSL route: plain WebGLRenderer, MeshToonMaterial + onBeforeCompile + prepass + one ShaderPass (no bloom)",
+      "backend": "WebGL2 (plain WebGLRenderer, GLSL route)",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "bench": null
+    },
+    "glsl-pack.png": {
+      "query": "view=pack&grainAmt=0",
+      "size": "1600x900",
+      "note": "GLSL route: paint key on instanceColor, four cars, one material",
+      "backend": "WebGL2 (plain WebGLRenderer, GLSL route)",
+      "view": "pack",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "bench": null
+    },
+    "glsl-thumb-40px.png": {
+      "query": "view=thumb&grainAmt=0",
+      "size": "128x72",
+      "note": "GLSL route: the 40 px car",
+      "backend": "WebGL2 (plain WebGLRenderer, GLSL route)",
+      "view": "thumb",
+      "on": true,
+      "W": 128,
+      "H": 72,
+      "bench": null
+    },
+    "minimal-props.png": {
+      "query": "x=1",
+      "size": "1280x720",
+      "note": "the recipes on ordinary meshes: barrel, crate, cone, glowing beacon (no car, atlas or instancing)",
+      "backend": "WebGPU",
+      "view": "minimal",
+      "on": true,
+      "W": 1280,
+      "H": 720,
+      "tier": "L"
+    },
+    "hero-outline-ids.png": {
+      "query": "look=on&view=hero&grainAmt=0&outline=ids",
+      "size": "1600x900",
+      "note": "cheap outline tier: object silhouettes only (no depth or normal taps)",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "hero-webgl2.png": {
+      "query": "look=on&view=hero&grainAmt=0&backend=webgl",
+      "size": "1600x900",
+      "note": "same recipe on WebGPURenderer forced onto its WebGL2 backend",
+      "backend": "WebGL2 (WebGPURenderer fallback backend)",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "debug-shade.png": {
+      "query": "look=on&view=hero&dbg=shade&nofxaa=1",
+      "size": "1600x900",
+      "note": "jjShade channel (0 lit, 1 cast shadow)",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "debug-id.png": {
+      "query": "look=on&view=pack&dbg=id&nofxaa=1",
+      "size": "1600x900",
+      "note": "object-id channel (hashed ids)",
+      "backend": "WebGPU",
+      "view": "pack",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    },
+    "debug-edge.png": {
+      "query": "look=on&view=hero&dbg=edge&nofxaa=1",
+      "size": "1600x900",
+      "note": "edge mask",
+      "backend": "WebGPU",
+      "view": "hero",
+      "on": true,
+      "W": 1600,
+      "H": 900,
+      "tier": "L",
+      "bench": null
+    }
+  },
+  "gpu": {
+    "webgpuAdapter": {
+      "vendor": "apple",
+      "architecture": "metal-3"
+    },
+    "webgl2Renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)"
+  },
+  "bench": {
+    "plain-webgpu": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 0.48,
+      "serialMsMedian": 0.93,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.49,
+          "serialMsPerFrame": 0.93
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.48,
+          "serialMsPerFrame": 0.94
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.48,
+          "serialMsPerFrame": 0.91
+        }
+      ]
+    },
+    "comic-webgpu": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 0.68,
+      "serialMsMedian": 1.46,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.69,
+          "serialMsPerFrame": 1.48
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.68,
+          "serialMsPerFrame": 1.46
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.68,
+          "serialMsPerFrame": 1.43
+        }
+      ]
+    },
+    "plain-webgl2": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 1.06,
+      "serialMsMedian": 1.75,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.08,
+          "serialMsPerFrame": 1.75
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.06,
+          "serialMsPerFrame": 1.76
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.06,
+          "serialMsPerFrame": 1.71
+        }
+      ]
+    },
+    "comic-webgl2": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 0.83,
+      "serialMsMedian": 1.43,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.82,
+          "serialMsPerFrame": 1.43
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.85,
+          "serialMsPerFrame": 1.43
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.83,
+          "serialMsPerFrame": 1.41
+        }
+      ]
+    },
+    "comic-webgpu-ids": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 0.6,
+      "serialMsMedian": 1.38,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.6,
+          "serialMsPerFrame": 1.38
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.6,
+          "serialMsPerFrame": 1.38
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 0.61,
+          "serialMsPerFrame": 1.38
+        }
+      ]
+    },
+    "comic-glsl-webglrenderer": {
+      "frames": 100,
+      "resolution": "1920x1080",
+      "pipelinedMsMedian": 1.95,
+      "serialMsMedian": 2.63,
+      "runs": [
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.95,
+          "serialMsPerFrame": 2.63
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.95,
+          "serialMsPerFrame": 2.79
+        },
+        {
+          "frames": 100,
+          "pipelinedMsPerFrame": 1.95,
+          "serialMsPerFrame": 2.63
+        }
+      ]
+    }
+  },
+  "pageErrors": []
+}

@@ -59,3 +59,5 @@ jobs:
         run: python3 tools/audio/check_cues.py tools/audio/cues-playtest1.tsv && python3 tools/audio/test_check_cues.py
       - name: Engine synth bundle and profile copy are current (P1-A04)
         run: node art/ui/poc/audio/engine/build.mjs --check
+      - name: jammers-look recipes match the rendered code (P1-F11)
+        run: node .claude/skills/jammers-look/example/check-recipes.mjs

@@ -1,0 +1,122 @@
+# P1-F11 local receipt
+date: 2026-10-03  machine: Mac (Apple M1 Pro, macOS 27.0.1)  repo HEAD while working: 236b00f (nothing committed by this bead's agent)
+node: v26.10.0  playwright: 1.62.1  three: 0.182.0  chromium (Playwright, headless): 151.0.7922.34
+GPU as seen by the page: WebGPU adapter vendor=apple architecture=metal-3; WebGL2 renderer "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)"
+Scope: AC1 (vendor + read-through), AC2 (adapter map), AC3 (captures). CI closes the bead; this is the committed local evidence.
+
+## AC1: vendored with licences and source commits, read first, no installer run
+
+$ git ls-remote https://github.com/dgreenheck/webgpu-claude-skill HEAD
+af2319bd01bb7cc881267a9ef42cafdaf5e9029d	HEAD
+$ git ls-remote https://github.com/majidmanzarpour/threejs-game-skills HEAD
+8286774b22a2566bf894dbc825825c16921866af	HEAD
+
+$ curl -sSL -o tsl.tar.gz   https://codeload.github.com/dgreenheck/webgpu-claude-skill/tar.gz/af2319bd01bb7cc881267a9ef42cafdaf5e9029d
+$ curl -sSL -o games.tar.gz https://codeload.github.com/majidmanzarpour/threejs-game-skills/tar.gz/8286774b22a2566bf894dbc825825c16921866af
+$ shasum -a 256 tsl.tar.gz games.tar.gz
+5279550c9086936a655e32e83aefe20c7d468eea4f333f32c2d05a24daab545f  tsl.tar.gz
+d343f748f10d41b34183b45f739773c25700d8fca44c4766c889b254e9eff863  games.tar.gz
+(tarballs extracted in the session scratch directory only; nothing from them was executed)
+
+Read-through before copying (every file opened and read, nothing run):
+  dgreenheck/webgpu-claude-skill @ af2319b: README.md, .claude-plugin/{plugin,marketplace}.json, .cursor/rules/*.mdc (5),
+    skills/webgpu-threejs-tsl/{SKILL.md, REFERENCE.md, docs/*.md (7), examples/*.js (5), templates/*.js (2)}.
+    Finding: documentation plus browser example source; no installer, hook, script, network call, eval or package manifest.
+  majidmanzarpour/threejs-game-skills @ 8286774: skills/threejs-aaa-graphics-builder/{SKILL.md, agents/openai.yaml,
+    references/*.md (4), assets/scorecard-anchors/scene-{1,2,3}.jpg (viewed)}; plus LICENSE, README.md, AGENTS.md, package.json,
+    .gitignore and install.sh (read, NOT run, NOT vendored; install.sh rsyncs skills into ~/.claude/skills and rm -rf's a same-named
+    destination with --force).
+  The other eight skills and scripts/ of threejs-game-skills were not vendored and not read line by line.
+
+Licences:
+$ gh api repos/dgreenheck/webgpu-claude-skill --jq '"license=" + (.license|tostring)'      -> license=null
+  README.md "## License / MIT License / Code examples derived from Three.js (MIT License)"; .claude-plugin/plugin.json "license": "MIT"
+  => MIT declared twice by the author, but NO LICENSE FILE upstream. webgpu-threejs-tsl/LICENSE is the standard MIT text written by the
+     vendoring agent (copyright line = author named in plugin.json, year = repo creation year) with a header saying exactly that.
+$ gh api repos/majidmanzarpour/threejs-game-skills --jq '.license.spdx_id'                   -> MIT
+$ cmp <upstream>/LICENSE .claude/skills/threejs-aaa-graphics-builder/LICENSE                 -> identical
+
+Copy and compare:
+$ diff -rq <upstream>/skills/webgpu-threejs-tsl .claude/skills/webgpu-threejs-tsl
+Only in .claude/skills/webgpu-threejs-tsl: LICENSE
+Only in .claude/skills/webgpu-threejs-tsl: VENDORED.md
+$ diff -rq <upstream>/skills/threejs-aaa-graphics-builder .claude/skills/threejs-aaa-graphics-builder
+Only in .claude/skills/threejs-aaa-graphics-builder: LICENSE
+Only in .claude/skills/threejs-aaa-graphics-builder: VENDORED.md
+$ find .claude/skills/webgpu-threejs-tsl .claude/skills/threejs-aaa-graphics-builder -type f -perm +111     (no output: no executable bits)
+Removed on vendoring (webgpu-threejs-tsl only): .claude-plugin/*.json, .cursor/rules/*.mdc, repo README.md (install metadata and
+Cursor shims pointing at paths that do not exist here). Nothing removed from threejs-aaa-graphics-builder.
+Each folder has VENDORED.md: source repo, commit, date, read-through note, removals, sha256 of every vendored file, local usage notes.
+
+## AC2: jammers-look maps every master 12.1 / 12.1a element to a TSL recipe, a GLSL route and cost rules
+
+Files: .claude/skills/jammers-look/{SKILL.md (181 lines), recipes.md (680), recipes-extra.md (177), example/*}.
+SKILL.md has the element table (every 12.1 and 12.1a row, status run / sketch), the per-tile cost tiers, ten r182 traps,
+and points at art/ui/tokens.json, art/ui/GUIDE.md, the plan sections, and the accepted U05 frames (art/ui/accepted/<date>/ once G-DESIGN passes).
+$ node .claude/skills/jammers-look/example/check-recipes.mjs
+23 recipe blocks checked, 0 drifted        (recipes.md and the SKILL.md import map == the code that rendered the captures)
+
+## AC3: Cruz Missile with toon ramp, ink outlines and halftone shadows (captures)
+
+$ node .claude/skills/jammers-look/example/capture.mjs        (serves the repo root on a random localhost port, Playwright chromium, 3 runs x 100 frames per bench row)
+shot before-hero.png WebGPU 1600x900
+shot hero.png WebGPU 1600x900
+shot before-side.png WebGPU 1600x900
+shot side.png WebGPU 1600x900
+shot before-thumb-40px.png WebGPU 128x72
+shot thumb-40px.png WebGPU 128x72
+shot pack.png WebGPU 1600x900
+shot speedlines.png WebGPU 1600x900
+shot hero-fringe.png WebGPU 1600x900
+shot glsl-hero.png WebGL2 (plain WebGLRenderer, GLSL route) 1600x900
+shot glsl-pack.png WebGL2 (plain WebGLRenderer, GLSL route) 1600x900
+shot glsl-thumb-40px.png WebGL2 (plain WebGLRenderer, GLSL route) 128x72
+shot minimal-props.png WebGPU 1280x720
+shot hero-outline-ids.png WebGPU 1600x900
+shot hero-webgl2.png WebGL2 (WebGPURenderer fallback backend) 1600x900
+shot debug-shade.png WebGPU 1600x900
+shot debug-id.png WebGPU 1600x900
+shot debug-edge.png WebGPU 1600x900
+bench plain-webgpu {"pipelined":0.48,"serial":0.93}
+bench comic-webgpu {"pipelined":0.68,"serial":1.46}
+bench plain-webgl2 {"pipelined":1.06,"serial":1.75}
+bench comic-webgl2 {"pipelined":0.83,"serial":1.43}
+bench comic-webgpu-ids {"pipelined":0.6,"serial":1.38}
+bench comic-glsl-webglrenderer {"pipelined":1.95,"serial":2.63}
+(earlier full runs of the same command moved the serial column by up to about 0.3 ms: run-to-run noise)
+no page errors
+
+Renderer backend that actually ran: WebGPU (Dawn/Metal) for the TSL captures, WebGPURenderer-on-WebGL2 for hero-webgl2.png, plain
+WebGLRenderer for glsl-*.png. Headless Chromium, not headed (the bead's "headed on the Mac" is not met literally; same GPU).
+Frame times: 1920x1080 hero view, one car, ms per frame (pipelined = 100 frames then one wait; serial = wait after each), headless
+Chromium on the Mac, NOT a perf receipt; plain rows use MSAA and the comic TSL rows do not, so they are not like for like.
+Visual check: every capture was opened and looked at; hero, side, thumb-40px@8x, pack, glsl-hero and minimal-props show all three
+treatments (flat toon tones, navy ink outlines, a halftone dot screen in the shaded side and the cast shadow); thumb-40px shows toon +
+1 px ink only by the XS cost tier.
+
+## Recipe corrections made while building the page (the adapter's first draft was wrong here)
+
+ 1. r182 has PostProcessing, not RenderPipeline.
+ 2. MeshToonNodeMaterial dots the object-space normal attribute with a view-space light: replaced by an own LightingModel.
+ 3. LightingModel.direct() lightColor keeps ~half the sun inside cast shadows (luminance 1.0 vs 3.0 lit, sun 2.05): now baseColorNode x shadowNode.
+ 4. NodeMaterial multiplies instanceColor into the whole colour: paint key moved to an instanced attribute.
+ 5. Linear-depth Laplacian drew a band along the horizon at small tile sizes: switched to the device-depth Laplacian x z / depthScale.
+ 6. Linear filtering of id/normal/depth drew a phantom line on the far plane: Nearest.
+ 7. Sky is cleared to (0,0,0,1) in the extra MRT targets (shade reads 1.0): sky classified by depth only.
+ 8. atan2 is "overloaded" in TSL; use atan(y, x).
+ 9. GLSL: `patch` is a reserved word in GLSL ES 3.0.
+
+## Not done / not claimed
+
+ - Fresh-agent test: an independent agent followed only SKILL.md/recipes.md (not example/) and rendered all three treatments; see
+   fresh-agent/NOTES.md. Its seven gaps were fixed in the skill (import map, import header, shadow flags, self-contained wiring,
+   conventions, halftone levels, frame block); examples/main.js was refactored into self-contained functions and all captures
+   re-rendered pixel-identical to the previous set (max abs diff 0).
+ - 24-tile frame cost, headed run, other GPUs/browsers, selective bloom in the GLSL route: not done.
+ - Nothing committed, pushed or closed; beads untouched; no files outside .claude/skills/{webgpu-threejs-tsl,threejs-aaa-graphics-builder,jammers-look}/ and docs/evidence/P1-F11/.
+
+$ ls docs/evidence/P1-F11
+fresh-agent/  (added by the coordinator's fresh-agent run)  README.md  before-hero.png  before-side.png  before-thumb-40px.png  before-thumb-40px@8x.png  captures.json  compare-hero.png
+debug-edge.png  debug-id.png  debug-shade.png  glsl-hero.png  glsl-pack.png  glsl-thumb-40px.png  glsl-thumb-40px@8x.png
+hero-fringe.png  hero-outline-ids.png  hero-webgl2.png  hero.png  local-receipt.txt  minimal-props.png  pack.png  side.png
+speedlines.png  thumb-40px.png  thumb-40px@8x.png

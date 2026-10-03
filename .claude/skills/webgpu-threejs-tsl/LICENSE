@@ -1,0 +1,32 @@
+NOTE FROM THE VENDORING AGENT (2026-10-03, bead P1-F11): upstream
+dgreenheck/webgpu-claude-skill at commit af2319bd01bb7cc881267a9ef42cafdaf5e9029d
+ships NO LICENSE file, and the GitHub licence API reports none. It does declare
+the licence twice: README.md ("## License / MIT License / Code examples derived
+from Three.js (MIT License)") and .claude-plugin/plugin.json ("license": "MIT",
+author "Dan Greenheck"). The text below is the standard MIT licence, written
+here so the folder carries a licence file; the copyright holder is the author
+named in plugin.json and the year is the repository's creation year (2026).
+This is a reconstruction of the declared licence, not a file copied from
+upstream. See VENDORED.md.
+
+MIT License
+
+Copyright (c) 2026 Dan Greenheck
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
