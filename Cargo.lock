@@ -388,6 +388,8 @@ version = "0.2.0"
 dependencies = [
  "jj-map",
  "jj-types",
+ "libm",
+ "wasm-bindgen-test",
 ]
 
 [[package]]
@@ -472,7 +474,6 @@ version = "0.2.0"
 dependencies = [
  "jj-input",
  "jj-protocol",
- "jj-types",
  "wasm-bindgen",
 ]
 

@@ -1,0 +1,16 @@
+{
+  "dressing": 9,
+  "gameplayHash": "5add1c9b2b380107461e09fbe3d1bca1699278893a55c061cac22fb9c7928a2f",
+  "gates": 19,
+  "generator": {
+    "id": "jj.procgen.placeholder",
+    "version": "1"
+  },
+  "ok": true,
+  "out": "target/jj-runs/procgen-42",
+  "props": 4,
+  "refLapMs": 51886,
+  "routePoints": 311,
+  "seed": 42,
+  "violations": []
+}

@@ -54,3 +54,13 @@
   `package.json` says `"type": "module"`, so Node loads the glue as ESM and dies ("exports is not defined"). The WASM test
   runner is `scripts/wasm-test-runner.sh` (`.cargo/config.toml`), which runs it with `TMPDIR=/tmp`.
 - cargo-deny (P1-M01): `scripts/ci/deny.sh | tail -1` hides deny's exit code in a shell chain; check `${PIPESTATUS[0]}` or run it bare. deny.toml lists the real targets, since an emscripten-only optional Tokio otherwise fails the ban.
+- Staging `Cargo.lock` by hand (P1-V01): leaving out another agent's dev-dependency line isn't enough; their manifest
+  edits add lines too (a `jj-types` dep under `jj-wasm-input`), and a lock that doesn't match the committed manifests
+  fails CI's `--locked` at the first step. Check the staged tree before committing: export the index's manifests and lock
+  (`git checkout-index --prefix=<scratch>/ Cargo.toml Cargo.lock rust-toolchain.toml` plus `crates/`) and run
+  `cargo metadata --locked --offline` there.
+- `cargo test -q --target wasm32-unknown-unknown` passes `--quiet` to `wasm-bindgen-test-runner`, which rejects it; run
+  the WASM tests without `-q`.
+- `rch exec -- cargo run …` returns the program's stdout on stderr (mixed with RCH's logs) and pulls the worker's Linux
+  binaries into the local `target/debug/`, where a later local `cargo run` can find them fresh and fail with an exec
+  format error. Extract the output from stderr, and delete a pulled binary (`file target/debug/jj`) before running locally.

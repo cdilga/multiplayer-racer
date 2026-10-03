@@ -3,6 +3,8 @@
 //! ```text
 //! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry) and
 //!                                               vehicle sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs)
+//! jj scenario [--json] <scenario.json>…        run scenario fixtures and check their outcome envelopes
+//! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
 //! jj --version
 //! ```
 //! Exit: 0 everything valid, 1 a file failed validation, 2 usage or I/O.
@@ -10,15 +12,17 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+mod procgen;
 mod scenario;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj scenario [--json] <scenario.json>…\n       jj --version";
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj scenario [--json] <scenario.json>…\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("validate") => validate(&args[1..]),
         Some("scenario") => scenario::command(&args[1..]),
+        Some("procgen") => procgen::command(&args[1..]),
         Some("--version") | Some("version") => {
             println!("jj {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS

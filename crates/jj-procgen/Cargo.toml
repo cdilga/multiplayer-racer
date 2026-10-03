@@ -11,6 +11,10 @@ repository.workspace = true
 [dependencies]
 jj-types.workspace = true
 jj-map.workspace = true
+libm.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
 
 [lints]
 workspace = true
