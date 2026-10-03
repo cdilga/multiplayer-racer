@@ -47,11 +47,15 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
       }
       return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}: ${state}${detail}${controls}</li>`;
     });
-    el.innerHTML = `<ul>${rows.join('')}</ul><ul>${input
+    const html = `<ul>${rows.join('')}</ul><ul>${input
       .clusters()
       .map((c) => `<li>${legend(c)}</li>`)
       .join('')}</ul>`;
+    // Only when something changed: rebuilding every tick swaps the buttons out from under a pointer (or a
+    // Playwright click) on a host whose frames are slow.
+    if (html !== last) el.innerHTML = last = html;
   };
+  let last = '';
   // Sit out / Return and Leave act on that source's seat at the next tick boundary (plan §9).
   el.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest('button[data-act]') as HTMLButtonElement | null;
