@@ -6,7 +6,12 @@
 //   and events (sent separately) are never dropped.
 // - A panic or unrecoverable WASM error is the `fault` pause reason: the loop stops and main is told.
 // Worker-scope code, typechecked by ./tsconfig.json once scripts/build-host-wasm.sh has built the pkg.
-import { PAUSE_BITS, type FromWorker, type InitOptions, type SimInput, type ToWorker } from './messages';
+import { PAUSE_BITS, type FromWorker, type InitOptions, type InputStat, type SimInput, type ToWorker } from './messages';
+
+/** How many recent input ages a local source keeps. */
+const AGES_KEPT = 2048;
+/** Now on the clock main and the worker share (their `performance.now()` origins differ). */
+const shared = () => performance.timeOrigin + performance.now();
 
 /** The sim object both jj-wasm-host builds export (the testing build's has more methods). */
 export interface Sim {
@@ -59,6 +64,9 @@ export class SimWorker<S extends Sim> {
   private pool: ArrayBuffer[] = [];
   private uiCommand = 1;
   private lastPause = '';
+  /** Local sources' latest unapplied sample time, and their recent host-applied input ages (P1-C05). */
+  private pending = new Map<number, number>();
+  private ages = new Map<number, number[]>();
 
   constructor(
     readonly wasm: WasmHost<S>,
@@ -143,13 +151,37 @@ export class SimWorker<S extends Sim> {
     this.post({ kind: 'pause', mask, countdownMs });
   }
 
+  /** The tick boundary just applied every pending local sample: record how old each was. */
+  private applied(): void {
+    if (this.pending.size === 0) return;
+    const now = shared();
+    for (const [source, at] of this.pending) {
+      const list = this.ages.get(source) ?? [];
+      list.push(now - at);
+      if (list.length > AGES_KEPT) list.shift();
+      this.ages.set(source, list);
+    }
+    this.pending.clear();
+  }
+
+  private inputStats(): InputStat[] {
+    return [...this.ages].map(([source, list]) => {
+      const sorted = [...list].sort((a, b) => a - b);
+      const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] ?? 0;
+      return { source, samples: list.length, p50: at(0.5), p95: at(0.95), p99: at(0.99), lastMs: list.at(-1) ?? 0 };
+    });
+  }
+
   /** After the sim moved outside the clock (the test surface's step): drain and publish now, so main sees it. */
   flush(stepped: boolean): void {
     this.guard((s) => {
       this.lastTick = s.tick();
       this.drain(s);
       this.pauseState(s);
-      if (stepped) this.publish(s);
+      if (stepped) {
+        this.applied();
+        this.publish(s);
+      }
     });
   }
 
@@ -159,7 +191,10 @@ export class SimWorker<S extends Sim> {
       this.lastTick = s.tick();
       this.drain(s);
       this.pauseState(s);
-      if (stepped > 0) this.publish(s);
+      if (stepped > 0) {
+        this.applied();
+        this.publish(s);
+      }
     });
     if (!this.faulted) setTimeout(() => this.loop(), LOOP_MS);
   }
@@ -188,9 +223,13 @@ export class SimWorker<S extends Sim> {
       }
       case 'input': {
         const { input } = msg as { input: SimInput };
+        if (input.type === 'local' && input.sampledAt !== undefined) this.pending.set(input.source, input.sampledAt);
         this.guard((s) => s.handle(this.encode(input)));
         return;
       }
+      case 'inputStats':
+        this.post({ kind: 'inputStats', id: (msg as { id: number }).id, sources: this.inputStats() });
+        return;
       case 'lifecycle': {
         const { visible, renderOk } = msg as { visible: boolean; renderOk: boolean };
         this.guard((s) => s.handle(this.wasm.encode_lifecycle(visible, renderOk)));

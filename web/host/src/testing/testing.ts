@@ -6,6 +6,7 @@
 // The commands are `jj sim`'s (jj-fixture JSON shapes), run in the host's own worker; the helpers on top are blocking
 // steps that wait on their own fact (`until`), fake controllers that join through the real controller path, a debug
 // overlay and capture metadata.
+import type { LocalInput } from '../input/local';
 import { SimClient, type Snapshot } from '../worker/client';
 import type { TestFromWorker, TestInput, TestToWorker, WorkerStatus } from './messages';
 
@@ -161,7 +162,7 @@ class Overlay {
 }
 
 /** Puts the surface on `window.__jjTest` for the page that loaded this chunk. */
-export function attach(client: SimClient, ctx: { mapJson: string; seed: number }) {
+export function attach(client: SimClient, ctx: { mapJson: string; seed: number; input?: LocalInput }) {
   const test = new TestClient(client);
   const overlay = new Overlay(ctx.mapJson);
   const fakes = new Map<string, FakeController>();
@@ -196,6 +197,9 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number }
     status: () => test.status(),
     lines: () => lines.slice(),
     pauseReasons: () => client.pauseReasons(),
+    /** Host pads and key clusters (P1-C05): the drawer's list and each source's host-applied input age. */
+    localSources: () => ctx.input?.list() ?? [],
+    inputStats: () => client.inputStats(),
 
     /** A fake controller joins through the real controller path (Hello + Claim as cmd-channel bytes) and gets a seat. */
     async join(name: string) {

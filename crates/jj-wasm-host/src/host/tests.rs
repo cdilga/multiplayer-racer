@@ -497,3 +497,111 @@ fn a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the
     assert_eq!(pad.len(), 1, "the pad's release fired once: {wheelies:?}");
     assert!(pad[0].0 >= 114 && pad[0].0 < 130, "at the release: {pad:?}");
 }
+
+fn pad(source: u32, drive: [i16; 2], buttons: u32) -> Vec<u8> {
+    MainToSim::LocalSource {
+        source: LocalSourceId(source),
+        axes: [drive[0], drive[1], 0, 0],
+        buttons,
+        seq: 0,
+    }
+    .encode()
+}
+
+#[test]
+fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
+    // P1-C05: two host pads claim two seats on their first press (a neutral pad claims nothing), unplugging one makes
+    // it neutral at once and hands only its car to the autopilot after DROPOUT_MS, and fresh deliberate input takes
+    // it back.
+    let mut h = Host::new(&init()).unwrap();
+    let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
+    // Pad 3 is plugged in but untouched until 1 s: it sends nothing, so it claims nothing.
+    for t in (0..ms(6_000)).step_by(6) {
+        h.schedule(t, &pad(1, [0, 32_767], 0)).unwrap();
+        if t >= ms(1_000) && t < ms(2_000) {
+            h.schedule(t, &pad(2, [0, 32_767], 0)).unwrap();
+        }
+        if t >= ms(5_000) {
+            h.schedule(t, &pad(2, [16_000, 32_767], 0)).unwrap();
+        }
+    }
+    // Pad 2 unplugs at 2 s: one unavailable sample, then silence until it comes back at 5 s.
+    h.schedule(ms(2_000), &pad(2, [0, 0], LOCAL_UNAVAILABLE))
+        .unwrap();
+    let seats_at = |h: &Host| h.seats.seats().count();
+    while h.tick() < ms(900) {
+        h.step_one();
+    }
+    assert_eq!(seats_at(&h), 1, "only the pressed pad has a seat");
+    let mut autopiloted_at = None;
+    while h.tick() < ms(4_800) {
+        h.step_one();
+        if autopiloted_at.is_none() && h.sim().has_autopilot(CarId(1)) {
+            autopiloted_at = Some(h.tick());
+        }
+    }
+    assert_eq!(seats_at(&h), 2);
+    let at = autopiloted_at.expect("the unplugged pad's car went to the autopilot");
+    assert!(
+        at > ms(2_000) + ms(DROPOUT_MS) - 6 && at <= ms(2_000) + ms(DROPOUT_MS) + 2,
+        "after DROPOUT_MS: tick {at}"
+    );
+    assert!(!h.sim().has_autopilot(CarId(0)), "only its seat");
+    while h.tick() < ms(5_500) {
+        h.step_one();
+    }
+    let back = h
+        .sim()
+        .has_autopilot(CarId(1))
+        .then(|| h.sim().autopilot_state(CarId(1)).map(|a| a.mode));
+    assert!(
+        matches!(back, None | Some(Some(jj_sim::autopilot::Mode::Handback))),
+        "fresh input took it back: {back:?}"
+    );
+}
+
+#[test]
+fn a_host_pad_identifies_leaves_and_claims_its_seat_again() {
+    let mut h = Host::new(&init()).unwrap();
+    let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
+    h.schedule(0, &pad(4, [0, 20_000], 0)).unwrap();
+    h.schedule(ms(500), &pad(4, [0, 0], LOCAL_IDENTIFY))
+        .unwrap();
+    h.schedule(ms(600), &pad(4, [0, 0], 0)).unwrap();
+    h.schedule(
+        ms(1_000),
+        &pad(4, [0, 0], LOCAL_IDENTIFY | LOCAL_READY | LOCAL_LEAVE),
+    )
+    .unwrap();
+    // Still holding when the seat leaves: no re-claim until it lets go.
+    h.schedule(
+        ms(1_100),
+        &pad(4, [0, 0], LOCAL_IDENTIFY | LOCAL_READY | LOCAL_LEAVE),
+    )
+    .unwrap();
+    h.schedule(ms(1_500), &pad(4, [0, 0], 0)).unwrap();
+    h.schedule(ms(2_000), &pad(4, [0, 25_000], 0)).unwrap();
+    let presence = |h: &Host| h.seats.seats().next().map(|s| s.presence);
+    while h.tick() < ms(1_400) {
+        h.step_one();
+    }
+    assert_eq!(
+        presence(&h),
+        Some(jj_session::seats::Presence::Left),
+        "Leave at a tick boundary"
+    );
+    assert!(
+        h.inputs.values().all(|i| i.car.is_none()),
+        "its car withdrawn"
+    );
+    while h.tick() < ms(2_200) {
+        h.step_one();
+    }
+    assert_eq!(
+        presence(&h),
+        Some(jj_session::seats::Presence::Active),
+        "a press claims it again"
+    );
+    assert_eq!(h.seats.seats().count(), 1, "the same seat, not a new one");
+    assert!(h.inputs.values().any(|i| i.car.is_some()));
+}

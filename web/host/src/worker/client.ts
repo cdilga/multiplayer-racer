@@ -1,7 +1,15 @@
 // The host main thread's side of the sim worker (P1-S02): starts it, forwards inputs and lifecycle, hands each
 // snapshot to the renderer and returns its buffer to the pool when the renderer is done, and composes the pause
 // reasons the host UI shows (a worker fault included).
-import { pauseReasons, type FromWorker, type InitOptions, type PauseReason, type SimInput, type ToWorker } from './messages';
+import {
+  pauseReasons,
+  type FromWorker,
+  type InitOptions,
+  type InputStat,
+  type PauseReason,
+  type SimInput,
+  type ToWorker,
+} from './messages';
 
 export interface Snapshot {
   tick: number;
@@ -13,6 +21,8 @@ export class SimClient {
   readonly worker: Worker;
   private fault: string | null = null;
   private mask = 0;
+  private statsWaiters = new Map<number, (s: InputStat[]) => void>();
+  private nextStats = 1;
   /** Milliseconds left on the resume countdown when it last changed second (0: none). */
   countdownMs = 0;
   /** Called with each snapshot; the renderer must call `release(snapshot)` when done with it. */
@@ -53,6 +63,10 @@ export class SimClient {
         this.fault = m.message;
         this.onFault(m.message);
         return;
+      case 'inputStats':
+        this.statsWaiters.get(m.id)?.(m.sources);
+        this.statsWaiters.delete(m.id);
+        return;
       case 'ready':
         return;
       default:
@@ -92,6 +106,15 @@ export class SimClient {
   /** Gives a snapshot's buffer back to the worker's pool. */
   release(s: Snapshot): void {
     this.send({ kind: 'return', buf: s.buf }, [s.buf]);
+  }
+
+  /** Each local source's host-applied input age so far (P1-C05; the receipt row and the input drawer read it). */
+  inputStats(): Promise<InputStat[]> {
+    const id = this.nextStats++;
+    return new Promise((resolve) => {
+      this.statsWaiters.set(id, resolve);
+      this.send({ kind: 'inputStats', id });
+    });
   }
 
   /** The pause reasons the host shows, plus `fault` if the worker broke. */

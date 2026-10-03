@@ -74,3 +74,12 @@
   `build.rollupOptions.output` and `worker.rollupOptions.output`. `scripts/ci/bundle-check.mjs` catches a slip.
 - The worker guard hook (`.claude/hooks/worker-guard.sh`) matches the text `cargo … --workspace` anywhere in a Bash
   command, heredoc bodies included. Write files that mention it (CI YAML, scripts) with the Write tool instead.
+- Emulating pads in Playwright (P1-C05): `Object.defineProperty(navigator, 'getGamepads', { value: () => pads })` in an
+  init script, plus `gamepadconnected`/`gamepaddisconnected` events built as `new Event(type)` with
+  `Object.defineProperty(e, 'gamepad', { value: pad })`. Plain assignment to `navigator.getGamepads` doesn't stick.
+  Pad objects need `index`, `connected`, `mapping: 'standard'`, `axes` and `buttons[{pressed, value}]`. The Gamepad
+  API's stick y is negative up, so flip it.
+- `1 << 31` in JS is negative (int32). A wasm-bindgen `u32` parameter still receives the bit pattern (`LOCAL_UNAVAILABLE`
+  arrives as 0x8000_0000), but don't compare it with `>` in JS.
+- Two clocks: main's and a worker's `performance.now()` have different origins. Ages across them use
+  `performance.timeOrigin + performance.now()` on both sides.

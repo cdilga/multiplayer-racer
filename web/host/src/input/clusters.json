@@ -1,0 +1,25 @@
+{
+  "//": "P1-C05: host keyboard players. Each cluster is a two-stick player (DRIVE + ACTION) with its own Identify and READY keys (owner, 2026-10-03); holding Identify + READY for leaveHoldMs leaves the seat. KeyboardEvent.code values, so layouts don't matter. Host commands (the bug-clip chord Ctrl/⌘+Shift+B, host UI) never use a cluster key: cluster keys are ignored while Ctrl, ⌘ or Alt is down.",
+  "clusters": [
+    {
+      "id": 1,
+      "label": "Keys A",
+      "drive": { "up": "KeyW", "down": "KeyS", "left": "KeyA", "right": "KeyD" },
+      "action": { "up": "KeyT", "down": "KeyG", "left": "KeyF", "right": "KeyH" },
+      "identify": "KeyQ",
+      "ready": "KeyE"
+    },
+    {
+      "id": 2,
+      "label": "Keys B",
+      "drive": { "up": "KeyI", "down": "KeyK", "left": "KeyJ", "right": "KeyL" },
+      "action": { "up": "ArrowUp", "down": "ArrowDown", "left": "ArrowLeft", "right": "ArrowRight" },
+      "identify": "KeyU",
+      "ready": "KeyO"
+    }
+  ],
+  "steerRatePerS": 6,
+  "leaveHoldMs": 2000,
+  "padDeadzone": 0.12,
+  "padSourceBase": 100
+}

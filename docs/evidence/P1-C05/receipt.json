@@ -1,0 +1,81 @@
+{
+  "format": "jj.input-receipt.v1",
+  "what": "P1-C05: host pads and key clusters, host-applied input age (sampled on the main thread to applied at a sim tick boundary in the worker, ms, on performance.timeOrigin-based clocks), and the unplugged pad's dropout to autopilot",
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), darwin/arm64",
+  "drive": {
+    "local:100": {
+      "forwardSpeed": 13.25951099395752,
+      "turnDeg": 0
+    },
+    "local:101": {
+      "forwardSpeed": 7.4651288986206055,
+      "turnDeg": 79.8593225479126
+    },
+    "local:1": {
+      "forwardSpeed": 13.25951099395752,
+      "turnDeg": 0
+    },
+    "local:2": {
+      "forwardSpeed": -3.4829623699188232,
+      "turnDeg": 60.65360641479492
+    }
+  },
+  "rows": [
+    {
+      "path": "host-local",
+      "source": 1,
+      "kind": "keys",
+      "label": "Keys A",
+      "samples": 303,
+      "hostAppliedInputAgeMs": {
+        "p50": 5.2,
+        "p95": 10.3,
+        "p99": 10.5
+      },
+      "unplugged": false,
+      "autopilotAfterMs": null
+    },
+    {
+      "path": "host-local",
+      "source": 2,
+      "kind": "keys",
+      "label": "Keys B",
+      "samples": 303,
+      "hostAppliedInputAgeMs": {
+        "p50": 5.2,
+        "p95": 10.3,
+        "p99": 10.6
+      },
+      "unplugged": false,
+      "autopilotAfterMs": null
+    },
+    {
+      "path": "host-local",
+      "source": 100,
+      "kind": "pad",
+      "label": "Pad 1",
+      "samples": 177,
+      "hostAppliedInputAgeMs": {
+        "p50": 5.2,
+        "p95": 10.3,
+        "p99": 10.5
+      },
+      "unplugged": true,
+      "autopilotAfterMs": 2024
+    },
+    {
+      "path": "host-local",
+      "source": 101,
+      "kind": "pad",
+      "label": "Pad 2",
+      "samples": 303,
+      "hostAppliedInputAgeMs": {
+        "p50": 5.2,
+        "p95": 10.3,
+        "p99": 10.6
+      },
+      "unplugged": false,
+      "autopilotAfterMs": null
+    }
+  ]
+}

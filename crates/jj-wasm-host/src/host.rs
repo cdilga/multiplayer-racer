@@ -41,6 +41,15 @@ pub const STALL_HOLD_US: u64 = 1_000_000;
 pub const RESUME_COUNTDOWN_US: u64 = 3_000_000;
 /// A source silent this long reads neutral (dropout; autopilot takeover after 2 s is G03's).
 pub const STALE_MS: u64 = 250;
+/// A source silent (or gone) this long hands its car to the autopilot; fresh deliberate input takes it back (R45, §9).
+pub const DROPOUT_MS: u64 = 2_000;
+/// `LocalSource.buttons` bits (P1-C05): a pad's View/Select or a key cluster's Identify key, its Start or READY key,
+/// the two held together for 2 s (Leave; the main thread times the hold), and the source being gone (an unplugged
+/// pad: neutral now, the autopilot after [`DROPOUT_MS`]).
+pub const LOCAL_IDENTIFY: u32 = 1;
+pub const LOCAL_READY: u32 = 1 << 1;
+pub const LOCAL_LEAVE: u32 = 1 << 2;
+pub const LOCAL_UNAVAILABLE: u32 = 1 << 31;
 /// Snapshot layout: a header, then one record per car and per debris body (little-endian).
 pub const SNAPSHOT_MAGIC: u32 = 0x4a4a_5331; // "JJS1"
 pub const SNAPSHOT_HEADER: usize = 40;
@@ -88,6 +97,16 @@ struct SeatInput {
     car: Option<CarId>,
     /// The controller's recent discrete action ids: a resent `Action` applies once (§5.4).
     seen_actions: Vec<ActionId>,
+    /// The autopilot took the car because the source went quiet (dropout), so fresh input takes it back.
+    dropped: bool,
+}
+
+/// A host pad or key cluster's button edges and its way back after leaving.
+#[derive(Default)]
+struct LocalButtons {
+    last: u32,
+    /// It left and must go fully neutral before a press claims its seat again.
+    left_held: bool,
 }
 
 /// How many recent action ids a seat remembers for deduplication.
@@ -105,6 +124,7 @@ pub struct Host {
     inputs: BTreeMap<SeatId, SeatInput>,
     conns: BTreeMap<EndpointId, ConnId>,
     locals: BTreeMap<LocalSourceId, ConnId>,
+    local_buttons: BTreeMap<LocalSourceId, LocalButtons>,
     next_conn: ConnId,
     /// Accumulated time × 120 (µs units), and the last time the worker passed in.
     acc: u128,
@@ -187,6 +207,7 @@ impl Host {
             inputs: BTreeMap::new(),
             conns: BTreeMap::new(),
             locals: BTreeMap::new(),
+            local_buttons: BTreeMap::new(),
             next_conn: 1,
             acc: 0,
             last_us: None,
@@ -366,6 +387,28 @@ impl Host {
             h.before_step(&mut self.sim);
         }
         let now_ms = tick_ms(tick);
+        // Dropout (R45, §9): a source silent or gone for DROPOUT_MS hands its car to the autopilot, and the room never
+        // pauses; fresh deliberate input takes it back through the autopilot's handback blend. Source-blind: phones,
+        // pads and keys alike (G03 adds idle and menus).
+        for input in self.inputs.values_mut() {
+            let Some(car) = input.car else { continue };
+            let age = input.state.age_ms(now_ms);
+            if age.is_some_and(|a| a > DROPOUT_MS) {
+                if !input.dropped && !self.sim.has_autopilot(car) {
+                    self.sim.set_autopilot(car, true);
+                    input.dropped = true;
+                }
+            } else if input.dropped
+                && age.is_some_and(|a| a <= STALE_MS)
+                && jj_sim::autopilot::is_deliberate(
+                    DriveInput::default(),
+                    controls(input.state.semantics()),
+                )
+            {
+                self.sim.set_autopilot(car, false);
+                input.dropped = false;
+            }
+        }
         for input in self.inputs.values() {
             let Some(car) = input.car else { continue };
             let fresh = input
@@ -426,15 +469,57 @@ impl Host {
                     }
                 }
             }
-            MainToSim::LocalSource { source, axes, .. } => {
+            MainToSim::LocalSource {
+                source,
+                axes,
+                buttons,
+                ..
+            } => {
                 let seat = self.local_seat(source);
+                let conn = self.locals[&source];
+                let lb = self.local_buttons.entry(source).or_default();
+                let pressed = |bit: u32| buttons & bit != 0 && lb.last & bit == 0;
+                let (leave, identify) = (pressed(LOCAL_LEAVE), pressed(LOCAL_IDENTIFY));
+                let neutral = axes == [0; 4] && buttons & !LOCAL_UNAVAILABLE == 0;
+                lb.last = buttons;
+                if leave {
+                    lb.left_held = true;
+                } else if neutral {
+                    lb.left_held = false;
+                }
+                let rejoin_armed = !lb.left_held;
+                let mut outs = Vec::new();
+                if leave {
+                    outs.extend(self.seats.apply(seats::Input::Leave { conn }));
+                }
+                // Any controller can come back (owner, 2026-10-03): after leaving and letting go, a press claims the
+                // same seat again.
+                let left = seat.is_some_and(|id| {
+                    self.seats
+                        .seats()
+                        .any(|s| s.id == id && s.presence == seats::Presence::Left)
+                });
+                if left && rejoin_armed && !neutral {
+                    outs.extend(self.seats.apply(seats::Input::Claim {
+                        conn,
+                        request: jj_types::RequestId(1),
+                        name: String::new(),
+                    }));
+                }
+                if identify {
+                    outs.extend(self.seats.apply(seats::Input::Identify { conn }));
+                }
+                for o in outs {
+                    self.seat_output(o);
+                }
+                // READY (`LOCAL_READY`) is the round director's (G01).
                 // Like the wire (`Seats::input_seat`), a sample only counts once the seat has a car.
                 if let Some(input) = seat
                     .and_then(|s| self.inputs.get_mut(&s))
                     .filter(|i| i.car.is_some())
                 {
                     let flags = SampleFlags {
-                        available: true,
+                        available: buttons & LOCAL_UNAVAILABLE == 0,
                         drive_touch: axes[0] != 0 || axes[1] != 0,
                         action_touch: axes[2] != 0 || axes[3] != 0,
                         menu_open: false,
@@ -587,6 +672,7 @@ impl Host {
                     state: SourceState::new(source),
                     car: None,
                     seen_actions: Vec::new(),
+                    dropped: false,
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)

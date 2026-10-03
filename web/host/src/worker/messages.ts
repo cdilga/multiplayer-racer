@@ -21,7 +21,9 @@ export function pauseReasons(mask: number): PauseReason[] {
 
 /** Something to apply at a tick boundary: host pads/keys, controller bytes from the transport, or a host UI command. */
 export type SimInput =
-  | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number }
+  /** A host pad or key cluster (P1-C05): axes and `LOCAL_*` button bits; `sampledAt` (ms, `performance.timeOrigin +
+   *  performance.now()`) lets the worker measure host-applied input age. */
+  | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
   | { type: 'ui'; ui: 'start' | 'end' | 'pause'; on?: boolean };
 
@@ -32,11 +34,28 @@ export interface InitOptions {
   poolSize?: number;
 }
 
+/** `LocalSource.buttons` bits (`jj_wasm_host::host::LOCAL_*`). */
+export const LOCAL_IDENTIFY = 1;
+export const LOCAL_READY = 1 << 1;
+export const LOCAL_LEAVE = 1 << 2;
+export const LOCAL_UNAVAILABLE = 1 << 31;
+
+/** One local source's host-applied input age: sampled on main to applied at a tick boundary in the worker (ms). */
+export interface InputStat {
+  source: number;
+  samples: number;
+  p50: number;
+  p95: number;
+  p99: number;
+  lastMs: number;
+}
+
 export type ToWorker =
   | ({ kind: 'init' } & InitOptions)
   | { kind: 'input'; input: SimInput }
   | { kind: 'lifecycle'; visible: boolean; renderOk: boolean }
-  | { kind: 'return'; buf: ArrayBuffer };
+  | { kind: 'return'; buf: ArrayBuffer }
+  | { kind: 'inputStats'; id: number };
 
 export type FromWorker =
   | { kind: 'ready' }
@@ -45,4 +64,5 @@ export type FromWorker =
   | { kind: 'messages'; list: Uint8Array[]; lines?: string[] }
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
-  | { kind: 'fault'; message: string };
+  | { kind: 'fault'; message: string }
+  | { kind: 'inputStats'; id: number; sources: InputStat[] };

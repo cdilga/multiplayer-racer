@@ -3,6 +3,8 @@
 // production-realm server doesn't serve that chunk, so there the import fails and the host runs as shipped.
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
+import { mountDrawer } from './input/drawer';
+import { LocalInput } from './input/local';
 import { SimClient } from './worker/client';
 
 const app = document.querySelector<HTMLElement>('#app');
@@ -22,7 +24,11 @@ async function boot(): Promise<void> {
   const client = new SimClient(testing?.createWorker());
   await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live' } : {});
   client.followVisibility();
-  testing?.attach(client, { mapJson: greybox, seed });
+  // Host pads and key clusters (P1-C05): players from their first press, listed in the input drawer.
+  const input = new LocalInput(client);
+  input.start();
+  mountDrawer(document.body, input);
+  testing?.attach(client, { mapJson: greybox, seed, input });
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
 
