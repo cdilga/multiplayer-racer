@@ -90,22 +90,28 @@ the solo one included.
 Start them from the repo:
 
 ```bash
-ntm spawn multiplayer-racer --omp=2:zai/glm-5.3:max \
-  --prompt "Read AGENTS.md, then the 'OMP workers' section of docs/process/bead-workflow.md, and start."
+ntm spawn multiplayer-racer --omp=2:zai/glm-5.3:max --no-recovery --no-cass-context --ready-timeout 3m \
+  --prompt "You are a NEW OMP worker joining this repo. Read AGENTS.md, then the 'OMP workers' section of docs/process/bead-workflow.md, and follow it: create your own new Agent Mail identity first (never reuse an existing name), then take an unclaimed ready bead."
 ```
+
+(`ntm add` has no `--no-recovery`, so grow by killing and respawning the NTM session rather than adding to it.)
 
 - `--omp=N:model:thinking` runs N OMP panes as `omp --auto-approve --model zai/glm-5.3 --thinking max`.
 - Never add `--worktrees`.
+- **Always pass `--no-recovery` and `--no-cass-context`.** Without them, NTM injects "continue where
+  you left off" plus the project's in-progress beads. On 2026-10-03 that made a new worker adopt the
+  solo session's identity and its claimed bead.
 - Watch them with `ntm attach multiplayer-racer`. Remote Control is Claude-only.
 
-**If you're an OMP worker**, you have no MCP and none of Claude Code's hooks. So, before the loop above:
+**If you're an OMP worker**, you don't get Claude Code's hooks. You may get Agent Mail's MCP tools; the
+`am` CLI below always works. Before the loop above:
 
-1. **Identity:** create it once.
+1. **Identity:** create a new one; never take over an existing name, even the one on a claimed bead.
    ```bash
    am agents create --project /Users/cdilga/Documents/dev/multiplayer-racer --program omp --model glm-5.3 --task "<bead or goal>"
    ```
    It prints your name. Prefix every commit, push and `scripts/beads/close.sh` with `AGENT_NAME=<name>`,
-   and use the name as `--actor` for `br`.
+   and use the name as `--actor` for `br`. A bead claimed by someone else isn't yours: take another.
 2. **Reservations:** reserve before editing.
    ```bash
    am file_reservations reserve /Users/cdilga/Documents/dev/multiplayer-racer <name> <paths…> --exclusive --reason <bead-id>

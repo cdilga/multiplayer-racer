@@ -9,3 +9,4 @@ spawn-state.json
 !README.md
 !prompts/
 !prompts/*.md
+pids/
