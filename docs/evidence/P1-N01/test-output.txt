@@ -1,0 +1,32 @@
+rch: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+test clock::tests::one_way_samples_bound_the_offset_too ... ok
+test clock::tests::recovers_a_known_offset_within_its_uncertainty ... ok
+test clock::tests::the_window_lets_old_tight_samples_go ... ok
+test tests::decoders_reject_wrong_versions_and_trailing_bytes ... ok
+test tests::every_variant_has_a_golden ... ok
+test tests::the_documented_layout_holds ... ok
+test tests::splitting_more_than_255_sources ... ok
+test tests::splitting_by_the_byte_target ... ok
+test tests::goldens_match_the_committed_bytes ... ok
+test clock::tests::one_way_bound_holds_for_any_delay_inside_the_round_trip ... ok
+test clock::tests::the_true_offset_is_always_inside_the_bound ... ok
+     Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_protocol-0b97929ba8bf97d4)
+test tests::decoders_never_panic_on_damaged_goldens ... ok
+test tests::decoders_never_panic_on_any_bytes ... ok
+test tests::every_record_survives_splitting ... ok
+test tests::every_message_round_trips ... ok
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s
+test axis::tests::thresholds_survive_quantisation ... ok
+test axis::tests::neutral_and_full_range_are_exact ... ok
+test seq::tests::wraps_around ... ok
+test time::tests::unwraps_across_the_wrap ... ok
+test ids::tests::room_codes_normalise_and_reject_ambiguous_letters ... ok
+test time::tests::recovers_any_time_near_the_reference ... ok
+test seq::tests::a_step_forward_is_always_newer ... ok
+test axis::tests::round_trip_error_is_half_a_step ... ok
+test axis::tests::any_threshold_agrees_with_the_float_comparison_off_its_step ... ok
+test axis::tests::quantisation_is_monotonic ... ok
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_types-289c88cea0197d0a)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

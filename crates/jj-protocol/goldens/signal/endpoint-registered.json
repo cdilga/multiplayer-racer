@@ -1,0 +1,1 @@
+{"iceServers":[{"urls":["stun:turn.dilger.dev:3479"]},{"urls":["turn:turn.dilger.dev:3479?transport=udp"],"username":"1791000000:c-9f2a","credential":"dGVzdA"}],"iceExpiresAt":1791003600000}

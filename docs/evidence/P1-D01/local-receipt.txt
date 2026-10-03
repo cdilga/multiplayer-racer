@@ -40,7 +40,7 @@ $ git lfs pull --include="art/ui/frames/*.png,docs/evidence/P1-U05/motion/reel.w
 == Not done here (owner action; see docs/deploy/README.md "Runners")
 Re-registering Physical Soccer's repository-scoped `rust` runners (TrueNAS, triton) as shared was refused to this session by
 its safety classifier (it changes another project's running CI). Until the owner does it, the rust job runs on the shared
-ubuntu-latest runner with the actions cache. Images publish to the Gitea registry from jammers-deploy (D02/D04), where the
+ubuntu-latest runner, cold (see the second push below). Images publish to the Gitea registry from jammers-deploy (D02/D04), where the
 secrets live; no GitHub Actions or GHCR is used.
 
 == Second push with no Rust change (74f6cc5: frame renames + this receipt) -> run 996, all green
