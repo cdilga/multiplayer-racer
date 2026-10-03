@@ -159,3 +159,7 @@ Then run the loop like everyone else: `bv --robot-next`, claim, build with tests
 - Never move an unmet acceptance item into a follow-up bead just to close the original.
 - A bead that only produced a report, scaffolding or a refusal is not a delivered capability.
 - Genuinely incomplete work stays `in_progress` or `rework` with a comment. Never false-close it.
+
+## The G-DESIGN rework loop (owner, 2026-10-04)
+
+The design gate (P1-U04) is blocked by every bead labelled `gate:g-design`; find them with `br list --label gate:g-design`. Fix them first, each with its visual self-review (`docs/process/visual-self-review.md`); the gallery republishes on push and you run `node art/ui/lib/live-check.mjs` on the live URL. Owner review comes after, and owner feedback on the POC becomes new `gate:g-design` beads added as blockers of P1-U04 (labels `drop:POC` and `gate:g-design`, parent the round's epic), never closed in place.

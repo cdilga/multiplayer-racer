@@ -15,8 +15,8 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] Colour-blind sheet: you can tell every pair of neighbouring players apart by colour or number.
 - [ ] TV grid, from the couch with 24–32 tiles: players joining and leaving 1 → 32 → 1, and the gap cases (2, 3, 5, 7, 10, 13).
 - [ ] The per-tile HUD is readable at the smallest tile; first- and third-person tiles sit well side by side.
-- [ ] Lobby at 2, 8, 16 and 32 players (the warm-up behind it), and the rule for bigger rooms.
-- [ ] Results and intermission at 8 and 32 players.
+- [ ] Lobby at 2, 8, 16 and 32 players: every player on one screen with joining/choosing/ready states, a generic track behind it (R110: no warm-up), the QR sized to the free space, and the rule for bigger rooms.
+- [ ] Round complete and highlights (one merged screen, video 50–67% of the screen, UI packed right) at 8 and 32 players.
 - [ ] Your host controls (Start now, End, Disband, pause, input drawer, diagnostics) stay out of the way during a race; captions don't cover anyone.
 - [ ] The derby Overview reference: cars big and readable at 8, 16 and 32.
 - [ ] The in-world look with the real Cruz Missile (toon, ink outlines, halftone), and each identity colour as paint next to its badge.
@@ -29,8 +29,7 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
       ended"; the design guide calls the party a "room". The mocks follow the plan; pick one word.
 - [ ] **Shader skill licence:** `webgpu-threejs-tsl` declares MIT upstream but ships no LICENSE file; we vendored it with the
       standard MIT text and a note (`.claude/skills/webgpu-threejs-tsl/VENDORED.md`). OK, or ask upstream / drop it?
-- [ ] **Style frames:** they're written but couldn't be generated (no image tool on the Codex account on 2026-10-03). Either
-      restore an image-capable Codex model or OK the `OPENAI_API_KEY` fallback, then the session generates and reviews them.
+- [x] **Style frames:** approved by the owner 2026-10-04 (generated). Align the real UI closer to them (phone header, banner behind the seat number).
 - [ ] Record the verdict and any changes (the session writes `docs/playtests/poc-<date>.md`).
 
 ## 2. Previews as they land (never a gate)
