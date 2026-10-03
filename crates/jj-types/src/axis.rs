@@ -11,7 +11,7 @@ pub const AXIS_MAX: i16 = 32767;
 const SCALE: f32 = AXIS_MAX as f32;
 
 /// Quantises an axis in −1.0..=1.0 (clamped; NaN is neutral, ±∞ is full range) to the wire's `i16`.
-pub fn quantise_axis(v: f32) -> i16 {
+pub const fn quantise_axis(v: f32) -> i16 {
     if v.is_nan() {
         return 0;
     }
@@ -24,8 +24,8 @@ pub fn dequantise_axis(q: i16) -> f32 {
 }
 
 /// Maps the one out-of-range wire value (−32768) to −32767; decoders apply it so every axis is symmetric.
-pub fn sanitise_axis(q: i16) -> i16 {
-    q.max(-AXIS_MAX)
+pub const fn sanitise_axis(q: i16) -> i16 {
+    if q < -AXIS_MAX { -AXIS_MAX } else { q }
 }
 
 /// A magnitude threshold (dead zone, sector, boost) held in quantised units, so controller and host agree exactly.
@@ -35,7 +35,7 @@ pub struct AxisThreshold(pub i16);
 
 impl AxisThreshold {
     /// The threshold for magnitude `t` (0.0..=1.0).
-    pub fn new(t: f32) -> Self {
+    pub const fn new(t: f32) -> Self {
         Self(quantise_axis(t.abs()))
     }
 
