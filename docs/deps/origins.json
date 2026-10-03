@@ -11,6 +11,7 @@
   "inert": [
     { "host": "www.w3.org", "why": "XML namespace URIs (createElementNS); never fetched" },
     { "host": "github.com", "why": "issue links inside three.js console warnings; never fetched" },
-    { "host": "www.shadertoy.com", "why": "a credit inside a three.js shader comment; never fetched" }
+    { "host": "www.shadertoy.com", "why": "a credit inside a three.js shader comment; never fetched" },
+    { "host": "jcgt.org", "why": "a paper citation (GGX VNDF sampling) inside a three.js WebGLRenderer shader comment; never fetched" }
   ]
 }

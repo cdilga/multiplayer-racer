@@ -4,6 +4,82 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Joystick Jammers · Host</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1b1a1f;
+        color: #f4efe6;
+        font: 16px/1.4 system-ui, sans-serif;
+        overflow: hidden;
+      }
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+      .jj-world {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .jj-render-chip {
+        position: fixed;
+        right: 8px;
+        bottom: 8px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgb(0 0 0 / 0.45);
+        font-size: 11px;
+        opacity: 0.8;
+        pointer-events: none;
+        max-width: calc(100vw - 16px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      /* The input drawer (P1-C05) floats over the world until the host UI (P1-U02) places it. */
+      [data-jj-input-drawer] {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 1;
+        box-sizing: border-box;
+        max-width: min(30rem, calc(100vw - 16px));
+        max-height: calc(100vh - 48px);
+        overflow: auto;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: rgb(0 0 0 / 0.6);
+        font-size: 13px;
+      }
+      [data-jj-input-drawer]:empty {
+        display: none;
+      }
+      .jj-unsupported {
+        box-sizing: border-box;
+        max-width: 36rem;
+        margin: 0 auto;
+        padding: 12vh 16px 16px;
+      }
+      .jj-unsupported h1 {
+        font-size: 1.6rem;
+        margin: 0 0 1rem;
+      }
+      .jj-unsupported li {
+        margin: 0.4rem 0;
+      }
+      .jj-join {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.8rem 1.4rem;
+        border-radius: 999px;
+        background: #ffd23f;
+        color: #1b1a1f;
+        font-weight: 700;
+        text-decoration: none;
+      }
+    </style>
   </head>
   <body>
     <main id="app"></main>

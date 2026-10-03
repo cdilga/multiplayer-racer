@@ -70,22 +70,35 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   assert.equal((await observe()).host.seats.length, 0, 'no phantom seats');
 
   // Pad 1 straight on, pad 2 throttle and right, keys A throttle (W), keys B brake/reverse and left (K, J).
-  await page.evaluate(() => {
-    window.__pads.axes(0, [0, -1, 0, 0]);
-    window.__pads.axes(1, [0.8, -0.7, 0, 0]);
-  });
+  // One source at a time, each waiting for its seat, so the grid order (and so who drives next to whom) doesn't depend
+  // on whether the host sampled them in one frame or several (it does under load).
+  const seated = async (n) => {
+    for (const t0 = Date.now(); (await observe()).host.seats.length < n; await page.waitForTimeout(50)) {
+      assert.ok(Date.now() - t0 < 10_000, `seat ${n} never claimed`);
+    }
+  };
+  await page.evaluate(() => window.__pads.axes(0, [0, -1, 0, 0]));
+  await seated(1);
+  await page.evaluate(() => window.__pads.axes(1, [0.8, -0.7, 0, 0]));
+  await seated(2);
   await page.keyboard.down('KeyW');
+  await seated(3);
   await page.keyboard.down('KeyK');
   await page.keyboard.down('KeyJ');
-  await page.waitForTimeout(300);
+  await seated(4);
   const start = await observe();
   const carOf = (state, endpoint) => {
     const seat = state.host.seats.find((s) => s.endpoint === endpoint);
     return seat && state.cars.find((c) => c.car === seat.car);
   };
   const heading0 = Object.fromEntries(['local:100', 'local:101', 'local:1', 'local:2'].map((e) => [e, carOf(start, e)?.headingDeg]));
-  await page.waitForTimeout(2500);
-  const driven = await observe();
+  // 2.5 s of driving in sim time (300 ticks at 120 Hz): the live sim's wall clock slows when the machine is busy (the
+  // host page renders too, and CI runs the browser tests in parallel), so wall time isn't the measure.
+  let driven = await observe();
+  for (const t0 = Date.now(); driven.tick - start.tick < 300; driven = await observe()) {
+    assert.ok(Date.now() - t0 < 30_000, `the sim reached tick ${driven.tick}, not ${start.tick + 300}`);
+    await page.waitForTimeout(100);
+  }
   assert.equal(driven.host.seats.length, 4, `four seats: ${driven.host.seats.map((s) => s.endpoint)}`);
   const turn = (e) => {
     const d = Math.abs(carOf(driven, e).headingDeg - heading0[e]) % 360;
@@ -101,6 +114,14 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   assert.ok(result['local:2'].forwardSpeed < -0.5, 'keys B reverse');
   const drawer = await page.evaluate(() => [...document.querySelectorAll('[data-jj-input-drawer] li[data-source]')].map((li) => `${li.dataset.source}:${li.dataset.state}`));
   assert.deepEqual(drawer.sort(), ['1:playing', '2:playing', '100:playing', '101:playing'].sort());
+
+  // Enough samples per source to measure input age before pad 1 is unplugged: the host samples on main-thread timers,
+  // which run slower while the page renders on a software rasteriser (headless CI), so hold until there are.
+  for (const t0 = Date.now(); ; await page.waitForTimeout(250)) {
+    const counts = await page.evaluate(() => window.__jjTest.inputStats());
+    if (counts.length === 4 && counts.every((s) => s.samples > 50)) break;
+    assert.ok(Date.now() - t0 < 20_000, `samples: ${counts.map((s) => `${s.source}:${s.samples}`)}`);
+  }
 
   // Unplug pad 1: neutral at once, its car (and only its car) to the autopilot within the dropout time.
   const unpluggedAt = Date.now();

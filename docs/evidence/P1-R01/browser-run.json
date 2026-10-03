@@ -1,0 +1,13 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "fallback": {
+    "main": "WebGL2 (WebGLRenderer)",
+    "fallback": "WebGL2 (WebGPURenderer)",
+    "sameSize": true,
+    "width": 1280,
+    "height": 720,
+    "meanDiff": 0.1873828125,
+    "bigDiffShare": 0.0012934027777777779,
+    "colours": 64
+  }
+}

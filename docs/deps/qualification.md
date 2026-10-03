@@ -52,7 +52,7 @@ P1-N02 (the server on Asupersync's API) goes to the same kind of worker.
 
 | Package | Pin | Licence | In | Why |
 |---|---|---|---|---|
-| `three` | 0.186.1 | MIT | `@jj/host` | the renderer (WebGPURenderer vs WebGLRenderer is P1-R01's call). The design POC and spikes use the root tooling's 0.182.0, which doesn't ship |
+| `three` | 0.186.1 | MIT | `@jj/host` | the renderer: WebGLRenderer by default, decided on numbers in P1-R01 (`docs/evidence/P1-R01/bench.md`); WebGPURenderer is a lazy chunk behind `?renderer=`. The design POC and spikes use the root tooling's 0.182.0, which doesn't ship |
 | `uqr` | 0.1.3 | MIT | `@jj/host` | the host's join QR: a tiny encoder that hands back the module matrix, so the QR rule (≥ 8 px per module, full quiet zone) is drawn exactly (G00/R07) |
 | `jsqr` | 1.4.0 | Apache-2.0 | `@jj/controller` | the controller's fallback QR decoder when `BarcodeDetector` is missing (C04). Pure JS and fetches nothing. `zxing-wasm` decodes better but loads its `.wasm` from jsDelivr by default, so that URL would sit in the bundle |
 | `vite` | 8.3.2 | MIT | dev | multi-page build; base path from `JJ_BASE` (`/p/<id>/` in previews) |
