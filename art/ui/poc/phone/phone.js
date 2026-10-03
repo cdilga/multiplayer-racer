@@ -141,7 +141,18 @@ const tools = (inline) => `<div class="tools${inline ? ' inline' : ''}" data-box
 
 // POC1-18: boost and power-ups sit together at the top centre, between the two sticks (landscape: a centre column;
 // portrait: a centred row above the sticks), so neither thumb has to leave its stick to see them.
-const pod = (cooldown) => `<div class="pod" data-box="pod"><div class="pod-boost"><span class="pod-label display">Boost</span><div class="meter" aria-label="Boost 62%"><i style="--v:62%"></i></div></div><div class="pod-items"><div class="utility${cooldown ? ' cooldown' : ''}" style="--c:35%" aria-label="Cone: ${cooldown ? 'recharging' : 'ready'}"><img alt="" src="${asset('icons/traffic-cone.svg')}"></div><div class="utility item" aria-label="Power-up: empty"><img alt="" src="${asset('icons/dices.svg')}"></div></div><span class="pod-cd">${cooldown ? 'Cone in 3 s' : 'Cone ready'}</span></div>`;
+// dim.10: these are indicators the ACTION stick drives, never buttons: flat inset wells, not focusable, taps fall
+// through them, and each says which way on the action stick fires it (the style frame's Boost, Front and Rear).
+const pod = (cooldown) => `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost 62%: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i style="--v:62%"></i></div></div><div class="pod-items"><div class="ind" data-ind="rear" role="img" aria-label="Cone: ${cooldown ? 'recharging' : 'ready'}; action stick down"><div class="utility${cooldown ? ' cooldown' : ''}" style="--c:35%"><img alt="" src="${asset('icons/traffic-cone.svg')}"></div><span class="dir-hint" aria-hidden="true">↓ Rear</span></div><div class="ind" data-ind="front" role="img" aria-label="Front slot: empty; action stick up"><div class="utility item"><img alt="" src="${asset('icons/dices.svg')}"></div><span class="dir-hint" aria-hidden="true">↑ Front</span></div></div><span class="pod-cd">${cooldown ? 'Cone in 3 s' : 'Cone ready'}</span></div>`;
+
+/** The action stick lights what it fires (dim.10): right boosts, up the front slot, down drops a cone. */
+const lightPod = (screen, v) => {
+  for (const p of screen.querySelectorAll('.pod')) {
+    p.querySelector('[data-ind=boost]').dataset.on = String(v.x > 0.75);
+    p.querySelector('[data-ind=front]').dataset.on = String(v.y < -0.75);
+    p.querySelector('[data-ind=rear]').dataset.on = String(v.y > 0.75);
+  }
+};
 
 function race() {
   const m = me();
@@ -171,7 +182,10 @@ function race() {
   };
   new ResizeObserver(posIndicators).observe(drive);
   const ui = {
-    update(kind, v) { tutorialStick(kind, v); },
+    update(kind, v) {
+      tutorialStick(kind, v);
+      if (kind === 'action') lightPod(s, v);
+    },
     wheelie() { const b = document.createElement('div'); b.className = 'banner'; b.style.background = 'var(--c-saffron)'; b.style.color = 'var(--c-ink)'; b.textContent = 'Wheelie!'; s.append(b); setTimeout(() => b.remove(), 700); tutorialEvent('wheelie'); },
   };
   const dStick = attachStick(drive, 'drive', ui);

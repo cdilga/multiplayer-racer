@@ -174,6 +174,80 @@ for (const [engineName, engine, launch] of [['chromium', chromium, { channel: 'c
   if (!okStub) failures.push(`${engineName}: the full-screen tap did not ask for full screen then the wake lock ${JSON.stringify(stub)}`);
   await browser.close();
 }
+// br-dim.10: the pod's boost meter, cone and front slot are indicators the ACTION stick drives, not buttons: no button
+// look (no border or outline, no drop shadow), not focusable, a real tap on each sends nothing and moves no stick, each
+// shows its stick direction, the stick lights each while it points that way; Identify, camera, recover and menu stay buttons.
+report.indicators = [];
+for (const [engineName, engine, launch] of [['chromium', chromium, { channel: 'chromium' }], ['webkit', webkit, {}]]) {
+  const browser = await engine.launch(launch);
+  for (const [vw, vh] of [[932, 430], [412, 915]]) {
+    const ctx = await browser.newContext({ viewport: { width: vw, height: vh }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+    const page = await ctx.newPage();
+    await page.goto(`${base}/poc/phone/index.html#race&chrome=0`);
+    await page.reload();
+    await page.waitForFunction(() => window.__phone?.ready === true);
+    const look = await page.evaluate(() => {
+      const dropShadow = (bs) => bs !== 'none' && bs.split(/,(?![^(]*\))/).some((s) => !s.includes('inset'));
+      const inds = [...document.querySelectorAll('.pod [data-ind]')].map((el) => {
+        const well = el.querySelector('.meter, .utility');
+        const cs = getComputedStyle(well);
+        el.focus();
+        const r = el.getBoundingClientRect();
+        return {
+          ind: el.dataset.ind,
+          border: parseFloat(cs.borderTopWidth),
+          outline: cs.outlineStyle,
+          drop: dropShadow(cs.boxShadow),
+          taps: getComputedStyle(el).pointerEvents,
+          focusable: document.activeElement === el || el.tabIndex >= 0,
+          role: el.getAttribute('role'),
+          hint: el.querySelector('.dir-hint, .dir')?.textContent.trim(),
+          x: r.left + r.width / 2,
+          y: r.top + r.height / 2,
+        };
+      });
+      const buttons = [...document.querySelectorAll('[data-box=tools] .btn')].map((b) => {
+        const cs = getComputedStyle(b);
+        b.focus();
+        return { label: b.getAttribute('aria-label'), border: parseFloat(cs.borderTopWidth), drop: dropShadow(cs.boxShadow), focusable: document.activeElement === b };
+      });
+      return { inds, buttons };
+    });
+    const sent0 = await page.evaluate(() => window.__phone.sent);
+    for (const i of look.inds) await page.touchscreen.tap(i.x, i.y);
+    await page.waitForTimeout(100);
+    const afterTaps = await page.evaluate(() => ({ sent: window.__phone.sent, sticks: JSON.parse(JSON.stringify(window.__phone.sticks)), lit: [...document.querySelectorAll('.pod [data-on=true]')].length }));
+    const lights = await page.evaluate(() => {
+      const z = document.querySelector('.zone.action'), r = z.getBoundingClientRect();
+      const x0 = r.left + r.width / 2, y0 = r.top + r.height * 0.6;
+      const P = (type, x, y) => z.dispatchEvent(new PointerEvent(type, { pointerId: 31, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, bubbles: true }));
+      const lit = () => [...document.querySelectorAll('.pod [data-on=true]')].map((e) => e.dataset.ind).sort().join(',');
+      const out = {};
+      for (const [dir, dx, dy] of [['right', 90, 0], ['up', 0, -90], ['down', 0, 90]]) {
+        P('pointerdown', x0, y0);
+        for (let i = 1; i <= 8; i++) P('pointermove', x0 + (dx * i) / 8, y0 + (dy * i) / 8);
+        out[dir] = lit();
+        P('pointerup', x0 + dx, y0 + dy);
+        out[`${dir}-released`] = lit();
+      }
+      return out;
+    });
+    const wantHint = { boost: '→', rear: '↓ Rear', front: '↑ Front' };
+    const okLook = look.inds.length === 3 && look.inds.every((i) => i.border === 0 && i.outline === 'none' && !i.drop && i.taps === 'none' && !i.focusable && i.role === 'img' && i.hint === wantHint[i.ind]);
+    const okTaps = afterTaps.sent === sent0 && Object.values(afterTaps.sticks).every((s) => s.x === 0 && s.y === 0) && afterTaps.lit === 0;
+    const okLights = lights.right === 'boost' && lights.up === 'front' && lights.down === 'rear' && ['right', 'up', 'down'].every((d) => lights[`${d}-released`] === '');
+    const okButtons = look.buttons.length === 4 && look.buttons.every((b) => b.border > 0 && b.drop && b.focusable);
+    const row = { engine: engineName, viewport: `${vw}x${vh}`, look, taps: { sent0, ...afterTaps }, lights, pass: okLook && okTaps && okLights && okButtons };
+    report.indicators.push(row);
+    if (!okLook) failures.push(`${engineName} ${vw}x${vh}: a pod indicator still looks or acts like a button ${JSON.stringify(look.inds)}`);
+    if (!okTaps) failures.push(`${engineName} ${vw}x${vh}: tapping the indicators sent input ${JSON.stringify({ sent0, ...afterTaps })}`);
+    if (!okLights) failures.push(`${engineName} ${vw}x${vh}: the action stick did not light boost/front/rear ${JSON.stringify(lights)}`);
+    if (!okButtons) failures.push(`${engineName} ${vw}x${vh}: Identify/camera/recover/menu lost the button look ${JSON.stringify(look.buttons)}`);
+    await ctx.close();
+  }
+  await browser.close();
+}
+
 if (report.network.external.length) failures.push(`requests left the folder: ${[...new Set(report.network.external)].join(', ')}`);
 
 // Captures: every state in device frames (Chromium).
