@@ -1,0 +1,16 @@
+{
+  "what": "Every origin a built Joystick Jammers 0.2 bundle names (P1-F03, R70). scripts/ci/origin-scan.mjs fails on any host not listed here, and on any runtime host outside the allowed set.",
+  "runtime": {
+    "allowed": [
+      { "host": "self", "why": "the deployment's own origin: pages, assets, API, signalling (base path aware)" },
+      { "host": "stun.cloudflare.com", "why": "STUN (R79); comes from the server's iceServers, may also appear as a default" },
+      { "host": "turn.dilger.dev", "why": "self-hosted coturn (R88); comes from the server's iceServers" }
+    ],
+    "note": "Cloudflare TURN entries arrive only in the lazy /api/v1/ice/fallback response (R92); no bundle names them."
+  },
+  "inert": [
+    { "host": "www.w3.org", "why": "XML namespace URIs (createElementNS); never fetched" },
+    { "host": "github.com", "why": "issue links inside three.js console warnings; never fetched" },
+    { "host": "www.shadertoy.com", "why": "a credit inside a three.js shader comment; never fetched" }
+  ]
+}

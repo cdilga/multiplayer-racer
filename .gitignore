@@ -62,3 +62,6 @@ private/
 
 # FrankenWhisper local state (transcripts, sqlite)
 .franken_whisper/
+
+# P1-F03 qualification bundle (built for the origin scan, never shipped)
+web/dist-qualify/

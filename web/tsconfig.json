@@ -24,6 +24,7 @@
     "host/src",
     "controller/src",
     "landing/src",
-    "vite.config.ts"
+    "vite.config.ts",
+    "qualify"
   ]
 }

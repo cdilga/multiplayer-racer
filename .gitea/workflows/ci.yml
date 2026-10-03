@@ -45,6 +45,8 @@ jobs:
           node-version-file: .nvmrc
       - run: npm --prefix web ci
       - run: npm --prefix web run build
+      - name: Runtime origins (P1-F03, R70)
+        run: npm --prefix web run qualify && node scripts/ci/origin-scan.mjs web/dist web/dist-qualify
 
   checks:
     runs-on: ubuntu-latest

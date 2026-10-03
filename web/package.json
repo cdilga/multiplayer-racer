@@ -16,10 +16,12 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "qualify": "vite build --config qualify/vite.config.ts"
   },
   "devDependencies": {
     "@types/node": "26.6.4",
+    "@types/three": "0.186.0",
     "typescript": "7.0.2",
     "vite": "8.3.2"
   }

@@ -2,5 +2,9 @@
   "name": "@jj/host",
   "private": true,
   "type": "module",
-  "description": "Host app: render, sim worker glue, grid, HUD, lobby and highlight reel."
+  "description": "Host app: render, sim worker glue, grid, HUD, lobby and highlight reel.",
+  "dependencies": {
+    "three": "0.186.1",
+    "uqr": "0.1.3"
+  }
 }

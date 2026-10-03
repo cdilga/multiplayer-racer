@@ -1,0 +1,29 @@
+P1-F03 local checks, 2026-10-03 (GentlePike)
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --locked -p jj-sim -p jj-wasm-host
+  rch: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+    Checking rapier3d v0.36.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.07s
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --locked --target wasm32-unknown-unknown -p jj-sim -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
+  rch: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+    Checking rapier3d v0.36.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.76s
+
+$ scripts/ci/deny.sh
+  advisories ok, bans ok, licenses ok, sources ok
+
+$ npm --prefix web run build && npm --prefix web run qualify
+  dist-qualify/qualify.js 1,590.80 kB (three/webgpu + three/tsl + uqr + jsqr, minified)
+
+$ node scripts/ci/origin-scan.mjs web/dist web/dist-qualify
+  origin-scan: 8 files in web/dist, web/dist-qualify
+    inert             github.com  (web/dist-qualify/qualify.js)
+    inert             www.shadertoy.com  (web/dist-qualify/qualify.js)
+    inert             www.w3.org  (web/dist-qualify/qualify.js)
+  origin-scan: ok (self + configured STUN/TURN only at runtime)
+
+$ (negative) node scripts/ci/origin-scan.mjs <scratch dir with probe.js containing import("https://cdn.jsdelivr.net/npm/zxing-wasm@3/dist/reader/zxing_reader.wasm")>
+  NOT LISTED        cdn.jsdelivr.net  (probe.js)
+  origin-scan: 1 unlisted host(s); add them to docs/deps/origins.json only if they are inert or allowed (R70)
+  exit 1
