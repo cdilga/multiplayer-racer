@@ -76,6 +76,35 @@ review notes. Subagents help inside a bead; more beads in parallel means more wo
 with its own Agent Mail name and file reservations. Any session that verifies registers with Remote
 Control so you can watch it.
 
+## Sonnet subagents: use them when they make the work faster (owner, 2026-10-04)
+
+Opus workers (and the solo session) are **permitted and encouraged** to spawn their own Sonnet 5.5 subagents (the Agent
+tool with `model: "sonnet"`) whenever that finishes the bead faster or cheaper than doing it inline. Don't ask first.
+
+**Good uses:** code and doc search across many files; running a test or build matrix and summarising failures; reading long
+logs and reporting the first real error; scaffolding tests, fixtures and boilerplate to a spec you give; mechanical edits
+across many files; generating or capturing the screenshot/device matrix for a visual bead and listing what looks wrong;
+cross-checking a diff against the acceptance list; independent parallel pieces of one bead with disjoint files. Run
+independent subagents in parallel (several Agent calls in one message).
+
+**Not for subagents:** deciding scope, reading rulings into the design, picking or claiming beads, anything that needs the
+owner's rulings judged, and the final close. Never delegate honesty about evidence: a result you didn't see isn't proof.
+
+**Ground rules (they protect the shared tree):**
+- A subagent is a helper inside **your** bead. It doesn't register with Agent Mail, claim beads, commit, push, run
+  `close.sh` or edit `.beads/`. You commit, push and close, under your name. Your file reservations cover its edits.
+- One shared working tree: no worktrees, no `isolation: "worktree"`, no extra clones. Parallel subagents get **disjoint
+  files** (say which paths each may touch); anything else is read-only.
+- Brief it like a new colleague: the bead ID and goal, the exact paths, what "done" looks like, what not to touch, the
+  constraints that matter (no CDNs, no caps, native resolution, Rust through RCH), and the form of the answer (short:
+  findings with file:line, or a diff summary). Ask for a short report, not a transcript.
+- Verify what comes back before relying on it: read the diff it made, rerun the check that decides the outcome, and spot-check
+  its claims. You remain responsible for correctness.
+- For visual beads a Sonnet subagent may capture the matrix and look at the screenshots, but **you open the key images
+  yourself** before writing `self-review.md`, since the loop is only real if someone who knows the intent looked.
+- Keep the token win: don't spawn for something a single grep or edit does, and don't spawn a subagent that re-reads the
+  whole project. Never more subagents than the work has independent pieces.
+
 **Hand-cranking.** The session stops after each instruction unless it's on a goal:
 
 | Say | The session |

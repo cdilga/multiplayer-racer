@@ -127,7 +127,7 @@ Most important rules:
   **on demand only** (no timers or `/loop`), so it costs nothing when work stops. Any session that
   verifies **must register with Remote Control** (`claude --remote-control <name>`, or `/remote-control`
   in a running session) so the owner can watch. Models: solo and workers on Opus 5.5 at medium effort,
-  delegating mechanical work to Sonnet 5.5 subagents; the verifier on Sonnet 5.5. Start commands and the
+  delegating to their own Sonnet 5.5 subagents whenever it's faster (permitted without asking; ground rules in `docs/process/bead-workflow.md`, "Sonnet subagents"); the verifier on Sonnet 5.5. Start commands and the
   crank table: `docs/process/bead-workflow.md`. NTM and Agent Mail can take over parts later.
 - **Lean by default** (owner, 2026-10-03): no routine review rounds (CI and the bead's tests are the check);
   the bead is the contract, so don't read the whole plan, only the sections a bead cites; keep command
