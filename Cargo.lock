@@ -427,7 +427,10 @@ version = "0.2.0"
 dependencies = [
  "jj-map",
  "jj-types",
+ "postcard",
  "rapier3d",
+ "serde",
+ "sha2",
 ]
 
 [[package]]
@@ -438,6 +441,8 @@ dependencies = [
  "jj-map",
  "jj-procgen",
  "jj-sim",
+ "jj-types",
+ "serde",
  "serde_json",
 ]
 

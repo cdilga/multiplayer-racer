@@ -10,12 +10,15 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj --version";
+mod scenario;
+
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj scenario [--json] <scenario.json>…\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("validate") => validate(&args[1..]),
+        Some("scenario") => scenario::command(&args[1..]),
         Some("--version") | Some("version") => {
             println!("jj {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS

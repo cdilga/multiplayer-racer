@@ -1,0 +1,37 @@
+P1-S01 local checks, 2026-10-03 (GentlePike), on the RCH worker eris (Arch x86_64, rustc 1.99.0)
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --locked -p jj-sim -p jj-tools
+  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+       Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_sim-8b00bc7054bb1a7f)
+       Running tests/determinism.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/determinism-66d2f52fc7a81bc5)
+  test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+  test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+       Running tests/determinism_scan.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/determinism_scan-c47fddf173986bb9)
+       Running tests/rapier_api.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/rapier_api-118bd1a94a6a84fa)
+       Running unittests src/main.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj-dd340c1c6d3f0c44)
+       Running tests/scenarios.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/scenarios-969329ff8ce2eb54)
+  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+$ jj scenario scenarios/idle-settle.json scenarios/straight-throttle.json   (before the upY ceiling fix: 1.0000001 > 1.0 was an envelope bug)
+  FAIL idle-settle (480 ticks, state 4a21ff422fae…)
+    ok  car 0 @   240 Speed = 0.031 in [0, 0.3]
+    ok  car 0 @   480 Speed = 0.031 in [0, 0.05]
+    BAD car 0 @   480 UpY = 1.000 in [0.99, 1]
+    ok  car 0 @   480 Height = 0.822 in [0.5, 1.1]
+    ok  car 0 @   480 Travel = 0.000 in [0, 0.2]
+    ok  car 0 @   480 WheelsInContact = 4.000 in [4, 4]
+  pass straight-throttle (720 ticks, state bd515c3be584…)
+    ok  car 0 @   240 ForwardSpeed = 10.034 in [5, 20]
+    ok  car 0 @   720 ForwardSpeed = 23.042 in [15, 35]
+    ok  car 0 @   720 Travel = 79.446 in [40, 130]
+    ok  car 0 @   720 LateralDrift = 0.000 in [0, 2]
+    ok  car 0 @   720 HeadingChangeDeg = 0.000 in [0, 5]
+    ok  car 0 @   720 UpY = 1.000 in [0.95, 1]
+    ok  car 0 @   720 WheelsInContact = 4.000 in [4, 4]
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --locked --target wasm32-unknown-unknown -p jj-sim
+      Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.86s
+$ cargo clippy --all-targets --no-deps -p jj-sim -p jj-tools -- -D warnings   -> clean
