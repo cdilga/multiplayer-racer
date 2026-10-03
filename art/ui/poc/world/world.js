@@ -174,7 +174,7 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
 
   // ---- in-world graphics (P1-U05.3, owner round 2): the finish banner, corner chevron posts, W-beam guard rail ----
   // R106: no "Checkpoint N" gantries. Lap-validity checkpoints stay as invisible gameplay (plan §8) until the owner decides.
-  const graphics = { finish: null, checkpoints: [], chevrons: [], barriers: [], terminals: [] };
+  const graphics = { finish: null, checkpoints: [], chevrons: [], barriers: [], terminals: [], dressing: [] };
   const chequer = canvasTexture(64, 16, (g, w, h) => { for (let x = 0; x < 16; x++) for (let y = 0; y < 4; y++) { g.fillStyle = (x + y) % 2 ? '#15203A' : '#FFF4DE'; g.fillRect(x * 4, y * 4, 4, 4); } });
   chequer.wrapS = chequer.wrapT = THREE.RepeatWrapping;
   const texMat = (tex, emissive = null) => makeComicMaterial(look, { colorNode: texture(tex).rgb, emissiveNode: emissive });
@@ -481,6 +481,33 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     windmill(BOWL.x + 38, BOWL.z - BOWL.r - 24, 0.5, 15);
     shed(BOWL.x - 46, BOWL.z - BOWL.r - 18, 0.2, 11, 7);
     sign(BOWL.x + 6, BOWL.z - BOWL.r - 9, 0, 'SEND IT!');
+    // POC2-08 (P1-U05.4, R107): an arena designed for the near-fixed Overview camera. It looks north over the bowl at a fixed
+    // 60° pitch and never rotates, so the far side (−z) fills the top of every frame: a range of Olgas-style domes there
+    // (Kata Tjuta's rounded red heads), quarry faces stepping up on both flanks, all placed from a seed. Which of them the
+    // camera keeps in view is recorded by capture-overview (the zones for P1-M10).
+    const OG = rng(23);
+    const domeGeo = new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeMats = ['#B4552E', '#A2492A', '#C0623A'].map((h) => flat(h));
+    for (let k = 0; k < 9; k++) {
+      const x = -76 + k * 19 + (OG() - 0.5) * 8, z = -BOWL.r - 20 - OG() * 18, r = 8 + OG() * 7, h = r * (1.4 + OG() * 0.6);
+      const dome = new THREE.Mesh(domeGeo, domeMats[k % 3]);
+      dome.scale.set(r, h, r * (0.8 + OG() * 0.4));
+      dome.position.set(BOWL.x + x, 0, BOWL.z + z);
+      dome.castShadow = dome.receiveShadow = true;
+      scene.add(dome);
+      graphics.dressing.push({ kind: 'olgas dome', x: +x.toFixed(1), z: +z.toFixed(1), h: +h.toFixed(1) });
+    }
+    for (const side of [-1, 1]) for (let t = 0; t < 3; t++) {
+      const h = 4 + t * 4, x = side * (BOWL.r + 20 + t * 7), z = -18 + (OG() - 0.5) * 10;
+      const face = new THREE.Mesh(new THREE.BoxGeometry(8, h, 46 - t * 6), flat(t % 2 ? '#C98A55' : '#B5763F'));
+      face.position.set(BOWL.x + x, h / 2, BOWL.z + z);
+      face.castShadow = face.receiveShadow = true;
+      scene.add(face);
+      graphics.dressing.push({ kind: `quarry terrace ${t + 1}`, x: +x.toFixed(1), z: +z.toFixed(1), h });
+    }
+    graphics.dressing.push({ kind: 'windmill', x: 38, z: -BOWL.r - 24, h: 15 }, { kind: 'shed', x: -46, z: -BOWL.r - 18, h: 7 }, { kind: 'sign', x: 6, z: -BOWL.r - 9, h: 3.5 });
+    for (let u = 0; u < 4; u++) graphics.dressing.push({ kind: 'parked ute', x: -21 + u * 14, z: -BOWL.r - 14 - (u % 2) * 3, h: 2 });
+    for (const a0 of [0.4, 1.9, 3.3, 4.6]) graphics.dressing.push({ kind: 'hay bales', x: +(Math.cos(a0) * (BOWL.r + 4.5)).toFixed(1), z: +(Math.sin(a0) * (BOWL.r + 4.5)).toFixed(1), h: 1.8 });
     bunting(Array.from({ length: 11 }, (_, j) => { const a = -Math.PI * 0.9 + j * (Math.PI * 0.8 / 10); return [BOWL.x + Math.cos(a) * (BOWL.r + 7.5), BOWL.z + Math.sin(a) * (BOWL.r + 7.5)]; }), 5);
   }
 

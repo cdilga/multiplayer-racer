@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { build, DEFAULT_P } from '../vendor/cruz/model.js';
 import { carMaterial } from '../vendor/cruz/atlas.js';
+import { createOverviewRig, createRound0Rig, motionStats } from '../shared/overview-camera.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TRACK_PTS = [[0, 0], [120, -10], [200, 40], [210, 120], [150, 170], [80, 140], [20, 190], [-80, 200], [-150, 140], [-160, 50], [-110, -20]];
@@ -256,7 +257,9 @@ export async function createWorld(canvas, { colors }) {
     if (count !== n || offset !== colorOffset) { colorOffset = offset; rebuildCars(count); }
     n = count;
   }
+  let derbyRng = rng(7); // seeded, so the Overview traces replay the same derby
   function setMode(m) {
+    if (m === 'overview') derbyRng = rng(7);
     mode = m;
     track.visible = scenery.visible = m !== 'overview';
     bowl.visible = m === 'overview';
@@ -278,7 +281,7 @@ export async function createWorld(canvas, { colors }) {
         const w = c.wander;
         w.t -= dt;
         const dx = BOWL.x + w.x - c.pos.x, dz = BOWL.z + w.z - c.pos.z;
-        if (w.t <= 0 || Math.hypot(dx, dz) < 4) { const a = Math.random() * Math.PI * 2, d = Math.random() * (BOWL.r - 8); w.x = Math.cos(a) * d; w.z = Math.sin(a) * d; w.t = 3 + Math.random() * 3; }
+        if (w.t <= 0 || Math.hypot(dx, dz) < 4) { const a = derbyRng() * Math.PI * 2, d = derbyRng() * (BOWL.r - 8); w.x = Math.cos(a) * d; w.z = Math.sin(a) * d; w.t = 3 + derbyRng() * 3; }
         const want = Math.atan2(dx, dz);
         let dy = want - c.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
         c.yaw += Math.max(-1.6 * dt, Math.min(1.6 * dt, dy));
@@ -422,22 +425,23 @@ export async function createWorld(canvas, { colors }) {
     return cam;
   }
 
+  // The Derby Overview camera (P1-U05.4, R107): predictive, smoothed and anchored to the bowl (../shared/overview-camera.js,
+  // values in framing.json `overview`); &cam=round0 shows round 0's per-frame refit for comparison.
+  const anchorXZ = { x: BOWL.x, z: BOWL.z };
+  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ) };
+  let ovLastT = null;
+  const carsXZ = () => cars.map((c) => ({ x: c.pos.x, z: c.pos.z }));
   const wideCam = new THREE.PerspectiveCamera(48, 1, 0.5, 2000);
   function wideCamera(aspect, kind, t) {
     wideCam.aspect = aspect;
     if (kind === 'overview') {
       wideCam.clearViewOffset();
-      // Frame every car's bounding box at a fixed pitch (60°), never rotating (master §6.4).
-      const box = new THREE.Box3();
-      for (const c of cars) box.expandByPoint(c.pos);
-      if (box.isEmpty()) box.expandByPoint(new THREE.Vector3(BOWL.x, 0, BOWL.z));
-      box.expandByScalar(9);
-      const ctr = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
-      const pitch = (60 * Math.PI) / 180, vfov = (wideCam.fov * Math.PI) / 180;
-      const needH = Math.max(size.z * Math.sin(pitch) + 4, size.x / aspect);
-      const dist = needH / 2 / Math.tan(vfov / 2) + 6;
-      wideCam.position.set(ctr.x, ctr.y + Math.sin(pitch) * dist, ctr.z + Math.cos(pitch) * dist);
-      wideCam.lookAt(ctr);
+      const dt = ovLastT == null ? 1 / 60 : Math.max(1e-3, t - ovLastT);
+      ovLastT = t;
+      const p = ovRigs[round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
+      wideCam.fov = FRAMING.overview.fovDeg;
+      wideCam.position.set(...p.position);
+      wideCam.lookAt(...p.target);
     } else if (kind === 'reel') {
       wideCam.clearViewOffset();
       const c = cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
@@ -510,11 +514,44 @@ export async function createWorld(canvas, { colors }) {
     return { carHeight: +((box.max.y - box.min.y) / 2).toFixed(3), carWidth: +((box.max.x - box.min.x) / 2).toFixed(3), horizonFromTop: +((1 - far.y) / 2).toFixed(3) };
   }
 
+  /**
+   * The Overview camera's motion over `seconds` of derby at a fixed step, for both rigs on the SAME car motion (recorded
+   * once, replayed into each), after a `warmupS` settle: acceleration and jerk of the camera path (and when the worst
+   * jerk happened), cars outside or near the frame's edge, and the predictive test: of the cars' actual positions
+   * `aheadS` later, how many the current frame already shows.
+   */
+  function overviewTrace({ seconds = 30, dt = 1 / 60, aspect = 16 / 9, warmupS = 2, aheadS = 1.5 } = {}) {
+    const rec = [];
+    const total = Math.round((seconds + aheadS) / dt), skip = Math.round(warmupS / dt), ahead = Math.round(aheadS / dt);
+    for (let i = 0; i < total; i++) { step(dt); rec.push(carsXZ()); }
+    const cam = new THREE.PerspectiveCamera(FRAMING.overview.fovDeg, aspect, 0.5, 2000);
+    const inFrame = (c, m = 1) => { const q = tmp.set(c.x, 0.6, c.z).project(cam); return Math.abs(q.x) <= m && Math.abs(q.y) <= m; };
+    const out = { seconds, dtS: dt, warmupS, aheadS, cars: cars.length };
+    for (const name of ['round0', 'framing']) {
+      const r = ovRigs[name];
+      r.reset();
+      const pos = [];
+      let outside = 0, edge = 0, futureShown = 0, futureAll = 0, n = 0;
+      rec.slice(0, total - ahead).forEach((cs, i) => {
+        const p = r.update(cs, dt, aspect);
+        if (i < skip) return;
+        pos.push(p.position);
+        cam.position.set(...p.position); cam.lookAt(...p.target); cam.updateMatrixWorld();
+        for (const c of cs) { if (!inFrame(c)) outside++; else if (!inFrame(c, 0.9)) edge++; n++; }
+        for (const c of rec[i + ahead]) { futureAll++; if (inFrame(c, 0.9)) futureShown++; }
+      });
+      const m = motionStats(pos, dt);
+      out[name] = { ...m, carSamples: n, outsideFrame: outside, nearEdge: edge, futureInsideShare: +(futureShown / futureAll).toFixed(4) };
+    }
+    ovLastT = null;
+    return out;
+  }
+
   function standings() {
     return [...cars].sort((a, b) => b.s - a.s).map((c, i) => ({ seat: c.seat, place: i + 1, lap: Math.min(LAPS, Math.max(1, Math.floor((c.s - trackLen * 3) / trackLen) + 1)), boost: c.boost }));
   }
 
   function resize(w, h) { renderer.setSize(w, h, false); }
 
-  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, standings, setOutlines, resize, get n() { return n; }, laps: LAPS };
+  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, overviewTrace, standings, setOutlines, resize, get n() { return n; }, laps: LAPS };
 }

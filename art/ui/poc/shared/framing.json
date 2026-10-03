@@ -12,6 +12,23 @@
     "far": { "backM": 11.5, "upM": 6.2, "lookAheadM": 24, "lookUpM": 0, "fovDeg": 56, "follow": 5 }
   },
   "round0": { "backM": 5.2, "upM": 2.05, "lookAheadM": 4, "lookUpM": 0.95, "fovDeg": 62, "follow": 6, "note": "The round-0 rig the owner found too close (POC1-12); kept only for before/after captures (&cam=round0)." },
+  "overview": {
+    "note": "The Derby Overview camera (P1-U05.4, R107; poc/shared/overview-camera.js), the TUNE inputs for P1-R11. Fixed pitch and heading, never rotating. It frames each car now and lookAheadS ahead from its velocity, follows on critically damped springs (smooth times in seconds, speed limits in m/s of centre and of framed ground), zooms out quicker than in, ignores target moves inside the dead zone, and stays within maxDriftM of the arena centre, showing between minFrameM and maxFrameM of ground height. Near-fixed: the smallest frame still holds the whole bowl, so the arena's dressing (P1-M10's zones) is always in view.",
+    "pitchDeg": 60,
+    "fovDeg": 48,
+    "lookAheadS": 1.6,
+    "velocitySmoothS": 0.3,
+    "goalSmoothS": 0.45,
+    "marginM": 9,
+    "deadZoneM": 2.5,
+    "deadZoneFrame": 0.06,
+    "smoothTimeS": { "pan": 0.9, "zoomOut": 0.8, "zoomIn": 2.4 },
+    "maxPanMps": 14,
+    "maxZoomMps": 12,
+    "maxDriftM": 12,
+    "minFrameM": 120,
+    "maxFrameM": 165
+  },
   "firstPerson": {
     "eye": { "rightM": 0, "upM": 1.5, "forwardM": 0.45 },
     "lookAheadM": 26,

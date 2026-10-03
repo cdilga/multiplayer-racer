@@ -1,0 +1,325 @@
+{
+  "format": "jj.u054-report.v1",
+  "framing": "art/ui/poc/shared/framing.json (overview)",
+  "traces": {
+    "8": {
+      "seconds": 30,
+      "dtS": 0.016666666666666666,
+      "warmupS": 2,
+      "aheadS": 1.5,
+      "cars": 8,
+      "round0": {
+        "samples": 1680,
+        "dtS": 0.016666666666666666,
+        "speed": {
+          "rms": 13.613,
+          "p95": 21.335,
+          "max": 23.396
+        },
+        "accel": {
+          "rms": 99.574,
+          "p95": 30.96,
+          "max": 1560.897
+        },
+        "jerk": {
+          "rms": 7222.249,
+          "p95": 8091.731,
+          "max": 93835.518
+        },
+        "carSamples": 13440,
+        "outsideFrame": 0,
+        "nearEdge": 0,
+        "futureInsideShare": 0.959
+      },
+      "framing": {
+        "samples": 1680,
+        "dtS": 0.016666666666666666,
+        "speed": {
+          "rms": 3.527,
+          "p95": 7.153,
+          "max": 7.816
+        },
+        "accel": {
+          "rms": 5.243,
+          "p95": 9.928,
+          "max": 11.279
+        },
+        "jerk": {
+          "rms": 13.979,
+          "p95": 24.816,
+          "max": 38.613
+        },
+        "carSamples": 13440,
+        "outsideFrame": 0,
+        "nearEdge": 0,
+        "futureInsideShare": 1
+      }
+    },
+    "24": {
+      "seconds": 30,
+      "dtS": 0.016666666666666666,
+      "warmupS": 2,
+      "aheadS": 1.5,
+      "cars": 24,
+      "round0": {
+        "samples": 1680,
+        "dtS": 0.016666666666666666,
+        "speed": {
+          "rms": 12.936,
+          "p95": 20.425,
+          "max": 22.564
+        },
+        "accel": {
+          "rms": 113.439,
+          "p95": 105.222,
+          "max": 1414.984
+        },
+        "jerk": {
+          "rms": 8210.911,
+          "p95": 15194.126,
+          "max": 85368.688
+        },
+        "carSamples": 40320,
+        "outsideFrame": 0,
+        "nearEdge": 108,
+        "futureInsideShare": 0.9729
+      },
+      "framing": {
+        "samples": 1680,
+        "dtS": 0.016666666666666666,
+        "speed": {
+          "rms": 3.545,
+          "p95": 6.154,
+          "max": 9.588
+        },
+        "accel": {
+          "rms": 5.249,
+          "p95": 9.889,
+          "max": 12.886
+        },
+        "jerk": {
+          "rms": 13.48,
+          "p95": 26.01,
+          "max": 36.295
+        },
+        "carSamples": 40320,
+        "outsideFrame": 0,
+        "nearEdge": 0,
+        "futureInsideShare": 1
+      }
+    }
+  },
+  "zones": "art/ui/poc/world/overview-zones.json",
+  "dressing": [
+    {
+      "kind": "olgas dome",
+      "x": -76.3,
+      "z": -79.9,
+      "h": 14.2,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": -56.9,
+      "z": -78.3,
+      "h": 15.7,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": -41.1,
+      "z": -93.5,
+      "h": 28.1,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": -21.7,
+      "z": -89.2,
+      "h": 28.7,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": 1.8,
+      "z": -89.7,
+      "h": 23,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": 17.2,
+      "z": -95.2,
+      "h": 14.4,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": 34.2,
+      "z": -87.5,
+      "h": 19.1,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": 56.6,
+      "z": -92.3,
+      "h": 15.4,
+      "zone": "sometimes",
+      "seenIn": "9/10"
+    },
+    {
+      "kind": "olgas dome",
+      "x": 74.5,
+      "z": -83.5,
+      "h": 18.3,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 1",
+      "x": -78,
+      "z": -21.7,
+      "h": 4,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 2",
+      "x": -85,
+      "z": -15.2,
+      "h": 8,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 3",
+      "x": -92,
+      "z": -16.6,
+      "h": 12,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 1",
+      "x": 78,
+      "z": -19.4,
+      "h": 4,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 2",
+      "x": 85,
+      "z": -22.3,
+      "h": 8,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "quarry terrace 3",
+      "x": 92,
+      "z": -14.1,
+      "h": 12,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "windmill",
+      "x": 38,
+      "z": -82,
+      "h": 15,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "shed",
+      "x": -46,
+      "z": -76,
+      "h": 7,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "sign",
+      "x": 6,
+      "z": -67,
+      "h": 3.5,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "parked ute",
+      "x": -21,
+      "z": -72,
+      "h": 2,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "parked ute",
+      "x": -7,
+      "z": -75,
+      "h": 2,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "parked ute",
+      "x": 7,
+      "z": -72,
+      "h": 2,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "parked ute",
+      "x": 21,
+      "z": -75,
+      "h": 2,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "hay bales",
+      "x": 57.6,
+      "z": 24.3,
+      "h": 1.8,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "hay bales",
+      "x": -20.2,
+      "z": 59.1,
+      "h": 1.8,
+      "zone": "sometimes",
+      "seenIn": "6/10"
+    },
+    {
+      "kind": "hay bales",
+      "x": -61.7,
+      "z": -9.9,
+      "h": 1.8,
+      "zone": "always",
+      "seenIn": "10/10"
+    },
+    {
+      "kind": "hay bales",
+      "x": -7,
+      "z": -62.1,
+      "h": 1.8,
+      "zone": "always",
+      "seenIn": "10/10"
+    }
+  ],
+  "pass": true,
+  "fails": []
+}

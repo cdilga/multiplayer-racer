@@ -844,6 +844,8 @@ window.__poc = {
   /** The 3D viewports the current state renders (one per tile on the grid, plus a mirror per first-person tile). */
   views: () => scene.views(0),
   beatAt,
+  /** The Overview camera's motion stats, round 0 against the new rig on the same derby (P1-U05.4). */
+  overviewTrace: (o) => world.overviewTrace(o),
   /** Per tile: how much of it the player's own car fills and where the horizon sits (P1-U05.2 framing evidence). */
   framing: () => lastViews.filter((v) => (v.kind === 'tp' || v.kind === 'fp') && v.camera).map((v) => ({ seat: v.seat, kind: v.kind, h: v.h, ...world.framingOf(v.seat, v.camera, v) })),
   tokens,

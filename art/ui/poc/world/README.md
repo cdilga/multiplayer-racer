@@ -10,7 +10,7 @@ tested module (`../vendor/look/look.js`, vendored by `../vendor.mjs`) and Spike 
 | `#tv` | one full-screen tile |
 | `#graphics` | the start-finish race banner, a W-beam guard rail run and its terminal, corner chevron posts, the rail along the track (P1-U05.3) |
 | `#paint` | every identity colour as lit paint on the car, next to its flat badge |
-| `#overview&n=16` | the derby bowl from the fixed 60° Overview camera, with a nameplate over every car |
+| `#overview&n=16` | the derby bowl from the Overview camera (P1-U05.4: near-fixed, predictive, smoothed; `&cam=round0` for round 0's), with a nameplate over every car. The arena is designed for it: a range of Olgas-style domes behind the far rim (the top of every frame) and quarry terraces on both flanks; `overview-zones.json` records what stays in view (for P1-M10) |
 | `&dist=near\|mid\|far\|round0` | the race tiles' camera distance from `../shared/framing.json` (P1-U05.2, R98), shared with the TV mock |
 
 `?mode=ids` (outlines on objects only), `?mode=plain` (no post), `?bloom=1|0&fxaa=1|0&halftone=1|0` (isolate one effect),

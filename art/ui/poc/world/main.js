@@ -7,7 +7,8 @@
 import * as THREE from 'three/webgpu';
 import { loadTokens, seatColor } from '../shared/tokens.js';
 import { layoutGrid } from '../tv/grid.js';
-import { createWorld, BOWL } from './world.js';
+import { createWorld, BOWL, FRAMING } from './world.js';
+import { createOverviewRig, createRound0Rig } from '../shared/overview-camera.js';
 
 const tokens = await loadTokens();
 const k = () => window.innerHeight / 1080;
@@ -28,6 +29,8 @@ const rects = (() => {
   if (name === 'graphics') { const w = Math.floor(W / 2), h = Math.floor(H / 2); return [[0, 0], [w, 0], [0, h], [w, h]].map(([x, y]) => ({ x, y, w, h })); }
   return [{ x: 0, y: 0, w: W, h: H }];
 })();
+// The Derby Overview camera (P1-U05.4, R107): the shared rig, anchored to the bowl; &cam=round0 is round 0's refit.
+const ovRig = (P.get('cam') === 'round0' ? createRound0Rig : createOverviewRig)(FRAMING.overview, { x: BOWL.x, z: BOWL.z });
 const world = await createWorld(canvas, { colors, tileHeight: Math.min(...rects.map((r) => r.h)), mode, trackTimestamp: q.get('ts') === '1', overrides: Object.fromEntries(['bloom', 'halftone', 'fxaa'].filter((k) => q.has(k)).map((k) => [k, q.get(k) === '1'])) });
 world.resize(W, H);
 
@@ -92,13 +95,9 @@ function aim(dt) {
     world.aimFixed(0, V.set(BOWL.x + 3, 6.6, BOWL.z + 34), new THREE.Vector3(BOWL.x, 0.2, BOWL.z - 1), 42);
     world.placeSun(new THREE.Vector3(BOWL.x, 0, BOWL.z));
   } else if (name === 'overview') {
-    const box = new THREE.Box3();
-    for (const c of world.cars) box.expandByPoint(c.pos);
-    box.expandByScalar(9);
-    const ctr = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
-    const pitch = THREE.MathUtils.degToRad(60), aspect = W / H, vfov = THREE.MathUtils.degToRad(48);
-    const dist = Math.max(size.z * Math.sin(pitch) + 4, size.x / aspect) / 2 / Math.tan(vfov / 2) + 6;
-    world.aimFixed(0, V.set(ctr.x, Math.sin(pitch) * dist, ctr.z + Math.cos(pitch) * dist), ctr, 48);
+    const p = ovRig.update(world.cars.map((c) => ({ x: c.pos.x, z: c.pos.z })), dt, W / H);
+    const ctr = new THREE.Vector3(...p.target);
+    world.aimFixed(0, V.set(...p.position), ctr, FRAMING.overview.fovDeg);
     world.placeSun(ctr);
   } else if (name === 'graphics') {
     const f = world.frames;
@@ -143,10 +142,45 @@ function loop(now) {
 }
 
 const pct = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
+
+/**
+ * Which ground and which dressing the Overview camera keeps in view (P1-U05.4, POC2-08; the zones for P1-M10). The rig's
+ * envelope is its centre anywhere within maxDriftM of the bowl's and its frame anywhere from minFrameM to maxFrameM; this
+ * tests the extremes (both frames × centred and drifted north, south, east, west). "always" = in view in every one,
+ * "sometimes" = in at least one. Ground is reported as one [xMin, xMax] span per `cellM` row (bowl-local metres; the
+ * footprints are convex). Each dressing item is in view if its base or its top is.
+ */
+function overviewZones({ cellM = 8, reach = 220 } = {}) {
+  const O = FRAMING.overview, pitch = THREE.MathUtils.degToRad(O.pitchDeg), vfov = THREE.MathUtils.degToRad(O.fovDeg);
+  const cam = new THREE.PerspectiveCamera(O.fovDeg, W / H, 0.5, 3000), q = new THREE.Vector3();
+  const states = [];
+  for (const f of [O.minFrameM, O.maxFrameM]) for (const [dx, dz] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) states.push({ f, cx: dx * O.maxDriftM, cz: dz * O.maxDriftM });
+  const seen = (st, x, y, z) => {
+    const dist = st.f / 2 / Math.tan(vfov / 2) + 6;
+    cam.position.set(BOWL.x + st.cx, Math.sin(pitch) * dist, BOWL.z + st.cz + Math.cos(pitch) * dist);
+    cam.lookAt(BOWL.x + st.cx, 0, BOWL.z + st.cz); cam.updateMatrixWorld();
+    q.set(BOWL.x + x, y, BOWL.z + z).project(cam);
+    return Math.abs(q.x) <= 1 && Math.abs(q.y) <= 1 && q.z < 1;
+  };
+  const rows = { always: [], sometimes: [] };
+  for (let z = -reach; z <= reach; z += cellM) {
+    for (const kind of ['always', 'sometimes']) {
+      const xs = [];
+      for (let x = -reach; x <= reach; x += cellM) { const n = states.filter((st) => seen(st, x, 0, z)).length; if (kind === 'always' ? n === states.length : n > 0) xs.push(x); }
+      if (xs.length) rows[kind].push({ z, x: [xs[0], xs.at(-1)] });
+    }
+  }
+  const items = world.graphics.dressing.map((d) => {
+    const n = states.filter((st) => seen(st, d.x, 0, d.z) || seen(st, d.x, d.h, d.z)).length;
+    return { ...d, zone: n === states.length ? 'always' : n > 0 ? 'sometimes' : 'never', seenIn: `${n}/${states.length}` };
+  });
+  return { format: 'jj.overview-zones.v1', note: 'Bowl-local metres (x east, z south; the camera looks north). Ground spans per row; dressing classified by the Overview rig envelope (framing.json overview).', bowl: { r: BOWL.r }, envelope: { minFrameM: O.minFrameM, maxFrameM: O.maxFrameM, maxDriftM: O.maxDriftM, pitchDeg: O.pitchDeg, fovDeg: O.fovDeg, aspect: +(W / H).toFixed(3) }, cellM, ground: rows, dressing: items };
+}
 window.__world = {
   ready: false,
   backend: world.backend,
   staticStats: world.staticStats,
+  overviewZones,
   /** Frame cost: `rafFrames` vsync-bound frames (rAF interval) and `gpuFrames` frames timed by GPU timestamp queries (ms of GPU
    *  execution for every render pass of the frame: the scene pass over all tiles plus the post chain). Needs ?ts=1. */
   async perf(rafFrames = 240, gpuFrames = 120) {
