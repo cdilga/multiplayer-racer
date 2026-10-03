@@ -102,46 +102,48 @@ fn differing(a: &Flat, c: &Flat, t: Option<&Flat>, skip: &[&str]) -> Vec<[String
         .collect()
 }
 
-fn print_table(rows: &[[String; 4]]) {
-    let w: Vec<usize> = (0..4)
+/// Prints `[key, (tick,) accepted, current, tuned]` rows; a `*` follows a value that differs from ACCEPTED.
+fn print_table(head: &[&str], rows: &[Vec<String>]) {
+    let rows: Vec<Vec<String>> = rows
+        .iter()
+        .map(|r| {
+            let n = r.len();
+            r.iter()
+                .enumerate()
+                .map(|(i, v)| {
+                    let marked = i >= n - 2 && v != &r[n - 3] && v != "—";
+                    if marked { format!("{v}*") } else { v.clone() }
+                })
+                .collect()
+        })
+        .collect();
+    let w: Vec<usize> = (0..head.len())
         .map(|i| {
             rows.iter()
                 .map(|r| r[i].chars().count())
                 .max()
                 .unwrap_or(0)
-                .max(["key", "ACCEPTED", "CURRENT", "TUNED"][i].len())
+                .max(head[i].len())
         })
         .collect();
-    println!(
-        "  {:<w0$}  {:<w1$}  {:<w2$}  TUNED",
-        "key",
-        "ACCEPTED",
-        "CURRENT",
-        w0 = w[0],
-        w1 = w[1],
-        w2 = w[2]
-    );
-    for r in rows {
-        let mark = |v: &str| if v != r[1] && v != "—" { "*" } else { " " };
-        println!(
-            "  {:<w0$}  {:<w1$}  {:<w2$}{} {}{}",
-            r[0],
-            r[1],
-            r[2],
-            mark(&r[2]),
-            r[3],
-            mark(&r[3]),
-            w0 = w[0],
-            w1 = w[1],
-            w2 = w[2]
-        );
+    let line = |cells: &[String]| {
+        let padded: Vec<String> = cells
+            .iter()
+            .zip(&w)
+            .map(|(c, w)| format!("{c:<w$}"))
+            .collect();
+        println!("  {}", padded.join("  ").trim_end());
+    };
+    line(&head.iter().map(|h| (*h).to_owned()).collect::<Vec<_>>());
+    for r in &rows {
+        line(r);
     }
 }
 
 fn report(a: &Trace, c: &Trace, t: Option<&Trace>, json_out: bool) {
-    // The scenario name and tuning list describe the runs, not what happened in them.
+    // The scenario name describes the runs, not what happened in them.
     let summary = differing(&a.summary, &c.summary, t.map(|t| &t.summary), &["scenario"]);
-    let mut divergence: Option<(u64, Vec<[String; 4]>)> = None;
+    // Every per-tick key that differs anywhere, with the first tick it differs at and the values there.
     let ticks: BTreeSet<u64> = a
         .ticks
         .keys()
@@ -150,33 +152,33 @@ fn report(a: &Trace, c: &Trace, t: Option<&Trace>, json_out: bool) {
         .copied()
         .collect();
     let empty = Flat::new();
+    let mut first: BTreeMap<String, (u64, [String; 4])> = BTreeMap::new();
     for tick in ticks {
-        let rows = differing(
+        for r in differing(
             a.ticks.get(&tick).unwrap_or(&empty),
             c.ticks.get(&tick).unwrap_or(&empty),
             t.map(|t| t.ticks.get(&tick).unwrap_or(&empty)),
             &[],
-        );
-        if !rows.is_empty() {
-            divergence = Some((tick, rows));
-            break;
+        ) {
+            first.entry(r[0].clone()).or_insert((tick, r));
         }
     }
-    let identical = summary.iter().all(|r| r[0] == "tuned") && divergence.is_none();
+    let mut divergence: Vec<(u64, [String; 4])> = first.into_values().collect();
+    divergence.sort_by(|x, y| (x.0, &x.1[0]).cmp(&(y.0, &y.1[0])));
+    let identical = summary.iter().all(|r| r[0].starts_with("tuned")) && divergence.is_empty();
     if json_out {
-        let rows = |rs: &[[String; 4]]| -> Vec<Value> {
-            rs.iter()
-                .map(|r| json!({ "key": r[0], "accepted": r[1], "current": r[2], "tuned": r[3] }))
-                .collect()
-        };
         let out = json!({
             "accepted": a.path,
             "current": c.path,
             "tuned": t.map(|t| t.path.clone()),
             "identical": identical,
             "ticks": { "accepted": a.ticks.len(), "current": c.ticks.len(), "tuned": t.map(|t| t.ticks.len()) },
-            "summary": rows(&summary),
-            "divergence": divergence.as_ref().map(|(tick, rs)| json!({ "tick": tick, "keys": rows(rs) })),
+            "summary": summary.iter()
+                .map(|r| json!({ "key": r[0], "accepted": r[1], "current": r[2], "tuned": r[3] }))
+                .collect::<Vec<_>>(),
+            "divergence": divergence.iter()
+                .map(|(tick, r)| json!({ "key": r[0], "tick": tick, "accepted": r[1], "current": r[2], "tuned": r[3] }))
+                .collect::<Vec<_>>(),
         });
         println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
         return;
@@ -191,17 +193,36 @@ fn report(a: &Trace, c: &Trace, t: Option<&Trace>, json_out: bool) {
         println!("identical: every tick and the summary match ACCEPTED");
         return;
     }
-    println!(
-        "\nsummary: {} differing key(s) (* differs from ACCEPTED)",
-        summary.len()
-    );
-    print_table(&summary);
-    if let Some((tick, rows)) = divergence {
+    if summary.is_empty() {
+        println!("\nsummary: the same in all runs");
+    } else {
         println!(
-            "\nfirst divergence at tick {tick}: {} differing key(s)",
-            rows.len()
+            "\nsummary: {} differing key(s) (* differs from ACCEPTED)",
+            summary.len()
         );
-        print_table(&rows);
+        print_table(
+            &["key", "ACCEPTED", "CURRENT", "TUNED"],
+            &summary.iter().map(|r| r.to_vec()).collect::<Vec<_>>(),
+        );
+    }
+    if !divergence.is_empty() {
+        println!(
+            "\nper tick: {} key(s) differ; each at the first tick it differs (* differs from ACCEPTED)",
+            divergence.len()
+        );
+        let rows: Vec<Vec<String>> = divergence
+            .iter()
+            .map(|(tick, r)| {
+                vec![
+                    r[0].clone(),
+                    tick.to_string(),
+                    r[1].clone(),
+                    r[2].clone(),
+                    r[3].clone(),
+                ]
+            })
+            .collect();
+        print_table(&["key", "tick", "ACCEPTED", "CURRENT", "TUNED"], &rows);
     }
 }
 

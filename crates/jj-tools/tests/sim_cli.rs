@@ -212,17 +212,18 @@ fn trace_feeds_compare_which_shows_the_differing_keys() {
             "CURRENT is the ACCEPTED run itself"
         );
     }
-    let div = &c["divergence"];
+    let div = c["divergence"].as_array().unwrap();
+    let impulse = div
+        .iter()
+        .find(|k| k["key"] == "cars[0].wheels[2].forwardImpulse")
+        .expect("the driven wheel's impulse differs");
     assert!(
-        div["tick"].as_u64().unwrap() <= 2,
-        "the tuned engine diverges at once: {div}"
+        impulse["tick"].as_u64().unwrap() <= 2,
+        "the tuned engine diverges at once: {impulse}"
     );
     assert!(
-        div["keys"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|k| k["key"] == "cars[0].wheels[2].forwardImpulse")
+        div.iter().all(|k| k["accepted"] == k["current"]),
+        "CURRENT is ACCEPTED"
     );
 
     let same = jj(&["sim", "--json", "--compare", &a, &a]);
