@@ -8,6 +8,7 @@ import { build, DEFAULT_P } from '../vendor/cruz/model.js';
 import { makeAtlas } from '../vendor/cruz/atlas.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createLook, addDayRig, tierFor, applyTier, updateLookCamera, addCarAttributes, paintKey, damageCreep, makeComicMaterial, comicPipeline, aCar, aState } from '../vendor/look/look.js';
+export const FRAMING = await (await fetch(new URL('../shared/framing.json', import.meta.url))).json();
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TRACK_PTS = [[0, 0], [120, -10], [200, 40], [210, 120], [150, 170], [80, 140], [20, 190], [-80, 200], [-150, 140], [-160, 50], [-110, -20]];
@@ -550,17 +551,23 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     }
     current = postFor.get(key);
   }
+  // Race-tile framing (P1-U05.2, R98) from ../shared/framing.json, shared with the TV mock: `dist` is a preset name
+  // (near, mid, far) or 'round0' for the old rig.
   const chase = new THREE.Vector3(), lookAt = new THREE.Vector3();
-  function aimTile(i, c, kind = 'tp') {
+  function aimTile(i, c, kind = 'tp', dist = FRAMING.distance.default) {
     const cam = array.cameras[i];
     if (kind === 'fp') {
+      const F = FRAMING.firstPerson;
       tmp.crossVectors(UP, c.fwd).normalize();
-      cam.position.copy(c.pos).addScaledVector(c.fwd, 0.35).addScaledVector(tmp, 0.38).setY(1.58);
-      cam.lookAt(lookAt.copy(c.pos).addScaledVector(c.fwd, 30).setY(0.2));
+      cam.position.copy(c.pos).addScaledVector(c.fwd, F.eye.forwardM).addScaledVector(tmp, F.eye.rightM).setY(F.eye.upM);
+      if (cam.fov !== F.fovDeg) { cam.fov = F.fovDeg; cam.updateProjectionMatrix(); }
+      cam.lookAt(lookAt.copy(c.pos).addScaledVector(c.fwd, F.lookAheadM).setY(F.lookUpM));
     } else {
-      chase.copy(c.pos).addScaledVector(c.fwd, -5.2).setY(2.05);
+      const R = dist === 'round0' ? FRAMING.round0 : FRAMING.chase[dist] ?? FRAMING.chase[FRAMING.distance.default];
+      if (cam.fov !== R.fovDeg) { cam.fov = R.fovDeg; cam.updateProjectionMatrix(); }
+      chase.copy(c.pos).addScaledVector(c.fwd, -R.backM).setY(R.upM);
       cam.position.lerp(chase, cam.userData.init ? 0.2 : 1); cam.userData.init = true;
-      cam.lookAt(lookAt.copy(c.pos).addScaledVector(c.fwd, 4).setY(0.95));
+      cam.lookAt(lookAt.copy(c.pos).addScaledVector(c.fwd, R.lookAheadM).setY(R.lookUpM));
     }
     cam.updateMatrixWorld();
   }

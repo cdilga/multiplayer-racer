@@ -12,6 +12,8 @@ const TRACK_PTS = [[0, 0], [120, -10], [200, 40], [210, 120], [150, 170], [80, 1
 const ROAD_W = 14;
 const BOWL = { x: 2000, z: 0, r: 58 };
 const LAPS = 3;
+// Race-tile framing (P1-U05.2, R98): data shared with the in-world mock; the TUNE inputs for P1-R05.
+export const FRAMING = await (await fetch(new URL('../shared/framing.json', import.meta.url))).json();
 
 function rng(seed) {
   let s = seed >>> 0 || 1;
@@ -371,28 +373,49 @@ export async function createWorld(canvas, { colors }) {
     }
   }
 
-  const cams = [];
+  // Camera distance is a setting (R98): the host's default, and each player's own override for their tile.
+  let distDefault = FRAMING.distance.default, round0 = false;
+  const distBySeat = new Map();
+  function setFraming({ distance = FRAMING.distance.default, perSeat = new Map(), rig = 'framing' } = {}) {
+    distDefault = FRAMING.chase[distance] ? distance : FRAMING.distance.default;
+    distBySeat.clear();
+    for (const [seat, d] of perSeat) if (FRAMING.chase[d]) distBySeat.set(seat, d);
+    round0 = rig === 'round0';
+  }
+  const rigFor = (seat) => (round0 ? FRAMING.round0 : FRAMING.chase[distBySeat.get(seat) ?? distDefault]);
+
+  const cams = [], mirrors = [];
   function cameraFor(i, kind, aspect, dt) {
     const c = cars[i];
-    const cam = (cams[i] ??= new THREE.PerspectiveCamera(62, 1, 0.1, 1200));
+    const cam = kind === 'mirror' ? (mirrors[i] ??= new THREE.PerspectiveCamera(46, 1, 0.1, 1200)) : (cams[i] ??= new THREE.PerspectiveCamera(62, 1, 0.1, 1200));
     cam.aspect = aspect;
-    if (kind === 'fp') {
-      cam.fov = 70;
-      // Driver's eye on the right (right-hand drive), just above the bonnet line so its edge shows.
+    if (kind === 'fp' || kind === 'mirror') {
+      // Driver's eye on the right (right-hand drive). Segmented first person: the eye pitches down so the road gets the
+      // tile, and the mirror looks back from the same eye into the strip of sky it frees.
+      const F = FRAMING.firstPerson;
       tmp.crossVectors(UP, c.fwd).normalize();
-      cam.position.copy(c.pos).addScaledVector(c.fwd, 0.35).addScaledVector(tmp, 0.38).add(tmp.set(0, 1.58, 0));
-      cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, 30).setY(0.2));
+      cam.position.copy(c.pos).addScaledVector(c.fwd, F.eye.forwardM).addScaledVector(tmp, F.eye.rightM).add(tmp.set(0, F.eye.upM, 0));
+      if (kind === 'mirror') {
+        cam.fov = F.mirror.fovDeg;
+        cam.position.y = c.pos.y + F.mirror.eyeUpM;
+        cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, -F.mirror.lookBackM).setY(F.mirror.lookUpM));
+      } else {
+        cam.fov = F.fovDeg;
+        cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, F.lookAheadM).setY(F.lookUpM));
+      }
     } else if (kind === 'back') {
       cam.fov = 62;
       cam.position.copy(c.pos).addScaledVector(c.fwd, 9).add(tmp.set(0, 2.2, 0));
       cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, 30).setY(1));
     } else {
-      cam.fov = 62;
-      const want = tmp.copy(c.pos).addScaledVector(c.fwd, -5.2).setY(c.pos.y + 2.05);
+      // Chase: higher and further back than round 0, aimed down the track (R98, framing.json).
+      const R = rigFor(i + 1);
+      cam.fov = R.fovDeg;
+      const want = tmp.copy(c.pos).addScaledVector(c.fwd, -R.backM).setY(c.pos.y + R.upM);
       if (!c.camInit) { c.camPos.copy(want); c.camInit = true; }
-      c.camPos.lerp(want, Math.min(1, dt * 6));
+      c.camPos.lerp(want, Math.min(1, dt * R.follow));
       cam.position.copy(c.camPos);
-      c.camLook.copy(c.pos).addScaledVector(c.fwd, 4).setY(0.95);
+      c.camLook.copy(c.pos).addScaledVector(c.fwd, R.lookAheadM).setY(R.lookUpM);
       cam.lookAt(c.camLook);
     }
     cam.updateProjectionMatrix();
@@ -472,11 +495,26 @@ export async function createWorld(canvas, { colors }) {
     return { x: view.x + (p.x * 0.5 + 0.5) * view.w, y: view.y + (-p.y * 0.5 + 0.5) * view.h, z: p.z, dist: cam.position.distanceTo(c.pos), ndc: { x: p.x, y: p.y } };
   }
 
+  /** How much of a view the seat's own car fills, and where the horizon sits (fractions of the view, from the top). */
+  const box = new THREE.Box3(), corner = new THREE.Vector3();
+  function framingOf(seat, cam, view) {
+    const c = cars[seat - 1];
+    if (!c) return null;
+    box.makeEmpty();
+    tmp.crossVectors(UP, c.fwd).normalize();
+    for (const a of [-2.2, 2.2]) for (const b of [-0.9, 0.9]) for (const h of [0.05, 1.45]) {
+      corner.copy(c.pos).addScaledVector(c.fwd, a).addScaledVector(tmp, b).setY(h).project(cam);
+      box.expandByPoint(corner);
+    }
+    const far = corner.copy(c.pos).addScaledVector(c.fwd, 2000).setY(0).project(cam);
+    return { carHeight: +((box.max.y - box.min.y) / 2).toFixed(3), carWidth: +((box.max.x - box.min.x) / 2).toFixed(3), horizonFromTop: +((1 - far.y) / 2).toFixed(3) };
+  }
+
   function standings() {
     return [...cars].sort((a, b) => b.s - a.s).map((c, i) => ({ seat: c.seat, place: i + 1, lap: Math.min(LAPS, Math.max(1, Math.floor((c.s - trackLen * 3) / trackLen) + 1)), boost: c.boost }));
   }
 
   function resize(w, h) { renderer.setSize(w, h, false); }
 
-  return { renderer, backend, setCars, setMode, step, render, project, standings, setOutlines, resize, get n() { return n; }, laps: LAPS };
+  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, standings, setOutlines, resize, get n() { return n; }, laps: LAPS };
 }

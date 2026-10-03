@@ -2,7 +2,7 @@
 // contents page at #). The 3D tiles are live (world.js); the HUD is one DOM layer positioned over the tile viewports,
 // built the way the game would build it, so its cost can be measured (window.__poc.perf).
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
-import { createWorld } from './world.js';
+import { createWorld, FRAMING } from './world.js';
 import { layoutGrid, PSEUDOCODE } from './grid.js';
 import { STATES } from './states.js';
 
@@ -40,7 +40,9 @@ function parseHash() {
   const raw = location.hash.replace(/^#/, '');
   const [name, ...rest] = raw.split('&');
   const p = new URLSearchParams(rest.join('&'));
-  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'footer', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', layout: p.get('layout') === 'static' ? 'static' : 'dynamic', sub: p.get('sub') ?? '', p };
+  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'footer', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', layout: p.get('layout') === 'static' ? 'static' : 'dynamic', sub: p.get('sub') ?? '',
+    // Camera distance (R98): &dist= the host default; &pdist=3:far,5:near per-player overrides; &cam=round0 the old rig.
+    dist: p.get('dist') ?? FRAMING.distance.default, pdist: new Map((p.get('pdist') ?? '').split(',').filter(Boolean).map((x) => x.split(':')).map(([s, d]) => [+s, d])), cam: p.get('cam') ?? 'framing', p };
 }
 
 let S = parseHash();
@@ -50,6 +52,7 @@ let frames = 0, settled = false;
 const FOOT = 88;
 // The pause flow and the QR hover stop the world (the loop skips world.step): nothing overlays a playing tile.
 let gamePaused = false;
+let cd = null; // the countdown state's beat control, for captures
 const CAPTION = 'Final lap! Give it everything!';
 const perfStats = { hudMs: [], renderMs: [], stepMs: [], draws: 0 };
 
@@ -92,6 +95,13 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     const boost = el('div', 'hud-boost', '<i></i>');
     top.append(tl, tr);
     t.append(top, boost);
+    if ((hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp')) === 'fp') {
+      // Segmented first person (R98): the rear-view mirror's frame over its viewport (views() adds the viewport).
+      const m = FRAMING.firstPerson.mirror, at = (f) => `calc(var(--k) * 4px + (100% - var(--k) * 8px) * ${f})`;
+      const fr = el('div', 'mirror');
+      Object.assign(fr.style, { left: at(m.x), top: at(m.y), width: `calc((100% - var(--k) * 8px) * ${m.w})`, height: `calc((100% - var(--k) * 8px) * ${m.h})` });
+      t.append(fr);
+    }
     const st = hudStates[seat];
     if (st?.status) t.append(el('div', 'hud-status', st.status === 'autopilot' ? `<span class="chip autopilot">${icon('car')}Autopilot</span>` : `<span class="chip reconnecting">${icon('wifi-off')}Reconnecting…</span>`));
     if (st?.wreck) t.append(el('div', 'hud-centre', `<div class="display italic wreck-word">Wrecked!</div><div class="wreck-back tnum">Back in <b class="cd">3</b> s</div>`));
@@ -241,7 +251,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     const k = K();
     for (const v of views) {
       const t = tiles.get(v.seat);
-      if (!t || !v.camera) continue;
+      if (!t || !v.camera || v.kind === 'mirror') continue;
       if (!plates) { drawArrow(v, t, k); continue; }
       let used = 0;
       const placed = [];
@@ -298,7 +308,16 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     views() {
       animateTiles();
       const ins = Math.round(4 * K()); // whole pixels: equal tiles give equal viewports
-      return [...tiles.entries()].map(([seat, t]) => ({ x: Math.round(t.cur.x) + ins, y: Math.round(t.cur.y) + ins, w: Math.round(t.cur.w) - 2 * ins, h: Math.round(t.cur.h) - 2 * ins, seat, kind: hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp') }));
+      const out = [];
+      for (const [seat, t] of tiles) {
+        const v = { x: Math.round(t.cur.x) + ins, y: Math.round(t.cur.y) + ins, w: Math.round(t.cur.w) - 2 * ins, h: Math.round(t.cur.h) - 2 * ins, seat, kind: hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp') };
+        out.push(v);
+        if (v.kind === 'fp') {
+          const m = FRAMING.firstPerson.mirror;
+          out.push({ x: v.x + Math.round(v.w * m.x), y: v.y + Math.round(v.h * m.y), w: Math.round(v.w * m.w), h: Math.round(v.h * m.h), seat, kind: 'mirror' });
+        }
+      }
+      return out;
     },
     update: updateHud,
     replayIdentify,
@@ -523,10 +542,33 @@ const SETUP = {
     return g;
   },
 
+  // The 3-2-1 (R99, POC1-13): one full-screen overlay with the Identify flash's high exposure, one beat each
+  // (tokens.motion countdown-beat), the world held until GO. Reduced motion holds the wash and swaps the numbers.
+  // The mock loops it so the review can watch.
   countdown() {
-    const g = SETUP.grid();
-    for (const t of g.tiles.values()) t.el.append(el('div', 'tile-count display italic tnum', '3'));
-    return g;
+    const g = raceGrid();
+    const o = el('div', 'cd-flash k', '<i class="flash"></i><b class="display italic tnum"></b>');
+    o.setAttribute('aria-live', 'assertive');
+    ui.append(o);
+    const beat = tokens.motion.named['countdown-beat'].durationMs, labels = ['3', '2', '1', 'GO!'];
+    let shown = -1, t0 = performance.now();
+    const show = (i) => {
+      shown = i;
+      o.hidden = i < 0 || i > 3;
+      gamePaused = i >= 0 && i < 3;
+      if (o.hidden) return;
+      const b = o.querySelector('b');
+      b.textContent = labels[i];
+      b.classList.toggle('go', i === 3);
+      for (const e of o.children) e.replaceWith(e.cloneNode(true)); // restart the tween on every beat
+    };
+    cd = { show, beat };
+    return { ...g, update(dt, views) {
+      g.update(dt, views);
+      if (window.__poc.held) return;
+      const i = Math.floor((performance.now() - t0) / beat) % (labels.length + 2); // two quiet beats, then again
+      if (i !== shown) show(i);
+    } };
   },
 
   // Captions are global (POC1-11, R96): never on one player's tile. Dynamic puts the line in a spare cell when one is
@@ -737,6 +779,8 @@ const SETUP = {
 function start() {
   ui.innerHTML = '';
   gamePaused = false;
+  cd = null;
+  world.setFraming({ distance: parseHash().dist, perSeat: parseHash().pdist, rig: parseHash().cam });
   world.setOutlines([]);
   S = parseHash();
   clearColor = tokens.palette.paper.hex;
@@ -754,6 +798,7 @@ window.addEventListener('resize', () => world.resize(W(), H()));
 window.addEventListener('keydown', (e) => { if (e.key === 'h' || e.key === 'H') location.hash = ''; });
 
 let last = performance.now();
+let lastViews = [];
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
@@ -762,6 +807,7 @@ function loop(now) {
   const t1 = performance.now();
   const views = scene.views(dt);
   const r = world.render(views, dt, { w: W(), h: H() }, clearColor);
+  lastViews = views;
   const t2 = performance.now();
   scene.update(dt, views);
   const t3 = performance.now();
@@ -770,6 +816,14 @@ function loop(now) {
   frames++;
   window.__poc.ready = frames > 40 && settled;
   requestAnimationFrame(loop);
+}
+
+/** Shows countdown beat `i` (0 = "3" … 3 = "GO!") and holds its animations at `ms` (captures of the countdown). */
+async function beatAt(i, ms) {
+  window.__poc.held = true;
+  cd?.show(i);
+  for (const a of document.getAnimations()) { a.pause(); a.currentTime = ms; }
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 }
 
 /** Holds every CSS animation at `ms` after a fresh Identify (captures of the flash, frame by frame). */
@@ -787,8 +841,11 @@ window.__poc = {
   identifyAt,
   /** Whether the world is stopped (the pause flow, the QR hover): only then may anything cover a tile. */
   paused: () => gamePaused,
-  /** The 3D viewports the current state renders (one per tile on the grid). */
+  /** The 3D viewports the current state renders (one per tile on the grid, plus a mirror per first-person tile). */
   views: () => scene.views(0),
+  beatAt,
+  /** Per tile: how much of it the player's own car fills and where the horizon sits (P1-U05.2 framing evidence). */
+  framing: () => lastViews.filter((v) => (v.kind === 'tp' || v.kind === 'fp') && v.camera).map((v) => ({ seat: v.seat, kind: v.kind, h: v.h, ...world.framingOf(v.seat, v.camera, v) })),
   tokens,
   backend: world.backend,
   /** Frame cost over `frames` frames: rAF interval, sim step, render submit and HUD update times (ms). */

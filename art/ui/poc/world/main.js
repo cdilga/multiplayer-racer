@@ -2,6 +2,7 @@
 //   #grid&n=24        24 live tiles under U02's HUD (the cost case)       #tv          one full-screen tile
 //   #overview&n=16    the derby bowl from the fixed 60° Overview camera   #paint       each identity colour as paint next to its badge
 //   #graphics         checkpoint gate, finish gantry, chevrons, barriers
+// &dist=near|mid|far|round0 picks the race-tile camera distance (../shared/framing.json, P1-U05.2).
 // ?mode=full|ids|plain picks the post tier (full look / outlines on objects only / no post) for the cost table.
 import * as THREE from 'three/webgpu';
 import { loadTokens, seatColor } from '../shared/tokens.js';
@@ -86,7 +87,7 @@ if (name === 'graphics') {
 const V = new THREE.Vector3();
 function aim(dt) {
   if (name === 'grid' || name === 'tv') {
-    rects.forEach((r, i) => world.aimTile(i, world.cars[i % world.cars.length], (name === 'grid' && [4, 11, 18].includes(i)) ? 'fp' : 'tp'));
+    rects.forEach((r, i) => world.aimTile(i, world.cars[i % world.cars.length], (name === 'grid' && [4, 11, 18].includes(i)) ? 'fp' : 'tp', P.get('dist') ?? undefined));
   } else if (name === 'paint') {
     world.aimFixed(0, V.set(BOWL.x + 3, 6.6, BOWL.z + 34), new THREE.Vector3(BOWL.x, 0.2, BOWL.z - 1), 42);
     world.placeSun(new THREE.Vector3(BOWL.x, 0, BOWL.z));

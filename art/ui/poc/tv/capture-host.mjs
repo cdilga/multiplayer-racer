@@ -44,7 +44,7 @@ const inspect = () => {
   const paused = window.__poc.paused();
   const over = [];
   for (const e of document.querySelectorAll('#ui *')) {
-    if (e.closest('.tile')) continue;
+    if (e.closest('.tile, .cd-flash')) continue; // the countdown is the one overlay allowed over a playing tile (R99)
     const cs = getComputedStyle(e);
     if (cs.display === 'none' || cs.visibility === 'hidden' || e.closest('[hidden]')) continue;
     const r = box(e);

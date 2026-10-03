@@ -51,3 +51,8 @@ canvas#world, #ui { position: fixed; inset: auto; }
 .stage .podium .card { will-change: transform; }
 .res-left, .res-right, .res-bottom { z-index: 0; }
 .podium { position: relative; z-index: 3; }
+
+/* P1-U05.2: the countdown overlay and the Cooee flash are driven frame by frame from the tweens above, not by tv.css's
+   keyframes; the reel has no footer, so the countdown covers the whole stage. */
+.cd-flash.js { bottom: 0; }
+.cd-flash.js .flash, .cd-flash.js b, .cooee.js .flash, .cooee.js b { animation: none; }

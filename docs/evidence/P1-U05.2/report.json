@@ -1,0 +1,666 @@
+{
+  "format": "jj.u052-report.v1",
+  "framingData": "art/ui/poc/shared/framing.json",
+  "framing": [
+    {
+      "state": "grid&n=1&cam=round0",
+      "tiles": 1,
+      "tileHeightPx": 978,
+      "carAreaOfTile": 0.028,
+      "carHeightOfTile": 0.223,
+      "carWidthOfTile": 0.127,
+      "horizonFromTop": 0.426
+    },
+    {
+      "state": "grid&n=1",
+      "tiles": 1,
+      "tileHeightPx": 978,
+      "carAreaOfTile": 0.014,
+      "carHeightOfTile": 0.181,
+      "carWidthOfTile": 0.076,
+      "horizonFromTop": 0.378
+    },
+    {
+      "state": "grid&n=8&cam=round0",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.03,
+      "carHeightOfTile": 0.233,
+      "carWidthOfTile": 0.13,
+      "horizonFromTop": 0.425
+    },
+    {
+      "state": "grid&n=8",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.015,
+      "carHeightOfTile": 0.188,
+      "carWidthOfTile": 0.077,
+      "horizonFromTop": 0.377
+    },
+    {
+      "state": "grid&n=24&cam=round0",
+      "tiles": 24,
+      "tileHeightPx": 234,
+      "carAreaOfTile": 0.055,
+      "carHeightOfTile": 0.252,
+      "carWidthOfTile": 0.212,
+      "horizonFromTop": 0.422
+    },
+    {
+      "state": "grid&n=24",
+      "tiles": 24,
+      "tileHeightPx": 234,
+      "carAreaOfTile": 0.029,
+      "carHeightOfTile": 0.219,
+      "carWidthOfTile": 0.132,
+      "horizonFromTop": 0.371
+    },
+    {
+      "state": "grid&n=32&cam=round0",
+      "tiles": 32,
+      "tileHeightPx": 184,
+      "carAreaOfTile": 0.039,
+      "carHeightOfTile": 0.221,
+      "carWidthOfTile": 0.174,
+      "horizonFromTop": 0.426
+    },
+    {
+      "state": "grid&n=32",
+      "tiles": 32,
+      "tileHeightPx": 184,
+      "carAreaOfTile": 0.023,
+      "carHeightOfTile": 0.202,
+      "carWidthOfTile": 0.115,
+      "horizonFromTop": 0.374
+    },
+    {
+      "state": "grid&n=8&dist=near",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.024,
+      "carHeightOfTile": 0.23,
+      "carWidthOfTile": 0.103,
+      "horizonFromTop": 0.394
+    },
+    {
+      "state": "grid&n=8&dist=far",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.011,
+      "carHeightOfTile": 0.176,
+      "carWidthOfTile": 0.064,
+      "horizonFromTop": 0.354
+    },
+    {
+      "state": "grid&n=32&dist=near",
+      "tiles": 32,
+      "tileHeightPx": 184,
+      "carAreaOfTile": 0.044,
+      "carHeightOfTile": 0.266,
+      "carWidthOfTile": 0.164,
+      "horizonFromTop": 0.389
+    },
+    {
+      "state": "grid&n=32&dist=far",
+      "tiles": 32,
+      "tileHeightPx": 184,
+      "carAreaOfTile": 0.017,
+      "carHeightOfTile": 0.181,
+      "carWidthOfTile": 0.092,
+      "horizonFromTop": 0.353
+    },
+    {
+      "state": "grid&n=8&pdist=2:near,5:far,7:far",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.019,
+      "carHeightOfTile": 0.217,
+      "carWidthOfTile": 0.086,
+      "horizonFromTop": 0.368,
+      "perTile": [
+        {
+          "seat": 1,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.227,
+          "carWidth": 0.09,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 2,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.252,
+          "carWidth": 0.111,
+          "horizonFromTop": 0.39
+        },
+        {
+          "seat": 3,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.226,
+          "carWidth": 0.09,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 4,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.223,
+          "carWidth": 0.089,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 5,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.18,
+          "carWidth": 0.065,
+          "horizonFromTop": 0.353
+        },
+        {
+          "seat": 6,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.222,
+          "carWidth": 0.088,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 7,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.185,
+          "carWidth": 0.066,
+          "horizonFromTop": 0.352
+        },
+        {
+          "seat": 8,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.223,
+          "carWidth": 0.089,
+          "horizonFromTop": 0.37
+        }
+      ]
+    },
+    {
+      "state": "grid&n=4&fp=2",
+      "tiles": 4,
+      "tileHeightPx": 482,
+      "carAreaOfTile": 0.02,
+      "carHeightOfTile": 0.226,
+      "carWidthOfTile": 0.091,
+      "horizonFromTop": 0.37,
+      "perTile": [
+        {
+          "seat": 1,
+          "kind": "tp",
+          "h": 482,
+          "carHeight": 0.227,
+          "carWidth": 0.091,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 2,
+          "kind": "fp",
+          "h": 482,
+          "carHeight": 0.935,
+          "carWidth": 0.361,
+          "horizonFromTop": 0.452
+        },
+        {
+          "seat": 3,
+          "kind": "tp",
+          "h": 482,
+          "carHeight": 0.226,
+          "carWidth": 0.091,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 4,
+          "kind": "tp",
+          "h": 482,
+          "carHeight": 0.225,
+          "carWidth": 0.09,
+          "horizonFromTop": 0.37
+        }
+      ]
+    },
+    {
+      "state": "grid&n=8&fp=2,5",
+      "tiles": 8,
+      "tileHeightPx": 316,
+      "carAreaOfTile": 0.021,
+      "carHeightOfTile": 0.228,
+      "carWidthOfTile": 0.09,
+      "horizonFromTop": 0.37,
+      "perTile": [
+        {
+          "seat": 1,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.227,
+          "carWidth": 0.09,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 2,
+          "kind": "fp",
+          "h": 316,
+          "carHeight": 0.935,
+          "carWidth": 0.357,
+          "horizonFromTop": 0.452
+        },
+        {
+          "seat": 3,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.227,
+          "carWidth": 0.09,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 4,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.225,
+          "carWidth": 0.089,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 5,
+          "kind": "fp",
+          "h": 316,
+          "carHeight": 0.935,
+          "carWidth": 0.357,
+          "horizonFromTop": 0.452
+        },
+        {
+          "seat": 6,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.223,
+          "carWidth": 0.089,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 7,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.228,
+          "carWidth": 0.091,
+          "horizonFromTop": 0.37
+        },
+        {
+          "seat": 8,
+          "kind": "tp",
+          "h": 316,
+          "carHeight": 0.238,
+          "carWidth": 0.094,
+          "horizonFromTop": 0.368
+        }
+      ]
+    }
+  ],
+  "distances": {
+    "near": {
+      "backM": 6.6,
+      "upM": 3.3,
+      "lookAheadM": 12,
+      "lookUpM": 0.6,
+      "fovDeg": 60,
+      "follow": 6
+    },
+    "mid": {
+      "backM": 8.4,
+      "upM": 4.4,
+      "lookAheadM": 17,
+      "lookUpM": 0.3,
+      "fovDeg": 58,
+      "follow": 6
+    },
+    "far": {
+      "backM": 11.5,
+      "upM": 6.2,
+      "lookAheadM": 24,
+      "lookUpM": 0,
+      "fovDeg": 56,
+      "follow": 5
+    }
+  },
+  "round0": {
+    "backM": 5.2,
+    "upM": 2.05,
+    "lookAheadM": 4,
+    "lookUpM": 0.95,
+    "fovDeg": 62,
+    "follow": 6,
+    "note": "The round-0 rig the owner found too close (POC1-12); kept only for before/after captures (&cam=round0)."
+  },
+  "firstPerson": {
+    "eye": {
+      "rightM": 0,
+      "upM": 1.5,
+      "forwardM": 0.45
+    },
+    "lookAheadM": 26,
+    "lookUpM": -0.3,
+    "fovDeg": 72,
+    "mirror": {
+      "x": 0.32,
+      "y": 0.04,
+      "w": 0.36,
+      "h": 0.17,
+      "fovDeg": 46,
+      "eyeUpM": 2.3,
+      "lookBackM": 30,
+      "lookUpM": 0.4,
+      "note": "Segmented first person: a bonnet-cam eye over the front of the bonnet, pitched a touch down, gives the road most of the tile and keeps a strip of bonnet so it reads as first person, and a rear-view mirror takes the strip of sky that would otherwise be wasted, looking back from above the roof so the car's own wing doesn't fill it. Rects are fractions of the tile."
+    }
+  },
+  "countdown": {
+    "no-preference": [
+      {
+        "beat": 0,
+        "ms": 0,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0,
+        "num": "3",
+        "numOpacity": 0,
+        "transform": "matrix(1.5961, -0.11161, 0.11161, 1.5961, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat0-0000ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 40,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.968,
+        "num": "3",
+        "numOpacity": 0.847,
+        "transform": "matrix(1.08907, -0.0761553, 0.0761553, 1.08907, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat0-0040ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.782,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat0-0120ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 500,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.107,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat0-0500ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 950,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.001,
+        "num": "3",
+        "numOpacity": 0.021,
+        "transform": "matrix(0.958489, -0.0670241, 0.0670241, 0.958489, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat0-0950ms.jpg"
+      },
+      {
+        "beat": 2,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.782,
+        "num": "1",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/full-beat2-0120ms.jpg"
+      },
+      {
+        "beat": 3,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.782,
+        "num": "GO!",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": false,
+        "file": "countdown/full-beat3-0120ms.jpg"
+      },
+      {
+        "beat": 3,
+        "ms": 700,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.029,
+        "num": "GO!",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": false,
+        "file": "countdown/full-beat3-0700ms.jpg"
+      }
+    ],
+    "reduce": [
+      {
+        "beat": 0,
+        "ms": 0,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat0-0000ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 40,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat0-0040ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat0-0120ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 500,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat0-0500ms.jpg"
+      },
+      {
+        "beat": 0,
+        "ms": 950,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "3",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat0-0950ms.jpg"
+      },
+      {
+        "beat": 2,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "1",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": true,
+        "file": "countdown/reduced-beat2-0120ms.jpg"
+      },
+      {
+        "beat": 3,
+        "ms": 120,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "GO!",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": false,
+        "file": "countdown/reduced-beat3-0120ms.jpg"
+      },
+      {
+        "beat": 3,
+        "ms": 700,
+        "overlays": 1,
+        "perTile": 0,
+        "flash": 0.6,
+        "num": "GO!",
+        "numOpacity": 1,
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "paused": false,
+        "file": "countdown/reduced-beat3-0700ms.jpg"
+      }
+    ]
+  },
+  "perf": {
+    "browser": "Chromium 151.0.7922.34 (Playwright, headed, channel chromium)",
+    "viewport": "1920x1080 @1x",
+    "rows": [
+      {
+        "state": "#grid&n=24&cam=round0",
+        "viewport": "1920x1080",
+        "tiles": 24,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 9.2,
+        "hud_ms_mean": 0.064,
+        "hud_ms_p95": 0.1,
+        "render_submit_ms_mean": 1.24,
+        "sim_step_ms_mean": 0.17,
+        "draws": 552,
+        "hud": true,
+        "mark": 318
+      },
+      {
+        "state": "#grid&n=24",
+        "viewport": "1920x1080",
+        "tiles": 24,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 8.6,
+        "hud_ms_mean": 0.06,
+        "hud_ms_p95": 0.1,
+        "render_submit_ms_mean": 1.23,
+        "sim_step_ms_mean": 0.15,
+        "draws": 552,
+        "hud": true,
+        "mark": 371
+      },
+      {
+        "state": "#grid&n=24&fp=2,9,16",
+        "viewport": "1920x1080",
+        "tiles": 24,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 8.5,
+        "hud_ms_mean": 0.055,
+        "hud_ms_p95": 0.1,
+        "render_submit_ms_mean": 1.4,
+        "sim_step_ms_mean": 0.16,
+        "draws": 621,
+        "hud": true,
+        "mark": 424
+      },
+      {
+        "state": "#grid&n=32&cam=round0",
+        "viewport": "1920x1080",
+        "tiles": 32,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 9.3,
+        "hud_ms_mean": 0.063,
+        "hud_ms_p95": 0.2,
+        "render_submit_ms_mean": 1.6,
+        "sim_step_ms_mean": 0.22,
+        "draws": 752,
+        "hud": true,
+        "mark": 477
+      },
+      {
+        "state": "#grid&n=32",
+        "viewport": "1920x1080",
+        "tiles": 32,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 9.2,
+        "hud_ms_mean": 0.06,
+        "hud_ms_p95": 0.1,
+        "render_submit_ms_mean": 1.56,
+        "sim_step_ms_mean": 0.21,
+        "draws": 736,
+        "hud": true,
+        "mark": 530
+      },
+      {
+        "state": "#grid&n=32&fp=2,9,16",
+        "viewport": "1920x1080",
+        "tiles": 32,
+        "backend": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+        "frames": 360,
+        "frame_ms_p50": 8.3,
+        "frame_ms_p95": 8.9,
+        "hud_ms_mean": 0.065,
+        "hud_ms_p95": 0.2,
+        "render_submit_ms_mean": 1.7,
+        "sim_step_ms_mean": 0.22,
+        "draws": 811,
+        "hud": true,
+        "mark": 583
+      }
+    ]
+  },
+  "pass": true,
+  "fails": [],
+  "errors": []
+}

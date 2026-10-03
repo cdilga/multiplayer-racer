@@ -11,6 +11,7 @@ tested module (`../vendor/look/look.js`, vendored by `../vendor.mjs`) and Spike 
 | `#graphics` | finish gantry and chequered line, a checkpoint gate, corner chevrons, tyre walls and rails |
 | `#paint` | every identity colour as lit paint on the car, next to its flat badge |
 | `#overview&n=16` | the derby bowl from the fixed 60° Overview camera, with a nameplate over every car |
+| `&dist=near\|mid\|far\|round0` | the race tiles' camera distance from `../shared/framing.json` (P1-U05.2, R98), shared with the TV mock |
 
 `?mode=ids` (outlines on objects only), `?mode=plain` (no post), `?bloom=1|0&fxaa=1|0&halftone=1|0` (isolate one effect),
 `?ts=1` (GPU timestamp queries for `window.__world.perf()`).

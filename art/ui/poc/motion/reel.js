@@ -345,11 +345,11 @@ let curStep = null;
 const ms = (n) => `${Math.round(n)} ms`;
 function noteText(id, sub) {
   const sticker = nm('sticker-in'), reflow = nm('reflow'), beat = nm('countdown-beat'), idf = nm('identify-pulse'), shake = nm('wreck-shake'), toast = nm('toast'), rr = nm('results-reveal');
-  const beatDetail = `${ms(beat.durationMs)} per beat · 3, 2, 1, GO${reduced ? ' · numbers swap, no scale' : ` · punch ${PUNCH.from}→${PUNCH.to}, fade`}`;
+  const beatDetail = `${ms(beat.durationMs)} per beat · 3, 2, 1, GO full screen${reduced ? ' · wash held, numbers swap, no scale' : ` · exposure flash · punch ${PUNCH.from}→${PUNCH.to}, fade`}`;
   switch (id) {
     case 'a': return { name: '(a) Countdown · countdown-beat', detail: beatDetail };
     case 'b': return { name: '(b) Join · sticker-in + reflow', detail: `sticker-in ${ms(sticker.durationMs)}${reduced ? ' fade' : ''} · reflow ${ms(reflow.durationMs)}${reduced ? ' (tiles cut)' : ''}` };
-    case 'c': return { name: '(c) Identify · identify-pulse', detail: `${idf.repeat} × ${ms(idf.durationMs)} = ${ms(idf.repeat * idf.durationMs)} · border + badge ${reduced ? 'step, no scale' : 'pulse and scale'}, burst, outline` };
+    case 'c': return { name: '(c) Identify · identify-pulse', detail: `${idf.repeat} × ${ms(idf.durationMs)} = ${ms(idf.repeat * idf.durationMs)} · Cooee #N ${reduced ? 'over a held wash' : 'over an exposure flash'} · border + badge ${reduced ? 'step, no scale' : 'pulse and scale'}, outline` };
     case 'd': return { name: '(d) Wreck and respawn · wreck-shake', detail: `${reduced ? 'no shake (0 ms), WRECKED! still shows' : `shake ${ms(shake.durationMs)}, this tile only`} · respawn cuts` };
     case 'e': return { name: `(e) Phase change${sub ? ` · ${sub}` : ''}`, detail: sub === 'countdown → race' ? beatDetail.replace('per beat', 'per beat, GO starts the race') : `exit fast ${ms(dur('fast'))} + enter toast ${ms(toast.durationMs)} = ${ms(dur('fast') + toast.durationMs)}${reduced ? ' (fade only)' : ` (slide ${SLIDE_PX} px)`}` };
     case 'f': return { name: '(f) Results reveal · results-reveal', detail: reduced ? `${ms(rr.durationMs)} · cards fade in together` : `${ms(rr.durationMs)} · 3 cards drop in, ${ms(STAGGER_MS)} stagger (${ms(rr.durationMs - 2 * STAGGER_MS)} each)` };
@@ -394,34 +394,41 @@ function stickerIn(target, { settle = true } = {}) {
   return tween({ duration: s.durationMs, ease: EASE[s.easing], update: (p, e) => set(e), onEnd: () => { target.style.removeProperty('--s'); target.style.removeProperty('--settle'); } });
 }
 
-/** One countdown: 3, 2, 1, GO on every tile, one beat each (countdown-beat). GO starts the race. Returns the 4 beat results. */
+/** One countdown (R99, P1-U05.2): 3, 2, 1, GO as ONE full-screen overlay with the Identify flash's high exposure, one beat
+ *  each (countdown-beat): the number punches in and fades while the exposure flash attacks and decays behind it. GO starts
+ *  the race. Reduced: the wash holds steady through each beat and the numbers swap, no scale or fade. Returns the 4 beats. */
 async function runCountdown({ phaseTag } = {}) {
   const beat = nm('countdown-beat'), punch = dur('base'), fade = dur('slow');
   const labels = ['3', '2', '1', 'GO!'];
-  let shown = [];
-  const jobs = labels.map((txt, i) => {
-    const els = [];
-    return tween({
-      duration: beat.durationMs,
-      delay: beat.durationMs * i,
-      marks: i === 0 ? [[0.12, 'countdown-3']] : i === 3 ? [[0.2, 'countdown-go']] : [],
-      onStart() {
-        if (i === 3) G.frozen = false; // the race starts on GO
-        for (const e of shown) e.remove(); // the number swaps on the beat: the previous one is gone before the next shows
-        for (const T of G.tiles.values()) { const e = el('div', `tile-count display italic tnum${i === 3 ? ' go' : ''}`, txt); if (!reduced) e.style.setProperty('--s', String(PUNCH.from)); T.el.append(e); els.push(e); }
-        shown = els;
-      },
-      update(p) {
-        if (reduced) return; // numbers just swap on the beat
-        const t = p * beat.durationMs;
-        const s = PUNCH.from + (PUNCH.to - PUNCH.from) * EASE.enter(clamp01(t / punch));
-        const o = 1 - EASE.exit(clamp01((t - (beat.durationMs - fade)) / fade));
-        for (const e of els) { e.style.setProperty('--s', String(s)); e.style.setProperty('--o', String(o)); }
-      },
-      onEnd() { for (const e of els) e.remove(); },
-    });
-  });
+  const o = el('div', 'cd-flash js', '<i class="flash"></i><b class="display italic tnum"></b>');
+  layer.append(o);
+  const flash = o.querySelector('.flash'), num = o.querySelector('b');
+  const ATTACK = 60; // ms to full exposure, then it decays over the rest of the beat
+  const jobs = labels.map((txt, i) => tween({
+    duration: beat.durationMs,
+    delay: beat.durationMs * i,
+    marks: i === 0 ? [[0.12, 'countdown-3']] : i === 3 ? [[0.2, 'countdown-go']] : [],
+    onStart() {
+      if (i === 3) G.frozen = false; // the race starts on GO
+      num.textContent = txt; // the number swaps on the beat
+      num.classList.toggle('go', i === 3);
+    },
+    update(p) {
+      const t = p * beat.durationMs;
+      if (reduced) {
+        flash.style.opacity = '0.6';
+        num.style.opacity = '1';
+        num.style.transform = 'rotate(-4deg)';
+        return;
+      }
+      const s = PUNCH.from + (PUNCH.to - PUNCH.from) * EASE.enter(clamp01(t / punch));
+      num.style.transform = `rotate(-4deg) scale(${s})`;
+      num.style.opacity = String(1 - EASE.exit(clamp01((t - (beat.durationMs - fade)) / fade)));
+      flash.style.opacity = String(t < ATTACK ? t / ATTACK : 1 - EASE.exit(clamp01((t - ATTACK) / (beat.durationMs - ATTACK))));
+    },
+  }));
   const results = await Promise.all(jobs);
+  o.remove();
   results.forEach((r, i) => {
     const next = results[i + 1];
     record({ name: 'countdown-beat', label: `beat ${labels[i]}`, short: labels[i].replace('!', ''), detail: labels[i], ...(phaseTag && i === 3 ? { phase: 'countdown → race' } : {}) }, r, beat.durationMs, { periodMs: next ? +(next.start - r.start).toFixed(2) : null });
@@ -472,20 +479,23 @@ async function joinSeat(seat) {
   record({ name: 'sticker-in', label: 'sticker-in tile', short: 'sticker-in', detail: `#${seat} tile` }, st, stickerSpec.durationMs);
 }
 
-/** Identify: 3 × 500 ms. Tile border and badge pulse and scale (reduced: step on / off), a "#N THAT'S YOU!" burst, and the car outlined in every tile. */
+/** Identify (R99, P1-U05.2): 3 × 500 ms. "Cooee #N" over a transparent, high-exposure flash in the seat colour (fast attack,
+ *  long decay over the whole pulse), the tile border and badge pulse and scale, and the car outlined in every tile. Reduced:
+ *  the wash holds steady, border and badge step on and off, the label shows without scale. The shared reference for the TV
+ *  and the controller (P1-U03.2). */
 async function identify(seat) {
   const T = G.tiles.get(seat), info = seatInfo(seat);
   const spec = nm('identify-pulse');
   const total = spec.durationMs * spec.repeat;
-  const burst = el('div', 'burst display italic', `#${info.num} that's you!`);
+  const cooee = el('div', 'cooee js', `<i class="flash"></i><b class="display">Cooee #${info.num}</b>`);
+  const flash = cooee.firstChild, label = cooee.lastChild;
   const cycles = [];
   const bw = T.badge.offsetWidth;
   let lastCycle = -1;
   world.setOutlines([seat]);
   brightenOutlines();
   T.el.classList.add('top');
-  T.el.append(burst);
-  const burstP = stickerIn(burst);
+  T.el.prepend(cooee); // under the HUD: the pills stay readable
   const pulse = tween({
     duration: total,
     marks: [[1 / (2 * spec.repeat), 'identify-peak'], [0.8, 'identify-late']],
@@ -493,21 +503,28 @@ async function identify(seat) {
       const x = p * spec.repeat, cyc = Math.min(spec.repeat - 1, Math.floor(x)), frac = x - Math.floor(x);
       if (cyc !== lastCycle) { cycles.push(now()); lastCycle = cyc; }
       if (reduced) {
+        flash.style.opacity = p < 1 ? '0.6' : '0';
+        label.style.opacity = p < 1 ? '1' : '0';
+        label.style.transform = 'rotate(-4deg)';
         const on = frac < 0.5 && p < 1;
         T.el.classList.toggle('step-on', on);
         T.el.style.setProperty('--ring', on ? '13' : '5');
       } else {
+        // The flash: attack to full exposure in 8% of the pulse, 0.85 by 30%, then decay to nothing at the end.
+        flash.style.opacity = String(p < 0.08 ? p / 0.08 : p < 0.3 ? 1 - (0.15 * (p - 0.08)) / 0.22 : 0.85 * (1 - (p - 0.3) / 0.7));
+        const ls = p < 0.1 ? 0.6 + (0.52 * p) / 0.1 : p < 0.22 ? 1.12 - (0.12 * (p - 0.1)) / 0.12 : 1;
+        label.style.transform = `rotate(-4deg) scale(${ls})`;
+        label.style.opacity = String(p < 0.1 ? p / 0.1 : p > 0.85 ? Math.max(0, (1 - p) / 0.15) : 1);
         const w = p >= 1 ? 0 : 0.5 - 0.5 * Math.cos(2 * Math.PI * frac);
         T.el.style.setProperty('--ring', String(5 + 8 * w));
         T.el.style.setProperty('--bs', String(1 + 0.25 * w));
         T.el.style.setProperty('--bnx', `${0.25 * w * bw}px`);
       }
     },
-    onEnd() { T.el.classList.remove('step-on', 'top'); for (const v of ['--ring', '--bs', '--bnx']) T.el.style.removeProperty(v); burst.remove(); world.setOutlines([]); },
+    onEnd() { T.el.classList.remove('step-on', 'top'); for (const v of ['--ring', '--bs', '--bnx']) T.el.style.removeProperty(v); cooee.remove(); world.setOutlines([]); },
   });
-  const [b, r] = await Promise.all([burstP, pulse]);
-  record({ name: 'identify-pulse', short: 'pulse', detail: `#${seat}` }, r, total, { repeat: spec.repeat, cycleMs: cycles.slice(1).map((c, i) => +(c - cycles[i]).toFixed(2)) });
-  record({ name: 'sticker-in', label: 'sticker-in burst', short: 'burst', detail: `#${seat} THAT'S YOU!` }, b, nm('sticker-in').durationMs);
+  const r = await pulse;
+  record({ name: 'identify-pulse', short: 'pulse', detail: `#${seat} · Cooee flash` }, r, total, { repeat: spec.repeat, cycleMs: cycles.slice(1).map((c, i) => +(c - cycles[i]).toFixed(2)) });
 }
 
 /** Wreck on `seat` (must be the newest seat): wreck-shake on that tile only + the WRECKED! word, 3 beats, then the respawn CUTS. */

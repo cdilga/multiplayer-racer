@@ -305,3 +305,19 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .plist .src .badge { font-size: calc(var(--k) * 28px); }
 .srcacts { display: flex; gap: calc(var(--k) * 8px); }
 .srcacts .btn { min-height: calc(var(--k) * 48px); font-size: calc(var(--k) * 24px); padding: 0 .6em; }
+
+/* ---- P1-U05.2: segmented first person and the full-screen countdown (R98, R99) ---- */
+.mirror { position: absolute; border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 0 0 calc(var(--k) * 2px) var(--c-paper); pointer-events: none; }
+.cd-flash { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--k) * 88px); z-index: 12; display: grid; place-items: center; overflow: hidden; pointer-events: none; }
+.cd-flash[hidden] { display: none; }
+.cd-flash .flash { position: absolute; inset: 0; background: radial-gradient(closest-side, rgb(255 255 255 / .7), color-mix(in srgb, var(--c-saffron) 50%, transparent) 62%, color-mix(in srgb, var(--c-saffron) 18%, transparent) 100%); backdrop-filter: brightness(1.9) saturate(1.5); opacity: 0; animation: cd-flash 1s cubic-bezier(.2, .7, .3, 1) forwards; }
+.cd-flash b { position: relative; font-size: calc(var(--k) * 400px); line-height: 1; color: var(--c-saffron); -webkit-text-stroke: calc(var(--k) * 12px) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(var(--k) * 16px) 0 var(--c-ink); opacity: 0; animation: cd-pop 1s cubic-bezier(.2, .7, .3, 1) forwards; }
+.cd-flash b.go { color: var(--c-teal); }
+@keyframes cd-flash { 0% { opacity: 0; } 6% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cd-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(1.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1); } 82% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(.96); } }
+@keyframes cd-held { 0% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes cd-held-num { 0% { opacity: 1; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .cd-flash .flash { animation: cd-held 1s steps(1, end) forwards; }
+  .cd-flash b { transform: rotate(-4deg); animation: cd-held-num 1s steps(1, end) forwards; }
+}
