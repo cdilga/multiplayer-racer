@@ -1,0 +1,72 @@
+{
+  "machine": "Apple M1 Pro (Apple M1 Pro), darwin/arm64",
+  "browser": "Google Chrome 154.0.8037.95 (Playwright, headed)",
+  "build": "f616716768f8",
+  "cohort": "24 cars × 24 chase tiles, Cruz Missile LOD1, every tile draws the whole pack; 10 warm-up + 120 timed frames, each waited to GPU completion",
+  "rows": [
+    {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "kind": "webgl",
+      "n": 24,
+      "lod": 1,
+      "shadows": false,
+      "w": 1920,
+      "h": 1080,
+      "tiles": "5x5",
+      "tile_px": "384x216",
+      "car_tris": 890,
+      "draws_per_frame": 216,
+      "ms_median": 3.1,
+      "ms_p90": 4.9,
+      "ms_throughput": 2.13
+    },
+    {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "kind": "webgl",
+      "n": 24,
+      "lod": 1,
+      "shadows": true,
+      "w": 1920,
+      "h": 1080,
+      "tiles": "5x5",
+      "tile_px": "384x216",
+      "car_tris": 890,
+      "draws_per_frame": 408,
+      "ms_median": 7,
+      "ms_p90": 8.2,
+      "ms_throughput": 4.07
+    },
+    {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "kind": "webgl",
+      "n": 24,
+      "lod": 1,
+      "shadows": false,
+      "w": 3840,
+      "h": 2160,
+      "tiles": "5x5",
+      "tile_px": "768x432",
+      "car_tris": 890,
+      "draws_per_frame": 216,
+      "ms_median": 4.4,
+      "ms_p90": 5.5,
+      "ms_throughput": 1.9
+    },
+    {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "kind": "webgl",
+      "n": 24,
+      "lod": 1,
+      "shadows": true,
+      "w": 3840,
+      "h": 2160,
+      "tiles": "5x5",
+      "tile_px": "768x432",
+      "car_tris": 890,
+      "draws_per_frame": 408,
+      "ms_median": 8.9,
+      "ms_p90": 9.2,
+      "ms_throughput": 7.01
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 // The host renderer's foundation (P1-R01): one canvas at the display's native pixel resolution (R111), the world scene,
-// interpolated from snapshots (the sim worker's or the synthetic source's), and one overview camera. Cars are
-// placeholder blocks until the instanced vehicle renderer (P1-R02); the map is a ground plane until P1-R03; the grid
-// of player tiles is P1-R04 and the cameras P1-R05. Instance buffers grow with the field: there is no car or debris cap.
+// interpolated from snapshots (the sim worker's or the synthetic source's), and one overview camera. Cars are the
+// instanced vehicle renderer's (P1-R02); the map is a ground plane until P1-R03; the grid of player tiles is P1-R04 and
+// the cameras P1-R05 (`tiles` is a plain chase-camera view until then). Instance buffers grow with the field: there is
+// no car or debris cap.
 import {
-  BoxGeometry,
   Color,
   ConeGeometry,
   DirectionalLight,
@@ -25,11 +25,34 @@ import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
 import { decodeSnapshot } from './snapshot';
 import type { SnapshotSource } from './synthetic';
+import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 
 /** The host's Render resolution setting (R111): Native by default; the host may choose less. */
 export type ResolutionMode = 'native' | 'user' | 'auto';
 
-const PAINT = ['#22c3e6', '#ff4fa3', '#ffd23f', '#7bd389', '#ff7a2e', '#9b7bff', '#ff3b3b', '#3bd6c6'];
+/** Rows × cols minimising unused area with tiles near 16:9 (Spike J's layout; P1-R04 owns the real grid). */
+export function tileLayout(n: number, w: number, h: number): { cols: number; rows: number; tw: number; th: number } {
+  let best = { cols: 1, rows: n, tw: w, th: h / n, cost: Infinity };
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const tw = w / cols;
+    const th = h / rows;
+    const cost = Math.abs(Math.log(tw / th / (16 / 9))) + (rows * cols - n) * 0.05;
+    if (cost < best.cost) best = { cols, rows, tw, th, cost };
+  }
+  return best;
+}
+
+/** A plain multi-tile view until the grid (P1-R04) and cameras (P1-R05): each tile chases one car. */
+export interface TileView {
+  count: number;
+  /** A LOD class per tile; otherwise from the tile's height (lodForTileHeight). */
+  lods?: number[];
+  /** The car (index in the snapshot) each tile follows; otherwise tile k follows car k. */
+  follow?: number[];
+  /** Degrees each tile's camera swings round its car from behind (captures of a car's side; P1-R05 owns cameras). */
+  orbit?: number[];
+}
 
 /** An InstancedMesh that grows (doubling) when the field outgrows it. */
 class Growable {
@@ -81,13 +104,18 @@ export interface WorldStats {
   debris: number;
   snapped: number;
   drawCalls: number;
+  /** The LOD class each tile drew (one entry for the overview camera). */
+  lods: number[];
 }
 
 export class World {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(50, 16 / 9, 0.5, 2000);
   readonly interp = new Interpolator();
-  private cars: Growable;
+  vehicles: VehicleRenderer | null = null;
+  /** Set for the plain multi-tile view; null draws the overview camera. */
+  tiles: TileView | null = null;
+  private tileCams: PerspectiveCamera[] = [];
   private debris: Growable;
   private sample: Sampled | undefined;
   private raf = 0;
@@ -97,7 +125,6 @@ export class World {
   private q = new Quaternion();
   private v = new Vector3();
   private s = new Vector3(1, 1, 1);
-  private c = new Color();
   private target = new Vector3();
   private half: [number, number] = [25, 25];
   readonly stats: WorldStats;
@@ -126,10 +153,12 @@ export class World {
       debris: 0,
       snapped: 0,
       drawCalls: 0,
+      lods: [],
     };
     const r = backend.renderer;
     r.setPixelRatio(1); // sizes below are device pixels already
     r.shadowMap.enabled = true;
+    r.shadowMap.autoUpdate = false; // once per frame, not once per tile (§6.1)
     this.scene.background = new Color('#9fc6d8');
     this.scene.add(new HemisphereLight('#ffffff', '#8a7a60', 1.6));
     const sun = new DirectionalLight('#fff4e0', 2.2);
@@ -145,7 +174,6 @@ export class World {
     const grid = new GridHelper(1000, 200, '#8f7b62', '#a48e72');
     grid.position.y = 0.01;
     this.scene.add(ground, grid);
-    this.cars = new Growable(this.scene, new BoxGeometry(1.8, 1.1, 4.2).translate(0, 0.05, 0), new MeshLambertMaterial({ color: '#ffffff' }));
     this.debris = new Growable(this.scene, new ConeGeometry(0.3, 0.7, 8), new MeshLambertMaterial({ color: '#ff7a2e' }), 64);
     this.observer = new ResizeObserver((entries) => {
       const e = entries[0];
@@ -157,6 +185,12 @@ export class World {
     } catch {
       this.observer.observe(canvas);
     }
+  }
+
+  /** Loads the baked vehicle (P1-V02) and draws cars with it. */
+  async loadVehicles(): Promise<VehicleRenderer> {
+    this.vehicles = await VehicleRenderer.load(this.scene);
+    return this.vehicles;
   }
 
   /** Feeds a source's snapshots into the interpolator (decoded copies), then passes each on to the handler the source
@@ -215,9 +249,21 @@ export class World {
     const t = this.interp.renderTick();
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
-    this.backend.renderer.info.autoReset = true;
-    this.backend.render(this.scene, this.camera);
+    this.vehicles?.update(s);
+    const r = this.backend.renderer;
     const st = this.stats;
+    r.shadowMap.needsUpdate = true;
+    r.info.autoReset = false;
+    r.info.reset();
+    if (this.tiles) st.lods = this.drawTiles(s, this.tiles);
+    else {
+      const lod = lodForTileHeight(st.height);
+      useLod(this.camera, lod);
+      r.setScissorTest(false);
+      r.setViewport(0, 0, st.width, st.height);
+      this.backend.render(this.scene, this.camera);
+      st.lods = [lod];
+    }
     st.frames++;
     st.tick = t;
     st.cars = s.cars;
@@ -227,8 +273,45 @@ export class World {
     this.onFrame(st);
   }
 
+  /** Each tile chases its car with its own camera and draws its LOD class; the shadow map was drawn once already. */
+  private drawTiles(s: Sampled, view: TileView): number[] {
+    const r = this.backend.renderer;
+    const { width: w, height: h } = this.stats;
+    const L = tileLayout(view.count, w, h);
+    const lods: number[] = [];
+    r.autoClear = false;
+    r.setScissorTest(false);
+    r.clear();
+    r.setScissorTest(true);
+    for (let k = 0; k < view.count; k++) {
+      const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 600));
+      cam.aspect = L.tw / L.th;
+      cam.updateProjectionMatrix();
+      const i = s.cars ? (view.follow?.[k] ?? k) % s.cars : -1;
+      if (i >= 0) {
+        this.q.fromArray(s.rot, i * 4);
+        this.v.fromArray(s.pos, i * 3);
+        const a = ((view.orbit?.[k] ?? 0) * Math.PI) / 180;
+        const orbiting = a !== 0;
+        cam.position.set(-6.2 * Math.sin(a), 2.4, -6.2 * Math.cos(a)).applyQuaternion(this.q).add(this.v);
+        this.target.set(0, orbiting ? 0.6 : 1, orbiting ? 0 : 4).applyQuaternion(this.q).add(this.v);
+        cam.lookAt(this.target);
+      }
+      const lod = view.lods?.[k] ?? lodForTileHeight(L.th);
+      useLod(cam, lod);
+      lods.push(lod);
+      const x = Math.round((k % L.cols) * L.tw);
+      const y = Math.round(h - (Math.floor(k / L.cols) + 1) * L.th);
+      r.setViewport(x, y, Math.round(L.tw), Math.round(L.th));
+      r.setScissor(x, y, Math.round(L.tw), Math.round(L.th));
+      this.backend.render(this.scene, cam);
+    }
+    r.setScissorTest(false);
+    r.autoClear = true;
+    return lods;
+  }
+
   private place(s: Sampled): void {
-    const cars = this.cars.ensure(s.cars);
     const box = [Infinity, -Infinity, Infinity, -Infinity]; // minX, maxX, minZ, maxZ of everything drawn
     const grow = (x: number, z: number) => {
       box[0] = Math.min(box[0]!, x);
@@ -236,15 +319,7 @@ export class World {
       box[2] = Math.min(box[2]!, z);
       box[3] = Math.max(box[3]!, z);
     };
-    for (let i = 0; i < s.cars; i++) {
-      this.v.fromArray(s.pos, i * 3);
-      this.q.fromArray(s.rot, i * 4);
-      cars.setMatrixAt(i, this.m.compose(this.v, this.q, this.s));
-      cars.setColorAt(i, this.c.set(PAINT[(s.id[i]! - 1) % PAINT.length]!));
-      grow(this.v.x, this.v.z);
-    }
-    cars.instanceMatrix.needsUpdate = true;
-    if (cars.instanceColor) cars.instanceColor.needsUpdate = true;
+    for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
     const f = s.frame;
     const debris = this.debris.ensure(f?.debris ?? 0);
     for (let i = 0; f && i < f.debris; i++) {

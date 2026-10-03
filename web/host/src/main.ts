@@ -2,7 +2,8 @@
 // `?test` (held, frame-stepped) or `?test=live` loads the test surface chunk (P1-F05b): a production-realm server
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
-// `?synthetic=<cars>[&freeze=<tick>]` (draw from the synthetic snapshot source instead of the sim), `?bench` (P1-R01).
+// `?synthetic=<cars>[&freeze=<tick>][&damage]` (draw from the synthetic snapshot source instead of the sim), `?bench`
+// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]` (a plain chase-camera tile view until the grid, P1-R04).
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountDrawer } from './input/drawer';
@@ -35,12 +36,23 @@ async function boot(): Promise<void> {
   const backend = await createBackend(backendFromQuery(params), canvas);
   const scale = Number(params.get('res') ?? 1);
   const world = new World(backend, canvas, scale > 0 && scale <= 1 ? scale : 1);
+  await world.loadVehicles();
+  const list = (k: string) => params.get(k)?.split(',').map(Number);
+  if (params.has('tiles')) world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
   mountOverlay(document.body, world, BUILD_LABEL);
-  (window as unknown as { __jjRender: unknown }).__jjRender = { stats: () => ({ ...world.stats }), frame: () => world.frame() };
+  (window as unknown as { __jjRender: unknown }).__jjRender = {
+    stats: () => ({ ...world.stats }),
+    frame: () => world.frame(),
+    vehicles: (car?: number) => world.vehicles?.inspect(car),
+  };
 
   if (params.has('synthetic')) {
     const freeze = params.get('freeze');
-    const source = new SyntheticSource({ cars: Number(params.get('synthetic')) || 24, freezeAt: freeze === null ? undefined : Number(freeze) });
+    const source = new SyntheticSource({
+      cars: Number(params.get('synthetic')) || 24,
+      freezeAt: freeze === null ? undefined : Number(freeze),
+      damage: params.has('damage'),
+    });
     world.attach(source);
     if (freeze !== null) world.interp.fixedTick = Number(freeze) - 0.5;
     source.start();

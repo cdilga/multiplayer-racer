@@ -1,0 +1,136 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "damage": {
+    "lods": [
+      0,
+      2
+    ],
+    "drawCalls": 28,
+    "parts": [
+      {
+        "part": "core",
+        "type": "core",
+        "position": [
+          33.2,
+          0,
+          5.025
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "front",
+        "type": "front",
+        "position": [
+          35.8,
+          0.7,
+          1.5
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "back",
+        "type": "back",
+        "position": [
+          33.2,
+          0.848,
+          3.475
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "door_FL",
+        "type": "door_FL",
+        "position": [
+          34.113,
+          0.629,
+          5.365
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "door_FR",
+        "type": "door_FR",
+        "position": [
+          32.287,
+          0.629,
+          5.365
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "door_RL",
+        "type": "door_RL",
+        "position": [
+          34.1,
+          0.648,
+          4.535
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "door_RR",
+        "type": "door_RR",
+        "position": [
+          32.3,
+          0.648,
+          4.535
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "wheel_FL",
+        "type": "wheel",
+        "position": [
+          34.05,
+          0.4,
+          6.365
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "wheel_FR",
+        "type": "wheel",
+        "position": [
+          32.35,
+          0.4,
+          6.365
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "wheel_RL",
+        "type": "wheel",
+        "position": [
+          34.05,
+          0.4,
+          3.685
+        ],
+        "colour": "#ffd23f"
+      },
+      {
+        "part": "wheel_RR",
+        "type": "wheel",
+        "position": [
+          30.8,
+          0.15,
+          -1
+        ],
+        "colour": "#ffd23f"
+      }
+    ]
+  },
+  "growth": {
+    "4": {
+      "capacity": 16,
+      "drawCalls": 18
+    },
+    "40": {
+      "capacity": 64,
+      "drawCalls": 18
+    },
+    "130": {
+      "capacity": 256,
+      "drawCalls": 18
+    }
+  }
+}

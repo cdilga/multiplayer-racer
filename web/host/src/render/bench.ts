@@ -1,16 +1,12 @@
-// The renderer backend bench (P1-R01), ported from Spike J's 24×24 bench (spikes/art-pipeline/J-cruze-lowpoly/bench.js)
-// into the host app: N baked Cruz Missiles (P1-V02's LOD GLB) on a starting grid, N chase-camera tiles on one canvas,
-// every tile drawing the whole pack (the dynamic grid's worst case). One InstancedMesh per GLB mesh, so draws per tile
-// stay constant in N. Loaded only by `host/?bench`; `window.__bench.run({...})` returns the numbers.
-import { Color, DirectionalLight, HemisphereLight, InstancedMesh, Matrix4, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene } from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import lod0 from '../../../../art/vehicles/cruz-missile/cruz-missile.lod0.glb?url';
-import lod1 from '../../../../art/vehicles/cruz-missile/cruz-missile.lod1.glb?url';
-import lod2 from '../../../../art/vehicles/cruz-missile/cruz-missile.lod2.glb?url';
+// The renderer bench (P1-R01, P1-R02), ported from Spike J's 24×24 bench (spikes/art-pipeline/J-cruze-lowpoly/bench.js)
+// into the host app: N baked Cruz Missiles (P1-V02) on a starting grid, N chase-camera tiles on one canvas, every tile
+// drawing the whole pack (the dynamic grid's worst case), through the production instanced vehicle renderer. Loaded
+// only by `host/?bench`; `window.__bench.run({...})` returns the numbers.
+import { Color, DirectionalLight, HemisphereLight, Mesh, MeshLambertMaterial, PerspectiveCamera, PlaneGeometry, Scene } from 'three';
 import { createBackend, type Backend, type BackendKind } from './backend';
-
-const LODS = [lod0, lod1, lod2];
-const PAINT = ['#22c3e6', '#ff4fa3', '#ffd23f', '#7bd389', '#ff7a2e', '#9b7bff', '#ff3b3b', '#3bd6c6'];
+import type { Sampled } from './interp';
+import { useLod, VehicleRenderer } from './vehicles/vehicles';
+import { tileLayout } from './world';
 
 export interface BenchRun {
   backend: BackendKind;
@@ -22,23 +18,9 @@ export interface BenchRun {
   frames?: number;
 }
 
-/** Rows × cols minimising unused area with tiles near 16:9 (Spike J's layout; P1-R04 owns the real grid). */
-function layout(n: number, w: number, h: number) {
-  let best = { cols: 1, rows: n, tw: w, th: h / n, cost: Infinity };
-  for (let cols = 1; cols <= n; cols++) {
-    const rows = Math.ceil(n / cols);
-    const tw = w / cols;
-    const th = h / rows;
-    const cost = Math.abs(Math.log(tw / th / (16 / 9))) + (rows * cols - n) * 0.05;
-    if (cost < best.cost) best = { cols, rows, tw, th, cost };
-  }
-  return best;
-}
-
 const pack = (n: number) => Array.from({ length: n }, (_, i) => ({ x: ((i % 4) - 1.5) * 3.2, z: -Math.floor(i / 4) * 6.5 }));
 
-async function scene(n: number, lod: number, shadows: boolean): Promise<{ scene: Scene; tris: number }> {
-  const gltf = await new GLTFLoader().loadAsync(LODS[lod]!);
+async function scene(n: number, shadows: boolean): Promise<{ scene: Scene; vehicles: VehicleRenderer }> {
   const s = new Scene();
   s.background = new Color('#d9c7a5');
   s.add(new HemisphereLight('#ffffff', '#8a7a60', 1.5));
@@ -52,30 +34,22 @@ async function scene(n: number, lod: number, shadows: boolean): Promise<{ scene:
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = shadows;
   s.add(ground);
-  gltf.scene.updateMatrixWorld(true);
+  const vehicles = await VehicleRenderer.load(s);
   const poses = pack(n);
-  const car = new Matrix4();
-  const m = new Matrix4();
-  const col = new Color();
-  let tris = 0;
-  gltf.scene.traverse((o) => {
-    if (!(o instanceof Mesh) || o.name.startsWith('collider_')) return; // LOD0's collider proxies are never drawn
-    const g = o.geometry;
-    tris += (g.index ? g.index.count : g.attributes.position!.count) / 3;
-    const im = new InstancedMesh(g, o.material, n);
-    im.castShadow = shadows;
-    im.frustumCulled = false;
-    // The GLB carries damage warp morph targets: WebGPURenderer's morph node needs the influences on the instanced
-    // mesh too (WebGLRenderer tolerates their absence). All zero = the intact car.
-    if (o.morphTargetInfluences) im.morphTargetInfluences = o.morphTargetInfluences.map(() => 0);
-    for (let i = 0; i < n; i++) {
-      car.makeTranslation(poses[i]!.x, 0, poses[i]!.z);
-      im.setMatrixAt(i, m.multiplyMatrices(car, o.matrixWorld));
-      im.setColorAt(i, col.set(PAINT[i % PAINT.length]!));
-    }
-    s.add(im);
-  });
-  return { scene: s, tris };
+  const sample: Sampled = {
+    tick: 0,
+    cars: n,
+    id: Uint32Array.from(poses, (_, i) => i + 1),
+    flags: new Uint32Array(n),
+    pos: Float32Array.from(poses.flatMap((p) => [p.x, 0, p.z])),
+    rot: Float32Array.from(poses.flatMap(() => [0, 0, 0, 1])),
+    steer: new Float32Array(n),
+    snapped: 0,
+    frame: null,
+  };
+  vehicles.update(sample);
+  for (const t of vehicles.types) for (const im of t.meshes) im.castShadow = shadows;
+  return { scene: s, vehicles };
 }
 
 let backend: Backend | null = null;
@@ -97,10 +71,11 @@ export async function run(canvas: HTMLCanvasElement, opts: BenchRun) {
   r.autoClear = false;
   r.shadowMap.enabled = shadows;
   r.info.autoReset = false; // counted per whole frame (all tiles)
-  const { scene: s, tris } = await scene(n, lod, shadows);
-  const L = layout(n, w, h);
+  const { scene: s, vehicles } = await scene(n, shadows);
+  const L = tileLayout(n, w, h);
   const poses = pack(n);
   const cams = poses.map(() => new PerspectiveCamera(60, L.tw / L.th, 0.3, 400));
+  cams.forEach((c) => useLod(c, lod));
   let draws = 0;
   const frame = () => {
     r.setScissorTest(false);
@@ -138,6 +113,11 @@ export async function run(canvas: HTMLCanvasElement, opts: BenchRun) {
   for (let i = 0; i < frames; i++) frame();
   await b.finish();
   const throughput = (performance.now() - t1) / frames;
+  const tris = vehicles.types.reduce((a, t) => {
+    const g = t.meshes[lod]!.geometry;
+    return a + ((g.index ? g.index.count : g.attributes.position!.count) / 3) * t.slots.length;
+  }, 0);
+  vehicles.dispose();
   return {
     backend: b.label,
     kind: b.kind,

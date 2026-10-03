@@ -875,7 +875,8 @@ impl Host {
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
     ///
     /// Header: magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32, cars u32,
-    /// debris u32, reserved u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
+    /// debris u32, parts u32 (the part records after the debris, P1-R02's layout in web/host/src/render/snapshot.ts;
+    /// written 0 until the sim reports loose and detached parts: every part intact). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
     /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08).
     pub fn write_snapshot(&self, buf: &mut [u8]) -> usize {
@@ -895,7 +896,7 @@ impl Host {
         w.u32((self.countdown_us() / 1000) as u32);
         w.u32(cars.len() as u32);
         w.u32(debris.len() as u32);
-        w.u32(0);
+        w.u32(0); // parts
         let race = self.sim.race();
         for car in cars {
             let s = self.sim.car_state(car).expect("listed car");
