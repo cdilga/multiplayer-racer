@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 2 of the code-first / batch-verify doctrine (docs/process/code-first-batch-verify.md).
+# The verifier's local lane runner (docs/process/bead-workflow.md). Still the 0.1 suite table until P1-F02 rewrites it for 0.2.
 #
 # One central verification run over a whole wave of batch_pending beads, a
 # revision-bound receipt, then per-bead close or rework. Only the batch

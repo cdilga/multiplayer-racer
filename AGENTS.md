@@ -12,7 +12,7 @@ override a ruling; flag the conflict instead of changing the ruling.
 
 | Doc | Role |
 |---|---|
-| `docs/policies/owner-direction-2026-09-29.md` | **Normative rules** (R1–R87, short form). |
+| `docs/policies/owner-direction-2026-09-29.md` | **Normative rules** (R1–R94, short form). |
 | `docs/plans/v0.2-playtest-1-plan.md` | **What we're building now** and the bead source: Playtest 1 (the Minimum build). |
 | `docs/plans/v0.2-revamp-plan-2026-09-28.md` | Master plan and design reference up to Full 0.2. |
 | `docs/plans/v0.2-experience-direction.md` | Website/host/controller/game design brief. |
@@ -37,7 +37,7 @@ Most important rules:
 - **TURN** (R88): self-hosted coturn at `turn.dilger.dev` first, Cloudflare TURN as fallback; only TURN
   has a WAN hole, everything else rides Cloudflare tunnels (`docs/infra/turn-and-previews.md`).
 
-## Where we are now (2026-10-02)
+## Where we are now (2026-10-03)
 
 - **Phase:** building **Playtest 1**: the new stack (Rust server, WebRTC/TURN controllers, Rust/WASM
   sim in a host worker) plus one car (the Cruz Missile) racing generated four-biome tracks. Scope,
@@ -50,12 +50,16 @@ Most important rules:
 - **Infra:** `https://jammers-preview.dilger.dev/` is live (placeholder index until P1-D03/D05);
   coturn runs on TrueNAS. Audio is generated on **eris** (GPU box: `ssh eris`, workspace
   `~/Work/dev/jammers-audio`), never in this repo (R89).
-- **Tracker:** the 0.2 beads are cut from the Playtest-1 plan §15 using its §15.0 template. Pre-0.2
-  beads were closed on 2026-09-30 (`superseded-v0_1`); don't reopen them. Beads close on CI,
+- **Tracker:** the 95 Playtest-1 beads are cut from the plan's §15 using its §15.0 template; each
+  carries `external_ref = P1-XXX`, and `docs/plans/v0.2-playtest-1-bead-map.md` maps every plan
+  requirement to its beads. The pre-0.2 beads were removed from the tracker on 2026-10-03 (read them
+  with `git show 0a165ef:.beads/issues.jsonl`; never resume them). Beads close on CI,
   emulators and Playwright; the owner playtests the lot (P1-Q02 checklist) and failures come back as
   bug beads.
-- **Machines:** the working tree, `br` and Agent Mail live on the Mac; builds, tests and browsers run
-  on eris (plan §15.2). Gitea (`tea`, login `gitea-lan`) is primary; GitHub is a passive mirror.
+- **Machines (R93):** the working tree, `br` and Agent Mail live on the Mac. Compute goes wherever
+  there's spare CPU: RCH workers (devbox, a VM on triton, and eris when it's on), the Mac, and the shared Gitea
+  runners on TrueNAS. Only hardware facts pin work to a machine (plan §15.2). Gitea (`tea`, login
+  `gitea-lan`) is primary; GitHub is a passive mirror.
 - **Canonical vehicle evidence:** `spikes/art-pipeline/J-cruze-lowpoly/` (see `spikes/README.md` for
   which spikes are canonical and which are reference only).
 
@@ -67,7 +71,7 @@ Most important rules:
 | `crates/`, `web/`, `tools/` | 0.2 code (created by P1-F01 onwards) |
 | `art/` | References, style, vehicle sources, contracts; `art/audio/v0.1-music/` is the vibe reference for regenerated music (R13) |
 | `spikes/` | Evidence from art/model spikes; nothing imports from here at runtime |
-| `.beads/`, `scripts/beads/` | Tracker and the batch-verify tooling |
+| `.beads/`, `scripts/beads/` | Tracker, its policy and canary, and the local lane runner |
 | `.claude/skills/`, `.claude/agents/`, `.claude/hooks/` | Project skills, agents, the worker guard hook |
 | `package.json` (root) | Tooling only: the spikes and skills import three/Playwright from root `node_modules` |
 
@@ -99,37 +103,58 @@ Most important rules:
   `/Users/cdilga/Documents/dev/multiplayer-racer`
 - Use the exact Agent Mail name assigned in your prompt. If no name was assigned, register with an
   auto-generated name and announce it. Commits need `AGENT_NAME=<your Agent Mail name>` (pre-commit guard).
-- Check Agent Mail before claiming work and after each meaningful edit/test cycle.
-- Reserve files with Agent Mail before editing. Use specific paths or globs, not the whole repo.
-- Announce bead claims, file reservations, blockers, and completion in a thread named after the bead ID.
+- With other agents running: check Agent Mail before claiming work, reserve files before editing
+  (specific paths or globs, not the whole repo), and announce claims, blockers and completion in a
+  thread named after the bead ID. **Solo, skip reservations and announcements**; register only for the
+  commit guard.
 - **NTM is paused (R91).** Run multi-agent work as native Claude Code agents with native messaging
-  (SendMessage); keep it to at most five agents including the coordinator. Agent Mail stays for
-  file reservations and the commit guard.
+  (SendMessage). Agent Mail stays for file reservations and the commit guard.
+- **No agent cap, no roles (R93).** Run as many agents as the work and machines support. Agents are
+  fungible generalists: nobody owns a track; everyone picks the most useful ready work with
+  `bv --robot-triage`. Coupled systems (transport, sim, renderer) stay safe through narrow Agent Mail
+  file reservations, not assigned owners.
+- **Operating modes** (owner, 2026-10-03): **solo → 2 workers → 4 workers**, each step when the owner is
+  happy. **Solo:** one session (`JJ_ROLE=solo`) does the whole lot while the owner watches and cranks it
+  with `next`, `goal: …`, `verify` and `status`. **With workers:** each worker closes its own beads on
+  green CI, and a **verifier on call** handles hand-offs, red CI and evidence closes. The verifier runs
+  **on demand only** (no timers or `/loop`), so it costs nothing when work stops. Any session that
+  verifies **must register with Remote Control** (`claude --remote-control <name>`, or `/remote-control`
+  in a running session) so the owner can watch. Models: solo and workers on Opus 5.5 at medium effort,
+  delegating mechanical work to Sonnet 5.5 subagents; the verifier on Sonnet 5.5. Start commands and the
+  crank table: `docs/process/bead-workflow.md`. NTM and Agent Mail can take over parts later.
+- **Lean by default** (owner, 2026-10-03): no routine review rounds (CI and the bead's tests are the check);
+  the bead is the contract, so don't read the whole plan, only the sections a bead cites; keep command
+  output small (focused tests, long logs to files); a bead that proves bigger than one session is
+  split into child beads (`br create --parent <id>`) with its acceptance moved over verbatim.
 - Don't sit idle waiting for consensus. If a ready bead is unclaimed and you can make progress, claim
   it, reserve files, announce, and start.
 
-## Beads (code-first / batch-verify)
+## Beads (Physical Soccer's model)
 
-`.beads/policy.yaml` enforces this workflow. Read `docs/process/code-first-batch-verify.md` before
-your first claim.
+`docs/process/bead-workflow.md` is the loop; `.beads/policy.yaml` enforces the close rules.
 
-- Use `br` 0.7.1 or newer, not `bd`.
-- Find ready work with `br ready --json` (it includes `rework` beads returned to you) and graph
-  priorities with `bv --robot-triage` or `bv --robot-next`. Never run bare `bv`: it launches an
-  interactive TUI.
-- Claim with `br update <id> --claim --actor <AgentMailName>`. You can hold one claimed bead at a
-  time, and the bead must have acceptance criteria.
-- **Workers get the full development loop but never run the batched verification or close beads**
-  (owner ruling 2026-10-02). Run servers, multi-controller/device sessions, emulators, `jj` probes,
-  debuggers, captures, and the scenarios and journeys for your area, preferably on eris; iterate on
-  mechanics or models until they work. Don't run workspace-wide `cargo test`, whole Playwright suites
-  or `batch-verify.sh` (the hook blocks them), and don't wait on CI. Commit with the bead ID. Then run
-  `br update <id> --status batch_pending --transition-comment "commit:<sha> <test that covers each acceptance item>"`
-  and take the next bead.
-- The batch verifier runs the tests once per wave (`scripts/beads/batch-verify.sh`). It closes green
-  beads with a `receipt:` reference, or returns failures to the same assignee as `rework` with the
-  failing assertion. (Its suite table still needs the 0.2 layout: bead P1-F02.)
-- Each bead copies its task's contract, acceptance and evidence from the Playtest-1 plan §15, plus the
+- Use `br` 0.7.4 or newer, not `bd`. Find work with `br ready --json` (it includes `rework` beads
+  returned to you) or `bv --robot-next`. Never run bare `bv`: it launches an interactive TUI.
+- Claim with `br update <id> --claim --actor <AgentMailName>`; the bead must have acceptance criteria.
+  A session may work one bead or a **goal** spanning several (R93): claim each as you start it.
+- **Full development loop** (owner ruling 2026-10-02): run servers, multi-controller/device sessions,
+  emulators, `jj` probes, debuggers, captures, and the scenarios and journeys for your area; iterate on
+  mechanics or models until they work. Before committing, check the paths you changed (affected crates
+  through RCH, the specs and scenarios you touched); leave the workspace-wide matrix to CI unless you
+  changed a shared contract (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core).
+- Commit with the P1 ID and bead ID, push to Gitea (`git lfs push --all` after), run
+  `scripts/ci-status.sh --wait` in the background, and **close your own bead when CI is green** on a
+  commit containing it: tick the covered acceptance items, `br gate report <id> --gate batch_verify
+  --provider gitea-ci --status pass --to closed --note "run:<url> commit:<sha>"`, then `br close <id>
+  --reason "receipt:<run url> AC1: <test> …" --transition-comment "<one line>"`. A red lane on your
+  change is yours to fix. To move on instead, set `batch_pending` with the commit and tests; the
+  verifier closes it. Before CI exists (P1-D01, P1-F02), close on your local checks with a committed
+  receipt under `docs/evidence/<P1-ID>/`.
+- Owner, deploy-repo and hardware evidence close with `receipt:docs/evidence/<P1-ID>/…` (the evidence
+  close, P1-F02).
+- `br sync --flush-only` exports the DB to `.beads/issues.jsonl` (mutations usually auto-flush). More
+  `br`/`bv` usage: `br robot-docs guide`, `br <cmd> --help`, `bv --help` (robot flags only).
+- Each bead carries its task's contract, acceptance and evidence from the Playtest-1 plan §15, plus the
   anti-narrowing clause from `docs/plans/BEAD-DEFINITION-OF-DONE.md`.
 
 ## Skills
@@ -160,16 +185,18 @@ your first claim.
   hardware, browser, build and cohort. Label honestly: Playwright WebKit is "WebKit", not Safari; a
   simulator/emulator run is not a device; a number copied from a spike or another codebase is a
   reference until measured. Per-bead evidence goes in `docs/evidence/<P1-ID>/`.
-- **Builds:** prefer eris for Rust work (`rch exec -- cargo …` or `scripts/remote/eris.sh`); never
-  run workspace-wide cargo on the Mac itself (a whole-workspace local build once filled a Mac's disk;
-  the hook blocks it). Per-crate local builds for a local server or a Mac-only lane are fine within
-  the 15 GiB `target/` budget.
+- **Builds:** Rust goes through RCH (`rch exec -- cargo …`), which spreads it across the RCH workers
+  (devbox on triton, eris when it's on); `scripts/remote/eris.sh` runs anything else on eris. Use the
+  Mac's CPU too: per-crate local builds, Vite, Playwright and the emulators are fine within the
+  15 GiB `target/` budget. The one Mac rule is disk, not CPU: no workspace-wide cargo on the Mac
+  itself (a whole-workspace local build once filled a Mac's disk; the hook blocks it).
 - **Tests:** follow Physical Soccer's shape: scenario banks (versioned fixtures replayed bit for bit,
   asserting outcome envelopes and stating known gaps) and Playwright journeys (real host + controller
   contexts through the real join path). Unit tests only where the unit is the lowest level that shows
   the behaviour.
 - **Working method:** plan §13a–§13b: see state as data, set it up, step/replay, assert with fixtures;
-  reach the game through the `jj` CLI; one bead per fresh agent session; name what you reuse; repair
+  reach the game through the `jj` CLI; a session works one bead or a goal of several, and rereads
+  AGENTS.md after a context compaction; name what you reuse; repair
   beads reproduce first; stop after 2–3 identical remote failures and reproduce locally; record traps
   in `docs/learnings/<area>.md`. Every feature earns its keep: add a tool, flag or helper only when a
   named task needs it now. Never block on the owner: proceed on the best evidence-backed candidate and
@@ -180,106 +207,7 @@ your first claim.
 
 - Preserve user and other-agent changes. Don't revert unfamiliar edits.
 - Keep file reservations narrow and release them when done.
-- Don't commit or push unless the human coordinator explicitly asks (bead workers commit per the
-  code-first doc). `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>`
+- Don't commit or push unless the human coordinator explicitly asks (bead sessions commit and push per
+  `docs/process/bead-workflow.md`). `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>`
   afterwards. Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
   (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.
-
-<!-- bv-agent-instructions-v2 -->
-
----
-
-## Beads Workflow Integration
-
-This project uses [beads_rust](https://github.com/Dicklesworthstone/beads_rust) (`br`) for issue tracking and [beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) (`bv`) for graph-aware triage. Issues are stored in `.beads/` and tracked in git.
-
-### Using bv as an AI sidecar
-
-bv is a graph-aware triage engine for Beads projects (.beads/beads.jsonl). Instead of parsing JSONL or hallucinating graph traversal, use robot flags for deterministic, dependency-aware outputs with precomputed metrics (PageRank, betweenness, critical path, cycles, HITS, eigenvector, k-core).
-
-**Scope boundary:** bv handles *what to work on* (triage, priority, planning). `br` handles creating, modifying, and closing beads.
-
-**CRITICAL: Use ONLY --robot-* flags. Bare bv launches an interactive TUI that blocks your session.**
-
-#### The Workflow: Start With Triage
-
-**`bv --robot-triage` is your single entry point.** It returns everything you need in one call:
-- `quick_ref`: at-a-glance counts + top 3 picks
-- `recommendations`: ranked actionable items with scores, reasons, unblock info
-- `quick_wins`: low-effort high-impact items
-- `blockers_to_clear`: items that unblock the most downstream work
-- `project_health`: status/type/priority distributions, graph metrics
-- `commands`: copy-paste shell commands for next steps
-
-```bash
-bv --robot-triage        # THE MEGA-COMMAND: start here
-bv --robot-next          # Minimal: just the single top pick + claim command
-
-# Token-optimized output (TOON) for lower LLM context usage:
-bv --robot-triage --format toon
-```
-
-Before claiming, verify current state with `br show <id> --json` or `br ready --json`. `recommendations` can include graph-important blocked or assigned work; only `quick_ref.top_picks` and non-empty `claim_command` fields represent claimable work.
-
-#### Other bv Commands
-
-| Command | Returns |
-|---------|---------|
-| `--robot-plan` | Parallel execution tracks with unblocks lists |
-| `--robot-priority` | Priority misalignment detection with confidence |
-| `--robot-insights` | Full metrics: PageRank, betweenness, HITS, eigenvector, critical path, cycles, k-core |
-| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
-| `--robot-suggest` | Hygiene: duplicates, missing deps, label suggestions, cycle breaks |
-| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified issues |
-| `--robot-graph [--graph-format=json\|dot\|mermaid]` | Dependency graph export |
-
-#### Scoping & Filtering
-
-```bash
-bv --robot-plan --label backend              # Scope to label's subgraph
-bv --robot-insights --as-of HEAD~30          # Historical point-in-time
-bv --recipe actionable --robot-plan          # Pre-filter: ready to work (no blockers)
-bv --recipe high-impact --robot-triage       # Pre-filter: top PageRank scores
-```
-
-### br Commands for Issue Management
-
-```bash
-br ready              # Show issues ready to work (no blockers)
-br list --status=open # All open issues
-br show <id>          # Full issue details with dependencies
-br create --title="..." --type=task --priority=2
-br update <id> --claim --actor <AgentMailName>
-br update <id> --status batch_pending --transition-comment "commit:<sha> ..."
-br sync --flush-only  # Export DB to JSONL
-```
-
-Closing is the batch verifier's job (`scripts/beads/batch-verify.sh close`), never a worker's.
-
-### Workflow Pattern
-
-1. **Triage**: Run `bv --robot-triage` to find the highest-impact actionable work
-2. **Claim**: `br update <id> --claim --actor <AgentMailName>`
-3. **Work**: Write the code and its tests (scenario banks and journeys over unit tests), develop with focused runs of your own area, and commit with the bead ID
-4. **Hand off**: `br update <id> --status batch_pending --transition-comment "commit:<sha> ..."`
-5. **Verify** (batch verifier only): `scripts/beads/batch-verify.sh run`, then `close` or `rework`
-6. **Sync**: Always run `br sync --flush-only` at session end
-
-### Key Concepts
-
-- **Dependencies**: Issues can block other issues. `br ready` shows only unblocked work.
-- **Priority**: P0=critical, P1=high, P2=medium, P3=low, P4=backlog (use numbers 0-4, not words)
-- **Types**: task, bug, feature, epic, chore, docs, question
-- **Blocking**: `br dep add <issue> <depends-on>` to add dependencies
-
-### Session Protocol
-
-```bash
-git status              # Check what changed
-git add <files>         # Stage specific files (never -A)
-br sync --flush-only    # Export beads changes to JSONL
-git commit -m "..."     # Commit with the bead ID (AGENT_NAME set)
-# Push once per wave (verifier), then: git lfs push --all <remote> <branch>
-```
-
-<!-- end-bv-agent-instructions -->

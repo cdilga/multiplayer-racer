@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Enforcement canary for the code-first / batch-verify policy (.beads/policy.yaml).
+# Enforcement canary for the bead workflow policy (.beads/policy.yaml; docs/process/bead-workflow.md).
 #
 # Policy files are claims until canaried. This script copies the repo's
 # policy.yaml into a throwaway br workspace and attempts every illegal move the
@@ -57,50 +57,49 @@ expect_allowed() {
 }
 
 new_id() { br create "$@" --json 2>/dev/null | jq -r '.id // .created.id // .[0].id'; }
-RECEIPT="Verified in canary wave, every acceptance item exercised receipt:.beads/receipts/canary.json"
+RECEIPT="CI green on the commit, every acceptance item exercised receipt:https://gitea.example/run/1"
 
 NOAC=$(new_id "canary: no acceptance criteria")
-B=$(new_id "canary: normal bead" --acceptance-criteria '- [ ] behaviour works')
-B2=$(new_id "canary: second bead" --acceptance-criteria '- [ ] other behaviour')
+B=$(new_id "canary: own-close bead" --acceptance-criteria '- [ ] behaviour works')
+B2=$(new_id "canary: hand-off bead" --acceptance-criteria '- [ ] other behaviour')
 
 echo "## claiming"
 expect_refused "claim without acceptance criteria"          "acceptance criteria"   -- update "$NOAC" --claim --actor W1
 expect_allowed "worker claims a bead with criteria"                                 -- update "$B" --claim --actor W1
-expect_refused "same worker claims a second bead"           "capacity"              -- update "$B2" --claim --actor W1
+expect_allowed "same worker claims a second bead (goals, R93)"                      -- update "$B2" --claim --actor W1
 expect_refused "another worker claims a claimed bead"       "already assigned"      -- update "$B" --claim --actor W2
 
-echo "## closing without verification"
-expect_refused "worker closes own bead"                     "cross-validation"      -- close "$B" --actor W1 --reason "$RECEIPT"
-expect_refused "other actor skips batch_pending"            "not permitted"         -- close "$B" --actor V --reason "$RECEIPT" --transition-comment x
-expect_refused "close via update --status closed"           "br close"              -- update "$B" --status closed --actor V
-expect_refused "close with --bypass-policy"                 "allow_bypass: false"   -- close "$B" --actor V --bypass-policy --bypass-reason x --reason "$RECEIPT"
+echo "## closing your own bead on green CI (Physical Soccer model)"
+expect_refused "close before a batch_verify gate pass"      "batch_verify"          -- close "$B" --actor W1 --reason "$RECEIPT" --transition-comment "ci green"
+expect_allowed "worker records the CI gate pass"                                    -- gate report "$B" --gate batch_verify --provider gitea-ci --status pass --to closed --note "run:canary commit:abc123"
+expect_refused "close reason without receipt: reference"    "typed references"      -- close "$B" --actor W1 --reason "CI went green on the commit with every criterion exercised" --transition-comment "ci green"
+expect_refused "close with unchecked acceptance criteria"   "unchecked"             -- close "$B" --actor W1 --reason "$RECEIPT" --transition-comment "ci green"
+expect_allowed "worker ticks the exercised criteria"                                -- update "$B" --acceptance-criteria '- [x] behaviour works' --actor W1
+expect_allowed "worker closes its own green bead"                                   -- close "$B" --actor W1 --reason "$RECEIPT" --transition-comment "ci green"
+expect_refused "reopen without a reason"                    "transition comment"    -- reopen "$B" --actor W1
+
+echo "## shortcuts stay closed"
+expect_refused "close via update --status closed"           "br close"              -- update "$B2" --status closed --actor W1
+expect_refused "close with --bypass-policy"                 "allow_bypass: false"   -- close "$B2" --actor W1 --bypass-policy --bypass-reason x --reason "$RECEIPT"
 expect_refused "create a bead already closed"               "not permitted"         -- create "canary: born closed" --status closed --actor W1
 
-echo "## hand-off to batch_pending"
-expect_refused "batch_pending without hand-off comment"     "transition comment"    -- update "$B" --status batch_pending --actor W1
-expect_allowed "batch_pending with hand-off comment"                                -- update "$B" --status batch_pending --actor W1 --transition-comment "commit:abc123 test:tests/canary.rs covers AC1"
-
-echo "## verifier close requirements"
-expect_refused "close before batch_verify gate passes"      "batch_verify"          -- close "$B" --actor V --reason "$RECEIPT" --transition-comment "wave green"
-expect_allowed "verifier reports batch_verify pass"                                 -- gate report "$B" --gate batch_verify --provider batch-verifier --status pass --to closed --note "run:canary"
-expect_refused "close reason without receipt: reference"    "typed references"      -- close "$B" --actor V --reason "Verified in the canary wave with all criteria exercised" --transition-comment "wave green"
-expect_refused "close with unchecked acceptance criteria"   "unchecked"             -- close "$B" --actor V --reason "$RECEIPT" --transition-comment "wave green"
-
-echo "## rework loop and stale verdicts"
-expect_refused "rework without failure note"                "transition comment"    -- update "$B" --status rework --actor V
-expect_allowed "rework with failure note"                                           -- update "$B" --status rework --actor V --transition-comment "FAIL tests/canary.rs:42 expected 3 got 2"
-if br ready --json 2>/dev/null | jq -e --arg id "$B" 'any(.[]; .id == $id and .status == "rework")' >/dev/null; then
+echo "## hand-off, rework and stale verdicts"
+expect_refused "batch_pending without hand-off comment"     "transition comment"    -- update "$B2" --status batch_pending --actor W1
+expect_allowed "batch_pending with hand-off comment"                                -- update "$B2" --status batch_pending --actor W1 --transition-comment "commit:abc123 test:tests/canary.rs covers AC1"
+expect_allowed "verifier records a pass"                                            -- gate report "$B2" --gate batch_verify --provider gitea-ci --status pass --to closed --note "run:canary-1"
+expect_refused "rework without failure note"                "transition comment"    -- update "$B2" --status rework --actor V
+expect_allowed "rework with failure note"                                           -- update "$B2" --status rework --actor V --transition-comment "FAIL tests/canary.rs:42 expected 3 got 2"
+if br ready --json 2>/dev/null | jq -e --arg id "$B2" 'any(.[]; .id == $id and .status == "rework")' >/dev/null; then
     pass=$((pass + 1)); report ok "rework bead resurfaces in br ready"
 else
     fail=$((fail + 1)); report FAIL "rework bead resurfaces in br ready"
 fi
-expect_allowed "same worker re-claims rework"                                       -- update "$B" --status in_progress --actor W1
-expect_allowed "worker hands off the fix"                                           -- update "$B" --status batch_pending --actor W1 --transition-comment "commit:def456 fixed off-by-one"
-expect_allowed "verifier ticks the exercised criteria"                              -- update "$B" --acceptance-criteria '- [x] behaviour works' --actor V
-expect_refused "stale PASS from before rework"              "batch_verify"          -- close "$B" --actor V --reason "$RECEIPT" --transition-comment "wave green"
-expect_allowed "fresh batch_verify pass for this revision"                          -- gate report "$B" --gate batch_verify --provider batch-verifier --status pass --to closed --note "run:canary-2"
-expect_allowed "verifier closes with receipt"                                       -- close "$B" --actor V --reason "$RECEIPT" --transition-comment "wave green"
-expect_refused "reopen without a reason"                    "transition comment"    -- reopen "$B" --actor W1
+expect_allowed "same worker re-claims rework"                                       -- update "$B2" --status in_progress --actor W1
+expect_allowed "worker hands off the fix"                                           -- update "$B2" --status batch_pending --actor W1 --transition-comment "commit:def456 fixed off-by-one"
+expect_allowed "verifier ticks the exercised criteria"                              -- update "$B2" --acceptance-criteria '- [x] other behaviour' --actor V
+expect_refused "stale PASS from before rework"              "batch_verify"          -- close "$B2" --actor V --reason "$RECEIPT" --transition-comment "ci green"
+expect_allowed "fresh pass for this revision"                                       -- gate report "$B2" --gate batch_verify --provider gitea-ci --status pass --to closed --note "run:canary-2"
+expect_allowed "verifier closes the handed-off bead"                                -- close "$B2" --actor V --reason "$RECEIPT" --transition-comment "ci green"
 
 echo "## epics"
 E=$(new_id "canary: epic" --type epic)
@@ -112,8 +111,8 @@ echo "## known gaps (enforced outside br; informational)"
 L=$(new_id "canary: leaf" --acceptance-criteria '- [ ] l')
 br update "$L" --claim --actor W3 --json >/dev/null 2>&1
 if br delete "$L" --actor W3 --reason canary --json >/dev/null 2>&1; then
-    report gap "worker can br delete a claimed bead (tombstone skips gates)" \
-        "mitigation: worker hook blocks 'br delete'; verifier audits tombstones each wave"
+    report gap "an agent can br delete a claimed bead (tombstone skips gates)" \
+        "mitigation: the hook blocks 'br delete' for worker and solo sessions"
 else
     report info "br now refuses deleting a claimed bead; the hook rule is belt-and-braces"
 fi
