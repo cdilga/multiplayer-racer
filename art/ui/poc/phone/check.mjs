@@ -4,7 +4,9 @@
 //   landscape: no horizontal scroll, no overlapping boxes, every touch target ≥ tokens.layout.minTouchTargetPx.
 //   Multi-touch: two simultaneous pointers (and, in Chromium, two real CDP touch points) move the two sticks
 //   independently. Standalone: no request leaves the local folder. Captures: every state in device frames.
-// Output: docs/evidence/P1-U03/ (frames/*.jpg, check-report.json). Exit 1 on any failure.
+//   P1-U03.2: the tutorial advances on the gesture (each step's stick move, in Chromium and WebKit), and the full-screen
+//   tap asks for full screen, then the wake lock (stubbed APIs record the order; the real APIs record what the engine did).
+// Output: docs/evidence/P1-U03/ (JJ_EVIDENCE_DIR overrides; frames/*.jpg, check-report.json). Exit 1 on any failure.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,12 +14,12 @@ import { chromium, webkit } from 'playwright';
 import { serveArtUi } from '../../lib/serve.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U03');
+const out = process.env.JJ_EVIDENCE_DIR ?? join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U03');
 mkdirSync(join(out, 'frames'), { recursive: true });
 const DEVICES = [['small-iphone', 375, 667], ['large-iphone', 430, 932], ['mid-android', 412, 915]];
 const { base, close } = await serveArtUi();
 const failures = [];
-const report = { base, layout: [], multitouch: [], network: { external: [] }, captures: [] };
+const report = { base, layout: [], multitouch: [], tutorial: [], session: [], network: { external: [] }, captures: [] };
 
 // The state list lives in phone.js; read it in a page so there's one source.
 const probe = await chromium.launch({ channel: 'chromium' });
@@ -118,6 +120,60 @@ for (const [engineName, engine, launch] of [['chromium', chromium, { channel: 'c
   }
   await browser.close();
 }
+
+// P1-U03.2 (POC1-20): the tutorial advances when the player does each step, in both engines (landscape, large iPhone).
+const drag = async (page, kind, dx, dy) => page.evaluate(([kind, dx, dy]) => {
+  const z = document.querySelector(`.zone.${kind}`), r = z.getBoundingClientRect();
+  const x0 = r.left + r.width / 2, y0 = r.top + r.height * 0.6;
+  const P = (type, x, y) => z.dispatchEvent(new PointerEvent(type, { pointerId: 21, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, bubbles: true }));
+  P('pointerdown', x0, y0);
+  for (let i = 1; i <= 8; i++) P('pointermove', x0 + (dx * i) / 8, y0 + (dy * i) / 8);
+  P('pointerup', x0 + dx, y0 + dy);
+}, [kind, dx, dy]);
+for (const [engineName, engine, launch] of [['chromium', chromium, { channel: 'chromium' }], ['webkit', webkit, {}]]) {
+  const browser = await engine.launch(launch);
+  const ctx = await browser.newContext({ viewport: { width: 932, height: 430 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  await page.goto(`${base}/poc/phone/index.html#tutorial&chrome=0`);
+  await page.reload();
+  await page.waitForFunction(() => window.__phone?.ready === true);
+  const steps = [];
+  const at = () => page.evaluate(() => window.__phone.tutorial?.step);
+  steps.push({ before: await at() });
+  await drag(page, 'drive', 90, 0); await drag(page, 'drive', -90, 0); await page.waitForTimeout(900); // steer right, then left
+  steps.push({ after: 'steer', step: await at() });
+  await drag(page, 'drive', 0, -90); await drag(page, 'drive', 0, 90); await page.waitForTimeout(900); // go, then stop
+  steps.push({ after: 'go and stop', step: await at() });
+  await drag(page, 'action', 90, 0); await page.waitForTimeout(900); // boost
+  steps.push({ after: 'boost', step: await at() });
+  const skip = await page.evaluate(() => { document.querySelector('[data-act=skip]')?.click(); return !document.querySelector('.coach'); });
+  const pass = steps[0].before === 0 && steps[1].step === 1 && steps[2].step === 2 && steps[3].step === 3 && skip;
+  report.tutorial.push({ engine: engineName, viewport: '932x430', steps, skipClosesIt: skip, pass });
+  if (!pass) failures.push(`${engineName}: the tutorial did not advance on the gestures ${JSON.stringify(steps)} skip ${skip}`);
+  // POC1-22: the tap asks for full screen, then a screen wake lock. Stubbed, so the order is recorded on any engine.
+  const sp = await ctx.newPage();
+  await sp.addInitScript(() => {
+    window.__calls = [];
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: async (t) => { window.__calls.push(`wakeLock:${t}`); return { release: async () => {}, addEventListener() {} }; } } });
+    Element.prototype.requestFullscreen = async function () { window.__calls.push('fullscreen'); }; // on the prototype: <html> doesn't exist yet
+  });
+  await sp.goto(`${base}/poc/phone/index.html#gate&chrome=0`);
+  await sp.waitForFunction(() => window.__phone?.ready === true);
+  await sp.click('[data-act=go]');
+  await sp.waitForFunction(() => window.__phone.session != null);
+  const stub = await sp.evaluate(() => ({ calls: window.__calls, session: window.__phone.session, shown: document.querySelector('.results')?.textContent }));
+  const okStub = stub.calls[0] === 'fullscreen' && stub.calls.includes('wakeLock:screen') && stub.calls.indexOf('wakeLock:screen') > 0 && stub.session.wakeLock === 'on' && stub.session.fullscreen === 'on';
+  // The engine's own APIs, unstubbed: what a browser without them (or refusing them) shows.
+  const rp = await ctx.newPage();
+  await rp.goto(`${base}/poc/phone/index.html#gate&chrome=0`);
+  await rp.waitForFunction(() => window.__phone?.ready === true);
+  await rp.click('[data-act=go]');
+  await rp.waitForFunction(() => window.__phone.session != null);
+  const real = await rp.evaluate(() => ({ session: window.__phone.session, shown: document.querySelector('.results')?.textContent }));
+  report.session.push({ engine: engineName, stubbed: stub, real, pass: okStub });
+  if (!okStub) failures.push(`${engineName}: the full-screen tap did not ask for full screen then the wake lock ${JSON.stringify(stub)}`);
+  await browser.close();
+}
 if (report.network.external.length) failures.push(`requests left the folder: ${[...new Set(report.network.external)].join(', ')}`);
 
 // Captures: every state in device frames (Chromium).
@@ -135,7 +191,7 @@ for (const state of ALL) {
 await browser.close();
 await close();
 
-report.summary = { states: ALL.length, layoutRuns: report.layout.length, multitouchRuns: report.multitouch.length, captures: report.captures.length, minTouchPx: minTouch, failures };
+report.summary = { states: ALL.length, layoutRuns: report.layout.length, multitouchRuns: report.multitouch.length, tutorialRuns: report.tutorial.length, sessionRuns: report.session.length, captures: report.captures.length, minTouchPx: minTouch, failures };
 writeFileSync(join(out, 'check-report.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(`states ${ALL.length} × 2 engines × 3 devices × 2 orientations = ${report.layout.length} layout runs; multi-touch runs ${report.multitouch.length} (${report.multitouch.filter((m) => m.pass).length} pass); captures ${report.captures.length}; external requests ${report.network.external.length}`);
 for (const f of failures.slice(0, 40)) console.log(`FAIL ${f}`);

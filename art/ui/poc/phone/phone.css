@@ -195,3 +195,128 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
   .scroll.settings [data-box=controls] { grid-column: 1; grid-row: 2; }
   .scroll.settings [data-box=actions] { grid-column: 2; grid-row: 2; align-self: start; }
 }
+
+/* ---- P1-U03.2: the owner's round 1 (POC1-18 to 22), in the R102 language (U01.3) ---- */
+/* the player's colour, always on screen (POC1-21) */
+.idframe { position: fixed; inset: 0; z-index: 24; pointer-events: none; border: 5px solid var(--seat); border-radius: 0; }
+/* R102 shapes: torn banner, brushed tag and strip, burst ticks */
+.paint { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
+.bn { position: relative; isolation: isolate; display: inline-block; padding: .1em .45em .14em; color: var(--c-paper); font: 900 italic 30px/1 var(--font-display); text-transform: uppercase; white-space: nowrap; rotate: var(--slant-heading); }
+.bn .paint path { fill: var(--c-ink); }
+.bn .acc { color: var(--c-saffron); }
+.tag { --tag-fill: var(--c-saffron); position: relative; isolation: isolate; display: inline-block; width: fit-content; padding: .05em .55em .08em; color: var(--c-ink); font: 900 italic 17px/1.1 var(--font-display); text-transform: uppercase; white-space: nowrap; transform: rotate(var(--rot-tag)) skewX(var(--skew-tag)); }
+.tag > span { display: inline-block; transform: skewX(calc(-1 * var(--skew-tag))); }
+.tag .paint path { fill: var(--tag-fill); }
+.zone .tag { --tag-fill: transparent; transform: translateX(-50%); }
+.goodstrip { --strip-bg: var(--c-success); position: relative; isolation: isolate; display: inline-flex; width: fit-content; padding: .2em .8em; color: var(--c-paper); font-weight: 700; transform: skewX(var(--skew-strip)); }
+.goodstrip > span { display: inline-block; transform: skewX(calc(-1 * var(--skew-strip))); }
+.goodstrip .paint path { fill: var(--strip-bg); }
+.ticks { display: inline-flex; align-items: center; gap: 6px; }
+.ticks svg.tk { flex: none; width: 20px; height: 34px; fill: none; stroke: var(--c-saffron); stroke-width: 6; stroke-linecap: square; }
+.ticks svg.tk:last-child { scale: -1 1; }
+.ticks .btn { flex: 1; }
+.btn, .field input, .seg { border-radius: 5px; }
+.panel { border-radius: 2px; }
+
+/* POC1-18: boost and power-ups in a pod at the top centre, between the sticks */
+.pod { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 10px 6px; }
+.pod-boost { display: flex; align-items: center; gap: 8px; width: 100%; }
+.pod-label { font-size: 15px; color: var(--c-saffron); }
+.pod .meter { position: relative; flex: 1; min-width: 90px; height: 18px; }
+.pod-items { display: flex; gap: 10px; }
+.pod .utility { position: relative; margin: 0; width: 52px; height: 52px; }
+.pod .utility.item { border-style: dashed; border-color: var(--c-ink-soft); }
+.pod .utility.item img { opacity: .5; }
+.pod-cd { font-size: 13px; color: rgb(255 244 222 / .75); white-space: nowrap; }
+.sticks.with-pod .pod { align-self: flex-start; width: 150px; margin-top: 4px; }
+@media (orientation: portrait) {
+  .pod { flex-direction: row; justify-content: center; flex-wrap: wrap; padding: 4px 24px; }
+  .pod-boost { width: auto; flex: 1; max-width: 220px; }
+  .pod-cd { width: 100%; text-align: center; }
+}
+
+/* POC1-21: the identify flash on the controller, the TV's tween in the player's colour */
+.cooee-phone { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: var(--seat); overflow: hidden; pointer-events: none; }
+.cooee-phone .flash { position: absolute; inset: 0; background: radial-gradient(closest-side, rgb(255 255 255 / .95), color-mix(in srgb, #fff 45%, var(--seat)) 55%, transparent 100%); opacity: 0; animation: cooee-flash 1.5s cubic-bezier(.2, .7, .3, 1) forwards; }
+.cooee-phone .lab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards; opacity: 0; }
+.cooee-phone b { padding: .08em .45em; background: var(--seat); color: var(--seat-on); border: 4px solid var(--c-ink); box-shadow: 0 6px 0 var(--c-ink); font-size: min(17vw, 26vh); font-style: italic; text-transform: none; white-space: nowrap; }
+.cooee-phone .lab span { padding: 4px 12px; background: var(--c-ink); color: var(--c-paper); font-size: 20px; font-weight: 700; }
+@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: 1; } 30% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes cooee-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 85% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(1); } }
+@keyframes cooee-held { 0% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .cooee-phone .flash { animation: cooee-held 1.5s steps(1, end) forwards; }
+  .cooee-phone .lab { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
+}
+
+/* POC1-20: the tutorial, bigger and central; goals tick as you do them */
+.coach { left: 50%; top: 8px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 8px; z-index: 6; }
+.coach-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.coach h2 { margin: 2px 0 0; font-size: 34px; }
+.coach p { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; }
+.goals { display: flex; gap: 10px; flex-wrap: wrap; }
+.goal { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 3px solid var(--c-ink); background: var(--c-paper-shade); font-weight: 700; font-size: 17px; }
+.goal.on { background: var(--c-success); color: var(--c-paper); }
+.goal img.i { filter: invert(1); width: 18px; height: 18px; }
+.dots i.done { background: var(--c-success); }
+.btn.quiet-ink { min-height: 48px; padding: 0 12px; background: transparent; border-color: var(--c-ink-soft); box-shadow: none; font-size: 15px; }
+.sticks.coaching .pod { visibility: hidden; }
+@media (orientation: landscape) {
+  .coach { left: 50%; width: min(520px, 58%); }
+}
+
+/* POC1-19: the lobby is a car picker */
+.lobby2 .strip-acts { margin-left: auto; display: flex; gap: 8px; }
+.lobby2 .strip-acts .btn.identify { background: var(--seat); }
+.lobby2 .strip-acts .btn.identify img.i { filter: none; }
+.picker { flex: 1; min-height: 0; overflow: auto; overflow-x: hidden; padding: 14px 16px 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; }
+.stage { position: relative; padding-top: 22px; min-height: 280px; }
+.carpanel { position: relative; background: var(--c-paper); color: var(--c-ink); border: 4px solid var(--c-ink); border-radius: 2px; box-shadow: 0 6px 0 rgb(0 0 0 / .55); padding: 30px 52px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.carpanel .tag { align-self: flex-start; margin-left: -46px; }
+.carimg { display: block; width: 100%; max-width: 360px; height: auto; }
+.carimg.big { margin: -6px -30px 0; width: calc(100% + 24px); filter: drop-shadow(3px 0 0 var(--c-ink)) drop-shadow(-3px 0 0 var(--c-ink)) drop-shadow(0 3px 0 var(--c-ink)) drop-shadow(0 -3px 0 var(--c-ink)); }
+.carimg.sil.big { filter: none; max-width: 300px; }
+.artnote { position: absolute; right: 10px; top: 10px; padding: 2px 8px; background: var(--c-paper-shade); border: 2px dashed var(--c-ink-soft); font-size: 13px; color: var(--c-ink-soft); }
+.stats { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; }
+.stat { display: grid; grid-template-columns: auto minmax(24px, 1fr); align-items: center; gap: 6px; font-size: 14px; font-weight: 700; min-width: 0; }
+.stat i { display: block; height: 10px; background: linear-gradient(90deg, var(--c-cobalt) var(--v), var(--c-paper-line) var(--v)); border: 2px solid var(--c-ink); }
+.blurb { margin: 2px 0 0; font-size: 15px; font-weight: 600; text-align: center; }
+.carname { position: absolute; left: 10px; top: 0; z-index: 2; font-size: 30px; }
+.stage .arrow { position: absolute; top: 50%; z-index: 2; background: var(--c-saffron); }
+.stage .arrow.prev { left: -6px; }
+.stage .arrow.next { right: -6px; }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.stage, .carpanel { min-width: 0; }
+.thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; }
+.thumb { flex: none; width: 76px; height: 54px; padding: 4px; background: var(--c-ink-raised); border: 3px solid var(--c-ink-soft); border-radius: 4px; display: grid; place-items: center; }
+.thumb[aria-selected=true] { background: var(--c-paper); border-color: var(--seat); box-shadow: 0 0 0 3px var(--seat); }
+.thumb .carimg { max-width: 64px; }
+.readyrow .ticks { width: 100%; }
+.readyrow .btn.big { min-height: 72px; font-size: 26px; }
+@media (orientation: landscape) {
+  .picker { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+  .stage { min-height: 0; }
+  .carpanel { padding: 26px 56px 10px; }
+  .carimg.big { max-width: 300px; }
+}
+
+/* POC1-22: landscape first, full screen and a wake lock */
+.gate { background: var(--c-ink); }
+.gatecard { position: relative; width: min(480px, 100%); padding: 40px 20px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; color: var(--c-ink); }
+.gatebn { position: absolute; left: 50%; top: 0; translate: -50% -50%; font-size: 34px; }
+.phone-turn { width: 64px; height: 64px; display: grid; place-items: center; animation: turn 2.4s ease-in-out infinite; }
+.phone-turn img.i { width: 52px; height: 52px; }
+@keyframes turn { 0%, 30% { rotate: 0deg; } 55%, 90% { rotate: -90deg; } 100% { rotate: 0deg; } }
+@media (prefers-reduced-motion: reduce) { .phone-turn { animation: none; rotate: -90deg; } }
+.gatecard .lead { margin: 0; font-size: 18px; font-weight: 600; }
+.gatecard .ticks { width: 100%; }
+.gatecard .results { display: flex; flex-direction: column; gap: 4px; font-weight: 700; }
+.gatecard .fallback { margin: 0; font-size: 14px; font-weight: 500; color: var(--c-ink-soft); }
+.rotate-card { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(320px, calc(100% - 48px)); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--c-ink); }
+.rotate-card b { font-size: 28px; }
+.rotate-card p { margin: 0; font-weight: 600; }
+.rotate-card .phone-turn img.i { filter: none; }
+.seg.mini { width: auto; }
+.seg.mini span { min-height: 40px; padding: 0 10px; font-size: 14px; }
+@media (orientation: landscape) { .rotate-card { display: none; } }
