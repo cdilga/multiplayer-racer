@@ -49,7 +49,11 @@ const surfaceProblems = (vw) => {
       const d = g.getImageData(0, 0, 16, 16).data;
       let flat = true;
       for (let i = 4; i < d.length; i += 4) if (d[i] !== d[0] || d[i + 1] !== d[1] || d[i + 2] !== d[2] || d[i + 3] !== d[3]) { flat = false; break; }
-      if (flat) bad.push(`canvas looks blank: one flat colour (${c.id || c.className || 'canvas'})`);
+      // A WebGL/WebGPU canvas without preserveDrawingBuffer reads back empty once it has been shown, so a flat read is
+      // only a suspicion: the caller judges the pixels actually on screen (a screenshot of the canvas's visible area).
+      const x = Math.max(0, r.left), y = Math.max(0, r.top);
+      const rect = { x, y, width: Math.min(r.right, vw) - x, height: Math.min(r.bottom, window.innerHeight) - y };
+      if (flat && rect.width >= 8 && rect.height >= 8) bad.push({ flat: true, rect, name: c.id || c.className || 'canvas' });
     } catch { /* tainted or GPU-only canvas: the screenshot must be looked at */ }
   }
   return bad;
@@ -69,7 +73,24 @@ try {
       await page.waitForTimeout(800);
       const check = async (label) => {
         for (const src of await page.evaluate(() => [...document.images].filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.currentSrc || i.src))) problems.push(`${label}image did not load: ${src}`);
-        for (const p of await page.evaluate(surfaceProblems, w)) problems.push(`${label}${p}`);
+        for (const p of await page.evaluate(surfaceProblems, w)) {
+          if (typeof p === 'string') {
+            problems.push(`${label}${p}`);
+            continue;
+          }
+          const png = await page.screenshot({ clip: p.rect });
+          const flat = await page.evaluate(async (b64) => {
+            const img = new Image();
+            img.src = `data:image/png;base64,${b64}`;
+            await img.decode();
+            const t = document.createElement('canvas'); t.width = 16; t.height = 16;
+            const g = t.getContext('2d'); g.drawImage(img, 0, 0, 16, 16);
+            const d = g.getImageData(0, 0, 16, 16).data;
+            for (let i = 4; i < d.length; i += 4) if (d[i] !== d[0] || d[i + 1] !== d[1] || d[i + 2] !== d[2]) return false;
+            return true;
+          }, png.toString('base64'));
+          if (flat) problems.push(`${label}canvas looks blank: one flat colour on screen (${p.name})`);
+        }
       };
       await check('');
       const stem = `${path.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || 'index'}_${w}x${h}`;
