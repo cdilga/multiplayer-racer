@@ -15,8 +15,9 @@ The P1-A04c self-review (`docs/evidence/P1-A04c/self-review.md`) covers the same
 - `live-phone-lab-boost-not-fitted.jpg`, 412x915 live: the Cruz's Boost section "Not fitted", rows say "not fitted"
   with no controls.
 - `live-tv-running.jpg`, 1920x1080 live: the page with the engine running.
-- Local `docs/evidence/P1-A04/lab.png` (1280) and `lab-phone.png` (390): the full lab with every section.
-- `docs/evidence/P1-A04c/lab-boost-not-fitted.png` / `lab-boost-fitted.png`: fitting a turbo marks the section modified.
+- Local `docs/evidence/P1-A04/lab.png` (1280) and `docs/evidence/P1-A04/lab-phone.png` (390): the full lab with every section.
+- `docs/evidence/P1-A04c/lab-boost-not-fitted.png` / `docs/evidence/P1-A04c/lab-boost-fitted.png`: fitting a turbo marks the
+  section modified.
 
 ## Defects found and fixed
 - The inherited check did not run (a syntax error) and two lab checks were wrong (SL3 hashed multi-layer renders, which
