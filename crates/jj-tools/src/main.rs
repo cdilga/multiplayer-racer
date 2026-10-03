@@ -3,7 +3,8 @@
 //! ```text
 //! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry) and
 //!                                               vehicle sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs)
-//! jj scenario [--json] <scenario.json>…        run scenario fixtures and check their outcome envelopes
+//! jj sim [--json] [--trace] [--set k=v] <fixture.json>…   set up, step, observe, assert and replay (`jj sim --help`)
+//! jj sim --compare <accepted> <current> [<tuned>]           ACCEPTED | CURRENT | TUNED trace table
 //! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
 //! jj --version
 //! ```
@@ -13,15 +14,15 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 mod procgen;
-mod scenario;
+mod sim;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj scenario [--json] <scenario.json>…\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj --version";
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("validate") => validate(&args[1..]),
-        Some("scenario") => scenario::command(&args[1..]),
+        Some("sim") => sim::command(&args[1..]),
         Some("procgen") => procgen::command(&args[1..]),
         Some("--version") | Some("version") => {
             println!("jj {}", env!("CARGO_PKG_VERSION"));

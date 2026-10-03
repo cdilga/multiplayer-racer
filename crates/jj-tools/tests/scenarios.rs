@@ -1,4 +1,4 @@
-//! The scenario bank through the real CLI: `jj scenario --json scenarios/*.json` passes every envelope (P1-S01's
+//! The scenario bank through the real CLI: `jj sim --json scenarios/*.json` passes every envelope and replays (P1-S01's
 //! `idle-settle` and `straight-throttle`, and every scenario added later).
 
 use std::path::Path;
@@ -19,7 +19,7 @@ fn every_scenario_in_the_bank_passes() {
             && files.iter().any(|f| f.ends_with("straight-throttle.json"))
     );
     let out = Command::new(env!("CARGO_BIN_EXE_jj"))
-        .arg("scenario")
+        .arg("sim")
         .arg("--json")
         .args(&files)
         .current_dir(&repo)

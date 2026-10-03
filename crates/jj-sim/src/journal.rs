@@ -30,7 +30,17 @@ pub struct SpawnPose {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Setup {
-    SpawnCar { car: u32, pose: SpawnPose },
+    SpawnCar {
+        car: u32,
+        pose: SpawnPose,
+    },
+    /// Teleports a car with a velocity, stopping its spin (scenario setup, P1-F05a). Journaled like every setup command,
+    /// so a run that places cars still replays.
+    PlaceCar {
+        car: u32,
+        pose: SpawnPose,
+        linvel: [f32; 3],
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

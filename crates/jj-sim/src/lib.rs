@@ -8,10 +8,11 @@
 #![forbid(unsafe_code)]
 
 pub mod journal;
+pub mod observe;
 pub mod profile;
 pub mod rng;
 pub mod sim;
 
 pub use journal::{DriveInput, Journal, SpawnPose};
 pub use profile::VehicleProfile;
-pub use sim::{CarId, CarState, DT, Sim, TICK_HZ, route_spawn};
+pub use sim::{CarId, CarState, DT, Sim, TICK_HZ, WheelState, route_spawn};

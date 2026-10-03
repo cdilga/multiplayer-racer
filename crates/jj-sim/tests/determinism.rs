@@ -72,3 +72,85 @@ fn journal_replay_reproduces_the_hash() {
         "replay = live, bit for bit"
     );
 }
+
+#[test]
+fn placing_a_car_is_journaled_so_the_run_still_replays() {
+    let map = greybox();
+    let mut live = Sim::new(
+        &map,
+        &Registry::generic(),
+        3,
+        VehicleProfile::provisional_cruz(),
+    );
+    let car = live.spawn_car(route_spawn(&map, 16, 0.0, 0.6));
+    let teleport = jj_sim::SpawnPose {
+        x: 60.0,
+        y: 1.5,
+        z: 3.0,
+        heading: 1.2,
+    };
+    for t in 0..480 {
+        if t == 200 {
+            live.place_car(car, teleport, [4.0, 0.0, 6.0]);
+        }
+        live.set_input(
+            car,
+            DriveInput {
+                throttle: 20_000,
+                steer: 0,
+                brake: 0,
+            },
+        );
+        live.step();
+    }
+    assert!(
+        live.journal()
+            .setup
+            .iter()
+            .any(|(t, s)| *t == 200 && matches!(s, jj_sim::journal::Setup::PlaceCar { .. }))
+    );
+    let journal = Journal::from_bytes(&live.journal().to_bytes()).unwrap();
+    let replayed = Sim::replay(
+        &map,
+        &Registry::generic(),
+        VehicleProfile::provisional_cruz(),
+        &journal,
+        480,
+    );
+    assert_eq!(
+        replayed.state_hash(),
+        live.state_hash(),
+        "a placed car replays bit for bit"
+    );
+    // And the place took effect: the car left the straight (z = 0) sideways, where the unplaced control run stays on it.
+    let placed = live.car_state(car).unwrap();
+    let mut control = Sim::new(
+        &map,
+        &Registry::generic(),
+        3,
+        VehicleProfile::provisional_cruz(),
+    );
+    let c = control.spawn_car(route_spawn(&map, 16, 0.0, 0.6));
+    for _ in 0..480 {
+        control.set_input(
+            c,
+            DriveInput {
+                throttle: 20_000,
+                steer: 0,
+                brake: 0,
+            },
+        );
+        control.step();
+    }
+    let stayed = control.car_state(c).unwrap();
+    assert!(
+        stayed.position[2].abs() < 0.5,
+        "control left the straight: {:?}",
+        stayed.position
+    );
+    assert!(
+        placed.position[2] > 3.0,
+        "the placed car should have moved off sideways: {:?}",
+        placed.position
+    );
+}

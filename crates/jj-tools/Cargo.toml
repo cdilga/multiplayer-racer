@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 jj-sim.workspace = true
+jj-session.workspace = true
 jj-procgen.workspace = true
 jj-map.workspace = true
 jj-contracts.workspace = true

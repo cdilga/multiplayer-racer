@@ -442,6 +442,7 @@ dependencies = [
  "jj-contracts",
  "jj-map",
  "jj-procgen",
+ "jj-session",
  "jj-sim",
  "jj-types",
  "serde",

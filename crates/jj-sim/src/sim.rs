@@ -58,6 +58,22 @@ pub struct CarState {
     pub sleeping: bool,
 }
 
+/// One wheel right now (front +x, front −x, rear +x, rear −x), for traces and outcome signatures.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WheelState {
+    pub in_contact: bool,
+    pub suspension_length: f32,
+    pub suspension_force: f32,
+    pub forward_impulse: f32,
+    pub side_impulse: f32,
+    /// Spin angle, radians.
+    pub rotation: f32,
+    pub steering: f32,
+    /// Slip angle at the hard point, degrees: the angle between the wheel's heading and its ground velocity (0 below
+    /// 0.5 m/s or off the ground).
+    pub slip_deg: f32,
+}
+
 pub struct Sim {
     world: PhysicsWorld,
     profile: VehicleProfile,
@@ -190,6 +206,32 @@ impl Sim {
             .push((self.tick, Setup::SpawnCar { car: id.0, pose }));
         self.add_car(pose);
         id
+    }
+
+    /// Teleports `car` to `pose` with `linvel` and no spin (a journaled setup command, so the run still replays).
+    pub fn place_car(&mut self, car: CarId, pose: SpawnPose, linvel: [f32; 3]) {
+        let Some(c) = self.cars.get(car.0 as usize) else {
+            return;
+        };
+        self.journal.setup.push((
+            self.tick,
+            Setup::PlaceCar {
+                car: car.0,
+                pose,
+                linvel,
+            },
+        ));
+        if let Some(b) = self.world.bodies.get_mut(c.body) {
+            b.set_position(
+                Pose::new(
+                    Vector::new(pose.x, pose.y, pose.z),
+                    Vector::new(0.0, pose.heading, 0.0),
+                ),
+                true,
+            );
+            b.set_linvel(Vector::new(linvel[0], linvel[1], linvel[2]), true);
+            b.set_angvel(Vector::ZERO, true);
+        }
     }
 
     fn add_car(&mut self, pose: SpawnPose) {
@@ -335,6 +377,60 @@ impl Sim {
         })
     }
 
+    /// The four wheels of `car` (front +x, front −x, rear +x, rear −x).
+    pub fn wheel_states(&self, car: CarId) -> Option<Vec<WheelState>> {
+        let c = self.cars.get(car.0 as usize)?;
+        let b = self.world.bodies.get(c.body)?;
+        let r = b.position().rotation;
+        let (fwd, up) = (
+            r * Vector::new(0.0, 0.0, 1.0),
+            r * Vector::new(0.0, 1.0, 0.0),
+        );
+        Some(
+            c.vehicle
+                .wheels()
+                .iter()
+                .map(|w| {
+                    let info = w.raycast_info();
+                    let slip_deg = if info.is_in_contact {
+                        let v = b.velocity_at_point(info.hard_point_ws);
+                        // The wheel's heading: the chassis' forward turned by the steering angle about its up axis.
+                        let (s, co) = w.steering.sin_cos();
+                        let heading = fwd * co + up.cross(fwd) * s;
+                        let side = up.cross(heading);
+                        let (vf, vs) = (v.dot(heading), v.dot(side));
+                        if vf.hypot(vs) < 0.5 {
+                            0.0
+                        } else {
+                            vs.atan2(vf.abs()).to_degrees()
+                        }
+                    } else {
+                        0.0
+                    };
+                    WheelState {
+                        in_contact: info.is_in_contact,
+                        suspension_length: info.suspension_length,
+                        suspension_force: w.wheel_suspension_force,
+                        forward_impulse: w.forward_impulse,
+                        side_impulse: w.side_impulse,
+                        rotation: w.rotation,
+                        steering: w.steering,
+                        slip_deg,
+                    }
+                })
+                .collect(),
+        )
+    }
+
+    /// The controls `car` is applying.
+    pub fn input(&self, car: CarId) -> Option<DriveInput> {
+        self.cars.get(car.0 as usize).map(|c| c.input)
+    }
+
+    pub fn profile(&self) -> &VehicleProfile {
+        &self.profile
+    }
+
     /// SHA-256 over the whole simulated state: tick, RNG, every car (pose, velocities, wheels) and every prop, in a
     /// stable order. Same build + same inputs + same seed → same hash.
     pub fn state_hash(&self) -> [u8; 32] {
@@ -392,10 +488,15 @@ impl Sim {
             journal.entries.iter().peekable(),
         );
         while sim.tick < ticks {
-            while let Some((_, Setup::SpawnCar { pose, .. })) =
-                setup.next_if(|(t, _)| *t == sim.tick)
-            {
-                sim.spawn_car(*pose);
+            while let Some((_, s)) = setup.next_if(|(t, _)| *t == sim.tick) {
+                match s {
+                    Setup::SpawnCar { pose, .. } => {
+                        sim.spawn_car(*pose);
+                    }
+                    Setup::PlaceCar { car, pose, linvel } => {
+                        sim.place_car(CarId(*car), *pose, *linvel)
+                    }
+                }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {
                 sim.set_input(CarId(e.car), e.input);
