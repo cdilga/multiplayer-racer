@@ -7,7 +7,7 @@ repeat and stagger is read from `art/ui/tokens.json` (`tokens.motion`) at runtim
 plays the reel on load; keys: P play, 1-6 one transition, R toggle reduced. A script drives it with `window.__reel = { ready, play(name), playAll(), timeline }`.
 
 Recorded by `art/ui/poc/motion/record.mjs` on Apple M1 Pro (MacBookPro18,3), macOS 27.0.1, Chromium 151.0.7922.34 (Playwright 1.62.1, channel chromium, headless, --use-angle=metal), GPU backend ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version).
-Videos: reel.webm 5.82 MB, reel-reduced.webm 4.98 MB. Stills (20 full, 18 reduced): `stills/`. Raw numbers: `timeline.json`. Commands and output: `local-receipt.txt`.
+Videos: reel.webm 5.97 MB, reel-reduced.webm 5.05 MB. Stills (20 full, 18 reduced): `stills/`. Raw numbers: `timeline.json`. Commands and output: `local-receipt.txt`.
 A 16:9 TV stage (1749x984, so TV px are scaled by 0.911) sits under a 96 px annotation bar that names each transition, its token duration and the durations just measured;
 the bar is reel furniture, not TV UI.
 
@@ -32,25 +32,25 @@ Pacing between transitions (lead-ins, holds) uses `durationsMs.reveal`, `countdo
 
 | Step | Motion | Token source | Token (ms) | Measured (ms) | Delta (ms) | Result |
 |---|---|---|---:|---:|---:|---|
-| a countdown | beat 3 | `motion.named.countdown-beat.durationMs` | 1000 | 1001.8 | +1.8 | pass |
-| a countdown | beat 2 | `motion.named.countdown-beat.durationMs` | 1000 | 1000.2 | +0.2 | pass |
-| a countdown | beat 1 | `motion.named.countdown-beat.durationMs` | 1000 | 1008.0 | +8.0 | pass |
-| a countdown | beat GO! | `motion.named.countdown-beat.durationMs` | 1000 | 1008.1 | +8.1 | pass |
-| b join | reflow | `motion.named.reflow.durationMs` | 320 | 325.0 | +5.0 | pass |
-| b join | sticker-in tile | `motion.named.sticker-in.durationMs` | 320 | 325.0 | +5.0 | pass |
-| c identify | identify-pulse | `motion.named.identify-pulse.durationMs x repeat` | 1500 | 1500.7 | +0.7 | pass |
-| d wreck + respawn | wreck-shake | `motion.named.wreck-shake.durationMs` | 300 | 301.1 | +1.1 | pass |
-| d wreck + respawn | sticker-in word | `motion.named.sticker-in.durationMs` | 320 | 325.1 | +5.1 | pass |
-| d wreck + respawn | back-in 3·2·1 | `3 x motion.durationsMs.countdownBeat` | 3000 | 3001.1 | +1.1 | pass |
+| a countdown | beat 3 | `motion.named.countdown-beat.durationMs` | 1000 | 1001.6 | +1.6 | pass |
+| a countdown | beat 2 | `motion.named.countdown-beat.durationMs` | 1000 | 1008.6 | +8.6 | pass |
+| a countdown | beat 1 | `motion.named.countdown-beat.durationMs` | 1000 | 1008.7 | +8.7 | pass |
+| a countdown | beat GO! | `motion.named.countdown-beat.durationMs` | 1000 | 1000.0 | +0.0 | pass |
+| b join | reflow | `motion.named.reflow.durationMs` | 320 | 326.5 | +6.5 | pass |
+| b join | sticker-in tile | `motion.named.sticker-in.durationMs` | 320 | 326.5 | +6.5 | pass |
+| c identify | identify-pulse | `motion.named.identify-pulse.durationMs x repeat` | 1500 | 1508.4 | +8.4 | pass |
+| d wreck + respawn | wreck-shake | `motion.named.wreck-shake.durationMs` | 300 | 300.1 | +0.1 | pass |
+| d wreck + respawn | sticker-in word | `motion.named.sticker-in.durationMs` | 320 | 325.4 | +5.4 | pass |
+| d wreck + respawn | back-in 3·2·1 | `3 x motion.durationsMs.countdownBeat` | 3000 | 3000.2 | +0.2 | pass |
 | d wreck + respawn | respawn-cut | `a cut (0 ms)` | 0 | 0.0 | +0.0 | pass |
-| e phase changes | phase race → lobby | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 325.1 | +5.1 | pass |
-| e phase changes | phase lobby → countdown | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 324.8 | +4.8 | pass |
-| e phase changes | beat 3 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1001.7 | +1.7 | pass |
-| e phase changes | beat 2 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1007.6 | +7.6 | pass |
-| e phase changes | beat 1 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1000.9 | +0.9 | pass |
-| e phase changes | beat GO! (countdown to race) | `motion.named.countdown-beat.durationMs` | 1000 | 1000.0 | +0.0 | pass |
-| e phase changes | phase race → results | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 325.1 | +5.1 | pass |
-| f results reveal | results-reveal | `motion.named.results-reveal.durationMs` | 1200 | 1208.2 | +8.2 | pass |
+| e phase changes | phase race → lobby | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 324.7 | +4.7 | pass |
+| e phase changes | phase lobby → countdown | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 325.0 | +5.0 | pass |
+| e phase changes | beat 3 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1001.5 | +1.5 | pass |
+| e phase changes | beat 2 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1007.9 | +7.9 | pass |
+| e phase changes | beat 1 (countdown phase) | `motion.named.countdown-beat.durationMs` | 1000 | 1000.3 | +0.3 | pass |
+| e phase changes | beat GO! (countdown to race) | `motion.named.countdown-beat.durationMs` | 1000 | 1008.0 | +8.0 | pass |
+| e phase changes | phase race → results | `motion.durationsMs.fast + motion.named.toast.durationMs` | 320 | 324.4 | +4.4 | pass |
+| f results reveal | results-reveal | `motion.named.results-reveal.durationMs` | 1200 | 1200.0 | +0.0 | pass |
 
 ## Measured against the tokens, reduced motion
 
@@ -58,25 +58,25 @@ Pacing between transitions (lead-ins, holds) uses `durationsMs.reveal`, `countdo
 
 | Step | Motion | Token source | Token (ms) | Measured (ms) | Delta (ms) | Result |
 |---|---|---|---:|---:|---:|---|
-| a countdown | beat 3 | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1008.5 | +8.5 | pass |
-| a countdown | beat 2 | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.4 | +0.4 | pass |
+| a countdown | beat 3 | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1008.6 | +8.6 | pass |
+| a countdown | beat 2 | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1001.6 | +1.6 | pass |
 | a countdown | beat 1 | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.0 | +0.0 | pass |
-| a countdown | beat GO! | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.1 | +0.1 | pass |
+| a countdown | beat GO! | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.3 | +0.3 | pass |
 | b join | reflow | `motion.named.reflow.reduced.durationMs` | 0 | 0.0 | +0.0 | pass |
-| b join | sticker-in tile | `motion.named.sticker-in.reduced.durationMs` | 120 | 123.4 | +3.4 | pass |
-| c identify | identify-pulse | `motion.named.identify-pulse.reduced.durationMs x repeat` | 1500 | 1507.5 | +7.5 | pass |
+| b join | sticker-in tile | `motion.named.sticker-in.reduced.durationMs` | 120 | 123.8 | +3.8 | pass |
+| c identify | identify-pulse | `motion.named.identify-pulse.reduced.durationMs x repeat` | 1500 | 1507.3 | +7.3 | pass |
 | d wreck + respawn | wreck-shake | `motion.named.wreck-shake.reduced.durationMs` | 0 | 0.0 | +0.0 | pass |
-| d wreck + respawn | sticker-in word | `motion.named.sticker-in.reduced.durationMs` | 120 | 125.8 | +5.8 | pass |
-| d wreck + respawn | back-in 3·2·1 | `3 x motion.durationsMs.countdownBeat` | 3000 | 3001.1 | +1.1 | pass |
+| d wreck + respawn | sticker-in word | `motion.named.sticker-in.reduced.durationMs` | 120 | 124.0 | +4.0 | pass |
+| d wreck + respawn | back-in 3·2·1 | `3 x motion.durationsMs.countdownBeat` | 3000 | 3000.0 | +0.0 | pass |
 | d wreck + respawn | respawn-cut | `a cut (0 ms)` | 0 | 0.0 | +0.0 | pass |
-| e phase changes | phase race → lobby | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 240.9 | +0.9 | pass |
-| e phase changes | phase lobby → countdown | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 240.3 | +0.3 | pass |
-| e phase changes | beat 3 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1006.8 | +6.8 | pass |
-| e phase changes | beat 2 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1008.4 | +8.4 | pass |
-| e phase changes | beat 1 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1010.1 | +10.1 | pass |
-| e phase changes | beat GO! (countdown to race) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1001.6 | +1.6 | pass |
-| e phase changes | phase race → results | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 241.6 | +1.6 | pass |
-| f results reveal | results-reveal | `motion.named.results-reveal.reduced.durationMs` | 200 | 201.6 | +1.6 | pass |
+| e phase changes | phase race → lobby | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 241.7 | +1.7 | pass |
+| e phase changes | phase lobby → countdown | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 242.5 | +2.5 | pass |
+| e phase changes | beat 3 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.3 | +0.3 | pass |
+| e phase changes | beat 2 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1001.1 | +1.1 | pass |
+| e phase changes | beat 1 (countdown phase) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1008.2 | +8.2 | pass |
+| e phase changes | beat GO! (countdown to race) | `motion.named.countdown-beat.reduced.durationMs` | 1000 | 1000.0 | +0.0 | pass |
+| e phase changes | phase race → results | `motion.durationsMs.fast + motion.named.toast.reduced.durationMs` | 240 | 242.1 | +2.1 | pass |
+| f results reveal | results-reveal | `motion.named.results-reveal.reduced.durationMs` | 200 | 200.4 | +0.4 | pass |
 
 Tolerance: pass if within +-50 ms or one frame at 60 Hz (16.7 ms), whichever is larger. Method: each motion is a tween on one rAF clock;
 start is the first frame it is applied and end the first frame at or after start + duration, so a reading carries up to one frame of quantisation (this Mac's

@@ -13,94 +13,95 @@ tolerance: +-50 ms or one frame at 60 Hz (16.7 ms), whichever is larger
   ok   OS reduce but ?reduced=0 (explicit override): reduced: false
   ok   ?autoplay=1 starts the reel: playing: true
 
-== full motion: 19/19 within tolerance; reel wall time 29.7 s; video 5.82 MB; backend ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)
-  a beat 3                       token  1000  measured  1001.8  delta    1.8  pass
-  a beat 2                       token  1000  measured  1000.2  delta    0.2  pass
-  a beat 1                       token  1000  measured  1008.0  delta    8.0  pass
-  a beat GO!                     token  1000  measured  1008.1  delta    8.1  pass
-  b reflow                       token   320  measured   325.0  delta    5.0  pass
-  b sticker-in tile              token   320  measured   325.0  delta    5.0  pass
-  c identify-pulse               token  1500  measured  1500.7  delta    0.7  pass
-  d wreck-shake                  token   300  measured   301.1  delta    1.1  pass
-  d sticker-in word              token   320  measured   325.1  delta    5.1  pass
-  d back-in 3·2·1                token  3000  measured  3001.1  delta    1.1  pass
+== full motion: 19/19 within tolerance; reel wall time 29.7 s; video 5.97 MB; backend ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)
+  a beat 3                       token  1000  measured  1001.6  delta    1.6  pass
+  a beat 2                       token  1000  measured  1008.6  delta    8.6  pass
+  a beat 1                       token  1000  measured  1008.7  delta    8.7  pass
+  a beat GO!                     token  1000  measured  1000.0  delta    0.0  pass
+  b reflow                       token   320  measured   326.5  delta    6.5  pass
+  b sticker-in tile              token   320  measured   326.5  delta    6.5  pass
+  c identify-pulse               token  1500  measured  1508.4  delta    8.4  pass
+  d wreck-shake                  token   300  measured   300.1  delta    0.1  pass
+  d sticker-in word              token   320  measured   325.4  delta    5.4  pass
+  d back-in 3·2·1                token  3000  measured  3000.2  delta    0.2  pass
   d respawn-cut                  token     0  measured     0.0  delta    0.0  pass
-  e phase race → lobby           token   320  measured   325.1  delta    5.1  pass
-  e phase lobby → countdown      token   320  measured   324.8  delta    4.8  pass
-  e beat 3 (countdown phase)     token  1000  measured  1001.7  delta    1.7  pass
-  e beat 2 (countdown phase)     token  1000  measured  1007.6  delta    7.6  pass
-  e beat 1 (countdown phase)     token  1000  measured  1000.9  delta    0.9  pass
-  e beat GO! (countdown to race) token  1000  measured  1000.0  delta    0.0  pass
-  e phase race → results         token   320  measured   325.1  delta    5.1  pass
-  f results-reveal               token  1200  measured  1208.2  delta    8.2  pass
+  e phase race → lobby           token   320  measured   324.7  delta    4.7  pass
+  e phase lobby → countdown      token   320  measured   325.0  delta    5.0  pass
+  e beat 3 (countdown phase)     token  1000  measured  1001.5  delta    1.5  pass
+  e beat 2 (countdown phase)     token  1000  measured  1007.9  delta    7.9  pass
+  e beat 1 (countdown phase)     token  1000  measured  1000.3  delta    0.3  pass
+  e beat GO! (countdown to race) token  1000  measured  1008.0  delta    8.0  pass
+  e phase race → results         token   320  measured   324.4  delta    4.4  pass
+  f results-reveal               token  1200  measured  1200.0  delta    0.0  pass
 
-== reduced motion: 19/19 within tolerance; reel wall time 28.2 s; video 4.98 MB; backend ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)
-  a beat 3                       token  1000  measured  1008.5  delta    8.5  pass
-  a beat 2                       token  1000  measured  1000.4  delta    0.4  pass
+== reduced motion: 19/19 within tolerance; reel wall time 28.2 s; video 5.05 MB; backend ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)
+  a beat 3                       token  1000  measured  1008.6  delta    8.6  pass
+  a beat 2                       token  1000  measured  1001.6  delta    1.6  pass
   a beat 1                       token  1000  measured  1000.0  delta    0.0  pass
-  a beat GO!                     token  1000  measured  1000.1  delta    0.1  pass
+  a beat GO!                     token  1000  measured  1000.3  delta    0.3  pass
   b reflow                       token     0  measured     0.0  delta    0.0  pass
-  b sticker-in tile              token   120  measured   123.4  delta    3.4  pass
-  c identify-pulse               token  1500  measured  1507.5  delta    7.5  pass
+  b sticker-in tile              token   120  measured   123.8  delta    3.8  pass
+  c identify-pulse               token  1500  measured  1507.3  delta    7.3  pass
   d wreck-shake                  token     0  measured     0.0  delta    0.0  pass
-  d sticker-in word              token   120  measured   125.8  delta    5.8  pass
-  d back-in 3·2·1                token  3000  measured  3001.1  delta    1.1  pass
+  d sticker-in word              token   120  measured   124.0  delta    4.0  pass
+  d back-in 3·2·1                token  3000  measured  3000.0  delta    0.0  pass
   d respawn-cut                  token     0  measured     0.0  delta    0.0  pass
-  e phase race → lobby           token   240  measured   240.9  delta    0.9  pass
-  e phase lobby → countdown      token   240  measured   240.3  delta    0.3  pass
-  e beat 3 (countdown phase)     token  1000  measured  1006.8  delta    6.8  pass
-  e beat 2 (countdown phase)     token  1000  measured  1008.4  delta    8.4  pass
-  e beat 1 (countdown phase)     token  1000  measured  1010.1  delta   10.1  pass
-  e beat GO! (countdown to race) token  1000  measured  1001.6  delta    1.6  pass
-  e phase race → results         token   240  measured   241.6  delta    1.6  pass
-  f results-reveal               token   200  measured   201.6  delta    1.6  pass
+  e phase race → lobby           token   240  measured   241.7  delta    1.7  pass
+  e phase lobby → countdown      token   240  measured   242.5  delta    2.5  pass
+  e beat 3 (countdown phase)     token  1000  measured  1000.3  delta    0.3  pass
+  e beat 2 (countdown phase)     token  1000  measured  1001.1  delta    1.1  pass
+  e beat 1 (countdown phase)     token  1000  measured  1008.2  delta    8.2  pass
+  e beat GO! (countdown to race) token  1000  measured  1000.0  delta    0.0  pass
+  e phase race → results         token   240  measured   242.1  delta    2.1  pass
+  f results-reveal               token   200  measured   200.4  delta    0.4  pass
 
 == stills pass (full): 20 stills; reel clock paused around each shot; 19/19 within tolerance
 
 == stills pass (reduced): 18 stills; reel clock paused around each shot; 19/19 within tolerance
 
 files:
-    12013  README.md
-  4976126  reel-reduced.webm
-  5820414  reel.webm
+    12012  README.md
+     5965  local-receipt.txt
+  5046749  reel-reduced.webm
+  5974100  reel.webm
      1280  stills
-    24300  timeline.json
+    24303  timeline.json
 stills:
-   261200  full-a-countdown-3.jpg
-   263249  full-a-countdown-go.jpg
-   285330  full-b-join-end.jpg
-   277652  full-b-join-mid.jpg
-   323212  full-c-identify-late.jpg
-   316304  full-c-identify-peak.jpg
-   305410  full-d-wreck-hold.jpg
-   288288  full-d-wreck-respawn-cut.jpg
-   308905  full-d-wreck-shake.jpg
-   302061  full-e-countdown-3.jpg
-   302073  full-e-countdown-go.jpg
-   316397  full-e-phase-lobby-countdown-mid.jpg
-   206971  full-e-phase-lobby.jpg
-   215007  full-e-phase-race-lobby-mid.jpg
-   269074  full-e-phase-race-results-mid.jpg
-   318626  full-e-phase-race.jpg
-   270705  full-e-phase-results.jpg
-   265375  full-f-results-drop-1.jpg
-   266433  full-f-results-end.jpg
-   261281  full-f-results-mid.jpg
+   261148  full-a-countdown-3.jpg
+   263307  full-a-countdown-go.jpg
+   292140  full-b-join-end.jpg
+   283274  full-b-join-mid.jpg
+   322990  full-c-identify-late.jpg
+   316299  full-c-identify-peak.jpg
+   304573  full-d-wreck-hold.jpg
+   287210  full-d-wreck-respawn-cut.jpg
+   309066  full-d-wreck-shake.jpg
+   302056  full-e-countdown-3.jpg
+   302299  full-e-countdown-go.jpg
+   316612  full-e-phase-lobby-countdown-mid.jpg
+   228607  full-e-phase-lobby.jpg
+   234611  full-e-phase-race-lobby-mid.jpg
+   277237  full-e-phase-race-results-mid.jpg
+   308191  full-e-phase-race.jpg
+   280311  full-e-phase-results.jpg
+   288542  full-f-results-drop-1.jpg
+   289311  full-f-results-end.jpg
+   285542  full-f-results-mid.jpg
    311935  reduced-a-countdown-3.jpg
-   310209  reduced-a-countdown-go.jpg
-   285239  reduced-b-join-end.jpg
-   278761  reduced-b-join-mid.jpg
+   310200  reduced-a-countdown-go.jpg
+   297337  reduced-b-join-end.jpg
+   290858  reduced-b-join-mid.jpg
    327088  reduced-c-identify-late.jpg
    327088  reduced-c-identify-peak.jpg
-   305853  reduced-d-wreck-hold.jpg
-   288344  reduced-d-wreck-respawn-cut.jpg
+   308424  reduced-d-wreck-hold.jpg
+   292187  reduced-d-wreck-respawn-cut.jpg
    331921  reduced-e-countdown-3.jpg
-   328700  reduced-e-countdown-go.jpg
-   318118  reduced-e-phase-lobby-countdown-mid.jpg
-   214153  reduced-e-phase-lobby.jpg
-   213739  reduced-e-phase-race-lobby-mid.jpg
-   271830  reduced-e-phase-race-results-mid.jpg
-   321275  reduced-e-phase-race.jpg
-   277157  reduced-e-phase-results.jpg
-   266969  reduced-f-results-end.jpg
-   264346  reduced-f-results-mid.jpg
+   328631  reduced-e-countdown-go.jpg
+   318038  reduced-e-phase-lobby-countdown-mid.jpg
+   241272  reduced-e-phase-lobby.jpg
+   237196  reduced-e-phase-race-lobby-mid.jpg
+   273982  reduced-e-phase-race-results-mid.jpg
+   314366  reduced-e-phase-race.jpg
+   280667  reduced-e-phase-results.jpg
+   286696  reduced-f-results-end.jpg
+   281984  reduced-f-results-mid.jpg
