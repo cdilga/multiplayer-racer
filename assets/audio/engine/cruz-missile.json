@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../web/shared/audio/engine-synth/profile.schema.json",
+  "format": "jj-engine-profile",
+  "version": 1,
+  "id": "cruz-missile",
+  "name": "Cruz Missile",
+  "description": "A small, cheeky four-cylinder: raspy exhaust, a little turbo whistle, a loose-bodied rattle when it is hurt, and pops on the lift. Procedural; no samples.",
+  "engine": {
+    "cylinders": 4,
+    "idleRpm": 900,
+    "redlineRpm": 7000,
+    "limiterRpm": 7300
+  },
+  "gearbox": {
+    "ratios": [3.6, 2.15, 1.5, 1.12, 0.9],
+    "finalDrive": 4.6,
+    "wheelRadiusM": 0.31,
+    "upshiftRpm": 6300,
+    "downshiftRpm": 3000,
+    "shiftTimeS": 0.22,
+    "launchRpm": 4000,
+    "rpmRiseTauS": 0.06,
+    "rpmFallTauS": 0.15
+  },
+  "output": {
+    "level": 0.85,
+    "controlTauS": 0.03,
+    "noiseSeed": 20261003
+  },
+  "firing": {
+    "level": 0.5,
+    "offThrottleLevel": 0.4,
+    "mellow": {
+      "phase": "sine",
+      "harmonics": [0.2, 0.35, 0.55, 0.75, 0.9, 1.0, 1.0, 0.9, 0.75, 0.6, 0.45, 0.33, 0.24, 0.17, 0.12, 0.08]
+    },
+    "bright": {
+      "phase": "cosine",
+      "harmonics": [0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5, 0.42, 0.35, 0.28, 0.22, 0.18, 0.14, 0.1, 0.08]
+    },
+    "brightMax": 0.85,
+    "bodyFilter": {
+      "minHz": 500,
+      "maxHz": 5200,
+      "q": 1.6,
+      "throttleOpen": 0.5
+    },
+    "lope": {
+      "depth": 0.4,
+      "fadeOutRpmN": 0.4
+    }
+  },
+  "intake": {
+    "level": 0.2,
+    "minHz": 350,
+    "maxHz": 1800,
+    "q": 1.4
+  },
+  "exhaust": {
+    "level": 0.3,
+    "minHz": 380,
+    "maxHz": 2800,
+    "q": 0.8,
+    "pulseDepth": 0.85,
+    "pulseHarmonics": [1, 0.7, 0.4, 0.2, 0.1]
+  },
+  "boost": {
+    "level": 0.045,
+    "whineBaseHz": 1700,
+    "whineSweepHz": 2800,
+    "whineRpmHz": 600,
+    "whooshLevel": 1.4,
+    "whooshHz": 1800,
+    "whooshSweepHz": 1500
+  },
+  "squeal": {
+    "level": 0.9,
+    "centerMinHz": 1350,
+    "centerMaxHz": 2250,
+    "q": 18,
+    "secondRatio": 1.51,
+    "wobbleHz": 6.5,
+    "wobbleDepth": 0.035,
+    "minSpeedMps": 3,
+    "fullSpeedMps": 18
+  },
+  "surface": {
+    "level": 0.5,
+    "fullSpeedMps": 45,
+    "speedExponent": 1.1,
+    "tarmac": { "brown": 0.7, "crackle": 0, "cutoffHz": 240, "q": 0.7, "level": 0.35 },
+    "dirt": { "brown": 0.75, "crackle": 0.35, "cutoffHz": 700, "q": 0.8, "level": 0.6 },
+    "gravel": { "brown": 0.45, "crackle": 1, "cutoffHz": 3600, "q": 0.6, "level": 0.8 }
+  },
+  "rattle": {
+    "level": 0.9,
+    "baseRateHz": 11,
+    "rpmRateScale": 0.25,
+    "idleShare": 0.35,
+    "bandsHz": [2300, 4200],
+    "q": 6,
+    "pulseHarmonics": [1, 0.8, 0.5, 0.25, 0.1]
+  },
+  "pops": {
+    "level": 0.55,
+    "armThrottle": 0.6,
+    "fireThrottle": 0.18,
+    "minRpmN": 0.35,
+    "burstMin": 2,
+    "burstMax": 5,
+    "gapMinS": 0.045,
+    "gapMaxS": 0.13,
+    "bandHz": 1500,
+    "q": 1.2,
+    "upshiftShare": 0.6
+  },
+  "gearDip": {
+    "depth": 0.6,
+    "rampS": 0.012,
+    "holdS": 0.05,
+    "recoverTauS": 0.07
+  }
+}

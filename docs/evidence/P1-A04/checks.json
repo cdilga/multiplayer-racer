@@ -1,0 +1,435 @@
+{
+  "date": "2026-10-03T02:14:19.810Z",
+  "passed": 58,
+  "total": 58,
+  "results": [
+    {
+      "id": "S1",
+      "desc": "no remote URLs in the served page, scripts or bundle (R70)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "S2",
+      "desc": "the page CSS has no colour literals: every colour is a token variable",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "S3",
+      "desc": "committed engine-synth.js and profile.schema.json match a fresh build",
+      "pass": true,
+      "detail": "engine-synth.js and profile.schema.json are up to date"
+    },
+    {
+      "id": "S4",
+      "desc": "web/shared/audio/engine-synth type-checks (strict, noUncheckedIndexedAccess)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "S5",
+      "desc": "lap.json regenerates byte for byte from make-lap.mjs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P1",
+      "desc": "cruz-missile.json passes the validator",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P2",
+      "desc": "cruz-missile.json passes the JSON Schema",
+      "pass": true,
+      "detail": "\"\""
+    },
+    {
+      "id": "P3",
+      "desc": "the validator refuses every broken profile, naming the path",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P4",
+      "desc": "the JSON Schema refuses every field-level break (cross-field rules are validator-only)",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "id": "P5",
+      "desc": "the validator refuses non-objects without throwing",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M1",
+      "desc": "firing frequency is rpm / 60 x cylinders / 2 (3000 rpm, 4 cyl = 100 Hz)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M2",
+      "desc": "the firing oscillators track rpm exactly across the range",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M3",
+      "desc": "throttle raises intake, exhaust, engine level and brightness; zero throttle means zero intake",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M4",
+      "desc": "boost drives the whine: zero boost is silent, whine pitch and level rise",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M5",
+      "desc": "drift drives the squeal, and only while moving",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M6",
+      "desc": "surface rumble needs speed and changes with the surface (cutoff and crackle: tarmac < dirt < gravel)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M7",
+      "desc": "damage drives the rattle: zero damage is silent, rate follows revs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M8",
+      "desc": "a stopped engine is silent (rpm 0) and fades in with revs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M9",
+      "desc": "without a speed the state derives it from rpm and gear (and gear 0 means stopped)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "D1",
+      "desc": "the drivetrain shifts through all five gears on the lap, up and down, with rpm inside the engine limits",
+      "pass": true,
+      "detail": "5 up, 5 down"
+    },
+    {
+      "id": "D2",
+      "desc": "the drivetrain is deterministic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B1",
+      "desc": "the gallery page loads with the tokens, fonts, profile and lap, no errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B2",
+      "desc": "it is styled from the tokens: the display and body faces loaded, paper background",
+      "pass": true,
+      "detail": "{\"display\":true,\"body\":true,\"h1\":\"\\\"Barlow Condensed\\\", system-ui, -apple-system, \\\"Segoe UI\\\", \\\"Noto Sans\\\", \\\"Noto Sans CJK SC\\\", \\\"Noto Sans Arabic\\\", \\\"Noto Sans Devanagari\\\", sans-serif\",\"bg\":\"rgb(255, 244, 222)\",\"ready\":\"true\"}"
+    },
+    {
+      "id": "B3",
+      "desc": "the page has sliders for RPM, throttle, boost, surface and damage, a gear indicator and a \"Play scripted lap\" button",
+      "pass": true,
+      "detail": "[\"in-rpm\",\"in-throttle\",\"in-boost\",\"in-surface\",\"in-damage\",\"in-drift\",\"in-volume\",\"gear\",\"lap-btn\"]"
+    },
+    {
+      "id": "B4",
+      "desc": "offline, \"Play scripted lap\" runs the audio graph: context running and its clock advancing",
+      "pass": true,
+      "detail": "clock +8.1 s"
+    },
+    {
+      "id": "B5",
+      "desc": "an AnalyserNode on the output shows non-silent audio all the way through the lap",
+      "pass": true,
+      "detail": "rms -30.8 to -20.9 dBFS"
+    },
+    {
+      "id": "B6",
+      "desc": "the dash follows the lap: rpm swings and the gear indicator changes",
+      "pass": true,
+      "detail": "rpm 900-6022, gears 1,2,3,4"
+    },
+    {
+      "id": "B7",
+      "desc": "the analyser spectrum moves as the lap moves",
+      "pass": true,
+      "detail": "18 distinct peak bands"
+    },
+    {
+      "id": "B8",
+      "desc": "the page made no request outside the local server, and none failed while the network was off",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B9",
+      "desc": "the lap ends on its own and hands the sliders back",
+      "pass": true,
+      "detail": "{\"rpm\":false,\"btn\":\"Play scripted lap\"}"
+    },
+    {
+      "id": "B10",
+      "desc": "moving the RPM slider moves the engine note: the measured fundamental follows rpm / 60 x 2 within 3%",
+      "pass": true,
+      "detail": "1500rpm: 50Hz -> 50.0Hz; 3000rpm: 100Hz -> 100.0Hz; 5400rpm: 180Hz -> 180.0Hz"
+    },
+    {
+      "id": "B11",
+      "desc": "and a higher rpm sounds brighter",
+      "pass": true,
+      "detail": "945 < 1525 < 2480"
+    },
+    {
+      "id": "B12",
+      "desc": "each layer meter follows its own control (intake and exhaust: throttle, boost, squeal: drift, rattle: damage)",
+      "pass": true,
+      "detail": "{\"throttle0\":0,\"throttle1\":0.585128,\"exhaust1\":0.660899,\"boost0\":0,\"boost1\":0.999804,\"drift0\":0,\"drift1\":0.630318,\"damage0\":0,\"damage1\":0.637705}"
+    },
+    {
+      "id": "B13",
+      "desc": "the surface slider changes the road rumble level (tarmac < dirt < gravel at the same speed)",
+      "pass": true,
+      "detail": "{\"tarmac\":0.0804045,\"dirt\":0.137836,\"gravel\":0.183782}"
+    },
+    {
+      "id": "B14",
+      "desc": "shifting changes the gear indicator and dips the engine level",
+      "pass": true,
+      "detail": "gear 2->3, firing 1.00 -> 0.40"
+    },
+    {
+      "id": "B15",
+      "desc": "lifting off at revs fires the exhaust pops layer",
+      "pass": true,
+      "detail": "pops meter 0.58"
+    },
+    {
+      "id": "B16",
+      "desc": "solo mutes the other seven layers",
+      "pass": true,
+      "detail": "{\"off\":7}"
+    },
+    {
+      "id": "L1",
+      "desc": "firing layer: the fundamental follows rpm / 60 x cylinders / 2 offline (900, 3000, 6000 rpm)",
+      "pass": true,
+      "detail": "900: 30->30.0; 3000: 100->100.0; 6000: 200->200.0"
+    },
+    {
+      "id": "L2",
+      "desc": "firing layer: throttle load raises level and brightness",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L3",
+      "desc": "intake layer: silent at zero throttle, audible at full",
+      "pass": true,
+      "detail": "-180.0 / -35.7 dBFS"
+    },
+    {
+      "id": "L4",
+      "desc": "exhaust layer: louder with revs and throttle",
+      "pass": true,
+      "detail": "-52.0 / -29.8 dBFS"
+    },
+    {
+      "id": "L5",
+      "desc": "boost layer: silent at zero boost, louder and higher in pitch as boost rises",
+      "pass": true,
+      "detail": "-180.0 / -48.5 / -40.3 / -31.9 dBFS, whine 2804 -> 4904 Hz"
+    },
+    {
+      "id": "L6",
+      "desc": "squeal layer: silent without drift or without motion, a narrow-band whine of 1-3 kHz with drift",
+      "pass": true,
+      "detail": "-26.5 dBFS, band ratio 13x"
+    },
+    {
+      "id": "L7",
+      "desc": "surface layer: silent when stopped; tarmac, dirt and gravel each audible and progressively brighter",
+      "pass": true,
+      "detail": "tarmac -36.1 dBFS @192Hz; dirt -30.5 dBFS @437Hz; gravel -31.6 dBFS @2486Hz"
+    },
+    {
+      "id": "L8",
+      "desc": "rattle layer: silent when intact, louder as more of the body comes loose",
+      "pass": true,
+      "detail": "-180.0 / -36.1 / -28.9 dBFS"
+    },
+    {
+      "id": "L9",
+      "desc": "pops layer: silent at steady throttle (and before the lift), crackles after a lift at revs",
+      "pass": true,
+      "detail": "-33.4 dBFS, peak -8.3 dBFS"
+    },
+    {
+      "id": "L10",
+      "desc": "gear-change dip: the engine ducks by 3 dB or more on a gear change and recovers",
+      "pass": true,
+      "detail": "before -21.0, dip -28.6, after -21.0 dBFS"
+    },
+    {
+      "id": "L11",
+      "desc": "an engine at rpm 0 with nothing else happening is silent",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L12",
+      "desc": "the whole voice with every layer maxed leaves headroom (peak below -1 dBFS, no NaN)",
+      "pass": true,
+      "detail": "peak -1.7, rms -17.1 dBFS"
+    },
+    {
+      "id": "R1",
+      "desc": "the scripted lap renders the same twice in one page (max difference below -120 dBFS)",
+      "pass": true,
+      "detail": "max |diff| 1.19e-7 (-138.5 dBFS), 1848000 samples"
+    },
+    {
+      "id": "R1b",
+      "desc": "a single layer of the lap renders bit-identically twice",
+      "pass": true,
+      "detail": "max |diff| 0"
+    },
+    {
+      "id": "R2",
+      "desc": "a different voice seed gives a clearly different (but still valid) render",
+      "pass": true,
+      "detail": "max |diff| 4.42e-1"
+    },
+    {
+      "id": "R3",
+      "desc": "and in a freshly loaded page (max difference below -120 dBFS)",
+      "pass": true,
+      "detail": "max |diff| 1.19e-7"
+    },
+    {
+      "id": "R4",
+      "desc": "the lap render has no NaN and no clipping (peak below -1 dBFS)",
+      "pass": true,
+      "detail": "peak -4.5, rms -20.3 dBFS"
+    },
+    {
+      "id": "R5",
+      "desc": "scripted-lap.wav is under 2 MB",
+      "pass": true,
+      "detail": "1.76 MB, 38.5 s, 24 kHz mono 16-bit"
+    },
+    {
+      "id": "W1",
+      "desc": "WebKit (Playwright build) renders the first 10 s of the lap with no NaN and the same level as Chromium (within 1.5 dB)",
+      "pass": true,
+      "detail": "WebKit -20.3 vs Chromium -20.3 dBFS"
+    },
+    {
+      "id": "C1",
+      "desc": "per-voice audio-thread cost measured at 1, 8, 24 and 32 voices (idle, cruise, all layers, and the scripted lap)",
+      "pass": true,
+      "detail": "lap 6.114/5.43/5.422/5.462, all layers 6.86/7.182/7.116/7.021, idle 2.38/2.461/2.429/2.462 ms per audio-second per voice"
+    },
+    {
+      "id": "C2",
+      "desc": "a voice costs under 1.5% of one core in real time in every scenario and cost per voice does not blow up with count",
+      "pass": true,
+      "detail": "max 7.182 ms/s/voice"
+    }
+  ],
+  "metrics": {
+    "lap": {
+      "maxDiffTwoRenders": 1.1920928955078125e-7,
+      "maxDiffFreshPage": 1.1920928955078125e-7,
+      "sha256OfFirstRender": "1c37b8a6b999acada13366fb8163317293fb771365e81ad1c9c00718ac700c0d",
+      "seconds": 38.5,
+      "peakDbfs": -4.5,
+      "rmsDbfs": -20.3
+    },
+    "layerBalance": {
+      "engine note, idle": {
+        "rmsDbfs": -27.7,
+        "peakDbfs": -15.3
+      },
+      "engine note, cruise 3000 rpm 40%": {
+        "rmsDbfs": -22.8,
+        "peakDbfs": -10.8
+      },
+      "engine note, 6000 rpm flat out": {
+        "rmsDbfs": -20.7,
+        "peakDbfs": -6.6
+      },
+      "intake, 6000 rpm flat out": {
+        "rmsDbfs": -33.3,
+        "peakDbfs": -21.6
+      },
+      "exhaust, 6000 rpm flat out": {
+        "rmsDbfs": -29.8,
+        "peakDbfs": -16.3
+      },
+      "boost whine, full boost 5000 rpm": {
+        "rmsDbfs": -31.9,
+        "peakDbfs": -22.8
+      },
+      "tyre squeal, full drift 25 m/s": {
+        "rmsDbfs": -26.5,
+        "peakDbfs": -13.5
+      },
+      "road rumble, tarmac 30 m/s": {
+        "rmsDbfs": -36.1,
+        "peakDbfs": -27.2
+      },
+      "road rumble, dirt 30 m/s": {
+        "rmsDbfs": -30.5,
+        "peakDbfs": -20
+      },
+      "road rumble, gravel 30 m/s": {
+        "rmsDbfs": -31.6,
+        "peakDbfs": -17.3
+      },
+      "rattle, damage 100% at idle": {
+        "rmsDbfs": -36.3,
+        "peakDbfs": -17.8
+      },
+      "rattle, damage 100% at 5000 rpm": {
+        "rmsDbfs": -28.9,
+        "peakDbfs": -9.6
+      },
+      "pops after a lift at 4500 rpm": {
+        "rmsDbfs": -33.4,
+        "peakDbfs": -8.3
+      },
+      "all layers maxed (worst case)": {
+        "rmsDbfs": -17.1,
+        "peakDbfs": -2.4
+      }
+    },
+    "layerRows": {
+      "firing throttle 0": "-27.0",
+      "firing throttle 1": "-20.0"
+    },
+    "cpu": {
+      "perVoiceLap": {
+        "1": 6.114,
+        "8": 5.43,
+        "24": 5.422,
+        "32": 5.462
+      }
+    }
+  }
+}

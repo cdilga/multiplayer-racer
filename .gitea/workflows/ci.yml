@@ -52,7 +52,10 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci
+      - run: npm --prefix web ci
       - name: UI tokens (P1-U01)
         run: node art/ui/check.mjs
       - name: Announcer cue sheet (P1-A00)
         run: python3 tools/audio/check_cues.py tools/audio/cues-playtest1.tsv && python3 tools/audio/test_check_cues.py
+      - name: Engine synth bundle and profile copy are current (P1-A04)
+        run: node art/ui/poc/audio/engine/build.mjs --check

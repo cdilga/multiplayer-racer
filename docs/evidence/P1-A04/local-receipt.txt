@@ -1,0 +1,127 @@
+# P1-A04 local receipt (engine synth prototype for the design review)
+date: 2026-10-03T01:58:33Z  machine: Apple M1 Pro, 8 cores, macOS 27.0.1  node: v26.10.0  playwright: 1.62.1 (Chromium new headless, channel chromium)  commit base: 236b00f (working tree, nothing committed)
+load before the run: 3.50 3.82 3.28
+
+# Build the gallery's module bundle + profile schema from web/shared/audio/engine-synth/, regenerate the lap, type-check the module
+
+$ node art/ui/poc/audio/engine/build.mjs
+built art/ui/poc/audio/engine/engine-synth.js and web/shared/audio/engine-synth/profile.schema.json
+exit: 0
+
+$ node art/ui/poc/audio/engine/make-lap.mjs
+lap.json: 761 samples, top speed 46.2 m/s
+exit: 0
+
+$ web/node_modules/.bin/tsc -p web/shared/audio/engine-synth/tsconfig.json
+exit: 0
+
+# AC1 + AC2: the gallery plays offline with the controls and a scripted lap; every layer is state-driven; the profile is data; per-voice CPU is recorded.
+# Full results in checks.json; cpu.json, scripted-lap.wav, lap-spectrogram.png, gallery.png and gallery-phone.png are written by this run.
+
+$ node art/ui/poc/audio/engine/check.mjs
+ok   S1 no remote URLs in the served page, scripts or bundle (R70)
+ok   S2 the page CSS has no colour literals: every colour is a token variable
+ok   S3 committed engine-synth.js and profile.schema.json match a fresh build  [engine-synth.js and profile.schema.json are up to date]
+ok   S4 web/shared/audio/engine-synth type-checks (strict, noUncheckedIndexedAccess)
+ok   S5 lap.json regenerates byte for byte from make-lap.mjs
+ok   P1 cruz-missile.json passes the validator
+ok   P2 cruz-missile.json passes the JSON Schema  [""]
+ok   P3 the validator refuses every broken profile, naming the path
+ok   P4 the JSON Schema refuses every field-level break (cross-field rules are validator-only)  [[]]
+ok   P5 the validator refuses non-objects without throwing
+ok   M1 firing frequency is rpm / 60 x cylinders / 2 (3000 rpm, 4 cyl = 100 Hz)
+ok   M2 the firing oscillators track rpm exactly across the range
+ok   M3 throttle raises intake, exhaust, engine level and brightness; zero throttle means zero intake
+ok   M4 boost drives the whine: zero boost is silent, whine pitch and level rise
+ok   M5 drift drives the squeal, and only while moving
+ok   M6 surface rumble needs speed and changes with the surface (cutoff and crackle: tarmac < dirt < gravel)
+ok   M7 damage drives the rattle: zero damage is silent, rate follows revs
+ok   M8 a stopped engine is silent (rpm 0) and fades in with revs
+ok   M9 without a speed the state derives it from rpm and gear (and gear 0 means stopped)
+ok   D1 the drivetrain shifts through all five gears on the lap, up and down, with rpm inside the engine limits  [5 up, 5 down]
+ok   D2 the drivetrain is deterministic
+ok   B1 the gallery page loads with the tokens, fonts, profile and lap, no errors
+ok   B2 it is styled from the tokens: the display and body faces loaded, paper background  [{"display":true,"body":true,"h1":"\"Barlow Condensed\", system-ui, -apple-system, \"Segoe UI\", \"Noto Sans\", \"Noto Sans CJK SC\", \"Noto Sans Arabic\", \"Noto Sans Devanagari\", sans-serif","bg":"rgb(255, 244, 222)","ready":"true"}]
+ok   B3 the page has sliders for RPM, throttle, boost, surface and damage, a gear indicator and a "Play scripted lap" button  [["in-rpm","in-throttle","in-boost","in-surface","in-damage","in-drift","in-volume","gear","lap-btn"]]
+ok   B4 offline, "Play scripted lap" runs the audio graph: context running and its clock advancing  [clock +8.1 s]
+ok   B5 an AnalyserNode on the output shows non-silent audio all the way through the lap  [rms -30.5 to -20.8 dBFS]
+ok   B6 the dash follows the lap: rpm swings and the gear indicator changes  [rpm 900-6022, gears 1,2,3,4]
+ok   B7 the analyser spectrum moves as the lap moves  [16 distinct peak bands]
+ok   B8 the page made no request outside the local server, and none failed while the network was off
+ok   B9 the lap ends on its own and hands the sliders back  [{"rpm":false,"btn":"Play scripted lap"}]
+ok   B10 moving the RPM slider moves the engine note: the measured fundamental follows rpm / 60 x 2 within 3%  [1500rpm: 50Hz -> 50.0Hz; 3000rpm: 100Hz -> 100.0Hz; 5400rpm: 180Hz -> 180.0Hz]
+ok   B11 and a higher rpm sounds brighter  [933 < 1524 < 2520]
+ok   B12 each layer meter follows its own control (intake and exhaust: throttle, boost, squeal: drift, rattle: damage)  [{"throttle0":0,"throttle1":0.586941,"exhaust1":0.66156,"boost0":0,"boost1":0.999832,"drift0":0,"drift1":0.630318,"damage0":0,"damage1":0.637705}]
+ok   B13 the surface slider changes the road rumble level (tarmac < dirt < gravel at the same speed)  [{"tarmac":0.0804045,"dirt":0.137836,"gravel":0.183782}]
+ok   B14 shifting changes the gear indicator and dips the engine level  [gear 2->3, firing 1.00 -> 0.40]
+ok   B15 lifting off at revs fires the exhaust pops layer  [pops meter 0.58]
+ok   B16 solo mutes the other seven layers  [{"off":7}]
+ok   L1 firing layer: the fundamental follows rpm / 60 x cylinders / 2 offline (900, 3000, 6000 rpm)  [900: 30->30.0; 3000: 100->100.0; 6000: 200->200.0]
+ok   L2 firing layer: throttle load raises level and brightness
+ok   L3 intake layer: silent at zero throttle, audible at full  [-180.0 / -35.7 dBFS]
+ok   L4 exhaust layer: louder with revs and throttle  [-52.0 / -29.8 dBFS]
+ok   L5 boost layer: silent at zero boost, louder and higher in pitch as boost rises  [-180.0 / -48.5 / -40.3 / -31.9 dBFS, whine 2804 -> 4904 Hz]
+ok   L6 squeal layer: silent without drift or without motion, a narrow-band whine of 1-3 kHz with drift  [-26.5 dBFS, band ratio 13x]
+ok   L7 surface layer: silent when stopped; tarmac, dirt and gravel each audible and progressively brighter  [tarmac -36.1 dBFS @192Hz; dirt -30.5 dBFS @437Hz; gravel -31.6 dBFS @2486Hz]
+ok   L8 rattle layer: silent when intact, louder as more of the body comes loose  [-180.0 / -36.1 / -28.9 dBFS]
+ok   L9 pops layer: silent at steady throttle (and before the lift), crackles after a lift at revs  [-33.4 dBFS, peak -8.3 dBFS]
+ok   L10 gear-change dip: the engine ducks by 3 dB or more on a gear change and recovers  [before -21.0, dip -28.6, after -21.0 dBFS]
+ok   L11 an engine at rpm 0 with nothing else happening is silent
+ok   L12 the whole voice with every layer maxed leaves headroom (peak below -1 dBFS, no NaN)  [peak -1.7, rms -17.1 dBFS]
+ok   R1 the scripted lap renders the same twice in one page (max difference below -120 dBFS)  [max |diff| 1.19e-7 (-138.5 dBFS), 1848000 samples]
+ok   R1b a single layer of the lap renders bit-identically twice  [max |diff| 0]
+ok   R2 a different voice seed gives a clearly different (but still valid) render  [max |diff| 4.42e-1]
+ok   R3 and in a freshly loaded page (max difference below -120 dBFS)  [max |diff| 1.19e-7]
+ok   R4 the lap render has no NaN and no clipping (peak below -1 dBFS)  [peak -4.5, rms -20.3 dBFS]
+ok   R5 scripted-lap.wav is under 2 MB  [1.76 MB, 38.5 s, 24 kHz mono 16-bit]
+ok   W1 WebKit (Playwright build) renders the first 10 s of the lap with no NaN and the same level as Chromium (within 1.5 dB)  [WebKit -20.3 vs Chromium -20.3 dBFS]
+     cpu static idle: 1v 2.45 ms/s/voice, 8v 2.56 ms/s/voice, 24v 2.631 ms/s/voice, 32v 2.65 ms/s/voice
+     cpu static cruise: 1v 3.21 ms/s/voice, 8v 3.47 ms/s/voice, 24v 3.597 ms/s/voice, 32v 3.578 ms/s/voice
+     cpu static all layers: 1v 6.89 ms/s/voice, 8v 6.996 ms/s/voice, 24v 7.092 ms/s/voice, 32v 7.195 ms/s/voice
+     cpu lap: 1v 5.608 ms/s/voice, 8v 5.524 ms/s/voice, 24v 6.631 ms/s/voice, 32v 5.912 ms/s/voice
+ok   C1 per-voice audio-thread cost measured at 1, 8, 24 and 32 voices (idle, cruise, all layers, and the scripted lap)  [lap 5.608/5.524/6.631/5.912, all layers 6.89/6.996/7.092/7.195, idle 2.45/2.56/2.631/2.65 ms per audio-second per voice]
+ok   C2 a voice costs under 1.5% of one core in real time in every scenario and cost per voice does not blow up with count  [max 7.195 ms/s/voice]
+
+engine synth check: ok (58 checks)
+exit: 0
+
+# The web build stays green
+
+$ npm --prefix web run build
+
+> build
+> tsc --noEmit && vite build
+
+vite v8.3.2 building client environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/landing/index.html             0.40 kB │ gzip: 0.27 kB
+dist/host/index.html                0.41 kB │ gzip: 0.27 kB
+dist/controller/index.html          0.42 kB │ gzip: 0.28 kB
+dist/assets/host-BYxQjiZy.js        0.11 kB │ gzip: 0.12 kB
+dist/assets/landing-BK4kYYos.js     0.11 kB │ gzip: 0.13 kB
+dist/assets/controller-0DqWQjtG.js  0.11 kB │ gzip: 0.13 kB
+dist/assets/build-DXdrtYyX.js       0.72 kB │ gzip: 0.42 kB
+
+✓ built in 25ms
+exit: 0
+
+# Evidence files
+total 5304
+-rw-r--r--@ 1 cdilga  staff    12976  3 Oct 12:01 checks.json
+-rw-r--r--@ 1 cdilga  staff     5695  3 Oct 12:01 cpu.json
+-rw-r--r--@ 1 cdilga  staff   202689  3 Oct 11:58 gallery-phone.png
+-rw-r--r--@ 1 cdilga  staff   211042  3 Oct 11:58 gallery.png
+-rw-r--r--@ 1 cdilga  staff   408974  3 Oct 11:58 lap-spectrogram.png
+-rw-r--r--@ 1 cdilga  staff     8691  3 Oct 12:01 local-receipt.txt
+-rw-r--r--@ 1 cdilga  staff  1848044  3 Oct 11:58 scripted-lap.wav
+
+# Re-run by GentlePike after copying the profile next to the page (gallery publishes art/ui/ alone), 2026-10-03T02:18:25Z, Mac M1 Pro
+$ node art/ui/poc/audio/engine/build.mjs --check
+engine-synth.js and profile.schema.json are up to date
+$ node art/ui/poc/audio/engine/check.mjs
+
+engine synth check: ok (58 checks)
+exit 0
