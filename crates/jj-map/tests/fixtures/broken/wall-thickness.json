@@ -1,0 +1,40 @@
+{
+ "expect": "wall-thickness",
+ "why": "a colliding fence 10 cm thick",
+ "registry": [
+  {
+   "id": "test/thin-fence",
+   "json": {
+    "id": "test/thin-fence",
+    "version": 1,
+    "collider": {
+     "box": {
+      "x": 4000,
+      "y": 900,
+      "z": 100
+     }
+    },
+    "lod": {
+     "simplifyBeyondMm": 1000
+    }
+   }
+  }
+ ],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/dressing/-",
+   "value": {
+    "kitPiece": "test/thin-fence",
+    "pose": {
+     "x": 170000,
+     "y": 0,
+     "z": -8700,
+     "yaw": 0
+    },
+    "params": {},
+    "collides": true
+   }
+  }
+ ]
+}

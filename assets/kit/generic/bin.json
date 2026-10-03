@@ -1,0 +1,17 @@
+{
+  "id": "generic/bin",
+  "version": 1,
+  "what": "A wheelie bin (a dynamic prop).",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 600,
+      "y": 1050,
+      "z": 700
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 30000,
+    "cullBeyondMm": 150000
+  }
+}

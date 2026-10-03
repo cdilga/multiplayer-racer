@@ -1,0 +1,12 @@
+{
+ "expect": "schema",
+ "why": "an unknown field on the route",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/route/surfaceSpeed",
+   "value": 3
+  }
+ ]
+}

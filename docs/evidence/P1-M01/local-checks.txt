@@ -1,0 +1,51 @@
+P1-M01 local checks, 2026-10-03 (GentlePike). Native and WASM on the RCH worker eris (Arch x86_64, rustc 1.99.0, Node 26.10.0).
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --locked --no-fail-fast -p jj-map
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+       Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_map-f2b5bac92cd99f80)
+       Running tests/broken.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/broken-4cda02274e25666d)
+  test the_unpatched_greybox_passes_the_same_harness ... ok
+  test every_broken_fixture_fails_with_the_rule_it_names ... ok
+  test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+  test greybox_validates_and_hashes_to_its_golden ... ok
+  test greybox_carries_the_duel_segments ... ok
+  test canonical_bytes_round_trip_and_only_canonical_bytes_load ... ok
+  test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+  test drivable_width ... ok
+  test reachable_checkpoints_need_a_clear_road ... ok
+  test the_baseline_loop_is_valid ... ok
+  test nothing_stands_in_the_start_corridor ... ok
+  test start_rows_are_clear_and_spaced ... ok
+  test reachable_checkpoints_need_a_real_loop ... ok
+  test reachable_checkpoints_need_gates_and_a_finish ... ok
+  test wall_thickness ... ok
+  test landing_checks ... ok
+  test missing_terrain_is_a_schema_error ... ok
+  test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+       Running tests/greybox.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/greybox-4c7505832695b885)
+       Running tests/v01_cases.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/v01_cases-b0d288b030d9dba5)
+       Running tests/wasm_parity.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/wasm_parity-e533569934398132)
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --locked --target wasm32-unknown-unknown -p jj-map --test wasm_parity   (wasm-bindgen-test-runner 0.2.129 in Node)
+       Running tests/wasm_parity.rs (.rch-target-eris-pool-9c62266c8b76b712bbdd0315c8576c62/wasm32-unknown-unknown/debug/deps/wasm_parity-e8a23b0dc8fc2316.wasm)
+  test greybox_hash_in_wasm_matches_the_native_golden ... ok
+  test result: ok. 1 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.11s
+
+$ jj validate --json maps/greybox-loop.json
+  [
+    {
+      "file": "maps/greybox-loop.json",
+      "gameplayHash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774",
+      "kind": "map",
+      "ok": true,
+      "violations": []
+    }
+  ]
+  exit 0
+
+$ jj validate maps/greybox-loop.json   (before the building fix: the validator caught a real authoring mistake)
+  maps/greybox-loop.json: 2 problem(s)
+    camera-clearance   dressing[79]             generic/box-building is 4.5 m tall within 2 m of the road
+    route-obstructed   dressing[79] generic/box-building a static collider stands in the drivable corridor

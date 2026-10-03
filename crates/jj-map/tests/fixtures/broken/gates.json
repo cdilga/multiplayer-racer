@@ -1,0 +1,12 @@
+{
+ "expect": "gates",
+ "why": "no gate is the finish line",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/route/gates/2/finish",
+   "value": false
+  }
+ ]
+}

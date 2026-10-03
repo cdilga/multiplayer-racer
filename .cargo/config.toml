@@ -17,3 +17,8 @@ debug = false
 
 [profile.test]
 debug = "line-tables-only"
+
+# WASM tests run in Node through wasm-bindgen-test-runner (same version as the wasm-bindgen crate, 0.2.129): the native =
+# WASM parity mechanism (Playtest-1 plan §13), e.g. `cargo test --target wasm32-unknown-unknown -p jj-map --test wasm_parity`.
+[target.wasm32-unknown-unknown]
+runner = "scripts/wasm-test-runner.sh"  # wraps wasm-bindgen-test-runner (TMPDIR outside the repo)

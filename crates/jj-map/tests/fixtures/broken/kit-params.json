@@ -1,0 +1,12 @@
+{
+ "expect": "kit-params",
+ "why": "a barrier 100 m tall",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/dressing/0/params/heightCm",
+   "value": 9999
+  }
+ ]
+}

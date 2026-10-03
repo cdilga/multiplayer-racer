@@ -1,0 +1,12 @@
+{
+ "expect": "gameplay-hash",
+ "why": "a stored hash that does not match",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/header/gameplayHash",
+   "value": "00"
+  }
+ ]
+}

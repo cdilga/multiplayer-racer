@@ -1,0 +1,21 @@
+{
+ "expect": "start-corridor",
+ "why": "a cone stands in the start corridor",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/props/-",
+   "value": {
+    "kitPiece": "generic/cone",
+    "pose": {
+     "x": 80000,
+     "y": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "params": {}
+   }
+  }
+ ]
+}

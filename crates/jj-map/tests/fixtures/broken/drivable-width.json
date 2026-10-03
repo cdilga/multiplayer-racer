@@ -1,0 +1,12 @@
+{
+ "expect": "drivable-width",
+ "why": "the road narrows to 5 m",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/route/points/10/width",
+   "value": 5000
+  }
+ ]
+}

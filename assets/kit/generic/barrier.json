@@ -1,0 +1,40 @@
+{
+  "id": "generic/barrier",
+  "version": 1,
+  "what": "A straight barrier section (tyre wall, rail or concrete), placed along route edges.",
+  "params": {
+    "lengthMm": {
+      "min": 1000,
+      "max": 50000,
+      "default": 4000
+    },
+    "heightCm": {
+      "min": 40,
+      "max": 300,
+      "default": 90
+    },
+    "thicknessMm": {
+      "min": 250,
+      "max": 3000,
+      "default": 400
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "lengthMm"
+      },
+      "y": {
+        "param": "heightCm",
+        "scale": 10
+      },
+      "z": {
+        "param": "thicknessMm"
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

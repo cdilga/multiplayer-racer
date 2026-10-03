@@ -1,0 +1,12 @@
+{
+ "expect": "feature-params",
+ "why": "a kerb 50 cm high",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/features/1/params/heightCm",
+   "value": 50
+  }
+ ]
+}

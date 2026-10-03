@@ -1,0 +1,22 @@
+{
+ "expect": "route-obstructed",
+ "why": "a building stands on the road",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/dressing/-",
+   "value": {
+    "kitPiece": "generic/box-building",
+    "pose": {
+     "x": 75000,
+     "y": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "params": {},
+    "collides": true
+   }
+  }
+ ]
+}

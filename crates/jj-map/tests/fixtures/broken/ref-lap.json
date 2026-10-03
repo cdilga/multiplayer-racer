@@ -1,0 +1,12 @@
+{
+ "expect": "ref-lap",
+ "why": "a zero reference lap",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/header/refLapMs",
+   "value": 0
+  }
+ ]
+}

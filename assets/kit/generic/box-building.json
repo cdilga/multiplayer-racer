@@ -1,0 +1,40 @@
+{
+  "id": "generic/box-building",
+  "version": 1,
+  "what": "A box standing in for a building (shed, shop, house) until the biome kits land.",
+  "params": {
+    "widthMm": {
+      "min": 2000,
+      "max": 60000,
+      "default": 9000
+    },
+    "depthMm": {
+      "min": 2000,
+      "max": 60000,
+      "default": 6000
+    },
+    "heightCm": {
+      "min": 200,
+      "max": 2500,
+      "default": 400
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "widthMm"
+      },
+      "y": {
+        "param": "heightCm",
+        "scale": 10
+      },
+      "z": {
+        "param": "depthMm"
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 120000,
+    "cullBeyondMm": 800000
+  }
+}

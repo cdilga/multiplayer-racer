@@ -1,0 +1,26 @@
+{
+ "expect": "registry-schema",
+ "why": "a registry entry's collider uses a param it doesn't declare",
+ "registry": [
+  {
+   "id": "test/bad-param",
+   "json": {
+    "id": "test/bad-param",
+    "version": 1,
+    "collider": {
+     "box": {
+      "x": {
+       "param": "lengthMm"
+      },
+      "y": 1000,
+      "z": 500
+     }
+    },
+    "lod": {
+     "simplifyBeyondMm": 1000
+    }
+   }
+  }
+ ],
+ "ops": []
+}

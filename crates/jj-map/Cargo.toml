@@ -1,6 +1,6 @@
 [package]
 name = "jj-map"
-description = "The jj.map.v1 schema, canonical bytes, validator and loader (authored and generated maps)."
+description = "jj.map.v1: the one map format (authored and generated), its kit-piece registry, validator, loader and canonical bytes."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,6 +10,13 @@ repository.workspace = true
 
 [dependencies]
 jj-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+postcard.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
 
 [lints]
 workspace = true

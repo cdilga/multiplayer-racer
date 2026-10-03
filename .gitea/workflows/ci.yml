@@ -30,6 +30,17 @@ jobs:
         run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Test
+        run: cargo test --workspace --locked
+      - name: WASM parity in Node (jj-map, P1-M01)
+        run: |
+          if ! command -v wasm-bindgen-test-runner >/dev/null; then
+            curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
+            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen-test-runner "$HOME/.cargo/bin/"
+          fi
+          cargo test --locked --target wasm32-unknown-unknown -p jj-map --test wasm_parity
+      - name: The greybox validates (jj validate)
+        run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
       - name: No Tokio (R2)
         run: scripts/ci/no-tokio.sh
       - name: cargo deny

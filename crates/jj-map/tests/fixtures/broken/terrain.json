@@ -1,0 +1,11 @@
+{
+ "expect": "terrain",
+ "why": "one height missing from the grid",
+ "registry": [],
+ "ops": [
+  {
+   "op": "remove",
+   "path": "/terrain/heights/0"
+  }
+ ]
+}

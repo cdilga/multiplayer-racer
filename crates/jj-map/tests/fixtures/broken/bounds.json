@@ -1,0 +1,21 @@
+{
+ "expect": "bounds",
+ "why": "a cone far outside the bounds",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/props/-",
+   "value": {
+    "kitPiece": "generic/cone",
+    "pose": {
+     "x": 279949,
+     "y": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "params": {}
+   }
+  }
+ ]
+}

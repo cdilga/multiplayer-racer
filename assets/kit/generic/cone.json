@@ -1,0 +1,16 @@
+{
+  "id": "generic/cone",
+  "version": 1,
+  "what": "A traffic cone (a dynamic prop: knocked over, stays where it lands).",
+  "params": {},
+  "collider": {
+    "cylinder": {
+      "radius": 180,
+      "height": 700
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 30000,
+    "cullBeyondMm": 150000
+  }
+}

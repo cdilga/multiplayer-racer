@@ -1,0 +1,21 @@
+{
+ "expect": "landing-envelope",
+ "why": "a bin sits on the jump landing",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/props/-",
+   "value": {
+    "kitPiece": "generic/bin",
+    "pose": {
+     "x": -1623,
+     "y": 0,
+     "z": 52505,
+     "yaw": 18000
+    },
+    "params": {}
+   }
+  }
+ ]
+}

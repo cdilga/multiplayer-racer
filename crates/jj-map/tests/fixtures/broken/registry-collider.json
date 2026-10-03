@@ -1,0 +1,17 @@
+{
+ "expect": "registry-collider",
+ "why": "a registry entry has no collider proxy",
+ "registry": [
+  {
+   "id": "test/no-collider",
+   "json": {
+    "id": "test/no-collider",
+    "version": 1,
+    "lod": {
+     "simplifyBeyondMm": 1000
+    }
+   }
+  }
+ ],
+ "ops": []
+}

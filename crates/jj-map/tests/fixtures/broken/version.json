@@ -1,0 +1,12 @@
+{
+ "expect": "version",
+ "why": "a future version string",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/header/version",
+   "value": "jj.map.v2"
+  }
+ ]
+}

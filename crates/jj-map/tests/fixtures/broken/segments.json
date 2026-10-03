@@ -1,0 +1,12 @@
+{
+ "expect": "segments",
+ "why": "a named segment past the end of the route",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/route/segments/0/span/to",
+   "value": 256
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "expect": "camera-clearance",
+ "why": "a 4.5 m building 1 m off the road edge",
+ "registry": [],
+ "ops": [
+  {
+   "op": "add",
+   "path": "/dressing/-",
+   "value": {
+    "kitPiece": "generic/box-building",
+    "pose": {
+     "x": 50000,
+     "y": 0,
+     "z": -11000,
+     "yaw": 0
+    },
+    "params": {
+     "widthMm": 9000,
+     "depthMm": 6000,
+     "heightCm": 450
+    },
+    "collides": false
+   }
+  }
+ ]
+}

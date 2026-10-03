@@ -1,0 +1,32 @@
+{
+  "id": "generic/post",
+  "version": 1,
+  "what": "A post or pole (gate posts, signs' legs).",
+  "params": {
+    "heightCm": {
+      "min": 50,
+      "max": 1200,
+      "default": 300
+    },
+    "radiusMm": {
+      "min": 50,
+      "max": 600,
+      "default": 150
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 60000,
+    "cullBeyondMm": 300000
+  }
+}

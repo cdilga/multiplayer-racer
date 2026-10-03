@@ -1,0 +1,12 @@
+{
+ "expect": "unknown-kit-piece",
+ "why": "a dressing piece names an id the registry lacks",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/dressing/0/kitPiece",
+   "value": "generic/fountain"
+  }
+ ]
+}

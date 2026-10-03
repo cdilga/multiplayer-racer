@@ -44,3 +44,12 @@
   `/data/projects` + `/dp`). eris uses a wrapper at `~/.local/bin/rch-wkr` that exports
   `RCH_WKR_CANONICAL_ROOT=/Users/cdilga/Documents/dev` (re-install it after `rch workers deploy-binary`), then
   `rch workers probe eris` refreshes the cached result. devbox drops to 0 slots under disk pressure (< ~8% free).
+
+## 2026-10-03 · RCH and WASM tests (P1-M01)
+
+- `rch exec -- cargo run …` succeeds remotely but exits **102** (RCH-E327): it brings Linux binaries back to an aarch64
+  Mac and flags them. The program's own output is above the error. For a one-off run use
+  `RCH_ALLOW_FOREIGN_ARTIFACTS=1`; tests (`cargo test`) aren't affected.
+- `wasm-bindgen-test-runner` writes CommonJS glue into `$TMPDIR`. RCH sets `TMPDIR` inside the repo, and the root
+  `package.json` says `"type": "module"`, so Node loads the glue as ESM and dies ("exports is not defined"). The WASM test
+  runner is `scripts/wasm-test-runner.sh` (`.cargo/config.toml`), which runs it with `TMPDIR=/tmp`.

@@ -1,0 +1,12 @@
+{
+ "expect": "recovery",
+ "why": "nowhere to respawn",
+ "registry": [],
+ "ops": [
+  {
+   "op": "replace",
+   "path": "/route/recovery",
+   "value": []
+  }
+ ]
+}
