@@ -6,7 +6,7 @@
 // Usage: node art/ui/poc/audio/engine/build.mjs [--check]   (--check fails if the committed files are stale)
 import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -34,17 +34,18 @@ await build({
 // JSON Schema (2020-12) from the validator's rule table.
 const bundle = await import(pathToFileURL(join(outDir, 'engine-synth.js')).href);
 const toSchema = (rule) => {
+  const meta = rule.doc || rule.unit ? { ...(rule.doc ? { description: rule.doc } : {}), ...(rule.unit ? { 'x-unit': rule.unit } : {}) } : {};
   switch (rule.k) {
     case 'num':
-      return { type: rule.int ? 'integer' : 'number', minimum: rule.min, maximum: rule.max };
+      return { type: rule.int ? 'integer' : 'number', minimum: rule.min, maximum: rule.max, ...meta };
     case 'str':
-      return { type: 'string', minLength: 1 };
+      return { type: 'string', minLength: 1, ...meta };
     case 'lit':
-      return { const: rule.v };
+      return { const: rule.v, ...meta };
     case 'enum':
-      return { enum: [...rule.v] };
+      return { enum: [...rule.v], ...meta };
     case 'arr':
-      return { type: 'array', minItems: rule.min, items: toSchema(rule.of) };
+      return { type: 'array', minItems: rule.min, items: toSchema(rule.of), ...meta };
     case 'obj': {
       const required = Object.keys(rule.props).filter((k) => !rule.optional?.includes(k));
       return {
@@ -52,6 +53,7 @@ const toSchema = (rule) => {
         properties: Object.fromEntries(Object.entries(rule.props).map(([k, v]) => [k, toSchema(v)])),
         required,
         additionalProperties: false,
+        ...meta,
       };
     }
     default:
@@ -68,10 +70,17 @@ const schema = {
 };
 const schemaText = `${JSON.stringify(schema, null, 2)}\n`;
 const schemaPath = join(moduleDir, 'profile.schema.json');
-// The gallery publishes art/ui/ on its own, so the page reads a copy of the profile kept next to it.
-const profileSrc = join(repo, 'assets', 'audio', 'engine', 'cruz-missile.json');
-const profileCopy = join(here, 'cruz-missile.json');
-const profileText = readFileSync(profileSrc, 'utf8');
+// The gallery publishes art/ui/ on its own, so the page reads copies kept next to it: the schema and
+// every profile named in the vehicle-sound manifest (P1-A04b; a new vehicle is a new file in
+// assets/audio/engine/ plus one line in manifest.json, and this build publishes it).
+const manifestSrc = join(repo, 'assets', 'audio', 'engine', 'manifest.json');
+const manifest = JSON.parse(readFileSync(manifestSrc, 'utf8'));
+if (!Array.isArray(manifest.files) || manifest.files.length === 0) throw new Error('assets/audio/engine/manifest.json: expected { "files": [ ... ] }');
+const published = [];
+for (const file of manifest.files) {
+  if (typeof file !== 'string' || !/^[a-z0-9-]+\.json$/.test(file)) throw new Error(`manifest: bad file name ${JSON.stringify(file)}`);
+  published.push([join(repo, 'assets', 'audio', 'engine', file), join(here, file)]);
+}
 
 if (checkOnly) {
   const stale = [];
@@ -80,15 +89,25 @@ if (checkOnly) {
   if (fresh !== committed) stale.push('art/ui/poc/audio/engine/engine-synth.js');
   const committedSchema = existsSync(schemaPath) ? readFileSync(schemaPath, 'utf8') : '';
   if (schemaText !== committedSchema) stale.push('web/shared/audio/engine-synth/profile.schema.json');
-  if (!existsSync(profileCopy) || readFileSync(profileCopy, 'utf8') !== profileText) stale.push('art/ui/poc/audio/engine/cruz-missile.json');
+  const committedSchemaCopy = existsSync(join(here, 'profile.schema.json')) ? readFileSync(join(here, 'profile.schema.json'), 'utf8') : '';
+  if (schemaText !== committedSchemaCopy) stale.push('art/ui/poc/audio/engine/profile.schema.json');
+  const committedManifest = existsSync(join(here, 'manifest.json')) ? readFileSync(join(here, 'manifest.json'), 'utf8') : '';
+  const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
+  if (committedManifest !== manifestText) stale.push('art/ui/poc/audio/engine/manifest.json');
+  for (const [src, copy] of published) {
+    const text = readFileSync(src, 'utf8');
+    if (!existsSync(copy) || readFileSync(copy, 'utf8') !== text) stale.push(`art/ui/poc/audio/engine/${basename(copy)}`);
+  }
   rmSync(outDir, { recursive: true, force: true });
   if (stale.length) {
     console.error(`stale: ${stale.join(', ')} (run node art/ui/poc/audio/engine/build.mjs)`);
     process.exit(1);
   }
-  console.log('engine-synth.js and profile.schema.json are up to date');
+  console.log('engine-synth.js, profile.schema.json, manifest and profiles are up to date');
 } else {
   writeFileSync(schemaPath, schemaText);
-  writeFileSync(profileCopy, profileText);
-  console.log('built art/ui/poc/audio/engine/engine-synth.js and web/shared/audio/engine-synth/profile.schema.json');
+  writeFileSync(join(here, 'profile.schema.json'), schemaText);
+  writeFileSync(join(here, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  for (const [src, copy] of published) writeFileSync(copy, readFileSync(src, 'utf8'));
+  console.log(`built engine-synth.js, profile.schema.json and ${published.length} profile(s) from the manifest`);
 }

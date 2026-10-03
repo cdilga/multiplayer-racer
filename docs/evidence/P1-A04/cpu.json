@@ -2,7 +2,7 @@
   "machine": "Apple M1 Pro, 8 cores, 16 GiB, macOS 27.0.1 (Darwin 27.0.0)",
   "chromium": "Chromium 151.0.7922.34 (Playwright 1.62.1, new headless, channel chromium)",
   "node": "v26.10.0",
-  "date": "2026-10-03T02:14:19.751Z",
+  "date": "2026-10-03T20:29:43.251Z",
   "sampleRate": 48000,
   "voiceSeedsDiffer": true,
   "unit": "msPerAudioSecondPerVoice = milliseconds of audio-thread time spent per second of audio rendered, per voice (divide by 10 for percent of one core in real time)",
@@ -14,235 +14,235 @@
   ],
   "perVoice": {
     "lap": {
-      "1": 6.114,
-      "8": 5.43,
-      "24": 5.422,
-      "32": 5.462
+      "1": 4.908,
+      "8": 4.841,
+      "24": 4.758,
+      "32": 4.746
     },
     "allLayers": {
-      "1": 6.86,
-      "8": 7.182,
-      "24": 7.116,
-      "32": 7.021
+      "1": 6.35,
+      "8": 6.376,
+      "24": 6.714,
+      "32": 6.971
     },
     "cruise": {
-      "1": 3.11,
-      "8": 3.239,
-      "24": 3.28,
-      "32": 3.322
+      "1": 3.34,
+      "8": 3.563,
+      "24": 3.501,
+      "32": 3.525
     },
     "idle": {
-      "1": 2.38,
-      "8": 2.461,
-      "24": 2.429,
-      "32": 2.462
+      "1": 2.65,
+      "8": 2.634,
+      "24": 2.74,
+      "32": 2.669
     }
   },
   "static": {
     "idle": {
       "1": {
-        "msPer10sAudio": 25.4,
-        "msPerAudioSecondPerVoice": 2.38,
+        "msPer10sAudio": 27.8,
+        "msPerAudioSecondPerVoice": 2.65,
         "runs": [
-          26.2,
-          25.7,
-          25.4,
-          25.4,
-          24.6
+          27.8,
+          28.3,
+          26.9,
+          28.1,
+          27.5
         ]
       },
       "8": {
-        "msPer10sAudio": 198.5,
-        "msPerAudioSecondPerVoice": 2.461,
+        "msPer10sAudio": 212,
+        "msPerAudioSecondPerVoice": 2.634,
         "runs": [
-          196.4,
-          195.6,
-          200.8,
-          198.5,
-          200
+          211.7,
+          212.6,
+          212.2,
+          212,
+          210.7
         ]
       },
       "24": {
-        "msPer10sAudio": 584.6,
-        "msPerAudioSecondPerVoice": 2.429,
+        "msPer10sAudio": 659,
+        "msPerAudioSecondPerVoice": 2.74,
         "runs": [
-          584.6,
-          581.4,
-          586.2,
-          584.6,
-          587.5
+          703.8,
+          664.9,
+          659,
+          651.2,
+          639.9
         ]
       },
       "32": {
-        "msPer10sAudio": 789.5,
-        "msPerAudioSecondPerVoice": 2.462,
+        "msPer10sAudio": 855.4,
+        "msPerAudioSecondPerVoice": 2.669,
         "runs": [
-          789.5,
-          783.7,
-          793.3,
-          790.3,
-          780.6
+          851.5,
+          855.4,
+          863.5,
+          853.6,
+          855.7
         ]
       }
     },
     "cruise": {
       "1": {
-        "msPer10sAudio": 32.6,
-        "msPerAudioSecondPerVoice": 3.11,
+        "msPer10sAudio": 34.8,
+        "msPerAudioSecondPerVoice": 3.34,
         "runs": [
-          32.8,
-          32.5,
-          32.6,
-          33.8,
-          32.4
+          34.2,
+          36.3,
+          34.8,
+          36.8,
+          34.6
         ]
       },
       "8": {
-        "msPer10sAudio": 260.6,
-        "msPerAudioSecondPerVoice": 3.239,
+        "msPer10sAudio": 286.4,
+        "msPerAudioSecondPerVoice": 3.563,
         "runs": [
-          263,
-          260.6,
-          256.7,
-          260.8,
-          258.7
+          294.1,
+          290.6,
+          283.5,
+          286.4,
+          284.1
         ]
       },
       "24": {
-        "msPer10sAudio": 788.7,
-        "msPerAudioSecondPerVoice": 3.28,
+        "msPer10sAudio": 841.7,
+        "msPerAudioSecondPerVoice": 3.501,
         "runs": [
-          795.2,
-          793.6,
-          787.5,
-          788.7,
-          785.9
+          834.1,
+          838.4,
+          844.7,
+          841.7,
+          858.3
         ]
       },
       "32": {
-        "msPer10sAudio": 1064.7,
-        "msPerAudioSecondPerVoice": 3.322,
+        "msPer10sAudio": 1129.3,
+        "msPerAudioSecondPerVoice": 3.525,
         "runs": [
-          1071.2,
-          1064.7,
-          1050.6,
-          1061.2,
-          1069.9
+          1199,
+          1124.6,
+          1129.3,
+          1140.6,
+          1125.9
         ]
       }
     },
     "all layers": {
       "1": {
-        "msPer10sAudio": 69.9,
-        "msPerAudioSecondPerVoice": 6.86,
+        "msPer10sAudio": 65,
+        "msPerAudioSecondPerVoice": 6.35,
         "runs": [
-          70.5,
-          68.7,
-          69.9,
-          68.6,
-          71.3
+          66.4,
+          63.4,
+          64.1,
+          65,
+          65.9
         ]
       },
       "8": {
-        "msPer10sAudio": 575.9,
-        "msPerAudioSecondPerVoice": 7.182,
+        "msPer10sAudio": 511.6,
+        "msPerAudioSecondPerVoice": 6.376,
         "runs": [
-          574,
-          568.2,
-          597.2,
-          575.9,
-          599
+          508.9,
+          514,
+          511.9,
+          506.8,
+          511.6
         ]
       },
       "24": {
-        "msPer10sAudio": 1709.1,
-        "msPerAudioSecondPerVoice": 7.116,
+        "msPer10sAudio": 1612.8,
+        "msPerAudioSecondPerVoice": 6.714,
         "runs": [
-          1941.1,
-          1709.1,
-          1679.6,
-          1675.3,
-          1719.6
+          1563.5,
+          1624.7,
+          1528.4,
+          1627.9,
+          1612.8
         ]
       },
       "32": {
-        "msPer10sAudio": 2248,
-        "msPerAudioSecondPerVoice": 7.021,
+        "msPer10sAudio": 2232.3,
+        "msPerAudioSecondPerVoice": 6.971,
         "runs": [
-          2249.7,
-          2234.3,
-          2248,
-          2233.8,
-          2253.2
+          2120.4,
+          2272,
+          2232.3,
+          2690.6,
+          2196.7
         ]
       }
     }
   },
   "lap": {
     "1": {
-      "wallMs": 273.6,
-      "mainThreadSetMs": 6.6,
-      "audioThreadMs": 235.4,
-      "msPerAudioSecondPerVoice": 6.114,
-      "percentOfOneCorePerVoiceRealtime": 0.611,
-      "setCallUsPerVoicePerCall": 3.47,
+      "wallMs": 243.2,
+      "mainThreadSetMs": 7,
+      "audioThreadMs": 203.4,
+      "msPerAudioSecondPerVoice": 4.908,
+      "percentOfOneCorePerVoiceRealtime": 0.491,
+      "setCallUsPerVoicePerCall": 3.42,
       "runs": [
-        257.6,
-        252.8,
-        273.6,
-        284.1,
-        286.8
+        246.3,
+        243.2,
+        241.6,
+        237.9,
+        244.9
       ]
     },
     "8": {
-      "wallMs": 1729.6,
-      "mainThreadSetMs": 25.7,
-      "audioThreadMs": 1672.3,
-      "msPerAudioSecondPerVoice": 5.43,
-      "percentOfOneCorePerVoiceRealtime": 0.543,
-      "setCallUsPerVoicePerCall": 1.69,
+      "wallMs": 1664.3,
+      "mainThreadSetMs": 26.7,
+      "audioThreadMs": 1604.8,
+      "msPerAudioSecondPerVoice": 4.841,
+      "percentOfOneCorePerVoiceRealtime": 0.484,
+      "setCallUsPerVoicePerCall": 1.63,
       "runs": [
-        1868.6,
-        1725.7,
-        1719.6,
-        1729.6,
-        1733
+        1664.3,
+        1642.4,
+        1692.9,
+        1684.1,
+        1623.8
       ]
     },
     "24": {
-      "wallMs": 5118.2,
-      "mainThreadSetMs": 76.3,
-      "audioThreadMs": 5010.3,
-      "msPerAudioSecondPerVoice": 5.422,
-      "percentOfOneCorePerVoiceRealtime": 0.542,
-      "setCallUsPerVoicePerCall": 1.67,
+      "wallMs": 4850.9,
+      "mainThreadSetMs": 85.6,
+      "audioThreadMs": 4732.5,
+      "msPerAudioSecondPerVoice": 4.758,
+      "percentOfOneCorePerVoiceRealtime": 0.476,
+      "setCallUsPerVoicePerCall": 1.74,
       "runs": [
-        5091,
-        5118.2,
-        5114.2,
-        5953.9,
-        5412
+        4848.8,
+        4891.4,
+        4850.9,
+        4896.7,
+        4833.7
       ]
     },
     "32": {
-      "wallMs": 6873.5,
-      "mainThreadSetMs": 112.5,
-      "audioThreadMs": 6729.4,
-      "msPerAudioSecondPerVoice": 5.462,
-      "percentOfOneCorePerVoiceRealtime": 0.546,
-      "setCallUsPerVoicePerCall": 1.85,
+      "wallMs": 6439.3,
+      "mainThreadSetMs": 113.4,
+      "audioThreadMs": 6293.1,
+      "msPerAudioSecondPerVoice": 4.746,
+      "percentOfOneCorePerVoiceRealtime": 0.475,
+      "setCallUsPerVoicePerCall": 1.73,
       "runs": [
-        6823.7,
-        7257.5,
-        6911.2,
-        6873.5,
-        6808.4
+        6460.4,
+        6511.1,
+        6439.3,
+        6409.6,
+        6434.7
       ]
     },
     "baseline": {
-      "wallMs": 31.6,
-      "callbackMs": 1.8,
-      "steps": 1900
+      "wallMs": 32.8,
+      "callbackMs": 2.1,
+      "steps": 2047
     }
   }
 }

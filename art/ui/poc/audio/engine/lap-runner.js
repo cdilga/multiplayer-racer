@@ -1,6 +1,10 @@
 // Scripted-lap playback shared by the gallery page (real time) and the checks (offline render): the same
 // fixed 20 ms steps drive the drivetrain and the voice either way, so what the owner hears on the page is
 // what the committed WAV and the determinism test render.
+//
+// The lap opens with an engine start and closes with a stop (P1-A04c): `preS` seconds parked at idle in
+// neutral while the start plays (crank, catch, settle), then the lap, then the key goes off and the stop plays
+// for the profile's `stopS`. Runner time is that whole timeline; lap time is runner time minus `preS`.
 import { createDrivetrain } from './engine-synth.js';
 
 export const STEP_S = 0.02;
@@ -14,17 +18,42 @@ function sampleSeries(series, rateHz, t, held = false) {
   return series[i] + (series[j] - series[i]) * (x - i);
 }
 
-/** Lap time -> voice state. Steps the drivetrain in fixed STEP_S increments so playback is deterministic. */
+/** The start pre-roll and stop tail for a profile, in whole control steps. */
+export function startStopTimes(profile) {
+  const ig = profile.ignition;
+  const steps = (s) => Math.ceil(s / STEP_S - 1e-9) * STEP_S;
+  return { preS: steps(ig.crankS + ig.catchS + 3 * ig.settleTauS + 0.3), stopS: steps(ig.stopS) };
+}
+
+/** Runner time -> voice state. Steps the drivetrain in fixed STEP_S increments so playback is deterministic. */
 export function createLapRunner(profile, lap) {
   const drivetrain = createDrivetrain(profile);
   const s = lap.series;
+  const { preS, stopS } = startStopTimes(profile);
+  const parked = {
+    ignition: true,
+    rpm: profile.engine.idleRpm,
+    throttle: 0,
+    boost: 0,
+    drift: 0,
+    surface: lap.surfaces[s.surface[0]] ?? 'tarmac',
+    damage: s.damage[0],
+    gear: 0,
+    speed: 0,
+    shifting: false,
+  };
   let simT = -STEP_S;
   let last = null;
-  const at = (t) => {
+  let lastLap = null;
+  const at = (runT) => {
+    const t = runT - preS;
+    if (t < 0) return parked;
+    if (t >= lap.durationS) return { ...(lastLap ?? parked), ignition: false, throttle: 0, boost: 0 };
     const speed = sampleSeries(s.speedMps, lap.rateHz, t);
     const throttle = sampleSeries(s.throttle, lap.rateHz, t);
     const out = drivetrain.step(STEP_S, speed, throttle);
-    return {
+    lastLap = {
+      ignition: true,
       rpm: out.rpm,
       throttle,
       boost: sampleSeries(s.boost, lap.rateHz, t),
@@ -35,14 +64,20 @@ export function createLapRunner(profile, lap) {
       speed,
       shifting: out.shifting,
     };
+    return lastLap;
   };
   return {
+    preS,
+    stopS,
+    /** The whole timeline: start, lap, stop. */
+    durationS: preS + lap.durationS + stopS,
     reset() {
       drivetrain.reset();
       simT = -STEP_S;
       last = null;
+      lastLap = null;
     },
-    /** State at lap time t; advances the drivetrain through every whole step up to t. */
+    /** State at runner time t; advances the drivetrain through every whole step up to t. */
     stateAt(t) {
       while (simT + STEP_S <= t + 1e-9 || last === null) {
         simT = last === null ? 0 : simT + STEP_S;
@@ -87,26 +122,28 @@ export async function renderScript(synth, profile, script, opts = {}) {
 /**
  * Render the lap through `voices` engine voices into an OfflineAudioContext and return the mono samples.
  * Control steps run at suspend points (the voice sees the same sequence of set() calls as in real time).
- * Options: sampleRate, seed (voice 0's seed; voice i uses seed + i), tailS, layers (only these layers stay on),
+ * The voices start parked with the engine off, so the render opens with the start and ends with the stop.
+ * Options: sampleRate, seed (voice 0's seed; voice i uses seed + i), tailS (after the stop), durationS (runner time,
+ * default the whole timeline), layers (only these layers stay on),
  * timing: true returns { samples, wallMs, callbackMs, steps } (wall time of startRendering and of the main-thread set()
  * callbacks inside it) instead of the bare samples.
  */
 export async function renderLapOffline(synth, profile, lap, opts = {}) {
-  const { sampleRate = 48000, seed = 0, voices = 1, tailS = 0.5, layers = null, durationS = lap.durationS, stepS = STEP_S, timing = false } = opts;
+  const runner = createLapRunner(profile, lap);
+  const { sampleRate = 48000, seed = 0, voices = 1, tailS = 0.5, layers = null, durationS = runner.durationS, stepS = STEP_S, timing = false } = opts;
   const frames = Math.ceil((durationS + tailS) * sampleRate);
   const ctx = new OfflineAudioContext(1, frames, sampleRate);
   const created = [];
   for (let i = 0; i < voices; i++) {
-    const v = synth.create(ctx, profile, { destination: ctx.destination, seed: seed + i });
+    const v = synth.create(ctx, profile, { destination: ctx.destination, seed: seed + i, initial: { ignition: false } });
     if (layers) for (const l of synth.LAYERS) v.setLayerEnabled(l, layers.includes(l));
     created.push(v);
   }
-  const runner = createLapRunner(profile, lap);
   let callbackMs = 0;
   let steps = 0;
   const apply = () => {
     const t0 = timing ? performance.now() : 0;
-    const st = runner.stateAt(Math.min(ctx.currentTime, lap.durationS));
+    const st = runner.stateAt(Math.min(ctx.currentTime, runner.durationS));
     for (const v of created) v.set(st);
     if (timing) {
       callbackMs += performance.now() - t0;

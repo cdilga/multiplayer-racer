@@ -81,7 +81,10 @@ a { color: var(--c-cobalt-deep); text-underline-offset: 3px; text-decoration-thi
 .status { display: inline-flex; align-items: center; gap: var(--sp-2); font-weight: 700; font-size: var(--fs-label); }
 .status::before { content: ""; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--c-ink); background: var(--c-paper-shade); }
 .status[data-on="true"]::before { background: var(--c-success); }
+.status[data-phase="cranking"]::before, .status[data-phase="catching"]::before, .status[data-phase="settling"]::before { background: var(--c-saffron); }
+.status[data-phase="stopping"]::before { background: var(--c-danger); }
 .lap-line { display: grid; gap: var(--sp-2); }
+.lap-line[hidden] { display: none; }
 .lap-bar { height: 14px; border: var(--outline) solid var(--c-ink); border-radius: 999px; background: var(--c-paper-shade); overflow: hidden; }
 .lap-bar i { display: block; height: 100%; width: 100%; background: var(--c-cobalt); transform-origin: 0 50%; transform: scaleX(0); }
 .lap-meta { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-label); color: var(--c-ink-soft); }
@@ -111,6 +114,8 @@ input[type=range]::-webkit-slider-thumb {
 input[type=range]::-moz-range-thumb { width: 30px; height: 30px; box-sizing: border-box; background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-radius: 50%; box-shadow: 0 3px 0 var(--shadow-c); }
 input[type=range]:disabled { cursor: not-allowed; opacity: .75; }
 .driven-note { margin-top: var(--sp-3); min-height: 1.3em; }
+.field[data-absent="true"] output { color: var(--c-ink-soft); }
+.field-note { margin: calc(-1 * var(--sp-1)) 0 var(--sp-1) calc(8.5ch + var(--sp-3)); font-size: var(--fs-caption); }
 
 /* ---------- dash ---------- */
 .dash { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-5); align-items: center; }
@@ -148,16 +153,75 @@ input[type=range]:disabled { cursor: not-allowed; opacity: .75; }
 
 /* ---------- scope ---------- */
 canvas { display: block; width: 100%; height: 170px; border: var(--outline) solid var(--c-ink); border-radius: var(--radius); background: var(--c-paper-shade); }
+.scope-wrap { position: relative; }
+.scope-idle { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: var(--sp-4); text-align: center; font-weight: 700; color: var(--c-ink-soft); pointer-events: none; }
+.scope-idle[hidden] { display: none; }
+.layer[data-absent="true"] h3, .layer[data-absent="true"] p { color: var(--c-ink-soft); }
 .scope-meta { display: flex; justify-content: space-between; margin-top: var(--sp-2); font-size: var(--fs-label); color: var(--c-ink-soft); }
 .scope-meta b { color: var(--c-ink); }
 
-/* ---------- profile + errors ---------- */
+
+/* ---------- sound lab (P1-A04b) ---------- */
+.lab-bar { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: end; margin-bottom: var(--sp-3); }
+.lab-bar + .lab-bar { margin-top: calc(-1 * var(--sp-1)); }
+.lab-pick { display: grid; gap: var(--sp-1); font-size: var(--fs-label); font-weight: 700; color: var(--c-ink-soft); }
+.lab-pick select, #lab-search {
+  min-height: 36px; padding: 0 var(--sp-3); font: 600 var(--fs-body)/1 var(--font-body); color: var(--c-ink);
+  background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-radius: var(--radius);
+}
+.lab-pick select { min-width: 18ch; }
+#lab-search { flex: 1 1 16ch; }
+.lab-match { font-size: var(--fs-label); font-weight: 700; color: var(--c-success); }
+.lab-err:not(:empty) { margin: 0 0 var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--outline) solid var(--c-danger); border-radius: var(--radius); background: var(--c-danger-tint); color: var(--c-danger); }
+.lab-sections { display: grid; gap: var(--sp-4); max-height: min(72vh, 860px); overflow-y: auto; padding-right: var(--sp-1); }
+.lab-section { border: var(--outline) solid var(--c-ink); border-radius: var(--radius); background: var(--c-paper); }
+.lab-section > header { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); border-bottom: var(--outline) solid var(--c-ink); background: var(--c-paper-shade); border-radius: var(--radius) var(--radius) 0 0; }
+.lab-section > header h3 { margin: 0; font: 900 italic var(--fs-label)/1.1 var(--font-display); text-transform: uppercase; letter-spacing: .04em; }
+.lab-section > header .note { margin-left: auto; }
+.lab-group { padding: var(--sp-2) var(--sp-3); border-bottom: var(--outline) dotted color-mix(in srgb, var(--c-ink) 35%, transparent); }
+.lab-group:last-child { border-bottom: none; }
+.lab-group > h4 { margin: 0 0 var(--sp-1); font-size: var(--fs-label); font-weight: 700; color: var(--c-ink-soft); }
+.lab-row { display: grid; grid-template-columns: minmax(9ch, 15ch) minmax(0, 1fr) minmax(6ch, 8ch) auto; gap: var(--sp-2); align-items: center; padding: var(--sp-1) 0; }
+.lab-row[data-modified="true"] .lab-name::after { content: "●"; margin-left: var(--sp-1); color: var(--c-saffron); font-size: .8em; }
+.lab-row[data-bad="true"] { color: var(--c-danger); }
+.lab-name { font-weight: 700; overflow-wrap: anywhere; }
+.lab-ctl { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.lab-ctl input[type=range] { flex: 1; }
+.lab-ctl input[type=number], .lab-ctl input[type=text], .lab-ctl select {
+  width: 100%; min-height: 30px; padding: 0 var(--sp-2); font: 600 var(--fs-label)/1 var(--font-body);
+  color: var(--c-ink); background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-radius: var(--radius);
+}
+.lab-ctl input[type=number] { width: 9ch; flex: none; text-align: right; }
+.lab-val { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lab-val small { color: var(--c-ink-soft); font-weight: 600; }
+.lab-row .btn-icon { min-height: 30px; min-width: 30px; padding: 0; font-size: var(--fs-label); }
+.lab-doc { grid-column: 1 / -1; margin: 0; font-size: var(--fs-caption); color: var(--c-ink-soft); }
+.lab-row[hidden] { display: none; }
+.lab-section > .lab-row { padding-inline: var(--sp-3); }
+.lab-section[data-empty="true"] { display: none; }
+.lab-section[data-absent="true"] > header { border-bottom-style: dashed; }
+.lab-row[data-absent="true"] { opacity: .55; }
+.lab-row[data-absent="true"] .lab-val { font-weight: 600; color: var(--c-ink-soft); }
+.lab-row[data-absent="true"] .lab-ctl { visibility: hidden; } /* no stale numbers from another car */
+.lab-fit[aria-pressed="true"] { background: var(--c-saffron); }
+.lab-fit[data-modified="true"]::after { content: "●"; margin-left: var(--sp-1); font-size: .8em; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-1) var(--sp-4); font-size: var(--fs-label); }
 .kv dt { color: var(--c-ink-soft); font-weight: 600; }
 .kv dd { font-weight: 700; }
 .error { margin-top: var(--sp-5); padding: var(--sp-4); background: var(--c-danger-tint); color: var(--c-danger); border: var(--outline) solid var(--c-danger); border-radius: var(--radius); font-weight: 600; }
 .error[hidden] { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Phones: each lab row stacks (name, value and reset; then the control full width; then the note). */
+@media (max-width: 640px) {
+  .lab-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .lab-row .lab-name { grid-column: 1; grid-row: 1; }
+  .lab-row .lab-val { grid-column: 2; grid-row: 1; }
+  .lab-row .btn-icon { grid-column: 3; grid-row: 1; }
+  .lab-row .lab-ctl { grid-column: 1 / -1; grid-row: 2; }
+  .lab-row .lab-doc { grid-row: 3; }
+  .lab-section > header { flex-wrap: wrap; }
+}
 
 @media (max-width: 520px) {
   .field { grid-template-columns: minmax(0, 7ch) minmax(0, 1fr) minmax(0, 6.5ch); gap: var(--sp-2); }
@@ -172,7 +236,7 @@ canvas { display: block; width: 100%; height: 170px; border: var(--outline) soli
   <header class="masthead">
     <p class="overline">P1-A04 · Audio · Design review</p>
     <h1>Engine synth</h1>
-    <p class="lede">The Cruz Missile's engine, built live in your browser from a data profile: no recordings, no network. Press <b>Start engine</b>, drag the sliders, or play the scripted lap. Headphones or the TV both work.</p>
+    <p class="lede">The Cruz Missile's engine, built live in your browser from a data profile: no recordings, no network. Press <b>Start engine</b> to hear it crank and catch (press again to cut it), drag the sliders, or play the scripted lap, which starts and stops the engine too. Headphones or the TV both work.</p>
   </header>
 
   <div class="error" id="load-error" role="alert" hidden></div>
@@ -186,7 +250,7 @@ canvas { display: block; width: 100%; height: 170px; border: var(--outline) soli
             <button class="btn btn-primary" id="start-btn" type="button">Start engine</button>
             <button class="btn" id="lap-btn" type="button">Play scripted lap</button>
           </div>
-          <div class="row"><span class="status" id="status" data-on="false" role="status">Engine off. Press start to allow sound.</span></div>
+          <div class="row"><span class="status" id="status" data-on="false" data-phase="off" role="status">Engine off</span></div>
           <div class="lap-line" id="lap-line" hidden>
             <div class="lap-bar" aria-hidden="true"><i id="lap-fill"></i></div>
             <div class="lap-meta"><span id="lap-story"><b>Idle</b></span><span id="lap-time">0.0 / 0.0 s</span></div>
@@ -196,7 +260,8 @@ canvas { display: block; width: 100%; height: 170px; border: var(--outline) soli
         <div class="sliders" id="sliders">
           <div class="field"><label for="in-rpm">RPM</label><input id="in-rpm" type="range" min="0" max="7300" step="10" value="900"><output for="in-rpm" id="out-rpm">900</output></div>
           <div class="field"><label for="in-throttle">Throttle</label><input id="in-throttle" type="range" min="0" max="100" step="1" value="0"><output for="in-throttle" id="out-throttle">0<span class="unit">%</span></output></div>
-          <div class="field"><label for="in-boost">Boost</label><input id="in-boost" type="range" min="0" max="100" step="1" value="0"><output for="in-boost" id="out-boost">0<span class="unit">%</span></output></div>
+          <div class="field"><label for="in-boost">Boost</label><input id="in-boost" type="range" min="0" max="100" step="1" value="0" aria-describedby="boost-note"><output for="in-boost" id="out-boost">0<span class="unit">%</span></output></div>
+          <p class="note field-note" id="boost-note" hidden></p>
           <div class="field"><label for="in-drift">Drift</label><input id="in-drift" type="range" min="0" max="100" step="1" value="0"><output for="in-drift" id="out-drift">0<span class="unit">%</span></output></div>
           <div class="field surface-field"><label for="in-surface">Surface</label><input id="in-surface" type="range" min="0" max="2" step="1" value="0" aria-valuetext="Tarmac"><output for="in-surface" id="out-surface">Tarmac</output></div>
           <div class="ticks" aria-hidden="true"><span>Tarmac</span><span>Dirt</span><span>Gravel</span></div>
@@ -216,7 +281,33 @@ canvas { display: block; width: 100%; height: 170px; border: var(--outline) soli
       <section class="panel" style="order:5" aria-labelledby="h-profile">
         <div class="tab"><h2 id="h-profile">The profile</h2></div>
         <dl class="kv" id="profile-kv"></dl>
-        <p class="note" style="margin-top: var(--sp-3)">Every number that shapes the sound is in <a href="./cruz-missile.json">cruz-missile.json</a> (a copy of <code>assets/audio/engine/cruz-missile.json</code>). Edit it, reload, listen.</p>
+        <p class="note" style="margin-top: var(--sp-3)">Every number that shapes the sound lives in a profile under <code>assets/audio/engine/</code>. The lab below edits one live.</p>
+      </section>
+
+      <section class="panel lab" style="order:6" aria-labelledby="h-lab">
+        <div class="tab"><h2 id="h-lab">Sound lab</h2></div>
+        <div class="lab-bar">
+          <label class="lab-pick"><span>Vehicle</span>
+            <select id="lab-profile" aria-label="Vehicle profile"></select>
+          </label>
+          <div class="row tight" role="group" aria-label="A/B slots">
+            <button class="btn btn-small" id="lab-a" type="button" aria-pressed="true">A</button>
+            <button class="btn btn-small" id="lab-b" type="button" aria-pressed="false">B</button>
+            <span class="lab-match" id="lab-match" hidden>level-matched</span>
+          </div>
+        </div>
+        <div class="lab-bar">
+          <input id="lab-search" type="search" placeholder="Search parameters (e.g. whine, idle, pops)" aria-label="Search parameters">
+          <div class="row tight">
+            <button class="btn btn-small" id="lab-export" type="button">Export</button>
+            <button class="btn btn-small" id="lab-import" type="button">Import</button>
+            <button class="btn btn-small" id="lab-reset-all" type="button">Reset all</button>
+            <input id="lab-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </div>
+        <p class="lab-err note" id="lab-err" role="status" aria-live="polite"></p>
+        <div class="lab-sections" id="lab-sections"></div>
+        <p class="note" style="margin-top: var(--sp-3)">Controls come from the profile schema, so a new parameter appears here by itself. Edits apply live; <b>Export</b> downloads the edited profile, and the URL carries your tweaks (<code>?profile=…&amp;p.…=…</code>).</p>
       </section>
     </div>
 
@@ -250,7 +341,10 @@ canvas { display: block; width: 100%; height: 170px; border: var(--outline) soli
 
       <section class="panel" style="order:4" aria-labelledby="h-scope">
         <div class="tab"><h2 id="h-scope">Spectrum</h2></div>
-        <canvas id="scope" width="900" height="340" role="img" aria-label="Live spectrum of the engine sound, 40 hertz to 12 kilohertz"></canvas>
+        <div class="scope-wrap">
+          <canvas id="scope" width="900" height="340" role="img" aria-label="Live spectrum of the engine sound, 40 hertz to 12 kilohertz"></canvas>
+          <p class="scope-idle" id="scope-idle">Start the engine to see its spectrum.</p>
+        </div>
         <div class="scope-meta"><span>40 Hz</span><span>Loudest <b id="peak-hz">-</b></span><span>12 kHz</span></div>
       </section>
     </div>

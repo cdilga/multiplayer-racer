@@ -1,0 +1,110 @@
+{
+  "$schema": "../../../web/shared/audio/engine-synth/profile.schema.json",
+  "format": "jj-engine-profile",
+  "version": 1,
+  "id": "hay-hauler",
+  "name": "Hay Hauler",
+  "description": "A lazy old V8 ute: big slow cylinders, a whistling straight-through pipe, doors that knock on corrugations, and one grumpy pop when you back off. Procedural; no samples.",
+  "engine": {
+    "cylinders": 8,
+    "idleRpm": 620,
+    "redlineRpm": 4600,
+    "limiterRpm": 5000
+  },
+  "gearbox": {
+    "ratios": [4.7, 2.9, 1.9, 1.3, 1.0],
+    "finalDrive": 4.1,
+    "wheelRadiusM": 0.42,
+    "upshiftRpm": 4100,
+    "downshiftRpm": 1900,
+    "shiftTimeS": 0.38,
+    "launchRpm": 2600,
+    "rpmRiseTauS": 0.11,
+    "rpmFallTauS": 0.26
+  },
+  "output": {
+    "level": 0.9,
+    "controlTauS": 0.04,
+    "noiseSeed": 20261004
+  },
+  "firing": {
+    "level": 1.3,
+    "offThrottleLevel": 0.24,
+    "mellow": { "phase": "sine", "harmonics": [1, 0.55, 0.3, 0.12] },
+    "bright": { "phase": "cosine", "harmonics": [0.4, 1, 0.35, 0.2] },
+    "brightMax": 0.55,
+    "bodyFilter": { "minHz": 260, "maxHz": 1900, "q": 0.6, "throttleOpen": 0.3 },
+    "lope": { "depth": 0.5, "fadeOutRpmN": 0.22 }
+  },
+  "intake": { "level": 0.5, "minHz": 320, "maxHz": 1250, "q": 1.1 },
+  "exhaust": {
+    "level": 1.6,
+    "minHz": 380,
+    "maxHz": 2100,
+    "q": 0.55,
+    "pulseDepth": 0.85,
+    "pulseHarmonics": [1, 0.5, 0.28, 0.1]
+  },
+  "boost": {
+    "level": 0.9,
+    "whineBaseHz": 640,
+    "whineSweepHz": 2600,
+    "whineRpmHz": 500,
+    "whooshLevel": 0.6,
+    "whooshHz": 950,
+    "whooshSweepHz": 900
+  },
+  "squeal": {
+    "level": 0.55,
+    "centerMinHz": 700,
+    "centerMaxHz": 1500,
+    "q": 6,
+    "secondRatio": 1.6,
+    "wobbleHz": 4.5,
+    "wobbleDepth": 0.06,
+    "minSpeedMps": 4,
+    "fullSpeedMps": 18
+  },
+  "surface": {
+    "level": 1.1,
+    "fullSpeedMps": 33,
+    "speedExponent": 1.4,
+    "tarmac": { "brown": 0.5, "crackle": 0.02, "cutoffHz": 340, "q": 0.5, "level": 0.9 },
+    "dirt": { "brown": 0.7, "crackle": 0.55, "cutoffHz": 260, "q": 0.6, "level": 1.0 },
+    "gravel": { "brown": 0.8, "crackle": 0.9, "cutoffHz": 200, "q": 0.7, "level": 1.0 }
+  },
+  "rattle": {
+    "level": 1.2,
+    "baseRateHz": 7,
+    "rpmRateScale": 2.6,
+    "idleShare": 0.04,
+    "bandsHz": [420, 980, 1750, 2900],
+    "q": 9,
+    "pulseHarmonics": [1, 0.4, 0.15]
+  },
+  "pops": {
+    "level": 1.4,
+    "armThrottle": 0.7,
+    "fireThrottle": 0.12,
+    "minRpmN": 0.45,
+    "burstMin": 1,
+    "burstMax": 2,
+    "gapMinS": 0.09,
+    "gapMaxS": 0.2,
+    "bandHz": 420,
+    "q": 1.1,
+    "upshiftShare": 0.5
+  },
+  "gearDip": { "depth": 0.55, "rampS": 0.09, "holdS": 0.16, "recoverTauS": 0.3 },
+  "ignition": {
+    "crankS": 1.1,
+    "crankRpm": 180,
+    "starterHz": 120,
+    "starterLevel": 0.5,
+    "crankShare": 0.35,
+    "catchS": 0.2,
+    "flareRpm": 1300,
+    "settleTauS": 0.4,
+    "stopS": 1.6
+  }
+}

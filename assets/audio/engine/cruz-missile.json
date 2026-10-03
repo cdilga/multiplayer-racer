@@ -4,7 +4,7 @@
   "version": 1,
   "id": "cruz-missile",
   "name": "Cruz Missile",
-  "description": "A small, cheeky four-cylinder: raspy exhaust, a little turbo whistle, a loose-bodied rattle when it is hurt, and pops on the lift. Procedural; no samples.",
+  "description": "A small, cheeky four-cylinder: raspy exhaust (no turbo), a loose-bodied rattle when it is hurt, and pops on the lift; a quick starter and an eager little flare when it catches. Procedural; no samples.",
   "engine": {
     "cylinders": 4,
     "idleRpm": 900,
@@ -64,15 +64,6 @@
     "pulseDepth": 0.85,
     "pulseHarmonics": [1, 0.7, 0.4, 0.2, 0.1]
   },
-  "boost": {
-    "level": 0.045,
-    "whineBaseHz": 1700,
-    "whineSweepHz": 2800,
-    "whineRpmHz": 600,
-    "whooshLevel": 1.4,
-    "whooshHz": 1800,
-    "whooshSweepHz": 1500
-  },
   "squeal": {
     "level": 0.9,
     "centerMinHz": 1350,
@@ -119,5 +110,16 @@
     "rampS": 0.012,
     "holdS": 0.05,
     "recoverTauS": 0.07
+  },
+  "ignition": {
+    "crankS": 0.75,
+    "crankRpm": 260,
+    "starterHz": 190,
+    "starterLevel": 0.35,
+    "crankShare": 0.3,
+    "catchS": 0.12,
+    "flareRpm": 1900,
+    "settleTauS": 0.22,
+    "stopS": 1.1
   }
 }

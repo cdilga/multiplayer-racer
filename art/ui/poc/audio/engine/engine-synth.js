@@ -14,7 +14,17 @@ var LAYERS = [
 	"squeal",
 	"surface",
 	"rattle",
-	"pops"
+	"pops",
+	"starter"
+];
+/** Where the engine is in its start and stop (P1-A04c). */
+var ENGINE_PHASES = [
+	"off",
+	"cranking",
+	"catching",
+	"settling",
+	"running",
+	"stopping"
 ];
 //#endregion
 //#region web/shared/audio/engine-synth/mapping.ts
@@ -34,7 +44,8 @@ var DEFAULT_STATE = Object.freeze({
 	drift: 0,
 	surface: "tarmac",
 	damage: 0,
-	gear: 0
+	gear: 0,
+	ignition: true
 });
 /** Ground speed implied by engine speed in a gear (0 in neutral). */
 function speedFromRpm(profile, rpm, gear) {
@@ -61,6 +72,7 @@ function mergeState(profile, prev, next) {
 	if (fin(next.damage)) out.damage = clamp01(next.damage);
 	if (fin(next.gear)) out.gear = clamp(Math.round(next.gear), 0, profile.gearbox.ratios.length);
 	if (typeof next.surface === "string" && SURFACES.includes(next.surface)) out.surface = next.surface;
+	if (typeof next.ignition === "boolean") out.ignition = next.ignition;
 	if ("speed" in next) {
 		if (fin(next.speed)) out.speed = Math.max(0, next.speed);
 		else delete out.speed;
@@ -92,12 +104,13 @@ function computeTargets(p, s) {
 	};
 	const intakeAct = Math.pow(s.throttle, 1.5) * (.3 + .7 * rpmN) * run;
 	const exhaustAct = lerp(.45, 1, s.throttle) * (.4 + .6 * rpmN) * run;
-	const boostAct = Math.pow(s.boost, 1.4) * run;
+	const b = p.boost;
+	const boostAct = b ? Math.pow(s.boost, 1.4) * run : 0;
 	const speedSqueal = smoothstep(p.squeal.minSpeedMps, p.squeal.fullSpeedMps, speed);
 	const squealAct = Math.pow(s.drift, 1.3) * speedSqueal;
 	const surf = p.surface[s.surface];
 	const surfaceAct = Math.pow(speedN, p.surface.speedExponent) * surf.level;
-	const rattleShare = p.rattle.idleShare + (1 - p.rattle.idleShare) * Math.max(rpmN, .7 * speedN);
+	const rattleShare = p.rattle.idleShare * run + (1 - p.rattle.idleShare) * Math.max(rpmN, .7 * speedN);
 	const rattleAct = Math.pow(s.damage, 1.2) * rattleShare;
 	const squealHz = elerp(p.squeal.centerMinHz, p.squeal.centerMaxHz, clamp01(.6 * s.drift + .4 * speedN));
 	return {
@@ -114,7 +127,8 @@ function computeTargets(p, s) {
 			squeal: squealAct,
 			surface: surfaceAct,
 			rattle: rattleAct,
-			pops: 0
+			pops: 0,
+			starter: 0
 		},
 		firing,
 		intake: {
@@ -127,11 +141,16 @@ function computeTargets(p, s) {
 			amHz: f0,
 			amDepth: p.exhaust.pulseDepth
 		},
-		boost: {
-			whineHz: p.boost.whineBaseHz + p.boost.whineSweepHz * s.boost + p.boost.whineRpmHz * rpmN,
-			whineGain: p.boost.level * boostAct * (.35 + .65 * rpmN),
-			whooshGain: p.boost.level * p.boost.whooshLevel * Math.pow(s.boost, 1.2),
-			whooshHz: p.boost.whooshHz + p.boost.whooshSweepHz * s.boost
+		boost: b ? {
+			whineHz: b.whineBaseHz + b.whineSweepHz * s.boost + b.whineRpmHz * rpmN,
+			whineGain: b.level * boostAct * (.35 + .65 * rpmN),
+			whooshGain: b.level * b.whooshLevel * Math.pow(s.boost, 1.2),
+			whooshHz: b.whooshHz + b.whooshSweepHz * s.boost
+		} : {
+			whineHz: 0,
+			whineGain: 0,
+			whooshGain: 0,
+			whooshHz: 0
 		},
 		squeal: {
 			gain: p.squeal.level * squealAct,
@@ -251,141 +270,158 @@ var obj = (props, optional = []) => ({
 	props,
 	optional
 });
-var unit = num(0, 1);
-var level = num(0, 4);
-var hz = num(1, 16e3);
-var q = num(1e-4, 100);
-var tau = num(.001, 5);
-var speed = num(0, 400);
+/** Attaches the lab metadata (doc always; unit when the field has one). */
+var meta = (r, doc, unit) => ({
+	...r,
+	doc,
+	...unit ? { unit } : {}
+});
+var unit = meta(num(0, 1), "A 0-to-1 share.", "0–1");
+var level = meta(num(0, 4), "A layer loudness (1 is the section reference; above 1 pushes).", "×");
+var hz = meta(num(1, 16e3), "A frequency.", "Hz");
+var q = meta(num(1e-4, 100), "Filter resonance: higher is a narrower, rangier band.", "Q");
+var tau = meta(num(.001, 5), "A glide time constant (63% of the way in one tau).", "s");
+var speed = meta(num(0, 400), "A ground speed.", "m/s");
 var wave = obj({
-	phase: oneOf("sine", "cosine"),
-	harmonics: arr(num(0, 4), 1)
+	phase: meta(oneOf("sine", "cosine"), "Which way the wave starts: sine from zero, cosine from full."),
+	harmonics: meta(arr(num(0, 4), 1), "Overtone weights: [fundamental, 2nd, 3rd…] relative strengths.", "×")
 });
 var surfaceRule = obj({
-	brown: unit,
-	crackle: unit,
-	cutoffHz: hz,
+	brown: meta(unit, "Rumble share (brown noise) for this surface."),
+	crackle: meta(unit, "Crackle share (loose grit) for this surface."),
+	cutoffHz: meta(hz, "Low-pass cutoff the road noise is capped at."),
 	q,
-	level: unit
+	level: meta(unit, "Overall share of this surface versus the others.")
 });
 /** The contract. Keep `profile.schema.json` in step (check.mjs compares the two). */
 var PROFILE_RULE = obj({
-	$schema: str,
-	format: lit("jj-engine-profile"),
-	version: lit(1),
-	id: str,
-	name: str,
-	description: str,
+	$schema: meta(str, "Pointer to the profile schema; kept by tooling, not a sound parameter."),
+	format: meta(lit("jj-engine-profile"), "The format tag; must stay jj-engine-profile."),
+	version: meta(lit(1), "The profile contract version this file speaks."),
+	id: meta(str, "Stable machine id (used in URLs and file names)."),
+	name: meta(str, "Display name painted in the lab and the game."),
+	description: meta(str, "One breath of flavour text about how this car should sound."),
 	engine: obj({
-		cylinders: num(1, 32, true),
-		idleRpm: num(100, 2e4),
-		redlineRpm: num(100, 2e4),
-		limiterRpm: num(100, 2e4)
+		cylinders: meta(num(1, 32, true), "Cylinder count: sets the firing rate (rpm/60 × cylinders/2).", "cyl"),
+		idleRpm: meta(num(100, 2e4), "Engine speed at closed throttle; also the lope idle.", "rpm"),
+		redlineRpm: meta(num(100, 2e4), "Where the tach marks red; the note stops climbing past it.", "rpm"),
+		limiterRpm: meta(num(100, 2e4), "The hard cut: the highest rpm any control may ask for.", "rpm")
 	}),
 	gearbox: obj({
-		ratios: arr(num(.1, 20), 1),
-		finalDrive: num(.1, 20),
-		wheelRadiusM: num(.05, 2),
-		upshiftRpm: num(100, 2e4),
-		downshiftRpm: num(100, 2e4),
-		shiftTimeS: num(0, 3),
-		launchRpm: num(100, 2e4),
-		rpmRiseTauS: tau,
-		rpmFallTauS: tau
+		ratios: meta(arr(num(.1, 20), 1), "Gear ratios highest (1st) to lowest; must fall.", "×"),
+		finalDrive: meta(num(.1, 20), "Final drive multiplied after the gearbox.", "×"),
+		wheelRadiusM: meta(num(.05, 2), "Driven wheel radius; converts rpm to road speed.", "m"),
+		upshiftRpm: meta(num(100, 2e4), "The drivetrain shifts up at this engine speed.", "rpm"),
+		downshiftRpm: meta(num(100, 2e4), "The drivetrain shifts back down below this.", "rpm"),
+		shiftTimeS: meta(num(0, 3), "How long a change takes (the lap driver pauses throttle).", "s"),
+		launchRpm: meta(num(100, 2e4), "Clutch-drop speed when pulling away from rest.", "rpm"),
+		rpmRiseTauS: meta(tau, "How quickly free revs rise (smaller is snappier).", "s"),
+		rpmFallTauS: meta(tau, "How quickly free revs fall back to idle.", "s")
 	}),
 	output: obj({
-		level,
-		controlTauS: tau,
-		noiseSeed: num(0, 4294967295, true)
+		level: meta(level, "Master level of the whole voice (A/B matching trims this).", "×"),
+		controlTauS: meta(tau, "Glide time for every live parameter change.", "s"),
+		noiseSeed: meta(num(0, 4294967295, true), "Seed for every random choice (offsets, pop strengths).", "seed")
 	}),
 	firing: obj({
 		level,
-		offThrottleLevel: unit,
-		mellow: wave,
-		bright: wave,
-		brightMax: unit,
+		offThrottleLevel: meta(unit, "Firing loudness with the throttle shut (engine braking)."),
+		mellow: meta(wave, "The base pulse wave: its shape sets the round body of the note."),
+		bright: meta(wave, "The brighter pulse added as revs and throttle rise."),
+		brightMax: meta(unit, "How much of the bright wave is mixed in at full song."),
 		bodyFilter: obj({
-			minHz: hz,
-			maxHz: hz,
+			minHz: meta(hz, "Body low-pass at closed throttle (the note darkens off song)."),
+			maxHz: meta(hz, "Body low-pass at full throttle (the note opens up)."),
 			q,
-			throttleOpen: unit
+			throttleOpen: meta(unit, "How far open the throttle must be before the filter opens.")
 		}),
 		lope: obj({
-			depth: unit,
-			fadeOutRpmN: num(.01, 1)
+			depth: meta(unit, "Idle-lope amplitude: the slow am/am wobble at low rpm."),
+			fadeOutRpmN: meta(num(.01, 1), "Fraction of redline where the lope is gone.", "×redline")
 		})
 	}),
 	intake: obj({
 		level,
-		minHz: hz,
-		maxHz: hz,
+		minHz: meta(hz, "Intake band-pass at low revs."),
+		maxHz: meta(hz, "Intake band-pass at redline (it sweeps with revs)."),
 		q
 	}),
 	exhaust: obj({
 		level,
-		minHz: hz,
-		maxHz: hz,
+		minHz: meta(hz, "Exhaust low-pass at low revs."),
+		maxHz: meta(hz, "Exhaust low-pass at redline."),
 		q,
-		pulseDepth: unit,
-		pulseHarmonics: arr(num(0, 4), 1)
+		pulseDepth: meta(unit, "How deeply each firing pulse chops the exhaust (the chuff)."),
+		pulseHarmonics: meta(arr(num(0, 4), 1), "Shape of the exhaust chop wave.", "×")
 	}),
-	boost: obj({
+	boost: meta(obj({
 		level,
-		whineBaseHz: hz,
-		whineSweepHz: num(0, 16e3),
-		whineRpmHz: num(0, 16e3),
-		whooshLevel: level,
-		whooshHz: hz,
-		whooshSweepHz: num(0, 16e3)
-	}),
+		whineBaseHz: meta(hz, "Turbo whine pitch at zero boost."),
+		whineSweepHz: meta(num(0, 16e3), "How far the whine rises at full boost.", "Hz"),
+		whineRpmHz: meta(num(0, 16e3), "Extra whine rise across the rev range.", "Hz"),
+		whooshLevel: meta(level, "The broadband hiss under the whine.", "×"),
+		whooshHz: meta(hz, "Centre of the whoosh band-pass."),
+		whooshSweepHz: meta(num(0, 16e3), "How far the whoosh centre rises with boost.", "Hz")
+	}), "Turbo or supercharger. Optional: leave it out for a car without one (the Cruz Missile has none)."),
 	squeal: obj({
 		level,
-		centerMinHz: hz,
-		centerMaxHz: hz,
+		centerMinHz: meta(hz, "Tyre-squeal resonance at the slip threshold."),
+		centerMaxHz: meta(hz, "Squeal resonance at full slip."),
 		q,
-		secondRatio: num(1, 4),
-		wobbleHz: num(.1, 60),
-		wobbleDepth: unit,
-		minSpeedMps: speed,
-		fullSpeedMps: speed
+		secondRatio: meta(num(1, 4), "The second resonance sits at this multiple of the first.", "×"),
+		wobbleHz: meta(num(.1, 60), "How fast the squeal pitch wobbles.", "Hz"),
+		wobbleDepth: meta(unit, "How far the wobble sweeps the resonances."),
+		minSpeedMps: meta(speed, "Below this road speed there is no squeal."),
+		fullSpeedMps: meta(speed, "Road speed where the squeal is fully on.")
 	}),
 	surface: obj({
 		level,
-		fullSpeedMps: num(1, 400),
-		speedExponent: num(.1, 4),
-		tarmac: surfaceRule,
-		dirt: surfaceRule,
-		gravel: surfaceRule
+		fullSpeedMps: meta(num(1, 400), "Road speed where the rumble reaches full level.", "m/s"),
+		speedExponent: meta(num(.1, 4), "How aggressively rumble grows with speed (1 is linear).", "exp"),
+		tarmac: meta(surfaceRule, "Smooth tarmac: mostly rumble, no crackle."),
+		dirt: meta(surfaceRule, "Packed dirt: more crackle, lower cutoff."),
+		gravel: meta(surfaceRule, "Loose gravel: the crackliest, darkest rumble.")
 	}),
 	rattle: obj({
 		level,
-		baseRateHz: num(.1, 200),
-		rpmRateScale: num(0, 10),
-		idleShare: unit,
-		bandsHz: arr(hz, 1),
+		baseRateHz: meta(num(.1, 200), "Rattle chop rate at idle (loose parts knocking).", "Hz"),
+		rpmRateScale: meta(num(0, 10), "How much the knock rate rises across the revs.", "×"),
+		idleShare: meta(unit, "Rattle loudness with no damage (nothing should be left loose)."),
+		bandsHz: meta(arr(hz, 1), "Centre frequencies of the metallic knock bands.", "Hz"),
 		q,
-		pulseHarmonics: arr(num(0, 4), 1)
+		pulseHarmonics: meta(arr(num(0, 4), 1), "Shape of the knock chop wave.", "×")
 	}),
 	pops: obj({
 		level,
-		armThrottle: unit,
-		fireThrottle: unit,
-		minRpmN: unit,
-		burstMin: num(1, 64, true),
-		burstMax: num(1, 64, true),
-		gapMinS: num(.005, 2),
-		gapMaxS: num(.005, 2),
-		bandHz: hz,
+		armThrottle: meta(unit, "Throttle above which the pop is armed while on the boost."),
+		fireThrottle: meta(unit, "Throttle below which an armed pop fires (the lift)."),
+		minRpmN: meta(unit, "Fraction of redline below which no pop fires.", "×redline"),
+		burstMin: meta(num(1, 64, true), "Fewest cracks in one overrun burst.", "count"),
+		burstMax: meta(num(1, 64, true), "Most cracks in one overrun burst.", "count"),
+		gapMinS: meta(num(.005, 2), "Shortest gap between cracks in a burst.", "s"),
+		gapMaxS: meta(num(.005, 2), "Longest gap between cracks in a burst.", "s"),
+		bandHz: meta(hz, "Centre of the crack band-pass."),
 		q,
-		upshiftShare: unit
+		upshiftShare: meta(unit, "How much of a crack a hard upshift adds.")
 	}),
 	gearDip: obj({
-		depth: unit,
-		rampS: num(.001, 1),
-		holdS: num(0, 2),
-		recoverTauS: tau
-	})
-}, ["$schema"]);
+		depth: meta(unit, "How far the engine ducks in level on a gear change."),
+		rampS: meta(num(.001, 1), "Time into the dip.", "s"),
+		holdS: meta(num(0, 2), "Time held at the bottom.", "s"),
+		recoverTauS: meta(tau, "How quickly the level climbs back out.", "s")
+	}),
+	ignition: meta(obj({
+		crankS: meta(num(.1, 5), "How long the starter turns the engine over before it catches.", "s"),
+		crankRpm: meta(num(30, 2e3), "Engine speed on the starter (below idle): sets the compression chug.", "rpm"),
+		starterHz: meta(hz, "Starter-motor whine pitch."),
+		starterLevel: meta(level, "Starter-motor loudness.", "×"),
+		crankShare: meta(unit, "Engine loudness while cranking, as a share of running (the chug under the starter)."),
+		catchS: meta(num(.01, 2), "Time from the catch to the top of the rev flare.", "s"),
+		flareRpm: meta(num(100, 2e4), "Peak of the rev flare when it catches.", "rpm"),
+		settleTauS: meta(tau, "How quickly the flare falls back to idle (settled after three of these).", "s"),
+		stopS: meta(num(.2, 6), "Fuel cut to silence: how long the engine spools down.", "s")
+	}), "Engine start (crank, catch, settle to idle) and stop (cut, spool down).")
+}, ["$schema", "boost"]);
 function typeName(v) {
 	return v === null ? "null" : Array.isArray(v) ? "array" : typeof v;
 }
@@ -447,6 +483,9 @@ function relations(p, errors) {
 	if (!(p.pops.burstMin <= p.pops.burstMax)) errors.push("$.pops: burstMin must not exceed burstMax");
 	if (!(p.pops.gapMinS <= p.pops.gapMaxS)) errors.push("$.pops: gapMinS must not exceed gapMaxS");
 	if (!(p.pops.fireThrottle < p.pops.armThrottle)) errors.push("$.pops: fireThrottle must be below armThrottle");
+	if (!(p.ignition.crankRpm < e.idleRpm)) errors.push("$.ignition: crankRpm must be below idleRpm");
+	if (!(p.ignition.flareRpm > e.idleRpm)) errors.push("$.ignition: flareRpm must be above idleRpm");
+	if (!(p.ignition.flareRpm <= e.limiterRpm)) errors.push("$.ignition: flareRpm must not exceed limiterRpm");
 }
 /** Validate unknown data (usually parsed JSON). Never throws. */
 function validateProfile(data) {
@@ -514,7 +553,36 @@ var SETTLE_S = .4;
 var POP_DECAY_TAU = .03;
 /** Pitch-critical params get a tighter dead band (0.2% is about 3.5 cents). */
 var PITCH_REL = .002;
-function create(ctx, profileIn, options = {}) {
+/** Crossfade length when a live profile swap rebuilds the graph (P1-A04b). */
+var SWAP_S = .03;
+/** The starter engages and the engine's chug fades in over this. */
+var ENGAGE_S = .06;
+/** The starter lets go after the catch over this. */
+var STARTER_RELEASE_S = .08;
+/** The fuel cut: the engine layers drop to CUT_SHARE over this, then fade to silence by `stopS`. */
+var CUT_S = .08;
+var CUT_SHARE = .45;
+/** Time constants of the post-cut fade per `stopS` (e^-7 is about -61 dB, so the final step to 0 is inaudible). */
+var STOP_TAUS = 7;
+/** The spool-down ends at this fraction of the crank speed. */
+var STOP_END_OF_CRANK = .5;
+/** Starter whine: a buzzy motor wave, a deep sag in level and a pitch dip at every compression stroke. */
+var STARTER_HARMONICS = [
+	1,
+	.75,
+	.55,
+	.4,
+	.3,
+	.2,
+	.14,
+	.1
+];
+var STARTER_CHUG_DEPTH = .7;
+var STARTER_SAG_CENTS = 60;
+/** The catch fires one cough through the pops layer, at this share of a full crack. */
+var CATCH_COUGH = .5;
+var cents = (ratio) => 1200 * Math.log2(Math.max(ratio, 1e-6));
+function buildGraph(ctx, tail, profileIn, options, fadeInAt) {
 	const profile = assertProfile(profileIn);
 	const rng = mulberry32(mixSeed(profile.output.noiseSeed, options.seed ?? 0));
 	const bank = noiseBank(ctx);
@@ -585,13 +653,110 @@ function create(ctx, profileIn, options = {}) {
 	let st = mergeState(profile, { ...DEFAULT_STATE }, options.initial ?? {});
 	const enabled = Object.fromEntries(LAYERS.map((l) => [l, true]));
 	let disposed = false;
-	const first = computeTargets(profile, st);
 	const E = 1e-4;
-	const out = gainNode(profile.output.level);
+	const ig = profile.ignition;
+	const idle = profile.engine.idleRpm;
+	let seq = {
+		kind: st.ignition ? "start" : "stop",
+		at: -Infinity,
+		base: idle,
+		fromIgn: st.ignition ? 1 : 0,
+		fromCents: 0,
+		fromStarter: 0
+	};
+	const startEnds = [
+		ig.crankS,
+		ig.crankS + ig.catchS,
+		ig.crankS + ig.catchS + 3 * ig.settleTauS
+	];
+	const cutS = Math.min(CUT_S, ig.stopS / 4);
+	const stopTau = (ig.stopS - cutS) / STOP_TAUS;
+	const phaseAt = (t) => {
+		const u = t - seq.at;
+		if (seq.kind === "stop") return u < ig.stopS ? "stopping" : "off";
+		return u < startEnds[0] ? "cranking" : u < startEnds[1] ? "catching" : u < startEnds[2] ? "settling" : "running";
+	};
+	/** Detune (cents) on the pitched oscillators, engine-layer gain and starter gain as scheduled, at time t. */
+	const envAt = (t) => {
+		const u = t - seq.at;
+		if (seq.kind === "start") {
+			const cCrank = cents(ig.crankRpm / seq.base);
+			const cFlare = cents(ig.flareRpm / seq.base);
+			const starter = u < ig.crankS ? lerp(seq.fromStarter, ig.starterLevel, clamp01(u / (ENGAGE_S / 2))) : ig.starterLevel * clamp01(1 - (u - ig.crankS) / STARTER_RELEASE_S);
+			if (u < startEnds[0]) return {
+				cents: cCrank,
+				ign: lerp(seq.fromIgn, ig.crankShare, clamp01(u / ENGAGE_S)),
+				starter
+			};
+			if (u < startEnds[1]) {
+				const x = (u - startEnds[0]) / ig.catchS;
+				return {
+					cents: lerp(cCrank, cFlare, x),
+					ign: lerp(ig.crankShare, 1, x),
+					starter
+				};
+			}
+			return {
+				cents: cFlare * Math.exp(-(u - startEnds[1]) / ig.settleTauS),
+				ign: 1,
+				starter
+			};
+		}
+		const cEnd = cents(ig.crankRpm * STOP_END_OF_CRANK / seq.base);
+		const starter = lerp(seq.fromStarter, 0, clamp01(u / .05));
+		if (u >= ig.stopS) return {
+			cents: cEnd,
+			ign: 0,
+			starter
+		};
+		const ign = u < cutS ? lerp(seq.fromIgn, seq.fromIgn * CUT_SHARE, u / cutS) : seq.fromIgn * CUT_SHARE * Math.exp(-(u - cutS) / stopTau);
+		return {
+			cents: lerp(seq.fromCents, cEnd, u / ig.stopS),
+			ign,
+			starter
+		};
+	};
+	/**
+	* The state the layers follow: the voice's own rpm, throttle and boost while it starts or stops. Road speed is
+	* only derived from rpm and gear while the engine runs under its own power; otherwise it is the caller's speed or
+	* 0 (a spooling-down or cranking engine is not driving the wheels), so the road layers don't hang on its rpm.
+	*/
+	const effective = (t) => {
+		const ph = phaseAt(t);
+		if (ph === "running") return st;
+		const speed = st.speed ?? 0;
+		if (ph === "off") return {
+			...st,
+			rpm: 0,
+			throttle: 0,
+			boost: 0,
+			speed
+		};
+		if (ph === "stopping") return {
+			...st,
+			rpm: seq.base,
+			throttle: 0,
+			boost: 0,
+			speed
+		};
+		return {
+			...st,
+			rpm: Math.max(st.rpm, idle),
+			throttle: ph === "cranking" ? 0 : st.throttle,
+			boost: 0,
+			speed
+		};
+	};
+	const first = computeTargets(profile, effective(ctx.currentTime));
+	/** The rpm the pitched oscillators were last aimed at (the base the detune is relative to). */
+	let lastBase = effective(ctx.currentTime).rpm;
+	const out = gainNode(fadeInAt < 0 ? profile.output.level : 0);
 	const dip = gainNode(1);
+	const ign = gainNode(envAt(ctx.currentTime).ign);
 	const engineBus = gainNode(1);
-	chain(engineBus, dip, out);
-	if (options.destination) out.connect(options.destination);
+	chain(engineBus, ign, dip, out);
+	out.connect(tail);
+	if (fadeInAt >= 0) out.gain.linearRampToValueAtTime(profile.output.level, fadeInAt + SWAP_S);
 	const srcWhite = noise(bank.white);
 	const srcBrown = noise(bank.brown);
 	const srcCrackle = noise(bank.crackle);
@@ -622,14 +787,22 @@ function create(ctx, profileIn, options = {}) {
 	const intakeBP = filter("bandpass", first.intake.hz, profile.intake.q);
 	const intakeGain = gainNode(first.intake.gain);
 	chain(srcWhite, intakeBP, intakeGain, engineBus);
-	const boostOut = gainNode(1);
-	const oscW = osc(null, first.boost.whineHz);
-	const whineGain = gainNode(first.boost.whineGain);
-	const whooshBP = filter("bandpass", first.boost.whooshHz, .9);
-	const whooshGain = gainNode(first.boost.whooshGain);
-	chain(oscW, whineGain, boostOut);
-	chain(srcWhite, whooshBP, whooshGain, boostOut);
-	const boostGate = gate(boostOut, engineBus, first.boost.whineGain + first.boost.whooshGain > E);
+	const boost = profile.boost ? (() => {
+		const boostOut = gainNode(1);
+		const oscW = osc(null, first.boost.whineHz);
+		const whineGain = gainNode(first.boost.whineGain);
+		const whooshBP = filter("bandpass", first.boost.whooshHz, .9);
+		const whooshGain = gainNode(first.boost.whooshGain);
+		chain(oscW, whineGain, boostOut);
+		chain(srcWhite, whooshBP, whooshGain, boostOut);
+		return {
+			gate: gate(boostOut, engineBus, first.boost.whineGain + first.boost.whooshGain > E),
+			whineHz: new Driven(oscW.frequency, oscW.frequency.value, PITCH_REL, .01),
+			whineGain: new Driven(whineGain.gain, first.boost.whineGain),
+			whooshHz: new Driven(whooshBP.frequency, first.boost.whooshHz),
+			whooshGain: new Driven(whooshGain.gain, first.boost.whooshGain)
+		};
+	})() : null;
 	const sq = profile.squeal;
 	const squealOut = gainNode(1);
 	const sqBP1 = filter("bandpass", first.squeal.hz1, sq.q);
@@ -671,6 +844,29 @@ function create(ctx, profileIn, options = {}) {
 	chain(srcBrown, popGain);
 	chain(popGain, popsOut);
 	const popsGate = gate(popsOut, out, false);
+	const oscSt = osc(periodicWave(ctx, "sine", STARTER_HARMONICS), ig.starterHz);
+	const stAM = gainNode(1 - STARTER_CHUG_DEPTH / 2, false);
+	const oscChug = osc(periodicWave(ctx, "cosine", [1, .35]), firingHz(profile.engine.cylinders, ig.crankRpm));
+	const chugDepth = gainNode(STARTER_CHUG_DEPTH / 2);
+	const chugSag = gainNode(STARTER_SAG_CENTS);
+	const stGain = gainNode(0);
+	const stMute = gainNode(1);
+	chain(oscSt, stAM, stGain, stMute);
+	oscChug.connect(chugDepth);
+	chugDepth.connect(stAM.gain);
+	oscChug.connect(chugSag);
+	chugSag.connect(oscSt.detune);
+	const starterGate = gate(stMute, out, false);
+	const pitchParams = [
+		oscM.detune,
+		oscB.detune,
+		oscL.detune,
+		oscAM.detune
+	];
+	for (const p of pitchParams) {
+		kRate(p);
+		p.value = envAt(ctx.currentTime).cents;
+	}
 	for (const s of sources) if (s === srcWhite || s === srcBrown || s === srcCrackle) s.start(0, rng() * bank.seconds);
 	else s.start(0);
 	const pitch = (p) => new Driven(p, p.value, PITCH_REL, .01);
@@ -689,10 +885,7 @@ function create(ctx, profileIn, options = {}) {
 		exhDepth: new Driven(exhDepth.gain, exhDepth.gain.value),
 		intakeHz: new Driven(intakeBP.frequency, first.intake.hz),
 		intakeGain: new Driven(intakeGain.gain, first.intake.gain),
-		whineHz: pitch(oscW.frequency),
-		whineGain: new Driven(whineGain.gain, first.boost.whineGain),
-		whooshHz: new Driven(whooshBP.frequency, first.boost.whooshHz),
-		whooshGain: new Driven(whooshGain.gain, first.boost.whooshGain),
+		stMute: new Driven(stMute.gain, 1),
 		sqHz1: new Driven(sqBP1.frequency, first.squeal.hz1),
 		sqHz2: new Driven(sqBP2.frequency, first.squeal.hz2),
 		sqD1: new Driven(sqD1.gain, sqD1.gain.value),
@@ -728,9 +921,9 @@ function create(ctx, profileIn, options = {}) {
 		p.setValueAtTime(1 - dipCfg.depth, now + dipCfg.rampS + dipCfg.holdS);
 		p.setTargetAtTime(1, now + dipCfg.rampS + dipCfg.holdS, dipCfg.recoverTauS);
 	};
-	const schedulePops = (now, count, strength) => {
+	const schedulePops = (now, count, strength, from = now + .02) => {
 		while (pops.length > 0 && now - (pops[0]?.t ?? now) > POP_DECAY_TAU * 8) pops.shift();
-		let t = Math.max(now + .02, popUntil - .15);
+		let t = Math.max(from, popUntil - .15);
 		for (let i = 0; i < count; i++) {
 			if (i > 0) t += lerp(pp.gapMinS, pp.gapMaxS, rng());
 			const peak = pp.level * strength * (.45 + .55 * rng());
@@ -746,8 +939,77 @@ function create(ctx, profileIn, options = {}) {
 		}
 		wire(popsGate, true, now);
 	};
+	const scheduleStart = (now) => {
+		const from = envAt(now);
+		seq = {
+			kind: "start",
+			at: now,
+			base: Math.max(st.rpm, idle),
+			fromIgn: from.ign,
+			fromCents: from.cents,
+			fromStarter: from.starter
+		};
+		const cCrank = cents(ig.crankRpm / seq.base);
+		const cFlare = cents(ig.flareRpm / seq.base);
+		const tc = now + ig.crankS;
+		const tf = tc + ig.catchS;
+		for (const p of pitchParams) {
+			p.cancelScheduledValues(now);
+			p.setValueAtTime(cCrank, now);
+			p.setValueAtTime(cCrank, tc);
+			p.linearRampToValueAtTime(cFlare, tf);
+			p.setTargetAtTime(0, tf, ig.settleTauS);
+		}
+		const g = ign.gain;
+		g.cancelScheduledValues(now);
+		g.setValueAtTime(from.ign, now);
+		g.linearRampToValueAtTime(ig.crankShare, now + ENGAGE_S);
+		g.setValueAtTime(ig.crankShare, tc);
+		g.linearRampToValueAtTime(1, tf);
+		const sg = stGain.gain;
+		sg.cancelScheduledValues(now);
+		sg.setValueAtTime(from.starter, now);
+		sg.linearRampToValueAtTime(ig.starterLevel, now + ENGAGE_S / 2);
+		sg.setValueAtTime(ig.starterLevel, tc);
+		sg.linearRampToValueAtTime(0, tc + STARTER_RELEASE_S);
+		wire(starterGate, true, now);
+		if (enabled.pops) schedulePops(now, 1, CATCH_COUGH, tc);
+	};
+	const scheduleStop = (now) => {
+		const from = envAt(now);
+		seq = {
+			kind: "stop",
+			at: now,
+			base: lastBase,
+			fromIgn: from.ign,
+			fromCents: from.cents,
+			fromStarter: from.starter
+		};
+		const cEnd = cents(ig.crankRpm * STOP_END_OF_CRANK / seq.base);
+		for (const p of pitchParams) {
+			p.cancelScheduledValues(now);
+			p.setValueAtTime(from.cents, now);
+			p.linearRampToValueAtTime(cEnd, now + ig.stopS);
+		}
+		const g = ign.gain;
+		g.cancelScheduledValues(now);
+		g.setValueAtTime(from.ign, now);
+		g.linearRampToValueAtTime(from.ign * CUT_SHARE, now + cutS);
+		g.setTargetAtTime(0, now + cutS, stopTau);
+		g.setValueAtTime(0, now + ig.stopS);
+		const sg = stGain.gain;
+		sg.cancelScheduledValues(now);
+		sg.setValueAtTime(from.starter, now);
+		sg.linearRampToValueAtTime(0, now + .05);
+		popGain.gain.cancelScheduledValues(now);
+		while (pops.length > 0 && (pops.at(-1)?.t ?? 0) >= now) pops.pop();
+		popUntil = Math.min(popUntil, now + POP_DECAY_TAU * 8);
+	};
 	const apply = (now) => {
-		const t = computeTargets(profile, st);
+		const phase = phaseAt(now);
+		const es = effective(now);
+		lastBase = es.rpm;
+		const t = computeTargets(profile, es);
 		const on = (l) => enabled[l] ? 1 : 0;
 		const hz = Math.max(t.firing.f0, 1);
 		D.f0M.to(hz, now, tau);
@@ -769,13 +1031,15 @@ function create(ctx, profileIn, options = {}) {
 		D.exhDepth.to(exG * t.exhaust.amDepth / 2, now, tau);
 		D.intakeHz.to(t.intake.hz, now, tau);
 		D.intakeGain.to(t.intake.gain * on("intake"), now, tau);
-		const whine = t.boost.whineGain * on("boost");
-		const whoosh = t.boost.whooshGain * on("boost");
-		D.whineHz.to(t.boost.whineHz, now, tau);
-		D.whineGain.to(whine, now, tau);
-		D.whooshHz.to(t.boost.whooshHz, now, tau);
-		D.whooshGain.to(whoosh, now, tau);
-		wire(boostGate, whine + whoosh > E, now);
+		if (boost) {
+			const whine = t.boost.whineGain * on("boost");
+			const whoosh = t.boost.whooshGain * on("boost");
+			boost.whineHz.to(t.boost.whineHz, now, tau);
+			boost.whineGain.to(whine, now, tau);
+			boost.whooshHz.to(t.boost.whooshHz, now, tau);
+			boost.whooshGain.to(whoosh, now, tau);
+			wire(boost.gate, whine + whoosh > E, now);
+		}
 		const sqG = t.squeal.gain * on("squeal");
 		D.sqHz1.to(t.squeal.hz1, now, tau);
 		D.sqHz2.to(t.squeal.hz2, now, tau);
@@ -790,36 +1054,63 @@ function create(ctx, profileIn, options = {}) {
 		D.surfHz.to(t.surface.cutoffHz, now, tau * 2);
 		D.surfQ.to(t.surface.q, now, tau * 2);
 		wire(surfaceGate, sfB + sfC > E, now);
-		const rtG = t.rattle.gain * on("rattle");
-		D.rtHz.to(t.rattle.rateHz, now, tau);
+		const rattle = phase === "stopping" || phase === "off" ? computeTargets(profile, {
+			...es,
+			rpm: 0
+		}).rattle : t.rattle;
+		const rtG = rattle.gain * on("rattle");
+		D.rtHz.to(rattle.rateHz, now, tau);
 		D.rtGain.to(rtG, now, tau);
 		wire(rattleGate, rtG > E, now);
-		if (st.throttle >= pp.armThrottle) armed = true;
-		if (armed && st.throttle <= pp.fireThrottle && t.rpmN >= pp.minRpmN) {
-			armed = false;
-			if (enabled.pops) schedulePops(now, pp.burstMin + Math.floor(rng() * (pp.burstMax - pp.burstMin + 1)), .4 + .6 * t.rpmN);
-		}
+		if (phase === "running" || phase === "settling") {
+			if (es.throttle >= pp.armThrottle) armed = true;
+			if (armed && es.throttle <= pp.fireThrottle && t.rpmN >= pp.minRpmN) {
+				armed = false;
+				if (enabled.pops) schedulePops(now, pp.burstMin + Math.floor(rng() * (pp.burstMax - pp.burstMin + 1)), .4 + .6 * t.rpmN);
+			}
+		} else armed = false;
 		wire(popsGate, now < popUntil, now);
+		D.stMute.to(on("starter"), now, tau);
+		wire(starterGate, phase === "cranking" || phase === "catching", now);
 	};
 	return {
 		output: out,
 		profile,
+		/** Begins the fade that retires this graph behind a replacement (P1-A04b live swaps). */
+		fadeOutAt(now) {
+			out.gain.cancelScheduledValues(now);
+			out.gain.setValueAtTime(out.gain.value, now);
+			out.gain.linearRampToValueAtTime(0, now + SWAP_S);
+		},
+		layerEnabled: (layer) => enabled[layer],
 		set(next) {
 			if (disposed) return;
 			const now = ctx.currentTime;
 			const prevGear = st.gear;
+			const prevIgnition = st.ignition;
 			st = mergeState(profile, st, next);
+			if (st.ignition !== prevIgnition) {
+				if (st.ignition) scheduleStart(now);
+				else scheduleStop(now);
+			}
 			if (st.gear !== prevGear) {
 				startDip(now);
 				const rpmN = computeTargets(profile, st).rpmN;
-				if (st.gear > prevGear && rpmN >= pp.minRpmN && st.throttle >= pp.fireThrottle && enabled.pops) schedulePops(now, 1, pp.upshiftShare * (.4 + .6 * rpmN));
+				if (st.gear > prevGear && phaseAt(now) === "running" && rpmN >= pp.minRpmN && st.throttle >= pp.fireThrottle && enabled.pops) schedulePops(now, 1, pp.upshiftShare * (.4 + .6 * rpmN));
 			}
 			apply(now);
 		},
 		levels() {
-			const t = computeTargets(profile, st);
 			const now = ctx.currentTime;
-			const keep = 1 - dipDepthAt(now);
+			const phase = phaseAt(now);
+			const es = effective(now);
+			const env = envAt(now);
+			const t = computeTargets(profile, es);
+			const rattle = phase === "stopping" || phase === "off" ? computeTargets(profile, {
+				...es,
+				rpm: 0
+			}).levels.rattle : t.levels.rattle;
+			const keep = (1 - dipDepthAt(now)) * env.ign;
 			while (pops.length > 0 && now - (pops[0]?.t ?? now) > POP_DECAY_TAU * 8) pops.shift();
 			let popEnv = 0;
 			for (const p of pops) if (now >= p.t) popEnv = Math.max(popEnv, p.peak / Math.max(pp.level, 1e-6) * Math.exp(-(now - p.t) / POP_DECAY_TAU));
@@ -833,11 +1124,29 @@ function create(ctx, profileIn, options = {}) {
 				boost: e("boost", l.boost * keep),
 				squeal: e("squeal", l.squeal),
 				surface: e("surface", l.surface),
-				rattle: e("rattle", l.rattle),
-				pops: e("pops", popEnv)
+				rattle: e("rattle", rattle),
+				pops: e("pops", popEnv),
+				starter: e("starter", clamp01(env.starter / Math.max(ig.starterLevel, 1e-6)))
 			};
 		},
 		state: () => ({ ...st }),
+		ignition() {
+			const now = ctx.currentTime;
+			const phase = phaseAt(now);
+			const ends = {
+				cranking: seq.at + startEnds[0],
+				catching: seq.at + startEnds[1],
+				settling: seq.at + startEnds[2],
+				running: Infinity,
+				stopping: seq.at + ig.stopS,
+				off: Infinity
+			};
+			return {
+				phase,
+				rpm: phase === "running" ? st.rpm : phase === "off" ? 0 : lastBase * Math.pow(2, envAt(now).cents / 1200),
+				endsAt: ends[phase]
+			};
+		},
 		setLayerEnabled(layer, isOn) {
 			if (disposed) return;
 			enabled[layer] = isOn;
@@ -850,6 +1159,62 @@ function create(ctx, profileIn, options = {}) {
 				s.stop();
 			} catch {}
 			for (const n of nodes) n.disconnect();
+		}
+	};
+}
+/**
+* Creates a car's engine voice. `output` is one persistent GainNode: a live profile swap
+* (`setProfile`, P1-A04b) rebuilds the graph behind it with a ${SWAP_S * 1000} ms equal crossfade,
+* carrying the current state and layer enables, so playback never stops (event layers — an
+* in-flight gear dip or pop — restart with the new graph).
+*/
+function create(ctx, profileIn, options = {}) {
+	const hub = ctx.createGain();
+	hub.gain.value = 1;
+	if (options.destination) hub.connect(options.destination);
+	let inner = buildGraph(ctx, hub, profileIn, options, -1);
+	let disposed = false;
+	return {
+		get output() {
+			return hub;
+		},
+		get profile() {
+			return inner.profile;
+		},
+		set(state) {
+			inner.set(state);
+		},
+		levels() {
+			return inner.levels();
+		},
+		state() {
+			return inner.state();
+		},
+		ignition() {
+			return inner.ignition();
+		},
+		setLayerEnabled(layer, enabled) {
+			inner.setLayerEnabled(layer, enabled);
+		},
+		setProfile(next) {
+			if (disposed) return;
+			const now = ctx.currentTime;
+			inner.fadeOutAt(now);
+			const replacement = buildGraph(ctx, hub, next, {
+				...options,
+				initial: inner.state()
+			}, now);
+			for (const l of LAYERS) replacement.setLayerEnabled(l, inner.layerEnabled(l));
+			replacement.set(inner.state());
+			const old = inner;
+			inner = replacement;
+			setTimeout(() => old.dispose(), Math.ceil(430.00000000000006) + 100);
+		},
+		dispose() {
+			if (disposed) return;
+			disposed = true;
+			inner.dispose();
+			hub.disconnect();
 		}
 	};
 }
@@ -896,4 +1261,4 @@ function createDrivetrain(profile) {
 	};
 }
 //#endregion
-export { DEFAULT_STATE, LAYERS, PROFILE_RULE, SURFACES, assertProfile, computeTargets, create, create as createEngineVoice, createDrivetrain, firingHz, mergeState, mixSeed, mulberry32, noiseBank, rpmFromSpeed, speedFromRpm, validateProfile };
+export { DEFAULT_STATE, ENGINE_PHASES, LAYERS, PROFILE_RULE, SURFACES, assertProfile, computeTargets, create, create as createEngineVoice, createDrivetrain, firingHz, mergeState, mixSeed, mulberry32, noiseBank, rpmFromSpeed, speedFromRpm, validateProfile };

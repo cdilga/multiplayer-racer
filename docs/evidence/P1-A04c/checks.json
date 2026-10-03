@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-03T20:34:47.125Z",
+  "bead": "P1-A04c",
+  "run": {
+    "passed": 80,
+    "total": 80
+  },
+  "passed": 17,
+  "total": 17,
+  "results": [
+    {
+      "id": "P6",
+      "desc": "turbo is per-vehicle data: the Cruz Missile has no boost section and the Hay Hauler has one; both pass the validator and the JSON Schema",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M10",
+      "desc": "the Cruz Missile has no turbo: full boost maps to no whine, no whoosh and a zero boost level (POC1-01)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B4b",
+      "desc": "the lap opens with the engine start: the state API reports cranking, then settling, then running, in order (POC1-02)",
+      "pass": true,
+      "detail": "cranking > catching > settling > running"
+    },
+    {
+      "id": "B9b",
+      "desc": "the lap ends with the engine stop: stopping, then off, the output silent and the key ready to start again (POC1-02)",
+      "pass": true,
+      "detail": "running > stopping > off, end rms -180.0 dBFS"
+    },
+    {
+      "id": "B17",
+      "desc": "Start engine plays the start on the page: cranking (audible), then running, the status line following and the button becoming Stop engine (POC1-02)",
+      "pass": true,
+      "detail": "cranking > catching > settling > running; Cranking… / Caught! / Settling to idle / Engine running"
+    },
+    {
+      "id": "B18",
+      "desc": "the Cruz has no turbo: its boost slider is disabled and says why, and asking the voice for full boost sounds nothing (POC1-01)",
+      "pass": true,
+      "detail": "{\"disabled\":true,\"note\":\"The Cruz Missile has no turbo, so there is no boost to hear. Pick a car with one (or fit one) in the sound lab.\",\"meter\":0}"
+    },
+    {
+      "id": "B19",
+      "desc": "Stop engine plays the stop on the page: stopping (audible, status Stopping…), then Engine off and silence within stopS (1.1 s) (POC1-02)",
+      "pass": true,
+      "detail": "stopping > off, silent at +1.29 s, rms -180.0 dBFS"
+    },
+    {
+      "id": "T1",
+      "desc": "POC1-01 the Cruz Missile renders no turbo at full boost: boost 1 renders the same as boost 0 and the whine band gains nothing (the Hay Hauler gains plainly)",
+      "pass": true,
+      "detail": "Cruz max |diff| 0.00e+0, band 0.00 dB, boost solo -180.0 dBFS; Hay Hauler band +14.5 dB"
+    },
+    {
+      "id": "K1",
+      "desc": "POC1-02 engine start offline: silent before the key, the crank audible, then cranking, catching, settling and running on the state API at the profile's times (within 12 ms), with no set() calls after the key",
+      "pass": true,
+      "detail": "crank -20.7 dBFS; cranking@0.2507 catching@1.0107 settling@1.1307 running@1.7813 (stated 1.780 s)"
+    },
+    {
+      "id": "K2",
+      "desc": "POC1-02 the start cranks at 260 rpm, flares toward 1900 and reaches idle within its stated time (crankS + catchS + 3 settleTauS = 1.53 s): rpm within 5% at the end of the settle, and the audio then matches a running idle (level within 1 dB, firing note at 30 Hz)",
+      "pass": true,
+      "detail": "flare peak 1879.1 rpm, 935.7 rpm at the end of the settle; tail -27.7 vs idle -27.6 dBFS, note 30.0 Hz"
+    },
+    {
+      "id": "K3",
+      "desc": "POC1-02 the start renders deterministically (twice: max difference below -120 dBFS, same trace)",
+      "pass": true,
+      "detail": "max |diff| 2.98e-8"
+    },
+    {
+      "id": "K4",
+      "desc": "POC1-02 engine stop offline: audible after the cut and fading (each window quieter), then exact silence from cut + stopS (1.1 s)",
+      "pass": true,
+      "detail": "-22.0 > -32.2 > -52.0 > -71.6 dBFS, then peak 0"
+    },
+    {
+      "id": "K5",
+      "desc": "POC1-02 the stop on the state API: stopping from the cut, off at cut + stopS (within 12 ms), the sounding rpm falling all the way from the revs",
+      "pass": true,
+      "detail": "stopping@0.4 off@1.5013 (stated 1.500), rpm 3000 -> 133.5"
+    },
+    {
+      "id": "K6",
+      "desc": "POC1-02 the stop renders deterministically (twice: max difference below -120 dBFS, same trace)",
+      "pass": true,
+      "detail": "max |diff| 0.00e+0"
+    },
+    {
+      "id": "K7",
+      "desc": "an interrupted start and stop (key off mid-crank, on again mid-stop) stays clean: no NaN, peak below -1 dBFS, and it ends running",
+      "pass": true,
+      "detail": "off > cranking > stopping > cranking > catching > settling > running, peak -9.7 dBFS"
+    },
+    {
+      "id": "K8",
+      "desc": "POC1-02 the scripted lap render opens with the start (the crank audible, the starter layer live) and closes with the stop (exact silence after it)",
+      "pass": true,
+      "detail": "pre-roll 1.84 s, stop 1.1 s, 41.44 s rendered"
+    },
+    {
+      "id": "SL8",
+      "desc": "POC1-01 in the lab: the Cruz's boost section is not fitted (its controls and the boost slider disabled); fitting a turbo enables them and the whine plays (URL p.boost=fit); taking it off restores the unmodified Cruz",
+      "pass": true,
+      "detail": "{\"before\":\"Not fitted\",\"fittedMeter\":\"1.00\",\"fittedUrl\":\"?profile=cruz-missile&p.boost=fit\",\"after\":[]}"
+    }
+  ]
+}

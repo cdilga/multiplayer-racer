@@ -21,6 +21,7 @@ export const DEFAULT_STATE: Readonly<VoiceState> = Object.freeze({
   surface: 'tarmac' as Surface,
   damage: 0,
   gear: 0,
+  ignition: true,
 });
 
 /** Ground speed implied by engine speed in a gear (0 in neutral). */
@@ -50,6 +51,7 @@ export function mergeState(profile: EngineProfile, prev: VoiceState, next: Parti
   if (fin(next.damage)) out.damage = clamp01(next.damage);
   if (fin(next.gear)) out.gear = clamp(Math.round(next.gear), 0, profile.gearbox.ratios.length);
   if (typeof next.surface === 'string' && (SURFACES as readonly string[]).includes(next.surface)) out.surface = next.surface;
+  if (typeof next.ignition === 'boolean') out.ignition = next.ignition;
   if ('speed' in next) {
     if (fin(next.speed)) out.speed = Math.max(0, next.speed);
     else delete out.speed;
@@ -65,7 +67,7 @@ export interface Targets {
   speedN: number;
   /** Firing frequency, Hz: rpm / 60 x cylinders / 2. */
   f0: number;
-  /** 0..1 activity of each layer (the pops entry is 0 here: pops are events, the voice reports them). */
+  /** 0..1 activity of each layer (pops and starter are 0 here: they are events, the voice reports them). */
   levels: LayerLevels;
   firing: { f0: number; lopeHz: number; lopeDepth: number; mellowGain: number; brightGain: number; bodyHz: number };
   intake: { gain: number; hz: number };
@@ -105,12 +107,15 @@ export function computeTargets(p: EngineProfile, s: VoiceState): Targets {
 
   const intakeAct = Math.pow(s.throttle, 1.5) * (0.3 + 0.7 * rpmN) * run;
   const exhaustAct = lerp(0.45, 1, s.throttle) * (0.4 + 0.6 * rpmN) * run;
-  const boostAct = Math.pow(s.boost, 1.4) * run;
+  // No boost section: the car has no turbo, so the layer has nothing to say whatever the boost input (P1-A04c).
+  const b = p.boost;
+  const boostAct = b ? Math.pow(s.boost, 1.4) * run : 0;
   const speedSqueal = smoothstep(p.squeal.minSpeedMps, p.squeal.fullSpeedMps, speed);
   const squealAct = Math.pow(s.drift, 1.3) * speedSqueal;
   const surf = p.surface[s.surface];
   const surfaceAct = Math.pow(speedN, p.surface.speedExponent) * surf.level;
-  const rattleShare = p.rattle.idleShare + (1 - p.rattle.idleShare) * Math.max(rpmN, 0.7 * speedN);
+  // The idle share needs the engine turning: a parked car with the engine off does not rattle.
+  const rattleShare = p.rattle.idleShare * run + (1 - p.rattle.idleShare) * Math.max(rpmN, 0.7 * speedN);
   const rattleAct = Math.pow(s.damage, 1.2) * rattleShare;
 
   const squealHz = elerp(p.squeal.centerMinHz, p.squeal.centerMaxHz, clamp01(0.6 * s.drift + 0.4 * speedN));
@@ -130,6 +135,7 @@ export function computeTargets(p: EngineProfile, s: VoiceState): Targets {
       surface: surfaceAct,
       rattle: rattleAct,
       pops: 0,
+      starter: 0,
     },
     firing,
     intake: { gain: p.intake.level * intakeAct, hz: elerp(p.intake.minHz, p.intake.maxHz, rpmN) },
@@ -139,12 +145,14 @@ export function computeTargets(p: EngineProfile, s: VoiceState): Targets {
       amHz: f0,
       amDepth: p.exhaust.pulseDepth,
     },
-    boost: {
-      whineHz: p.boost.whineBaseHz + p.boost.whineSweepHz * s.boost + p.boost.whineRpmHz * rpmN,
-      whineGain: p.boost.level * boostAct * (0.35 + 0.65 * rpmN),
-      whooshGain: p.boost.level * p.boost.whooshLevel * Math.pow(s.boost, 1.2),
-      whooshHz: p.boost.whooshHz + p.boost.whooshSweepHz * s.boost,
-    },
+    boost: b
+      ? {
+          whineHz: b.whineBaseHz + b.whineSweepHz * s.boost + b.whineRpmHz * rpmN,
+          whineGain: b.level * boostAct * (0.35 + 0.65 * rpmN),
+          whooshGain: b.level * b.whooshLevel * Math.pow(s.boost, 1.2),
+          whooshHz: b.whooshHz + b.whooshSweepHz * s.boost,
+        }
+      : { whineHz: 0, whineGain: 0, whooshGain: 0, whooshHz: 0 },
     squeal: { gain: p.squeal.level * squealAct, hz1: squealHz, hz2: squealHz * p.squeal.secondRatio },
     surface: {
       brownGain: p.surface.level * surfaceAct * surf.brown,

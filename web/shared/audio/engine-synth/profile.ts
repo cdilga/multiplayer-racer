@@ -10,13 +10,19 @@ export interface ProfileCheck {
   profile?: EngineProfile;
 }
 
+/** Documentation a generated control can read (P1-A04b): a one-line meaning and the unit. */
+interface Meta {
+  doc?: string;
+  unit?: string;
+}
+
 type Rule =
-  | { k: 'num'; min: number; max: number; int: boolean }
-  | { k: 'str' }
-  | { k: 'lit'; v: string | number }
-  | { k: 'enum'; v: readonly string[] }
-  | { k: 'arr'; of: Rule; min: number }
-  | { k: 'obj'; props: Record<string, Rule>; optional?: readonly string[] };
+  | ({ k: 'num'; min: number; max: number; int: boolean } & Meta)
+  | ({ k: 'str' } & Meta)
+  | ({ k: 'lit'; v: string | number } & Meta)
+  | ({ k: 'enum'; v: readonly string[] } & Meta)
+  | ({ k: 'arr'; of: Rule; min: number } & Meta)
+  | ({ k: 'obj'; props: Record<string, Rule>; optional?: readonly string[] } & Meta);
 
 const num = (min: number, max: number, int = false): Rule => ({ k: 'num', min, max, int });
 const str: Rule = { k: 'str' };
@@ -24,79 +30,153 @@ const lit = (v: string | number): Rule => ({ k: 'lit', v });
 const oneOf = (...v: string[]): Rule => ({ k: 'enum', v });
 const arr = (of: Rule, min = 1): Rule => ({ k: 'arr', of, min });
 const obj = (props: Record<string, Rule>, optional: readonly string[] = []): Rule => ({ k: 'obj', props, optional });
+/** Attaches the lab metadata (doc always; unit when the field has one). */
+const meta = (r: Rule, doc: string, unit?: string): Rule => ({ ...r, doc, ...(unit ? { unit } : {}) });
 
-const unit = num(0, 1);
-const level = num(0, 4);
-const hz = num(1, 16000);
-const q = num(0.0001, 100);
-const tau = num(0.001, 5);
-const speed = num(0, 400);
-const wave = obj({ phase: oneOf('sine', 'cosine'), harmonics: arr(num(0, 4), 1) });
-const surfaceRule = obj({ brown: unit, crackle: unit, cutoffHz: hz, q, level: unit });
+const unit = meta(num(0, 1), 'A 0-to-1 share.', '0–1');
+const level = meta(num(0, 4), 'A layer loudness (1 is the section reference; above 1 pushes).', '×');
+const hz = meta(num(1, 16000), 'A frequency.', 'Hz');
+const q = meta(num(0.0001, 100), 'Filter resonance: higher is a narrower, rangier band.', 'Q');
+const tau = meta(num(0.001, 5), 'A glide time constant (63% of the way in one tau).', 's');
+const speed = meta(num(0, 400), 'A ground speed.', 'm/s');
+const wave = obj({
+  phase: meta(oneOf('sine', 'cosine'), 'Which way the wave starts: sine from zero, cosine from full.'),
+  harmonics: meta(arr(num(0, 4), 1), 'Overtone weights: [fundamental, 2nd, 3rd…] relative strengths.', '×'),
+});
+const surfaceRule = obj({
+  brown: meta(unit, 'Rumble share (brown noise) for this surface.'),
+  crackle: meta(unit, 'Crackle share (loose grit) for this surface.'),
+  cutoffHz: meta(hz, 'Low-pass cutoff the road noise is capped at.'),
+  q,
+  level: meta(unit, 'Overall share of this surface versus the others.'),
+});
 
 /** The contract. Keep `profile.schema.json` in step (check.mjs compares the two). */
 export const PROFILE_RULE: Rule = obj(
   {
-    $schema: str,
-    format: lit('jj-engine-profile'),
-    version: lit(1),
-    id: str,
-    name: str,
-    description: str,
-    engine: obj({ cylinders: num(1, 32, true), idleRpm: num(100, 20000), redlineRpm: num(100, 20000), limiterRpm: num(100, 20000) }),
-    gearbox: obj({
-      ratios: arr(num(0.1, 20), 1),
-      finalDrive: num(0.1, 20),
-      wheelRadiusM: num(0.05, 2),
-      upshiftRpm: num(100, 20000),
-      downshiftRpm: num(100, 20000),
-      shiftTimeS: num(0, 3),
-      launchRpm: num(100, 20000),
-      rpmRiseTauS: tau,
-      rpmFallTauS: tau,
+    $schema: meta(str, 'Pointer to the profile schema; kept by tooling, not a sound parameter.'),
+    format: meta(lit('jj-engine-profile'), 'The format tag; must stay jj-engine-profile.'),
+    version: meta(lit(1), 'The profile contract version this file speaks.'),
+    id: meta(str, 'Stable machine id (used in URLs and file names).'),
+    name: meta(str, 'Display name painted in the lab and the game.'),
+    description: meta(str, 'One breath of flavour text about how this car should sound.'),
+    engine: obj({
+      cylinders: meta(num(1, 32, true), 'Cylinder count: sets the firing rate (rpm/60 × cylinders/2).', 'cyl'),
+      idleRpm: meta(num(100, 20000), 'Engine speed at closed throttle; also the lope idle.', 'rpm'),
+      redlineRpm: meta(num(100, 20000), 'Where the tach marks red; the note stops climbing past it.', 'rpm'),
+      limiterRpm: meta(num(100, 20000), 'The hard cut: the highest rpm any control may ask for.', 'rpm'),
     }),
-    output: obj({ level: level, controlTauS: tau, noiseSeed: num(0, 4294967295, true) }),
+    gearbox: obj({
+      ratios: meta(arr(num(0.1, 20), 1), 'Gear ratios highest (1st) to lowest; must fall.', '×'),
+      finalDrive: meta(num(0.1, 20), 'Final drive multiplied after the gearbox.', '×'),
+      wheelRadiusM: meta(num(0.05, 2), 'Driven wheel radius; converts rpm to road speed.', 'm'),
+      upshiftRpm: meta(num(100, 20000), 'The drivetrain shifts up at this engine speed.', 'rpm'),
+      downshiftRpm: meta(num(100, 20000), 'The drivetrain shifts back down below this.', 'rpm'),
+      shiftTimeS: meta(num(0, 3), 'How long a change takes (the lap driver pauses throttle).', 's'),
+      launchRpm: meta(num(100, 20000), 'Clutch-drop speed when pulling away from rest.', 'rpm'),
+      rpmRiseTauS: meta(tau, 'How quickly free revs rise (smaller is snappier).', 's'),
+      rpmFallTauS: meta(tau, 'How quickly free revs fall back to idle.', 's'),
+    }),
+    output: obj({
+      level: meta(level, 'Master level of the whole voice (A/B matching trims this).', '×'),
+      controlTauS: meta(tau, 'Glide time for every live parameter change.', 's'),
+      noiseSeed: meta(num(0, 4294967295, true), 'Seed for every random choice (offsets, pop strengths).', 'seed'),
+    }),
     firing: obj({
       level,
-      offThrottleLevel: unit,
-      mellow: wave,
-      bright: wave,
-      brightMax: unit,
-      bodyFilter: obj({ minHz: hz, maxHz: hz, q, throttleOpen: unit }),
-      lope: obj({ depth: unit, fadeOutRpmN: num(0.01, 1) }),
+      offThrottleLevel: meta(unit, 'Firing loudness with the throttle shut (engine braking).'),
+      mellow: meta(wave, 'The base pulse wave: its shape sets the round body of the note.'),
+      bright: meta(wave, 'The brighter pulse added as revs and throttle rise.'),
+      brightMax: meta(unit, 'How much of the bright wave is mixed in at full song.'),
+      bodyFilter: obj({
+        minHz: meta(hz, 'Body low-pass at closed throttle (the note darkens off song).'),
+        maxHz: meta(hz, 'Body low-pass at full throttle (the note opens up).'),
+        q,
+        throttleOpen: meta(unit, 'How far open the throttle must be before the filter opens.'),
+      }),
+      lope: obj({
+        depth: meta(unit, 'Idle-lope amplitude: the slow am/am wobble at low rpm.'),
+        fadeOutRpmN: meta(num(0.01, 1), 'Fraction of redline where the lope is gone.', '×redline'),
+      }),
     }),
-    intake: obj({ level, minHz: hz, maxHz: hz, q }),
-    exhaust: obj({ level, minHz: hz, maxHz: hz, q, pulseDepth: unit, pulseHarmonics: arr(num(0, 4), 1) }),
-    boost: obj({ level, whineBaseHz: hz, whineSweepHz: num(0, 16000), whineRpmHz: num(0, 16000), whooshLevel: level, whooshHz: hz, whooshSweepHz: num(0, 16000) }),
+    intake: obj({ level, minHz: meta(hz, 'Intake band-pass at low revs.'), maxHz: meta(hz, 'Intake band-pass at redline (it sweeps with revs).'), q }),
+    exhaust: obj({
+      level,
+      minHz: meta(hz, 'Exhaust low-pass at low revs.'),
+      maxHz: meta(hz, 'Exhaust low-pass at redline.'),
+      q,
+      pulseDepth: meta(unit, 'How deeply each firing pulse chops the exhaust (the chuff).'),
+      pulseHarmonics: meta(arr(num(0, 4), 1), 'Shape of the exhaust chop wave.', '×'),
+    }),
+    boost: meta(obj({
+      level,
+      whineBaseHz: meta(hz, 'Turbo whine pitch at zero boost.'),
+      whineSweepHz: meta(num(0, 16000), 'How far the whine rises at full boost.', 'Hz'),
+      whineRpmHz: meta(num(0, 16000), 'Extra whine rise across the rev range.', 'Hz'),
+      whooshLevel: meta(level, 'The broadband hiss under the whine.', '×'),
+      whooshHz: meta(hz, 'Centre of the whoosh band-pass.'),
+      whooshSweepHz: meta(num(0, 16000), 'How far the whoosh centre rises with boost.', 'Hz'),
+    }), 'Turbo or supercharger. Optional: leave it out for a car without one (the Cruz Missile has none).'),
     squeal: obj({
       level,
-      centerMinHz: hz,
-      centerMaxHz: hz,
+      centerMinHz: meta(hz, 'Tyre-squeal resonance at the slip threshold.'),
+      centerMaxHz: meta(hz, 'Squeal resonance at full slip.'),
       q,
-      secondRatio: num(1, 4),
-      wobbleHz: num(0.1, 60),
-      wobbleDepth: unit,
-      minSpeedMps: speed,
-      fullSpeedMps: speed,
+      secondRatio: meta(num(1, 4), 'The second resonance sits at this multiple of the first.', '×'),
+      wobbleHz: meta(num(0.1, 60), 'How fast the squeal pitch wobbles.', 'Hz'),
+      wobbleDepth: meta(unit, 'How far the wobble sweeps the resonances.'),
+      minSpeedMps: meta(speed, 'Below this road speed there is no squeal.'),
+      fullSpeedMps: meta(speed, 'Road speed where the squeal is fully on.'),
     }),
-    surface: obj({ level, fullSpeedMps: num(1, 400), speedExponent: num(0.1, 4), tarmac: surfaceRule, dirt: surfaceRule, gravel: surfaceRule }),
-    rattle: obj({ level, baseRateHz: num(0.1, 200), rpmRateScale: num(0, 10), idleShare: unit, bandsHz: arr(hz, 1), q, pulseHarmonics: arr(num(0, 4), 1) }),
+    surface: obj({
+      level,
+      fullSpeedMps: meta(num(1, 400), 'Road speed where the rumble reaches full level.', 'm/s'),
+      speedExponent: meta(num(0.1, 4), 'How aggressively rumble grows with speed (1 is linear).', 'exp'),
+      tarmac: meta(surfaceRule, 'Smooth tarmac: mostly rumble, no crackle.'),
+      dirt: meta(surfaceRule, 'Packed dirt: more crackle, lower cutoff.'),
+      gravel: meta(surfaceRule, 'Loose gravel: the crackliest, darkest rumble.'),
+    }),
+    rattle: obj({
+      level,
+      baseRateHz: meta(num(0.1, 200), 'Rattle chop rate at idle (loose parts knocking).', 'Hz'),
+      rpmRateScale: meta(num(0, 10), 'How much the knock rate rises across the revs.', '×'),
+      idleShare: meta(unit, 'Rattle loudness with no damage (nothing should be left loose).'),
+      bandsHz: meta(arr(hz, 1), 'Centre frequencies of the metallic knock bands.', 'Hz'),
+      q,
+      pulseHarmonics: meta(arr(num(0, 4), 1), 'Shape of the knock chop wave.', '×'),
+    }),
     pops: obj({
       level,
-      armThrottle: unit,
-      fireThrottle: unit,
-      minRpmN: unit,
-      burstMin: num(1, 64, true),
-      burstMax: num(1, 64, true),
-      gapMinS: num(0.005, 2),
-      gapMaxS: num(0.005, 2),
-      bandHz: hz,
+      armThrottle: meta(unit, 'Throttle above which the pop is armed while on the boost.'),
+      fireThrottle: meta(unit, 'Throttle below which an armed pop fires (the lift).'),
+      minRpmN: meta(unit, 'Fraction of redline below which no pop fires.', '×redline'),
+      burstMin: meta(num(1, 64, true), 'Fewest cracks in one overrun burst.', 'count'),
+      burstMax: meta(num(1, 64, true), 'Most cracks in one overrun burst.', 'count'),
+      gapMinS: meta(num(0.005, 2), 'Shortest gap between cracks in a burst.', 's'),
+      gapMaxS: meta(num(0.005, 2), 'Longest gap between cracks in a burst.', 's'),
+      bandHz: meta(hz, 'Centre of the crack band-pass.'),
       q,
-      upshiftShare: unit,
+      upshiftShare: meta(unit, 'How much of a crack a hard upshift adds.'),
     }),
-    gearDip: obj({ depth: unit, rampS: num(0.001, 1), holdS: num(0, 2), recoverTauS: tau }),
+    gearDip: obj({
+      depth: meta(unit, 'How far the engine ducks in level on a gear change.'),
+      rampS: meta(num(0.001, 1), 'Time into the dip.', 's'),
+      holdS: meta(num(0, 2), 'Time held at the bottom.', 's'),
+      recoverTauS: meta(tau, 'How quickly the level climbs back out.', 's'),
+    }),
+    ignition: meta(obj({
+      crankS: meta(num(0.1, 5), 'How long the starter turns the engine over before it catches.', 's'),
+      crankRpm: meta(num(30, 2000), 'Engine speed on the starter (below idle): sets the compression chug.', 'rpm'),
+      starterHz: meta(hz, 'Starter-motor whine pitch.'),
+      starterLevel: meta(level, 'Starter-motor loudness.', '×'),
+      crankShare: meta(unit, 'Engine loudness while cranking, as a share of running (the chug under the starter).'),
+      catchS: meta(num(0.01, 2), 'Time from the catch to the top of the rev flare.', 's'),
+      flareRpm: meta(num(100, 20000), 'Peak of the rev flare when it catches.', 'rpm'),
+      settleTauS: meta(tau, 'How quickly the flare falls back to idle (settled after three of these).', 's'),
+      stopS: meta(num(0.2, 6), 'Fuel cut to silence: how long the engine spools down.', 's'),
+    }), 'Engine start (crank, catch, settle to idle) and stop (cut, spool down).'),
   },
-  ['$schema'],
+  ['$schema', 'boost'],
 );
 
 function typeName(v: unknown): string {
@@ -164,6 +244,9 @@ function relations(p: EngineProfile, errors: string[]): void {
   if (!(p.pops.burstMin <= p.pops.burstMax)) errors.push('$.pops: burstMin must not exceed burstMax');
   if (!(p.pops.gapMinS <= p.pops.gapMaxS)) errors.push('$.pops: gapMinS must not exceed gapMaxS');
   if (!(p.pops.fireThrottle < p.pops.armThrottle)) errors.push('$.pops: fireThrottle must be below armThrottle');
+  if (!(p.ignition.crankRpm < e.idleRpm)) errors.push('$.ignition: crankRpm must be below idleRpm');
+  if (!(p.ignition.flareRpm > e.idleRpm)) errors.push('$.ignition: flareRpm must be above idleRpm');
+  if (!(p.ignition.flareRpm <= e.limiterRpm)) errors.push('$.ignition: flareRpm must not exceed limiterRpm');
 }
 
 /** Validate unknown data (usually parsed JSON). Never throws. */

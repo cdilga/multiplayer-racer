@@ -5,7 +5,7 @@ export const SURFACES = ['tarmac', 'dirt', 'gravel'] as const;
 export type Surface = (typeof SURFACES)[number];
 
 /** Every audible layer of a voice, in mix order. Each is driven by state (see mapping.ts). */
-export const LAYERS = ['firing', 'intake', 'exhaust', 'boost', 'squeal', 'surface', 'rattle', 'pops'] as const;
+export const LAYERS = ['firing', 'intake', 'exhaust', 'boost', 'squeal', 'surface', 'rattle', 'pops', 'starter'] as const;
 export type LayerName = (typeof LAYERS)[number];
 
 /** The state a car's audio is a pure function of. All numbers are plain JS numbers; nothing else is read. */
@@ -25,11 +25,31 @@ export interface VoiceState {
   /** Current gear, 0 for neutral. A change triggers the gear-change dip. */
   gear: number;
   /**
+   * The key (P1-A04c). Turning it on from off plays the start (the starter cranks, the engine catches and flares,
+   * then settles to idle); turning it off plays the stop (fuel cut, spool down to silence). Timings come from the
+   * profile's `ignition` section and `voice.ignition()` reports the phase. Default true, so a voice made without it
+   * runs at once; pass `initial: { ignition: false }` for a car that starts parked. While running, `rpm` is the
+   * engine's speed as before (pass idle at rest: rpm 0 is a stalled, silent engine).
+   */
+  ignition: boolean;
+  /**
    * Ground speed in metres per second. Optional: with none given it is derived from rpm and gear through the
    * profile's gearbox, so a caller that only knows the engine still gets a sensible rumble. `set` merges, so a
    * speed you gave stays until you pass `speed: undefined` explicitly.
    */
   speed?: number;
+}
+
+/** Where the engine is in its start and stop (P1-A04c). */
+export const ENGINE_PHASES = ['off', 'cranking', 'catching', 'settling', 'running', 'stopping'] as const;
+export type EnginePhase = (typeof ENGINE_PHASES)[number];
+
+export interface IgnitionStatus {
+  phase: EnginePhase;
+  /** The engine speed being sounded: the crank, the flare and the spool-down, or the state's rpm while running. */
+  rpm: number;
+  /** Context time the current phase ends (Infinity while off or running). */
+  endsAt: number;
 }
 
 /** A 0..1 magnitude per layer after the profile's mapping (before mute and master level). */
@@ -104,7 +124,8 @@ export interface EngineProfile {
     pulseDepth: number;
     pulseHarmonics: number[];
   };
-  boost: {
+  /** Turbo or supercharger. Optional: a car without one (the Cruz Missile) leaves it out and never builds the layer. */
+  boost?: {
     level: number;
     whineBaseHz: number;
     whineSweepHz: number;
@@ -167,6 +188,27 @@ export interface EngineProfile {
     holdS: number;
     recoverTauS: number;
   };
+  /** Engine start and stop (P1-A04c). */
+  ignition: {
+    /** How long the starter turns the engine over before it catches. */
+    crankS: number;
+    /** Engine speed on the starter (below idle); sets the compression chug. */
+    crankRpm: number;
+    /** Starter-motor whine pitch. */
+    starterHz: number;
+    /** Starter-motor loudness. */
+    starterLevel: number;
+    /** Engine layers' level while cranking, as a share of running level. */
+    crankShare: number;
+    /** Time from the catch to the top of the flare. */
+    catchS: number;
+    /** Peak rpm of the flare when it catches. */
+    flareRpm: number;
+    /** Time constant of the flare settling to idle (settled after three). */
+    settleTauS: number;
+    /** Fuel cut to silence. */
+    stopS: number;
+  };
 }
 
 export interface VoiceOptions {
@@ -189,8 +231,12 @@ export interface EngineVoice {
   levels(): LayerLevels;
   /** The full state the voice currently holds. */
   state(): VoiceState;
+  /** Where the start/stop sequence is and the rpm being sounded (P1-A04c; in-game audio reads it). */
+  ignition(): IgnitionStatus;
   /** Silence one layer (design-review solo/mute and tests). */
   setLayerEnabled(layer: LayerName, enabled: boolean): void;
+  /** Swaps to a new profile live: the graph rebuilds behind the same output with a short equal crossfade, carrying state and layer enables (P1-A04b). */
+  setProfile(profile: EngineProfile): void;
   /** Stop all sources and disconnect every node. The voice is unusable afterwards. */
   dispose(): void;
 }

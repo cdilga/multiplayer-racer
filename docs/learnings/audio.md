@@ -20,3 +20,15 @@
   `logs/p1a01.exit`) and follows the log; re-running resumes from the take cache.
 - **dcg/zsh:** an `echo =====` in zsh is a command substitution error; the Mac guard blocks `rm -rf` outside /tmp and
   `python -c`. Use script files and `rm -f` on single files.
+
+## 2026-10-04 · Engine synth start/stop traps (P1-A04c)
+
+- **Engine synth: a sequence the voice plays by itself must not lean on derived state** (P1-A04c). The stop holds the
+  oscillators on the rpm at the cut and moves pitch on `detune`; with no `speed` passed, the road layers derived speed
+  from that frozen rpm, so a car handed back in gear hummed at -62 dB after "silence" until the next `set()`. Road speed
+  is only derived while the engine runs; transitions that happen with no `set()` (off after a stop) must leave the same
+  targets as the phase before. Reproduce real-time-only leftovers with a loop of page runs, then mute one layer at a time:
+  if *any* mute clears it, the cause is a stale target (the mute re-applies), not that layer.
+- **Engine synth: hash only single-layer renders.** Chromium sums a node's inputs in no fixed order, so a render with
+  several live layers (including layers muted at t=0 that are still gliding out) differs in the last float32 bit run to
+  run. Compare multi-layer renders by max difference (< 1e-6, -120 dBFS), as R1/R3/SL3 do.

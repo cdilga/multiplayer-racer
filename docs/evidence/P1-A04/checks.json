@@ -1,7 +1,7 @@
 {
-  "date": "2026-10-03T02:14:19.810Z",
-  "passed": 58,
-  "total": 58,
+  "date": "2026-10-03T20:34:47.125Z",
+  "passed": 80,
+  "total": 80,
   "results": [
     {
       "id": "S1",
@@ -19,7 +19,7 @@
       "id": "S3",
       "desc": "committed engine-synth.js and profile.schema.json match a fresh build",
       "pass": true,
-      "detail": "engine-synth.js and profile.schema.json are up to date"
+      "detail": "engine-synth.js, profile.schema.json, manifest and profiles are up to date"
     },
     {
       "id": "S4",
@@ -64,6 +64,12 @@
       "detail": ""
     },
     {
+      "id": "P6",
+      "desc": "turbo is per-vehicle data: the Cruz Missile has no boost section and the Hay Hauler has one; both pass the validator and the JSON Schema",
+      "pass": true,
+      "detail": ""
+    },
+    {
       "id": "M1",
       "desc": "firing frequency is rpm / 60 x cylinders / 2 (3000 rpm, 4 cyl = 100 Hz)",
       "pass": true,
@@ -83,7 +89,13 @@
     },
     {
       "id": "M4",
-      "desc": "boost drives the whine: zero boost is silent, whine pitch and level rise",
+      "desc": "boost drives the whine on a car with a turbo (Hay Hauler): zero boost is silent, whine pitch and level rise",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M10",
+      "desc": "the Cruz Missile has no turbo: full boost maps to no whine, no whoosh and a zero boost level (POC1-01)",
       "pass": true,
       "detail": ""
     },
@@ -148,28 +160,34 @@
       "detail": "[\"in-rpm\",\"in-throttle\",\"in-boost\",\"in-surface\",\"in-damage\",\"in-drift\",\"in-volume\",\"gear\",\"lap-btn\"]"
     },
     {
+      "id": "B4b",
+      "desc": "the lap opens with the engine start: the state API reports cranking, then settling, then running, in order (POC1-02)",
+      "pass": true,
+      "detail": "cranking > catching > settling > running"
+    },
+    {
       "id": "B4",
       "desc": "offline, \"Play scripted lap\" runs the audio graph: context running and its clock advancing",
       "pass": true,
-      "detail": "clock +8.1 s"
+      "detail": "clock +7.7 s"
     },
     {
       "id": "B5",
       "desc": "an AnalyserNode on the output shows non-silent audio all the way through the lap",
       "pass": true,
-      "detail": "rms -30.8 to -20.9 dBFS"
+      "detail": "rms -32.8 to -21.4 dBFS"
     },
     {
       "id": "B6",
       "desc": "the dash follows the lap: rpm swings and the gear indicator changes",
       "pass": true,
-      "detail": "rpm 900-6022, gears 1,2,3,4"
+      "detail": "rpm 260-5918, gears N,1,2,3"
     },
     {
       "id": "B7",
       "desc": "the analyser spectrum moves as the lap moves",
       "pass": true,
-      "detail": "18 distinct peak bands"
+      "detail": "15 distinct peak bands"
     },
     {
       "id": "B8",
@@ -181,7 +199,19 @@
       "id": "B9",
       "desc": "the lap ends on its own and hands the sliders back",
       "pass": true,
-      "detail": "{\"rpm\":false,\"btn\":\"Play scripted lap\"}"
+      "detail": "{\"rpm\":false,\"btn\":\"Play scripted lap\",\"key\":\"Start engine\",\"phase\":\"off\",\"rms\":0}"
+    },
+    {
+      "id": "B9b",
+      "desc": "the lap ends with the engine stop: stopping, then off, the output silent and the key ready to start again (POC1-02)",
+      "pass": true,
+      "detail": "running > stopping > off, end rms -180.0 dBFS"
+    },
+    {
+      "id": "B17",
+      "desc": "Start engine plays the start on the page: cranking (audible), then running, the status line following and the button becoming Stop engine (POC1-02)",
+      "pass": true,
+      "detail": "cranking > catching > settling > running; Cranking… / Caught! / Settling to idle / Engine running"
     },
     {
       "id": "B10",
@@ -193,13 +223,19 @@
       "id": "B11",
       "desc": "and a higher rpm sounds brighter",
       "pass": true,
-      "detail": "945 < 1525 < 2480"
+      "detail": "930 < 1522 < 2519"
     },
     {
       "id": "B12",
-      "desc": "each layer meter follows its own control (intake and exhaust: throttle, boost, squeal: drift, rattle: damage)",
+      "desc": "each layer meter follows its own control (intake and exhaust: throttle, squeal: drift, rattle: damage; boost on a turbo car in SL8)",
       "pass": true,
-      "detail": "{\"throttle0\":0,\"throttle1\":0.585128,\"exhaust1\":0.660899,\"boost0\":0,\"boost1\":0.999804,\"drift0\":0,\"drift1\":0.630318,\"damage0\":0,\"damage1\":0.637705}"
+      "detail": "{\"throttle0\":0,\"throttle1\":0.586941,\"exhaust1\":0.661242,\"drift0\":0,\"drift1\":0.630318,\"damage0\":0,\"damage1\":0.637705}"
+    },
+    {
+      "id": "B18",
+      "desc": "the Cruz has no turbo: its boost slider is disabled and says why, and asking the voice for full boost sounds nothing (POC1-01)",
+      "pass": true,
+      "detail": "{\"disabled\":true,\"note\":\"The Cruz Missile has no turbo, so there is no boost to hear. Pick a car with one (or fit one) in the sound lab.\",\"meter\":0}"
     },
     {
       "id": "B13",
@@ -217,13 +253,19 @@
       "id": "B15",
       "desc": "lifting off at revs fires the exhaust pops layer",
       "pass": true,
-      "detail": "pops meter 0.58"
+      "detail": "pops meter 0.48"
     },
     {
       "id": "B16",
-      "desc": "solo mutes the other seven layers",
+      "desc": "solo mutes the other eight layers (starter included)",
       "pass": true,
-      "detail": "{\"off\":7}"
+      "detail": "{\"off\":8,\"layers\":9}"
+    },
+    {
+      "id": "B19",
+      "desc": "Stop engine plays the stop on the page: stopping (audible, status Stopping…), then Engine off and silence within stopS (1.1 s) (POC1-02)",
+      "pass": true,
+      "detail": "stopping > off, silent at +1.29 s, rms -180.0 dBFS"
     },
     {
       "id": "L1",
@@ -251,9 +293,9 @@
     },
     {
       "id": "L5",
-      "desc": "boost layer: silent at zero boost, louder and higher in pitch as boost rises",
+      "desc": "boost layer (Hay Hauler): silent at zero boost, louder and higher in pitch as boost rises",
       "pass": true,
-      "detail": "-180.0 / -48.5 / -40.3 / -31.9 dBFS, whine 2804 -> 4904 Hz"
+      "detail": "-180.0 / -23.3 / -14.8 / -6.4 dBFS, whine 1652 -> 3601 Hz"
     },
     {
       "id": "L6",
@@ -295,13 +337,13 @@
       "id": "L12",
       "desc": "the whole voice with every layer maxed leaves headroom (peak below -1 dBFS, no NaN)",
       "pass": true,
-      "detail": "peak -1.7, rms -17.1 dBFS"
+      "detail": "peak -1.6, rms -17.4 dBFS"
     },
     {
       "id": "R1",
       "desc": "the scripted lap renders the same twice in one page (max difference below -120 dBFS)",
       "pass": true,
-      "detail": "max |diff| 1.19e-7 (-138.5 dBFS), 1848000 samples"
+      "detail": "max |diff| 1.19e-7 (-138.5 dBFS), 1989121 samples"
     },
     {
       "id": "R1b",
@@ -313,53 +355,143 @@
       "id": "R2",
       "desc": "a different voice seed gives a clearly different (but still valid) render",
       "pass": true,
-      "detail": "max |diff| 4.42e-1"
+      "detail": "max |diff| 4.38e-1"
     },
     {
       "id": "R3",
       "desc": "and in a freshly loaded page (max difference below -120 dBFS)",
       "pass": true,
-      "detail": "max |diff| 1.19e-7"
+      "detail": "max |diff| 8.94e-8"
     },
     {
       "id": "R4",
       "desc": "the lap render has no NaN and no clipping (peak below -1 dBFS)",
       "pass": true,
-      "detail": "peak -4.5, rms -20.3 dBFS"
+      "detail": "peak -5.2, rms -21.0 dBFS"
     },
     {
       "id": "R5",
       "desc": "scripted-lap.wav is under 2 MB",
       "pass": true,
-      "detail": "1.76 MB, 38.5 s, 24 kHz mono 16-bit"
+      "detail": "1.90 MB, 41.4 s, 24 kHz mono 16-bit"
+    },
+    {
+      "id": "T1",
+      "desc": "POC1-01 the Cruz Missile renders no turbo at full boost: boost 1 renders the same as boost 0 and the whine band gains nothing (the Hay Hauler gains plainly)",
+      "pass": true,
+      "detail": "Cruz max |diff| 0.00e+0, band 0.00 dB, boost solo -180.0 dBFS; Hay Hauler band +14.5 dB"
+    },
+    {
+      "id": "K1",
+      "desc": "POC1-02 engine start offline: silent before the key, the crank audible, then cranking, catching, settling and running on the state API at the profile's times (within 12 ms), with no set() calls after the key",
+      "pass": true,
+      "detail": "crank -20.7 dBFS; cranking@0.2507 catching@1.0107 settling@1.1307 running@1.7813 (stated 1.780 s)"
+    },
+    {
+      "id": "K2",
+      "desc": "POC1-02 the start cranks at 260 rpm, flares toward 1900 and reaches idle within its stated time (crankS + catchS + 3 settleTauS = 1.53 s): rpm within 5% at the end of the settle, and the audio then matches a running idle (level within 1 dB, firing note at 30 Hz)",
+      "pass": true,
+      "detail": "flare peak 1879.1 rpm, 935.7 rpm at the end of the settle; tail -27.7 vs idle -27.6 dBFS, note 30.0 Hz"
+    },
+    {
+      "id": "K3",
+      "desc": "POC1-02 the start renders deterministically (twice: max difference below -120 dBFS, same trace)",
+      "pass": true,
+      "detail": "max |diff| 2.98e-8"
+    },
+    {
+      "id": "K4",
+      "desc": "POC1-02 engine stop offline: audible after the cut and fading (each window quieter), then exact silence from cut + stopS (1.1 s)",
+      "pass": true,
+      "detail": "-22.0 > -32.2 > -52.0 > -71.6 dBFS, then peak 0"
+    },
+    {
+      "id": "K5",
+      "desc": "POC1-02 the stop on the state API: stopping from the cut, off at cut + stopS (within 12 ms), the sounding rpm falling all the way from the revs",
+      "pass": true,
+      "detail": "stopping@0.4 off@1.5013 (stated 1.500), rpm 3000 -> 133.5"
+    },
+    {
+      "id": "K6",
+      "desc": "POC1-02 the stop renders deterministically (twice: max difference below -120 dBFS, same trace)",
+      "pass": true,
+      "detail": "max |diff| 0.00e+0"
+    },
+    {
+      "id": "K7",
+      "desc": "an interrupted start and stop (key off mid-crank, on again mid-stop) stays clean: no NaN, peak below -1 dBFS, and it ends running",
+      "pass": true,
+      "detail": "off > cranking > stopping > cranking > catching > settling > running, peak -9.7 dBFS"
+    },
+    {
+      "id": "K8",
+      "desc": "POC1-02 the scripted lap render opens with the start (the crank audible, the starter layer live) and closes with the stop (exact silence after it)",
+      "pass": true,
+      "detail": "pre-roll 1.84 s, stop 1.1 s, 41.44 s rendered"
     },
     {
       "id": "W1",
       "desc": "WebKit (Playwright build) renders the first 10 s of the lap with no NaN and the same level as Chromium (within 1.5 dB)",
       "pass": true,
-      "detail": "WebKit -20.3 vs Chromium -20.3 dBFS"
+      "detail": "WebKit -21.1 vs Chromium -21.0 dBFS"
     },
     {
-      "id": "C1",
-      "desc": "per-voice audio-thread cost measured at 1, 8, 24 and 32 voices (idle, cruise, all layers, and the scripted lap)",
+      "id": "SL1",
+      "desc": "every schema field has a lab control, generated from the schema (110 fields) and both manifest profiles are in the picker",
       "pass": true,
-      "detail": "lap 6.114/5.43/5.422/5.462, all layers 6.86/7.182/7.116/7.021, idle 2.38/2.461/2.429/2.462 ms per audio-second per voice"
+      "detail": "missing  extra "
     },
     {
-      "id": "C2",
-      "desc": "a voice costs under 1.5% of one core in real time in every scenario and cost per voice does not blow up with count",
+      "id": "SL2",
+      "desc": "a second vehicle profile, added through the manifest alone, is pickable and plays (analyser non-silent)",
       "pass": true,
-      "detail": "max 7.182 ms/s/voice"
+      "detail": "id hay-hauler, rms -18.4 dBFS"
+    },
+    {
+      "id": "SL3",
+      "desc": "an edit changes the rendered audio and reset restores it (offline renders within -120 dBFS; the export reflects the edit)",
+      "pass": true,
+      "detail": "edit max |diff| 7.29e-1, reset max |diff| 2.38e-7"
+    },
+    {
+      "id": "SL4",
+      "desc": "export then import round-trips byte for byte (and import validates)",
+      "pass": true,
+      "detail": "stable"
+    },
+    {
+      "id": "SL5",
+      "desc": "the URL reproduces a tweak (?profile=…&p.…=…), arrays as comma lists",
+      "pass": true,
+      "detail": "{\"id\":\"hay-hauler\",\"modified\":[\"firing.level\",\"gearbox.ratios\"],\"level\":2,\"ratios\":\"4.7,2.9,1.9,1.3,1\",\"url\":\"?profile=hay-hauler&p.firing.level=2&p.gearbox.ratios=4.7%2C2.9%2C1.9%2C1.3%2C1\"}"
+    },
+    {
+      "id": "SL6",
+      "desc": "A/B switches live to the other slot without stopping playback, level-matched by an offline render",
+      "pass": true,
+      "detail": "live 1, gains 1.00/3.76, rms -17.4 dBFS"
+    },
+    {
+      "id": "SL7",
+      "desc": "the search box filters controls (whine: every visible row mentions it)",
+      "pass": true,
+      "detail": "5/110 rows: boost.whineBaseHz, boost.whineSweepHz, boost.whineRpmHz, boost.whooshLevel, ignition.starterHz"
+    },
+    {
+      "id": "SL8",
+      "desc": "POC1-01 in the lab: the Cruz's boost section is not fitted (its controls and the boost slider disabled); fitting a turbo enables them and the whine plays (URL p.boost=fit); taking it off restores the unmodified Cruz",
+      "pass": true,
+      "detail": "{\"before\":\"Not fitted\",\"fittedMeter\":\"1.00\",\"fittedUrl\":\"?profile=cruz-missile&p.boost=fit\",\"after\":[]}"
     }
   ],
   "metrics": {
     "lap": {
       "maxDiffTwoRenders": 1.1920928955078125e-7,
-      "maxDiffFreshPage": 1.1920928955078125e-7,
-      "sha256OfFirstRender": "1c37b8a6b999acada13366fb8163317293fb771365e81ad1c9c00718ac700c0d",
-      "seconds": 38.5,
-      "peakDbfs": -4.5,
-      "rmsDbfs": -20.3
+      "maxDiffFreshPage": 8.940696716308594e-8,
+      "sha256OfFirstRender": "e07c284b6676809a465e1b41ef130079c15b5d7303cbd0e57ece96cd5aa9ed29",
+      "seconds": 41.440020833333335,
+      "peakDbfs": -5.2,
+      "rmsDbfs": -21
     },
     "layerBalance": {
       "engine note, idle": {
@@ -382,9 +514,9 @@
         "rmsDbfs": -29.8,
         "peakDbfs": -16.3
       },
-      "boost whine, full boost 5000 rpm": {
-        "rmsDbfs": -31.9,
-        "peakDbfs": -22.8
+      "boost whine, Hay Hauler full boost 3500 rpm (the Cruz has no turbo)": {
+        "rmsDbfs": -6.4,
+        "peakDbfs": 0
       },
       "tyre squeal, full drift 25 m/s": {
         "rmsDbfs": -26.5,
@@ -415,21 +547,13 @@
         "peakDbfs": -8.3
       },
       "all layers maxed (worst case)": {
-        "rmsDbfs": -17.1,
-        "peakDbfs": -2.4
+        "rmsDbfs": -17.4,
+        "peakDbfs": -2.6
       }
     },
     "layerRows": {
       "firing throttle 0": "-27.0",
       "firing throttle 1": "-20.0"
-    },
-    "cpu": {
-      "perVoiceLap": {
-        "1": 6.114,
-        "8": 5.43,
-        "24": 5.422,
-        "32": 5.462
-      }
     }
   }
 }
