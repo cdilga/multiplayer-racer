@@ -1,5 +1,6 @@
 // The host's input drawer (P1-C05): which local sources exist, which have claimed a seat, which are unplugged, and
-// each key cluster's legend. Its visual design belongs to the accepted TV mocks (R07); this is the plain version the
+// each key cluster's legend. Wheels (P1-C05.2) show their profile and live steering and pedals, and any device can be
+// mapped as a wheel here: the prompts walk the calibration and the profile is saved for that device. Its visual design belongs to the accepted TV mocks (R07); this is the plain version the
 // host shows until then, and the data the designed one will read.
 import type { Cluster, LocalInput } from './local';
 
@@ -28,11 +29,23 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
               ? 'sitting out'
               : 'playing';
       const seated = s.connected && s.claimed && !s.left;
-      const controls = seated
-        ? ` <button type="button" data-act="sit-out" data-source="${s.source}">${s.sittingOut ? 'Return' : 'Sit out'}</button>` +
-          ` <button type="button" data-act="leave" data-source="${s.source}">Leave</button>`
-        : '';
-      return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}: ${state}${controls}</li>`;
+      const btn = (act: string, text: string) => ` <button type="button" data-act="${act}" data-source="${s.source}">${text}</button>`;
+      if (s.calibrating) {
+        return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="calibrating" data-step="${s.calibrating.step}">${s.label}: ${s.calibrating.prompt}${btn('skip', 'Skip')}${btn('cancel', 'Cancel')}</li>`;
+      }
+      let controls = seated ? btn('sit-out', s.sittingOut ? 'Return' : 'Sit out') + btn('leave', 'Leave') : '';
+      let detail = '';
+      if (s.kind === 'wheel' && s.wheel) {
+        const w = s.wheel;
+        detail = ` · steer ${w.steer.toFixed(2)}, accelerator ${w.throttle.toFixed(2)}, brake ${w.brake.toFixed(2)}${w.verified ? '' : ' (profile not yet confirmed on a device)'}`;
+        controls += w.verified ? btn('calibrate', 'Recalibrate') : btn('confirm', 'Looks right') + btn('calibrate', 'Calibrate');
+      } else if (s.needsMapping) {
+        detail = ' · needs mapping';
+        controls += btn('calibrate', 'Map as a wheel');
+      } else if (s.kind === 'pad' && s.connected) {
+        controls += btn('calibrate', 'Map as a wheel');
+      }
+      return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}: ${state}${detail}${controls}</li>`;
     });
     el.innerHTML = `<ul>${rows.join('')}</ul><ul>${input
       .clusters()
@@ -44,8 +57,13 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
     const b = (e.target as HTMLElement).closest('button[data-act]') as HTMLButtonElement | null;
     if (!b) return;
     const source = Number(b.dataset.source);
-    if (b.dataset.act === 'sit-out') input.toggleSitOut(source);
-    else input.leave(source);
+    const act = b.dataset.act;
+    if (act === 'sit-out') input.toggleSitOut(source);
+    else if (act === 'leave') input.leave(source);
+    else if (act === 'calibrate') input.calibrate(source);
+    else if (act === 'skip') input.skipStep(source);
+    else if (act === 'cancel') input.cancelCalibration(source);
+    else if (act === 'confirm') input.confirmWheel(source);
     render();
   });
   render();

@@ -50,6 +50,9 @@ export interface InputStat {
   p95: number;
   p99: number;
   lastMs: number;
+  /** Samples sent so far and the mean encoded `LocalSource` bytes per sample (P1-C05.2). */
+  sent: number;
+  bytesPerSample: number;
 }
 
 export type ToWorker =

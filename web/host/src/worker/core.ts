@@ -67,6 +67,8 @@ export class SimWorker<S extends Sim> {
   /** Local sources' latest unapplied sample time, and their recent host-applied input ages (P1-C05). */
   private pending = new Map<number, number>();
   private ages = new Map<number, number[]>();
+  /** Per local source: samples and encoded bytes (the `LocalSource` message each sample becomes, P1-C05.2). */
+  private wire = new Map<number, { samples: number; bytes: number }>();
 
   constructor(
     readonly wasm: WasmHost<S>,
@@ -168,7 +170,8 @@ export class SimWorker<S extends Sim> {
     return [...this.ages].map(([source, list]) => {
       const sorted = [...list].sort((a, b) => a - b);
       const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] ?? 0;
-      return { source, samples: list.length, p50: at(0.5), p95: at(0.95), p99: at(0.99), lastMs: list.at(-1) ?? 0 };
+      const w = this.wire.get(source);
+      return { source, samples: list.length, p50: at(0.5), p95: at(0.95), p99: at(0.99), lastMs: list.at(-1) ?? 0, sent: w?.samples ?? 0, bytesPerSample: w ? w.bytes / w.samples : 0 };
     });
   }
 
@@ -224,7 +227,16 @@ export class SimWorker<S extends Sim> {
       case 'input': {
         const { input } = msg as { input: SimInput };
         if (input.type === 'local' && input.sampledAt !== undefined) this.pending.set(input.source, input.sampledAt);
-        this.guard((s) => s.handle(this.encode(input)));
+        this.guard((s) => {
+          const bytes = this.encode(input);
+          if (input.type === 'local') {
+            const w = this.wire.get(input.source) ?? { samples: 0, bytes: 0 };
+            w.samples += 1;
+            w.bytes += bytes.length;
+            this.wire.set(input.source, w);
+          }
+          s.handle(bytes);
+        });
         return;
       }
       case 'inputStats':

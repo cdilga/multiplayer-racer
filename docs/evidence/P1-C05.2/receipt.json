@@ -1,0 +1,41 @@
+{
+  "format": "jj.input-receipt.v1",
+  "what": "Host wheels (P1-C05.2): emulated Gamepad API devices on the real join path; ages are main thread to tick boundary, bytes are the encoded LocalSource message per sample",
+  "browser": "Chromium 151.0.7922.34 (Playwright headless)",
+  "rows": [
+    {
+      "path": "host-local",
+      "source": 100,
+      "kind": "wheel",
+      "label": "Fancy Wheel Pro (wheel 1)",
+      "profile": "Fancy Wheel Pro",
+      "profileVerified": true,
+      "samples": 246,
+      "hostAppliedInputAgeMs": {
+        "p50": 5.8,
+        "p95": 11.7,
+        "p99": 12.9
+      },
+      "bytesPerSample": 11.86,
+      "device": "emulated Gamepad API (no hardware)",
+      "case": "calibrated wheel"
+    },
+    {
+      "path": "host-local",
+      "source": 101,
+      "kind": "wheel",
+      "label": "Logitech G29 / G920 (wheel 2)",
+      "profile": "Logitech G29 / G920",
+      "profileVerified": true,
+      "samples": 140,
+      "hostAppliedInputAgeMs": {
+        "p50": 6,
+        "p95": 12.2,
+        "p99": 12.4
+      },
+      "bytesPerSample": 10.09,
+      "device": "emulated Gamepad API (no hardware)",
+      "case": "shipped profile"
+    }
+  ]
+}

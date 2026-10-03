@@ -6,11 +6,16 @@
 // - Pads use the standard mapping: left stick DRIVE, right stick ACTION, View/Select = Identify, Start = READY.
 //   Key clusters come from `clusters.json` (data). Holding Identify + READY for `leaveHoldMs` leaves the seat.
 // - Digital steering is rate-shaped (keys ramp the DRIVE x axis); everything else is immediate.
+// - Steering wheels with pedals (P1-C05.2) map onto the same two sticks through a profile (`wheel.ts`): a shipped one
+//   matched by USB ids, or one saved by calibrating that device in the input drawer. A non-standard device with an
+//   axis resting far from centre (pedals) and no profile sends nothing until it's mapped, so it can't claim a seat
+//   with its brake on. While a source calibrates, its seat gets neutral input.
 // - An unplugged pad sends one `LOCAL_UNAVAILABLE` sample and goes quiet: neutral at once, its car to the autopilot
 //   after the worker's dropout time, and back when it's plugged in and pressed again.
 import map from './clusters.json';
 import type { SimClient } from '../worker/client';
 import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_SIT_OUT, LOCAL_UNAVAILABLE } from '../worker/messages';
+import { CAL_PROMPTS, Calibration, type PadLike, type WheelProfile, pedal, profileFor, saveProfile, savedProfiles, wheelSample } from './wheel';
 
 type Axes = [number, number, number, number];
 type Stick = { up: string; down: string; left: string; right: string };
@@ -25,7 +30,7 @@ export interface Cluster {
 
 export interface LocalSourceView {
   source: number;
-  kind: 'pad' | 'keys';
+  kind: 'pad' | 'keys' | 'wheel';
   label: string;
   connected: boolean;
   /** Pressed at least once: it has (or had) a seat. */
@@ -34,6 +39,12 @@ export interface LocalSourceView {
   left: boolean;
   /** Its seat is sitting out (from the drawer). */
   sittingOut: boolean;
+  /** A wheel's profile: its name, whether it's confirmed on a device, and the live mapping (−1..1 steer, 0..1 pedals). */
+  wheel?: { profile: string; verified: boolean; steer: number; throttle: number; brake: number };
+  /** A non-standard device that needs mapping before it can play (P1-C05.2). */
+  needsMapping?: boolean;
+  /** Calibrating: the step and its prompt. */
+  calibrating?: { step: string; prompt: string };
 }
 
 const AXIS_MAX = 32767;
@@ -53,6 +64,11 @@ interface Source {
   once: number;
   /** Let go since leaving (so the next press is a new player). */
   released: boolean;
+  /** A pad's Gamepad id (wheel profiles are per device). */
+  padId?: string;
+  cal?: Calibration;
+  /** Just calibrated: the press that finished it isn't a join; everything must be let go first. */
+  awaitRelease?: boolean;
 }
 
 /** A stick past the radial deadzone, rescaled so the edge of the deadzone reads 0. */
@@ -68,6 +84,8 @@ export class LocalInput {
   private keys = new Set<string>();
   private timer: ReturnType<typeof setInterval> | undefined;
   private last = 0;
+  /** Profiles saved by calibration (read once, written on save). */
+  private saved: Record<string, WheelProfile> = savedProfiles();
   private readonly clusterKeys = new Set(
     clusters.flatMap((c) => [...Object.values(c.drive), ...Object.values(c.action), c.identify, c.ready]),
   );
@@ -94,6 +112,41 @@ export class LocalInput {
     if (!s?.view.claimed || s.view.left) return;
     s.once |= LOCAL_SIT_OUT;
     s.view.sittingOut = !s.view.sittingOut;
+  }
+
+  /** The drawer's "Map as a wheel" / "Calibrate": walk the prompts with this device; its seat gets neutral input. */
+  calibrate(source: number): void {
+    const s = this.sources.get(source);
+    if (!s?.padId || !s.view.connected) return;
+    s.cal = new Calibration({ id: s.padId });
+  }
+
+  /** The calibration prompt's Skip (button steps) and Cancel. */
+  skipStep(source: number): void {
+    this.sources.get(source)?.cal?.skip();
+  }
+
+  cancelCalibration(source: number): void {
+    const s = this.sources.get(source);
+    if (s) s.cal = undefined;
+  }
+
+  /** "Looks right" on a shipped profile: saved as confirmed for this device. */
+  confirmWheel(source: number): void {
+    const s = this.sources.get(source);
+    const pad = s?.padId ? this.pads().find((p) => p.id === s.padId) : undefined;
+    const prof = pad && profileFor(pad, this.saved);
+    if (!s?.padId || !prof) return;
+    this.keep(s.padId, { ...prof, verified: true, note: `${prof.note ?? ''} Confirmed on this device.`.trim() });
+  }
+
+  private keep(padId: string, p: WheelProfile): void {
+    this.saved = { ...this.saved, [padId]: p };
+    saveProfile(padId, p);
+  }
+
+  private pads(): PadLike[] {
+    return [...(this.win.navigator.getGamepads?.() ?? [])].filter((p): p is Gamepad => !!p?.connected);
   }
 
   /** The drawer's Leave for a seated source. */
@@ -124,7 +177,7 @@ export class LocalInput {
     clearInterval(this.timer);
   }
 
-  private add(source: number, kind: 'pad' | 'keys', label: string): Source {
+  private add(source: number, kind: LocalSourceView['kind'], label: string): Source {
     const s: Source = {
       view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false },
       axes: [0, 0, 0, 0],
@@ -171,6 +224,45 @@ export class LocalInput {
       const source = map.padSourceBase + pad.index;
       const s = this.sources.get(source) ?? this.add(source, 'pad', `Pad ${pad.index + 1}`);
       if (!s.view.connected) continue;
+      s.padId = pad.id;
+      if (s.cal) {
+        const step = s.cal.sample(pad.axes, pad.buttons, now);
+        s.view.calibrating = { step, prompt: CAL_PROMPTS[step] };
+        if (step === 'done') {
+          if (s.cal.profile) this.keep(pad.id, s.cal.profile);
+          s.cal = undefined;
+          s.view.calibrating = undefined;
+          s.awaitRelease = true;
+        }
+        if (s.view.claimed) this.update(s, [0, 0, 0, 0], false, false, now);
+        continue;
+      }
+      const prof = profileFor(pad, this.saved);
+      if (prof) {
+        const w = wheelSample(pad, prof);
+        if (s.awaitRelease) {
+          if (w.axes.some((v) => v !== 0) || w.identify || w.ready) continue;
+          s.awaitRelease = false;
+        }
+        s.view.kind = 'wheel';
+        s.view.label = `${prof.label} (wheel ${pad.index + 1})`;
+        s.view.needsMapping = false;
+        s.view.wheel = {
+          profile: prof.label,
+          verified: prof.verified,
+          steer: w.axes[0],
+          throttle: pedal(pad.axes[prof.throttle.axis], prof.throttle),
+          brake: pedal(pad.axes[prof.brake.axis], prof.brake),
+        };
+        this.update(s, w.axes, w.identify, w.ready, now);
+        continue;
+      }
+      // An unmapped non-standard device resting off centre (pedals at +1 or −1) waits for mapping.
+      if (pad.mapping !== 'standard' && !s.view.claimed && pad.axes.some((v) => Math.abs(v) > 0.5)) {
+        s.view.needsMapping = true;
+        continue;
+      }
+      s.view.needsMapping = false;
       const [dx, dy] = deadzone(pad.axes[0] ?? 0, -(pad.axes[1] ?? 0), map.padDeadzone);
       const [ax, ay] = deadzone(pad.axes[2] ?? 0, -(pad.axes[3] ?? 0), map.padDeadzone);
       const identify = pad.buttons[8]?.pressed ?? false;

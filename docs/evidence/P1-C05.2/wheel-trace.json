@@ -1,0 +1,414 @@
+{
+  "format": "jj.wheel-trace.v1",
+  "what": "The calibrated wheel as the host mapped it, sampled every 50 ms from its first press: steering −1..1, accelerator and brake 0..1",
+  "samples": [
+    {
+      "ms": 167,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 221,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 275,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 327,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 379,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 432,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 487,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 545,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 601,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 655,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 709,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 763,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 820,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 875,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 932,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 988,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1041,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1099,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1156,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1215,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1273,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1331,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1386,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1439,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1492,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1549,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1604,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1659,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1714,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1767,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1820,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1874,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1930,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 1985,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2040,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2094,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2148,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2203,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2256,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2309,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2364,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2421,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2476,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2531,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2588,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2642,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2704,
+      "steer": 0.33,
+      "throttle": 0.7917,
+      "brake": 0
+    },
+    {
+      "ms": 2757,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 2816,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 2870,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 2925,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 2981,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3037,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3092,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3150,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3208,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3266,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3324,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3382,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3437,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3498,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3556,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3610,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3664,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3718,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3772,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3827,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    },
+    {
+      "ms": 3880,
+      "steer": 0,
+      "throttle": 0,
+      "brake": 1
+    }
+  ]
+}

@@ -1,0 +1,647 @@
+{
+ "scenario": "wheel-trace",
+ "what": "P1-C05.2 (R90): a wheel run recorded live in the host (an emulated wheel calibrated in the drawer) and replayed as fixture sticks through jj-input and the sim: the car accelerates, turns with the wheel, then slows on the brake.",
+ "map": "maps/greybox-loop.json",
+ "seed": 83,
+ "ticks": 447,
+ "cars": [
+  {
+   "routePoint": 88,
+   "lateral": 0
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 6,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 6,
+   "toTick": 13,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 13,
+   "toTick": 19,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 19,
+   "toTick": 25,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 25,
+   "toTick": 32,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 32,
+   "toTick": 38,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 38,
+   "toTick": 45,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 45,
+   "toTick": 52,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 52,
+   "toTick": 59,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 59,
+   "toTick": 65,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 65,
+   "toTick": 72,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 72,
+   "toTick": 78,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 78,
+   "toTick": 85,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 85,
+   "toTick": 92,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 92,
+   "toTick": 99,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 99,
+   "toTick": 105,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 105,
+   "toTick": 112,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 112,
+   "toTick": 119,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 119,
+   "toTick": 126,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 126,
+   "toTick": 133,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 133,
+   "toTick": 140,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 140,
+   "toTick": 146,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 146,
+   "toTick": 153,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 153,
+   "toTick": 159,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 159,
+   "toTick": 166,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 166,
+   "toTick": 172,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 172,
+   "toTick": 179,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 179,
+   "toTick": 186,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 186,
+   "toTick": 192,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 192,
+   "toTick": 198,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 198,
+   "toTick": 205,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 205,
+   "toTick": 212,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 212,
+   "toTick": 218,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 218,
+   "toTick": 225,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 225,
+   "toTick": 231,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 231,
+   "toTick": 238,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 238,
+   "toTick": 244,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 244,
+   "toTick": 251,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 251,
+   "toTick": 257,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 257,
+   "toTick": 264,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 264,
+   "toTick": 270,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 270,
+   "toTick": 277,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 277,
+   "toTick": 284,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 284,
+   "toTick": 291,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 291,
+   "toTick": 297,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 297,
+   "toTick": 304,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 304,
+   "toTick": 311,
+   "stick": [
+    0.33,
+    0.7917
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 311,
+   "toTick": 318,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 318,
+   "toTick": 324,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 324,
+   "toTick": 331,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 331,
+   "toTick": 338,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 338,
+   "toTick": 344,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 344,
+   "toTick": 351,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 351,
+   "toTick": 358,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 358,
+   "toTick": 365,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 365,
+   "toTick": 372,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 372,
+   "toTick": 379,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 379,
+   "toTick": 386,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 386,
+   "toTick": 392,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 392,
+   "toTick": 400,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 400,
+   "toTick": 407,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 407,
+   "toTick": 413,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 413,
+   "toTick": 420,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 420,
+   "toTick": 426,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 426,
+   "toTick": 433,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 433,
+   "toTick": 439,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 439,
+   "toTick": 446,
+   "stick": [
+    0,
+    -1
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 446,
+   "stick": [
+    0,
+    -1
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "atTick": 304,
+   "metric": "headingChangeDeg",
+   "min": 10,
+   "max": 180
+  },
+  {
+   "car": 0,
+   "metric": "maxSpeed",
+   "min": 4,
+   "max": 40
+  },
+  {
+   "car": 0,
+   "metric": "wrecks",
+   "min": 0,
+   "max": 0
+  }
+ ]
+}
