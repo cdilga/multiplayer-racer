@@ -89,7 +89,7 @@ GLSL route = the same element on a plain `WebGLRenderer`; **run** items are in `
 |---|---|---|---|
 | 12.1 Cel/toon, 2-3 tone ramp | `toon-model` | `MeshToonMaterial({ gradientMap })`, 40-texel Nearest ramp (run) | run |
 | 12.1 Thick ink outlines (depth + normals + object id, once in post) | `post` edge pass; `tokens`; `outline:'ids'` is the cheap tier | prepass RT + one quad pass, same maths (run) | run |
-| 12.1 Halftone dots in shadows | `post` halftone, keyed on `jjShade` from `toon-model` | halftone inside the patched toon chunk (run) | run |
+| 12.1 Halftone dots in shadows | `post` halftone, keyed on `jjShade` from `toon-model`. **Known issue (owner POC round 2, POC2-13):** it also dots a car's own shadow side; the POC fix masks it with the object-id target's dynamic flag (`art/ui/poc/world/shaders/pipeline.js`), so only cast shadows on static ground are dotted | halftone inside the patched toon chunk (run) | run |
 | 12.1 Bold flat colours, curated palette | flat `colorNode` from tokens + Neutral tone map | same | run |
 | 12.1 Comic speed lines at high speed | `speed-lines` | same maths in the quad pass (run) | run |
 | 12.1 Impact words (KRUNCH!) as sprites | `recipes-extra` impact-word | `Sprite` + `SpriteMaterial` | sketch |
@@ -103,16 +103,16 @@ GLSL route = the same element on a plain `WebGLRenderer`; **run** items are in `
 | 12.1a Edge-worn bare metal (curvature bake) | `recipes-extra` edge-wear (needs baked `aCurv`) | same | sketch |
 | 12.1a Dust layer, driven over | `grit` dust term (`aState.y`) | world-height dust (run), driven-over dust is a port | run |
 | 12.1a Hot metal / exhaust orange to white | `recipes-extra` hot-metal (`aState.w`) | emissive `onBeforeCompile` | sketch |
-| 12.1a Heat shimmer (larger tiles only) | `recipes-extra` shimmer, gated by `tier.shimmer` | `ShaderPass` UV offset | sketch |
+| 12.1a Heat shimmer (larger tiles only) | `recipes-extra` shimmer, gated by `tier.shimmer`; rendered in the P1-U05.5 POC (`pipeline.js`: depth-gated far ground, never cars) | `ShaderPass` UV offset | sketch (POC run) |
 | 12.1a Emissive kit: head/tail lights, light bars, underglow, roof number, weapon charge | `emissiveNode` from the atlas emissive map + MRT emissive + bloom (run: headlights, LED bar, tail); underglow/roof/charge in `recipes-extra` | cookbook selective bloom | run + sketch |
 | 12.1a Selective bloom, once in post | `post` glow (emissive target only) | `UnrealBloomPass` on an emissive-only render (port, not run) | run |
-| 12.1a Boost flames (blue at full boost) | `recipes-extra` boost-flame | same, cone + sprites | sketch |
+| 12.1a Boost flames (blue at full boost) | `recipes-extra` boost-flame; rendered in the P1-U05.5 POC (`art/ui/poc/world/world.js`: an instanced cone carrying the car's id) | same, cone + sprites | sketch (POC run) |
 | 12.1a Sparks and embers (GPU particles) | `recipes-extra` sparks, on `../webgpu-threejs-tsl/docs/compute-shaders.md` | CPU-updated `Points` | sketch |
 | 12.1a Damage glow, burning husks | `recipes-extra` damage-glow (`aState.z`) | same | sketch |
 | 12.1a Sky and light: harsh sun, long shadows, fog gradient | `rig` (sun azimuth/elevation, haze fog) | same | run |
-| 12.1a Heat haze, dust storm, dusk/night variants | `recipes-extra` weather parameter sets | same | sketch |
+| 12.1a Heat haze, dust storm, dusk/night variants | `recipes-extra` weather parameter sets; five Mad Max parameter sets rendered and costed in the P1-U05.5 POC (`art/ui/poc/world/shaders/looks.json`, `docs/evidence/P1-U05.5/`) | same | sketch (POC run) |
 | 12.1a Ground: red dirt (run), cracked clay, ripples, tyre tracks, wet sheen | `grit` ground; others in `recipes-extra` ground | same | run + sketch |
-| 12.1a Environment emissive (servo/neon signs, flares, markers) | `recipes-extra` signs (`emissiveNode` + flicker) | same | sketch |
+| 12.1a Environment emissive (servo/neon signs, flares, markers) | `recipes-extra` signs (`emissiveNode` + flicker); hazard beacons and roadside flares rendered in the P1-U05.5 POC (instanced glow attribute driven from the sim clock) | same | sketch (POC run) |
 | 12.1a Post once (D17): warm grade, vignette, grain, halftone, chromatic fringe on big hits only | `post` (`look.warm`, `vignette`, `grainAmt`, `fringe`; fringe is a build option) | warm/vignette/grain in the quad pass (run), fringe is a port | run |
 | 12.1a Guard rails: informative emissive first; effects scale down with tile size; measured cost | `tiers` + cost rules below | same (run at the 40 px tier) | run (tiers), cost = G-PERF |
 

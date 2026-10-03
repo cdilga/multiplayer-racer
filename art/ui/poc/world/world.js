@@ -3,12 +3,17 @@
 // whole grid is ONE scene pass into the shared MRT targets and the comic post chain (outlines, halftone, bloom, grade) runs
 // ONCE over the screen (jammers-look "Per-tile cost rules"). The track layout matches the TV mocks (../tv/world.js).
 import * as THREE from 'three/webgpu';
-import { color, texture, positionWorld, vertexColor, vec2, vec3, float, abs, mix, smoothstep, length } from 'three/tsl';
+import { color, texture, positionWorld, vertexColor, vec2, vec3, float, abs, mix, smoothstep, length, attribute, uv, positionGeometry, step as tslStep, max } from 'three/tsl';
 import { build, DEFAULT_P } from '../vendor/cruz/model.js';
 import { makeAtlas } from '../vendor/cruz/atlas.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { createLook, addDayRig, tierFor, applyTier, updateLookCamera, addCarAttributes, paintKey, damageCreep, makeComicMaterial, comicPipeline, aCar, aState } from '../vendor/look/look.js';
+import { createLook, addDayRig, tierFor, applyTier, updateLookCamera, addCarAttributes, paintKey, damageCreep, makeComicMaterial, aCar, aState } from '../vendor/look/look.js';
+import { jjPipeline, extendLook } from './shaders/pipeline.js';
 export const FRAMING = await (await fetch(new URL('../shared/framing.json', import.meta.url))).json();
+// The Mad Max looks (P1-U05.5, R108): light, sky, grade and wear per look, as data. The first listed is the recommended one.
+export const LOOKS = await (await fetch(new URL('./shaders/looks.json', import.meta.url))).json();
+// Texture filtering (POC2-12): anisotropic filtering on every world texture; &af=1 shows the before.
+let ANISO = 16;
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TRACK_PTS = [[0, 0], [120, -10], [200, 40], [210, 120], [150, 170], [80, 140], [20, 190], [-80, 200], [-150, 140], [-160, 50], [-110, -20]];
@@ -23,12 +28,12 @@ function rng(seed) {
 
 // Graphic sky (master 12.1, H4): festival blue fading to the haze at the horizon, with small hand-inked cumulus 6–18 degrees up.
 // An equirect background texture, so the sky stays at depth 1 and the post chain still classifies it as sky (jammers-look trap 4).
-function paintSky() {
+function paintSky({ top = '#2F7BCB', upper = '#4E9BDE', low = '#A4CFEC', horizon = '#F4DDB0', cloud = '#FFFDF5', belly = '#E4D9C8' } = {}) {
   const W = 4096, H = 2048; // 2:1, as equirect mapping expects, so puffs stay round
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   const grad = g.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#2F7BCB'); grad.addColorStop(0.36, '#4E9BDE'); grad.addColorStop(0.462, '#A4CFEC'); grad.addColorStop(0.495, '#F4DDB0'); grad.addColorStop(1, '#F4DDB0');
+  grad.addColorStop(0, top); grad.addColorStop(0.36, upper); grad.addColorStop(0.462, low); grad.addColorStop(0.495, horizon); grad.addColorStop(1, horizon);
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
   const R = rng(7);
   const blob = (x, y, puffs, grow) => { g.beginPath(); for (const [dx, dy, r] of puffs) { g.moveTo(x + dx + r + grow, y + dy); g.arc(x + dx, y + dy, r + grow, 0, Math.PI * 2); } g.fill(); };
@@ -41,9 +46,9 @@ function paintSky() {
     g.fillStyle = '#15203A'; blob(x, base, puffs, 3);   // ink rim, and a flat inked base
     g.restore();
     g.save(); g.beginPath(); g.rect(x - w, base - h * 3, w * 2, h * 3); g.clip();
-    g.fillStyle = '#FFFDF5'; blob(x, base, puffs, 0);   // body
+    g.fillStyle = cloud; blob(x, base, puffs, 0);   // body
     g.beginPath(); g.rect(x - w, base - h * 0.32, w * 2, h); g.clip();
-    g.fillStyle = '#E4D9C8'; blob(x, base, puffs, 0);   // warm-grey belly
+    g.fillStyle = belly; blob(x, base, puffs, 0);   // warm-grey belly
     g.restore();
   }
   const t = new THREE.CanvasTexture(cv);
@@ -75,6 +80,7 @@ function patchTexture(size = 512) {
   const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
+  t.anisotropy = ANISO;
   t.needsUpdate = true;
   return t;
 }
@@ -86,17 +92,27 @@ function canvasTexture(w, h, draw) {
   const t = new THREE.CanvasTexture(cv);
   t.colorSpace = THREE.SRGBColorSpace;
   t.magFilter = THREE.NearestFilter;
-  t.anisotropy = 4;
+  t.anisotropy = ANISO;
   return t;
 }
 
-export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'full', forceWebGL = false, trackTimestamp = false, overrides = {} }) {
+// fx (P1-U05.5): the shader and lighting options, each costed on its own (see README "Shader and lighting POC").
+//   look: an id from shaders/looks.json        ink: 'outer' | 'silhouette' | 'full' | 'none'      ao, smaa, shimmer, haze: booleans
+//   shadow: 'pcf' | 'soft' | 'vsm' | 'basic' | 'csm' | 'off'      shadowSize: px      tm: tone mapping override ('neutral' | 'agx' | 'aces' | 'none')
+//   roadtex: textured road (false = round 1's geometry lines)      af: anisotropy      emissive: the emissive kit      grain      debug
+//   htcar: halftone on the cars too (round 1's bug, for the before capture)
+//   tierH: pick the effect tier as if the tiles were this tall (the shimmer metric's supersampled reference renders a small
+//          tile's exact settings at 4x the pixels)
+const TONE = { neutral: THREE.NeutralToneMapping, agx: THREE.AgXToneMapping, aces: THREE.ACESFilmicToneMapping, none: THREE.NoToneMapping };
+const SHADOW = { pcf: THREE.PCFShadowMap, soft: THREE.PCFSoftShadowMap, vsm: THREE.VSMShadowMap, basic: THREE.BasicShadowMap, csm: THREE.PCFShadowMap };
+export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'full', forceWebGL = false, trackTimestamp = false, overrides = {}, fx = {} }) {
+  ANISO = fx.af ?? 16;
   // trackTimestamp: GPU timestamp queries for the cost table (needs the 'timestamp-query' feature; ?ts=1 on the page).
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: false, forceWebGL, trackTimestamp });
   renderer.setPixelRatio(1);
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.enabled = fx.shadow !== 'off';
+  renderer.shadowMap.type = SHADOW[fx.shadow] ?? THREE.PCFShadowMap;
   await renderer.init();
   const backend = renderer.backend.isWebGPUBackend ? 'WebGPU' : 'WebGL2 (WebGPURenderer fallback)';
   let adapterInfo = '';
@@ -108,14 +124,35 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   scene.background = paintSky();
   // A track-wide shadow frustum (the skill's +/-9 m rig is for one car); R10 replaces this with cascades.
   Object.assign(sun.shadow.camera, { left: -260, right: 260, top: 260, bottom: -260, near: 1, far: 900 });
-  sun.shadow.mapSize.set(4096, 4096);
+  sun.shadow.mapSize.set(fx.shadowSize ?? 4096, fx.shadowSize ?? 4096);
   sun.shadow.bias = -0.0008;
   sun.shadow.normalBias = 0.25;
-  const sunDir = sun.position.clone().normalize();
-  const placeSun = (at) => { sun.position.copy(at).addScaledVector(sunDir, 400); sun.target.position.copy(at); sun.target.updateMatrixWorld(); sun.shadow.camera.updateProjectionMatrix(); };
+  if (fx.shadow === 'vsm') { sun.shadow.radius = 3; sun.shadow.blurSamples = 8; }
+  const hemi = scene.children.find((o) => o.isHemisphereLight);
+  const sunDir = sun.position.clone().normalize(), sunAt = new THREE.Vector3(), snapped = new THREE.Vector3(), lr = new THREE.Vector3(), lu = new THREE.Vector3();
+  // Stable shadows (POC2-11): the frustum centre snaps to whole shadow texels across the light, so a sun that follows a moving
+  // camera never crawls the shadow edges. Free.
+  const placeSun = (at) => {
+    sunAt.copy(at);
+    const texel = (sun.shadow.camera.right - sun.shadow.camera.left) / sun.shadow.mapSize.x;
+    lr.crossVectors(UP, sunDir).normalize(); lu.crossVectors(sunDir, lr).normalize();
+    const a = at.dot(lr), b = at.dot(lu);
+    snapped.copy(at).addScaledVector(lr, Math.round(a / texel) * texel - a).addScaledVector(lu, Math.round(b / texel) * texel - b);
+    sun.position.copy(snapped).addScaledVector(sunDir, 400); sun.target.position.copy(snapped); sun.target.updateMatrixWorld(); sun.shadow.camera.updateProjectionMatrix();
+  };
   placeSun(new THREE.Vector3(25, 0, 95));
+  // Cascaded shadows (POC2-11, a single-view option): three cascades fitted to the first tile's camera, sharp near the car and
+  // cheap far away. The grid's 24 cameras would need cascades each (R10's problem), so it is measured on the single view only.
+  let csm = null;
+  if (fx.shadow === 'csm') {
+    const { CSMShadowNode } = await import('three/addons/csm/CSMShadowNode.js');
+    sun.shadow.mapSize.set(fx.shadowSize ?? 2048, fx.shadowSize ?? 2048);
+    csm = new CSMShadowNode(sun, { cascades: 3, maxFar: 420, mode: 'practical', lightMargin: 300 });
+    csm.fade = true;
+    sun.shadow.shadowNode = csm;
+  }
 
-  const look = createLook(tierFor(tileHeight));
+  const look = extendLook(createLook(tierFor(tileHeight)));
   const flat = (hex, grit = {}) => makeComicMaterial(look, { colorNode: color(hex), grit });
   const vcol = (grit = {}) => makeComicMaterial(look, { colorNode: vertexColor(), grit });
 
@@ -165,12 +202,54 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   const C = (h) => new THREE.Color(h);
   const dirt = C('#D39A62'), rut = C('#BC834F'), red = C('#D8382C'), white = C('#F4EFE4'), line = C('#FFF4DE');
   const track = new THREE.Group();
-  track.add(ribbon(-ROAD_W / 2, ROAD_W / 2, 0.02, () => dirt));
-  track.add(ribbon(-3.2, -2.2, 0.03, () => rut), ribbon(2.2, 3.2, 0.03, () => rut));
-  track.add(ribbon(-ROAD_W / 2 + 0.35, -ROAD_W / 2 + 0.6, 0.035, () => line), ribbon(ROAD_W / 2 - 0.6, ROAD_W / 2 - 0.35, 0.035, () => line)); // route edges
-  track.add(ribbon(-ROAD_W / 2 - 1.3, -ROAD_W / 2, 0.06, (i) => ((i >> 1) & 1 ? red : white), true));
-  track.add(ribbon(ROAD_W / 2, ROAD_W / 2 + 1.3, 0.06, (i) => ((i >> 1) & 1 ? red : white), true));
+  if (fx.roadtex === false) { // round 1: dirt, ruts, edge lines and kerbs as separate vertex-coloured ribbons (the shimmer "before")
+    track.add(ribbon(-ROAD_W / 2, ROAD_W / 2, 0.02, () => dirt));
+    track.add(ribbon(-3.2, -2.2, 0.03, () => rut), ribbon(2.2, 3.2, 0.03, () => rut));
+    track.add(ribbon(-ROAD_W / 2 + 0.35, -ROAD_W / 2 + 0.6, 0.035, () => line), ribbon(ROAD_W / 2 - 0.6, ROAD_W / 2 - 0.35, 0.035, () => line)); // route edges
+    track.add(ribbon(-ROAD_W / 2 - 1.3, -ROAD_W / 2, 0.06, (i) => ((i >> 1) & 1 ? red : white), true));
+    track.add(ribbon(ROAD_W / 2, ROAD_W / 2 + 1.3, 0.06, (i) => ((i >> 1) & 1 ? red : white), true));
+  } else track.add(texturedRoad());
   scene.add(track);
+
+  // POC2-12: the road as ONE textured ribbon. Dirt, ruts, the cream edge lines and the red/white kerbs are painted into a
+  // mipmapped canvas, so a line far down the road is filtered (mips + 16x anisotropic) instead of being a strip of geometry
+  // thinner than a pixel that the screen samples once per pixel: that is what shimmered in round 1, and FXAA cannot fix it.
+  function texturedRoad() {
+    const HALF = ROAD_W / 2 + 1.3, cycles = Math.max(1, Math.round(trackLen / 11.6)); // one texture repeat = 4 kerb blocks, a whole number per lap
+    const px = (x) => ((x + HALF) / (2 * HALF)) * 512;
+    const tex = canvasTexture(512, 512, (g, w, h) => {
+      g.fillStyle = '#D39A62'; g.fillRect(0, 0, w, h);
+      const R = rng(5);
+      for (let k = 0; k < 900; k++) { g.fillStyle = R() < 0.5 ? 'rgba(170,110,60,0.18)' : 'rgba(240,200,150,0.16)'; const r = 3 + R() * 9; g.beginPath(); g.ellipse(R() * w, R() * h, r, r * (0.6 + R()), 0, 0, Math.PI * 2); g.fill(); }
+      for (const [a, b] of [[-3.2, -2.2], [2.2, 3.2]]) { // ruts: darker, soft-edged bands
+        const gr = g.createLinearGradient(px(a), 0, px(b), 0);
+        gr.addColorStop(0, 'rgba(188,131,79,0)'); gr.addColorStop(0.25, 'rgba(176,118,68,0.95)'); gr.addColorStop(0.75, 'rgba(176,118,68,0.95)'); gr.addColorStop(1, 'rgba(188,131,79,0)');
+        g.fillStyle = gr; g.fillRect(px(a), 0, px(b) - px(a), h);
+      }
+      g.fillStyle = '#FFF4DE';
+      for (const [a, b] of [[-ROAD_W / 2 + 0.35, -ROAD_W / 2 + 0.6], [ROAD_W / 2 - 0.6, ROAD_W / 2 - 0.35]]) g.fillRect(px(a), 0, px(b) - px(a), h);
+      for (let k = 0; k < 4; k++) { // kerbs: red, white, red, white along the road
+        g.fillStyle = k % 2 ? '#F4EFE4' : '#D8382C';
+        g.fillRect(0, (k * h) / 4, px(-ROAD_W / 2), h / 4); g.fillRect(px(ROAD_W / 2), (k * h) / 4, w - px(ROAD_W / 2), h / 4);
+      }
+      g.fillStyle = '#15203A'; g.fillRect(px(-ROAD_W / 2) - 1, 0, 2, h); g.fillRect(px(ROAD_W / 2) - 1, 0, 2, h); // inked kerb edge
+    });
+    tex.wrapT = THREE.RepeatWrapping; tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearMipmapLinearFilter; tex.generateMipmaps = true;
+    const pos = [], uvs = [], idx = [];
+    for (let i = 0; i <= SAMPLES; i++) {
+      const { p, n } = frames[i], v = (i * cycles) / SAMPLES;
+      for (const o of [-HALF, HALF]) { pos.push(p.x + n.x * o, 0.03, p.z + n.z * o); uvs.push(o < 0 ? 0 : 1, v); }
+      if (i < SAMPLES) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, makeComicMaterial(look, { colorNode: texture(tex, uv()).rgb, grit: { space: positionWorld, cell: 24, patchFreq: 0.5 } }));
+    m.receiveShadow = true;
+    return m;
+  }
 
   // ---- in-world graphics (P1-U05.3, owner round 2): the finish banner, corner chevron posts, W-beam guard rail ----
   // R106: no "Checkpoint N" gantries. Lap-validity checkpoints stay as invisible gameplay (plan §8) until the owner decides.
@@ -511,6 +590,43 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     bunting(Array.from({ length: 11 }, (_, j) => { const a = -Math.PI * 0.9 + j * (Math.PI * 0.8 / 10); return [BOWL.x + Math.cos(a) * (BOWL.r + 7.5), BOWL.z + Math.sin(a) * (BOWL.r + 7.5)]; }), 5);
   }
 
+  // ---- emissive kit, world half (POC2-14): amber hazard beacons that double-strobe on the corner chevrons and round the derby
+  // bowl, and red roadside flares that flicker along the start straight. One InstancedMesh per kind; the glow per instance is
+  // an instanced attribute written from the sim clock in step(), so a capture is repeatable. Bloom (single view) haloes them;
+  // the grid shows them as bright flat colour. &emissive=0 leaves the kit out for the cost table.
+  const kit = { beacons: null, flares: null, beaconPhase: [], flarePhase: [], boost: null };
+  const glowMat = (base, glow, gain, id = null) => makeComicMaterial(look, { colorNode: color(base), emissiveNode: color(glow).mul(attribute('aGlow', 'float')).mul(gain), dynamicId: id });
+  const glowMesh = (geo, mat, places, shadow = false) => {
+    const im = new THREE.InstancedMesh(geo, mat, Math.max(1, places.length));
+    places.forEach((m4, i) => im.setMatrixAt(i, m4));
+    im.count = places.length;
+    geo.setAttribute('aGlow', new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, places.length)), 1));
+    im.castShadow = shadow; im.frustumCulled = false;
+    scene.add(im);
+    return im;
+  };
+  if (fx.emissive !== false) {
+    const at4 = (x, y, z, sx = 1, sy = 1, sz = 1) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion(), new THREE.Vector3(sx, sy, sz));
+    const beaconAt = [];
+    graphics.chevrons.forEach((b, i) => { if (i % 4 === 0) beaconAt.push([b.position.x, 1.66, b.position.z]); });
+    for (const a0 of [0.4, 1.9, 3.3, 4.6]) beaconAt.push([BOWL.x + Math.cos(a0) * (BOWL.r + 4.5), 2.05, BOWL.z + Math.sin(a0) * (BOWL.r + 4.5)]);
+    const cap = flat('#2A2F38');
+    for (const i of [18, 32]) { // two on posts by the start straight, where the close-up sees them
+      const f = frames[i], x = f.p.x + f.n.x * (ROAD_W / 2 + 3.4), z = f.p.z + f.n.z * (ROAD_W / 2 + 3.4);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.1), cap); post.position.set(x, 0.65, z); post.castShadow = true; scene.add(post);
+      beaconAt.push([x, 1.3, z]);
+    }
+    for (const [x, y, z] of beaconAt) { const base = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.08, 10), cap); base.position.set(x, y + 0.04, z); scene.add(base); }
+    kit.beacons = glowMesh(new THREE.CylinderGeometry(0.13, 0.15, 0.24, 12), glowMat('#B8741A', '#FFB020', 2.6), beaconAt.map(([x, y, z]) => at4(x, y + 0.2, z)));
+    kit.beaconPhase = beaconAt.map((_, i) => (i * 0.37) % 1);
+    const flareAt = [], R = rng(31);
+    for (let i = 0; i < 46; i += 3) for (const side of [-1, 1]) { const f = frames[i]; flareAt.push([f.p.x + f.n.x * side * (ROAD_W / 2 + 1.9), f.p.z + f.n.z * side * (ROAD_W / 2 + 1.9)]); }
+    const stick = flat('#7A1A12');
+    for (const [x, z] of flareAt) { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.32, 6), stick); s.position.set(x, 0.16, z); scene.add(s); }
+    kit.flares = glowMesh(new THREE.SphereGeometry(0.11, 10, 8), glowMat('#FF6A3D', '#FF3B1F', 4.0), flareAt.map(([x, z]) => at4(x, 0.36, z, 1, 1.5, 1)));
+    kit.flarePhase = flareAt.map(() => R() * 10);
+  }
+
   // ---- bake: static props are built as plain meshes (readable above), then merged into one mesh per material, so the 24-tile
   // ArrayCamera pass (one draw per object per tile) issues tens of draws per tile instead of hundreds. Turning fans stay live.
   {
@@ -539,13 +655,23 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   try { P = await (await fetch('../vendor/cruz/params.json')).json(); } catch { /* defaults */ }
   const atlas = makeAtlas({ paint: '#ffffff', pink: '#FFF4DE', lime: '#15203A' }); // livery bolts cream and navy: only the paint carries identity
   const texel = texture(atlas.map).rgb;
-  const carMaterial = makeComicMaterial(look, { colorNode: damageCreep(paintKey(texel), texel), emissiveNode: texture(atlas.emissiveMap).rgb.mul(1.6), dynamicId: aCar.w, grit: { dust: aState.y } });
+  // Brake lamps (POC2-14): the atlas's red emissive texels (the tail lamps) brighten with aKit.x, the car's braking 0..1.
+  const lamp = texture(atlas.emissiveMap).rgb, tail = tslStep(0.15, lamp.r.sub(max(lamp.g, lamp.b)));
+  const carMaterial = makeComicMaterial(look, { colorNode: damageCreep(paintKey(texel), texel), emissiveNode: lamp.mul(1.6).mul(float(1).add(attribute('aKit', 'vec2').x.mul(tail).mul(2.4))), dynamicId: aCar.w, grit: { dust: aState.y } });
   const groups = {};
   for (const [name, mesh] of Object.entries(build(P, 1).parts)) (groups[name.startsWith('wheel') ? 'wheel' : name] ??= []).push(mesh);
   const parts = [];
   const cars = [];
+  // Per-car emissive kit (POC2-14): the tail lamps light up with deceleration (carMaterial above), and a blue boost flame
+  // comes from the exhaust. The flame carries its car's id, so the ink treats it as part of the car and the halftone never
+  // lands on it.
+  const carBox = new THREE.Box3().setFromObject(build(P, 1).group);
+  const flameGeo = new THREE.ConeGeometry(0.1, 0.75, 12, 1, true).rotateX(-Math.PI / 2).translate(0, 0, -0.375);
+  const flameMat = makeComicMaterial(look, { colorNode: color('#9FE3FF'), emissiveNode: mix(color('#FFFFFF'), color('#2E8CFF'), smoothstep(0.05, 0.5, positionGeometry.z.negate())).mul(attribute('aGlow', 'float')).mul(3.2), dynamicId: attribute('aKitId', 'float') });
+  let wear = 0;
   function setCars(list) {
     for (const im of parts) { scene.remove(im); im.dispose(); }
+    if (kit.boost) { scene.remove(kit.boost); kit.boost.dispose(); kit.boost = null; }
     parts.length = 0;
     cars.length = 0;
     list.forEach((c, i) => cars.push({ ...c, id: i + 1, pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1), yaw: 0, s: c.s ?? 0, lane: c.lane ?? 0, speed: 0, spin: 0 }));
@@ -553,14 +679,36 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
       const geo = meshes[0].geometry.clone();
       const im = new THREE.InstancedMesh(geo, carMaterial, Math.max(1, cars.length) * meshes.length);
       const per = [];
-      cars.forEach((c) => meshes.forEach(() => per.push({ paint: c.paint, id: c.id, damage: c.damage ?? 0, dust: c.dust ?? 0.15 })));
+      cars.forEach((c) => meshes.forEach(() => per.push({ paint: c.paint, id: c.id, damage: c.damage ?? wear, dust: c.dust ?? 0.15 })));
       addCarAttributes(geo, per.length ? per : [{ paint: '#ffffff', id: 1 }]);
+      geo.setAttribute('aKit', new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, per.length) * 2), 2)); // (brake, boost)
       im.userData = { key, meshes };
       im.castShadow = im.receiveShadow = true;
       im.frustumCulled = false;
       im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       scene.add(im);
       parts.push(im);
+    }
+    if (fx.emissive !== false && cars.length) {
+      const kitMesh = (geo, mat, per) => {
+        const g = geo.clone(), n = cars.length * per;
+        g.setAttribute('aGlow', new THREE.InstancedBufferAttribute(new Float32Array(n), 1));
+        g.setAttribute('aKitId', new THREE.InstancedBufferAttribute(new Float32Array(n).map((_, i) => cars[Math.floor(i / per)].id), 1));
+        const im = new THREE.InstancedMesh(g, mat, n);
+        im.frustumCulled = false; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        scene.add(im);
+        return im;
+      };
+      kit.boost = kitMesh(flameGeo, flameMat, 1);
+    }
+  }
+  /** Scavenged paint (looks.json `wear`): damage creep on every car that has no damage of its own. */
+  function setWear(w) {
+    wear = w;
+    for (const im of parts) {
+      const a = im.geometry.attributes.aState, per = im.userData.meshes.length;
+      cars.forEach((c, i) => { for (let k = 0; k < per; k++) a.array[(i * per + k) * 4] = c.damage ?? w; });
+      a.needsUpdate = true;
     }
   }
 
@@ -570,7 +718,8 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     simTime += dt;
     for (const fan of dressing.fans) fan.rotation.z += dt * 1.4;
     for (const c of cars) {
-      if (c.fixed) { c.pos.set(c.x, 0, c.z); c.yaw = c.yaw0 ?? 0; c.fwd.set(Math.sin(c.yaw), 0, Math.cos(c.yaw)); continue; }
+      const v0 = c.speed;
+      if (c.fixed) { c.pos.set(c.x, 0, c.z); c.yaw = c.yaw0 ?? 0; c.fwd.set(Math.sin(c.yaw), 0, Math.cos(c.yaw)); c.brake = c.brake0 ?? 0; c.boost = c.boost0 ?? 0; continue; }
       if (mode === 'overview') {
         c.wander ??= { x: 0, z: 0, t: 0 };
         if (!c.init) { const a = c.id * 2.399; c.pos.set(BOWL.x + Math.cos(a) * 25, 0, BOWL.z + Math.sin(a) * 25); c.yaw = a; c.init = true; }
@@ -581,6 +730,7 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
         c.yaw += Math.max(-1.6 * dt, Math.min(1.6 * dt, dy));
         c.fwd.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
         c.speed = 11; c.pos.addScaledVector(c.fwd, c.speed * dt);
+        c.brake = Math.min(1, Math.abs(dy) / 1.2); c.boost = c.id % 3 === 1 && Math.abs(dy) < 0.15 ? 1 : 0;
       } else {
         const u = ((c.s % trackLen) + trackLen) % trackLen / trackLen;
         const t0 = curve.getTangentAt(u), t1 = curve.getTangentAt((u + 0.02) % 1);
@@ -592,6 +742,9 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
         tmp.crossVectors(UP, t).normalize();
         c.pos.copy(p).addScaledVector(tmp, c.lane);
         c.fwd.copy(t); c.yaw = Math.atan2(t.x, t.z);
+        const decel = dt > 0 ? (v0 - c.speed) / dt : 0;
+        c.brake = THREE.MathUtils.lerp(c.brake ?? 0, Math.min(1, Math.max(0, decel / 4)), Math.min(1, dt * 12));
+        c.boost = THREE.MathUtils.lerp(c.boost ?? 0, c.id % 3 === 1 && bend < 0.05 ? 1 : 0, Math.min(1, dt * 6));
       }
       c.spin += (c.speed / 0.38) * dt;
     }
@@ -608,14 +761,69 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
       im.count = cars.length * meshes.length;
       im.instanceMatrix.needsUpdate = true;
     }
+    updateKit();
+  }
+  const kitM = new THREE.Matrix4(), kitS = new THREE.Vector3(), kitQ = new THREE.Quaternion(), kitP = new THREE.Vector3();
+  function updateKit() {
+    if (fx.emissive !== false) for (const im of parts) { // brake and boost per part instance
+      const a = im.geometry.attributes.aKit, per = im.userData.meshes.length;
+      cars.forEach((c, i) => { for (let k = 0; k < per; k++) { a.array[(i * per + k) * 2] = c.brake ?? 0; a.array[(i * per + k) * 2 + 1] = c.boost ?? 0; } });
+      a.needsUpdate = true;
+    }
+    if (kit.boost) {
+      const g = kit.boost.geometry.attributes.aGlow;
+      cars.forEach((c, i) => {
+        const b = c.boost ?? 0, flick = 0.85 + 0.15 * Math.sin(simTime * 47 + c.id * 1.7) * Math.sin(simTime * 23 + c.id);
+        kitQ.setFromAxisAngle(UP, c.yaw);
+        kitP.set((carBox.max.x - carBox.min.x) * 0.2, carBox.min.y + 0.3, carBox.min.z + 0.05).applyQuaternion(kitQ).add(c.pos);
+        kitS.set(Math.max(0.001, b) * flick, Math.max(0.001, b) * flick, Math.max(0.001, b * flick));
+        kit.boost.setMatrixAt(i, kitM.compose(kitP, kitQ, kitS));
+        g.array[i] = b * flick;
+      });
+      g.needsUpdate = true; kit.boost.instanceMatrix.needsUpdate = true;
+    }
+    if (kit.beacons) { // a double strobe, about one a second
+      const g = kit.beacons.geometry.attributes.aGlow;
+      kit.beaconPhase.forEach((ph, i) => { const f = (simTime * 1.1 + ph) % 1; g.array[i] = f < 0.07 || (f > 0.15 && f < 0.22) ? 1 : 0.3; });
+      g.needsUpdate = true;
+    }
+    if (kit.flares) { // a burning flare never sits still
+      const g = kit.flares.geometry.attributes.aGlow;
+      kit.flarePhase.forEach((ph, i) => { g.array[i] = 0.6 + 0.4 * Math.abs(Math.sin(simTime * 17 + ph) * Math.sin(simTime * 5.3 + ph * 1.7)); });
+      g.needsUpdate = true;
+    }
   }
 
   // ---- cameras: one ArrayCamera, one sub-camera per tile; the post chain sees one camera ----
   const array = new THREE.ArrayCamera([]);
   array.near = 0.1; array.far = 900;
   const postFor = new Map();
-  let current = null;
+  let current = null, lastRects = null, gritMul = 1, lookNow = null;
+  const skies = new Map();
+  /** A look from shaders/looks.json, live: light, sky, fog, tone mapping, grade, haze, shimmer, ground grit and paint wear. */
+  function applyLook(L) {
+    lookNow = L;
+    const { light: Li, grade: G } = L, az = THREE.MathUtils.degToRad(Li.sunAzDeg), el = THREE.MathUtils.degToRad(Li.sunElevDeg);
+    sunDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    sun.color.set(Li.sunColor); sun.intensity = Li.sunIntensity;
+    hemi.intensity = Li.hemiIntensity; hemi.color.set(Li.hemiSky); hemi.groundColor.set(Li.hemiGround);
+    scene.fog.color.set(Li.fog.color); scene.fog.near = Li.fog.near; scene.fog.far = Li.fog.far;
+    if (!skies.has(L.id)) skies.set(L.id, paintSky(L.sky));
+    scene.background = skies.get(L.id);
+    const tm = TONE[fx.tm ?? Li.toneMapping] ?? THREE.NeutralToneMapping;
+    if (tm !== renderer.toneMapping) { renderer.toneMapping = tm; for (const p of postFor.values()) p.needsUpdate = true; }
+    renderer.toneMappingExposure = Li.exposure;
+    for (const k of ['split', 'contrast', 'saturation', 'bleachHi', 'hazeAmt', 'hazeNear', 'hazeFar', 'vignette']) look[k].value = G[k];
+    look.shadowMul.value.fromArray(G.shadowMul); look.highMul.value.fromArray(G.highMul); look.hazeColor.value.set(G.hazeColor);
+    look.grainAmt.value = fx.grain === false ? 0 : G.grain;
+    look.shimmerAmt.value = G.shimmer;
+    look.bleach.value = L.ground.bleach; look.dust.value = L.ground.dust; gritMul = L.ground.grit;
+    setWear(L.wear);
+    placeSun(sunAt.clone());
+    if (lastRects) setTiles(lastRects); // the shimmer pass is in or out of the graph per look
+  }
   function setTiles(rects) { // rects in canvas pixels, top-left origin: [{x, y, w, h}]
+    lastRects = rects;
     while (array.cameras.length < rects.length) array.cameras.push(new THREE.PerspectiveCamera(60, 1, 0.1, 900));
     array.cameras.length = rects.length;
     rects.forEach((r, i) => {
@@ -623,23 +831,27 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
       cam.viewport = new THREE.Vector4(r.x, r.y, r.w, r.h); // WebGPU viewports: top-left origin
       cam.aspect = r.w / r.h; cam.near = 0.1; cam.far = 900; cam.updateProjectionMatrix();
     });
-    const minH = Math.min(...rects.map((r) => r.h));
-    applyTier(look, tierFor(minH));
+    const minH = fx.tierH ?? Math.min(...rects.map((r) => r.h));
+    const t = tierFor(minH);
+    applyTier(look, t);
+    look.grit.value = t.grit * gritMul;
     updateLookCamera(look, array.cameras[0] ?? array);
     look.aspect.value = renderer.domElement.width / renderer.domElement.height;
-    const key = `${mode}:${tierFor(minH).name}:${rects.length <= 4}:${JSON.stringify(overrides)}`;
-    if (!postFor.has(key)) {
-      const t = tierFor(minH);
-      // Measured (docs/evidence/P1-U05/world/perf.json, GPU timestamp queries): at 24 tiles r182's bloom + FXAA add ~72 ms of GPU
-      // at 1080p and ~192 ms at 4K (FXAA alone ~7 ms at 1080p), while toon + ink + halftone + grade cost under 1 ms over no post. So the
-      // grid look runs without bloom (emissives keep their bright colour, no halo) and without FXAA (the ink outlines carry the
-      // edges); both stay for 4 tiles or fewer.
-      const opts = mode === 'plain' ? { bloom: false, halftone: false, outline: false, speedLines: false, fxaa: false }
-        : { bloom: t.bloom > 0 && rects.length <= 4, halftone: t.halftone > 0, speedLines: false, outline: mode === 'ids' ? 'ids' : true, fxaa: rects.length <= 4 };
-      Object.assign(opts, overrides); // ?bloom=0&halftone=0&fxaa=0 isolate one effect's cost
-      postFor.set(key, comicPipeline(renderer, scene, array, look, opts).post);
-    }
+    if (csm) { if (csm.camera === null) csm._init({ camera: array.cameras[0], renderer }); else csm.updateFrustums(); } // fitted to the first tile (see above)
+    // Measured (docs/evidence/P1-U05/world/perf.json, GPU timestamp queries): at 24 tiles r182's bloom + FXAA add ~72 ms of GPU
+    // at 1080p and ~192 ms at 4K (FXAA alone ~7 ms at 1080p), while toon + ink + halftone + grade cost under 1 ms over no post. So the
+    // grid look runs without bloom (emissives keep their bright colour, no halo) and without FXAA (the ink outlines carry the
+    // edges); both stay for 4 tiles or fewer. Ambient occlusion reconstructs positions from one camera, so it is a single-view
+    // option; heat shimmer is for big tiles (jammers-look tiers). P1-U05.5 costs every option (docs/evidence/P1-U05.5/).
+    const single = rects.length === 1, few = rects.length <= 4;
+    const opts = mode === 'plain' ? { bloom: false, halftone: false, ink: 'none', fxaa: false, haze: false }
+      : { bloom: t.bloom > 0 && few, halftone: t.halftone > 0, ink: mode === 'ids' ? 'silhouette' : fx.ink ?? 'outer', fxaa: few && !fx.smaa, smaa: !!fx.smaa,
+        ao: !!fx.ao && single, haze: fx.haze !== false, shimmer: fx.shimmer ?? ((lookNow?.grade.shimmer ?? 0) > 0 && few), halftoneOnCars: !!fx.htcar, debug: fx.debug ?? null };
+    Object.assign(opts, overrides); // ?bloom=0&halftone=0&fxaa=0 isolate one effect's cost
+    const key = JSON.stringify(opts);
+    if (!postFor.has(key)) postFor.set(key, jjPipeline(renderer, scene, array, look, { ...opts, aoCamera: array.cameras[0] }).post);
     current = postFor.get(key);
+    current.opts = opts;
   }
   // Race-tile framing (P1-U05.2, R98) from ../shared/framing.json, shared with the TV mock: `dist` is a preset name
   // (near, mid, far) or 'round0' for the old rig.
@@ -668,5 +880,9 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   function render() { current.render(); }
   function resize(w, h) { renderer.setSize(w, h, false); }
 
-  return { renderer, backend, adapterInfo, scene, look, frames, graphics, trackLen, setCars, step, setTiles, aimTile, aimFixed, render, resize, placeSun, cars, array, colors, BOWL, staticStats };
+  const kitStats = () => ({ brakeLampCars: fx.emissive !== false ? cars.length : 0, boostFlames: kit.boost?.count ?? 0, hazardBeacons: kit.beacons?.count ?? 0, roadsideFlares: kit.flares?.count ?? 0 });
+  const options = () => ({ look: lookNow?.id, ...current?.opts, shadow: fx.shadow ?? 'pcf', shadowSize: sun.shadow.mapSize.x, toneMapping: fx.tm ?? lookNow?.light.toneMapping, roadtex: fx.roadtex !== false, af: ANISO, emissive: fx.emissive !== false });
+  applyLook(LOOKS.looks.find((l) => l.id === fx.look) ?? LOOKS.looks.find((l) => l.id === LOOKS.recommended));
+
+  return { renderer, backend, adapterInfo, scene, look, frames, graphics, trackLen, setCars, step, setTiles, aimTile, aimFixed, render, resize, placeSun, cars, array, colors, BOWL, staticStats, applyLook, options, kitStats };
 }

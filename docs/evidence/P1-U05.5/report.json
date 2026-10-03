@@ -1,0 +1,824 @@
+{
+  "format": "jj.u055-captures.v1",
+  "base": "http://127.0.0.1:49569",
+  "machine": "Apple M1 Pro (MacBookPro18,3), macOS 27.0.1",
+  "browser": "Chromium 151.0.7922.34 (headless, WebGPU)",
+  "looks": [
+    {
+      "look": "fury-road",
+      "state": "tv",
+      "file": "looks/fury-road__tv.jpg",
+      "options": {
+        "look": "fury-road",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "fury-road",
+      "state": "grid&n=8",
+      "file": "looks/fury-road__grid_n8.jpg",
+      "options": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "fury-road",
+      "state": "grid&n=24",
+      "file": "looks/fury-road__grid_n24.jpg",
+      "options": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "dust-storm",
+      "state": "tv",
+      "file": "looks/dust-storm__tv.jpg",
+      "options": {
+        "look": "dust-storm",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "dust-storm",
+      "state": "grid&n=8",
+      "file": "looks/dust-storm__grid_n8.jpg",
+      "options": {
+        "look": "dust-storm",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "dust-storm",
+      "state": "grid&n=24",
+      "file": "looks/dust-storm__grid_n24.jpg",
+      "options": {
+        "look": "dust-storm",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "bleached-heat",
+      "state": "tv",
+      "file": "looks/bleached-heat__tv.jpg",
+      "options": {
+        "look": "bleached-heat",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": true,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "bleached-heat",
+      "state": "grid&n=8",
+      "file": "looks/bleached-heat__grid_n8.jpg",
+      "options": {
+        "look": "bleached-heat",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "bleached-heat",
+      "state": "grid&n=24",
+      "file": "looks/bleached-heat__grid_n24.jpg",
+      "options": {
+        "look": "bleached-heat",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "scavenged",
+      "state": "tv",
+      "file": "looks/scavenged__tv.jpg",
+      "options": {
+        "look": "scavenged",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "aces",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "scavenged",
+      "state": "grid&n=8",
+      "file": "looks/scavenged__grid_n8.jpg",
+      "options": {
+        "look": "scavenged",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "aces",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "scavenged",
+      "state": "grid&n=24",
+      "file": "looks/scavenged__grid_n24.jpg",
+      "options": {
+        "look": "scavenged",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "aces",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "burnt-dusk",
+      "state": "tv",
+      "file": "looks/burnt-dusk__tv.jpg",
+      "options": {
+        "look": "burnt-dusk",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "burnt-dusk",
+      "state": "grid&n=8",
+      "file": "looks/burnt-dusk__grid_n8.jpg",
+      "options": {
+        "look": "burnt-dusk",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "burnt-dusk",
+      "state": "grid&n=24",
+      "file": "looks/burnt-dusk__grid_n24.jpg",
+      "options": {
+        "look": "burnt-dusk",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "round1",
+      "state": "tv",
+      "file": "looks/round1__tv.jpg",
+      "options": {
+        "look": "round1",
+        "bloom": true,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": true,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "round1",
+      "state": "grid&n=8",
+      "file": "looks/round1__grid_n8.jpg",
+      "options": {
+        "look": "round1",
+        "bloom": false,
+        "halftone": true,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    },
+    {
+      "look": "round1",
+      "state": "grid&n=24",
+      "file": "looks/round1__grid_n24.jpg",
+      "options": {
+        "look": "round1",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true
+      }
+    }
+  ],
+  "closeup": [
+    {
+      "tag": "outer",
+      "params": {},
+      "file": "closeup/outer.jpg"
+    },
+    {
+      "tag": "silhouette",
+      "params": {
+        "ink": "silhouette"
+      },
+      "file": "closeup/silhouette.jpg"
+    },
+    {
+      "tag": "full",
+      "params": {
+        "ink": "full"
+      },
+      "file": "closeup/full.jpg"
+    },
+    {
+      "tag": "none",
+      "params": {
+        "ink": "none"
+      },
+      "file": "closeup/none.jpg"
+    },
+    {
+      "tag": "round1-halftone-on-car",
+      "params": {
+        "htcar": "1",
+        "ink": "full",
+        "look": "round1"
+      },
+      "file": "closeup/round1-halftone-on-car.jpg"
+    },
+    {
+      "tag": "round1-look",
+      "params": {
+        "look": "round1"
+      },
+      "file": "closeup/round1-look.jpg"
+    },
+    {
+      "tag": "burnt-dusk",
+      "params": {
+        "look": "burnt-dusk"
+      },
+      "file": "closeup/burnt-dusk.jpg"
+    }
+  ],
+  "halftone": {
+    "what": "Close-up, both views: pixels where the halftone pass draws dots (debug=halftone > 40/255) that are also car pixels (debug=dynamic, the objectId .g mask)",
+    "before": {
+      "halftonePx": 282748,
+      "carPx": 551681,
+      "halftoneOnCarPx": 57751,
+      "share": 0.1047
+    },
+    "after": {
+      "halftonePx": 224999,
+      "carPx": 551681,
+      "halftoneOnCarPx": 1,
+      "share": 0
+    },
+    "pass": false
+  },
+  "shimmer": {
+    "what": "#shimmer camera (the chase 'mid' framing, no cars, sim clock stopped), 24 frames 10 cm apart, each also rendered at S times the pixels as the reference. error = mean |frame - reference averaged SxS|; flicker = mean |alias(t+1) - alias(t)|; RGB 0-255; rows 40-100% of the frame, split by the projected road ribbon into kerbs, lines, dirt and geometry (everything else)",
+    "off": [
+      "ink",
+      "halftone",
+      "grain"
+    ],
+    "scales": {
+      "grid-tile": {
+        "viewport": "320x256",
+        "reference": "1280x1024 averaged 4x4",
+        "presented": {
+          "fxaa": "0",
+          "bloom": "0"
+        },
+        "variants": [
+          {
+            "tag": "round1-lines",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "256",
+              "fxaa": "0",
+              "bloom": "0",
+              "roadtex": "0"
+            },
+            "geometry": {
+              "error": 5.804,
+              "flicker": 3.635,
+              "px": 10371
+            },
+            "dirt": {
+              "error": 0.332,
+              "flicker": 0.314,
+              "px": 35197
+            },
+            "lines": {
+              "error": 11.19,
+              "flicker": 0.874,
+              "px": 1196
+            },
+            "kerbs": {
+              "error": 7.939,
+              "flicker": 5.277,
+              "px": 2517
+            }
+          },
+          {
+            "tag": "texture-no-af",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "256",
+              "fxaa": "0",
+              "bloom": "0",
+              "af": "1"
+            },
+            "geometry": {
+              "error": 5.706,
+              "flicker": 3.566,
+              "px": 10371
+            },
+            "dirt": {
+              "error": 1.965,
+              "flicker": 1.04,
+              "px": 35197
+            },
+            "lines": {
+              "error": 17.337,
+              "flicker": 0.817,
+              "px": 1196
+            },
+            "kerbs": {
+              "error": 8.984,
+              "flicker": 1.733,
+              "px": 2517
+            }
+          },
+          {
+            "tag": "texture-af16",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "256",
+              "fxaa": "0",
+              "bloom": "0"
+            },
+            "geometry": {
+              "error": 5.721,
+              "flicker": 3.571,
+              "px": 10371
+            },
+            "dirt": {
+              "error": 0.453,
+              "flicker": 0.536,
+              "px": 35197
+            },
+            "lines": {
+              "error": 4.2,
+              "flicker": 0.372,
+              "px": 1196
+            },
+            "kerbs": {
+              "error": 4.639,
+              "flicker": 1.668,
+              "px": 2517
+            }
+          },
+          {
+            "tag": "texture-af16-smaa",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "256",
+              "fxaa": "0",
+              "bloom": "0",
+              "smaa": "1"
+            },
+            "geometry": {
+              "error": 4.321,
+              "flicker": 3.028,
+              "px": 10371
+            },
+            "dirt": {
+              "error": 0.466,
+              "flicker": 0.495,
+              "px": 35197
+            },
+            "lines": {
+              "error": 5.225,
+              "flicker": 0.737,
+              "px": 1196
+            },
+            "kerbs": {
+              "error": 6.052,
+              "flicker": 3.066,
+              "px": 2517
+            }
+          }
+        ],
+        "reduction": {
+          "kerbs": {
+            "flicker": 0.684,
+            "error": 0.416
+          },
+          "lines": {
+            "flicker": 0.574,
+            "error": 0.625
+          },
+          "dirt": {
+            "flicker": -0.707,
+            "error": -0.364
+          },
+          "geometryWithSmaa": {
+            "flicker": 0.152,
+            "error": 0.245
+          }
+        }
+      },
+      "tv": {
+        "viewport": "1920x1080",
+        "reference": "3840x2160 averaged 2x2",
+        "presented": {},
+        "variants": [
+          {
+            "tag": "round1-lines",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "1080",
+              "roadtex": "0"
+            },
+            "geometry": {
+              "error": 1.16,
+              "flicker": 1.17,
+              "px": 404725
+            },
+            "dirt": {
+              "error": 0.419,
+              "flicker": 0.634,
+              "px": 704983
+            },
+            "lines": {
+              "error": 0.917,
+              "flicker": 0.954,
+              "px": 43233
+            },
+            "kerbs": {
+              "error": 1.129,
+              "flicker": 1.156,
+              "px": 91219
+            }
+          },
+          {
+            "tag": "texture-no-af",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "1080",
+              "af": "1"
+            },
+            "geometry": {
+              "error": 1.192,
+              "flicker": 1.167,
+              "px": 404725
+            },
+            "dirt": {
+              "error": 0.646,
+              "flicker": 0.762,
+              "px": 704983
+            },
+            "lines": {
+              "error": 2.943,
+              "flicker": 1.014,
+              "px": 43233
+            },
+            "kerbs": {
+              "error": 1.973,
+              "flicker": 0.862,
+              "px": 91219
+            }
+          },
+          {
+            "tag": "texture-af16",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "1080"
+            },
+            "geometry": {
+              "error": 1.301,
+              "flicker": 1.203,
+              "px": 404725
+            },
+            "dirt": {
+              "error": 0.434,
+              "flicker": 0.686,
+              "px": 704983
+            },
+            "lines": {
+              "error": 0.846,
+              "flicker": 0.976,
+              "px": 43233
+            },
+            "kerbs": {
+              "error": 1.008,
+              "flicker": 0.874,
+              "px": 91219
+            }
+          },
+          {
+            "tag": "texture-af16-smaa",
+            "params": {
+              "grain": "0",
+              "halftone": "0",
+              "ink": "none",
+              "tierH": "1080",
+              "smaa": "1"
+            },
+            "geometry": {
+              "error": 1.094,
+              "flicker": 1.1,
+              "px": 404725
+            },
+            "dirt": {
+              "error": 0.536,
+              "flicker": 0.844,
+              "px": 704983
+            },
+            "lines": {
+              "error": 1.114,
+              "flicker": 1.212,
+              "px": 43233
+            },
+            "kerbs": {
+              "error": 0.96,
+              "flicker": 0.862,
+              "px": 91219
+            }
+          }
+        ],
+        "reduction": {
+          "kerbs": {
+            "flicker": 0.244,
+            "error": 0.107
+          },
+          "lines": {
+            "flicker": -0.023,
+            "error": 0.077
+          },
+          "dirt": {
+            "flicker": -0.082,
+            "error": -0.036
+          },
+          "geometryWithSmaa": {
+            "flicker": 0.086,
+            "error": 0.159
+          }
+        }
+      }
+    }
+  },
+  "emissive": {
+    "brakeLampCars": 8,
+    "boostFlames": 8,
+    "hazardBeacons": 26,
+    "roadsideFlares": 32
+  },
+  "errors": [],
+  "external": []
+}

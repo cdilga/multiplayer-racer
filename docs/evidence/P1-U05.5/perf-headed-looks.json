@@ -1,0 +1,38 @@
+{
+  "format": "jj.u055-perf-headed.v1",
+  "what": "The headed per-look frame cost (P1-U05.5, POC2-09): node art/ui/poc/world/capture-looks.mjs --perf, run 1, headed on the Mac's GPU, 2026-10-04 from about 01:05 AEST. Every Mad Max look at 1, 8 and 24 tiles completed; the run then stalled when the screen locked (a locked screen stops a headed window's frames), before it wrote perf.json, so these rows are transcribed from its console log. Run 2 was stopped after a few rows to switch the looks live on one page instead of reloading, and run 3 hung on a perf() bug (it waited on the length of a trimmed array; fixed); their completed rows are listed for the run-to-run spread. The full table (looks and options) is perf.json, measured headless on the same GPU.",
+  "machine": "Apple M1 Pro (MacBookPro18,3), macOS 27.0.1",
+  "browser": "Chromium 151.0.7922.34 (Playwright, headed, channel chromium), WebGPU",
+  "viewport": "1920x1080",
+  "method": "GPU ms per frame from WebGPU timestamp queries (120 frames, p50 / p95); frame ms = requestAnimationFrame interval p50 over 240 frames on the 120 Hz display; CPU = mean CPU submit ms per frame",
+  "note": "Bleached heat was retuned (AgX to Neutral, less bleach) during run 1; its run-1 rows may be either setting. Tone mapping is one curve per pixel in the post pass, so it doesn't move these numbers.",
+  "run1": [
+    { "look": "Fury road", "tiles": 1, "gpu_ms_p50": 50.31, "gpu_ms_p95": 58.53, "frame_ms_p50": 8.3, "cpu_ms": 1.49 },
+    { "look": "Fury road", "tiles": 8, "gpu_ms_p50": 10.66, "gpu_ms_p95": 11.77, "frame_ms_p50": 8.3, "cpu_ms": 1.52 },
+    { "look": "Fury road", "tiles": 24, "gpu_ms_p50": 10.1, "gpu_ms_p95": 11.27, "frame_ms_p50": 8.3, "cpu_ms": 1.84 },
+    { "look": "Dust storm", "tiles": 1, "gpu_ms_p50": 51.23, "gpu_ms_p95": 55.3, "frame_ms_p50": 8.3, "cpu_ms": 1.55 },
+    { "look": "Dust storm", "tiles": 8, "gpu_ms_p50": 9.73, "gpu_ms_p95": 11.91, "frame_ms_p50": 8.3, "cpu_ms": 1.5 },
+    { "look": "Dust storm", "tiles": 24, "gpu_ms_p50": 10.01, "gpu_ms_p95": 12, "frame_ms_p50": 8.3, "cpu_ms": 1.86 },
+    { "look": "Bleached heat", "tiles": 1, "gpu_ms_p50": 50.17, "gpu_ms_p95": 55.34, "frame_ms_p50": 8.3, "cpu_ms": 1.55 },
+    { "look": "Bleached heat", "tiles": 8, "gpu_ms_p50": 10.37, "gpu_ms_p95": 11.9, "frame_ms_p50": 8.3, "cpu_ms": 1.53 },
+    { "look": "Bleached heat", "tiles": 24, "gpu_ms_p50": 10.03, "gpu_ms_p95": 11.03, "frame_ms_p50": 8.3, "cpu_ms": 1.8 },
+    { "look": "Scavenged", "tiles": 1, "gpu_ms_p50": 44.26, "gpu_ms_p95": 67.27, "frame_ms_p50": 8.3, "cpu_ms": 1.42 },
+    { "look": "Scavenged", "tiles": 8, "gpu_ms_p50": 10.51, "gpu_ms_p95": 11.94, "frame_ms_p50": 8.4, "cpu_ms": 1.45 },
+    { "look": "Scavenged", "tiles": 24, "gpu_ms_p50": 10.04, "gpu_ms_p95": 11.69, "frame_ms_p50": 8.3, "cpu_ms": 1.83 },
+    { "look": "Burnt dusk", "tiles": 1, "gpu_ms_p50": 41.24, "gpu_ms_p95": 66.97, "frame_ms_p50": 8.3, "cpu_ms": 1.61 },
+    { "look": "Burnt dusk", "tiles": 8, "gpu_ms_p50": 9.68, "gpu_ms_p95": 11.92, "frame_ms_p50": 8.3, "cpu_ms": 1.44 },
+    { "look": "Burnt dusk", "tiles": 24, "gpu_ms_p50": 10.03, "gpu_ms_p95": 11.59, "frame_ms_p50": 8.3, "cpu_ms": 1.86 },
+    { "look": "Round 1 (for comparison)", "tiles": 1, "gpu_ms_p50": 43.66, "gpu_ms_p95": 58.89, "frame_ms_p50": 8.3, "cpu_ms": 1.5 }
+  ],
+  "run2": [
+    { "look": "Fury road", "tiles": 1, "gpu_ms_p50": 37.07, "gpu_ms_p95": 52.41, "frame_ms_p50": 8.3, "cpu_ms": 1.57 },
+    { "look": "Fury road", "tiles": 8, "gpu_ms_p50": 7.22, "gpu_ms_p95": 10.08, "frame_ms_p50": 8.3, "cpu_ms": 1.36 },
+    { "look": "Fury road", "tiles": 24, "gpu_ms_p50": 8.8, "gpu_ms_p95": 11.28, "frame_ms_p50": 8.3, "cpu_ms": 1.85 },
+    { "look": "Dust storm", "tiles": 1, "gpu_ms_p50": 30.47, "gpu_ms_p95": 38.75, "frame_ms_p50": 8.3, "cpu_ms": 1.52 },
+    { "look": "Dust storm", "tiles": 24, "gpu_ms_p50": 8.99, "gpu_ms_p95": 11.14, "frame_ms_p50": 8.3, "cpu_ms": 1.82 },
+    { "look": "Bleached heat", "tiles": 1, "gpu_ms_p50": 30.38, "gpu_ms_p95": 39.13, "frame_ms_p50": 8.3, "cpu_ms": 1.55 }
+  ],
+  "run3": [
+    { "look": "Fury road", "tiles": 1, "gpu_ms_p50": 36.3, "gpu_ms_p95": 50.41, "frame_ms_p50": 8.3, "cpu_ms": 1.58 }
+  ]
+}

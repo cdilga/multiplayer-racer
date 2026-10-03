@@ -1,0 +1,66 @@
+{
+  "//": "Mad Max-toned looks for the in-world POC (P1-U05.5, R108, POC2-09): one scene, switched live (the bar on the page, or &look=<id>). light: sun azimuth/elevation in degrees (azimuth 0 = +z, the cast shadow falls away from it), colour and intensity; the hemisphere ambient's sky and ground colours (the toon model's image-based light: r182's toon material ignores scene.environment); fog; tone mapping and exposure. sky: the painted sky's gradient and cloud colours. grade (shaders/pipeline.js): split tone as linear RGB multipliers for the shadows and the highlights, blended by split; contrast round mid grey; saturation; highlight bleach; vignette; grain; dust haze by view depth; heat shimmer (pixels, big tiles only). ground: the skill's grit, sun-bleach and dust. wear: damage creep (rust and scorch on paint texels) on every car without damage of its own. The recommended look is first; round1 is the look the owner reviewed in round 1, for comparison.",
+  "recommended": "fury-road",
+  "looks": [
+    {
+      "id": "fury-road",
+      "name": "Fury road",
+      "why": "Recommended. Low, harsh sun with long shadows; teal shadows against hot orange light; dust haze takes the distance; strong but readable, and identity colours stay vivid.",
+      "light": {"sunAzDeg": -55, "sunElevDeg": 24, "sunIntensity": 2.7, "sunColor": "#FFE2B8", "hemiIntensity": 1.15, "fog": {"color": "#E9B98A", "near": 160, "far": 620}, "toneMapping": "neutral", "exposure": 1.05, "hemiSky": "#BFD3E8", "hemiGround": "#B0623A"},
+      "sky": {"top": "#3A7FC0", "upper": "#5C9ED8", "low": "#D9BC98", "horizon": "#E9B98A", "cloud": "#FFF3E0", "belly": "#E2C3A2"},
+      "grade": {"split": 0.6, "shadowMul": [0.8, 0.98, 1.1], "highMul": [1.14, 1.0, 0.82], "contrast": 1.14, "saturation": 1.05, "bleachHi": 0.2, "vignette": 0.3, "grain": 0.03, "hazeAmt": 0.38, "hazeColor": "#E7B184", "hazeNear": 70, "hazeFar": 460, "shimmer": 0},
+      "ground": {"grit": 1.2, "bleach": 0.28, "dust": 0.35},
+      "wear": 0.15
+    },
+    {
+      "id": "dust-storm",
+      "name": "Dust storm",
+      "why": "A soft orange world with short sight-lines: the haze closes in, shadows go soft and cars pop out of the dust.",
+      "light": {"sunAzDeg": -40, "sunElevDeg": 38, "sunIntensity": 1.25, "sunColor": "#FFC98F", "hemiIntensity": 1.9, "fog": {"color": "#D99A62", "near": 45, "far": 260}, "toneMapping": "neutral", "exposure": 1.0, "hemiSky": "#E2B48A", "hemiGround": "#9C5A36"},
+      "sky": {"top": "#B9774A", "upper": "#C9895A", "low": "#D59A66", "horizon": "#D99A62", "cloud": "#E7B489", "belly": "#C98B5E"},
+      "grade": {"split": 0.5, "shadowMul": [0.96, 0.92, 0.88], "highMul": [1.1, 0.98, 0.84], "contrast": 0.92, "saturation": 0.85, "bleachHi": 0.1, "vignette": 0.36, "grain": 0.05, "hazeAmt": 0.85, "hazeColor": "#D99A62", "hazeNear": 25, "hazeFar": 210, "shimmer": 0},
+      "ground": {"grit": 1.0, "bleach": 0.15, "dust": 0.6},
+      "wear": 0.2
+    },
+    {
+      "id": "bleached-heat",
+      "name": "Bleached heat",
+      "why": "Noon: the sun nearly overhead, short hard shadows, glare bleaching the highlights and the far road shimmering in the heat; the paint stays readable.",
+      "light": {"sunAzDeg": -30, "sunElevDeg": 72, "sunIntensity": 3.0, "sunColor": "#FFF6E6", "hemiIntensity": 1.4, "fog": {"color": "#F2DDB8", "near": 140, "far": 560}, "toneMapping": "neutral", "exposure": 1.1, "hemiSky": "#E6EEF6", "hemiGround": "#C08A66"},
+      "sky": {"top": "#5E9ED6", "upper": "#86BCE6", "low": "#D6E6EE", "horizon": "#F2DDB8", "cloud": "#FFFFFF", "belly": "#EEE6D8"},
+      "grade": {"split": 0.4, "shadowMul": [0.88, 0.98, 1.04], "highMul": [1.06, 1.03, 0.94], "contrast": 1.05, "saturation": 0.88, "bleachHi": 0.35, "vignette": 0.22, "grain": 0.025, "hazeAmt": 0.3, "hazeColor": "#F2DDB8", "hazeNear": 90, "hazeFar": 480, "shimmer": 3.0},
+      "ground": {"grit": 1.4, "bleach": 0.45, "dust": 0.3},
+      "wear": 0.15
+    },
+    {
+      "id": "scavenged",
+      "name": "Scavenged",
+      "why": "Gritty and hard-edged: desaturated, high contrast, every car's paint worn back to rust at the edges, coarse grain.",
+      "light": {"sunAzDeg": -60, "sunElevDeg": 40, "sunIntensity": 2.4, "sunColor": "#FFE8C8", "hemiIntensity": 1.2, "fog": {"color": "#D8B08A", "near": 150, "far": 600}, "toneMapping": "aces", "exposure": 1.0, "hemiSky": "#C9D3DC", "hemiGround": "#9E6A4C"},
+      "sky": {"top": "#3F78A8", "upper": "#5E93BE", "low": "#B9C2B8", "horizon": "#D8B08A", "cloud": "#F1E9DA", "belly": "#CDBFAA"},
+      "grade": {"split": 0.5, "shadowMul": [0.84, 0.98, 1.04], "highMul": [1.1, 1.0, 0.86], "contrast": 1.22, "saturation": 0.72, "bleachHi": 0.15, "vignette": 0.34, "grain": 0.06, "hazeAmt": 0.25, "hazeColor": "#D8B08A", "hazeNear": 90, "hazeFar": 520, "shimmer": 0},
+      "ground": {"grit": 1.7, "bleach": 0.3, "dust": 0.45},
+      "wear": 0.65
+    },
+    {
+      "id": "burnt-dusk",
+      "name": "Burnt dusk",
+      "why": "The sun on the horizon throws long orange light; the shadows go deep teal; the emissives (lights, flares, beacons) start to matter.",
+      "light": {"sunAzDeg": -75, "sunElevDeg": 13, "sunIntensity": 2.5, "sunColor": "#FF9A55", "hemiIntensity": 1.2, "fog": {"color": "#E8875A", "near": 120, "far": 520}, "toneMapping": "neutral", "exposure": 1.08, "hemiSky": "#8E8FB8", "hemiGround": "#7A3A26"},
+      "sky": {"top": "#26406E", "upper": "#5B5E8A", "low": "#E3925E", "horizon": "#E8875A", "cloud": "#FFC78F", "belly": "#B5604A"},
+      "grade": {"split": 0.7, "shadowMul": [0.72, 0.95, 1.14], "highMul": [1.2, 0.96, 0.74], "contrast": 1.06, "saturation": 1.1, "bleachHi": 0.05, "vignette": 0.34, "grain": 0.035, "hazeAmt": 0.42, "hazeColor": "#E8875A", "hazeNear": 60, "hazeFar": 420, "shimmer": 0},
+      "ground": {"grit": 1.0, "bleach": 0.15, "dust": 0.3},
+      "wear": 0.2
+    },
+    {
+      "id": "round1",
+      "name": "Round 1 (for comparison)",
+      "why": "The look the owner reviewed in round 1: the skill's day rig and warm grade, no haze or split tone.",
+      "light": {"sunAzDeg": -40, "sunElevDeg": 43, "sunIntensity": 2.1, "sunColor": "#FFF1D6", "hemiIntensity": 1.5, "fog": {"color": "#F4DDB0", "near": 140, "far": 560}, "toneMapping": "neutral", "exposure": 1.0, "hemiSky": "#D8E2FF", "hemiGround": "#B07A66"},
+      "sky": {"top": "#2F7BCB", "upper": "#4E9BDE", "low": "#A4CFEC", "horizon": "#F4DDB0", "cloud": "#FFFDF5", "belly": "#E4D9C8"},
+      "grade": {"split": 0.35, "shadowMul": [0.9, 1.0, 1.06], "highMul": [1.08, 1.0, 0.9], "contrast": 1.0, "saturation": 1.0, "bleachHi": 0, "vignette": 0.22, "grain": 0.02, "hazeAmt": 0, "hazeColor": "#F4DDB0", "hazeNear": 60, "hazeFar": 420, "shimmer": 0},
+      "ground": {"grit": 1.0, "bleach": 0.22, "dust": 0.3},
+      "wear": 0
+    }
+  ]
+}

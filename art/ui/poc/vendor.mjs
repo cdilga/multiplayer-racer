@@ -22,7 +22,10 @@ copyFileSync(join(three, 'build', 'three.core.min.js'), join(here, 'vendor', 'th
 copyFileSync(join(three, 'build', 'three.webgpu.min.js'), join(here, 'vendor', 'three', 'three.webgpu.min.js'));
 copyFileSync(join(three, 'build', 'three.tsl.min.js'), join(here, 'vendor', 'three', 'three.tsl.min.js'));
 mkdirSync(join(here, 'vendor', 'three', 'addons', 'tsl', 'display'), { recursive: true });
-for (const f of ['BloomNode.js', 'FXAANode.js']) copyFileSync(join(three, 'examples', 'jsm', 'tsl', 'display', f), join(here, 'vendor', 'three', 'addons', 'tsl', 'display', f));
+// P1-U05.5's lighting and AA options add ambient occlusion, SMAA and cascaded shadows.
+for (const f of ['BloomNode.js', 'FXAANode.js', 'GTAONode.js', 'SMAANode.js']) copyFileSync(join(three, 'examples', 'jsm', 'tsl', 'display', f), join(here, 'vendor', 'three', 'addons', 'tsl', 'display', f));
+mkdirSync(join(here, 'vendor', 'three', 'addons', 'csm'), { recursive: true });
+for (const f of ['CSMShadowNode.js', 'CSMFrustum.js']) copyFileSync(join(three, 'examples', 'jsm', 'csm', f), join(here, 'vendor', 'three', 'addons', 'csm', f));
 mkdirSync(join(here, 'vendor', 'three', 'addons', 'utils'), { recursive: true });
 copyFileSync(join(three, 'examples', 'jsm', 'utils', 'BufferGeometryUtils.js'), join(here, 'vendor', 'three', 'addons', 'utils', 'BufferGeometryUtils.js'));
 copyFileSync(join(three, 'LICENSE'), join(here, 'vendor', 'three', 'LICENSE'));

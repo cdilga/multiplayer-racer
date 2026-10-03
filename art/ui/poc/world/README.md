@@ -13,8 +13,11 @@ tested module (`../vendor/look/look.js`, vendored by `../vendor.mjs`) and Spike 
 | `#overview&n=16` | the derby bowl from the Overview camera (P1-U05.4: near-fixed, predictive, smoothed; `&cam=round0` for round 0's), with a nameplate over every car. The arena is designed for it: a range of Olgas-style domes behind the far rim (the top of every frame) and quarry terraces on both flanks; `overview-zones.json` records what stays in view (for P1-M10) |
 | `&dist=near\|mid\|far\|round0` | the race tiles' camera distance from `../shared/framing.json` (P1-U05.2, R98), shared with the TV mock |
 
+| `#closeup` | one car on the start straight from the front three-quarter (its shaded flank and cast shadow) and the rear (brake lamps, boost flame), P1-U05.5 |
+| `#shimmer` | a chase-height camera crawling down the start straight with no cars: the line-shimmer test (`&n=24` runs it in every tile of a 24-tile grid, `&speed=` m/s), P1-U05.5 |
+
 `?mode=ids` (outlines on objects only), `?mode=plain` (no post), `?bloom=1|0&fxaa=1|0&halftone=1|0` (isolate one effect),
-`?ts=1` (GPU timestamp queries for `window.__world.perf()`).
+`?ts=1` (GPU timestamp queries for `window.__world.perf()`). The shader and lighting options (P1-U05.5) are below.
 
 **How it renders:** one `WebGPURenderer`; every tile is a sub-camera of one `ArrayCamera`, so the whole grid is one scene pass
 into the shared MRT targets (colour, emissive, normal + shade, object id, depth) and the comic post chain (ink outlines from
@@ -82,9 +85,51 @@ Reworked for owner round 2 (P1-U05.3, R104 to R106), in the common Australian ro
 - **Cars:** the livery bolts are cream and navy, so only the paint carries the player colour (the review found the shared
   pink-and-lime livery competing with #6 pink and #8 green).
 
+## Shader and lighting POC (P1-U05.5, owner round 2)
+
+The owner asked for a Mad Max tone with the choices side by side (POC2-09 to 14, R108). Everything is on one scene; the bar
+at the bottom switches the **looks** live, and its menus reload the page with an **option**. Measurements, captures and the
+cost of every look and option: `docs/evidence/P1-U05.5/`.
+
+**Recommended:** Fury road, ink on the outer silhouette, PCF 4096 shadows with texel snapping, dust haze, the textured road
+with 16× anisotropic filtering, the emissive kit, and FXAA and bloom on four tiles or fewer. Why: the most Mad Max of the
+looks with every paint colour still vivid; each part costs nothing measurable or earns its cost.
+
+- **Looks** (`shaders/looks.json`, data): sun azimuth, elevation, colour and intensity; the hemisphere ambient's sky and
+  ground colours; fog; the painted sky's colours; tone mapping and exposure; the grade (split tone as linear multipliers
+  for shadows and highlights, contrast, saturation, highlight bleach, vignette, grain); dust haze by depth; heat shimmer; the
+  ground's grit, bleach and dust; and paint wear (damage creep on every car). Fury road, Dust storm, Bleached heat,
+  Scavenged, Burnt dusk, and Round 1 for comparison. `world.applyLook()` sets all of it at runtime.
+- **Post chain** (`shaders/pipeline.js`, `jjPipeline`): the skill's `comicPipeline` (still the tested reference in
+  `../vendor/look/look.js`) plus round 2's changes. Ink is `outer` (the object-id silhouette sampled 1.6× wider, the depth
+  and normal interior lines at 45%), `silhouette`, `full` (round 0) or `none`. The halftone is multiplied by the object-id
+  target's dynamic flag, so it never lands on a car (POC2-13), while a car's cast shadow on the ground keeps its dots. Then
+  GTAO (half resolution, single view only: it rebuilds positions from one camera), dust haze, heat shimmer (far ground only,
+  never the cars), the split-tone grade, and FXAA or SMAA. An option that is off is left out of the graph.
+- **Lighting** (`world.js`): `&shadow=pcf|soft|vsm|basic|csm|off`, `&shadowSize=`. Cascades (three, `CSMShadowNode`) are
+  fitted to the first tile's camera, so they are a single-view option until P1-R10 gives each tile its own. The sun's
+  frustum centre snaps to whole shadow texels, so a sun that follows a camera never crawls the shadow edges. Image-based
+  light: r182's toon material ignores `scene.environment`, so each look tints the hemisphere ambient from its own sky and
+  ground instead.
+- **Road** (POC2-12): one ribbon textured from a mipmapped canvas (dirt, ruts, cream edge lines, red and white kerbs, an
+  inked kerb edge), with 16× anisotropic filtering on every world texture. Round 1's thin geometry strips were thinner than
+  a pixel at grid-tile size and broke up as they moved. `&roadtex=0` brings them back, `&af=1` turns AF off.
+- **Emissive kit** (POC2-14): brake lamps (the atlas's tail-lamp texels brighten with each car's braking, through a
+  per-instance `aKit` attribute), boost flames (an instanced cone carrying the car's id), amber hazard beacons that double
+  strobe, and red roadside flares that flicker. All are driven from the sim clock, so captures repeat. `&emissive=0` turns
+  the kit off for the cost table.
+- Other parameters: `&tm=neutral|agx|aces|none` (tone mapping override), `&haze=0`, `&shimmer=1`, `&grain=0`, `&ao=1`,
+  `&smaa=1`, `&debug=halftone|dynamic|edge|shade|glow`, `&htcar=1` (round 1's halftone on the cars, for the before), and
+  `&tierH=` (the effect tier for a given tile height, for the shimmer metric's supersampled reference).
+
+`capture-looks.mjs` makes the evidence: the looks at 1, 8 and 24 tiles, the close-ups, the halftone overlap measurement,
+the shimmer metric against a supersampled reference, and the headed frame-cost table (`--perf`).
+
 ## Known gaps
 
-- No impact words, speed lines, sparks or boost flames yet (skill sketches; R12).
+- No impact words, speed lines or sparks yet (skill sketches; R12).
+- The guard rails, posts and signs still alias at grid-tile size: geometry edges need anti-aliasing, and a temporal AA
+  over the 24-camera ArrayCamera pass is P1-R10's to try (`docs/evidence/P1-U05.5/`, "What still shimmers").
 - No light halos at 24 tiles (no bloom); the lamps read by colour alone.
 - The sun's shadow covers the whole track at about 0.13 m per texel, so car shadows are soft.
 - One biome only; the other three biomes' dressing is procgen work (P1-M beads).
