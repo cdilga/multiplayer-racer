@@ -153,7 +153,7 @@ shapes from the same tokens.
 | **Name** | Up to 32 grapheme clusters (master §10.6). Lobby cards and results wrap to two lines and never truncate the number; the per-tile HUD shows the badge and up to 12 graphemes with an ellipsis (fewer when the tile is narrow; on the
 smallest tiles the HUD drops to number, place and lap); the full name stays in the accessible label. Rendered as text nodes with `dir="auto"` | `fonts.png` |
 | **Tile badge** | Top-left corner of the player's tile: number badge + short name + source icon (phone, pad, keyboard) on a small cream sticker. The tile border is the seat colour | Style frame `tv-race-grid` |
-| **Identify** | About 1.5 s (`tokens.motion.named.identify-pulse`): "Cooee #7" over a transparent, high-exposure flash in the seat colour, tweened (R99; reduced motion holds the wash steady), the tile border and badge pulse, a bright outline on the car in other tiles; the controller plays the same flash in the player's colour. Auto-fires on join and respawn; rate-limited | Master §5.2, R99, `poc/tv` `#identify` |
+| **Identify** | About 1.5 s (`tokens.motion.named.identify-pulse`): "Cooee #7" over a transparent, high-exposure flash in the seat colour, tweened (R99; reduced motion has no flash: the label and a held border carry it, P1-U05.6), the tile border and badge pulse, a bright outline on the car in other tiles; the controller plays the same flash in the player's colour. Auto-fires on join and respawn; rate-limited | Master §5.2, R99, `poc/tv` `#identify` |
 
 Colour-blind safety comes from the number (and later the pattern), never colour alone. The CVD sheet
 shows adjacent seats separated by at least ΔE00 20 in normal vision and simulated protanopia,

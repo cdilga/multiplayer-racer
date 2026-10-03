@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion reel: Full beside Reduced</title>
+<link rel="icon" href="../../brand/favicon.svg">
+<!-- P1-U05.6 (POC2-15): the same reel twice, Full on the left and Reduced on the right, started on the same frame and
+     replayed in a loop, so the difference reads without switching. Each side is the live reel (index.html) in an iframe. -->
+<style>
+  html, body { margin: 0; height: 100%; background: #15203A; color: #FFF4DE; font-family: "Barlow", system-ui, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; border-bottom: 4px solid #FFB400; }
+  h1 { margin: 0; font: 900 italic 30px/1 "Barlow Condensed", system-ui, sans-serif; text-transform: uppercase; }
+  header p { margin: 0; font-size: 15px; opacity: .85; }
+  button { font: 700 18px/1 system-ui, sans-serif; padding: 10px 16px; border: 3px solid #FFF4DE; border-radius: 5px; background: #FFB400; color: #15203A; cursor: pointer; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 24px; }
+  figure { margin: 0; }
+  figcaption { display: inline-block; margin-bottom: 8px; padding: 4px 14px; font: 900 italic 26px/1.1 "Barlow Condensed", system-ui, sans-serif; text-transform: uppercase; color: #15203A; background: #FFB400; transform: skewX(-8deg); }
+  figure.reduced figcaption { background: #00C2B8; }
+  iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 4px solid #FFF4DE; border-radius: 3px; background: #15203A; }
+  .note { padding: 0 24px 16px; font-size: 15px; opacity: .85; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Motion reel: Full beside Reduced</h1><p>Same reel, same moment, both sides. Reduced keeps the meaning and drops the flashes, shake, scaling and slides.</p></div>
+  <button type="button" id="again">Play both again</button>
+</header>
+<main>
+  <figure><figcaption>Full motion</figcaption><iframe id="full" title="Full motion" src="./index.html?reduced=0&embed=1"></iframe></figure>
+  <figure class="reduced"><figcaption>Reduced motion</figcaption><iframe id="reduced" title="Reduced motion" src="./index.html?reduced=1&embed=1"></iframe></figure>
+</main>
+<p class="note">Each side is the live reel at 16:9. They start on the same frame; the durations come from the same tokens, so each transition lines up.</p>
+<script type="module">
+  const sides = ['full', 'reduced'].map((id) => document.getElementById(id));
+  const reel = (f) => f.contentWindow?.__reel;
+  const ready = () => sides.every((f) => reel(f)?.ready);
+  const until = (ok) => new Promise((res) => { const t = () => (ok() ? res() : setTimeout(t, 100)); t(); });
+  let looping = false;
+  async function playBoth() {
+    await until(ready);
+    await until(() => sides.every((f) => !reel(f).playing));
+    await Promise.all(sides.map((f) => reel(f).playAll()));
+  }
+  async function loop() {
+    if (looping) return;
+    looping = true;
+    for (;;) { await playBoth(); window.sideRounds = (window.sideRounds ?? 0) + 1; await new Promise((r) => setTimeout(r, 1500)); }
+  }
+  document.getElementById('again').addEventListener('click', () => { if (!looping) loop(); });
+  window.sideReady = () => ready();
+  if (new URLSearchParams(location.search).get('autoplay') !== '0') loop();
+</script>
+</body>
+</html>

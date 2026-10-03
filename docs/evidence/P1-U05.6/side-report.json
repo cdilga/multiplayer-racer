@@ -1,0 +1,33 @@
+{
+  "format": "jj.u056-side.v1",
+  "what": "side.html: Full (left) and Reduced (right) started on the same frame; per-sample visible state of the countdown and Identify",
+  "summary": {
+    "full": {
+      "countdownFlashMax": 0.999488,
+      "countdownScaleMax": 1.341,
+      "identifyFlashMax": 0.993955,
+      "identifyScaleMax": 1.109
+    },
+    "reduced": {
+      "countdownFlashMax": 0,
+      "countdownScaleMax": 1,
+      "identifyFlashMax": 0,
+      "identifyScaleMax": 1
+    }
+  },
+  "stills": [
+    {
+      "tag": "countdown-flash",
+      "at": 663,
+      "file": "side/countdown-flash.jpg"
+    },
+    {
+      "tag": "identify-flash",
+      "at": 8280,
+      "file": "side/identify-flash.jpg"
+    }
+  ],
+  "samples": 784,
+  "errors": [],
+  "pass": true
+}

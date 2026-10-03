@@ -56,3 +56,9 @@ canvas#world, #ui { position: fixed; inset: auto; }
    keyframes; the reel has no footer, so the countdown covers the whole stage. */
 .cd-flash.js { bottom: 0; }
 .cd-flash.js .flash, .cd-flash.js b, .cooee.js .flash, .cooee.js b { animation: none; }
+
+/* P1-U05.6 (POC2-15): the version playing, flagged on the stage; Reduced has no flash at all */
+.mode-flag { position: fixed; right: calc(var(--vk, 1) * 40px); top: calc(var(--vk, 1) * 116px); z-index: 11; padding: .12em .6em .16em; background: var(--c-saffron); color: var(--c-ink); border: calc(var(--vk, 1) * 4px) solid var(--c-ink); box-shadow: 0 calc(var(--vk, 1) * 5px) 0 var(--c-ink); font-size: calc(var(--vk, 1) * 44px); transform: rotate(-2deg) skewX(-6deg); pointer-events: none; }
+.mode-flag.reduced { background: var(--c-teal); }
+body.embed #bar { display: none; }
+body.embed .mode-flag { top: calc(var(--vk, 1) * 24px); }

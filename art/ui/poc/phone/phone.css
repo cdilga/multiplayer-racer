@@ -246,7 +246,8 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 @keyframes cooee-held { 0% { opacity: .6; } 100% { opacity: 0; } }
 @keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .cooee-phone .flash { animation: cooee-held 1.5s steps(1, end) forwards; }
+  .cooee-phone { background: transparent; } /* POC2-15: no full-screen colour change and no flash */
+  .cooee-phone .flash { animation: none; opacity: 0; }
   .cooee-phone .lab { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
 }
 

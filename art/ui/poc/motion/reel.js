@@ -335,7 +335,18 @@ stepsNav.addEventListener('click', (e) => {
   if (b.dataset.step === 'all') playAll(); else play(b.dataset.step);
 });
 const rswitch = document.getElementById('rswitch');
-function syncSwitch() { for (const b of rswitch.querySelectorAll('button')) b.classList.toggle('on', (b.dataset.m === 'reduced') === reduced); document.title = `Motion reel${reduced ? ' (reduced)' : ''}`; }
+// POC2-15: which version is playing is never in doubt: a flag on the stage itself, not only the switch in the bar.
+const modeFlag = document.createElement('div');
+modeFlag.className = 'mode-flag display italic';
+modeFlag.setAttribute('aria-live', 'polite');
+document.body.append(modeFlag);
+function syncSwitch() {
+  for (const b of rswitch.querySelectorAll('button')) b.classList.toggle('on', (b.dataset.m === 'reduced') === reduced);
+  document.title = `Motion reel${reduced ? ' (reduced)' : ''}`;
+  modeFlag.textContent = reduced ? 'Reduced motion' : 'Full motion';
+  modeFlag.classList.toggle('reduced', reduced);
+  document.body.classList.toggle('is-reduced', reduced);
+}
 function setReduced(v) { reduced = !!v; syncSwitch(); if (!running) setNote(curStep, { idle: true }); }
 rswitch.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setReduced(b.dataset.m === 'reduced'); });
 mq.addEventListener?.('change', (e) => { if (!qs.has('reduced')) setReduced(e.matches); });
@@ -345,11 +356,11 @@ let curStep = null;
 const ms = (n) => `${Math.round(n)} ms`;
 function noteText(id, sub) {
   const sticker = nm('sticker-in'), reflow = nm('reflow'), beat = nm('countdown-beat'), idf = nm('identify-pulse'), shake = nm('wreck-shake'), toast = nm('toast'), rr = nm('results-reveal');
-  const beatDetail = `${ms(beat.durationMs)} per beat · 3, 2, 1, GO full screen${reduced ? ' · wash held, numbers swap, no scale' : ` · exposure flash · punch ${PUNCH.from}→${PUNCH.to}, fade`}`;
+  const beatDetail = `${ms(beat.durationMs)} per beat · 3, 2, 1, GO full screen${reduced ? ' · no flash, numbers swap, no scale' : ` · exposure flash · punch ${PUNCH.from}→${PUNCH.to}, fade`}`;
   switch (id) {
     case 'a': return { name: '(a) Countdown · countdown-beat', detail: beatDetail };
     case 'b': return { name: '(b) Join · sticker-in + reflow', detail: `sticker-in ${ms(sticker.durationMs)}${reduced ? ' fade' : ''} · reflow ${ms(reflow.durationMs)}${reduced ? ' (tiles cut)' : ''}` };
-    case 'c': return { name: '(c) Identify · identify-pulse', detail: `${idf.repeat} × ${ms(idf.durationMs)} = ${ms(idf.repeat * idf.durationMs)} · Cooee #N ${reduced ? 'over a held wash' : 'over an exposure flash'} · border + badge ${reduced ? 'step, no scale' : 'pulse and scale'}, outline` };
+    case 'c': return { name: '(c) Identify · identify-pulse', detail: `${idf.repeat} × ${ms(idf.durationMs)} = ${ms(idf.repeat * idf.durationMs)} · Cooee #N ${reduced ? 'with no flash' : 'over an exposure flash'} · border + badge ${reduced ? 'held, no blink or scale' : 'pulse and scale'}, outline` };
     case 'd': return { name: '(d) Wreck and respawn · wreck-shake', detail: `${reduced ? 'no shake (0 ms), WRECKED! still shows' : `shake ${ms(shake.durationMs)}, this tile only`} · respawn cuts` };
     case 'e': return { name: `(e) Phase change${sub ? ` · ${sub}` : ''}`, detail: sub === 'countdown → race' ? beatDetail.replace('per beat', 'per beat, GO starts the race') : `exit fast ${ms(dur('fast'))} + enter toast ${ms(toast.durationMs)} = ${ms(dur('fast') + toast.durationMs)}${reduced ? ' (fade only)' : ` (slide ${SLIDE_PX} px)`}` };
     case 'f': return { name: '(f) Results reveal · results-reveal', detail: reduced ? `${ms(rr.durationMs)} · cards fade in together` : `${ms(rr.durationMs)} · 3 cards drop in, ${ms(STAGGER_MS)} stagger (${ms(rr.durationMs - 2 * STAGGER_MS)} each)` };
@@ -415,8 +426,8 @@ async function runCountdown({ phaseTag } = {}) {
     },
     update(p) {
       const t = p * beat.durationMs;
-      if (reduced) {
-        flash.style.opacity = '0.6';
+      if (reduced) { // POC2-15: no flash and no scale; the number swaps on the beat
+        flash.style.opacity = '0';
         num.style.opacity = '1';
         num.style.transform = 'rotate(-4deg)';
         return;
@@ -480,9 +491,9 @@ async function joinSeat(seat) {
 }
 
 /** Identify (R99, P1-U05.2): 3 × 500 ms. "Cooee #N" over a transparent, high-exposure flash in the seat colour (fast attack,
- *  long decay over the whole pulse), the tile border and badge pulse and scale, and the car outlined in every tile. Reduced:
- *  the wash holds steady, border and badge step on and off, the label shows without scale. The shared reference for the TV
- *  and the controller (P1-U03.2). */
+ *  long decay over the whole pulse), the tile border and badge pulse and scale, and the car outlined in every tile. Reduced
+ *  (P1-U05.6, POC2-15): no flash and no blinking: the thick border holds for the pulse and the label shows without scale.
+ *  The shared reference for the TV and the controller (P1-U03.2). */
 async function identify(seat) {
   const T = G.tiles.get(seat), info = seatInfo(seat);
   const spec = nm('identify-pulse');
@@ -502,11 +513,11 @@ async function identify(seat) {
     update(p) {
       const x = p * spec.repeat, cyc = Math.min(spec.repeat - 1, Math.floor(x)), frac = x - Math.floor(x);
       if (cyc !== lastCycle) { cycles.push(now()); lastCycle = cyc; }
-      if (reduced) {
-        flash.style.opacity = p < 1 ? '0.6' : '0';
+      if (reduced) { // POC2-15: no flash; the label and the stepped border carry the meaning
+        flash.style.opacity = '0';
         label.style.opacity = p < 1 ? '1' : '0';
         label.style.transform = 'rotate(-4deg)';
-        const on = frac < 0.5 && p < 1;
+        const on = p < 1; // held for the whole pulse: no blinking in Reduced (POC2-15)
         T.el.classList.toggle('step-on', on);
         T.el.style.setProperty('--ring', on ? '13' : '5');
       } else {
@@ -761,7 +772,14 @@ window.__reel = {
   get t0() { return t0Ref.t; },
 };
 built = true;
+if (qs.get('embed') === '1') document.body.classList.add('embed'); // inside side.html: the side page drives it
 if (qs.get('autoplay') === '1') {
   while (!window.__reel.ready) await nextFrame();
   playAll();
+} else if (qs.get('autoplay') === 'both') {
+  // POC2-15: the autoplay alternates Full and Reduced, flagged, so the difference shows without touching anything.
+  while (!window.__reel.ready) await nextFrame();
+  for (;;) {
+    for (const r of [false, true]) { setReduced(r); await playAll(); await sleep(1500); }
+  }
 }

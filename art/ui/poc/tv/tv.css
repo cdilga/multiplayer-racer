@@ -62,7 +62,7 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 @keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .tile.identify, .tile.identify .hud-badge { animation: none; } .tile.anim { transition: none; }
-  .cooee .flash { animation: cooee-held 1.5s steps(1, end) forwards; }
+  .cooee .flash { animation: none; opacity: 0; } /* POC2-15: Reduced has no flash at all */
   .cooee b { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
 }
 
@@ -318,6 +318,6 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 @keyframes cd-held { 0% { opacity: .6; } 100% { opacity: 0; } }
 @keyframes cd-held-num { 0% { opacity: 1; } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .cd-flash .flash { animation: cd-held 1s steps(1, end) forwards; }
+  .cd-flash .flash { animation: none; opacity: 0; }
   .cd-flash b { transform: rotate(-4deg); animation: cd-held-num 1s steps(1, end) forwards; }
 }
