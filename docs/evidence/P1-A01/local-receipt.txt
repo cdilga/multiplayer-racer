@@ -1,0 +1,253 @@
+P1-A01 local receipt: announcer voice (owner clone), Playtest-1 cues
+Written 2026-10-03 12:47  by the P1-A01 session.
+Machines: eris (Arch Linux, RTX 2080 SUPER 8 GB) rendered, scored and exported; the Mac ran the loader, the driver, the tests and
+FrankenWhisper (fw). Receipt kind: local checks (ev:ci closes this bead on green CI, per the bead).
+
+$ sw_vers -productVersion  # Mac
+  27.0.1
+  [exit 0]
+
+$ ssh eris 'nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; uname -sr'
+  NVIDIA GeForce RTX 2080 SUPER, 8192 MiB
+  Linux 7.2.5-3-omarchy
+  [exit 0]
+
+== 1. Owner reference transcript: FrankenWhisper (fw, whisper.cpp backend, full ggml-large-v3) on the Mac
+   The reference audio is copied to the Mac scratch dir for this check and deleted afterwards; the transcript text is not printed.
+$ fw transcribe --input ref-A.wav --backend whisper-cpp --model ~/.cache/franken_whisper_models/ggml-large-v3.bin --language en --no-diarize --no-persist
+  exit 0; fw words 40; stored ref-A.txt words 40; case/punctuation-insensitive match: True; sha256(normalised transcript) c04d806a2a70fba4
+$ fw transcribe --input ref-B.wav --backend whisper-cpp --model ~/.cache/franken_whisper_models/ggml-large-v3.bin --language en --no-diarize --no-persist
+  exit 0; fw words 77; stored ref-B.txt words 77; case/punctuation-insensitive match: True; sha256(normalised transcript) 4f51d0a485bb20f7
+
+== 2. Highest precision that fits: fp32 vs bf16 load probe on eris (GPU idle)
+$ ssh eris 'cd ~/Work/dev/jammers-audio && .venv/bin/python -' < probe_fp32.py   # load_model('fp32') then load_model('bf16') + one short clone
+  free/total MiB before: [7582, 7794]
+  fp32 FAILED: RuntimeError could not load Qwen/Qwen3-TTS-12Hz-1.7B-Base in ['float32']: OutOfMemoryError('CUDA out of memory. Tried to allocate 1.16 GiB. GPU 0 has a total capacity of 7.61 GiB of which 604.50 MiB is free. Inclu
+  bf16 loaded as bfloat16 in 5.9 s; allocated MiB 4006 free MiB 3430
+  bf16 generated 1.52 s; peak MiB 6732
+
+== 3. A00's loader and the render command's guard rails (Mac)
+$ tools/audio/check_cues.py
+  OK: 61 rows in tools/audio/cues-playtest1.tsv (16 moments covered; glossary 28 terms)
+  variants: welcome=3, all-ready=3, countdown=3, final-lap=3, first-finisher=3, photo-finish=3, time-up=3, winner=3, next-round=3, door-off=5, wheel-off=5, bodywork-off=4, big-air=5, wreck=5, lead-change=5, late-joiner=5
+  [exit 0]
+
+$ python3 tools/audio/test_check_cues.py
+  test_required_moments_from_the_bead_are_declared (__main__.RealSheet.test_required_moments_from_the_bead_are_declared) ... ok
+  ----------------------------------------------------------------------
+  Ran 36 tests in 0.575s
+  OK
+  [exit 0]
+
+$ python3 tools/audio/test_render_voice.py -v
+  test_a_failing_take_never_beats_a_passing_one (__main__.PickRule.test_a_failing_take_never_beats_a_passing_one) ... ok
+  test_best_score_among_passing_takes (__main__.PickRule.test_best_score_among_passing_takes) ... ok
+  test_hype_prefers_the_more_excited_of_equal_takes (__main__.PickRule.test_hype_prefers_the_more_excited_of_equal_takes) ... ok
+  test_lift_semitones (__main__.PickRule.test_lift_semitones) ... ok
+  test_no_passing_take_fails_the_row_but_keeps_the_best_score (__main__.PickRule.test_no_passing_take_fails_the_row_but_keeps_the_best_score) ... ok
+  test_no_takes (__main__.PickRule.test_no_takes) ... ok
+  test_ties_go_to_the_lower_seed (__main__.PickRule.test_ties_go_to_the_lower_seed) ... ok
+  test_dry_run_accepts_the_real_sheet (__main__.RealSheet.test_dry_run_accepts_the_real_sheet) ... ok
+  test_job_has_one_row_per_sheet_row_in_order (__main__.RealSheet.test_job_has_one_row_per_sheet_row_in_order) ... ok
+  test_unknown_moment_in_only_is_rejected (__main__.RealSheet.test_unknown_moment_in_only_is_rejected) ... ok
+  test_bad_fixture_is_refused_and_nothing_is_sent (__main__.RefusesBadSheets.test_bad_fixture_is_refused_and_nothing_is_sent) ... ok
+  test_fewer_than_three_candidates_is_rejected (__main__.RefusesBadSheets.test_fewer_than_three_candidates_is_rejected) ... ok
+  test_the_refusal_names_the_fault (__main__.RefusesBadSheets.test_the_refusal_names_the_fault) ... ok
+  test_unreadable_sheet_exits_2 (__main__.RefusesBadSheets.test_unreadable_sheet_exits_2) ... ok
+  test_a_good_take_passes_every_screen (__main__.Screens.test_a_good_take_passes_every_screen) ... ok
+  test_clipped_raw_take_fails (__main__.Screens.test_clipped_raw_take_fails) ... ok
+  test_each_screen_can_fail_alone (__main__.Screens.test_each_screen_can_fail_alone) ... ok
+  test_export_screen (__main__.Screens.test_export_screen) ... ok
+  test_too_short_is_truncated (__main__.Screens.test_too_short_is_truncated) ... ok
+  test_unmeasured_take_is_not_a_candidate (__main__.Screens.test_unmeasured_take_is_not_a_candidate) ... ok
+  test_alias_folds_asr_respelling (__main__.Wer.test_alias_folds_asr_respelling) ... ok
+  test_exact_and_digits (__main__.Wer.test_exact_and_digits) ... ok
+  test_homophones_are_folded_but_real_errors_are_not (__main__.Wer.test_homophones_are_folded_but_real_errors_are_not) ... ok
+  test_one_wrong_word_counts (__main__.Wer.test_one_wrong_word_counts) ... ok
+  test_tts_respelling_changes_only_whole_words (__main__.Wer.test_tts_respelling_changes_only_whole_words) ... ok
+  ----------------------------------------------------------------------
+  Ran 25 tests in 0.040s
+  OK
+  [exit 0]
+
+$ tools/audio/render_voice.py --sheet tools/audio/fixtures/cues/bad-player-name.tsv   # a sheet the loader rejects is refused; nothing sent to eris
+  tools/audio/fixtures/cues/bad-player-name.tsv:6: [player-name] winner v1: caption has capitalised word 'Bazza' mid-sentence: looks like a name (allowed: Bondi, Jammers, Joystick)
+  tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: text has a placeholder or token ('{'); no player names (R69)
+  tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: text says 'name'; no player names (R69)
+  tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: caption has a placeholder or token ('{'); no player names (R69)
+  tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: caption says 'name'; no player names (R69)
+  REFUSED: 21 problem(s) in tools/audio/fixtures/cues/bad-player-name.tsv; nothing was sent to eris
+  [exit 1]
+
+$ tools/audio/render_voice.py --sheet tools/audio/fixtures/cues/bad-missing-caption.tsv   # a sheet the loader rejects is refused; nothing sent to eris
+  tools/audio/fixtures/cues/bad-missing-caption.tsv:2: [variants-short] welcome: 1 variant(s), floor is 2 for a once moment
+  tools/audio/fixtures/cues/bad-missing-caption.tsv:3: [variants-short] countdown: 1 variant(s), floor is 2 for a once moment
+  tools/audio/fixtures/cues/bad-missing-caption.tsv:4: [missing-caption] door-off v1: caption is empty (A03 shows a caption for every cue)
+  tools/audio/fixtures/cues/bad-missing-caption.tsv:4: [variants-short] door-off: 1 variant(s), floor is 4 for a repeat moment
+  tools/audio/fixtures/cues/bad-missing-caption.tsv:5: [variants-short] wheel-off: 1 variant(s), floor is 4 for a repeat moment
+  REFUSED: 17 problem(s) in tools/audio/fixtures/cues/bad-missing-caption.tsv; nothing was sent to eris
+  [exit 1]
+
+$ tools/audio/render_voice.py --sheet tools/audio/cues-playtest1.tsv --dry-run
+  sheet OK: 61 rows (47 hype, 14 warm), 8 takes each (+4 per failing row up to 16)
+  dry run: nothing sent
+  [exit 0]
+
+== 4. First full render (attached ssh, 8 seeded takes per row, adaptive extra seeds; output filtered to the summary lines)
+$ tools/audio/render_voice.py --sheet tools/audio/cues-playtest1.tsv    # first run, before the homophone/alias/respelling folds
+  sheet OK: 61 rows (47 hype, 14 warm), 8 takes each (+4 per failing row up to 16)
+  == rendering on eris ...
+  == round 0: 488 takes wanted for 61 rows
+  render: loaded Qwen/Qwen3-TTS-12Hz-1.7B-Base as bfloat16 in 8s; 479 takes to render
+  render: clone prompt excited (excited-ref-E4f): cached
+  render: clone prompt owner (owner-ref-B): cached
+  render: 479 takes in 1370s
+  asr: 479 takes in 177s
+  == 7 rows have no passing take yet: +4 seeds each: all-ready-2, photo-finish-3, door-off-2, wheel-off-1, wheel-off-4, big-air-1, late-joiner-4
+  == round 1: 516 takes wanted for 61 rows
+  render: loaded Qwen/Qwen3-TTS-12Hz-1.7B-Base as bfloat16 in 9s; 28 takes to render
+  render: clone prompt excited (excited-ref-E4f): cached
+  render: clone prompt owner (owner-ref-B): cached
+  render: 28 takes in 102s
+  asr: 28 takes in 41s
+  == 7 rows have no passing take yet: +4 seeds each: all-ready-2, photo-finish-3, door-off-2, wheel-off-1, wheel-off-4, big-air-1, late-joiner-4
+  == round 2: 544 takes wanted for 61 rows
+  render: loaded Qwen/Qwen3-TTS-12Hz-1.7B-Base as bfloat16 in 8s; 28 takes to render
+  render: clone prompt excited (excited-ref-E4f): cached
+  render: clone prompt owner (owner-ref-B): cached
+  render: 28 takes in 84s
+  asr: 28 takes in 10s
+  finish: all-ready-2      seed 1011 wer 0.222 sim 0.9686 -16.1 LUFS -3.2 dBTP FAIL
+  finish: photo-finish-3   seed 1013 wer 0.25 sim 0.9771 -16.1 LUFS -1.5 dBTP FAIL
+  finish: door-off-2       seed 1015 wer 0.2 sim 0.9745 -16.1 LUFS -3.5 dBTP FAIL
+  finish: wheel-off-1      seed 1000 wer 0.167 sim 0.9716 -16.1 LUFS -2.5 dBTP FAIL
+  finish: wheel-off-4      seed 1004 wer 0.25 sim 0.9601 -16.1 LUFS -4.8 dBTP FAIL
+  finish: big-air-1        seed 1003 wer 0.2 sim 0.9695 -16.1 LUFS -3.4 dBTP FAIL
+  finish: late-joiner-4    seed 1007 wer 0.125 sim 0.9809 -16.1 LUFS -1.6 dBTP FAIL
+  finish: 54/61 rows pass every screen; reel 1.63 MB, 03:27.9
+  finish: screen pass counts {"wer": 54, "speaker_sim": 61, "duration": 61, "raw_loudness": 61, "export_loudness": 61, "export_true_peak": 61}
+  54/61 rows pass every screen (model Qwen/Qwen3-TTS-12Hz-1.7B-Base bfloat16; excited reference e4f)
+  failing rows: all-ready-2, photo-finish-3, door-off-2, wheel-off-1, wheel-off-4, big-air-1, late-joiner-4
+  (7 rows failed only the WER screen at that point: all-ready-2, photo-finish-3, door-off-2, wheel-off-1, wheel-off-4, big-air-1, late-joiner-4;
+   Whisper's 'Already'/'Struth'/'Doors off', and a garbled line-initial G'day. See docs/learnings/audio.md. Then folds + respelling were added.)
+
+== 5. The one regeneration command, run again on the final code (takes cached on eris; only the G'day rows had been re-rendered)
+$ tools/audio/render_voice.py --sheet tools/audio/cues-playtest1.tsv
+  sheet OK: 61 rows (47 hype, 14 warm), 8 takes each (+4 per failing row up to 16)
+  == rendering on eris (detached; log Work/dev/jammers-audio/logs/p1a01.log) ...
+  == round 0: 488 takes wanted for 61 rows
+  render: every take is cached
+  asr: every take and reference is already transcribed
+  asr: loudness measured on 0 takes
+  finish: welcome-1        seed 1001 wer 0.0 sim 0.986 -16.1 LUFS -1.6 dBTP PASS
+  finish: welcome-2        seed 1002 wer 0.0 sim 0.9825 -16.1 LUFS -1.4 dBTP PASS
+  finish: welcome-3        seed 1002 wer 0.0 sim 0.9854 -16.0 LUFS -1.6 dBTP PASS
+  finish: all-ready-1      seed 1000 wer 0.0 sim 0.9764 -16.1 LUFS -1.7 dBTP PASS
+  finish: all-ready-2      seed 1007 wer 0.0 sim 0.9713 -16.1 LUFS -2.2 dBTP PASS
+  finish: all-ready-3      seed 1005 wer 0.0 sim 0.9725 -16.1 LUFS -2.2 dBTP PASS
+  finish: countdown-1      seed 1005 wer 0.0 sim 0.9701 -16.1 LUFS -2.8 dBTP PASS
+  finish: countdown-2      seed 1004 wer 0.0 sim 0.9741 -16.1 LUFS -2.5 dBTP PASS
+  finish: countdown-3      seed 1000 wer 0.0 sim 0.9712 -16.0 LUFS -2.1 dBTP PASS
+  finish: final-lap-1      seed 1005 wer 0.0 sim 0.9671 -16.1 LUFS -1.6 dBTP PASS
+  finish: final-lap-2      seed 1003 wer 0.0 sim 0.9701 -16.0 LUFS -3.1 dBTP PASS
+  finish: final-lap-3      seed 1003 wer 0.0 sim 0.9684 -16.1 LUFS -3.9 dBTP PASS
+  finish: first-finisher-1 seed 1005 wer 0.0 sim 0.9696 -16.1 LUFS -2.0 dBTP PASS
+  finish: first-finisher-2 seed 1007 wer 0.0 sim 0.9758 -16.1 LUFS -1.7 dBTP PASS
+  finish: first-finisher-3 seed 1003 wer 0.0 sim 0.9662 -16.1 LUFS -4.0 dBTP PASS
+  finish: photo-finish-1   seed 1000 wer 0.0 sim 0.9704 -16.1 LUFS -1.6 dBTP PASS
+  finish: photo-finish-2   seed 1003 wer 0.0 sim 0.9697 -16.1 LUFS -2.6 dBTP PASS
+  finish: photo-finish-3   seed 1005 wer 0.0 sim 0.9746 -16.1 LUFS -1.7 dBTP PASS
+  finish: time-up-1        seed 1000 wer 0.0 sim 0.9758 -16.1 LUFS -1.7 dBTP PASS
+  finish: time-up-2        seed 1002 wer 0.0 sim 0.9815 -16.1 LUFS -1.3 dBTP PASS
+  finish: time-up-3        seed 1001 wer 0.0 sim 0.9789 -16.1 LUFS -2.4 dBTP PASS
+  finish: winner-1         seed 1007 wer 0.0 sim 0.9765 -16.0 LUFS -1.6 dBTP PASS
+  finish: winner-2         seed 1006 wer 0.0 sim 0.9736 -16.1 LUFS -1.7 dBTP PASS
+  finish: winner-3         seed 1004 wer 0.0 sim 0.9767 -16.0 LUFS -3.0 dBTP PASS
+  finish: next-round-1     seed 1000 wer 0.0 sim 0.9815 -16.1 LUFS -1.1 dBTP PASS
+  finish: next-round-2     seed 1007 wer 0.0 sim 0.9856 -16.1 LUFS -1.6 dBTP PASS
+  finish: next-round-3     seed 1006 wer 0.0 sim 0.9809 -16.1 LUFS -1.6 dBTP PASS
+  finish: door-off-1       seed 1001 wer 0.0 sim 0.9694 -16.0 LUFS -1.9 dBTP PASS
+  finish: door-off-2       seed 1002 wer 0.0 sim 0.9683 -16.1 LUFS -3.5 dBTP PASS
+  finish: door-off-3       seed 1003 wer 0.0 sim 0.9726 -16.1 LUFS -1.7 dBTP PASS
+  finish: door-off-4       seed 1000 wer 0.0 sim 0.9735 -16.1 LUFS -1.7 dBTP PASS
+  finish: door-off-5       seed 1003 wer 0.0 sim 0.9705 -16.1 LUFS -3.6 dBTP PASS
+  finish: wheel-off-1      seed 1000 wer 0.0 sim 0.9716 -16.1 LUFS -2.5 dBTP PASS
+  finish: wheel-off-2      seed 1005 wer 0.0 sim 0.9809 -16.1 LUFS -1.6 dBTP PASS
+  finish: wheel-off-3      seed 1006 wer 0.0 sim 0.9677 -16.1 LUFS -4.9 dBTP PASS
+  finish: wheel-off-4      seed 1004 wer 0.0 sim 0.9601 -16.1 LUFS -4.8 dBTP PASS
+  finish: wheel-off-5      seed 1002 wer 0.0 sim 0.9664 -16.1 LUFS -5.2 dBTP PASS
+  finish: bodywork-off-1   seed 1003 wer 0.0 sim 0.9667 -16.1 LUFS -4.8 dBTP PASS
+  finish: bodywork-off-2   seed 1004 wer 0.0 sim 0.971 -16.1 LUFS -4.0 dBTP PASS
+  finish: bodywork-off-3   seed 1006 wer 0.0 sim 0.9728 -16.0 LUFS -2.2 dBTP PASS
+  finish: bodywork-off-4   seed 1002 wer 0.0 sim 0.97 -16.1 LUFS -2.1 dBTP PASS
+  finish: big-air-1        seed 1003 wer 0.0 sim 0.9695 -16.1 LUFS -3.4 dBTP PASS
+  finish: big-air-2        seed 1004 wer 0.0 sim 0.9707 -16.1 LUFS -4.2 dBTP PASS
+  finish: big-air-3        seed 1001 wer 0.0 sim 0.967 -16.1 LUFS -3.1 dBTP PASS
+  finish: big-air-4        seed 1003 wer 0.0 sim 0.97 -16.1 LUFS -3.6 dBTP PASS
+  finish: big-air-5        seed 1001 wer 0.0 sim 0.9686 -16.0 LUFS -4.4 dBTP PASS
+  finish: wreck-1          seed 1004 wer 0.0 sim 0.9687 -16.1 LUFS -1.9 dBTP PASS
+  finish: wreck-2          seed 1003 wer 0.0 sim 0.9775 -16.1 LUFS -2.5 dBTP PASS
+  finish: wreck-3          seed 1004 wer 0.0 sim 0.9673 -16.1 LUFS -3.0 dBTP PASS
+  finish: wreck-4          seed 1000 wer 0.0 sim 0.959 -16.1 LUFS -2.3 dBTP PASS
+  finish: wreck-5          seed 1000 wer 0.0 sim 0.9769 -16.0 LUFS -1.5 dBTP PASS
+  finish: lead-change-1    seed 1003 wer 0.0 sim 0.9634 -16.1 LUFS -6.0 dBTP PASS
+  finish: lead-change-2    seed 1006 wer 0.0 sim 0.9741 -16.1 LUFS -3.2 dBTP PASS
+  finish: lead-change-3    seed 1006 wer 0.0 sim 0.9687 -16.1 LUFS -2.0 dBTP PASS
+  finish: lead-change-4    seed 1002 wer 0.0 sim 0.9667 -16.1 LUFS -4.2 dBTP PASS
+  finish: lead-change-5    seed 1005 wer 0.0 sim 0.9706 -16.0 LUFS -3.9 dBTP PASS
+  finish: late-joiner-1    seed 1006 wer 0.0 sim 0.9817 -16.1 LUFS -1.6 dBTP PASS
+  finish: late-joiner-2    seed 1004 wer 0.0 sim 0.9815 -16.1 LUFS -1.4 dBTP PASS
+  finish: late-joiner-3    seed 1000 wer 0.0 sim 0.9757 -16.1 LUFS -1.7 dBTP PASS
+  finish: late-joiner-4    seed 1001 wer 0.0 sim 0.9821 -16.1 LUFS -1.6 dBTP PASS
+  finish: late-joiner-5    seed 1000 wer 0.0 sim 0.9786 -16.0 LUFS -1.6 dBTP PASS
+  finish: 61/61 rows pass every screen; reel 1.65 MB, 03:29.8
+  finish: screen pass counts {"wer": 61, "speaker_sim": 61, "duration": 61, "raw_loudness": 61, "export_loudness": 61, "export_true_peak": 61}
+  fetched reel 1.65 MB -> docs/evidence/P1-A01/audition-reel.ogg
+  61/61 rows pass every screen (model Qwen/Qwen3-TTS-12Hz-1.7B-Base bfloat16; excited reference e4f)
+    wer              61/61
+    speaker_sim      61/61
+    duration         61/61
+    raw_loudness     61/61
+    export_loudness  61/61
+    export_true_peak 61/61
+  [exit 0]
+
+== 6. manifest.json summary (assets/audio/voice/manifest.json; identical copy in docs/evidence/P1-A01/)
+  model Qwen/Qwen3-TTS-12Hz-1.7B-Base dtype bfloat16; export Ogg/Opus 48 kbps mono 48000 Hz; target -16.0 LUFS / -1.0 dBTP
+  excited reference excited-ref-E4f; selection {"e4f": {"takes": 8, "mean_speaker_sim": 0.9698, "mean_wer": 0.0, "takes_with_wer_0": 8, "mean_pitch_lift_st": 6.76}, "e4": {"takes": 8, "mean_speaker_sim": 0.9781, "mean_wer": 0.15, "takes_with_wer_0": 5, "mean_pitch_lift_st": 1.75}}
+  rows 61 pass 61 fail 0; takes rendered/row {'requested': 8, 'max': 16, 'rendered_min': 8, 'rendered_max': 8}
+  screen pass counts {"wer": 61, "speaker_sim": 61, "duration": 61, "raw_loudness": 61, "export_loudness": 61, "export_true_peak": 61}
+  pitch lift over owner (semitones) of picked takes {"hype": {"rows": 47, "min": 1.76, "median": 8.19, "max": 11.49}, "warm": {"rows": 14, "min": -1.83, "median": 1.62, "max": 4.38}}
+  thresholds {"wer_max": 0.0, "speaker_sim_min": 0.93, "duration_min_base_s": 0.4, "duration_min_per_word_s": 0.15, "duration_max_base_s": 2.0, "duration_max_per_word_s": 0.6, "raw_lufs_min": -45.0, "raw_true_peak_max_dbtp": 0.0, "export_lufs_target": -16.0, "export_lufs_tolerance_lu": 1.0, "export_true_peak_max_dbtp": -1.0}
+  asr_aliases {"struth": "strewth", "gidday": "g'day"} homophone_rules ["trailing 's -> s (door's = doors)", "'all ready' -> 'already'"] tts_respellings {"G'day": "Gidday"}
+  takes scored 488, passing every take screen 406
+  picked export loudness range -16.1..-16.0 LUFS; true peak max -1.1 dBTP; speaker similarity of picks 0.959..0.986
+
+$ ls -l assets/audio/voice | head -8; ls assets/audio/voice | wc -l; du -sh assets/audio/voice docs/evidence/P1-A01; ls -l docs/evidence/P1-A01
+  total 2864
+  -rw-r--r--@ 1 cdilga  staff   20371  3 Oct 12:48 all-ready-1.ogg
+  -rw-r--r--@ 1 cdilga  staff   20084  3 Oct 12:48 all-ready-2.ogg
+  -rw-r--r--@ 1 cdilga  staff   19750  3 Oct 12:48 all-ready-3.ogg
+  -rw-r--r--@ 1 cdilga  staff   14622  3 Oct 12:48 big-air-1.ogg
+  -rw-r--r--@ 1 cdilga  staff   16476  3 Oct 12:48 big-air-2.ogg
+  -rw-r--r--@ 1 cdilga  staff   17773  3 Oct 12:48 big-air-3.ogg
+  -rw-r--r--@ 1 cdilga  staff   17121  3 Oct 12:48 big-air-4.ogg
+        62
+  1.4M	assets/audio/voice
+  1.9M	docs/evidence/P1-A01
+  total 3840
+  -rw-r--r--@ 1 cdilga  staff     7220  3 Oct 12:48 audition-reel-index.txt
+  -rw-r--r--@ 1 cdilga  staff  1648468  3 Oct 12:48 audition-reel.ogg
+  -rw-r--r--@ 1 cdilga  staff   307001  3 Oct 12:48 manifest.json
+  [exit 0]
+
+$ git check-attr filter assets/audio/voice/countdown-1.ogg assets/audio/voice/x.m4a docs/evidence/P1-A01/audition-reel.ogg
+  assets/audio/voice/countdown-1.ogg: filter: lfs
+  assets/audio/voice/x.m4a: filter: lfs
+  docs/evidence/P1-A01/audition-reel.ogg: filter: lfs
+  [exit 0]
+
+$ ffprobe the exports: codec,rate,channels (count by value)
+    61 opus,48000,1
+  [exit 0]
+
