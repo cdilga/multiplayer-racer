@@ -82,6 +82,43 @@ Control so you can watch it.
 | `status` | ready count, beads waiting on CI, the next three picks |
 
 With one agent, skip Agent Mail reservations and announcements; register only for the commit guard.
+As soon as a second session runs (another Claude, or OMP workers), every session reserves files,
+the solo one included.
+
+## OMP workers (GLM-5.3 through NTM)
+
+Start them from the repo:
+
+```bash
+ntm spawn multiplayer-racer --omp=2:zai/glm-5.3:max \
+  --prompt "Read AGENTS.md, then the 'OMP workers' section of docs/process/bead-workflow.md, and start."
+```
+
+- `--omp=N:model:thinking` runs N OMP panes as `omp --auto-approve --model zai/glm-5.3 --thinking max`.
+- Never add `--worktrees`.
+- Watch them with `ntm attach multiplayer-racer`. Remote Control is Claude-only.
+
+**If you're an OMP worker**, you have no MCP and none of Claude Code's hooks. So, before the loop above:
+
+1. **Identity:** create it once.
+   ```bash
+   am agents create --project /Users/cdilga/Documents/dev/multiplayer-racer --program omp --model glm-5.3 --task "<bead or goal>"
+   ```
+   It prints your name. Prefix every commit, push and `scripts/beads/close.sh` with `AGENT_NAME=<name>`,
+   and use the name as `--actor` for `br`.
+2. **Reservations:** reserve before editing.
+   ```bash
+   am file_reservations reserve /Users/cdilga/Documents/dev/multiplayer-racer <name> <paths…> --exclusive --reason <bead-id>
+   ```
+   Release with `am file_reservations release /Users/cdilga/Documents/dev/multiplayer-racer <name>` when done.
+   Read and send mail with `am mail inbox` and `am mail send`, in a thread named after the bead.
+3. **The hooks' rules, by hand:**
+   - No workspace-wide cargo on the Mac: Rust goes through `rch exec -- cargo …`.
+   - Never `br delete`.
+   - The pinned Node is `.nvmrc` (26.10.0): put `$HOME/.nvm/versions/node/v26.10.0/bin` first on `PATH`
+     for npm, npx and Vite.
+
+Then run the loop like everyone else: `bv --robot-next`, claim, build with tests, commit, `scripts/beads/close.sh`.
 
 ## Lean by default
 

@@ -108,8 +108,12 @@ Most important rules:
   (specific paths or globs, not the whole repo), and announce claims, blockers and completion in a
   thread named after the bead ID. **Solo, skip reservations and announcements**; register only for the
   commit guard.
-- **NTM is paused (R91).** Run multi-agent work as native Claude Code agents with native messaging
-  (SendMessage). Agent Mail stays for file reservations and the commit guard.
+- **NTM launches workers again** (owner, 2026-10-03, amends R91): native Claude Code sessions, or NTM
+  panes, including **OMP workers on GLM-5.3 at max thinking**
+  (`ntm spawn multiplayer-racer --omp=N:zai/glm-5.3:max`). Never pass `--worktrees`. OMP workers have no
+  MCP or Claude hooks: they use the `am` CLI for Agent Mail and follow the hooks' rules by hand
+  (`docs/process/bead-workflow.md`, "OMP workers"). Agent Mail stays for file reservations and the commit
+  guard.
 - **No agent cap, no roles (R93).** Run as many agents as the work and machines support. Agents are
   fungible generalists: nobody owns a track; everyone picks the most useful ready work with
   `bv --robot-triage`. Coupled systems (transport, sim, renderer) stay safe through narrow Agent Mail
