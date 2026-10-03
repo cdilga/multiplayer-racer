@@ -1,6 +1,6 @@
 # Audio tooling (runs on eris)
 
-> **Licence rider (2026-10-04):** `franken_tts` and `franken_whisper` (`ftts`, `fw`) are MIT with an OpenAI/Anthropic rider (no rights for Anthropic or anyone acting for it; 'use' includes executing and testing). **Agents must not run them**; the owner runs FrankenTTS steps, and agent transcripts use faster-whisper on eris. The `fw` mentions below predate this and are being replaced (`br-ftts-rider-83r5`).
+> **Licence rider:** `franken_tts` and `franken_whisper` (`ftts`, `fw`) are MIT with an OpenAI/Anthropic rider. The owner confirmed on 2026-10-04 that their use, including by agents, is approved without reservation; agents may run them. Keep the author's permission, if any, in `docs/evidence/P1-A01d/permission.md`.
 
 Generation happens on **eris** (`ssh eris`, RTX 2080 SUPER 8 GB, Arch Linux), never on the Mac and
 never in this repo (R89). Workspace: `~/Work/dev/jammers-audio` (`JJ_AUDIO_HOME`). Model weights,
