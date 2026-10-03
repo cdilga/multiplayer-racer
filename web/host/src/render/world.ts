@@ -24,25 +24,18 @@ import { decodeSnapshot } from './snapshot';
 import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
+import { GridAnimator, type Layout } from '../layout/grid';
+
+/** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
+const PAPER = new Color('#FFF4DE');
+const SKY = new Color('#9fc6d8');
 
 /** The host's Render resolution setting (R111): Native by default; the host may choose less. */
 export type ResolutionMode = 'native' | 'user' | 'auto';
 
-/** Rows × cols minimising unused area with tiles near 16:9 (Spike J's layout; P1-R04 owns the real grid). */
-export function tileLayout(n: number, w: number, h: number): { cols: number; rows: number; tw: number; th: number } {
-  let best = { cols: 1, rows: n, tw: w, th: h / n, cost: Infinity };
-  for (let cols = 1; cols <= n; cols++) {
-    const rows = Math.ceil(n / cols);
-    const tw = w / cols;
-    const th = h / rows;
-    const cost = Math.abs(Math.log(tw / th / (16 / 9))) + (rows * cols - n) * 0.05;
-    if (cost < best.cost) best = { cols, rows, tw, th, cost };
-  }
-  return best;
-}
-
-/** A plain multi-tile view until the grid (P1-R04) and cameras (P1-R05): each tile chases one car. */
+/** The tiled view (P1-R04's grid; a plain chase camera per tile until the cameras, P1-R05). */
 export interface TileView {
+  /** Seats on screen; tile k is seat k + 1 in join order. */
   count: number;
   /** A LOD class per tile; otherwise from the tile's height (lodForTileHeight). */
   lods?: number[];
@@ -82,6 +75,9 @@ export class World {
   /** Set for the plain multi-tile view; null draws the overview camera. */
   tiles: TileView | null = null;
   private tileCams: PerspectiveCamera[] = [];
+  private tileGrid: GridAnimator | null = null;
+  /** Called with the grid's layout (device pixels) and the device pixel ratio when the tiles move. */
+  onLayout: (layout: Layout | null, dpr: number) => void = () => {};
   map: MapRenderer | null = null;
   private props: PropRenderer;
   private ground: Mesh;
@@ -267,19 +263,30 @@ export class World {
     this.onFrame(st);
   }
 
-  /** Each tile chases its car with its own camera and draws its LOD class; the shadow map was drawn once already. */
+  /** The grid (P1-R04): each seat's tile chases its car with its own camera at its LOD class; spare cells and gutters
+   *  are the paper backdrop. The shadow map was drawn once already. */
   private drawTiles(s: Sampled, view: TileView): number[] {
     const r = this.backend.renderer;
     const { width: w, height: h } = this.stats;
-    const L = tileLayout(view.count, w, h);
+    const display = { x: 0, y: 0, w, h };
+    const safe = { x: w * 0.05, y: h * 0.05, w: w * 0.9, h: h * 0.9 };
+    const gutter = Math.max(2, Math.round(Math.min(w, h) * 0.004));
+    this.tileGrid ??= new GridAnimator(display, safe, { gutter });
+    const seats = Array.from({ length: view.count }, (_, k) => k + 1);
+    const now = performance.now();
+    const moved = this.tileGrid.update(seats, now, display, safe);
+    if (moved || this.tileGrid.animating(now)) this.onLayout(this.tileGrid.layout, this.stats.dpr * this.scale);
     const lods: number[] = [];
     r.autoClear = false;
     r.setScissorTest(false);
+    r.setClearColor(PAPER);
     r.clear();
     r.setScissorTest(true);
-    for (let k = 0; k < view.count; k++) {
+    for (const t of this.tileGrid.tiles(now)) {
+      const k = t.seat - 1;
+      if (t.w < 1 || t.h < 1) continue;
       const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 600));
-      cam.aspect = L.tw / L.th;
+      cam.aspect = t.w / t.h;
       cam.updateProjectionMatrix();
       const i = s.cars ? (view.follow?.[k] ?? k) % s.cars : -1;
       if (i >= 0) {
@@ -291,13 +298,15 @@ export class World {
         this.target.set(0, orbiting ? 0.6 : 1, orbiting ? 0 : 4).applyQuaternion(this.q).add(this.v);
         cam.lookAt(this.target);
       }
-      const lod = view.lods?.[k] ?? lodForTileHeight(L.th);
+      const lod = view.lods?.[k] ?? lodForTileHeight(t.h);
       useLod(cam, lod);
       lods.push(lod);
-      const x = Math.round((k % L.cols) * L.tw);
-      const y = Math.round(h - (Math.floor(k / L.cols) + 1) * L.th);
-      r.setViewport(x, y, Math.round(L.tw), Math.round(L.th));
-      r.setScissor(x, y, Math.round(L.tw), Math.round(L.th));
+      // Layout rects are top-down; GL viewports are bottom-up.
+      const [x, y, tw, th] = [Math.round(t.x), Math.round(h - t.y - t.h), Math.round(t.w), Math.round(t.h)];
+      r.setViewport(x, y, tw, th);
+      r.setScissor(x, y, tw, th);
+      r.setClearColor(SKY);
+      r.clear();
       this.backend.render(this.scene, cam);
     }
     r.setScissorTest(false);

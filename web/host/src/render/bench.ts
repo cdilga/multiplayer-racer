@@ -6,7 +6,6 @@ import { Color, DirectionalLight, HemisphereLight, Mesh, MeshLambertMaterial, Pe
 import { createBackend, type Backend, type BackendKind } from './backend';
 import type { Sampled } from './interp';
 import { useLod, VehicleRenderer } from './vehicles/vehicles';
-import { tileLayout } from './world';
 
 export interface BenchRun {
   backend: BackendKind;
@@ -16,6 +15,19 @@ export interface BenchRun {
   w?: number;
   h?: number;
   frames?: number;
+}
+
+/** Rows × cols minimising unused area with tiles near 16:9 (Spike J's layout, kept so the bench's numbers compare with its reference row). */
+export function tileLayout(n: number, w: number, h: number): { cols: number; rows: number; tw: number; th: number } {
+  let best = { cols: 1, rows: n, tw: w, th: h / n, cost: Infinity };
+  for (let cols = 1; cols <= n; cols++) {
+    const rows = Math.ceil(n / cols);
+    const tw = w / cols;
+    const th = h / rows;
+    const cost = Math.abs(Math.log(tw / th / (16 / 9))) + (rows * cols - n) * 0.05;
+    if (cost < best.cost) best = { cols, rows, tw, th, cost };
+  }
+  return best;
 }
 
 const pack = (n: number) => Array.from({ length: n }, (_, i) => ({ x: ((i % 4) - 1.5) * 3.2, z: -Math.floor(i / 4) * 6.5 }));

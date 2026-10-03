@@ -20,6 +20,7 @@ type ThreeRenderer = Pick<
   | 'setScissor'
   | 'setScissorTest'
   | 'clear'
+  | 'setClearColor'
   | 'render'
   | 'dispose'
   | 'shadowMap'

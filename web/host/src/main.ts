@@ -7,6 +7,7 @@
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountDrawer } from './input/drawer';
+import { mountGridOverlay } from './layout/overlay';
 import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
@@ -42,7 +43,12 @@ async function boot(): Promise<void> {
   const withMap = !params.has('synthetic') || params.has('map');
   if (withMap) world.loadMap(JSON.parse(greybox), { repeat: Number(params.get('kitx')) || 1 });
   const list = (k: string) => params.get(k)?.split(',').map(Number);
-  if (params.has('tiles')) world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
+  if (params.has('tiles')) {
+    world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
+    // The grid's spare cells (P1-R04): the join QR points at the join page until rooms exist (G00).
+    const overlay = mountGridOverlay(app, new URL('../controller/', location.href).href);
+    world.onLayout = (layout, scale) => overlay.render(layout, scale);
+  }
   mountOverlay(document.body, world, BUILD_LABEL);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
