@@ -14,7 +14,7 @@ import { chromium } from 'playwright';
 import { serveArtUi } from '../../lib/serve.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U02.2');
+const out = process.env.JJ_EVIDENCE_DIR ?? join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U02.2');
 const GPU_ARGS = ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
 const { base, close } = await serveArtUi();
 mkdirSync(join(out, 'captures'), { recursive: true });
@@ -43,15 +43,17 @@ for (const n of [...Array.from({ length: 40 }, (_, i) => i + 1), 64, 99]) {
     const box = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
     const tiles = [...document.querySelectorAll('.tile')].map(box);
     const fillers = [...document.querySelectorAll('.filler')].map((e) => ({ ...box(e), kind: e.classList.contains('cell') ? 'cell' : 'margin', role: e.dataset.role }));
+    const footEl = document.querySelector('.foot'), foot = footEl && box(footEl);
     const views = window.__poc.views();
     const area = (r) => r.w * r.h;
     const ratio = (list) => Math.max(...list.map(area)) / Math.min(...list.map(area));
-    // Every sampled point is a filler, or a tile or empty cell including its own half-gutter (the ink gutter line).
+    // Every sampled point is a filler, the footer band (P1-U02.3), or a tile or empty cell including its own half-gutter
+    // (the ink gutter line).
     const inside = (r, x, y, e = 0) => x >= r.x - e && x < r.x + r.w + e && y >= r.y - e && y < r.y + r.h + e;
     let samples = 0, black = 0;
     for (let y = 1.5; y < innerHeight; y += 6) for (let x = 1.5; x < innerWidth; x += 6) {
       samples++;
-      if (fillers.some((f) => inside(f, x, y, f.kind === 'cell' ? hg : 0)) || tiles.some((t) => inside(t, x, y, hg))) continue;
+      if (fillers.some((f) => inside(f, x, y, f.kind === 'cell' ? hg : 0)) || tiles.some((t) => inside(t, x, y, hg)) || (foot && inside(foot, x, y))) continue;
       black++;
     }
     const roles = {};

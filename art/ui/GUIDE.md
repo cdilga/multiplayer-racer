@@ -169,8 +169,12 @@ deuteranopia and tritanopia (`check.mjs` enforces it), and badge text stays at l
   only (badge and name top-left, position and lap on one line top-right, a slim boost meter along the
   bottom) on cream stickers, every pill one line high and scaled with the tile (7.5% of its height, 16–32
   px at 1080p); nothing else covers the road. Name plates over cars are only for Derby and other
-  single-shared-screen modes (R100). Host controls hide during a race and surface on input (U02 places
-  them).
+  single-shared-screen modes (R100). Host controls live in a **footer band** under the grid (R96, P1-U02.3,
+  after Physical Soccer's host footer): the join (room code, address, player count, a QR that hovers big and
+  pauses), race readouts or a global caption, the logo, Pause, Fullscreen and the host menu, which swaps the
+  band's middle for its buttons in place. Diagnostics grow the band upward. Anything needing the whole screen
+  (settings, players and controllers, End round, Disband) is in the pause flow, which pauses first. Nothing but
+  the countdown and the Identify flash covers a playing tile.
 - **TV between races (lobby, results, intermission):** H4's layout: cream panels with ink borders over
   the painted world, a saffron highlight bar under the title, cobalt numbers, the QR panel bottom-left.
 - **Phone:** an ink base with cream panels and the player's colour (§10).

@@ -1,7 +1,7 @@
 // main.js — TV mocks (P1-U02): every state opens from a URL fragment, e.g. #grid&n=7&fp=2,5 (see STATES below and the
 // contents page at #). The 3D tiles are live (world.js); the HUD is one DOM layer positioned over the tile viewports,
 // built the way the game would build it, so its cost can be measured (window.__poc.perf).
-import { loadTokens, seatColor, asset } from '../shared/tokens.js';
+import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
 import { createWorld } from './world.js';
 import { layoutGrid, PSEUDOCODE } from './grid.js';
 import { STATES } from './states.js';
@@ -40,12 +40,17 @@ function parseHash() {
   const raw = location.hash.replace(/^#/, '');
   const [name, ...rest] = raw.split('&');
   const p = new URLSearchParams(rest.join('&'));
-  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'global', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', p };
+  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'footer', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', layout: p.get('layout') === 'static' ? 'static' : 'dynamic', sub: p.get('sub') ?? '', p };
 }
 
 let S = parseHash();
 let scene = null; // { views(dt): [], update(dt), layout() }
 let frames = 0, settled = false;
+// The footer band (POC1-08, R96/R97) in TV px at 1080p; the race grid fills the screen above it.
+const FOOT = 88;
+// The pause flow and the QR hover stop the world (the loop skips world.step): nothing overlays a playing tile.
+let gamePaused = false;
+const CAPTION = 'Final lap! Give it everything!';
 const perfStats = { hudMs: [], renderMs: [], stepMs: [], draws: 0 };
 
 function seatInfo(i) { // i = 1-based seat index in this room; display number may be offset (3-digit stress)
@@ -54,10 +59,14 @@ function seatInfo(i) { // i = 1-based seat index in this room; display number ma
   return { seat: i, num, name: NAMES[(i - 1) % NAMES.length], color: c.hex, on: c.on };
 }
 
-// ---------- grid scene (grid, hud, countdown, identify, captions, host*, overlays, grid-player) ----------
-function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = new Set(), hudStates = {}, overlays = false, plates = false, cornerChip = true } = {}) {
+// ---------- grid scene (grid, hud, countdown, identify, captions, footer, menu, diagnostics, overlays, grid-player) ----------
+// `foot` reserves the footer band under the grid (POC1-08). `layout` is the host setting (R96): dynamic moves the join
+// QR, the player list and captions into spare cells when they fit; static keeps them in the footer.
+function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = false, plates = false, cornerChip = true, foot = true, layout = S.layout, caption = null, menu = false, diag = false } = {}) {
   const layer = el('div', 'k');
   ui.append(layer);
+  const footer = foot ? makeFooter({ menu, diag, layout, onLayout: (m) => { layout = m; relayout(true); }, onDiag: (on) => { diag = on; relayout(true); } }) : null;
+  rect ??= () => ({ x: 0, y: 0, w: W(), h: H() - (foot ? footer.height() : 0) });
   const tiles = new Map(); // seat → { el, cur, tgt, t0, from, hud refs }
   let fillerEls = [];
   let joinChip = null;
@@ -87,10 +96,9 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     if (st?.status) t.append(el('div', 'hud-status', st.status === 'autopilot' ? `<span class="chip autopilot">${icon('car')}Autopilot</span>` : `<span class="chip reconnecting">${icon('wifi-off')}Reconnecting…</span>`));
     if (st?.wreck) t.append(el('div', 'hud-centre', `<div class="display italic wreck-word">Wrecked!</div><div class="wreck-back tnum">Back in <b class="cd">3</b> s</div>`));
     if (st?.identify) { t.classList.add('identify'); t.prepend(cooee(info.num)); } // under the HUD: the pills stay readable
-    if (st?.caption) { const c = el('div', 'caption player'); c.textContent = st.caption; c.style.left = '50%'; c.style.transform = 'translateX(-50%)'; c.dataset.under = 'hud'; t.append(c); }
     if (!S.hud) t.replaceChildren();
     layer.append(t);
-    return { el: t, pos, lap, boost: boost.firstChild, name, last: {}, cur: null, tgt: null, t0: 0, from: null, plates: [], arrow: null, caption: t.querySelector('.caption') };
+    return { el: t, pos, lap, boost: boost.firstChild, name, last: {}, cur: null, tgt: null, t0: 0, from: null, plates: [], arrow: null };
   }
 
   function relayout(animate) {
@@ -120,16 +128,17 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     fillerEls = [];
     joinChip?.remove();
     joinChip = null;
-    // Filler roles (R95): empty cells first, in reading order, then margins, largest first. Joining comes first: the join
-    // QR goes in the first that fits a scannable QR or, with no room for one, the room code and address in the first that
-    // fits them; then the standings in the next that fits them. Everything else is the painted backdrop: never black.
+    // Filler roles (R95): empty cells first, in reading order, then margins, largest first. With the footer (R96):
+    // dynamic puts the join QR in the first spare cell that fits a scannable QR, then the standings, then a global caption;
+    // whatever doesn't fit stays in the footer. Static leaves all three in the footer. Without a footer (the grid player)
+    // joining comes first: the QR or, with no room for one, the room code. Everything else is the painted backdrop.
     const QR = 37 * tokens.qr.minModulePx.tv * k; // 8 px per module at 1080p: scannable from the couch
-    const fits = { qr: (f) => f.w >= QR + 40 * k && f.h >= QR + 40 * k, standings: (f) => f.w >= 260 * k && f.h >= 200 * k, code: (f) => f.w >= 220 * k && f.h >= 120 * k };
+    const fits = { qr: (f) => f.w >= QR + 40 * k && f.h >= QR + 40 * k, standings: (f) => f.w >= 260 * k && f.h >= 200 * k, code: (f) => f.w >= 220 * k && f.h >= 120 * k, caption: (f) => f.w >= 300 * k && f.h >= 120 * k };
     const roles = lay.fillers.map(() => 'backdrop');
     const give = (role) => { const i = lay.fillers.findIndex((f, j) => roles[j] === 'backdrop' && fits[role](f)); if (i >= 0) roles[i] = role; return i >= 0; };
-    const hasQr = give('qr');
-    const hasCode = !hasQr && give('code');
-    give('standings');
+    let hasQr = false, hasCode = false, capInCell = false;
+    if (!foot) { hasQr = give('qr'); hasCode = !hasQr && give('code'); give('standings'); }
+    else if (layout === 'dynamic') { hasQr = give('qr'); give('standings'); capInCell = !!caption && give('caption'); }
     lay.fillers.forEach((f, i) => {
       const e = el('div', `filler ${f.kind}`);
       e.dataset.role = roles[i];
@@ -137,10 +146,12 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
       if (roles[i] === 'qr') e.append(joinCard(f.w < f.h * 1.3));
       else if (roles[i] === 'standings') e.append(standingsCard(Math.max(3, Math.min(8, Math.floor((f.h / k - 80) / 38)))));
       else if (roles[i] === 'code') e.append(codeCard());
+      else if (roles[i] === 'caption') e.append(el('div', 'caption cellcap', esc(caption)));
       layer.prepend(e);
       fillerEls.push(e);
     });
-    if (cornerChip && !hasQr && !hasCode) {
+    footer?.update({ qr: !hasQr, caption: capInCell ? null : caption, players: seats().length, layout });
+    if (!foot && cornerChip && !hasQr && !hasCode) {
       // One player: a full-size corner QR (plan §10). More players and no free cell: the code only, because a QR
       // smaller than 8 px per module won't scan from the couch (tokens.qr).
       joinChip = seats().length === 1
@@ -217,12 +228,11 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
       card.dataset.key = key;
       card.querySelector('.rows').innerHTML = st.slice(0, rows).map((s) => { const i = seatInfo(s.seat); return `<div class="srow"><span class="place">${s.place}</span><span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span><span>${esc(shortName(i.name, 10))}</span></div>`; }).join('');
     }
+    footer?.tick(st);
     if (overlays) drawOverlays(views);
     // wreck countdown
     const cd = Math.max(1, 3 - Math.floor((performance.now() / 1000) % 3));
     for (const e of layer.querySelectorAll('.cd')) if (e.textContent !== String(cd)) e.textContent = String(cd);
-    // player caption sits under the tile's HUD band
-    for (const t of tiles.values()) if (t.caption) t.caption.style.top = `${t.el.querySelector('.hud-tl').offsetHeight + 24 * K()}px`;
   }
 
   // Over-3D overlays on the per-player grid: the Identify outline and an off-screen arrow to your own car. Name plates
@@ -268,7 +278,8 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     const me = world.project(v.seat, v.camera, v);
     const off = !me || me.z > 1 || me.x < v.x || me.x > v.x + v.w || me.y < v.y || me.y > v.y + v.h;
     if (off && me) {
-      if (!t.arrow) { t.arrow = el('div', 'arrow', `<i></i><b>Your car</b>`); t.arrow.style.setProperty('--seat', seatInfo(v.seat).color); layer.append(t.arrow); }
+      // The arrow belongs to its own tile (data-own): the overlay check allows it there and nowhere else.
+      if (!t.arrow) { t.arrow = el('div', 'arrow', `<i></i><b>Your car</b>`); t.arrow.style.setProperty('--seat', seatInfo(v.seat).color); t.arrow.dataset.own = String(seatInfo(v.seat).num); layer.append(t.arrow); }
       let dx = me.ndc.x, dy = -me.ndc.y;
       if (me.z > 1) { dx = -dx; dy = -dy; if (Math.abs(dx) + Math.abs(dy) < 0.01) dy = 1; }
       const ang = Math.atan2(dy, dx), cx = v.x + v.w / 2, cy = v.y + v.h / 2;
@@ -291,9 +302,124 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     },
     update: updateHud,
     replayIdentify,
+    footer,
     tiles,
     get layout() { return lay; },
   };
+}
+
+// ---------- the footer band (P1-U02.3: POC1-08 to 11, R96, R97) ----------
+// One ink band under the grid, after Physical Soccer's host footer (refs/owner-2026-10-03/ps-host-footer.jpg): the join
+// (a small QR when no spare cell holds the big one, the room code, the address and the player count), the race readouts
+// or a global caption, the logo, Pause (top-level), Fullscreen and the host menu. The menu swaps the band's middle for the
+// host's buttons in place, so it never covers or reflows a tile. Diagnostics grow the band upward and the grid reflows
+// above it. Anything that needs the whole screen (settings, players and controllers, ending the round) goes through the
+// pause flow, which pauses first. Hovering the QR shows it big for a while and pauses the game.
+const DIAG = { colPx: 330, gapPx: 16, rowPx: 34, headPx: 46 };
+function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, onDiag } = {}) {
+  const f = el('footer', 'foot k');
+  f.setAttribute('aria-label', 'Host toolbar');
+  f.innerHTML = `<div class="f-diag" hidden></div>
+    <div class="f-row">
+      <div class="f-join"><button class="f-qr" type="button" aria-label="Show the join code bigger (pauses the game)"><img class="qr" alt="" src="${asset('poc/shared/qr-roo7.svg')}"></button>
+        <div class="f-room"><span class="f-code"><small>Room</small><b class="display code">ROO7</b></span><span class="f-sub">jammers.dilger.dev · <b class="f-n tnum">0</b> players</span></div></div>
+      <div class="f-mid"></div>
+      <div class="f-right"><img class="f-logo" alt="Joystick Jammers" src="${asset('brand/wordmark-on-ink.svg')}">
+        <button class="fbtn f-pause" type="button">${icon('pause')}Pause</button>
+        <button class="fbtn icon f-full" type="button" aria-label="Fullscreen">${icon('maximize')}</button>
+        <button class="fbtn icon f-menu" type="button" aria-label="Host menu" aria-expanded="false">${icon('menu')}</button></div>
+    </div>`;
+  ui.append(f);
+  const mid = f.querySelector('.f-mid'), dEl = f.querySelector('.f-diag');
+  let state = { qr: true, caption: null, players: S.n, layout };
+  const diagRows = () => {
+    const cols = Math.max(1, Math.floor((W() / K() - 56 + DIAG.gapPx) / (DIAG.colPx + DIAG.gapPx)));
+    return Math.ceil(state.players / cols);
+  };
+  const diagPx = () => (diag ? DIAG.headPx + diagRows() * DIAG.rowPx + 8 : 0);
+  const readouts = () => `<span class="f-read"><b>Race</b> · <span class="f-lap tnum">Lap 1/3</span></span><span class="f-read">Leader <span class="f-lead"></span></span><span class="f-read tnum f-time">0:00</span>`;
+  const menuRow = () => `<button class="fbtn" type="button" data-go="players">${icon('users')}Players</button>`
+    + `<button class="fbtn${diag ? ' on' : ''}" type="button" data-go="diag" aria-pressed="${diag}">${icon('bug')}Diagnostics</button>`
+    + `<span class="fseg" role="group" aria-label="Player list, QR and captions"><span>Layout</span><button type="button" data-go="dynamic" class="${state.layout === 'dynamic' ? 'on' : ''}">Dynamic</button><button type="button" data-go="static" class="${state.layout === 'static' ? 'on' : ''}">Static</button></span>`
+    + `<button class="fbtn" type="button" data-go="settings">${icon('settings')}Settings…</button>`;
+  function renderDiag() {
+    const ms = perfStats.renderMs.at(-1) ?? 0;
+    dEl.style.height = `${(diagPx() - 8) * K()}px`;
+    dEl.innerHTML = `<h3 class="display">Diagnostics <small class="tnum">path · round trip · input age · loss · ${esc(world.backend.slice(0, 32))} · render ${ms.toFixed(1)} ms · draws ${perfStats.draws}</small></h3>`
+      + Array.from({ length: state.players }, (_, i) => {
+        const s = seatInfo(i + 1), relay = i % 4 === 1;
+        return `<span class="drow tnum"><span class="badge" style="--seat:${s.color};--seat-on:${s.on}">#${s.num}</span>${relay ? '<b class="relay">relay</b>' : 'direct'} ${relay ? 92 : 30 + (i % 9) * 3} ms · ${relay ? 61 : 18 + (i % 7)} ms · ${relay ? '0.4' : '0.0'}%</span>`;
+      }).join('');
+  }
+  const render = () => {
+    f.classList.toggle('has-qr', state.qr);
+    f.classList.toggle('menu-open', menu);
+    const pb = f.querySelector('.f-pause');
+    pb.innerHTML = state.paused ? `${icon('play')}Resume` : `${icon('pause')}Pause`;
+    f.querySelector('.f-n').textContent = String(state.players);
+    mid.innerHTML = menu ? menuRow() : state.caption ? `<span class="caption footcap">${esc(state.caption)}</span>` : readouts();
+    const mb = f.querySelector('.f-menu');
+    mb.setAttribute('aria-expanded', String(menu));
+    mb.classList.toggle('on', menu);
+    dEl.hidden = !diag;
+    if (diag) renderDiag();
+  };
+  // The mock's controls work, so the review can click through them.
+  f.querySelector('.f-pause').addEventListener('click', () => { location.hash = `${state.paused ? 'grid' : 'paused'}&n=${S.n}${S.base ? `&base=${S.base}` : ''}&layout=${state.layout}`; });
+  f.querySelector('.f-full').addEventListener('click', () => document.documentElement.requestFullscreen?.().catch(() => {}));
+  f.querySelector('.f-menu').addEventListener('click', () => { menu = !menu; render(); });
+  mid.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-go]')?.dataset.go;
+    if (!go) return;
+    if (go === 'players' || go === 'settings') location.hash = `paused&n=${S.n}&layout=${state.layout}${go === 'players' ? '&sub=players' : ''}`;
+    else if (go === 'diag') { diag = !diag; render(); onDiag?.(diag); }
+    else { state.layout = go; render(); onLayout?.(go); }
+  });
+  let pop = null, popTimer = 0;
+  const hidePop = () => { pop?.remove(); pop = null; gamePaused = false; f.classList.remove('qr-open'); };
+  function showQrPop(hold = false) {
+    clearTimeout(popTimer);
+    if (!pop) {
+      pop = el('div', 'qr-pop k', `<div class="card"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div><div class="qr-note">${icon('pause')}Game paused while the code is up</div></div></div>`);
+      ui.append(pop);
+      gamePaused = true;
+      f.classList.add('qr-open');
+    }
+    if (!hold) popTimer = setTimeout(hidePop, 10000); // "for a while": then the race carries on
+  }
+  const qrBtn = f.querySelector('.f-qr');
+  qrBtn.addEventListener('mouseenter', () => showQrPop());
+  qrBtn.addEventListener('focus', () => showQrPop());
+  qrBtn.addEventListener('mouseleave', () => { clearTimeout(popTimer); popTimer = setTimeout(hidePop, 1500); });
+  render();
+  const t0 = performance.now();
+  return {
+    el: f,
+    height: () => (FOOT + diagPx()) * K(),
+    update(next) { state = { ...state, ...next }; render(); },
+    tick(st) {
+      if (menu || state.caption) return;
+      const lead = st[0];
+      const le = f.querySelector('.f-lead');
+      if (lead && le) { const i = seatInfo(lead.seat); const html = `<span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span> ${esc(shortName(i.name, 10))}`; if (le.dataset.k !== html) { le.innerHTML = html; le.dataset.k = html; } }
+      const lap = f.querySelector('.f-lap');
+      if (lead && lap) lap.textContent = `Lap ${lead.lap}/${world.laps}`;
+      const tm = f.querySelector('.f-time');
+      if (tm) { const sec = Math.floor((performance.now() - t0) / 1000); tm.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
+    },
+    showQrPop,
+  };
+}
+
+// The R102 shapes (U01.3) for the pause flow: torn banners, brushed tags and strips, seeded tilts.
+const TICKS = '<svg viewBox="0 0 26 44" aria-hidden="true"><path d="M4 6 L22 15 M2 22 L22 22 M4 38 L22 29"/></svg>';
+function paint(root) {
+  const amp = tokens.language.banner.heading.tornAmplitudePx.tv * K();
+  for (const e of root.querySelectorAll('[data-torn], [data-brush]')) {
+    const torn = e.dataset.torn != null, w = e.offsetWidth, h = e.offsetHeight;
+    e.insertAdjacentHTML('afterbegin', `<svg class="paint" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${paintPath(torn ? e.dataset.torn : e.dataset.brush, w, h, amp, torn ? 'torn' : 'brush')}"/></svg>`);
+  }
+  for (const e of root.querySelectorAll('[data-tilt]')) e.style.rotate = `${tiltFor(e.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
 }
 
 // Gutters between tiles are the renderer's ink clear colour; screens without a grid clear to paper.
@@ -301,6 +427,16 @@ let clearColor = '#fff4de';
 function gutterBackground() {
   clearColor = tokens.palette.ink.hex;
   return document.createComment('gutters: ink clear colour');
+}
+
+// A race grid of S.n seats with the footer (the shared start of most states).
+function raceGrid(opts = {}) {
+  world.setMode('race');
+  world.setCars(S.n, S.base);
+  ui.append(gutterBackground());
+  const g = gridScene({ seats: () => Array.from({ length: S.n }, (_, i) => i + 1), fp: S.fp, ...opts });
+  g.relayout(false);
+  return g;
 }
 
 // ---------- states ----------
@@ -319,13 +455,7 @@ const SETUP = {
   },
 
   grid() {
-    world.setMode('race');
-    world.setCars(S.n, S.base);
-    ui.append(gutterBackground({ x: 0, y: 0, w: W(), h: H() }));
-    const seats = () => Array.from({ length: S.n }, (_, i) => i + 1);
-    const g = gridScene({ seats, fp: S.fp });
-    g.relayout(false);
-    return g;
+    return raceGrid();
   },
 
   'grid-player'() {
@@ -349,7 +479,7 @@ const SETUP = {
     { const pool = Array.from({ length: 32 }, (_, i) => i + 1); while (pool.length > 1) seqDown.push({ remove: pool.splice(Math.floor(r() * pool.length), 1)[0] }); }
     const seq = [...seqUp, ...seqDown];
     let idx = 0, next = performance.now() + 900;
-    const g = gridScene({ rect, seats: () => active, cornerChip: false });
+    const g = gridScene({ rect, seats: () => active, cornerChip: false, foot: false });
     g.relayout(false);
     const freeze = S.p.get('at');
     if (freeze) { active = Array.from({ length: +freeze }, (_, i) => i + 1); g.relayout(false); panel.querySelector('.n span').textContent = String(active.length); }
@@ -399,27 +529,10 @@ const SETUP = {
     return g;
   },
 
+  // Captions are global (POC1-11, R96): never on one player's tile. Dynamic puts the line in a spare cell when one is
+  // free after the QR and the standings; otherwise, and always when static, it takes the middle of the footer.
   captions() {
-    const g = SETUP.grid();
-    const k = K();
-    if (S.kind === 'player') {
-      ui.innerHTML = '';
-      ui.append(gutterBackground({ x: 0, y: 0, w: W(), h: H() }));
-      const g2 = gridScene({ seats: () => Array.from({ length: S.n }, (_, i) => i + 1), hudStates: { 5: { caption: 'Door off! Someone’s leaving bits all over the track.' } } });
-      g2.relayout(false);
-      return g2;
-    }
-    const cap = el('div', 'caption k', 'Final lap! <b>Give it everything!</b>');
-    const lay = g.layout;
-    const filler = lay.fillers[1] ?? lay.fillers[0];
-    if (S.kind === 'filler' && filler && filler.w >= 300 * k) {
-      Object.assign(cap.style, { left: `${filler.x + filler.w / 2}px`, top: `${filler.y + 30 * k}px`, transform: 'translateX(-50%)', maxWidth: `${filler.w - 40 * k}px` });
-    } else {
-      const top = lay.tiles[0];
-      Object.assign(cap.style, { left: '50%', top: `${top.y + 150 * k * Math.max(0.6, Math.min(1, top.h / (540 * k)))}px`, transform: 'translateX(-50%)' });
-    }
-    ui.append(cap);
-    return g;
+    return raceGrid({ caption: CAPTION });
   },
 
   overlays() {
@@ -432,50 +545,78 @@ const SETUP = {
     return g;
   },
 
-  host() {
-    const g = SETUP.grid();
-    const k = K();
-    const puck = el('div', 'puck k', `<div class="row"><button class="btn">${icon('pause')}Pause</button><button class="btn">${icon('gamepad-2')}Players</button><button class="btn">${icon('bug')}Diagnostics</button></div><div class="row"><button class="btn danger">${icon('flag')}End round…</button><span class="joinchip" style="position:static"><span><span class="display code">ROO7</span><small>Host · hides in 4 s</small></span></span></div>`);
-    Object.assign(puck.style, { right: `${0.035 * W()}px`, bottom: `${0.035 * H()}px` });
-    ui.querySelector('.joinchip')?.remove();
-    ui.append(puck);
+  // The host menu, open in the footer (POC1-09): the puck is gone; its buttons take the band's middle.
+  menu() {
+    return raceGrid({ menu: true });
+  },
+
+  // Hovering the footer QR shows it big and pauses the game for a while (POC1-08, R97).
+  'qr-hover'() {
+    const g = raceGrid();
+    g.footer.showQrPop(true);
     return g;
   },
 
-  'host-end'() {
-    const g = SETUP.grid();
-    ui.append(el('div', 'overlay-centre k', `<div class="scrim"></div><div class="card modal"><h2 class="display italic">End the round?</h2><p><b>End round</b> takes everyone back to the lobby with their numbers. <b>Disband room</b> disconnects everyone and closes ROO7.</p><div class="actions"><button class="btn gp">Cancel</button><button class="btn">${icon('users')}End round</button><button class="btn danger">${icon('log-out')}Disband room</button></div></div>`));
-    return g;
-  },
-
-  'input-drawer'() {
-    const g = SETUP.grid();
-    const rows = [
-      [1, 'Phone', 'Direct on the Wi-Fi · 38 ms', ''], [2, 'Phone', 'Through the relay · 92 ms', 'relay'], [3, 'Pad 1 on this laptop', 'Wired to the host', ''],
-      [4, 'Keyboard: WASD + arrows', 'This laptop', ''], [5, 'Phone + pad', 'Pad paired to #5’s phone · direct · 41 ms', ''], [6, 'Hub laptop: pad 2', 'Hub · direct · 22 ms', ''],
-      [7, 'Hub laptop: keyboard', 'Hub · direct · 22 ms', ''], [8, 'Phone', 'Reconnecting…', 'relay'],
-    ];
-    const d = el('div', 'drawer k', `<h2 class="display italic">Players and controllers</h2><p class="lede">How each player is connected. Press <b>A</b> on a pad or <b>Enter</b> on a keyboard to join from this laptop.</p>`);
-    for (const [seat, what, how, cls] of rows) {
-      const i = seatInfo(seat);
-      d.append(el('div', 'src', `<span class="badge" style="--seat:${i.color};--seat-on:${i.on};font-size:calc(var(--k)*28px)">#${i.num}</span><span><b>${esc(shortName(i.name))}</b> · ${what}<br><span class="how ${cls}">${how}</span></span><button class="btn">${icon('user-minus')}Remove</button>`));
-    }
-    ui.append(d);
-    return g;
-  },
-
+  // Diagnostics while playing (POC1-10): the footer grows upward; nothing sits over a tile.
   diagnostics() {
-    const g = SETUP.grid();
-    const d = el('div', 'diag k');
-    d.innerHTML = `<h3 class="display">Diagnostics</h3><div class="fr tnum"></div><table><tr><th>Player</th><th>Path</th><th>RTT</th><th>Input age</th><th>Pkts/s</th><th>Loss</th></tr>${Array.from({ length: S.n }, (_, i) => { const s = seatInfo(i + 1), relay = i % 4 === 1; return `<tr><td>#${s.num} ${esc(shortName(s.name, 8))}</td><td class="${relay ? 'relay' : ''}">${relay ? 'relay' : 'direct'}</td><td>${relay ? 92 : 30 + i * 3} ms</td><td>${relay ? 61 : 18 + i} ms</td><td>60</td><td>${relay ? '0.4' : '0.0'} %</td></tr>`; }).join('')}</table>`;
-    ui.append(d);
-    const fr = d.querySelector('.fr');
-    return { ...g, update(dt, views) { g.update(dt, views); const ms = perfStats.renderMs.at(-1) ?? 0; fr.textContent = `${world.backend.slice(0, 48)} · render ${ms.toFixed(1)} ms · draws ${perfStats.draws}`; } };
+    return raceGrid({ diag: true, menu: true });
   },
 
+  // The pause flow (POC1-09/10), in the language of refs/owner-2026-10-03/tv-pause-menu.jpg (U01.3): everything that
+  // needs the whole screen lives here, and it pauses first. sub = players | end | disband.
   paused() {
-    const g = SETUP.grid();
-    ui.append(el('div', 'overlay-centre k', `<div class="scrim"></div><div class="card modal"><h2 class="display italic">Paused</h2><p>Host paused: back in a moment.</p><div class="actions"><button class="btn">${icon('flag')}End round…</button><button class="btn primary gp">${icon('play')}Resume</button></div></div>`));
+    const g = raceGrid();
+    gamePaused = true;
+    g.footer.update({ paused: true });
+    const seg = (opts, on) => `<span class="seg">${opts.map((o, i) => `<b class="${i === on ? 'on' : ''}">${o}</b>`).join('')}</span>`;
+    const row = (ic, label, control) => `<div class="pset"><span class="pic">${icon(ic)}</span><span>${label}</span>${control}</div>`;
+    const back = `<button class="btn" type="button" data-go="">${icon('chevron-left')}Back</button>`;
+    let body;
+    if (S.sub === 'players') {
+      const rows = [
+        [1, 'Phone', 'Direct on the Wi-Fi · 38 ms', ''], [2, 'Phone', 'Through the relay · 92 ms', 'relay'], [3, 'Pad 1 on this laptop', 'Wired to the host', ''],
+        [4, 'Keys A (WASD + TFGH)', 'This laptop', ''], [5, 'Phone + pad', 'Pad paired to #5’s phone · direct · 41 ms', ''], [6, 'Hub laptop: pad 2', 'Hub · direct · 22 ms', ''],
+        [7, 'Hub laptop: keys', 'Hub · direct · 22 ms', ''], [8, 'Phone', 'Reconnecting…', 'relay'],
+      ].slice(0, Math.max(1, S.n));
+      body = `<span class="bn pbn" data-torn="pause-players">Players and <span class="acc">controllers</span></span>
+        <p class="pnote">How each player is connected. Press <b>A</b> on a pad, or a cluster's keys, to join from this laptop.</p>
+        <div class="plist">${rows.map(([seat, what, how, cls]) => { const i = seatInfo(seat); return `<div class="src"><span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span><span><b>${esc(shortName(i.name))}</b> · ${what}<br><span class="how ${cls}">${how}</span></span><span class="srcacts"><button class="btn" type="button">${icon('eye-off')}Sit out</button><button class="btn" type="button">${icon('user-minus')}Remove</button></span></div>`; }).join('')}</div>
+        <div class="pacts">${back}</div>`;
+    } else if (S.sub === 'end') {
+      body = `<span class="bn pbn" data-torn="pause-end">End the <span class="acc">round</span>?</span>
+        <p class="plead">Everyone goes back to the lobby and keeps their number. The room and ROO7 stay open.</p>
+        <div class="pacts row">${back}<span class="ticks">${TICKS}<button class="btn primary gp" type="button">${icon('flag')}End round</button>${TICKS}</span></div>`;
+    } else if (S.sub === 'disband') {
+      body = `<span class="bn pbn" data-torn="pause-disband">Disband <span class="acc">ROO7</span>?</span>
+        <span class="strip danger" data-brush="pause-disband-strip"><span>${icon('triangle-alert')}This disconnects everyone</span></span>
+        <p class="plead">Phones are told the room ended and can't rejoin. Playing again needs a new room and code.</p>
+        <div class="pacts row"><button class="btn gp" type="button" data-go="">${icon('chevron-left')}Keep playing</button><button class="btn danger" type="button">${icon('log-out')}Disband room</button></div>`;
+    } else {
+      body = `<span class="bn pbn" data-torn="pause">Race <span class="acc">paused</span></span>
+        <span class="strip ink psub" data-brush="pause-sub"><span>${icon('pause')}Host pause · every car frozen where it is</span></span>
+        <div class="pcols">
+          <div class="pcol"><span class="tag" data-brush="t-tv"><span>On this TV</span></span>
+            ${row('video', 'Camera', seg(['Chase', 'High'], 0))}${row('monitor', 'View', seg(['Grid', 'Overview'], 0))}${row('volume-2', 'Sound', seg(['On', 'Off'], 0))}${row('eye-off', 'Reduced motion', seg(['Off', 'On'], 0))}</div>
+          <div class="pcol"><span class="tag warning" data-brush="t-room"><span>This room</span></span>
+            ${row('locate-fixed', 'Camera distance', seg(['Near', 'Mid', 'Far'], 1))}${row('qr-code', 'QR, players, captions', seg(['Dynamic', 'Static'], S.layout === 'static' ? 1 : 0))}${row('flag', 'Laps', seg(['3', '5', '8'], 0))}${row('user-plus', 'Late joiners', seg(['Join now', 'Next race'], 0))}
+            <p class="pnote">Changes apply now; laps from the next race.</p></div>
+        </div>
+        <div class="pacts">
+          <span class="ticks">${TICKS}<button class="btn primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button>${TICKS}</span>
+          <div class="prow"><button class="btn" type="button" data-go="players">${icon('users')}Players and controllers</button><button class="btn" type="button" data-go="end">${icon('flag')}End round…</button><button class="btn danger-o" type="button" data-go="disband">${icon('log-out')}Disband room…</button></div>
+          <p class="pnote">End round goes back to the lobby; everyone keeps their number. Disband disconnects everyone and ROO7 stops working.</p>
+        </div>`;
+    }
+    const shell = el('div', 'pause k', `<div class="scrim"></div><div class="pcard${S.sub ? ` sub-${S.sub}` : ''}" data-tilt="pause-${S.sub || 'main'}">${body}</div>`);
+    shell.addEventListener('click', (e) => {
+      const go = e.target.closest('[data-go]')?.dataset.go;
+      if (go == null) return;
+      const base = `n=${S.n}&layout=${S.layout}`;
+      location.hash = go === 'resume' ? `grid&${base}` : `paused&${base}${go ? `&sub=${go}` : ''}`;
+    });
+    ui.append(shell);
+    paint(shell);
+    g.paused = true;
     return g;
   },
 
@@ -595,6 +736,7 @@ const SETUP = {
 
 function start() {
   ui.innerHTML = '';
+  gamePaused = false;
   world.setOutlines([]);
   S = parseHash();
   clearColor = tokens.palette.paper.hex;
@@ -616,7 +758,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   const t0 = performance.now();
-  world.step(dt);
+  if (!gamePaused) world.step(dt);
   const t1 = performance.now();
   const views = scene.views(dt);
   const r = world.render(views, dt, { w: W(), h: H() }, clearColor);
@@ -643,6 +785,8 @@ window.__poc = {
   ready: false,
   held: false,
   identifyAt,
+  /** Whether the world is stopped (the pause flow, the QR hover): only then may anything cover a tile. */
+  paused: () => gamePaused,
   /** The 3D viewports the current state renders (one per tile on the grid). */
   views: () => scene.views(0),
   tokens,

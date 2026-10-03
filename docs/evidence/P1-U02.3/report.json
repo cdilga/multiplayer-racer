@@ -1,0 +1,1037 @@
+{
+  "format": "jj.u023-report.v1",
+  "browser": "Chromium 151.0.7922.34 (Playwright, channel chromium, GPU args), darwin/arm64",
+  "pass": true,
+  "fails": [],
+  "rows": [
+    {
+      "state": "grid&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=24",
+      "tiles": 24,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 24 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=32",
+      "tiles": 32,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 32 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "backdrop",
+        "backdrop",
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=99",
+      "tiles": 99,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 99 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=3",
+      "tiles": 3,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 3 players",
+          "qr": false
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "qr"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=3&layout=static",
+      "tiles": 3,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 3 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=8&layout=static",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "hud&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "identify&n=8&seat=3",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "overlays&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "countdown&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "menu&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Players",
+          "Diagnostics",
+          "Dynamic",
+          "Static",
+          "Settings…",
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": false,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "qr-hover&n=32",
+      "tiles": 32,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 8,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 32 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": {
+        "scannable": true,
+        "sizeTvPx": 360
+      },
+      "caption": null,
+      "cells": [
+        "backdrop",
+        "backdrop",
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "diagnostics&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 202,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Players",
+          "Diagnostics",
+          "Dynamic",
+          "Static",
+          "Settings…",
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": false,
+        "tilesAbove": true
+      },
+      "diag": true,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "diagnostics&n=32",
+      "tiles": 32,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 372,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 32 players",
+          "qr": true
+        },
+        "buttons": [
+          "Players",
+          "Diagnostics",
+          "Dynamic",
+          "Static",
+          "Settings…",
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": false,
+        "tilesAbove": true
+      },
+      "diag": true,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "paused&n=8",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 56,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": "pcard",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "paused&n=8&sub=players",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 41,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": "pcard sub-players",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "paused&n=8&sub=end",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 15,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": "pcard sub-end",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "paused&n=8&sub=disband",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 16,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": "pcard sub-disband",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "captions&n=8",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": {
+        "where": "footer",
+        "onTile": false
+      },
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "captions&n=8&layout=static",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": {
+        "where": "footer",
+        "onTile": false
+      },
+      "cells": [
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "captions&n=13",
+      "tiles": 13,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 13 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": {
+        "where": "cell",
+        "onTile": false
+      },
+      "cells": [
+        "caption",
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=8 @21x9",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=32 @21x9",
+      "tiles": 32,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 32 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "menu&n=8 @21x9",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Players",
+          "Diagnostics",
+          "Dynamic",
+          "Static",
+          "Settings…",
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": false,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "paused&n=8 @21x9",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 49,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [],
+      "pauseCard": "pcard",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "captions&n=13 @21x9",
+      "tiles": 13,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 13 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": {
+        "where": "cell",
+        "onTile": false
+      },
+      "cells": [
+        "caption",
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=8 @4k",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "grid&n=32 @4k",
+      "tiles": 32,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 32 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "backdrop",
+        "backdrop",
+        "backdrop"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "menu&n=8 @4k",
+      "tiles": 8,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Players",
+          "Diagnostics",
+          "Dynamic",
+          "Static",
+          "Settings…",
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": false,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    },
+    {
+      "state": "paused&n=8 @4k",
+      "tiles": 8,
+      "paused": true,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 56,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 8 players",
+          "qr": true
+        },
+        "buttons": [
+          "Resume",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": null,
+      "cells": [
+        "standings"
+      ],
+      "pauseCard": "pcard",
+      "pauseButton": "Resume"
+    },
+    {
+      "state": "captions&n=13 @4k",
+      "tiles": 13,
+      "paused": false,
+      "overlaysOnTiles": [],
+      "coveredWhilePaused": 0,
+      "puck": false,
+      "footer": {
+        "heightTvPx": 88,
+        "join": {
+          "code": "ROO7",
+          "address": "jammers.dilger.dev · 13 players",
+          "qr": true
+        },
+        "buttons": [
+          "Pause",
+          "Fullscreen",
+          "Host menu"
+        ],
+        "logo": true,
+        "tilesAbove": true
+      },
+      "diag": false,
+      "qrPop": null,
+      "caption": {
+        "where": "cell",
+        "onTile": false
+      },
+      "cells": [
+        "caption",
+        "standings"
+      ],
+      "pauseCard": null,
+      "pauseButton": "Pause"
+    }
+  ],
+  "errors": []
+}
