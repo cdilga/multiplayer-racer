@@ -12,6 +12,11 @@ repository.workspace = true
 jj-types.workspace = true
 jj-protocol.workspace = true
 jj-input.workspace = true
+unicode-segmentation.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
 
 [lints]
 workspace = true

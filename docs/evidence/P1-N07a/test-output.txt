@@ -1,0 +1,14 @@
+rch: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+test seats::tests::a_duplicate_tab_fences_the_older_one_and_a_wrong_secret_is_refused ... ok
+test seats::tests::identify_rate_limit_table ... ok
+test seats::tests::leave_and_sit_out_take_effect_at_the_next_tick_boundary_and_keep_the_seat ... ok
+test seats::tests::retries_and_reconnects_never_duplicate_a_seat ... ok
+test seats::tests::opening_never_claims_and_one_car_per_seat ... ok
+test seats::tests::stale_input_is_neutralised ... ok
+test seats::names::tests::names_are_cleaned_and_bounded ... ok
+test seats::tests::names_follow_the_rules_and_duplicates_gain_the_number ... ok
+     Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_session-8933e3eed01a4533)
+test seats::tests::any_number_of_seats_gets_stable_distinct_numbers ... ok
+test seats::tests::one_car_per_seat_no_phantoms_stable_numbers ... ok
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.91s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
