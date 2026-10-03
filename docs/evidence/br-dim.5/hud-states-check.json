@@ -1,12 +1,16 @@
 {
   "summary": {
-    "runs": 65,
-    "tiles": 885,
+    "runs": 75,
+    "tiles": 1705,
     "combinations": [
-      "boost,chip,poslap,name",
-      "boost,chip,poslap,name,wreck",
-      "boost,poslap,name",
-      "boost,poslap,name,wreck"
+      "boost,chip,poslap,badge",
+      "boost,chip,poslap,badge,name",
+      "boost,chip,poslap,badge,name,wreck",
+      "boost,chip,poslap,badge,wreck",
+      "boost,poslap,badge",
+      "boost,poslap,badge,name",
+      "boost,poslap,badge,name,wreck",
+      "boost,poslap,badge,wreck"
     ],
     "failures": 0
   },
@@ -103,6 +107,20 @@
       "bad": 0
     },
     {
+      "screen": "1920x1080",
+      "n": 64,
+      "tile": "234x118",
+      "compact": 64,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 100,
+      "tile": "186x93",
+      "compact": 100,
+      "bad": 0
+    },
+    {
       "screen": "2560x1440",
       "n": 1,
       "tile": "2552x1314",
@@ -191,6 +209,20 @@
       "n": 40,
       "tile": "312x256",
       "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 64,
+      "tile": "312x157",
+      "compact": 64,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 100,
+      "tile": "248x124",
+      "compact": 100,
       "bad": 0
     },
     {
@@ -285,6 +317,20 @@
       "bad": 0
     },
     {
+      "screen": "1366x768",
+      "n": 64,
+      "tile": "166x84",
+      "compact": 64,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 100,
+      "tile": "132x66",
+      "compact": 100,
+      "bad": 0
+    },
+    {
       "screen": "915x412",
       "n": 1,
       "tile": "754x376",
@@ -376,6 +422,20 @@
       "bad": 0
     },
     {
+      "screen": "915x412",
+      "n": 64,
+      "tile": "81x61",
+      "compact": 64,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 100,
+      "tile": "68x45",
+      "compact": 100,
+      "bad": 0
+    },
+    {
       "screen": "412x915",
       "n": 1,
       "tile": "408x339",
@@ -464,6 +524,20 @@
       "n": 40,
       "tile": "99x81",
       "compact": 40,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 64,
+      "tile": "99x50",
+      "compact": 64,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 100,
+      "tile": "78x39",
+      "compact": 100,
       "bad": 0
     }
   ],

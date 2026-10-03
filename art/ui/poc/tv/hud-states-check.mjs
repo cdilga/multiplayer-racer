@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // br-dim.5: in every tile, at every tile size and with every combination of the tile states, the HUD parts never overlap.
-// Loads `#hud&n=N&states=matrix` (the seats cycle through status none/Autopilot/Reconnecting × Wrecked × boost empty/full,
+// Loads `#hud&n=N&states=matrix` (N up to 100: no player cap) (the seats cycle through status none/Autopilot/Reconnecting × Wrecked × boost empty/full,
 // twelve combinations) for N players on several screens, and for every tile checks that the boost bar, the status chip,
-// the position/lap pill, the number/name and the Wrecked overlay don't intersect each other and stay inside the tile.
+// the position/lap pill, the number badge, the name and the Wrecked overlay don't intersect each other and stay inside the tile.
 // Screenshots of a few sizes go to docs/evidence/br-dim.5/ (JJ_EVIDENCE_DIR overrides).
 // Run: node art/ui/poc/tv/hud-states-check.mjs [--json]
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -15,8 +15,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const out = process.env.JJ_EVIDENCE_DIR ?? join(here, '..', '..', '..', '..', 'docs', 'evidence', 'br-dim.5');
 mkdirSync(out, { recursive: true });
 const SCREENS = [[1920, 1080], [2560, 1440], [1366, 768], [915, 412], [412, 915]];
-const NS = [1, 2, 3, 4, 6, 8, 9, 12, 16, 20, 24, 32, 40];
-const SHOTS = new Set(['1920x1080:12', '1920x1080:40', '412x915:12', '412x915:40', '915x412:24', '1366x768:32']);
+const NS = [1, 2, 3, 4, 6, 8, 9, 12, 16, 20, 24, 32, 40, 64, 100];
+const SHOTS = new Set(['1920x1080:12', '1920x1080:40', '1920x1080:100', '412x915:12', '412x915:40', '412x915:100', '915x412:24', '1366x768:32']);
 
 const measure = () => {
   const box = (e) => {
@@ -32,7 +32,8 @@ const measure = () => {
       boost: box(t.querySelector('.hud-boost')),
       chip: box(t.querySelector('.hud-status .chip')),
       poslap: box(t.querySelector('.hud-tr')),
-      name: box(t.querySelector('.hud-tl')),
+      badge: box(t.querySelector('.hud-badge')), // the visible parts, not their flex container (which can shrink)
+      name: box(t.querySelector('.hud-name')),
       wreck: box(t.querySelector('.hud-centre')),
     };
     const names = Object.keys(parts).filter((k) => parts[k]);

@@ -1,10 +1,10 @@
 # Self-review br-dim.5 (P1-U: Reconnecting chip and the boost indicator never stack)
 
 The TV tile HUD (`art/ui/poc/tv/`, `#hud`). Checked with the new `node art/ui/poc/tv/hud-states-check.mjs` (Playwright
-Chromium on a Mac: 5 screens × 13 player counts = 65 layouts, 885 tiles, from 1914x986 down to 99x81; `#hud&states=matrix`
+Chromium on a Mac: 5 screens × 15 player counts (1 to 100, no cap) = 75 layouts, 1705 tiles, from 1914x986 down to 78x39; `#hud&states=matrix`
 cycles every seat through status none/Autopilot/Reconnecting × Wrecked × boost empty/full, so every combination appears
-at every tile size; per tile, the boost bar, status chip, position/lap pill, number/name and Wrecked overlay must not
-intersect and must stay inside the tile: 0 failures, `hud-states-check.json`) and `node art/ui/lib/live-check.mjs --local
+at every tile size; per tile, the boost bar, status chip, position/lap pill, number badge, name and Wrecked overlay must
+not intersect and must stay inside the tile: 0 failures, `hud-states-check.json`) and `node art/ui/lib/live-check.mjs --local
 --fullscreen` at 1920x1080, 1366x768, 412x915 and 915x412 over `#hud&n=8`, `#hud&n=32&base=100`,
 `#hud&n=12&states=matrix`, `#grid&n=99` and `#identify&n=32&seat=12` (20/20 ok). Emulation, not the owner's TV.
 
@@ -16,7 +16,10 @@ intersect and must stay inside the tile: 0 failures, `hud-states-check.json`) an
 - `hud-states-915x412-n24.jpg`: phone landscape host: small but clean.
 - `hud-states-412x915-n12.jpg`: phone portrait host, 202x140 tiles.
 - `hud-states-412x915-n40.jpg` and `hud-states-412x915-n40-zoom.jpg`: 99x81 compact tiles: icon-only chips in their
-  colours, a compact "Wrecked!" over "3 s", nothing overlapping.
+  colours, a one-line "Wrecked! 3 s" between the rows, nothing overlapping.
+- `hud-states-1920x1080-n100.jpg`: 100 players on a TV (186x93 tiles): one-line "Wrecked! 3 s" between the rows.
+- `hud-states-412x915-n100.jpg`: 100 players on a portrait phone (78x39 tiles): the top row's text shrinks to fit, the
+  badge never under the position pill; tiny, but nothing overlaps.
 - `hud-default-1920x1080-n8.jpg`: the normal `#hud` state (Autopilot, Reconnecting, Wrecked, first-person mirror).
 
 ## Defects found and fixed
@@ -28,9 +31,14 @@ intersect and must stay inside the tile: 0 failures, `hud-states-check.json`) an
 - live-check reported every 3D page's world canvas as "blank: one flat colour", on the deployed preview too: it read the
   WebGL canvas back after the browser had cleared its drawing buffer. A flat read is now re-judged from a screenshot of
   the canvas's visible area (tested: a blank WebGL canvas still fails, a drawn one and the TV world pass).
+- Reopened after the first close: extending the check to 64 and 100 players (no cap) showed the Wrecked block touching
+  the position pill on the shortest compact tiles, and measuring the visible badge (not its shrinking flex container)
+  showed the badge running under the position pill on 78x39 tiles. Compact tiles now draw Wrecked as one line sized to
+  the band between the rows and the tile's width (container units), and the top row's text fits the tile's width.
 
 ## Remaining defects
-- None in this bead. At 99x81 the "3 s" pill is small; that size only occurs with 40 players on a phone-sized host.
+- None in this bead. On the smallest tiles (64+ players on a phone-sized host) the text is very small: legible on a TV
+  grid of 100, barely on a 78x39 phone tile; nothing is hidden or capped.
 
 ## Not covered
 - The owner's TV and phone: Chromium emulation only. The deployed preview is checked after the push.

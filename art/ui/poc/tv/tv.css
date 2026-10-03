@@ -216,14 +216,22 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .tile.compact .hud-boost { border-width: calc(var(--k) * 2px); flex-basis: 40%; min-width: calc(var(--k) * 44px); }
 .tile.compact .chip { padding: 0 .35em; gap: 0; }
 .tile.compact .chip .lbl { display: none; }
-/* Compact tiles (the smallest grids, e.g. 32-40 players on a phone-sized host) are short: the rows hug the edges and
-   Wrecked shrinks to a word over its seconds, so it fits between the rows instead of covering them (dim.5). */
+/* Compact tiles (big grids: 32+ players on a phone-sized host, 64-100+ on a TV) are short: the rows hug the edges, and
+   Wrecked becomes one line, "Wrecked! 3 s", sized to the band between the rows and to the tile's width (container units),
+   so it fits between them at any player count instead of covering them (dim.5). */
+.tile { container-type: size; }
 .tile.compact .hud-top { top: calc(var(--hud) * .3); }
+/* The top row fits the tile's width: on the narrowest tiles (100 players on a phone) its text shrinks rather than the
+   number badge sliding under the position pill. The budget is the badge, the position and "Lap n/n" with their padding. */
+.tile.compact .hud-badge, .tile.compact .hud-tr { font-size: min(var(--hud), calc((100cqw - var(--hud) * 1.4) / 10)); }
 .tile.compact .hud-bottom { bottom: calc(var(--hud) * .3); height: calc(var(--hud) * 1.2); }
 .tile.compact .chip { font-size: calc(var(--hud) * .8); height: 1.4em; }
-.tile.compact .hud-centre { top: 50%; }
-.tile.compact .wreck-word { font-size: calc(var(--hud) * 1.15); line-height: 1; -webkit-text-stroke-width: calc(var(--k) * 2px); text-shadow: 0 calc(var(--k) * 2px) 0 var(--c-ink); }
-.tile.compact .wreck-back { height: 1.4em; margin-top: calc(var(--k) * 2px); padding: 0 .35em; border-width: calc(var(--k) * 2px); font-size: calc(var(--hud) * .75); }
+.tile.compact .hud-centre {
+  top: calc(50% + var(--hud) * .15); display: flex; align-items: center; gap: .25em; white-space: nowrap;
+  font-size: min(calc(var(--hud) * 1.15), calc((100cqh - var(--hud) * 3.6) * .68), calc((100cqw - var(--hud) * .6) / 7.4));
+}
+.tile.compact .wreck-word { font-size: 1em; line-height: 1; -webkit-text-stroke-width: calc(var(--k) * 2px); text-shadow: 0 calc(var(--k) * 2px) 0 var(--c-ink); }
+.tile.compact .wreck-back { height: 1.4em; margin-top: 0; padding: 0 .35em; border-width: calc(var(--k) * 2px); font-size: .7em; }
 .tile.compact .wreck-back .lbl { display: none; }
 .filler.cell { box-shadow: inset 0 0 0 calc(var(--k) * 3px) var(--c-paper-line, rgb(21 32 58 / .25)); }
 .codecard .code { font-size: calc(var(--k) * 56px); }
