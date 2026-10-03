@@ -12,7 +12,11 @@ if [ -n "${POC_DEPLOY_KEY:-}" ]; then
   printf '%s\n' "$POC_DEPLOY_KEY" > "$key"; chmod 600 "$key"
   ssh_cmd="$ssh_cmd -i $key"
 fi
-rsync -az --delete --exclude '.DS_Store' -e "$ssh_cmd" "$root/art/ui/poc/" "$dest"
+# The POC pages reach siblings of art/ui/poc/ (../brand, ../frames, ../sheets, ../GUIDE.md, ...), so the whole
+# art/ui/ tree is mirrored, minus generation scratch; the edge serves /poc/ and those siblings from it.
+rsync -az --delete --exclude '.DS_Store' --exclude '*.log' --exclude 'frames/prompts/' --exclude 'frames/ledger.jsonl' \
+  --exclude 'frames/generate.mjs' --exclude 'brand/make.py' --exclude 'check.mjs' --exclude 'poc/vendor.mjs' \
+  -e "$ssh_cmd" "$root/art/ui/" "$dest"
 sleep 1
 code=$(curl -s -o /dev/null -w '%{http_code}' "https://jammers-preview.dilger.dev/poc/")
 echo "published $(git -C "$root" rev-parse --short HEAD) -> /poc/ (HTTP $code)"

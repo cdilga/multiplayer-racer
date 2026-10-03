@@ -7,7 +7,7 @@ name: POC deploy
 on:
   push:
     branches: [v0.2-revamp]
-    paths: ["art/ui/poc/**", "art/ui/tokens.json", ".gitea/workflows/poc-deploy.yml", "scripts/poc-publish.sh"]
+    paths: ["art/ui/**", ".gitea/workflows/poc-deploy.yml", "scripts/poc-publish.sh"]
   workflow_dispatch:
 
 concurrency:
