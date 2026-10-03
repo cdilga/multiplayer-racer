@@ -23,33 +23,30 @@ Every dependency the Playtest-1 build ships: pinned, with features, licence, sou
 | `rapier3d` | 0.36.0 | `enhanced-determinism` | Apache-2.0 | crates.io | `jj-sim` (P1-S01) | the physics and vehicle controller; `enhanced-determinism` forces libm maths, so a replay is bit-identical on native and wasm32 |
 | `arbitrary` | 1.4.2 | `derive` | MIT OR Apache-2.0 | crates.io | tests only | structured fuzzing of every wire message |
 | `proptest` | 1.11.0 | `std` (no default) | MIT OR Apache-2.0 | crates.io | tests only | property tests |
-| **Asupersync** | **not pinned** | — | **MIT + OpenAI/Anthropic rider** | crates.io 0.5.0 | `jj-server` (P1-N02) | **blocked: see below** |
+| **Asupersync** | 0.5.0 (pin pending) | `native-runtime`, `tls-webpki-roots` (no default) | MIT + OpenAI/Anthropic rider, **accepted (R2)** | crates.io | `jj-server` (P1-N02) | the no-Tokio server runtime (R2); see below |
 
 Transitive crates: `cargo deny` allows only the licences in `deny.toml` (all GPL-3.0-compatible), denies Tokio and unknown
 registries or git sources, and fails on yanked versions. Built and checked on eris through RCH, 2026-10-03: `cargo check -p
 jj-sim -p jj-wasm-host` (native) and `--target wasm32-unknown-unknown -p jj-sim -p jj-wasm-host -p jj-wasm-procgen -p
 jj-wasm-input`, both with rapier3d 0.36.0 (`docs/evidence/P1-F03/`).
 
-### Asupersync: blocked on an owner decision
+### Asupersync: accepted by the owner, pinned by a non-Anthropic worker
 
-R2 names Asupersync for the server. Its 0.5.0 licence (`LICENSE` in the published crate, SPDX
-`LicenseRef-MIT-OpenAI-Anthropic-Rider`) is MIT plus a rider that controls over the rest:
+R2 names Asupersync for the server. Its 0.5.0 licence (SPDX `LicenseRef-MIT-OpenAI-Anthropic-Rider`) is MIT plus a rider
+that grants no rights to OpenAI, Anthropic or anyone acting for them, counts executing, testing and analysing as use, and
+conflicts with GPL-3.0's no-further-restrictions terms. **The owner accepted it, the GPL position included (R2, 2026-10-03):**
+Claude sessions treat it as an opaque dependency (cargo builds and links it; no Claude session opens, reads or pastes its
+source or docs), and work on its internals goes to a non-Anthropic worker.
 
-- It grants **no rights to OpenAI, Anthropic or anyone "acting directly or indirectly on behalf of, for the benefit of, or
-  under the direction of"** them.
-- It forbids making the software or derivatives available to them, and its "use" includes "executing, benchmarking,
-  testing, analyzing, indexing" and putting it into "any … pipeline for machine learning or other automated systems".
-- Any breach terminates the licence.
+A Claude session's attempt to add the pin was refused by its safety classifier, so the pin itself is for an OMP
+(non-Anthropic) worker or the owner. The recipe (resolution checked before the refusal), on `br-p1-f03-vap`:
 
-Two consequences for this project:
+- workspace `Cargo.toml`: `asupersync = { version = "0.5.0", default-features = false, features = ["native-runtime", "tls-webpki-roots"] }`; `crates/jj-server/Cargo.toml`: `asupersync.workspace = true`;
+- `deny.toml`: licence exceptions for `asupersync`, `franken-decision`, `franken-evidence` and `franken-kernel` (the rider
+  licence), and allow `webpki-roots`' CDLA-Permissive-2.0 (Mozilla's root list as data);
+- then `scripts/ci/no-tokio.sh`, `scripts/ci/deny.sh` and a native `cargo check -p jj-server`.
 
-1. **GPL-3.0 compatibility.** The game is GPL-3.0-or-later, and GPL-3.0 §7 and §10 forbid adding restrictions. A server
-   binary that links Asupersync carries a field-of-use restriction, so it can't be distributed under the GPL as one work.
-2. **How the project is built.** Claude agents (Anthropic's model) write, build and test this repo. An agent compiling,
-   testing or reading Asupersync's source is plausibly what the rider prohibits, and the risk falls on the owner as licensee.
-
-So Asupersync isn't in `Cargo.toml`, `deny.toml` doesn't allow its licence, and no agent has built or analysed its source
-(only its `LICENSE` was read). P1-N02, which builds the server on it, waits for the owner. R2's "no Tokio" stands either way.
+P1-N02 (the server on Asupersync's API) goes to the same kind of worker.
 
 ## Web packages (`web/`)
 

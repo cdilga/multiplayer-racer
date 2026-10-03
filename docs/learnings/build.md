@@ -53,3 +53,4 @@
 - `wasm-bindgen-test-runner` writes CommonJS glue into `$TMPDIR`. RCH sets `TMPDIR` inside the repo, and the root
   `package.json` says `"type": "module"`, so Node loads the glue as ESM and dies ("exports is not defined"). The WASM test
   runner is `scripts/wasm-test-runner.sh` (`.cargo/config.toml`), which runs it with `TMPDIR=/tmp`.
+- cargo-deny (P1-M01): `scripts/ci/deny.sh | tail -1` hides deny's exit code in a shell chain; check `${PIPESTATUS[0]}` or run it bare. deny.toml lists the real targets, since an emscripten-only optional Tokio otherwise fails the ban.
