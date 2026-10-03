@@ -1,0 +1,13 @@
+br-dim.9 · frames.html keeps true CSS sizes inside each frame while the frames are drawn to fit the page
+Run 2026-10-04, Mac M1 Pro, Playwright Chromium (not a phone), local art/ui served from the checkout.
+Command: node frames-true-size.mjs (opens /poc/phone/frames.html#race at each viewport and reads every iframe's
+contentWindow.innerWidth x innerHeight, its drawn width and the page's horizontal overflow)
+
+ok   375x667 page overflow 0px; 375x667 inner 375x667 drawn 323px; 430x932 inner 430x932 drawn 326px; 412x915 inner 412x915 drawn 325px; 667x375 inner 667x375 drawn 333px; 932x430 inner 932x430 drawn 337px; 915x412 inner 915x412 drawn 337px
+ok   412x915 page overflow 0px; 375x667 inner 375x667 drawn 357px; 430x932 inner 430x932 drawn 361px; 412x915 inner 412x915 drawn 360px; 667x375 inner 667x375 drawn 369px; 932x430 inner 932x430 drawn 373px; 915x412 inner 915x412 drawn 373px
+ok   915x412 page overflow 0px; 375x667 inner 375x667 drawn 375px; 430x932 inner 430x932 drawn 430px; 412x915 inner 412x915 drawn 412px; 667x375 inner 667x375 drawn 667px; 932x430 inner 932x430 drawn 834px; 915x412 inner 915x412 drawn 833px
+ok   1920x1080 page overflow 0px; 375x667 inner 375x667 drawn 375px; 430x932 inner 430x932 drawn 430px; 412x915 inner 412x915 drawn 412px; 667x375 inner 667x375 drawn 667px; 932x430 inner 932x430 drawn 932px; 915x412 inner 915x412 drawn 915px
+
+live-check (node art/ui/lib/live-check.mjs --local --fullscreen --viewports 375x667,412x915,915x412,1366x768,1920x1080
+/poc/phone/frames.html /poc/guide.html "/poc/phone/frames.html#lobby"): 15/15 ok (before the fix: frames.html failed
+at all three phone sizes, 1767-2307 px wider than the viewport; guide.html failed in portrait, 210-247 px wider).

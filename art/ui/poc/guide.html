@@ -17,6 +17,18 @@
   code { font-size: .9em; background: var(--c-paper-shade, #F1E2C2); padding: 0 4px; border-radius: 4px; }
   a { color: var(--c-cobalt-deep, #1442C4); font-weight: 700; }
   .back { display: inline-block; margin-bottom: 16px; }
+  /* Long paths and code never push the page sideways: they break inside their cell or line (dim.9). */
+  code { overflow-wrap: anywhere; }
+  p, li { overflow-wrap: break-word; }
+  img { max-width: 100%; height: auto; }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    main { padding: 20px 14px 60px; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 24px; }
+    table { font-size: 13px; }
+    th, td { padding: 4px 6px; }
+  }
 </style>
 </head>
 <body>

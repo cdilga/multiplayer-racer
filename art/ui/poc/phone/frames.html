@@ -8,12 +8,19 @@
   body { margin: 0; padding: 24px 28px; background: #e9dcc4; font-family: system-ui, sans-serif; color: #15203A; }
   h1 { margin: 0 0 4px; font: 900 italic 34px/1 "Barlow Condensed", system-ui; text-transform: uppercase; }
   p { margin: 0 0 16px; font-size: 15px; }
-  .row { display: flex; gap: 28px; align-items: flex-end; margin-bottom: 26px; }
-  .dev { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .bezel { padding: 14px; border-radius: 44px; background: #0d0f14; box-shadow: 0 10px 0 rgb(0 0 0 / .25); }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; margin-bottom: 26px; }
+  .dev { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 100%; }
+  /* A frame wider than the page is drawn smaller (fit() scales the bezel); the phone inside keeps its true CSS size. */
+  .fit { position: relative; overflow: hidden; }
+  .bezel { width: max-content; padding: 14px; border-radius: 44px; background: #0d0f14; box-shadow: 0 10px 0 rgb(0 0 0 / .25); transform-origin: 0 0; }
   .bezel.land { border-radius: 40px; }
   iframe { display: block; border: 0; border-radius: 30px; background: #15203A; }
-  .cap { font-size: 14px; font-weight: 600; }
+  .cap { font-size: 14px; font-weight: 600; text-align: center; }
+  @media (max-width: 640px) {
+    body { padding: 16px 14px; }
+    h1 { font-size: 26px; }
+    .row { flex-direction: column; align-items: flex-start; gap: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -31,11 +38,26 @@
     for (const [rowId, fw, fh, orient] of [['portrait', w, h, 'portrait'], ['landscape', h, w, 'landscape']]) {
       const d = document.createElement('div');
       d.className = 'dev';
-      d.innerHTML = `<div class="bezel ${orient === 'landscape' ? 'land' : ''}"><iframe width="${fw}" height="${fh}" title="${name} ${orient}" src="./index.html#${state}&chrome=0"></iframe></div><div class="cap">${name} · ${fw}×${fh} · ${orient}</div>`;
+      d.innerHTML = `<div class="fit"><div class="bezel ${orient === 'landscape' ? 'land' : ''}"><iframe width="${fw}" height="${fh}" title="${name} ${orient}" src="./index.html#${state}&chrome=0"></iframe></div></div><div class="cap">${name} · ${fw}×${fh} · ${orient}<span class="scale"></span></div>`;
       document.getElementById(rowId).append(d);
       frames.push(d.querySelector('iframe'));
     }
   }
+  // On a narrow screen each frame is drawn smaller to fit the width, like a picture; the iframe's viewport
+  // (the phone's true CSS size) is unchanged, so the mock inside lays out exactly as on that phone.
+  const fit = () => {
+    const avail = document.getElementById('portrait').clientWidth;
+    for (const d of document.querySelectorAll('.dev')) {
+      const bezel = d.querySelector('.bezel');
+      const k = Math.min(1, avail / bezel.offsetWidth);
+      bezel.style.transform = k < 1 ? `scale(${k})` : '';
+      d.querySelector('.fit').style.width = `${bezel.offsetWidth * k}px`;
+      d.querySelector('.fit').style.height = `${bezel.offsetHeight * k}px`;
+      d.querySelector('.scale').textContent = k < 1 ? ` · drawn at ${Math.round(k * 100)}%` : '';
+    }
+  };
+  fit();
+  addEventListener('resize', fit);
   const ready = () => frames.every((f) => f.contentWindow?.__phone?.ready === true);
   const wait = () => (ready() ? (window.framesReady = true) : setTimeout(wait, 100));
   wait();
