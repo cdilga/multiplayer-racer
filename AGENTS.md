@@ -22,7 +22,8 @@ Most important rules:
 - **No arbitrary gameplay-count caps anywhere** (players, seats, controllers, tiles, cars, live debris).
   No temporary/MVP limits, queues or truncated arrays. Test cohort sizes are samples, not limits.
 - Debris stays **dynamic** for the round: never static, merged, deleted, expired or count-budgeted.
-- **Rust** game server (day 0, Asupersync, no Tokio) and Rust/WASM simulation core.
+- **Rust** game server (day 0, Asupersync, no Tokio) and Rust/WASM simulation core. Asupersync's licence is
+  **approved by the owner, absolutely and finally (R112)**; R2's opaque-dependency handling of its source stands.
 - Completely **separate from Physical Soccer**: borrow ideas, never code or dependencies.
 - Two-stick controls; no tap-to-fire or accelerometer boost; one player per phone touchscreen.
 - No runtime CDNs; all runtime assets/libraries are self-hosted. Cloudflare STUN/TURN is the
