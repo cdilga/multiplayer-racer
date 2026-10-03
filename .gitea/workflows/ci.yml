@@ -1,0 +1,44 @@
+# CI stub from P1-F01: the checks the workspace scaffold guarantees. P1-D01 brings up the repo and the
+# shared runners; P1-F02 grows this into the fast/build/browser lanes (Playtest-1 plan §12.1) and
+# scripts/ci-status.sh.
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  rust:
+    runs-on: rust
+    timeout-minutes: 30
+    env:
+      CARGO_HOME: /cargo-cache/cargo
+      RUSTUP_HOME: /cargo-cache/rustup
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check (native)
+        run: cargo check --workspace --all-targets --locked
+      - name: Check (wasm facades)
+        run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: No Tokio (R2)
+        run: scripts/ci/no-tokio.sh
+      - name: cargo deny
+        run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm --prefix web ci
+      - run: npm --prefix web run build

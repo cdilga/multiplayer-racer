@@ -1,0 +1,19 @@
+# Keep target/ small: a local target/ once filled a Mac's disk (Playtest-1 plan §13b.5).
+# Workspace-wide cargo on the Mac is hook-blocked; per-crate builds stay within a 15 GiB target/.
+
+[build]
+# The config form of CARGO_INCREMENTAL=0: incremental caches are the biggest part of a dev target/.
+incremental = false
+
+[env]
+CARGO_INCREMENTAL = "0"
+
+# Slim dev profile: line tables only (backtraces keep file:line), no debug info for dependencies.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+[profile.test]
+debug = "line-tables-only"

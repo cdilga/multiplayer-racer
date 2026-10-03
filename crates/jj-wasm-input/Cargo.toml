@@ -1,0 +1,20 @@
+[package]
+name = "jj-wasm-input"
+description = "wasm-bindgen facade for controllers (input + protocol only; no sim, no renderer)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jj-input.workspace = true
+jj-protocol.workspace = true
+wasm-bindgen.workspace = true
+
+[lints]
+workspace = true

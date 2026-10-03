@@ -1,0 +1,30 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.99"
+license = "GPL-3.0-or-later"
+publish = false
+repository = "https://github.com/cdilga/multiplayer-racer"
+
+[workspace.dependencies]
+jj-types = { path = "crates/jj-types" }
+jj-protocol = { path = "crates/jj-protocol" }
+jj-input = { path = "crates/jj-input" }
+jj-session = { path = "crates/jj-session" }
+jj-sim = { path = "crates/jj-sim" }
+jj-map = { path = "crates/jj-map" }
+jj-procgen = { path = "crates/jj-procgen" }
+jj-contracts = { path = "crates/jj-contracts" }
+
+# Pin the wasm-bindgen crate exactly: the CLI on the Mac, eris and CI must be the same version.
+wasm-bindgen = "=0.2.129"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"

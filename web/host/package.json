@@ -1,0 +1,6 @@
+{
+  "name": "@jj/host",
+  "private": true,
+  "type": "module",
+  "description": "Host app: render, sim worker glue, grid, HUD, lobby and highlight reel."
+}

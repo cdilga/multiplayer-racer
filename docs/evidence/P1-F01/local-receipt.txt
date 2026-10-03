@@ -1,0 +1,68 @@
+# P1-F01 local receipt
+date: 2026-10-03T00:43:56Z  machine: Mac (M1 Pro, macOS 27.0.1)  commit base: bc0bb2b
+RCH: `rch exec -- cargo check --workspace --locked` succeeded but RCH fell back to the Mac (rch 2.1.15 os gate: devbox is tagged os=linux, so no worker admits unqualified builds). AC1 stays open until RCH offloads; the native and wasm checks below ran on the Mac.
+rustc: rustc 1.99.0 (b940084d7 2026-09-28)  cargo-deny: cargo-deny 0.20.2  node: v26.10.0  npm: 11.19.1
+
+$ cat rust-toolchain.toml
+# toolchain; bump it in one commit and requalify (P1-F03).
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+exit: 0
+
+$ cat .nvmrc
+26.10.0
+exit: 0
+
+$ grep -n incremental\|CARGO_INCREMENTAL\|debug =  .cargo/config.toml
+5:# The config form of CARGO_INCREMENTAL=0: incremental caches are the biggest part of a dev target/.
+6:incremental = false
+9:CARGO_INCREMENTAL = "0"
+13:debug = "line-tables-only"
+16:debug = false
+19:debug = "line-tables-only"
+exit: 0
+
+$ bash -c cargo metadata --no-deps --format-version 1 --locked | python3 -c 'import json,sys; m=json.load(sys.stdin); print(len(m["packages"]), "crates:", " ".join(sorted(p["name"] for p in m["packages"])))'
+13 crates: jj-contracts jj-input jj-map jj-procgen jj-protocol jj-server jj-session jj-sim jj-tools jj-types jj-wasm-host jj-wasm-input jj-wasm-procgen
+exit: 0
+
+$ cargo fmt --all -- --check
+exit: 0
+
+$ cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+exit: 0
+
+$ cargo clippy --locked --all-targets -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input -p jj-server -p jj-tools -p jj-contracts -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+exit: 0
+
+$ cargo run -q --locked -p jj-tools --bin jj
+jj 0.2.0
+exit: 0
+
+$ scripts/ci/no-tokio.sh
+no-tokio: ok (37 packages, no tokio)
+exit: 0
+
+$ scripts/ci/deny.sh
+advisories ok, bans ok, licenses ok, sources ok
+exit: 0
+
+$ npm --prefix web run build
+✓ 9 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/landing/index.html             0.40 kB │ gzip: 0.27 kB
+dist/host/index.html                0.41 kB │ gzip: 0.27 kB
+dist/controller/index.html          0.42 kB │ gzip: 0.28 kB
+dist/assets/host-BYxQjiZy.js        0.11 kB │ gzip: 0.12 kB
+dist/assets/landing-BK4kYYos.js     0.11 kB │ gzip: 0.13 kB
+dist/assets/controller-0DqWQjtG.js  0.11 kB │ gzip: 0.13 kB
+dist/assets/build-DXdrtYyX.js       0.72 kB │ gzip: 0.42 kB
+
+✓ built in 19ms
+exit: 0

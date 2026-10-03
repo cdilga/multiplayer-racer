@@ -1,0 +1,16 @@
+[package]
+name = "jj-procgen"
+description = "Seeded track generation producing jj.map.v1 (native and WASM)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[dependencies]
+jj-types.workspace = true
+jj-map.workspace = true
+
+[lints]
+workspace = true

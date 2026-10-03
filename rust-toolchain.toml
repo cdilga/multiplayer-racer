@@ -1,0 +1,7 @@
+# Stable Rust for the 0.2 workspace (P1-F01). RCH workers, eris (P1-F06) and CI install this same
+# toolchain; bump it in one commit and requalify (P1-F03).
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]

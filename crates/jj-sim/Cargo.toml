@@ -1,0 +1,16 @@
+[package]
+name = "jj-sim"
+description = "Authoritative simulation: Rapier world, vehicle, damage parts, debris, race progress, placement and autopilot."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[dependencies]
+jj-types.workspace = true
+jj-map.workspace = true
+
+[lints]
+workspace = true

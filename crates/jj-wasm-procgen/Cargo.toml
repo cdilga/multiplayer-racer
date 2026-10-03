@@ -1,0 +1,20 @@
+[package]
+name = "jj-wasm-procgen"
+description = "wasm-bindgen facade for the procgen worker."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jj-procgen.workspace = true
+jj-map.workspace = true
+wasm-bindgen.workspace = true
+
+[lints]
+workspace = true

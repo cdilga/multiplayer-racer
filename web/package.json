@@ -1,0 +1,26 @@
+{
+  "name": "jj-web",
+  "private": true,
+  "type": "module",
+  "description": "Joystick Jammers 0.2 web apps: landing, host and controller, built by one Vite multi-page build. All dependencies are bundled and self-hosted; no CDNs (R70).",
+  "workspaces": [
+    "shared",
+    "host",
+    "controller",
+    "landing"
+  ],
+  "engines": {
+    "node": "26.10.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "typescript": "7.0.2",
+    "vite": "8.3.2"
+  }
+}

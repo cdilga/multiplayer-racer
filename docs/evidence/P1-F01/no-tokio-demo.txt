@@ -1,0 +1,18 @@
+# P1-F01 no-Tokio check demonstration (2026-10-03T00:41:44Z, Mac, rustc 1.99.0 (b940084d7 2026-09-28))
+
+$ cargo add -p jj-server tokio@1 --features rt   # deliberate Tokio dependency
+      Adding pin-project-lite v0.2.17
+      Adding tokio v1.53.1
+
+$ scripts/ci/no-tokio.sh
+no-tokio: FAIL: Tokio is in the shipping graph (R2). Who pulls it in:
+tokio v1.53.1
+└── jj-server v0.2.0 (/Users/cdilga/Documents/dev/multiplayer-racer/crates/jj-server)
+exit: 1
+
+$ cargo remove -p jj-server tokio   # remove it again
+    Removing tokio from dependencies
+
+$ scripts/ci/no-tokio.sh
+no-tokio: ok (37 packages, no tokio)
+exit: 0

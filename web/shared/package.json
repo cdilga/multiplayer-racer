@@ -1,0 +1,6 @@
+{
+  "name": "@jj/shared",
+  "private": true,
+  "type": "module",
+  "description": "Shared web code: generated protocol bindings glue, transport (WebRTC + signalling) and UI tokens."
+}

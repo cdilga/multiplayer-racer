@@ -1,0 +1,6 @@
+{
+  "name": "@jj/controller",
+  "private": true,
+  "type": "module",
+  "description": "Controller app: sticks, HUD, join/resume and scanner. Never imports three.js, Rapier or the sim."
+}
