@@ -66,3 +66,32 @@ dist/assets/build-DXdrtYyX.js       0.72 kB │ gzip: 0.42 kB
 
 ✓ built in 19ms
 exit: 0
+
+## AC1 through RCH (2026-10-03T04:06Z), after the worker fix
+RCH 2.1.15 workers: devbox (0 slots: disk pressure, 7.5% free) and eris (Arch x86_64, rustc 1.99.0, 6 slots).
+The `os` lines are gone from workers.toml; eris's rch-wkr wrapper sets the canonical root to the Mac's layout.
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --workspace --locked
+INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+INFO rch::hook::transfer_orchestration: Executing command remotely: cargo check --workspace --locked ...
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+exit: 0
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
+INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.5)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.50s
+exit: 0
+rch status: Builds : 3 total, 100% command success rate (remote; no local fallback with RCH_REQUIRE_REMOTE=1)
+
+Clean clone on the same worker (eris's ru-managed clone, untouched; fresh CARGO_TARGET_DIR under ~/Work/runs/p1-f01-clean):
+host eris Linux 7.2.5-3-omarchy x86_64 commit 236b00f dirty_files=0   (crates/ unchanged since 97f86b6)
+rustc 1.99.0 (b940084d7 2026-09-28)
+$ cargo check --workspace --locked
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.38s
+native exit 0
+$ cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s
+wasm exit 0
+
+AC4 note: the bead says "one Node LTS"; the owner ruled on 2026-10-03 "latest release, not stable/LTS", so .nvmrc and
+web/package.json engines pin Node 26.10.0 (latest release) and rust-toolchain.toml pins 1.99.0 (latest stable release).

@@ -31,3 +31,16 @@
 
 - GitHub declines a push (`pre-receive hook declined`) whose commits reference LFS objects it doesn't have yet. Run
   `git lfs push --all origin <branch>` first, then `git push`.
+
+## 2026-10-03 · RCH: don't `rch daemon start` while launchd runs the daemon; eris needs the canonical-root wrapper
+
+- `rch daemon restart --drain` killed by a timeout leaves admission paused ("restart remediation is active");
+  `rch daemon reload` doesn't clear it, and a plain restart is refused by the admission barrier even when nothing
+  is in flight. `rch daemon restart -y --force` with no builds running stops it cleanly.
+- The Mac's daemon is a launchd agent (`com.rch.daemon`, KeepAlive). Running `rch daemon start` beside it starts
+  a second `rchd`, which fails and unlinks the live socket: `rch status` then says the socket is missing while
+  `rchd` is running. Fix: `launchctl kickstart -k gui/$(id -u)/com.rch.daemon`, and never `rch daemon start` here.
+- A worker fails the hard preflight `canonical_missing` unless rch-wkr's canonical root exists on it (default
+  `/data/projects` + `/dp`). eris uses a wrapper at `~/.local/bin/rch-wkr` that exports
+  `RCH_WKR_CANONICAL_ROOT=/Users/cdilga/Documents/dev` (re-install it after `rch workers deploy-binary`), then
+  `rch workers probe eris` refreshes the cached result. devbox drops to 0 slots under disk pressure (< ~8% free).
