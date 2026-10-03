@@ -91,7 +91,7 @@ fn placing_a_car_is_journaled_so_the_run_still_replays() {
     };
     for t in 0..480 {
         if t == 200 {
-            live.place_car(car, teleport, [4.0, 0.0, 6.0]);
+            live.place_car(car, teleport, 0.0, [4.0, 0.0, 6.0]);
         }
         live.set_input(
             car,

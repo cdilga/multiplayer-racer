@@ -25,3 +25,17 @@
   for caps and invented features before using it.
 
 - Muse returns **WebP** whatever the request says; the first frames were saved as `.png` by mistake (browsers sniff the bytes, so nothing looked wrong). `generate.mjs` now names files by their magic bytes.
+
+## 2026-10-03 · Byte-stable vehicle bakes (P1-V02)
+
+- **Node's zlib isn't byte-stable across machines.** Chromium's zlib (bundled with Node) picks deflate matches with
+  CPU-specific hashing, so the same pixels can compress to different bytes on arm64 and x64.
+  `tools/vehicles/png.mjs` writes its own fixed-Huffman DEFLATE (Sub-filtered rows, run matches only): about 65 KB for
+  the 1024×512 atlas, and identical on the Mac and the Linux CI runners (run 1013).
+- **An LFS pointer is a hash.** CI checks out without LFS, but a pointer's `oid sha256:` is the content's sha256, so
+  `bake.mjs --check` compares a fresh bake against committed files without fetching anything. Validating the GLBs
+  themselves needs a targeted `git lfs pull --include=<the asset>`.
+- **Spike J's per-LOD pivots drifted.** Bounding-box-centre pivots move by millimetres between LODs because coarser
+  tiers sample fewer rings, but the contract wants one pivot per part. Measure pivots once, on LOD0.
+- **Polygon wheels float.** An n-gon tyre whose bottom is a flat sits `R(1 − cos π/n)` above the ground (3 cm at n = 8).
+  Make the inscribed radius the wheel radius.

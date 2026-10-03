@@ -1,5 +1,5 @@
 //! The scenario bank through the real CLI: `jj sim --json scenarios/*.json` passes every envelope and replays (P1-S01's
-//! `idle-settle` and `straight-throttle`, and every scenario added later).
+//! `idle-settle` and `straight-throttle`, P1-S05's §7.3a `flip-recover` and `oob-recover`, and every scenario added later).
 
 use std::path::Path;
 use std::process::Command;
@@ -7,17 +7,26 @@ use std::process::Command;
 #[test]
 fn every_scenario_in_the_bank_passes() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let mut files: Vec<String> = std::fs::read_dir(repo.join("scenarios"))
-        .unwrap()
+    // The bank and its §7.3a affordance rows (`scenarios/affordances/`).
+    let mut files: Vec<String> = ["scenarios", "scenarios/affordances"]
+        .iter()
+        .flat_map(|d| std::fs::read_dir(repo.join(d)).unwrap())
         .map(|e| e.unwrap().path())
         .filter(|p| p.extension().is_some_and(|e| e == "json"))
         .map(|p| p.display().to_string())
         .collect();
     files.sort();
-    assert!(
-        files.iter().any(|f| f.ends_with("idle-settle.json"))
-            && files.iter().any(|f| f.ends_with("straight-throttle.json"))
-    );
+    for name in [
+        "idle-settle.json",
+        "straight-throttle.json",
+        "flip-recover.json",
+        "oob-recover.json",
+    ] {
+        assert!(
+            files.iter().any(|f| f.ends_with(name)),
+            "{name} is in the bank"
+        );
+    }
     let out = Command::new(env!("CARGO_BIN_EXE_jj"))
         .arg("sim")
         .arg("--json")

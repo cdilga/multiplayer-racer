@@ -58,6 +58,12 @@ pub struct Fixture {
     pub phase: Option<PhaseTarget>,
     #[serde(default)]
     pub place: Vec<PlaceSpec>,
+    /// Starts the race (countdown completion) at a tick with a lap count.
+    #[serde(default)]
+    pub race: Option<RaceSpec>,
+    /// Recover-button presses.
+    #[serde(default)]
+    pub recover: Vec<RecoverSpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     #[serde(default)]
@@ -77,6 +83,29 @@ pub struct PoseSpec {
     pub z: f32,
     #[serde(default)]
     pub heading_deg: f32,
+    /// About the car's own forward axis (180 = on its roof, ±90 = on a side).
+    #[serde(default)]
+    pub roll_deg: f32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RaceSpec {
+    #[serde(default = "default_laps")]
+    pub laps: u32,
+    #[serde(default)]
+    pub at_tick: u64,
+}
+
+fn default_laps() -> u32 {
+    jj_sim::race::DEFAULT_LAPS
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RecoverSpec {
+    pub tick: u64,
+    pub car: u32,
 }
 
 impl PoseSpec {
@@ -263,11 +292,12 @@ struct Recorder<'a> {
     /// How much of the journal earlier trace rows have reported.
     seen_setup: usize,
     seen_inputs: usize,
+    seen_race: usize,
 }
 
 impl Recorder<'_> {
-    /// What changed the sim since the previous row: the journal's setup commands and input changes, each with the tick
-    /// it was applied at. Later sim events (contacts, detaches, landings) join this list.
+    /// What changed the sim since the previous row: the journal's setup commands and input changes, and the race's events
+    /// (gates, laps, assist, respawns, the race end; P1-S05), each with its tick. Contacts and detaches join later (S04).
     fn events(&mut self, sim: &Sim) -> Vec<Value> {
         let j = sim.journal();
         let mut events: Vec<Value> = j.setup[self.seen_setup..]
@@ -280,6 +310,13 @@ impl Recorder<'_> {
                                              "brake": dequantise_axis(e.input.brake) } })
         }));
         (self.seen_setup, self.seen_inputs) = (j.setup.len(), j.entries.len());
+        let race = sim.race().events();
+        events.extend(
+            race[self.seen_race..]
+                .iter()
+                .map(|(at, e)| json!({ "at": at, "race": e })),
+        );
+        self.seen_race = race.len();
         events
     }
 
@@ -372,8 +409,9 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
             (None, None) => return Err(format!("cars[{i}] needs routePoint or pose")),
         };
         let id = sim.spawn_car(pose);
-        if let Some(v) = c.linvel {
-            sim.place_car(id, pose, v);
+        let roll = c.pose.map_or(0.0, |p| p.roll_deg.to_radians());
+        if c.linvel.is_some() || roll != 0.0 {
+            sim.place_car(id, pose, roll, c.linvel.unwrap_or([0.0; 3]));
         }
         spawns.push(pose);
     }
@@ -407,13 +445,25 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         trace: Vec::new(),
         seen_setup: 0,
         seen_inputs: 0,
+        seen_race: 0,
     };
     let mut stopped_early = false;
     rec.record(&sim, &session, fx.ticks == 0);
     while sim.tick() < fx.ticks {
         let t = sim.tick();
+        if let Some(r) = fx.race.as_ref().filter(|r| r.at_tick == t) {
+            sim.start_race(r.laps);
+        }
         for p in fx.place.iter().filter(|p| p.tick == t) {
-            sim.place_car(CarId(p.car), p.pose.spawn(), p.linvel);
+            sim.place_car(
+                CarId(p.car),
+                p.pose.spawn(),
+                p.pose.roll_deg.to_radians(),
+                p.linvel,
+            );
+        }
+        for r in fx.recover.iter().filter(|r| r.tick == t) {
+            sim.recover(CarId(r.car));
         }
         for car in 0..spawns.len() as u32 {
             let span =

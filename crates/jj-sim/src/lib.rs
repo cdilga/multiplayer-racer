@@ -10,6 +10,7 @@
 pub mod journal;
 pub mod observe;
 pub mod profile;
+pub mod race;
 pub mod rng;
 pub mod sim;
 

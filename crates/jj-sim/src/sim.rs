@@ -25,10 +25,29 @@ use jj_types::axis::dequantise_axis;
 
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
 use crate::profile::{Drive, VehicleProfile};
+use crate::race::{Course, Effect, Race};
 use crate::rng::Rng;
 
 pub const TICK_HZ: u32 = 120;
 pub const DT: f32 = 1.0 / TICK_HZ as f32;
+
+/// Collision groups (P1-S05): finished cars become ghosts that touch only the world (terrain and static dressing), so
+/// they stop colliding with racers and debris but keep driving on the ground.
+pub const GROUP_WORLD: Group = Group::GROUP_1;
+pub const GROUP_CAR: Group = Group::GROUP_2;
+pub const GROUP_PROP: Group = Group::GROUP_3;
+pub const GROUP_GHOST: Group = Group::GROUP_4;
+const fn groups(memberships: Group, filter: Group) -> InteractionGroups {
+    InteractionGroups::new(memberships, filter, InteractionTestMode::And)
+}
+const WORLD_GROUPS: InteractionGroups = groups(GROUP_WORLD, Group::ALL);
+const PROP_GROUPS: InteractionGroups = groups(GROUP_PROP, Group::ALL);
+const CAR_GROUPS: InteractionGroups = groups(GROUP_CAR, Group::ALL);
+const GHOST_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
+/// What a racing car's wheel rays hit (everything but ghosts), and a ghost's (only the world).
+const CAR_RAYS: InteractionGroups =
+    groups(GROUP_CAR, GROUP_WORLD.union(GROUP_PROP).union(GROUP_CAR));
+const GHOST_RAYS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
 
 /// A car's id: its index in spawn order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -36,6 +55,7 @@ pub struct CarId(pub u32);
 
 struct Car {
     body: RigidBodyHandle,
+    collider: ColliderHandle,
     vehicle: DynamicRayCastVehicleController,
     input: DriveInput,
 }
@@ -82,6 +102,7 @@ pub struct Sim {
     tick: u64,
     rng: Rng,
     journal: Journal,
+    race: Race,
 }
 
 fn yaw_rotation(yaw_cdeg: i32) -> Vector {
@@ -122,7 +143,8 @@ impl Sim {
                 0.0,
                 t.origin_z as f32 / 1000.0 + sz / 2.0,
             ))
-            .friction(0.9);
+            .friction(0.9)
+            .collision_groups(WORLD_GROUPS);
         world.insert_collider(ground, None);
 
         // Static dressing with `collides`: the registry's collider proxies, standing on the ground at their pose.
@@ -140,7 +162,8 @@ impl Sim {
                     d.pose.y as f32 / 1000.0 + hy,
                     d.pose.z as f32 / 1000.0,
                 ))
-                .rotation(yaw_rotation(d.pose.yaw));
+                .rotation(yaw_rotation(d.pose.yaw))
+                .collision_groups(WORLD_GROUPS);
             world.insert_collider(c, None);
         }
 
@@ -161,7 +184,7 @@ impl Sim {
                     p.pose.z as f32 / 1000.0,
                 ))
                 .rotation(yaw_rotation(p.pose.yaw));
-            let (h, _) = world.insert(body, builder.density(80.0));
+            let (h, _) = world.insert(body, builder.density(80.0).collision_groups(PROP_GROUPS));
             props.push(h);
         }
 
@@ -179,6 +202,7 @@ impl Sim {
             tick: 0,
             rng: Rng::stream(seed, "sim"),
             journal,
+            race: Race::new(Course::new(map)),
         }
     }
 
@@ -205,32 +229,90 @@ impl Sim {
             .setup
             .push((self.tick, Setup::SpawnCar { car: id.0, pose }));
         self.add_car(pose);
+        self.race.add_car(pose);
         id
     }
 
-    /// Teleports `car` to `pose` with `linvel` and no spin (a journaled setup command, so the run still replays).
-    pub fn place_car(&mut self, car: CarId, pose: SpawnPose, linvel: [f32; 3]) {
-        let Some(c) = self.cars.get(car.0 as usize) else {
+    /// Teleports `car` to `pose`, rolled `roll` radians about its forward axis, with `linvel` and no spin (a journaled
+    /// setup command, so the run still replays). A placement never crosses a race gate.
+    pub fn place_car(&mut self, car: CarId, pose: SpawnPose, roll: f32, linvel: [f32; 3]) {
+        if self.cars.get(car.0 as usize).is_none() {
             return;
-        };
+        }
         self.journal.setup.push((
             self.tick,
             Setup::PlaceCar {
                 car: car.0,
                 pose,
+                roll,
                 linvel,
             },
         ));
+        self.teleport(car, pose, roll, linvel);
+    }
+
+    fn teleport(&mut self, car: CarId, pose: SpawnPose, roll: f32, linvel: [f32; 3]) {
+        let Some(c) = self.cars.get(car.0 as usize) else {
+            return;
+        };
         if let Some(b) = self.world.bodies.get_mut(c.body) {
+            let rotation = Rotation::from_axis_angle(Vector::Y, pose.heading)
+                * Rotation::from_axis_angle(Vector::Z, roll);
             b.set_position(
-                Pose::new(
-                    Vector::new(pose.x, pose.y, pose.z),
-                    Vector::new(0.0, pose.heading, 0.0),
-                ),
+                Pose::from_parts(Vector::new(pose.x, pose.y, pose.z), rotation),
                 true,
             );
             b.set_linvel(Vector::new(linvel[0], linvel[1], linvel[2]), true);
             b.set_angvel(Vector::ZERO, true);
+        }
+        self.race.placed(car.0);
+    }
+
+    /// The race starts now with `laps` laps (a journaled command: countdown completion, P1-S05).
+    pub fn start_race(&mut self, laps: u32) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::StartRace { laps }));
+        self.race.start(self.tick, laps);
+    }
+
+    /// A player's Recover button (a journaled command). Returns whether it was accepted: after 1 s under 3 m/s, or when
+    /// inverted; the car then respawns at its anchor and is held for the 2 s penalty.
+    pub fn recover(&mut self, car: CarId) -> bool {
+        self.journal
+            .setup
+            .push((self.tick, Setup::Recover { car: car.0 }));
+        match self.race.recover(self.tick, car.0) {
+            Some(effect) => {
+                self.apply(effect);
+                true
+            }
+            None => false,
+        }
+    }
+
+    pub fn race(&self) -> &Race {
+        &self.race
+    }
+
+    /// Whether `car` is a ghost (finished: touches only the world).
+    pub fn is_ghost(&self, car: CarId) -> bool {
+        self.cars
+            .get(car.0 as usize)
+            .and_then(|c| self.world.colliders.get(c.collider))
+            .is_some_and(|c| c.collision_groups() == GHOST_GROUPS)
+    }
+
+    fn apply(&mut self, effect: Effect) {
+        match effect {
+            Effect::Respawn { car, pose, .. } => self.teleport(CarId(car), pose, 0.0, [0.0; 3]),
+            Effect::Ghost { car } => {
+                if let Some(c) = self.cars.get(car as usize)
+                    && let Some(col) = self.world.colliders.get_mut(c.collider)
+                {
+                    col.set_collision_groups(GHOST_GROUPS);
+                }
+            }
         }
     }
 
@@ -249,8 +331,9 @@ impl Sim {
         let volume = 8.0 * hx * hy * hz;
         let collider = ColliderBuilder::cuboid(hx, hy, hz)
             .density(p.chassis_mass / volume)
-            .friction(0.6);
-        let (handle, _) = self.world.insert(body, collider);
+            .friction(0.6)
+            .collision_groups(CAR_GROUPS);
+        let (handle, collider) = self.world.insert(body, collider);
 
         let mut vehicle = DynamicRayCastVehicleController::new(handle);
         vehicle.index_up_axis = 1;
@@ -283,6 +366,7 @@ impl Sim {
         }
         self.cars.push(Car {
             body: handle,
+            collider,
             vehicle,
             input: DriveInput::default(),
         });
@@ -306,10 +390,18 @@ impl Sim {
     /// Advances one fixed tick.
     pub fn step(&mut self) {
         let p = self.profile.clone();
-        for car in &mut self.cars {
-            let throttle = dequantise_axis(car.input.throttle);
-            let steer = dequantise_axis(car.input.steer);
-            let brake = dequantise_axis(car.input.brake).max(0.0);
+        let tick = self.tick;
+        for (i, car) in self.cars.iter_mut().enumerate() {
+            let id = i as u32;
+            // A held car (the 2 s respawn penalty) gets no controls.
+            let input = if self.race.is_held(id, tick) {
+                DriveInput::default()
+            } else {
+                car.input
+            };
+            let throttle = dequantise_axis(input.throttle);
+            let steer = dequantise_axis(input.steer);
+            let brake = dequantise_axis(input.brake).max(0.0);
             let driven = |i: usize| match p.drive {
                 Drive::Front => i < 2,
                 Drive::Rear => i >= 2,
@@ -332,13 +424,30 @@ impl Sim {
                 }
             }
             // Only a positive engine force wakes a sleeping chassis in Rapier: wake it on any control input.
-            if !car.input.is_neutral()
+            if !input.is_neutral()
                 && let Some(b) = self.world.bodies.get_mut(car.body)
                 && b.is_sleeping()
             {
                 b.wake_up(true);
             }
-            let filter = QueryFilter::default().exclude_rigid_body(car.body);
+            // Flip assist (P1-S05): a self-righting torque, integrated once per tick as an impulse.
+            if self.race.is_assisting(id)
+                && let Some(b) = self.world.bodies.get_mut(car.body)
+            {
+                let r = b.position().rotation;
+                let (up, fwd, w) = (r * Vector::Y, r * Vector::Z, b.angvel());
+                let t =
+                    Race::assist_torque([up.x, up.y, up.z], [fwd.x, fwd.y, fwd.z], [w.x, w.y, w.z]);
+                b.apply_torque_impulse(Vector::new(t[0], t[1], t[2]) * DT, true);
+            }
+            let rays = if self.race.is_finished(id) {
+                GHOST_RAYS
+            } else {
+                CAR_RAYS
+            };
+            let filter = QueryFilter::default()
+                .exclude_rigid_body(car.body)
+                .groups(rays);
             let queries = self.world.broad_phase.as_query_pipeline_mut(
                 self.world.narrow_phase.query_dispatcher(),
                 &mut self.world.bodies,
@@ -349,6 +458,23 @@ impl Sim {
         }
         self.world.step();
         self.tick += 1;
+        let views: Vec<crate::race::CarView> = self
+            .cars
+            .iter()
+            .map(|c| {
+                let b = &self.world.bodies[c.body];
+                let (v, up) = (b.linvel(), b.position().rotation * Vector::Y);
+                let t = b.position().translation;
+                crate::race::CarView {
+                    position: [t.x, t.y, t.z],
+                    up_y: up.y,
+                    speed: v.length(),
+                }
+            })
+            .collect();
+        for effect in self.race.update(self.tick, &views) {
+            self.apply(effect);
+        }
     }
 
     pub fn car_state(&self, car: CarId) -> Option<CarState> {
@@ -456,6 +582,9 @@ impl Sim {
         for &p in &self.props {
             body(p);
         }
+        let mut race = Vec::new();
+        self.race.hash_into(&mut race);
+        h.update(&race);
         for c in &self.cars {
             for w in c.vehicle.wheels() {
                 for f in [
@@ -493,8 +622,15 @@ impl Sim {
                     Setup::SpawnCar { pose, .. } => {
                         sim.spawn_car(*pose);
                     }
-                    Setup::PlaceCar { car, pose, linvel } => {
-                        sim.place_car(CarId(*car), *pose, *linvel)
+                    Setup::PlaceCar {
+                        car,
+                        pose,
+                        roll,
+                        linvel,
+                    } => sim.place_car(CarId(*car), *pose, *roll, *linvel),
+                    Setup::StartRace { laps } => sim.start_race(*laps),
+                    Setup::Recover { car } => {
+                        sim.recover(CarId(*car));
                     }
                 }
             }

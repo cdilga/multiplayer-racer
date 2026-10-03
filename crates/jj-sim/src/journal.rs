@@ -35,11 +35,20 @@ pub enum Setup {
         pose: SpawnPose,
     },
     /// Teleports a car with a velocity, stopping its spin (scenario setup, P1-F05a). Journaled like every setup command,
-    /// so a run that places cars still replays.
+    /// so a run that places cars still replays. `roll` turns it about its own forward axis (radians; π = on its roof).
     PlaceCar {
         car: u32,
         pose: SpawnPose,
+        roll: f32,
         linvel: [f32; 3],
+    },
+    /// The race starts (countdown completion, P1-S05): progress counts from this tick.
+    StartRace {
+        laps: u32,
+    },
+    /// A player's Recover button (P1-S05); refused unless the car qualifies.
+    Recover {
+        car: u32,
     },
 }
 

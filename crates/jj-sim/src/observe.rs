@@ -110,6 +110,24 @@ pub struct WheelObs {
     pub slip_deg: f32,
 }
 
+/// A car's race state (P1-S05).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RaceObs {
+    pub gates_passed: u32,
+    pub laps: u32,
+    /// Legal progress, metres (gates in order, windowed between the last gate and the next).
+    pub progress_m: f32,
+    /// The route point of the anchor gate (`None` before the first gate).
+    pub anchor_route_point: Option<u32>,
+    pub held: bool,
+    pub assisting: bool,
+    pub finished_at: Option<u64>,
+    pub ghost: bool,
+    pub wrecks: u32,
+    pub recoveries: u32,
+}
+
 /// One car at one tick.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -129,11 +147,14 @@ pub struct CarObs {
     pub progress: RouteProgress,
     pub input: InputObs,
     pub wheels: Vec<WheelObs>,
+    pub race: RaceObs,
 }
 
 pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
     let s = sim.car_state(car)?;
     let input = sim.input(car)?;
+    let race = sim.race();
+    let rc = race.car(car.0)?;
     let v = s.linvel;
     Some(CarObs {
         car: car.0,
@@ -165,6 +186,18 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
                 slip_deg: w.slip_deg,
             })
             .collect(),
+        race: RaceObs {
+            gates_passed: rc.gates_passed,
+            laps: race.laps_completed(car.0),
+            progress_m: race.progress_m(car.0),
+            anchor_route_point: rc.last_gate.map(|g| race.course.gate_route_point(g) as u32),
+            held: race.is_held(car.0, sim.tick()),
+            assisting: race.is_assisting(car.0),
+            finished_at: rc.finished_at,
+            ghost: sim.is_ghost(car),
+            wrecks: rc.wrecks,
+            recoveries: rc.recoveries,
+        },
     })
 }
 
@@ -202,10 +235,18 @@ pub enum Metric {
     MinUpY,
     /// Distance driven along the route, m (signed, unwrapped across the finish).
     ProgressM,
+    /// Race (P1-S05): gates passed in order, laps completed, legal progress (m), wrecks and accepted Recovers.
+    GatesPassed,
+    LapsCompleted,
+    LegalProgressM,
+    Wrecks,
+    Recoveries,
+    /// 1 once the car has finished, else 0.
+    Finished,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 14] = [
+    pub const ALL: [Metric; 20] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -220,6 +261,12 @@ impl Metric {
         Metric::AirtimeS,
         Metric::MinUpY,
         Metric::ProgressM,
+        Metric::GatesPassed,
+        Metric::LapsCompleted,
+        Metric::LegalProgressM,
+        Metric::Wrecks,
+        Metric::Recoveries,
+        Metric::Finished,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -239,6 +286,12 @@ impl Metric {
             Metric::AirtimeS => "airtimeS",
             Metric::MinUpY => "minUpY",
             Metric::ProgressM => "progressM",
+            Metric::GatesPassed => "gatesPassed",
+            Metric::LapsCompleted => "lapsCompleted",
+            Metric::LegalProgressM => "legalProgressM",
+            Metric::Wrecks => "wrecks",
+            Metric::Recoveries => "recoveries",
+            Metric::Finished => "finished",
         }
     }
 }
@@ -330,6 +383,12 @@ impl SignatureTracker {
             Metric::AirtimeS => self.airtime_ticks as f64 / f64::from(TICK_HZ),
             Metric::MinUpY => self.min_up_y,
             Metric::ProgressM => self.progress_m,
+            Metric::GatesPassed => f64::from(o.race.gates_passed),
+            Metric::LapsCompleted => f64::from(o.race.laps),
+            Metric::LegalProgressM => f64::from(o.race.progress_m),
+            Metric::Wrecks => f64::from(o.race.wrecks),
+            Metric::Recoveries => f64::from(o.race.recoveries),
+            Metric::Finished => f64::from(u8::from(o.race.finished_at.is_some())),
         })
     }
 

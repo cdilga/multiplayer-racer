@@ -1,0 +1,36 @@
+{
+ "scenario": "oob-recover",
+ "what": "§7.3a: the player can always recover from out of bounds (0.1's oob-recovery lesson). Four cars are thrown out a second into a race: past +X, past −Z, under the kill plane inside the bounds, and off the far edge at 40 m/s. Each is wrecked once and respawned at its anchor (the grid slot; no gate passed yet), upright on its wheels.",
+ "map": "maps/greybox-loop.json",
+ "seed": 12,
+ "ticks": 840,
+ "race": { "laps": 3, "atTick": 0 },
+ "cars": [
+  { "routePoint": 30, "lateral": -4.5 },
+  { "routePoint": 30, "lateral": -1.5 },
+  { "routePoint": 30, "lateral": 1.5 },
+  { "routePoint": 30, "lateral": 4.5 }
+ ],
+ "place": [
+  { "tick": 120, "car": 0, "pose": { "x": 280, "y": 3, "z": 0 } },
+  { "tick": 120, "car": 1, "pose": { "x": 75, "y": 3, "z": -70 } },
+  { "tick": 120, "car": 2, "pose": { "x": 60, "y": -30, "z": 20 } },
+  { "tick": 120, "car": 3, "pose": { "x": 225, "y": 1, "z": 20, "headingDeg": 90 }, "linvel": [40, 0, 0] }
+ ],
+ "expect": [
+  { "car": 0, "metric": "wrecks", "min": 1, "max": 1 },
+  { "car": 1, "metric": "wrecks", "min": 1, "max": 1 },
+  { "car": 2, "metric": "wrecks", "min": 1, "max": 1 },
+  { "car": 3, "metric": "wrecks", "min": 1, "max": 1 },
+  { "car": 0, "metric": "travel", "min": 0, "max": 1 },
+  { "car": 1, "metric": "travel", "min": 0, "max": 1 },
+  { "car": 2, "metric": "travel", "min": 0, "max": 1 },
+  { "car": 3, "metric": "travel", "min": 0, "max": 1 },
+  { "car": 0, "metric": "upY", "min": 0.95, "max": 1.001 },
+  { "car": 1, "metric": "upY", "min": 0.95, "max": 1.001 },
+  { "car": 2, "metric": "upY", "min": 0.95, "max": 1.001 },
+  { "car": 3, "metric": "upY", "min": 0.95, "max": 1.001 },
+  { "car": 0, "metric": "wheelsInContact", "min": 4, "max": 4 },
+  { "car": 3, "metric": "wheelsInContact", "min": 4, "max": 4 }
+ ]
+}

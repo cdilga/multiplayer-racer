@@ -12,6 +12,7 @@ repository.workspace = true
 jj-types.workspace = true
 jj-map.workspace = true
 rapier3d.workspace = true
+libm.workspace = true
 serde.workspace = true
 postcard.workspace = true
 sha2.workspace = true

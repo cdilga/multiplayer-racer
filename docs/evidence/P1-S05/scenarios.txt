@@ -1,0 +1,39 @@
+$ jj sim scenarios/affordances/flip-recover.json scenarios/affordances/oob-recover.json
+pass flip-recover (900 ticks, state 2f6432d4fa88…, replay matches) → target/jj-runs/sim-flip-recover
+  observed vs envelope:
+    ok  car 0 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 0 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 1 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 1 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 2 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 2 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 3 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 3 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 3 @   end recoveries = 1.000 in [1, 1]
+    ok  car 4 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 4 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 0 @   end minUpY = -1.000 in [-1.001, 0.2]
+    ok  car 1 @   end minUpY = -0.007 in [-1.001, 0.2]
+    ok  car 2 @   end minUpY = -1.000 in [-1.001, 0.2]
+    ok  car 3 @   end minUpY = -0.006 in [-1.001, 0.2]
+    ok  car 4 @   end minUpY = -1.000 in [-1.001, 0.2]
+pass oob-recover (840 ticks, state 6e3d80c9890b…, replay matches) → target/jj-runs/sim-oob-recover
+  observed vs envelope:
+    ok  car 0 @   end wrecks = 1.000 in [1, 1]
+    ok  car 1 @   end wrecks = 1.000 in [1, 1]
+    ok  car 2 @   end wrecks = 1.000 in [1, 1]
+    ok  car 3 @   end wrecks = 1.000 in [1, 1]
+    ok  car 0 @   end travel = 0.000 in [0, 1]
+    ok  car 1 @   end travel = 0.000 in [0, 1]
+    ok  car 2 @   end travel = 0.000 in [0, 1]
+    ok  car 3 @   end travel = 0.000 in [0, 1]
+    ok  car 0 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 1 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 2 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 3 @   end upY = 1.000 in [0.95, 1.001]
+    ok  car 0 @   end wheelsInContact = 4.000 in [4, 4]
+    ok  car 3 @   end wheelsInContact = 4.000 in [4, 4]
+exit 0
+
+$ cargo test -p jj-sim --test race
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.80s
