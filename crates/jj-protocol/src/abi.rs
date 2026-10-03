@@ -123,6 +123,11 @@ pub enum SimEvent {
         preparation: PreparationId,
         seed: u64,
     },
+    /// Flash this seat's car ("Cooee #N"): its player pressed Identify, or it just joined or respawned (rate-limited
+    /// by the seat reducer).
+    Identify {
+        seat: SeatId,
+    },
 }
 
 /// Sim → main.

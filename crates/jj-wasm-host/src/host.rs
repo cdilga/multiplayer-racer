@@ -49,6 +49,8 @@ pub const DROPOUT_MS: u64 = 2_000;
 pub const LOCAL_IDENTIFY: u32 = 1;
 pub const LOCAL_READY: u32 = 1 << 1;
 pub const LOCAL_LEAVE: u32 = 1 << 2;
+/// The input drawer's Sit out / Return for this source's seat (a toggle).
+pub const LOCAL_SIT_OUT: u32 = 1 << 3;
 pub const LOCAL_UNAVAILABLE: u32 = 1 << 31;
 /// Snapshot layout: a header, then one record per car and per debris body (little-endian).
 pub const SNAPSHOT_MAGIC: u32 = 0x4a4a_5331; // "JJS1"
@@ -105,8 +107,12 @@ struct SeatInput {
 #[derive(Default)]
 struct LocalButtons {
     last: u32,
-    /// It left and must go fully neutral before a press claims its seat again.
-    left_held: bool,
+    /// It left: once it has gone fully neutral, its next press joins as a new player with a new seat (the old seat
+    /// keeps its number and standings).
+    left: bool,
+    left_released: bool,
+    /// How many seats this source has had (its endpoint is `local:<id>`, then `local:<id>#2`…).
+    generation: u32,
 }
 
 /// How many recent action ids a seat remembers for deduplication.
@@ -475,36 +481,44 @@ impl Host {
                 buttons,
                 ..
             } => {
+                let neutral = axes == [0; 4] && buttons & !LOCAL_UNAVAILABLE == 0;
+                // After leaving and letting go, the next press is a new player: forget the old connection so the
+                // source joins again under its next endpoint generation.
+                let lb = self.local_buttons.entry(source).or_default();
+                if lb.left && neutral {
+                    lb.left_released = true;
+                }
+                if lb.left && lb.left_released && !neutral {
+                    (lb.left, lb.left_released) = (false, false);
+                    lb.generation += 1;
+                    self.locals.remove(&source);
+                }
                 let seat = self.local_seat(source);
                 let conn = self.locals[&source];
                 let lb = self.local_buttons.entry(source).or_default();
                 let pressed = |bit: u32| buttons & bit != 0 && lb.last & bit == 0;
-                let (leave, identify) = (pressed(LOCAL_LEAVE), pressed(LOCAL_IDENTIFY));
-                let neutral = axes == [0; 4] && buttons & !LOCAL_UNAVAILABLE == 0;
+                let (leave, identify, sit_out) = (
+                    pressed(LOCAL_LEAVE),
+                    pressed(LOCAL_IDENTIFY),
+                    pressed(LOCAL_SIT_OUT),
+                );
                 lb.last = buttons;
                 if leave {
-                    lb.left_held = true;
-                } else if neutral {
-                    lb.left_held = false;
+                    lb.left = true;
                 }
-                let rejoin_armed = !lb.left_held;
                 let mut outs = Vec::new();
                 if leave {
                     outs.extend(self.seats.apply(seats::Input::Leave { conn }));
                 }
-                // Any controller can come back (owner, 2026-10-03): after leaving and letting go, a press claims the
-                // same seat again.
-                let left = seat.is_some_and(|id| {
-                    self.seats
+                if sit_out && let Some(id) = seat {
+                    let sitting = self
+                        .seats
                         .seats()
-                        .any(|s| s.id == id && s.presence == seats::Presence::Left)
-                });
-                if left && rejoin_armed && !neutral {
-                    outs.extend(self.seats.apply(seats::Input::Claim {
-                        conn,
-                        request: jj_types::RequestId(1),
-                        name: String::new(),
-                    }));
+                        .any(|s| s.id == id && s.presence == seats::Presence::SittingOut);
+                    outs.extend(
+                        self.seats
+                            .apply(seats::Input::SitOut { conn, on: !sitting }),
+                    );
                 }
                 if identify {
                     outs.extend(self.seats.apply(seats::Input::Identify { conn }));
@@ -634,7 +648,11 @@ impl Host {
                 let c = self.next_conn;
                 self.next_conn += 1;
                 self.locals.insert(source, c);
-                let endpoint = EndpointId(format!("local:{}", source.0));
+                let generation = self.local_buttons.get(&source).map_or(0, |b| b.generation);
+                let endpoint = EndpointId(match generation {
+                    0 => format!("local:{}", source.0),
+                    g => format!("local:{}#{}", source.0, g + 1),
+                });
                 let mut outs = self.seats.apply(seats::Input::Hello {
                     conn: c,
                     endpoint: endpoint.clone(),
@@ -714,6 +732,9 @@ impl Host {
                 }
                 self.events.push(SimEvent::SeatLeft { seat });
                 self.session_rev += 1;
+            }
+            seats::Output::Identify { seat } => {
+                self.events.push(SimEvent::Identify { seat });
             }
             seats::Output::ClaimRejected { conn, reason } => {
                 if let Some(endpoint) = self.endpoint_of(conn) {

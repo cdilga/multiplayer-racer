@@ -561,47 +561,90 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
 }
 
 #[test]
-fn a_host_pad_identifies_leaves_and_claims_its_seat_again() {
+fn a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat() {
+    // P1-C05: Identify fires for that seat only (an event for the renderer's Cooee flash); the drawer's Sit out
+    // toggles at a tick boundary; the hold chord leaves (the seat stays, Left, with its standings), and after letting
+    // go the pad's next press is a new player with a new seat.
     let mut h = Host::new(&init()).unwrap();
     let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
     h.schedule(0, &pad(4, [0, 20_000], 0)).unwrap();
-    h.schedule(ms(500), &pad(4, [0, 0], LOCAL_IDENTIFY))
+    h.schedule(0, &pad(9, [0, 20_000], 0)).unwrap();
+    // Past the seat reducer's 3 s Identify limit (joining auto-flashes).
+    h.schedule(ms(3_500), &pad(4, [0, 0], LOCAL_IDENTIFY))
         .unwrap();
-    h.schedule(ms(600), &pad(4, [0, 0], 0)).unwrap();
+    h.schedule(ms(3_600), &pad(4, [0, 0], 0)).unwrap();
+    h.schedule(ms(4_000), &pad(9, [0, 0], LOCAL_SIT_OUT))
+        .unwrap();
+    h.schedule(ms(4_100), &pad(9, [0, 0], 0)).unwrap();
     h.schedule(
-        ms(1_000),
+        ms(5_000),
         &pad(4, [0, 0], LOCAL_IDENTIFY | LOCAL_READY | LOCAL_LEAVE),
     )
     .unwrap();
-    // Still holding when the seat leaves: no re-claim until it lets go.
+    // Still holding after leaving: nothing joins until it lets go.
     h.schedule(
-        ms(1_100),
+        ms(5_100),
         &pad(4, [0, 0], LOCAL_IDENTIFY | LOCAL_READY | LOCAL_LEAVE),
     )
     .unwrap();
-    h.schedule(ms(1_500), &pad(4, [0, 0], 0)).unwrap();
-    h.schedule(ms(2_000), &pad(4, [0, 25_000], 0)).unwrap();
-    let presence = |h: &Host| h.seats.seats().next().map(|s| s.presence);
-    while h.tick() < ms(1_400) {
+    h.schedule(ms(5_500), &pad(4, [0, 0], 0)).unwrap();
+    h.schedule(ms(6_000), &pad(4, [0, 25_000], 0)).unwrap();
+    let mut identified = Vec::new();
+    let presence = |h: &Host, endpoint: &str| {
+        h.seats
+            .seats()
+            .find(|s| s.endpoint.0 == endpoint)
+            .map(|s| s.presence)
+    };
+    while h.tick() < ms(5_400) {
         h.step_one();
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Events { batch } = m {
+                identified.extend(batch.into_iter().filter_map(|e| match e {
+                    SimEvent::Identify { seat } => Some(seat),
+                    _ => None,
+                }));
+            }
+        }
     }
+    let seat_of = |h: &Host, endpoint: &str| {
+        h.seats
+            .seats()
+            .find(|s| s.endpoint.0 == endpoint)
+            .map(|s| s.id)
+    };
+    let (four, nine) = (
+        seat_of(&h, "local:4").unwrap(),
+        seat_of(&h, "local:9").unwrap(),
+    );
+    // Each seat auto-flashed on joining; then only pad 4's press flashed, and only its seat.
     assert_eq!(
-        presence(&h),
+        identified,
+        vec![four, nine, four],
+        "Identify for that seat only"
+    );
+    assert_eq!(
+        presence(&h, "local:9"),
+        Some(jj_session::seats::Presence::SittingOut),
+        "Sit out from the drawer"
+    );
+    assert_eq!(
+        presence(&h, "local:4"),
         Some(jj_session::seats::Presence::Left),
         "Leave at a tick boundary"
     );
-    assert!(
-        h.inputs.values().all(|i| i.car.is_none()),
-        "its car withdrawn"
-    );
-    while h.tick() < ms(2_200) {
+    while h.tick() < ms(6_200) {
         h.step_one();
     }
     assert_eq!(
-        presence(&h),
-        Some(jj_session::seats::Presence::Active),
-        "a press claims it again"
+        presence(&h, "local:4"),
+        Some(jj_session::seats::Presence::Left),
+        "the old seat stays, standings kept"
     );
-    assert_eq!(h.seats.seats().count(), 1, "the same seat, not a new one");
-    assert!(h.inputs.values().any(|i| i.car.is_some()));
+    assert_eq!(
+        presence(&h, "local:4#2"),
+        Some(jj_session::seats::Presence::Active),
+        "a new seat for the next press"
+    );
+    assert_eq!(h.seats.seats().count(), 3);
 }

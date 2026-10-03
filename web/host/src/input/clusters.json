@@ -18,6 +18,11 @@
       "ready": "KeyO"
     }
   ],
+  "reserved": {
+    "//": "Keys no cluster may use (checked by web/host/tests/clusters.test.mjs). bugClip: the clip chord's key (plan §13b.6), reserved outright so a held cluster never half-presses it. hostUi: focus, activate, back, the browser's function keys and the dev drawer.",
+    "bugClip": ["KeyB"],
+    "hostUi": ["Escape", "Tab", "Enter", "NumpadEnter", "Space", "Backquote", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"]
+  },
   "steerRatePerS": 6,
   "leaveHoldMs": 2000,
   "padDeadzone": 0.12,

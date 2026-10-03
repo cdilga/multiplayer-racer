@@ -10,7 +10,7 @@
 //   after the worker's dropout time, and back when it's plugged in and pressed again.
 import map from './clusters.json';
 import type { SimClient } from '../worker/client';
-import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_UNAVAILABLE } from '../worker/messages';
+import { LOCAL_IDENTIFY, LOCAL_LEAVE, LOCAL_READY, LOCAL_SIT_OUT, LOCAL_UNAVAILABLE } from '../worker/messages';
 
 type Axes = [number, number, number, number];
 type Stick = { up: string; down: string; left: string; right: string };
@@ -30,6 +30,10 @@ export interface LocalSourceView {
   connected: boolean;
   /** Pressed at least once: it has (or had) a seat. */
   claimed: boolean;
+  /** Its seat left; its next press (after letting go) joins as a new player. */
+  left: boolean;
+  /** Its seat is sitting out (from the drawer). */
+  sittingOut: boolean;
 }
 
 const AXIS_MAX = 32767;
@@ -45,6 +49,10 @@ interface Source {
   seq: number;
   /** When Identify + READY started being held together (ms), for Leave. */
   holdSince: number | null;
+  /** Drawer requests riding on the next sample (Sit out, Leave). */
+  once: number;
+  /** Let go since leaving (so the next press is a new player). */
+  released: boolean;
 }
 
 /** A stick past the radial deadzone, rescaled so the edge of the deadzone reads 0. */
@@ -80,6 +88,21 @@ export class LocalInput {
     return clusters;
   }
 
+  /** The drawer's Sit out / Return for a seated source. */
+  toggleSitOut(source: number): void {
+    const s = this.sources.get(source);
+    if (!s?.view.claimed || s.view.left) return;
+    s.once |= LOCAL_SIT_OUT;
+    s.view.sittingOut = !s.view.sittingOut;
+  }
+
+  /** The drawer's Leave for a seated source. */
+  leave(source: number): void {
+    const s = this.sources.get(source);
+    if (!s?.view.claimed || s.view.left) return;
+    s.once |= LOCAL_LEAVE;
+  }
+
   start(pollMs = 16): void {
     const w = this.win;
     w.addEventListener('keydown', this.onKey);
@@ -103,11 +126,13 @@ export class LocalInput {
 
   private add(source: number, kind: 'pad' | 'keys', label: string): Source {
     const s: Source = {
-      view: { source, kind, label, connected: true, claimed: false },
+      view: { source, kind, label, connected: true, claimed: false, left: false, sittingOut: false },
       axes: [0, 0, 0, 0],
       buttons: 0,
       seq: 0,
       holdSince: null,
+      once: 0,
+      released: false,
     };
     this.sources.set(source, s);
     return s;
@@ -181,6 +206,14 @@ export class LocalInput {
     const pressed = axes.some((v) => Math.abs(v) > 0.001) || buttons !== 0;
     if (!s.view.claimed && !pressed) return;
     s.view.claimed = true;
+    // After leaving: letting go, then pressing again, is a new player (the worker gives it a new seat).
+    if (s.view.left) {
+      if (!pressed) s.released = true;
+      else if (s.released) Object.assign(s.view, { left: false, sittingOut: false }), (s.released = false);
+    }
+    buttons |= s.once;
+    s.once = 0;
+    if (buttons & LOCAL_LEAVE) Object.assign(s.view, { left: true, sittingOut: false }), (s.released = false);
     this.send(s, axes, buttons);
   }
 

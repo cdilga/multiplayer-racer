@@ -38,6 +38,8 @@ export interface InitOptions {
 export const LOCAL_IDENTIFY = 1;
 export const LOCAL_READY = 1 << 1;
 export const LOCAL_LEAVE = 1 << 2;
+/** The input drawer's Sit out / Return (a toggle). */
+export const LOCAL_SIT_OUT = 1 << 3;
 export const LOCAL_UNAVAILABLE = 1 << 31;
 
 /** One local source's host-applied input age: sampled on main to applied at a tick boundary in the worker (ms). */

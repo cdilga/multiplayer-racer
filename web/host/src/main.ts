@@ -22,7 +22,7 @@ async function boot(): Promise<void> {
   }
   const seed = 1;
   const client = new SimClient(testing?.createWorker());
-  await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live' } : {});
+  await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live', describe: true } : {});
   client.followVisibility();
   // Host pads and key clusters (P1-C05): players from their first press, listed in the input drawer.
   const input = new LocalInput(client);
