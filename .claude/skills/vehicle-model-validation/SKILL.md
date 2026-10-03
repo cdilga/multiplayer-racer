@@ -85,6 +85,11 @@ model-script reproducibility, `jj-sim` load/settle scenario, renderer capture te
 instancing bench when materials/batching/loader changed. If a check doesn't exist yet, say so
 and name the bead that adds it. A screenshot is not an automated check.
 
+### 8. Engine sound
+A roster car ships an engine sound profile (`assets/audio/engine/<id>.json`, one line in that folder's
+`manifest.json`) that passes `node art/ui/poc/audio/engine/check.mjs` and plays in the sound lab at
+`/poc/audio/engine/` (P1-A04b). Turbo and start/stop are profile data (R103).
+
 ## Done report
 
 ```markdown

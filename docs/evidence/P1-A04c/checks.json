@@ -1,9 +1,9 @@
 {
-  "date": "2026-10-03T20:34:47.125Z",
+  "date": "2026-10-03T20:39:42.543Z",
   "bead": "P1-A04c",
   "run": {
-    "passed": 80,
-    "total": 80
+    "passed": 82,
+    "total": 82
   },
   "passed": 17,
   "total": 17,
@@ -48,7 +48,7 @@
       "id": "B19",
       "desc": "Stop engine plays the stop on the page: stopping (audible, status Stopping…), then Engine off and silence within stopS (1.1 s) (POC1-02)",
       "pass": true,
-      "detail": "stopping > off, silent at +1.29 s, rms -180.0 dBFS"
+      "detail": "stopping > off, silent at +1.28 s, rms -180.0 dBFS"
     },
     {
       "id": "T1",
@@ -72,7 +72,7 @@
       "id": "K3",
       "desc": "POC1-02 the start renders deterministically (twice: max difference below -120 dBFS, same trace)",
       "pass": true,
-      "detail": "max |diff| 2.98e-8"
+      "detail": "max |diff| 0.00e+0"
     },
     {
       "id": "K4",
@@ -90,7 +90,7 @@
       "id": "K6",
       "desc": "POC1-02 the stop renders deterministically (twice: max difference below -120 dBFS, same trace)",
       "pass": true,
-      "detail": "max |diff| 0.00e+0"
+      "detail": "max |diff| 2.98e-8"
     },
     {
       "id": "K7",

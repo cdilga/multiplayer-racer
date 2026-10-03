@@ -1,7 +1,7 @@
 {
-  "date": "2026-10-03T20:34:47.125Z",
-  "passed": 80,
-  "total": 80,
+  "date": "2026-10-03T20:39:42.543Z",
+  "passed": 82,
+  "total": 82,
   "results": [
     {
       "id": "S1",
@@ -62,6 +62,12 @@
       "desc": "the validator refuses non-objects without throwing",
       "pass": true,
       "detail": ""
+    },
+    {
+      "id": "P7",
+      "desc": "every profile in the vehicle-sound manifest validates against the validator and the JSON Schema (cruz-missile.json, hay-hauler.json)",
+      "pass": true,
+      "detail": "[]"
     },
     {
       "id": "P6",
@@ -169,19 +175,19 @@
       "id": "B4",
       "desc": "offline, \"Play scripted lap\" runs the audio graph: context running and its clock advancing",
       "pass": true,
-      "detail": "clock +7.7 s"
+      "detail": "clock +7.8 s"
     },
     {
       "id": "B5",
       "desc": "an AnalyserNode on the output shows non-silent audio all the way through the lap",
       "pass": true,
-      "detail": "rms -32.8 to -21.4 dBFS"
+      "detail": "rms -32.8 to -21.3 dBFS"
     },
     {
       "id": "B6",
       "desc": "the dash follows the lap: rpm swings and the gear indicator changes",
       "pass": true,
-      "detail": "rpm 260-5918, gears N,1,2,3"
+      "detail": "rpm 260-6080, gears N,1,2,3"
     },
     {
       "id": "B7",
@@ -223,13 +229,13 @@
       "id": "B11",
       "desc": "and a higher rpm sounds brighter",
       "pass": true,
-      "detail": "930 < 1522 < 2519"
+      "detail": "937 < 1530 < 2521"
     },
     {
       "id": "B12",
       "desc": "each layer meter follows its own control (intake and exhaust: throttle, squeal: drift, rattle: damage; boost on a turbo car in SL8)",
       "pass": true,
-      "detail": "{\"throttle0\":0,\"throttle1\":0.586941,\"exhaust1\":0.661242,\"drift0\":0,\"drift1\":0.630318,\"damage0\":0,\"damage1\":0.637705}"
+      "detail": "{\"throttle0\":0,\"throttle1\":0.58862,\"exhaust1\":0.661854,\"drift0\":0,\"drift1\":0.630318,\"damage0\":0,\"damage1\":0.637705}"
     },
     {
       "id": "B18",
@@ -253,7 +259,7 @@
       "id": "B15",
       "desc": "lifting off at revs fires the exhaust pops layer",
       "pass": true,
-      "detail": "pops meter 0.48"
+      "detail": "pops meter 0.57"
     },
     {
       "id": "B16",
@@ -265,7 +271,7 @@
       "id": "B19",
       "desc": "Stop engine plays the stop on the page: stopping (audible, status Stopping…), then Engine off and silence within stopS (1.1 s) (POC1-02)",
       "pass": true,
-      "detail": "stopping > off, silent at +1.29 s, rms -180.0 dBFS"
+      "detail": "stopping > off, silent at +1.28 s, rms -180.0 dBFS"
     },
     {
       "id": "L1",
@@ -343,7 +349,7 @@
       "id": "R1",
       "desc": "the scripted lap renders the same twice in one page (max difference below -120 dBFS)",
       "pass": true,
-      "detail": "max |diff| 1.19e-7 (-138.5 dBFS), 1989121 samples"
+      "detail": "max |diff| 8.94e-8 (-141.0 dBFS), 1989121 samples"
     },
     {
       "id": "R1b",
@@ -397,7 +403,7 @@
       "id": "K3",
       "desc": "POC1-02 the start renders deterministically (twice: max difference below -120 dBFS, same trace)",
       "pass": true,
-      "detail": "max |diff| 2.98e-8"
+      "detail": "max |diff| 0.00e+0"
     },
     {
       "id": "K4",
@@ -415,7 +421,7 @@
       "id": "K6",
       "desc": "POC1-02 the stop renders deterministically (twice: max difference below -120 dBFS, same trace)",
       "pass": true,
-      "detail": "max |diff| 0.00e+0"
+      "detail": "max |diff| 2.98e-8"
     },
     {
       "id": "K7",
@@ -445,7 +451,7 @@
       "id": "SL2",
       "desc": "a second vehicle profile, added through the manifest alone, is pickable and plays (analyser non-silent)",
       "pass": true,
-      "detail": "id hay-hauler, rms -18.4 dBFS"
+      "detail": "id hay-hauler, rms -18.5 dBFS"
     },
     {
       "id": "SL3",
@@ -469,7 +475,7 @@
       "id": "SL6",
       "desc": "A/B switches live to the other slot without stopping playback, level-matched by an offline render",
       "pass": true,
-      "detail": "live 1, gains 1.00/3.76, rms -17.4 dBFS"
+      "detail": "live 1, gains 1.00/3.76, rms -17.5 dBFS"
     },
     {
       "id": "SL7",
@@ -482,13 +488,19 @@
       "desc": "POC1-01 in the lab: the Cruz's boost section is not fitted (its controls and the boost slider disabled); fitting a turbo enables them and the whine plays (URL p.boost=fit); taking it off restores the unmodified Cruz",
       "pass": true,
       "detail": "{\"before\":\"Not fitted\",\"fittedMeter\":\"1.00\",\"fittedUrl\":\"?profile=cruz-missile&p.boost=fit\",\"after\":[]}"
+    },
+    {
+      "id": "SL9",
+      "desc": "A/B between two vehicles (Cruz Missile in A, Hay Hauler in B): one tap switches at the same state, level-matched, without stopping playback",
+      "pass": true,
+      "detail": "A cruz-missile -> B hay-hauler, B gain 0.184 (loudness ratio 0.184, not clamped), rms -33.2 dBFS"
     }
   ],
   "metrics": {
     "lap": {
-      "maxDiffTwoRenders": 1.1920928955078125e-7,
+      "maxDiffTwoRenders": 8.940696716308594e-8,
       "maxDiffFreshPage": 8.940696716308594e-8,
-      "sha256OfFirstRender": "e07c284b6676809a465e1b41ef130079c15b5d7303cbd0e57ece96cd5aa9ed29",
+      "sha256OfFirstRender": "e2a3760c32b85943cf29bfc87816312bb9b0055a7e6d02c7e09df571f758d2b8",
       "seconds": 41.440020833333335,
       "peakDbfs": -5.2,
       "rmsDbfs": -21

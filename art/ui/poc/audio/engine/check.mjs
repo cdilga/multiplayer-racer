@@ -106,6 +106,13 @@ record('P3', 'the validator refuses every broken profile, naming the path', pari
 record('P4', 'the JSON Schema refuses every field-level break (cross-field rules are validator-only)', parity.filter((r) => r.expectSchema).every((r) => r.schema) && parity.filter((r) => !r.expectSchema).every((r) => !r.schema), JSON.stringify(parity.filter((r) => r.expectSchema !== r.schema)));
 record('P5', 'the validator refuses non-objects without throwing', !synthNode.validateProfile(null).ok && !synthNode.validateProfile('x').ok && !synthNode.validateProfile([]).ok);
 const hayCheck = synthNode.validateProfile(hay);
+const manifestFiles = JSON.parse(readFileSync(join(repo, 'assets', 'audio', 'engine', 'manifest.json'), 'utf8')).files;
+const manifestRows = manifestFiles.map((f) => {
+  const p = JSON.parse(readFileSync(join(repo, 'assets', 'audio', 'engine', f), 'utf8'));
+  return { f, validator: synthNode.validateProfile(p).ok, schema: schemaOk(p) === true };
+});
+record('P7', `every profile in the vehicle-sound manifest validates against the validator and the JSON Schema (${manifestFiles.join(', ')})`,
+  manifestRows.length >= 2 && manifestRows.every((r) => r.validator && r.schema), JSON.stringify(manifestRows.filter((r) => !r.validator || !r.schema)));
 record('P6', 'turbo is per-vehicle data: the Cruz Missile has no boost section and the Hay Hauler has one; both pass the validator and the JSON Schema',
   !('boost' in profile) && Boolean(hay.boost) && hayCheck.ok && schemaOk(hay) === true && !schema.required.includes('boost') && schema.required.includes('ignition'), hayCheck.errors.slice(0, 2).join('; '));
 
@@ -823,6 +830,20 @@ try {
       fit1.absent === 'false' && !fit1.rowDisabled && !fit1.slider && fit1.has && fit1.meter > 0.3 && fit1.url.includes('p.boost=fit') &&
       fit2.absent === 'true' && fit2.slider && !fit2.has && fit2.modified.length === 0 && fit2.meter === 0,
     JSON.stringify({ before: fit0.fitLabel, fittedMeter: fit1.meter?.toFixed(2), fittedUrl: fit1.url, after: fit2.modified }));
+  // A/B between two different vehicles (P1-A04b AC3): the Cruz in A, the Hay Hauler in B, one tap apart.
+  await SL.evaluate(() => window.__gallery.lab.switchSlot(1));
+  await SL.evaluate(() => window.__gallery.lab.selectProfile('hay-hauler'));
+  await sleep(200);
+  await SL.evaluate(() => window.__gallery.lab.switchSlot(0));
+  await sleep(200);
+  const slotA = await SL.evaluate(() => ({ id: window.__gallery.lab.liveProfile().id, st: window.__gallery.voice.state() }));
+  await SL.locator('#lab-b').click();
+  await sleep(500);
+  const slotB = await SL.evaluate(() => ({ id: window.__gallery.lab.liveProfile().id, st: window.__gallery.voice.state(), info: window.__gallery.lab.slotInfo(), rms: window.__gallery.probe().rms, run: window.__gallery.ctx.state, pressed: document.getElementById('lab-b').getAttribute('aria-pressed') }));
+  const sameState = ['throttle', 'gear', 'surface', 'drift', 'damage', 'ignition'].every((k) => slotA.st[k] === slotB.st[k]);
+  record('SL9', 'A/B between two vehicles (Cruz Missile in A, Hay Hauler in B): one tap switches at the same state, level-matched, without stopping playback',
+    slotA.id === 'cruz-missile' && slotB.id === 'hay-hauler' && sameState && slotB.pressed === 'true' && slotB.info.live === 1 && slotB.info.matched && Math.abs(slotB.info.gains[1] - slotB.info.ratio) < 1e-9 && slotB.run === 'running' && slotB.rms > 0.002,
+    `A ${slotA.id} -> B ${slotB.id}, B gain ${slotB.info.gains[1].toFixed(3)} (loudness ratio ${slotB.info.ratio?.toFixed(3)}, not clamped), rms ${db(slotB.rms)} dBFS`);
   await ctxL.close();
 
   // ======================================================================================== 6. CPU cost

@@ -614,6 +614,7 @@ const lab = {
   slots: null, // [{ baseId, base, imported, edits: Map<path, value>, matchGain }]
   live: 0,
   matchKnown: false,
+  matchRatio: null, // A's loudness over B's at the match state (the last level match)
   rows: new Map(), // path -> { kind, row, input, valueEl, section }
   sections: new Map(), // top-level key -> { section, fit } (fit: the Fitted toggle of an optional section)
   optional: new Set(), // top-level sections a profile may leave out (boost: a car without a turbo)
@@ -967,7 +968,9 @@ async function labMatchLevels() {
   try {
     const [a, b] = await Promise.all([loudness(labSlotProfile(lab.slots[0])), loudness(labSlotProfile(lab.slots[1]))]);
     if (a > 1e-6 && b > 1e-6) {
-      lab.slots[1].matchGain = Math.min(4, Math.max(0.25, a / b));
+      // B is scaled to A's loudness, down by up to 24 dB (cars differ a lot) or up by 12 dB (output.level tops out at 4).
+      lab.matchRatio = a / b;
+      lab.slots[1].matchGain = Math.min(4, Math.max(1 / 16, a / b));
       lab.slots[0].matchGain = 1;
     }
   } catch {
@@ -1166,7 +1169,7 @@ function labApi() {
     exportText: () => labExportText(),
     importText: (text) => labImportText(text),
     switchSlot: (i) => labSwitchSlot(i),
-    slotInfo: () => ({ live: lab.live, gains: lab.slots.map((s) => s.matchGain), matched: lab.matchKnown }),
+    slotInfo: () => ({ live: lab.live, gains: lab.slots.map((s) => s.matchGain), matched: lab.matchKnown, ratio: lab.matchRatio }),
     search: (q) => {
       $('lab-search').value = q;
       labApplySearch();
