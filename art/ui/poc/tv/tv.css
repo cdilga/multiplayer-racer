@@ -165,11 +165,11 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .underline { height: calc(var(--k) * 10px); background: var(--c-saffron); border-radius: 999px; margin: calc(var(--k) * 8px) 0 calc(var(--k) * 14px); transform: rotate(-.6deg); }
 .res-right .sub { font-size: calc(var(--k) * 28px); margin-bottom: calc(var(--k) * 12px); }
 .table { flex: 1; display: grid; column-gap: calc(var(--k) * 26px); align-content: start; min-height: 0; overflow: hidden; }
-.trow { display: flex; align-items: center; gap: calc(var(--k) * 8px); padding: 0; border-bottom: calc(var(--k) * 2px) solid var(--c-paper-line); font-size: calc(var(--k) * 26px); white-space: nowrap; min-width: 0; }
+.trow { display: flex; align-items: center; gap: calc(var(--k) * 8px); padding: 0; border-bottom: calc(var(--k) * 2px) solid var(--c-paper-line); font-size: calc(var(--k) * 26px * var(--grow, 1)); white-space: nowrap; min-width: 0; }
 .trow .place { width: 2em; text-align: right; font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums; }
 .trow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .trow .pts { font-family: var(--font-display); font-weight: 900; color: var(--c-cobalt); font-variant-numeric: tabular-nums; }
-.trow .badge { font-size: calc(var(--k) * 24px); }
+.trow .badge { font-size: calc(var(--k) * 24px * var(--grow, 1)); }
 .res-bottom { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--k) * 360px); background: var(--c-paper); border-top: calc(var(--k) * 6px) solid var(--c-ink); display: flex; align-items: center; justify-content: space-between; padding: 0 calc(var(--k) * 64px); }
 .res-bottom .acts { display: flex; flex-direction: column; gap: calc(var(--k) * 14px); }
 .res-bottom .acts .btn { justify-content: flex-start; min-width: calc(var(--k) * 560px); }
@@ -264,7 +264,7 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 /* ---- the pause flow (POC1-09/10) in the U01.3 language, after refs/owner-2026-10-03/tv-pause-menu.jpg ---- */
 .pause { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--k) * 88px); z-index: 15; display: grid; place-items: center; }
 .pause .scrim { position: absolute; inset: 0; background: rgb(21 32 58 / .62); }
-.pcard { position: relative; width: calc(var(--k) * 1180px); max-width: 94%; padding: calc(var(--k) * 74px) calc(var(--k) * 44px) calc(var(--k) * 30px); background: var(--c-paper); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); }
+.pause .pcard { position: relative; width: calc(var(--k) * 1180px); max-width: 94%; padding: calc(var(--k) * 74px) calc(var(--k) * 44px) calc(var(--k) * 30px); background: var(--c-paper); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); }
 .paint { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
 .bn { position: relative; isolation: isolate; display: inline-block; padding: .1em .45em .14em; color: var(--c-paper); font: 900 italic calc(var(--k) * 84px)/1 var(--font-display); text-transform: uppercase; letter-spacing: .01em; white-space: nowrap; rotate: var(--slant-heading); }
 .bn .paint path { fill: var(--c-ink); }
@@ -321,3 +321,95 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
   .cd-flash .flash { animation: none; opacity: 0; }
   .cd-flash b { transform: rotate(-4deg); animation: cd-held-num 1s steps(1, end) forwards; }
 }
+
+/* ---- P1-U02.4: warm-up, end of round, intermission (POC1-15/16/17) in the U01.3 language ---- */
+/* Text and the join QR stay inside title-safe (5 %: 96 × 54 TV px), other chrome inside action-safe (GUIDE §4); the 3D
+   views may bleed. No text under the TV minimum (24 px). */
+/* Warm-up: the yard from the Overview camera fills the left; the join card, the roster and Start race stand at the right. */
+.warm-head { position: absolute; left: calc(var(--k) * 112px); top: calc(var(--k) * 72px); display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--k) * 12px); z-index: 2; }
+.wbn { font-size: calc(var(--k) * 80px); }
+.warm-side { position: absolute; right: calc(var(--k) * 96px); top: calc(var(--k) * 54px); width: calc(var(--k) * 560px); display: flex; flex-direction: column; gap: calc(var(--k) * 22px); }
+.warm-join { display: flex; align-items: center; gap: calc(var(--k) * 18px); padding: calc(var(--k) * 16px); }
+.warm-join .qr { flex: none; width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
+.wj-text { display: flex; flex-direction: column; gap: calc(var(--k) * 4px); min-width: 0; }
+.wj-text small { font: 700 calc(var(--k) * 24px)/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; }
+.wj-text .code { font-size: calc(var(--k) * 92px); line-height: .95; letter-spacing: .04em; }
+.wj-text .code-cap { max-width: none; }
+.warm-roster { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: calc(var(--k) * 16px); }
+.warm-roster.fits { flex: 0 1 auto; }
+.warm-roster.fits .rlist { flex: none; }
+.warm-roster .tag { font-size: calc(var(--k) * 34px); }
+.rlist { flex: 1; min-height: 0; display: grid; gap: calc(var(--k) * 8px); align-content: start; margin-top: calc(var(--k) * 14px); }
+.rcard { display: flex; align-items: center; gap: calc(var(--k) * 10px); min-width: 0; padding: 0 calc(var(--k) * 10px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-left: calc(var(--k) * 10px) solid var(--seat); border-radius: calc(var(--k) * 10px); }
+.rcard .badge { font-size: calc(var(--k) * 26px); }
+.rcard .nm { flex: 1; min-width: 0; font-size: calc(var(--k) * 28px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcard .chip { font-size: calc(var(--k) * 24px); }
+.rcard.chip { gap: calc(var(--k) * 8px); padding: 0 calc(var(--k) * 6px); border-left-width: calc(var(--k) * 3px); }
+.rcard.chip .badge, .rcard.chip .nm { font-size: calc(var(--k) * 24px); }
+.rcard .tick { flex: none; display: inline-grid; place-items: center; width: calc(var(--k) * 32px); height: calc(var(--k) * 32px); border-radius: 50%; border: calc(var(--k) * 3px) solid var(--c-ink); background: var(--c-success); color: var(--c-paper); font-size: calc(var(--k) * 24px); }
+.rcard .tick.wait { background: var(--c-paper-shade); color: var(--c-ink); }
+.warm-roster .page-note { margin-top: calc(var(--k) * 8px); }
+.warm-go { display: flex; justify-content: center; margin-top: auto; }
+.warm-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); padding: 0 .9em; transform: rotate(-2deg); }
+.plate .ok { font-style: normal; color: var(--c-teal); margin-left: .15em; }
+
+/* End of round: the winner's car as the hero, the podium breaking its lower edge, the standings, the join band. */
+.eor-head, .inter-head { position: absolute; left: calc(var(--k) * 112px); top: calc(var(--k) * 72px); display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--k) * 12px); }
+.eor-hero { position: absolute; left: calc(var(--k) * 96px); top: calc(var(--k) * 54px); width: calc(var(--k) * 1054px); height: calc(var(--k) * 650px); border: calc(var(--k) * 6px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); }
+.eor .eor-head { left: calc(var(--k) * 120px); top: calc(var(--k) * 74px); }
+.eor-pod { position: absolute; left: calc(var(--k) * 126px); top: calc(var(--k) * 400px); width: calc(var(--k) * 994px); height: calc(var(--k) * 330px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--k) * 28px); align-items: end; }
+.podcard { display: flex; flex-direction: column; gap: calc(var(--k) * 10px); }
+.podcar { height: calc(var(--k) * 150px); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); }
+.podwin { display: inline-flex; align-items: center; gap: .3em; margin-bottom: calc(var(--k) * 4px); font: 900 italic calc(var(--k) * 26px)/1 var(--font-display); text-transform: uppercase; }
+.podwin img { width: 1.1em; height: 1.1em; }
+.podcard.p1 .podinfo { padding-top: calc(var(--k) * 14px); padding-bottom: calc(var(--k) * 14px); }
+.podinfo { padding: calc(var(--k) * 10px) calc(var(--k) * 16px); background: var(--c-paper); border: calc(var(--k) * 4px) solid var(--c-ink); border-top: calc(var(--k) * 12px) solid var(--seat); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); }
+.podwho { display: flex; align-items: center; gap: calc(var(--k) * 10px); font-size: calc(var(--k) * 30px); font-weight: 700; min-width: 0; }
+.podwho .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podnum { display: flex; align-items: baseline; justify-content: space-between; }
+.podnum .place { font-size: calc(var(--k) * 64px); }
+.podcard.p1 .podnum .place { font-size: calc(var(--k) * 84px); }
+.podnum .pts { font-size: calc(var(--k) * 40px); color: var(--c-cobalt); }
+.eor-table { position: absolute; left: calc(var(--k) * 1180px); right: calc(var(--k) * 96px); top: calc(var(--k) * 54px); bottom: calc(var(--k) * 360px); display: flex; flex-direction: column; padding: calc(var(--k) * 16px) calc(var(--k) * 20px); }
+.eor-table .tag { font-size: calc(var(--k) * 36px); }
+.eor-table .table { margin-top: calc(var(--k) * 12px); }
+
+/* The join band (end of round, intermission): the QR big at the left, the screen's extra in the middle, the actions right. */
+.jband { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--k) * 340px); display: flex; align-items: flex-start; gap: calc(var(--k) * 40px); padding: calc(var(--k) * 16px) calc(var(--k) * 96px) 0; background: var(--c-paper); border-top: calc(var(--k) * 6px) solid var(--c-ink); }
+.jb-join { flex: none; display: flex; align-items: center; gap: calc(var(--k) * 24px); }
+.jb-join .qr { width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
+.jb-code { display: block; font-size: calc(var(--k) * 84px); line-height: 1.05; }
+.jb-code .hi { background: var(--c-saffron); padding: 0 .12em; box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
+.jb-join .code-cap { display: block; max-width: calc(var(--k) * 480px); margin-top: calc(var(--k) * 10px); }
+.jb-mid { flex: 1; min-width: 0; align-self: stretch; display: flex; justify-content: center; align-items: center; padding-bottom: calc(var(--k) * 54px); }
+.jb-next { display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 12px); }
+.jb-next .tag { font-size: calc(var(--k) * 48px); }
+.jb-next .tag img { width: .9em; height: .9em; vertical-align: -.1em; margin-right: .2em; }
+.jb-note { font-size: calc(var(--k) * 24px); }
+.jb-acts { flex: none; display: flex; flex-direction: column; gap: calc(var(--k) * 12px); }
+.jb-acts .btn { justify-content: flex-start; min-width: calc(var(--k) * 470px); min-height: calc(var(--k) * 70px); font-size: calc(var(--k) * 30px); }
+.jb-acts .btn .sub { font-size: calc(var(--k) * 24px); }
+.jb-top { display: flex; flex-direction: column; align-items: stretch; gap: calc(var(--k) * 10px); width: 100%; max-width: calc(var(--k) * 440px); }
+.jb-pod { display: flex; align-items: center; gap: calc(var(--k) * 12px); padding: calc(var(--k) * 6px) calc(var(--k) * 16px); background: var(--c-paper); border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
+.jb-pod .badge { font-size: calc(var(--k) * 28px); }
+.jb-pod b { font-size: calc(var(--k) * 40px); }
+.jb-pod .pts { margin-left: auto; color: var(--c-cobalt); font-size: calc(var(--k) * 34px); }
+.jb-pod:first-child b { font-size: calc(var(--k) * 48px); }
+
+/* Intermission: the main replay as big as the safe area and the band allow, the highlights still to come beside it. */
+.inter-head { flex-direction: row; align-items: center; gap: calc(var(--k) * 24px); }
+.ibn { font-size: calc(var(--k) * 60px); }
+.inter-head .strip { font-size: calc(var(--k) * 36px); }
+.inter-main { position: absolute; left: calc(var(--k) * 96px); top: calc(var(--k) * 150px); width: calc(var(--k) * 1070px); height: calc(var(--k) * 586px); }
+.hl-view { position: absolute; inset: 0; border: calc(var(--k) * 6px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); }
+.hl-cap { position: absolute; left: calc(var(--k) * 28px); bottom: calc(var(--k) * 40px); font-size: calc(var(--k) * 44px); }
+.hl-cap .badge { font-size: .8em; vertical-align: .05em; }
+.hl-count { position: absolute; right: calc(var(--k) * 22px); top: calc(var(--k) * 20px); padding: calc(var(--k) * 4px) calc(var(--k) * 14px); background: var(--c-ink); color: var(--c-paper); border-radius: 999px; font: 700 calc(var(--k) * 26px)/1.2 var(--font-body); }
+.hl-bar { position: absolute; left: calc(var(--k) * 28px); right: calc(var(--k) * 28px); bottom: calc(var(--k) * 16px); height: calc(var(--k) * 10px); background: rgb(21 32 58 / .55); border-radius: 999px; overflow: hidden; }
+.hl-bar i { display: block; height: 100%; background: var(--c-saffron); }
+.inter-side { position: absolute; left: calc(var(--k) * 1196px); right: calc(var(--k) * 96px); top: calc(var(--k) * 146px); height: calc(var(--k) * 584px); display: flex; flex-direction: column; gap: calc(var(--k) * 14px); }
+.inter-side .tag { font-size: calc(var(--k) * 34px); }
+.hl-card { position: relative; flex: 1; min-height: 0; }
+.hl-mini { position: absolute; inset: 0; border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
+.hl-what { position: absolute; left: calc(var(--k) * 10px); top: calc(var(--k) * 10px); display: inline-flex; align-items: center; gap: .35em; padding: calc(var(--k) * 2px) calc(var(--k) * 10px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 6px); font: 700 calc(var(--k) * 24px)/1.25 var(--font-body); }
+.hl-what .badge { font-size: calc(var(--k) * 24px); }

@@ -335,7 +335,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
 // above it. Anything that needs the whole screen (settings, players and controllers, ending the round) goes through the
 // pause flow, which pauses first. Hovering the QR shows it big for a while and pauses the game.
 const DIAG = { colPx: 330, gapPx: 16, rowPx: 34, headPx: 46 };
-function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, onDiag } = {}) {
+function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, onDiag, action = null, noPause = false } = {}) {
   const f = el('footer', 'foot k');
   f.setAttribute('aria-label', 'Host toolbar');
   f.innerHTML = `<div class="f-diag" hidden></div>
@@ -372,9 +372,11 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
   }
   const render = () => {
     f.classList.toggle('has-qr', state.qr);
+    f.querySelector('.f-join').style.display = state.join === false ? 'none' : ''; // (the class's display beats [hidden])
+    f.querySelector('.f-pause').style.display = noPause ? 'none' : '';
     f.classList.toggle('menu-open', menu);
     const pb = f.querySelector('.f-pause');
-    pb.innerHTML = state.paused ? `${icon('play')}Resume` : `${icon('pause')}Pause`;
+    pb.innerHTML = action ? `${icon(action.icon)}${action.label}` : state.paused ? `${icon('play')}Resume` : `${icon('pause')}Pause`;
     f.querySelector('.f-n').textContent = String(state.players);
     mid.innerHTML = menu ? menuRow() : state.caption ? `<span class="caption footcap">${esc(state.caption)}</span>` : readouts();
     const mb = f.querySelector('.f-menu');
@@ -384,7 +386,7 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
     if (diag) renderDiag();
   };
   // The mock's controls work, so the review can click through them.
-  f.querySelector('.f-pause').addEventListener('click', () => { location.hash = `${state.paused ? 'grid' : 'paused'}&n=${S.n}${S.base ? `&base=${S.base}` : ''}&layout=${state.layout}`; });
+  f.querySelector('.f-pause').addEventListener('click', () => { if (action) { location.hash = action.go; return; } location.hash = `${state.paused ? 'grid' : 'paused'}&n=${S.n}${S.base ? `&base=${S.base}` : ''}&layout=${state.layout}`; });
   f.querySelector('.f-full').addEventListener('click', () => document.documentElement.requestFullscreen?.().catch(() => {}));
   f.querySelector('.f-menu').addEventListener('click', () => { menu = !menu; render(); });
   mid.addEventListener('click', (e) => {
@@ -662,76 +664,105 @@ const SETUP = {
     return g;
   },
 
+  // Warm-up (POC1-15, U02.4). How it works: joining drops your car straight into the warm-up yard (the derby bowl) beside
+  // everyone else's, and you can drive and Cooee at once, so you find your car by moving it. Ready is on your phone; the
+  // host starts the race (the side panel's one big action), and late joiners keep dropping into the yard. The TV shows the yard from the
+  // Overview camera (R107: smooth, near-fixed, frames every car) with a nameplate over each car, the join card big at the
+  // top right (joining is the lobby's one job) and the roster under it. Every seat is a car: nothing caps the yard.
   lobby() {
-    world.setMode('lobby');
-    world.setCars(Math.min(S.n, 32));
-    const k = K();
-    const s = el('div', 'screen k');
-    const ready = Math.round(S.n * 0.84);
-    s.innerHTML = `<img class="wordmark" style="left:calc(var(--k)*96px);top:calc(var(--k)*70px)" src="${asset('brand/wordmark.svg')}" alt="Joystick Jammers">
-      <div class="card lobby-qr"><div class="join stack"><img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:calc(var(--k)*300px);height:calc(var(--k)*300px)"><div class="display code">ROO7</div><div class="code-cap" style="max-width:none">Scan to join, or enter the code at jammers.dilger.dev</div></div></div>
-      <div class="card roster"><h2 class="display italic"><span class="num tnum">${S.n}</span> players · <span class="num tnum">${ready}</span> ready</h2><div class="sub">Late joiners start a few seconds behind the last car. There's no player limit.</div><div class="cards"></div><div class="page-note"></div></div>
-      <div class="warmup"><span class="chip choosing">Warm-up: drive around while everyone joins</span></div>
-      <div class="start"><button class="btn primary gp">${icon('flag')}Start race</button></div>`;
+    world.setCars(S.n, S.base);
+    world.setMode('warmup');
+    const ready = (seat) => seat % 6 !== 0;
+    const nReady = Array.from({ length: S.n }, (_, i) => ready(i + 1)).filter(Boolean).length;
+    const s = el('div', 'screen k warm');
+    s.innerHTML = `<div class="warm-head"><span class="bn wbn" data-torn="warm-up">Warm-<span class="acc">up</span></span>
+        <span class="strip ink" data-brush="warm-sub"><span>${icon('car')}Drive around while everyone joins · Cooee to find your car</span></span></div>
+      <div class="warm-side">
+        <div class="card warm-join" data-tilt="warm-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
+        <div class="card warm-roster"><span class="tag" data-brush="warm-roster"><span><b class="tnum">${S.n}</b> players · <b class="tnum">${nReady}</b> ready</span></span>
+          <div class="rlist"></div><div class="page-note"></div></div>
+        <div class="warm-go"><span class="ticks">${TICKS}<button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button>${TICKS}</span></div>
+      </div>`;
     ui.append(s);
-    const cards = s.querySelector('.cards'), note = s.querySelector('.page-note');
-    // Roster rule: full cards reflow into more columns down to the legible minimum, then number + name chips, then pages.
-    const area = cards.getBoundingClientRect();
-    area.height -= 44 * k; // keep the page note inside the card
-    const gap = 10 * k;
-    const fit = (minW, rowH) => { const cols = Math.max(1, Math.floor((area.width + gap) / (minW + gap))); const rows = Math.max(1, Math.floor((area.height + gap) / (rowH + gap))); return { cols, rows, per: cols * rows }; };
-    let mode = 'card', f = null;
-    for (const cols of [1, 2, 3, 4]) { const minW = (area.width + gap) / cols - gap; if (minW < 300 * k) break; const g2 = fit(minW, 62 * k); if (g2.per >= S.n && g2.cols >= cols) { f = { ...g2, cols }; break; } }
-    if (!f) { mode = 'chip'; f = fit(205 * k, 44 * k); }
-    const per = f.cols * f.rows, pages = Math.ceil(S.n / per);
-    cards.style.gridTemplateColumns = `repeat(${f.cols}, minmax(0, 1fr))`;
-    const page = +(S.p.get('page') ?? 1) - 1;
-    for (let i = page * per + 1; i <= Math.min(S.n, (page + 1) * per); i++) {
-      const p = seatInfo(i), isReady = i % 6 !== 0;
-      const c = el('div', `pcard${mode === 'chip' ? ' chipmode' : ''}`);
+    // The footer keeps the host's fullscreen and menu; the join card already carries the room, so the footer's join hides.
+    const footer = makeFooter({ noPause: true });
+    footer.update({ qr: false, join: false, players: S.n, caption: 'Warm-up · late joiners drop into the yard and drive straight away' });
+    s.querySelector('.warm-side').style.bottom = `${Math.max(footer.height() + 20 * K(), 54 * K())}px`;
+    wireActs(s);
+    fitCards(s.querySelector('.rlist'), s.querySelector('.warm-roster .page-note'), S.n, (seat, chip) => {
+      const p = seatInfo(seat), r = ready(seat), c = el('div', `rcard${chip ? ' chip' : ''}`);
       c.style.setProperty('--seat', p.color); c.style.setProperty('--seat-on', p.on);
-      c.innerHTML = mode === 'chip'
-        ? `<span class="badge">#${p.num}</span><span class="nm"></span><span class="tick${isReady ? '' : ' wait'}" title="${isReady ? 'Ready' : 'Choosing'}">${isReady ? '✓' : '…'}</span>`
-        : `<span class="badge">#${p.num}</span><span class="nm"></span>${isReady ? `<span class="chip ready">${icon('check')}Ready</span>` : '<span class="chip choosing">choosing…</span>'}`;
+      c.innerHTML = `<span class="badge">#${p.num}</span><span class="nm"></span>${chip ? `<span class="tick${r ? '' : ' wait'}" title="${r ? 'Ready' : 'Choosing'}">${r ? '✓' : '…'}</span>` : r ? `<span class="chip ready">${icon('check')}Ready</span>` : '<span class="chip choosing">choosing…</span>'}`;
       c.querySelector('.nm').textContent = p.name;
-      cards.append(c);
-    }
-    note.textContent = mode === 'card' ? '' : pages > 1 ? `Page ${page + 1} of ${pages}; pages turn every 6 s. ✓ is Ready.` : '✓ is Ready, … is still choosing.';
-    return { views: () => [{ x: 0, y: 0, w: W(), h: H(), kind: 'wide' }], update() {} };
+      return c;
+    }, { readyNote: '✓ is Ready, … is still choosing.' });
+    // A roster that fits whole sizes to its content instead of leaving a blank panel (fresh-eyes review).
+    if (!s.querySelector('.warm-roster .page-note').textContent.startsWith('Page')) s.querySelector('.warm-roster').classList.add('fits');
+    paint(s);
+    const plates = nameplates(s, { suffix: (seat) => (S.n <= 12 && ready(seat) ? '<i class="ok">✓</i>' : ''), badgesTo: 32 });
+    const side = () => s.querySelector('.warm-side').getBoundingClientRect();
+    return {
+      views: () => [{ x: 0, y: 0, w: Math.round(side().left - 16 * K()), h: Math.round(H() - footer.height()), kind: 'overview' }],
+      update(dt, views) { plates(views[0]); },
+    };
   },
 
+  // End of round (POC1-17): the content the owner called fine (round complete, the podium with points, every player's
+  // standing, the next-race timer, the join QR, the host's actions) in the R102 language: a torn banner, brushed tags,
+  // tilted podium cards, colour behind text, and the winner's car as the hero render (point 2: at least 30% of the
+  // screen), with second and third live in their own windows. The highlights follow in the intermission (#intermission),
+  // so this screen is the result and nothing else.
   results() {
     world.setMode('race');
-    world.setCars(Math.min(S.n, 32));
-    const k = K();
-    const s = el('div', 'screen k');
-    clearColor = '#f3dcb0';
-    const st = Array.from({ length: S.n }, (_, i) => ({ seat: ((i * 7) % S.n) + 1, place: i + 1, pts: Math.max(1, 30 - i * (S.n > 10 ? 1 : 3)) }));
-    const pod = st.slice(0, 3).map((r) => { const p = seatInfo(r.seat), [n, suf] = ordinal(r.place); return `<div class="card pod"><div class="who"><span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span><span>${esc(shortName(p.name, 10))}</span></div><div><div class="display italic place">${n}<span class="lc">${suf}</span></div><div class="display pts tnum">+${r.pts}</div></div></div>`; }).join('');
-        const rows = st.map((r) => { const p = seatInfo(r.seat); return `<div class="trow"><span class="place">${r.place}</span><span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span><span class="nm"></span><span class="pts">+${r.pts}</span></div>`; }).join('');
-    s.innerHTML = `<img class="wordmark" style="left:calc(var(--k)*64px);top:calc(var(--k)*20px);height:calc(var(--k)*120px)" src="${asset('brand/wordmark.svg')}" alt="Joystick Jammers">
-      <div class="display italic tab" style="position:absolute;left:calc(var(--k)*420px);top:calc(var(--k)*44px);font-size:calc(var(--k)*56px)"><span>Round 3 complete</span></div>
-      <div class="res-left"><div class="reel"><div class="tab display italic"><span>Round highlights</span></div></div><div class="podium">${pod}</div></div>
-      <div class="card res-right"><h2 class="display italic">Next race starts in <span class="t tnum lc">42s</span></h2><div class="underline"></div><div class="sub">Rematch on the same track. Everyone keeps their number.</div><div class="table">${rows}</div><div class="page-note"></div></div>
-      <div class="res-bottom"><div class="join"><img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:calc(var(--k)*296px);height:calc(var(--k)*296px)"><div><span class="display italic" style="font-size:calc(var(--k)*96px);line-height:1.1"><span class="lc">Jump in</span> · ROO7</span><div class="code-cap" style="max-width:none;margin-top:calc(var(--k)*8px)">Scan, or enter the code at jammers.dilger.dev. You'll race next round.</div></div></div>
-        <div class="acts"><button class="btn">${icon('eye-off')}<span>Hide replay<span class="sub">Timer keeps running</span></span></button><button class="btn primary gp">${icon('play')}<span>Start next round now<span class="sub">Skips the timer</span></span></button><button class="btn">${icon('users')}<span>Return to lobby<span class="sub">Everyone stays connected</span></span></button></div></div>`;
-    s.querySelectorAll('.trow .nm').forEach((e, i) => { e.textContent = seatInfo(st[i].seat).name; });
+    world.setCars(S.n, S.base);
+    clearColor = tokens.palette.paper.hex;
+    const st = mockStandings();
+    const s = el('div', 'screen k eor');
+    const pod = [1, 0, 2].map((i) => { const r = st[i], p = seatInfo(r.seat), [n, suf] = ordinal(r.place); return `<div class="podcard p${r.place}" data-tilt="pod-${r.place}" style="--seat:${p.color};--seat-on:${p.on}">${r.place === 1 ? '' : `<div class="podcar" data-seat="${r.seat}"></div>`}<div class="podinfo">${r.place === 1 ? `<span class="podwin">${icon('trophy')}Winner</span>` : ''}<div class="podwho"><span class="badge">#${p.num}</span><span class="nm">${esc(shortName(p.name, 10))}</span></div><div class="podnum"><span class="display italic place">${n}<span class="lc">${suf}</span></span><span class="display pts tnum">+${r.pts}</span></div></div></div>`; }).join('');
+    s.innerHTML = `<div class="eor-hero" data-seat="${st[0].seat}"></div>
+      <div class="eor-head"><span class="bn" data-torn="eor">Round 3 <span class="acc">complete</span></span>
+        <span class="strip ink" data-brush="eor-sub"><span>${icon('flag')}Rematch on the same track · everyone keeps their number</span></span></div>
+      <div class="eor-pod">${pod}</div>
+      <div class="card eor-table"><span class="tag" data-brush="eor-standings"><span>Standings</span></span><div class="table"></div><div class="page-note"></div></div>
+      ${joinBand({ mid: `<div class="jb-next"><span class="tag warning" data-brush="eor-next"><span>${icon('timer')}Next race in <b class="tnum">42<span class="lc">s</span></b></span></span><span class="jb-note">Highlights first, then the grid lines up.</span></div>`,
+        acts: [['play', 'Watch the highlights', 'Timer keeps running', 'intermission'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']] })}`;
     ui.append(s);
-    // Standings fit like the lobby roster: more columns down to the legible minimum, then pages (never truncated).
-    const table = s.querySelector('.table');
-    const box = table.getBoundingClientRect();
-    const rowH = (table.firstElementChild?.getBoundingClientRect().height ?? 36 * k) + 6 * k, maxRows = Math.max(1, Math.floor(box.height / rowH));
-    const maxCols = Math.max(1, Math.floor((box.width + 26 * k) / (320 * k + 26 * k))); // keep room for the name
-    let pageRows = maxRows;
-    if (S.n > maxCols * pageRows) pageRows = Math.max(1, pageRows - 1); // leave room for the page note
-    const tcols = Math.min(maxCols, Math.ceil(S.n / pageRows)), perPage = tcols * pageRows;
-    table.style.gridTemplateColumns = `repeat(${tcols}, minmax(0,1fr))`;
-    table.style.gridTemplateRows = `repeat(${Math.min(pageRows, Math.ceil(S.n / tcols))}, ${rowH}px)`;
-    table.style.gridAutoFlow = 'column';
-    [...table.children].forEach((r, i) => { if (i >= perPage) r.remove(); });
-    if (S.n > perPage) s.querySelector('.res-right .page-note').textContent = `Page 1 of ${Math.ceil(S.n / perPage)}; pages turn every 6 s.`;
-    const reel = s.querySelector('.reel');
-    return { views() { const r = reel.getBoundingClientRect(); const b = 5 * K(); return [{ x: 0, y: 0, w: W(), h: H(), kind: 'wide' }, { x: Math.round(r.x + b), y: Math.round(r.y + b), w: Math.round(r.width - 2 * b), h: Math.round(r.height - 2 * b), kind: 'reel' }]; }, update() {} };
+    standingsTable(s.querySelector('.eor-table .table'), s.querySelector('.eor-table .page-note'), st);
+    paint(s);
+    wireActs(s);
+    return {
+      views: () => [...s.querySelectorAll('.eor-hero, .podcar')].map((e) => { const r = e.getBoundingClientRect(), b = 5 * K(); return { x: Math.round(r.x + b), y: Math.round(r.y + b), w: Math.round(r.width - 2 * b), h: Math.round(r.height - 2 * b), kind: 'reel', seat: +e.dataset.seat }; }),
+      update() {},
+    };
+  },
+
+  // Intermission (POC1-16): the highlights, maximised. The main replay takes most of the screen; beside it the highlights
+  // still to come play live, so the sides are more highlights rather than chrome; the join band keeps the QR big, with the
+  // round's top three and the host's actions filling the rest of it (no empty space beside the QR).
+  intermission() {
+    world.setMode('race');
+    world.setCars(S.n, S.base);
+    clearColor = tokens.palette.paper.hex;
+    const st = mockStandings();
+    const who = (seat) => { const p = seatInfo(seat); return `<span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span>`; };
+    const pick = (k) => st[Math.min(st.length - 1, k)].seat;
+    const reel = [['Fastest lap', pick(4)], ['Closest finish', pick(1)], ['Most wrecks', pick(2)], ['Longest drift', pick(5)], ['Comeback of the round', pick(st.length - 1)]];
+    const now = 0;
+    const s = el('div', 'screen k inter');
+    s.innerHTML = `<div class="inter-head"><span class="bn ibn" data-torn="inter">Round <span class="acc">highlights</span></span>
+        <span class="strip ink" data-brush="inter-next"><span>${icon('timer')}Next round in <b class="tnum">42s</b></span></span></div>
+      <div class="inter-main"><div class="hl-view" data-seat="${reel[now][1]}"></div>
+        <span class="tag hl-cap" data-brush="hl-cap"><span>${reel[now][0]} · ${who(reel[now][1])} ${esc(shortName(seatInfo(reel[now][1]).name, 10))}</span></span>
+        <span class="hl-count tnum">${now + 1} / ${reel.length}</span><div class="hl-bar"><i style="width:38%"></i></div></div>
+      <div class="inter-side"><span class="tag" data-brush="hl-next"><span>Up next</span></span>
+        ${reel.slice(now + 1).map(([what, seat], i) => `<div class="hl-card" data-tilt="hl-${i}"><div class="hl-mini" data-seat="${seat}"></div><span class="hl-what">${who(seat)} ${what}</span></div>`).join('')}</div>
+      ${joinBand({ mid: `<div class="jb-top">${st.slice(0, 3).map((r) => { const [n, suf] = ordinal(r.place); return `<span class="jb-pod" data-tilt="jb-${r.place}">${who(r.seat)}<b class="display italic">${n}<span class="lc">${suf}</span></b><b class="display tnum pts">+${r.pts}</b></span>`; }).join('')}</div>`,
+        acts: [['chevron-right', 'Skip highlight', 'Next one plays', 'intermission'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']], row: true })}`;
+    ui.append(s);
+    paint(s);
+    wireActs(s);
+    const box = (e, kind) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), kind, seat: +e.dataset.seat }; };
+    return { views: () => [box(s.querySelector('.hl-view'), 'highlight'), ...[...s.querySelectorAll('.hl-mini')].map((e) => box(e, 'reel'))], update() {} };
   },
 
   overview() {
@@ -750,31 +781,96 @@ const SETUP = {
     rowsEl.style.cssText = `display:grid;grid-auto-flow:column;grid-template-rows:repeat(${Math.min(perCol, S.n)}, ${rowH}px);grid-template-columns:repeat(${cols}, ${colW}px);column-gap:calc(var(--k)*10px)`;
     const bandW = Math.max(300 * k, cols * colW + (cols - 1) * 10 * k + 28 * k);
     band.style.width = `${bandW}px`;
-    const plates = new Map();
-    const placedO = [];
+    const plates = nameplates(s);
     const rect = () => ({ x: 0, y: Math.round(74 * K()), w: Math.round(W() - bandW), h: Math.round(H() - 74 * K()) });
     return {
       views: () => [{ ...rect(), kind: 'overview' }],
-      update(dt, views) {
-        const v = views[0];
-        if (!v?.camera) return;
-        for (let seat = 1; seat <= S.n; seat++) {
-          const p = world.project(seat, v.camera, v);
-          let pl = plates.get(seat);
-          if (!pl) { const i = seatInfo(seat); pl = el('div', 'plate'); pl.style.setProperty('--seat', i.color); pl.style.setProperty('--seat-on', i.on); pl.innerHTML = S.n > 12 ? `<span class="badge">#${i.num}</span>` : `<span class="badge">#${i.num}</span>${esc(shortName(i.name, 8))}`; s.append(pl); plates.set(seat, pl); }
-          if (!p) continue;
-          pl.style.fontSize = `${Math.max(24 * k, Math.min(28 * k, (2600 * k) / p.dist))}px`;
-          let y = p.y - 6 * k;
-          const fs = parseFloat(pl.style.fontSize), pw = pl.offsetWidth, ph = fs * 1.5;
-          for (const q of placedO) if (Math.abs(q.x - p.x) < pw && Math.abs(q.y - y) < ph) y = q.y - ph;
-          placedO.push({ x: p.x, y });
-          pl.style.left = `${p.x}px`; pl.style.top = `${y}px`;
-        }
-        placedO.length = 0;
-      },
+      update(dt, views) { plates(views[0]); },
     };
   },
 };
+
+// ---------- shared by the warm-up, end of round, intermission and Overview (U02.4) ----------
+// Nameplates over the cars in a wide view: the badge, the name while there's room (12 cars or fewer) and an optional suffix
+// (the warm-up's ready tick), pushed upward where two would overlap. Past `badgesTo` cars the plates go: a crowd of plates
+// hides the cars, so the identity rings under them and the roster carry identity, and Cooee finds your own car. No
+// arbitrary cap on cars: this is per-view decluttering. Plates stay inside the title-safe area (GUIDE §4).
+function nameplates(layer, { suffix = () => '', badgesTo = Infinity } = {}) {
+  const plates = new Map(), placed = [];
+  return (v) => {
+    if (!v?.camera || S.n > badgesTo) return;
+    const k = K(), safe = { l: 0.05 * W(), r: 0.95 * W(), t: 0.05 * H() };
+    for (let seat = 1; seat <= S.n; seat++) {
+      const p = world.project(seat, v.camera, v);
+      let pl = plates.get(seat);
+      if (!pl) { const i = seatInfo(seat); pl = el('div', 'plate'); pl.style.setProperty('--seat', i.color); pl.style.setProperty('--seat-on', i.on); pl.innerHTML = `<span class="badge">#${i.num}</span>${S.n > 12 ? '' : esc(shortName(i.name, 8))}${suffix(seat)}`; layer.append(pl); plates.set(seat, pl); }
+      if (!p) continue;
+      pl.style.fontSize = `${Math.max(24 * k, Math.min(28 * k, (2600 * k) / p.dist))}px`;
+      const y0 = p.y - 6 * k;
+      const fs = parseFloat(pl.style.fontSize), pw = pl.offsetWidth, ph = fs * 1.5;
+      // Pushed up one step at most where two would overlap; past that a crowd's plates overlap at their cars, rather than
+      // stacking into a tower far from them. Never off the view.
+      let y = y0;
+      for (const q of placed) if (Math.abs(q.x - p.x) < pw && Math.abs(q.y - y) < ph) y = Math.max(y0 - ph, q.y - ph);
+      y = Math.max(Math.max(v.y, safe.t) + pl.offsetHeight + 2 * k, y);
+      placed.push({ x: p.x, y });
+      pl.style.left = `${Math.min(Math.min(v.x + v.w, safe.r) - pw / 2, Math.max(Math.max(v.x, safe.l) + pw / 2, p.x))}px`; pl.style.top = `${y}px`;
+    }
+    placed.length = 0;
+  };
+}
+
+// A roster that fits its box (the lobby rule): full cards in as many columns as fit, then number + name chips, then pages
+// that turn every 6 s (never truncated).
+function fitCards(list, note, n, item, { cardH = 58, chipH = 44, minCardW = 300, minChipW = 200, readyNote = '' } = {}) {
+  const k = K(), gap = 8 * k, area = list.getBoundingClientRect(), h = area.height;
+  const fit = (minW, rowH) => ({ cols: Math.max(1, Math.floor((area.width + gap) / (minW * k + gap))), rows: Math.max(1, Math.floor((h + gap) / (rowH * k + gap))) });
+  let chip = false, f = fit(minCardW, cardH);
+  if (f.cols * f.rows < n) { chip = true; f = fit(minChipW, chipH); }
+  const per = f.cols * f.rows, pages = Math.ceil(n / per);
+  list.style.gridTemplateColumns = `repeat(${f.cols}, minmax(0, 1fr))`;
+  list.style.gridAutoRows = `${(chip ? chipH : cardH) * k}px`;
+  const page = Math.min(pages - 1, Math.max(0, +(S.p.get('page') ?? 1) - 1));
+  for (let i = page * per + 1; i <= Math.min(n, (page + 1) * per); i++) list.append(item(i, chip));
+  note.textContent = pages > 1 ? `Page ${page + 1} of ${pages}; pages turn every 6 s.${chip ? ' ✓ is Ready.' : ''}` : chip ? readyNote : '';
+  return { chip, pages, per };
+}
+
+// The round's mock result: every seat placed, points by place.
+const mockStandings = () => Array.from({ length: S.n }, (_, i) => ({ seat: ((i * 7) % S.n) + 1, place: i + 1, pts: Math.max(1, 30 - i * (S.n > 10 ? 1 : 3)) }));
+
+// Standings in a box: more columns down to the legible minimum, then pages (never truncated).
+function standingsTable(table, note, st) {
+  const k = K();
+  table.innerHTML = st.map((r) => { const p = seatInfo(r.seat); return `<div class="trow"><span class="place">${r.place}</span><span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span><span class="nm"></span><span class="pts">+${r.pts}</span></div>`; }).join('');
+  table.querySelectorAll('.trow .nm').forEach((e, i) => { e.textContent = seatInfo(st[i].seat).name; });
+  const box = table.getBoundingClientRect();
+  const rowH = (table.firstElementChild?.getBoundingClientRect().height ?? 36 * k) + 6 * k, maxRows = Math.max(1, Math.floor(box.height / rowH));
+  const maxCols = Math.max(1, Math.floor((box.width + 26 * k) / (300 * k + 26 * k)));
+  let pageRows = maxRows;
+  if (st.length > maxCols * pageRows) pageRows = Math.max(1, pageRows - 1);
+  const tcols = Math.min(maxCols, Math.ceil(st.length / pageRows)), perPage = tcols * pageRows;
+  table.style.gridTemplateColumns = `repeat(${tcols}, minmax(0,1fr))`;
+  table.style.gridTemplateRows = `repeat(${Math.min(pageRows, Math.ceil(st.length / tcols))}, ${rowH}px)`;
+  table.style.gridAutoFlow = 'column';
+  [...table.children].forEach((r, i) => { if (i >= perPage) r.remove(); });
+  // Few players: the rows grow to fill the card (up to 1.4×) rather than leaving half of it blank.
+  if (st.length <= maxRows && tcols === 1) {
+    const grow = Math.min(1.4, box.height / (st.length * rowH));
+    if (grow > 1.05) { table.style.setProperty('--grow', grow.toFixed(3)); table.style.gridTemplateRows = `repeat(${st.length}, ${rowH * grow}px)`; }
+  }
+  note.textContent = st.length > perPage ? `Page 1 of ${Math.ceil(st.length / perPage)}; pages turn every 6 s.` : '';
+}
+
+// The join band of the between-rounds screens: the QR big at the left (joining mid-session is the point), what this screen
+// adds in the middle, the host's actions at the right. acts: [icon, label, sub, goes-to state, primary?]; row = side by side.
+function joinBand({ mid = '', acts = [], row = false } = {}) {
+  return `<div class="jband${row ? ' row' : ''}"><div class="jb-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div><span class="display italic jb-code"><span class="lc">Jump in</span> · <span class="hi">ROO7</span></span><span class="code-cap">Scan, or enter the code at jammers.dilger.dev. You'll race next round.</span></div></div>
+    <div class="jb-mid">${mid}</div>
+    <div class="jb-acts">${acts.map(([ic, label, sub, go, primary]) => `<button class="btn${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div></div>`;
+}
+// The mock's buttons work, so the review can click through the flow.
+const wireActs = (root) => root.addEventListener('click', (e) => { const go = e.target.closest('[data-go]')?.dataset.go; if (go) location.hash = `${go}&n=${S.n}`; });
 
 function start() {
   ui.innerHTML = '';
@@ -848,6 +944,8 @@ window.__poc = {
   overviewTrace: (o) => world.overviewTrace(o),
   /** Per tile: how much of it the player's own car fills and where the horizon sits (P1-U05.2 framing evidence). */
   framing: () => lastViews.filter((v) => (v.kind === 'tp' || v.kind === 'fp') && v.camera).map((v) => ({ seat: v.seat, kind: v.kind, h: v.h, ...world.framingOf(v.seat, v.camera, v) })),
+  /** The wide views (warm-up yard, podium, highlights): for each, which seats' cars are inside it on screen (P1-U02.4). */
+  carsSeen: () => lastViews.filter((v) => v.camera && ['overview', 'reel', 'highlight', 'wide'].includes(v.kind)).map((v) => ({ kind: v.kind, seat: v.seat ?? null, x: v.x, y: v.y, w: v.w, h: v.h, inside: Array.from({ length: S.n }, (_, i) => i + 1).filter((seat) => { const p = world.project(seat, v.camera, v); return p && p.z < 1 && p.x >= v.x && p.x <= v.x + v.w && p.y >= v.y && p.y <= v.y + v.h; }) })),
   tokens,
   backend: world.backend,
   /** Frame cost over `frames` frames: rAF interval, sim step, render submit and HUD update times (ms). */

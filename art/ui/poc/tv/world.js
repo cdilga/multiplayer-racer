@@ -219,7 +219,7 @@ export async function createWorld(canvas, { colors }) {
     dust = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.55, 0), dustMat, cap * DUST_PER_CAR);
     dust.frustumCulled = false; dust.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(dust);
     rings = new THREE.InstancedMesh(new THREE.RingGeometry(2.6, 3.4, 32).rotateX(-Math.PI / 2), ringMat, cap);
-    rings.frustumCulled = false; rings.visible = mode === 'overview'; scene.add(rings);
+    rings.frustumCulled = false; rings.visible = mode === 'overview' || mode === 'warmup'; scene.add(rings);
     const col = new THREE.Color();
     for (let i = 0; i < cap; i++) {
       col.set(colors[(i + colorOffset) % colors.length]);
@@ -258,15 +258,26 @@ export async function createWorld(canvas, { colors }) {
     n = count;
   }
   let derbyRng = rng(7); // seeded, so the Overview traces replay the same derby
+  // 'warmup' (P1-U02.4) is the derby bowl as the warm-up yard: the same free driving, in a yard that grows with the room
+  // (about 12 m radius for two cars, the whole floor for 140), the cars starting spread evenly over it (a
+  // sunflower spiral). Its camera (the 'warmup' rig below) may frame closer than the derby's, so two cars are big.
+  let yardR = BOWL.r - 8;
   function setMode(m) {
-    if (m === 'overview') derbyRng = rng(7);
+    const yard = m === 'overview' || m === 'warmup';
+    if (yard) derbyRng = rng(7);
     mode = m;
-    track.visible = scenery.visible = m !== 'overview';
-    bowl.visible = m === 'overview';
-    if (rings) rings.visible = m === 'overview';
+    track.visible = scenery.visible = !yard;
+    bowl.visible = yard;
+    if (rings) rings.visible = yard;
     if (m === 'overview') cars.forEach((c, i) => {
       const a = (i / Math.max(1, cars.length)) * Math.PI * 2;
       c.pos.set(BOWL.x + Math.cos(a) * 30, 0, BOWL.z + Math.sin(a) * 30); c.yaw = a + Math.PI / 2; c.camInit = false;
+    });
+    yardR = m === 'warmup' ? Math.min(BOWL.r - 8, 6 + 4 * Math.sqrt(cars.length)) : BOWL.r - 8;
+    if (m === 'warmup') ovRigs.warmup.reset();
+    if (m === 'warmup') cars.forEach((c, i) => {
+      const a = i * 2.39996, r = yardR * Math.sqrt((i + 0.5) / Math.max(1, cars.length));
+      c.pos.set(BOWL.x + Math.cos(a) * r, 0, BOWL.z + Math.sin(a) * r); c.yaw = a + Math.PI / 2; c.camInit = false;
     });
   }
 
@@ -277,11 +288,11 @@ export async function createWorld(canvas, { colors }) {
   function step(dt) {
     simTime += dt;
     for (const c of cars) {
-      if (mode === 'overview') {
+      if (mode === 'overview' || mode === 'warmup') {
         const w = c.wander;
         w.t -= dt;
         const dx = BOWL.x + w.x - c.pos.x, dz = BOWL.z + w.z - c.pos.z;
-        if (w.t <= 0 || Math.hypot(dx, dz) < 4) { const a = derbyRng() * Math.PI * 2, d = derbyRng() * (BOWL.r - 8); w.x = Math.cos(a) * d; w.z = Math.sin(a) * d; w.t = 3 + derbyRng() * 3; }
+        if (w.t <= 0 || Math.hypot(dx, dz) < 4) { const a = derbyRng() * Math.PI * 2, d = derbyRng() * yardR; w.x = Math.cos(a) * d; w.z = Math.sin(a) * d; w.t = 3 + derbyRng() * 3; }
         const want = Math.atan2(dx, dz);
         let dy = want - c.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
         c.yaw += Math.max(-1.6 * dt, Math.min(1.6 * dt, dy));
@@ -428,28 +439,42 @@ export async function createWorld(canvas, { colors }) {
   // The Derby Overview camera (P1-U05.4, R107): predictive, smoothed and anchored to the bowl (../shared/overview-camera.js,
   // values in framing.json `overview`); &cam=round0 shows round 0's per-frame refit for comparison.
   const anchorXZ = { x: BOWL.x, z: BOWL.z };
-  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ) };
+  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ),
+    warmup: createOverviewRig({ ...FRAMING.overview, minFrameM: 22, maxDriftM: 40 }, anchorXZ) };
   let ovLastT = null;
   const carsXZ = () => cars.map((c) => ({ x: c.pos.x, z: c.pos.z }));
-  const wideCam = new THREE.PerspectiveCamera(48, 1, 0.5, 2000);
-  function wideCamera(aspect, kind, t) {
+  // One camera per wide view in a frame (the podium's three, the intermission's replay and its minis), so each view's
+  // camera stays valid after the frame for projecting nameplates and for the checks.
+  const wideCams = [];
+  let wideCam = null;
+  function wideCamera(aspect, kind, t, seat = 1, idx = 0) {
+    wideCam = wideCams[idx] ??= new THREE.PerspectiveCamera(48, 1, 0.5, 2000);
     wideCam.aspect = aspect;
     if (kind === 'overview') {
       wideCam.clearViewOffset();
       const dt = ovLastT == null ? 1 / 60 : Math.max(1e-3, t - ovLastT);
       ovLastT = t;
-      const p = ovRigs[round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
-      wideCam.fov = FRAMING.overview.fovDeg;
+      const p = ovRigs[mode === 'warmup' ? 'warmup' : round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
+      wideCam.fov = FRAMING.overview.fovDeg;  // (reel and highlight set their own)
       wideCam.position.set(...p.position);
       wideCam.lookAt(...p.target);
-    } else if (kind === 'reel') {
+    } else if (kind === 'reel') { // a slow orbit round one seat's car (the podium, the up-next highlights)
       wideCam.clearViewOffset();
-      const c = cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
-      const a = t * 0.35;
-      wideCam.position.copy(c.pos).add(tmp.set(Math.cos(a) * 9, 3.2, Math.sin(a) * 9));
-      wideCam.lookAt(tmp.copy(c.pos).setY(1));
+      const c = cars[seat - 1] ?? cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
+      const a = t * 0.35 + seat * 1.3;
+      wideCam.fov = 46;
+      wideCam.position.copy(c.pos).add(tmp.set(Math.cos(a) * 5.6, 3.1, Math.sin(a) * 5.6));
+      wideCam.lookAt(tmp.copy(c.pos).setY(0.7));
+    } else if (kind === 'highlight') { // a broadcast tracking shot beside one seat's car (the intermission's main replay)
+      wideCam.clearViewOffset();
+      const c = cars[seat - 1] ?? cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
+      const side = tmp.crossVectors(UP, c.fwd).normalize();
+      wideCam.fov = 42;
+      wideCam.position.copy(c.pos).addScaledVector(c.fwd, -2.5).addScaledVector(side, 6).setY(2.6);
+      wideCam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, 2.5).setY(1));
     } else {
-      // lobby warm-up: a slow crane over the pack
+      // a slow crane over the pack (the backdrop of the screens without a grid)
+      wideCam.fov = 48;
       const lead = cars.reduce((a, b) => (b.s > (a?.s ?? -Infinity) ? b : a), null);
       const c = lead ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
       const a = t * 0.05;
@@ -476,11 +501,11 @@ export async function createWorld(canvas, { colors }) {
     renderer.setClearColor(clear, 1);
     renderer.clear();
     renderer.setScissorTest(true);
-    let draws = 0;
+    let draws = 0, wideIdx = 0;
     for (const v of views) {
       if (v.w < 2 || v.h < 2) continue;
       const aspect = v.w / v.h;
-      const cam = v.kind === 'wide' || v.kind === 'overview' || v.kind === 'reel' ? wideCamera(aspect, v.kind, simTime) : cameraFor(v.seat - 1, v.kind, aspect, dt);
+      const cam = v.kind === 'wide' || v.kind === 'overview' || v.kind === 'reel' || v.kind === 'highlight' ? wideCamera(aspect, v.kind, simTime, v.seat, wideIdx++) : cameraFor(v.seat - 1, v.kind, aspect, dt);
       showLod(v.h >= 540 ? 0 : v.h >= 200 ? 1 : 2);
       const y = H - v.y - v.h;
       renderer.setViewport(v.x, y, v.w, v.h);

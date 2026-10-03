@@ -1,0 +1,271 @@
+{
+  "format": "jj.u024-rounds.v1",
+  "base": "http://127.0.0.1:50666",
+  "captures": [
+    "captures/1080p-lobby_n=2.jpg",
+    "captures/1080p-lobby_n=8.jpg",
+    "captures/1080p-lobby_n=16.jpg",
+    "captures/1080p-lobby_n=32.jpg",
+    "captures/1080p-lobby_n=48.jpg",
+    "captures/1080p-lobby_n=140.jpg",
+    "captures/1080p-results_n=8.jpg",
+    "captures/1080p-results_n=32.jpg",
+    "captures/1080p-intermission_n=8.jpg",
+    "captures/1080p-intermission_n=32.jpg",
+    "captures/4k-lobby_n=8.jpg",
+    "captures/4k-lobby_n=32.jpg",
+    "captures/4k-results_n=8.jpg",
+    "captures/4k-results_n=32.jpg",
+    "captures/4k-intermission_n=8.jpg",
+    "captures/4k-intermission_n=32.jpg"
+  ],
+  "states": {
+    "lobby&n=2": {
+      "n": 2,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 2,
+        "plates": 2,
+        "rosterShown": 2,
+        "rosterMode": "cards",
+        "pageNote": "",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "lobby&n=8": {
+      "n": 8,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 8,
+        "plates": 8,
+        "rosterShown": 8,
+        "rosterMode": "chips",
+        "pageNote": "✓ is Ready, … is still choosing.",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "lobby&n=16": {
+      "n": 16,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 16,
+        "plates": 16,
+        "rosterShown": 14,
+        "rosterMode": "chips",
+        "pageNote": "Page 1 of 2; pages turn every 6 s. ✓ is Ready.",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "lobby&n=32": {
+      "n": 32,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 32,
+        "plates": 32,
+        "rosterShown": 14,
+        "rosterMode": "chips",
+        "pageNote": "Page 1 of 3; pages turn every 6 s. ✓ is Ready.",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "lobby&n=48": {
+      "n": 48,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 48,
+        "plates": 0,
+        "rosterShown": 14,
+        "rosterMode": "chips",
+        "pageNote": "Page 1 of 4; pages turn every 6 s. ✓ is Ready.",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "lobby&n=140": {
+      "n": 140,
+      "offscreen": [],
+      "qrTvPx": 265,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "warmup": {
+        "yardShare": 0.597,
+        "carsInYard": 140,
+        "plates": 0,
+        "rosterShown": 14,
+        "rosterMode": "chips",
+        "pageNote": "Page 1 of 10; pages turn every 6 s. ✓ is Ready.",
+        "startRace": true
+      },
+      "pass": true
+    },
+    "results&n=8": {
+      "n": 8,
+      "offscreen": [],
+      "qrTvPx": 260,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "endOfRound": {
+        "banner": "Round 3 complete",
+        "heroShare": 0.322,
+        "podium": [
+          {
+            "seat": 1,
+            "carInside": true,
+            "sizeTvPx": "1044x640"
+          },
+          {
+            "seat": 8,
+            "carInside": true,
+            "sizeTvPx": "306x147"
+          },
+          {
+            "seat": 7,
+            "carInside": true,
+            "sizeTvPx": "304x143"
+          }
+        ],
+        "standingsShown": 8,
+        "pageNote": "",
+        "timer": "Next race in 42sHighlights first, then the grid lines up.",
+        "actions": [
+          "Watch the highlights",
+          "Start next round now",
+          "Return to lobby"
+        ]
+      },
+      "pass": true
+    },
+    "results&n=32": {
+      "n": 32,
+      "offscreen": [],
+      "qrTvPx": 260,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "endOfRound": {
+        "banner": "Round 3 complete",
+        "heroShare": 0.322,
+        "podium": [
+          {
+            "seat": 1,
+            "carInside": true,
+            "sizeTvPx": "1044x640"
+          },
+          {
+            "seat": 8,
+            "carInside": true,
+            "sizeTvPx": "306x147"
+          },
+          {
+            "seat": 15,
+            "carInside": true,
+            "sizeTvPx": "304x143"
+          }
+        ],
+        "standingsShown": 12,
+        "pageNote": "Page 1 of 3; pages turn every 6 s.",
+        "timer": "Next race in 42sHighlights first, then the grid lines up.",
+        "actions": [
+          "Watch the highlights",
+          "Start next round now",
+          "Return to lobby"
+        ]
+      },
+      "pass": true
+    },
+    "intermission&n=8": {
+      "n": 8,
+      "offscreen": [],
+      "qrTvPx": 260,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "intermission": {
+        "replayShare": 0.302,
+        "replaySizeTvPx": "1070x586",
+        "replayCarInside": true,
+        "sideHighlights": [
+          {
+            "seat": 8,
+            "carInside": true
+          },
+          {
+            "seat": 7,
+            "carInside": true
+          },
+          {
+            "seat": 4,
+            "carInside": true
+          },
+          {
+            "seat": 2,
+            "carInside": true
+          }
+        ],
+        "bandWidestGapTvPx": 48,
+        "topThree": 3,
+        "actions": 3
+      },
+      "pass": true
+    },
+    "intermission&n=32": {
+      "n": 32,
+      "offscreen": [],
+      "qrTvPx": 260,
+      "outsideTitleSafe": [],
+      "outsideActionSafe": [],
+      "intermission": {
+        "replayShare": 0.302,
+        "replaySizeTvPx": "1070x586",
+        "replayCarInside": true,
+        "sideHighlights": [
+          {
+            "seat": 8,
+            "carInside": true
+          },
+          {
+            "seat": 15,
+            "carInside": true
+          },
+          {
+            "seat": 4,
+            "carInside": true
+          },
+          {
+            "seat": 26,
+            "carInside": true
+          }
+        ],
+        "bandWidestGapTvPx": 48,
+        "topThree": 3,
+        "actions": 3
+      },
+      "pass": true
+    }
+  },
+  "errors": [],
+  "external": [],
+  "pass": true
+}
