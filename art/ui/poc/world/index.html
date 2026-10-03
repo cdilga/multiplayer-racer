@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-world look</title>
+<link rel="icon" href="../../brand/favicon.svg">
+<link rel="stylesheet" href="../tv/tv.css">
+<style>
+  .paint-title { position: fixed; left: 50%; top: calc(var(--k) * 40px); transform: translateX(-50%); font-size: calc(var(--k) * 56px); color: var(--c-ink); }
+  .graphics-label { position: absolute; padding: .15em .5em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); font-size: calc(var(--k) * 28px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); }
+  .paint-badge { position: absolute; transform: translate(-50%, 0); }
+  .nameplate { position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center; gap: calc(var(--k) * 6px); padding: calc(var(--k) * 3px) calc(var(--k) * 10px) calc(var(--k) * 3px) calc(var(--k) * 3px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); font-size: calc(var(--k) * 22px); font-weight: 700; white-space: nowrap; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
+  .nameplate .badge { font-size: inherit; }
+</style>
+<!-- Self-hosted only (R70). 'three' and 'three/webgpu' are the same URL so the vendored Cruz model (which imports 'three') and the
+     comic look (which imports 'three/webgpu') share one module instance (jammers-look setup facts). -->
+<script type="importmap">{ "imports": {
+  "three": "../vendor/three/three.webgpu.min.js",
+  "three/webgpu": "../vendor/three/three.webgpu.min.js",
+  "three/tsl": "../vendor/three/three.tsl.min.js",
+  "three/addons/": "../vendor/three/addons/" } }</script>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div id="ui"></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

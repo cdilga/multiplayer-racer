@@ -1,0 +1,36 @@
+P1-U05 local receipt: the in-world look and the motion reel
+Written 2026-10-03 by GentlePike. Receipt kind: local checks (ev:hardware for AC1, on:mac; ev:ci items close on these local runs
+until CI lanes exist, P1-F02).
+
+machine: Apple M1 Pro (MacBookPro18,3), macOS 27.0.1
+browser: Chromium 151.0.7922.34 (Playwright 1.62.1, headed, channel chromium)
+backend: WebGPU (apple metal-3 Apple M1 Pro)
+
+== AC1 the look live at 1080p and 4K, 24 tiles, headed on the Mac's GPU
+$ node art/ui/poc/world/capture.mjs --perf      # writes docs/evidence/P1-U05/world/perf.json
+  method: rAF interval over 240 frames (vsync-bound, 120 Hz display) and GPU execution per frame from WebGPU timestamp queries (renderer trackTimestamp + resolveTimestampsAsync: every render pass of the frame, i.e. the 24-tile scene pass and the post chain), 120 frames
+  1080p full             GPU p50   12.43 p95   13.89 ms (120 samples)  frame p50 8.3 p95 9.6 ms  CPU submit 2.27 ms  tiles 24 (min 261 px)
+  1080p full+bloom+fxaa  GPU p50   84.53 p95   93.85 ms (120 samples)  frame p50 8.3 p95 9.4 ms  CPU submit 2.53 ms  tiles 24 (min 261 px)
+  1080p ids              GPU p50   11.94 p95   13.78 ms (120 samples)  frame p50 8.3 p95 9.3 ms  CPU submit 2.19 ms  tiles 24 (min 261 px)
+  1080p plain            GPU p50   12.19 p95   13.87 ms (120 samples)  frame p50 8.3 p95 9.6 ms  CPU submit 2.11 ms  tiles 24 (min 261 px)
+  4k    full             GPU p50   23.97 p95   30.31 ms (120 samples)  frame p50 8.9 p95 17.1 ms  CPU submit 2.34 ms  tiles 24 (min 521 px)
+  4k    full+bloom+fxaa  GPU p50  216.09 p95  228.07 ms (120 samples)  frame p50 16.7 p95 24.5 ms  CPU submit 2.98 ms  tiles 24 (min 521 px)
+  4k    ids              GPU p50   22.93 p95   29.04 ms (120 samples)  frame p50 8.9 p95 16.9 ms  CPU submit 2.45 ms  tiles 24 (min 521 px)
+  4k    plain            GPU p50   19.62 p95   25.84 ms (120 samples)  frame p50 8.4 p95 17 ms  CPU submit 2.38 ms  tiles 24 (min 521 px)
+  presented look = 'full' (toon + ink + halftone + grade; no bloom, no FXAA at 24 tiles); proposal and caveats: art/ui/poc/world/README.md
+
+== AC2 paint next to its badge, AC3 in-world graphics (and every look state at 1080p and 4K)
+$ node art/ui/poc/world/capture.mjs
+  captures 13 (WebGPU); errors 0; external requests 0
+  AC2: docs/evidence/P1-U05/world/captures/{1080p,4k}-paint.jpg (12 identity paints, lit, each above its flat badge)
+  AC3: docs/evidence/P1-U05/world/captures/{1080p,4k}-graphics.jpg (finish gantry + chequered line, checkpoint gate + line,
+       corner chevrons, tyre walls and rails, kerbs and edge lines), also visible in the tv and grid captures
+
+== AC4 the motion reel at token durations, full and reduced
+$ node art/ui/poc/motion/record.mjs        # docs/evidence/P1-U05/motion/local-receipt.txt has the full table
+  full motion: 20/20 within tolerance; reduced: 20/20 within tolerance; reduced-motion switches 8/8 ok
+  recordings: docs/evidence/P1-U05/motion/reel.webm, reel-reduced.webm; measured timings: timeline.json; stills/
+
+== AC5 fresh-eyes review against H4
+  docs/evidence/P1-U05/review.md: 'In-world look' (Sonnet 5.5 subagent, fresh context, did not build it) and the builder's
+  'Fixes after the review' table (each defect, what changed, which capture shows it).

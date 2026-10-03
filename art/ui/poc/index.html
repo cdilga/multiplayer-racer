@@ -46,8 +46,9 @@
   <p class="why">One wordmark, an app icon, and a QR that's plain, quiet-zoned and at least 8 px per module on the TV; a component sheet with every state, including keyboard and gamepad focus. <i>Why: every generated image drew a different logo, and a logo inside the QR stops phones scanning it.</i></p>
   <div class="links"><a class="primary" href="../sheets/brand.html">Brand sheet</a><a href="../sheets/components.html">Component sheet</a></div>
 
-  <h2>Style frames <span class="status blocked">blocked</span></h2>
-  <p class="why">Three H4-style frames (TV grid with HUD, lobby at 32, phone controller) are written and ready to generate, but image generation isn't available on the Codex account today. The mocks below carry the decisions; the frames only judge the painted feel.</p>
+  <h2>Style frames <span class="status ready">ready</span></h2>
+  <p class="why">Four painted H4-style targets, each packing related views: the TV race grid with its HUD, the lobby at 32, the phone controller beside its lobby, and the derby Overview. Cars, badges, names and room codes in them are generated placeholders. The mocks below carry the decisions; the frames judge the painted feel. <i>Why: you liked H4 most, so it's the style lock on every frame.</i></p>
+  <div class="links"><a class="primary" href="../frames/tv-race-grid.png">TV race grid</a><a href="../frames/lobby-32.png">Lobby at 32</a><a href="../frames/phone-controller.png">Phone controller (layout sketch)</a><a href="../frames/tv-derby-overview.png">Derby Overview</a><a href="../frames/README.md">How they were made</a></div>
 
   <h2><span class="n">2–5</span> The TV grid <span class="status ready">ready</span></h2>
   <p class="why">Balanced rows with fuller rows on top; short rows centred with wider tiles; spare cells show the join QR and live standings, never black. Third person by default, first person per seat. Per-tile HUD in the corners on cream stickers. <i>Why: gameplay area first, then finding your own car (master §6.2).</i></p>
@@ -69,9 +70,9 @@
   <p class="why">M2's sticks (DRIVE left, ACTION right) on an ink base with cream panels and your colour; boost, wheelie preload and cone cooldown beside the sticks; Identify, camera, Recover and the menu along the top, away from your thumbs; every connection state as one card with the next step. <i>Why: no glare in a dark room, and your number and colour are always on screen.</i></p>
   <div class="links"><a class="primary" href="./phone/">Open on your phone</a><a href="./phone/frames.html#race">In device frames</a><a href="./phone/frames.html#race&stick=preload">Wheelie preload</a><a href="./phone/frames.html#lobby">Lobby / Ready</a><a href="./phone/frames.html#join">Join</a><a href="./phone/frames.html#settings">Settings</a><a href="./phone/frames.html#tutorial">Tutorial</a><a href="./phone/frames.html#reconnecting">Reconnecting</a><a href="./phone/frames.html#no-route">No route</a></div>
 
-  <h2><span class="n">9, 10</span> The in-world look and motion <span class="status wait">coming</span></h2>
-  <p class="why">The comic treatment on the real Cruz Missile (toon ramp, ink outlines, halftone shadows) with its frame cost at 24 tiles, and the motion reel with its reduced-motion version. Lands with P1-U05.</p>
-  <div class="links" id="look"></div>
+  <h2><span class="n">9, 10</span> The in-world look and motion <span class="status ready">ready</span></h2>
+  <p class="why">The comic treatment live on the real Cruz Missile (toon ramp, ink outlines, halftone in the shadows, grade) in an outback dressed toward H4, under the real HUD at 24 tiles, plus the motion reel and its reduced-motion version. At 24 tiles it runs without bloom and FXAA, which cost far more than the rest of the look together. <i>Why: the look has to hold at 24 tiles on a laptop GPU (measured: 120 Hz at 1080p).</i> Needs a WebGPU browser (Chrome or Edge).</p>
+  <div class="links" id="look"><a class="primary" href="./world/#grid&n=24">24 live tiles</a><a href="./world/#tv">One tile</a><a href="./world/#graphics">Track graphics</a><a href="./world/#paint">Paint next to its badge</a><a href="./world/#overview&n=16">Derby Overview</a><a href="./world/?mode=plain#grid&n=24">Without the look</a><a href="./motion/?autoplay=1">Motion reel</a><a href="./motion/?autoplay=1&reduced=1">Reduced motion</a></div>
 
   <h2><span class="n">14</span> Derby Overview (reference for later) <span class="status ready">ready</span></h2>
   <p class="why">One shared view of the bowl at a fixed 60° pitch that frames every car and never rotates; identity rings under the cars; thin bands for the timer and damage points; your Grid ↔ Overview switch. <i>Why: derby needs one screen everyone can read; it's built in Full.</i></p>
@@ -84,10 +85,9 @@
 <script type="module">
   import { loadTokens } from './shared/tokens.js';
   await loadTokens();
-  // Light up the sections whose pages exist (U05's look and A04's engine synth land separately).
+  // Light up the engine section when its page exists (A04's synth lands separately).
   const has = async (p) => { try { return (await fetch(p, { method: 'HEAD' })).ok; } catch { return false; } };
   if (await has('./audio/engine/index.html')) { document.getElementById('synth').innerHTML = '<a class="primary" href="./audio/engine/">Play the engine</a>'; const s = document.getElementById('synth-status'); s.className = 'status ready'; s.textContent = 'ready'; }
-  if (await has('./look/index.html')) document.getElementById('look').innerHTML = '<a class="primary" href="./look/">The look with the real car</a>';
 </script>
 </body>
 </html>
