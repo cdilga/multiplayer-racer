@@ -25,6 +25,11 @@
     "controller/src",
     "landing/src",
     "vite.config.ts",
-    "qualify"
+    "qualify",
+    "host/tests"
+  ],
+  "exclude": [
+    "host/src/worker/sim.worker.ts",
+    "host/src/worker/pkg"
   ]
 }

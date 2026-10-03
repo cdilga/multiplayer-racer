@@ -73,6 +73,8 @@ struct Car {
     autopilot: Option<Autopilot>,
     /// The controls actually applied last step (the player's, the autopilot's, a handback blend, or none while held).
     applied: DriveInput,
+    /// Bumps on every teleport (placement, respawn): renderers never interpolate across a change of life (P1-S02).
+    life: u32,
 }
 
 /// What a car looks like right now (for scenarios, receipts and the introspection surface).
@@ -335,6 +337,23 @@ impl Sim {
         self.cars.get(car.0 as usize)?.autopilot.as_ref()?.state()
     }
 
+    /// The car's life: bumps on every teleport or respawn, so interpolation never spans one.
+    pub fn car_life(&self, car: CarId) -> Option<u32> {
+        self.cars.get(car.0 as usize).map(|c| c.life)
+    }
+
+    /// Every debris body's position and rotation (props and injected debris), in creation order.
+    pub fn debris_poses(&self) -> Vec<([f32; 3], [f32; 4])> {
+        self.props
+            .iter()
+            .filter_map(|&h| self.world.bodies.get(h))
+            .map(|b| {
+                let (t, r) = (b.position().translation, b.position().rotation);
+                ([t.x, t.y, t.z], [r.x, r.y, r.z, r.w])
+            })
+            .collect()
+    }
+
     pub fn has_autopilot(&self, car: CarId) -> bool {
         self.cars
             .get(car.0 as usize)
@@ -478,9 +497,11 @@ impl Sim {
     }
 
     fn teleport(&mut self, car: CarId, pose: SpawnPose, roll: f32, linvel: [f32; 3]) {
-        let Some(c) = self.cars.get(car.0 as usize) else {
+        let Some(c) = self.cars.get_mut(car.0 as usize) else {
             return;
         };
+        c.life = c.life.wrapping_add(1);
+        let c = &self.cars[car.0 as usize];
         if let Some(b) = self.world.bodies.get_mut(c.body) {
             let rotation = Rotation::from_axis_angle(Vector::Y, pose.heading)
                 * Rotation::from_axis_angle(Vector::Z, roll);
@@ -610,6 +631,7 @@ impl Sim {
             protected_since: None,
             autopilot: None,
             applied: DriveInput::default(),
+            life: 0,
         });
     }
 

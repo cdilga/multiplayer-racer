@@ -16,6 +16,9 @@ jj-session.workspace = true
 jj-input.workspace = true
 jj-sim.workspace = true
 jj-protocol.workspace = true
+jj-map.workspace = true
+jj-types.workspace = true
+sha2.workspace = true
 wasm-bindgen.workspace = true
 
 [lints]

@@ -61,6 +61,45 @@ jobs:
       - name: cargo deny
         run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
 
+  # The host's sim worker as WASM in a real module Web Worker in headless Chromium (P1-S02): render cadence, source
+  # parity, hide/resume, buffer starvation, panic → fault. Its own target dir so it never waits on the rust job's lock.
+  host-worker:
+    runs-on: rust
+    timeout-minutes: 30
+    env:
+      CARGO_HOME: /cargo-cache/cargo
+      RUSTUP_HOME: /cargo-cache/rustup
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
+      CARGO_BUILD_JOBS: "12"
+      PLAYWRIGHT_BROWSERS_PATH: /cargo-cache/ms-playwright
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Toolchain and wasm-bindgen 0.2.129 on the persistent cache
+        run: |
+          test -w /cargo-cache
+          if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
+          fi
+          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
+          if ! "$CARGO_HOME/bin/wasm-bindgen" --version 2>/dev/null | grep -q ' 0\.2\.129'; then
+            curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
+            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen "$CARGO_HOME/bin/"
+          fi
+      - name: Build the worker's WASM (scripts/build-host-wasm.sh)
+        run: scripts/build-host-wasm.sh
+      - run: npm ci && npm --prefix web ci
+      - name: Typecheck the worker and build the harness
+        run: |
+          npx --prefix web tsc --noEmit -p web/host/src/worker/tsconfig.json
+          npx --prefix web vite build --config web/host/tests/vite.config.ts
+      - name: Chromium headless shell (Playwright 1.62.1)
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Sim worker in Chromium (P1-S02)
+        run: node --test web/host/tests/
+
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 15

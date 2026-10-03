@@ -1,0 +1,83 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), darwin/arm64",
+  "ac1": [
+    {
+      "renderHz": 30,
+      "renderWorkMs": 20,
+      "tick": 720,
+      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+      "frames": 186,
+      "snapshots": 403,
+      "wallMs": 6185
+    },
+    {
+      "renderHz": 60,
+      "renderWorkMs": 8,
+      "tick": 720,
+      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+      "frames": 384,
+      "snapshots": 711,
+      "wallMs": 6153
+    },
+    {
+      "renderHz": 144,
+      "renderWorkMs": 2,
+      "tick": 720,
+      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+      "frames": 1020,
+      "snapshots": 720,
+      "wallMs": 6123
+    }
+  ],
+  "ac2": {
+    "tick": 720,
+    "localHash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+    "wireHash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+    "welcomed": true,
+    "joined": true
+  },
+  "ac3": {
+    "visibility": "emulated: document.visibilityState + a dispatched visibilitychange (headless Chromium never hides a page)",
+    "hiddenTick": 245,
+    "hiddenForMs": 2000,
+    "countdownMsAt200": 2801,
+    "countdownWallMs": 3022,
+    "ticksInFirstSecondAfterResume": 121,
+    "rearm": {
+      "pauseTick": 367,
+      "firstTickAfterResume": 368,
+      "throttleThere": 0,
+      "throttleAfterFreshInput": 1
+    }
+  },
+  "ac4": {
+    "fed": {
+      "hash": "1625252b00b87f0d35b31e4ebdd55fd3a7de0822a01f3189120dae0961a9aca4",
+      "published": 719,
+      "skipped": 0,
+      "wallMs": 6130,
+      "lines": 61
+    },
+    "starved": {
+      "hash": "1625252b00b87f0d35b31e4ebdd55fd3a7de0822a01f3189120dae0961a9aca4",
+      "published": 3,
+      "skipped": 717,
+      "wallMs": 6138,
+      "lines": 61,
+      "held": 3
+    },
+    "seatJoined": 31,
+    "outbound": 30
+  },
+  "ac5": {
+    "reasons": [
+      "fault"
+    ],
+    "faults": [
+      "RuntimeError: unreachable"
+    ],
+    "tickAtFault": 62,
+    "tickAfter500ms": 62,
+    "statusMask": 16
+  }
+}
