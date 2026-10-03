@@ -18,3 +18,11 @@
 
 - `cat > "$VAR"` and loops writing `web/$p/…` are blocked by dcg (`redirect-truncate-dynamic-path`). Write
   files with the Write tool or a Python script, and redirect only to literal paths.
+
+## 2026-10-03 · Playwright's browser revision must match the installed browsers (P1-U01)
+
+- Root tooling pinned Playwright 1.57 (Chromium build 1200) while the Mac only had build 1234 (Playwright
+  1.62.1). `npx playwright install chromium` then hung for over 10 minutes and left a 428 KB stub
+  `chromium-1200/` folder. The fix was to move root Playwright to 1.62.1, matching what was installed.
+- Check with `ls ~/Library/Caches/ms-playwright/` before installing: the browser folder's number must match
+  the version's `playwright-core/browsers.json`.

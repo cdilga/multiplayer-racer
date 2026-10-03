@@ -62,7 +62,19 @@ cute, chunky, toy-like, funny; comic ink; a hint of sun-bleached Mad Max grit an
 > A game UI screen for a TV, 16:9: sticker-style panels with thick slightly hand-inked (not wobbly)
 > borders, warm cream paper and deep navy ink as the base, bold condensed display type for titles and a
 > clean legible sans for labels, big touch-friendly buttons, a large QR code block, player cards with
-> number, colour and pattern. Straight text baselines; playful, not childish.
+> number, colour and pattern. Straight text baselines; playful, not childish. Match the H4 reference's
+> chrome: ink-and-cream comic panels with thick hand-inked navy borders, bold condensed italic display
+> headings, saffron-yellow and cobalt accents, tabular digits, a painted outback world visible behind the
+> chrome. Any wordmark reads exactly 'JOYSTICK JAMMERS' and nothing else; a QR code is plain black on
+> white with a wide quiet zone and nothing in its middle.
+
+UI prompts attach `docs/plans/ux-study-2026-09-29/images/H4-host-round-results-v2.png` (the most
+authoritative style reference, owner 2026-10-02) and, for in-game views, Spike J's Cruz Missile render
+(`spikes/art-pipeline/J-cruze-lowpoly/out/evidence/ladder_L0_hero.png`). Tokens, type and the real
+wordmark come from `art/ui/` (`GUIDE.md`, `tokens.json`, `brand/`); generated logos, brand badges and
+cars are placeholders and never ship. **Superseded (2026-10-02):** `refs/ui_lobby.png` and its prompt
+`prompts/ui_lobby.txt` (the drivers'-heads-out cartoony look); keep them as history, don't use them as a
+reference.
 
 **VFX / COMIC FX**
 > Comic impact effects as stickers on a flat background: onomatopoeia burst words in chunky outlined

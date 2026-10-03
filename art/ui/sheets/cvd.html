@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<title>Identity under colour-vision deficiency</title>
+<style>
+  body { margin: 0; padding: 32px 40px 40px; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-weight: 500; }
+  h1 { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 48px; line-height: .95; margin: 0 0 6px; }
+  p.lede { margin: 0 0 20px; font-size: 17px; max-width: 1200px; }
+  .row { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 16px; margin: 10px 0; }
+  .row h2 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: 24px; margin: 0; }
+  .row h2 small { display: block; font-family: var(--font-body); font-weight: 500; text-transform: none; font-size: 13px; }
+  .seats { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge { min-width: 52px; height: 44px; padding: 0 6px; box-sizing: border-box; display: grid; place-items: center; border: 3px solid var(--c-ink); border-radius: 8px; box-shadow: 0 4px 0 rgb(21 32 58 / .85); font-family: var(--font-display); font-weight: 900; font-size: 26px; font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; margin-top: 22px; font-size: 15px; font-variant-numeric: tabular-nums; }
+  th, td { border: 2px solid var(--c-ink); padding: 5px 10px; text-align: right; }
+  th { background: var(--c-paper-shade); font-weight: 700; }
+  td:first-child, th:first-child { text-align: left; }
+  td.low { background: var(--c-danger-tint); color: var(--c-danger); font-weight: 700; }
+  td.ok { color: var(--c-success); font-weight: 700; }
+  .note { margin-top: 14px; font-size: 15px; max-width: 1300px; }
+</style>
+</head>
+<body>
+<h1>Identity under colour-vision deficiency</h1>
+<p class="lede" id="lede"></p>
+<div id="rows"></div>
+<table id="pairs"></table>
+<p class="note" id="note"></p>
+<script type="module">
+  import { applyTokens } from './tokens-css.js';
+  import { CVD_TYPES, contrast, deltaE2000, simulateCvd } from '../lib/color.mjs';
+
+  const tokens = await applyTokens('desk');
+  const colors = tokens.identity.colors;
+  const pal = tokens.palette;
+  const minDe = tokens.identity.cvdMinDeltaE;
+  const views = ['normal', ...CVD_TYPES];
+  const see = (hex, v) => (v === 'normal' ? hex : simulateCvd(hex, v));
+  const seats = [...Array(36)].map((_, i) => i + 1).concat([99, 100, 108, 250, 999]);
+  const label = { normal: 'Normal vision', protanopia: 'Protanopia', deuteranopia: 'Deuteranopia', tritanopia: 'Tritanopia' };
+  const sub = { normal: 'as designed', protanopia: 'no L cones (red-blind)', deuteranopia: 'no M cones (green-blind)', tritanopia: 'no S cones (blue-blind)' };
+
+  document.getElementById('lede').textContent =
+    `Seats 1–36 then 99, 100, 108, 250 and 999. Colours cycle through ${colors.length} identity colours in order, so seat n and seat n+${colors.length} share a colour and are told apart by their numbers. Each row is the whole palette as seen with that deficiency (Machado et al. 2009, full severity). Adjacent seats must differ by at least ΔE00 ${minDe} in every view.`;
+
+  const rows = document.getElementById('rows');
+  for (const v of views) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<h2>${label[v]}<small>${sub[v]}</small></h2><div class="seats"></div>`;
+    const box = row.querySelector('.seats');
+    for (const n of seats) {
+      const c = colors[(n - 1) % colors.length];
+      const b = document.createElement('div');
+      b.className = 'badge';
+      b.style.background = see(c.hex, v);
+      b.style.color = see(pal[c.on].hex, v);
+      b.textContent = `#${n}`;
+      box.append(b);
+    }
+    rows.append(row);
+  }
+
+  const failures = [];
+  const pairs = [];
+  const table = document.getElementById('pairs');
+  table.innerHTML = `<tr><th>Adjacent seats</th>${views.map((v) => `<th>ΔE00 ${label[v]}</th>`).join('')}<th>Worst</th><th>Told apart by</th><th>Badge text contrast</th></tr>`;
+  for (let i = 0; i < colors.length; i++) {
+    const a = colors[i];
+    const b = colors[(i + 1) % colors.length];
+    const de = Object.fromEntries(views.map((v) => [v, deltaE2000(see(a.hex, v), see(b.hex, v))]));
+    const worst = Math.min(...Object.values(de));
+    const byColour = worst >= minDe;
+    const badge = Math.min(...views.map((v) => contrast(see(pal[a.on].hex, v), see(a.hex, v))));
+    pairs.push({ from: a.name, to: b.name, deltaE: Object.fromEntries(Object.entries(de).map(([k, x]) => [k, +x.toFixed(1)])), worst: +worst.toFixed(1), byColour, byNumber: true, badgeContrastWorst: +badge.toFixed(2) });
+    if (!byColour) failures.push(`${a.name}→${b.name}: ΔE00 ${worst.toFixed(1)} < ${minDe}; identity rests on the number`);
+    if (badge < 3) failures.push(`badge text on ${a.name} drops to ${badge.toFixed(2)}:1 in some view`);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>seat ${i + 1} ${a.name} → seat ${i + 2} ${b.name}</td>${views.map((v) => `<td class="${de[v] < minDe ? 'low' : ''}">${de[v].toFixed(1)}</td>`).join('')}<td class="${byColour ? 'ok' : 'low'}">${worst.toFixed(1)}</td><td>${byColour ? 'colour and number' : 'number'}</td><td class="${badge >= 3 ? 'ok' : 'low'}">${badge.toFixed(2)}:1</td>`;
+    table.append(tr);
+  }
+  document.getElementById('note').textContent =
+    `Numbers are unique in the room, so every pair of seats is always told apart by number; the table shows that adjacent seats are also told apart by colour in all four views. Badge text contrast is the worst case across the four views (3:1 minimum for bold display numbers). Non-adjacent seats may share or nearly share a colour; their numbers carry identity (no cap, R66).`;
+  window.sheetReport = { ok: failures.length === 0, failures, minDeltaE: minDe, pairs };
+  window.sheetReady = true;
+</script>
+</body>
+</html>

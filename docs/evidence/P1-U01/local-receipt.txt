@@ -1,0 +1,95 @@
+# P1-U01 local receipt (tokens, guide, sheets, brand)
+date: 2026-10-03T01:17:24Z  machine: Mac (M1 Pro, macOS 27.0.1)  node: v26.10.0  playwright: 1.62.1 (Chromium, new headless)  commit base: aa9cf0e
+
+# AC1 schema + AC2 WCAG AA for every named pair (+ badges, adjacent seats under CVD, promised files); full output in check.txt
+
+$ node art/ui/check.mjs
+cvd      ok   worst ΔE00  50.9 maroon→sky {"normal":68.3,"protanopia":55.9,"deuteranopia":50.9,"tritanopia":74.8}
+cvd      ok   worst ΔE00  52.5 sky→red {"normal":60.2,"protanopia":53,"deuteranopia":52.5,"tritanopia":67.8}
+files: 38/38 present
+token check: ok
+exit: 0
+contrast pairs: 22/22 pass; min ratio 4.82
+
+# The check fails loudly: a copy of tokens.json with paper text on saffron as a named pair
+
+$ node /var/folders/d7/lj1cjbfs2gjb0gff7n541pf00000gn/T/tmp.Cw1TGbUCkM/ui/check.mjs
+FAIL contrast: bad-demo (paper on saffron) is 1.63:1, needs 4.5:1 for normal
+FAIL file: art/ui/x is missing
+FAIL file: art/ui/y is missing
+token check: 6 failure(s)
+exit: 1
+
+# AC3 CVD sheet, AC4 font stress render, AC5 brand, AC6 component sheet (PNG + JSON in this folder)
+
+$ node art/ui/sheets/render.mjs
+ok   cvd.png (+ cvd.json)
+ok   fonts.png (+ fonts.json)
+ok   components.png
+ok   brand.png (+ brand.json)
+exit: 0
+
+# AC3 detail: adjacent seats, worst ΔE00 across normal/protan/deutan/tritan (min 20)
+red→blue worst 46 badge 3.35:1
+blue→orange worst 56.1 badge 3.87:1
+orange→teal worst 34.7 badge 4.78:1
+teal→yellow worst 36.8 badge 6:1
+yellow→pink worst 26.4 badge 10.07:1
+pink→charcoal worst 30.9 badge 3.93:1
+charcoal→green worst 41.2 badge 12.39:1
+green→white worst 31.1 badge 4.78:1
+white→purple worst 41.5 badge 13.91:1
+purple→maroon worst 28.2 badge 4.7:1
+maroon→sky worst 50.9 badge 7.15:1
+sky→red worst 52.5 badge 8.16:1
+
+# AC4 detail: stress names
+32 graphemes, Latin          32 bundled
+32 graphemes, accents        32 bundled
+32 graphemes, emoji (ZWJ)    32 fallback
+Japanese                      7 fallback
+Chinese                       5 fallback
+Korean                        3 fallback
+Arabic (RTL)                  4 fallback
+Hindi                         2 fallback
+Russian                       7 fallback
+Greek                         5 fallback
+Thai                          5 fallback
+Hebrew (RTL)                  4 fallback
+Vietnamese                   15 bundled
+
+# AC4 fonts are local OFL WOFF2 subsets with the licence
+34224 art/ui/fonts/barlow-condensed-800.woff2
+35464 art/ui/fonts/barlow-condensed-900-italic.woff2
+33452 art/ui/fonts/barlow-condensed-900.woff2
+34084 art/ui/fonts/barlow-semi-condensed-500.woff2
+35020 art/ui/fonts/barlow-semi-condensed-600.woff2
+35400 art/ui/fonts/barlow-semi-condensed-700.woff2
+Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+# AC5 brand files and the QR decode
+app-icon-192.png
+app-icon-512.png
+app-icon-fullbleed.svg
+app-icon.svg
+apple-touch-icon-180.png
+favicon-32.png
+favicon.ico
+favicon.svg
+make.py
+qr-dont-inverted.svg
+qr-dont-logo.svg
+qr-dont-quiet.svg
+qr-rule.svg
+rasterize.mjs
+wordmark-on-ink.svg
+wordmark.svg
+
+$ /private/tmp/claude-501/-Users-cdilga-Documents-dev-multiplayer-racer/48ffb49b-6b21-43e4-b025-03f1c1ee450f/scratchpad/venv/bin/python art/ui/brand/make.py --verify
+qr: version 3, 37 modules incl. quiet zone, https://jammers.dilger.dev/j/ROO7
+verify: 740px wide -> 'https://jammers.dilger.dev/j/ROO7' OK
+verify: 1480px wide -> 'https://jammers.dilger.dev/j/ROO7' OK
+verify: 370px wide -> 'https://jammers.dilger.dev/j/ROO7' OK
+exit: 0

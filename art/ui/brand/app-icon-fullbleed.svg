@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="t d">
+<title id="t">Joystick Jammers app icon</title>
+<desc id="d">JJ monogram in Barlow Condensed Black Italic: saffron with an ink outline and cobalt sticker shadow on an ink square with a thin paper keyline. Full-bleed square version for PNG exports; the operating system rounds the corners.</desc>
+<rect width="512" height="512" rx="0" fill="#15203A"/>
+<rect x="22" y="22" width="468" height="468" rx="70" fill="none" stroke="#FFF4DE" stroke-width="5" stroke-opacity="0.55"/>
+<defs><path id="jj" d="M98 312.63Q98 309.19 98.69 302.32L101.09 282.38Q101.44 279.97 102.98 278.6Q104.53 277.22 106.59 277.22H159.53Q161.6 277.22 162.8 278.6Q164 279.97 163.66 282.38L161.25 303Q160.57 308.5 162.8 312.11Q165.03 315.72 169.5 315.72Q173.97 315.72 177.41 312.11Q180.85 308.5 181.19 303L202.16 132.84Q202.51 130.43 204.05 129.06Q205.6 127.68 207.66 127.68H260.6Q262.67 127.68 263.87 129.06Q265.07 130.43 264.73 132.84L244.1 302.32Q241.7 322.6 230.52 338.24Q219.35 353.88 201.82 362.48Q184.29 371.07 162.63 371.07Q133.06 371.07 115.53 355.08Q98 339.1 98 312.63ZM247.2 312.63Q247.2 309.19 247.88 302.32L250.29 282.38Q250.63 279.97 252.18 278.6Q253.73 277.22 255.79 277.22H308.73Q310.79 277.22 312 278.6Q313.2 279.97 312.86 282.38L310.45 303Q309.76 308.5 312 312.11Q314.23 315.72 318.7 315.72Q323.17 315.72 326.61 312.11Q330.04 308.5 330.39 303L351.36 132.84Q351.7 130.43 353.25 129.06Q354.8 127.68 356.86 127.68H409.8Q411.86 127.68 413.06 129.06Q414.27 130.43 413.92 132.84L393.3 302.32Q390.89 322.6 379.72 338.24Q368.55 353.88 351.01 362.48Q333.48 371.07 311.82 371.07Q282.26 371.07 264.73 355.08Q247.2 339.1 247.2 312.63Z"/></defs>
+<use href="#jj" x="-2.7" y="22" fill="#1E5BFF" stroke="#1E5BFF" stroke-width="23" stroke-linejoin="round"/>
+<use href="#jj" fill="#FFB400" stroke="#15203A" stroke-width="26" paint-order="stroke" stroke-linejoin="round"/>
+</svg>

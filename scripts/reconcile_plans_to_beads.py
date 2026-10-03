@@ -98,8 +98,10 @@ def reconcile(jsonl: str | None) -> dict:
     unreferenced = 0
     for b in beads:
         ref = (b.get("external_ref") or "").strip()
-        if re.fullmatch(r"P1-[A-Z]+\d+[a-z]?", ref):
-            by_ref.setdefault(ref, []).append(b["id"])
+        # A split bead's children carry P1-XXX.N (external refs are unique in br); they count for P1-XXX.
+        m = re.fullmatch(r"(P1-[A-Z]+\d+[a-z]?)(?:\.\d+)?", ref)
+        if m:
+            by_ref.setdefault(m.group(1), []).append(b["id"])
         else:
             unreferenced += 1
     present = {t: sorted(by_ref[t]) for t in tasks if t in by_ref}

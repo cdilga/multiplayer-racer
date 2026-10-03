@@ -1,0 +1,175 @@
+{
+  "ok": true,
+  "failures": [],
+  "minDeltaE": 20,
+  "pairs": [
+    {
+      "from": "red",
+      "to": "blue",
+      "deltaE": {
+        "normal": 46,
+        "protanopia": 53.1,
+        "deuteranopia": 62.8,
+        "tritanopia": 66.2
+      },
+      "worst": 46,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 3.35
+    },
+    {
+      "from": "blue",
+      "to": "orange",
+      "deltaE": {
+        "normal": 56.1,
+        "protanopia": 62.8,
+        "deuteranopia": 70.2,
+        "tritanopia": 63.3
+      },
+      "worst": 56.1,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 3.87
+    },
+    {
+      "from": "orange",
+      "to": "teal",
+      "deltaE": {
+        "normal": 51.8,
+        "protanopia": 34.7,
+        "deuteranopia": 42.7,
+        "tritanopia": 63.3
+      },
+      "worst": 34.7,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 4.78
+    },
+    {
+      "from": "teal",
+      "to": "yellow",
+      "deltaE": {
+        "normal": 43.7,
+        "protanopia": 36.8,
+        "deuteranopia": 45.9,
+        "tritanopia": 45.8
+      },
+      "worst": 36.8,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 6
+    },
+    {
+      "from": "yellow",
+      "to": "pink",
+      "deltaE": {
+        "normal": 63.4,
+        "protanopia": 52.7,
+        "deuteranopia": 31.3,
+        "tritanopia": 26.4
+      },
+      "worst": 26.4,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 10.07
+    },
+    {
+      "from": "pink",
+      "to": "charcoal",
+      "deltaE": {
+        "normal": 47.1,
+        "protanopia": 30.9,
+        "deuteranopia": 43.3,
+        "tritanopia": 41
+      },
+      "worst": 30.9,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 3.93
+    },
+    {
+      "from": "charcoal",
+      "to": "green",
+      "deltaE": {
+        "normal": 47,
+        "protanopia": 47.5,
+        "deuteranopia": 42.3,
+        "tritanopia": 41.2
+      },
+      "worst": 41.2,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 12.39
+    },
+    {
+      "from": "green",
+      "to": "white",
+      "deltaE": {
+        "normal": 36.5,
+        "protanopia": 31.1,
+        "deuteranopia": 31.6,
+        "tritanopia": 37.7
+      },
+      "worst": 31.1,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 4.78
+    },
+    {
+      "from": "white",
+      "to": "purple",
+      "deltaE": {
+        "normal": 52.6,
+        "protanopia": 49.6,
+        "deuteranopia": 50.1,
+        "tritanopia": 41.5
+      },
+      "worst": 41.5,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 13.91
+    },
+    {
+      "from": "purple",
+      "to": "maroon",
+      "deltaE": {
+        "normal": 29.6,
+        "protanopia": 28.7,
+        "deuteranopia": 42.2,
+        "tritanopia": 28.2
+      },
+      "worst": 28.2,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 4.7
+    },
+    {
+      "from": "maroon",
+      "to": "sky",
+      "deltaE": {
+        "normal": 68.3,
+        "protanopia": 55.9,
+        "deuteranopia": 50.9,
+        "tritanopia": 74.8
+      },
+      "worst": 50.9,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 7.15
+    },
+    {
+      "from": "sky",
+      "to": "red",
+      "deltaE": {
+        "normal": 60.2,
+        "protanopia": 53,
+        "deuteranopia": 52.5,
+        "tritanopia": 67.8
+      },
+      "worst": 52.5,
+      "byColour": true,
+      "byNumber": true,
+      "badgeContrastWorst": 8.16
+    }
+  ]
+}

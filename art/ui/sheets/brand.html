@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Joystick Jammers brand sheet</title>
+<meta name="viewport" content="width=1600">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    width: 1600px;
+    background: var(--c-paper);
+    color: var(--c-ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: var(--fs-body);
+    line-height: 1.3;
+    padding: 56px 64px 72px;
+  }
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+  h1 { font-size: 72px; }
+  h2 { font-size: var(--fs-heading); display: inline-block; padding: 8px 22px 6px 16px; background: var(--c-saffron); transform: skewX(-8deg); margin-left: 8px; }
+  h2 > span { display: inline-block; transform: skewX(8deg); }
+  .lede { margin: 10px 0 0; color: var(--c-ink-soft); font-weight: 600; font-size: 18px; }
+  section { margin-top: 56px; }
+  .label { font-weight: 600; font-size: 15px; color: var(--c-ink-soft); margin-top: 12px; }
+  .label b { color: var(--c-ink); font-weight: 700; }
+  .panel {
+    background: var(--c-paper);
+    border: var(--outline) solid var(--c-ink);
+    border-radius: 14px;
+    box-shadow: var(--sticker-shadow);
+  }
+  .ink { background: var(--c-ink); color: var(--c-paper); }
+  .row { display: flex; gap: 32px; align-items: flex-start; margin-top: 28px; }
+  .cell { display: flex; flex-direction: column; }
+
+  /* wordmark */
+  .wm-panel { flex: none; width: 100%; height: 360px; display: flex; align-items: center; justify-content: center; }
+  .wm-panel img { width: 660px; display: block; }
+  .wm-sizes { display: flex; align-items: flex-end; gap: 28px; margin-top: 18px; }
+  .chip { padding: 20px 24px; display: flex; align-items: center; justify-content: center; }
+  .rules { margin: 14px 0 0; padding-left: 20px; font-weight: 600; font-size: 15px; color: var(--c-ink-soft); }
+  .rules li { margin: 3px 0; }
+
+  /* icons */
+  .icon-big { width: 512px; height: 512px; border-radius: 22%; display: block; box-shadow: var(--sticker-shadow); }
+  .icon-180 { width: 180px; height: 180px; border-radius: 22.37%; display: block; box-shadow: var(--sticker-shadow); }
+  .stack { display: flex; flex-direction: column; gap: 30px; }
+  .sizes { display: flex; gap: 20px; align-items: flex-end; }
+  .tile { width: 112px; height: 96px; border: var(--outline) solid var(--c-ink); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .tile.dark { background: var(--c-ink); border-color: var(--c-ink); }
+  .tile.paper { background: var(--c-paper); }
+  .tab { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 12px; background: var(--c-paper); border: var(--outline) solid var(--c-ink); border-bottom: 0; border-radius: 10px 10px 0 0; font-family: var(--font-body); font-weight: 600; font-size: 14px; }
+  .tabbar { background: var(--c-paper-shade); border: var(--outline) solid var(--c-ink); border-radius: 8px; padding: 10px 14px 0; width: 330px; height: 52px; display: flex; align-items: flex-end; margin-top: 4px; }
+  #zoom { width: 128px; height: 128px; image-rendering: pixelated; border: var(--outline) solid var(--c-ink); border-radius: 6px; background: var(--c-paper-shade); display: block; }
+
+  /* qr */
+  .qr-wrap { display: flex; gap: 48px; align-items: flex-start; margin-top: 28px; }
+  .qr-wrap img { width: 880px; display: block; }
+  .facts { flex: 1; font-weight: 600; font-size: 17px; }
+  .facts h3 { font-family: var(--font-display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: 28px; margin: 0 0 8px; line-height: 1; }
+  .facts ul { margin: 0 0 20px; padding-left: 20px; }
+  .facts li { margin: 5px 0; }
+  .facts .num { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--c-cobalt-deep); font-variant-numeric: tabular-nums; }
+  .donts { display: flex; gap: 40px; margin-top: 36px; }
+  .dont { flex: 1 1 0; min-width: 0; }
+  .dont .frame { position: relative; width: 100%; height: 300px; border: var(--outline) solid var(--c-ink); border-radius: 12px; background: var(--c-paper-shade); display: flex; align-items: center; justify-content: center; }
+  .dont .frame img { width: 220px; height: 220px; display: block; }
+  .dont .cross { position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; margin: -125px 0 0 -125px; overflow: hidden; }
+  .dont .cap { margin-top: 12px; display: flex; gap: 10px; align-items: flex-start; font-weight: 700; font-size: 17px; }
+  .dont .x { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--c-danger); color: var(--c-paper); display: grid; place-items: center; }
+  .dont .x svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+<h1>Joystick Jammers brand</h1>
+<p class="lede">The wordmark, app icon, favicon and join QR. Every file is generated by <b>art/ui/brand/make.py</b> from the bundled fonts and tokens.json; lettering is outline paths, so nothing depends on an installed font.</p>
+
+<section id="wordmark">
+  <h2><span>Wordmark</span></h2>
+  <div class="row">
+    <div class="cell" style="flex:1 1 0">
+      <div class="panel wm-panel"><img id="wm-paper" src="../brand/wordmark.svg" alt="Joystick Jammers wordmark on paper"></div>
+      <div class="label"><b>wordmark.svg</b> for paper and light grounds. JOYSTICK ink, JAMMERS saffron, ink outline, hard shadow.</div>
+    </div>
+    <div class="cell" style="flex:1 1 0">
+      <div class="panel ink wm-panel"><img id="wm-ink" src="../brand/wordmark-on-ink.svg" alt="Joystick Jammers wordmark on ink"></div>
+      <div class="label"><b>wordmark-on-ink.svg</b> for ink grounds. JOYSTICK paper, paper keyline round the whole sticker.</div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:24px;align-items:flex-end;gap:40px">
+    <div class="cell">
+      <div class="wm-sizes">
+        <img src="../brand/wordmark.svg" width="320" alt="">
+        <img src="../brand/wordmark.svg" width="200" alt="">
+        <img src="../brand/wordmark.svg" width="120" alt="">
+      </div>
+      <div class="label"><b>Small sizes:</b> 320, 200 and 120 px wide. 120 px is the minimum; below that use the JJ monogram.</div>
+    </div>
+    <div class="cell">
+      <div class="panel ink chip"><img src="../brand/wordmark-on-ink.svg" width="240" alt=""></div>
+      <div class="label"><b>On ink at 240 px</b></div>
+    </div>
+    <ul class="rules" style="margin:0 0 6px;flex:1">
+      <li>Clear space on every side: half the cap height of JOYSTICK.</li>
+      <li>One lockup only: never restack, recolour, skew or set in another face.</li>
+      <li>On photos or busy art, use the on-ink version on an ink plate.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="icons">
+  <h2><span>App icon and favicon</span></h2>
+  <div class="row" style="gap:56px">
+    <div class="cell">
+      <img class="icon-big" id="i512" src="../brand/app-icon-512.png" alt="App icon 512">
+      <div class="label"><b>app-icon-512.png</b> at 512 px. Full-bleed and opaque; the OS rounds the corners.</div>
+    </div>
+    <div class="stack">
+      <div class="cell">
+        <div class="sizes">
+          <img class="icon-180" id="i180" src="../brand/apple-touch-icon-180.png" alt="Apple touch icon 180">
+          <div class="cell"><img id="i64" src="../brand/app-icon.svg" width="64" height="64" alt="App icon 64"><div class="label"><b>64 px</b></div></div>
+          <div class="cell"><img id="i32" src="../brand/app-icon.svg" width="32" height="32" alt="App icon 32"><div class="label"><b>32 px</b></div></div>
+        </div>
+        <div class="label"><b>apple-touch-icon-180.png</b> at 180 px, then <b>app-icon.svg</b> at 64 and 32 px.</div>
+      </div>
+      <div class="cell">
+        <div class="sizes">
+          <div class="cell"><img id="f32" src="../brand/favicon-32.png" width="32" height="32" alt="Favicon 32"><div class="label"><b>32 px</b></div></div>
+          <div class="cell"><img id="f16" src="../brand/favicon.svg" width="16" height="16" alt="Favicon 16"><div class="label"><b>16 px</b></div></div>
+          <div class="cell"><canvas id="zoom" width="16" height="16"></canvas><div class="label"><b>16 px at 8x</b></div></div>
+        </div>
+        <div class="label"><b>favicon.svg</b>, <b>favicon-32.png</b> and <b>favicon.ico</b> (16, 32, 48). The favicon drops the outline and keyline to stay legible small.</div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="cell">
+        <div class="sizes">
+          <div class="tile paper"><img src="../brand/app-icon.svg" width="64" height="64" alt=""><img src="../brand/app-icon.svg" width="32" height="32" alt=""></div>
+          <div class="tile dark"><img src="../brand/app-icon.svg" width="64" height="64" alt=""><img src="../brand/app-icon.svg" width="32" height="32" alt=""></div>
+        </div>
+        <div class="label">The icon carries its own ink square, so it sits the same on paper and on dark.</div>
+      </div>
+      <div class="cell">
+        <div class="tabbar"><div class="tab"><img src="../brand/favicon.svg" width="16" height="16" alt=""><span>Joystick Jammers</span></div></div>
+        <div class="label">In a browser tab.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="qr">
+  <h2><span>QR rule</span></h2>
+  <div class="qr-wrap">
+    <div class="cell">
+      <img id="qr-big" src="../brand/qr-rule.svg" alt="Join QR with room code ROO7">
+      <div class="label"><b>qr-rule.svg</b>: a real, scannable code for https://jammers.dilger.dev/j/ROO7. The room code sits beside it, never inside.</div>
+    </div>
+    <div class="facts">
+      <h3>The rule</h3>
+      <ul>
+        <li>Plain black modules on pure white (#000000 on #FFFFFF). Never tinted, never inverted.</li>
+        <li>A quiet zone of at least 4 modules on every side. Nothing overlaps it.</li>
+        <li>Error correction M, square modules, nothing in the middle.</li>
+        <li>The room code goes beside the code in the display face, large enough to read across a room.</li>
+      </ul>
+      <h3>Minimum size</h3>
+      <ul id="minsizes"></ul>
+    </div>
+  </div>
+  <div class="donts" id="donts">
+    <div class="dont"><div class="frame"><img src="../brand/qr-dont-logo.svg" alt="QR with a logo in the middle"><svg class="cross" id="x1" viewBox="0 0 300 300"></svg></div><div class="cap"><span class="x"></span><span>Never put a logo in the middle.</span></div></div>
+    <div class="dont"><div class="frame"><img src="../brand/qr-dont-quiet.svg" alt="QR with no quiet zone"><svg class="cross" id="x2" viewBox="0 0 300 300"></svg></div><div class="cap"><span class="x"></span><span>Never trim the 4-module quiet zone.</span></div></div>
+    <div class="dont"><div class="frame"><img src="../brand/qr-dont-inverted.svg" alt="Inverted QR"><svg class="cross" id="x3" viewBox="0 0 300 300"></svg></div><div class="cap"><span class="x"></span><span>Never invert or tint: black on white only.</span></div></div>
+  </div>
+</section>
+
+<script type="module">
+  import { applyTokens } from './tokens-css.js';
+  const tokens = await applyTokens('desk');
+
+  // red cross-outs and the x badges
+  const danger = getComputedStyle(document.documentElement).getPropertyValue('--c-danger').trim();
+  for (const id of ['x1', 'x2', 'x3']) {
+    document.getElementById(id).innerHTML =
+      `<g stroke="${danger}" stroke-width="6" stroke-linecap="round" opacity="0.85"><path d="M24 24L276 276"/><path d="M276 24L24 276"/></g>`;
+  }
+  for (const x of document.querySelectorAll('.dont .x')) {
+    x.innerHTML = '<svg viewBox="0 0 14 14"><path d="M2 2L12 12M12 2L2 12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
+  }
+
+  // minimum sizes derived from the code's module count (read from the negative example's viewBox)
+  const svgText = await (await fetch('../brand/qr-dont-inverted.svg')).text();
+  const n = Number(svgText.match(/viewBox="0 0 (\d+) /)[1]);
+  const q = tokens.qr;
+  const names = { tv: 'TV (1080p reference)', desk: 'Laptop or desktop', handheld: 'Phone' };
+  document.getElementById('minsizes').innerHTML = Object.entries(q.minModulePx)
+    .map(([k, m]) => `<li>${names[k]}: <span class="num">${m} px</span> per module, so the whole code, quiet zone included, is at least <span class="num">${n * m} px</span> wide.</li>`)
+    .join('');
+
+  // the 16 px favicon, enlarged without smoothing
+  const f16 = document.getElementById('f16');
+  await f16.decode();
+  const ctx = document.getElementById('zoom').getContext('2d');
+  ctx.drawImage(f16, 0, 0, 16, 16);
+
+  const imgs = [...document.images];
+  await Promise.all(imgs.map((i) => i.decode().catch(() => null)));
+  const failures = [];
+  for (const i of imgs) if (!(i.complete && i.naturalWidth > 0)) failures.push(`image did not load: ${i.getAttribute('src')}`);
+  if (document.documentElement.scrollWidth > 1600) failures.push(`horizontal overflow: ${document.documentElement.scrollWidth}px`);
+  for (const f of ['italic 900 20px "Barlow Condensed"', '600 16px "Barlow Semi Condensed"']) {
+    if (!document.fonts.check(f)) failures.push(`font not loaded: ${f}`);
+  }
+  window.sheetReport = { ok: failures.length === 0, failures, images: imgs.length, qrModules: n };
+  window.sheetReady = true;
+</script>
+</body>
+</html>

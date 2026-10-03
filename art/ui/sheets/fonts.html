@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<title>Fonts under stress</title>
+<style>
+  body { margin: 0; padding: 32px 40px 40px; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-weight: 500; }
+  h1 { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 48px; line-height: .95; margin: 0 0 6px; }
+  h2 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: 26px; margin: 26px 0 10px; }
+  p { margin: 0 0 10px; font-size: 16px; max-width: 1300px; }
+  .specimen { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .face { border: 3px solid var(--c-ink); border-radius: 10px; background: #fff9ec; padding: 14px 18px; box-shadow: 0 5px 0 rgb(21 32 58 / .85); }
+  .face .name { font-size: 14px; margin-bottom: 6px; }
+  .display { font-family: var(--font-display); font-weight: 900; }
+  .display-i { font-family: var(--font-display); font-weight: 900; font-style: italic; }
+  .body6 { font-family: var(--font-body); font-weight: 600; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .numbers { display: flex; gap: 14px; flex-wrap: wrap; }
+  .badge { height: 64px; padding: 0 10px; display: grid; place-items: center; border: 4px solid var(--c-ink); border-radius: 10px; font-family: var(--font-display); font-weight: 900; font-size: 44px; font-variant-numeric: tabular-nums; box-shadow: 0 5px 0 rgb(21 32 58 / .85); }
+  .scores { font-family: var(--font-display); font-weight: 900; font-size: 44px; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { border: 2px solid var(--c-ink); padding: 6px 10px; text-align: left; vertical-align: middle; }
+  th { background: var(--c-paper-shade); font-weight: 700; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  td .tv { font-size: 32px; font-weight: 600; line-height: 1.15; }
+  td .card { display: flex; align-items: center; gap: 10px; width: 300px; border: 3px solid var(--c-ink); border-radius: 8px; padding: 4px 8px; background: #fff9ec; }
+  td .card .b { flex: none; min-width: 40px; height: 34px; display: grid; place-items: center; border: 3px solid var(--c-ink); border-radius: 6px; font-family: var(--font-display); font-weight: 900; font-size: 22px; font-variant-numeric: tabular-nums; }
+  td .card .nm { font-weight: 600; font-size: 17px; overflow-wrap: anywhere; line-height: 1.15; }
+  td .hud { display: inline-flex; align-items: center; gap: 6px; max-width: 200px; background: var(--c-ink); color: var(--c-paper); border-radius: 6px; padding: 3px 8px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .ok { color: var(--c-success); font-weight: 700; }
+  .fb { color: var(--c-cobalt-deep); font-weight: 700; }
+  .bad { color: var(--c-danger); font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>Fonts under stress</h1>
+<p id="lede"></p>
+
+<h2>The two bundled faces</h2>
+<div class="specimen">
+  <div class="face"><div class="name" id="dname"></div>
+    <div class="display-i" style="font-size:72px;line-height:.95;text-transform:uppercase">Round 3 complete</div>
+    <div class="display" style="font-size:44px;line-height:1.05;text-transform:uppercase">Next round starts in <span class="tnum" style="text-transform:none">42s</span></div>
+    <div class="display" style="font-size:28px">ÀÉÎÕÜ Çà Ñ Ŵ Ğ Ł Ő ẞ · Ngữ Phương · 0123456789</div>
+  </div>
+  <div class="face"><div class="name" id="bname"></div>
+    <div class="body6" style="font-size:32px;line-height:1.2">Release both sticks, then move to take control.</div>
+    <div style="font-size:20px;line-height:1.3">Scan to join, or enter the code. Reconnecting as #7… Autopilot is driving your car. Everyone else keeps racing.</div>
+    <div class="body6" style="font-size:20px">ÀÉÎÕÜ Çà Ñ Ŵ Ğ Ł Ő · “quotes” — dashes – … · €£$ · 0123456789</div>
+  </div>
+</div>
+
+<h2>Numbers: tabular digits, any number of digits</h2>
+<div class="numbers" id="numbers"></div>
+<div class="scores" style="margin-top:14px">
+  <div>1st&nbsp; #7&nbsp;&nbsp; 1:42.118&nbsp; +30</div>
+  <div>2nd&nbsp; #108 1:43.907&nbsp; +23</div>
+  <div>11th #999 2:01.000&nbsp; +01</div>
+</div>
+
+<h2>Names: 32 graphemes and non-Latin scripts</h2>
+<table id="names"></table>
+<p id="rule" style="margin-top:12px"></p>
+
+<script type="module">
+  import { applyTokens } from './tokens-css.js';
+  const tokens = await applyTokens('desk');
+  const { display, body, fallback } = tokens.fonts;
+  document.getElementById('lede').textContent =
+    `Bundled, self-hosted OFL faces: ${display.family} (display) and ${body.family} (body), subset to ${tokens.fonts.subset}. Anything outside the subset uses the named fallback stack: ${fallback.join(', ')}. No remote font service (R70). This capture: Chromium on the machine named in the receipt.`;
+  document.getElementById('dname').textContent = `${display.family}: ${display.files.map((f) => `${f.weight}${f.style === 'italic' ? ' italic' : ''}`).join(', ')}`;
+  document.getElementById('bname').textContent = `${body.family}: ${body.files.map((f) => f.weight).join(', ')}`;
+
+  const colors = tokens.identity.colors;
+  const pal = tokens.palette;
+  const nums = document.getElementById('numbers');
+  for (const n of [1, 7, 12, 99, 100, 108, 250, 999]) {
+    const c = colors[(n - 1) % colors.length];
+    const b = document.createElement('div');
+    b.className = 'badge';
+    b.style.background = c.hex;
+    b.style.color = pal[c.on].hex;
+    b.textContent = `#${n}`;
+    nums.append(b);
+  }
+
+  // Coverage of the bundled subset (fonts/subset.py): Latin, Latin Extended, Vietnamese, punctuation.
+  const RANGES = [[0x0000, 0x024f], [0x0259, 0x0259], [0x02bb, 0x02bc], [0x02c6, 0x02c6], [0x02da, 0x02da], [0x02dc, 0x02dc], [0x0300, 0x036f], [0x1e00, 0x1eff], [0x2000, 0x206f], [0x20a0, 0x20c0], [0x2100, 0x2122], [0x2190, 0x2199], [0x2212, 0x2212], [0x2215, 0x2215], [0x2713, 0x2714], [0xfe0f, 0xfe0f], [0xfeff, 0xfeff], [0xfffd, 0xfffd]];
+  const bundled = (cp) => RANGES.some(([a, b]) => cp >= a && cp <= b);
+  const seg = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  const graphemes = (s) => [...seg.segment(s)].length;
+
+  // Does any font on this machine draw the text (no tofu)? Compare each non-bundled char with the
+  // .notdef box drawn for a private-use code point in the same stack.
+  const cv = document.createElement('canvas').getContext('2d');
+  const stack = getComputedStyle(document.documentElement).getPropertyValue('--font-body');
+  cv.font = `40px ${stack}`;
+  const tofuW = cv.measureText('').width;
+  const drawn = (ch) => {
+    const w = cv.measureText(ch).width;
+    return w > 0 && Math.abs(w - tofuW) > 0.01;
+  };
+
+  const NAMES = [
+    ['32 graphemes, Latin', 'Maximilian Alexander Fitzgerald!'],
+    ['32 graphemes, accents', 'Zoë-Brontë Ngữ Phương de la Peña'],
+    ['32 graphemes, emoji (ZWJ)', 'Bazza 🏎️💨 the 👨‍👩‍👧 Dad Racer Junior!'],
+    ['Japanese', 'さくら・ゆうき'],
+    ['Chinese', '小龙赛车手'],
+    ['Korean', '김지민'],
+    ['Arabic (RTL)', 'ليلى'],
+    ['Hindi', 'प्रिया'],
+    ['Russian', 'Дмитрий'],
+    ['Greek', 'Νίκος'],
+    ['Thai', 'สมชาย'],
+    ['Hebrew (RTL)', 'נועה'],
+    ['Vietnamese', 'Nguyễn Thị Hằng'],
+  ];
+  const failures = [];
+  const rows = [];
+  const tbl = document.getElementById('names');
+  tbl.innerHTML = '<tr><th>Case</th><th>Graphemes</th><th>TV label (32 px, body 600)</th><th>Lobby card (wraps)</th><th>Tile HUD (number + first 12 graphemes)</th><th>Font</th></tr>';
+  NAMES.forEach(([what, name], i) => {
+    const g = graphemes(name);
+    const cps = [...name].map((c) => c.codePointAt(0)).filter((cp) => cp > 0x20 && cp !== 0x200d);
+    const outside = [...new Set([...name].filter((c) => !bundled(c.codePointAt(0)) && c.codePointAt(0) !== 0x200d))];
+    const missing = outside.filter((c) => !/\p{Extended_Pictographic}/u.test(c) && !drawn(c));
+    const font = outside.length === 0 ? 'bundled' : missing.length ? 'tofu' : 'fallback';
+    const n = [7, 12, 108, 999][i % 4];
+    const c = colors[(n - 1) % colors.length];
+    const short = [...seg.segment(name)].map((s) => s.segment);
+    const hud = short.length > 12 ? `${short.slice(0, 12).join('').trimEnd()}…` : name;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${what}</td><td class="n">${g}</td><td><div class="tv" dir="auto"></div></td>
+      <td><div class="card"><span class="b" style="background:${c.hex};color:${pal[c.on].hex}">#${n}</span><span class="nm" dir="auto"></span></div></td>
+      <td><span class="hud"><span>#${n}</span><span dir="auto"></span></span></td>
+      <td class="${font === 'bundled' ? 'ok' : font === 'fallback' ? 'fb' : 'bad'}">${font === 'bundled' ? 'bundled' : font === 'fallback' ? `fallback (${outside.length} chars)` : `MISSING: ${missing.join(' ')}`}</td>`;
+    tr.querySelector('.tv').textContent = name;
+    tr.querySelector('.nm').textContent = name;
+    tr.querySelector('.hud span:last-child').textContent = hud;
+    tbl.append(tr);
+    rows.push({ case: what, name, graphemes: g, font, outsideSubset: outside.length, missing });
+    if (font === 'tofu') failures.push(`${what}: no font draws ${missing.join(' ')}`);
+    if (what.startsWith('32 graphemes') && g !== 32) failures.push(`${what}: has ${g} graphemes, not 32`);
+  });
+  document.getElementById('rule').textContent =
+    'Rule (GUIDE.md): names keep up to 32 graphemes (master §10.6). The lobby card and results wrap a long name to two lines and never truncate the number; the per-tile HUD shows the number badge and the first 12 graphemes with an ellipsis. Text runs with dir="auto" so right-to-left names render correctly.';
+  window.sheetReport = { ok: failures.length === 0, failures, rows };
+  window.sheetReady = true;
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+schema: valid
+contrast ok   14.81:1 (min 4.5) text-on-paper: ink on paper
+contrast ok   12.62:1 (min 4.5) text-on-paper-shade: ink on paper-shade
+contrast ok    8.05:1 (min 4.5) muted-on-paper: ink-soft on paper
+contrast ok    6.86:1 (min 4.5) muted-on-paper-shade: ink-soft on paper-shade
+contrast ok   14.81:1 (min 4.5) text-on-ink: paper on ink
+contrast ok   12.45:1 (min 4.5) text-on-ink-raised: paper on ink-raised
+contrast ok    9.06:1 (min 3) primary-button: ink on saffron
+contrast ok    9.06:1 (min 4.5) primary-button-label: ink on saffron
+contrast ok    4.82:1 (min 3) cobalt-button: paper on cobalt
+contrast ok    4.82:1 (min 3) cobalt-number-on-paper: cobalt on paper
+contrast ok    7.39:1 (min 4.5) cobalt-text-on-paper: cobalt-deep on paper
+contrast ok    5.99:1 (min 4.5) destructive-button: paper on danger
+contrast ok    5.33:1 (min 4.5) destructive-text-on-tint: danger on danger-tint
+contrast ok    5.22:1 (min 4.5) success-text-on-tint: success on success-tint
+contrast ok    5.64:1 (min 4.5) success-text-on-paper: success on paper
+contrast ok   13.42:1 (min 4.5) text-on-warning-tint: ink on warning-tint
+contrast ok    6.18:1 (min 4.5) warning-text-on-ink: warning on ink
+contrast ok    9.06:1 (min 4.5) saffron-text-on-ink: saffron on ink
+contrast ok   14.81:1 (min 3) outline-on-paper: ink on paper
+contrast ok    4.82:1 (min 3) focus-ring-on-paper: cobalt on paper
+contrast ok    9.06:1 (min 3) focus-ring-on-ink: saffron on ink
+contrast ok   21.00:1 (min 3) qr-modules: black on white
+badge    ok    3.99:1 paper on red
+badge    ok    4.74:1 paper on blue
+badge    ok    6.19:1 ink on orange
+badge    ok    6.39:1 ink on teal
+badge    ok   11.19:1 ink on yellow
+badge    ok    5.31:1 ink on pink
+badge    ok   12.63:1 paper on charcoal
+badge    ok    4.98:1 ink on green
+badge    ok   14.33:1 ink on white
+badge    ok    5.05:1 paper on purple
+badge    ok    8.09:1 paper on maroon
+badge    ok    8.60:1 ink on sky
+cvd      ok   worst ΔE00    46 red→blue {"normal":46,"protanopia":53.1,"deuteranopia":62.8,"tritanopia":66.2}
+cvd      ok   worst ΔE00  56.1 blue→orange {"normal":56.1,"protanopia":62.8,"deuteranopia":70.2,"tritanopia":63.3}
+cvd      ok   worst ΔE00  34.7 orange→teal {"normal":51.8,"protanopia":34.7,"deuteranopia":42.7,"tritanopia":63.3}
+cvd      ok   worst ΔE00  36.8 teal→yellow {"normal":43.7,"protanopia":36.8,"deuteranopia":45.9,"tritanopia":45.8}
+cvd      ok   worst ΔE00  26.4 yellow→pink {"normal":63.4,"protanopia":52.7,"deuteranopia":31.3,"tritanopia":26.4}
+cvd      ok   worst ΔE00  30.9 pink→charcoal {"normal":47.1,"protanopia":30.9,"deuteranopia":43.3,"tritanopia":41}
+cvd      ok   worst ΔE00  41.2 charcoal→green {"normal":47,"protanopia":47.5,"deuteranopia":42.3,"tritanopia":41.2}
+cvd      ok   worst ΔE00  31.1 green→white {"normal":36.5,"protanopia":31.1,"deuteranopia":31.6,"tritanopia":37.7}
+cvd      ok   worst ΔE00  41.5 white→purple {"normal":52.6,"protanopia":49.6,"deuteranopia":50.1,"tritanopia":41.5}
+cvd      ok   worst ΔE00  28.2 purple→maroon {"normal":29.6,"protanopia":28.7,"deuteranopia":42.2,"tritanopia":28.2}
+cvd      ok   worst ΔE00  50.9 maroon→sky {"normal":68.3,"protanopia":55.9,"deuteranopia":50.9,"tritanopia":74.8}
+cvd      ok   worst ΔE00  52.5 sky→red {"normal":60.2,"protanopia":53,"deuteranopia":52.5,"tritanopia":67.8}
+files: 38/38 present
+token check: ok

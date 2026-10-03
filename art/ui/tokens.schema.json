@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jammers.dilger.dev/schemas/ui-tokens.v0.json",
+  "title": "Joystick Jammers UI tokens",
+  "type": "object",
+  "required": ["name", "version", "status", "references", "palette", "contrastPairs", "identity", "fonts", "type", "space", "layout", "ink", "wobble", "focus", "icons", "motion", "qr"],
+  "additionalProperties": false,
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "paletteRef": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "byProfile": {
+      "type": "object",
+      "required": ["tv", "desk", "handheld"],
+      "additionalProperties": false,
+      "properties": { "tv": { "type": "number", "minimum": 0 }, "desk": { "type": "number", "minimum": 0 }, "handheld": { "type": "number", "minimum": 0 } }
+    },
+    "scale": {
+      "type": "object",
+      "required": ["caption", "label", "body", "title", "heading", "display", "hero"],
+      "additionalProperties": false,
+      "patternProperties": { ".*": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["viewing", "unit", "minTextPx", "minCapHeightPx", "scale"],
+      "additionalProperties": false,
+      "properties": {
+        "viewing": { "type": "string" },
+        "unit": { "enum": ["px@1080p", "css-px"] },
+        "minTextPx": { "type": "number", "exclusiveMinimum": 0 },
+        "minCapHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+        "scale": { "$ref": "#/$defs/scale" }
+      }
+    },
+    "fontFace": {
+      "type": "object",
+      "required": ["family", "role", "licence", "licenceFile", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "family": { "type": "string" },
+        "role": { "type": "string" },
+        "licence": { "const": "OFL-1.1" },
+        "licenceFile": { "type": "string" },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["weight", "style", "file"],
+            "additionalProperties": false,
+            "properties": {
+              "weight": { "type": "integer", "minimum": 100, "maximum": 900 },
+              "style": { "enum": ["normal", "italic"] },
+              "file": { "type": "string", "pattern": "^fonts/[a-z0-9-]+\\.woff2$" }
+            }
+          }
+        }
+      }
+    },
+    "motionStep": {
+      "type": "object",
+      "required": ["durationMs", "does"],
+      "properties": {
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "repeat": { "type": "integer", "minimum": 1 },
+        "easing": { "type": "string" },
+        "does": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "status": { "enum": ["draft", "accepted"] },
+    "statusNote": { "type": "string" },
+    "references": {
+      "type": "object",
+      "required": ["primary"],
+      "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] }
+    },
+    "palette": {
+      "type": "object",
+      "minProperties": 2,
+      "propertyNames": { "$ref": "#/$defs/paletteRef" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["hex", "role"],
+        "additionalProperties": false,
+        "properties": { "hex": { "$ref": "#/$defs/hex" }, "role": { "type": "string" } }
+      }
+    },
+    "contrastPairs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "fg", "bg", "size"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "fg": { "$ref": "#/$defs/paletteRef" },
+          "bg": { "$ref": "#/$defs/paletteRef" },
+          "size": { "enum": ["normal", "large", "ui"], "description": "WCAG AA: normal text 4.5:1; large text (24 px, or 18.7 px bold) and UI graphics 3:1" }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "required": ["rule", "numberFormat", "badge", "colors", "cvdMinDeltaE"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": { "type": "string" },
+        "numberFormat": { "type": "string" },
+        "badge": { "type": "string" },
+        "colors": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["name", "hex", "on"],
+            "additionalProperties": false,
+            "properties": { "name": { "type": "string" }, "hex": { "$ref": "#/$defs/hex" }, "on": { "$ref": "#/$defs/paletteRef" } }
+          }
+        },
+        "cvdMinDeltaE": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "required": ["display", "body", "fallback", "numeric"],
+      "additionalProperties": false,
+      "properties": {
+        "display": { "$ref": "#/$defs/fontFace" },
+        "body": { "$ref": "#/$defs/fontFace" },
+        "fallback": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "fallbackNote": { "type": "string" },
+        "numeric": { "const": "tabular-nums" },
+        "subset": { "type": "string" }
+      }
+    },
+    "type": {
+      "type": "object",
+      "required": ["profiles", "lineHeight", "letterSpacing", "displayCase"],
+      "additionalProperties": false,
+      "properties": {
+        "profiles": {
+          "type": "object",
+          "required": ["tv", "desk", "handheld"],
+          "additionalProperties": false,
+          "properties": { "tv": { "$ref": "#/$defs/profile" }, "desk": { "$ref": "#/$defs/profile" }, "handheld": { "$ref": "#/$defs/profile" } }
+        },
+        "lineHeight": { "type": "object", "required": ["display", "body"] },
+        "letterSpacing": { "type": "object", "required": ["display", "body"] },
+        "displayCase": { "type": "string" }
+      }
+    },
+    "space": {
+      "type": "object",
+      "required": ["unit", "steps", "profileMultiplier"],
+      "properties": {
+        "unit": { "type": "string" },
+        "steps": { "type": "array", "minItems": 4, "items": { "type": "number", "minimum": 0 } },
+        "profileMultiplier": { "$ref": "#/$defs/byProfile" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "required": ["minTouchTargetPx", "minTouchGapPx", "stickRegion", "tvSafe", "radiusPx"],
+      "properties": {
+        "minTouchTargetPx": { "type": "number", "minimum": 44 },
+        "minTouchGapPx": { "type": "number", "minimum": 0 },
+        "stickRegion": { "type": "string" },
+        "tvSafe": {
+          "type": "object",
+          "required": ["title", "action"],
+          "properties": { "title": { "type": "number", "minimum": 0, "maximum": 0.2 }, "action": { "type": "number", "minimum": 0, "maximum": 0.2 }, "note": { "type": "string" } }
+        },
+        "radiusPx": { "$ref": "#/$defs/byProfile" }
+      }
+    },
+    "ink": {
+      "type": "object",
+      "required": ["outlinePx", "stickerShadow"],
+      "properties": {
+        "outlinePx": { "$ref": "#/$defs/byProfile" },
+        "stickerShadow": { "type": "object", "required": ["x", "y", "blur", "color", "opacity"] }
+      }
+    },
+    "wobble": {
+      "type": "object",
+      "required": ["amplitudePx", "segmentsPerEdge", "seed", "animated", "appliesTo"],
+      "properties": {
+        "amplitudePx": { "$ref": "#/$defs/byProfile" },
+        "segmentsPerEdge": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 1 } },
+        "seed": { "type": "string" },
+        "animated": { "const": false },
+        "appliesTo": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "required": ["keyboard", "gamepad"],
+      "properties": {
+        "keyboard": { "type": "object", "required": ["ring", "widthPx", "offsetPx"] },
+        "gamepad": { "type": "object", "required": ["ring", "widthPx", "offsetPx", "marker"] }
+      }
+    },
+    "icons": {
+      "type": "object",
+      "required": ["source", "licenceFile", "strokeWidth", "grid", "set"],
+      "properties": {
+        "set": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "required": ["durationsMs", "easing", "named", "reducedMotionNote"],
+      "properties": {
+        "durationsMs": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "easing": { "type": "object", "additionalProperties": { "type": "string" } },
+        "named": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "allOf": [{ "$ref": "#/$defs/motionStep" }],
+            "required": ["reduced"],
+            "properties": { "reduced": { "$ref": "#/$defs/motionStep" } }
+          }
+        },
+        "reducedMotionNote": { "type": "string" }
+      }
+    },
+    "qr": {
+      "type": "object",
+      "required": ["rule", "quietZoneModules", "errorCorrection", "minModulePx", "colors"],
+      "properties": {
+        "quietZoneModules": { "type": "integer", "minimum": 4 },
+        "errorCorrection": { "enum": ["L", "M", "Q", "H"] },
+        "minModulePx": { "$ref": "#/$defs/byProfile" }
+      }
+    }
+  }
+}

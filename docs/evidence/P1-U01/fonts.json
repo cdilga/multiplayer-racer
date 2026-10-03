@@ -1,0 +1,110 @@
+{
+  "ok": true,
+  "failures": [],
+  "rows": [
+    {
+      "case": "32 graphemes, Latin",
+      "name": "Maximilian Alexander Fitzgerald!",
+      "graphemes": 32,
+      "font": "bundled",
+      "outsideSubset": 0,
+      "missing": []
+    },
+    {
+      "case": "32 graphemes, accents",
+      "name": "Zoë-Brontë Ngữ Phương de la Peña",
+      "graphemes": 32,
+      "font": "bundled",
+      "outsideSubset": 0,
+      "missing": []
+    },
+    {
+      "case": "32 graphemes, emoji (ZWJ)",
+      "name": "Bazza 🏎️💨 the 👨‍👩‍👧 Dad Racer Junior!",
+      "graphemes": 32,
+      "font": "fallback",
+      "outsideSubset": 5,
+      "missing": []
+    },
+    {
+      "case": "Japanese",
+      "name": "さくら・ゆうき",
+      "graphemes": 7,
+      "font": "fallback",
+      "outsideSubset": 7,
+      "missing": []
+    },
+    {
+      "case": "Chinese",
+      "name": "小龙赛车手",
+      "graphemes": 5,
+      "font": "fallback",
+      "outsideSubset": 5,
+      "missing": []
+    },
+    {
+      "case": "Korean",
+      "name": "김지민",
+      "graphemes": 3,
+      "font": "fallback",
+      "outsideSubset": 3,
+      "missing": []
+    },
+    {
+      "case": "Arabic (RTL)",
+      "name": "ليلى",
+      "graphemes": 4,
+      "font": "fallback",
+      "outsideSubset": 3,
+      "missing": []
+    },
+    {
+      "case": "Hindi",
+      "name": "प्रिया",
+      "graphemes": 2,
+      "font": "fallback",
+      "outsideSubset": 6,
+      "missing": []
+    },
+    {
+      "case": "Russian",
+      "name": "Дмитрий",
+      "graphemes": 7,
+      "font": "fallback",
+      "outsideSubset": 6,
+      "missing": []
+    },
+    {
+      "case": "Greek",
+      "name": "Νίκος",
+      "graphemes": 5,
+      "font": "fallback",
+      "outsideSubset": 5,
+      "missing": []
+    },
+    {
+      "case": "Thai",
+      "name": "สมชาย",
+      "graphemes": 5,
+      "font": "fallback",
+      "outsideSubset": 5,
+      "missing": []
+    },
+    {
+      "case": "Hebrew (RTL)",
+      "name": "נועה",
+      "graphemes": 4,
+      "font": "fallback",
+      "outsideSubset": 4,
+      "missing": []
+    },
+    {
+      "case": "Vietnamese",
+      "name": "Nguyễn Thị Hằng",
+      "graphemes": 15,
+      "font": "bundled",
+      "outsideSubset": 0,
+      "missing": []
+    }
+  ]
+}
