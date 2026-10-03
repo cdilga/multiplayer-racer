@@ -12,5 +12,8 @@ repository.workspace = true
 jj-types.workspace = true
 jj-protocol.workspace = true
 
+[dev-dependencies]
+proptest.workspace = true
+
 [lints]
 workspace = true

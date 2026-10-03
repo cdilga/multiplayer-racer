@@ -368,6 +368,7 @@ version = "0.2.0"
 dependencies = [
  "jj-protocol",
  "jj-types",
+ "proptest",
 ]
 
 [[package]]
@@ -477,6 +478,7 @@ version = "0.2.0"
 dependencies = [
  "jj-input",
  "jj-protocol",
+ "jj-types",
  "wasm-bindgen",
 ]
 

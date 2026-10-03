@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 jj-input.workspace = true
+jj-types.workspace = true
 jj-protocol.workspace = true
 wasm-bindgen.workspace = true
 
