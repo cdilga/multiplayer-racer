@@ -52,6 +52,11 @@ pub enum Setup {
     },
     /// A seat joining mid-round (P1-S06): the placement service picks the pose and gate state, deterministically.
     DropIn,
+    /// The autopilot takes a car (`on`) or hands it back to its player (P1-S07; the session decides when, G03).
+    Autopilot {
+        car: u32,
+        on: bool,
+    },
     /// A dynamic debris body (a cuboid with these half extents, m), for scenarios before damage makes real debris.
     SpawnDebris {
         pose: SpawnPose,

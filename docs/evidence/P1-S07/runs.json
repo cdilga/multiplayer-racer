@@ -1,0 +1,133 @@
+{
+ "threeLaps": {
+  "ok": true,
+  "ticks": 18065,
+  "lapsAtTicks": [
+   6209,
+   12137,
+   18065
+  ],
+  "lapSeconds": [
+   51.7,
+   49.4,
+   49.4
+  ],
+  "stateHash": "37f6de4912368322b2ae83677c375b798691fcd5db1e1451924273cc54fccc75",
+  "replayMatches": true,
+  "signature": {
+   "airtimeS": 0.008333333333333333,
+   "car": 0,
+   "finished": 1.0,
+   "forwardSpeed": 23.5738468170166,
+   "gatesPassed": 46.0,
+   "headingChangeDeg": 0.49775003576467924,
+   "height": 0.8222973942756653,
+   "lapsCompleted": 3.0,
+   "lateralDrift": 3.93992728211138,
+   "legalProgressM": 1845.83447265625,
+   "maxSlipDeg": 5.758686542510986,
+   "maxSpeed": 23.576669692993164,
+   "maxYawRateDegS": 34.10213390316026,
+   "minUpY": 0.9997303485870361,
+   "progressM": 1849.9738809986466,
+   "recoveries": 0.0,
+   "speed": 23.57662010192871,
+   "travel": 5.715304473725963,
+   "upY": 0.999901533126831,
+   "wheelsInContact": 4.0,
+   "wrecks": 0.0
+  }
+ },
+ "handback": {
+  "atTick": 1018,
+  "replayMatches": true,
+  "maxYawRateChangePerTickBefore": 3.055,
+  "maxYawRateChangePerTickDuring": 0.745,
+  "samples": [
+   {
+    "tick": 1012,
+    "appliedSteer": -0.313,
+    "yawRateDegS": -23.98,
+    "forwardSpeed": 6.53
+   },
+   {
+    "tick": 1015,
+    "appliedSteer": -0.299,
+    "yawRateDegS": -22.92,
+    "forwardSpeed": 6.53
+   },
+   {
+    "tick": 1018,
+    "appliedSteer": -0.286,
+    "yawRateDegS": -21.91,
+    "forwardSpeed": 6.53
+   },
+   {
+    "tick": 1021,
+    "appliedSteer": -0.267,
+    "yawRateDegS": -20.56,
+    "forwardSpeed": 6.54
+   },
+   {
+    "tick": 1024,
+    "appliedSteer": -0.238,
+    "yawRateDegS": -18.4,
+    "forwardSpeed": 6.54
+   },
+   {
+    "tick": 1027,
+    "appliedSteer": -0.21,
+    "yawRateDegS": -16.23,
+    "forwardSpeed": 6.56
+   },
+   {
+    "tick": 1030,
+    "appliedSteer": -0.181,
+    "yawRateDegS": -14.07,
+    "forwardSpeed": 6.57
+   },
+   {
+    "tick": 1033,
+    "appliedSteer": -0.152,
+    "yawRateDegS": -11.91,
+    "forwardSpeed": 6.59
+   },
+   {
+    "tick": 1036,
+    "appliedSteer": -0.124,
+    "yawRateDegS": -9.74,
+    "forwardSpeed": 6.61
+   },
+   {
+    "tick": 1039,
+    "appliedSteer": -0.095,
+    "yawRateDegS": -7.56,
+    "forwardSpeed": 6.63
+   },
+   {
+    "tick": 1042,
+    "appliedSteer": -0.067,
+    "yawRateDegS": -5.37,
+    "forwardSpeed": 6.66
+   },
+   {
+    "tick": 1045,
+    "appliedSteer": -0.038,
+    "yawRateDegS": -3.16,
+    "forwardSpeed": 6.69
+   },
+   {
+    "tick": 1048,
+    "appliedSteer": -0.01,
+    "yawRateDegS": -0.94,
+    "forwardSpeed": 6.72
+   },
+   {
+    "tick": 1051,
+    "appliedSteer": 0.0,
+    "yawRateDegS": -0.01,
+    "forwardSpeed": 6.75
+   }
+  ]
+ }
+}

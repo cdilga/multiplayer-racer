@@ -1,0 +1,18 @@
+{
+ "scenario": "autopilot-three-laps",
+ "what": "P1-S07: the autopilot alone takes a car round three laps of the greybox (pure pursuit, curvature-planned low-skill speed, seeded noise) with no wreck and no recovery, then coasts its cool-down. Generated seeds are checked in P1-M03g.",
+ "map": "maps/greybox-loop.json",
+ "seed": 5,
+ "ticks": 36000,
+ "grid": 1,
+ "race": { "laps": 3, "atTick": 0 },
+ "autopilot": [{ "tick": 0, "car": 0, "on": true }],
+ "until": { "car": 0, "metric": "finished", "min": 1 },
+ "expect": [
+  { "car": 0, "metric": "lapsCompleted", "min": 3, "max": 3 },
+  { "car": 0, "metric": "finished", "min": 1, "max": 1 },
+  { "car": 0, "metric": "wrecks", "min": 0, "max": 0 },
+  { "car": 0, "metric": "recoveries", "min": 0, "max": 0 },
+  { "car": 0, "metric": "minUpY", "min": 0.9, "max": 1.001 }
+ ]
+}

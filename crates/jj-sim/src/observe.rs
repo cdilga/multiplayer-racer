@@ -152,11 +152,13 @@ pub struct CarObs {
     pub input: InputObs,
     pub wheels: Vec<WheelObs>,
     pub race: RaceObs,
+    /// The autopilot's last decision when it's driving (P1-S07): the visible "autopilot" badge and its target.
+    pub autopilot: Option<crate::autopilot::AutopilotState>,
 }
 
 pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
     let s = sim.car_state(car)?;
-    let input = sim.input(car)?;
+    let input = sim.applied_input(car)?;
     let race = sim.race();
     let rc = race.car(car.0)?;
     let v = s.linvel;
@@ -203,6 +205,11 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             recoveries: rc.recoveries,
             late: rc.late,
             protected: sim.is_protected(car),
+        },
+        autopilot: if sim.has_autopilot(car) {
+            sim.autopilot_state(car)
+        } else {
+            None
         },
     })
 }

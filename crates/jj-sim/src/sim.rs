@@ -23,6 +23,7 @@ use sha2::{Digest, Sha256};
 use jj_map::{Footprint, LoadedMap, Registry};
 use jj_types::axis::dequantise_axis;
 
+use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
 use crate::placement::{
     CLEARANCE_M, PROTECT_TICKS, Rect, RouteLine, SEARCH_LATERAL_M, SEARCH_STEP_M, SEARCH_STEPS,
@@ -68,6 +69,10 @@ struct Car {
     input: DriveInput,
     /// Under spawn protection since this tick (P1-S06).
     protected_since: Option<u64>,
+    /// Driven by the autopilot (P1-S07): dropout, idle, a finished car's cool-down, or a bot.
+    autopilot: Option<Autopilot>,
+    /// The controls actually applied last step (the player's, the autopilot's, a handback blend, or none while held).
+    applied: DriveInput,
 }
 
 /// What a car looks like right now (for scenarios, receipts and the introspection surface).
@@ -115,6 +120,7 @@ pub struct Sim {
     race: Race,
     line: RouteLine,
     slots: Vec<SpawnPose>,
+    path: Path,
 }
 
 fn yaw_rotation(yaw_cdeg: i32) -> Vector {
@@ -217,6 +223,7 @@ impl Sim {
             race: Race::new(Course::new(map)),
             line: RouteLine::new(map),
             slots: corridor_slots(map, &RouteLine::new(map)),
+            path: Path::new(map),
         }
     }
 
@@ -303,6 +310,35 @@ impl Sim {
             .collision_groups(PROP_GROUPS);
         let (h, _) = self.world.insert(body, collider);
         self.props.push(h);
+    }
+
+    /// The autopilot takes `car` (`on`), or hands it back to its player over a short blend (a journaled command; the
+    /// session decides when, on fresh deliberate input: see [`crate::autopilot::is_deliberate`]).
+    pub fn set_autopilot(&mut self, car: CarId, on: bool) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::Autopilot { car: car.0, on }));
+        let (seed, tick) = (self.journal.seed, self.tick);
+        let Some(c) = self.cars.get_mut(car.0 as usize) else {
+            return;
+        };
+        match (on, c.autopilot.as_mut()) {
+            (true, Some(ap)) if ap.mode() != Mode::Handback => {}
+            (true, _) => c.autopilot = Some(Autopilot::new(seed, car.0, Mode::Driving)),
+            (false, Some(ap)) if ap.mode() != Mode::Handback => ap.hand_back(tick),
+            (false, _) => {}
+        }
+    }
+
+    /// The autopilot's last decision for `car`, if it's driving (target, look-ahead, target speed, stuck time).
+    pub fn autopilot_state(&self, car: CarId) -> Option<AutopilotState> {
+        self.cars.get(car.0 as usize)?.autopilot.as_ref()?.state()
+    }
+
+    pub fn has_autopilot(&self, car: CarId) -> bool {
+        self.cars
+            .get(car.0 as usize)
+            .is_some_and(|c| c.autopilot.is_some())
     }
 
     pub fn is_protected(&self, car: CarId) -> bool {
@@ -509,6 +545,11 @@ impl Sim {
                 {
                     col.set_collision_groups(GHOST_GROUPS);
                 }
+                // A finished car coasts its cool-down laps on autopilot.
+                let seed = self.journal.seed;
+                if let Some(c) = self.cars.get_mut(car as usize) {
+                    c.autopilot = Some(Autopilot::new(seed, car, Mode::CoolDown));
+                }
             }
         }
     }
@@ -567,6 +608,8 @@ impl Sim {
             vehicle,
             input: DriveInput::default(),
             protected_since: None,
+            autopilot: None,
+            applied: DriveInput::default(),
         });
     }
 
@@ -589,14 +632,39 @@ impl Sim {
     pub fn step(&mut self) {
         let p = self.profile.clone();
         let tick = self.tick;
+        let wheelbase = p.axle_front_z - p.axle_rear_z;
+        let mut stuck = Vec::new();
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
-            // A held car (the 2 s respawn penalty) gets no controls.
-            let input = if self.race.is_held(id, tick) {
-                DriveInput::default()
-            } else {
-                car.input
-            };
+            // A held car (the 2 s respawn penalty) gets no controls; an autopiloted one gets the autopilot's, blending
+            // to the player's during a handback.
+            let mut input = car.input;
+            if let Some(ap) = car.autopilot.as_mut() {
+                if ap.mode() == Mode::Handback {
+                    match ap.blend(tick, car.input) {
+                        Some(blended) => input = blended,
+                        None => car.autopilot = None,
+                    }
+                } else if let Some(b) = self.world.bodies.get(car.body) {
+                    let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
+                    let pose = Pose2 {
+                        x: t.x,
+                        z: t.z,
+                        heading: libm::atan2f(fwd.x, fwd.z),
+                        forward_speed: b.linvel().dot(fwd),
+                    };
+                    let (out, recover) =
+                        ap.drive(&self.path, pose, p.max_steer_rad, wheelbase, tick);
+                    input = out;
+                    if recover {
+                        stuck.push(id);
+                    }
+                }
+            }
+            if self.race.is_held(id, tick) {
+                input = DriveInput::default();
+            }
+            car.applied = input;
             let throttle = dequantise_axis(input.throttle);
             let steer = dequantise_axis(input.steer);
             let brake = dequantise_axis(input.brake).max(0.0);
@@ -655,6 +723,12 @@ impl Sim {
                 filter,
             );
             car.vehicle.update_vehicle(DT, queries);
+        }
+        // A stuck autopilot presses Recover: a consequence of the state, so not journaled.
+        for id in stuck {
+            if let Some(effect) = self.race.recover(tick, id) {
+                self.apply(effect);
+            }
         }
         self.world.step();
         self.tick += 1;
@@ -749,9 +823,15 @@ impl Sim {
         )
     }
 
-    /// The controls `car` is applying.
+    /// The player's controls for `car` (what `set_input` last gave it).
     pub fn input(&self, car: CarId) -> Option<DriveInput> {
         self.cars.get(car.0 as usize).map(|c| c.input)
+    }
+
+    /// The controls the car actually drove with last step: the player's, the autopilot's, a handback blend, or none
+    /// while held.
+    pub fn applied_input(&self, car: CarId) -> Option<DriveInput> {
+        self.cars.get(car.0 as usize).map(|c| c.applied)
     }
 
     pub fn profile(&self) -> &VehicleProfile {
@@ -787,6 +867,10 @@ impl Sim {
         self.race.hash_into(&mut race);
         for c in &self.cars {
             race.extend(c.protected_since.unwrap_or(u64::MAX).to_le_bytes());
+            match &c.autopilot {
+                Some(ap) => ap.hash_into(&mut race),
+                None => race.push(0xff),
+            }
         }
         h.update(&race);
         for c in &self.cars {
@@ -840,6 +924,7 @@ impl Sim {
                         sim.drop_in();
                     }
                     Setup::SpawnDebris { pose, half } => sim.spawn_debris(*pose, *half),
+                    Setup::Autopilot { car, on } => sim.set_autopilot(CarId(*car), *on),
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {

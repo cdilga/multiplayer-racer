@@ -73,6 +73,9 @@ pub struct Fixture {
     /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
     #[serde(default)]
     pub debris: Vec<DebrisSpec>,
+    /// The autopilot takes a car (`on`) or hands it back (P1-S07).
+    #[serde(default)]
+    pub autopilot: Vec<AutopilotSpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     #[serde(default)]
@@ -121,6 +124,14 @@ pub struct RecoverSpec {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TickSpec {
     pub tick: u64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AutopilotSpec {
+    pub tick: u64,
+    pub car: u32,
+    pub on: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -518,6 +529,9 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         }
         for _ in fx.drop_in.iter().filter(|d| d.tick == t) {
             sim.drop_in();
+        }
+        for a in fx.autopilot.iter().filter(|a| a.tick == t) {
+            sim.set_autopilot(CarId(a.car), a.on);
         }
         for car in 0..sim.cars().count() as u32 {
             let span =
