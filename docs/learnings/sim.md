@@ -117,3 +117,23 @@ not feel targets.
 - **Route `progressM` rewards cutting the infield.** It measures the nearest point along the route, so an open-loop
   car that leaves the road can gain tens of metres. Gate-based `legalProgressM` stays 0 for a car that starts mid-lap.
   Check `maxRouteOffsetM` before trusting progress, or use the autopilot for the line.
+
+## 2026-10-03 · The wheelie (P1-S03c)
+
+- **One detector, three callers.** jj-input's `WheelieDetector` finds the gesture: past −0.85 to preload, then up
+  past −0.3 within 250 ms. Holding the preload past 1.2 s cancels it.
+  - A controller sends the release as `ControllerCmd::Action`. The host applies each action id once, since it can
+    arrive twice on the reliable channel.
+  - The host's own `SourceState` detects host pads' and keys' releases.
+  - Fixtures with raw `stick` spans run the same `SourceState` per car.
+
+  The sim never sees the stick, only `Sim::wheelie(car, preload_ms)`, which is journaled (`Setup::Wheelie`) and
+  replays.
+- **`DriveInput::from_semantics`** holds the one sign convention between jj-input (steer −1 left .. +1 right) and the
+  sim (positive steer turns left). The host and fixtures both call it.
+- **Lift is an impulse at the front axle.** 1,500 N·s at full preload gives ≈9° nose-up and 0.5–0.6 s with the front
+  wheels off the ground, about 0.44 m of front lift. That hops a 12 cm kerb, and the car lands on four wheels.
+  2,500 N·s stood the car up at 21° for a second. Lift scales with preload up to 0.4 s, so a 0.15 s release only
+  squats the nose up 1.7°.
+- **Steering while the front is up** needs no extra rule: raycast wheels in the air have no grip, so the car can't
+  turn until they're down.

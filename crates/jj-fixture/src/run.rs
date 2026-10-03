@@ -126,6 +126,7 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
             .map(|i| InputSpan {
                 drift: false,
                 boost: false,
+                action: None,
                 ..i.clone()
             })
             .collect(),
@@ -143,6 +144,8 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                     brake: 0.0,
                     drift: false,
                     boost: true,
+                    stick: None,
+                    action: None,
                 })
                 .collect();
             spans.extend(fx.inputs.iter().map(|i| InputSpan {
@@ -184,6 +187,8 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                         brake: 0.0,
                         drift: action < 0.2,
                         boost: (0.2..0.4).contains(&action),
+                        stick: None,
+                        action: None,
                     });
                 }
             }

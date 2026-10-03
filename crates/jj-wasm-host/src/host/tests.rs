@@ -431,3 +431,69 @@ fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
             .is_some_and(|i| i.drift && !i.boost)
     );
 }
+
+#[test]
+fn a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host() {
+    // P1-S03c: a controller sends its validated release as `Action` (resent on the reliable channel, applied once);
+    // a host pad's pull-release is detected by the host's own source machine.
+    let mut h = Host::new(&init()).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("phone".into()),
+        resume: None,
+    };
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    };
+    h.schedule(0, &net("phone", Channel::Cmd, hello.encode()))
+        .unwrap();
+    h.schedule(0, &net("phone", Channel::Cmd, claim.encode()))
+        .unwrap();
+    let wheelie = ControllerCmd::Action {
+        action: jj_types::ActionId(7),
+        source: SourceHandle(1),
+        kind: jj_protocol::cmd::ActionKind::Wheelie { preload_ms: 450 },
+        round: jj_types::RoundId(0),
+        life: jj_types::LifeId(0),
+        at_source_seq: 1,
+    };
+    for t in [30, 31] {
+        h.schedule(t, &net("phone", Channel::Cmd, wheelie.encode()))
+            .unwrap();
+    }
+    // A pad (local source 5) rolls, pulls past full brake for 0.45 s, then snaps forward.
+    for t in (0..240u64).step_by(2) {
+        let y = if t < 60 {
+            13_000
+        } else if t < 114 {
+            -32_767
+        } else {
+            32_767
+        };
+        h.schedule(t, &local(5, [0, y])).unwrap();
+    }
+    while h.tick() < 240 {
+        h.step_one();
+    }
+    let wheelies: Vec<(u64, u32)> = h
+        .sim()
+        .journal()
+        .setup
+        .iter()
+        .filter_map(|(t, s)| match s {
+            jj_sim::journal::Setup::Wheelie { car, .. } => Some((*t, *car)),
+            _ => None,
+        })
+        .collect();
+    let phone: Vec<_> = wheelies.iter().filter(|(_, c)| *c == 0).collect();
+    let pad: Vec<_> = wheelies.iter().filter(|(_, c)| *c == 1).collect();
+    assert_eq!(
+        phone.len(),
+        1,
+        "the resent Action applied once: {wheelies:?}"
+    );
+    assert_eq!(pad.len(), 1, "the pad's release fired once: {wheelies:?}");
+    assert!(pad[0].0 >= 114 && pad[0].0 < 130, "at the release: {pad:?}");
+}

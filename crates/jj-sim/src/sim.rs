@@ -546,6 +546,47 @@ impl Sim {
         }
     }
 
+    /// A wheelie release (P1-S03c, R64) with jj-input's measured preload. Journaled; refused (false) unless at least 3
+    /// wheels are on the ground and the car isn't held. Lift scales with preload (full at
+    /// `wheelie_full_preload_ms`) as an upward impulse at the front axle, and a well-timed release (at least
+    /// `wheelie_good_min_ms`) adds drive for `wheelie_drive_s`. With the front wheels up, the car can't steer much: they
+    /// have no grip in the air.
+    pub fn wheelie(&mut self, car: CarId, preload_ms: u16) -> bool {
+        self.journal.setup.push((
+            self.tick,
+            Setup::Wheelie {
+                car: car.0,
+                preload_ms,
+            },
+        ));
+        let t = self.profile.tuning.clone();
+        let held = self.race.is_held(car.0, self.tick);
+        let Some(c) = self.cars.get_mut(car.0 as usize) else {
+            return false;
+        };
+        let grounded = c
+            .vehicle
+            .wheels()
+            .iter()
+            .filter(|w| w.raycast_info().is_in_contact)
+            .count();
+        if grounded < 3 || held || preload_ms == 0 {
+            return false;
+        }
+        let Some(b) = self.world.bodies.get_mut(c.body) else {
+            return false;
+        };
+        let lift = (f32::from(preload_ms) / t.wheelie_full_preload_ms).min(1.0);
+        let iso = *b.position();
+        let front = iso * Vector::new(0.0, 0.0, self.profile.axle_front_z());
+        let up = iso.rotation * Vector::Y;
+        b.apply_impulse_at_point(up * (t.wheelie_lift_impulse * lift), front, true);
+        if f32::from(preload_ms) >= t.wheelie_good_min_ms {
+            c.action.wheelie_ticks = libm::roundf(t.wheelie_drive_s * TICK_HZ as f32) as u32;
+        }
+        true
+    }
+
     pub fn race(&self) -> &Race {
         &self.race
     }
@@ -984,6 +1025,7 @@ impl Sim {
                 h.update(f.to_bits().to_le_bytes());
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
+            h.update(c.action.wheelie_ticks.to_le_bytes());
             for w in c.vehicle.wheels() {
                 for f in [
                     w.rotation,
@@ -1035,6 +1077,9 @@ impl Sim {
                     }
                     Setup::SpawnDebris { pose, half } => sim.spawn_debris(*pose, *half),
                     Setup::Autopilot { car, on } => sim.set_autopilot(CarId(*car), *on),
+                    Setup::Wheelie { car, preload_ms } => {
+                        sim.wheelie(CarId(*car), *preload_ms);
+                    }
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {

@@ -107,3 +107,25 @@ The bank (Mac run, 2026-10-03; native = WASM hash, as for S03a):
 | `affordances/boost-line` | 2 | The autopilot drives 20 s from the kerb straight and from the grid while the driver boosts on the straights. 254.7 m and 216.5 m, against 238.5 m and 196.0 m without boost, and 242.0 m and 202.5 m holding boost the whole way. |
 
 `feel/drift-entry-exit` is also the §7.3a `drift-entry-exit` affordance row (all baselines, plus `no-action`).
+
+# P1-S03c: the wheelie, "lift and launch" (R64)
+
+Child `.3`. The gesture is jj-input's: past −0.85 to preload, then up past −0.3 within 250 ms; a preload held past
+1.2 s cancels. Paths into the sim:
+- A controller sends the release as `ControllerCmd::Action`, applied once per action id.
+- A host pad's release is detected by the host's own source machine.
+- Fixtures drive raw sticks through the same `SourceState`, so the scenarios test the gesture itself, not a scripted
+  event.
+
+`Sim::wheelie` is journaled. It needs at least 3 wheels down. It lifts the front with an impulse at the front axle
+that scales with preload (full at 0.4 s), and a release preloaded at least 0.35 s adds +15 % drive for 0.8 s.
+
+| Scenario | Cars | What it shows |
+|---|---|---|
+| `feel/wheelie-ok` | 2 | A 0.45 s preload and snap release, from a crawl and from 6 m/s: 9.4° and 7.5° nose-up, the front off the ground for 0.59 s and 0.48 s, 0.79 s of launch drive, back on four wheels. No input, mashing and holding the first throttle never lift. |
+| `feel/wheelie-fail` | 2 | A 0.15 s preload barely lifts (1.7°, no front air, no launch); a 1.4 s preload is cancelled by jj-input, so the release does nothing. |
+| `feel/brake-no-wheelie` | 3 | Hard braking from 8, 12 and 18 m/s, holding full down through the stop and easing off, or braking short of the preload zone: no front air and no launch, ever. |
+
+`wheelie-ok` and `brake-no-wheelie` are also the §7.3a affordance rows (all baselines). Host tests:
+- `a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host`
+- `the_action_stick_reaches_the_sim_as_boost_then_drift` (S03b)

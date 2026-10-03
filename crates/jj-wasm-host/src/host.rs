@@ -24,13 +24,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
 use jj_map::{LoadedMap, Registry, load_canonical};
 use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimEvent, SimToMain, UiCommand};
-use jj_protocol::cmd::{ControllerCmd, HostCmd};
+use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd};
 use jj_protocol::state::{StateFlags, StateMessage};
 use jj_session::seats::{self, ConnId, SeatConfig, Seats};
 use jj_sim::race::Event;
 use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, VehicleProfile};
-use jj_types::axis::quantise_axis;
-use jj_types::{EndpointId, LocalSourceId, SeatId, Tick};
+
+use jj_types::{ActionId, EndpointId, LocalSourceId, SeatId, Tick};
 use sha2::{Digest, Sha256};
 
 /// Microseconds the accumulator may fall behind before the host enters `performance-stall`.
@@ -86,7 +86,12 @@ enum Origin {
 struct SeatInput {
     state: SourceState,
     car: Option<CarId>,
+    /// The controller's recent discrete action ids: a resent `Action` applies once (§5.4).
+    seen_actions: Vec<ActionId>,
 }
+
+/// How many recent action ids a seat remembers for deduplication.
+const SEEN_ACTIONS: usize = 32;
 
 pub struct Host {
     sim: Sim,
@@ -134,13 +139,13 @@ fn sha(bytes: &[u8]) -> [u8; 32] {
 /// A seat's controls from its source's semantics. `jj-input` steers −1 left to +1 right; the sim's positive steer
 /// turns left, so steering flips here. The ACTION stick's held sectors pass through (drift left, boost right).
 fn controls(s: SourceSemantics) -> DriveInput {
-    DriveInput {
-        throttle: quantise_axis(s.drive.throttle),
-        steer: quantise_axis(-s.drive.steer),
-        brake: quantise_axis(s.drive.brake),
-        drift: s.drift,
-        boost: s.boost,
-    }
+    DriveInput::from_semantics(
+        s.drive.throttle,
+        s.drive.steer,
+        s.drive.brake,
+        s.drift,
+        s.boost,
+    )
 }
 
 impl Host {
@@ -357,7 +362,7 @@ impl Host {
         }
         // A loaded fixture's events and scripted inputs come before the seats' controls, as in `jj sim`.
         #[cfg(feature = "testing")]
-        if let Some(h) = &self.test.harness {
+        if let Some(h) = &mut self.test.harness {
             h.before_step(&mut self.sim);
         }
         let now_ms = tick_ms(tick);
@@ -434,9 +439,18 @@ impl Host {
                         action_touch: axes[2] != 0 || axes[3] != 0,
                         menu_open: false,
                     };
-                    input
-                        .state
-                        .sample([axes[0], axes[1]], [axes[2], axes[3]], flags, now_ms);
+                    let fired =
+                        input
+                            .state
+                            .sample([axes[0], axes[1]], [axes[2], axes[3]], flags, now_ms);
+                    // A host pad's gestures are detected here (a controller sends its own as `Action`).
+                    if let Some(car) = input.car {
+                        for a in fired {
+                            if let ActionKind::Wheelie { preload_ms } = a.kind {
+                                self.sim.wheelie(car, preload_ms);
+                            }
+                        }
+                    }
                 }
             }
             MainToSim::Ui { ui, .. } => match ui {
@@ -495,7 +509,31 @@ impl Host {
                 }
                 vec![]
             }
-            // Actions, Ready, names, cameras, menus and pings are wired by their beads (S08, G01, R05, C-beads).
+            // The wheelie (P1-S03c): the controller validated the gesture; applied once per action id. Utilities are
+            // S08's.
+            ControllerCmd::Action {
+                action,
+                source,
+                kind: ActionKind::Wheelie { preload_ms },
+                ..
+            } => {
+                if let Some(input) = self
+                    .seats
+                    .input_seat(conn, source)
+                    .and_then(|s| self.inputs.get_mut(&s))
+                    && !input.seen_actions.contains(&action)
+                {
+                    if input.seen_actions.len() == SEEN_ACTIONS {
+                        input.seen_actions.remove(0);
+                    }
+                    input.seen_actions.push(action);
+                    if let Some(car) = input.car {
+                        self.sim.wheelie(car, preload_ms);
+                    }
+                }
+                vec![]
+            }
+            // Other actions, Ready, names, cameras, menus and pings are wired by their beads (S08, G01, R05, C-beads).
             _ => vec![],
         };
         for o in outputs {
@@ -548,6 +586,7 @@ impl Host {
                 self.inputs.entry(seat).or_insert_with(|| SeatInput {
                     state: SourceState::new(source),
                     car: None,
+                    seen_actions: Vec::new(),
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)

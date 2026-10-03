@@ -13,6 +13,8 @@ jj-sim.workspace = true
 jj-session.workspace = true
 jj-map.workspace = true
 jj-types.workspace = true
+jj-input.workspace = true
+jj-protocol.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

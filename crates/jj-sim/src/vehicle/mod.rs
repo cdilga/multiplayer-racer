@@ -46,6 +46,8 @@ pub struct ActionState {
     /// Boost can start: false once a burst has emptied the meter, until boost is let go (re-armed on release, like
     /// the ACTION stick's sectors).
     pub armed: bool,
+    /// Ticks left of a well-timed wheelie's extra drive (P1-S03c).
+    pub wheelie_ticks: u32,
 }
 
 impl ActionState {
@@ -55,6 +57,7 @@ impl ActionState {
             drift: 0.0,
             boosting: false,
             armed: true,
+            wheelie_ticks: 0,
         }
     }
 
@@ -70,6 +73,7 @@ impl ActionState {
         dt: f32,
     ) {
         let t = &p.tuning;
+        self.wheelie_ticks = self.wheelie_ticks.saturating_sub(1);
         self.drift = if input.drift {
             1.0
         } else {
@@ -155,6 +159,12 @@ pub fn wheel_commands(
             ),
             0.0,
         )
+    };
+    // A well-timed wheelie launches: more forward drive for a moment.
+    let engine = if action.wheelie_ticks > 0 && engine > 0.0 {
+        engine * (1.0 + t.wheelie_drive_gain)
+    } else {
+        engine
     };
     // The handbrake drift loosens the rear tyres.
     let rear_grip = 1.0 - action.drift * (1.0 - t.drift_rear_grip);

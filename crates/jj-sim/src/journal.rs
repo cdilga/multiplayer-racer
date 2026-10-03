@@ -21,6 +21,26 @@ impl DriveInput {
     pub fn is_neutral(&self) -> bool {
         *self == Self::default()
     }
+
+    /// From a source's interpreted sticks (jj-input's `SourceSemantics`): throttle and brake 0..1, steer −1 left ..
+    /// +1 right. The sim's positive steer turns left, so steering flips here, in the one place the host and fixtures
+    /// share.
+    pub fn from_semantics(
+        throttle: f32,
+        steer_right: f32,
+        brake: f32,
+        drift: bool,
+        boost: bool,
+    ) -> Self {
+        use jj_types::axis::quantise_axis;
+        Self {
+            throttle: quantise_axis(throttle),
+            steer: quantise_axis(-steer_right),
+            brake: quantise_axis(brake),
+            drift,
+            boost,
+        }
+    }
 }
 
 /// A spawn pose: position (m) and heading (rad about +y, 0 = +z forward, counter-clockwise seen from above).
@@ -56,6 +76,12 @@ pub enum Setup {
     },
     /// A seat joining mid-round (P1-S06): the placement service picks the pose and gate state, deterministically.
     DropIn,
+    /// A wheelie release (P1-S03c, R64): jj-input's validated gesture with its preload; refused unless 3 wheels are
+    /// down.
+    Wheelie {
+        car: u32,
+        preload_ms: u16,
+    },
     /// The autopilot takes a car (`on`) or hands it back to its player (P1-S07; the session decides when, G03).
     Autopilot {
         car: u32,

@@ -1,0 +1,39 @@
+{
+ "scenario": "wheelie-ok",
+ "what": "§7.3 Wheelie, 'lift and launch' (R64, P1-S03c); §7.3a 'wheelie only from the pull-release gesture'. Two Cruz Missiles, rolling slowly and at about 6 m/s, pull DRIVE past full brake for 0.45 s (the preload) and snap it forward: jj-input's source machine sees the release and the sim lifts the front, about 9° for half a second, with +15 % drive for 0.8 s, and lands back on four wheels. Driven through the raw sticks, exactly as a host pad is. Baselines: no input, mashing and holding the first throttle never lift the front.",
+ "map": "maps/greybox-loop.json",
+ "seed": 71,
+ "ticks": 420,
+ "cars": [
+  {"routePoint": 4, "lateral": -3},
+  {"routePoint": 30, "lateral": 3, "linvel": [6, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "stick": [0, 0.4], "toTick": 60},
+  {"car": 0, "fromTick": 60, "stick": [0, -1], "toTick": 114},
+  {"car": 0, "fromTick": 114, "stick": [0, 1]},
+  {"car": 1, "fromTick": 0, "stick": [0, 0.4], "toTick": 30},
+  {"car": 1, "fromTick": 30, "stick": [0, -1], "toTick": 84},
+  {"car": 1, "fromTick": 84, "stick": [0, 1]}
+ ],
+ "expect": [
+  {"car": 0, "metric": "maxNoseUpDeg", "min": 6, "max": 14},
+  {"car": 0, "metric": "frontAirTimeS", "min": 0.3, "max": 0.9},
+  {"car": 0, "metric": "wheelieDriveS", "min": 0.7, "max": 0.85},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 0, "metric": "wheelsInContact", "min": 4, "max": 4},
+  {"car": 1, "metric": "maxNoseUpDeg", "min": 6, "max": 14},
+  {"car": 1, "metric": "frontAirTimeS", "min": 0.3, "max": 0.9},
+  {"car": 1, "metric": "wheelieDriveS", "min": 0.7, "max": 0.85},
+  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 1, "metric": "wheelsInContact", "min": 4, "max": 4}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 0, "metric": "frontAirTimeS", "by": 0.2, "more": true},
+   {"car": 1, "metric": "frontAirTimeS", "by": 0.2, "more": true},
+   {"car": 0, "metric": "maxNoseUpDeg", "by": 4.0, "more": true}
+  ]
+ }
+}

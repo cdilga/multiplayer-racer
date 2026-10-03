@@ -835,6 +835,11 @@
     "drift_charge_per_s": 0.25,
     "drift_charge_min_slip_deg": 10.0,
     "drift_charge_min_mps": 5.0,
+    "wheelie_full_preload_ms": 400.0,
+    "wheelie_good_min_ms": 350.0,
+    "wheelie_lift_impulse": 1500.0,
+    "wheelie_drive_gain": 0.15,
+    "wheelie_drive_s": 0.8,
     "air_pitch_torque": 900.0,
     "air_roll_torque": 1500.0,
     "surfaces": {

@@ -164,6 +164,8 @@ pub struct ActionObs {
     pub boost: f32,
     pub boosting: bool,
     pub drift: f32,
+    /// A well-timed wheelie's extra drive is on (P1-S03c).
+    pub wheelie: bool,
 }
 
 pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
@@ -227,6 +229,7 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
                 boost: a.boost,
                 boosting: a.boosting,
                 drift: a.drift,
+                wheelie: a.wheelie_ticks > 0,
             }),
     })
 }
@@ -298,10 +301,15 @@ pub enum Metric {
     DriftChargeGained,
     /// The largest |slip angle| over the wheels in contact now, degrees.
     SlipDeg,
+    /// The wheelie (P1-S03c): the most nose-up pitch over the run (degrees, signed), the time with both front wheels
+    /// off the ground and a rear one down, and the time a well-timed release's extra drive was on, s.
+    MaxNoseUpDeg,
+    FrontAirTimeS,
+    WheelieDriveS,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 34] = [
+    pub const ALL: [Metric; 37] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -336,6 +344,9 @@ impl Metric {
         Metric::DriftTimeS,
         Metric::DriftChargeGained,
         Metric::SlipDeg,
+        Metric::MaxNoseUpDeg,
+        Metric::FrontAirTimeS,
+        Metric::WheelieDriveS,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -375,6 +386,9 @@ impl Metric {
             Metric::DriftTimeS => "driftTimeS",
             Metric::DriftChargeGained => "driftChargeGained",
             Metric::SlipDeg => "slipDeg",
+            Metric::MaxNoseUpDeg => "maxNoseUpDeg",
+            Metric::FrontAirTimeS => "frontAirTimeS",
+            Metric::WheelieDriveS => "wheelieDriveS",
         }
     }
 }
@@ -408,6 +422,9 @@ pub struct SignatureTracker {
     boost_ticks: u64,
     drift_ticks: u64,
     drift_charge: f64,
+    max_nose_up: f64,
+    front_air_ticks: u64,
+    wheelie_drive_ticks: u64,
 }
 
 /// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
@@ -451,6 +468,9 @@ impl SignatureTracker {
             boost_ticks: 0,
             drift_ticks: 0,
             drift_charge: 0.0,
+            max_nose_up: 0.0,
+            front_air_ticks: 0,
+            wheelie_drive_ticks: 0,
         }
     }
 
@@ -530,6 +550,16 @@ impl SignatureTracker {
         let (pitch, roll) = pitch_roll_deg(o.rotation);
         self.max_pitch = self.max_pitch.max(pitch.abs());
         self.max_roll = self.max_roll.max(roll.abs());
+        self.max_nose_up = self.max_nose_up.max(pitch);
+        if self.last.is_some() {
+            let up = |i: usize| o.wheels.get(i).is_some_and(|w| !w.contact);
+            if up(0) && up(1) && !(up(2) && up(3)) {
+                self.front_air_ticks += 1;
+            }
+            if o.action.wheelie {
+                self.wheelie_drive_ticks += 1;
+            }
+        }
         if let Some(prev) = &self.last {
             if o.action.boosting {
                 self.boost_ticks += 1;
@@ -589,6 +619,9 @@ impl SignatureTracker {
             Metric::BoostTimeS => self.boost_ticks as f64 / f64::from(TICK_HZ),
             Metric::DriftTimeS => self.drift_ticks as f64 / f64::from(TICK_HZ),
             Metric::DriftChargeGained => self.drift_charge,
+            Metric::MaxNoseUpDeg => self.max_nose_up,
+            Metric::FrontAirTimeS => self.front_air_ticks as f64 / f64::from(TICK_HZ),
+            Metric::WheelieDriveS => self.wheelie_drive_ticks as f64 / f64::from(TICK_HZ),
             Metric::SlipDeg => o
                 .wheels
                 .iter()

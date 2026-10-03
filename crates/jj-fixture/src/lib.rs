@@ -254,6 +254,14 @@ pub struct InputSpan {
     /// ACTION right held: boost (P1-S03b).
     #[serde(default)]
     pub boost: bool,
+    /// The raw DRIVE stick (x right, y up; −1..1) instead of the fields above (P1-S03c). A car with any `stick` span
+    /// is driven through jj-input's source machine every tick, as a host pad is, so its gestures (the wheelie) are
+    /// detected the real way; between its stick spans it reads neutral.
+    #[serde(default)]
+    pub stick: Option<[f32; 2]>,
+    /// The raw ACTION stick alongside `stick` (x right boosts, left drifts).
+    #[serde(default)]
+    pub action: Option<[f32; 2]>,
 }
 
 /// Stop early once a car's metric is inside `[min, max]`.
@@ -369,6 +377,8 @@ pub struct Harness {
     seen_setup: usize,
     seen_inputs: usize,
     seen_race: usize,
+    /// The jj-input source machine of each car driven by raw `stick` spans.
+    sources: std::collections::BTreeMap<u32, jj_input::SourceState>,
 }
 
 /// Spawns a car the way a fixture's `cars` entry does (journaled); returns it and its spawn pose.
@@ -433,6 +443,7 @@ impl Harness {
             seen_setup: 0,
             seen_inputs: 0,
             seen_race: 0,
+            sources: std::collections::BTreeMap::new(),
         })
     }
 
@@ -453,7 +464,7 @@ impl Harness {
     }
 
     /// Before the sim steps tick `sim.tick()`: the fixture's events at that tick, then every car's scripted input.
-    pub fn before_step(&self, sim: &mut Sim) {
+    pub fn before_step(&mut self, sim: &mut Sim) {
         let fx = &self.fx;
         let t = sim.tick();
         if let Some(r) = fx.race.as_ref().filter(|r| r.at_tick == t) {
@@ -484,6 +495,45 @@ impl Harness {
                 fx.inputs.iter().rev().find(|i| {
                     i.car == car && i.from_tick <= t && i.to_tick.is_none_or(|end| t < end)
                 });
+            let stick_driven = fx.inputs.iter().any(|i| i.car == car && i.stick.is_some());
+            if stick_driven {
+                // Through jj-input, as the host does for a pad: the sticks' meaning, and any gesture they complete.
+                let q = |v: [f32; 2]| [quantise_axis(v[0]), quantise_axis(v[1])];
+                let (drive, action) = span.map_or(([0, 0], [0, 0]), |i| {
+                    (
+                        q(i.stick.unwrap_or_default()),
+                        q(i.action.unwrap_or_default()),
+                    )
+                });
+                let flags = jj_input::SampleFlags {
+                    available: true,
+                    drive_touch: drive != [0, 0],
+                    action_touch: action != [0, 0],
+                    menu_open: false,
+                };
+                let source = self.sources.entry(car).or_insert_with(|| {
+                    jj_input::SourceState::new(jj_types::SourceHandle(car as u16 + 1))
+                });
+                let fired =
+                    source.sample(drive, action, flags, t * 1000 / u64::from(jj_sim::TICK_HZ));
+                let s = source.semantics();
+                sim.set_input(
+                    CarId(car),
+                    DriveInput::from_semantics(
+                        s.drive.throttle,
+                        s.drive.steer,
+                        s.drive.brake,
+                        s.drift,
+                        s.boost,
+                    ),
+                );
+                for a in fired {
+                    if let jj_protocol::cmd::ActionKind::Wheelie { preload_ms } = a.kind {
+                        sim.wheelie(CarId(car), preload_ms);
+                    }
+                }
+                continue;
+            }
             let input = span.map_or(DriveInput::default(), |i| DriveInput {
                 throttle: quantise_axis(i.throttle),
                 steer: quantise_axis(i.steer),

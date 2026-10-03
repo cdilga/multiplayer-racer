@@ -1,0 +1,36 @@
+{
+ "scenario": "wheelie-fail",
+ "what": "§7.3 Wheelie (R64, P1-S03c): mistimed releases. One Cruz Missile releases after only 0.15 s of preload, so the front barely lifts and there's no extra drive; another holds the preload for 1.4 s, past jj-input's 1.2 s cancel, so the release does nothing at all. Neither front comes off the ground. Baselines: no input and mashing don't drive away like either does.",
+ "map": "maps/greybox-loop.json",
+ "seed": 73,
+ "ticks": 420,
+ "cars": [
+  {"routePoint": 4, "lateral": -3},
+  {"routePoint": 30, "lateral": 3}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "stick": [0, 0.4], "toTick": 60},
+  {"car": 0, "fromTick": 60, "stick": [0, -1], "toTick": 78},
+  {"car": 0, "fromTick": 78, "stick": [0, 1]},
+  {"car": 1, "fromTick": 0, "stick": [0, 0.4], "toTick": 60},
+  {"car": 1, "fromTick": 60, "stick": [0, -1], "toTick": 230},
+  {"car": 1, "fromTick": 230, "stick": [0, 1]}
+ ],
+ "expect": [
+  {"car": 0, "metric": "maxNoseUpDeg", "min": 0, "max": 4},
+  {"car": 0, "metric": "frontAirTimeS", "min": 0, "max": 0},
+  {"car": 0, "metric": "wheelieDriveS", "min": 0, "max": 0},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "maxNoseUpDeg", "min": 0, "max": 4},
+  {"car": 1, "metric": "frontAirTimeS", "min": 0, "max": 0},
+  {"car": 1, "metric": "wheelieDriveS", "min": 0, "max": 0},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash"],
+  "differ": [
+   {"car": 0, "metric": "travel", "by": 3.0},
+   {"car": 1, "metric": "travel", "by": 3.0}
+  ]
+ }
+}

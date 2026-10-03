@@ -366,7 +366,9 @@ dependencies = [
 name = "jj-fixture"
 version = "0.2.0"
 dependencies = [
+ "jj-input",
  "jj-map",
+ "jj-protocol",
  "jj-session",
  "jj-sim",
  "jj-types",

@@ -1,0 +1,46 @@
+{
+ "scenario": "brake-no-wheelie",
+ "what": "§7.3 Wheelie, §7.3a 'wheelie only from the pull-release gesture, never from braking' (P1-S03c). Three Cruz Missiles at 8, 12 and 18 m/s brake hard: two hold DRIVE full down through the stop (it reverses, and the preload cancels after 1.2 s) and ease off slowly; one brakes at 0.7 (short of the preload zone) and lets go at once. None of them wheelies: the front never leaves the ground and no launch drive fires. Baselines: no input, mashing and holding the first brake don't stop and pull away like this.",
+ "map": "maps/greybox-loop.json",
+ "seed": 79,
+ "ticks": 420,
+ "cars": [
+  {"routePoint": 10, "lateral": -5, "linvel": [8, 0, 0]},
+  {"routePoint": 20, "lateral": 0, "linvel": [12, 0, 0]},
+  {"routePoint": 0, "lateral": 5, "linvel": [18, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "stick": [0, -1], "toTick": 180},
+  {"car": 0, "fromTick": 180, "stick": [0, -0.6], "toTick": 220},
+  {"car": 0, "fromTick": 220, "stick": [0, -0.25], "toTick": 260},
+  {"car": 0, "fromTick": 260, "stick": [0, 0]},
+  {"car": 1, "fromTick": 0, "stick": [0, -1], "toTick": 180},
+  {"car": 1, "fromTick": 180, "stick": [0, -0.6], "toTick": 220},
+  {"car": 1, "fromTick": 220, "stick": [0, -0.25], "toTick": 260},
+  {"car": 1, "fromTick": 260, "stick": [0, 0]},
+  {"car": 2, "fromTick": 0, "stick": [0, -0.7], "toTick": 150},
+  {"car": 2, "fromTick": 150, "stick": [0, 0.6]}
+ ],
+ "expect": [
+  {"car": 0, "metric": "frontAirTimeS", "min": 0, "max": 0},
+  {"car": 0, "metric": "wheelieDriveS", "min": 0, "max": 0},
+  {"car": 0, "metric": "maxNoseUpDeg", "min": 0, "max": 3},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "frontAirTimeS", "min": 0, "max": 0},
+  {"car": 1, "metric": "wheelieDriveS", "min": 0, "max": 0},
+  {"car": 1, "metric": "maxNoseUpDeg", "min": 0, "max": 3},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 2, "metric": "frontAirTimeS", "min": 0, "max": 0},
+  {"car": 2, "metric": "wheelieDriveS", "min": 0, "max": 0},
+  {"car": 2, "metric": "maxNoseUpDeg", "min": 0, "max": 3},
+  {"car": 2, "metric": "minUpY", "min": 0.98, "max": 1.001}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 0, "metric": "stopDistanceM", "by": 2.0},
+   {"car": 2, "metric": "forwardSpeed", "by": 2.0},
+   {"car": 1, "metric": "forwardSpeed", "by": 1.0}
+  ]
+ }
+}

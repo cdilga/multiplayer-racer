@@ -110,6 +110,15 @@ pub struct Tuning {
     pub drift_charge_per_s: f32,
     pub drift_charge_min_slip_deg: f32,
     pub drift_charge_min_mps: f32,
+    /// Wheelie ("lift and launch", R64): lift scales with the gesture's preload up to `wheelie_full_preload_ms`, as an
+    /// upward impulse at the front axle (N·s at full lift). A release preloaded at least `wheelie_good_min_ms` also
+    /// adds `wheelie_drive_gain` to the drive force for `wheelie_drive_s`. (jj-input cancels a preload held past
+    /// 1.2 s, so a late release never arrives.)
+    pub wheelie_full_preload_ms: f32,
+    pub wheelie_good_min_ms: f32,
+    pub wheelie_lift_impulse: f32,
+    pub wheelie_drive_gain: f32,
+    pub wheelie_drive_s: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
