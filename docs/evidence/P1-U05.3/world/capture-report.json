@@ -1,0 +1,40 @@
+{
+  "base": "http://127.0.0.1:61761",
+  "machine": "Apple M1 Pro (MacBookPro18,3), macOS 27.0.1",
+  "captures": [
+    {
+      "file": "1080p-graphics.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "1080p-grid_n=24.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "1080p-tv.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "1080p-overview_n=16.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "4k-graphics.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "4k-grid_n=24.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "4k-tv.jpg",
+      "backend": "WebGPU"
+    },
+    {
+      "file": "4k-overview_n=16.jpg",
+      "backend": "WebGPU"
+    }
+  ],
+  "errors": [],
+  "external": []
+}

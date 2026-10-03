@@ -1,7 +1,7 @@
 // main.js — the in-world look page (P1-U05). States by URL fragment:
 //   #grid&n=24        24 live tiles under U02's HUD (the cost case)       #tv          one full-screen tile
 //   #overview&n=16    the derby bowl from the fixed 60° Overview camera   #paint       each identity colour as paint next to its badge
-//   #graphics         checkpoint gate, finish gantry, chevrons, barriers
+//   #graphics         the start-finish banner, W-beam guard rail, chevron posts (P1-U05.3)
 // &dist=near|mid|far|round0 picks the race-tile camera distance (../shared/framing.json, P1-U05.2).
 // ?mode=full|ids|plain picks the post tier (full look / outlines on objects only / no post) for the cost table.
 import * as THREE from 'three/webgpu';
@@ -75,7 +75,7 @@ if (name === 'overview') {
   });
 }
 if (name === 'graphics') {
-  for (const [i, label] of ['Finish gantry and line', 'Checkpoint gate', 'Corner chevrons', 'Tyre wall and rails'].entries()) {
+  for (const [i, label] of ['Start-finish banner', 'W-beam guard rail and terminal', 'Corner chevron posts', 'Guard rail along the track'].entries()) {
     const r = rects[i];
     const tag = el('div', 'graphics-label display', label);
     Object.assign(tag.style, { left: `${r.x + 16}px`, top: `${r.y + 14}px` });
@@ -104,7 +104,9 @@ function aim(dt) {
     const f = world.frames;
     const view = (i, idx, side, back, up, fwd) => { const p = f[idx].p, n = f[idx].n, t = f[idx].t; world.aimFixed(i, V.copy(p).addScaledVector(n, side).addScaledVector(t, -back).setY(up), new THREE.Vector3().copy(p).addScaledVector(t, fwd).setY(2.5), 52); };
     view(0, 10, 3, 26, 5, 0);
-    view(1, 175, -4, 24, 4.5, 0);
+    // a rail run's flared terminal, from the verge: the W-beam, its posts and a delineator
+    const term = world.graphics.terminals.find((x) => x.i > 150) ?? world.graphics.terminals[0];
+    if (term) { const tf = f[term.i]; world.aimFixed(1, V.copy(term.p).addScaledVector(tf.n, term.side * 5).addScaledVector(tf.t, -7).setY(1.7), new THREE.Vector3().copy(term.p).addScaledVector(tf.t, 6).setY(0.5), 50); }
     const chev = world.graphics.chevrons[2]?.position ?? f[60].p;
     world.aimFixed(2, V.copy(chev).add(new THREE.Vector3(-14, 4, -10)), chev, 48);
     view(3, 112, 9, 18, 3.2, 8);

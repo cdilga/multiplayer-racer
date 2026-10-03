@@ -12,7 +12,7 @@ import { chromium } from 'playwright';
 import { serveArtUi } from '../../lib/serve.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U05', 'world');
+const out = process.env.JJ_EVIDENCE_DIR ?? join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U05', 'world');
 mkdirSync(join(out, 'captures'), { recursive: true });
 const PERF = process.argv.includes('--perf');
 const ARGS = ['--enable-unsafe-webgpu', '--enable-webgpu-developer-features', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
@@ -56,13 +56,13 @@ if (PERF) {
 }
 
 const browser = await chromium.launch({ channel: 'chromium', args: ARGS });
-const states = ['grid&n=24', 'tv', 'graphics', 'paint', 'overview&n=16'];
+const states = process.env.JJ_STATES?.split(',') ?? ['grid&n=24', 'tv', 'graphics', 'paint', 'overview&n=16'];
 const report = { base, machine, captures: [], errors: [], external: [] };
 for (const [res, w, h] of [['1080p', 1920, 1080], ['4k', 3840, 2160]]) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });
   page.on('pageerror', (e) => report.errors.push(`${res} ${e.message}`));
   page.on('request', (r) => { if (!r.url().startsWith(base) && !r.url().startsWith('data:') && !r.url().startsWith('blob:') && r.url() !== 'about:blank') report.external.push(r.url()); });
-  const jobs = states.map((s) => [s, null]).concat(res === '1080p' ? [['grid&n=24', 'ids'], ['grid&n=24', 'plain'], ['tv', 'plain']] : []);
+  const jobs = states.map((s) => [s, null]).concat(res === '1080p' && !process.env.JJ_STATES ? [['grid&n=24', 'ids'], ['grid&n=24', 'plain'], ['tv', 'plain']] : []);
   for (const [s, mode] of jobs) {
     await open(page, s, mode);
     const file = `${res}-${s.replace(/&/g, '_')}${mode ? `-${mode}` : ''}.jpg`;

@@ -8,7 +8,7 @@ tested module (`../vendor/look/look.js`, vendored by `../vendor.mjs`) and Spike 
 |---|---|
 | `#grid&n=24` | 24 live tiles under U02's HUD, three of them first person; the cost case |
 | `#tv` | one full-screen tile |
-| `#graphics` | finish gantry and chequered line, a checkpoint gate, corner chevrons, tyre walls and rails |
+| `#graphics` | the start-finish race banner, a W-beam guard rail run and its terminal, corner chevron posts, the rail along the track (P1-U05.3) |
 | `#paint` | every identity colour as lit paint on the car, next to its flat badge |
 | `#overview&n=16` | the derby bowl from the fixed 60° Overview camera, with a nameplate over every car |
 | `&dist=near\|mid\|far\|round0` | the race tiles' camera distance from `../shared/framing.json` (P1-U05.2, R98), shared with the TV mock |
@@ -52,11 +52,22 @@ so expensive at this size (a downsampled emissive input for bloom is the first t
 
 ## In-world graphics
 
-Checkpoint gates: cobalt posts, a saffron "CHECKPOINT n" banner and a wide saffron line with navy edges on the road. Finish: an
-ink gantry with a cream "FINISH" banner, seven lamps in navy housings (emissive) and a navy-edged chequered line. Route edges:
-cream edge lines inside crisp red and white kerb blocks. Barriers: tyre walls on bends (black, with red and white painted tyres)
-and red/white rails on straights. Wayfinding: yellow boards with black chevrons on the outside of every bend (the warning-sign
-family; the owner's road-sign direction is R83).
+Reworked for owner round 2 (P1-U05.3, R104 to R106), in the common Australian road style. The references are in
+`art/references/australia/raw/` (`wbeam-*.jpg`, `chevrons-*.jpg`) and `art/ui/refs/owner-2026-10-03/world-finish-gantry-tatts-finke.png`.
+
+- **Start-finish:** a race banner across the track on a light truss frame, in the reference's language and never its
+  sponsors or words. A long ink banner carries big paper type, "START · FINISH" with "FINISH" in saffron. A slanted
+  saffron end panel carries our name, a slanted chequer panel closes the other end (R102), a chequered flag stands on
+  a pole by the line, and the chequered line is on the road.
+- **Barriers:** Australian steel guard rail: a galvanised W-beam (a real W profile, 20% over life size so it reads at
+  chase distance) on posts, with yellow delineators and flared terminals with rounded caps at the ends of each run.
+  It's continuous on the outside of bends and on both sides of straights, where the tyre walls and rails were. Tyres
+  are now only derby dressing (the bowl).
+- **Wayfinding:** rows of posts on the outside of every sharper bend, each carrying one yellow chevron pointing the way
+  the road turns: the chevron alignment marker.
+- **No checkpoint gantries** (R106). Lap-validity checkpoints stay as invisible gameplay (plan §8) until the owner
+  decides.
+- Route edges are unchanged: cream edge lines inside red and white kerb blocks. Paint colours are unchanged (POC2-05).
 
 ## World dressing (after the fresh-eyes review, toward H4)
 

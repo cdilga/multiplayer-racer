@@ -172,98 +172,161 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   track.add(ribbon(ROAD_W / 2, ROAD_W / 2 + 1.3, 0.06, (i) => ((i >> 1) & 1 ? red : white), true));
   scene.add(track);
 
-  // ---- in-world graphics: finish gantry, checkpoint gates, corner chevrons, barriers ----
-  const graphics = { finish: null, checkpoints: [], chevrons: [], barriers: [] };
+  // ---- in-world graphics (P1-U05.3, owner round 2): the finish banner, corner chevron posts, W-beam guard rail ----
+  // R106: no "Checkpoint N" gantries. Lap-validity checkpoints stay as invisible gameplay (plan §8) until the owner decides.
+  const graphics = { finish: null, checkpoints: [], chevrons: [], barriers: [], terminals: [] };
   const chequer = canvasTexture(64, 16, (g, w, h) => { for (let x = 0; x < 16; x++) for (let y = 0; y < 4; y++) { g.fillStyle = (x + y) % 2 ? '#15203A' : '#FFF4DE'; g.fillRect(x * 4, y * 4, 4, 4); } });
   chequer.wrapS = chequer.wrapT = THREE.RepeatWrapping;
-  const chevronTex = canvasTexture(256, 96, (g, w, h) => {
+  const texMat = (tex, emissive = null) => makeComicMaterial(look, { colorNode: texture(tex).rgb, emissiveNode: emissive });
+
+  // R104: corners get a ROW of posts, each carrying one chevron (the Australian chevron alignment marker), facing the
+  // approaching cars on the outside of the bend. References: art/references/australia/raw/chevrons-*.jpg.
+  const chevronTex = canvasTexture(96, 128, (g, w, h) => {
     g.fillStyle = '#FFD23F'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#15203A';
-    for (let k = 0; k < 3; k++) { const x = 40 + k * 70; g.beginPath(); g.moveTo(x, 12); g.lineTo(x + 34, 48); g.lineTo(x, 84); g.lineTo(x + 24, 84); g.lineTo(x + 58, 48); g.lineTo(x + 24, 12); g.closePath(); g.fill(); }
-    g.lineWidth = 8; g.strokeRect(4, 4, w - 8, h - 8);
+    g.beginPath(); g.moveTo(22, 14); g.lineTo(62, 64); g.lineTo(22, 114); g.lineTo(46, 114); g.lineTo(84, 64); g.lineTo(46, 14); g.closePath(); g.fill();
+    g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
   });
+  const chevMat = texMat(chevronTex), chevPost = flat('#3A3F47');
+  for (let i = 0; i < SAMPLES; i += 6) {
+    const a = frames[i].t, b = frames[(i + 12) % SAMPLES].t;
+    const turn = a.x * b.z - a.z * b.x;
+    if (Math.abs(turn) < 0.12) continue;
+    const side = turn > 0 ? 1 : -1; // outside of the bend
+    const f = frames[i];
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.55, 0.1), chevPost);
+    post.position.copy(f.p).addScaledVector(f.n, side * (ROAD_W / 2 + 3.3)).setY(0.78);
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.82, 0.05), chevMat);
+    board.position.copy(post.position).setY(1.25);
+    board.rotation.y = Math.atan2(f.t.x, f.t.z) + Math.PI;
+    if (side < 0) board.scale.x = -1; // the chevron points the way the road turns
+    board.castShadow = post.castShadow = true;
+    scene.add(post, board);
+    graphics.chevrons.push(board);
+  }
+
+  // R105: tyre walls and tyre rails become Australian steel guard rail: a galvanised W-beam on posts, with flared
+  // terminals at the ends of each run and yellow delineators. Continuous on the outside of bends and on both sides of the
+  // straights (where the tyre walls and rails were). References: art/references/australia/raw/wbeam-*.jpg and
+  // generated/biome-outback-dirt-and-bitumen.png. Tyres stay only as derby dressing.
+  const wProfile = new THREE.Shape([[0, 0], [0.05, 0.05], [0.05, 0.11], [0, 0.16], [0.05, 0.21], [0.05, 0.27], [0, 0.32], [-0.025, 0.32], [0.025, 0.27], [0.025, 0.21], [-0.025, 0.16], [0.025, 0.11], [0.025, 0.05], [-0.025, 0]].map(([x, y]) => new THREE.Vector2(x * 1.2, y * 1.2))); // 20% over life size so it reads at chase distance
+  const beamMat = flat('#D3D9DE'), railPost = flat('#8E979F'), delineator = makeComicMaterial(look, { colorNode: color('#FFD23F'), emissiveNode: vec3(0.35, 0.28, 0.05) });
+  const RAIL_OFF = ROAD_W / 2 + 2.4, RAIL_Y = 0.48, STEP = 2;
+  const basis = new THREE.Matrix4(), out = new THREE.Vector3();
+  const railOn = (i, side) => {
+    const a = frames[i % SAMPLES].t, b = frames[(i + 10) % SAMPLES].t, turn = a.x * b.z - a.z * b.x;
+    return Math.abs(turn) < 0.08 || (turn > 0 ? 1 : -1) === side;
+  };
+  const railPoint = (i, side, flare = 0) => frames[i % SAMPLES].p.clone().addScaledVector(frames[i % SAMPLES].n, side * (RAIL_OFF + flare));
+  function beam(p0, p1, side) {
+    const len = p0.distanceTo(p1);
+    if (len < 0.05) return;
+    const geo = new THREE.ExtrudeGeometry(wProfile, { depth: len + 0.06, bevelEnabled: false });
+    const t = p1.clone().sub(p0).normalize();
+    out.crossVectors(UP, t).multiplyScalar(-side); // the W faces the road
+    basis.makeBasis(out, UP, t).setPosition(p0.x, RAIL_Y, p0.z);
+    const m = new THREE.Mesh(geo, beamMat);
+    m.applyMatrix4(basis);
+    m.castShadow = true;
+    scene.add(m);
+  }
+  let runs = 0;
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < SAMPLES; i += STEP) {
+      if (!railOn(i, side)) continue;
+      const startsRun = !railOn(i - STEP + SAMPLES, side), endsRun = !railOn(i + STEP, side);
+      // the run's ends flare away from the road into a terminal
+      const p0 = railPoint(i, side, startsRun ? 1.4 : 0), p1 = railPoint(i + STEP, side, endsRun ? 1.4 : 0);
+      beam(p0, p1, side);
+      if (startsRun) { runs++; graphics.terminals.push({ p: p0.clone(), i, side }); }
+      if ((i / STEP) % 2 === 0 || startsRun) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.82, 0.15), railPost);
+        post.position.copy(p0).setY(0.41);
+        post.castShadow = true;
+        scene.add(post);
+        if ((i / STEP) % 6 === 0) {
+          const d = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.16, 0.06), delineator);
+          d.position.copy(p0).setY(0.92);
+          scene.add(d);
+        }
+      }
+      if (startsRun || endsRun) { // the end terminal: a rounded cap on the flared end
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.34, 10), beamMat);
+        cap.position.copy(startsRun ? p0 : p1).setY(RAIL_Y + 0.16);
+        scene.add(cap);
+      }
+    }
+  }
+  graphics.barriers.push({ kind: 'w-beam', runs });
+  const tyreGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.42, 10); // tyres stay only as derby dressing (the bowl below)
+
+  // R106 / POC2-04: the start-finish line is a race banner across the track, in the language of
+  // art/ui/refs/owner-2026-10-03/world-finish-gantry-tatts-finke.png (never its sponsors or words) with R102's slants
+  // and contrast: a long ink banner on a light truss frame, big paper type with a saffron accent, slanted end panels and
+  // a chequered flag.
+  const bannerW = ROAD_W + 12, bannerH = 2.1;
+  const finishBanner = canvasTexture(2048, Math.round((2048 * bannerH) / bannerW), (g, w, h) => {
+    g.fillStyle = '#15203A'; g.fillRect(0, 0, w, h);
+    const skew = h * 0.22;
+    // left end panel: saffron, slanted, our own name
+    g.fillStyle = '#FFB400'; g.beginPath(); g.moveTo(0, 0); g.lineTo(w * 0.2 + skew, 0); g.lineTo(w * 0.2, h); g.lineTo(0, h); g.closePath(); g.fill();
+    g.fillStyle = '#15203A'; g.font = `900 italic ${Math.round(h * 0.36)}px "Barlow Condensed", system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('JOYSTICK', w * 0.1, h * 0.33); g.fillText('JAMMERS', w * 0.1, h * 0.7);
+    // right end panel: a chequer, slanted
+    const x0 = w * 0.82;
+    g.save(); g.beginPath(); g.moveTo(x0 + skew, 0); g.lineTo(w, 0); g.lineTo(w, h); g.lineTo(x0, h); g.closePath(); g.clip();
+    const cs = h / 4;
+    for (let x = 0; x * cs < w - x0 + skew; x++) for (let y = 0; y < 4; y++) { g.fillStyle = (x + y) % 2 ? '#15203A' : '#FFF4DE'; g.fillRect(x0 + x * cs, y * cs, cs, cs); }
+    g.restore();
+    // the big words, paper with a saffron accent
+    g.font = `900 italic ${Math.round(h * 0.62)}px "Barlow Condensed", system-ui, sans-serif`;
+    g.textAlign = 'center';
+    const cx = w * 0.51;
+    const a = 'START  ·  ', b2 = 'FINISH';
+    const wa = g.measureText(a).width, wb = g.measureText(b2).width;
+    g.fillStyle = '#FFF4DE'; g.textAlign = 'left'; g.fillText(a, cx - (wa + wb) / 2, h * 0.54);
+    g.fillStyle = '#FFB400'; g.fillText(b2, cx - (wa + wb) / 2 + wa, h * 0.54);
+    g.lineWidth = 10; g.strokeStyle = '#FFF4DE'; g.strokeRect(5, 5, w - 10, h - 10);
+  });
+  function finishGantry(f) {
+    const g = new THREE.Group();
+    const half = bannerW / 2;
+    const truss = flat('#D9DEE3');
+    for (const s of [-1, 1]) { // light truss uprights: two poles and braces
+      for (const dz of [-0.3, 0.3]) { const pole = new THREE.Mesh(new THREE.BoxGeometry(0.14, 7.2, 0.14), truss); pole.position.set(s * (half + 0.3), 3.6, dz); pole.castShadow = true; g.add(pole); }
+      for (let k = 0; k < 6; k++) { const br = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.3, 0.06), truss); br.position.set(s * (half + 0.3), 0.7 + k * 1.15, 0); br.rotation.x = k % 2 ? 0.75 : -0.75; g.add(br); }
+    }
+    for (const dy of [7.0, 6.55]) { const top = new THREE.Mesh(new THREE.BoxGeometry(bannerW + 1.2, 0.12, 0.12), truss); top.position.set(0, dy, 0); g.add(top); }
+    const banner = new THREE.Mesh(new THREE.BoxGeometry(bannerW, bannerH, 0.08), texMat(finishBanner));
+    banner.position.set(0, 6.45 - bannerH / 2, 0); banner.castShadow = true; g.add(banner);
+    // a chequered flag on a pole by the line
+    const flagPole = new THREE.Mesh(new THREE.BoxGeometry(0.08, 3.4, 0.08), flat('#3A3F47'));
+    flagPole.position.set(half - 2, 1.7, 1.2); g.add(flagPole);
+    const flagGeo = new THREE.PlaneGeometry(1.6, 1.05, 8, 1);
+    const pos = flagGeo.attributes.position;
+    for (let v = 0; v < pos.count; v++) pos.setZ(v, Math.sin((pos.getX(v) + 0.8) * 3.2) * 0.12); // a fold, not a flutter
+    flagGeo.computeVertexNormals();
+    const flagTex = chequer.clone(); flagTex.repeat.set(1.6, 2); flagTex.needsUpdate = true;
+    const flagMat = makeComicMaterial(look, { colorNode: texture(flagTex).rgb });
+    flagMat.side = THREE.DoubleSide;
+    const flag = new THREE.Mesh(flagGeo, flagMat);
+    flag.position.set(half - 2 - 0.84, 2.9, 1.2); g.add(flag);
+    // the chequered line on the road
+    const lineTex = chequer.clone(); lineTex.repeat.set(ROAD_W / 1.6, 2); lineTex.needsUpdate = true;
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 1.6), texMat(lineTex));
+    strip.rotation.x = -Math.PI / 2; strip.position.y = 0.045; strip.receiveShadow = true; g.add(strip);
+    g.position.copy(f.p);
+    g.rotation.y = Math.atan2(f.t.x, f.t.z);
+    scene.add(g);
+    return g;
+  }
+  graphics.finish = finishGantry(frames[10]);
   const bannerTex = (text, bg, fg) => canvasTexture(512, 96, (g, w, h) => {
     g.fillStyle = bg; g.fillRect(0, 0, w, h);
     g.fillStyle = fg; g.font = '900 italic 64px "Barlow Condensed", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(text, w / 2, h / 2 + 4);
     g.lineWidth = 8; g.strokeStyle = '#15203A'; g.strokeRect(4, 4, w - 8, h - 8);
   });
-  const texMat = (tex, emissive = null) => makeComicMaterial(look, { colorNode: texture(tex).rgb, emissiveNode: emissive });
-  const lampHousing = flat('#15203A'), lampFace = makeComicMaterial(look, { colorNode: color('#FFF8E0'), emissiveNode: vec3(2.4, 2.1, 1.4) });
-  function gantry(f, opts) {
-    const g = new THREE.Group();
-    const half = ROAD_W / 2 + 2.2;
-    for (const s of [-1, 1]) {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.7, 6.5, 0.7), flat(opts.post));
-      post.position.set(s * half, 3.25, 0); post.castShadow = true; g.add(post);
-    }
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(half * 2 + 0.7, 1.6, 0.6), texMat(opts.banner));
-    beam.position.set(0, 6.4, 0); beam.castShadow = true; g.add(beam);
-    if (opts.lights) for (let k = -3; k <= 3; k++) {
-      const housing = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.8, 0.3), lampHousing);
-      housing.position.set(k * 2.2, 5.15, 0.4); g.add(housing);
-      const l = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.56, 0.12), lampFace);
-      l.position.set(k * 2.2, 5.15, 0.58); g.add(l);
-    }
-    if (opts.strip) {
-      const strip = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 3.2), texMat(opts.strip));
-      strip.rotation.x = -Math.PI / 2; strip.position.y = 0.045; strip.receiveShadow = true; g.add(strip);
-    }
-    g.position.copy(f.p);
-    g.rotation.y = Math.atan2(f.t.x, f.t.z);
-    scene.add(g);
-    return g;
-  }
-  const finishTex = canvasTexture(256, 56, (g) => { g.fillStyle = '#15203A'; g.fillRect(0, 0, 256, 56); for (let x = 0; x < 32; x++) for (let y = 0; y < 5; y++) { g.fillStyle = (x + y) % 2 ? '#15203A' : '#FFF4DE'; g.fillRect(x * 8, 8 + y * 8, 8, 8); } });
-  const cpLineTex = canvasTexture(64, 32, (g) => { g.fillStyle = '#15203A'; g.fillRect(0, 0, 64, 32); g.fillStyle = '#FFB400'; g.fillRect(0, 6, 64, 20); });
-  graphics.finish = gantry(frames[10], { post: '#15203A', banner: bannerTex('FINISH', '#FFF4DE', '#15203A'), strip: finishTex, lights: true });
-  const cpLine = texMat(cpLineTex);
-  for (const [i, k] of [[175, 1], [350, 2], [525, 3]]) {
-    graphics.checkpoints.push(gantry(frames[i], { post: '#1E5BFF', banner: bannerTex(`CHECKPOINT ${k}`, '#FFB400', '#15203A'), strip: null }));
-    const paint = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 1.6), cpLine);
-    paint.rotation.x = -Math.PI / 2; paint.position.copy(frames[i].p).setY(0.045); paint.rotation.z = -Math.atan2(frames[i].t.x, frames[i].t.z); paint.receiveShadow = true; scene.add(paint);
-  }
-  // Chevron boards on the outside of every bend, facing the approaching cars.
-  const chevMat = texMat(chevronTex);
-  for (let i = 0; i < SAMPLES; i += 5) {
-    const a = frames[i].t, b = frames[(i + 12) % SAMPLES].t;
-    const turn = a.x * b.z - a.z * b.x;
-    if (Math.abs(turn) < 0.12 || i % 15 !== 0) continue;
-    const side = turn > 0 ? 1 : -1; // outside of the bend
-    const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.0, 0.12), chevMat);
-    const f = frames[i];
-    board.position.copy(f.p).addScaledVector(f.n, side * (ROAD_W / 2 + 3.6)).setY(1.4);
-    board.rotation.y = Math.atan2(f.t.x, f.t.z) + Math.PI;
-    if (side < 0) board.scale.x = -1;
-    board.castShadow = true;
-    const pole = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.4, 0.15), flat('#9AA2AB'));
-    pole.position.copy(board.position).setY(0.7);
-    scene.add(board, pole);
-    graphics.chevrons.push(board);
-  }
-  // Barriers: tyre walls on bends (black with red and white painted tyres), rails on straights.
-  const tyreGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.42, 10);
-  const tyreColors = ['#26282C', '#26282C', '#D8382C', '#26282C', '#F4EFE4'];
-  const tyreMats = tyreColors.map((h) => flat(h));
-  const railMat = flat('#E8E4DA'), railStripe = flat('#D8382C');
-  for (let i = 0; i < SAMPLES; i += 3) {
-    const a = frames[i].t, b = frames[(i + 10) % SAMPLES].t, turn = a.x * b.z - a.z * b.x;
-    const f = frames[i];
-    if (Math.abs(turn) >= 0.08) {
-      const side = turn > 0 ? 1 : -1;
-      for (const h of [0.21, 0.63]) {
-        const tyre = new THREE.Mesh(tyreGeo, tyreMats[(i / 3 + (h > 0.5 ? 2 : 0)) % tyreMats.length]);
-        tyre.position.copy(f.p).addScaledVector(f.n, side * (ROAD_W / 2 + 2.2)).setY(h);
-        tyre.castShadow = tyre.receiveShadow = true; scene.add(tyre);
-      }
-    } else if (i % 9 === 0) {
-      for (const side of [-1, 1]) {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 3.2), (i / 9) % 2 ? railMat : railStripe);
-        rail.position.copy(f.p).addScaledVector(f.n, side * (ROAD_W / 2 + 2.4)).setY(0.6);
-        rail.rotation.y = Math.atan2(f.t.x, f.t.z); rail.castShadow = true; scene.add(rail);
-      }
-    }
-  }
 
   // ---- scenery: mesas, spinifex, gum trees ----
   const R = rng(42);
