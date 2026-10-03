@@ -358,6 +358,8 @@ name = "jj-contracts"
 version = "0.2.0"
 dependencies = [
  "jj-types",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -465,6 +467,7 @@ version = "0.2.0"
 dependencies = [
  "jj-input",
  "jj-protocol",
+ "jj-types",
  "wasm-bindgen",
 ]
 

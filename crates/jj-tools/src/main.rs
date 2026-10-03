@@ -1,7 +1,8 @@
 //! The `jj` CLI for agents and developers: sim, procgen and validate, with JSON output.
 //!
 //! ```text
-//! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1) against the kit-piece registry
+//! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry) and
+//!                                               vehicle sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs)
 //! jj --version
 //! ```
 //! Exit: 0 everything valid, 1 a file failed validation, 2 usage or I/O.
@@ -89,25 +90,7 @@ fn validate(args: &[String]) -> ExitCode {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     }
-    let kit = kit.or_else(|| find_kit(files[0].parent().unwrap_or(Path::new("."))));
-    let Some(kit) = kit else {
-        eprintln!(
-            "jj validate: no assets/kit found above {}; pass --kit <dir>",
-            files[0].display()
-        );
-        return ExitCode::from(2);
-    };
-    let registry = match load_registry(&kit) {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!(
-                "jj validate: reading the registry at {}: {e}",
-                kit.display()
-            );
-            return ExitCode::from(2);
-        }
-    };
-
+    let mut registry: Option<jj_map::Registry> = None;
     let mut all_ok = true;
     let mut results = Vec::new();
     for file in &files {
@@ -118,10 +101,64 @@ fn validate(args: &[String]) -> ExitCode {
                 return ExitCode::from(2);
             }
         };
-        let (report, hash) = match jj_map::load_json(&bytes, &registry) {
-            Ok(loaded) => (jj_map::Report::of(vec![]), Some(jj_map::hex(&loaded.hash))),
-            Err(report) => (report, None),
-        };
+        // Vehicle sidecars (`*.asset.json`, jj.vehicle.v1): the GLBs it names are read next to it.
+        if file.to_string_lossy().ends_with(".asset.json") {
+            let dir = file.parent().unwrap_or(Path::new(".")).to_path_buf();
+            let report = match jj_contracts::vehicle::parse_sidecar(&bytes) {
+                Err(r) => r,
+                Ok(s) => jj_contracts::vehicle::validate(&s, |f| std::fs::read(dir.join(f)).ok()),
+            };
+            all_ok &= report.ok;
+            if json {
+                results.push(serde_json::json!({
+                    "file": file.display().to_string(),
+                    "kind": "vehicle",
+                    "ok": report.ok,
+                    "tris": report.tris,
+                    "violations": report.violations,
+                }));
+            } else if report.ok {
+                println!(
+                    "{}: ok (jj.vehicle.v1, triangles per LOD {:?})",
+                    file.display(),
+                    report.tris
+                );
+            } else {
+                println!("{}: {} problem(s)", file.display(), report.violations.len());
+                for v in &report.violations {
+                    println!("  {:<20} {:<28} {}", v.rule.name(), v.at, v.detail);
+                }
+            }
+            continue;
+        }
+        // Maps (jj.map.v1), against the kit-piece registry (loaded once, on the first map).
+        if registry.is_none() {
+            let Some(dir) = kit
+                .clone()
+                .or_else(|| find_kit(file.parent().unwrap_or(Path::new("."))))
+            else {
+                eprintln!(
+                    "jj validate: no assets/kit found above {}; pass --kit <dir>",
+                    file.display()
+                );
+                return ExitCode::from(2);
+            };
+            match load_registry(&dir) {
+                Ok(r) => registry = Some(r),
+                Err(e) => {
+                    eprintln!(
+                        "jj validate: reading the registry at {}: {e}",
+                        dir.display()
+                    );
+                    return ExitCode::from(2);
+                }
+            }
+        }
+        let (report, hash) =
+            match jj_map::load_json(&bytes, registry.as_ref().expect("loaded above")) {
+                Ok(loaded) => (jj_map::Report::of(vec![]), Some(jj_map::hex(&loaded.hash))),
+                Err(report) => (report, None),
+            };
         all_ok &= report.ok;
         if json {
             results.push(serde_json::json!({

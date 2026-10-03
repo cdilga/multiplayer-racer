@@ -1,0 +1,51 @@
+P1-V01 local checks, 2026-10-03 (GentlePike), on the RCH worker eris
+
+$ RCH_REQUIRE_REMOTE=1 rch exec -- cargo test --locked -p jj-contracts
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+  test the_hand_made_vehicle_passes ... ok
+  test the_json_schema_names_the_same_parts_and_anchors ... ok
+  test every_broken_vehicle_fails_with_the_rule_it_names ... ok
+  test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+  test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+       Running unittests src/lib.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/jj_contracts-cf04a6862ebcd064)
+       Running tests/vehicle.rs (.rch-target-eris-pool-af6e4cf1ab7223fba5b53a808b9dcb8a/debug/deps/vehicle-87ff7cad935d796d)
+
+$ jj validate --json crates/jj-contracts/tests/fixtures/vehicle/valid/toy.asset.json crates/jj-contracts/tests/fixtures/vehicle/mass-sum/toy.asset.json maps/greybox-loop.json
+  [
+    {
+      "file": "crates/jj-contracts/tests/fixtures/vehicle/valid/toy.asset.json",
+      "kind": "vehicle",
+      "ok": true,
+      "tris": [
+        196,
+        196,
+        196
+      ],
+      "violations": []
+    },
+    {
+      "file": "crates/jj-contracts/tests/fixtures/vehicle/mass-sum/toy.asset.json",
+      "kind": "vehicle",
+      "ok": false,
+      "tris": [
+        196,
+        196,
+        196
+      ],
+      "violations": [
+        {
+          "at": "parts.*.massFraction",
+          "detail": "fractions sum to 0.920; must be 1 ± 0.01, each positive",
+          "rule": "mass-sum"
+        }
+      ]
+    },
+    {
+      "file": "maps/greybox-loop.json",
+      "gameplayHash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774",
+      "kind": "map",
+      "ok": true,
+      "violations": []
+    }
+  ]
+  exit 1 (the mass-sum case fails, naming its rule)
