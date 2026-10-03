@@ -36,7 +36,7 @@ Chromium 151.0.7922.34 (Playwright 1.62.1 headless shell), darwin/arm64. `node -
 | 3 | `scripts/ci/bundle-check.mjs web/dist` | `9 shipped files carry no test code; 3 test files are under test/`. Every marker it looks for is present in the test artefacts, so the check isn't vacuous. |
 | 4 (host half) | `surface.test.mjs` AC4 | With no `?test` flag the page made no `/test/` requests and had no `__jjTest`. Against a server answering `/test/` with 404 (the production realm's rule, via the node stand-in), `?test` asked once, got 404, and the host booted as shipped. `assertTestable` refuses `jammers.dilger.dev`. |
 
-The server's own realm gate moved verbatim to the child bead **br-p1-f05b-wfl.1 (P1-F05b.1)**. It waits on P1-N02,
+The server's own realm gate moved verbatim to **br-p1-f05b1-realm-gate-esu (P1-F05b.1)**. It waits on P1-N02,
 because `jj-server` is a stub until the Asupersync pin (P1-F03).
 
 Native: `cargo test -p jj-wasm-host --features testing` runs 10 tests. `spawning_through_the_surface_and_stepping_held_matches_the_native_fixture_run`
