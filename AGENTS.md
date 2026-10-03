@@ -196,6 +196,10 @@ Most important rules:
 - **Logging:** default to none. Never log per frame or per tick; use overlays, receipts, captures or
   one-time logs.
 - **Data over code:** profiles, rules, maps and asset contracts are versioned data with validators.
+- **Visual self-review** (owner, 2026-10-04): any bead whose outcome you can see (label `visual`) runs the loop in
+  `docs/process/visual-self-review.md` before it goes to review or closes: capture phones/TV/full-screen/states with
+  `node art/ui/lib/live-check.mjs`, **look at every screenshot**, fix, repeat, and commit
+  `docs/evidence/<P1-ID>/self-review.md`. Blank panels, overlaps and broken images reaching the owner are your bug.
 - **Evidence:** behavioural acceptance in the running game, not just unit assertions; receipts name
   hardware, browser, build and cohort. Label honestly: Playwright WebKit is "WebKit", not Safari; a
   simulator/emulator run is not a device; a number copied from a spike or another codebase is a

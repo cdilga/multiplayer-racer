@@ -20,6 +20,10 @@
    scenarios you touched. Leave the workspace-wide matrix to CI, unless you changed a shared contract
    (`jj-types`, `jj-protocol`, `jj-map`, the `jj-sim` core): then also run the workspace check through RCH.
 4. **Commit.** Commit with the P1 ID and the bead ID in the message.
+4a. **Visual self-review (`visual` beads; owner 2026-10-04).** If the outcome is something you can see, run the loop in
+   `docs/process/visual-self-review.md` first: capture the device/state matrix (`node art/ui/lib/live-check.mjs`), **look at
+   every screenshot**, fix, repeat, and commit `docs/evidence/<P1-ID>/self-review.md` with the images. `close.sh` refuses a
+   `visual` bead without it. The owner reviews taste, not breakage.
 5. **Close on green, in one command:** `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`
    (run it in the background and keep working). It pushes the commit and `git lfs push --all`, waits on
    `scripts/ci-status.sh --wait`, ticks the acceptance boxes, records the gate

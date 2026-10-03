@@ -54,3 +54,10 @@ python3 scripts/reconcile_plans_to_beads.py --gate    # non-zero exit on un-allo
 
 Intentional deferrals go in `scripts/reconcile_allowlist.txt` with a reason.
 Turn `--gate` on in CI once the current MISSING backlog is cut or allowlisted.
+
+## Visual beads: look before you hand over (added 2026-10-04)
+
+A bead whose outcome is visible (label `visual`) is not done until the agent has *looked at* its own output across the
+device and state matrix, fixed what it saw, and committed `docs/evidence/<P1-ID>/self-review.md` with the screenshots
+(`docs/process/visual-self-review.md`). Automated checks catch 4xx, overflow and blank canvases; only looking catches
+ugly, cramped, wasteful and misleading (a non-interactive thing that looks tappable). `scripts/beads/close.sh` enforces the file.

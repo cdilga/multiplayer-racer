@@ -60,6 +60,33 @@ if [[ $(git rev-list --count "$upstream..HEAD") -gt 0 ]]; then
 fi
 git merge-base --is-ancestor "$sha" "$upstream" || die "$short isn't on $upstream yet"
 
+# Visual beads (owner 2026-10-04): a committed self-review with the screenshots that were looked at, or no close.
+if python3 - "$id" <<'PY'
+import json, sys
+for d in map(json.loads, open(".beads/issues.jsonl")):
+    if d["id"] == sys.argv[1]: sys.exit(0 if "visual" in (d.get("labels") or []) else 1)
+sys.exit(1)
+PY
+then
+    pid=$(python3 -c 'import json,sys
+for d in map(json.loads, open(".beads/issues.jsonl")):
+    if d["id"] == sys.argv[1]: print(d.get("external_ref") or d["id"])' "$id")
+    review="docs/evidence/$pid/self-review.md"
+    [[ -f $review ]] || die "$id is a visual bead: run docs/process/visual-self-review.md and commit $review with the screenshots you looked at"
+    git ls-files --error-unmatch "$review" >/dev/null 2>&1 || die "$review isn't committed"
+    git diff --quiet HEAD -- "$review" || die "$review has uncommitted changes"
+    for h in "## Looked at" "## Defects found and fixed" "## Remaining defects" "## Not covered"; do
+        grep -q -- "$h" "$review" || die "$review is missing the section '$h'"
+    done
+    imgs=$(grep -oE '[A-Za-z0-9_./-]+\.(png|jpe?g|webp)' "$review" | sort -u)
+    [[ -n $imgs ]] || die "$review names no screenshots: list the images you looked at"
+    for i in $imgs; do
+        f="docs/evidence/$pid/$i"; [[ -f $f ]] || f=$i
+        [[ -f $f ]] || die "$review names $i but it isn't in docs/evidence/$pid/"
+    done
+    echo "close: visual self-review present ($review)"
+fi
+
 if [[ $pending == 1 ]]; then
     br update "$id" --status batch_pending --transition-comment "commit:$short $tests" --actor "$AGENT_NAME" >/dev/null
     echo "close: $id handed off (batch_pending, commit $short); the verifier closes it when CI is green"
