@@ -1,57 +1,57 @@
-// grid.js — the TV grid layout rule (P1-U02 proposal; becomes P1-R04's contract once the owner accepts it).
-// Pure: layoutGrid(n, rect, opts) → { rows, tiles[seat order], fillers }. Master §6.2 + plan §3a.
+// grid.js — the TV grid layout rule (P1-U02.2 proposal after the owner's POC round 1; becomes P1-R04's contract once the
+// owner accepts it). Pure: layoutGrid(n, rect, opts) → { rows, cols, cell, tiles[seat order], fillers }. R95, master §6.2.
 
 export const BAND = { min: 1.2, max: 2.0 }; // playable tile aspect (third person); first person uses the same cell
 
-export const PSEUDOCODE = `layout(N, screen, safe) → tiles, fillers
+export const PSEUDOCODE = `layout(N, screen) → tiles, fillers
+  # R95: every player tile is exactly the same size, at any N.
   # Seat order is reading order. Only joins and leaves change N, so only they reflow (300 ms ease).
   best ← none
   for rows R in 1 … N:
-    counts ← balanced(N, R)            # rows differ by at most one tile, fuller rows on top
-    rowH ← screen.h / R
-    for each row i with c = counts[i]:
-      w ← screen.w / c,  h ← rowH       # the cell
-      if w / h > BAND.max: w ← h × BAND.max      # too wide: narrow the tile, row stays centred
-      if w / h < BAND.min: h ← w / BAND.min      # too tall: shorten the tile, centred in the row
-      place c tiles of w × h centred in the row; the rest of the row is filler
-    score ← (total tile area, smallest tile area)  # gameplay area first, then own-car readability
-    keep the best score
-  fillers: the largest shows the join QR, the next the live standings, the rest the painted backdrop
-  if no filler is big enough for a QR: a small join chip sits in the bottom-right corner, inside action-safe
+    C ← ceil(N / R)                       # columns
+    if C × (R − 1) ≥ N: skip              # the last row would be empty
+    w ← floor(screen.w / C),  h ← floor(screen.h / R)     # whole pixels: equal to the pixel
+    if w / h > BAND.max: w ← floor(h × BAND.max)          # too wide: narrow every tile
+    if w / h < BAND.min: h ← floor(w / BAND.min)          # too tall: shorten every tile
+    keep R if N × w × h beats the best (ties: fewer empty cells)
+  the C × R block is centred; seats fill it in reading order
+  the C × R − N empty cells sit at the end of the last row, each exactly a tile
+  fillers: the first that fits a scannable QR shows the join QR (none fits: the room code and address),
+           the next the live standings; the rest, and the margins, the painted backdrop
+  no filler for the join: a small join chip in the bottom-right corner, inside action-safe
   BAND = 1.2 … 2.0 (third person); portrait screens stack rows, ultrawide screens add columns,
-  both fall out of the same rule. Nothing is ever black; there is no maximum N.`;
+  both fall out of the same rule. Nothing is ever black, no tile is ever larger; there is no maximum N.`;
 
-export function balanced(n, rows) {
-  const base = Math.floor(n / rows), extra = n % rows;
-  return Array.from({ length: rows }, (_, i) => base + (i < extra ? 1 : 0));
-}
-
+/** The equal-tile grid: every tile is `cell.w × cell.h` whole pixels, inset by the same half-gutter. */
 export function layoutGrid(n, rect, { band = BAND, gutter = 0 } = {}) {
-  if (n <= 0) return { rows: 0, counts: [], tiles: [], fillers: [{ ...rect }] };
+  const X = Math.round(rect.x), Y = Math.round(rect.y), RW = Math.floor(rect.x + rect.w) - X, RH = Math.floor(rect.y + rect.h) - Y;
+  const right = rect.x + rect.w, bottom = rect.y + rect.h;
+  if (n <= 0) return { rows: 0, cols: 0, cell: null, tiles: [], fillers: [{ x: rect.x, y: rect.y, w: rect.w, h: rect.h, kind: 'margin' }] };
   let best = null;
   for (let r = 1; r <= n; r++) {
-    const counts = balanced(n, r);
-    if (counts.some((c) => c === 0)) break;
-    const rowH = rect.h / r;
-    const tiles = [], fillers = [];
-    let area = 0, minArea = Infinity;
-    counts.forEach((c, i) => {
-      const y0 = rect.y + i * rowH;
-      let w = rect.w / c, h = rowH;
-      if (w / h > band.max) w = h * band.max;
-      if (w / h < band.min) h = w / band.min;
-      const rowW = w * c, x0 = rect.x + (rect.w - rowW) / 2, yT = y0 + (rowH - h) / 2;
-      for (let k = 0; k < c; k++) tiles.push({ x: x0 + k * w, y: yT, w, h });
-      if (x0 - rect.x > 0.5) fillers.push({ x: rect.x, y: y0, w: x0 - rect.x, h: rowH }, { x: x0 + rowW, y: y0, w: rect.x + rect.w - (x0 + rowW), h: rowH });
-      if (yT - y0 > 0.5) fillers.push({ x: x0, y: y0, w: rowW, h: yT - y0 }, { x: x0, y: yT + h, w: rowW, h: y0 + rowH - (yT + h) });
-      area += w * h * c;
-      minArea = Math.min(minArea, w * h);
-    });
-    const better = !best || area > best.area * 1.0001 || (Math.abs(area - best.area) <= best.area * 1e-4 && minArea > best.minArea);
-    if (better) best = { rows: r, counts, tiles, fillers, area, minArea };
+    const c = Math.ceil(n / r);
+    if (c * (r - 1) >= n) continue;
+    let w = Math.floor(RW / c), h = Math.floor(RH / r);
+    if (w / h > band.max) w = Math.floor(h * band.max);
+    if (w / h < band.min) h = Math.floor(w / band.min);
+    const area = w * h, empty = c * r - n;
+    if (!best || area > best.area || (area === best.area && empty < best.empty)) best = { rows: r, cols: c, w, h, area, empty };
   }
-  const g = gutter / 2;
-  best.tiles = best.tiles.map((t) => ({ x: t.x + g, y: t.y + g, w: t.w - gutter, h: t.h - gutter }));
-  best.fillers.sort((a, b) => b.w * b.h - a.w * a.h);
-  return best;
+  const { rows, cols, w, h } = best;
+  const x0 = X + Math.floor((RW - cols * w) / 2), y0 = Y + Math.floor((RH - rows * h) / 2);
+  const x1 = x0 + cols * w, y1 = y0 + rows * h;
+  const hg = Math.round(gutter / 2); // whole pixels, so every tile stays the same size
+  const slot = (i) => ({ x: x0 + (i % cols) * w + hg, y: y0 + Math.floor(i / cols) * h + hg, w: w - 2 * hg, h: h - 2 * hg });
+  const tiles = Array.from({ length: n }, (_, i) => slot(i));
+  const fillers = [];
+  for (let i = n; i < cols * rows; i++) fillers.push({ ...slot(i), kind: 'cell' });
+  // Margins left by the aspect band and the whole-pixel rounding, out to the exact rect edges.
+  const margins = [
+    { x: rect.x, y: rect.y, w: x0 - rect.x, h: rect.h },
+    { x: x1, y: rect.y, w: right - x1, h: rect.h },
+    { x: x0, y: rect.y, w: cols * w, h: y0 - rect.y },
+    { x: x0, y: y1, w: cols * w, h: bottom - y1 },
+  ].filter((m) => m.w > 0.01 && m.h > 0.01).sort((a, b) => b.w * b.h - a.w * a.h);
+  for (const m of margins) fillers.push({ ...m, kind: 'margin' });
+  return { rows, cols, cell: { w, h, x0, y0 }, tiles, fillers };
 }

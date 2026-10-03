@@ -13,21 +13,25 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 
 /* ---- grid tiles and HUD ---- */
 .gutter { position: absolute; background: var(--c-ink); }
+/* The per-tile HUD (POC1-06): every pill is one line high and scales with the tile: text = 7.5% of the tile height,
+   from 16 px (32 tiles at 1080p) to 32 px, in TV px × --k. --t is the tile height / 540 TV px. */
+.tile { --hud: clamp(calc(var(--k) * 16px), calc(var(--k) * var(--t, 1) * 40.5px), calc(var(--k) * 32px)); }
 .tile { position: absolute; box-shadow: inset 0 0 0 calc(var(--k) * 2px) var(--c-paper), inset 0 0 0 calc(var(--k) * 7px) var(--seat), inset 0 0 0 calc(var(--k) * 9px) var(--c-paper); }
 .tile.anim { transition: left .32s cubic-bezier(.2,0,0,1), top .32s cubic-bezier(.2,0,0,1), width .32s cubic-bezier(.2,0,0,1), height .32s cubic-bezier(.2,0,0,1); }
-.hud-t { position: absolute; display: flex; align-items: center; gap: calc(var(--k) * 8px); }
-.hud-top { position: absolute; left: calc(var(--k) * 14px); right: calc(var(--k) * 14px); top: calc(var(--k) * 14px); display: flex; justify-content: space-between; align-items: flex-start; gap: calc(var(--k) * 8px); }
+.hud-t { position: absolute; display: flex; align-items: center; gap: calc(var(--hud) * .3); font-size: var(--hud); }
+.hud-top { position: absolute; left: calc(var(--hud) * .55); right: calc(var(--hud) * .55); top: calc(var(--hud) * .55); display: flex; justify-content: space-between; align-items: flex-start; gap: calc(var(--hud) * .3); }
 .hud-tl { position: static; flex: 0 1 auto; min-width: 0; }
-.hud-tr { position: static; flex: none; flex-direction: column; align-items: flex-end; gap: 0; padding: .1em .45em .2em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
+.hud-tr { position: static; flex: none; flex-direction: row; align-items: center; gap: .4em; height: 1.5em; padding: 0 .45em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); white-space: nowrap; }
 .badge { flex: none; display: inline-grid; place-items: center; min-width: 2.2em; height: 1.45em; padding: 0 .28em; border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); background: var(--seat); color: var(--seat-on); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
-.hud-badge { font-size: max(calc(var(--k) * 24px), calc(var(--k) * var(--t) * 40px)); }
-.hud-name { font-size: max(calc(var(--k) * 24px), calc(var(--k) * var(--t) * 30px)); font-weight: 700; color: var(--c-ink); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); padding: 0 .35em; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
-.hud-pos { font-size: max(calc(var(--k) * 32px), calc(var(--k) * var(--t) * 54px)); color: var(--c-ink); }
-.hud-pos sup { font-size: max(calc(var(--k) * 24px), .45em); vertical-align: .6em; margin-left: .04em; text-transform: none; }
-.hud-lap { font-size: max(calc(var(--k) * 24px), calc(var(--k) * var(--t) * 26px)); color: var(--c-ink); font-weight: 700; }
-.hud-boost { position: absolute; left: calc(var(--k) * 14px); bottom: calc(var(--k) * 14px); width: 28%; min-width: calc(var(--k) * 70px); height: max(calc(var(--k) * 12px), calc(var(--k) * var(--t) * 18px)); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
+.hud-badge { font-size: var(--hud); height: 1.5em; }
+.hud-name { font-size: var(--hud); height: 1.5em; display: block; font-weight: 700; color: var(--c-ink); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); padding: 0 .35em; line-height: calc(1.5em - calc(var(--k) * 6px)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
+.hud-pos { font-size: 1.15em; line-height: 1; color: var(--c-ink); }
+.hud-pos sup { font-size: .6em; vertical-align: .45em; margin-left: .04em; text-transform: none; }
+.hud-lap { font-size: 1em; line-height: 1; color: var(--c-ink); font-weight: 700; }
+.hud-boost { position: absolute; left: calc(var(--hud) * .55); bottom: calc(var(--hud) * .55); width: 28%; min-width: calc(var(--k) * 70px); height: calc(var(--hud) * .5); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
 .hud-boost i { display: block; height: 100%; background: var(--c-saffron); }
-.hud-status { position: absolute; left: calc(var(--k) * 12px); bottom: calc(var(--k) * 26px + max(calc(var(--k) * 12px), calc(var(--k) * var(--t) * 18px))); display: flex; gap: calc(var(--k) * 6px); }
+.hud-status { position: absolute; left: calc(var(--hud) * .5); bottom: calc(var(--hud) * 1.4); display: flex; gap: calc(var(--hud) * .3); }
+.tile .chip { font-size: var(--hud); height: 1.5em; padding: 0 .6em; }
 .chip { display: inline-flex; align-items: center; gap: .35em; padding: .18em .6em; border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; font-size: calc(var(--k) * 24px); font-weight: 700; line-height: 1.1; white-space: nowrap; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
 .chip img { width: 1em; height: 1em; }
 .chip.autopilot { background: var(--c-cobalt); color: var(--c-paper); }
@@ -37,21 +41,35 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .chip.ready img { filter: invert(1); }
 .chip.choosing { background: var(--c-paper-shade); font-style: italic; }
 .hud-centre { position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%) rotate(-3deg); text-align: center; }
-.wreck-word { font-size: max(calc(var(--k) * 36px), calc(var(--k) * var(--t) * 84px)); color: var(--c-saffron); -webkit-text-stroke: calc(var(--k) * 3px) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
-.wreck-back { display: inline-block; margin-top: calc(var(--k) * 6px); padding: .15em .6em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); font-size: max(calc(var(--k) * 24px), calc(var(--k) * var(--t) * 30px)); }
+.wreck-word { font-size: calc(var(--hud) * 2.4); color: var(--c-saffron); -webkit-text-stroke: calc(var(--k) * 3px) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
+.wreck-back { display: inline-flex; align-items: center; gap: .25em; height: 1.5em; margin-top: calc(var(--k) * 6px); padding: 0 .6em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); font-size: var(--hud); line-height: 1.2; white-space: nowrap; }
 .tile.identify { animation: ident .5s ease-in-out 3; box-shadow: inset 0 0 0 calc(var(--k) * 2px) var(--c-paper), inset 0 0 0 calc(var(--k) * 12px) var(--seat), inset 0 0 0 calc(var(--k) * 15px) var(--c-paper); }
-.tile.identify .hud-top { left: calc(var(--k) * 24px); right: calc(var(--k) * 24px); top: calc(var(--k) * 22px); }
-.tile.identify .hud-boost { left: calc(var(--k) * 26px); bottom: calc(var(--k) * 26px); }
+
 .tile.identify .hud-badge { animation: identb .5s ease-in-out 3; }
 @keyframes ident { 50% { box-shadow: inset 0 0 0 calc(var(--k) * 2px) var(--c-paper), inset 0 0 0 calc(var(--k) * 16px) var(--seat), inset 0 0 0 calc(var(--k) * 19px) var(--c-paper); } }
 @keyframes identb { 50% { transform: scale(1.25); } }
+/* The motion reel's old identify burst (../motion/reel.js); U05.2 moves the reel to the Cooee flash below. */
 .burst { position: absolute; left: 50%; top: 62%; transform: translate(-50%, -50%) rotate(-4deg); padding: .2em .55em; background: var(--seat); color: var(--seat-on); border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); font-size: max(calc(var(--k) * 28px), calc(var(--k) * var(--t) * 52px)); white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) { .tile.identify, .tile.identify .hud-badge { animation: none; } .tile.anim { transition: none; } }
+/* Identify (R99, POC1-07): a transparent, high-exposure flash in the seat colour (backdrop brightness over the 3D, a seat
+   colour wash with a hot centre) with "Cooee #N" over it; fast attack, 1.4 s decay. Reduced motion: the same wash held
+   steady at 60% for 1.5 s, no tween and no scale. */
+.cooee { position: absolute; inset: 0; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
+.cooee .flash { position: absolute; inset: 0; background: radial-gradient(closest-side, color-mix(in srgb, #fff 60%, var(--seat)) 0%, color-mix(in srgb, var(--seat) 70%, transparent) 65%, color-mix(in srgb, var(--seat) 40%, transparent) 100%); backdrop-filter: brightness(2.2) saturate(1.6); opacity: 0; animation: cooee-flash 1.5s cubic-bezier(.2, .7, .3, 1) forwards; }
+.cooee b { position: relative; padding: .1em .5em; background: var(--seat); color: var(--seat-on); border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); font-size: calc(var(--hud) * 2); font-style: italic; text-transform: none; white-space: nowrap; opacity: 0; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards; }
+@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: 1; } 30% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes cooee-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 85% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(1); } }
+@keyframes cooee-held { 0% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .tile.identify, .tile.identify .hud-badge { animation: none; } .tile.anim { transition: none; }
+  .cooee .flash { animation: cooee-held 1.5s steps(1, end) forwards; }
+  .cooee b { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
+}
 
 /* captions (announcer, A03) */
 .caption { position: absolute; max-width: 50%; padding: .35em .8em; background: var(--c-ink); color: var(--c-paper); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 5px) 0 rgb(0 0 0 / .55); font-size: calc(var(--k) * 30px); font-weight: 700; text-align: center; line-height: 1.2; }
 .caption b { color: var(--c-saffron); }
-.caption.player { background: var(--c-paper); color: var(--c-ink); border: calc(var(--k) * 3px) solid var(--c-ink); max-width: 80%; font-size: max(calc(var(--k) * 24px), calc(var(--k) * var(--t) * 30px)); }
+.caption.player { background: var(--c-paper); color: var(--c-ink); border: calc(var(--k) * 3px) solid var(--c-ink); max-width: 80%; font-size: var(--hud); }
 .caption.player::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: calc(var(--k) * 10px); background: var(--seat); border-radius: calc(var(--k) * 9px) 0 0 calc(var(--k) * 9px); }
 
 /* fillers: never black */
@@ -190,10 +208,10 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .pcard.chipmode .tick.wait { background: var(--c-paper-shade); color: var(--c-ink); }
 .band-right .srow { margin: calc(var(--k) * 2px) 0; }
 
-/* compact HUD on tiny tiles (32 tiles on a phone host, many tiles on a small screen): number and position only */
-.tile.compact .hud-name, .tile.compact .hud-lap, .tile.compact .hud-status { display: none; }
-.tile.compact .hud-top { left: calc(var(--k) * 8px); right: calc(var(--k) * 8px); top: calc(var(--k) * 8px); }
-.tile.compact .hud-tr { padding: 0 .3em; }
-.tile.compact .hud-pos { font-size: calc(var(--k) * 26px); }
-.tile.compact .hud-boost { left: calc(var(--k) * 8px); bottom: calc(var(--k) * 8px); height: calc(var(--k) * 10px); border-width: calc(var(--k) * 2px); }
+/* compact HUD on tiny tiles (64+ tiles, a phone host): the name goes; number, place and lap stay on one line */
+.tile.compact .hud-name { display: none; }
+.tile.compact .hud-tr { padding: 0 .3em; gap: .3em; }
+.tile.compact .hud-boost { border-width: calc(var(--k) * 2px); }
+.filler.cell { box-shadow: inset 0 0 0 calc(var(--k) * 3px) var(--c-paper-line, rgb(21 32 58 / .25)); }
+.codecard .code { font-size: calc(var(--k) * 56px); }
 .joinchip small { margin-left: calc(var(--k) * 8px); }

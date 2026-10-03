@@ -14,6 +14,9 @@ const ordinal = (n) => { const s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th'
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 const icon = (name) => `<img alt="" src="${asset(`icons/${name}.svg`)}">`;
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+// Identify (R99): "Cooee #N" over a transparent, high-exposure flash in the seat colour, tweened over 1.5 s
+// (tokens.motion identify-pulse); with prefers-reduced-motion it holds a steady tint for the same time (tv.css).
+const cooee = (num) => el('div', 'cooee', `<i class="flash"></i><b class="display">Cooee #${num}</b>`);
 
 const tokens = await loadTokens();
 // TV px at 1080p scaled by output height. A portrait screen is a phone host held at arm's length: scale by width,
@@ -52,7 +55,7 @@ function seatInfo(i) { // i = 1-based seat index in this room; display number ma
 }
 
 // ---------- grid scene (grid, hud, countdown, identify, captions, host*, overlays, grid-player) ----------
-function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = new Set(), hudStates = {}, overlays = false, cornerChip = true } = {}) {
+function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = new Set(), hudStates = {}, overlays = false, plates = false, cornerChip = true } = {}) {
   const layer = el('div', 'k');
   ui.append(layer);
   const tiles = new Map(); // seat → { el, cur, tgt, t0, from, hud refs }
@@ -83,7 +86,7 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     const st = hudStates[seat];
     if (st?.status) t.append(el('div', 'hud-status', st.status === 'autopilot' ? `<span class="chip autopilot">${icon('car')}Autopilot</span>` : `<span class="chip reconnecting">${icon('wifi-off')}Reconnecting…</span>`));
     if (st?.wreck) t.append(el('div', 'hud-centre', `<div class="display italic wreck-word">Wrecked!</div><div class="wreck-back tnum">Back in <b class="cd">3</b> s</div>`));
-    if (st?.identify) { t.classList.add('identify'); t.append(el('div', 'burst display italic', `#${info.num} that's you!`)); }
+    if (st?.identify) { t.classList.add('identify'); t.prepend(cooee(info.num)); } // under the HUD: the pills stay readable
     if (st?.caption) { const c = el('div', 'caption player'); c.textContent = st.caption; c.style.left = '50%'; c.style.transform = 'translateX(-50%)'; c.dataset.under = 'hud'; t.append(c); }
     if (!S.hud) t.replaceChildren();
     layer.append(t);
@@ -109,7 +112,7 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
       t.tgt = tgt;
       t.t0 = animate ? now : now - 1000;
       t.el.style.setProperty('--t', String(Math.max(0.35, Math.min(1.3, tgt.h / (540 * k)))));
-      t.el.classList.toggle('compact', tgt.w < 300 * k || tgt.h < 170 * k);
+      t.el.classList.toggle('compact', tgt.w < 230 * k || tgt.h < 140 * k);
     });
     // gutter background = ink behind the grid area
     layer.style.cssText = '';
@@ -117,18 +120,27 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     fillerEls = [];
     joinChip?.remove();
     joinChip = null;
+    // Filler roles (R95): empty cells first, in reading order, then margins, largest first. Joining comes first: the join
+    // QR goes in the first that fits a scannable QR or, with no room for one, the room code and address in the first that
+    // fits them; then the standings in the next that fits them. Everything else is the painted backdrop: never black.
     const QR = 37 * tokens.qr.minModulePx.tv * k; // 8 px per module at 1080p: scannable from the couch
-    const big = (f) => f.w >= QR + 40 * k && f.h >= QR + 40 * k;
-    const mid = (f) => f.w >= 260 * k && f.h >= 200 * k;
+    const fits = { qr: (f) => f.w >= QR + 40 * k && f.h >= QR + 40 * k, standings: (f) => f.w >= 260 * k && f.h >= 200 * k, code: (f) => f.w >= 220 * k && f.h >= 120 * k };
+    const roles = lay.fillers.map(() => 'backdrop');
+    const give = (role) => { const i = lay.fillers.findIndex((f, j) => roles[j] === 'backdrop' && fits[role](f)); if (i >= 0) roles[i] = role; return i >= 0; };
+    const hasQr = give('qr');
+    const hasCode = !hasQr && give('code');
+    give('standings');
     lay.fillers.forEach((f, i) => {
-      const e = el('div', 'filler');
+      const e = el('div', `filler ${f.kind}`);
+      e.dataset.role = roles[i];
       Object.assign(e.style, { left: `${f.x}px`, top: `${f.y}px`, width: `${f.w}px`, height: `${f.h}px` });
-      if (i === 0 && big(f)) e.append(joinCard(f.w < f.h * 1.3));
-      else if (i === 1 && mid(f)) e.append(standingsCard(Math.max(3, Math.min(8, Math.floor((f.h / k - 80) / 38)))));
+      if (roles[i] === 'qr') e.append(joinCard(f.w < f.h * 1.3));
+      else if (roles[i] === 'standings') e.append(standingsCard(Math.max(3, Math.min(8, Math.floor((f.h / k - 80) / 38)))));
+      else if (roles[i] === 'code') e.append(codeCard());
       layer.prepend(e);
       fillerEls.push(e);
     });
-    if (cornerChip && !(lay.fillers[0] && big(lay.fillers[0]))) {
+    if (cornerChip && !hasQr && !hasCode) {
       // One player: a full-size corner QR (plan §10). More players and no free cell: the code only, because a QR
       // smaller than 8 px per module won't scan from the couch (tokens.qr).
       joinChip = seats().length === 1
@@ -144,6 +156,9 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     const c = el('div', `card join${stack ? ' stack' : ''}`);
     c.innerHTML = `<img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:calc(var(--k)*296px);height:calc(var(--k)*296px)"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div></div>`;
     return c;
+  }
+  function codeCard() {
+    return el('div', 'card join stack codecard', `<div class="display code">ROO7</div><div class="code-cap">Join at jammers.dilger.dev</div>`);
   }
   function standingsCard(rows) {
     const c = el('div', 'card standings');
@@ -164,9 +179,24 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     if (!moving) settled = true;
   }
 
+  // The mock replays Identify every 3 s so the review can watch it (a real one fires once per press, join or respawn).
+  let flashAt = performance.now();
+  function replayIdentify() {
+    flashAt = performance.now();
+    for (const t of tiles.values()) {
+      const c = t.el.querySelector('.cooee');
+      if (!c) continue;
+      c.replaceWith(c.cloneNode(true));
+      t.el.classList.remove('identify');
+      void t.el.offsetWidth;
+      t.el.classList.add('identify');
+    }
+  }
+
   const order = new Map();
   function updateHud(dt, views) {
     if (!S.hud) return; // hud=0: measure the frame without the HUD layer
+    if (performance.now() - flashAt > 3000 && !window.__poc.held) replayIdentify();
     const st = world.standings();
     st.forEach((s) => order.set(s.seat, s));
     for (const [seat, t] of tiles) {
@@ -195,12 +225,14 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     for (const t of tiles.values()) if (t.caption) t.caption.style.top = `${t.el.querySelector('.hud-tl').offsetHeight + 24 * K()}px`;
   }
 
-  // Nameplates over other cars in each tile, the Identify outline and an off-screen arrow (over-3D overlays).
+  // Over-3D overlays on the per-player grid: the Identify outline and an off-screen arrow to your own car. Name plates
+  // over other cars are only for Derby and other single-shared-screen modes (R100, the Overview state).
   function drawOverlays(views) {
     const k = K();
     for (const v of views) {
       const t = tiles.get(v.seat);
       if (!t || !v.camera) continue;
+      if (!plates) { drawArrow(v, t, k); continue; }
       let used = 0;
       const placed = [];
       const near = seats().filter((o) => o !== v.seat).map((o) => ({ o, p: world.project(o, v.camera, v) })).sort((a, b) => (b.p?.y ?? 0) - (a.p?.y ?? 0)).map((x) => x.o);
@@ -227,21 +259,25 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
         used++;
       }
       for (let j = used; j < t.plates.length; j++) t.plates[j].style.display = 'none';
-      // off-screen arrow to your own car
-      const me = world.project(v.seat, v.camera, v);
-      const off = !me || me.z > 1 || me.x < v.x || me.x > v.x + v.w || me.y < v.y || me.y > v.y + v.h;
-      if (off && me) {
-        if (!t.arrow) { t.arrow = el('div', 'arrow', `<i></i><b>Your car</b>`); t.arrow.style.setProperty('--seat', seatInfo(v.seat).color); layer.append(t.arrow); }
-        let dx = me.ndc.x, dy = -me.ndc.y;
-        if (me.z > 1) { dx = -dx; dy = -dy; if (Math.abs(dx) + Math.abs(dy) < 0.01) dy = 1; }
-        const ang = Math.atan2(dy, dx), cx = v.x + v.w / 2, cy = v.y + v.h / 2;
-        const rx = v.w / 2 - 60 * k, ry = v.h / 2 - 60 * k;
-        const sc = 1 / Math.max(Math.abs(Math.cos(ang)) / rx, Math.abs(Math.sin(ang)) / ry);
-        t.arrow.style.display = '';
-        t.arrow.style.left = `${cx + Math.cos(ang) * sc}px`; t.arrow.style.top = `${cy + Math.sin(ang) * sc}px`;
-        t.arrow.querySelector('i').style.transform = `rotate(${ang}rad)`;
-      } else if (t.arrow) t.arrow.style.display = 'none';
+      drawArrow(v, t, k);
     }
+  }
+
+  // Off-screen arrow to your own car.
+  function drawArrow(v, t, k) {
+    const me = world.project(v.seat, v.camera, v);
+    const off = !me || me.z > 1 || me.x < v.x || me.x > v.x + v.w || me.y < v.y || me.y > v.y + v.h;
+    if (off && me) {
+      if (!t.arrow) { t.arrow = el('div', 'arrow', `<i></i><b>Your car</b>`); t.arrow.style.setProperty('--seat', seatInfo(v.seat).color); layer.append(t.arrow); }
+      let dx = me.ndc.x, dy = -me.ndc.y;
+      if (me.z > 1) { dx = -dx; dy = -dy; if (Math.abs(dx) + Math.abs(dy) < 0.01) dy = 1; }
+      const ang = Math.atan2(dy, dx), cx = v.x + v.w / 2, cy = v.y + v.h / 2;
+      const rx = v.w / 2 - 60 * k, ry = v.h / 2 - 60 * k;
+      const sc = 1 / Math.max(Math.abs(Math.cos(ang)) / rx, Math.abs(Math.sin(ang)) / ry);
+      t.arrow.style.display = '';
+      t.arrow.style.left = `${cx + Math.cos(ang) * sc}px`; t.arrow.style.top = `${cy + Math.sin(ang) * sc}px`;
+      t.arrow.querySelector('i').style.transform = `rotate(${ang}rad)`;
+    } else if (t.arrow) t.arrow.style.display = 'none';
   }
 
   window.addEventListener('resize', () => relayout(false));
@@ -250,10 +286,11 @@ function gridScene({ rect = () => ({ x: 0, y: 0, w: W(), h: H() }), seats, fp = 
     relayout,
     views() {
       animateTiles();
-      const k = K();
-      return [...tiles.entries()].map(([seat, t]) => ({ x: Math.round(t.cur.x + 4 * k), y: Math.round(t.cur.y + 4 * k), w: Math.round(t.cur.w - 8 * k), h: Math.round(t.cur.h - 8 * k), seat, kind: hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp') }));
+      const ins = Math.round(4 * K()); // whole pixels: equal tiles give equal viewports
+      return [...tiles.entries()].map(([seat, t]) => ({ x: Math.round(t.cur.x) + ins, y: Math.round(t.cur.y) + ins, w: Math.round(t.cur.w) - 2 * ins, h: Math.round(t.cur.h) - 2 * ins, seat, kind: hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp') }));
     },
     update: updateHud,
+    replayIdentify,
     tiles,
     get layout() { return lay; },
   };
@@ -567,6 +604,8 @@ function start() {
   const setup = SETUP[S.name] ?? SETUP.contents;
   scene = setup();
   document.title = `TV mock · ${S.name}`;
+  window.__poc.hash = location.hash; // which state `ready` refers to (hash navigations don't reload the page)
+  window.__poc.held = false;
 }
 window.addEventListener('hashchange', start);
 window.addEventListener('resize', () => world.resize(W(), H()));
@@ -591,9 +630,21 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+/** Holds every CSS animation at `ms` after a fresh Identify (captures of the flash, frame by frame). */
+async function identifyAt(ms) {
+  window.__poc.held = true;
+  if (ms === 0) scene.replayIdentify?.();
+  for (const a of document.getAnimations()) { a.pause(); a.currentTime = ms; }
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+}
+
 const pct = (a, q) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(q * s.length))] ?? 0; };
 window.__poc = {
   ready: false,
+  held: false,
+  identifyAt,
+  /** The 3D viewports the current state renders (one per tile on the grid). */
+  views: () => scene.views(0),
   tokens,
   backend: world.backend,
   /** Frame cost over `frames` frames: rAF interval, sim step, render submit and HUD update times (ms). */

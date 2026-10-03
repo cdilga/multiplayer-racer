@@ -122,9 +122,9 @@ Sans and its CJK, Arabic and Devanagari cuts); never a remote font service (R70)
 | **Number badge** | `#` + the seat number in Barlow Condensed 900, tabular, on the seat colour, ink outline, sticker shadow; text colour from the colour's `on` value. Any number of digits (`#108`, `#999`); the badge widens, the type never shrinks below the profile minimum | H4's `#7` / `#12` / `#3` result cards |
 | **Colour** | 12 identity colours in a fixed order (`tokens.identity.colors`); seat *n* takes colour (*n*−1) mod 12. Numbers are unique, so they carry identity as colours repeat; there's no cap (R66). Why 12, not master §5.1's 16: past 12 the hues stop separating under colour-vision deficiency and on a TV, and Full's patterns multiply identity later | `cvd.png` |
 | **Name** | Up to 32 grapheme clusters (master §10.6). Lobby cards and results wrap to two lines and never truncate the number; the per-tile HUD shows the badge and up to 12 graphemes with an ellipsis (fewer when the tile is narrow; on the
-smallest tiles the HUD drops to number and position only); the full name stays in the accessible label. Rendered as text nodes with `dir="auto"` | `fonts.png` |
+smallest tiles the HUD drops to number, place and lap); the full name stays in the accessible label. Rendered as text nodes with `dir="auto"` | `fonts.png` |
 | **Tile badge** | Top-left corner of the player's tile: number badge + short name + source icon (phone, pad, keyboard) on a small cream sticker. The tile border is the seat colour | Style frame `tv-race-grid` |
-| **Identify** | About 1.5 s (`tokens.motion.named.identify-pulse`): tile border and badge pulse and scale, a "#7 THAT'S YOU!" burst over the car, a bright outline on the car in other tiles; the controller flashes the number and colour. Auto-fires on join and respawn; rate-limited | Master §5.2 |
+| **Identify** | About 1.5 s (`tokens.motion.named.identify-pulse`): "Cooee #7" over a transparent, high-exposure flash in the seat colour, tweened (R99; reduced motion holds the wash steady), the tile border and badge pulse, a bright outline on the car in other tiles; the controller plays the same flash in the player's colour. Auto-fires on join and respawn; rate-limited | Master §5.2, R99, `poc/tv` `#identify` |
 
 Colour-blind safety comes from the number (and later the pattern), never colour alone. The CVD sheet
 shows adjacent seats separated by at least ΔE00 20 in normal vision and simulated protanopia,
@@ -132,10 +132,16 @@ deuteranopia and tritanopia (`check.mjs` enforces it), and badge text stays at l
 
 ## 7. How the chrome frames the 3D world
 
-- **TV in a race:** the screen is the grid of player tiles with thin ink gutters. Each tile carries a
-  small HUD in its corners only (badge and name top-left, position and lap top-right, a slim boost meter
-  along the bottom) on cream stickers; nothing else covers the road. Host controls hide during a race
-  and surface on input (U02 places them).
+- **TV in a race:** the screen is the grid of player tiles with thin ink gutters. **Every player tile has
+  exactly the same area at any N** (R95): one tile size in whole pixels, in the 1.2–2.0 aspect band, as
+  large as the screen allows; empty cells at the end of the last row and any margins hold the join QR,
+  standings, the room code or the painted backdrop, never black and never a larger tile
+  (`poc/tv/grid.js`, checked by `poc/tv/grid-check.mjs`). Each tile carries a small HUD in its corners
+  only (badge and name top-left, position and lap on one line top-right, a slim boost meter along the
+  bottom) on cream stickers, every pill one line high and scaled with the tile (7.5% of its height, 16–32
+  px at 1080p); nothing else covers the road. Name plates over cars are only for Derby and other
+  single-shared-screen modes (R100). Host controls hide during a race and surface on input (U02 places
+  them).
 - **TV between races (lobby, results, intermission):** H4's layout: cream panels with ink borders over
   the painted world, a saffron highlight bar under the title, cobalt numbers, the QR panel bottom-left.
 - **Phone:** an ink base with cream panels and the player's colour (§10).

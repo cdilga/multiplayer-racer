@@ -44,7 +44,7 @@ const machine = (() => {
 
 async function openState(page, state) {
   await page.goto(`${base}/poc/tv/index.html#${state}`);
-  await page.waitForFunction(() => window.__poc?.ready === true, null, { timeout: 30000 });
+  await page.waitForFunction((h) => window.__poc?.ready === true && window.__poc.hash === h, `#${state}`, { timeout: 30000 });
   await page.waitForTimeout(250);
 }
 
@@ -107,18 +107,20 @@ for (const n of [2, 3, 5, 7, 10, 13]) {
   await openState(page, `grid&n=${n}`);
   gaps.push(await page.evaluate(() => {
     const tiles = [...document.querySelectorAll('.tile')].map((t) => t.getBoundingClientRect());
-    const fillers = [...document.querySelectorAll('.filler')].map((f) => ({ w: Math.round(f.getBoundingClientRect().width), h: Math.round(f.getBoundingClientRect().height), has: f.querySelector('.join') ? 'join QR' : f.querySelector('.standings') ? 'standings' : 'backdrop' }));
+    const fillers = [...document.querySelectorAll('.filler')].map((f) => ({ w: Math.round(f.getBoundingClientRect().width), h: Math.round(f.getBoundingClientRect().height), has: f.dataset.role }));
     return { n: tiles.length, tile: `${Math.round(tiles[0].width)}x${Math.round(tiles[0].height)}`, lastRowTile: `${Math.round(tiles.at(-1).width)}x${Math.round(tiles.at(-1).height)}`, fillers, joinChip: !!document.querySelector('.joinchip') };
   }));
 }
 
-// HUD cap height at the smallest tile: 32 tiles at 1080p (AC4).
+// HUD cap height at the smallest tile: 32 tiles at 1080p (AC4). Since POC1-06 (owner, round 1) the per-tile HUD scales
+// with the tile below the TV text minimum, down to 16 px text at 1080p (tv.css --hud), so that is the floor checked.
+const HUD_MIN_TEXT_PX = 16;
 await openState(page, 'hud&n=32&base=100');
-const cap = await page.evaluate(() => {
-  const t = window.__poc.tokens, ratio = t.type.capHeightRatio, k = window.innerHeight / 1080, min = t.type.profiles.tv.minCapHeightPx * k;
+const cap = await page.evaluate((hudMin) => {
+  const t = window.__poc.tokens, ratio = t.type.capHeightRatio, k = window.innerHeight / 1080, min = hudMin * ratio * k;
   const cv = document.createElement('canvas').getContext('2d');
   const items = [];
-  for (const sel of ['.hud-badge', '.hud-name', '.hud-pos', '.hud-lap', '.chip', '.wreck-back', '.burst']) {
+  for (const sel of ['.hud-badge', '.hud-name', '.hud-pos', '.hud-lap', '.chip', '.wreck-back', '.cooee b']) {
     for (const e of document.querySelectorAll(`.tile ${sel}`)) {
       const cs = getComputedStyle(e), size = parseFloat(cs.fontSize);
       cv.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
@@ -129,7 +131,7 @@ const cap = await page.evaluate(() => {
   const smallest = items.reduce((a, b) => (b.capPx < a.capPx ? b : a));
   const tile = [...document.querySelectorAll('.tile')].map((e) => e.getBoundingClientRect()).reduce((a, b) => (b.width * b.height < a.width * a.height ? b : a));
   return { viewport: `${innerWidth}x${innerHeight}`, tiles: document.querySelectorAll('.tile').length, smallestTile: `${Math.round(tile.width)}x${Math.round(tile.height)}`, minCapHeightPx: min, smallest, pass: smallest.capPx >= min - 1e-6 && smallest.glyphCapPx >= min - 0.5, elements: items.length };
-});
+}, HUD_MIN_TEXT_PX);
 await page.close();
 
 // The grid player as a video: 1 → 32 → 1 with the reflow (seat order kept).

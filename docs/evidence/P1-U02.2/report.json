@@ -1,0 +1,837 @@
+{
+  "format": "jj.u022-report.v1",
+  "browser": "Chromium 151.0.7922.34 (Playwright, channel chromium, GPU args), darwin/arm64",
+  "grid": {
+    "pass": true,
+    "layouts": [
+      {
+        "n": 1,
+        "tiles": 1,
+        "tile": "1914x1074",
+        "tileAreaRatio": 1,
+        "viewport": "1906x1066",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 2,
+        "tiles": 2,
+        "tile": "954x794",
+        "tileAreaRatio": 1,
+        "viewport": "946x786",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "margin:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 3,
+        "tiles": 3,
+        "tile": "954x534",
+        "tileAreaRatio": 1,
+        "viewport": "946x526",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 4,
+        "tiles": 4,
+        "tile": "954x534",
+        "tileAreaRatio": 1,
+        "viewport": "946x526",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 5,
+        "tiles": 5,
+        "tile": "634x527",
+        "tileAreaRatio": 1,
+        "viewport": "626x519",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 6,
+        "tiles": 6,
+        "tile": "634x527",
+        "tileAreaRatio": 1,
+        "viewport": "626x519",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 7,
+        "tiles": 7,
+        "tile": "634x354",
+        "tileAreaRatio": 1,
+        "viewport": "626x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 8,
+        "tiles": 8,
+        "tile": "634x354",
+        "tileAreaRatio": 1,
+        "viewport": "626x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 9,
+        "tiles": 9,
+        "tile": "634x354",
+        "tileAreaRatio": 1,
+        "viewport": "626x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 10,
+        "tiles": 10,
+        "tile": "474x354",
+        "tileAreaRatio": 1,
+        "viewport": "466x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 11,
+        "tiles": 11,
+        "tile": "474x354",
+        "tileAreaRatio": 1,
+        "viewport": "466x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:qr": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 12,
+        "tiles": 12,
+        "tile": "474x354",
+        "tileAreaRatio": 1,
+        "viewport": "466x346",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 13,
+        "tiles": 13,
+        "tile": "474x264",
+        "tileAreaRatio": 1,
+        "viewport": "466x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 14,
+        "tiles": 14,
+        "tile": "474x264",
+        "tileAreaRatio": 1,
+        "viewport": "466x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 15,
+        "tiles": 15,
+        "tile": "474x264",
+        "tileAreaRatio": 1,
+        "viewport": "466x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 16,
+        "tiles": 16,
+        "tile": "474x264",
+        "tileAreaRatio": 1,
+        "viewport": "466x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 17,
+        "tiles": 17,
+        "tile": "378x264",
+        "tileAreaRatio": 1,
+        "viewport": "370x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 18,
+        "tiles": 18,
+        "tile": "378x264",
+        "tileAreaRatio": 1,
+        "viewport": "370x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 19,
+        "tiles": 19,
+        "tile": "378x264",
+        "tileAreaRatio": 1,
+        "viewport": "370x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 20,
+        "tiles": 20,
+        "tile": "378x264",
+        "tileAreaRatio": 1,
+        "viewport": "370x256",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 21,
+        "tiles": 21,
+        "tile": "314x260",
+        "tileAreaRatio": 1,
+        "viewport": "306x252",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 22,
+        "tiles": 22,
+        "tile": "314x260",
+        "tileAreaRatio": 1,
+        "viewport": "306x252",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 23,
+        "tiles": 23,
+        "tile": "314x260",
+        "tileAreaRatio": 1,
+        "viewport": "306x252",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 24,
+        "tiles": 24,
+        "tile": "314x260",
+        "tileAreaRatio": 1,
+        "viewport": "306x252",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 25,
+        "tiles": 25,
+        "tile": "378x210",
+        "tileAreaRatio": 1,
+        "viewport": "370x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 26,
+        "tiles": 26,
+        "tile": "314x210",
+        "tileAreaRatio": 1,
+        "viewport": "306x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 4,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 2,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 27,
+        "tiles": 27,
+        "tile": "314x210",
+        "tileAreaRatio": 1,
+        "viewport": "306x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 28,
+        "tiles": 28,
+        "tile": "314x210",
+        "tileAreaRatio": 1,
+        "viewport": "306x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 29,
+        "tiles": 29,
+        "tile": "314x210",
+        "tileAreaRatio": 1,
+        "viewport": "306x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 30,
+        "tiles": 30,
+        "tile": "314x210",
+        "tileAreaRatio": 1,
+        "viewport": "306x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 31,
+        "tiles": 31,
+        "tile": "268x210",
+        "tileAreaRatio": 1,
+        "viewport": "260x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 4,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 2,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 32,
+        "tiles": 32,
+        "tile": "268x210",
+        "tileAreaRatio": 1,
+        "viewport": "260x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 33,
+        "tiles": 33,
+        "tile": "268x210",
+        "tileAreaRatio": 1,
+        "viewport": "260x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:standings": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 34,
+        "tiles": 34,
+        "tile": "268x210",
+        "tileAreaRatio": 1,
+        "viewport": "260x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 1,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 35,
+        "tiles": 35,
+        "tile": "268x210",
+        "tileAreaRatio": 1,
+        "viewport": "260x202",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 36,
+        "tiles": 36,
+        "tile": "314x174",
+        "tileAreaRatio": 1,
+        "viewport": "306x166",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 37,
+        "tiles": 37,
+        "tile": "268x174",
+        "tileAreaRatio": 1,
+        "viewport": "260x166",
+        "viewportAreaRatio": 1,
+        "emptyCells": 5,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 4,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 38,
+        "tiles": 38,
+        "tile": "268x174",
+        "tileAreaRatio": 1,
+        "viewport": "260x166",
+        "viewportAreaRatio": 1,
+        "emptyCells": 4,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 3,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 39,
+        "tiles": 39,
+        "tile": "268x174",
+        "tileAreaRatio": 1,
+        "viewport": "260x166",
+        "viewportAreaRatio": 1,
+        "emptyCells": 3,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 2,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 40,
+        "tiles": 40,
+        "tile": "268x174",
+        "tileAreaRatio": 1,
+        "viewport": "260x166",
+        "viewportAreaRatio": 1,
+        "emptyCells": 2,
+        "cellsMatchTiles": true,
+        "fillerRoles": {
+          "cell:backdrop": 1,
+          "cell:code": 1
+        },
+        "joinChip": false,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 64,
+        "tiles": 64,
+        "tile": "234x129",
+        "tileAreaRatio": 1,
+        "viewport": "226x121",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      },
+      {
+        "n": 99,
+        "tiles": 99,
+        "tile": "168x114",
+        "tileAreaRatio": 1,
+        "viewport": "160x106",
+        "viewportAreaRatio": 1,
+        "emptyCells": 0,
+        "cellsMatchTiles": true,
+        "fillerRoles": {},
+        "joinChip": true,
+        "samples": 57600,
+        "uncovered": 0
+      }
+    ]
+  },
+  "hud": {
+    "pass": true,
+    "at32": {
+      "viewport": "1920x1080",
+      "tile": "268x210",
+      "hudTextPx": 16,
+      "pillHeightPx": 28.94,
+      "pillShareOfTile": 0.138,
+      "allOneLine": true,
+      "pills": 99,
+      "twoLine": []
+    },
+    "at8": {
+      "tile": "634x354",
+      "hudTextPx": 26.55
+    }
+  },
+  "namePlates": {
+    "pass": true,
+    "onGrid": 0,
+    "onOverview": 8
+  },
+  "identify": {
+    "pass": true,
+    "full": [
+      {
+        "ms": 0,
+        "flash": 0,
+        "label": 0,
+        "text": "Cooee #3",
+        "transform": "matrix(0.598538, -0.0418539, 0.0418539, 0.598538, 0, 0)",
+        "file": "identify/full-0000ms.jpg"
+      },
+      {
+        "ms": 60,
+        "flash": 0.91,
+        "label": 0.847,
+        "text": "Cooee #3",
+        "transform": "matrix(1.03796, -0.0725816, 0.0725816, 1.03796, 0, 0)",
+        "file": "identify/full-0060ms.jpg"
+      },
+      {
+        "ms": 120,
+        "flash": 1,
+        "label": 0.99,
+        "text": "Cooee #3",
+        "transform": "matrix(1.11215, -0.077769, 0.077769, 1.11215, 0, 0)",
+        "file": "identify/full-0120ms.jpg"
+      },
+      {
+        "ms": 250,
+        "flash": 0.874,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(1.00541, -0.0703054, 0.0703054, 1.00541, 0, 0)",
+        "file": "identify/full-0250ms.jpg"
+      },
+      {
+        "ms": 500,
+        "flash": 0.71,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/full-0500ms.jpg"
+      },
+      {
+        "ms": 900,
+        "flash": 0.112,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/full-0900ms.jpg"
+      },
+      {
+        "ms": 1300,
+        "flash": 0.008,
+        "label": 0.634,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/full-1300ms.jpg"
+      },
+      {
+        "ms": 1500,
+        "flash": 0,
+        "label": 0,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/full-1500ms.jpg"
+      }
+    ],
+    "reduced": [
+      {
+        "ms": 0,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0000ms.jpg"
+      },
+      {
+        "ms": 60,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0060ms.jpg"
+      },
+      {
+        "ms": 120,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0120ms.jpg"
+      },
+      {
+        "ms": 250,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0250ms.jpg"
+      },
+      {
+        "ms": 500,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0500ms.jpg"
+      },
+      {
+        "ms": 900,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-0900ms.jpg"
+      },
+      {
+        "ms": 1300,
+        "flash": 0.6,
+        "label": 1,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-1300ms.jpg"
+      },
+      {
+        "ms": 1500,
+        "flash": 0,
+        "label": 0,
+        "text": "Cooee #3",
+        "transform": "matrix(0.997564, -0.0697565, 0.0697565, 0.997564, 0, 0)",
+        "file": "identify/reduced-1500ms.jpg"
+      }
+    ],
+    "video": "identify-flash.webm"
+  },
+  "errors": []
+}
