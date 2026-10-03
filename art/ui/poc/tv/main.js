@@ -29,7 +29,6 @@ const setK = () => {
   document.documentElement.style.setProperty('--k', String(kNow));
 };
 setK();
-window.addEventListener('resize', setK);
 const colors = tokens.identity.colors.map((c) => c.hex);
 const canvas = document.getElementById('world');
 const ui = document.getElementById('ui');
@@ -40,13 +39,14 @@ function parseHash() {
   const raw = location.hash.replace(/^#/, '');
   const [name, ...rest] = raw.split('&');
   const p = new URLSearchParams(rest.join('&'));
-  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'footer', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', layout: p.get('layout') === 'static' ? 'static' : 'dynamic', sub: p.get('sub') ?? '',
+  return { name: name || 'contents', n: +(p.get('n') ?? 8), fp: new Set((p.get('fp') ?? '').split(',').filter(Boolean).map(Number)), base: +(p.get('base') ?? 0), kind: p.get('kind') ?? 'footer', seat: +(p.get('seat') ?? 3), hud: p.get('hud') !== '0', layout: p.get('layout') === 'static' ? 'static' : 'dynamic', sub: p.get('sub') ?? '', mirror: p.get('mirror') !== '0',
     // Camera distance (R98): &dist= the host default; &pdist=3:far,5:near per-player overrides; &cam=round0 the old rig.
     dist: p.get('dist') ?? FRAMING.distance.default, pdist: new Map((p.get('pdist') ?? '').split(',').filter(Boolean).map((x) => x.split(':')).map(([s, d]) => [+s, d])), cam: p.get('cam') ?? 'framing', p };
 }
 
 let S = parseHash();
 let scene = null; // { views(dt): [], update(dt), layout() }
+const relayouts = []; // the live scene's grid layouts, re-run on every viewport change (start() clears them)
 let frames = 0, settled = false;
 // The footer band (POC1-08, R96/R97) in TV px at 1080p; the race grid fills the screen above it.
 const FOOT = 88;
@@ -98,12 +98,11 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     const bottom = el('div', 'hud-bottom');
     bottom.append(boost);
     t.append(top, bottom);
-    if ((hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp')) === 'fp') {
-      // Segmented first person (R98): the rear-view mirror's frame over its viewport (views() adds the viewport).
-      const m = FRAMING.firstPerson.mirror, at = (f) => `calc(var(--k) * 4px + (100% - var(--k) * 8px) * ${f})`;
-      const fr = el('div', 'mirror');
-      Object.assign(fr.style, { left: at(m.x), top: at(m.y), width: `calc((100% - var(--k) * 8px) * ${m.w})`, height: `calc((100% - var(--k) * 8px) * ${m.h})` });
-      t.append(fr);
+    let mirror = null;
+    if ((hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp')) === 'fp' && S.mirror) {
+      // Segmented first person (R98): the rear-view mirror's frame over its viewport; mirrorBox() places both.
+      mirror = el('div', 'mirror');
+      t.append(mirror);
     }
     const st = hudStates[seat];
     // A compact tile keeps the chip's icon and colour and drops its word (the label stays for screen readers).
@@ -112,7 +111,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     if (st?.identify) { t.classList.add('identify'); t.prepend(cooee(info.num)); } // under the HUD: the pills stay readable
     if (!S.hud) t.replaceChildren();
     layer.append(t);
-    return { el: t, pos, lap, boost: boost.firstChild, name, last: {}, cur: null, tgt: null, t0: 0, from: null, plates: [], arrow: null };
+    return { el: t, pos, lap, boost: boost.firstChild, name, mirror, tp: 1, last: {}, cur: null, tgt: null, t0: 0, from: null, plates: [], arrow: null };
   }
 
   function relayout(animate) {
@@ -133,7 +132,8 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       t.from = { ...t.cur };
       t.tgt = tgt;
       t.t0 = animate ? now : now - 1000;
-      t.el.style.setProperty('--t', String(Math.max(0.35, Math.min(1.3, tgt.h / (540 * k)))));
+      t.tp = Math.max(0.35, Math.min(1.3, tgt.h / (540 * k)));
+      t.el.style.setProperty('--t', String(t.tp));
       t.el.classList.toggle('compact', tgt.w < 230 * k || tgt.h < 140 * k);
     });
     // gutter background = ink behind the grid area
@@ -200,8 +200,22 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       if (a < 1) moving = true;
       t.cur = { x: t.from.x + (t.tgt.x - t.from.x) * e, y: t.from.y + (t.tgt.y - t.from.y) * e, w: t.from.w + (t.tgt.w - t.from.w) * e, h: t.from.h + (t.tgt.h - t.from.h) * e };
       Object.assign(t.el.style, { left: `${t.cur.x}px`, top: `${t.cur.y}px`, width: `${t.cur.w}px`, height: `${t.cur.h}px` });
+      if (t.mirror) {
+        const b = mirrorBox(t);
+        Object.assign(t.mirror.style, { left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px` });
+      }
     }
     if (!moving) settled = true;
+  }
+
+  // The rear-view mirror (R98) takes the strip of sky at the top of a first-person tile, in the tile's own fractions,
+  // but never sits on the top HUD row: on a small tile the number and position pills reach into that strip, so the
+  // mirror drops to just below them (dim.2). Tile-local px; the frame and the mirror's 3D viewport both use this.
+  function mirrorBox(t) {
+    const k = K(), m = FRAMING.firstPerson.mirror, ins = 4 * k;
+    const hud = Math.min(32 * k, Math.max(16 * k, k * t.tp * 40.5)); // tv.css --hud
+    const inner = { w: t.cur.w - 2 * ins, h: t.cur.h - 2 * ins };
+    return { x: ins + inner.w * m.x, y: Math.max(ins + inner.h * m.y, hud * 2.35), w: inner.w * m.w, h: inner.h * m.h };
   }
 
   // The mock replays Identify every 3 s so the review can watch it (a real one fires once per press, join or respawn).
@@ -305,7 +319,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     } else if (t.arrow) t.arrow.style.display = 'none';
   }
 
-  window.addEventListener('resize', () => relayout(false));
+  relayouts.push(() => relayout(false));
   return {
     layer,
     relayout,
@@ -316,9 +330,9 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       for (const [seat, t] of tiles) {
         const v = { x: Math.round(t.cur.x) + ins, y: Math.round(t.cur.y) + ins, w: Math.round(t.cur.w) - 2 * ins, h: Math.round(t.cur.h) - 2 * ins, seat, kind: hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp') };
         out.push(v);
-        if (v.kind === 'fp') {
-          const m = FRAMING.firstPerson.mirror;
-          out.push({ x: v.x + Math.round(v.w * m.x), y: v.y + Math.round(v.h * m.y), w: Math.round(v.w * m.w), h: Math.round(v.h * m.h), seat, kind: 'mirror' });
+        if (v.kind === 'fp' && t.mirror) {
+          const b = mirrorBox(t);
+          out.push({ x: Math.round(t.cur.x + b.x), y: Math.round(t.cur.y + b.y), w: Math.round(b.w), h: Math.round(b.h), seat, kind: 'mirror' });
         }
       }
       return out;
@@ -882,6 +896,7 @@ const wireActs = (root) => root.addEventListener('click', (e) => { const go = e.
 
 function start() {
   ui.innerHTML = '';
+  relayouts.length = 0; // the old scene's layout goes with it
   gamePaused = false;
   cd = null;
   world.setFraming({ distance: parseHash().dist, perSeat: parseHash().pdist, rig: parseHash().cam });
@@ -898,7 +913,26 @@ function start() {
   window.__poc.held = false;
 }
 window.addEventListener('hashchange', start);
-window.addEventListener('resize', () => world.resize(W(), H()));
+// dim.2: every viewport change (a resize, the mobile browser's bars coming and going, a rotation, full screen on or off)
+// recomputes the scale, the world and the live scene's layout: one pass per frame, then once more after the browser has
+// finished changing the viewport (bars animate, rotations report late), so a fresh load at that size is what you see.
+let viewportQueued = false;
+const onViewport = () => {
+  if (viewportQueued) return;
+  viewportQueued = true;
+  requestAnimationFrame(() => {
+    viewportQueued = false;
+    setK();
+    world.resize(W(), H());
+    for (const r of relayouts) r();
+  });
+};
+for (const [target, type] of [[window, 'resize'], [window, 'orientationchange'], [document, 'fullscreenchange'], [window.visualViewport, 'resize']]) {
+  target?.addEventListener(type, () => {
+    onViewport();
+    setTimeout(onViewport, 250);
+  });
+}
 window.addEventListener('keydown', (e) => { if (e.key === 'h' || e.key === 'H') location.hash = ''; });
 
 let last = performance.now();

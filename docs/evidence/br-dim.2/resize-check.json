@@ -1,0 +1,267 @@
+{
+  "failures": [],
+  "layout": [
+    {
+      "hash": "#hud&n=32&base=100&fp=6,13,27&states=matrix",
+      "change": "resize 1366x768 -> 1920x1080",
+      "compared": 188,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=32&base=100&fp=6,13,27&states=matrix",
+      "change": "resize 1920x1080 -> 1366x768",
+      "compared": 188,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=32&base=100&fp=6,13,27&states=matrix",
+      "change": "browser bars: 1920x1080 -> 1920x980",
+      "compared": 188,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=32&base=100&fp=6,13,27&states=matrix",
+      "change": "rotation 915x412 -> 412x915",
+      "compared": 188,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=32&base=100&fp=6,13,27&states=matrix",
+      "change": "full screen on then off (1920x1080)",
+      "compared": 188,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=100&fp=6,50,99&states=matrix",
+      "change": "resize 1366x768 -> 1920x1080",
+      "compared": 573,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=100&fp=6,50,99&states=matrix",
+      "change": "resize 1920x1080 -> 1366x768",
+      "compared": 573,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=100&fp=6,50,99&states=matrix",
+      "change": "browser bars: 1920x1080 -> 1920x980",
+      "compared": 573,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=100&fp=6,50,99&states=matrix",
+      "change": "rotation 915x412 -> 412x915",
+      "compared": 573,
+      "diff": 0
+    },
+    {
+      "hash": "#hud&n=100&fp=6,50,99&states=matrix",
+      "change": "full screen on then off (1920x1080)",
+      "compared": 573,
+      "diff": 0
+    }
+  ],
+  "mirror": [
+    {
+      "screen": "1920x1080",
+      "n": 1,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "1",
+          "tile": "1914x986",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 1,
+      "pass": true
+    },
+    {
+      "screen": "1920x1080",
+      "n": 1,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    },
+    {
+      "screen": "1920x1080",
+      "n": 32,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "6",
+          "tile": "268x192",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "13",
+          "tile": "268x192",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "27",
+          "tile": "268x192",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 3,
+      "pass": true
+    },
+    {
+      "screen": "1920x1080",
+      "n": 32,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    },
+    {
+      "screen": "1920x1080",
+      "n": 100,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "6",
+          "tile": "186x93",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "50",
+          "tile": "186x93",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "99",
+          "tile": "186x93",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 3,
+      "pass": true
+    },
+    {
+      "screen": "1920x1080",
+      "n": 100,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 1,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "1",
+          "tile": "408x339",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 1,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 1,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 32,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "6",
+          "tile": "133x74",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "13",
+          "tile": "133x74",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "27",
+          "tile": "133x74",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 3,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 32,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 100,
+      "mirror": "on",
+      "frames": [
+        {
+          "seat": "6",
+          "tile": "78x39",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "50",
+          "tile": "78x39",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        },
+        {
+          "seat": "99",
+          "tile": "78x39",
+          "inside": true,
+          "hits": [],
+          "viewport": true
+        }
+      ],
+      "mirrorViews": 3,
+      "pass": true
+    },
+    {
+      "screen": "412x915",
+      "n": 100,
+      "mirror": "off",
+      "frames": [],
+      "mirrorViews": 0,
+      "pass": true
+    }
+  ]
+}
