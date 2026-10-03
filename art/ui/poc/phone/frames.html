@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone mock in device frames</title>
+<style>
+  body { margin: 0; padding: 24px 28px; background: #e9dcc4; font-family: system-ui, sans-serif; color: #15203A; }
+  h1 { margin: 0 0 4px; font: 900 italic 34px/1 "Barlow Condensed", system-ui; text-transform: uppercase; }
+  p { margin: 0 0 16px; font-size: 15px; }
+  .row { display: flex; gap: 28px; align-items: flex-end; margin-bottom: 26px; }
+  .dev { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .bezel { padding: 14px; border-radius: 44px; background: #0d0f14; box-shadow: 0 10px 0 rgb(0 0 0 / .25); }
+  .bezel.land { border-radius: 40px; }
+  iframe { display: block; border: 0; border-radius: 30px; background: #15203A; }
+  .cap { font-size: 14px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1 id="t"></h1>
+<p>True CSS sizes (DEFAULT set, plan P1-U03): small iPhone 375×667, large iPhone 430×932, mid Android 412×915; portrait, then landscape. Each frame is the live mock (<code>index.html</code>) with the mock chrome hidden.</p>
+<div class="row" id="portrait"></div>
+<div class="row" id="landscape"></div>
+<script type="module">
+  const DEVICES = [['Small iPhone', 375, 667], ['Large iPhone', 430, 932], ['Mid Android', 412, 915]];
+  const state = location.hash.replace(/^#/, '') || 'race';
+  addEventListener("hashchange", () => location.reload());
+  document.getElementById('t').textContent = `Phone mock · ${state}`;
+  const frames = [];
+  for (const [name, w, h] of DEVICES) {
+    for (const [rowId, fw, fh, orient] of [['portrait', w, h, 'portrait'], ['landscape', h, w, 'landscape']]) {
+      const d = document.createElement('div');
+      d.className = 'dev';
+      d.innerHTML = `<div class="bezel ${orient === 'landscape' ? 'land' : ''}"><iframe width="${fw}" height="${fh}" title="${name} ${orient}" src="./index.html#${state}&chrome=0"></iframe></div><div class="cap">${name} · ${fw}×${fh} · ${orient}</div>`;
+      document.getElementById(rowId).append(d);
+      frames.push(d.querySelector('iframe'));
+    }
+  }
+  const ready = () => frames.every((f) => f.contentWindow?.__phone?.ready === true);
+  const wait = () => (ready() ? (window.framesReady = true) : setTimeout(wait, 100));
+  wait();
+</script>
+</body>
+</html>

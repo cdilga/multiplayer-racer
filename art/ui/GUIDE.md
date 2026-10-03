@@ -97,7 +97,7 @@ Sans and its CJK, Arabic and Devanagari cuts); never a remote font service (R70)
   `font-variant-numeric: tabular-nums` so they don't jitter as they change.
 - **Case:** display headings uppercase; labels and buttons sentence case. Units stay lower case inside an uppercase heading ("NEXT ROUND STARTS IN 42s", as H4).
 - **Type scale per viewing profile** (`tokens.type.profiles`): TV at 3 m (sized in px at 1080p and
-  scaled by output height; minimum 24 px, cap height 17 px), desk at 60 cm (minimum 12 px) and
+  scaled by output height; minimum 24 px, so cap height 16.8 px: Barlow's caps are 0.7 em), desk at 60 cm (minimum 12 px) and
   handheld at 30 cm (minimum 13 px). U02, U03, R07 and C02 measure their mocks against these minimums.
 
 ## 5. Space, layout, ink and wobble
@@ -121,7 +121,8 @@ Sans and its CJK, Arabic and Devanagari cuts); never a remote font service (R70)
 |---|---|---|
 | **Number badge** | `#` + the seat number in Barlow Condensed 900, tabular, on the seat colour, ink outline, sticker shadow; text colour from the colour's `on` value. Any number of digits (`#108`, `#999`); the badge widens, the type never shrinks below the profile minimum | H4's `#7` / `#12` / `#3` result cards |
 | **Colour** | 12 identity colours in a fixed order (`tokens.identity.colors`); seat *n* takes colour (*n*−1) mod 12. Numbers are unique, so they carry identity as colours repeat; there's no cap (R66). Why 12, not master §5.1's 16: past 12 the hues stop separating under colour-vision deficiency and on a TV, and Full's patterns multiply identity later | `cvd.png` |
-| **Name** | Up to 32 grapheme clusters (master §10.6). Lobby cards and results wrap to two lines and never truncate the number; the per-tile HUD shows the badge and the first 12 graphemes with an ellipsis; the full name stays in the accessible label. Rendered as text nodes with `dir="auto"` | `fonts.png` |
+| **Name** | Up to 32 grapheme clusters (master §10.6). Lobby cards and results wrap to two lines and never truncate the number; the per-tile HUD shows the badge and up to 12 graphemes with an ellipsis (fewer when the tile is narrow; on the
+smallest tiles the HUD drops to number and position only); the full name stays in the accessible label. Rendered as text nodes with `dir="auto"` | `fonts.png` |
 | **Tile badge** | Top-left corner of the player's tile: number badge + short name + source icon (phone, pad, keyboard) on a small cream sticker. The tile border is the seat colour | Style frame `tv-race-grid` |
 | **Identify** | About 1.5 s (`tokens.motion.named.identify-pulse`): tile border and badge pulse and scale, a "#7 THAT'S YOU!" burst over the car, a bright outline on the car in other tiles; the controller flashes the number and colour. Auto-fires on join and respawn; rate-limited | Master §5.2 |
 
@@ -190,15 +191,18 @@ player, never use jargon (no "peer", "ICE", "session"), never shout in body copy
 
 | Say | Means | Don't say |
 |---|---|---|
-| **room** | The party on this TV that people join with the code ("Room ROO7") | lobby, session, server, game |
+| **room** | The party on this TV that people join with the code ("Room ROO7") | session, server, game |
+| **lobby** | The screen where players gather and get Ready before a round (H4: "Return everyone to lobby") | waiting room, menu |
 | **round** | One race (later one derby) from countdown to results | match, game, level, heat |
 | **number** | A player's seat, as players see it ("You're #7", "Reconnecting as #7") | seat, slot, player ID |
 | **car** | The vehicle a player drives | vehicle, kart, ride |
 | **host** | The screen running the room | server, admin |
 | **controller** | The phone, pad or keyboard a player drives with | remote, client, device |
 
-**Button verbs:** Join, Ready, Start race, Find my car, Sit out, Leave room, End room, Retry, Enter
-code, Scan QR code. Sentence case, a verb first, two or three words.
+**Button verbs:** Join, Ready, Start race, Identify, Sit out, Leave room, End round (everyone back to the
+lobby, the party stays), Disband room (everyone disconnected; master plan's End/Disband), Retry, Enter
+code, Scan QR code. Plan §11's join states read "Finding game…", "No game with code…"; the mocks follow
+the plan and the owner decides room vs game at the design review. Sentence case, a verb first, two or three words.
 
 **States in words:** "Reconnecting as #7…", "Autopilot is driving your car. Everyone else keeps
 racing.", "Host paused: back in a moment", "Room ROO7 has ended. Ask the host for the new code."

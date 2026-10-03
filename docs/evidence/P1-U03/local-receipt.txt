@@ -1,0 +1,17 @@
+# P1-U03 local receipt (phone mocks)
+date: 2026-10-03T02:17:15Z  machine: Apple M1 Pro (MacBookPro18,3), macOS 27.0.1  node: v26.10.0  playwright: 1.62.1 (Chromium 1234 new headless, WebKit 2336; mobile emulation, not devices)  commit base: 236b00f
+
+$ node art/ui/poc/phone/check.mjs   (final run on this code, log kept from that run)
+states 30 × 2 engines × 3 devices × 2 orientations = 360 layout runs; multi-touch runs 18 (18 pass); captures 30; external requests 0
+all checks pass
+exit 0
+
+AC1 layout runs: 360 | engines: chromium, webkit | devices: small-iphone, large-iphone, mid-android | orientations: portrait, landscape
+    horizontal scroll in 0 runs; overlapping boxes in 0 runs
+AC2 touch targets checked per run (max): 13 | runs with a target under 48 px: 0
+AC3 multi-touch runs: 18 | pass: 18 | methods: pointer events (two pointerIds) + CDP Input.dispatchTouchEvent (two touch points)
+    e.g. webkit small-iphone portrait {"drive":{"x":-1,"y":0},"action":{"x":0,"y":-1}}
+AC4 captures (device frames): 30 -> race.jpg race_stick=touched.jpg race_stick=preload.jpg race_stick=cooldown.jpg race_stick=disabled.jpg race_stick=autopilot.jpg identify.jpg menu.jpg tutorial.jpg lobby.jpg lobby_ready=1.jpg join.jpg settings.jpg finding.jpg no-such-game.jpg game-ended.jpg preview-expired.jpg connecting.jpg finding-relay.jpg no-route.jpg ready-to-join.jpg joining.jpg playing.jpg reconnecting.jpg host-gone.jpg host-paused.jpg another-tab.jpg update-needed.jpg race_edges=1.jpg race_reach=1.jpg
+AC5 requests outside the folder: 0
+AC5 overlays: race&edges=1 (24 px edge-safe band) and race&reach=1 (thumb reach) are states in the captures above
+AC6 review: 8115 bytes docs/evidence/P1-U03/review.md

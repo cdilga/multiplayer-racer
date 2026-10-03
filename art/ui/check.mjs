@@ -68,7 +68,13 @@ for (let i = 0; i < colors.length; i++) {
   if (!ok) fail(`cvd: adjacent seats ${a.name}→${b.name} differ by only ΔE00 ${worst} in some view (min ${minDe})`);
 }
 
-// 5. Files the tokens promise.
+// 5. Each profile's minimum cap height must be reachable at its minimum text size.
+for (const [name, prof] of Object.entries(tokens.type?.profiles ?? {})) {
+  const reachable = prof.minTextPx * (tokens.type.capHeightRatio ?? 0);
+  if (prof.minCapHeightPx > reachable + 1e-6) fail(`type: ${name} minCapHeightPx ${prof.minCapHeightPx} exceeds minTextPx ${prof.minTextPx} × cap ratio (${reachable.toFixed(2)})`);
+}
+
+// 6. Files the tokens promise.
 const files = [
   tokens.fonts?.display?.licenceFile,
   ...(tokens.fonts?.display?.files ?? []).map((f) => f.file),

@@ -23,6 +23,12 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] The motion reel (countdown, join, Identify, wreck and respawn, phase changes, results), and its reduced-motion version.
 - [ ] Phone controller on your own phone, once in a dim room: thumb reach, the two sticks, the dark-room base, every state screen.
 - [ ] **Engine synth:** the Cruz Missile's engine across RPM, throttle, boost, surfaces and damage, and the scripted lap.
+- [ ] **Announcer copy** (`docs/copy/australianisms.md`, `tools/audio/cues-playtest1.tsv`): keep or drop the mild minced oaths
+      (strewth, crikey, stone the crows); the 26 shipped terms and the ones left out (with reasons) read right to you.
+- [ ] **"Room" or "game":** plan §11's phone states say "Finding game ROO7…", "No game with code…", "That game has
+      ended"; the design guide calls the party a "room". The mocks follow the plan; pick one word.
+- [ ] **Style frames:** they're written but couldn't be generated (no image tool on the Codex account on 2026-10-03). Either
+      restore an image-capable Codex model or OK the `OPENAI_API_KEY` fallback, then the session generates and reviews them.
 - [ ] Record the verdict and any changes (the session writes `docs/playtests/poc-<date>.md`).
 
 ## 2. Previews as they land (never a gate)

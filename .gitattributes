@@ -37,3 +37,7 @@ spikes/**/*.obj filter=lfs diff=lfs merge=lfs -text
 assets/**/*.ogg filter=lfs diff=lfs merge=lfs -text
 assets/**/*.wav filter=lfs diff=lfs merge=lfs -text
 assets/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
+docs/evidence/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+docs/evidence/**/*.webm filter=lfs diff=lfs merge=lfs -text
+assets/**/*.m4a filter=lfs diff=lfs merge=lfs -text
+docs/evidence/**/*.ogg filter=lfs diff=lfs merge=lfs -text
