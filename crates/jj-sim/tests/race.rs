@@ -498,3 +498,58 @@ fn a_race_with_commands_replays_to_the_same_hash() {
     assert_eq!(replay.state_hash(), live.state_hash());
     assert_eq!(replay.race().events(), live.race().events());
 }
+
+#[test]
+fn finishes_carry_a_crossing_fraction_and_progress_keeps_its_high_water_mark() {
+    let map = greybox();
+    let mut s = sim(&map, 9);
+    let a = s.spawn_car(route_spawn(&map, 30, -3.0, 0.6));
+    let b = s.spawn_car(route_spawn(&map, 30, 3.0, 0.6));
+    s.start_race(1);
+    steps(&mut s, S);
+    let n = s.race().course.gate_count();
+    for i in 0..=n {
+        drive_through(&map, &mut s, a, i % n);
+    }
+    let ca = s.race().car(a.0).unwrap();
+    assert!(ca.finished_at.is_some());
+    // 12 m/s is 0.1 m per tick: the line falls somewhere inside the finishing step.
+    assert!(ca.finish_fraction > 0, "fraction {}", ca.finish_fraction);
+    // B crosses the start line, drives on, then reverses: its high-water mark is the furthest it got, and when.
+    drive_through(&map, &mut s, b, 0);
+    let (mut max_mm, mut max_tick) = (0u64, 0u64);
+    for t in 0..(4 * S) {
+        let throttle = if t < S { 30_000 } else { -30_000 };
+        s.set_input(
+            b,
+            DriveInput {
+                throttle,
+                steer: 0,
+                brake: 0,
+            },
+        );
+        s.step();
+        let mm = (s.race().progress_m(b.0) * 1000.0) as u64;
+        if mm > max_mm {
+            (max_mm, max_tick) = (mm, s.tick());
+        }
+    }
+    let cb = s.race().car(b.0).unwrap();
+    assert_eq!(
+        (cb.best_progress_mm, cb.best_progress_tick),
+        (max_mm, max_tick),
+        "the high-water mark and its tick"
+    );
+    assert!(
+        (s.race().progress_m(b.0) * 1000.0) < max_mm as f32 - 1000.0,
+        "current progress fell back well behind it"
+    );
+    assert_eq!(
+        s.race()
+            .standings()
+            .iter()
+            .map(|r| r.car)
+            .collect::<Vec<_>>(),
+        vec![0, 1]
+    );
+}

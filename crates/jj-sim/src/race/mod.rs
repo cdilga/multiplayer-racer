@@ -272,6 +272,11 @@ pub struct CarRace {
     pub assist_since: Option<u64>,
     pub wrecks: u32,
     pub recoveries: u32,
+    /// How far through the finishing tick's step the line was crossed, 0..=65535 (results order same-tick finishes by it).
+    pub finish_fraction: u16,
+    /// The legal-progress high-water mark (mm) and the tick it was reached: what unfinished entrants rank by.
+    pub best_progress_mm: u64,
+    pub best_progress_tick: u64,
     rest_inverted: u64,
     slow: u64,
     last: Option<CarView>,
@@ -321,6 +326,9 @@ impl Race {
             assist_since: None,
             wrecks: 0,
             recoveries: 0,
+            finish_fraction: 0,
+            best_progress_mm: 0,
+            best_progress_tick: 0,
             rest_inverted: 0,
             slow: 0,
             last: None,
@@ -448,6 +456,14 @@ impl Race {
                 self.cross(tick, car, prev, v, &mut effects);
             }
             self.cars[i].last = Some(v);
+            if self.started_at.is_some() && self.cars[i].finished_at.is_none() {
+                let mm = (self.progress_m(car) * 1000.0) as u64;
+                let c = &mut self.cars[i];
+                if mm > c.best_progress_mm {
+                    c.best_progress_mm = mm;
+                    c.best_progress_tick = tick;
+                }
+            }
         }
         self.check_end(tick);
         effects
@@ -470,12 +486,12 @@ impl Race {
         let g = &self.course.gates[gi];
         let f = |p: [f32; 3]| (p[0] - g.x) * g.tx + (p[2] - g.z) * g.tz;
         let lateral = ((now.position[0] - g.x) * -g.tz + (now.position[2] - g.z) * g.tx).abs();
-        if !(f(prev.position) < 0.0
-            && f(now.position) >= 0.0
-            && lateral <= g.half_width + GATE_MARGIN_M)
-        {
+        let (before, after) = (f(prev.position), f(now.position));
+        if !(before < 0.0 && after >= 0.0 && lateral <= g.half_width + GATE_MARGIN_M) {
             return;
         }
+        // Where in this tick's step the line was crossed, linearly between the two positions.
+        let fraction = ((-before / (after - before)).clamp(0.0, 1.0) * 65535.0) as u16;
         let anchor = g.anchor;
         let c = &mut self.cars[car as usize];
         c.gates_passed += 1;
@@ -495,7 +511,9 @@ impl Race {
             let laps = (passed - 1) / n;
             self.events.push((tick, Event::LapCompleted { car, laps }));
             if laps >= self.laps {
-                self.cars[car as usize].finished_at = Some(tick);
+                let c = &mut self.cars[car as usize];
+                c.finished_at = Some(tick);
+                c.finish_fraction = fraction;
                 self.first_finish.get_or_insert(tick);
                 self.events.push((tick, Event::Finished { car }));
                 effects.push(Effect::Ghost { car });
@@ -566,14 +584,21 @@ impl Race {
                 progress_m: self.progress_m(car),
             })
             .collect();
-        rows.sort_by(|a, b| match (a.finished_at, b.finished_at) {
-            (Some(x), Some(y)) => x.cmp(&y).then(a.car.cmp(&b.car)),
-            (Some(_), None) => std::cmp::Ordering::Less,
-            (None, Some(_)) => std::cmp::Ordering::Greater,
-            (None, None) => b
-                .progress_m
-                .total_cmp(&a.progress_m)
-                .then(a.car.cmp(&b.car)),
+        // The same order the session's results use (P1-N07c): finish time with its crossing fraction, then the progress
+        // high-water mark and the tick it was reached.
+        let key = |car: u32| {
+            let c = &self.cars[car as usize];
+            (
+                c.finished_at.map(|t| (t, c.finish_fraction)),
+                std::cmp::Reverse(c.best_progress_mm),
+                c.best_progress_tick,
+            )
+        };
+        rows.sort_by(|a, b| match (key(a.car), key(b.car)) {
+            ((Some(x), ..), (Some(y), ..)) => x.cmp(&y).then(a.car.cmp(&b.car)),
+            ((Some(_), ..), (None, ..)) => std::cmp::Ordering::Less,
+            ((None, ..), (Some(_), ..)) => std::cmp::Ordering::Greater,
+            ((None, pa, ta), (None, pb, tb)) => (pa, ta).cmp(&(pb, tb)).then(a.car.cmp(&b.car)),
         });
         rows
     }
@@ -593,6 +618,9 @@ impl Race {
             out.extend(c.slow.to_le_bytes());
             out.extend(c.wrecks.to_le_bytes());
             out.extend(c.recoveries.to_le_bytes());
+            out.extend(c.finish_fraction.to_le_bytes());
+            out.extend(c.best_progress_mm.to_le_bytes());
+            out.extend(c.best_progress_tick.to_le_bytes());
         }
     }
 
