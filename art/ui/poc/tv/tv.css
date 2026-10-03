@@ -1,6 +1,8 @@
 /* TV mocks (P1-U02). Every size is in TV px at 1080p × --k (output height / 1080), so 1080p and 4K share one layout.
    Colours, fonts and minimums come from art/ui/tokens.json via ../shared/tokens.js. */
 * { box-sizing: border-box; }
+/* Android Chromium (Brave included) may boost text sizes on its own; the HUD is sized to its tiles, so opt out. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-weight: 600; }
 canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
 #ui { position: fixed; inset: 0; pointer-events: none; }
@@ -258,6 +260,21 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .f-logo { height: calc(var(--k) * 52px); margin-right: calc(var(--k) * 8px); }
 .fbtn { display: inline-flex; align-items: center; gap: .4em; height: calc(var(--k) * 60px); padding: 0 calc(var(--k) * 18px); background: var(--c-ink); color: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-paper); border-radius: var(--r-button); font: 700 calc(var(--k) * 26px)/1 var(--font-body); white-space: nowrap; cursor: pointer; }
 .fbtn img { width: 1.05em; height: 1.05em; filter: invert(1); }
+/* A phone as the host (u02 phone grid): the host controls never leave the screen. The join line and the wordmark give
+   way first, and on a narrow footer Pause/Resume shows its icon (its label stays for screen readers). */
+.foot { container-type: inline-size; }
+.f-join, .f-room { min-width: 0; }
+.f-join { flex: 0 1 auto; }
+.f-sub { overflow: hidden; text-overflow: ellipsis; }
+.f-right { flex: 0 1 auto; min-width: 0; }
+.f-logo { flex: 0 1 auto; min-width: 0; object-fit: contain; object-position: right center; }
+.fbtn { flex: none; }
+/* The readouts (race, leader, clock) show whole or not at all: ones that don't fit wrap onto a line the footer clips. */
+.f-mid { flex-wrap: wrap; align-content: flex-start; height: calc(var(--k) * 62px); row-gap: calc(var(--k) * 40px); }
+@container (max-width: 600px) {
+  .f-row { gap: calc(var(--k) * 12px); padding: 0 calc(var(--k) * 14px); }
+  .f-pause .lbl { display: none; }
+}
 .fbtn.icon { width: calc(var(--k) * 60px); padding: 0; justify-content: center; }
 .fbtn.on, .f-pause { background: var(--c-saffron); color: var(--c-ink); border-color: var(--c-saffron); }
 .fbtn.on img, .f-pause img { filter: none; }

@@ -362,12 +362,27 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
         <div class="f-room"><span class="f-code"><small>Room</small><b class="display code">ROO7</b></span><span class="f-sub">jammers.dilger.dev · <b class="f-n tnum">0</b> players</span></div></div>
       <div class="f-mid"></div>
       <div class="f-right"><img class="f-logo" alt="Joystick Jammers" src="${asset('brand/wordmark-on-ink.svg')}">
-        <button class="fbtn f-pause" type="button">${icon('pause')}Pause</button>
+        <button class="fbtn f-pause" type="button" aria-label="Pause">${icon('pause')}<span class="lbl">Pause</span></button>
         <button class="fbtn icon f-full" type="button" aria-label="Fullscreen">${icon('maximize')}</button>
         <button class="fbtn icon f-menu" type="button" aria-label="Host menu" aria-expanded="false">${icon('menu')}</button></div>
     </div>`;
   ui.append(f);
   const mid = f.querySelector('.f-mid'), dEl = f.querySelector('.f-diag');
+  // A readout shows whole or not at all: on a narrow footer (a phone as the host) one that doesn't fit is hidden rather
+  // than clipped to a fragment. Re-fitted whenever the readouts or the space change size (late fonts, resizes).
+  const fitMid = () => {
+    if (!mid.querySelector('.f-read')) return;
+    const box = mid.getBoundingClientRect();
+    for (const c of mid.children) {
+      c.style.visibility = '';
+      const r = c.getBoundingClientRect();
+      // Off either side, or wrapped onto the clipped second line.
+      if (r.left < box.left - 0.5 || r.right > box.right + 0.5 || r.top > box.top + r.height / 2) c.style.visibility = 'hidden';
+    }
+  };
+  const midFit = new ResizeObserver(fitMid);
+  midFit.observe(mid);
+  document.fonts?.ready.then(fitMid);
   let state = { qr: true, caption: null, players: S.n, layout };
   const diagRows = () => {
     const cols = Math.max(1, Math.floor((W() / K() - 56 + DIAG.gapPx) / (DIAG.colPx + DIAG.gapPx)));
@@ -394,9 +409,13 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
     f.querySelector('.f-pause').style.display = noPause ? 'none' : '';
     f.classList.toggle('menu-open', menu);
     const pb = f.querySelector('.f-pause');
-    pb.innerHTML = action ? `${icon(action.icon)}${action.label}` : state.paused ? `${icon('play')}Resume` : `${icon('pause')}Pause`;
+    const [pIcon, pLabel] = action ? [action.icon, action.label] : state.paused ? ['play', 'Resume'] : ['pause', 'Pause'];
+    pb.innerHTML = `${icon(pIcon)}<span class="lbl">${pLabel}</span>`; // a narrow footer shows the icon; the label stays
+    pb.setAttribute('aria-label', pLabel);
     f.querySelector('.f-n').textContent = String(state.players);
     mid.innerHTML = menu ? menuRow() : state.caption ? `<span class="caption footcap">${esc(state.caption)}</span>` : readouts();
+    if (!menu && !state.caption) for (const c of mid.children) midFit.observe(c);
+    requestAnimationFrame(fitMid);
     const mb = f.querySelector('.f-menu');
     mb.setAttribute('aria-expanded', String(menu));
     mb.classList.toggle('on', menu);
