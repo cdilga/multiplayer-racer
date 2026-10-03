@@ -264,8 +264,8 @@ impl Sim {
             friction_slip: p.friction_slip,
             max_suspension_force: p.max_suspension_force,
         };
-        // Wheel order: front +x, front −x, rear +x, rear −x. In this right-handed frame (+y up, facing +z) +x is the
-        // car's left; Spike J's model and the look skill call +x "right", so part names wait for P1-V02's sidecar.
+        // Wheel order: front +x, front −x, rear +x, rear −x, i.e. wheel_FL, wheel_FR, wheel_RL, wheel_RR. In this
+        // right-handed frame (+y up, facing +z) +x is the car's left, as the Cruz Missile's sidecar names it (P1-V02).
         for (x, z) in [
             (p.half_track, p.axle_front_z),
             (-p.half_track, p.axle_front_z),

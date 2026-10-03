@@ -50,6 +50,12 @@ jobs:
         run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
       - name: A generated map validates (jj procgen, P1-M03a)
         run: cargo run --locked -q -p jj-tools --bin jj -- procgen --seed 42 --json
+      - name: The Cruz Missile's committed bake validates (jj validate, P1-V02)
+        run: |
+          command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
+          git lfs install --local
+          git lfs pull --include="art/vehicles/cruz-missile/cruz-missile.*"
+          cargo run --locked -q -p jj-tools --bin jj -- validate art/vehicles/cruz-missile/cruz-missile.asset.json
       - name: No Tokio (R2)
         run: scripts/ci/no-tokio.sh
       - name: cargo deny
@@ -86,3 +92,5 @@ jobs:
         run: node art/ui/poc/audio/engine/build.mjs --check
       - name: jammers-look recipes match the rendered code (P1-F11)
         run: node .claude/skills/jammers-look/example/check-recipes.mjs
+      - name: Vehicle bake is reproducible and committed; loads in three.js (P1-V02)
+        run: node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/

@@ -1,0 +1,39 @@
+{
+ "id": "cruz-missile",
+ "what": "Contract data the geometry doesn't carry (P1-V02): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into cruz-missile.asset.json. Hinges are provisional: P1-V03's production pass places hinge lines and limits. +X is the car's left.",
+ "lods": [
+  { "maxTris": 1300 },
+  { "maxTris": 900 },
+  { "maxTris": 600 }
+ ],
+ "parts": {
+  "core": { "massFraction": 0.62, "hinge": null, "collider": "convex" },
+  "front": { "massFraction": 0.08, "hinge": { "axis": [1, 0, 0], "min": -20, "max": 5 }, "collider": "convex" },
+  "back": { "massFraction": 0.07, "hinge": { "axis": [1, 0, 0], "min": -5, "max": 20 }, "collider": "convex" },
+  "door_FL": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 }, "collider": "convex" },
+  "door_RL": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 }, "collider": "convex" },
+  "door_FR": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 }, "collider": "convex" },
+  "door_RR": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 }, "collider": "convex" },
+  "wheel_FL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
+  "wheel_FR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
+  "wheel_RL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
+  "wheel_RR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" }
+ },
+ "anchors": {
+  "cam_fp": [-0.38, 1.25, -0.05],
+  "cam_tp_target": [0, 1.1, 0.4],
+  "com": [0, 0.55, 0],
+  "roof_number": [0, 1.625, -0.09],
+  "lplate_front": [0, 0.42, 2.145],
+  "lplate_rear": [0, 0.66, -2.175]
+ },
+ "anchorNotes": {
+  "cam_fp": "Driver's eye: right-hand drive, so the car's right (-X).",
+  "roof_number": "On the roof crown, midway along the painted roof (stations z 0.14 and -0.32).",
+  "lplate_front": "On the lower fascia behind the bull bar.",
+  "lplate_rear": "Between the diffuser and the tail lamps."
+ },
+ "colliderExclude": {
+  "front": "The UHF whip and its mount: a thin aerial is not a collision surface."
+ }
+}
