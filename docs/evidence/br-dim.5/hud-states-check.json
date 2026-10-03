@@ -1,0 +1,471 @@
+{
+  "summary": {
+    "runs": 65,
+    "tiles": 885,
+    "combinations": [
+      "boost,chip,poslap,name",
+      "boost,chip,poslap,name,wreck",
+      "boost,poslap,name",
+      "boost,poslap,name,wreck"
+    ],
+    "failures": 0
+  },
+  "report": [
+    {
+      "screen": "1920x1080",
+      "n": 1,
+      "tile": "1914x986",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 2,
+      "tile": "954x794",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 3,
+      "tile": "954x490",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 4,
+      "tile": "954x490",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 6,
+      "tile": "634x490",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 8,
+      "tile": "634x324",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 9,
+      "tile": "634x324",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 12,
+      "tile": "474x324",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 16,
+      "tile": "474x242",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 20,
+      "tile": "378x242",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 24,
+      "tile": "314x242",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 32,
+      "tile": "268x192",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1920x1080",
+      "n": 40,
+      "tile": "234x192",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 1,
+      "tile": "2552x1314",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 2,
+      "tile": "1272x1058",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 3,
+      "tile": "1272x653",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 4,
+      "tile": "1272x653",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 6,
+      "tile": "845x653",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 8,
+      "tile": "845x432",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 9,
+      "tile": "845x432",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 12,
+      "tile": "632x432",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 16,
+      "tile": "632x322",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 20,
+      "tile": "504x322",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 24,
+      "tile": "418x322",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 32,
+      "tile": "357x256",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "2560x1440",
+      "n": 40,
+      "tile": "312x256",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 1,
+      "tile": "1362x701",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 2,
+      "tile": "679x565",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 3,
+      "tile": "679x348",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 4,
+      "tile": "679x348",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 6,
+      "tile": "451x348",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 8,
+      "tile": "451x231",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 9,
+      "tile": "451x231",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 12,
+      "tile": "337x231",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 16,
+      "tile": "337x172",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 20,
+      "tile": "269x172",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 24,
+      "tile": "223x172",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 32,
+      "tile": "191x137",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "1366x768",
+      "n": 40,
+      "tile": "166x137",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 1,
+      "tile": "754x376",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 2,
+      "tile": "455x376",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 3,
+      "tile": "303x252",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 4,
+      "tile": "376x187",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 6,
+      "tile": "303x187",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 8,
+      "tile": "226x187",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 9,
+      "tile": "250x124",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 12,
+      "tile": "226x124",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 16,
+      "tile": "150x124",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 20,
+      "tile": "181x92",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 24,
+      "tile": "150x92",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 32,
+      "tile": "112x92",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "915x412",
+      "n": 40,
+      "tile": "112x73",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 1,
+      "tile": "408x339",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 2,
+      "tile": "408x339",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 3,
+      "tile": "408x285",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 4,
+      "tile": "408x212",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 6,
+      "tile": "284x140",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 8,
+      "tile": "202x167",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 9,
+      "tile": "202x167",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 12,
+      "tile": "202x140",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 16,
+      "tile": "202x104",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 20,
+      "tile": "133x110",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 24,
+      "tile": "133x104",
+      "compact": 0,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 32,
+      "tile": "133x74",
+      "compact": 32,
+      "bad": 0
+    },
+    {
+      "screen": "412x915",
+      "n": 40,
+      "tile": "99x81",
+      "compact": 40,
+      "bad": 0
+    }
+  ],
+  "failures": []
+}

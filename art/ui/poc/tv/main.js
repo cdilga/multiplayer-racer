@@ -94,7 +94,10 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     tr.append(pos, lap);
     const boost = el('div', 'hud-boost', '<i></i>');
     top.append(tl, tr);
-    t.append(top, boost);
+    // dim.5: the bottom row holds the boost bar (left) and a status chip (right), side by side and never stacked.
+    const bottom = el('div', 'hud-bottom');
+    bottom.append(boost);
+    t.append(top, bottom);
     if ((hudStates[seat]?.camera ?? (fp.has(seat) ? 'fp' : 'tp')) === 'fp') {
       // Segmented first person (R98): the rear-view mirror's frame over its viewport (views() adds the viewport).
       const m = FRAMING.firstPerson.mirror, at = (f) => `calc(var(--k) * 4px + (100% - var(--k) * 8px) * ${f})`;
@@ -103,8 +106,9 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       t.append(fr);
     }
     const st = hudStates[seat];
-    if (st?.status) t.append(el('div', 'hud-status', st.status === 'autopilot' ? `<span class="chip autopilot">${icon('car')}Autopilot</span>` : `<span class="chip reconnecting">${icon('wifi-off')}Reconnecting…</span>`));
-    if (st?.wreck) t.append(el('div', 'hud-centre', `<div class="display italic wreck-word">Wrecked!</div><div class="wreck-back tnum">Back in <b class="cd">3</b> s</div>`));
+    // A compact tile keeps the chip's icon and colour and drops its word (the label stays for screen readers).
+    if (st?.status) bottom.append(el('div', 'hud-status', st.status === 'autopilot' ? `<span class="chip autopilot" aria-label="Autopilot">${icon('car')}<span class="lbl">Autopilot</span></span>` : `<span class="chip reconnecting" aria-label="Reconnecting">${icon('wifi-off')}<span class="lbl">Reconnecting…</span></span>`));
+    if (st?.wreck) t.append(el('div', 'hud-centre', `<div class="display italic wreck-word">Wrecked!</div><div class="wreck-back tnum" aria-label="Back in 3 seconds"><span class="lbl">Back in </span><b class="cd">3</b> s</div>`));
     if (st?.identify) { t.classList.add('identify'); t.prepend(cooee(info.num)); } // under the HUD: the pills stay readable
     if (!S.hud) t.replaceChildren();
     layer.append(t);
@@ -225,7 +229,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       if (!s) continue;
       if (t.last.place !== s.place) { const [n, suf] = ordinal(s.place); t.pos.innerHTML = `${n}<sup>${suf}</sup>`; t.last.place = s.place; }
       if (t.last.lap !== s.lap) { t.lap.textContent = `Lap ${s.lap}/${world.laps}`; t.last.lap = s.lap; }
-      const b = Math.round(s.boost * 100);
+      const b = Math.round((hudStates[seat]?.boost ?? s.boost) * 100);
       if (t.last.boost !== b) { t.boost.style.width = `${b}%`; t.last.boost = b; }
     }
     // filler standings
@@ -526,7 +530,12 @@ const SETUP = {
     world.setCars(S.n, S.base);
     ui.append(gutterBackground({ x: 0, y: 0, w: W(), h: H() }));
     const seats = () => Array.from({ length: S.n }, (_, i) => i + 1);
-    const hudStates = { 2: { status: 'autopilot' }, 4: { status: 'reconnecting' }, 5: { wreck: true }, 3: { identify: true }, 6: { camera: 'fp' } };
+    // &states=matrix (dim.5) gives the seats every combination of the tile states in turn: status (none, Autopilot,
+    // Reconnecting) × Wrecked × boost (empty, full), twelve combinations, so one page shows them all at one tile size.
+    const combo = (i) => ({ status: [null, 'autopilot', 'reconnecting'][i % 3], wreck: Math.floor(i / 3) % 2 === 1, boost: Math.floor(i / 6) % 2 });
+    const hudStates = S.p.get('states') === 'matrix'
+      ? Object.fromEntries(seats().map((s) => [s, combo(s - 1)]))
+      : { 2: { status: 'autopilot' }, 4: { status: 'reconnecting' }, 5: { wreck: true }, 3: { identify: true }, 6: { camera: 'fp' } };
     world.setOutlines([3]);
     const g = gridScene({ seats, hudStates, fp: S.fp });
     g.relayout(false);

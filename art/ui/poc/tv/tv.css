@@ -28,9 +28,11 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .hud-pos { font-size: 1.15em; line-height: 1; color: var(--c-ink); }
 .hud-pos sup { font-size: .6em; vertical-align: .45em; margin-left: .04em; text-transform: none; }
 .hud-lap { font-size: 1em; line-height: 1; color: var(--c-ink); font-weight: 700; }
-.hud-boost { position: absolute; left: calc(var(--hud) * .55); bottom: calc(var(--hud) * .55); width: 28%; min-width: calc(var(--k) * 70px); height: calc(var(--hud) * .5); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
+/* dim.5: the bottom row: boost bar on the left, a status chip (Autopilot, Reconnecting) on the right, centred on one line. */
+.hud-bottom { position: absolute; left: calc(var(--hud) * .55); right: calc(var(--hud) * .55); bottom: calc(var(--hud) * .55); display: flex; align-items: center; justify-content: space-between; gap: calc(var(--hud) * .4); height: calc(var(--hud) * 1.5); }
+.hud-boost { position: relative; flex: 0 1 28%; min-width: calc(var(--k) * 70px); height: calc(var(--hud) * .5); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; background: rgb(21 32 58 / .55); overflow: hidden; }
 .hud-boost i { display: block; height: 100%; background: var(--c-saffron); }
-.hud-status { position: absolute; left: calc(var(--hud) * .5); bottom: calc(var(--hud) * 1.4); display: flex; gap: calc(var(--hud) * .3); }
+.hud-status { flex: none; display: flex; gap: calc(var(--hud) * .3); margin-left: auto; }
 .tile .chip { font-size: var(--hud); height: 1.5em; padding: 0 .6em; }
 .chip { display: inline-flex; align-items: center; gap: .35em; padding: .18em .6em; border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: 999px; font-size: calc(var(--k) * 24px); font-weight: 700; line-height: 1.1; white-space: nowrap; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
 .chip img { width: 1em; height: 1em; }
@@ -211,7 +213,18 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 /* compact HUD on tiny tiles (64+ tiles, a phone host): the name goes; number, place and lap stay on one line */
 .tile.compact .hud-name { display: none; }
 .tile.compact .hud-tr { padding: 0 .3em; gap: .3em; }
-.tile.compact .hud-boost { border-width: calc(var(--k) * 2px); }
+.tile.compact .hud-boost { border-width: calc(var(--k) * 2px); flex-basis: 40%; min-width: calc(var(--k) * 44px); }
+.tile.compact .chip { padding: 0 .35em; gap: 0; }
+.tile.compact .chip .lbl { display: none; }
+/* Compact tiles (the smallest grids, e.g. 32-40 players on a phone-sized host) are short: the rows hug the edges and
+   Wrecked shrinks to a word over its seconds, so it fits between the rows instead of covering them (dim.5). */
+.tile.compact .hud-top { top: calc(var(--hud) * .3); }
+.tile.compact .hud-bottom { bottom: calc(var(--hud) * .3); height: calc(var(--hud) * 1.2); }
+.tile.compact .chip { font-size: calc(var(--hud) * .8); height: 1.4em; }
+.tile.compact .hud-centre { top: 50%; }
+.tile.compact .wreck-word { font-size: calc(var(--hud) * 1.15); line-height: 1; -webkit-text-stroke-width: calc(var(--k) * 2px); text-shadow: 0 calc(var(--k) * 2px) 0 var(--c-ink); }
+.tile.compact .wreck-back { height: 1.4em; margin-top: calc(var(--k) * 2px); padding: 0 .35em; border-width: calc(var(--k) * 2px); font-size: calc(var(--hud) * .75); }
+.tile.compact .wreck-back .lbl { display: none; }
 .filler.cell { box-shadow: inset 0 0 0 calc(var(--k) * 3px) var(--c-paper-line, rgb(21 32 58 / .25)); }
 .codecard .code { font-size: calc(var(--k) * 56px); }
 .joinchip small { margin-left: calc(var(--k) * 8px); }
