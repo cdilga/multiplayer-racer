@@ -23,3 +23,5 @@
 - It invents chrome from H4's layout (bottom bars, QR codes, "Hide debris", counters, "32/32 joined" that reads
   as a player cap). Say "nothing else: no bottom bar, no QR code, no buttons, no counters" and check every pick
   for caps and invented features before using it.
+
+- Muse returns **WebP** whatever the request says; the first frames were saved as `.png` by mistake (browsers sniff the bytes, so nothing looked wrong). `generate.mjs` now names files by their magic bytes.

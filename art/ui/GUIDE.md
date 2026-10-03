@@ -17,7 +17,7 @@ image for each element. Each decision below is **one worked proposal with a one-
 | Font stress render | `node art/ui/sheets/render.mjs fonts` | `fonts.png`, `fonts.json` |
 | Component sheet (every state, keyboard and gamepad focus) | `node art/ui/sheets/render.mjs components` | `components.png` |
 | Brand sheet (wordmark, icons, QR rule) | `node art/ui/sheets/render.mjs brand` | `brand.png` |
-| Style frames | `node art/ui/frames/generate.mjs <name>` | `art/ui/frames/*.png` |
+| Style frames | `node art/ui/frames/generate.mjs <name>` | `art/ui/frames/*.webp` |
 
 ## 1. References
 
@@ -47,9 +47,9 @@ tokens and this guide are what ships.
 | Focus (keyboard and gamepad) | `components.png` §09 |
 | Wordmark, app icon, favicon | H4's top-left lockup, `brand.png` |
 | QR and room code | H4's "Jump in · ROO7" block (minus H2's kangaroo), `brand.png` |
-| Phone controller | M2, style frame `frames/phone-controller.png` |
-| TV race grid and per-tile HUD | style frame `frames/tv-race-grid.png`, Spike J's Cruz Missile |
-| Lobby | H2's layout with H4's chrome, style frame `frames/lobby-32.png` |
+| Phone controller | M2, style frame `frames/phone-controller.webp` |
+| TV race grid and per-tile HUD | style frame `frames/tv-race-grid.webp`, Spike J's Cruz Missile |
+| Lobby | H2's layout with H4's chrome, style frame `frames/lobby-32.webp` |
 | Results and intermission | H4 |
 
 ## 2. Principles

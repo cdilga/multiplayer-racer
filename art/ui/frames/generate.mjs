@@ -4,7 +4,7 @@
 //   Prompt: prompts/<name>.txt, used verbatim (MASTER + UI block + H4 direction + subject + GUARDS).
 //   References go to /v1/images/edits: H4 (the house style, always first), plus Spike J's Cruz Missile render
 //   for TV frames, or M2's controls and the car render for the phone frame.
-//   Output: <name><suffix>-<k>.png beside this script; every call appends to ledger.jsonl (what was asked,
+//   Output: <name><suffix>-<k>.webp beside this script (named by its bytes: Muse returns WebP); every call appends to ledger.jsonl (what was asked,
 //   what came back, what it cost).
 // Key: MUSE_API_KEY from the environment or the repo's git-ignored .env; never printed or written anywhere.
 // Budget: the owner allowed $2.50 (250 images) on 2026-10-03; the ledger refuses a call that would pass it.
@@ -68,8 +68,12 @@ let body;
 try { body = JSON.parse(text); } catch { body = { raw: text.slice(0, 400) }; }
 const images = Array.isArray(body.data) ? body.data.filter((d) => d.b64_json) : [];
 const files = images.map((d, k) => {
-  const file = `${name}${suffix}-${k + 1}.png`;
-  writeFileSync(join(here, file), Buffer.from(d.b64_json, 'base64'));
+  const bytes = Buffer.from(d.b64_json, 'base64');
+  // Muse returns WebP; name the file by its bytes, not by what was asked for.
+  const tag = (a, b) => bytes.subarray(a, b).toString('latin1');
+  const ext = tag(0, 4) === 'RIFF' && tag(8, 12) === 'WEBP' ? 'webp' : tag(1, 4) === 'PNG' ? 'png' : bytes[0] === 0xff && bytes[1] === 0xd8 ? 'jpg' : 'bin';
+  const file = `${name}${suffix}-${k + 1}.${ext}`;
+  writeFileSync(join(here, file), bytes);
   return file;
 });
 const entry = {

@@ -1,0 +1,43 @@
+P1-D01 receipt: Gitea primary, push to both remotes, CI on Gitea, ci-status.sh
+Written 2026-10-03 by GentlePike (Mac). Gitea http://192.168.11.12:3001 (login gitea-lan).
+
+== Repos (tea)
+$ tea repos create --login gitea-lan --name multiplayer-racer --private --description "Joystick Jammers (primary for 0.2; …)"
+  http://192.168.11.12:3001/cdilga/multiplayer-racer
+$ tea repos create --login gitea-lan --name jammers-deploy --private --description "Joystick Jammers deploy workflows, secrets, …"
+  http://192.168.11.12:3001/cdilga/jammers-deploy
+$ tea api --login gitea-lan -X PATCH /repos/cdilga/multiplayer-racer -d '{"default_branch":"v0.2-revamp"}'   -> v0.2-revamp
+
+== First push (LFS first, then the branch and the v0.1-final tag)
+$ git remote add gitea http://192.168.11.12:3001/cdilga/multiplayer-racer.git   (SSH :2222 is closed; HTTP + keychain, as Physical Soccer)
+$ git lfs push --all gitea v0.2-revamp    -> Uploading LFS objects: 100% (1191/1191), 394 MB
+$ git push gitea v0.2-revamp              -> * [new branch] v0.2-revamp -> v0.2-revamp
+$ git push gitea v0.1-final               -> * [new tag] v0.1-final -> v0.1-final
+$ git branch -u gitea/v0.2-revamp v0.2-revamp
+
+== CI on Gitea (shared ubuntu-latest runner)
+run 994 on 2ae8e16 (first push, before the rust job moved): web success 46 s, checks success 36 s, rust waiting (no `rust` runner)
+run 995 on 3d54f6f (scripts/push.sh: Gitea, then GitHub):
+  rust   success  04:49:13 -> 04:54:14  (5 min 1 s, cold: toolchain install + workspace check/clippy/deny)
+  web    success  04:54:15 -> 04:54:45
+  checks success  04:54:45 -> 04:55:15
+  http://192.168.11.12:3001/cdilga/multiplayer-racer/actions/runs/995
+  GitHub: push: v0.2-revamp -> origin (3d54f6f), the same scripts/push.sh call
+
+== scripts/ci-status.sh exit codes
+$ scripts/ci-status.sh 3d54f6f            -> 3 lanes success, run URL last, exit 0
+$ PATH=<stand-in tea returning a failed lane>:$PATH scripts/ci-status.sh   -> failure CI / rust (push) … exit 1
+  (the warm-cache run below records exit 2 for an unpushed commit)
+
+== Clean clone fetches LFS from Gitea
+$ GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch v0.2-revamp http://192.168.11.12:3001/cdilga/multiplayer-racer.git
+$ git lfs pull --include="art/ui/frames/*.png,docs/evidence/P1-U05/motion/reel.webm"
+  art/ui/frames/tv-race-grid.png: RIFF (little-endian) data, Web/P image   (pointer before the pull)
+  docs/evidence/P1-U05/motion/reel.webm: WebM
+  git lfs env: Endpoint=http://192.168.11.12:3001/cdilga/multiplayer-racer.git/info/lfs (auth=basic)
+
+== Not done here (owner action; see docs/deploy/README.md "Runners")
+Re-registering Physical Soccer's repository-scoped `rust` runners (TrueNAS, triton) as shared was refused to this session by
+its safety classifier (it changes another project's running CI). Until the owner does it, the rust job runs on the shared
+ubuntu-latest runner with the actions cache. Images publish to the Gitea registry from jammers-deploy (D02/D04), where the
+secrets live; no GitHub Actions or GHCR is used.

@@ -5,10 +5,10 @@ They show the house style; they are not mocks of the real UI (those are `../poc/
 
 | Frame | What it shows |
 |---|---|
-| `tv-race-grid.png` | The TV during a race with eight players: a 4 × 2 grid of live views (six chase, two bonnet cameras) with the per-tile HUD (badge, name, position, lap, boost) and nothing else on screen |
-| `lobby-32.png` | The TV lobby at 32 players: QR and room code, the roster in four columns with Ready ticks and "choosing…", the Start race button, the painted warm-up behind the chrome |
-| `phone-controller.png` | The phone controller, sideways, in a dark room (DRIVE and ACTION sticks, boost meter, HUD strip, Find my car) beside the phone lobby, upright (badge, name reroll, car still, Ready) |
-| `tv-derby-overview.png` | The derby from a fixed high camera: sixteen battered cars in a quarry bowl with nameplates, debris lying where it fell |
+| `tv-race-grid.webp` | The TV during a race with eight players: a 4 × 2 grid of live views (six chase, two bonnet cameras) with the per-tile HUD (badge, name, position, lap, boost) and nothing else on screen |
+| `lobby-32.webp` | The TV lobby at 32 players: QR and room code, the roster in four columns with Ready ticks and "choosing…", the Start race button, the painted warm-up behind the chrome |
+| `phone-controller.webp` | The phone controller, sideways, in a dark room (DRIVE and ACTION sticks, boost meter, HUD strip, Find my car) beside the phone lobby, upright (badge, name reroll, car still, Ready) |
+| `tv-derby-overview.webp` | The derby from a fixed high camera: sixteen battered cars in a quarry bowl with nameplates, debris lying where it fell |
 
 **Placeholders.** Every car, number badge, name, room code and wordmark in these frames is generated and a placeholder.
 The real car is Spike J's Cruz Missile (`spikes/art-pipeline/J-cruze-lowpoly/`), the real badges and colours come from
