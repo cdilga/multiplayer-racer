@@ -11,14 +11,16 @@ use jj_fixture::{BaselineKind, Fixture, run};
 use jj_map::{Registry, load_json};
 use jj_sim::VehicleProfile;
 
-/// The S03-owned affordance rows (the shared ones, `slalom`, `air-level` and `jump-land`, live in `scenarios/feel/`).
-const S03_ROWS: [&str; 6] = [
+/// The S03-owned affordance rows (the shared ones, `slalom`, `air-level`, `jump-land` and `drift-entry-exit`, live in
+/// `scenarios/feel/`).
+const S03_ROWS: [&str; 7] = [
     "fwd-back-rest",
     "brake-stop",
     "turn-around",
     "unstick-wall",
     "authority",
     "rejoin-route",
+    "boost-line",
 ];
 
 fn repo() -> PathBuf {
@@ -71,7 +73,7 @@ fn every_feel_scenario_and_s03_affordance_row_holds_its_envelopes_and_beats_its_
             fx.scenario
         );
         assert!(
-            fx.cars.len() >= 2,
+            fx.cars.len() + fx.grid.unwrap_or(0) >= 2,
             "{}: several starting states",
             fx.scenario
         );

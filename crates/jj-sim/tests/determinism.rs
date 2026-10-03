@@ -22,6 +22,7 @@ fn session(seed: u64, ticks: u64) -> Sim {
             throttle: if phase < 2 { 26_000 } else { 0 },
             steer: if phase == 1 { 6_000 * k } else { 0 },
             brake: if phase == 3 { 20_000 } else { 0 },
+            ..Default::default()
         };
         sim.set_input(a, input(1));
         sim.set_input(b, input(-1));
@@ -89,6 +90,7 @@ fn placing_a_car_is_journaled_so_the_run_still_replays() {
                 throttle: 20_000,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         live.step();
@@ -123,6 +125,7 @@ fn placing_a_car_is_journaled_so_the_run_still_replays() {
                 throttle: 20_000,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         control.step();

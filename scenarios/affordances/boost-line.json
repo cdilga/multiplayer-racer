@@ -1,0 +1,42 @@
+{
+ "scenario": "boost-line",
+ "what": "§7.3a 'go meaningfully faster with boost than without, and boost-forever isn't the best line' (P1-S03b). Two Cruz Missiles lap the greybox on the autopilot's line (it steers, throttles and brakes; their ACTION stick passes through), one from the kerb straight and one from the grid, for 20 s. The driver presses boost on the straights and lets go before the corners, so each burst re-arms and the meter refills between them. Without boost the same line is far slower; holding boost the whole way gets one burst, because an emptied meter only restarts after a release, so it's slower too. Baselines: no input and holding the first input are the same as those; mashing boosts at random.",
+ "map": "maps/greybox-loop.json",
+ "seed": 53,
+ "ticks": 2400,
+ "grid": 1,
+ "cars": [
+  {"routePoint": 100, "lateral": 0, "linvel": [-10, 0, 0]}
+ ],
+ "race": {"laps": 3, "atTick": 0},
+ "autopilot": [
+  {"tick": 0, "car": 0, "on": true},
+  {"tick": 0, "car": 1, "on": true}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 250, "boost": true},
+  {"car": 0, "fromTick": 1100, "toTick": 1650, "boost": true},
+  {"car": 0, "fromTick": 2250, "toTick": 2400, "boost": true},
+  {"car": 1, "fromTick": 0, "toTick": 500, "boost": true},
+  {"car": 1, "fromTick": 1650, "toTick": 2150, "boost": true}
+ ],
+ "expect": [
+  {"car": 0, "metric": "progressM", "min": 235, "max": 275},
+  {"car": 1, "metric": "progressM", "min": 200, "max": 235},
+  {"car": 0, "metric": "boostTimeS", "min": 4, "max": 7},
+  {"car": 1, "metric": "boostTimeS", "min": 3.5, "max": 6},
+  {"car": 0, "metric": "wrecks", "min": 0, "max": 0},
+  {"car": 0, "metric": "minUpY", "min": 0.9, "max": 1.001},
+  {"car": 1, "metric": "wrecks", "min": 0, "max": 0},
+  {"car": 1, "metric": "minUpY", "min": 0.9, "max": 1.001}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold", "no-action", "boost-forever"],
+  "differ": [
+   {"car": 0, "metric": "progressM", "by": 8.0, "more": true, "against": ["no-input", "hold", "no-action", "boost-forever"]},
+   {"car": 1, "metric": "progressM", "by": 8.0, "more": true, "against": ["no-input", "hold", "no-action", "boost-forever"]},
+   {"car": 0, "metric": "boostTimeS", "by": 0.5, "against": ["mash"]},
+   {"car": 1, "metric": "boostTimeS", "by": 0.5, "against": ["mash"]}
+  ]
+ }
+}

@@ -5,12 +5,16 @@
 use serde::{Deserialize, Serialize};
 
 /// One car's controls for a tick, quantised like the wire (`jj_types::axis`): throttle and steer −32767..32767,
-/// brake 0..32767.
+/// brake 0..32767, and the ACTION stick's held sectors (§7.3): left is the handbrake drift, right is boost.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct DriveInput {
     pub throttle: i16,
     pub steer: i16,
     pub brake: i16,
+    #[serde(default)]
+    pub drift: bool,
+    #[serde(default)]
+    pub boost: bool,
 }
 
 impl DriveInput {

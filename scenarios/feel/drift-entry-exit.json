@@ -1,0 +1,44 @@
+{
+ "scenario": "drift-entry-exit",
+ "what": "§7.3 Handbrake drift, §7.3a 'enter and leave a drift on purpose, and gain boost from it' (P1-S03b). Two Cruz Missiles at 15 and 18 m/s turn in, flick the handbrake (ACTION left) for half a second and counter-steer out: the rear steps out (25–60° of slip), the drift charges the boost meter, and within a second of letting go the tyres grip again and the car drives on. Baselines: no input, holding the turn-in and the same drive without the handbrake never drift or charge; mashing doesn't drift like that.",
+ "map": "maps/greybox-loop.json",
+ "seed": 43,
+ "ticks": 360,
+ "cars": [
+  {"routePoint": 4, "lateral": 3, "linvel": [15, 0, 0]},
+  {"routePoint": 40, "lateral": -3, "linvel": [18, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 30, "throttle": 0.6, "steer": 0.6},
+  {"car": 0, "fromTick": 30, "toTick": 90, "throttle": 0.7, "steer": 0.6, "drift": true},
+  {"car": 0, "fromTick": 90, "toTick": 130, "throttle": 0.7, "steer": -0.8},
+  {"car": 0, "fromTick": 130, "throttle": 0.5},
+  {"car": 1, "fromTick": 0, "toTick": 30, "throttle": 0.6, "steer": -0.6},
+  {"car": 1, "fromTick": 30, "toTick": 90, "throttle": 0.7, "steer": -0.6, "drift": true},
+  {"car": 1, "fromTick": 90, "toTick": 130, "throttle": 0.7, "steer": 0.8},
+  {"car": 1, "fromTick": 130, "throttle": 0.5}
+ ],
+ "expect": [
+  {"car": 0, "metric": "maxSlipDeg", "min": 25, "max": 60},
+  {"car": 0, "metric": "driftTimeS", "min": 0.4, "max": 0.9},
+  {"car": 0, "metric": "driftChargeGained", "min": 0.12, "max": 0.35},
+  {"car": 0, "atTick": 240, "metric": "slipDeg", "min": 0, "max": 3},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 0, "metric": "speed", "min": 8, "max": 25},
+  {"car": 1, "metric": "maxSlipDeg", "min": 25, "max": 60},
+  {"car": 1, "metric": "driftTimeS", "min": 0.4, "max": 0.9},
+  {"car": 1, "metric": "driftChargeGained", "min": 0.12, "max": 0.35},
+  {"car": 1, "atTick": 240, "metric": "slipDeg", "min": 0, "max": 3},
+  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 1, "metric": "speed", "min": 8, "max": 25}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold", "no-action"],
+  "differ": [
+   {"car": 0, "metric": "driftChargeGained", "by": 0.08, "more": true},
+   {"car": 1, "metric": "driftChargeGained", "by": 0.08, "more": true},
+   {"car": 0, "metric": "maxSlipDeg", "by": 10.0},
+   {"car": 0, "metric": "headingChangeDeg", "by": 15.0}
+  ]
+ }
+}

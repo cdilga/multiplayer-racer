@@ -284,6 +284,7 @@ fn a_shortcut_across_the_infield_doesnt_count_progress() {
                 throttle: 26_000,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         s.step();
@@ -423,6 +424,7 @@ fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
                 throttle: 0,
                 steer: 0,
                 brake: if rolling { 32_767 } else { 0 },
+                ..Default::default()
             },
         );
         s.step();
@@ -439,6 +441,7 @@ fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
                 throttle: 32_767,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         assert!(s.race().is_held(0, s.tick()));
@@ -479,6 +482,7 @@ fn a_race_with_commands_replays_to_the_same_hash() {
                 throttle: if t < 600 { 30_000 } else { 0 },
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         if t == 700 {
@@ -528,6 +532,7 @@ fn finishes_carry_a_crossing_fraction_and_progress_keeps_its_high_water_mark() {
                 throttle,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         s.step();

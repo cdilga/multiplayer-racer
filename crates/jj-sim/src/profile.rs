@@ -76,6 +76,8 @@ pub struct Tuning {
     pub side_friction_stiffness: f32,
     /// Total engine force at full throttle, N (split across the driven wheels).
     pub max_engine_force: f32,
+    /// Engine power at full throttle, W: past `power / force` m/s the force falls as power / speed (0: no limit).
+    pub max_engine_power_w: f32,
     /// Total engine force in reverse at full brake once nearly stopped, N.
     pub max_reverse_force: f32,
     /// Below this forward speed (m/s), brake reverses instead (and throttle while rolling backwards brakes).
@@ -92,6 +94,22 @@ pub struct Tuning {
     /// How much of the tyres' side forces' real lever arm rolls the body (Bullet's `rollInfluence`: 1 physical, 0 none).
     /// Rapier fixes its own at 0.1 privately; the sim puts back the difference (`crate::vehicle::ROLL_INFLUENCE_RAPIER`).
     pub roll_influence: f32,
+    /// Handbrake drift (ACTION left, §7.3): the rear tyres' grip while it's held, and how long they take to come back
+    /// (linearly) once it's let go, s.
+    pub drift_rear_grip: f32,
+    pub drift_recovery_s: f32,
+    /// Boost (ACTION right, §7.3): the meter at spawn (0..1), the extra engine force while boosting (+60 % = 0.6),
+    /// how fast boosting drains the meter and idling refills it (per s), and the extra refill while drifting (per s,
+    /// at least `drift_charge_min_slip_deg` of rear slip and `drift_charge_min_mps`).
+    pub boost_start: f32,
+    /// A burst needs this much meter to start (then runs while held until empty).
+    pub boost_min_start: f32,
+    pub boost_engine_gain: f32,
+    pub boost_drain_per_s: f32,
+    pub boost_recharge_per_s: f32,
+    pub drift_charge_per_s: f32,
+    pub drift_charge_min_slip_deg: f32,
+    pub drift_charge_min_mps: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,

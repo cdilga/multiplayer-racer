@@ -120,6 +120,37 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
     };
     match kind {
         BaselineKind::NoInput => vec![],
+        BaselineKind::NoAction => fx
+            .inputs
+            .iter()
+            .map(|i| InputSpan {
+                drift: false,
+                boost: false,
+                ..i.clone()
+            })
+            .collect(),
+        BaselineKind::BoostForever => {
+            // Every span boosts, and a span from tick 0 keeps boost held where the script has gaps, for every car
+            // (an autopiloted one too: its ACTION stick passes through).
+            let all = (fx.cars.len() + fx.grid.unwrap_or(0) + fx.drop_in.len()) as u32;
+            let mut spans: Vec<InputSpan> = (0..all)
+                .map(|car| InputSpan {
+                    car,
+                    from_tick: 0,
+                    to_tick: None,
+                    throttle: 0.0,
+                    steer: 0.0,
+                    brake: 0.0,
+                    drift: false,
+                    boost: true,
+                })
+                .collect();
+            spans.extend(fx.inputs.iter().map(|i| InputSpan {
+                boost: true,
+                ..i.clone()
+            }));
+            spans
+        }
         BaselineKind::Hold => cars
             .iter()
             .filter_map(|&car| {
@@ -141,13 +172,18 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
             let mut out = Vec::new();
             for t in (0..fx.ticks).step_by(EVERY as usize) {
                 for &car in &cars {
+                    // DRIVE anywhere; ACTION left (drift) or right (boost) a fifth of the time each.
+                    let (throttle, steer, action) =
+                        (rng.next_f32(), rng.next_f32(), rng.next_f32());
                     out.push(InputSpan {
                         car,
                         from_tick: t,
                         to_tick: Some(t + EVERY),
-                        throttle: rng.next_f32() * 2.0 - 1.0,
-                        steer: rng.next_f32() * 2.0 - 1.0,
+                        throttle: throttle * 2.0 - 1.0,
+                        steer: steer * 2.0 - 1.0,
                         brake: 0.0,
+                        drift: action < 0.2,
+                        boost: (0.2..0.4).contains(&action),
                     });
                 }
             }
@@ -191,6 +227,7 @@ pub fn run(
                 .differ
                 .iter()
                 .zip(deliberate.iter().zip(&got))
+                .filter(|(d, _)| d.against.is_empty() || d.against.contains(&kind))
                 .map(|(d, (&a, &v))| DifferResult {
                     car: d.car,
                     metric: d.metric,
@@ -198,10 +235,13 @@ pub fn run(
                     deliberate: a,
                     baseline: v,
                     by: d.by,
-                    // A metric only one run has (it stopped, it landed) differs by definition.
+                    // A metric only one of the runs has (it stopped, it landed) differs by definition; `more` needs the
+                    // deliberate run's to be the higher.
                     ok: match (a, v) {
+                        (Some(a), Some(v)) if d.more => a - v >= d.by,
                         (Some(a), Some(v)) => (a - v).abs() >= d.by,
-                        (Some(_), None) | (None, Some(_)) => true,
+                        (Some(_), None) => true,
+                        (None, Some(_)) => !d.more,
                         (None, None) => false,
                     },
                 })

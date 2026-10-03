@@ -164,6 +164,7 @@ fn a_99_car_grid_on_a_24_car_corridor_places_everyone_at_once_under_protection()
                     throttle: 30_000,
                     steer: 0,
                     brake: 0,
+                    ..Default::default()
                 },
             );
         }
@@ -215,6 +216,7 @@ fn a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state() {
                     throttle: [30_000, 24_000, 16_000][i],
                     steer: 0,
                     brake: 0,
+                    ..Default::default()
                 },
             );
         }
@@ -260,6 +262,7 @@ fn a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state() {
                 throttle: 30_000,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         s.step();
@@ -279,6 +282,7 @@ fn a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state() {
                     throttle: 0,
                     steer: 0,
                     brake: 32_767,
+                    ..Default::default()
                 },
             );
         }
@@ -288,6 +292,7 @@ fn a_mid_race_join_lands_about_3_s_behind_the_last_racer_with_its_gate_state() {
                 throttle: 0,
                 steer: 0,
                 brake: 32_767,
+                ..Default::default()
             },
         );
         s.step();
@@ -354,6 +359,7 @@ fn a_crowded_tail_still_yields_a_controllable_protected_car_within_3_s() {
                 throttle: 30_000,
                 steer: 0,
                 brake: 0,
+                ..Default::default()
             },
         );
         s.step();
@@ -459,6 +465,7 @@ fn drop_ins_and_debris_replay_to_the_same_hash() {
                     throttle: 12_000 + 4_000 * i as i16,
                     steer: 0,
                     brake: 0,
+                    ..Default::default()
                 },
             );
         }

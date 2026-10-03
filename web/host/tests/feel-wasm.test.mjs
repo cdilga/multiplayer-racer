@@ -10,7 +10,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const S03_ROWS = ['fwd-back-rest', 'brake-stop', 'turn-around', 'unstick-wall', 'authority', 'rejoin-route'];
+const S03_ROWS = ['fwd-back-rest', 'brake-stop', 'turn-around', 'unstick-wall', 'authority', 'rejoin-route', 'boost-line'];
 
 async function bank() {
   const feel = (await readdir(join(repo, 'scenarios/feel'))).filter((f) => f.endsWith('.json')).sort();

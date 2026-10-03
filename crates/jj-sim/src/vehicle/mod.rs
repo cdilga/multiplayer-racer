@@ -35,11 +35,79 @@ fn stick(input: DriveInput) -> (f32, f32) {
     (throttle.max(0.0), down)
 }
 
+/// A car's ACTION-stick state (§7.3): the boost meter (0..1) and how far into a drift the rear tyres are (0 gripping,
+/// 1 drifting).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct ActionState {
+    pub boost: f32,
+    pub drift: f32,
+    /// Boosting this tick (held and the meter not empty).
+    pub boosting: bool,
+    /// Boost can start: false once a burst has emptied the meter, until boost is let go (re-armed on release, like
+    /// the ACTION stick's sectors).
+    pub armed: bool,
+}
+
+impl ActionState {
+    pub fn new(p: &VehicleProfile) -> Self {
+        Self {
+            boost: p.tuning.boost_start.clamp(0.0, 1.0),
+            drift: 0.0,
+            boosting: false,
+            armed: true,
+        }
+    }
+
+    /// One tick: the drift blend follows the handbrake (on at once, back to grip over `drift_recovery_s`); boosting
+    /// drains the meter, not boosting refills it, and a real drift (rear slip and speed over their minimums) refills
+    /// more.
+    pub fn update(
+        &mut self,
+        p: &VehicleProfile,
+        input: DriveInput,
+        rear_slip_deg: f32,
+        speed: f32,
+        dt: f32,
+    ) {
+        let t = &p.tuning;
+        self.drift = if input.drift {
+            1.0
+        } else {
+            (self.drift - dt / t.drift_recovery_s).max(0.0)
+        };
+        // A burst starts from `boost_min_start` of meter and runs while held, down to empty; an empty meter ends it
+        // until boost is let go. So holding boost forever is one burst, and boosting again means choosing when
+        // (§7.3a "boost-forever isn't the best line").
+        if !input.boost {
+            self.armed = true;
+        }
+        self.boosting = input.boost
+            && self.armed
+            && (self.boost >= t.boost_min_start || (self.boosting && self.boost > 0.0));
+        if self.boosting {
+            self.boost -= t.boost_drain_per_s * dt;
+            if self.boost <= 0.0 {
+                self.armed = false;
+            }
+        } else {
+            self.boost += t.boost_recharge_per_s * dt;
+        }
+        if self.drift > 0.5
+            && rear_slip_deg >= t.drift_charge_min_slip_deg
+            && speed >= t.drift_charge_min_mps
+        {
+            self.boost += t.drift_charge_per_s * dt;
+        }
+        self.boost = self.boost.clamp(0.0, 1.0);
+    }
+}
+
 /// The four wheels' commands (FL, FR, RL, RR) for `input` at `forward_speed` m/s, on ground with `grip[i]` under wheel
-/// `i`, for a tick of `dt` seconds.
+/// `i`, for a tick of `dt` seconds, with the car's ACTION state (`action.update` already run this tick).
 pub fn wheel_commands(
     p: &VehicleProfile,
     input: DriveInput,
+    action: ActionState,
     forward_speed: f32,
     grip: [f32; 4],
     dt: f32,
@@ -53,8 +121,25 @@ pub fn wheel_commands(
         Drive::All => true,
     };
     let n_driven = (0..4).filter(|&i| driven(i)).count() as f32;
-    // Down brakes while rolling forward and reverses near rest; up drives forward, but brakes while rolling backwards.
-    let (engine, braking) = if brake > 0.0 {
+    // Boost is full forward drive and then some, whatever DRIVE says: letting go of it is how a booster slows for a
+    // corner (§7.3a "boost-forever isn't the best line"). Otherwise down brakes while rolling forward and reverses near
+    // rest, and up drives forward but brakes while rolling backwards.
+    // Forward drive is power-limited: the force falls as power / speed once past the crossover, so a car has a top
+    // speed and boost is worth most at low speed (a corner exit), least flat out.
+    let drive = |force: f32, power: f32| {
+        if t.max_engine_power_w > 0.0 {
+            force.min(power / forward_speed.max(1.0))
+        } else {
+            force
+        }
+    };
+    let (engine, braking) = if action.boosting {
+        let gain = 1.0 + t.boost_engine_gain;
+        (
+            drive(t.max_engine_force * gain, t.max_engine_power_w * gain),
+            0.0,
+        )
+    } else if brake > 0.0 {
         if forward_speed > t.reverse_below_mps {
             (0.0, brake)
         } else {
@@ -63,8 +148,16 @@ pub fn wheel_commands(
     } else if throttle > 0.0 && forward_speed < -t.reverse_below_mps {
         (0.0, throttle)
     } else {
-        (throttle * t.max_engine_force, 0.0)
+        (
+            drive(
+                throttle * t.max_engine_force,
+                throttle * t.max_engine_power_w,
+            ),
+            0.0,
+        )
     };
+    // The handbrake drift loosens the rear tyres.
+    let rear_grip = 1.0 - action.drift * (1.0 - t.drift_rear_grip);
     let lock = p.steer_lock(forward_speed);
     let mut out = [WheelCommand::default(); 4];
     for (i, w) in out.iter_mut().enumerate() {
@@ -75,7 +168,7 @@ pub fn wheel_commands(
         } else if driven(i) {
             w.engine_force = engine / n_driven;
         }
-        w.friction_slip = t.friction_slip * grip[i];
+        w.friction_slip = t.friction_slip * grip[i] * if i >= 2 { rear_grip } else { 1.0 };
     }
     out
 }
@@ -117,21 +210,43 @@ mod tests {
             throttle: quantise_axis(throttle),
             steer: quantise_axis(steer),
             brake: quantise_axis(brake),
+            ..Default::default()
         }
     }
 
     #[test]
     fn brake_brakes_when_rolling_and_reverses_near_rest() {
         let p = VehicleProfile::cruz();
-        let rolling = wheel_commands(&p, input(0.0, 0.0, 1.0), 10.0, [1.0; 4], 1.0 / 120.0);
+        let rolling = wheel_commands(
+            &p,
+            input(0.0, 0.0, 1.0),
+            ActionState::default(),
+            10.0,
+            [1.0; 4],
+            1.0 / 120.0,
+        );
         assert!(
             rolling
                 .iter()
                 .all(|w| w.brake_impulse > 0.0 && w.engine_force == 0.0)
         );
-        let stopped = wheel_commands(&p, input(0.0, 0.0, 1.0), 0.0, [1.0; 4], 1.0 / 120.0);
+        let stopped = wheel_commands(
+            &p,
+            input(0.0, 0.0, 1.0),
+            ActionState::default(),
+            0.0,
+            [1.0; 4],
+            1.0 / 120.0,
+        );
         assert!(stopped[2].engine_force < 0.0 && stopped.iter().all(|w| w.brake_impulse == 0.0));
-        let backwards = wheel_commands(&p, input(1.0, 0.0, 0.0), -5.0, [1.0; 4], 1.0 / 120.0);
+        let backwards = wheel_commands(
+            &p,
+            input(1.0, 0.0, 0.0),
+            ActionState::default(),
+            -5.0,
+            [1.0; 4],
+            1.0 / 120.0,
+        );
         assert!(
             backwards
                 .iter()
@@ -145,11 +260,19 @@ mod tests {
         let slow = wheel_commands(
             &p,
             input(0.0, 1.0, 0.0),
+            ActionState::default(),
             0.0,
             [1.0, 0.8, 0.7, 0.9],
             1.0 / 120.0,
         );
-        let fast = wheel_commands(&p, input(0.0, 1.0, 0.0), 30.0, [1.0; 4], 1.0 / 120.0);
+        let fast = wheel_commands(
+            &p,
+            input(0.0, 1.0, 0.0),
+            ActionState::default(),
+            30.0,
+            [1.0; 4],
+            1.0 / 120.0,
+        );
         assert!(fast[0].steering < slow[0].steering && slow[2].steering == 0.0);
         let base = p.tuning.friction_slip;
         assert_eq!(

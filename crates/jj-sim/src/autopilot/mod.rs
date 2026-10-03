@@ -220,6 +220,9 @@ impl Autopilot {
             throttle: mix(self.last_out.throttle, player.throttle),
             steer: mix(self.last_out.steer, player.steer),
             brake: mix(self.last_out.brake, player.brake),
+            // The ACTION stick's held sectors are the player's own from the first handback tick.
+            drift: player.drift,
+            boost: player.boost,
         })
     }
 
@@ -304,6 +307,7 @@ impl Autopilot {
             throttle: quantise_axis(throttle),
             steer: quantise_axis(steer),
             brake: quantise_axis(brake),
+            ..DriveInput::default()
         };
         self.last_out = out;
         self.state = Some(AutopilotState {

@@ -75,6 +75,8 @@ struct Car {
     applied: DriveInput,
     /// Bumps on every teleport (placement, respawn): renderers never interpolate across a change of life (P1-S02).
     life: u32,
+    /// The ACTION stick's state: boost meter and drift (P1-S03b).
+    action: vehicle::ActionState,
 }
 
 /// What a car looks like right now (for scenarios, receipts and the introspection surface).
@@ -657,6 +659,7 @@ impl Sim {
             autopilot: None,
             applied: DriveInput::default(),
             life: 0,
+            action: vehicle::ActionState::new(p),
         });
     }
 
@@ -702,7 +705,13 @@ impl Sim {
                     };
                     let (out, recover) =
                         ap.drive(&self.path, pose, p.tuning.max_steer_rad, wheelbase, tick);
-                    input = out;
+                    // The ACTION stick passes through (P1-S03b): an idle player's is neutral, a bot's or a scenario's
+                    // boost and drift ride on the autopilot's line. Only DRIVE moving counts as taking back over.
+                    input = DriveInput {
+                        drift: car.input.drift,
+                        boost: car.input.boost,
+                        ..out
+                    };
                     if recover {
                         stuck.push(id);
                     }
@@ -718,13 +727,31 @@ impl Sim {
                 let iso = *b.position();
                 let fwd = iso.rotation * Vector::Z;
                 let forward_speed = b.linvel().dot(fwd);
+                // The rear tyres' slip from last tick's contacts decides the drift's boost charge, so libm.
+                let side = (iso.rotation * Vector::Y).cross(fwd);
+                let rear_slip = car.vehicle.wheels()[2..]
+                    .iter()
+                    .filter(|w| w.raycast_info().is_in_contact)
+                    .map(|w| {
+                        let v = b.velocity_at_point(w.raycast_info().hard_point_ws);
+                        let (vf, vs) = (v.dot(fwd), v.dot(side));
+                        if libm::hypotf(vf, vs) < 0.5 {
+                            0.0
+                        } else {
+                            libm::fabsf(libm::atan2f(vs, libm::fabsf(vf))).to_degrees()
+                        }
+                    })
+                    .fold(0.0, f32::max);
+                car.action
+                    .update(&p, input, rear_slip, b.linvel().length(), DT);
                 let mut grip = [1.0; 4];
                 for (i, g) in grip.iter_mut().enumerate() {
                     let [x, y, z] = p.geometry.wheels[i];
                     let at = iso * Vector::new(x, y, z);
                     *g = p.grip(vehicle::surface_at(&self.terrain, at.x, at.z));
                 }
-                let commands = vehicle::wheel_commands(&p, input, forward_speed, grip, DT);
+                let commands =
+                    vehicle::wheel_commands(&p, input, car.action, forward_speed, grip, DT);
                 for (w, c) in car.vehicle.wheels_mut().iter_mut().zip(commands) {
                     w.steering = c.steering;
                     w.engine_force = c.engine_force;
@@ -897,6 +924,11 @@ impl Sim {
         )
     }
 
+    /// A car's ACTION-stick state: its boost meter, how far into a drift it is, and whether it's boosting (P1-S03b).
+    pub fn action_state(&self, car: CarId) -> Option<vehicle::ActionState> {
+        self.cars.get(car.0 as usize).map(|c| c.action)
+    }
+
     /// The player's controls for `car` (what `set_input` last gave it).
     pub fn input(&self, car: CarId) -> Option<DriveInput> {
         self.cars.get(car.0 as usize).map(|c| c.input)
@@ -948,6 +980,10 @@ impl Sim {
         }
         h.update(&race);
         for c in &self.cars {
+            for f in [c.action.boost, c.action.drift] {
+                h.update(f.to_bits().to_le_bytes());
+            }
+            h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
             for w in c.vehicle.wheels() {
                 for f in [
                     w.rotation,

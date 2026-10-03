@@ -28,6 +28,7 @@ fn input(throttle: f32, steer: f32, brake: f32) -> DriveInput {
         throttle: quantise_axis(throttle),
         steer: quantise_axis(steer),
         brake: quantise_axis(brake),
+        ..Default::default()
     }
 }
 

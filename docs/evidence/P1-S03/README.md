@@ -85,3 +85,25 @@ the value, whether the run held its envelopes, and every outcome-signature metri
 
 The sweep shows lock only matters at low speed. Heading change in 0.5 s at 5 m/s rises from 14.2° to 22.2° across the
 range. At 15 and 30 m/s it stays near 24° and 14°: there the tyres' grip, not the lock, sets the turn.
+
+# P1-S03b: handbrake drift and boost
+
+Child `.2`. The ACTION stick's held sectors (jj-input) travel through the host's controls into the sim's journaled
+`DriveInput` (`drift`, `boost`). `host/tests.rs` `the_action_stick_reaches_the_sim_as_boost_then_drift` follows a
+phone's ACTION right to boosting and ACTION left to drifting. The snapshot carries `boosting`/`drifting` flags and the
+boost meter for the renderer and HUD.
+
+| §7.3 / §7.3a | Mechanic (profile numbers, TUNE) |
+|---|---|
+| Handbrake drift, ACTION left | rear friction slip × 0.35 at once, linear recovery over 0.4 s; drifting (rear slip ≥ 10° and ≥ 5 m/s) charges the meter 0.25/s |
+| Boost, ACTION right | meter 0..1 (spawn 0.5), drains 0.35/s while boosting, refills 0.12/s; +60 % engine force; a burst needs 0.25 to start, overrides braking, and an emptied meter re-arms only on release |
+
+The bank (Mac run, 2026-10-03; native = WASM hash, as for S03a):
+
+| Scenario | Cars | What it shows |
+|---|---|---|
+| `feel/drift-entry-exit` | 2 | A 0.5 s flick at 15 and 18 m/s. Slip peaks at 31° and 39°, a 71° and 102° turn, +0.19 meter charged, back under 1° of slip 1.25 s after release. No input, holding the turn-in and the same drive without the handbrake (`no-action`) never drift or charge. |
+| `feel/boost-hold` | 2 | Holding boost from 8 and 14 m/s: 1.43 s of +60 % (the half meter at 0.35/s), +4.4 m/s at 1.5 s over the same drive without boost. Holding on doesn't start another burst; the meter ends at 0.31. |
+| `affordances/boost-line` | 2 | The autopilot drives 20 s from the kerb straight and from the grid while the driver boosts on the straights. 254.7 m and 216.5 m, against 238.5 m and 196.0 m without boost, and 242.0 m and 202.5 m holding boost the whole way. |
+
+`feel/drift-entry-exit` is also the §7.3a `drift-entry-exit` affordance row (all baselines, plus `no-action`).

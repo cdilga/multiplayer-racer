@@ -154,6 +154,16 @@ pub struct CarObs {
     pub race: RaceObs,
     /// The autopilot's last decision when it's driving (P1-S07): the visible "autopilot" badge and its target.
     pub autopilot: Option<crate::autopilot::AutopilotState>,
+    /// The ACTION stick (P1-S03b): the boost meter (0..1), boosting now, and how far into a drift (0 grip, 1 drift).
+    pub action: ActionObs,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActionObs {
+    pub boost: f32,
+    pub boosting: bool,
+    pub drift: f32,
 }
 
 pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
@@ -211,6 +221,13 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
         } else {
             None
         },
+        action: sim
+            .action_state(car)
+            .map_or_else(ActionObs::default, |a| ActionObs {
+                boost: a.boost,
+                boosting: a.boosting,
+                drift: a.drift,
+            }),
     })
 }
 
@@ -273,10 +290,18 @@ pub enum Metric {
     /// The most nose-up or nose-down (squat, dive), and the most body roll, degrees.
     MaxPitchDeg,
     MaxRollDeg,
+    /// Boost (P1-S03b): the meter now (0..1), time spent boosting and time drifting (drift past half), s; the most
+    /// the meter gained over the run while drifting.
+    BoostMeter,
+    BoostTimeS,
+    DriftTimeS,
+    DriftChargeGained,
+    /// The largest |slip angle| over the wheels in contact now, degrees.
+    SlipDeg,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 29] = [
+    pub const ALL: [Metric; 34] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -306,6 +331,11 @@ impl Metric {
         Metric::MaxRouteOffsetM,
         Metric::MaxPitchDeg,
         Metric::MaxRollDeg,
+        Metric::BoostMeter,
+        Metric::BoostTimeS,
+        Metric::DriftTimeS,
+        Metric::DriftChargeGained,
+        Metric::SlipDeg,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -340,6 +370,11 @@ impl Metric {
             Metric::MaxRouteOffsetM => "maxRouteOffsetM",
             Metric::MaxPitchDeg => "maxPitchDeg",
             Metric::MaxRollDeg => "maxRollDeg",
+            Metric::BoostMeter => "boostMeter",
+            Metric::BoostTimeS => "boostTimeS",
+            Metric::DriftTimeS => "driftTimeS",
+            Metric::DriftChargeGained => "driftChargeGained",
+            Metric::SlipDeg => "slipDeg",
         }
     }
 }
@@ -370,6 +405,9 @@ pub struct SignatureTracker {
     max_route_offset: f64,
     max_pitch: f64,
     max_roll: f64,
+    boost_ticks: u64,
+    drift_ticks: u64,
+    drift_charge: f64,
 }
 
 /// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
@@ -410,6 +448,9 @@ impl SignatureTracker {
             max_route_offset: 0.0,
             max_pitch: 0.0,
             max_roll: 0.0,
+            boost_ticks: 0,
+            drift_ticks: 0,
+            drift_charge: 0.0,
         }
     }
 
@@ -489,6 +530,15 @@ impl SignatureTracker {
         let (pitch, roll) = pitch_roll_deg(o.rotation);
         self.max_pitch = self.max_pitch.max(pitch.abs());
         self.max_roll = self.max_roll.max(roll.abs());
+        if let Some(prev) = &self.last {
+            if o.action.boosting {
+                self.boost_ticks += 1;
+            }
+            if o.action.drift > 0.5 {
+                self.drift_ticks += 1;
+                self.drift_charge += f64::from((o.action.boost - prev.action.boost).max(0.0));
+            }
+        }
         self.last = Some(o.clone());
     }
 
@@ -535,6 +585,16 @@ impl SignatureTracker {
             Metric::MaxRouteOffsetM => self.max_route_offset,
             Metric::MaxPitchDeg => self.max_pitch,
             Metric::MaxRollDeg => self.max_roll,
+            Metric::BoostMeter => f64::from(o.action.boost),
+            Metric::BoostTimeS => self.boost_ticks as f64 / f64::from(TICK_HZ),
+            Metric::DriftTimeS => self.drift_ticks as f64 / f64::from(TICK_HZ),
+            Metric::DriftChargeGained => self.drift_charge,
+            Metric::SlipDeg => o
+                .wheels
+                .iter()
+                .filter(|w| w.contact)
+                .map(|w| f64::from(w.slip_deg.abs()))
+                .fold(0.0, f64::max),
         })
     }
 

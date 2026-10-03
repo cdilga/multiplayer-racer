@@ -375,3 +375,59 @@ fn snapshots_carry_cars_and_skip_when_the_buffer_is_short() {
     assert!(y > 0.0 && y < 2.0, "car 0's height {y}");
     let _ = Origin::Local(LocalSourceId(1));
 }
+
+#[test]
+fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
+    // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
+    // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.
+    let mut h = Host::new(&init()).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("phone".into()),
+        resume: None,
+    };
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    };
+    h.schedule(0, &net("phone", Channel::Cmd, hello.encode()))
+        .unwrap();
+    h.schedule(0, &net("phone", Channel::Cmd, claim.encode()))
+        .unwrap();
+    for (k, t) in (0..240u64).step_by(6).enumerate() {
+        let action = if t < 120 { [32_767, 0] } else { [-32_767, 0] };
+        let batch = StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: k as u16 + 1,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(1),
+                seq: k as u16 + 1,
+                drive: [0, 32_767],
+                action,
+                flags: StateFlags(
+                    StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH | StateFlags::ACTION_TOUCH,
+                ),
+            }],
+        };
+        h.schedule(t, &net("phone", Channel::State, batch.encode().unwrap()))
+            .unwrap();
+    }
+    let mut boosted = false;
+    while h.tick() < 120 {
+        h.step_one();
+        boosted |= h.sim().action_state(CarId(0)).is_some_and(|a| a.boosting);
+    }
+    assert!(boosted, "ACTION right boosted");
+    while h.tick() < 200 {
+        h.step_one();
+    }
+    let a = h.sim().action_state(CarId(0)).unwrap();
+    assert!(a.drift > 0.9 && !a.boosting, "ACTION left drifts: {a:?}");
+    assert!(
+        h.sim()
+            .applied_input(CarId(0))
+            .is_some_and(|i| i.drift && !i.boost)
+    );
+}

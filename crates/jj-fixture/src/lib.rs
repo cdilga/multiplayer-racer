@@ -99,10 +99,15 @@ fn all_baselines() -> Vec<BaselineKind> {
 pub enum BaselineKind {
     /// No scripted input at all.
     NoInput,
-    /// Every car's stick thrown somewhere new every 50 ms (seeded).
+    /// Every car's sticks thrown somewhere new every 50 ms (seeded): DRIVE anywhere, ACTION drifting or boosting at
+    /// random.
     Mash,
     /// Every car holds its first scripted input for the whole run.
     Hold,
+    /// The same inputs without the ACTION stick: no drift, no boost (§7.3a "faster with boost than without").
+    NoAction,
+    /// The same inputs with boost held throughout (§7.3a "boost-forever isn't the best line").
+    BoostForever,
 }
 
 /// A car's metric (at `atTick`, else the end) and the margin it differs from a baseline's by. A baseline differs when
@@ -115,6 +120,12 @@ pub struct Differ {
     #[serde(default)]
     pub at_tick: Option<u64>,
     pub by: f64,
+    /// The deliberate run must come out *higher* by `by`, not just different (a claim like "faster with boost").
+    #[serde(default)]
+    pub more: bool,
+    /// The baselines this entry judges (empty: all of them).
+    #[serde(default)]
+    pub against: Vec<BaselineKind>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -237,6 +248,12 @@ pub struct InputSpan {
     pub steer: f32,
     #[serde(default)]
     pub brake: f32,
+    /// ACTION left held: the handbrake drift (P1-S03b).
+    #[serde(default)]
+    pub drift: bool,
+    /// ACTION right held: boost (P1-S03b).
+    #[serde(default)]
+    pub boost: bool,
 }
 
 /// Stop early once a car's metric is inside `[min, max]`.
@@ -471,6 +488,8 @@ impl Harness {
                 throttle: quantise_axis(i.throttle),
                 steer: quantise_axis(i.steer),
                 brake: quantise_axis(i.brake.max(0.0)),
+                drift: i.drift,
+                boost: i.boost,
             });
             sim.set_input(CarId(car), input);
         }

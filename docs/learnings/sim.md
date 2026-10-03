@@ -91,3 +91,29 @@ not feel targets.
   engine or brake force on any surface. Surfaces show in turns: at 15 m/s on full lock for 1 s, heading change is 57° on
   tarmac, 50° on rock, 44° on dirt and 38° on gravel. The authority sweep shows lock only matters at low speed: at 15 and
   30 m/s, heading change in 0.5 s is grip-bound (about 24° and 14°) whatever the lock.
+
+## 2026-10-03 · Drift and boost (P1-S03b)
+
+- **The ACTION stick is in `DriveInput`** (`drift`, `boost`, journaled) from jj-input's held sectors (`SourceSemantics`),
+  and it passes through the autopilot: an idle player's is neutral, and a bot's or a scenario's rides on the
+  autopilot's line. Only DRIVE moving hands control back.
+- **Handbrake drift** sets the rear tyres' friction slip × 0.35 at once and recovers linearly over 0.4 s. An open-loop
+  drift has to be a flick (about 0.5 s) with counter-steer. Holding it for 0.75 s at 0.8 lock spins the car through
+  180°. At 18 m/s the car takes about 1 s after the release to grip again, however long the counter-steer.
+- **Boost-forever only lost once holding it had a structural cost.** The meter (drain 0.35/s, refill 0.12/s) makes
+  boost a trickle. Trickling it out (hold forever) is as good as saving it unless spending at the wrong moment costs
+  something. Three things together make the timed line win, and every 2-car autopilot run agrees:
+  1. Boost overrides braking.
+  2. A burst needs 0.25 of meter to start.
+  3. An emptied meter re-arms only on release, so holding forever gives one burst.
+
+  Before the re-arm rule, holding boost forever won by 9–16 m in 20 s, because the low-skill autopilot corners far
+  under the grip limit. The engine power limit (`max_engine_power_w`) made no difference, so it's at 0 (off) and kept
+  for tuning.
+- **Baselines got two kinds** for the §7.3a claims: `no-action` (the same inputs without drift or boost) and
+  `boost-forever` (boost held throughout, for every car). `differ` entries can require the deliberate run to be
+  *higher* (`more`) and can name which baselines they judge (`against`). A claim like "faster with boost" then binds
+  exactly those baselines, and mash is judged on something else.
+- **Route `progressM` rewards cutting the infield.** It measures the nearest point along the route, so an open-loop
+  car that leaves the road can gain tens of metres. Gate-based `legalProgressM` stays 0 for a car that starts mid-lap.
+  Check `maxRouteOffsetM` before trusting progress, or use the autopilot for the line.

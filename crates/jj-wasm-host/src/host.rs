@@ -21,7 +21,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use jj_input::{DriveIntent, Neutralise, SampleFlags, SourceState};
+use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
 use jj_map::{LoadedMap, Registry, load_canonical};
 use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimEvent, SimToMain, UiCommand};
 use jj_protocol::cmd::{ControllerCmd, HostCmd};
@@ -131,13 +131,15 @@ fn sha(bytes: &[u8]) -> [u8; 32] {
     out
 }
 
-/// A seat's controls from its source's drive intent. `jj-input` steers −1 left to +1 right; the sim's positive steer
-/// turns left, so steering flips here.
-fn controls(intent: DriveIntent) -> DriveInput {
+/// A seat's controls from its source's semantics. `jj-input` steers −1 left to +1 right; the sim's positive steer
+/// turns left, so steering flips here. The ACTION stick's held sectors pass through (drift left, boost right).
+fn controls(s: SourceSemantics) -> DriveInput {
     DriveInput {
-        throttle: quantise_axis(intent.throttle),
-        steer: quantise_axis(-intent.steer),
-        brake: quantise_axis(intent.brake),
+        throttle: quantise_axis(s.drive.throttle),
+        steer: quantise_axis(-s.drive.steer),
+        brake: quantise_axis(s.drive.brake),
+        drift: s.drift,
+        boost: s.boost,
     }
 }
 
@@ -366,7 +368,7 @@ impl Host {
                 .age_ms(now_ms)
                 .is_some_and(|age| age <= STALE_MS);
             let controls = if fresh {
-                controls(input.state.drive_intent())
+                controls(input.state.semantics())
             } else {
                 DriveInput::default()
             };
@@ -685,8 +687,8 @@ impl Host {
     ///
     /// Header: magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32, cars u32,
     /// debris u32, reserved u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
-    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held), reserved 2×u32. Debris (32 B): position 3×f32, rotation
-    /// 4×f32, reserved u32.
+    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
+    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, reserved u32.
     pub fn write_snapshot(&self, buf: &mut [u8]) -> usize {
         let need = self.snapshot_size();
         if buf.len() < need {
@@ -712,10 +714,13 @@ impl Host {
                 .sim
                 .applied_input(car)
                 .map_or(0.0, |i| jj_types::axis::dequantise_axis(i.steer));
+            let action = self.sim.action_state(car).unwrap_or_default();
             let flags = u32::from(self.sim.is_protected(car))
                 | (u32::from(race.is_finished(car.0)) << 1)
                 | (u32::from(self.sim.has_autopilot(car)) << 2)
-                | (u32::from(race.is_held(car.0, self.sim.tick())) << 3);
+                | (u32::from(race.is_held(car.0, self.sim.tick())) << 3)
+                | (u32::from(action.boosting) << 4)
+                | (u32::from(action.drift > 0.0) << 5);
             w.u32(car.0);
             w.u32(self.sim.car_life(car).unwrap_or(0));
             s.position
@@ -725,7 +730,7 @@ impl Host {
                 .for_each(|&v| w.f32(v));
             w.f32(steer);
             w.u32(flags);
-            w.u32(0);
+            w.f32(action.boost);
             w.u32(0);
         }
         for (p, r) in debris {
