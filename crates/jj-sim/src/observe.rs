@@ -126,6 +126,10 @@ pub struct RaceObs {
     pub ghost: bool,
     pub wrecks: u32,
     pub recoveries: u32,
+    /// Joined mid-round (drop-in, P1-S06).
+    pub late: bool,
+    /// Under spawn protection (ghosted against cars and debris until clear).
+    pub protected: bool,
 }
 
 /// One car at one tick.
@@ -197,6 +201,8 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             ghost: sim.is_ghost(car),
             wrecks: rc.wrecks,
             recoveries: rc.recoveries,
+            late: rc.late,
+            protected: sim.is_protected(car),
         },
     })
 }

@@ -24,6 +24,10 @@ use jj_map::{Footprint, LoadedMap, Registry};
 use jj_types::axis::dequantise_axis;
 
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
+use crate::placement::{
+    CLEARANCE_M, PROTECT_TICKS, Rect, RouteLine, SEARCH_LATERAL_M, SEARCH_STEP_M, SEARCH_STEPS,
+    SPAWN_LIFT_M, corridor_slots, grid_pose, offset, overlaps,
+};
 use crate::profile::{Drive, VehicleProfile};
 use crate::race::{Course, Effect, Race};
 use crate::rng::Rng;
@@ -37,6 +41,8 @@ pub const GROUP_WORLD: Group = Group::GROUP_1;
 pub const GROUP_CAR: Group = Group::GROUP_2;
 pub const GROUP_PROP: Group = Group::GROUP_3;
 pub const GROUP_GHOST: Group = Group::GROUP_4;
+/// Spawn protection (P1-S06): like a ghost, touching only the world, until the car is clear.
+pub const GROUP_PROTECTED: Group = Group::GROUP_5;
 const fn groups(memberships: Group, filter: Group) -> InteractionGroups {
     InteractionGroups::new(memberships, filter, InteractionTestMode::And)
 }
@@ -48,6 +54,8 @@ const GHOST_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
 const CAR_RAYS: InteractionGroups =
     groups(GROUP_CAR, GROUP_WORLD.union(GROUP_PROP).union(GROUP_CAR));
 const GHOST_RAYS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
+const PROTECTED_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
+const PROTECTED_RAYS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
 
 /// A car's id: its index in spawn order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -58,6 +66,8 @@ struct Car {
     collider: ColliderHandle,
     vehicle: DynamicRayCastVehicleController,
     input: DriveInput,
+    /// Under spawn protection since this tick (P1-S06).
+    protected_since: Option<u64>,
 }
 
 /// What a car looks like right now (for scenarios, receipts and the introspection surface).
@@ -103,6 +113,8 @@ pub struct Sim {
     rng: Rng,
     journal: Journal,
     race: Race,
+    line: RouteLine,
+    slots: Vec<SpawnPose>,
 }
 
 fn yaw_rotation(yaw_cdeg: i32) -> Vector {
@@ -203,6 +215,8 @@ impl Sim {
             rng: Rng::stream(seed, "sim"),
             journal,
             race: Race::new(Course::new(map)),
+            line: RouteLine::new(map),
+            slots: corridor_slots(map, &RouteLine::new(map)),
         }
     }
 
@@ -230,7 +244,183 @@ impl Sim {
             .push((self.tick, Setup::SpawnCar { car: id.0, pose }));
         self.add_car(pose);
         self.race.add_car(pose);
+        self.protect(id);
         id
+    }
+
+    /// The start grid for `n` more cars (any `n`): each takes the next grid pose, the overflow under protection.
+    pub fn spawn_grid(&mut self, n: usize) -> Vec<CarId> {
+        (0..n)
+            .map(|_| self.spawn_car(self.grid_pose(self.cars.len())))
+            .collect()
+    }
+
+    /// The `k`-th car's start-grid pose.
+    pub fn grid_pose(&self, k: usize) -> SpawnPose {
+        grid_pose(&self.slots, k)
+    }
+
+    /// A seat joining mid-round (a journaled command): ~3 s of route behind the last still-racing car with that
+    /// car's gate state, marked late, immediately controllable under protection. Before the race has that much
+    /// history, it takes the next grid slot.
+    pub fn drop_in(&mut self) -> CarId {
+        self.journal.setup.push((self.tick, Setup::DropIn));
+        let id = CarId(self.cars.len() as u32);
+        match self.race.drop_in_progress(self.tick) {
+            Some(p) => {
+                let target = self
+                    .line
+                    .pose_at(self.race.finish_s() + p, 0.0, SPAWN_LIFT_M);
+                let pose = self.clear_pose_near(None, target);
+                self.add_car(pose);
+                self.race.add_late_car(pose, p, self.tick);
+            }
+            None => {
+                let pose = self.grid_pose(self.cars.len());
+                self.add_car(pose);
+                if self.race.started_at.is_some() {
+                    self.race.add_late_car(pose, -1.0, self.tick);
+                } else {
+                    self.race.add_car(pose);
+                }
+            }
+        }
+        self.protect(id);
+        id
+    }
+
+    /// A dynamic debris body (a journaled setup command): a cuboid with half extents `half`, resting at `pose`. It
+    /// stays for the round (R58).
+    pub fn spawn_debris(&mut self, pose: SpawnPose, half: [f32; 3]) {
+        self.journal
+            .setup
+            .push((self.tick, Setup::SpawnDebris { pose, half }));
+        let body = RigidBodyBuilder::dynamic()
+            .translation(Vector::new(pose.x, pose.y, pose.z))
+            .rotation(Vector::new(0.0, pose.heading, 0.0));
+        let collider = ColliderBuilder::cuboid(half[0], half[1], half[2])
+            .density(150.0)
+            .collision_groups(PROP_GROUPS);
+        let (h, _) = self.world.insert(body, collider);
+        self.props.push(h);
+    }
+
+    pub fn is_protected(&self, car: CarId) -> bool {
+        self.cars
+            .get(car.0 as usize)
+            .is_some_and(|c| c.protected_since.is_some())
+    }
+
+    /// A car's ground footprint (chassis plus the clearance margin).
+    pub fn footprint(&self, car: CarId) -> Option<Rect> {
+        let c = self.cars.get(car.0 as usize)?;
+        let b = self.world.bodies.get(c.body)?;
+        let (t, fwd) = (b.position().translation, b.position().rotation * Vector::Z);
+        Some(Rect {
+            x: t.x,
+            z: t.z,
+            heading: libm::atan2f(fwd.x, fwd.z),
+            half_w: self.profile.chassis_half[0] + CLEARANCE_M,
+            half_l: self.profile.chassis_half[2] + CLEARANCE_M,
+        })
+    }
+
+    /// Every debris body's ground footprint (its collider's bounding box).
+    pub fn debris_footprints(&self) -> Vec<Rect> {
+        self.props
+            .iter()
+            .filter_map(|&h| self.world.bodies.get(h))
+            .flat_map(|b| {
+                b.colliders()
+                    .iter()
+                    .filter_map(|&c| self.world.colliders.get(c))
+            })
+            .map(|c| {
+                let aabb = c.compute_aabb();
+                let (mid, half) = (aabb.center(), aabb.half_extents());
+                Rect {
+                    x: mid.x,
+                    z: mid.z,
+                    heading: 0.0,
+                    half_w: half.x,
+                    half_l: half.z,
+                }
+            })
+            .collect()
+    }
+
+    fn pose_footprint(&self, pose: SpawnPose) -> Rect {
+        Rect {
+            x: pose.x,
+            z: pose.z,
+            heading: pose.heading,
+            half_w: self.profile.chassis_half[0] + CLEARANCE_M,
+            half_l: self.profile.chassis_half[2] + CLEARANCE_M,
+        }
+    }
+
+    /// The first clear pose near `target` (itself, then steps back along its heading and to either side), checked
+    /// against every other car and debris; `target` itself if none is clear (the car then waits out protection).
+    fn clear_pose_near(&self, exclude: Option<CarId>, target: SpawnPose) -> SpawnPose {
+        let others: Vec<Rect> = self
+            .cars()
+            .filter(|&c| Some(c) != exclude)
+            .filter_map(|c| self.footprint(c))
+            .chain(self.debris_footprints())
+            .collect();
+        for step in 0..SEARCH_STEPS {
+            for side in SEARCH_LATERAL_M {
+                let pose = offset(target, step as f32 * SEARCH_STEP_M, side);
+                let fp = self.pose_footprint(pose);
+                if !others.iter().any(|o| overlaps(&fp, o)) {
+                    return pose;
+                }
+            }
+        }
+        target
+    }
+
+    fn protect(&mut self, car: CarId) {
+        let tick = self.tick;
+        if let Some(c) = self.cars.get_mut(car.0 as usize) {
+            c.protected_since = Some(tick);
+            if let Some(col) = self.world.colliders.get_mut(c.collider) {
+                col.set_collision_groups(PROTECTED_GROUPS);
+            }
+        }
+    }
+
+    /// Ends spawn protection for cars that have had 1.5 s and overlap no solid car, no lower-id protected car and no
+    /// debris; the rest stay protected and are checked again next tick.
+    fn settle_protection(&mut self) {
+        let tick = self.tick;
+        let prints: Vec<Option<Rect>> = self.cars().map(|c| self.footprint(c)).collect();
+        let debris = self.debris_footprints();
+        for i in 0..self.cars.len() {
+            let Some(since) = self.cars[i].protected_since else {
+                continue;
+            };
+            let Some(me) = prints[i] else { continue };
+            if tick < since + PROTECT_TICKS {
+                continue;
+            }
+            let blocked = prints.iter().enumerate().any(|(j, f)| {
+                j != i
+                    && (self.cars[j].protected_since.is_none() || j < i)
+                    && f.is_some_and(|f| overlaps(&me, &f))
+            }) || debris.iter().any(|d| overlaps(&me, d));
+            if !blocked {
+                let groups = if self.race.is_finished(i as u32) {
+                    GHOST_GROUPS
+                } else {
+                    CAR_GROUPS
+                };
+                self.cars[i].protected_since = None;
+                if let Some(col) = self.world.colliders.get_mut(self.cars[i].collider) {
+                    col.set_collision_groups(groups);
+                }
+            }
+        }
     }
 
     /// Teleports `car` to `pose`, rolled `roll` radians about its forward axis, with `linvel` and no spin (a journaled
@@ -305,9 +495,16 @@ impl Sim {
 
     fn apply(&mut self, effect: Effect) {
         match effect {
-            Effect::Respawn { car, pose, .. } => self.teleport(CarId(car), pose, 0.0, [0.0; 3]),
+            Effect::Respawn { car, pose, .. } => {
+                // Through the placement service: a clear pose near the anchor, then spawn protection.
+                let pose = self.clear_pose_near(Some(CarId(car)), pose);
+                self.teleport(CarId(car), pose, 0.0, [0.0; 3]);
+                self.protect(CarId(car));
+            }
             Effect::Ghost { car } => {
+                // A protected car turns ghost (not solid) when its protection ends.
                 if let Some(c) = self.cars.get(car as usize)
+                    && c.protected_since.is_none()
                     && let Some(col) = self.world.colliders.get_mut(c.collider)
                 {
                     col.set_collision_groups(GHOST_GROUPS);
@@ -369,6 +566,7 @@ impl Sim {
             collider,
             vehicle,
             input: DriveInput::default(),
+            protected_since: None,
         });
     }
 
@@ -440,7 +638,9 @@ impl Sim {
                     Race::assist_torque([up.x, up.y, up.z], [fwd.x, fwd.y, fwd.z], [w.x, w.y, w.z]);
                 b.apply_torque_impulse(Vector::new(t[0], t[1], t[2]) * DT, true);
             }
-            let rays = if self.race.is_finished(id) {
+            let rays = if car.protected_since.is_some() {
+                PROTECTED_RAYS
+            } else if self.race.is_finished(id) {
                 GHOST_RAYS
             } else {
                 CAR_RAYS
@@ -475,6 +675,7 @@ impl Sim {
         for effect in self.race.update(self.tick, &views) {
             self.apply(effect);
         }
+        self.settle_protection();
     }
 
     pub fn car_state(&self, car: CarId) -> Option<CarState> {
@@ -584,6 +785,9 @@ impl Sim {
         }
         let mut race = Vec::new();
         self.race.hash_into(&mut race);
+        for c in &self.cars {
+            race.extend(c.protected_since.unwrap_or(u64::MAX).to_le_bytes());
+        }
         h.update(&race);
         for c in &self.cars {
             for w in c.vehicle.wheels() {
@@ -632,6 +836,10 @@ impl Sim {
                     Setup::Recover { car } => {
                         sim.recover(CarId(*car));
                     }
+                    Setup::DropIn => {
+                        sim.drop_in();
+                    }
+                    Setup::SpawnDebris { pose, half } => sim.spawn_debris(*pose, *half),
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {

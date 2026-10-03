@@ -433,6 +433,7 @@ dependencies = [
  "postcard",
  "rapier3d",
  "serde",
+ "serde_json",
  "sha2",
 ]
 

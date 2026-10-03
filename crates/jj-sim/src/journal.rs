@@ -50,6 +50,13 @@ pub enum Setup {
     Recover {
         car: u32,
     },
+    /// A seat joining mid-round (P1-S06): the placement service picks the pose and gate state, deterministically.
+    DropIn,
+    /// A dynamic debris body (a cuboid with these half extents, m), for scenarios before damage makes real debris.
+    SpawnDebris {
+        pose: SpawnPose,
+        half: [f32; 3],
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,0 +1,17 @@
+{
+ "scenario": "placement-grid-99",
+ "what": "P1-S06: a 99-car start grid on the greybox's corridor, which is sized for 24. Everyone is placed at once with no cap and no queue: the corridor's 24 turn solid after 1.5 s, and the overflow, staggered inside the corridor, stays protected (ghosted) while it overlaps. Every car, the 99th included, settles upright on its wheels.",
+ "map": "maps/greybox-loop.json",
+ "seed": 21,
+ "ticks": 360,
+ "grid": 99,
+ "observe": [0],
+ "expect": [
+  { "car": 0, "metric": "upY", "min": 0.99, "max": 1.001 },
+  { "car": 0, "metric": "wheelsInContact", "min": 4, "max": 4 },
+  { "car": 23, "metric": "wheelsInContact", "min": 4, "max": 4 },
+  { "car": 98, "metric": "upY", "min": 0.99, "max": 1.001 },
+  { "car": 98, "metric": "wheelsInContact", "min": 4, "max": 4 },
+  { "car": 98, "metric": "travel", "min": 0, "max": 0.2 }
+ ]
+}

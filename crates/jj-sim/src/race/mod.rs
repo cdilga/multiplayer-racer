@@ -29,6 +29,10 @@ use jj_map::LoadedMap;
 use serde::Serialize;
 
 use crate::journal::SpawnPose;
+use crate::placement::{
+    DROP_IN_BEHIND_TICKS, DROP_IN_MIN_GAP_M, HISTORY_EVERY_TICKS, HISTORY_KEEP_TICKS,
+    ProgressSample,
+};
 use crate::sim::{TICK_HZ, route_spawn};
 
 const SECOND: u64 = TICK_HZ as u64;
@@ -277,6 +281,10 @@ pub struct CarRace {
     /// The legal-progress high-water mark (mm) and the tick it was reached: what unfinished entrants rank by.
     pub best_progress_mm: u64,
     pub best_progress_tick: u64,
+    /// Joined mid-round through drop-in (P1-S06).
+    pub late: bool,
+    /// Recent legal progress, for placing a drop-in behind this car.
+    history: Vec<ProgressSample>,
     rest_inverted: u64,
     slow: u64,
     last: Option<CarView>,
@@ -329,10 +337,82 @@ impl Race {
             finish_fraction: 0,
             best_progress_mm: 0,
             best_progress_tick: 0,
+            late: false,
+            history: Vec::new(),
             rest_inverted: 0,
             slow: 0,
             last: None,
         });
+    }
+
+    /// A drop-in (P1-S06): a car joining at legal progress `progress_m` with the gate state there, marked late.
+    pub fn add_late_car(&mut self, spawn: SpawnPose, progress_m: f32, tick: u64) {
+        self.add_car(spawn);
+        let gates = self.gates_for_progress(progress_m);
+        let n = self.course.gates.len();
+        let c = self.cars.last_mut().expect("just added");
+        c.late = true;
+        c.gates_passed = gates;
+        c.best_progress_mm = (progress_m.max(0.0) * 1000.0) as u64;
+        c.best_progress_tick = tick;
+        if gates > 0 && n > 0 {
+            let g = (gates as usize - 1) % n;
+            c.last_gate = Some(g);
+            c.anchor = self.course.anchor(g);
+        }
+    }
+
+    /// How many in-order gate crossings a car at legal progress `p` (m) has made: the start line counts at 0 m.
+    pub fn gates_for_progress(&self, p: f32) -> u32 {
+        let n = self.course.gates.len();
+        if n == 0 || p < 0.0 {
+            return 0;
+        }
+        let mut k = 0u32;
+        loop {
+            let i = k as usize;
+            let d = (i / n) as f32 * self.course.total + self.course.gates[i % n].from_finish;
+            if d > p {
+                return k;
+            }
+            k += 1;
+        }
+    }
+
+    /// The route arc length of the finish line.
+    pub fn finish_s(&self) -> f32 {
+        self.course
+            .gates
+            .first()
+            .map_or(0.0, |g| self.course.s[g.at])
+    }
+
+    /// The last still-racing car: the lowest legal progress among unfinished cars (then the lowest id).
+    pub fn last_racer(&self) -> Option<u32> {
+        self.started_at?;
+        (0..self.cars.len() as u32)
+            .filter(|&c| self.cars[c as usize].finished_at.is_none())
+            .min_by(|&a, &b| {
+                self.progress_m(a)
+                    .total_cmp(&self.progress_m(b))
+                    .then(a.cmp(&b))
+            })
+    }
+
+    /// Where a drop-in goes (legal progress, m): where the last racer was 3 s ago, and at least
+    /// [`DROP_IN_MIN_GAP_M`] behind where it is now. `None` before the race has that much history (use the grid).
+    pub fn drop_in_progress(&self, tick: u64) -> Option<f32> {
+        let last = self.last_racer()?;
+        let then = tick.checked_sub(DROP_IN_BEHIND_TICKS)?;
+        let sample = self.cars[last as usize]
+            .history
+            .iter()
+            .rev()
+            .find(|s| s.tick <= then)?;
+        let p = sample
+            .progress_m
+            .min(self.progress_m(last) - DROP_IN_MIN_GAP_M);
+        (p >= 0.0).then_some(p)
     }
 
     pub fn car(&self, car: u32) -> Option<&CarRace> {
@@ -462,6 +542,14 @@ impl Race {
                 if mm > c.best_progress_mm {
                     c.best_progress_mm = mm;
                     c.best_progress_tick = tick;
+                }
+                if tick.is_multiple_of(HISTORY_EVERY_TICKS) {
+                    let progress_m = self.progress_m(car);
+                    let c = &mut self.cars[i];
+                    c.history.push(ProgressSample { tick, progress_m });
+                    let keep_from = tick.saturating_sub(HISTORY_KEEP_TICKS);
+                    let old = c.history.iter().take_while(|s| s.tick < keep_from).count();
+                    c.history.drain(..old);
                 }
             }
         }
@@ -621,6 +709,11 @@ impl Race {
             out.extend(c.finish_fraction.to_le_bytes());
             out.extend(c.best_progress_mm.to_le_bytes());
             out.extend(c.best_progress_tick.to_le_bytes());
+            out.push(u8::from(c.late));
+            for s in &c.history {
+                out.extend(s.tick.to_le_bytes());
+                out.extend(s.progress_m.to_bits().to_le_bytes());
+            }
         }
     }
 

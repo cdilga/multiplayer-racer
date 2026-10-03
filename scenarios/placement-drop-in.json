@@ -1,0 +1,23 @@
+{
+ "scenario": "placement-drop-in",
+ "what": "P1-S06 (R63): three racers leave the grid at different paces; 7 s into the race a fourth seat drops in about 3 s of route behind the last racer, with the gate state at that point, protected and immediately controllable (it drives off at once).",
+ "map": "maps/greybox-loop.json",
+ "seed": 22,
+ "ticks": 1200,
+ "grid": 3,
+ "race": { "laps": 3, "atTick": 0 },
+ "dropIn": [{ "tick": 840 }],
+ "inputs": [
+  { "car": 0, "fromTick": 0, "throttle": 0.9 },
+  { "car": 1, "fromTick": 0, "throttle": 0.7 },
+  { "car": 2, "fromTick": 0, "throttle": 0.5 },
+  { "car": 3, "fromTick": 840, "throttle": 0.8 }
+ ],
+ "observe": [840, 841],
+ "expect": [
+  { "car": 2, "atTick": 840, "metric": "gatesPassed", "min": 1, "max": 3 },
+  { "car": 3, "atTick": 841, "metric": "gatesPassed", "min": 1, "max": 3 },
+  { "car": 3, "metric": "travel", "min": 5, "max": 200 },
+  { "car": 3, "metric": "upY", "min": 0.95, "max": 1.001 }
+ ]
+}

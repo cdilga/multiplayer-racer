@@ -64,6 +64,15 @@ pub struct Fixture {
     /// Recover-button presses.
     #[serde(default)]
     pub recover: Vec<RecoverSpec>,
+    /// Spawn this many more cars through the start grid (P1-S06), after `cars`.
+    #[serde(default)]
+    pub grid: Option<usize>,
+    /// Seats joining mid-round through the placement service.
+    #[serde(default)]
+    pub drop_in: Vec<TickSpec>,
+    /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
+    #[serde(default)]
+    pub debris: Vec<DebrisSpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
     #[serde(default)]
@@ -106,6 +115,20 @@ fn default_laps() -> u32 {
 pub struct RecoverSpec {
     pub tick: u64,
     pub car: u32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TickSpec {
+    pub tick: u64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DebrisSpec {
+    pub tick: u64,
+    pub pose: PoseSpec,
+    pub half: [f32; 3],
 }
 
 impl PoseSpec {
@@ -280,6 +303,14 @@ fn signature_json(car: u32, t: &SignatureTracker) -> Value {
     Value::Object(m)
 }
 
+/// Debris footprints on the ground (centre and half extents, m) for snapshots.
+fn debris(sim: &Sim) -> Vec<Value> {
+    sim.debris_footprints()
+        .iter()
+        .map(|d| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l }))
+        .collect()
+}
+
 /// Observes the run tick by tick: signatures, envelope checks, snapshots and the trace.
 struct Recorder<'a> {
     fx: &'a Fixture,
@@ -323,6 +354,17 @@ impl Recorder<'_> {
     /// Records the state after a tick (`end`: the last one); returns whether the `until` predicate holds.
     fn record(&mut self, sim: &Sim, session: &session::Session, end: bool) -> bool {
         let cars = observe_cars(sim, self.route);
+        // Cars that joined mid-run (grid, drop-in) get a tracker from where they first appear.
+        for o in cars.iter().skip(self.trackers.len()) {
+            let p = o.position;
+            let spawn = SpawnPose {
+                x: p[0],
+                y: p[1],
+                z: p[2],
+                heading: o.heading_deg.to_radians(),
+            };
+            self.trackers.push(SignatureTracker::new(spawn, self.route));
+        }
         for (t, o) in self.trackers.iter_mut().zip(&cars) {
             t.update(o);
         }
@@ -330,7 +372,7 @@ impl Recorder<'_> {
         self.check(tick, end);
         if end || self.fx.observe.contains(&tick) {
             self.observations
-                .push(json!({ "tick": tick, "cars": cars, "session": session.observe() }));
+                .push(json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": session.observe() }));
         }
         if self.trace_on {
             let events = self.events(sim);
@@ -351,7 +393,7 @@ impl Recorder<'_> {
         self.check(tick, true);
         if !self.fx.observe.contains(&tick) {
             self.observations.push(
-                json!({ "tick": tick, "cars": observe_cars(sim, self.route), "session": session.observe() }),
+                json!({ "tick": tick, "cars": observe_cars(sim, self.route), "debris": debris(sim), "session": session.observe() }),
             );
         }
     }
@@ -415,6 +457,12 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         }
         spawns.push(pose);
     }
+    if let Some(n) = fx.grid {
+        for id in sim.spawn_grid(n) {
+            let pose = sim.grid_pose(id.0 as usize);
+            spawns.push(pose);
+        }
+    }
     let mut session = session::Session::new(&fx.seats)?;
     if let Some(phase) = fx.phase {
         session.jump(phase)?;
@@ -465,7 +513,13 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         for r in fx.recover.iter().filter(|r| r.tick == t) {
             sim.recover(CarId(r.car));
         }
-        for car in 0..spawns.len() as u32 {
+        for d in fx.debris.iter().filter(|d| d.tick == t) {
+            sim.spawn_debris(d.pose.spawn(), d.half);
+        }
+        for _ in fx.drop_in.iter().filter(|d| d.tick == t) {
+            sim.drop_in();
+        }
+        for car in 0..sim.cars().count() as u32 {
             let span =
                 fx.inputs.iter().rev().find(|i| {
                     i.car == car && i.from_tick <= t && i.to_tick.is_none_or(|end| t < end)

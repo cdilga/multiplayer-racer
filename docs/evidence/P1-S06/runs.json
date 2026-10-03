@@ -1,0 +1,34 @@
+{
+ "grid-99-long": {
+  "ok": true,
+  "ticks": 240,
+  "stateHash": "f64b183c852f6bc51781524c4ba5d0f6e2d211bb5f7f604d8ae6a9803a5fa44c",
+  "replayMatches": true,
+  "cars": 99,
+  "protectedAtEnd": 0
+ },
+ "grid-99-short": {
+  "ok": true,
+  "ticks": 240,
+  "stateHash": "afd5c13cf7d1e369d3c69ab3883a431e40abf8404fe6728726220e6c9e3d32d1",
+  "replayMatches": true,
+  "cars": 99,
+  "protectedAtEnd": 72
+ },
+ "crowded-tail": {
+  "ok": true,
+  "ticks": 1260,
+  "stateHash": "9667ca7edb392e7730271792f29778f2bdd48ee8f7be328a7866ce98eebe2ef1",
+  "replayMatches": true,
+  "cars": 21,
+  "protectedAtEnd": 0
+ },
+ "drop-in": {
+  "ok": true,
+  "ticks": 1200,
+  "stateHash": "7fdd9fdc3cbc3de85e706502c25450e1b35f0cc78069badd7c08b1f5c7a443ac",
+  "replayMatches": true,
+  "cars": 4,
+  "protectedAtEnd": 0
+ }
+}

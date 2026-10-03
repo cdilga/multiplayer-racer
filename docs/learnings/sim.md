@@ -45,3 +45,14 @@ not feel targets.
   impulse once per tick) rights the 1,200 kg cuboid chassis from every one of the 12 bank poses about 1.1 s after the
   assist starts (2.1 s after rest), well inside the 4 s rule. When a car is exactly upside down, `up × Y` vanishes, so
   it rolls about its forward axis instead.
+
+## 2026-10-03 · Placement and spawn protection (P1-S06)
+
+- **Protection deadlocks unless it's ordered.** Two protected cars that overlap each other would both wait forever if
+  each counted the other as blocking. A protected car ignores higher-id protected cars, so the lower id turns solid
+  first and the other waits for it to move.
+- **Assert on the transition, not the state.** Solid cars that drive into each other touch, and with a clearance
+  margin their footprints overlap. The invariant is that protection never ends overlapping, so check the cars whose
+  protection ended this tick.
+- **Overflow staggering needs a non-repeating sequence.** A fixed step modulo the row gap came back to within 0.75 m of
+  the slot after six layers. Roberts' R2 sequence, offset 1–7 m behind the slot, never lands on player 1's spawn.
