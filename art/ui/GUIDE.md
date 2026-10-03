@@ -1,6 +1,7 @@
 # Joystick Jammers UI design guide
 
-**Status: draft (P1-U01, 2026-10-03).** P1-C01 (landing and join pages) and P1-D05 (preview index)
+**Status: draft (P1-U01, 2026-10-03; design language reworked in P1-U01.3 for R102, §5a).** P1-C01
+(landing and join pages) and P1-D05 (preview index)
 build from this draft. Every other UI task waits for the owner's G-DESIGN verdict at P1-U04, which
 freezes the accepted guide, tokens and mocks in `art/ui/accepted/<date>/`. Changes after that follow
 the playtest loop (Playtest-1 plan §13.4).
@@ -15,7 +16,7 @@ image for each element. Each decision below is **one worked proposal with a one-
 | Schema, WCAG AA for every named pair, badge contrast, adjacent seats under CVD, promised files | `node art/ui/check.mjs` (exits non-zero naming each failure) | `docs/evidence/P1-U01/check.txt` |
 | CVD simulation sheet | `node art/ui/sheets/render.mjs cvd` | `cvd.png`, `cvd.json` |
 | Font stress render | `node art/ui/sheets/render.mjs fonts` | `fonts.png`, `fonts.json` |
-| Component sheet (every state, keyboard and gamepad focus) | `node art/ui/sheets/render.mjs components` | `components.png` |
+| Component sheet (every state, keyboard and gamepad focus, and §00 the design language) | `node art/ui/sheets/render.mjs components` | `components.png` (round 0); `docs/evidence/P1-U01.3/after/components.png` (R102) |
 | Brand sheet (wordmark, icons, QR rule) | `node art/ui/sheets/render.mjs brand` | `brand.png` |
 | Style frames | `node art/ui/frames/generate.mjs <name>` | `art/ui/frames/*.webp` |
 
@@ -59,8 +60,8 @@ tokens and this guide are what ships.
 2. **Identity second.** Every player finds themselves by number and colour in under a second.
 3. **Then the current action, the objective and immediate threats.** Standings, flavour and decoration
    come last.
-4. **Comic, not childish.** Thick ink, cream paper, sticker badges and a slight hand-inked lean; text
-   baselines, numbers and hit boxes stay dead straight.
+4. **Comic, not childish; hand-made, not web-grid** (R102). Thick ink, cream paper, sticker badges,
+   torn banners and slants that feel alive (§5a); body text, numbers and hit boxes stay dead straight.
 5. **Same words, same marks everywhere.** TV, phone and announcer use one vocabulary (§11).
 
 ## 3. Colour
@@ -115,6 +116,34 @@ Sans and its CJK, Arabic and Devanagari cuts); never a remote font service (R70)
   a panel looks the same everywhere and never animates. Text baselines, content boxes, hit boxes and
   focus rings stay straight rectangles. `sheets/tokens-css.js` has a reference `wobblePath()`.
 
+## 5a. Design language (R102, owner POC round 1)
+
+The owner found round 0 sterile: a web grid with the same rounded corner on everything. The language now
+comes from the four reference screens in `refs/owner-2026-10-03/` (pause menu, intermission highlights,
+phone vote, phone join). **We take their language, never their content:** not their copy, slogans or
+painted signs, vote cards or voting flow, car art or liveries (ours are code-built, R81), mode, track or
+course names, or logo lockup. Every primitive is data in `tokens.language`. Section 00 of the component
+sheet draws each one and a free screen built only from them.
+
+| Owner's point | What we do | Token |
+|---|---|---|
+| 1. Non-web feel, not strictly grid-aligned | On free screens (join, lobby, pause, intermission, results) panels anchor to the art, not a column grid. They tilt up to ±1.5° (seeded per element, like the wobble), step off alignment by 8–24 px (TV 16–48) and may overlap a neighbour. Lists, tables, forms, the race grid and anything a gamepad walks in order stay aligned | `slant.panelTiltMaxDeg`, `placement` |
+| 2. Big images and renders | The hero render (the player's car, a highlight) takes at least 30% of a free screen. It's a cut-out with an ink outline and sticker shadow and may break a panel's edge, never over text. Until the renderer makes its own, the sheets use Spike J's L0 hero cut out by `renders/make.py` | `renders` |
+| 3. A contrasting banner behind heading type | **Heading banner:** torn ink, paper display type, one saffron accent word, rotated −2°; it may overhang the panel it heads. Section labels are **tags:** saffron, warning-orange or teal brush swatches, skewed −10° and tilted −3° | `banner.heading`, `banner.tag` |
+| 4. Still very compact | Panels pad 16 px (TV 32), rows sit 8 px apart, and section gaps are a step tighter than round 0 | `density` |
+| 5. Slants and high contrast that feel alive | Banners rotate, tags and strips skew, and burst ticks (cobalt, saffron on ink) frame the one action that matters on a screen, at most once. Every colour behind text passes WCAG AA, checked by `check.mjs` | `slant`, `banner.ticks`, `textBacking` |
+| 6. Colour behind some text | **Strips** put success, cobalt, ink or saffron behind one short line (a result, a status, a points value), never behind a paragraph. A saffron **highlighter** stroke goes under the player's own word | `banner.strip`, `banner.underline` |
+
+**Corners (no uniform radius).** Panels are square (2 px desk, 3 px TV) or wobbled. Banners, tags and strips
+are torn or brushed. Buttons and fields get a small radius (4 px desk, 6 px TV, `layout.radiusPx`).
+Badges get 3 px desk, 4 px TV. Only status chips and toggle tracks are pills.
+
+**Shapes are code, seeded and still:** `sheets/tokens-css.js` has `paintPath()` (torn banners, brushed
+tags and strips), `strokePath()` (the highlighter) and `tiltFor()`. They're seeded by the element's id
+like `wobblePath()`, so a banner keeps its teeth everywhere, and they never animate. The POC mocks get them,
+and the corner and slant variables, from `poc/shared/tokens.js`. The game's Rust/WASM UI builds the same
+shapes from the same tokens.
+
 ## 6. The identity kit (master §5.1–§5.2)
 
 | Element | Rule | Reference |
@@ -150,7 +179,7 @@ deuteranopia and tritanopia (`check.mjs` enforces it), and badge text stays at l
 
 ## 8. Components and focus
 
-The component sheet (`docs/evidence/P1-U01/components.png`, source `sheets/components.html`) shows
+The component sheet (`docs/evidence/P1-U01.3/after/components.png`, source `sheets/components.html`) shows
 every component in every state: primary (saffron), secondary (paper) and destructive (danger) buttons;
 panels; badges and status chips; toasts; confirmations; progress and loading; errors; disabled; text
 input; and **focus for keyboard and gamepad**. Pressed buttons drop onto their sticker shadow.

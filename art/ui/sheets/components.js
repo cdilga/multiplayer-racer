@@ -1,6 +1,8 @@
 // P1-U01 component sheet: every component in every state, as static classes (is-hover, is-pressed,
 // is-focus-kb, is-focus-gp, is-disabled, is-loading). Built from tokens.json through tokens-css.js.
-import { applyTokens, wobblePath } from './tokens-css.js';
+// P1-U01.3 (R102): section 00 shows the design language's primitives, and every section head, tab and free panel
+// uses them (torn banners, brush tags and strips, highlighter strokes, burst ticks, seeded tilts, a big render).
+import { applyTokens, paintPath, strokePath, tiltFor, wobblePath } from './tokens-css.js';
 
 const tokens = await applyTokens('desk');
 const app = document.getElementById('app');
@@ -17,6 +19,9 @@ const tvVars = [
   ...tokens.space.steps.map((s, i) => `--sp-${i}:${s * tokens.space.profileMultiplier.tv * H}px`),
   `--outline:${tokens.ink.outlinePx.tv * H}px`,
   `--radius:${tokens.layout.radiusPx.tv * H}px`,
+  `--r-panel:${tokens.language.corners.panelPx.tv * H}px`,
+  `--r-badge:${tokens.language.corners.badgePx.tv * H}px`,
+  `--torn-amp:${tokens.language.banner.heading.tornAmplitudePx.tv * H}`,
   `--focus-kb-w:${tokens.focus.keyboard.widthPx.tv * H}px`,
   `--focus-kb-off:${tokens.focus.keyboard.offsetPx.tv * H}px`,
   `--focus-gp-w:${tokens.focus.gamepad.widthPx.tv * H}px`,
@@ -62,8 +67,75 @@ const recRow = ({ label, sub, on, state = '' }) =>
 const rosterCard = ({ n, name, chipKind, state = '' }) =>
   `<div class="${cls('card wb', stateCls(state))}" data-wobble="card-${n}">${tab(state)}${badge(n, 'sm')}<b class="nm">${name}</b>${chip(chipKind)}</div>`;
 
+// R102 primitives (tokens.language): shapes are painted after layout by the passes at the bottom.
+const banner = (id, html, tagName = 'span', extra = '') => `<${tagName} class="${cls('bn', extra)}" data-torn="${id}">${html}</${tagName}>`;
+const tag = (id, text, kind = '', extra = '') => `<span class="${cls('tag', kind, extra)}" data-brush="${id}"><span>${text}</span></span>`;
+const strip = (id, html, kind = '', extra = '') => `<span class="${cls('strip', kind, extra)}" data-brush="${id}"><span>${html}</span></span>`;
+const ul = (id, text) => `<span class="ul" data-stroke="${id}">${text}</span>`;
+const tickSvg = '<svg viewBox="0 0 26 44" aria-hidden="true"><path d="M4 6 L22 15 M2 22 L22 22 M4 38 L22 29"/></svg>';
+const ticks = (html, extra = '') => `<span class="${cls('ticks', extra)}">${tickSvg}${html}${tickSvg}</span>`;
+
 const section = (num, title, note, body) => `
-  <section class="sec" id="s${num}"><header class="sec-head"><span class="sec-num">${String(num).padStart(2, '0')}</span><h2>${title}</h2><p>${note}</p></header>${body}</section>`;
+  <section class="sec" id="s${num}"><header class="sec-head">${tag(`sec-${num}`, String(num).padStart(2, '0'))}${banner(`sec-${num}`, title, 'h2')}<p>${note}</p></header>${body}</section>`;
+
+// ---------- 0 design language (R102, P1-U01.3) ----------
+const L = tokens.language;
+const backing = (name) => L.textBacking.find((p) => p.name === name);
+const ratioOf = (p) => {
+  const lum = (hx) => { const c = [1, 3, 5].map((i) => parseInt(hx.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const [a, b] = [lum(tokens.palette[p.fg].hex), lum(tokens.palette[p.bg].hex)];
+  return ((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toFixed(1);
+};
+const SIX = [
+  ['Non-grid, hand-made placement', 'the panel tilts and steps off the grid; the banner overhangs it; the render and the points strip break its edge'],
+  ['Big renders', 'the cut-out car is a first-class element, outlined in ink and nearly as tall as the panel'],
+  ['Contrast banner behind heading type', 'torn ink banner, paper type, one saffron accent word'],
+  ['Compact', 'tight 16 px padding, 8 px rows, three players and two actions in one small panel'],
+  ['Slants and high contrast', 'skewed tags, rotated banners, burst ticks round the one action that matters'],
+  ['Colour behind some text', 'tags, strips and a highlighter stroke behind short lines'],
+];
+const langBody = `<div class="lang">
+  <div class="free" aria-label="A free screen built only from the primitives">
+    ${banner('free', 'On the <span class="acc">grid</span>', 'span', 'fp-bn')}
+    <div class="fp wb" data-wobble="free-panel" data-tilt="free-panel">
+      ${tag('free-tag', 'This round')}
+      ${strip('free-strip', `${ic('check')}Lap record: 1:12.4 by #9`)}
+      <div class="rows">${rosterCard({ n: 9, name: 'Roo Boy', chipKind: 'ready' })}${rosterCard({ n: 14, name: 'Nina', chipKind: 'choosing' })}${rosterCard({ n: 5, name: 'Big Kev', chipKind: 'ready' })}</div>
+      <div class="acts">${ticks(btn({ label: 'Start race' }))}${btn({ label: 'Ready', variant: 'secondary' })}</div>
+    </div>
+    <img class="render car" src="../${L.renders.sheetStandIn.split(' ')[0]}" alt="The Cruz Missile">
+    ${strip('free-pts', 'Fastest lap <span class="lc">+5</span>', 'saffron big', 'pts')}
+    ${strip('free-you', 'Cooee <b>#9</b>', 'ink big', 'you')}
+  </div>
+  <div class="lang-spec">
+    <p class="cap"><b>From the owner's four reference screens</b> (<code>${L.from}</code>, ${L.ruling.split(' ')[0]}), we take the language, never the content. The free screen on the left is built only from the primitives below; the screens themselves are U02.3, U02.4 and U03.2's. The references were drawn from our round-0 mocks, so they share our fixtures (seat names, ROO7); the copy here is our own.</p>
+    <ol class="six">${SIX.map(([t, how]) => `<li><b>${t}:</b> ${how}.</li>`).join('')}</ol>
+    <p class="notl"><b>Not taken:</b> ${L.notTaken.join('; ')}.</p>
+  </div>
+</div>
+<div class="lrow"><div class="rl"><b>Heading banner</b>Torn ink, paper type, one saffron accent word, rotated ${L.slant.headingRotateDeg}°. Teeth ±${L.banner.heading.tornAmplitudePx.desk} px (TV ±${L.banner.heading.tornAmplitudePx.tv}).</div>
+  <div class="prims">${banner('demo-1', 'Round <span class="acc">3</span> done')}${banner('demo-2', 'Pick your <span class="acc">car</span>')}<span class="cap">paper on ink ${ratioOf(backing('paper-on-ink'))}:1 · saffron on ink ${ratioOf(backing('saffron-accent-on-ink'))}:1</span></div></div>
+<div class="lrow"><div class="rl"><b>Tags</b>Section labels: display italic, skew ${L.slant.tagSkewDeg}°, tilt ${L.slant.tagRotateDeg}°, dry-brush ends. Fills: ${L.banner.tag.fills.join(', ')}.</div>
+  <div class="prims">${L.banner.tag.fills.map((f, i) => `<div class="blk">${tag(`demo-tag-${i}`, ['This round', 'Your car', 'Settings'][i] ?? f, f === 'saffron' ? '' : f)}<span class="cap">ink on ${f} ${ratioOf({ fg: 'ink', bg: f })}:1</span></div>`).join('')}</div></div>
+<div class="lrow"><div class="rl"><b>Strips</b>Colour behind one short line, skew ${L.slant.stripSkewDeg}°: a result, a status, a points value. Never behind a paragraph.</div>
+  <div class="prims">
+    <div class="blk">${strip('demo-s1', `${ic('check')}Result saved`)}<span class="cap">paper on success ${ratioOf(backing('paper-on-success'))}:1</span></div>
+    <div class="blk">${strip('demo-s2', `${ic('users')}8 players in`, 'cobalt')}<span class="cap">paper on cobalt ${ratioOf(backing('paper-on-cobalt'))}:1</span></div>
+    <div class="blk">${strip('demo-s3', 'Host · ROO7', 'ink')}<span class="cap">paper on ink ${ratioOf(backing('paper-on-ink'))}:1</span></div>
+    <div class="blk">${strip('demo-s4', 'Fastest lap <span class="lc">+5</span>', 'saffron big')}<span class="cap">ink on saffron ${ratioOf(backing('ink-on-saffron'))}:1</span></div>
+  </div></div>
+<div class="lrow"><div class="rl"><b>Highlighter and burst ticks</b>A saffron stroke under the player's own word; cobalt ticks (saffron on ink) either side of the one action that matters, at most once a screen.</div>
+  <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${ticks(btn({ label: 'Start race' }))}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${ticks(btn({ label: 'Ready', variant: 'secondary' }))}</div></div></div>
+<div class="lrow"><div class="rl"><b>Corners</b>${L.corners.rule}</div>
+  <div class="corners">
+    <div class="blk"><div class="cn-panel"></div><span class="cap"><b>Panel</b> ${L.corners.panelPx.desk} px (or wobbled)</span></div>
+    <div class="blk">${banner('demo-cn', 'Banner')}<span class="cap"><b>Banner</b> torn, ${L.corners.bannerPx.desk} px</span></div>
+    <div class="blk">${tag('demo-cn', 'Tag')}<span class="cap"><b>Tag / strip</b> brushed, square</span></div>
+    <div class="blk">${btn({ label: 'Button' })}<span class="cap"><b>Button, field</b> ${tokens.layout.radiusPx.desk} px</span></div>
+    <div class="blk">${badge(7, 'sm')}<span class="cap"><b>Badge</b> ${L.corners.badgePx.desk} px</span></div>
+    <div class="blk">${chip('ready')}<span class="cap"><b>Status chip</b> pill</span></div>
+    <div class="blk">${toggle({ on: true })}<span class="cap"><b>Toggle track</b> pill</span></div>
+  </div></div>`;
 
 // ---------- 1 buttons ----------
 const STATES = [
@@ -93,13 +165,13 @@ const buttonsGrid = `<div class="states">
 const [wMin, wMax] = tokens.wobble.segmentsPerEdge;
 const panels = `<div class="panels">
   <div class="pcol">
-    <div class="panel-paper wb" data-wobble="panel-paper">
-      <span class="title-tab"><span>Round highlights</span></span>
-      <h3 class="h-display">Next round starts in <span class="num">42s</span></h3>
+    <div class="panel-paper wb" data-wobble="panel-paper" data-tilt="panel-paper">
+      ${tag('panel-paper', 'Race results', '', 'title-tab')}
+      <h3 class="h-display">Grid opens in <span class="num">0:42</span></h3>
       <p>Straight text and a straight hit box on a hand-cut edge. Votes close when the timer does.</p>
       <div class="btnrow">${btn({ label: 'Start race' })}${btn({ label: 'Ready', variant: 'secondary' })}</div>
     </div>
-    <p class="cap"><b>Paper panel.</b> Wobble outline of ±${tokens.wobble.amplitudePx.desk} px over ${wMin}–${wMax} segments per edge, ink outline ${tokens.ink.outlinePx.desk} px, sticker shadow y ${stk.y} px. Seeded by id, never animated. Saffron title tab skews its box, not its text.</p>
+    <p class="cap"><b>Paper panel.</b> Wobble outline of ±${tokens.wobble.amplitudePx.desk} px over ${wMin}–${wMax} segments per edge, ink outline ${tokens.ink.outlinePx.desk} px, sticker shadow y ${stk.y} px, a seeded tilt of up to ±${tokens.language.slant.panelTiltMaxDeg}°. Seeded by id, never animated. The saffron tag skews its box, not its text.</p>
   </div>
   <div class="pcol off">
     <div class="ink-base">
@@ -144,18 +216,18 @@ const toastsBody = `<div class="toasts">
 </div>`;
 
 // ---------- 5 confirmation ----------
-const ghost = `<div class="ghost" aria-hidden="true"><div class="gbar"><span>Round 3 complete</span></div><div class="gp">Next round starts in <i>42s</i></div><div class="gp">Vote on your controller</div></div>`;
+const ghost = `<div class="ghost" aria-hidden="true"><div class="gbar">${tag('ghost', 'Round 3 complete')}</div><div class="gp">Grid opens in <i>0:42</i></div><div class="gp">Pick your car</div></div>`;
 const confirmsBody = `<div class="confirms">
   <div class="pblk"><span class="cap"><b>Destructive.</b> Focus starts on the safe action (Cancel). Danger fill only on the button that does the damage.</span>
     <div class="stage">${ghost}<div class="scrim"></div>
-      <div class="modal wb" data-wobble="modal-end" role="alertdialog" aria-labelledby="m1">
+      <div class="modal wb" data-wobble="modal-end" data-tilt="modal-end" role="alertdialog" aria-labelledby="m1">
         <div class="modal-head"><span class="tile" style="--tile-bg:var(--c-danger)">${ic('triangle-alert')}</span><h3 class="h-display" id="m1">End the room?</h3></div>
         <p>Everyone is disconnected and the results are lost.</p>
         <div class="btnrow">${btn({ label: 'Cancel', variant: 'secondary', state: 'focus-kb' })}${btn({ label: 'Disband room', variant: 'destructive' })}</div>
       </div></div></div>
   <div class="pblk"><span class="cap"><b>Non-destructive.</b> Primary is saffron, the way out is a quiet-weight secondary. Focus starts on the primary.</span>
     <div class="stage">${ghost}<div class="scrim"></div>
-      <div class="modal wb" data-wobble="modal-join" role="dialog" aria-labelledby="m2">
+      <div class="modal wb" data-wobble="modal-join" data-tilt="modal-join" role="dialog" aria-labelledby="m2">
         <div class="modal-head">${badge(7)}<h3 class="h-display" id="m2">Join the race as #7?</h3></div>
         <p>You're #7 and you drive straight away. Everyone else keeps racing.</p>
         <div class="btnrow">${btn({ label: 'Not now', variant: 'quiet' })}${btn({ label: 'Join', variant: 'primary', state: 'focus-kb' })}</div>
@@ -172,7 +244,7 @@ const progressBody = `<div class="pgrid">
     <div class="spin-row"><i class="spinner lg" role="status" aria-label="Loading"></i><span>Connecting to the host…</span></div>
     <span class="cap">Used when the wait has no measurable end. Stops turning under reduced motion; the words stay.</span></div>
   <div class="pblk"><span class="cap k">Countdown number</span>
-    <div class="count"><div class="count-box wb" data-wobble="count-3"><span class="num" aria-live="assertive">3</span></div><span class="cap">Display face, hero size, cobalt on paper.<br>Beat: punches in, fades on the second.<br>Reduced motion: numbers just swap.</span></div></div>
+    <div class="count"><div class="count-box wb" data-wobble="count-3" data-tilt="count-3"><span class="num" aria-live="assertive">3</span></div><span class="cap">Display face, hero size, cobalt on paper.<br>Beat: punches in, fades on the second.<br>Reduced motion: numbers just swap.</span></div></div>
   <div class="pblk"><span class="cap k">Skeleton row</span>
     <div class="sk-row" aria-busy="true"><span class="sk badge-sk"></span><span class="sk-lines"><span class="sk line" style="width:46%"></span><span class="sk line" style="width:28%"></span></span><span class="sk pill"></span></div>
     <div class="sk-row" aria-busy="true"><span class="sk badge-sk"></span><span class="sk-lines"><span class="sk line" style="width:38%"></span><span class="sk line" style="width:22%"></span></span><span class="sk pill"></span></div>
@@ -242,13 +314,13 @@ const tvBody = `<div class="tvwrap">
     <div class="tv-safe" style="inset:${+(tokens.layout.tvSafe.title * 100).toFixed(2)}%;"></div>
     <div class="tv-safe" style="inset:${+(tokens.layout.tvSafe.action * 100).toFixed(2)}%;border-color:var(--c-teal);"></div>
     <div class="tv-inner">
-      <div class="tv-top"><span class="title-tab"><span>Round 3 complete</span></span>${chip('autopilot')}</div>
-      <div class="tv-panel wb" data-wobble="tv-panel">
-        <h3 class="h-display">Next round starts in <span class="num">42s</span></h3>
+      <div class="tv-top">${tag('tv-top', 'Round 3 complete')}${chip('autopilot')}</div>
+      <div class="tv-panel wb" data-wobble="tv-panel" data-tilt="tv-panel">
+        ${banner('tv-panel', 'Grid opens in <span class="acc">0:42</span>', 'h3')}
         <div class="tv-cards">${rosterCard({ n: 7, name: 'Dusty', chipKind: 'ready' })}${rosterCard({ n: 12, name: 'Pip', chipKind: 'choosing' })}${rosterCard({ n: 108, name: 'Ash', chipKind: 'ready' })}</div>
       </div>
       <div class="tv-prog"><div class="bar-head"><span>Preparing track…</span><span class="num">64%</span></div><div class="bar"><i></i></div></div>
-      <div class="tv-bottom">${btn({ label: 'Start race', state: 'focus-gp' })}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
+      <div class="tv-bottom">${ticks(btn({ label: 'Start race', state: 'focus-gp' }), 'on-ink')}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
     </div>
   </div>
   <div class="tv-spec">
@@ -257,7 +329,8 @@ const tvBody = `<div class="tvwrap">
     <div class="rule"></div>
     <dl>${tvRows}
       <dt>outline</dt><dd><b>${tokens.ink.outlinePx.tv * H} px</b> here · ${tokens.ink.outlinePx.tv} px</dd>
-      <dt>radius</dt><dd><b>${tokens.layout.radiusPx.tv * H} px</b> here · ${tokens.layout.radiusPx.tv} px</dd>
+      <dt>corners</dt><dd>buttons <b>${tokens.layout.radiusPx.tv * H} px</b> · panels <b>${tokens.language.corners.panelPx.tv * H} px</b> · badges <b>${tokens.language.corners.badgePx.tv * H} px</b> here (×2 at 1080p)</dd>
+      <dt>torn edge</dt><dd><b>±${tokens.language.banner.heading.tornAmplitudePx.tv * H} px</b> here · ±${tokens.language.banner.heading.tornAmplitudePx.tv} px</dd>
       <dt>shadow y</dt><dd><b>${(tvShadowY * H).toFixed(2)} px</b> here · ${tvShadowY.toFixed(2)} px (scales with outline)</dd>
       <dt>wobble</dt><dd><b>±${tokens.wobble.amplitudePx.tv * H} px</b> here · ±${tokens.wobble.amplitudePx.tv} px</dd>
       <dt>keyboard ring</dt><dd><b>${tokens.focus.keyboard.widthPx.tv * H} px</b> + ${tokens.focus.keyboard.offsetPx.tv * H} px offset · ${tokens.focus.keyboard.widthPx.tv} / ${tokens.focus.keyboard.offsetPx.tv} px</dd>
@@ -270,9 +343,10 @@ const tvBody = `<div class="tvwrap">
 </div>`;
 
 app.innerHTML = [
-  `<header class="masthead"><div><div class="overline">Joystick Jammers · UI design guide · P1-U01 · tokens v${tokens.version} (${tokens.status})</div><h1>Component sheet</h1>
-     <p>Every component in every state, forced with classes so the sheet is a still. Desk profile (laptop at 60 cm): type ${tokens.type.profiles.desk.scale.body} px body, outline ${tokens.ink.outlinePx.desk} px, radius ${tokens.layout.radiusPx.desk} px. The TV profile is at the bottom, at half size.</p></div>
+  `<header class="masthead"><div><div class="overline">Joystick Jammers · UI design guide · P1-U01, P1-U01.3 · tokens v${tokens.version} (${tokens.status})</div>${banner('masthead', 'Component <span class="acc">sheet</span>', 'h1')}
+     <p>Every component in every state, forced with classes so the sheet is a still. Desk profile (laptop at 60 cm): type ${tokens.type.profiles.desk.scale.body} px body, outline ${tokens.ink.outlinePx.desk} px, buttons ${tokens.layout.radiusPx.desk} px corners, panels ${tokens.language.corners.panelPx.desk} px. Section 00 is the design language (R102); the TV profile is at the bottom, at half size.</p></div>
      <div class="legend"><span><i class="sw" style="background:var(--c-cobalt)"></i><b>Keyboard focus</b> cobalt ring on paper, saffron on ink</span><span><i class="sw" style="background:var(--c-saffron)"></i><b>Gamepad focus</b> saffron ring, chevron tab, lift</span><span><b>Hover</b> lighter fill · <b>Pressed</b> shadow collapses · <b>Disabled</b> flat and muted</span></div></header>`,
+  section(0, 'Design language', 'Hand-made, not web-grid (R102): slants, banners behind headings, colour behind some text, big renders, compact, high contrast, no uniform rounded corners.', langBody),
   section(1, 'Buttons', 'Sentence-case labels, 48 px minimum height, ink outline, hard sticker shadow. Pressed drops the button by the shadow offset; disabled has no shadow at all.', buttonsGrid),
   section(2, 'Panels', 'Paper for the TV, ink for the controller, recessed rows for settings. Outlines wobble; text, content and hit boxes do not.', panels),
   section(3, 'Badges and chips', 'A number plus a colour identifies every seat for any N. Colours repeat after 12; the number never does.', badgesBody),
@@ -299,5 +373,25 @@ for (const el of document.querySelectorAll('[data-wobble]')) {
     `<svg class="wb-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">${shY ? `<path class="wb-shadow" d="${d}" transform="translate(${o / 2} ${o / 2 + shY})" stroke-width="${o}"/>` : ''}<path class="wb-fill" d="${d}" transform="translate(${o / 2} ${o / 2})" stroke-width="${o}"/></svg>`);
 }
 
+// ---------- R102 paint: torn banners, brushed tags and strips, highlighter strokes, seeded tilts ----------
+const paint = (el, d, w, h, cls2 = 'paint-svg') =>
+  el.insertAdjacentHTML('afterbegin', `<svg class="${cls2}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}"/></svg>`);
+for (const el of document.querySelectorAll('[data-torn]')) {
+  el.style.rotate = `${tokens.language.slant.headingRotateDeg + tiltFor(`bn:${el.dataset.torn}`, tokens.language.slant.headingJitterDeg)}deg`;
+  const amp = parseFloat(getComputedStyle(el).getPropertyValue('--torn-amp'));
+  paint(el, paintPath(el.dataset.torn, el.offsetWidth, el.offsetHeight, amp, 'torn'), el.offsetWidth, el.offsetHeight, 'bn-svg');
+}
+for (const el of document.querySelectorAll('[data-brush]')) {
+  const amp = parseFloat(getComputedStyle(el).getPropertyValue('--torn-amp'));
+  paint(el, paintPath(el.dataset.brush, el.offsetWidth, el.offsetHeight, amp, 'brush'), el.offsetWidth, el.offsetHeight);
+}
+for (const el of document.querySelectorAll('[data-stroke]')) {
+  const w = el.offsetWidth, h = Math.round(el.offsetHeight * tokens.language.banner.underline.heightEm * 1.6);
+  el.insertAdjacentHTML('afterbegin', `<svg class="paint-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="top:auto;bottom:${-h * 0.15}px;rotate:${tokens.language.banner.underline.rotateDeg}deg" aria-hidden="true"><path d="${strokePath(el.dataset.stroke, w, h)}"/></svg>`);
+}
+for (const el of document.querySelectorAll('[data-tilt]')) el.style.rotate = `${tiltFor(el.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
+
 await document.fonts.ready;
+await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; }))));
 window.sheetReady = true;
+

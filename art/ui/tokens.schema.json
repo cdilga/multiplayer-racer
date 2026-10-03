@@ -20,7 +20,8 @@
     "focus",
     "icons",
     "motion",
-    "qr"
+    "qr",
+    "language"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -492,6 +493,9 @@
         },
         "radiusPx": {
           "$ref": "#/$defs/byProfile"
+        },
+        "radiusNote": {
+          "type": "string"
         }
       }
     },
@@ -550,6 +554,398 @@
         },
         "note": {
           "type": "string"
+        }
+      }
+    },
+    "language": {
+      "type": "object",
+      "description": "R102 design language primitives (P1-U01.3): slants, banners, colour behind text, corner rules, free placement, density and renders.",
+      "required": [
+        "ruling",
+        "from",
+        "takes",
+        "notTaken",
+        "slant",
+        "banner",
+        "textBacking",
+        "corners",
+        "placement",
+        "density",
+        "renders"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ruling": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "takes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "notTaken": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "slant": {
+          "type": "object",
+          "required": [
+            "headingRotateDeg",
+            "headingJitterDeg",
+            "tagSkewDeg",
+            "tagRotateDeg",
+            "stripSkewDeg",
+            "panelTiltMaxDeg",
+            "seed",
+            "never"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "headingRotateDeg": {
+              "type": "number",
+              "minimum": -6,
+              "maximum": 6
+            },
+            "headingJitterDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "tagSkewDeg": {
+              "type": "number",
+              "minimum": -20,
+              "maximum": 20
+            },
+            "tagRotateDeg": {
+              "type": "number",
+              "minimum": -8,
+              "maximum": 8
+            },
+            "stripSkewDeg": {
+              "type": "number",
+              "minimum": -20,
+              "maximum": 20
+            },
+            "panelTiltMaxDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "seed": {
+              "type": "string"
+            },
+            "never": {
+              "type": "string"
+            }
+          }
+        },
+        "banner": {
+          "type": "object",
+          "required": [
+            "heading",
+            "tag",
+            "strip",
+            "underline",
+            "ticks"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "heading": {
+              "type": "object",
+              "required": [
+                "fill",
+                "text",
+                "accent",
+                "edge",
+                "tornAmplitudePx",
+                "padEm"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "fill": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "text": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "accent": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "edge": {
+                  "enum": [
+                    "torn",
+                    "brush",
+                    "square"
+                  ]
+                },
+                "tornAmplitudePx": {
+                  "$ref": "#/$defs/byProfile"
+                },
+                "padEm": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "tag": {
+              "type": "object",
+              "required": [
+                "fills",
+                "text",
+                "edge"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "fills": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/paletteRef"
+                  }
+                },
+                "text": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "edge": {
+                  "enum": [
+                    "torn",
+                    "brush",
+                    "square"
+                  ]
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "strip": {
+              "type": "object",
+              "required": [
+                "fills",
+                "edge"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "fills": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/paletteRef"
+                  }
+                },
+                "edge": {
+                  "enum": [
+                    "torn",
+                    "brush",
+                    "square"
+                  ]
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "underline": {
+              "type": "object",
+              "required": [
+                "color",
+                "heightEm",
+                "rotateDeg",
+                "edge"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "heightEm": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                },
+                "rotateDeg": {
+                  "type": "number",
+                  "minimum": -6,
+                  "maximum": 6
+                },
+                "edge": {
+                  "enum": [
+                    "torn",
+                    "brush",
+                    "square"
+                  ]
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "ticks": {
+              "type": "object",
+              "required": [
+                "onPaper",
+                "onInk",
+                "count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "onPaper": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "onInk": {
+                  "$ref": "#/$defs/paletteRef"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 6
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "textBacking": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/properties/contrastPairs/items"
+          }
+        },
+        "corners": {
+          "type": "object",
+          "required": [
+            "rule",
+            "panelPx",
+            "bannerPx",
+            "buttonPx",
+            "badgePx",
+            "chip"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "rule": {
+              "type": "string"
+            },
+            "panelPx": {
+              "$ref": "#/$defs/byProfile"
+            },
+            "bannerPx": {
+              "$ref": "#/$defs/byProfile"
+            },
+            "buttonPx": {
+              "$ref": "#/$defs/byProfile"
+            },
+            "badgePx": {
+              "$ref": "#/$defs/byProfile"
+            },
+            "chip": {
+              "enum": [
+                "pill"
+              ]
+            }
+          }
+        },
+        "placement": {
+          "type": "object",
+          "required": [
+            "offsetPx",
+            "overlapPx",
+            "note"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "offsetPx": {
+              "type": "object",
+              "required": [
+                "tv",
+                "desk",
+                "handheld"
+              ],
+              "additionalProperties": false,
+              "patternProperties": {
+                "^(tv|desk|handheld)$": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "overlapPx": {
+              "$ref": "#/$defs/byProfile"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "density": {
+          "type": "object",
+          "required": [
+            "panelPadStep",
+            "rowGapStep"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "panelPadStep": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rowGapStep": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "renders": {
+          "type": "object",
+          "required": [
+            "minScreenShare",
+            "cutout",
+            "where"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "minScreenShare": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cutout": {
+              "type": "string"
+            },
+            "where": {
+              "type": "string"
+            },
+            "sheetStandIn": {
+              "type": "string"
+            }
+          }
         }
       }
     },

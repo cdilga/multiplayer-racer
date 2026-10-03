@@ -68,6 +68,28 @@ for (let i = 0; i < colors.length; i++) {
   if (!ok) fail(`cvd: adjacent seats ${a.name}→${b.name} differ by only ΔE00 ${worst} in some view (min ${minDe})`);
 }
 
+// 4a. The R102 language (P1-U01.3): every colour put behind text passes WCAG AA for its size, and every banner, tag and
+//     strip fill has a named backing pair with the text colour it carries.
+const lang = tokens.language ?? {};
+report.backing = [];
+for (const p of lang.textBacking ?? []) {
+  const [fg, bg] = [hex(p.fg), hex(p.bg)];
+  if (!fg || !bg) continue;
+  const ratio = contrast(fg, bg);
+  const ok = ratio >= MIN[p.size];
+  report.backing.push({ name: p.name, fg: p.fg, bg: p.bg, size: p.size, ratio: +ratio.toFixed(2), min: MIN[p.size], ok });
+  if (!ok) fail(`backing: ${p.name} (${p.fg} on ${p.bg}) is ${ratio.toFixed(2)}:1, needs ${MIN[p.size]}:1 for ${p.size}`);
+}
+const backed = (fg, bg) => (lang.textBacking ?? []).some((p) => p.fg === fg && p.bg === bg);
+const b = lang.banner ?? {};
+if (b.heading) for (const fg of [b.heading.text, b.heading.accent]) if (!backed(fg, b.heading.fill)) fail(`backing: heading banner ${fg} on ${b.heading.fill} has no textBacking pair`);
+for (const f of b.tag?.fills ?? []) if (!backed(b.tag.text, f)) fail(`backing: tag ${b.tag.text} on ${f} has no textBacking pair`);
+for (const f of b.strip?.fills ?? []) if (!(lang.textBacking ?? []).some((p) => p.bg === f)) fail(`backing: strip fill ${f} has no textBacking pair`);
+for (const r of [b.underline?.color, b.ticks?.onPaper, b.ticks?.onInk]) if (r) hex(r);
+if (lang.renders?.sheetStandIn) {
+  const f = lang.renders.sheetStandIn.split(' ')[0];
+  if (!existsSync(join(here, f))) fail(`file: art/ui/${f} (language.renders.sheetStandIn) is missing`);
+}
 // 5. Each profile's minimum cap height must be reachable at its minimum text size.
 for (const [name, prof] of Object.entries(tokens.type?.profiles ?? {})) {
   const reachable = prof.minTextPx * (tokens.type.capHeightRatio ?? 0);
@@ -92,6 +114,7 @@ if (process.argv.includes('--json')) console.log(JSON.stringify({ ok: failures.l
 else {
   console.log(`schema: ${valid ? 'valid' : 'INVALID'}`);
   for (const c of report.contrast) console.log(`contrast ${c.ok ? 'ok  ' : 'FAIL'} ${c.ratio.toFixed(2).padStart(5)}:1 (min ${c.min}) ${c.name}: ${c.fg} on ${c.bg}`);
+  for (const c of report.backing) console.log(`backing  ${c.ok ? 'ok  ' : 'FAIL'} ${c.ratio.toFixed(2).padStart(5)}:1 (min ${c.min}) ${c.name}: ${c.fg} on ${c.bg}`);
   for (const b of report.badges) console.log(`badge    ${b.ok ? 'ok  ' : 'FAIL'} ${b.ratio.toFixed(2).padStart(5)}:1 ${b.on} on ${b.color}`);
   for (const c of report.cvd) console.log(`cvd      ${c.byColour ? 'ok  ' : 'FAIL'} worst ΔE00 ${String(c.worst).padStart(5)} ${c.seats} ${JSON.stringify(c.deltaE)}`);
   console.log(`files: ${report.files.filter((f) => f.ok).length}/${report.files.length} present`);

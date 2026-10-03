@@ -1,6 +1,8 @@
 // Design POC token loader (P1-U02/U03/U05): reads art/ui/tokens.json and exposes it as CSS custom properties and
 // @font-face rules, with --k = the TV scale (output height / 1080) so mocks size everything in TV px at 1080p.
 // The game's own token → CSS pipeline is P1-C01's; this exists only for the POC pages.
+// The R102 shape helpers (torn banners, brushed tags and strips, highlighter strokes, seeded tilts) are the sheets' own.
+export { paintPath, seeded, strokePath, tiltFor } from '../../sheets/tokens-css.js';
 const ROOT = new URL('../../', import.meta.url);
 
 export async function loadTokens() {
@@ -15,6 +17,10 @@ export async function loadTokens() {
   for (const [name, c] of Object.entries(tokens.palette)) vars.push(`--c-${name}:${c.hex}`);
   const fallback = tokens.fonts.fallback.map((f) => (f.includes(' ') ? `"${f}"` : f)).join(',');
   vars.push(`--font-display:"${tokens.fonts.display.family}",${fallback}`, `--font-body:"${tokens.fonts.body.family}",${fallback}`);
+  // R102 language (P1-U01.3): corners and slants in TV px × --k, for the mocks to build banners, tags and strips from.
+  const L = tokens.language;
+  vars.push(`--r-panel:calc(var(--k, 1) * ${L.corners.panelPx.tv}px)`, `--r-button:calc(var(--k, 1) * ${L.corners.buttonPx.tv}px)`, `--r-badge:calc(var(--k, 1) * ${L.corners.badgePx.tv}px)`);
+  vars.push(`--slant-heading:${L.slant.headingRotateDeg}deg`, `--skew-tag:${L.slant.tagSkewDeg}deg`, `--rot-tag:${L.slant.tagRotateDeg}deg`, `--skew-strip:${L.slant.stripSkewDeg}deg`);
   css.push(`:root{${vars.join(';')}}`);
   const style = document.createElement('style');
   style.textContent = css.join('\n');
