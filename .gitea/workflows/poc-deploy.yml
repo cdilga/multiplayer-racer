@@ -21,7 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Tools
-        run: command -v rsync >/dev/null && command -v ssh >/dev/null || (apt-get update -qq && apt-get install -y -qq rsync openssh-client)
+        run: command -v rsync >/dev/null && command -v ssh >/dev/null && command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq rsync openssh-client git-lfs)
+      # The frames, icons and other PNG/WebP are LFS objects; a plain checkout leaves 130-byte pointer files that
+      # would overwrite the real images on the site (broke the style frames and icons on the first CI deploy).
+      - name: LFS objects for the POC
+        run: |
+          git lfs install --local
+          git lfs pull --include="art/ui/**"
       - name: Publish
         env:
           POC_DEPLOY_KEY: ${{ secrets.POC_DEPLOY_KEY }}

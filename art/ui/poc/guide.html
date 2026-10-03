@@ -28,7 +28,8 @@
   import { loadTokens } from './shared/tokens.js';
   await loadTokens();
   // A small Markdown renderer for GUIDE.md (headings, paragraphs, lists, tables, code, bold, links): no library.
-  const md = await (await fetch('../GUIDE.md')).text();
+  // ?f=<path> renders any Markdown file under art/ui (the frames README, round notes); default is the guide.
+  const md = await (await fetch(new URLSearchParams(location.search).get('f') || '../GUIDE.md')).text();
   const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const inline = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, h) => `<a href="${h.startsWith('http') || h.startsWith('#') ? h : `../${h}`}">${t}</a>`);
   const out = [];

@@ -106,3 +106,20 @@ evidence to read, not work to resume.
 **2026-10-03 (owner):** the pre-0.2 beads were removed from the tracker entirely before the Playtest-1
 conversion. Read them with `git show 0a165ef:.beads/issues.jsonl`. The tracker now holds only the
 Playtest-1 beads (`docs/plans/v0.2-playtest-1-bead-map.md`).
+
+## POC round 1 rulings (owner, 2026-10-03)
+
+From the owner's design-POC review (`docs/playtests/poc-2026-10-03.md`; the reference screens are in
+`art/ui/refs/owner-2026-10-03/`). They apply to R04–R09, C02, C03, C06, C07, A03 and A05 as well as the POC.
+
+| # | Ruling |
+|---|---|
+| R95 | **Every player tile has exactly the same area, at any N.** This supersedes the plan §3a "last row centred, tiles grow wider" gap rule. Cells left over hold the join QR, standings, player list or captions, never black. |
+| R96 | **The host's chrome lives in a bottom footer**: pause and the host menu, room code with the domain, the join QR when it doesn't fit around the tiles, player count and readouts, global captions, diagnostics (the footer can expand) and the logo. Nothing overlays a player's tile except the full-screen countdown and the Identify flash. Whether the player list, QR and captions are **dynamic** (reflow between footer and spare cells) or **static** is a host setting. |
+| R97 | **Pause is a top-level footer button.** Any submenu that takes over the screen pauses first; Settings, End round and Disband live in that pause flow. Hovering the QR enlarges it for a while and pauses. |
+| R98 | **Cameras sit higher and show the track ahead**; no tile space is spent on dead scene. First person is segmented to maximise driving information. **Cars are smaller by default**, and **camera distance is a setting** (host default by player count, or per player) because the right value may change with the number of screens. |
+| R99 | **Identify and the countdown use a timed, high-exposure colour flash.** The label reads **"Cooee #N"**, never "That's you". The 3-2-1 is **one full-screen overlay**, not one per tile. The controller always carries the player's identify colour and plays the same flash. |
+| R100 | **Name plates are only for Derby and other single-shared-screen modes.** |
+| R101 | **Phone controllers are held in landscape**: encourage it, and prompt for fullscreen and a wake lock. Boost and power-ups sit centre top between the two sides. The tutorial is larger and central and advances when the player performs the gesture. The lobby supports choosing among multiple vehicles. |
+| R102 | **UI design language:** hand-made rather than web-grid: slants, contrast banner backing for headings, colour behind some text, big renders, compact, high contrast, **no uniform rounded corners**. Take the language from the reference screens, never their content. |
+| R103 | **Engine audio:** the Cruz Missile has **no turbo** sound (turbo/boost is per-vehicle profile data). Engines have **start and stop** sounds. |

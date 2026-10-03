@@ -12,6 +12,10 @@ if [ -n "${POC_DEPLOY_KEY:-}" ]; then
   printf '%s\n' "$POC_DEPLOY_KEY" > "$key"; chmod 600 "$key"
   ssh_cmd="$ssh_cmd -i $key"
 fi
+# Never publish an LFS pointer in place of an image (a checkout without `git lfs pull` leaves ~130-byte stubs).
+if grep -rl --exclude-dir=vendor '^version https://git-lfs.github.com/spec' "$root/art/ui" 2>/dev/null | head -3 | grep -q .; then
+  echo "refusing to publish: art/ui still has LFS pointer files (run: git lfs pull --include='art/ui/**')" >&2; exit 1
+fi
 # The POC pages reach siblings of art/ui/poc/ (../brand, ../frames, ../sheets, ../GUIDE.md, ...), so the whole
 # art/ui/ tree is mirrored, minus generation scratch; the edge serves /poc/ and those siblings from it.
 rsync -az --delete --exclude '.DS_Store' --exclude '*.log' --exclude 'frames/prompts/' --exclude 'frames/ledger.jsonl' \
