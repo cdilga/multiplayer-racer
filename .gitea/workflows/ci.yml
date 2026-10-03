@@ -1,8 +1,9 @@
 # CI from P1-F01, brought up on Gitea by P1-D01: the checks the workspace scaffold guarantees. P1-F02 grows this into
 # the fast/build/browser lanes (Playtest-1 plan §12.1); scripts/ci-status.sh reports the lanes for a commit.
-# The rust job runs cold on the shared ubuntu-latest runner (truenas-shared) until a shared `rust` runner with a
-# persistent cargo cache serves this repo (P1-D01: the owner re-registers Physical Soccer's repository-scoped `rust`
-# runners as shared). No actions/cache: truenas-shared's cache server times out from job containers (run 996).
+# The rust job runs on the shared `rust` runners (truenas-rust, triton-rust: instance-wide since 2026-10-03), whose
+# job containers mount a persistent /cargo-cache. rustup, the pinned toolchain and cargo tools install there once;
+# Jammers keeps its own target dir so Physical Soccer's builds on the same cache don't evict ours (P1-D01 AC1/AC3).
+# No actions/cache: truenas-shared's cache server times out from job containers (run 996).
 name: CI
 
 on:
@@ -11,17 +12,23 @@ on:
 
 jobs:
   rust:
-    runs-on: ubuntu-latest
+    runs-on: rust
     timeout-minutes: 45
+    env:
+      CARGO_HOME: /cargo-cache/cargo
+      RUSTUP_HOME: /cargo-cache/rustup
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers
+      CARGO_BUILD_JOBS: "12"
     steps:
       - uses: actions/checkout@v4
-      - name: Toolchain (rust-toolchain.toml)
+      - name: Toolchain (rust-toolchain.toml) on the persistent cache
         run: |
-          if ! command -v rustup >/dev/null && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+          test -w /cargo-cache
+          if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
           fi
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          "$HOME/.cargo/bin/rustup" show active-toolchain || "$HOME/.cargo/bin/rustup" toolchain install
+          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
+          "$CARGO_HOME/bin/rustup" show active-toolchain || "$CARGO_HOME/bin/rustup" toolchain install
       - name: Format
         run: cargo fmt --all -- --check
       - name: Check (native)
@@ -34,9 +41,9 @@ jobs:
         run: cargo test --workspace --locked
       - name: WASM parity in Node (jj-map P1-M01, jj-procgen P1-M03a)
         run: |
-          if ! command -v wasm-bindgen-test-runner >/dev/null; then
+          if ! wasm-bindgen-test-runner --version 2>/dev/null | grep -q ' 0\.2\.129'; then
             curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
-            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen-test-runner "$HOME/.cargo/bin/"
+            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen-test-runner "$CARGO_HOME/bin/"
           fi
           cargo test --locked --target wasm32-unknown-unknown -p jj-map -p jj-procgen --test wasm_parity
       - name: The greybox validates (jj validate)
