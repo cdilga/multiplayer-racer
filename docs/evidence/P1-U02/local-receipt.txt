@@ -1,0 +1,40 @@
+# P1-U02 local receipt (TV mocks)
+date: 2026-10-03T02:19:11Z  machine: Apple M1 Pro (MacBookPro18,3), macOS 27.0.1  node: v26.10.0  playwright: 1.62.1  commit base: 6f91a90
+
+$ node art/ui/poc/tv/capture.mjs        # captures + request audit + seat order + gap cases + cap height + video
+phone-portrait: 13 states
+captures: 96; external requests: 0; failed: 0; seat order: 5:ok 13:ok 24:ok 32:ok; cap height at 32 tiles: smallest 16.8px (.hud-badge) vs min 16.8px → ok
+gap n=2: tiles 954x794 (last row 954x794); fillers 1920x140 backdrop, 1920x140 backdrop; join chip
+gap n=3: tiles 954x534 (last row 1074x534); fillers 420x540 standings, 420x540 join QR
+gap n=5: tiles 634x527 (last row 954x534); fillers 1920x3 backdrop, 1920x3 backdrop; join chip
+gap n=7: tiles 474x394 (last row 634x527); fillers 1920x3 backdrop, 1920x3 backdrop, 1920x70 backdrop, 1920x70 backdrop; join chip
+gap n=10: tiles 474x354 (last row 634x354); fillers none; join chip
+gap n=13: tiles 378x314 (last row 474x354); fillers 1920x20 backdrop, 1920x20 backdrop; join chip
+exit 0
+
+captures on disk: 96 (1080p=35 21x9=13 4k=35 phone-portrait=13 )
+video: docs/evidence/P1-U02/grid-player.webm (7.3M)
+
+# AC1: requests outside the folder (capture-report.json .external) and failed responses
+external: 0  failed: 0
+# AC3: seat order in the grid player and the gap cases
+N=5 seat order kept 1,2,3,4,5
+N=13 seat order kept 1,2,3,4,5,6,7,8,9,10,11,12,13
+N=24 seat order kept 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
+N=32 seat order kept 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32
+gap n=2 tiles 954x794 last row 954x794 fillers 1920x140 backdrop; 1920x140 backdrop + join chip
+gap n=3 tiles 954x534 last row 1074x534 fillers 420x540 standings; 420x540 join QR 
+gap n=5 tiles 634x527 last row 954x534 fillers 1920x3 backdrop; 1920x3 backdrop + join chip
+gap n=7 tiles 474x394 last row 634x527 fillers 1920x3 backdrop; 1920x3 backdrop; 1920x70 backdrop; 1920x70 backdrop + join chip
+gap n=10 tiles 474x354 last row 634x354 fillers none + join chip
+gap n=13 tiles 378x314 last row 474x354 fillers 1920x20 backdrop; 1920x20 backdrop + join chip
+# AC4: HUD cap height at the smallest tile (32 tiles at 1080p)
+{"viewport":"1920x1080","tiles":32,"smallestTile":"268x210","minCapHeightPx":16.8,"smallest":{"sel":".hud-badge","fontPx":24,"capPx":16.8,"glyphCapPx":16.8},"pass":true,"elements":132}
+# AC5: HUD layer frame cost, headed on the Mac's GPU (perf.json)
+Apple M1 Pro (MacBookPro18,3), macOS 27.0.1 | Chromium 151.0.7922.34 (Playwright, headed, channel chromium) | ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)
+n=24 hud=true frame p50/p95 8.3/9.2 ms; hud update mean/p95 0.019/0.1 ms; render submit 1.55 ms; draws 552
+n=24 hud=false frame p50/p95 8.3/9.7 ms; hud update mean/p95 0.001/0 ms; render submit 1.67 ms; draws 552
+n=32 hud=true frame p50/p95 8.3/9.9 ms; hud update mean/p95 0.022/0.1 ms; render submit 1.8 ms; draws 736
+n=32 hud=false frame p50/p95 8.3/9.6 ms; hud update mean/p95 0/0 ms; render submit 1.83 ms; draws 736
+# AC7: fresh-eyes review
+13150 bytes docs/evidence/P1-U02/review.md

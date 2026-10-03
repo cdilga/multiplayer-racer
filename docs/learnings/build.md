@@ -26,3 +26,8 @@
   `chromium-1200/` folder. The fix was to move root Playwright to 1.62.1, matching what was installed.
 - Check with `ls ~/Library/Caches/ms-playwright/` before installing: the browser folder's number must match
   the version's `playwright-core/browsers.json`.
+
+## 2026-10-03 · Push LFS objects before the branch
+
+- GitHub declines a push (`pre-receive hook declined`) whose commits reference LFS objects it doesn't have yet. Run
+  `git lfs push --all origin <branch>` first, then `git push`.

@@ -78,7 +78,7 @@ const STATES = [
 const BTN_ROWS = [
   { name: 'Primary', sub: 'Saffron fill, ink text', variant: 'primary', label: 'Start race' },
   { name: 'Secondary', sub: 'Paper fill, ink outline', variant: 'secondary', label: 'Ready' },
-  { name: 'Destructive', sub: 'Danger fill, paper text', variant: 'destructive', label: 'End room' },
+  { name: 'Destructive', sub: 'Danger fill, paper text', variant: 'destructive', label: 'Disband room' },
   { name: 'Quiet (text)', sub: 'No outline, no shadow', variant: 'quiet', label: 'Cancel' },
   { name: 'Leading icon', sub: 'Icon 20 px, gap sp-2', variant: 'secondary', label: 'Find my car', icon: 'car' },
   { name: 'Leading icon, destructive', sub: 'Leave room', variant: 'destructive', label: 'Leave room', icon: 'log-out' },
@@ -151,7 +151,7 @@ const confirmsBody = `<div class="confirms">
       <div class="modal wb" data-wobble="modal-end" role="alertdialog" aria-labelledby="m1">
         <div class="modal-head"><span class="tile" style="--tile-bg:var(--c-danger)">${ic('triangle-alert')}</span><h3 class="h-display" id="m1">End the room?</h3></div>
         <p>Everyone is disconnected and the results are lost.</p>
-        <div class="btnrow">${btn({ label: 'Cancel', variant: 'secondary', state: 'focus-kb' })}${btn({ label: 'End room', variant: 'destructive' })}</div>
+        <div class="btnrow">${btn({ label: 'Cancel', variant: 'secondary', state: 'focus-kb' })}${btn({ label: 'Disband room', variant: 'destructive' })}</div>
       </div></div></div>
   <div class="pblk"><span class="cap"><b>Non-destructive.</b> Primary is saffron, the way out is a quiet-weight secondary. Focus starts on the primary.</span>
     <div class="stage">${ghost}<div class="scrim"></div>
@@ -248,7 +248,7 @@ const tvBody = `<div class="tvwrap">
         <div class="tv-cards">${rosterCard({ n: 7, name: 'Dusty', chipKind: 'ready' })}${rosterCard({ n: 12, name: 'Pip', chipKind: 'choosing' })}${rosterCard({ n: 108, name: 'Ash', chipKind: 'ready' })}</div>
       </div>
       <div class="tv-prog"><div class="bar-head"><span>Preparing track…</span><span class="num">64%</span></div><div class="bar"><i></i></div></div>
-      <div class="tv-bottom">${btn({ label: 'Start race', state: 'focus-gp' })}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'End room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
+      <div class="tv-bottom">${btn({ label: 'Start race', state: 'focus-gp' })}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
     </div>
   </div>
   <div class="tv-spec">

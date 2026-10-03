@@ -1,0 +1,230 @@
+{
+  "base": "http://127.0.0.1:54304",
+  "machine": "Apple M1 Pro (MacBookPro18,3), macOS 27.0.1",
+  "captures": 96,
+  "external": [],
+  "failed": [],
+  "seatOrder": [
+    {
+      "at": 5,
+      "seats": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "inOrder": true
+    },
+    {
+      "at": 13,
+      "seats": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "inOrder": true
+    },
+    {
+      "at": 24,
+      "seats": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "inOrder": true
+    },
+    {
+      "at": 32,
+      "seats": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ],
+      "inOrder": true
+    }
+  ],
+  "gapCases": [
+    {
+      "n": 2,
+      "tile": "954x794",
+      "lastRowTile": "954x794",
+      "fillers": [
+        {
+          "w": 1920,
+          "h": 140,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 140,
+          "has": "backdrop"
+        }
+      ],
+      "joinChip": true
+    },
+    {
+      "n": 3,
+      "tile": "954x534",
+      "lastRowTile": "1074x534",
+      "fillers": [
+        {
+          "w": 420,
+          "h": 540,
+          "has": "standings"
+        },
+        {
+          "w": 420,
+          "h": 540,
+          "has": "join QR"
+        }
+      ],
+      "joinChip": false
+    },
+    {
+      "n": 5,
+      "tile": "634x527",
+      "lastRowTile": "954x534",
+      "fillers": [
+        {
+          "w": 1920,
+          "h": 3,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 3,
+          "has": "backdrop"
+        }
+      ],
+      "joinChip": true
+    },
+    {
+      "n": 7,
+      "tile": "474x394",
+      "lastRowTile": "634x527",
+      "fillers": [
+        {
+          "w": 1920,
+          "h": 3,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 3,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 70,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 70,
+          "has": "backdrop"
+        }
+      ],
+      "joinChip": true
+    },
+    {
+      "n": 10,
+      "tile": "474x354",
+      "lastRowTile": "634x354",
+      "fillers": [],
+      "joinChip": true
+    },
+    {
+      "n": 13,
+      "tile": "378x314",
+      "lastRowTile": "474x354",
+      "fillers": [
+        {
+          "w": 1920,
+          "h": 20,
+          "has": "backdrop"
+        },
+        {
+          "w": 1920,
+          "h": 20,
+          "has": "backdrop"
+        }
+      ],
+      "joinChip": true
+    }
+  ],
+  "capHeight": {
+    "viewport": "1920x1080",
+    "tiles": 32,
+    "smallestTile": "268x210",
+    "minCapHeightPx": 16.8,
+    "smallest": {
+      "sel": ".hud-badge",
+      "fontPx": 24,
+      "capPx": 16.8,
+      "glyphCapPx": 16.8
+    },
+    "pass": true,
+    "elements": 132
+  }
+}
