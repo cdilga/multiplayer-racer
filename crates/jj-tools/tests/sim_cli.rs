@@ -182,6 +182,15 @@ fn trace_feeds_compare_which_shows_the_differing_keys() {
     }
     assert!(car["wheels"][0]["slipDeg"].is_f64() && car["wheels"][0]["contact"].is_boolean());
     assert!(rows[721]["summary"]["stateHash"].is_string());
+    // Events: what changed the sim since the previous row (the spawn at row 0, the throttle input applied at tick 0).
+    assert!(
+        rows[0]["events"][0]["setup"]["SpawnCar"].is_object(),
+        "{}",
+        rows[0]["events"]
+    );
+    assert_eq!(rows[1]["events"][0]["input"]["throttle"], 1.0);
+    assert_eq!(rows[1]["events"][0]["at"], 0);
+    assert!(rows[360]["events"].as_array().unwrap().is_empty());
 
     // ACCEPTED | CURRENT | TUNED: the same run twice is identical; the tuned one differs, key by key.
     let cmp = jj(&["sim", "--json", "--compare", &a, &a, &b]);

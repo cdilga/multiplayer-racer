@@ -38,7 +38,7 @@ use serde_json::{Value, json};
 
 use jj_sim::observe::{Metric, RouteGeom, SignatureTracker, observe_cars};
 use jj_sim::{CarId, DriveInput, Journal, Sim, SpawnPose, VehicleProfile, route_spawn};
-use jj_types::axis::quantise_axis;
+use jj_types::axis::{dequantise_axis, quantise_axis};
 
 pub use session::PhaseTarget;
 
@@ -260,9 +260,29 @@ struct Recorder<'a> {
     checks: Vec<Check>,
     observations: Vec<Value>,
     trace: Vec<Value>,
+    /// How much of the journal earlier trace rows have reported.
+    seen_setup: usize,
+    seen_inputs: usize,
 }
 
 impl Recorder<'_> {
+    /// What changed the sim since the previous row: the journal's setup commands and input changes, each with the tick
+    /// it was applied at. Later sim events (contacts, detaches, landings) join this list.
+    fn events(&mut self, sim: &Sim) -> Vec<Value> {
+        let j = sim.journal();
+        let mut events: Vec<Value> = j.setup[self.seen_setup..]
+            .iter()
+            .map(|(at, setup)| json!({ "at": at, "setup": setup }))
+            .collect();
+        events.extend(j.entries[self.seen_inputs..].iter().map(|e| {
+            json!({ "at": e.tick, "input": { "car": e.car, "throttle": dequantise_axis(e.input.throttle),
+                                             "steer": dequantise_axis(e.input.steer),
+                                             "brake": dequantise_axis(e.input.brake) } })
+        }));
+        (self.seen_setup, self.seen_inputs) = (j.setup.len(), j.entries.len());
+        events
+    }
+
     /// Records the state after a tick (`end`: the last one); returns whether the `until` predicate holds.
     fn record(&mut self, sim: &Sim, session: &session::Session, end: bool) -> bool {
         let cars = observe_cars(sim, self.route);
@@ -276,7 +296,9 @@ impl Recorder<'_> {
                 .push(json!({ "tick": tick, "cars": cars, "session": session.observe() }));
         }
         if self.trace_on {
-            self.trace.push(json!({ "tick": tick, "cars": cars }));
+            let events = self.events(sim);
+            self.trace
+                .push(json!({ "tick": tick, "cars": cars, "events": events }));
         }
         self.fx.until.as_ref().is_some_and(|u| {
             self.trackers
@@ -383,6 +405,8 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
             .collect(),
         observations: Vec::new(),
         trace: Vec::new(),
+        seen_setup: 0,
+        seen_inputs: 0,
     };
     let mut stopped_early = false;
     rec.record(&sim, &session, fx.ticks == 0);
