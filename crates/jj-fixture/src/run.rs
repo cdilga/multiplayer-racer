@@ -129,6 +129,7 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                 action: None,
                 ..i.clone()
             })
+            // (the ACTION stick's utilities go with it: P1-S08's duels compare a cone against none)
             .collect(),
         BaselineKind::BoostForever => {
             // Every span boosts, and a span from tick 0 keeps boost held where the script has gaps, for every car
@@ -146,6 +147,7 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                     boost: true,
                     stick: None,
                     action: None,
+                    cancel: false,
                 })
                 .collect();
             spans.extend(fx.inputs.iter().map(|i| InputSpan {
@@ -189,6 +191,7 @@ fn baseline_inputs(fx: &Fixture, kind: BaselineKind) -> Vec<InputSpan> {
                         boost: (0.2..0.4).contains(&action),
                         stick: None,
                         action: None,
+                        cancel: false,
                     });
                 }
             }
@@ -243,9 +246,17 @@ pub fn run(
                     // A metric only one of the runs has (it stopped, it landed) differs by definition; `more` needs the
                     // deliberate run's to be the higher.
                     ok: match (a, v) {
-                        (Some(a), Some(v)) if d.more => a - v >= d.by,
-                        (Some(a), Some(v)) => (a - v).abs() >= d.by,
-                        (Some(_), None) => true,
+                        (Some(a), Some(v)) => {
+                            let d_ = if d.more {
+                                a - v
+                            } else if d.less {
+                                v - a
+                            } else {
+                                (a - v).abs()
+                            };
+                            d_ >= d.by && d.at_most.is_none_or(|m| d_ <= m)
+                        }
+                        (Some(_), None) => !d.less,
                         (None, Some(_)) => !d.more,
                         (None, None) => false,
                     },

@@ -15,8 +15,10 @@ pub mod profile;
 pub mod race;
 pub mod rng;
 pub mod sim;
+pub mod utility;
 pub mod vehicle;
 
 pub use journal::{DriveInput, Journal, SpawnPose};
 pub use profile::VehicleProfile;
 pub use sim::{CarId, CarState, DT, Sim, TICK_HZ, WheelState, route_spawn};
+pub use utility::{PropKind, UtilityEvent, UtilityKind};

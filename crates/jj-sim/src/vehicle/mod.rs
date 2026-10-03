@@ -48,6 +48,10 @@ pub struct ActionState {
     pub armed: bool,
     /// Ticks left of a well-timed wheelie's extra drive (P1-S03c).
     pub wheelie_ticks: u32,
+    /// The ACTION utilities (P1-S08), indexed by [`crate::utility::UtilityKind::index`]: the tick each can next fire
+    /// (game time), and how many have fired over the round.
+    pub utility_ready: [u64; 2],
+    pub utility_fired: [u32; 2],
 }
 
 impl ActionState {
@@ -58,6 +62,8 @@ impl ActionState {
             boosting: false,
             armed: true,
             wheelie_ticks: 0,
+            utility_ready: [0; 2],
+            utility_fired: [0; 2],
         }
     }
 

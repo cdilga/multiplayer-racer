@@ -128,6 +128,15 @@ pub enum SimEvent {
     Identify {
         seat: SeatId,
     },
+    /// The seat's ACTION up fired the "OI!" flash (P1-S08): headlights flash and "OI!" pops over the car.
+    Oi {
+        seat: SeatId,
+    },
+    /// The seat's ACTION down dropped a cone (P1-S08); `debris` indexes the snapshot's debris records.
+    ConeDropped {
+        seat: SeatId,
+        debris: u32,
+    },
 }
 
 /// Sim → main.

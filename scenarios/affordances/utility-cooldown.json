@@ -1,0 +1,41 @@
+{
+ "scenario": "utility-cooldown",
+ "what": "P1-S08's cooldowns hold in game time: 0.5 s between OI! flashes and 2.5 s between cones, and a cone stays where it fell. One Cruz Missile rolls down the greybox's back straight with its player flicking ACTION up three times (at 0, 0.3 and 0.7 s: the second is inside the 0.5 s cooldown and is refused) and down three times (at 0.9, 1.9 and 3.5 s: the second is inside the 2.5 s cooldown). Each flick is a deliberate entry through jj-input (out, back to neutral), so only the sim's cooldown can refuse it. Baselines: without the ACTION stick nothing fires.",
+ "map": "maps/greybox-loop.json",
+ "seed": 67,
+ "ticks": 480,
+ "cars": [
+  {"routePoint": 88, "lateral": 0, "linvel": [-5, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 8, "stick": [0, 0.25], "action": [0, 1]},
+  {"car": 0, "fromTick": 8, "toTick": 36, "stick": [0, 0.25]},
+  {"car": 0, "fromTick": 36, "toTick": 44, "stick": [0, 0.25], "action": [0, 1]},
+  {"car": 0, "fromTick": 44, "toTick": 84, "stick": [0, 0.25]},
+  {"car": 0, "fromTick": 84, "toTick": 92, "stick": [0, 0.25], "action": [0, 1]},
+  {"car": 0, "fromTick": 92, "toTick": 108, "stick": [0, 0.25]},
+  {"car": 0, "fromTick": 108, "toTick": 116, "stick": [0, 0.25], "action": [0, -1]},
+  {"car": 0, "fromTick": 116, "toTick": 228, "stick": [0, 0.25]},
+  {"car": 0, "fromTick": 228, "toTick": 236, "stick": [0, 0.25], "action": [0, -1]},
+  {"car": 0, "fromTick": 236, "toTick": 420, "stick": [0, 0.25]},
+  {"car": 0, "fromTick": 420, "toTick": 428, "stick": [0, 0.25], "action": [0, -1]},
+  {"car": 0, "fromTick": 428, "stick": [0, 0.25]}
+ ],
+ "expect": [
+  {"car": 0, "atTick": 10, "metric": "oiFired", "min": 1, "max": 1},
+  {"car": 0, "atTick": 60, "metric": "oiFired", "min": 1, "max": 1},
+  {"car": 0, "atTick": 100, "metric": "oiFired", "min": 2, "max": 2},
+  {"car": 0, "atTick": 120, "metric": "conesDropped", "min": 1, "max": 1},
+  {"car": 0, "atTick": 300, "metric": "conesDropped", "min": 1, "max": 1},
+  {"car": 0, "metric": "conesDropped", "min": 2, "max": 2},
+  {"car": 0, "metric": "oiFired", "min": 2, "max": 2},
+  {"car": 0, "metric": "wrecks", "min": 0, "max": 0}
+ ],
+ "observe": [118, 480],
+ "baselines": {
+  "kinds": ["no-action"],
+  "differ": [
+   {"car": 0, "metric": "conesDropped", "by": 2, "more": true}
+  ]
+ }
+}

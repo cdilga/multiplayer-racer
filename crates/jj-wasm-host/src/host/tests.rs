@@ -648,3 +648,108 @@ fn a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat() {
     );
     assert_eq!(h.seats.seats().count(), 3);
 }
+
+#[test]
+fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the_snapshot() {
+    // P1-S08 through the real host path: a phone sends its ACTION up/down entries as `Action` (resent on the reliable
+    // channel, applied once per id); a host pad's flick up is detected by the host's own source machine. Accepted
+    // utilities reach main as `Oi` / `ConeDropped`, and the cone is a debris record of kind 1 in the snapshot.
+    let mut h = Host::new(&init()).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("phone".into()),
+        resume: None,
+    };
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    };
+    h.schedule(0, &net("phone", Channel::Cmd, hello.encode()))
+        .unwrap();
+    h.schedule(0, &net("phone", Channel::Cmd, claim.encode()))
+        .unwrap();
+    let action = |id: u32, kind| ControllerCmd::Action {
+        action: jj_types::ActionId(id),
+        source: SourceHandle(1),
+        kind,
+        round: jj_types::RoundId(0),
+        life: jj_types::LifeId(0),
+        at_source_seq: 1,
+    };
+    let rear = action(9, jj_protocol::cmd::ActionKind::UtilityRear);
+    let up = action(10, jj_protocol::cmd::ActionKind::UtilityForward);
+    for t in [30, 31, 33] {
+        h.schedule(t, &net("phone", Channel::Cmd, rear.encode()))
+            .unwrap();
+    }
+    h.schedule(40, &net("phone", Channel::Cmd, up.encode()))
+        .unwrap();
+    // A pad (local source 5): ACTION up for 0.1 s, then neutral.
+    let pad = |action_y: i16| {
+        MainToSim::LocalSource {
+            source: LocalSourceId(5),
+            axes: [0, 0, 0, action_y],
+            buttons: 0,
+            seq: 0,
+        }
+        .encode()
+    };
+    for t in (0..120u64).step_by(2) {
+        let y = if (50..62).contains(&t) { 32_767 } else { 0 };
+        h.schedule(t, &pad(y)).unwrap();
+    }
+    let mut events = Vec::new();
+    while h.tick() < 120 {
+        h.step_one();
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Events { batch } = m {
+                events.extend(batch);
+            }
+        }
+    }
+    let utilities: Vec<(u32, jj_sim::UtilityKind)> = h
+        .sim()
+        .journal()
+        .setup
+        .iter()
+        .filter_map(|(_, s)| match s {
+            jj_sim::journal::Setup::Utility { car, kind } => Some((*car, *kind)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        utilities,
+        vec![
+            (0, jj_sim::UtilityKind::Rear),
+            (0, jj_sim::UtilityKind::Forward),
+            (1, jj_sim::UtilityKind::Forward)
+        ],
+        "each action id applied once, the pad's flick once"
+    );
+    let cones: Vec<_> = events
+        .iter()
+        .filter(|e| matches!(e, SimEvent::ConeDropped { .. }))
+        .collect();
+    let ois = events
+        .iter()
+        .filter(|e| matches!(e, SimEvent::Oi { .. }))
+        .count();
+    assert_eq!(cones.len(), 1, "one cone reached main: {events:?}");
+    assert_eq!(
+        ois, 2,
+        "the phone's and the pad's OI! reached main: {events:?}"
+    );
+    let SimEvent::ConeDropped { debris, .. } = *cones[0] else {
+        unreachable!()
+    };
+    let mut buf = vec![0u8; h.snapshot_size()];
+    assert!(h.write_snapshot(&mut buf) > 0);
+    let cars = h.sim().cars().count();
+    let at = SNAPSHOT_HEADER + SNAPSHOT_CAR * cars + SNAPSHOT_DEBRIS * debris as usize + 28;
+    assert_eq!(
+        u32::from_le_bytes(buf[at..at + 4].try_into().unwrap()),
+        1,
+        "the cone's debris record says cone"
+    );
+}

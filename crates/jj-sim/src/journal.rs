@@ -92,6 +92,12 @@ pub enum Setup {
         pose: SpawnPose,
         half: [f32; 3],
     },
+    /// A discrete ACTION utility (P1-S08): jj-input's deliberate sector entry, up ("OI!") or down (drop a cone).
+    /// Refused while the car's cooldown runs or the car is held.
+    Utility {
+        car: u32,
+        kind: crate::utility::UtilityKind,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

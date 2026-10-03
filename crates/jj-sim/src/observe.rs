@@ -166,6 +166,9 @@ pub struct ActionObs {
     pub drift: f32,
     /// A well-timed wheelie's extra drive is on (P1-S03c).
     pub wheelie: bool,
+    /// ACTION utilities fired over the round (P1-S08): "OI!" flashes and cones dropped.
+    pub oi: u32,
+    pub cones: u32,
 }
 
 pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
@@ -230,6 +233,8 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
                 boosting: a.boosting,
                 drift: a.drift,
                 wheelie: a.wheelie_ticks > 0,
+                oi: a.utility_fired[crate::utility::UtilityKind::Forward.index()],
+                cones: a.utility_fired[crate::utility::UtilityKind::Rear.index()],
             }),
     })
 }
@@ -306,10 +311,13 @@ pub enum Metric {
     MaxNoseUpDeg,
     FrontAirTimeS,
     WheelieDriveS,
+    /// The ACTION utilities (P1-S08): "OI!" flashes fired and cones dropped over the run.
+    OiFired,
+    ConesDropped,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 37] = [
+    pub const ALL: [Metric; 39] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -347,6 +355,8 @@ impl Metric {
         Metric::MaxNoseUpDeg,
         Metric::FrontAirTimeS,
         Metric::WheelieDriveS,
+        Metric::OiFired,
+        Metric::ConesDropped,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -389,6 +399,8 @@ impl Metric {
             Metric::MaxNoseUpDeg => "maxNoseUpDeg",
             Metric::FrontAirTimeS => "frontAirTimeS",
             Metric::WheelieDriveS => "wheelieDriveS",
+            Metric::OiFired => "oiFired",
+            Metric::ConesDropped => "conesDropped",
         }
     }
 }
@@ -622,6 +634,8 @@ impl SignatureTracker {
             Metric::MaxNoseUpDeg => self.max_nose_up,
             Metric::FrontAirTimeS => self.front_air_ticks as f64 / f64::from(TICK_HZ),
             Metric::WheelieDriveS => self.wheelie_drive_ticks as f64 / f64::from(TICK_HZ),
+            Metric::OiFired => f64::from(o.action.oi),
+            Metric::ConesDropped => f64::from(o.action.cones),
             Metric::SlipDeg => o
                 .wheels
                 .iter()

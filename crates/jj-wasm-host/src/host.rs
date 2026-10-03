@@ -28,7 +28,7 @@ use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd};
 use jj_protocol::state::{StateFlags, StateMessage};
 use jj_session::seats::{self, ConnId, SeatConfig, Seats};
 use jj_sim::race::Event;
-use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, VehicleProfile};
+use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, UtilityEvent, UtilityKind, VehicleProfile};
 
 use jj_types::{ActionId, EndpointId, LocalSourceId, SeatId, Tick};
 use sha2::{Digest, Sha256};
@@ -146,6 +146,8 @@ pub struct Host {
     out: Vec<SimToMain>,
     events: Vec<SimEvent>,
     seen_race_events: usize,
+    /// How many of the sim's utility events have become seat events (P1-S08).
+    seen_utility_events: usize,
     session_rev: u32,
     /// The test surface's state (P1-F05b): only in the `testing` build, never in the shipped worker.
     #[cfg(feature = "testing")]
@@ -227,6 +229,7 @@ impl Host {
             out: Vec::new(),
             events: Vec::new(),
             seen_race_events: 0,
+            seen_utility_events: 0,
             session_rev: 0,
             #[cfg(feature = "testing")]
             test: testing::TestState {
@@ -434,6 +437,7 @@ impl Host {
             h.after_step(&self.sim, false);
         }
         self.collect_race_events();
+        self.collect_utility_events();
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
@@ -545,8 +549,16 @@ impl Host {
                     // A host pad's gestures are detected here (a controller sends its own as `Action`).
                     if let Some(car) = input.car {
                         for a in fired {
-                            if let ActionKind::Wheelie { preload_ms } = a.kind {
-                                self.sim.wheelie(car, preload_ms);
+                            match a.kind {
+                                ActionKind::Wheelie { preload_ms } => {
+                                    self.sim.wheelie(car, preload_ms);
+                                }
+                                ActionKind::UtilityForward => {
+                                    self.sim.utility(car, UtilityKind::Forward);
+                                }
+                                ActionKind::UtilityRear => {
+                                    self.sim.utility(car, UtilityKind::Rear);
+                                }
                             }
                         }
                     }
@@ -608,12 +620,12 @@ impl Host {
                 }
                 vec![]
             }
-            // The wheelie (P1-S03c): the controller validated the gesture; applied once per action id. Utilities are
-            // S08's.
+            // The wheelie (P1-S03c) and the ACTION utilities (P1-S08): the controller validated the gesture; each is
+            // applied once per action id (a resent action does nothing).
             ControllerCmd::Action {
                 action,
                 source,
-                kind: ActionKind::Wheelie { preload_ms },
+                kind,
                 ..
             } => {
                 if let Some(input) = self
@@ -627,7 +639,17 @@ impl Host {
                     }
                     input.seen_actions.push(action);
                     if let Some(car) = input.car {
-                        self.sim.wheelie(car, preload_ms);
+                        match kind {
+                            ActionKind::Wheelie { preload_ms } => {
+                                self.sim.wheelie(car, preload_ms);
+                            }
+                            ActionKind::UtilityForward => {
+                                self.sim.utility(car, UtilityKind::Forward);
+                            }
+                            ActionKind::UtilityRear => {
+                                self.sim.utility(car, UtilityKind::Rear);
+                            }
+                        }
                     }
                 }
                 vec![]
@@ -764,6 +786,27 @@ impl Host {
             .map(|(s, _)| *s)
     }
 
+    /// The sim's accepted ACTION utilities since the last step, as seat events for the host's cues (P1-S08).
+    fn collect_utility_events(&mut self) {
+        let fired = self.sim.utility_events().to_vec();
+        for (_, e) in &fired[self.seen_utility_events..] {
+            match *e {
+                UtilityEvent::Oi { car } => {
+                    if let Some(seat) = self.seat_of_car(car) {
+                        self.events.push(SimEvent::Oi { seat });
+                    }
+                }
+                UtilityEvent::Cone { car, prop } => {
+                    if let Some(seat) = self.seat_of_car(car) {
+                        self.events
+                            .push(SimEvent::ConeDropped { seat, debris: prop });
+                    }
+                }
+            }
+        }
+        self.seen_utility_events = fired.len();
+    }
+
     fn collect_race_events(&mut self) {
         let race = self.sim.race().events().to_vec();
         for (_, e) in &race[self.seen_race_events..] {
@@ -834,7 +877,7 @@ impl Host {
     /// Header: magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32, cars u32,
     /// debris u32, reserved u32. Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
-    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, reserved u32.
+    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08).
     pub fn write_snapshot(&self, buf: &mut [u8]) -> usize {
         let need = self.snapshot_size();
         if buf.len() < need {
@@ -879,9 +922,9 @@ impl Host {
             w.f32(action.boost);
             w.u32(0);
         }
-        for (p, r) in debris {
+        for ((p, r), k) in debris.into_iter().zip(self.sim.prop_kinds()) {
             p.iter().chain(&r).for_each(|&v| w.f32(v));
-            w.u32(0);
+            w.u32(k.code());
         }
         w.at
     }

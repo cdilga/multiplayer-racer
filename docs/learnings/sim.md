@@ -137,3 +137,17 @@ not feel targets.
   squats the nose up 1.7°.
 - **Steering while the front is up** needs no extra rule: raycast wheels in the air have no grip, so the car can't
   turn until they're down.
+
+## ACTION utilities (P1-S08)
+
+- **Utilities ride the wheelie's path.** jj-input's sector machine fires `UtilityForward` / `UtilityRear` on a
+  deliberate entry (neutral re-arm, hysteresis; a pointer cancel neutralises without firing). The host applies a
+  controller's `Action` once per id, detects host pads itself, and fixtures with `stick`/`action` spans run the same
+  source machine. The sim sees only `Sim::utility(car, kind)`, journaled (`Setup::Utility`), so it replays.
+- **Cooldowns live in the sim, in ticks** (`utility_ready` in `ActionState`): a deliberate re-entry inside the
+  cooldown reaches the sim and is refused there, so the journal shows the attempt.
+- **Spawn protection ghosts props.** A protected car (the first 1.5 s after a spawn, and until it's clear of debris)
+  collides only with the world, so it drives straight through a cone. A duel that needs contact waits out the
+  protection, then places its cars (`place` doesn't re-protect).
+- **A cone's cost is its mass.** A 4.5 kg cone cost a 20 m/s follower 0.08 m; 8 kg costs about 0.3 m with a visible
+  jolt and never wrecks. That's the TUNE lever, not a scripted slowdown.

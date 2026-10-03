@@ -1,0 +1,36 @@
+{
+ "scenario": "cone-defence",
+ "what": "§7.3b duel 'a follower hitting a dropped cone loses a little time and is never wrecked' (P1-S08). Two Cruz Missiles wait out their 1.5 s spawn protection parked apart (a protected car touches only the world), then are placed on the greybox's back straight at 20 m/s on the autopilot's line, the follower 20 m behind the leader. The leader's player flicks ACTION down once: a cone lands 1.5 m behind its bumper, in the follower's path, and the follower drives into it. Against the same run without the ACTION stick (no cone), the follower is a little behind at the end and stays upright and unwrecked; the leader isn't slowed by dropping it.",
+ "map": "maps/greybox-loop.json",
+ "seed": 71,
+ "ticks": 440,
+ "cars": [
+  {"routePoint": 30, "lateral": 0},
+  {"routePoint": 200, "lateral": 0}
+ ],
+ "place": [
+  {"tick": 200, "car": 0, "pose": {"x": 147.5, "y": 0.1, "z": 30.0, "headingDeg": -90}, "linvel": [-20, 0, 0]},
+  {"tick": 200, "car": 1, "pose": {"x": 167.5, "y": 0.1, "z": 30.0, "headingDeg": -90}, "linvel": [-20, 0, 0]}
+ ],
+ "autopilot": [
+  {"tick": 200, "car": 0, "on": true},
+  {"tick": 200, "car": 1, "on": true}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 224, "stick": [0, 0]},
+  {"car": 0, "fromTick": 224, "toTick": 232, "stick": [0, 0], "action": [0, -1]},
+  {"car": 0, "fromTick": 232, "stick": [0, 0]}
+ ],
+ "expect": [
+  {"car": 0, "metric": "conesDropped", "min": 1, "max": 1},
+  {"car": 1, "metric": "wrecks", "min": 0, "max": 0},
+  {"car": 1, "metric": "minUpY", "min": 0.85, "max": 1.001},
+  {"car": 0, "metric": "wrecks", "min": 0, "max": 0}
+ ],
+ "baselines": {
+  "kinds": ["no-action"],
+  "differ": [
+   {"car": 1, "metric": "progressM", "by": 0.1, "less": true, "atMost": 4.0}
+  ]
+ }
+}

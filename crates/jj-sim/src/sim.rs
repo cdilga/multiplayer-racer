@@ -31,6 +31,7 @@ use crate::placement::{
 use crate::profile::VehicleProfile;
 use crate::race::{Course, Effect, Race};
 use crate::rng::Rng;
+use crate::utility::{self, PropKind, UtilityEvent, UtilityKind, rules};
 use crate::vehicle;
 
 pub const TICK_HZ: u32 = 120;
@@ -122,6 +123,10 @@ pub struct Sim {
     terrain: Terrain,
     cars: Vec<Car>,
     props: Vec<RigidBodyHandle>,
+    /// What each prop is, for renderers (P1-S08: map props and debris, or dropped cones).
+    prop_kinds: Vec<PropKind>,
+    /// Accepted ACTION utilities, with the tick they fired at (P1-S08).
+    utility_events: Vec<(u64, UtilityEvent)>,
     tick: u64,
     rng: Rng,
     journal: Journal,
@@ -226,6 +231,8 @@ impl Sim {
             profile,
             terrain: m.terrain.clone(),
             cars: Vec::new(),
+            prop_kinds: vec![PropKind::Debris; props.len()],
+            utility_events: Vec::new(),
             props,
             tick: 0,
             rng: Rng::stream(seed, "sim"),
@@ -320,6 +327,80 @@ impl Sim {
             .collision_groups(PROP_GROUPS);
         let (h, _) = self.world.insert(body, collider);
         self.props.push(h);
+        self.prop_kinds.push(PropKind::Debris);
+    }
+
+    /// An ACTION utility (P1-S08, a journaled command): jj-input's deliberate up or down sector entry. Up fires the
+    /// "OI!" flash (an event for the host's cue); down drops a traffic cone [`rules::CONE_BEHIND_M`] behind the rear
+    /// bumper, at rest, a light dynamic prop that stays for the round (R58). Refused (false) while that utility's
+    /// cooldown runs (game time), while the car is held, or for a finished car.
+    pub fn utility(&mut self, car: CarId, kind: UtilityKind) -> bool {
+        self.journal
+            .setup
+            .push((self.tick, Setup::Utility { car: car.0, kind }));
+        let held = self.race.is_held(car.0, self.tick) || self.race.is_finished(car.0);
+        let tick = self.tick;
+        let rear_z = self.profile.hull_bounds().0[2];
+        let Some(c) = self.cars.get_mut(car.0 as usize) else {
+            return false;
+        };
+        let i = kind.index();
+        if held || tick < c.action.utility_ready[i] {
+            return false;
+        }
+        c.action.utility_ready[i] = tick + utility::cooldown_ticks(kind);
+        c.action.utility_fired[i] += 1;
+        match kind {
+            UtilityKind::Forward => self
+                .utility_events
+                .push((tick, UtilityEvent::Oi { car: car.0 })),
+            UtilityKind::Rear => {
+                let Some(b) = self.world.bodies.get(c.body) else {
+                    return false;
+                };
+                let iso = *b.position();
+                // The body frame is the car's vehicle space: origin on the ground between the axles, +z forward.
+                let base = iso
+                    * Vector::new(
+                        0.0,
+                        0.0,
+                        rear_z - rules::CONE_BEHIND_M - rules::CONE_RADIUS_M,
+                    );
+                let heading = {
+                    let fwd = iso.rotation * Vector::Z;
+                    libm::atan2f(fwd.x, fwd.z)
+                };
+                let body = RigidBodyBuilder::dynamic()
+                    .translation(Vector::new(
+                        base.x,
+                        base.y + rules::CONE_HALF_HEIGHT_M + 0.02,
+                        base.z,
+                    ))
+                    .rotation(Vector::new(0.0, heading, 0.0));
+                let collider =
+                    ColliderBuilder::cone(rules::CONE_HALF_HEIGHT_M, rules::CONE_RADIUS_M)
+                        .density(utility::cone_density())
+                        .friction(0.7)
+                        .collision_groups(PROP_GROUPS);
+                let (h, _) = self.world.insert(body, collider);
+                let prop = self.props.len() as u32;
+                self.props.push(h);
+                self.prop_kinds.push(PropKind::Cone);
+                self.utility_events
+                    .push((tick, UtilityEvent::Cone { car: car.0, prop }));
+            }
+        }
+        true
+    }
+
+    /// Accepted ACTION utilities so far, with their ticks (P1-S08).
+    pub fn utility_events(&self) -> &[(u64, UtilityEvent)] {
+        &self.utility_events
+    }
+
+    /// What each prop is, in the order of [`Sim::debris_poses`] (P1-S08).
+    pub fn prop_kinds(&self) -> &[PropKind] {
+        &self.prop_kinds
     }
 
     /// The autopilot takes `car` (`on`), or hands it back to its player over a short blend (a journaled command; the
@@ -1026,6 +1107,10 @@ impl Sim {
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
             h.update(c.action.wheelie_ticks.to_le_bytes());
+            for (r, n) in c.action.utility_ready.iter().zip(c.action.utility_fired) {
+                h.update(r.to_le_bytes());
+                h.update(n.to_le_bytes());
+            }
             for w in c.vehicle.wheels() {
                 for f in [
                     w.rotation,
@@ -1079,6 +1164,9 @@ impl Sim {
                     Setup::Autopilot { car, on } => sim.set_autopilot(CarId(*car), *on),
                     Setup::Wheelie { car, preload_ms } => {
                         sim.wheelie(CarId(*car), *preload_ms);
+                    }
+                    Setup::Utility { car, kind } => {
+                        sim.utility(CarId(*car), *kind);
                     }
                 }
             }

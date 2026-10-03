@@ -123,6 +123,12 @@ pub struct Differ {
     /// The deliberate run must come out *higher* by `by`, not just different (a claim like "faster with boost").
     #[serde(default)]
     pub more: bool,
+    /// The deliberate run must come out *lower* by `by` (a cost, like "a follower hitting a cone loses a little time").
+    #[serde(default)]
+    pub less: bool,
+    /// And differ by no more than this (a cost that stays "a little").
+    #[serde(default)]
+    pub at_most: Option<f64>,
     /// The baselines this entry judges (empty: all of them).
     #[serde(default)]
     pub against: Vec<BaselineKind>,
@@ -262,6 +268,10 @@ pub struct InputSpan {
     /// The raw ACTION stick alongside `stick` (x right boosts, left drifts).
     #[serde(default)]
     pub action: Option<[f32; 2]>,
+    /// The touch is cancelled for this span (a `pointercancel`: the source reads unavailable, so its sticks are
+    /// neutral and every pending detection drops without firing; P1-S08's `utility-intent`).
+    #[serde(default)]
+    pub cancel: bool,
 }
 
 /// Stop early once a car's metric is inside `[min, max]`.
@@ -347,7 +357,10 @@ pub fn signature_json(car: u32, t: &SignatureTracker) -> Value {
 pub fn debris(sim: &Sim) -> Vec<Value> {
     sim.debris_footprints()
         .iter()
-        .map(|d| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l }))
+        .zip(sim.prop_kinds())
+        .map(
+            |(d, k)| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l, "kind": k }),
+        )
         .collect()
 }
 
@@ -506,7 +519,7 @@ impl Harness {
                     )
                 });
                 let flags = jj_input::SampleFlags {
-                    available: true,
+                    available: !span.is_some_and(|i| i.cancel),
                     drive_touch: drive != [0, 0],
                     action_touch: action != [0, 0],
                     menu_open: false,
@@ -528,8 +541,17 @@ impl Harness {
                     ),
                 );
                 for a in fired {
-                    if let jj_protocol::cmd::ActionKind::Wheelie { preload_ms } = a.kind {
-                        sim.wheelie(CarId(car), preload_ms);
+                    match a.kind {
+                        jj_protocol::cmd::ActionKind::Wheelie { preload_ms } => {
+                            sim.wheelie(CarId(car), preload_ms);
+                        }
+                        // The ACTION stick's up and down sectors (P1-S08), as the host applies them.
+                        jj_protocol::cmd::ActionKind::UtilityForward => {
+                            sim.utility(CarId(car), jj_sim::UtilityKind::Forward);
+                        }
+                        jj_protocol::cmd::ActionKind::UtilityRear => {
+                            sim.utility(CarId(car), jj_sim::UtilityKind::Rear);
+                        }
                     }
                 }
                 continue;
