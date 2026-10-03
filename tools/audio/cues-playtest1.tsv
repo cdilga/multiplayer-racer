@@ -1,0 +1,62 @@
+moment_id	variant	trigger_event	text	caption	delivery	slang_terms	family_friendly
+welcome	1	room.opened	G'day, and welcome to Joystick Jammers! Grab a controller and make a spectacular mess.	G'day, and welcome to Joystick Jammers! Grab a controller and make a spectacular mess.	warm	g'day	yes
+welcome	2	room.opened	Welcome, mate! Scan the code, pick your car and give it a burl.	Welcome, mate! Scan the code, pick your car and give it a burl.	warm	mate; give it a burl	yes
+welcome	3	room.opened	Welcome to Joystick Jammers! New to this? No worries, you'll get the hang of it.	Welcome to Joystick Jammers! New to this? No worries, you'll get the hang of it.	warm	no worries	yes
+all-ready	1	lobby.all_ready	Everyone's ready. Strap in, this is going to get messy!	Everyone's ready. Strap in, this is going to get messy!	hype	-	yes
+all-ready	2	lobby.all_ready	All ready! This one's going to be a ripper!	All ready! This one's going to be a ripper!	hype	ripper	yes
+all-ready	3	lobby.all_ready	Everyone's locked in. Let's give it a burl!	Everyone's locked in. Let's give it a burl!	hype	give it a burl	yes
+countdown	1	phase.countdown	Three! Two! One! Go, go, go!	3... 2... 1... GO!	hype	-	yes
+countdown	2	phase.countdown	Three! Two! One! Off you go!	3... 2... 1... Off you go!	hype	-	yes
+countdown	3	phase.countdown	Three! Two! One! Let her rip!	3... 2... 1... Let her rip!	hype	-	yes
+final-lap	1	race.final_lap	Final lap! Flat out like a lizard drinking!	Final lap! Flat out like a lizard drinking!	hype	flat out like a lizard drinking	yes
+final-lap	2	race.final_lap	Last lap! Hold on to your doors!	Last lap! Hold on to your doors!	hype	-	yes
+final-lap	3	race.final_lap	One lap to go! Give it everything!	One lap to go! Give it everything!	hype	-	yes
+first-finisher	1	race.first_finish	The first car's home! The clock's ticking!	The first car's home! The clock's ticking!	hype	-	yes
+first-finisher	2	race.first_finish	We've got a finisher! Who's next across the line?	We've got a finisher! Who's next across the line?	hype	-	yes
+first-finisher	3	race.first_finish	First one's across! Hurry up, everybody else!	First one's across! Hurry up, everybody else!	hype	-	yes
+photo-finish	1	race.photo_finish	Photo finish! That's fair dinkum close!	Photo finish! That's fair dinkum close!	hype	fair dinkum	yes
+photo-finish	2	race.photo_finish	Neck and neck to the line! What a ripper!	Neck and neck to the line! What a ripper!	hype	ripper	yes
+photo-finish	3	race.photo_finish	Strewth, that was close!	Strewth, that was close!	hype	strewth	yes
+time-up	1	race.time_up	And that's time! Well driven, everyone.	And that's time! Well driven, everyone.	warm	-	yes
+time-up	2	race.time_up	That's time! No worries if you didn't make the line.	That's time! No worries if you didn't make the line.	warm	no worries	yes
+time-up	3	race.time_up	Time's up! The race is over.	Time's up! The race is over.	warm	-	yes
+winner	1	round.results	And that's the race! Give the winner a big cheer. You beauty!	And that's the race! Give the winner a big cheer. You beauty!	hype	you beauty	yes
+winner	2	round.results	We have a winner! Good on ya, champion!	We have a winner! Good on ya, champion!	hype	good on ya	yes
+winner	3	round.results	That's the race! A bonzer drive from the winner!	That's the race! A bonzer drive from the winner!	hype	bonzer	yes
+next-round	1	intermission.next_ready	Next track's loading. Same again? Too right!	Next track's loading. Same again? Too right!	warm	too right	yes
+next-round	2	intermission.next_ready	Say hooroo to this track. The next round's on its way!	Say hooroo to this track. The next round's on its way!	warm	hooroo	yes
+next-round	3	intermission.next_ready	Next round's loading. Lost a door? She'll be right!	Next round's loading. Lost a door? She'll be right!	warm	she'll be right	yes
+door-off	1	part.detached.door	There goes a door! She'll be right!	There goes a door! She'll be right!	hype	she'll be right	yes
+door-off	2	part.detached.door	Door's off! Free air-conditioning!	Door's off! Free air-conditioning!	hype	-	yes
+door-off	3	part.detached.door	Doors are optional, mate!	Doors are optional, mate!	hype	mate	yes
+door-off	4	part.detached.door	Crikey, a door's gone flying!	Crikey, a door's gone flying!	hype	crikey	yes
+door-off	5	part.detached.door	Who needs doors anyway?	Who needs doors anyway?	hype	-	yes
+wheel-off	1	part.detached.wheel	Wheel's off! That one's rolling solo!	Wheel's off! That one's rolling solo!	hype	-	yes
+wheel-off	2	part.detached.wheel	A wheel's shot through like a Bondi tram!	A wheel's shot through like a Bondi tram!	hype	shoot through like a Bondi tram	yes
+wheel-off	3	part.detached.wheel	Down a wheel! Keep her going!	Down a wheel! Keep her going!	hype	-	yes
+wheel-off	4	part.detached.wheel	Wheel's flown the coop!	Wheel's flown the coop!	hype	-	yes
+wheel-off	5	part.detached.wheel	That's a bonzer way to lose a wheel!	That's a bonzer way to lose a wheel!	hype	bonzer	yes
+bodywork-off	1	part.detached.bodywork	Bodywork everywhere! What a mess!	Bodywork everywhere! What a mess!	hype	-	yes
+bodywork-off	2	part.detached.bodywork	Bodywork's gone! She'll be apples!	Bodywork's gone! She'll be apples!	hype	she'll be apples	yes
+bodywork-off	3	part.detached.bodywork	That's a big chunk of bodywork gone!	That's a big chunk of bodywork gone!	hype	-	yes
+bodywork-off	4	part.detached.bodywork	There goes the bumper! Proper smash!	There goes the bumper! Proper smash!	hype	-	yes
+big-air	1	car.air_time	Look at that air! Strewth!	Look at that air! Strewth!	hype	strewth	yes
+big-air	2	car.air_time	Stone the crows, that's airborne!	Stone the crows, that's airborne!	hype	stone the crows	yes
+big-air	3	car.air_time	Starve the lizards, someone's flying!	Starve the lizards, someone's flying!	hype	starve the lizards	yes
+big-air	4	car.air_time	Mind the clouds! Huge air!	Mind the clouds! Huge air!	hype	-	yes
+big-air	5	car.air_time	That jump was a pearler!	That jump was a pearler!	hype	pearler	yes
+wreck	1	car.wrecked	That one's carked it!	That one's carked it!	hype	cark it	yes
+wreck	2	car.wrecked	What a bingle! They'll be back in a tick.	What a bingle! They'll be back in a tick.	hype	bingle	yes
+wreck	3	car.wrecked	She's cactus! Better luck next lap.	She's cactus! Better luck next lap.	hype	cactus	yes
+wreck	4	car.wrecked	Come a gutser there, mate!	Come a gutser there, mate!	hype	come a gutser; mate	yes
+wreck	5	car.wrecked	Wreck city! Back on the track soon.	Wreck city! Back on the track soon.	hype	-	yes
+lead-change	1	race.lead_change	We've got a new leader!	We've got a new leader!	hype	-	yes
+lead-change	2	race.lead_change	The lead has changed hands! Fair dinkum thriller!	The lead has changed hands! Fair dinkum thriller!	hype	fair dinkum	yes
+lead-change	3	race.lead_change	Here comes a new leader. You beauty!	Here comes a new leader. You beauty!	hype	you beauty	yes
+lead-change	4	race.lead_change	Overtaken! Who's got the lead now?	Overtaken! Who's got the lead now?	hype	-	yes
+lead-change	5	race.lead_change	That pass was a ripper! New leader!	That pass was a ripper! New leader!	hype	ripper	yes
+late-joiner	1	seat.late_join	Someone's just rocked up! Welcome to the race!	Someone's just rocked up! Welcome to the race!	warm	rock up	yes
+late-joiner	2	seat.late_join	Everyone gets a fair go. Another driver's joined in!	Everyone gets a fair go. Another driver's joined in!	warm	fair go	yes
+late-joiner	3	seat.late_join	Late to the party, but no worries!	Late to the party, but no worries!	warm	no worries	yes
+late-joiner	4	seat.late_join	G'day, new driver! Catch up if you can!	G'day, new driver! Catch up if you can!	warm	g'day	yes
+late-joiner	5	seat.late_join	Another driver joins the chase!	Another driver joins the chase!	warm	-	yes

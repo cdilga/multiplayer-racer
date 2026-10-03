@@ -1,0 +1,147 @@
+# P1-A00 local receipt
+date: 2026-10-03T01:37:38Z  machine: Mac  commit base: 68f513b  python: Python 3.11.7
+(Gitea CI wave not wired yet; this is the committed local receipt the bead allows before CI exists.)
+
+## 1. The loader accepts the real sheet
+
+$ python3 tools/audio/check_cues.py
+OK: 61 rows in tools/audio/cues-playtest1.tsv (16 moments covered; glossary 28 terms)
+variants: welcome=3, all-ready=3, countdown=3, final-lap=3, first-finisher=3, photo-finish=3, time-up=3, winner=3, next-round=3, door-off=5, wheel-off=5, bodywork-off=4, big-air=5, wreck=5, lead-change=5, late-joiner=5
+exit: 0
+
+## 2. The moment list A01 renders and A03 triggers (the shared vocabulary)
+
+$ python3 tools/audio/check_cues.py --moments
+moment          kind    floor event                     fires
+welcome         once    2     room.opened               The host room is open and audio is unlocked by the first gesture. Once per room.
+all-ready       once    2     lobby.all_ready           Every active human seat is Ready, just before Countdown. Not for host Start now.
+countdown       once    2     phase.countdown           Countdown phase begins (3-2-1). A03 starts the clip so its last word lands on the race start.
+final-lap       once    2     race.final_lap            The leader starts the last lap. Skipped when the round has fewer than 2 laps.
+first-finisher  once    2     race.first_finish         The first car crosses the finish line (the finish window starts).
+photo-finish    once    2     race.photo_finish         A second car crosses within 0.5 s of the first, inside the finish window (DEFAULT, TUNE).
+time-up         once    2     race.time_up              The finish window or the deadline closes while at least one car has not finished.
+winner          once    2     round.results             Results are revealed (Finalising to Intermission). Generic: the TV shows who won.
+next-round      once    2     intermission.next_ready   The next round's map is ready and the intermission auto-start is running.
+door-off        repeat  4     part.detached.door        A door part detaches (health 0). Loose does not count.
+wheel-off       repeat  4     part.detached.wheel       A wheel part detaches (health 0).
+bodywork-off    repeat  4     part.detached.bodywork    The `front` or `back` part detaches (health 0).
+big-air         repeat  4     car.air_time              A car's airtime passes 1.2 s while still airborne (the reel threshold, DEFAULT, TUNE).
+wreck           repeat  4     car.wrecked               A car is wrecked (2+ wheels detached, flipped past the recovery timeout, or out of bounds).
+lead-change     repeat  4     race.lead_change          A different car takes first place and holds it for 2 s (debounce, DEFAULT, TUNE).
+late-joiner     repeat  4     seat.late_join            A seat joins a running round and is placed at the tail (drop-in).
+exit: 0
+
+## 3. Three small fixture sheets: the loader refuses each for its one fault
+(each fixture is ok-rows.tsv plus one change; --rows-only skips the required-moment and floor checks
+ so the fixtures can stay four rows long)
+
+$ python3 tools/audio/check_cues.py --rows-only tools/audio/fixtures/cues/ok-rows.tsv
+OK: 4 rows in tools/audio/fixtures/cues/ok-rows.tsv (rows only; glossary 28 terms)
+variants: welcome=1, countdown=1, door-off=1, wheel-off=1
+exit: 0
+
+$ python3 tools/audio/check_cues.py --rows-only tools/audio/fixtures/cues/bad-missing-caption.tsv
+tools/audio/fixtures/cues/bad-missing-caption.tsv:4: [missing-caption] door-off v1: caption is empty (A03 shows a caption for every cue)
+FAIL: 1 problem(s) in tools/audio/fixtures/cues/bad-missing-caption.tsv
+exit: 1
+
+$ python3 tools/audio/check_cues.py --rows-only tools/audio/fixtures/cues/bad-unflagged.tsv
+tools/audio/fixtures/cues/bad-unflagged.tsv:5: [unflagged] wheel-off v1: family_friendly is blank; every shipped line must be flagged yes
+FAIL: 1 problem(s) in tools/audio/fixtures/cues/bad-unflagged.tsv
+exit: 1
+
+$ python3 tools/audio/check_cues.py --rows-only tools/audio/fixtures/cues/bad-player-name.tsv
+tools/audio/fixtures/cues/bad-player-name.tsv:6: [player-name] winner v1: text has capitalised word 'Bazza' mid-sentence: looks like a name (allowed: Bondi, Jammers, Joystick)
+tools/audio/fixtures/cues/bad-player-name.tsv:6: [player-name] winner v1: caption has capitalised word 'Bazza' mid-sentence: looks like a name (allowed: Bondi, Jammers, Joystick)
+tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: text has a placeholder or token ('{'); no player names (R69)
+tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: text says 'name'; no player names (R69)
+tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: caption has a placeholder or token ('{'); no player names (R69)
+tools/audio/fixtures/cues/bad-player-name.tsv:7: [player-name] winner v2: caption says 'name'; no player names (R69)
+FAIL: 6 problem(s) in tools/audio/fixtures/cues/bad-player-name.tsv
+exit: 1
+
+## 4. The full sheet with the same faults (no --rows-only): a copy of the real sheet, one fault each
+
+$ python3 tools/audio/check_cues.py <copy of the real sheet>/missing-caption.tsv
+<copy of the real sheet>/missing-caption.tsv:29: [missing-caption] door-off v1: caption is empty (A03 shows a caption for every cue)
+FAIL: 1 problem(s) in <copy of the real sheet>/missing-caption.tsv
+exit: 1
+
+$ python3 tools/audio/check_cues.py <copy of the real sheet>/unflagged.tsv
+<copy of the real sheet>/unflagged.tsv:23: [unflagged] winner v1: family_friendly is blank; every shipped line must be flagged yes
+FAIL: 1 problem(s) in <copy of the real sheet>/unflagged.tsv
+exit: 1
+
+$ python3 tools/audio/check_cues.py <copy of the real sheet>/player-name.tsv
+<copy of the real sheet>/player-name.tsv:48: [player-name] wreck v1: text has capitalised word 'Bazza' mid-sentence: looks like a name (allowed: Bondi, Jammers, Joystick)
+<copy of the real sheet>/player-name.tsv:48: [player-name] wreck v1: caption has capitalised word 'Bazza' mid-sentence: looks like a name (allowed: Bondi, Jammers, Joystick)
+FAIL: 2 problem(s) in <copy of the real sheet>/player-name.tsv
+exit: 1
+
+## 5. The test suite (fixtures through the command line, the other rules on corrupted copies)
+
+$ python3 tools/audio/test_check_cues.py
+test_bad_delivery (__main__.Corrupted.test_bad_delivery) ... ok
+test_blank_slang_cell (__main__.Corrupted.test_blank_slang_cell) ... ok
+test_caption_must_track_speech (__main__.Corrupted.test_caption_must_track_speech) ... ok
+test_car_number_in_words (__main__.Corrupted.test_car_number_in_words) ... ok
+test_colour (__main__.Corrupted.test_colour) ... ok
+test_curated_name_list (__main__.Corrupted.test_curated_name_list) ... ok
+test_digit_in_speech (__main__.Corrupted.test_digit_in_speech) ... ok
+test_duplicate_text (__main__.Corrupted.test_duplicate_text) ... ok
+test_glossary_dont_say (__main__.Corrupted.test_glossary_dont_say) ... ok
+test_indigenous_joke (__main__.Corrupted.test_indigenous_joke) ... ok
+test_non_ascii (__main__.Corrupted.test_non_ascii) ... ok
+test_not_family_friendly_flag (__main__.Corrupted.test_not_family_friendly_flag) ... ok
+test_required_moment_missing (__main__.Corrupted.test_required_moment_missing) ... ok
+test_slang_listed_but_unused (__main__.Corrupted.test_slang_listed_but_unused) ... ok
+test_slang_used_but_undeclared (__main__.Corrupted.test_slang_used_but_undeclared) ... ok
+test_swearing (__main__.Corrupted.test_swearing) ... ok
+test_too_long_callout (__main__.Corrupted.test_too_long_callout) ... ok
+test_unknown_moment (__main__.Corrupted.test_unknown_moment) ... ok
+test_unknown_slang_term (__main__.Corrupted.test_unknown_slang_term) ... ok
+test_unmodified_copy_passes (__main__.Corrupted.test_unmodified_copy_passes) ... ok
+test_us_spelling (__main__.Corrupted.test_us_spelling) ... ok
+test_variant_floor_once (__main__.Corrupted.test_variant_floor_once) ... ok
+test_variant_floor_repeating (__main__.Corrupted.test_variant_floor_repeating) ... ok
+test_variant_gap (__main__.Corrupted.test_variant_gap) ... ok
+test_wrong_field_count (__main__.Corrupted.test_wrong_field_count) ... ok
+test_wrong_trigger_event (__main__.Corrupted.test_wrong_trigger_event) ... ok
+test_missing_caption_is_refused (__main__.Fixtures.test_missing_caption_is_refused) ... ok
+test_missing_file_exits_2 (__main__.Fixtures.test_missing_file_exits_2) ... ok
+test_ok_fixture_is_accepted (__main__.Fixtures.test_ok_fixture_is_accepted) ... ok
+test_player_name_is_refused (__main__.Fixtures.test_player_name_is_refused) ... ok
+test_unflagged_line_is_refused (__main__.Fixtures.test_unflagged_line_is_refused) ... ok
+test_every_declared_moment_meets_its_floor (__main__.RealSheet.test_every_declared_moment_meets_its_floor) ... ok
+test_glossary_used_in_matches_the_sheet (__main__.RealSheet.test_glossary_used_in_matches_the_sheet) ... ok
+test_json_export_records_the_repeat_rule (__main__.RealSheet.test_json_export_records_the_repeat_rule) ... ok
+test_real_sheet_passes (__main__.RealSheet.test_real_sheet_passes) ... ok
+test_required_moments_from_the_bead_are_declared (__main__.RealSheet.test_required_moments_from_the_bead_are_declared) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.581s
+
+OK
+exit: 0
+
+## 6. Sheet shape
+
+$ bash -c awk -F'\t' 'NR>1 {n[$1]++; rows++} END {for (m in n) print n[m], m}' tools/audio/cues-playtest1.tsv | sort -k2; wc -l < tools/audio/cues-playtest1.tsv
+3 all-ready
+5 big-air
+4 bodywork-off
+3 countdown
+5 door-off
+3 final-lap
+3 first-finisher
+5 late-joiner
+5 lead-change
+3 next-round
+3 photo-finish
+3 time-up
+3 welcome
+5 wheel-off
+3 winner
+5 wreck
+      62
+exit: 0

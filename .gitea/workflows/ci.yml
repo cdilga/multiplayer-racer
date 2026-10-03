@@ -42,3 +42,17 @@ jobs:
           node-version-file: .nvmrc
       - run: npm --prefix web ci
       - run: npm --prefix web run build
+
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - name: UI tokens (P1-U01)
+        run: node art/ui/check.mjs
+      - name: Announcer cue sheet (P1-A00)
+        run: python3 tools/audio/check_cues.py tools/audio/cues-playtest1.tsv && python3 tools/audio/test_check_cues.py

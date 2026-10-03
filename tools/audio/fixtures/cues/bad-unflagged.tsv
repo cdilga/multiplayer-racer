@@ -1,0 +1,5 @@
+moment_id	variant	trigger_event	text	caption	delivery	slang_terms	family_friendly
+welcome	1	room.opened	G'day, and welcome to Joystick Jammers! Grab a controller and make a spectacular mess.	G'day, and welcome to Joystick Jammers! Grab a controller and make a spectacular mess.	warm	g'day	yes
+countdown	1	phase.countdown	Three! Two! One! Go, go, go!	3... 2... 1... GO!	hype	-	yes
+door-off	1	part.detached.door	There goes a door! She'll be right!	There goes a door! She'll be right!	hype	she'll be right	yes
+wheel-off	1	part.detached.wheel	Wheel's off! That one's rolling solo!	Wheel's off! That one's rolling solo!	hype	-	
