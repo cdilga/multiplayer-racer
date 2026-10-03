@@ -1,0 +1,59 @@
+{
+ "scenario": "fwd-back-rest",
+ "what": "§7.3a 'go forward and backward from rest, on every surface, without an accidental wheelie or stunt' (P1-S03a). On the surface-strips map, five Cruz Missiles at rest (tarmac, packed dirt, gravel, rock, and the greybox's off-track) floor it for 1.5 s, then hold DRIVE down for 3 s: each pulls away, stops, and reverses, upright, wheels on the ground, nose level. Baselines: no input never moves; holding the throttle never reverses; mashing goes nowhere in particular.",
+ "map": "maps/test/surface-strips.json",
+ "seed": 19,
+ "ticks": 540,
+ "cars": [
+  {"pose": {"x": 18, "y": 0.1, "z": -8, "headingDeg": 90}},
+  {"pose": {"x": 58, "y": 0.1, "z": -8, "headingDeg": 90}},
+  {"pose": {"x": 98, "y": 0.1, "z": -8, "headingDeg": 90}},
+  {"pose": {"x": 138, "y": 0.1, "z": -8, "headingDeg": 90}},
+  {"pose": {"x": 18, "y": 0.1, "z": -32, "headingDeg": 90}}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 180, "throttle": 1.0},
+  {"car": 0, "fromTick": 180, "brake": 1.0},
+  {"car": 1, "fromTick": 0, "toTick": 180, "throttle": 1.0},
+  {"car": 1, "fromTick": 180, "brake": 1.0},
+  {"car": 2, "fromTick": 0, "toTick": 180, "throttle": 1.0},
+  {"car": 2, "fromTick": 180, "brake": 1.0},
+  {"car": 3, "fromTick": 0, "toTick": 180, "throttle": 1.0},
+  {"car": 3, "fromTick": 180, "brake": 1.0},
+  {"car": 4, "fromTick": 0, "toTick": 180, "throttle": 1.0},
+  {"car": 4, "fromTick": 180, "brake": 1.0}
+ ],
+ "expect": [
+  {"car": 0, "atTick": 180, "metric": "forwardSpeed", "min": 4, "max": 12},
+  {"car": 0, "metric": "forwardSpeed", "min": -8, "max": -2.5},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 0, "metric": "airtimeS", "min": 0, "max": 0.05},
+  {"car": 0, "metric": "maxPitchDeg", "min": 0, "max": 6},
+  {"car": 1, "atTick": 180, "metric": "forwardSpeed", "min": 4, "max": 12},
+  {"car": 1, "metric": "forwardSpeed", "min": -8, "max": -2.5},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "airtimeS", "min": 0, "max": 0.05},
+  {"car": 1, "metric": "maxPitchDeg", "min": 0, "max": 6},
+  {"car": 2, "atTick": 180, "metric": "forwardSpeed", "min": 4, "max": 12},
+  {"car": 2, "metric": "forwardSpeed", "min": -8, "max": -2.5},
+  {"car": 2, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 2, "metric": "airtimeS", "min": 0, "max": 0.05},
+  {"car": 2, "metric": "maxPitchDeg", "min": 0, "max": 6},
+  {"car": 3, "atTick": 180, "metric": "forwardSpeed", "min": 4, "max": 12},
+  {"car": 3, "metric": "forwardSpeed", "min": -8, "max": -2.5},
+  {"car": 3, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 3, "metric": "airtimeS", "min": 0, "max": 0.05},
+  {"car": 3, "metric": "maxPitchDeg", "min": 0, "max": 6},
+  {"car": 4, "atTick": 180, "metric": "forwardSpeed", "min": 4, "max": 12},
+  {"car": 4, "metric": "forwardSpeed", "min": -8, "max": -2.5},
+  {"car": 4, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 4, "metric": "airtimeS", "min": 0, "max": 0.05},
+  {"car": 4, "metric": "maxPitchDeg", "min": 0, "max": 6}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 0, "metric": "forwardSpeed", "by": 2.0},
+   {"car": 2, "metric": "forwardSpeed", "by": 2.0}
+  ]
+ }
+}

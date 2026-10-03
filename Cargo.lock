@@ -440,6 +440,7 @@ dependencies = [
 name = "jj-sim"
 version = "0.2.0"
 dependencies = [
+ "jj-fixture",
  "jj-map",
  "jj-types",
  "libm",
@@ -463,6 +464,7 @@ dependencies = [
  "jj-types",
  "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]

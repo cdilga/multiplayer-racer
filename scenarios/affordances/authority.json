@@ -1,0 +1,35 @@
+{
+ "scenario": "authority",
+ "what": "§7.3a 'steer with authority at 5/15/30 m/s' and the authority metric (P1-S03a): the heading change from full lock in 0.5 s, from 5, 15 and 30 m/s on the main straight, holding the speed with a little throttle, then straightening. Read `headingChangeDeg` at tick 60 per car; the envelopes are TUNE (G-FEEL). Baselines: no input doesn't turn; holding full lock keeps turning; mashing doesn't end where a deliberate turn does.",
+ "map": "maps/greybox-loop.json",
+ "seed": 29,
+ "ticks": 180,
+ "cars": [
+  {"routePoint": 50, "lateral": 4, "linvel": [5, 0, 0]},
+  {"routePoint": 20, "lateral": 0, "linvel": [15, 0, 0]},
+  {"routePoint": 0, "lateral": -4, "linvel": [30, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 60, "throttle": 0.2, "steer": 1.0},
+  {"car": 0, "fromTick": 60, "throttle": 0.2},
+  {"car": 1, "fromTick": 0, "toTick": 60, "throttle": 0.3, "steer": 1.0},
+  {"car": 1, "fromTick": 60, "throttle": 0.3},
+  {"car": 2, "fromTick": 0, "toTick": 60, "throttle": 0.5, "steer": 1.0},
+  {"car": 2, "fromTick": 60, "throttle": 0.5}
+ ],
+ "observe": [60],
+ "expect": [
+  {"car": 0, "atTick": 60, "metric": "headingChangeDeg", "min": 12, "max": 30},
+  {"car": 1, "atTick": 60, "metric": "headingChangeDeg", "min": 15, "max": 35},
+  {"car": 2, "atTick": 60, "metric": "headingChangeDeg", "min": 8, "max": 22},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 2, "metric": "minUpY", "min": 0.95, "max": 1.001}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 1, "metric": "headingChangeDeg", "by": 10.0},
+   {"car": 1, "metric": "travel", "by": 5.0}
+  ]
+ }
+}

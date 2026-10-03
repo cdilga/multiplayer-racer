@@ -52,7 +52,7 @@ pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
 /// Lateral slack beyond the road's half-width for a gate crossing.
 pub const GATE_MARGIN_M: f32 = 2.0;
-pub const RESPAWN_LIFT_M: f32 = 0.6;
+pub const RESPAWN_LIFT_M: f32 = crate::placement::SPAWN_LIFT_M;
 /// Flip-assist PD gains about the axis that turns the car's up towards world up (TUNE, S03).
 pub const ASSIST_K: f32 = 9_000.0;
 pub const ASSIST_D: f32 = 3_000.0;

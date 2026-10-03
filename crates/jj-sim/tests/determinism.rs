@@ -13,12 +13,7 @@ fn greybox() -> LoadedMap {
 /// Two cars on the main straight; a scripted minute of throttle, steering and braking.
 fn session(seed: u64, ticks: u64) -> Sim {
     let map = greybox();
-    let mut sim = Sim::new(
-        &map,
-        &Registry::generic(),
-        seed,
-        VehicleProfile::provisional_cruz(),
-    );
+    let mut sim = Sim::new(&map, &Registry::generic(), seed, VehicleProfile::cruz());
     let a = sim.spawn_car(route_spawn(&map, 16, -2.0, 0.6));
     let b = sim.spawn_car(route_spawn(&map, 16, 2.0, 0.6));
     for t in 0..ticks {
@@ -61,7 +56,7 @@ fn journal_replay_reproduces_the_hash() {
     let replayed = Sim::replay(
         &greybox(),
         &Registry::generic(),
-        VehicleProfile::provisional_cruz(),
+        VehicleProfile::cruz(),
         &journal,
         ticks,
     );
@@ -76,12 +71,7 @@ fn journal_replay_reproduces_the_hash() {
 #[test]
 fn placing_a_car_is_journaled_so_the_run_still_replays() {
     let map = greybox();
-    let mut live = Sim::new(
-        &map,
-        &Registry::generic(),
-        3,
-        VehicleProfile::provisional_cruz(),
-    );
+    let mut live = Sim::new(&map, &Registry::generic(), 3, VehicleProfile::cruz());
     let car = live.spawn_car(route_spawn(&map, 16, 0.0, 0.6));
     let teleport = jj_sim::SpawnPose {
         x: 60.0,
@@ -113,7 +103,7 @@ fn placing_a_car_is_journaled_so_the_run_still_replays() {
     let replayed = Sim::replay(
         &map,
         &Registry::generic(),
-        VehicleProfile::provisional_cruz(),
+        VehicleProfile::cruz(),
         &journal,
         480,
     );
@@ -124,12 +114,7 @@ fn placing_a_car_is_journaled_so_the_run_still_replays() {
     );
     // And the place took effect: the car left the straight (z = 0) sideways, where the unplaced control run stays on it.
     let placed = live.car_state(car).unwrap();
-    let mut control = Sim::new(
-        &map,
-        &Registry::generic(),
-        3,
-        VehicleProfile::provisional_cruz(),
-    );
+    let mut control = Sim::new(&map, &Registry::generic(), 3, VehicleProfile::cruz());
     let c = control.spawn_car(route_spawn(&map, 16, 0.0, 0.6));
     for _ in 0..480 {
         control.set_input(

@@ -14,11 +14,13 @@ jj-map.workspace = true
 rapier3d.workspace = true
 libm.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 postcard.workspace = true
 sha2.workspace = true
 
 [dev-dependencies]
-serde_json.workspace = true
+# The feel bank (tests/feel.rs) runs fixtures through the shared runner, which depends on this crate's library.
+jj-fixture.workspace = true
 
 [lints]
 workspace = true

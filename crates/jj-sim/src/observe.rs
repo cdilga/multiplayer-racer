@@ -256,10 +256,27 @@ pub enum Metric {
     Recoveries,
     /// 1 once the car has finished, else 0.
     Finished,
+    /// Feel (P1-S03a): times the car came down onto its wheels after at least 3 ticks in the air.
+    Landings,
+    /// The up axis' y at the first landing (1 level).
+    LandingUpY,
+    /// Bounces on the suspension: the body rising more than 1.5 cm again after settling down, with a wheel on the
+    /// ground (a single-settle landing has none or one).
+    Rebounds,
+    /// Distance from the spawn when the car first comes to rest after moving (under 0.3 m/s after over 1 m/s), m.
+    StopDistanceM,
+    /// When that happened, s.
+    StopTimeS,
+    /// |distance from the route's centerline|, m: now, and the most over the run.
+    RouteOffsetM,
+    MaxRouteOffsetM,
+    /// The most nose-up or nose-down (squat, dive), and the most body roll, degrees.
+    MaxPitchDeg,
+    MaxRollDeg,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 20] = [
+    pub const ALL: [Metric; 29] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -280,6 +297,15 @@ impl Metric {
         Metric::Wrecks,
         Metric::Recoveries,
         Metric::Finished,
+        Metric::Landings,
+        Metric::LandingUpY,
+        Metric::Rebounds,
+        Metric::StopDistanceM,
+        Metric::StopTimeS,
+        Metric::RouteOffsetM,
+        Metric::MaxRouteOffsetM,
+        Metric::MaxPitchDeg,
+        Metric::MaxRollDeg,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -305,6 +331,15 @@ impl Metric {
             Metric::Wrecks => "wrecks",
             Metric::Recoveries => "recoveries",
             Metric::Finished => "finished",
+            Metric::Landings => "landings",
+            Metric::LandingUpY => "landingUpY",
+            Metric::Rebounds => "rebounds",
+            Metric::StopDistanceM => "stopDistanceM",
+            Metric::StopTimeS => "stopTimeS",
+            Metric::RouteOffsetM => "routeOffsetM",
+            Metric::MaxRouteOffsetM => "maxRouteOffsetM",
+            Metric::MaxPitchDeg => "maxPitchDeg",
+            Metric::MaxRollDeg => "maxRollDeg",
         }
     }
 }
@@ -322,6 +357,31 @@ pub struct SignatureTracker {
     min_up_y: f64,
     progress_m: f64,
     last_distance: Option<f64>,
+    ticks: u64,
+    air_run: u64,
+    landings: u64,
+    landing_up_y: Option<f64>,
+    grounded_once: bool,
+    rising: Option<bool>,
+    trough: f64,
+    rebounds: u64,
+    moved: bool,
+    stop: Option<(f64, f64)>,
+    max_route_offset: f64,
+    max_pitch: f64,
+    max_roll: f64,
+}
+
+/// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
+fn pitch_roll_deg(q: [f32; 4]) -> (f64, f64) {
+    let [x, y, z, w] = q.map(f64::from);
+    // The rotated +z (forward) and +x (left) axes' y components.
+    let fy = 2.0 * (y * z - w * x);
+    let ly = 2.0 * (x * y + w * z);
+    (
+        fy.clamp(-1.0, 1.0).asin().to_degrees(),
+        ly.clamp(-1.0, 1.0).asin().to_degrees(),
+    )
 }
 
 impl SignatureTracker {
@@ -337,6 +397,19 @@ impl SignatureTracker {
             min_up_y: 1.0,
             progress_m: 0.0,
             last_distance: None,
+            ticks: 0,
+            air_run: 0,
+            landings: 0,
+            landing_up_y: None,
+            grounded_once: false,
+            rising: None,
+            trough: 0.0,
+            rebounds: 0,
+            moved: false,
+            stop: None,
+            max_route_offset: 0.0,
+            max_pitch: 0.0,
+            max_roll: 0.0,
         }
     }
 
@@ -365,6 +438,57 @@ impl SignatureTracker {
             self.progress_m += delta;
         }
         self.last_distance = Some(d);
+        if self.last.is_some() {
+            self.ticks += 1;
+        }
+        // Landings: back on the wheels after at least 3 ticks in the air.
+        if o.wheels_in_contact == 0 {
+            self.air_run += 1;
+        } else {
+            if self.air_run >= 3 {
+                self.landings += 1;
+                self.landing_up_y.get_or_insert(f64::from(o.up_y));
+            }
+            self.air_run = 0;
+        }
+        // Rebounds: with a wheel down, the body turning upwards again more than 1.5 cm above its last low point.
+        let (h, vy) = (f64::from(o.position[1]), o.linvel[1]);
+        if o.wheels_in_contact > 0 {
+            if self.grounded_once {
+                match self.rising {
+                    Some(false) if vy > 0.0 => {
+                        self.rising = Some(true);
+                        self.trough = h;
+                    }
+                    Some(true) if vy < 0.0 => {
+                        if h - self.trough > 0.015 {
+                            self.rebounds += 1;
+                        }
+                        self.rising = Some(false);
+                    }
+                    None => {
+                        self.rising = Some(vy > 0.0);
+                        self.trough = h;
+                    }
+                    _ => {}
+                }
+            }
+            self.grounded_once = true;
+        } else {
+            self.rising = None;
+        }
+        // Coming to rest after moving.
+        if o.speed > 1.0 {
+            self.moved = true;
+        } else if self.moved && self.stop.is_none() && o.speed < 0.3 {
+            let travel = f64::from(o.position[0] - self.spawn.x)
+                .hypot(f64::from(o.position[2] - self.spawn.z));
+            self.stop = Some((travel, self.ticks as f64 / f64::from(TICK_HZ)));
+        }
+        self.max_route_offset = self.max_route_offset.max(o.progress.lateral_m.abs());
+        let (pitch, roll) = pitch_roll_deg(o.rotation);
+        self.max_pitch = self.max_pitch.max(pitch.abs());
+        self.max_roll = self.max_roll.max(roll.abs());
         self.last = Some(o.clone());
     }
 
@@ -402,6 +526,15 @@ impl SignatureTracker {
             Metric::Wrecks => f64::from(o.race.wrecks),
             Metric::Recoveries => f64::from(o.race.recoveries),
             Metric::Finished => f64::from(u8::from(o.race.finished_at.is_some())),
+            Metric::Landings => self.landings as f64,
+            Metric::LandingUpY => self.landing_up_y?,
+            Metric::Rebounds => self.rebounds as f64,
+            Metric::StopDistanceM => self.stop?.0,
+            Metric::StopTimeS => self.stop?.1,
+            Metric::RouteOffsetM => o.progress.lateral_m.abs(),
+            Metric::MaxRouteOffsetM => self.max_route_offset,
+            Metric::MaxPitchDeg => self.max_pitch,
+            Metric::MaxRollDeg => self.max_roll,
         })
     }
 

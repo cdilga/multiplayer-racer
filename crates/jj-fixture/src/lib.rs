@@ -14,6 +14,7 @@
 //! let recorded = h.finish();
 //! ```
 
+pub mod run;
 pub mod session;
 
 use serde::{Deserialize, Serialize};
@@ -24,9 +25,10 @@ use jj_sim::observe::{Metric, RouteGeom, SignatureTracker, observe_cars};
 use jj_sim::{CarId, DriveInput, Sim, SpawnPose, VehicleProfile, route_spawn};
 use jj_types::axis::{dequantise_axis, quantise_axis};
 
+pub use run::{BaselineResult, DifferResult, RunOutput, run};
 pub use session::{PhaseTarget, Session};
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Fixture {
     pub scenario: String,
@@ -69,6 +71,50 @@ pub struct Fixture {
     pub observe: Vec<u64>,
     #[serde(default)]
     pub expect: Vec<Expect>,
+    /// The same setup re-run with every car's scripted inputs replaced (no input, mashing, holding the first input),
+    /// and the metrics that must come out different from the deliberate run's (§7.3a, P1-S03).
+    #[serde(default)]
+    pub baselines: Option<Baselines>,
+}
+
+/// Baseline runs, and what must come out different in each of them.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Baselines {
+    #[serde(default = "all_baselines")]
+    pub kinds: Vec<BaselineKind>,
+    pub differ: Vec<Differ>,
+}
+
+fn all_baselines() -> Vec<BaselineKind> {
+    vec![
+        BaselineKind::NoInput,
+        BaselineKind::Mash,
+        BaselineKind::Hold,
+    ]
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BaselineKind {
+    /// No scripted input at all.
+    NoInput,
+    /// Every car's stick thrown somewhere new every 50 ms (seeded).
+    Mash,
+    /// Every car holds its first scripted input for the whole run.
+    Hold,
+}
+
+/// A car's metric (at `atTick`, else the end) and the margin it differs from a baseline's by. A baseline differs when
+/// at least one listed metric does; a metric only one of the runs has (a stop, a landing) differs by definition.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Differ {
+    pub car: u32,
+    pub metric: Metric,
+    #[serde(default)]
+    pub at_tick: Option<u64>,
+    pub by: f64,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -84,7 +130,7 @@ pub struct PoseSpec {
     pub roll_deg: f32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RaceSpec {
     #[serde(default = "default_laps")]
@@ -97,20 +143,20 @@ fn default_laps() -> u32 {
     jj_sim::race::DEFAULT_LAPS
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RecoverSpec {
     pub tick: u64,
     pub car: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TickSpec {
     pub tick: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AutopilotSpec {
     pub tick: u64,
@@ -118,7 +164,7 @@ pub struct AutopilotSpec {
     pub on: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DebrisSpec {
     pub tick: u64,
@@ -139,7 +185,7 @@ impl PoseSpec {
 
 /// A car on route point `routePoint` (`lateral` m to the side, `lift` m up) or at an explicit `pose`, with an optional
 /// starting velocity.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CarSpec {
     #[serde(default)]
@@ -155,11 +201,11 @@ pub struct CarSpec {
 }
 
 fn default_lift() -> f32 {
-    0.6
+    jj_sim::placement::SPAWN_LIFT_M
 }
 
 /// A seat claimed through the seat reducer (Hello + Claim + a tick boundary), optionally driving car `car`.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SeatSpec {
     pub name: String,
@@ -168,7 +214,7 @@ pub struct SeatSpec {
 }
 
 /// Teleports a car at a tick (a journaled setup command).
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlaceSpec {
     pub tick: u64,
@@ -178,7 +224,7 @@ pub struct PlaceSpec {
     pub linvel: [f32; 3],
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InputSpan {
     pub car: u32,
@@ -194,7 +240,7 @@ pub struct InputSpan {
 }
 
 /// Stop early once a car's metric is inside `[min, max]`.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Until {
     pub car: u32,
@@ -205,7 +251,7 @@ pub struct Until {
     pub max: Option<f64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Expect {
     pub car: u32,
@@ -229,18 +275,36 @@ pub struct Check {
     pub ok: bool,
 }
 
-/// The provisional Cruz profile with `--set` overrides applied by field name (`max_engine_force=4000`).
+/// The Cruz Missile profile with `--set` overrides applied by tuning field name (`max_engine_force=4000`).
 pub fn profile_with(set: &[(String, String)]) -> Result<VehicleProfile, String> {
-    let mut v =
-        serde_json::to_value(VehicleProfile::provisional_cruz()).map_err(|e| e.to_string())?;
+    profile_from(VehicleProfile::cruz(), set)
+}
+
+/// `base` with its tuning fields overridden by name (`max_engine_force=4000`, `surfaces.gravel=0.6`): the TUNED run and
+/// `jj sim --sweep`. Geometry comes from the sidecar and isn't settable.
+pub fn profile_from(
+    base: VehicleProfile,
+    set: &[(String, String)],
+) -> Result<VehicleProfile, String> {
+    let mut v = serde_json::to_value(base).map_err(|e| e.to_string())?;
     for (k, raw) in set {
-        let obj = v.as_object_mut().ok_or("the profile isn't an object")?;
-        if !obj.contains_key(k) {
-            let keys: Vec<&String> = obj.keys().collect();
-            return Err(format!("--set: no profile field {k:?}; fields: {keys:?}"));
+        let mut at = v.get_mut("tuning").ok_or("the profile has no tuning")?;
+        let path: Vec<&str> = k.split('.').collect();
+        for (i, part) in path.iter().enumerate() {
+            let obj = at
+                .as_object_mut()
+                .ok_or_else(|| format!("--set {k}: not an object above {part:?}"))?;
+            if !obj.contains_key(*part) {
+                let keys: Vec<&String> = obj.keys().collect();
+                return Err(format!("--set: no tuning field {k:?}; fields: {keys:?}"));
+            }
+            if i + 1 == path.len() {
+                let val: Value = serde_json::from_str(raw).unwrap_or(Value::String(raw.clone()));
+                obj.insert((*part).to_owned(), val);
+                break;
+            }
+            at = obj.get_mut(*part).expect("checked above");
         }
-        let val: Value = serde_json::from_str(raw).unwrap_or(Value::String(raw.clone()));
-        obj.insert(k.clone(), val);
     }
     serde_json::from_value(v).map_err(|e| format!("--set: {e}"))
 }

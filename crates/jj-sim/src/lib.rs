@@ -15,6 +15,7 @@ pub mod profile;
 pub mod race;
 pub mod rng;
 pub mod sim;
+pub mod vehicle;
 
 pub use journal::{DriveInput, Journal, SpawnPose};
 pub use profile::VehicleProfile;

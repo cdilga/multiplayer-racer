@@ -17,12 +17,7 @@ fn greybox() -> LoadedMap {
 }
 
 fn sim(map: &LoadedMap, seed: u64) -> Sim {
-    Sim::new(
-        map,
-        &Registry::generic(),
-        seed,
-        VehicleProfile::provisional_cruz(),
-    )
+    Sim::new(map, &Registry::generic(), seed, VehicleProfile::cruz())
 }
 
 fn steps(sim: &mut Sim, n: u64) {
@@ -418,14 +413,16 @@ fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
     s.place_car(car, route_spawn(&map, 20, 0.0, 0.4), 0.0, [15.0, 0.0, 0.0]);
     s.step();
     assert!(!s.recover(car));
-    // Braked to a stop and stopped for over a second: accepted, respawned at the anchor and held.
+    // Braked to a stop (released once stopped, since a held brake reverses) and stopped for over a second: accepted,
+    // respawned at the anchor and held.
     for _ in 0..(3 * S) {
+        let rolling = s.car_state(car).unwrap().forward_speed > 0.3;
         s.set_input(
             car,
             DriveInput {
                 throttle: 0,
                 steer: 0,
-                brake: 32_767,
+                brake: if rolling { 32_767 } else { 0 },
             },
         );
         s.step();
@@ -456,8 +453,13 @@ fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
         !s.recover(car),
         "not again straight away (it's moving under throttle)"
     );
-    // Inverted (on its side, rocking): accepted at once.
-    s.place_car(car, route_spawn(&map, 60, 0.0, 1.2), 1.6, [0.0; 3]);
+    // Inverted (on its roof): accepted at once. (On its side the Cruz's round flanks roll it back onto its wheels.)
+    s.place_car(
+        car,
+        route_spawn(&map, 60, 0.0, 1.7),
+        std::f32::consts::PI,
+        [0.0; 3],
+    );
     steps(&mut s, S / 2);
     assert!(s.recover(car));
     assert_eq!(s.race().car(0).unwrap().recoveries, 2);
@@ -491,7 +493,7 @@ fn a_race_with_commands_replays_to_the_same_hash() {
     let replay = Sim::replay(
         &map,
         &Registry::generic(),
-        VehicleProfile::provisional_cruz(),
+        VehicleProfile::cruz(),
         &journal,
         live.tick(),
     );

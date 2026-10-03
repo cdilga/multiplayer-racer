@@ -1,0 +1,46 @@
+{
+ "scenario": "progressive-brake",
+ "what": "§7.3 Steer/throttle/brake/reverse (P1-S03a). Four Cruz Missiles on the main straight press DRIVE down progressively (0.3, then 0.6, then full, a quarter second each) from 10, 20 and 30 m/s, and one holds half brake from 20 m/s. Each comes to a stop (half brake takes longer), then keeps reversing because the stick is still down. Baselines: no input coasts on and never stops; mashing doesn't stop where braking does; holding the first light touch stops much later.",
+ "map": "maps/greybox-loop.json",
+ "seed": 5,
+ "ticks": 480,
+ "cars": [
+  {"routePoint": 0, "lateral": -5, "linvel": [30, 0, 0]},
+  {"routePoint": 20, "lateral": -1.7, "linvel": [20, 0, 0]},
+  {"routePoint": 40, "lateral": 1.7, "linvel": [10, 0, 0]},
+  {"routePoint": 30, "lateral": 5, "linvel": [20, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 0, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 0, "fromTick": 60, "brake": 1.0},
+  {"car": 1, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 1, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 1, "fromTick": 60, "brake": 1.0},
+  {"car": 2, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 2, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 2, "fromTick": 60, "brake": 1.0},
+  {"car": 3, "fromTick": 0, "brake": 0.5}
+ ],
+ "expect": [
+  {"car": 0, "metric": "stopDistanceM", "min": 30, "max": 45},
+  {"car": 0, "metric": "forwardSpeed", "min": -8, "max": -1},
+  {"car": 1, "metric": "stopDistanceM", "min": 14, "max": 24},
+  {"car": 1, "metric": "forwardSpeed", "min": -8, "max": -1},
+  {"car": 2, "metric": "stopDistanceM", "min": 4, "max": 9},
+  {"car": 2, "metric": "forwardSpeed", "min": -8, "max": -1},
+  {"car": 3, "metric": "stopDistanceM", "min": 21, "max": 33},
+  {"car": 3, "metric": "forwardSpeed", "min": -4, "max": -0.2},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 2, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 3, "metric": "minUpY", "min": 0.98, "max": 1.001}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 1, "metric": "stopDistanceM", "by": 3.0},
+   {"car": 1, "metric": "forwardSpeed", "by": 2.0}
+  ]
+ }
+}

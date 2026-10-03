@@ -21,6 +21,7 @@ jj-map.workspace = true
 jj-contracts.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+sha2.workspace = true
 jj-types.workspace = true
 
 [lints]

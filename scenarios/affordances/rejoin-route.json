@@ -1,0 +1,43 @@
+{
+ "scenario": "rejoin-route",
+ "what": "§7.3a 'get back onto the route from the verge or a ditch' (P1-S03a). Three Cruz Missiles have run off onto the greybox's off-track ground at 8 m/s, 13 m from the centreline: on the left verge, on the right verge, and angled 30° away from the road. Each steers back (0.8 lock, straight, 0.8 the other way to line up) and is back on the road within 4 s, upright. Baselines: no input runs on along the verge; holding the first lock circles; mashing doesn't get there.",
+ "map": "maps/greybox-loop.json",
+ "seed": 31,
+ "ticks": 480,
+ "cars": [
+  {"pose": {"x": 20, "y": 0.1, "z": -13, "headingDeg": 90}, "linvel": [8.0, 0, 0.0]},
+  {"pose": {"x": 80, "y": 0.1, "z": 13, "headingDeg": 90}, "linvel": [8.0, 0, 0.0]},
+  {"pose": {"x": 130, "y": 0.1, "z": -13, "headingDeg": 120}, "linvel": [6.928, 0, -4.0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 110, "throttle": 0.5, "steer": -0.8},
+  {"car": 0, "fromTick": 110, "toTick": 250, "throttle": 0.5},
+  {"car": 0, "fromTick": 250, "toTick": 360, "throttle": 0.5, "steer": 0.8},
+  {"car": 0, "fromTick": 360, "throttle": 0.5},
+  {"car": 1, "fromTick": 0, "toTick": 110, "throttle": 0.5, "steer": 0.8},
+  {"car": 1, "fromTick": 110, "toTick": 250, "throttle": 0.5},
+  {"car": 1, "fromTick": 250, "toTick": 360, "throttle": 0.5, "steer": -0.8},
+  {"car": 1, "fromTick": 360, "throttle": 0.5},
+  {"car": 2, "fromTick": 0, "toTick": 190, "throttle": 0.5, "steer": -0.8},
+  {"car": 2, "fromTick": 190, "toTick": 330, "throttle": 0.5},
+  {"car": 2, "fromTick": 330, "toTick": 440, "throttle": 0.5, "steer": 0.8},
+  {"car": 2, "fromTick": 440, "throttle": 0.5}
+ ],
+ "observe": [480],
+ "expect": [
+  {"car": 0, "metric": "routeOffsetM", "min": 0, "max": 5},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 1, "metric": "routeOffsetM", "min": 0, "max": 5},
+  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 2, "metric": "routeOffsetM", "min": 0, "max": 5},
+  {"car": 2, "metric": "minUpY", "min": 0.95, "max": 1.001}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 0, "metric": "routeOffsetM", "by": 4.0},
+   {"car": 1, "metric": "routeOffsetM", "by": 4.0},
+   {"car": 0, "metric": "headingChangeDeg", "by": 30.0},
+   {"car": 0, "metric": "travel", "by": 8.0}
+  ]
+ }
+}

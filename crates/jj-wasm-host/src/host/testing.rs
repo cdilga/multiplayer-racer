@@ -255,12 +255,7 @@ mod tests {
         let fx: Fixture = serde_json::from_str(fixture).unwrap();
         let map = load_json(GREYBOX.as_bytes(), &Registry::generic()).unwrap();
         let ticks = fx.ticks;
-        let mut sim = Sim::new(
-            &map,
-            &Registry::generic(),
-            fx.seed,
-            VehicleProfile::provisional_cruz(),
-        );
+        let mut sim = Sim::new(&map, &Registry::generic(), fx.seed, VehicleProfile::cruz());
         let mut h = Harness::new(fx, &map, &mut sim, false).unwrap();
         h.record(&sim, ticks == 0);
         while sim.tick() < ticks {

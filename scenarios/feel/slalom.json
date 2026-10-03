@@ -1,0 +1,45 @@
+{
+ "scenario": "slalom",
+ "what": "§7.3 Steer, §7.3a 'steer with authority and counter-steer out of a slide' (P1-S03a). Two Cruz Missiles on the main straight's centreline at 10 and 15 m/s weave at 0.7 lock (left 1/3 s, right, left, right 2/3 s each, left 1/3 s) with the throttle at 0.4: they yaw hard both ways, slide and catch it, stay upright and on the road, and finish back on the line pointing down the straight. Baselines: no input never yaws; holding the first lock spins round; mashing makes no headway.",
+ "map": "maps/greybox-loop.json",
+ "seed": 9,
+ "ticks": 480,
+ "cars": [
+  {"routePoint": 2, "lateral": 0, "linvel": [10, 0, 0]},
+  {"routePoint": 30, "lateral": 0, "linvel": [15, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 40, "throttle": 0.4, "steer": 0.7},
+  {"car": 0, "fromTick": 40, "toTick": 120, "throttle": 0.4, "steer": -0.7},
+  {"car": 0, "fromTick": 120, "toTick": 200, "throttle": 0.4, "steer": 0.7},
+  {"car": 0, "fromTick": 200, "toTick": 280, "throttle": 0.4, "steer": -0.7},
+  {"car": 0, "fromTick": 280, "toTick": 320, "throttle": 0.4, "steer": 0.7},
+  {"car": 0, "fromTick": 320, "throttle": 0.4},
+  {"car": 1, "fromTick": 0, "toTick": 40, "throttle": 0.4, "steer": 0.7},
+  {"car": 1, "fromTick": 40, "toTick": 120, "throttle": 0.4, "steer": -0.7},
+  {"car": 1, "fromTick": 120, "toTick": 200, "throttle": 0.4, "steer": 0.7},
+  {"car": 1, "fromTick": 200, "toTick": 280, "throttle": 0.4, "steer": -0.7},
+  {"car": 1, "fromTick": 280, "toTick": 320, "throttle": 0.4, "steer": 0.7},
+  {"car": 1, "fromTick": 320, "throttle": 0.4}
+ ],
+ "expect": [
+  {"car": 0, "metric": "maxYawRateDegS", "min": 40, "max": 90},
+  {"car": 0, "metric": "headingChangeDeg", "min": 0, "max": 20},
+  {"car": 0, "metric": "maxRouteOffsetM", "min": 0, "max": 6},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 0, "metric": "maxSlipDeg", "min": 5, "max": 40},
+  {"car": 1, "metric": "maxYawRateDegS", "min": 40, "max": 90},
+  {"car": 1, "metric": "headingChangeDeg", "min": 0, "max": 20},
+  {"car": 1, "metric": "maxRouteOffsetM", "min": 0, "max": 6},
+  {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 1, "metric": "maxSlipDeg", "min": 5, "max": 40}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 0, "metric": "maxYawRateDegS", "by": 20.0},
+   {"car": 0, "metric": "headingChangeDeg", "by": 20.0},
+   {"car": 0, "metric": "travel", "by": 10.0}
+  ]
+ }
+}

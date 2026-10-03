@@ -20,12 +20,7 @@ fn greybox() -> LoadedMap {
 }
 
 fn sim(map: &LoadedMap, seed: u64) -> Sim {
-    Sim::new(
-        map,
-        &Registry::generic(),
-        seed,
-        VehicleProfile::provisional_cruz(),
-    )
+    Sim::new(map, &Registry::generic(), seed, VehicleProfile::cruz())
 }
 
 fn input(throttle: f32, steer: f32, brake: f32) -> DriveInput {
@@ -169,9 +164,11 @@ fn it_recovers_itself_after_being_stuck_3_s_and_its_state_is_introspectable() {
     for _ in 0..S {
         s.step();
     }
-    // Box the car in with four huge debris blocks it can't push.
+    // Box the car in with four huge debris blocks it can't push, 0.3 m clear of its hull (it faces +x on the grid).
     let p = s.car_state(car).unwrap().position;
-    for (dx, dz) in [(4.6, 0.0), (-4.6, 0.0), (0.0, 3.6), (0.0, -3.6)] {
+    let [half_w, _, half_l] = VehicleProfile::cruz().chassis_half();
+    let (gx, gz) = (half_l + 2.2 + 0.3, half_w + 2.2 + 0.3);
+    for (dx, dz) in [(gx, 0.0), (-gx, 0.0), (0.0, gz), (0.0, -gz)] {
         s.spawn_debris(
             SpawnPose {
                 x: p[0] + dx,
@@ -241,7 +238,7 @@ fn autopilot_takeovers_and_handbacks_replay_to_the_same_hash() {
     let replay = Sim::replay(
         &map,
         &Registry::generic(),
-        VehicleProfile::provisional_cruz(),
+        VehicleProfile::cruz(),
         &journal,
         live.tick(),
     );

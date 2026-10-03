@@ -1,11 +1,13 @@
 //! The `jj` CLI for agents and developers: sim, procgen and validate, with JSON output.
 //!
 //! ```text
-//! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry) and
-//!                                               vehicle sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs)
+//! jj validate [--json] [--kit <dir>] <file>…   validate maps (jj.map.v1, against the kit-piece registry), vehicle
+//!                                               sidecars (*.asset.json, jj.vehicle.v1, with their LOD GLBs) and
+//!                                               vehicle profiles (jj.vehicle-profile.v1, against their sidecar)
 //! jj sim [--json] [--trace] [--set k=v] <fixture.json>…   set up, step, observe, assert and replay (`jj sim --help`)
 //! jj sim --compare <accepted> <current> [<tuned>]           ACCEPTED | CURRENT | TUNED trace table
 //! jj procgen --seed N [--json] [--out <dir>]   generate, validate and dump a seed's map
+//! jj vehicle sync <profile.json>…               derive a vehicle profile's geometry from its baked sidecar
 //! jj --version
 //! ```
 //! Exit: 0 everything valid, 1 a file failed validation, 2 usage or I/O.
@@ -15,8 +17,9 @@ use std::process::ExitCode;
 
 mod procgen;
 mod sim;
+mod vehicle;
 
-const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj --version";
+const USAGE: &str = "usage: jj validate [--json] [--kit <dir>] <file>…\n       jj sim [--json] [--trace] [--set <field>=<value>]… <fixture.json>… (jj sim --help)\n       jj procgen --seed <u64> [--json] [--out <dir>]\n       jj vehicle sync <profile.json>…\n       jj --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -24,6 +27,7 @@ fn main() -> ExitCode {
         Some("validate") => validate(&args[1..]),
         Some("sim") => sim::command(&args[1..]),
         Some("procgen") => procgen::command(&args[1..]),
+        Some("vehicle") => vehicle::command(&args[1..]),
         Some("--version") | Some("version") => {
             println!("jj {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
@@ -135,6 +139,36 @@ fn validate(args: &[String]) -> ExitCode {
                 println!("{}: {} problem(s)", file.display(), report.violations.len());
                 for v in &report.violations {
                     println!("  {:<20} {:<28} {}", v.rule.name(), v.at, v.detail);
+                }
+            }
+            continue;
+        }
+        // Vehicle profiles (jj.vehicle-profile.v1): the geometry must still match the sidecar it was derived from.
+        if serde_json::from_slice::<serde_json::Value>(&bytes).is_ok_and(|v| {
+            v.get("profile").and_then(|p| p.as_str()) == Some(jj_sim::profile::PROFILE)
+        }) {
+            let problems = match vehicle::check(file) {
+                Ok(p) => p,
+                Err(e) => vec![e],
+            };
+            all_ok &= problems.is_empty();
+            if json {
+                results.push(serde_json::json!({
+                    "file": file.display().to_string(),
+                    "kind": "vehicle-profile",
+                    "ok": problems.is_empty(),
+                    "violations": problems,
+                }));
+            } else if problems.is_empty() {
+                println!(
+                    "{}: ok ({}, in sync with its sidecar)",
+                    file.display(),
+                    jj_sim::profile::PROFILE
+                );
+            } else {
+                println!("{}: {} problem(s)", file.display(), problems.len());
+                for p in &problems {
+                    println!("  {p}");
                 }
             }
             continue;

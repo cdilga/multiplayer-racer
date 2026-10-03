@@ -1,0 +1,52 @@
+{
+ "scenario": "brake-stop",
+ "what": "§7.3a 'stop: progressive braking reaches a stop within an envelope from 10/20/30 m/s' (P1-S03a). Four Cruz Missiles on the main straight brake (0.3, then 0.6, then full, a quarter second each) from 10, 20 and 30 m/s, and from 20 m/s while turning gently; each lets go once it has stopped and stays stopped, upright and pointing roughly where it was. Baselines: no input never stops; holding the light first touch stops far later; mashing doesn't stop.",
+ "map": "maps/greybox-loop.json",
+ "seed": 23,
+ "ticks": 480,
+ "cars": [
+  {"routePoint": 40, "lateral": 5, "linvel": [10, 0, 0]},
+  {"routePoint": 20, "lateral": 1.7, "linvel": [20, 0, 0]},
+  {"routePoint": 0, "lateral": -1.7, "linvel": [30, 0, 0]},
+  {"routePoint": 0, "lateral": -5, "linvel": [20, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 0, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 0, "fromTick": 60, "toTick": 150, "brake": 1.0},
+  {"car": 0, "fromTick": 150},
+  {"car": 1, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 1, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 1, "fromTick": 60, "toTick": 260, "brake": 1.0},
+  {"car": 1, "fromTick": 260},
+  {"car": 2, "fromTick": 0, "toTick": 30, "brake": 0.3},
+  {"car": 2, "fromTick": 30, "toTick": 60, "brake": 0.6},
+  {"car": 2, "fromTick": 60, "toTick": 340, "brake": 1.0},
+  {"car": 2, "fromTick": 340},
+  {"car": 3, "fromTick": 0, "toTick": 30, "brake": 0.3, "steer": 0.3},
+  {"car": 3, "fromTick": 30, "toTick": 60, "brake": 0.6, "steer": 0.3},
+  {"car": 3, "fromTick": 60, "toTick": 260, "brake": 1.0, "steer": 0.3},
+  {"car": 3, "fromTick": 260}
+ ],
+ "expect": [
+  {"car": 0, "metric": "stopDistanceM", "min": 4.5, "max": 8.5},
+  {"car": 1, "metric": "stopDistanceM", "min": 15, "max": 23},
+  {"car": 2, "metric": "stopDistanceM", "min": 30, "max": 44},
+  {"car": 3, "metric": "stopDistanceM", "min": 16, "max": 27},
+  {"car": 3, "metric": "headingChangeDeg", "min": 10, "max": 90},
+  {"car": 0, "metric": "forwardSpeed", "min": -1, "max": 1},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "forwardSpeed", "min": -1, "max": 1},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 2, "metric": "forwardSpeed", "min": -1, "max": 1},
+  {"car": 2, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 3, "metric": "forwardSpeed", "min": -1, "max": 1},
+  {"car": 3, "metric": "minUpY", "min": 0.98, "max": 1.001}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 1, "metric": "stopDistanceM", "by": 3.0},
+   {"car": 1, "metric": "forwardSpeed", "by": 1.5}
+  ]
+ }
+}

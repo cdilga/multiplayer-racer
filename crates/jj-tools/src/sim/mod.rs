@@ -23,11 +23,16 @@
 //!   "inputs": [{ "car": 0, "fromTick": 0, "toTick": 600, "throttle": 1.0, "steer": 0, "brake": 0 }],
 //!   "until": { "car": 0, "metric": "travel", "min": 40 },
 //!   "observe": [0, 300],
-//!   "expect": [{ "car": 0, "atTick": 480, "metric": "speed", "min": 0, "max": 0.05 }] }
+//!   "expect": [{ "car": 0, "atTick": 480, "metric": "speed", "min": 0, "max": 0.05 }],
+//!   "baselines": { "kinds": ["no-input", "mash", "hold"], "differ": [{ "car": 0, "metric": "travel", "by": 5 }] } }
 //! ```
+//! `baselines` (§7.3a, P1-S03a) re-runs the setup with every car's inputs replaced (none, mashed, the first one held);
+//! each baseline must come out different in at least one `differ` metric. `--sweep field=a..b[:n]` re-runs fixtures
+//! across a tuning field's range and prints one CSV row per value × car.
 //! Metrics are [`jj_sim::observe::Metric`]: state now (`speed`, `upY`, `travel`…) and signature accumulators
-//! (`maxSpeed`, `maxYawRateDegS`, `maxSlipDeg`, `airtimeS`, `minUpY`, `progressM`). An `expect` without `atTick` is
-//! checked at the end of the run.
+//! (`maxSpeed`, `maxYawRateDegS`, `maxSlipDeg`, `airtimeS`, `minUpY`, `progressM`; feel: `landings`, `landingUpY`,
+//! `rebounds`, `stopDistanceM`, `stopTimeS`, `routeOffsetM`, `maxRouteOffsetM`, `maxPitchDeg`, `maxRollDeg`). An
+//! `expect` without `atTick` is checked at the end of the run.
 
 mod compare;
 
@@ -37,9 +42,7 @@ use std::process::ExitCode;
 use serde::Serialize;
 use serde_json::{Value, json};
 
-use jj_sim::{Journal, Sim};
-
-use jj_fixture::{Check, Fixture, Harness, Recorded, profile_with};
+use jj_fixture::{BaselineResult, Check, Fixture, Recorded, RunOutput, profile_with};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,6 +58,8 @@ pub struct Outcome {
     pub replay_matches: bool,
     pub tuned: Vec<String>,
     pub checks: Vec<Check>,
+    /// The baseline runs (no input, mash, hold) and whether each differed from the deliberate run (§7.3a).
+    pub baselines: Vec<BaselineResult>,
     /// One object per car: every outcome-signature metric at the end of the run.
     pub signature: Vec<Value>,
     /// The full state (cars and session) at each `observe` tick and at the end.
@@ -113,39 +118,34 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     });
     std::fs::create_dir_all(&out_dir).map_err(|e| format!("{}: {e}", out_dir.display()))?;
 
-    // Set up (cars journaled; seats and the director through their own inputs), then step under the fixture's script.
-    let (scenario, what, ticks) = (fx.scenario.clone(), fx.what.clone(), fx.ticks);
-    let mut sim = Sim::new(&map, &registry, fx.seed, profile.clone());
-    let mut harness = Harness::new(fx, &map, &mut sim, opts.trace)?;
-    let mut stopped_early = false;
-    harness.record(&sim, ticks == 0);
-    while sim.tick() < ticks {
-        harness.before_step(&mut sim);
-        sim.step();
-        let last = sim.tick() == ticks;
-        if harness.after_step(&sim, last) && !last {
-            stopped_early = true;
-            harness.end_here(&sim);
-            break;
-        }
-    }
-    let Recorded {
-        checks,
-        signature,
-        observations,
-        trace,
-    } = harness.finish();
-    // Replay the journal from its bytes: same hash, or the run isn't reproducible.
-    let journal = Journal::from_bytes(&sim.journal().to_bytes()).map_err(|e| e.to_string())?;
-    let replayed = Sim::replay(&map, &registry, profile, &journal, sim.tick());
-    let state_hash = jj_map::hex(&sim.state_hash());
-    let replay_hash = jj_map::hex(&replayed.state_hash());
-    let replay_matches = state_hash == replay_hash;
+    // Set up (cars journaled; seats and the director through their own inputs), step under the fixture's script,
+    // replay the journal, and run the baselines (jj-fixture).
+    let out = jj_fixture::run(&fx, &map, &registry, &profile, opts.trace)?;
+    let ok = out.ok();
+    let replay_matches = out.replay_matches();
+    let RunOutput {
+        ticks,
+        stopped_early,
+        state_hash,
+        replay_hash,
+        journal,
+        recorded:
+            Recorded {
+                checks,
+                signature,
+                observations,
+                trace,
+            },
+        baselines,
+    } = out;
+    let (scenario, what) = (fx.scenario, fx.what);
+    let state_hash = jj_map::hex(&state_hash);
+    let replay_hash = jj_map::hex(&replay_hash);
 
     let write = |name: &str, bytes: &[u8]| {
         std::fs::write(out_dir.join(name), bytes).map_err(|e| format!("{name}: {e}"))
     };
-    write("journal.bin", &sim.journal().to_bytes())?;
+    write("journal.bin", &journal.to_bytes())?;
     let trace_path = if opts.trace {
         let mut lines = String::new();
         for row in &trace {
@@ -153,7 +153,7 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
             lines.push('\n');
         }
         lines.push_str(
-            &json!({ "summary": { "scenario": scenario, "ticks": sim.tick(), "stateHash": state_hash,
+            &json!({ "summary": { "scenario": scenario, "ticks": ticks, "stateHash": state_hash,
                                    "tuned": tuned, "signature": signature } })
             .to_string(),
         );
@@ -164,16 +164,17 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         None
     };
     let outcome = Outcome {
-        ok: checks.iter().all(|c| c.ok) && replay_matches,
+        ok,
         scenario,
         what,
-        ticks: sim.tick(),
+        ticks,
         stopped_early,
         state_hash,
         replay_hash,
         replay_matches,
         tuned,
         checks,
+        baselines,
         signature,
         observations,
         out: out_dir.display().to_string(),
@@ -228,6 +229,20 @@ fn print_human(o: &Outcome) {
             c.max
         );
     }
+    for b in o.baselines.iter().filter(|b| !b.ok) {
+        for d in &b.differ {
+            let at = d.at_tick.map_or("end".to_owned(), |t| t.to_string());
+            println!(
+                "    BAD car {} @ {at:>5} {} = {:?} deliberate vs {:?} {:?}: not {} apart",
+                d.car,
+                d.metric.name(),
+                d.deliberate,
+                d.baseline,
+                b.kind,
+                d.by
+            );
+        }
+    }
     if !o.ok {
         println!("  outcome signature at the end:");
         for s in &o.signature {
@@ -246,6 +261,7 @@ fn print_human(o: &Outcome) {
 pub const HELP: &str = "jj sim: load a fixture, set up cars, seats and the round phase, step, read state as JSON, replay.
 
 usage: jj sim [--json] [--trace] [--out <dir>] [--set <field>=<value>]… <fixture.json>…
+       jj sim --sweep <field>=<from>..<to>[:<steps>] [--set …] <fixture.json>…   (one CSV row per value × car)
        jj sim [--json] <fixture.json> --compare <accepted trace|run dir>   (runs CURRENT, plus TUNED with --set)
        jj sim [--json] --compare <accepted> <current> [<tuned>]          (traces or run dirs)
 
@@ -261,7 +277,81 @@ examples:
   jj sim --trace --set max_engine_force=4000 scenarios/straight-throttle.json
   jj sim scenarios/straight-throttle.json --compare baselines/straight-throttle.trace.jsonl --set max_engine_force=4000
   jj sim --compare old/trace.jsonl target/jj-runs/sim-straight-throttle
+  jj sim --sweep max_steer_rad=0.35..0.75:5 scenarios/affordances/authority.json > sweep.csv
 ";
+
+/// `--sweep field=from..to[:steps]`: a tuning field stepped evenly from `from` to `to` (both included).
+struct Sweep {
+    field: String,
+    values: Vec<f64>,
+}
+
+impl Sweep {
+    fn parse(s: &str) -> Result<Self, String> {
+        let bad = || format!("--sweep {s:?}: expected <field>=<from>..<to>[:<steps>]");
+        let (field, range) = s.split_once('=').ok_or_else(bad)?;
+        let (range, steps) = range.split_once(':').unwrap_or((range, "5"));
+        let (a, b) = range.split_once("..").ok_or_else(bad)?;
+        let (a, b): (f64, f64) = (a.parse().map_err(|_| bad())?, b.parse().map_err(|_| bad())?);
+        let steps: usize = steps.parse().map_err(|_| bad())?;
+        if steps < 2 {
+            return Err(format!("--sweep {s:?}: at least 2 steps"));
+        }
+        // Rounded to 6 decimals so 0.35..0.75:5 reads 0.45, not 0.44999999999999996.
+        let values = (0..steps)
+            .map(|i| ((a + (b - a) * i as f64 / (steps - 1) as f64) * 1e6).round() / 1e6)
+            .collect();
+        Ok(Self {
+            field: field.to_owned(),
+            values,
+        })
+    }
+}
+
+/// One CSV row per fixture × value × car: the swept value, whether the run held its envelopes, and every
+/// outcome-signature metric at its end (the tuning loop of §13b.1; S03).
+fn sweep_csv(files: &[PathBuf], opts: &Options, sw: &Sweep) -> Result<String, String> {
+    let mut rows: Vec<(String, f64, Value, bool)> = Vec::new();
+    let mut metrics: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for f in files {
+        for &v in &sw.values {
+            let mut o = opts.clone();
+            o.set.push((sw.field.clone(), format!("{v}")));
+            o.out = Some(PathBuf::from(format!(
+                "target/jj-runs/sweep-{}-{v}",
+                sw.field
+            )));
+            let out = run(f, &o).map_err(|e| format!("{}: {e}", f.display()))?;
+            for sig in out.signature {
+                metrics.extend(
+                    sig.as_object()
+                        .into_iter()
+                        .flatten()
+                        .map(|(k, _)| k.clone())
+                        .filter(|k| k != "car"),
+                );
+                rows.push((out.scenario.clone(), v, sig, out.ok));
+            }
+        }
+    }
+    let mut csv = format!("scenario,{},car,ok", sw.field);
+    for m in &metrics {
+        csv.push(',');
+        csv.push_str(m);
+    }
+    csv.push('\n');
+    for (scenario, v, sig, ok) in rows {
+        csv.push_str(&format!("{scenario},{v},{},{ok}", sig["car"]));
+        for m in &metrics {
+            csv.push(',');
+            if let Some(x) = sig[m.as_str()].as_f64() {
+                csv.push_str(&format!("{x:.4}"));
+            }
+        }
+        csv.push('\n');
+    }
+    Ok(csv)
+}
 
 /// `jj sim …`
 pub fn command(args: &[String]) -> ExitCode {
@@ -275,6 +365,7 @@ pub fn command(args: &[String]) -> ExitCode {
         ExitCode::from(2)
     };
     let mut comparing = false;
+    let mut sweep: Option<Sweep> = None;
     while let Some(a) = it.next() {
         match a.as_str() {
             "-h" | "--help" => {
@@ -292,6 +383,11 @@ pub fn command(args: &[String]) -> ExitCode {
                 None => return usage("--set needs <field>=<value>"),
             },
             "--compare" => comparing = true,
+            "--sweep" => match it.next().map(|s| Sweep::parse(s)) {
+                Some(Ok(s)) => sweep = Some(s),
+                Some(Err(e)) => return usage(&e),
+                None => return usage("--sweep needs <field>=<from>..<to>[:<steps>]"),
+            },
             _ if comparing => compare.push(PathBuf::from(a)),
             _ => files.push(PathBuf::from(a)),
         }
@@ -304,6 +400,18 @@ pub fn command(args: &[String]) -> ExitCode {
     }
     if files.len() > 1 && opts.out.is_some() {
         return usage("--out takes one fixture");
+    }
+    if let Some(sw) = sweep {
+        return match sweep_csv(&files, &opts, &sw) {
+            Ok(csv) => {
+                print!("{csv}");
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("jj sim --sweep: {e}");
+                ExitCode::from(2)
+            }
+        };
     }
     let mut all_ok = true;
     let mut outcomes = Vec::new();

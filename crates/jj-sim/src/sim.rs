@@ -20,8 +20,7 @@ use rapier3d::parry::utils::Array2;
 use rapier3d::prelude::*;
 use sha2::{Digest, Sha256};
 
-use jj_map::{Footprint, LoadedMap, Registry};
-use jj_types::axis::dequantise_axis;
+use jj_map::{Footprint, LoadedMap, Registry, Terrain};
 
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
@@ -29,9 +28,10 @@ use crate::placement::{
     CLEARANCE_M, PROTECT_TICKS, Rect, RouteLine, SEARCH_LATERAL_M, SEARCH_STEP_M, SEARCH_STEPS,
     SPAWN_LIFT_M, corridor_slots, grid_pose, offset, overlaps,
 };
-use crate::profile::{Drive, VehicleProfile};
+use crate::profile::VehicleProfile;
 use crate::race::{Course, Effect, Race};
 use crate::rng::Rng;
+use crate::vehicle;
 
 pub const TICK_HZ: u32 = 120;
 pub const DT: f32 = 1.0 / TICK_HZ as f32;
@@ -114,6 +114,10 @@ pub struct WheelState {
 pub struct Sim {
     world: PhysicsWorld,
     profile: VehicleProfile,
+    /// The hull's half extents (footprints and clearances).
+    chassis_half: [f32; 3],
+    /// The ground classes under the wheels (per-surface grip).
+    terrain: Terrain,
     cars: Vec<Car>,
     props: Vec<RigidBodyHandle>,
     tick: u64,
@@ -216,7 +220,9 @@ impl Sim {
         };
         Self {
             world,
+            chassis_half: profile.chassis_half(),
             profile,
+            terrain: m.terrain.clone(),
             cars: Vec::new(),
             props,
             tick: 0,
@@ -375,8 +381,8 @@ impl Sim {
             x: t.x,
             z: t.z,
             heading: libm::atan2f(fwd.x, fwd.z),
-            half_w: self.profile.chassis_half[0] + CLEARANCE_M,
-            half_l: self.profile.chassis_half[2] + CLEARANCE_M,
+            half_w: self.chassis_half[0] + CLEARANCE_M,
+            half_l: self.chassis_half[2] + CLEARANCE_M,
         })
     }
 
@@ -409,8 +415,8 @@ impl Sim {
             x: pose.x,
             z: pose.z,
             heading: pose.heading,
-            half_w: self.profile.chassis_half[0] + CLEARANCE_M,
-            half_l: self.profile.chassis_half[2] + CLEARANCE_M,
+            half_w: self.chassis_half[0] + CLEARANCE_M,
+            half_l: self.chassis_half[2] + CLEARANCE_M,
         }
     }
 
@@ -575,21 +581,44 @@ impl Sim {
         }
     }
 
+    /// Builds a car from the profile (P1-S03a): the body frame is the sidecar's vehicle space (origin on the ground
+    /// between the axles), the chassis is the convex hull of the sidecar's core proxy with the sidecar's centre of mass,
+    /// and the wheels hang from their sidecar pivots.
     fn add_car(&mut self, pose: SpawnPose) {
         let p = &self.profile;
-        let [hx, hy, hz] = p.chassis_half;
+        let t = &p.tuning;
         let body = RigidBodyBuilder::dynamic()
             .translation(Vector::new(pose.x, pose.y, pose.z))
             .rotation(Vector::new(0.0, pose.heading, 0.0))
-            .linear_damping(p.linear_damping)
-            .angular_damping(p.angular_damping)
+            .linear_damping(t.linear_damping)
+            .angular_damping(t.angular_damping)
             // Never asleep: Rapier's update_vehicle pumps suspension impulses into a sleeping chassis' velocity
             // without waking it (tests/rapier_api.rs), which would jolt the car when it woke.
             .can_sleep(false)
             .ccd_enabled(true);
-        let volume = 8.0 * hx * hy * hz;
-        let collider = ColliderBuilder::cuboid(hx, hy, hz)
-            .density(p.chassis_mass / volume)
+        let points: Vec<Vector> = p
+            .geometry
+            .hull
+            .iter()
+            .map(|&[x, y, z]| Vector::new(x, y, z))
+            .collect();
+        let (lo, hi) = p.hull_bounds();
+        let [w, h, l] = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+        // The hull's box inertia at the car's mass (scaled by the profile), about the sidecar's centre of mass.
+        let k = t.mass / 12.0 * t.inertia_scale;
+        let inertia = Vector::new(
+            k * (h * h + l * l),
+            k * (w * w + l * l),
+            k * (w * w + h * h),
+        );
+        let [cx, cy, cz] = p.geometry.com;
+        let collider = ColliderBuilder::convex_hull(&points)
+            .unwrap_or_else(|| ColliderBuilder::cuboid(w / 2.0, h / 2.0, l / 2.0))
+            .mass_properties(MassProperties::new(
+                Vector::new(cx, cy, cz),
+                t.mass,
+                inertia,
+            ))
             .friction(0.6)
             .collision_groups(CAR_GROUPS);
         let (handle, collider) = self.world.insert(body, collider);
@@ -598,28 +627,24 @@ impl Sim {
         vehicle.index_up_axis = 1;
         vehicle.index_forward_axis = 2;
         let tuning = WheelTuning {
-            suspension_stiffness: p.suspension_stiffness,
-            suspension_compression: p.suspension_compression,
-            suspension_damping: p.suspension_damping,
-            max_suspension_travel: p.max_suspension_travel,
-            side_friction_stiffness: p.side_friction_stiffness,
-            friction_slip: p.friction_slip,
-            max_suspension_force: p.max_suspension_force,
+            suspension_stiffness: t.suspension_stiffness,
+            suspension_compression: t.suspension_compression,
+            suspension_damping: t.suspension_damping,
+            max_suspension_travel: t.max_suspension_travel,
+            side_friction_stiffness: t.side_friction_stiffness,
+            friction_slip: t.friction_slip,
+            max_suspension_force: t.max_suspension_force,
         };
-        // Wheel order: front +x, front −x, rear +x, rear −x, i.e. wheel_FL, wheel_FR, wheel_RL, wheel_RR. In this
-        // right-handed frame (+y up, facing +z) +x is the car's left, as the Cruz Missile's sidecar names it (P1-V02).
-        for (x, z) in [
-            (p.half_track, p.axle_front_z),
-            (-p.half_track, p.axle_front_z),
-            (p.half_track, p.axle_rear_z),
-            (-p.half_track, p.axle_rear_z),
-        ] {
+        // Wheel order: FL, FR, RL, RR. In this right-handed frame (+y up, facing +z) +x is the car's left, as the
+        // sidecar names them (P1-V02).
+        for i in 0..4 {
+            let [x, y, z] = p.hard_point(i);
             vehicle.add_wheel(
-                Vector::new(x, p.hard_point_y, z),
+                Vector::new(x, y, z),
                 Vector::new(0.0, -1.0, 0.0),
                 Vector::new(-1.0, 0.0, 0.0),
-                p.suspension_rest,
-                p.wheel_radius,
+                t.suspension_rest,
+                p.geometry.wheel_radius,
                 &tuning,
             );
         }
@@ -654,7 +679,7 @@ impl Sim {
     pub fn step(&mut self) {
         let p = self.profile.clone();
         let tick = self.tick;
-        let wheelbase = p.axle_front_z - p.axle_rear_z;
+        let wheelbase = p.wheelbase();
         let mut stuck = Vec::new();
         for (i, car) in self.cars.iter_mut().enumerate() {
             let id = i as u32;
@@ -676,7 +701,7 @@ impl Sim {
                         forward_speed: b.linvel().dot(fwd),
                     };
                     let (out, recover) =
-                        ap.drive(&self.path, pose, p.max_steer_rad, wheelbase, tick);
+                        ap.drive(&self.path, pose, p.tuning.max_steer_rad, wheelbase, tick);
                     input = out;
                     if recover {
                         stuck.push(id);
@@ -687,28 +712,33 @@ impl Sim {
                 input = DriveInput::default();
             }
             car.applied = input;
-            let throttle = dequantise_axis(input.throttle);
-            let steer = dequantise_axis(input.steer);
-            let brake = dequantise_axis(input.brake).max(0.0);
-            let driven = |i: usize| match p.drive {
-                Drive::Front => i < 2,
-                Drive::Rear => i >= 2,
-                Drive::All => true,
-            };
-            let n_driven = (0..4).filter(|&i| driven(i)).count() as f32;
-            for (i, w) in car.vehicle.wheels_mut().iter_mut().enumerate() {
-                w.steering = if i < 2 { steer * p.max_steer_rad } else { 0.0 };
-                if brake > 0.0 {
-                    // Rapier ignores `brake` while an engine force is set, and treats it as an impulse per tick.
-                    w.engine_force = 0.0;
-                    w.brake = brake * p.max_brake_force / 4.0 * DT;
-                } else {
-                    w.engine_force = if driven(i) {
-                        throttle * p.max_engine_force / n_driven
-                    } else {
-                        0.0
-                    };
-                    w.brake = 0.0;
+            // The controls (P1-S03a, crate::vehicle): reverse near rest, speed-scaled steering, the grip of the
+            // ground under each wheel, and air control while no wheel touches the ground.
+            if let Some(b) = self.world.bodies.get_mut(car.body) {
+                let iso = *b.position();
+                let fwd = iso.rotation * Vector::Z;
+                let forward_speed = b.linvel().dot(fwd);
+                let mut grip = [1.0; 4];
+                for (i, g) in grip.iter_mut().enumerate() {
+                    let [x, y, z] = p.geometry.wheels[i];
+                    let at = iso * Vector::new(x, y, z);
+                    *g = p.grip(vehicle::surface_at(&self.terrain, at.x, at.z));
+                }
+                let commands = vehicle::wheel_commands(&p, input, forward_speed, grip, DT);
+                for (w, c) in car.vehicle.wheels_mut().iter_mut().zip(commands) {
+                    w.steering = c.steering;
+                    w.engine_force = c.engine_force;
+                    w.brake = c.brake_impulse;
+                    w.friction_slip = c.friction_slip;
+                }
+                let airborne = car
+                    .vehicle
+                    .wheels()
+                    .iter()
+                    .all(|w| !w.raycast_info().is_in_contact);
+                if airborne && !input.is_neutral() {
+                    let [tx, ty, tz] = vehicle::air_torque(&p, input);
+                    b.apply_torque_impulse(iso.rotation * Vector::new(tx, ty, tz) * DT, true);
                 }
             }
             // Only a positive engine force wakes a sleeping chassis in Rapier: wake it on any control input.
@@ -745,6 +775,28 @@ impl Sim {
                 filter,
             );
             car.vehicle.update_vehicle(DT, queries);
+            // Rapier applied each side impulse at a point moved (1 − 0.1) of its height up toward the centre of mass;
+            // a `roll_influence` of r would have moved it (1 − r). The difference is a moment about the moved points:
+            // (up · h · (r − 0.1)) × J per wheel, h the contact's height relative to the centre of mass.
+            let extra = p.tuning.roll_influence - vehicle::ROLL_INFLUENCE_RAPIER;
+            if extra != 0.0
+                && let Some(b) = self.world.bodies.get_mut(car.body)
+            {
+                let up = b.position().rotation * Vector::Y;
+                let com = b.center_of_mass();
+                let mut torque = Vector::ZERO;
+                for w in car.vehicle.wheels() {
+                    let ri = w.raycast_info();
+                    if !ri.is_in_contact || w.side_impulse == 0.0 {
+                        continue;
+                    }
+                    let n = ri.contact_normal_ws;
+                    let axle = (w.axle() - n * w.axle().dot(n)).normalize_or_zero();
+                    let h = up.dot(ri.contact_point_ws - com);
+                    torque += (up * (h * extra)).cross(axle * w.side_impulse);
+                }
+                b.apply_torque_impulse(torque, true);
+            }
         }
         // A stuck autopilot presses Recover: a consequence of the state, so not journaled.
         for id in stuck {

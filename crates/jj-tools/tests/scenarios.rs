@@ -1,5 +1,6 @@
-//! The scenario bank through the real CLI: `jj sim --json scenarios/*.json` passes every envelope and replays (P1-S01's
-//! `idle-settle` and `straight-throttle`, P1-S05's §7.3a `flip-recover` and `oob-recover`, and every scenario added later).
+//! The scenario bank through the real CLI: `jj sim --json scenarios/**/*.json` passes every envelope, replays and beats
+//! its baselines (P1-S01's `idle-settle` and `straight-throttle`, P1-S05's §7.3a `flip-recover` and `oob-recover`, the
+//! P1-S03a feel bank, and every scenario added later).
 
 use std::path::Path;
 use std::process::Command;
@@ -7,14 +8,20 @@ use std::process::Command;
 #[test]
 fn every_scenario_in_the_bank_passes() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    // The bank and its §7.3a affordance rows (`scenarios/affordances/`).
-    let mut files: Vec<String> = ["scenarios", "scenarios/affordances"]
-        .iter()
-        .flat_map(|d| std::fs::read_dir(repo.join(d)).unwrap())
-        .map(|e| e.unwrap().path())
-        .filter(|p| p.extension().is_some_and(|e| e == "json"))
-        .map(|p| p.display().to_string())
-        .collect();
+    // The bank: its §7.3a affordance rows (`scenarios/affordances/`), the feel bank (`scenarios/feel/`, P1-S03a) and
+    // the introspection fixtures (`scenarios/introspection/`, P1-F05b).
+    let mut files: Vec<String> = [
+        "scenarios",
+        "scenarios/affordances",
+        "scenarios/feel",
+        "scenarios/introspection",
+    ]
+    .iter()
+    .flat_map(|d| std::fs::read_dir(repo.join(d)).unwrap())
+    .map(|e| e.unwrap().path())
+    .filter(|p| p.extension().is_some_and(|e| e == "json"))
+    .map(|p| p.display().to_string())
+    .collect();
     files.sort();
     for name in [
         "idle-settle.json",

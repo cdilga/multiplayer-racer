@@ -591,3 +591,95 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
         tris,
     }
 }
+
+/// What the sim builds a car from (P1-S03a), derived from the baked sidecar and its LOD0 GLB: the chassis proxy's hull
+/// points, the wheels' pivots and radius, and the centre of mass. Vehicle space: metres, +y up, +z forward, origin on
+/// the ground between the axles. Wheels in the sim's order: FL, FR, RL, RR.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PhysicsGeometry {
+    /// The intact body's proxy vertices (core, front, back and doors; not the wheels), deduplicated and sorted. The
+    /// sim takes their convex hull; S04 splits it when parts come loose.
+    pub hull: Vec<[f64; 3]>,
+    pub wheels: [[f64; 3]; 4],
+    pub wheel_radius: f64,
+    pub com: [f64; 3],
+}
+
+/// One part's collider proxy points from a LOD0 GLB, in vehicle space.
+pub fn collider_points(glb: &Glb, part: &str) -> Result<Vec<[f64; 3]>, String> {
+    let world = glb.world();
+    let root = *glb.roots().first().ok_or("no scene root")?;
+    let name = format!("collider_{part}");
+    let ni = glb.nodes()[root]
+        .children
+        .iter()
+        .copied()
+        .find(|&c| glb.nodes().get(c).and_then(|n| n.name.as_deref()) == Some(name.as_str()))
+        .ok_or_else(|| format!("no {name}"))?;
+    let mesh = glb.nodes()[ni]
+        .mesh
+        .and_then(|m| glb.mesh(m))
+        .ok_or_else(|| format!("{name} has no mesh"))?;
+    let mut pts = Vec::new();
+    for pr in &mesh.primitives {
+        if let Some(&a) = pr.attributes.get("POSITION") {
+            pts.extend(glb.positions(a)?.into_iter().map(|q| apply(&world[&ni], q)));
+        }
+    }
+    Ok(pts)
+}
+
+/// Rounds to 0.1 mm so the derived numbers are stable text in a profile file.
+fn mm10(v: f64) -> f64 {
+    (v * 10_000.0).round() / 10_000.0
+}
+
+/// Derives the sim's [`PhysicsGeometry`] from a sidecar and its LOD0 GLB bytes.
+pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometry, String> {
+    let glb = Glb::parse(lod0)?;
+    let mut hull: Vec<[f64; 3]> = Vec::new();
+    for part in PARTS.iter().filter(|p| !p.starts_with("wheel_")) {
+        hull.extend(
+            collider_points(&glb, part)?
+                .into_iter()
+                .map(|p| p.map(mm10)),
+        );
+    }
+    hull.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    hull.dedup();
+    let pivot = |p: &str| {
+        sidecar
+            .parts
+            .get(p)
+            .map(|x| x.pivot.map(mm10))
+            .ok_or_else(|| format!("no part {p}"))
+    };
+    let wheels = [
+        pivot("wheel_FL")?,
+        pivot("wheel_FR")?,
+        pivot("wheel_RL")?,
+        pivot("wheel_RR")?,
+    ];
+    // The wheel's radius is half its proxy's height (a wheel stands on the ground at rest, so this is also its pivot y).
+    let w = collider_points(&glb, "wheel_FL")?;
+    let (lo, hi) = w
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
+            (lo.min(p[1]), hi.max(p[1]))
+        });
+    if !lo.is_finite() {
+        return Err("collider_wheel_FL has no points".into());
+    }
+    let com = sidecar
+        .anchors
+        .get("com")
+        .map(|c| c.map(mm10))
+        .ok_or("no com anchor")?;
+    Ok(PhysicsGeometry {
+        hull,
+        wheels,
+        wheel_radius: mm10((hi - lo) / 2.0),
+        com,
+    })
+}

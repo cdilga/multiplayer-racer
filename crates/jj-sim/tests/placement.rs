@@ -25,12 +25,7 @@ fn greybox(length_m: Option<u32>) -> LoadedMap {
 }
 
 fn sim(map: &LoadedMap) -> Sim {
-    Sim::new(
-        map,
-        &Registry::generic(),
-        1,
-        VehicleProfile::provisional_cruz(),
-    )
+    Sim::new(map, &Registry::generic(), 1, VehicleProfile::cruz())
 }
 
 fn steps(sim: &mut Sim, n: u64) {
@@ -487,7 +482,7 @@ fn drop_ins_and_debris_replay_to_the_same_hash() {
     let replay = Sim::replay(
         &map,
         &Registry::generic(),
-        VehicleProfile::provisional_cruz(),
+        VehicleProfile::cruz(),
         &journal,
         live.tick(),
     );

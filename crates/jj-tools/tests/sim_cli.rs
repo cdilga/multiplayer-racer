@@ -253,7 +253,7 @@ fn help_has_worked_examples_and_bad_usage_exits_2() {
             "sim",
             "--set",
             "no_such_field=1",
-            "scenarios/idle-settle.json"
+            "scenarios/feel/idle-settle.json"
         ])
         .status
         .code(),

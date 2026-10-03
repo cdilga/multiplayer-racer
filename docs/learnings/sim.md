@@ -62,3 +62,32 @@ not feel targets.
   phone would; one sample goes stale after 250 ms of sim time).
 - An open-ended run (the live host) has no last tick, so `jj-fixture`'s end-of-run checks never evaluate on their own.
   The surface's `outcome` calls `Harness::check_now` first.
+
+## 2026-10-03 · The Cruz Missile from its sidecar (P1-S03a)
+
+- **Body frame = vehicle space.** The chassis body's origin is the sidecar's (on the ground between the axles), so a
+  renderer puts the GLB at the body pose with no offset. Every spawn `lift` is now a real drop: 0.1 m
+  (`SPAWN_LIFT_M`, also the respawn lift and fixtures' default). A fixture or test that spawned at 0.6 m (the old
+  box-centre frame's ride height) now drops 0.6 m and spends ~40 ticks in the air before the engine can act.
+- **Rest at the design pose.** Wheel hard points sit `suspension_rest − static sag` above the pivots, with sag
+  g / (4 × stiffness), since Rapier's spring force is stiffness × compression × chassis mass. The car rests with its
+  origin ~0 m off the road.
+- **Hull:** the chassis is the convex hull of the *intact body's* proxies (core, front, back, doors). The core proxy
+  alone is just the cabin (z −1.64…0.92). Mass properties come from the profile's mass and the sidecar's `com` anchor,
+  with box inertia from the hull's bounds. The bubbly sides roll a car off its flank and back onto its wheels; only a
+  roof landing stays inverted.
+- **Body roll needs `roll_influence`.** Rapier's raycast vehicle moves each side impulse (1 − 0.1) of its height up
+  toward the centre of mass before applying it. That `roll_influence` is private and fixed at Bullet's 0.1, so roll is cut
+  by 90 % (0.5° in a hard turn). The sim applies (up · h · (r − 0.1)) × J per wheel after `update_vehicle`, exactly what a
+  public `roll_influence` of r would do. It's a profile number, not a fudge factor.
+- **The profile is compiled in** (`include_str!`), so `jj sim` and the host see edits to
+  `assets/profiles/cruz-missile.json` only after a rebuild. Tune with `--set`/`--sweep` first, then write the file.
+- **DRIVE y is one stick.** Throttle drives; brake, or a negative throttle (the stick pulled down, as mash baselines
+  throw it), brakes. Below `reverse_below_mps` it reverses, and throttle while rolling backwards brakes first. Holding the
+  brake after stopping therefore reverses, so a scripted stop releases once stopped.
+- **Air control** is DRIVE in the air: holding the throttle over a jump pitches the nose down, so the torques must stay
+  mild (900 N·m pitch, 1,500 N·m roll). Levelling a 25° tilt takes steering into it and then back out to stop the roll.
+- **Grip limits cornering, not straight-line speed.** With `friction_slip` 2.0 the tyres don't break traction under full
+  engine or brake force on any surface. Surfaces show in turns: at 15 m/s on full lock for 1 s, heading change is 57° on
+  tarmac, 50° on rock, 44° on dirt and 38° on gravel. The authority sweep shows lock only matters at low speed: at 15 and
+  30 m/s, heading change in 0.5 s is grip-bound (about 24° and 14°) whatever the lock.

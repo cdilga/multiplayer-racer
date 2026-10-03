@@ -1,0 +1,37 @@
+{
+ "scenario": "unstick-wall",
+ "what": "§7.3a 'reverse out of a nose-in wall or barrier contact within 2 s' (P1-S03a). Three Cruz Missiles drive nose-first into the barriers lining the greybox's jump straight (head-on from either side, and at 30°), pushing for 0.75 s (pinned: under 0.5 m of give, sliding along at 30°); then the player holds DRIVE down and each backs out: within 2 s it's reversing away and clear of the barrier. Baselines: no input sits against the wall; holding the throttle keeps pushing; mashing doesn't back out.",
+ "map": "maps/greybox-loop.json",
+ "seed": 41,
+ "ticks": 330,
+ "cars": [
+  {"pose": {"x": -18.623, "y": 0.1, "z": 60.18, "headingDeg": 0}},
+  {"pose": {"x": 1.377, "y": 0.1, "z": 49.83, "headingDeg": 180}},
+  {"pose": {"x": 21.377, "y": 0.1, "z": 59.9, "headingDeg": 30}}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 90, "throttle": 1.0},
+  {"car": 0, "fromTick": 90, "brake": 1.0},
+  {"car": 1, "fromTick": 0, "toTick": 90, "throttle": 1.0},
+  {"car": 1, "fromTick": 90, "brake": 1.0},
+  {"car": 2, "fromTick": 0, "toTick": 90, "throttle": 1.0},
+  {"car": 2, "fromTick": 90, "brake": 1.0}
+ ],
+ "expect": [
+  {"car": 0, "atTick": 90, "metric": "travel", "min": 0, "max": 0.5},
+  {"car": 0, "metric": "travel", "min": 2.0, "max": 10},
+  {"car": 0, "metric": "forwardSpeed", "min": -8, "max": -2},
+  {"car": 1, "atTick": 90, "metric": "travel", "min": 0, "max": 0.5},
+  {"car": 1, "metric": "travel", "min": 2.0, "max": 10},
+  {"car": 1, "metric": "forwardSpeed", "min": -8, "max": -2},
+  {"car": 2, "atTick": 90, "metric": "travel", "min": 0, "max": 0.5},
+  {"car": 2, "metric": "travel", "min": 2.0, "max": 10},
+  {"car": 2, "metric": "forwardSpeed", "min": -8, "max": -2}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 0, "metric": "travel", "by": 1.5},
+   {"car": 0, "metric": "forwardSpeed", "by": 1.0}
+  ]
+ }
+}

@@ -1,0 +1,49 @@
+{
+ "scenario": "turn-around",
+ "what": "§7.3a 'turn around inside the road width (three-point turn)' (P1-S03a). Three Cruz Missiles on the greybox's 14 m-wide main straight, two at rest near the right edge and one rolling at 3 m/s, turn around in three moves: forward on full left lock, stop, reverse on full right lock, stop, forward on full left lock, then drive back the way they came. Each ends facing the other way, never more than 6 m from the centreline (the car's centre; the road's half-width is 7 m), upright. Baselines: no input never turns; holding the first move circles off the road; mashing doesn't turn round.",
+ "map": "maps/greybox-loop.json",
+ "seed": 37,
+ "ticks": 1050,
+ "cars": [
+  {"routePoint": 10, "lateral": 5},
+  {"routePoint": 40, "lateral": 4},
+  {"routePoint": 56, "lateral": 5.5, "linvel": [3, 0, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 240, "throttle": 0.7, "steer": 1.0},
+  {"car": 0, "fromTick": 240, "toTick": 300, "brake": 1.0},
+  {"car": 0, "fromTick": 300, "toTick": 610, "brake": 0.8, "steer": -1.0},
+  {"car": 0, "fromTick": 610, "toTick": 670, "throttle": 1.0},
+  {"car": 0, "fromTick": 670, "toTick": 930, "throttle": 0.7, "steer": 1.0},
+  {"car": 0, "fromTick": 930, "throttle": 0.3},
+  {"car": 1, "fromTick": 0, "toTick": 240, "throttle": 0.7, "steer": 1.0},
+  {"car": 1, "fromTick": 240, "toTick": 300, "brake": 1.0},
+  {"car": 1, "fromTick": 300, "toTick": 610, "brake": 0.8, "steer": -1.0},
+  {"car": 1, "fromTick": 610, "toTick": 670, "throttle": 1.0},
+  {"car": 1, "fromTick": 670, "toTick": 930, "throttle": 0.7, "steer": 1.0},
+  {"car": 1, "fromTick": 930, "throttle": 0.3},
+  {"car": 2, "fromTick": 0, "toTick": 240, "throttle": 0.7, "steer": 1.0},
+  {"car": 2, "fromTick": 240, "toTick": 300, "brake": 1.0},
+  {"car": 2, "fromTick": 300, "toTick": 610, "brake": 0.8, "steer": -1.0},
+  {"car": 2, "fromTick": 610, "toTick": 670, "throttle": 1.0},
+  {"car": 2, "fromTick": 670, "toTick": 930, "throttle": 0.7, "steer": 1.0},
+  {"car": 2, "fromTick": 930, "throttle": 0.3}
+ ],
+ "expect": [
+  {"car": 0, "metric": "headingChangeDeg", "min": 150, "max": 180},
+  {"car": 0, "metric": "maxRouteOffsetM", "min": 0, "max": 6},
+  {"car": 0, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 1, "metric": "headingChangeDeg", "min": 150, "max": 180},
+  {"car": 1, "metric": "maxRouteOffsetM", "min": 0, "max": 6},
+  {"car": 1, "metric": "minUpY", "min": 0.98, "max": 1.001},
+  {"car": 2, "metric": "headingChangeDeg", "min": 150, "max": 180},
+  {"car": 2, "metric": "maxRouteOffsetM", "min": 0, "max": 6},
+  {"car": 2, "metric": "minUpY", "min": 0.98, "max": 1.001}
+ ],
+ "baselines": {
+  "differ": [
+   {"car": 0, "metric": "headingChangeDeg", "by": 30.0},
+   {"car": 0, "metric": "maxRouteOffsetM", "by": 3.0}
+  ]
+ }
+}

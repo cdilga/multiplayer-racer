@@ -28,7 +28,8 @@ pub const DROP_IN_MIN_GAP_M: f32 = 12.0;
 /// Progress history: one sample per this many ticks, kept for [`HISTORY_KEEP_TICKS`].
 pub const HISTORY_EVERY_TICKS: u64 = TICK_HZ as u64 / 10;
 pub const HISTORY_KEEP_TICKS: u64 = 6 * TICK_HZ as u64;
-pub const SPAWN_LIFT_M: f32 = 0.6;
+/// How far above the road a placed car starts (its body origin is on the ground at rest, P1-S03a): a short drop.
+pub const SPAWN_LIFT_M: f32 = 0.1;
 /// Pose search: steps back along the route (m), and lateral offsets tried at each step (m).
 pub const SEARCH_STEP_M: f32 = 6.0;
 pub const SEARCH_STEPS: usize = 10;

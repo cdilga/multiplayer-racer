@@ -1,0 +1,160 @@
+//! How a car's controls become wheel and body commands (P1-S03a, plan §7.3). Pure functions of the profile, the
+//! applied input and the car's state, so feel changes are data (`assets/profiles/*.json`) and testable without a world.
+//!
+//! - **Steer/throttle/brake/reverse:** DRIVE x steers, with less lock as speed rises. Up throttles; down (brake, or a
+//!   negative throttle) brakes, and reverses once the car is nearly stopped. Throttle while rolling backwards brakes
+//!   first.
+//! - **Surfaces:** each wheel's grip is the profile's multiplier for the ground class under it.
+//! - **Air control:** with no wheel on the ground, DRIVE y pitches and DRIVE x rolls the body, gently.
+
+use jj_map::model::{Surface, Terrain};
+use jj_types::axis::dequantise_axis;
+
+use crate::journal::DriveInput;
+use crate::profile::{Drive, VehicleProfile};
+
+/// Rapier's raycast vehicle moves each tyre's side impulse most of the way up to the centre of mass before applying it
+/// (its private `roll_influence`, 0.1 as in Bullet), which cuts body roll by 90 %. The profile's `roll_influence` is the
+/// share the sim wants; [`crate::sim::Sim::step`] puts back the difference after `update_vehicle`.
+pub const ROLL_INFLUENCE_RAPIER: f32 = 0.1;
+
+/// What one wheel does this tick.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct WheelCommand {
+    pub steering: f32,
+    pub engine_force: f32,
+    /// Rapier's `brake` is an impulse per tick: force × dt.
+    pub brake_impulse: f32,
+    pub friction_slip: f32,
+}
+
+/// DRIVE y as (up, down), each 0..1: throttle drives, brake (or a negative throttle, the stick pulled down) brakes.
+fn stick(input: DriveInput) -> (f32, f32) {
+    let throttle = dequantise_axis(input.throttle);
+    let down = (dequantise_axis(input.brake).max(0.0) + (-throttle).max(0.0)).min(1.0);
+    (throttle.max(0.0), down)
+}
+
+/// The four wheels' commands (FL, FR, RL, RR) for `input` at `forward_speed` m/s, on ground with `grip[i]` under wheel
+/// `i`, for a tick of `dt` seconds.
+pub fn wheel_commands(
+    p: &VehicleProfile,
+    input: DriveInput,
+    forward_speed: f32,
+    grip: [f32; 4],
+    dt: f32,
+) -> [WheelCommand; 4] {
+    let t = &p.tuning;
+    let (throttle, brake) = stick(input);
+    let steer = dequantise_axis(input.steer);
+    let driven = |i: usize| match t.drive {
+        Drive::Front => i < 2,
+        Drive::Rear => i >= 2,
+        Drive::All => true,
+    };
+    let n_driven = (0..4).filter(|&i| driven(i)).count() as f32;
+    // Down brakes while rolling forward and reverses near rest; up drives forward, but brakes while rolling backwards.
+    let (engine, braking) = if brake > 0.0 {
+        if forward_speed > t.reverse_below_mps {
+            (0.0, brake)
+        } else {
+            (-brake * t.max_reverse_force, 0.0)
+        }
+    } else if throttle > 0.0 && forward_speed < -t.reverse_below_mps {
+        (0.0, throttle)
+    } else {
+        (throttle * t.max_engine_force, 0.0)
+    };
+    let lock = p.steer_lock(forward_speed);
+    let mut out = [WheelCommand::default(); 4];
+    for (i, w) in out.iter_mut().enumerate() {
+        w.steering = if i < 2 { steer * lock } else { 0.0 };
+        // Rapier ignores `brake` while an engine force is set.
+        if braking > 0.0 {
+            w.brake_impulse = braking * t.max_brake_force / 4.0 * dt;
+        } else if driven(i) {
+            w.engine_force = engine / n_driven;
+        }
+        w.friction_slip = t.friction_slip * grip[i];
+    }
+    out
+}
+
+/// The ground class at world `(x, z)`: the terrain grid's nearest sample (outside the grid is off-track).
+pub fn surface_at(terrain: &Terrain, x: f32, z: f32) -> Surface {
+    let spacing = terrain.spacing as f32 / 1000.0;
+    let col = libm::roundf((x - terrain.origin_x as f32 / 1000.0) / spacing);
+    let row = libm::roundf((z - terrain.origin_z as f32 / 1000.0) / spacing);
+    if col < 0.0 || row < 0.0 || col >= terrain.cols as f32 || row >= terrain.rows as f32 {
+        return Surface::OffTrack;
+    }
+    terrain.surfaces[row as usize * terrain.cols as usize + col as usize]
+}
+
+/// Air control: the body-space torque (x pitches, z rolls) for `input`, N·m. Pushing up noses down; steering left
+/// drops the left side.
+pub fn air_torque(p: &VehicleProfile, input: DriveInput) -> [f32; 3] {
+    let t = &p.tuning;
+    let (up, down) = stick(input);
+    let stick_y = up - down;
+    let steer = dequantise_axis(input.steer);
+    // +x is the car's left: a positive turn about it lowers the nose. A positive turn about +z (forward) lifts the
+    // left side, so steering left (positive) turns the other way.
+    [
+        stick_y * t.air_pitch_torque,
+        0.0,
+        -steer * t.air_roll_torque,
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use jj_types::axis::quantise_axis;
+
+    fn input(throttle: f32, steer: f32, brake: f32) -> DriveInput {
+        DriveInput {
+            throttle: quantise_axis(throttle),
+            steer: quantise_axis(steer),
+            brake: quantise_axis(brake),
+        }
+    }
+
+    #[test]
+    fn brake_brakes_when_rolling_and_reverses_near_rest() {
+        let p = VehicleProfile::cruz();
+        let rolling = wheel_commands(&p, input(0.0, 0.0, 1.0), 10.0, [1.0; 4], 1.0 / 120.0);
+        assert!(
+            rolling
+                .iter()
+                .all(|w| w.brake_impulse > 0.0 && w.engine_force == 0.0)
+        );
+        let stopped = wheel_commands(&p, input(0.0, 0.0, 1.0), 0.0, [1.0; 4], 1.0 / 120.0);
+        assert!(stopped[2].engine_force < 0.0 && stopped.iter().all(|w| w.brake_impulse == 0.0));
+        let backwards = wheel_commands(&p, input(1.0, 0.0, 0.0), -5.0, [1.0; 4], 1.0 / 120.0);
+        assert!(
+            backwards
+                .iter()
+                .all(|w| w.brake_impulse > 0.0 && w.engine_force == 0.0)
+        );
+    }
+
+    #[test]
+    fn steering_lock_falls_with_speed_and_grip_follows_the_surface() {
+        let p = VehicleProfile::cruz();
+        let slow = wheel_commands(
+            &p,
+            input(0.0, 1.0, 0.0),
+            0.0,
+            [1.0, 0.8, 0.7, 0.9],
+            1.0 / 120.0,
+        );
+        let fast = wheel_commands(&p, input(0.0, 1.0, 0.0), 30.0, [1.0; 4], 1.0 / 120.0);
+        assert!(fast[0].steering < slow[0].steering && slow[2].steering == 0.0);
+        let base = p.tuning.friction_slip;
+        assert_eq!(
+            slow.map(|w| w.friction_slip),
+            [base, base * 0.8, base * 0.7, base * 0.9]
+        );
+    }
+}

@@ -168,15 +168,10 @@ impl Host {
         Ok(Self::from_map(map, seed))
     }
 
-    /// A host on a validated map with a seed (the generic kit registry and the provisional Cruz profile).
+    /// A host on a validated map with a seed (the generic kit registry and the Cruz Missile profile).
     pub fn from_map(map: LoadedMap, seed: u64) -> Self {
         Self {
-            sim: Sim::new(
-                &map,
-                &Registry::generic(),
-                seed,
-                VehicleProfile::provisional_cruz(),
-            ),
+            sim: Sim::new(&map, &Registry::generic(), seed, VehicleProfile::cruz()),
             map,
             seats: Seats::new(SeatConfig {
                 tick_hz: TICK_HZ,

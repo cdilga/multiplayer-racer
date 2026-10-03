@@ -1,0 +1,51 @@
+{
+ "scenario": "jump-land",
+ "what": "§7.3 Suspension, §7.3a 'land a jump on its wheels' (P1-S03a; M03d shares it). Three Cruz Missiles leave a lip at 10, 15 and 20 m/s (launched 2.5 m up with 5–6 m/s of climb, level), easing the throttle in the air and flooring it once down. Each lands once on its wheels, upright, settles in one go and drives on. Baselines: no input, mashing and holding the half throttle land too, but don't drive on as far.",
+ "map": "maps/greybox-loop.json",
+ "seed": 3,
+ "ticks": 360,
+ "cars": [
+  {"pose": {"x": 5, "y": 2.5, "z": -4, "headingDeg": 90}, "linvel": [10, 5, 0]},
+  {"pose": {"x": 55, "y": 2.5, "z": 0, "headingDeg": 90}, "linvel": [15, 5, 0]},
+  {"pose": {"x": 95, "y": 2.5, "z": 4, "headingDeg": 90}, "linvel": [20, 6, 0]}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 180, "throttle": 0.5},
+  {"car": 0, "fromTick": 180, "throttle": 1.0},
+  {"car": 1, "fromTick": 0, "toTick": 180, "throttle": 0.5},
+  {"car": 1, "fromTick": 180, "throttle": 1.0},
+  {"car": 2, "fromTick": 0, "toTick": 180, "throttle": 0.5},
+  {"car": 2, "fromTick": 180, "throttle": 1.0}
+ ],
+ "expect": [
+  {"car": 0, "metric": "landings", "min": 1, "max": 1},
+  {"car": 0, "metric": "landingUpY", "min": 0.97, "max": 1.001},
+  {"car": 0, "metric": "minUpY", "min": 0.9, "max": 1.001},
+  {"car": 0, "metric": "rebounds", "min": 0, "max": 2},
+  {"car": 0, "metric": "airtimeS", "min": 0.8, "max": 2.0},
+  {"car": 0, "metric": "wheelsInContact", "min": 4, "max": 4},
+  {"car": 0, "metric": "forwardSpeed", "min": 8, "max": 25},
+  {"car": 1, "metric": "landings", "min": 1, "max": 1},
+  {"car": 1, "metric": "landingUpY", "min": 0.97, "max": 1.001},
+  {"car": 1, "metric": "minUpY", "min": 0.9, "max": 1.001},
+  {"car": 1, "metric": "rebounds", "min": 0, "max": 2},
+  {"car": 1, "metric": "airtimeS", "min": 0.8, "max": 2.0},
+  {"car": 1, "metric": "wheelsInContact", "min": 4, "max": 4},
+  {"car": 1, "metric": "forwardSpeed", "min": 8, "max": 25},
+  {"car": 2, "metric": "landings", "min": 1, "max": 1},
+  {"car": 2, "metric": "landingUpY", "min": 0.97, "max": 1.001},
+  {"car": 2, "metric": "minUpY", "min": 0.9, "max": 1.001},
+  {"car": 2, "metric": "rebounds", "min": 0, "max": 2},
+  {"car": 2, "metric": "airtimeS", "min": 0.8, "max": 2.0},
+  {"car": 2, "metric": "wheelsInContact", "min": 4, "max": 4},
+  {"car": 2, "metric": "forwardSpeed", "min": 8, "max": 25}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 0, "metric": "travel", "by": 3.0},
+   {"car": 1, "metric": "travel", "by": 3.0},
+   {"car": 2, "metric": "travel", "by": 3.0}
+  ]
+ }
+}
