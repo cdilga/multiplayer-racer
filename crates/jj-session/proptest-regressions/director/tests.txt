@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 11fc6319667a20168e955e0a979de53143af3396be9bdf3bcce2172bea2d76a7 # shrinks to inputs = [SetEligible { seat: SeatId(1), eligible: true }, Elapsed { ms: 0 }, SetReady { seat: SeatId(1), ready: true, revision: 0 }, PrepareFinished { id: PreparationId(1), ok: true }, End, StartNow, End, StartNow, End, StartNow, Reroll, Reroll, Elapsed { ms: 0 }, Reroll, PrepareFinished { id: PreparationId(7), ok: true }, Elapsed { ms: 10000 }, RoundOver], disband_at = 17
