@@ -29,7 +29,13 @@ report() {
     tea api --login gitea-lan "/repos/$repo/commits/$sha/statuses?limit=50" | python3 -c '
 import json, os, sys
 latest, runs = {}, []
-for s in json.load(sys.stdin):                         # newest first; keep the newest status per lane
+try:
+    data = json.load(sys.stdin)
+except ValueError:
+    data = []
+if not isinstance(data, list):                         # Gitea answers an error object for a commit it has not seen
+    data = []
+for s in data:                                         # newest first; keep the newest status per lane
     latest.setdefault(s["context"], s)
 code = 2 if not latest else 0
 for ctx, s in sorted(latest.items()):

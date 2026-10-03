@@ -33,8 +33,10 @@ registry (D02).
 
 ## Runners
 
-- **Today:** a shared runner with the `ubuntu-latest` label serves this repo, and all three jobs run there; the `rust` job
-  keeps the toolchain, cargo downloads and `target/` in the actions cache.
+- **Today:** the shared runner `truenas-shared` (label `ubuntu-latest`) serves this repo and runs all three jobs; the
+  `rust` job is cold every time (about 4–5 minutes). The actions cache doesn't work there: its cache server times out from
+  job containers (`getCacheEntry`/`reserveCache` request timeouts, run 996), which needs the runner's `cache.host` set to an
+  address job containers can reach (owner, TrueNAS).
 - **Owner action pending:** the persistent-cache Rust runners, `physical-soccer-rust-truenas` and
   `physical-soccer-rust-triton` (label `rust`), are still scoped to Physical Soccer. The owner ruled on 2026-10-02 that
   runners are shared, but re-registering them was refused to this session because it touches another project's running

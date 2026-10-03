@@ -27,7 +27,8 @@ run 995 on 3d54f6f (scripts/push.sh: Gitea, then GitHub):
 == scripts/ci-status.sh exit codes
 $ scripts/ci-status.sh 3d54f6f            -> 3 lanes success, run URL last, exit 0
 $ PATH=<stand-in tea returning a failed lane>:$PATH scripts/ci-status.sh   -> failure CI / rust (push) … exit 1
-  (the warm-cache run below records exit 2 for an unpushed commit)
+$ scripts/ci-status.sh <a commit Gitea has never seen>   -> (no lanes reported yet), exit 2
+  (fixed in this commit: Gitea answers an error object for an unknown commit, which first crashed the parser into exit 1)
 
 == Clean clone fetches LFS from Gitea
 $ GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch v0.2-revamp http://192.168.11.12:3001/cdilga/multiplayer-racer.git
@@ -41,3 +42,10 @@ Re-registering Physical Soccer's repository-scoped `rust` runners (TrueNAS, trit
 its safety classifier (it changes another project's running CI). Until the owner does it, the rust job runs on the shared
 ubuntu-latest runner with the actions cache. Images publish to the Gitea registry from jammers-deploy (D02/D04), where the
 secrets live; no GitHub Actions or GHCR is used.
+
+== Second push with no Rust change (74f6cc5: frame renames + this receipt) -> run 996, all green
+  rust 04:57:37 -> 05:01:30 (3 min 53 s) vs 5 min 1 s cold: NOT a warm cache. The job log shows
+  ::warning::Failed to restore: getCacheEntry failed: Request timeout: /_apis/artifactcache/cache?keys=rust-…
+  ::warning::Failed to save: reserveCache failed: Request timeout: /_apis/artifactcache/caches
+  truenas-shared's cache server isn't reachable from its job containers; the actions/cache step is removed (it cost ~45 s of
+  timeouts). AC3 stays open: it needs a shared `rust` runner with a persistent cargo volume (or the cache host fixed).
