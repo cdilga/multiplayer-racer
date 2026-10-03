@@ -55,7 +55,7 @@ for (const [name, s] of Object.entries(SCREENS)) {
       if (!cells.some((c) => c.kind === 'qr')) {
         const sa = safeOf(s);
         assert.ok(L.joinChip, `N=${n}: a join chip`);
-        assert.ok(L.joinChip.x >= sa.x - 1 && L.joinChip.x + L.joinChip.w <= sa.x + sa.w + 1 && L.joinChip.y + L.joinChip.h <= sa.y + sa.h + 1);
+        assert.ok(L.joinChip.x >= sa.x - 1 && L.joinChip.x + L.joinChip.w <= sa.x + sa.w + 1 && L.joinChip.y >= sa.y - 1 && L.joinChip.y + L.joinChip.h <= sa.y + sa.h + 1);
       }
     }
   });

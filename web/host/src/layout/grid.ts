@@ -31,7 +31,7 @@ export interface Layout {
   cell: { w: number; h: number } | null;
   tiles: Tile[];
   fillers: Filler[];
-  /** The small "join" chip, inside the safe area, whenever no cell holds the join QR. */
+  /** The small join chip (the join address), inside the safe area, whenever no cell holds the join QR. */
   joinChip: Rect | null;
 }
 
@@ -44,6 +44,9 @@ export interface LayoutOptions {
   qrMin?: number;
   /** The join chip's size. */
   chip?: { w: number; h: number };
+  /** How far down the top row's tiles the chip sits (a fraction of a tile's height): below the first-person mirror
+   *  strip (assets/profiles/camera.json mirror y + h), in the band of sky above the horizon. */
+  chipBelow?: number;
 }
 
 export const BAND = { min: 1.2, max: 2.0 };
@@ -52,15 +55,18 @@ export function layout(display: Rect, safe: Rect, seats: readonly number[], opts
   const band = opts.band ?? BAND;
   const gutter = opts.gutter ?? 0;
   const qrMin = opts.qrMin ?? Math.round(Math.min(display.w, display.h) * 0.22);
-  const chipSize = opts.chip ?? { w: Math.round(Math.min(display.w, display.h) * 0.16), h: Math.round(Math.min(display.w, display.h) * 0.16) };
+  // A slim pill (the POC's "code + address" chip), so it sits over a player's tile without hiding their car.
+  const chipSize = opts.chip ?? { w: Math.round(Math.min(display.w, display.h) * 0.3), h: Math.round(Math.min(display.w, display.h) * 0.045) };
   const n = seats.length;
   const X = Math.round(display.x);
   const Y = Math.round(display.y);
   const RW = Math.floor(display.x + display.w) - X;
   const RH = Math.floor(display.y + display.h) - Y;
-  const chip = (): Rect => ({
+  // Top-right, under the mirror strip of the top row: a race tile's top is sky (R98), so the chip hides no car and
+  // no mirror. Called once the grid is known.
+  const chip = (y0: number, cellH: number): Rect => ({
     x: Math.round(safe.x + safe.w - chipSize.w),
-    y: Math.round(safe.y + safe.h - chipSize.h),
+    y: Math.round(Math.max(safe.y, y0 + cellH * (opts.chipBelow ?? 0.23))),
     w: chipSize.w,
     h: chipSize.h,
   });
@@ -113,7 +119,7 @@ export function layout(display: Rect, safe: Rect, seats: readonly number[], opts
   ];
   for (const m of margins) if (m.w > 0.01 && m.h > 0.01) fillers.push({ ...m, kind: 'margin' });
   const qrCell = fillers.some((f) => f.kind === 'qr');
-  return { rows, cols, cell: { w, h }, tiles, fillers, joinChip: qrCell ? null : chip() };
+  return { rows, cols, cell: { w, h }, tiles, fillers, joinChip: qrCell ? null : chip(y0, h) };
 }
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);

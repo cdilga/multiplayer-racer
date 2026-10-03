@@ -25,6 +25,7 @@ import type { SnapshotSource } from './synthetic';
 import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
+import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
 const PAPER = new Color('#FFF4DE');
@@ -41,8 +42,11 @@ export interface TileView {
   lods?: number[];
   /** The car (index in the snapshot) each tile follows; otherwise tile k follows car k. */
   follow?: number[];
-  /** Degrees each tile's camera swings round its car from behind (captures of a car's side; P1-R05 owns cameras). */
+  /** Degrees a tile's debug camera swings round its car from behind (captures of a car's side); a tile with an orbit
+   *  bypasses its seat's camera. */
   orbit?: number[];
+  /** Each seat's starting camera mode (the controller's SetCamera changes it). */
+  modes?: CameraMode[];
 }
 
 export interface WorldStats {
@@ -76,6 +80,13 @@ export class World {
   tiles: TileView | null = null;
   private tileCams: PerspectiveCamera[] = [];
   private tileGrid: GridAnimator | null = null;
+  /** Per-seat race cameras (P1-R05). */
+  readonly rig = new CameraRig();
+  private mirrorCam = new PerspectiveCamera(46, 2, 0.3, 600);
+  private lastFrame = 0;
+  /** Called when the set of off-screen arrows changes: per tile, the rect (device px) and the arrow's angle. */
+  onArrows: (arrows: { x: number; y: number; w: number; h: number; angle: number }[], dpr: number) => void = () => {};
+  private arrowKey = '';
   /** Called with the grid's layout (device pixels) and the device pixel ratio when the tiles move. */
   onLayout: (layout: Layout | null, dpr: number) => void = () => {};
   map: MapRenderer | null = null;
@@ -157,6 +168,7 @@ export class World {
     this.map?.group.removeFromParent();
     this.map = new MapRenderer(map, opts).addTo(this.scene);
     this.props = new PropRenderer(this.scene, map);
+    this.rig.obstacles = this.map.obstacles();
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     this.ground.position.y = -0.05;
@@ -282,21 +294,35 @@ export class World {
     r.setClearColor(PAPER);
     r.clear();
     r.setScissorTest(true);
+    const dt = this.lastFrame ? (now - this.lastFrame) / 1000 : 0;
+    this.lastFrame = now;
+    this.rig.players = view.count;
+    const arrows: { x: number; y: number; w: number; h: number; angle: number }[] = [];
     for (const t of this.tileGrid.tiles(now)) {
       const k = t.seat - 1;
       if (t.w < 1 || t.h < 1) continue;
-      const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 600));
+      const cam = (this.tileCams[k] ??= new PerspectiveCamera(55, 16 / 9, 0.3, 2000));
       cam.aspect = t.w / t.h;
       cam.updateProjectionMatrix();
       const i = s.cars ? (view.follow?.[k] ?? k) % s.cars : -1;
+      const mode = this.rig.mode(t.seat);
       if (i >= 0) {
         this.q.fromArray(s.rot, i * 4);
         this.v.fromArray(s.pos, i * 3);
-        const a = ((view.orbit?.[k] ?? 0) * Math.PI) / 180;
-        const orbiting = a !== 0;
-        cam.position.set(-6.2 * Math.sin(a), 2.4, -6.2 * Math.cos(a)).applyQuaternion(this.q).add(this.v);
-        this.target.set(0, orbiting ? 0.6 : 1, orbiting ? 0 : 4).applyQuaternion(this.q).add(this.v);
-        cam.lookAt(this.target);
+        const orbit = view.orbit?.[k];
+        if (orbit !== undefined && orbit !== 0) {
+          const a = (orbit * Math.PI) / 180;
+          cam.position.set(-6.2 * Math.sin(a), 2.4, -6.2 * Math.cos(a)).applyQuaternion(this.q).add(this.v);
+          this.target.set(0, 0.6, 0).applyQuaternion(this.q).add(this.v);
+          cam.lookAt(this.target);
+        } else {
+          this.rig.update(t.seat, cam, { pos: this.v.clone(), rot: this.q.clone(), life: s.life[i]! }, dt);
+          if (mode === 'tp') {
+            // The off-screen arrow: the own car projected outside its tile (the chase aims at it; this is the backstop).
+            const p = this.v.clone().setY(this.v.y + 0.6).project(cam);
+            if (Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z > 1) arrows.push({ x: t.x, y: t.y, w: t.w, h: t.h, angle: Math.atan2(-p.y, p.x) });
+          }
+        }
       }
       const lod = view.lods?.[k] ?? lodForTileHeight(t.h);
       useLod(cam, lod);
@@ -308,6 +334,25 @@ export class World {
       r.setClearColor(SKY);
       r.clear();
       this.backend.render(this.scene, cam);
+      if (mode === 'fp' && i >= 0) {
+        // Segmented first person: the rear-view mirror in its strip of the tile (rects are fractions, top-down).
+        const M = CAMERA.firstPerson.mirror;
+        const [mx, mw, mh] = [x + Math.round(M.x * tw), Math.round(M.w * tw), Math.round(M.h * th)];
+        const my = y + th - Math.round(M.y * th) - mh;
+        this.mirrorCam.aspect = mw / mh;
+        this.mirrorCam.updateProjectionMatrix();
+        this.rig.aimMirror(t.seat, this.mirrorCam, { pos: this.v.clone(), rot: this.q.clone(), life: s.life[i]! });
+        useLod(this.mirrorCam, lodForTileHeight(mh));
+        r.setViewport(mx, my, mw, mh);
+        r.setScissor(mx, my, mw, mh);
+        r.clear();
+        this.backend.render(this.scene, this.mirrorCam);
+      }
+    }
+    const key = arrows.map((a) => `${a.x},${a.y},${a.angle.toFixed(1)}`).join('|');
+    if (key !== this.arrowKey) {
+      this.arrowKey = key;
+      this.onArrows(arrows, this.stats.dpr * this.scale);
     }
     r.setScissorTest(false);
     r.autoClear = true;

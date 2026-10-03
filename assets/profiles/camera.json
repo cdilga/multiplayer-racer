@@ -1,0 +1,32 @@
+{
+  "//": "Race-tile cameras (P1-R05), format jj.framing.v1. The chase presets, first person and its mirror are seeded from the design POC's framing (art/ui/poc/shared/framing.json, P1-U05.2, R98) and are TUNE values until the owner accepts the POC at G-DESIGN. Distances in metres from the car's origin (on the ground between the axles). `rig` holds the host's own tuning: the spring that follows the chase point, speed-scaled look-ahead, the pull-in when a barrier or building hides the car, the first-person comfort limits and speed FOV kick. `byCount` is the host's default distance by the number of players on screen (mid at every count, as the POC frames it, until playtests pick per count); each player may override it for their tile. The first-person eye sits further forward than the POC's (1.05 m, not 0.45 m) because the baked Cruz Missile's bonnet is higher than the POC car's: at 0.45 m it filled 40 % of the tile. Nothing here caps anything.",
+  "format": "jj.framing.v1",
+  "distance": {
+    "default": "mid",
+    "order": ["near", "mid", "far"],
+    "byCount": [{ "upTo": null, "preset": "mid" }]
+  },
+  "chase": {
+    "near": { "backM": 6.6, "upM": 3.3, "lookAheadM": 12, "lookUpM": 0.6, "fovDeg": 60, "follow": 6 },
+    "mid": { "backM": 8.4, "upM": 4.4, "lookAheadM": 17, "lookUpM": 0.3, "fovDeg": 58, "follow": 6 },
+    "far": { "backM": 11.5, "upM": 6.2, "lookAheadM": 24, "lookUpM": 0, "fovDeg": 56, "follow": 5 }
+  },
+  "firstPerson": {
+    "eye": { "rightM": 0, "upM": 1.5, "forwardM": 1.05 },
+    "lookAheadM": 26,
+    "lookUpM": -0.3,
+    "fovDeg": 72,
+    "mirror": { "x": 0.32, "y": 0.04, "w": 0.36, "h": 0.17, "fovDeg": 46, "eyeUpM": 2.3, "lookBackM": 30, "lookUpM": 0.4 }
+  },
+  "rig": {
+    "lookAheadPerMps": 0.35,
+    "lookAheadMaxM": 14,
+    "pullInMarginM": 0.6,
+    "pullInMinM": 2.5,
+    "pullInEyeUpM": 1.2,
+    "fpTiltKeep": 0.6,
+    "fovKickPerMps": 0.18,
+    "fovKickMaxDeg": 9,
+    "maxDtS": 0.1
+  }
+}

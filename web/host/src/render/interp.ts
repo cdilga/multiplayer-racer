@@ -16,6 +16,8 @@ export interface Sampled {
   pos: Float32Array;
   rot: Float32Array;
   steer: Float32Array;
+  /** Bumps on a respawn: cameras cut instead of following across the map. */
+  life: Uint32Array;
   /** Cars drawn at the newer pose because the pair crossed a respawn (or the car is new), this sample. */
   snapped: number;
   frame: Frame | null;
@@ -80,6 +82,7 @@ export class Interpolator {
       s.id[i] = b.id[i]!;
       s.flags[i] = b.flags[i]!;
       s.steer[i] = b.steer[i]!;
+      s.life[i] = b.life[i]!;
       const j = index.get(b.id[i]!);
       if (j === undefined || a.life[j] !== b.life[i] || alpha === 1) {
         if (alpha < 1) s.snapped++;
@@ -107,6 +110,7 @@ function prepare(out: Sampled | undefined, cars: number): Sampled {
     pos: new Float32Array(cars * 3),
     rot: new Float32Array(cars * 4),
     steer: new Float32Array(cars),
+    life: new Uint32Array(cars),
     snapped: 0,
     frame: null,
   };

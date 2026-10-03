@@ -3,7 +3,7 @@
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
 // `?synthetic=<cars>[&freeze=<tick>][&damage]` (draw from the synthetic snapshot source instead of the sim), `?bench`
-// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>` (a plain chase-camera tile view until the grid, P1-R04).
+// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far` (a plain chase-camera tile view until the grid, P1-R04).
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountDrawer } from './input/drawer';
@@ -48,6 +48,11 @@ async function boot(): Promise<void> {
     // The grid's spare cells (P1-R04): the join QR points at the join page until rooms exist (G00).
     const overlay = mountGridOverlay(app, new URL('../controller/', location.href).href);
     world.onLayout = (layout, scale) => overlay.render(layout, scale);
+    world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
+    // Cameras (P1-R05): `?cams=fp,tp,…` sets each seat's starting mode, `?camdist=near|mid|far` the host default.
+    params.get('cams')?.split(',').forEach((m, k) => world.rig.setMode(k + 1, m === 'fp' ? 'fp' : 'tp'));
+    const camdist = params.get('camdist');
+    if (camdist === 'near' || camdist === 'mid' || camdist === 'far') world.rig.hostDistance = camdist;
   }
   mountOverlay(document.body, world, BUILD_LABEL);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
@@ -57,6 +62,8 @@ async function boot(): Promise<void> {
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
     kitBounds: () => MapRenderer.kitBounds(),
     props: () => world.propCounts(),
+    cameras: () => world.rig.inspect(),
+    setCamera: (seat: number, mode: 'fp' | 'tp') => world.rig.setMode(seat, mode),
     project: (x: number, y: number, z: number) => world.project(x, y, z),
   };
 

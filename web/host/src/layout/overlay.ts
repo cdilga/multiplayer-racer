@@ -1,7 +1,8 @@
 // The grid's spare cells on the TV (P1-R04): every cell the layout leaves is painted, never black. The join cell shows
 // the join QR (or, too small for a scannable QR, the join address), the next the standings, the rest and the margins
 // the paper backdrop; with no QR cell, a join chip sits in the safe area's corner. Plain DOM over the canvas, in CSS
-// pixels. The accepted look (G-DESIGN) is P1-R04.style's; the standings' content is P1-R07's.
+// pixels. With no cell for the QR, a slim pill with the join address sits in the safe area's corner. The accepted look
+// (G-DESIGN) is P1-R04.style's; the standings' content is P1-R07's.
 import { renderSVG } from 'uqr';
 import type { Layout, Rect } from './grid';
 
@@ -10,6 +11,9 @@ export function mountGridOverlay(root: HTMLElement, joinUrl: string) {
   el.className = 'jj-grid';
   el.dataset.testid = 'grid-overlay';
   root.append(el);
+  const arrowsEl = document.createElement('div');
+  arrowsEl.className = 'jj-arrows';
+  root.append(arrowsEl);
   const qr = renderSVG(joinUrl, { border: 1 });
   const host = joinUrl.replace(/^https?:\/\//, '');
   let last = '';
@@ -29,9 +33,25 @@ export function mountGridOverlay(root: HTMLElement, joinUrl: string) {
                 : '';
         return `<div class="jj-filler" data-kind="${f.kind}" style="${px(f)}">${inner}</div>`;
       });
-      if (L?.joinChip) parts.push(`<div class="jj-chip" data-kind="chip" style="${px(L.joinChip)}">${qr}</div>`);
+      if (L?.joinChip) {
+        // Anchored by its right edge and sized to its text, so a long address never runs past the screen.
+        const c = L.joinChip;
+        const right = `right:calc(100% - ${(c.x + c.w) / scale}px);top:${c.y / scale}px;height:${c.h / scale}px`;
+        parts.push(`<div class="jj-chip" data-kind="chip" style="${right}"><span>Join at</span> <b>${host}</b></div>`);
+      }
       const html = parts.join('');
       if (html !== last) el.innerHTML = last = html;
+    },
+    /** The off-screen arrow on each tile whose own car the camera lost (P1-R05), pointing towards the car. */
+    arrows(list: (Rect & { angle: number })[], scale: number) {
+      arrowsEl.innerHTML = list
+        .map((a) => {
+          const [cx, cy] = [(a.x + a.w / 2) / scale, (a.y + a.h / 2) / scale];
+          const r = Math.min(a.w, a.h) / scale / 2 - 24;
+          const [x, y] = [cx + Math.cos(a.angle) * r, cy + Math.sin(a.angle) * r];
+          return `<div class="jj-arrow" style="left:${x}px;top:${y}px;transform:translate(-50%,-50%) rotate(${a.angle}rad)">➤</div>`;
+        })
+        .join('');
     },
   };
 }

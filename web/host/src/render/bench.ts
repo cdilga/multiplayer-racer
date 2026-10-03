@@ -56,6 +56,7 @@ async function scene(n: number, shadows: boolean): Promise<{ scene: Scene; vehic
     pos: Float32Array.from(poses.flatMap((p) => [p.x, 0, p.z])),
     rot: Float32Array.from(poses.flatMap(() => [0, 0, 0, 1])),
     steer: new Float32Array(n),
+    life: new Uint32Array(n),
     snapped: 0,
     frame: null,
   };

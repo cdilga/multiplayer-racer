@@ -287,6 +287,20 @@ export class MapRenderer {
     return total;
   }
 
+  /** The `collides` dressing as oriented boxes: what the chase cameras pull in front of (P1-R05). */
+  obstacles(): { centre: Vector3; half: Vector3; inv: Quaternion }[] {
+    return this.map.dressing
+      .filter((d) => d.collides && ENTRIES[d.kitPiece])
+      .map((d) => {
+        const size = colliderSize(ENTRIES[d.kitPiece]!, d.params ?? {});
+        return {
+          centre: new Vector3(mm(d.pose.x), mm(d.pose.y) + size[1] / 2, mm(d.pose.z)),
+          half: new Vector3(size[0] / 2, size[1] / 2, size[2] / 2),
+          inv: yawQuat(d.pose.yaw).invert(),
+        };
+      });
+  }
+
   /** Each registry entry's collider extent next to its rendered bounds at the same params (sim and render agree). */
   static kitBounds(): { id: string; collider: number[]; rendered: number[] }[] {
     return Object.values(ENTRIES).map((entry) => {
