@@ -217,10 +217,15 @@ Most important rules:
 
 - Preserve user and other-agent changes. Don't revert unfamiliar edits.
 - Keep file reservations narrow and release them when done.
-- **Commit and push your own finished work without asking** (owner, 2026-10-03), bead or not.
-  - Stage specific paths, and commit with `git commit -- <paths>` so another session's staged files stay
-    out. Set `AGENT_NAME` for the commit guard and the pre-push hook.
+- **Commit and push freely** (owner, 2026-10-03). Every session commits, pushes and closes its own work
+  as it goes: solo, worker and verifier alike. There's no separate committer and no asking.
+  - It's one shared tree, so anything else that's ready gets committed too: files another session left
+    behind, tracker exports, docs. Give it its own commit saying what it is. Leave only work that's
+    visibly mid-edit (it doesn't build, or a test it touches fails).
+  - Mechanics: stage specific paths, and commit with `git commit -- <paths>` so half-staged work elsewhere
+    stays out. `AGENT_NAME` is set by the start commands; it's needed for the commit guard and the
+    pre-push hook.
   - `git push` doesn't upload LFS objects here: run `git lfs push --all <remote> <branch>` afterwards.
-  - Ask first only before force-pushing, rewriting history, or committing another session's files.
+  - Only force-pushing or rewriting pushed history needs the owner.
   - Never `git add -A`: local MCP configs hold an Agent Mail token, and personal files
     (`.claude/skills/idea-engine/`, `.claude/workflows/idea-engine.mjs`) must stay out of this public repo.

@@ -63,6 +63,9 @@ Scale in steps when you're happy: **solo → 2 workers → 4 workers** (no cap, 
 | **Solo (hand crank)** | `JJ_ROLE=solo AGENT_NAME=<name> claude --remote-control "jj-solo" --model claude-opus-5-5 --effort medium` |
 | **Workers** | `JJ_ROLE=worker AGENT_NAME=<name> claude --model claude-opus-5-5 --effort medium`, plus the verifier on call above |
 
+Every mode commits, pushes and closes on its own (AGENTS.md, Code rules): the solo session needs no
+orchestrator or verifier to land its work, and it also commits anything else in the tree that's ready.
+
 Workers and the solo session run Opus 5.5 at medium effort and hand mechanical work to Sonnet 5.5
 subagents (the Agent tool with `model: "sonnet"`): code search, long logs, test scaffolding, capture
 review notes. Subagents help inside a bead; more beads in parallel means more worker sessions, each
