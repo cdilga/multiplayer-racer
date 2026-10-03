@@ -1,6 +1,6 @@
 {
  "id": "cruz-missile",
- "what": "Contract data the geometry doesn't carry (P1-V02): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into cruz-missile.asset.json. Hinges are provisional: P1-V03's production pass places hinge lines and limits. +X is the car's left.",
+ "what": "Contract data the geometry doesn't carry (P1-V02): mass split, hinges, collider kinds, anchors and LOD budgets. Pivots come from the model (model.js pivots()); the bake joins the two into cruz-missile.asset.json. Hinges are plan §6.3's (P1-V03): doors 0–70° about the front edge, front and back hang 0–25° about their top edge, wheels ±6° camber; the pivots (model.js) sit on those hinge lines. +X is the car's left.",
  "lods": [
   { "maxTris": 1300 },
   { "maxTris": 900 },
@@ -8,16 +8,16 @@
  ],
  "parts": {
   "core": { "massFraction": 0.62, "hinge": null, "collider": "convex" },
-  "front": { "massFraction": 0.08, "hinge": { "axis": [1, 0, 0], "min": -20, "max": 5 }, "collider": "convex" },
-  "back": { "massFraction": 0.07, "hinge": { "axis": [1, 0, 0], "min": -5, "max": 20 }, "collider": "convex" },
+  "front": { "massFraction": 0.08, "hinge": { "axis": [1, 0, 0], "min": 0, "max": 25 }, "collider": "convex" },
+  "back": { "massFraction": 0.07, "hinge": { "axis": [1, 0, 0], "min": -25, "max": 0 }, "collider": "convex" },
   "door_FL": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 }, "collider": "convex" },
   "door_RL": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": -70, "max": 0 }, "collider": "convex" },
   "door_FR": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 }, "collider": "convex" },
   "door_RR": { "massFraction": 0.04, "hinge": { "axis": [0, 1, 0], "min": 0, "max": 70 }, "collider": "convex" },
-  "wheel_FL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
-  "wheel_FR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
-  "wheel_RL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" },
-  "wheel_RR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -25, "max": 25 }, "collider": "convex" }
+  "wheel_FL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" },
+  "wheel_FR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" },
+  "wheel_RL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" },
+  "wheel_RR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" }
  },
  "anchors": {
   "cam_fp": [-0.38, 1.25, -0.05],

@@ -2,7 +2,7 @@
 // `?test` (held, frame-stepped) or `?test=live` loads the test surface chunk (P1-F05b): a production-realm server
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
-// `?synthetic=<cars>[&freeze=<tick>][&damage]` (draw from the synthetic snapshot source instead of the sim), `?bench`
+// `?synthetic=<cars>[&freeze=<tick>][&damage[=strip]]` (draw from the synthetic snapshot source instead of the sim), `?bench`
 // (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far` (a plain chase-camera tile view until the grid, P1-R04).
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
@@ -73,6 +73,7 @@ async function boot(): Promise<void> {
       cars: Number(params.get('synthetic')) || 24,
       freezeAt: freeze === null ? undefined : Number(freeze),
       damage: params.has('damage'),
+      strip: params.get('damage') === 'strip',
     });
     world.attach(source);
     if (freeze !== null) world.interp.fixedTick = Number(freeze) - 0.5;

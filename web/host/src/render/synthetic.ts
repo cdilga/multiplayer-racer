@@ -22,6 +22,8 @@ export interface SyntheticOptions {
   /** Damage some cars (P1-R02): every third car has a loose door swinging on its hinge; the next has its front and a
    *  wheel detached, lying where the car last respawned, and its rear door loose. */
   damage?: boolean;
+  /** The damage strip (P1-V03): cars parked side by side, side-on to the overview camera, each in one state. */
+  strip?: boolean;
 }
 
 const SPEED = 18; // m/s
@@ -90,6 +92,44 @@ export function syntheticParts(i: number, n: number, tick: number): PartPose[] {
   ];
 }
 
+/** The damage strip's states, one per car (every hinged part at its §6.3 limit, then detachments). */
+export const STRIP: { name: string; parts: { part: string; state: number; angleDeg?: number }[] }[] = [
+  { name: 'intact', parts: [] },
+  { name: 'door_FL loose', parts: [{ part: 'door_FL', state: PART_LOOSE, angleDeg: -60 }] },
+  { name: 'door_RL loose', parts: [{ part: 'door_RL', state: PART_LOOSE, angleDeg: -45 }] },
+  { name: 'front loose', parts: [{ part: 'front', state: PART_LOOSE, angleDeg: 25 }] },
+  { name: 'back loose', parts: [{ part: 'back', state: PART_LOOSE, angleDeg: -25 }] },
+  { name: 'wheel_FL loose', parts: [{ part: 'wheel_FL', state: PART_LOOSE, angleDeg: 6 }] },
+  { name: 'front detached', parts: [{ part: 'front', state: PART_DETACHED }] },
+  { name: 'door_FL detached', parts: [{ part: 'door_FL', state: PART_DETACHED }] },
+  { name: 'wheel_FL detached', parts: [{ part: 'wheel_FL', state: PART_DETACHED }] },
+  {
+    name: 'stripped',
+    parts: ['front', 'back', 'door_FL', 'door_RL', 'door_FR', 'door_RR'].map((part) => ({ part, state: PART_DETACHED })),
+  },
+];
+const STRIP_GAP = 6.5;
+
+/** Strip car i: parked along -x (reading left to right from the overview camera) facing +x, so its left side (doors FL/RL) faces the overview camera. */
+function stripPose(i: number): CarPose {
+  const yaw = Math.PI / 2;
+  return { id: i + 1, life: 0, pos: [-i * STRIP_GAP, 0, 0], rot: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)], steer: 0 };
+}
+
+/** Strip car i's part records; detached parts lie on the ground in front of the car (towards the camera). */
+function stripParts(i: number): PartPose[] {
+  const pivots = sidecar.parts as Record<string, { pivot: number[] }>;
+  return (STRIP[i % STRIP.length]?.parts ?? []).map((p, k) => {
+    if (p.state !== PART_DETACHED) return { car: i + 1, part: PART[p.part]!, state: p.state, angle: (p.angleDeg ?? 0) * deg };
+    // Car space → world: the car faces +x, so its local +z is world +x and its local +x (left) is world -z.
+    const piv = pivots[p.part]!.pivot;
+    const lie = [-i * STRIP_GAP + piv[2]! * 0.6, 0.25, -2.6 - k * 0.9];
+    // Turned a quarter about world z: a door or wheel (thin across the car) lies flat; the front and back lie on an end.
+    const flat = Math.PI / 2;
+    return { car: i + 1, part: PART[p.part]!, state: PART_DETACHED, pos: lie as [number, number, number], rot: [0, 0, Math.sin(flat / 2), Math.cos(flat / 2)] };
+  });
+}
+
 export class SyntheticSource implements SnapshotSource {
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
   tick = 0;
@@ -101,7 +141,7 @@ export class SyntheticSource implements SnapshotSource {
 
   constructor(readonly opts: SyntheticOptions) {
     // Room for every car's part records: three at most per damaged car.
-    const bytes = snapshotBytes(opts.cars, 0, opts.damage ? opts.cars * 3 : 0);
+    const bytes = snapshotBytes(opts.cars, 0, opts.strip ? opts.cars * 6 : opts.damage ? opts.cars * 3 : 0);
     for (let i = 0; i < (opts.poolSize ?? 4); i++) this.free.push(new ArrayBuffer(bytes));
   }
 
@@ -135,8 +175,13 @@ export class SyntheticSource implements SnapshotSource {
       return;
     }
     const n = this.opts.cars;
-    const cars = Array.from({ length: n }, (_, i) => syntheticPose(i, n, tick));
-    const parts = this.opts.damage ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat() : [];
+    const strip = this.opts.strip;
+    const cars = Array.from({ length: n }, (_, i) => (strip ? stripPose(i) : syntheticPose(i, n, tick)));
+    const parts = strip
+      ? Array.from({ length: n }, (_, i) => stripParts(i)).flat()
+      : this.opts.damage
+        ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat()
+        : [];
     const bytes = encodeSnapshot(buf, tick, cars, 0, parts);
     this.published++;
     this.onSnapshot({ tick, view: new DataView(buf, 0, bytes), buf });

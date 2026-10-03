@@ -10,7 +10,7 @@ The Playtest-1 car, code-built from reference sheets (R81). P1-V02 moved Spike J
 | `model.js` | The model script: `soups(P, lod)` for the bake, `build(P, lod)` for three.js, `pivots(P)` |
 | `atlas.js` | The one atlas, drawn as data and rasterised without a DOM; `BAKE_COLOURS` paints pure white (the paint key) |
 | `params.json` | Spike J's final, pixel-fitted parameters (silhouette IoU 0.947 against `refs/lod-plus-1.png`) |
-| `vehicle.json` | Contract data the geometry doesn't carry: mass split, hinges (provisional until P1-V03), collider kinds, anchors, LOD budgets |
+| `vehicle.json` | Contract data the geometry doesn't carry: mass split, hinges (plan §6.3, P1-V03), collider kinds, anchors, LOD budgets |
 | `refs/` | The owner's reference sheets (`lod-plus-1` ≈ LOD0, `lowest-lod` ≈ LOD2, `damage-med-lod`) |
 | `cruz-missile.asset.json`, `cruz-missile.lod{0,1,2}.glb`, `cruz-missile.atlas.png`, `cruz-missile.emissive.png` | The bake: never edit by hand |
 

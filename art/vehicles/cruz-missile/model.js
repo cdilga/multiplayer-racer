@@ -276,10 +276,10 @@ function makeSoups(P, lod) {
   return { soups, stations: Z.length };
 }
 
-// Each part's pivot (its origin as debris, Spike J's choice): the wheel centre, the bounding-box centre for the other
-// detachable parts, the vehicle origin for core, always measured on LOD0, because the contract wants one pivot per part
-// at every LOD (coarser tiers sample fewer rings, which would move a bounding-box centre by millimetres). P1-V03's
-// production pass moves the hinged ones to their hinge lines.
+// Each part's pivot is its hinge line (P1-V03, plan §6.3): a loose part turns about its hinge axis through the pivot.
+// Doors: the front edge on the outer skin (they swing out 0–70° like a real door). Front and back: their top edge where
+// they meet the body, at the shoulder line on the cut (they hang 0–25°). Wheels: the hub (±6° camber wobble). Core:
+// the vehicle origin. Measured on LOD0, because the contract wants one pivot per part at every LOD.
 export function pivots(P = DEFAULT_P) {
   const out = {};
   for (const [id, so] of Object.entries(makeSoups(P, 0).soups)) out[id] = pivotOf(P, id, so.p);
@@ -291,7 +291,12 @@ function pivotOf(P, id, positions) {
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < positions.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], positions[i + k]); hi[k] = Math.max(hi[k], positions[i + k]); }
   if (id.startsWith('wheel')) return [Math.sign(hi[0] + lo[0]) * P.track, P.wheelR, id[6] === 'F' ? P.zFA : P.zRA];
-  return [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+  const mid = (k) => (lo[k] + hi[k]) / 2;
+  if (id.startsWith('door')) return [mid(0) > 0 ? hi[0] : lo[0], mid(1), hi[2]]; // +X is the car's left
+  const zA = P.zFA - P.archR, zC = P.zRA + P.archR;
+  if (id === 'front') return [0, lerpCurve(P.ySh, zA), lo[2]];
+  if (id === 'back') return [0, lerpCurve(P.ySh, zC), hi[2]];
+  return [mid(0), mid(1), mid(2)];
 }
 
 /** Plain per-part triangle soups for the bake: { parts: { id: { pivot, positions (part space), uvs (v up), tris } } }. */
