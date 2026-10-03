@@ -169,6 +169,7 @@ export class World {
     this.map = new MapRenderer(map, opts).addTo(this.scene);
     this.props = new PropRenderer(this.scene, map);
     this.rig.obstacles = this.map.obstacles();
+    this.rig.groundAt = this.map.groundAt;
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
     this.ground.position.y = -0.05;

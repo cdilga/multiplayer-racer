@@ -287,6 +287,19 @@ export class MapRenderer {
     return total;
   }
 
+  /** The terrain's height (m) at (x, z), bilinear over the heightfield like the ground the car drives on. */
+  groundAt = (x: number, z: number): number => {
+    const t = this.map.terrain;
+    const c = Math.min(Math.max((x * 1000 - t.originX) / t.spacing, 0), t.cols - 1);
+    const r = Math.min(Math.max((z * 1000 - t.originZ) / t.spacing, 0), t.rows - 1);
+    const [c0, r0] = [Math.floor(c), Math.floor(r)];
+    const [c1, r1] = [Math.min(c0 + 1, t.cols - 1), Math.min(r0 + 1, t.rows - 1)];
+    const h = (cc: number, rr: number) => t.heights[rr * t.cols + cc]! / 100;
+    const top = h(c0, r0) + (h(c1, r0) - h(c0, r0)) * (c - c0);
+    const bot = h(c0, r1) + (h(c1, r1) - h(c0, r1)) * (c - c0);
+    return top + (bot - top) * (r - r0);
+  };
+
   /** The `collides` dressing as oriented boxes: what the chase cameras pull in front of (P1-R05). */
   obstacles(): { centre: Vector3; half: Vector3; inv: Quaternion }[] {
     return this.map.dressing

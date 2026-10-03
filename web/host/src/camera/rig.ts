@@ -64,6 +64,8 @@ export class CameraRig {
   hostDistance: Distance | 'auto' = 'auto';
   players = 1;
   obstacles: Obstacle[] = [];
+  /** The ground's height (m) under (x, z): the chase stays above it and keeps its line of sight to the car over it. */
+  groundAt: ((x: number, z: number) => number) | null = null;
   private fwd = new Vector3();
   private v = new Vector3();
   private w = new Vector3();
@@ -138,6 +140,7 @@ export class CameraRig {
     const target = this.w.copy(car.pos).addScaledVector(dir, -R.backM);
     target.y = car.pos.y + R.upM;
     this.pullIn(s, car, target);
+    this.overGround(car, target);
     s.pos.copy(target);
     // Look ahead along the car's own heading (in a turn it leads the camera's smoothed heading), further the faster it
     // goes, at the preset's pitch whatever the distance, so speed never tips the view up into the sky (R98).
@@ -153,6 +156,31 @@ export class CameraRig {
     cam.position.copy(s.pos);
     cam.up.copy(UP);
     cam.lookAt(s.look);
+  }
+
+  /** Raises `target` until it is clear of the ground under it and the ground doesn't hide the car (undulating maps:
+   *  in a dip the chase point can sit inside the rise behind the car). */
+  private overGround(car: CarView, target: Vector3): void {
+    const ground = this.groundAt;
+    if (!ground) return;
+    const minUp = profile.rig.groundClearM;
+    target.y = Math.max(target.y, ground(target.x, target.z) + minUp);
+    const eye = car.pos.y + profile.rig.pullInEyeUpM;
+    for (let lift = 0; lift < profile.rig.losMaxLiftM; lift += 0.5) {
+      let clear = true;
+      for (let k = 1; k < 8; k++) {
+        const t = k / 8;
+        const x = target.x + (car.pos.x - target.x) * t;
+        const z = target.z + (car.pos.z - target.z) * t;
+        const y = target.y + (eye - target.y) * t;
+        if (ground(x, z) + 0.2 > y) {
+          clear = false;
+          break;
+        }
+      }
+      if (clear) return;
+      target.y += 0.5;
+    }
   }
 
   /** Moves `target` in front of the first obstacle between the car and it. */

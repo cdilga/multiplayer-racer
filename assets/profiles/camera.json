@@ -27,6 +27,8 @@
     "fpTiltKeep": 0.6,
     "fovKickPerMps": 0.18,
     "fovKickMaxDeg": 9,
-    "maxDtS": 0.1
+    "maxDtS": 0.1,
+    "groundClearM": 1.2,
+    "losMaxLiftM": 8
   }
 }
