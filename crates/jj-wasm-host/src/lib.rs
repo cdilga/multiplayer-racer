@@ -1,6 +1,9 @@
 //! The host's sim worker in WASM (P1-S02): `jj-session` + `jj-input` + `jj-sim` behind the worker ABI
 //! (`jj_protocol::abi`). [`host::Host`] is the native-testable core; [`HostSim`] is the wasm-bindgen face the worker
 //! (`web/host/src/worker/sim.worker.ts`) calls.
+//!
+//! The `testing` feature adds the test surface (`host::testing`, P1-F05b) and the test hooks. Only the test chunk's
+//! worker (`web/host/src/testing/`) loads that build; the shipped worker is built without it.
 
 #![forbid(unsafe_code)]
 
@@ -74,19 +77,32 @@ impl HostSim {
         self.0.sim().journal().to_bytes()
     }
 
-    /// Test/bot hook: applies an encoded `MainToSim` exactly at the boundary before `tick`.
+    /// The worker caught a panic or an unrecoverable error: the `fault` pause reason.
+    pub fn fault(&mut self) {
+        self.0.fault();
+    }
+}
+
+/// Test hooks (P1-S02, P1-F05b): only in the `testing` build, which only the test chunk's worker loads.
+#[cfg(feature = "testing")]
+#[wasm_bindgen]
+impl HostSim {
+    /// A test-surface command (JSON, see `host::testing`) → its answer (JSON).
+    pub fn test(&mut self, command: &str) -> Result<String, JsError> {
+        self.0
+            .test_command(command)
+            .map(|v| v.to_string())
+            .map_err(|e| JsError::new(&e))
+    }
+
+    /// Applies an encoded `MainToSim` exactly at the boundary before `tick`.
     pub fn schedule(&mut self, tick: f64, msg: &[u8]) -> Result<(), JsError> {
         self.0.schedule(tick as u64, msg).map_err(err)
     }
 
-    /// Test hook: stop stepping at `tick`.
+    /// Stop stepping at `tick`.
     pub fn stop_at(&mut self, tick: f64) {
         self.0.stop_at(tick as u64);
-    }
-
-    /// The worker caught a panic or an unrecoverable error: the `fault` pause reason.
-    pub fn fault(&mut self) {
-        self.0.fault();
     }
 
     /// The throttle car `car` drove with last tick (0..1; for tests of the neutral re-arm).
@@ -97,7 +113,7 @@ impl HostSim {
             .map_or(0.0, |i| jj_types::axis::dequantise_axis(i.throttle))
     }
 
-    /// Test hook: panics, so the worker's fault path can be shown working.
+    /// Panics, so the worker's fault path can be shown working.
     pub fn debug_panic(&self) {
         panic!("debug_panic: the worker's fault path under test");
     }
@@ -106,11 +122,8 @@ impl HostSim {
 /// Typed encoders for the worker ABI, so the worker (and its test harness) never hand-roll postcard in JS.
 pub mod codec {
     use jj_map::{Registry, load_json};
-    use jj_protocol::PROTOCOL_VERSION;
     use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, UiCommand};
-    use jj_protocol::cmd::ControllerCmd;
-    use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
-    use jj_types::{BuildId, CommandId, EndpointId, LocalSourceId, RequestId, SourceHandle};
+    use jj_types::{CommandId, EndpointId, LocalSourceId};
     use wasm_bindgen::prelude::*;
 
     /// Validates a `jj.map.v1` JSON document and returns its canonical bytes (what `Init` carries).
@@ -191,6 +204,17 @@ pub mod codec {
         }
         .encode()
     }
+}
+
+/// Test-side encoders and a message describer (`testing` build only): a real controller encodes its frames in
+/// `jj-wasm-input`.
+#[cfg(feature = "testing")]
+pub mod test_codec {
+    use jj_protocol::PROTOCOL_VERSION;
+    use jj_protocol::cmd::ControllerCmd;
+    use jj_protocol::state::{STATE_MINOR, StateBatch, StateFlags, StateRecord};
+    use jj_types::{BuildId, EndpointId, RequestId, SourceHandle};
+    use wasm_bindgen::prelude::*;
 
     /// A `SimToMain` as text for tests: one line per event (an `Events` batch's boundaries depend on the worker's
     /// cadence, its events don't), or one line for an outbound message.
@@ -214,7 +238,6 @@ pub mod codec {
         }
     }
 
-    /// Test-side controller encoders (a real controller builds these in `jj-wasm-input`).
     #[wasm_bindgen]
     pub fn controller_hello(endpoint: &str) -> Vec<u8> {
         ControllerCmd::Hello {

@@ -5,5 +5,5 @@
     "lib": ["ES2023", "WebWorker"],
     "types": []
   },
-  "include": ["sim.worker.ts", "messages.ts"]
+  "include": ["sim.worker.ts", "core.ts", "messages.ts"]
 }

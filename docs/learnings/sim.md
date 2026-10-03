@@ -56,3 +56,9 @@ not feel targets.
   protection ended this tick.
 - **Overflow staggering needs a non-repeating sequence.** A fixed step modulo the row gap came back to within 0.75 m of
   the slot after six layers. Roberts' R2 sequence, offset 1–7 m behind the slot, never lands on player 1's spawn.
+- Host test surface (P1-F05b): a seated car follows its seat, so scripted `inputs` spans only drive unseated cars. The
+  host applies the fixture's inputs first and then the seats' controls, and a silent seat reads neutral. Drive a seated
+  car through its fake controller (`__jjTest.drive` + `untilFact`, which re-sends the stick every 6 ticks, the way a
+  phone would; one sample goes stale after 250 ms of sim time).
+- An open-ended run (the live host) has no last tick, so `jj-fixture`'s end-of-run checks never evaluate on their own.
+  The surface's `outcome` calls `Harness::check_now` first.

@@ -1,9 +1,11 @@
 // P1-S02 harness: one sim worker run at a time, driven by web/host/tests/worker.test.mjs through `window.__jj`.
 // The "renderer" here holds each snapshot until its next frame at `renderHz` (with `renderWorkMs` of main-thread work
-// per frame), or never gives buffers back (`starve`), so the tests can show the sim doesn't care.
+// per frame), or never gives buffers back (`starve`), so the tests can show the sim doesn't care. It runs the test
+// chunk's worker live (on its own clock) for the exact-tick scheduling, status and panic hooks.
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { SimClient, type Snapshot } from '../src/worker/client';
-import type { SimInput } from '../src/worker/messages';
+import { TestClient, createWorker } from '../src/testing/testing';
+import type { TestInput } from '../src/testing/messages';
 
 interface RunOptions {
   seed?: number;
@@ -11,12 +13,13 @@ interface RunOptions {
   renderHz?: number;
   renderWorkMs?: number;
   starve?: boolean;
-  script?: { tick: number; input: SimInput }[];
+  script?: { tick: number; input: TestInput }[];
   stopAt?: number;
 }
 
 class Run {
-  readonly client = new SimClient();
+  readonly client = new SimClient(createWorker());
+  readonly test = new TestClient(this.client);
   readonly lines: string[] = [];
   readonly faults: string[] = [];
   held: Snapshot[] = [];
@@ -39,9 +42,9 @@ class Run {
 
   async start(): Promise<void> {
     const o = this.opts;
-    await this.client.start({ mapJson: greybox, seed: o.seed ?? 3, poolSize: o.poolSize ?? 3, describe: true });
-    for (const { tick, input } of o.script ?? []) this.client.schedule(tick, input);
-    if (o.stopAt !== undefined) this.client.stopAt(o.stopAt);
+    await this.client.start({ mapJson: greybox, seed: o.seed ?? 3, poolSize: o.poolSize ?? 3 }, { describe: true, live: true });
+    for (const { tick, input } of o.script ?? []) this.test.schedule(tick, input);
+    if (o.stopAt !== undefined) this.test.stopAt(o.stopAt);
     const hz = o.renderHz ?? 60;
     this.render = setInterval(() => this.frame(), 1000 / hz);
   }
@@ -103,15 +106,15 @@ const api = {
     run = new Run(opts);
     await run.start();
   },
-  status: () => current().client.status(),
-  schedule: (tick: number, input: SimInput) => current().client.schedule(tick, input),
-  stopAt: (tick: number) => current().client.stopAt(tick),
-  input: (input: SimInput) => current().client.input(input),
+  status: () => current().test.status(),
+  schedule: (tick: number, input: TestInput) => current().test.schedule(tick, input),
+  stopAt: (tick: number) => current().test.stopAt(tick),
+  input: (input: TestInput) => current().test.input(input),
   hold: (source: number, axes: [number, number, number, number], everyMs?: number) => current().hold(source, axes, everyMs),
   unhold: () => current().unhold(),
   hide: () => setVisible(false),
   show: () => setVisible(true),
-  panic: () => current().client.panic(),
+  panic: () => current().test.panic(),
   pauseReasons: () => current().client.pauseReasons(),
   countdownMs: () => current().client.countdownMs,
   lines: () => current().lines.slice(),

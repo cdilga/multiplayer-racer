@@ -7,6 +7,7 @@ export default defineConfig({
   root: import.meta.dirname,
   base: './',
   worker: { format: 'es' },
+  define: { __JJ_COMMIT__: JSON.stringify('harness') },
   build: {
     outDir: resolve(import.meta.dirname, '../../dist-test'),
     emptyOutDir: true,

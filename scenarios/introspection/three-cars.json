@@ -1,0 +1,22 @@
+{
+ "scenario": "three-cars",
+ "what": "P1-F05b: the fixture the browser host's test surface rebuilds piece by piece (load without cars, spawn the three cars, add the inputs, step 600 paused ticks) and must hash the same as this native run. Three Cruz Missiles side by side on the greybox's main straight: full throttle, half throttle, and a slow left-hand turn.",
+ "map": "maps/greybox-loop.json",
+ "seed": 7,
+ "ticks": 600,
+ "cars": [
+  { "routePoint": 16, "lateral": -4 },
+  { "routePoint": 16, "lateral": 0 },
+  { "routePoint": 16, "lateral": 4 }
+ ],
+ "inputs": [
+  { "car": 0, "fromTick": 0, "throttle": 1.0 },
+  { "car": 1, "fromTick": 0, "throttle": 0.5 },
+  { "car": 2, "fromTick": 120, "throttle": 0.4, "steer": 0.5 }
+ ],
+ "expect": [
+  { "car": 0, "metric": "progressM", "min": 20, "max": 120 },
+  { "car": 1, "metric": "progressM", "min": 5, "max": 100 },
+  { "car": 2, "metric": "travel", "min": 1, "max": 100 }
+ ]
+}

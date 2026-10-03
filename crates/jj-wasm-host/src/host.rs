@@ -90,6 +90,12 @@ struct SeatInput {
 
 pub struct Host {
     sim: Sim,
+    /// The map the sim runs on (the test surface's `load` and route-relative observations read it).
+    #[cfg_attr(
+        not(feature = "testing"),
+        expect(dead_code, reason = "only the testing build reads it so far")
+    )]
+    map: LoadedMap,
     seats: Seats,
     inputs: BTreeMap<SeatId, SeatInput>,
     conns: BTreeMap<EndpointId, ConnId>,
@@ -110,6 +116,9 @@ pub struct Host {
     events: Vec<SimEvent>,
     seen_race_events: usize,
     session_rev: u32,
+    /// The test surface's state (P1-F05b): only in the `testing` build, never in the shipped worker.
+    #[cfg(feature = "testing")]
+    test: testing::TestState,
 }
 
 fn tick_ms(tick: u64) -> u64 {
@@ -147,8 +156,7 @@ impl Host {
         if abi_version != ABI_VERSION {
             return Err(HostError::Abi(abi_version));
         }
-        let registry = Registry::generic();
-        let map: LoadedMap = load_canonical(&map_bytes, &registry).map_err(|r| {
+        let map: LoadedMap = load_canonical(&map_bytes, &Registry::generic()).map_err(|r| {
             HostError::Map(format!(
                 "{:?}",
                 r.violations
@@ -157,8 +165,19 @@ impl Host {
                     .collect::<Vec<_>>()
             ))
         })?;
-        Ok(Self {
-            sim: Sim::new(&map, &registry, seed, VehicleProfile::provisional_cruz()),
+        Ok(Self::from_map(map, seed))
+    }
+
+    /// A host on a validated map with a seed (the generic kit registry and the provisional Cruz profile).
+    pub fn from_map(map: LoadedMap, seed: u64) -> Self {
+        Self {
+            sim: Sim::new(
+                &map,
+                &Registry::generic(),
+                seed,
+                VehicleProfile::provisional_cruz(),
+            ),
+            map,
             seats: Seats::new(SeatConfig {
                 tick_hz: TICK_HZ,
                 ..SeatConfig::default()
@@ -180,7 +199,12 @@ impl Host {
             events: Vec::new(),
             seen_race_events: 0,
             session_rev: 0,
-        })
+            #[cfg(feature = "testing")]
+            test: testing::TestState {
+                seed,
+                ..Default::default()
+            },
+        }
     }
 
     pub fn tick(&self) -> u64 {
@@ -259,6 +283,12 @@ impl Host {
     pub fn advance(&mut self, now_us: u64) -> u32 {
         self.now_us = now_us;
         let last = self.last_us.replace(now_us);
+        #[cfg(feature = "testing")]
+        if self.test.held {
+            // Held by the test surface: only its `step` moves the sim, and no backlog builds up meanwhile.
+            self.acc = 0;
+            return 0;
+        }
         if self.pauses.contains(&Pause::PerformanceStall)
             && self
                 .stall_since_us
@@ -328,6 +358,11 @@ impl Host {
         for o in self.seats.apply(seats::Input::Tick(Tick(tick + 1))) {
             self.seat_output(o);
         }
+        // A loaded fixture's events and scripted inputs come before the seats' controls, as in `jj sim`.
+        #[cfg(feature = "testing")]
+        if let Some(h) = &self.test.harness {
+            h.before_step(&mut self.sim);
+        }
         let now_ms = tick_ms(tick);
         for input in self.inputs.values() {
             let Some(car) = input.car else { continue };
@@ -343,6 +378,10 @@ impl Host {
             self.sim.set_input(car, controls);
         }
         self.sim.step();
+        #[cfg(feature = "testing")]
+        if let Some(h) = &mut self.test.harness {
+            h.after_step(&self.sim, false);
+        }
         self.collect_race_events();
     }
 
@@ -725,6 +764,9 @@ impl Writer<'_> {
         self.put(&v.to_le_bytes());
     }
 }
+
+#[cfg(feature = "testing")]
+pub mod testing;
 
 #[cfg(test)]
 mod tests;

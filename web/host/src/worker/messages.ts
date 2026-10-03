@@ -2,6 +2,7 @@
 // (MainToSim / SimToMain, postcard); over postMessage, main sends these structured messages and the worker encodes
 // them into MainToSim with `jj-wasm-host`'s codec, so main never loads the sim. Snapshot buffers travel as
 // transferables in both directions (the ABI's `ReturnBuffer` is a transfer, not a copy).
+// The test chunk's worker understands more (web/host/src/testing/messages.ts); the shipped worker ignores those.
 
 export type PauseReason = 'manual' | 'host-hidden' | 'renderer-unavailable' | 'performance-stall' | 'fault';
 
@@ -22,31 +23,20 @@ export function pauseReasons(mask: number): PauseReason[] {
 export type SimInput =
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause'; on?: boolean }
-  /** Test-side controller frames, encoded in the worker (a real controller encodes them in `jj-wasm-input`). */
-  | { type: 'controller'; endpoint: string; frame: { hello: true } | { claim: string } | { state: { source: number; seq: number; drive: [number, number] } } };
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause'; on?: boolean };
+
+export interface InitOptions {
+  mapJson?: string;
+  mapBytes?: Uint8Array;
+  seed: number;
+  poolSize?: number;
+}
 
 export type ToWorker =
-  /** `describe` (tests): each `messages` post also carries the messages as text, one line per event or outbound. */
-  | { kind: 'init'; mapJson?: string; mapBytes?: Uint8Array; seed: number; poolSize?: number; describe?: boolean }
+  | ({ kind: 'init' } & InitOptions)
   | { kind: 'input'; input: SimInput }
   | { kind: 'lifecycle'; visible: boolean; renderOk: boolean }
-  | { kind: 'return'; buf: ArrayBuffer }
-  /** Test and bot hooks (R90 "settable"); F05b grows these into the agent surface. */
-  | { kind: 'schedule'; tick: number; input: SimInput }
-  | { kind: 'stopAt'; tick: number }
-  | { kind: 'status'; id: number }
-  | { kind: 'panic' };
-
-export interface WorkerStatus {
-  tick: number;
-  hash: string;
-  pauseMask: number;
-  countdownMs: number;
-  published: number;
-  skipped: number;
-  appliedThrottle: number[];
-}
+  | { kind: 'return'; buf: ArrayBuffer };
 
 export type FromWorker =
   | { kind: 'ready' }
@@ -55,5 +45,4 @@ export type FromWorker =
   | { kind: 'messages'; list: Uint8Array[]; lines?: string[] }
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
-  | { kind: 'status'; id: number; status: WorkerStatus }
   | { kind: 'fault'; message: string };

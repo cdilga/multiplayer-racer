@@ -1,6 +1,6 @@
 [package]
-name = "jj-tools"
-description = "The `jj` CLI for agents and developers: sim, procgen and validate, with JSON output."
+name = "jj-fixture"
+description = "The sim fixture format and runner (R90): set up, step, observe, assert. Shared by `jj sim` and the browser host's test surface."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,20 +8,13 @@ license.workspace = true
 publish.workspace = true
 repository.workspace = true
 
-[[bin]]
-name = "jj"
-path = "src/main.rs"
-
 [dependencies]
 jj-sim.workspace = true
-jj-fixture.workspace = true
 jj-session.workspace = true
-jj-procgen.workspace = true
 jj-map.workspace = true
-jj-contracts.workspace = true
-serde_json.workspace = true
-serde.workspace = true
 jj-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [lints]
 workspace = true

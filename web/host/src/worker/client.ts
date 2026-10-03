@@ -1,7 +1,7 @@
 // The host main thread's side of the sim worker (P1-S02): starts it, forwards inputs and lifecycle, hands each
 // snapshot to the renderer and returns its buffer to the pool when the renderer is done, and composes the pause
 // reasons the host UI shows (a worker fault included).
-import { pauseReasons, type FromWorker, type PauseReason, type SimInput, type ToWorker, type WorkerStatus } from './messages';
+import { pauseReasons, type FromWorker, type InitOptions, type PauseReason, type SimInput, type ToWorker } from './messages';
 
 export interface Snapshot {
   tick: number;
@@ -15,53 +15,54 @@ export class SimClient {
   private mask = 0;
   /** Milliseconds left on the resume countdown when it last changed second (0: none). */
   countdownMs = 0;
-  private statusWaiters = new Map<number, (s: WorkerStatus) => void>();
-  private nextStatus = 1;
   /** Called with each snapshot; the renderer must call `release(snapshot)` when done with it. */
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
-  /** Encoded `SimToMain` events and outbound controller bytes, in order (`lines`: as text, when started with `describe`). */
+  /** Encoded `SimToMain` events and outbound controller bytes, in order (`lines`: as text, from a describing worker). */
   onMessages: (list: Uint8Array[], lines?: string[]) => void = () => {};
   onPause: (reasons: PauseReason[], countdownMs: number) => void = () => {};
   onFault: (message: string) => void = () => {};
+  /** Messages only the test chunk's worker sends (web/host/src/testing/). */
+  onOther: (msg: { kind: string } & Record<string, unknown>) => void = () => {};
 
+  /** `worker`: the shipped sim worker unless given one (the test chunk passes its own). */
   constructor(worker?: Worker) {
     this.worker = worker ?? new Worker(new URL('./sim.worker.ts', import.meta.url), { type: 'module' });
     this.worker.onmessage = (e: MessageEvent<FromWorker>) => this.receive(e.data);
     this.worker.onerror = (e) => this.receive({ kind: 'fault', message: e.message });
   }
 
-  private send(msg: ToWorker, transfer: Transferable[] = []): void {
+  send(msg: ToWorker | ({ kind: string } & Record<string, unknown>), transfer: Transferable[] = []): void {
     this.worker.postMessage(msg, transfer);
   }
 
-  private receive(msg: FromWorker): void {
-    switch (msg.kind) {
+  private receive(msg: FromWorker | ({ kind: string } & Record<string, unknown>)): void {
+    const m = msg as FromWorker;
+    switch (m.kind) {
       case 'snapshot':
-        this.onSnapshot({ tick: msg.tick, view: new DataView(msg.buf, 0, msg.bytes), buf: msg.buf });
+        this.onSnapshot({ tick: m.tick, view: new DataView(m.buf, 0, m.bytes), buf: m.buf });
         return;
       case 'messages':
-        this.onMessages(msg.list, msg.lines);
+        this.onMessages(m.list, m.lines);
         return;
       case 'pause':
-        this.mask = msg.mask;
-        this.countdownMs = msg.countdownMs;
-        this.onPause(this.pauseReasons(), msg.countdownMs);
-        return;
-      case 'status':
-        this.statusWaiters.get(msg.id)?.(msg.status);
-        this.statusWaiters.delete(msg.id);
+        this.mask = m.mask;
+        this.countdownMs = m.countdownMs;
+        this.onPause(this.pauseReasons(), m.countdownMs);
         return;
       case 'fault':
-        this.fault = msg.message;
-        this.onFault(msg.message);
+        this.fault = m.message;
+        this.onFault(m.message);
         return;
       case 'ready':
         return;
+      default:
+        this.onOther(msg as { kind: string } & Record<string, unknown>);
     }
   }
 
-  /** Starts the sim on a map (canonical bytes, or `jj.map.v1` JSON) with a seed. Resolves when the worker is ready. */
-  start(opts: { mapJson?: string; mapBytes?: Uint8Array; seed: number; poolSize?: number; describe?: boolean }): Promise<void> {
+  /** Starts the sim on a map (canonical bytes, or `jj.map.v1` JSON) with a seed. Resolves when the worker is ready.
+   *  `extra`: init options only the test chunk's worker reads. */
+  start(opts: InitOptions, extra: Record<string, unknown> = {}): Promise<void> {
     return new Promise((resolve) => {
       const prev = this.worker.onmessage;
       this.worker.onmessage = (e: MessageEvent<FromWorker>) => {
@@ -70,7 +71,7 @@ export class SimClient {
           resolve();
         } else this.receive(e.data);
       };
-      this.send({ kind: 'init', ...opts });
+      this.send({ ...extra, kind: 'init', ...opts });
     });
   }
 
@@ -98,26 +99,5 @@ export class SimClient {
     const reasons = pauseReasons(this.mask);
     if (this.fault && !reasons.includes('fault')) reasons.push('fault');
     return reasons;
-  }
-
-  // Test and bot hooks (R90): exact-tick scheduling, a stop tick, status and a deliberate panic.
-  schedule(tick: number, input: SimInput): void {
-    this.send({ kind: 'schedule', tick, input });
-  }
-
-  stopAt(tick: number): void {
-    this.send({ kind: 'stopAt', tick });
-  }
-
-  status(): Promise<WorkerStatus> {
-    const id = this.nextStatus++;
-    return new Promise((resolve) => {
-      this.statusWaiters.set(id, resolve);
-      this.send({ kind: 'status', id });
-    });
-  }
-
-  panic(): void {
-    this.send({ kind: 'panic' });
   }
 }

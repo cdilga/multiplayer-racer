@@ -1,0 +1,411 @@
+{
+  "joined": [
+    {
+      "endpoint": "fake-0",
+      "seat": 1,
+      "source": 1,
+      "car": 0
+    },
+    {
+      "endpoint": "fake-1",
+      "seat": 2,
+      "source": 1,
+      "car": 1
+    },
+    {
+      "endpoint": "fake-2",
+      "seat": 3,
+      "source": 1,
+      "car": 2
+    }
+  ],
+  "until": {
+    "held": true,
+    "tick": 189,
+    "ticks": 186
+  },
+  "state": {
+    "cars": [
+      {
+        "angvel": [
+          -1.1379491127172514e-8,
+          1.989278075598122e-9,
+          5.310389497026335e-7
+        ],
+        "autopilot": null,
+        "car": 0,
+        "forwardSpeed": 8.06010913848877,
+        "headingDeg": 90,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 1
+        },
+        "linvel": [
+          8.062968254089355,
+          -0.030619049444794655,
+          -3.644454409368336e-7
+        ],
+        "position": [
+          102.53219604492188,
+          0.8221727609634399,
+          -3.5
+        ],
+        "progress": {
+          "distanceM": 102.53219604492188,
+          "fraction": 0.16664372301072325,
+          "lateralM": -3.5,
+          "routePoint": 41
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          -0.008169139735400677,
+          0.7070596218109131,
+          0.008169146254658699,
+          0.7070596218109131
+        ],
+        "speed": 8.063026428222656,
+        "upY": 0.9997330904006958,
+        "wheels": [
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0.000006546879831148544,
+            "slipDeg": 3.5090874206389344e-8,
+            "steering": 0,
+            "suspensionForce": 1826.4879150390625,
+            "suspensionLength": 0.303360253572464
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0.000006546879831148544,
+            "slipDeg": 3.5090874206389344e-8,
+            "steering": 0,
+            "suspensionForce": 1826.4876708984375,
+            "suspensionLength": 0.303360253572464
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 29.166667938232422,
+            "sideImpulse": 0.000004765972335007973,
+            "slipDeg": -7.80531372868154e-9,
+            "steering": 0,
+            "suspensionForce": 4056.785400390625,
+            "suspensionLength": 0.2414242923259735
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 29.166667938232422,
+            "sideImpulse": 0.000004765972335007973,
+            "slipDeg": -7.80531372868154e-9,
+            "steering": 0,
+            "suspensionForce": 4056.78515625,
+            "suspensionLength": 0.2414242923259735
+          }
+        ],
+        "wheelsInContact": 4
+      },
+      {
+        "angvel": [
+          0,
+          0,
+          0
+        ],
+        "autopilot": null,
+        "car": 1,
+        "forwardSpeed": 0,
+        "headingDeg": 90,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "linvel": [
+          0,
+          -0.030619150027632713,
+          0
+        ],
+        "position": [
+          96,
+          0.8223705887794495,
+          0
+        ],
+        "progress": {
+          "distanceM": 96,
+          "fraction": 0.15602706297269206,
+          "lateralM": 0,
+          "routePoint": 38
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          0,
+          0.7071068286895752,
+          0,
+          0.7071068286895752
+        ],
+        "speed": 0.030619150027632713,
+        "upY": 1.0000001192092896,
+        "wheels": [
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.633056640625,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.633056640625,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.633056640625,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 0,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.633056640625,
+            "suspensionLength": 0.2723705470561981
+          }
+        ],
+        "wheelsInContact": 4
+      },
+      {
+        "angvel": [
+          -2.8311143651649218e-8,
+          -3.1333953155269023e-18,
+          1.8503111931522653e-8
+        ],
+        "autopilot": null,
+        "car": 2,
+        "forwardSpeed": -1.2095785484333987e-10,
+        "headingDeg": 90,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 0
+        },
+        "linvel": [
+          -2.1694418000550543e-23,
+          -0.030619515106081963,
+          -2.2711189373580964e-8
+        ],
+        "position": [
+          96,
+          0.8223706483840942,
+          3.5
+        ],
+        "progress": {
+          "distanceM": 96,
+          "fraction": 0.15602706297269206,
+          "lateralM": 3.5,
+          "routePoint": 38
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          -5.6902091927213405e-9,
+          0.7071068286895752,
+          -2.8968891729874713e-9,
+          0.7071068286895752
+        ],
+        "speed": 0.030619515106081963,
+        "upY": 1.0000001192092896,
+        "wheels": [
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": -0.000005617313490802189,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.63525390625,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": -0.000005617313490802189,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.63525390625,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": -0.000005617313490802189,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.635498046875,
+            "suspensionLength": 0.2723705470561981
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": -0.000005617313490802189,
+            "slipDeg": 0,
+            "steering": 0,
+            "suspensionForce": 2941.635498046875,
+            "suspensionLength": 0.2723705470561981
+          }
+        ],
+        "wheelsInContact": 4
+      }
+    ],
+    "debris": [
+      {
+        "halfL": 0.35000038146972656,
+        "halfW": 0.2999992370605469,
+        "x": 39.99999237060547,
+        "z": 19.500001907348633
+      },
+      {
+        "halfL": 0.35000038146972656,
+        "halfW": 0.2999992370605469,
+        "x": 42.49999237060547,
+        "z": 19.500001907348633
+      },
+      {
+        "halfL": 0.18000507354736328,
+        "halfW": 0.1800079345703125,
+        "x": 150,
+        "z": -10.000017166137695
+      },
+      {
+        "halfL": 0.18000316619873047,
+        "halfW": 0.1800079345703125,
+        "x": 154.99996948242188,
+        "z": -10.000003814697266
+      },
+      {
+        "halfL": 0.18000125885009766,
+        "halfW": 0.1800079345703125,
+        "x": 157.49998474121094,
+        "z": -9.999991416931152
+      }
+    ],
+    "host": {
+      "countdownMs": 0,
+      "held": true,
+      "pauseMask": 0,
+      "queued": 0,
+      "seats": [
+        {
+          "car": 0,
+          "colour": {
+            "index": 0,
+            "rgb": [
+              229,
+              50,
+              45
+            ]
+          },
+          "connected": true,
+          "endpoint": "fake-0",
+          "fresh": true,
+          "inputAgeMs": 50,
+          "name": "Ava",
+          "number": 1,
+          "presence": "Active",
+          "seat": 1,
+          "source": 1
+        },
+        {
+          "car": 1,
+          "colour": {
+            "index": 1,
+            "rgb": [
+              37,
+              99,
+              235
+            ]
+          },
+          "connected": true,
+          "endpoint": "fake-1",
+          "fresh": false,
+          "inputAgeMs": null,
+          "name": "Bo",
+          "number": 2,
+          "presence": "Active",
+          "seat": 2,
+          "source": 1
+        },
+        {
+          "car": 2,
+          "colour": {
+            "index": 2,
+            "rgb": [
+              255,
+              122,
+              26
+            ]
+          },
+          "connected": true,
+          "endpoint": "fake-2",
+          "fresh": false,
+          "inputAgeMs": null,
+          "name": "Cy",
+          "number": 3,
+          "presence": "Active",
+          "seat": 3,
+          "source": 1
+        }
+      ]
+    },
+    "tick": 189
+  }
+}

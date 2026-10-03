@@ -363,6 +363,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "jj-fixture"
+version = "0.2.0"
+dependencies = [
+ "jj-map",
+ "jj-session",
+ "jj-sim",
+ "jj-types",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "jj-input"
 version = "0.2.0"
 dependencies = [
@@ -443,6 +455,7 @@ name = "jj-tools"
 version = "0.2.0"
 dependencies = [
  "jj-contracts",
+ "jj-fixture",
  "jj-map",
  "jj-procgen",
  "jj-session",
@@ -465,12 +478,15 @@ dependencies = [
 name = "jj-wasm-host"
 version = "0.2.0"
 dependencies = [
+ "jj-fixture",
  "jj-input",
  "jj-map",
  "jj-protocol",
  "jj-session",
  "jj-sim",
  "jj-types",
+ "serde",
+ "serde_json",
  "sha2",
  "wasm-bindgen",
 ]

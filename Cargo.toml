@@ -19,6 +19,7 @@ jj-sim = { path = "crates/jj-sim" }
 jj-map = { path = "crates/jj-map" }
 jj-procgen = { path = "crates/jj-procgen" }
 jj-contracts = { path = "crates/jj-contracts" }
+jj-fixture = { path = "crates/jj-fixture" }
 
 # Pin the wasm-bindgen crate exactly: the CLI on the Mac, eris and CI must be the same version.
 wasm-bindgen = "=0.2.129"

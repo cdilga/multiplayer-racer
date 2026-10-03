@@ -1,4 +1,4 @@
-//! The session side of `jj sim`: seats claimed through the real seat reducer (P1-N07a) and the round director (P1-N07b)
+//! The session side of a fixture: seats claimed through the real seat reducer (P1-N07a) and the round director (P1-N07b)
 //! driven to a phase through its own inputs, never by writing its state. Ticks keep both in step with the sim.
 
 use serde::Deserialize;
@@ -8,7 +8,7 @@ use jj_session::director::{self, Director, Phase};
 use jj_session::seats::{self, Seats};
 use jj_types::{EndpointId, RequestId, SeatId, Tick};
 
-use super::SeatSpec;
+use crate::SeatSpec;
 
 /// A phase a fixture can start in.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]

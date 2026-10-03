@@ -1,0 +1,111 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), darwin/arm64",
+  "ac1": {
+    "fixture": "scenarios/introspection/three-cars.json",
+    "native": "6b69a535e76bfff6915ed11b9dd5213941cf9102547885775d02eebaa52d2981",
+    "browser": "6b69a535e76bfff6915ed11b9dd5213941cf9102547885775d02eebaa52d2981",
+    "tick": 600,
+    "spawned": [
+      0,
+      1,
+      2
+    ],
+    "checks": [
+      {
+        "actual": 57.60847473144531,
+        "atTick": null,
+        "car": 0,
+        "max": 120,
+        "metric": "progressM",
+        "min": 20,
+        "ok": true
+      },
+      {
+        "actual": 28.805328369140625,
+        "atTick": null,
+        "car": 1,
+        "max": 100,
+        "metric": "progressM",
+        "min": 5,
+        "ok": true
+      },
+      {
+        "actual": 13.11291062227749,
+        "atTick": null,
+        "car": 2,
+        "max": 100,
+        "metric": "travel",
+        "min": 1,
+        "ok": true
+      }
+    ]
+  },
+  "ac2": {
+    "joined": [
+      {
+        "endpoint": "fake-0",
+        "seat": 1,
+        "source": 1,
+        "car": 0
+      },
+      {
+        "endpoint": "fake-1",
+        "seat": 2,
+        "source": 1,
+        "car": 1
+      },
+      {
+        "endpoint": "fake-2",
+        "seat": 3,
+        "source": 1,
+        "car": 2
+      }
+    ],
+    "until": {
+      "held": true,
+      "tick": 189,
+      "ticks": 186
+    },
+    "capture": "helper-session/capture.png",
+    "meta": {
+      "name": "helper-session",
+      "commit": "4a8dc90158d7",
+      "url": "http://127.0.0.1:51461/host/?test",
+      "map": {
+        "hash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774"
+      },
+      "assets": {
+        "note": "the host loads no vehicle assets until the renderer lands (R01)"
+      },
+      "fixture": null,
+      "seed": 1,
+      "tick": 189,
+      "stateHash": "fa3115bd3ec272675dbbfe13c07762f933791304e966eb78f3cb686eaed7ad10",
+      "viewport": {
+        "width": 1280,
+        "height": 720,
+        "devicePixelRatio": 1
+      },
+      "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+      "backend": "none: the host has no renderer until R01",
+      "overlay": true,
+      "takenAt": "2026-10-03T09:01:25.037Z"
+    }
+  },
+  "ac4": {
+    "noFlag": {
+      "mode": "ready",
+      "surface": false,
+      "testRequests": []
+    },
+    "productionRealm": {
+      "mode": "ready",
+      "surface": false,
+      "testRequests": [
+        "/test/testing-DRPhdZRC.js"
+      ],
+      "ticking": true
+    },
+    "guardrail": "assertTestable refuses https://jammers.dilger.dev/host/?test"
+  }
+}

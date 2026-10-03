@@ -1,0 +1,24 @@
+{
+  "name": "helper-session",
+  "commit": "4a8dc90158d7",
+  "url": "http://127.0.0.1:51461/host/?test",
+  "map": {
+    "hash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774"
+  },
+  "assets": {
+    "note": "the host loads no vehicle assets until the renderer lands (R01)"
+  },
+  "fixture": null,
+  "seed": 1,
+  "tick": 189,
+  "stateHash": "fa3115bd3ec272675dbbfe13c07762f933791304e966eb78f3cb686eaed7ad10",
+  "viewport": {
+    "width": 1280,
+    "height": 720,
+    "devicePixelRatio": 1
+  },
+  "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+  "backend": "none: the host has no renderer until R01",
+  "overlay": true,
+  "takenAt": "2026-10-03T09:01:25.037Z"
+}

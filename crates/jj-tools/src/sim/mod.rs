@@ -1,5 +1,7 @@
 //! `jj sim` (P1-F05a, R90): the one native surface for seeing, setting up, stepping and asserting the sim and the
 //! session core. It grew from S01's scenario runner, and the scenario bank (`scenarios/*.json`) is its fixture format.
+//! The fixture format and runner live in `jj-fixture`, shared with the browser host's test surface (P1-F05b); this
+//! module is the file, printing and replay side.
 //!
 //! A fixture sets up state directly:
 //! - loads a map;
@@ -28,222 +30,16 @@
 //! checked at the end of the run.
 
 mod compare;
-mod session;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::{Value, json};
 
-use jj_sim::observe::{Metric, RouteGeom, SignatureTracker, observe_cars};
-use jj_sim::{CarId, DriveInput, Journal, Sim, SpawnPose, VehicleProfile, route_spawn};
-use jj_types::axis::{dequantise_axis, quantise_axis};
+use jj_sim::{Journal, Sim};
 
-pub use session::PhaseTarget;
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Fixture {
-    pub scenario: String,
-    pub what: String,
-    pub map: String,
-    pub seed: u64,
-    pub ticks: u64,
-    #[serde(default)]
-    pub cars: Vec<CarSpec>,
-    #[serde(default)]
-    pub seats: Vec<SeatSpec>,
-    #[serde(default)]
-    pub phase: Option<PhaseTarget>,
-    #[serde(default)]
-    pub place: Vec<PlaceSpec>,
-    /// Starts the race (countdown completion) at a tick with a lap count.
-    #[serde(default)]
-    pub race: Option<RaceSpec>,
-    /// Recover-button presses.
-    #[serde(default)]
-    pub recover: Vec<RecoverSpec>,
-    /// Spawn this many more cars through the start grid (P1-S06), after `cars`.
-    #[serde(default)]
-    pub grid: Option<usize>,
-    /// Seats joining mid-round through the placement service.
-    #[serde(default)]
-    pub drop_in: Vec<TickSpec>,
-    /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
-    #[serde(default)]
-    pub debris: Vec<DebrisSpec>,
-    /// The autopilot takes a car (`on`) or hands it back (P1-S07).
-    #[serde(default)]
-    pub autopilot: Vec<AutopilotSpec>,
-    #[serde(default)]
-    pub inputs: Vec<InputSpan>,
-    #[serde(default)]
-    pub until: Option<Until>,
-    /// Ticks at which to record the full state (the end of the run is always recorded).
-    #[serde(default)]
-    pub observe: Vec<u64>,
-    #[serde(default)]
-    pub expect: Vec<Expect>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct PoseSpec {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    #[serde(default)]
-    pub heading_deg: f32,
-    /// About the car's own forward axis (180 = on its roof, ±90 = on a side).
-    #[serde(default)]
-    pub roll_deg: f32,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RaceSpec {
-    #[serde(default = "default_laps")]
-    pub laps: u32,
-    #[serde(default)]
-    pub at_tick: u64,
-}
-
-fn default_laps() -> u32 {
-    jj_sim::race::DEFAULT_LAPS
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RecoverSpec {
-    pub tick: u64,
-    pub car: u32,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct TickSpec {
-    pub tick: u64,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct AutopilotSpec {
-    pub tick: u64,
-    pub car: u32,
-    pub on: bool,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DebrisSpec {
-    pub tick: u64,
-    pub pose: PoseSpec,
-    pub half: [f32; 3],
-}
-
-impl PoseSpec {
-    fn spawn(self) -> SpawnPose {
-        SpawnPose {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-            heading: self.heading_deg.to_radians(),
-        }
-    }
-}
-
-/// A car on route point `routePoint` (`lateral` m to the side, `lift` m up) or at an explicit `pose`, with an optional
-/// starting velocity.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct CarSpec {
-    #[serde(default)]
-    pub route_point: Option<usize>,
-    #[serde(default)]
-    pub lateral: f32,
-    #[serde(default = "default_lift")]
-    pub lift: f32,
-    #[serde(default)]
-    pub pose: Option<PoseSpec>,
-    #[serde(default)]
-    pub linvel: Option<[f32; 3]>,
-}
-
-fn default_lift() -> f32 {
-    0.6
-}
-
-/// A seat claimed through the seat reducer (Hello + Claim + a tick boundary), optionally driving car `car`.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct SeatSpec {
-    pub name: String,
-    #[serde(default)]
-    pub car: Option<u32>,
-}
-
-/// Teleports a car at a tick (a journaled setup command).
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct PlaceSpec {
-    pub tick: u64,
-    pub car: u32,
-    pub pose: PoseSpec,
-    #[serde(default)]
-    pub linvel: [f32; 3],
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InputSpan {
-    pub car: u32,
-    pub from_tick: u64,
-    #[serde(default)]
-    pub to_tick: Option<u64>,
-    #[serde(default)]
-    pub throttle: f32,
-    #[serde(default)]
-    pub steer: f32,
-    #[serde(default)]
-    pub brake: f32,
-}
-
-/// Stop early once a car's metric is inside `[min, max]`.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Until {
-    pub car: u32,
-    pub metric: Metric,
-    #[serde(default)]
-    pub min: Option<f64>,
-    #[serde(default)]
-    pub max: Option<f64>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Expect {
-    pub car: u32,
-    /// Checked after this tick; omitted, at the end of the run.
-    #[serde(default)]
-    pub at_tick: Option<u64>,
-    pub metric: Metric,
-    pub min: f64,
-    pub max: f64,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Check {
-    pub car: u32,
-    pub at_tick: Option<u64>,
-    pub metric: Metric,
-    pub min: f64,
-    pub max: f64,
-    pub actual: Option<f64>,
-    pub ok: bool,
-}
+use jj_fixture::{Check, Fixture, Harness, Recorded, profile_with};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -289,140 +85,6 @@ fn resolve(fixture_file: &Path, rel: &str) -> PathBuf {
         .unwrap_or(direct)
 }
 
-/// The provisional Cruz profile with `--set` overrides applied by field name (`max_engine_force=4000`).
-pub fn profile_with(set: &[(String, String)]) -> Result<VehicleProfile, String> {
-    let mut v =
-        serde_json::to_value(VehicleProfile::provisional_cruz()).map_err(|e| e.to_string())?;
-    for (k, raw) in set {
-        let obj = v.as_object_mut().ok_or("the profile isn't an object")?;
-        if !obj.contains_key(k) {
-            let keys: Vec<&String> = obj.keys().collect();
-            return Err(format!("--set: no profile field {k:?}; fields: {keys:?}"));
-        }
-        let val: Value = serde_json::from_str(raw).unwrap_or(Value::String(raw.clone()));
-        obj.insert(k.clone(), val);
-    }
-    serde_json::from_value(v).map_err(|e| format!("--set: {e}"))
-}
-
-fn signature_json(car: u32, t: &SignatureTracker) -> Value {
-    let mut m = serde_json::Map::new();
-    m.insert("car".into(), json!(car));
-    for (name, v) in t.signature() {
-        m.insert(name.into(), json!(v));
-    }
-    Value::Object(m)
-}
-
-/// Debris footprints on the ground (centre and half extents, m) for snapshots.
-fn debris(sim: &Sim) -> Vec<Value> {
-    sim.debris_footprints()
-        .iter()
-        .map(|d| json!({ "x": d.x, "z": d.z, "halfW": d.half_w, "halfL": d.half_l }))
-        .collect()
-}
-
-/// Observes the run tick by tick: signatures, envelope checks, snapshots and the trace.
-struct Recorder<'a> {
-    fx: &'a Fixture,
-    route: &'a RouteGeom,
-    trace_on: bool,
-    trackers: Vec<SignatureTracker>,
-    checks: Vec<Check>,
-    observations: Vec<Value>,
-    trace: Vec<Value>,
-    /// How much of the journal earlier trace rows have reported.
-    seen_setup: usize,
-    seen_inputs: usize,
-    seen_race: usize,
-}
-
-impl Recorder<'_> {
-    /// What changed the sim since the previous row: the journal's setup commands and input changes, and the race's events
-    /// (gates, laps, assist, respawns, the race end; P1-S05), each with its tick. Contacts and detaches join later (S04).
-    fn events(&mut self, sim: &Sim) -> Vec<Value> {
-        let j = sim.journal();
-        let mut events: Vec<Value> = j.setup[self.seen_setup..]
-            .iter()
-            .map(|(at, setup)| json!({ "at": at, "setup": setup }))
-            .collect();
-        events.extend(j.entries[self.seen_inputs..].iter().map(|e| {
-            json!({ "at": e.tick, "input": { "car": e.car, "throttle": dequantise_axis(e.input.throttle),
-                                             "steer": dequantise_axis(e.input.steer),
-                                             "brake": dequantise_axis(e.input.brake) } })
-        }));
-        (self.seen_setup, self.seen_inputs) = (j.setup.len(), j.entries.len());
-        let race = sim.race().events();
-        events.extend(
-            race[self.seen_race..]
-                .iter()
-                .map(|(at, e)| json!({ "at": at, "race": e })),
-        );
-        self.seen_race = race.len();
-        events
-    }
-
-    /// Records the state after a tick (`end`: the last one); returns whether the `until` predicate holds.
-    fn record(&mut self, sim: &Sim, session: &session::Session, end: bool) -> bool {
-        let cars = observe_cars(sim, self.route);
-        // Cars that joined mid-run (grid, drop-in) get a tracker from where they first appear.
-        for o in cars.iter().skip(self.trackers.len()) {
-            let p = o.position;
-            let spawn = SpawnPose {
-                x: p[0],
-                y: p[1],
-                z: p[2],
-                heading: o.heading_deg.to_radians(),
-            };
-            self.trackers.push(SignatureTracker::new(spawn, self.route));
-        }
-        for (t, o) in self.trackers.iter_mut().zip(&cars) {
-            t.update(o);
-        }
-        let tick = sim.tick();
-        self.check(tick, end);
-        if end || self.fx.observe.contains(&tick) {
-            self.observations
-                .push(json!({ "tick": tick, "cars": cars, "debris": debris(sim), "session": session.observe() }));
-        }
-        if self.trace_on {
-            let events = self.events(sim);
-            self.trace
-                .push(json!({ "tick": tick, "cars": cars, "events": events }));
-        }
-        self.fx.until.as_ref().is_some_and(|u| {
-            self.trackers
-                .get(u.car as usize)
-                .and_then(|t| t.metric(u.metric))
-                .is_some_and(|v| u.min.is_none_or(|m| v >= m) && u.max.is_none_or(|m| v <= m))
-        })
-    }
-
-    /// `until` stopped the run at this tick: it's the end, so check the end-of-run envelopes and snapshot it.
-    fn end_here(&mut self, sim: &Sim, session: &session::Session) {
-        let tick = sim.tick();
-        self.check(tick, true);
-        if !self.fx.observe.contains(&tick) {
-            self.observations.push(
-                json!({ "tick": tick, "cars": observe_cars(sim, self.route), "debris": debris(sim), "session": session.observe() }),
-            );
-        }
-    }
-
-    fn check(&mut self, tick: u64, end: bool) {
-        for c in self
-            .checks
-            .iter_mut()
-            .filter(|c| c.at_tick == Some(tick) || (end && c.at_tick.is_none()))
-        {
-            if let Some(t) = self.trackers.get(c.car as usize) {
-                c.actual = t.metric(c.metric);
-                c.ok = c.actual.is_some_and(|v| v >= c.min && v <= c.max);
-            }
-        }
-    }
-}
-
 pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     let fx: Fixture = serde_json::from_slice(&std::fs::read(file).map_err(|e| e.to_string())?)
         .map_err(|e| format!("bad fixture: {e}"))?;
@@ -444,7 +106,6 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
         )
     })?;
     let profile = profile_with(&opts.set)?;
-    let route = RouteGeom::new(&map.map);
     let tuned: Vec<String> = opts.set.iter().map(|(k, v)| format!("{k}={v}")).collect();
     let out_dir = opts.out.clone().unwrap_or_else(|| {
         let suffix = if tuned.is_empty() { "" } else { "-tuned" };
@@ -452,126 +113,34 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     });
     std::fs::create_dir_all(&out_dir).map_err(|e| format!("{}: {e}", out_dir.display()))?;
 
-    // Set up: cars (journaled), seats and the director (through their own inputs).
+    // Set up (cars journaled; seats and the director through their own inputs), then step under the fixture's script.
+    let (scenario, what, ticks) = (fx.scenario.clone(), fx.what.clone(), fx.ticks);
     let mut sim = Sim::new(&map, &registry, fx.seed, profile.clone());
-    let mut spawns = Vec::new();
-    for (i, c) in fx.cars.iter().enumerate() {
-        let pose = match (c.pose, c.route_point) {
-            (Some(p), _) => p.spawn(),
-            (None, Some(rp)) => route_spawn(&map, rp, c.lateral, c.lift),
-            (None, None) => return Err(format!("cars[{i}] needs routePoint or pose")),
-        };
-        let id = sim.spawn_car(pose);
-        let roll = c.pose.map_or(0.0, |p| p.roll_deg.to_radians());
-        if c.linvel.is_some() || roll != 0.0 {
-            sim.place_car(id, pose, roll, c.linvel.unwrap_or([0.0; 3]));
-        }
-        spawns.push(pose);
-    }
-    if let Some(n) = fx.grid {
-        for id in sim.spawn_grid(n) {
-            let pose = sim.grid_pose(id.0 as usize);
-            spawns.push(pose);
-        }
-    }
-    let mut session = session::Session::new(&fx.seats)?;
-    if let Some(phase) = fx.phase {
-        session.jump(phase)?;
-    }
-
-    let mut rec = Recorder {
-        fx: &fx,
-        route: &route,
-        trace_on: opts.trace,
-        trackers: spawns
-            .iter()
-            .map(|&s| SignatureTracker::new(s, &route))
-            .collect(),
-        checks: fx
-            .expect
-            .iter()
-            .map(|e| Check {
-                car: e.car,
-                at_tick: e.at_tick,
-                metric: e.metric,
-                min: e.min,
-                max: e.max,
-                actual: None,
-                ok: false,
-            })
-            .collect(),
-        observations: Vec::new(),
-        trace: Vec::new(),
-        seen_setup: 0,
-        seen_inputs: 0,
-        seen_race: 0,
-    };
+    let mut harness = Harness::new(fx, &map, &mut sim, opts.trace)?;
     let mut stopped_early = false;
-    rec.record(&sim, &session, fx.ticks == 0);
-    while sim.tick() < fx.ticks {
-        let t = sim.tick();
-        if let Some(r) = fx.race.as_ref().filter(|r| r.at_tick == t) {
-            sim.start_race(r.laps);
-        }
-        for p in fx.place.iter().filter(|p| p.tick == t) {
-            sim.place_car(
-                CarId(p.car),
-                p.pose.spawn(),
-                p.pose.roll_deg.to_radians(),
-                p.linvel,
-            );
-        }
-        for r in fx.recover.iter().filter(|r| r.tick == t) {
-            sim.recover(CarId(r.car));
-        }
-        for d in fx.debris.iter().filter(|d| d.tick == t) {
-            sim.spawn_debris(d.pose.spawn(), d.half);
-        }
-        for _ in fx.drop_in.iter().filter(|d| d.tick == t) {
-            sim.drop_in();
-        }
-        for a in fx.autopilot.iter().filter(|a| a.tick == t) {
-            sim.set_autopilot(CarId(a.car), a.on);
-        }
-        for car in 0..sim.cars().count() as u32 {
-            let span =
-                fx.inputs.iter().rev().find(|i| {
-                    i.car == car && i.from_tick <= t && i.to_tick.is_none_or(|end| t < end)
-                });
-            let input = span.map_or(DriveInput::default(), |i| DriveInput {
-                throttle: quantise_axis(i.throttle),
-                steer: quantise_axis(i.steer),
-                brake: quantise_axis(i.brake.max(0.0)),
-            });
-            sim.set_input(CarId(car), input);
-        }
+    harness.record(&sim, ticks == 0);
+    while sim.tick() < ticks {
+        harness.before_step(&mut sim);
         sim.step();
-        session.step(sim.tick());
-        let last = sim.tick() == fx.ticks;
-        if rec.record(&sim, &session, last) && !last {
+        let last = sim.tick() == ticks;
+        if harness.after_step(&sim, last) && !last {
             stopped_early = true;
-            rec.end_here(&sim, &session);
+            harness.end_here(&sim);
             break;
         }
     }
-    let Recorder {
-        trackers,
+    let Recorded {
         checks,
+        signature,
         observations,
         trace,
-        ..
-    } = rec;
+    } = harness.finish();
     // Replay the journal from its bytes: same hash, or the run isn't reproducible.
     let journal = Journal::from_bytes(&sim.journal().to_bytes()).map_err(|e| e.to_string())?;
     let replayed = Sim::replay(&map, &registry, profile, &journal, sim.tick());
     let state_hash = jj_map::hex(&sim.state_hash());
     let replay_hash = jj_map::hex(&replayed.state_hash());
     let replay_matches = state_hash == replay_hash;
-    let signature: Vec<Value> = trackers
-        .iter()
-        .enumerate()
-        .map(|(i, t)| signature_json(i as u32, t))
-        .collect();
 
     let write = |name: &str, bytes: &[u8]| {
         std::fs::write(out_dir.join(name), bytes).map_err(|e| format!("{name}: {e}"))
@@ -584,7 +153,7 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
             lines.push('\n');
         }
         lines.push_str(
-            &json!({ "summary": { "scenario": fx.scenario, "ticks": sim.tick(), "stateHash": state_hash,
+            &json!({ "summary": { "scenario": scenario, "ticks": sim.tick(), "stateHash": state_hash,
                                    "tuned": tuned, "signature": signature } })
             .to_string(),
         );
@@ -596,8 +165,8 @@ pub fn run(file: &Path, opts: &Options) -> Result<Outcome, String> {
     };
     let outcome = Outcome {
         ok: checks.iter().all(|c| c.ok) && replay_matches,
-        scenario: fx.scenario,
-        what: fx.what,
+        scenario,
+        what,
         ticks: sim.tick(),
         stopped_early,
         state_hash,

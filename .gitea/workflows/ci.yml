@@ -36,9 +36,13 @@ jobs:
       - name: Check (wasm facades)
         run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
       - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+        run: |
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
       - name: Test
-        run: cargo test --workspace --locked
+        run: |
+          cargo test --workspace --locked
+          cargo test -p jj-wasm-host --features testing --locked
       - name: WASM parity in Node (jj-map P1-M01, jj-procgen P1-M03a)
         run: |
           if ! wasm-bindgen-test-runner --version 2>/dev/null | grep -q ' 0\.2\.129'; then
@@ -61,9 +65,10 @@ jobs:
       - name: cargo deny
         run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
 
-  # The host's sim worker as WASM in a real module Web Worker in headless Chromium (P1-S02): render cadence, source
-  # parity, hide/resume, buffer starvation, panic → fault. Its own target dir so it never waits on the rust job's lock.
-  host-worker:
+  # The web build, on a rust runner since the host bundles the sim worker's WASM (P1-S02): both jj-wasm-host builds,
+  # the pages, the bundle and origin checks, then the host in headless Chromium: the sim worker (P1-S02) and the test
+  # surface against the native `jj sim` hash (P1-F05b). Its own target dir so it never waits on the rust job's lock.
+  web:
     runs-on: rust
     timeout-minutes: 30
     env:
@@ -84,34 +89,31 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
           fi
           echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
+          "$CARGO_HOME/bin/rustup" show active-toolchain || "$CARGO_HOME/bin/rustup" toolchain install
           if ! "$CARGO_HOME/bin/wasm-bindgen" --version 2>/dev/null | grep -q ' 0\.2\.129'; then
             curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
             cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen "$CARGO_HOME/bin/"
           fi
-      - name: Build the worker's WASM (scripts/build-host-wasm.sh)
+      - name: The sim worker's WASM, shipped and testing builds (scripts/build-host-wasm.sh)
         run: scripts/build-host-wasm.sh
       - run: npm ci && npm --prefix web ci
-      - name: Typecheck the worker and build the harness
+      - name: Typecheck the two workers (their own WebWorker programs)
         run: |
           npx --prefix web tsc --noEmit -p web/host/src/worker/tsconfig.json
-          npx --prefix web vite build --config web/host/tests/vite.config.ts
-      - name: Chromium headless shell (Playwright 1.62.1)
-        run: npx playwright install --with-deps --only-shell chromium
-      - name: Sim worker in Chromium (P1-S02)
-        run: node --test web/host/tests/
-
-  web:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - run: npm --prefix web ci
+          npx --prefix web tsc --noEmit -p web/host/src/testing/tsconfig.json
       - run: npm --prefix web run build
+      - name: No test code in the shipped bundles (P1-F05b)
+        run: node scripts/ci/bundle-check.mjs web/dist
       - name: Runtime origins (P1-F03, R70)
         run: npm --prefix web run qualify && node scripts/ci/origin-scan.mjs web/dist web/dist-qualify
+      - name: The S02 harness and the native jj (for the hash comparison)
+        run: |
+          npx --prefix web vite build --config web/host/tests/vite.config.ts
+          cargo build --locked -q -p jj-tools --bin jj
+      - name: Chromium headless shell (Playwright 1.62.1)
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface)
+        run: JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test web/host/tests/
 
   checks:
     runs-on: ubuntu-latest

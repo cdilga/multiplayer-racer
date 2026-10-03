@@ -1,0 +1,9 @@
+{
+  "//": "The testing worker runs in a WebWorker scope and imports pkg/, which only exists after scripts/build-host-wasm.sh, so web/tsconfig.json leaves it out and CI checks it here once the pkg is built.",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "WebWorker"],
+    "types": []
+  },
+  "include": ["testing.worker.ts", "messages.ts", "../worker/core.ts", "../worker/messages.ts"]
+}

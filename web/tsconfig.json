@@ -30,6 +30,9 @@
   ],
   "exclude": [
     "host/src/worker/sim.worker.ts",
-    "host/src/worker/pkg"
+    "host/src/worker/core.ts",
+    "host/src/worker/pkg",
+    "host/src/testing/testing.worker.ts",
+    "host/src/testing/pkg"
   ]
 }

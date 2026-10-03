@@ -64,3 +64,13 @@
 - `rch exec -- cargo run …` returns the program's stdout on stderr (mixed with RCH's logs) and pulls the worker's Linux
   binaries into the local `target/debug/`, where a later local `cargo run` can find them fresh and fail with an exec
   format error. Extract the output from stderr, and delete a pulled binary (`file target/debug/jj`) before running locally.
+- Two builds of one wasm crate (P1-F05b): `cargo build -p jj-wasm-host` and `… --features testing` both write
+  `target/wasm32-unknown-unknown/<profile>/jj_wasm_host.wasm`, so run wasm-bindgen after each build, before the next
+  overwrites it (`scripts/build-host-wasm.sh`). `--out-name` gives the testing build distinct file names, which the vite
+  config uses to route it under `dist/test/`.
+- Vite (8, rolldown) names a dynamically imported chunk, a `new Worker(new URL(…))` worker and the worker's
+  `new URL('*.wasm', import.meta.url)` asset after their source files. `web/vite.config.ts` sends anything whose name
+  contains `testing` to `test/` through `entryFileNames`, `chunkFileNames` and `assetFileNames`, in both
+  `build.rollupOptions.output` and `worker.rollupOptions.output`. `scripts/ci/bundle-check.mjs` catches a slip.
+- The worker guard hook (`.claude/hooks/worker-guard.sh`) matches the text `cargo … --workspace` anywhere in a Bash
+  command, heredoc bodies included. Write files that mention it (CI YAML, scripts) with the Write tool instead.
