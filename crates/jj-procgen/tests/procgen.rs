@@ -1,7 +1,7 @@
 //! P1-M03a: seeds are recipes, canonical bytes are the evidence. The same seed gives the same bytes (and the committed
 //! golden hashes, which `wasm_parity.rs` checks in WASM too); changing only the dressing stream never moves the route;
 //! generated maps pass the `jj-map` validator. Re-bless the goldens after an intended generator change with
-//! `JJ_BLESS=1 cargo test -p jj-procgen --test procgen` (and bump `PLACEHOLDER_VERSION`).
+//! `JJ_BLESS=1 cargo test -p jj-procgen --test procgen` (and bump `GENERATOR_VERSION`).
 
 use jj_map::{Registry, canonical_bytes, gameplay_hash, hex, validate};
 use jj_procgen::seed::{Rng, Streams};
@@ -39,7 +39,7 @@ fn seeds_hash_to_the_committed_goldens() {
     }
     assert_eq!(
         GOLDENS, actual,
-        "the generator's output changed: bump PLACEHOLDER_VERSION and re-bless (JJ_BLESS=1)"
+        "the generator's output changed: bump GENERATOR_VERSION and re-bless (JJ_BLESS=1)"
     );
 }
 
@@ -62,7 +62,7 @@ fn changing_only_the_dressing_stream_never_moves_the_route() {
         for other in [seed.wrapping_add(1), seed ^ 0x5555_5555_5555_5555, !seed] {
             let mut st = Streams::new(seed);
             st.dressing = Rng::stream(other, "dressing");
-            let swapped = generate_from(st);
+            let swapped = generate_from(st).0;
             assert_eq!(
                 swapped.route, base.route,
                 "seed {seed}: the route moved when only the dressing stream changed"
@@ -81,5 +81,5 @@ fn changing_only_the_dressing_stream_never_moves_the_route() {
 fn changing_the_structure_stream_does_move_the_route() {
     let mut st = Streams::new(7);
     st.structure = Rng::stream(8, "structure");
-    assert_ne!(generate_from(st).route, generate(7).route);
+    assert_ne!(generate_from(st).0.route, generate(7).route);
 }

@@ -2,8 +2,9 @@
 # The CI lanes for a commit on Gitea (P1-D01), so nobody queries Gitea by hand.
 #
 # Usage: scripts/ci-status.sh [--wait] [--timeout <s>] [<rev>]   (rev defaults to HEAD)
-#   Prints one line per lane: state, lane name, run link. Lanes are Gitea's commit statuses for the commit
-#   (one per workflow job), read through `tea api` with the `gitea-lan` login, so no token is handled here.
+#   Prints one line per lane: state, lane name, run link. Lanes are the `CI` workflow's commit statuses for the commit
+#   (one per job), read through `tea api` with the `gitea-lan` login, so no token is handled here. Other workflows on
+#   the commit (deploys such as `POC deploy`) are printed with "(not a lane)" and never decide the exit code.
 #   --wait polls every 20 s until no lane is pending, or until --timeout (default 3600 s).
 #
 # The last line is the run's URL (scripts/beads/close.sh cites it as the receipt).
@@ -37,11 +38,15 @@ if not isinstance(data, list):                         # Gitea answers an error 
     data = []
 for s in data:                                         # newest first; keep the newest status per lane
     latest.setdefault(s["context"], s)
-code = 2 if not latest else 0
+lanes = {c: s for c, s in latest.items() if c.startswith("CI /")}
+code = 2 if not lanes else 0
 for ctx, s in sorted(latest.items()):
     state = s["status"] if "status" in s else s.get("state", "pending")
     link = s.get("target_url") or ""
     if link.startswith("/"): link = os.environ["GITEA_BASE"] + link
+    if ctx not in lanes:
+        print(f"{state:8} {ctx}  {link}  (not a lane)")
+        continue
     print(f"{state:8} {ctx}  {link}")
     run = link.split("/jobs/")[0]
     if run and run not in runs: runs.append(run)

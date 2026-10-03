@@ -1,0 +1,40 @@
+{
+ "valid": 100,
+ "fallbacks": 0,
+ "meanAttempts": 7.02,
+ "cornerMix": {
+  "chicane": 98,
+  "hairpin": 125,
+  "medium": 198,
+  "sweeper": 127
+ },
+ "lengthM": {
+  "min": 704.3,
+  "max": 1094.3,
+  "mean": 887.9
+ },
+ "attempts": {
+  "max": 27
+ },
+ "rejectReasons": {
+  "corner out of range after fitting the turn budget": 231,
+  "longer than the length band": 212,
+  "no pair of straights closes the loop": 75,
+  "shorter than the length band": 30,
+  "two hairpins back to back": 54
+ },
+ "coursesByMix(hairpin,sweeper,medium,chicane)": {
+  "(1, 2, 1, 1)": 8,
+  "(1, 1, 2, 2)": 7,
+  "(1, 1, 3, 2)": 6,
+  "(1, 1, 3, 0)": 6,
+  "(1, 2, 1, 2)": 5,
+  "(1, 2, 1, 0)": 5,
+  "(1, 1, 2, 1)": 5,
+  "(1, 2, 2, 1)": 4,
+  "(1, 2, 3, 0)": 4,
+  "(2, 1, 0, 1)": 3,
+  "(2, 1, 0, 2)": 3,
+  "(1, 1, 4, 1)": 3
+ }
+}

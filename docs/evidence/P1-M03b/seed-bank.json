@@ -1,0 +1,2167 @@
+{
+  "cornerMix": {
+    "chicane": 98,
+    "hairpin": 125,
+    "medium": 198,
+    "sweeper": 127
+  },
+  "fallbacks": 0,
+  "meanAttempts": 7.02,
+  "rows": [
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 827.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2
+        }
+      },
+      "gameplayHash": "2c9f90d21033bb3459e4cac5ccebac54df926dc7e52b3057c45cb9c157bfd628",
+      "ok": true,
+      "seed": 0,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 12,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 967.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 3,
+          "no pair of straights closes the loop": 3,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "a629b3d61fb1a4e3e77f1e0ab205764496ef2b30fce38615c730761a72fa693b",
+      "ok": true,
+      "seed": 1,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 803.6,
+        "rejects": {}
+      },
+      "gameplayHash": "9d451691f5bc01c35994f0d0f3dc89666ebe69f84f81f33234d927113ab16294",
+      "ok": true,
+      "seed": 2,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 15,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 743.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 6,
+          "no pair of straights closes the loop": 3,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "4a0d874e2e6ccecdfff50773a553186a792ae8018712c3ece6c1092e99d000c5",
+      "ok": true,
+      "seed": 3,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 997.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 2
+        }
+      },
+      "gameplayHash": "b0f0a4980485d5fed562d084fd05c72c6fcdf915635da3e830cd557e85701998",
+      "ok": true,
+      "seed": 4,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 970.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 2
+        }
+      },
+      "gameplayHash": "e80bb3f9e7a8bb7e6fd8f8a25c0cb1a8b22d098072708522e0086d07971d347e",
+      "ok": true,
+      "seed": 5,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 902.0,
+        "rejects": {}
+      },
+      "gameplayHash": "94e35a05b46023ae9ebedf0d6b70e1b2578e724e0d4ee00a3b8537b85f2874e2",
+      "ok": true,
+      "seed": 6,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 5,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 913.1,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 4,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "2bbf95ed34aaee02b9e52ce6a31a029e13b765765f7dff7529459399cd156624",
+      "ok": true,
+      "seed": 7,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 13,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1051.9,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 6,
+          "longer than the length band": 3,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "1949714a339a68a198faae754891dbe9c7d496de292987be4ccc09082412a32f",
+      "ok": true,
+      "seed": 8,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 8,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1006.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "98ab6721f7e3e49c96aa14b7256283ae8693cd4484a4f842610a8e5efb69e67c",
+      "ok": true,
+      "seed": 9,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 886.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "a34782fdd8483469ae5e423f580759b3be1a23a9ec609217269b797373462026",
+      "ok": true,
+      "seed": 10,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 731.6,
+        "rejects": {
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "f0dbfd1a88d4dd4ba68ebde130cfa2791acce98e3b718da24eb61fb4f6f2dcf9",
+      "ok": true,
+      "seed": 11,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1020.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "81d857430fe0346548b64edaab51023860bb13e7bf0c7753ee30ea0842bf2485",
+      "ok": true,
+      "seed": 12,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 761.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "f62eccd582e2c110f29090f700a7a7ba62e680dc8f1275cf82fe5dbbf4d7150c",
+      "ok": true,
+      "seed": 13,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1058.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "704379e02d346f37342ee57d291f4b30238acd59f6190449ca22cc3deca3db7e",
+      "ok": true,
+      "seed": 14,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 7,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1020.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "0448f26b3beb053f2073d00f6bd7f66457cb4e0ba375ab6714a6d05f55da411f",
+      "ok": true,
+      "seed": 15,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1063.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "661b5f2852c4d4c43e9f3232a32de06b399d642c67db799b8a09aaa92bdcde7c",
+      "ok": true,
+      "seed": 16,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 840.8,
+        "rejects": {
+          "longer than the length band": 2
+        }
+      },
+      "gameplayHash": "00c16fce1867a5da74b458f75b1937d04b8dd47895e9eab2faa032084ea2815d",
+      "ok": true,
+      "seed": 17,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 806.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "f1c26f709e29f0723975af2e2f03d07519a28d85229ddceaffc21e6d3583ef2d",
+      "ok": true,
+      "seed": 18,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 776.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 2,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "d8907c0bb3aeea63c4f8ed5f2cc026050dafadd24ec20909ed93d7aad69fee3a",
+      "ok": true,
+      "seed": 19,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 9,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 781.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "e97c27b897d36b5e129f67443080071f6fb3b7242d112a7ebbf417c8a7489c43",
+      "ok": true,
+      "seed": 20,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 4,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 817.0,
+        "rejects": {
+          "longer than the length band": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "61e07b5d1c1f31621ce0286422a45f68c471e60b6692473d3c399810faa833b0",
+      "ok": true,
+      "seed": 21,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 814.1,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "bced0d34498785a5402b999341170edb6b665a215285bb010f789421597b6fd8",
+      "ok": true,
+      "seed": 22,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 4,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1094.3,
+        "rejects": {
+          "longer than the length band": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "63e6ec60657d19de21e9c083d97f2e1f4a63f99eb8caf2ce7327902c80458d8c",
+      "ok": true,
+      "seed": 23,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 888.1,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 3,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "133c52d6df00e8c0cc792bf335120953cb2b7bde741727b35f18719ac8a84d9b",
+      "ok": true,
+      "seed": 24,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 7,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 741.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 5
+        }
+      },
+      "gameplayHash": "37be92981e615a3b7c0fe526c6381fa330b76042573152c329acd1c8b9a2b8a6",
+      "ok": true,
+      "seed": 25,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1012.5,
+        "rejects": {
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "d01855dc0b6d1fb6ae4cdd51bb08c86213ab29d7474d857755cd53ed0476bec2",
+      "ok": true,
+      "seed": 26,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 824.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 6,
+          "longer than the length band": 4
+        }
+      },
+      "gameplayHash": "8365596a3ed5409fee01814daa6cb6e730b0a5e579907a83a827f8de5d70f3eb",
+      "ok": true,
+      "seed": 27,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 916.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 3,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "cf816725d85d1ff5c5bdb351b176570797264df5751582909cdf8b52d92a3c56",
+      "ok": true,
+      "seed": 28,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 911.5,
+        "rejects": {
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "dd4c330fb4bd87683e09d07e76a303679b136d245a854186f41bdc574585bc7b",
+      "ok": true,
+      "seed": 29,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 0,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 968.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "972df7757b81a96dabc716a40755fd063d56a9de4bed5985b5aea0b566b55ea0",
+      "ok": true,
+      "seed": 30,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 828.2,
+        "rejects": {}
+      },
+      "gameplayHash": "7c8905ac27bd78c9b9488f8485cd4d25643f27d0b89ea17ea29e984a191ead49",
+      "ok": true,
+      "seed": 31,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 949.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 5,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "6062ac8ecdceff28ffa455c5744032de1d3e4b1981fb49b6030dd2d218aec00b",
+      "ok": true,
+      "seed": 32,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 870.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "2e4d0f5e1ea72e3c743fc8e0b62c021facd6e77867a4fb5a28726295c6e1b3a5",
+      "ok": true,
+      "seed": 33,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 919.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "89bc0e0d80c247278cf42f3afba7f8e1a299e03ffc80d9374e1a31e044b68e47",
+      "ok": true,
+      "seed": 34,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 894.7,
+        "rejects": {}
+      },
+      "gameplayHash": "6e99c51ba6d00ceec49aa6f07e65fd849456425802b0a5db0912c809f038a843",
+      "ok": true,
+      "seed": 35,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 15,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 892.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 7,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 3
+        }
+      },
+      "gameplayHash": "a9ac7fcadf60c67ccfdf03ac1093787f666b57fc50a64e217f65e75e4fe8bfe3",
+      "ok": true,
+      "seed": 36,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 872.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 3,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "7073cfb8e2759a2856a3b5b805f523c67ed272d6ac9e2f76288f750cc66f4561",
+      "ok": true,
+      "seed": 37,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 4,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 765.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2
+        }
+      },
+      "gameplayHash": "a36ea3be2acab355c73ed67c6c08aa6d519ebc06a0d179332f95e03b8e138a70",
+      "ok": true,
+      "seed": 38,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 715.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "bd0b05077ed97ebf232c3776261f415d1ce60a939add30b86e36109ff2db3340",
+      "ok": true,
+      "seed": 39,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 721.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "9ee54c4ddce0d781611a7a9ee329eb04f210f44acc7f570a036dab5729e81173",
+      "ok": true,
+      "seed": 40,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 898.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "76a9daa6172b1c0c4e46dafb5f849ffa0e64cca9b12bd5cf3cbf764dd22f5fdf",
+      "ok": true,
+      "seed": 41,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 17,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 983.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 7,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 2,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "ce1d3bd69f083ff46ce3b27844ce28d6ccb3df82d718150e0885154dba9e1ba0",
+      "ok": true,
+      "seed": 42,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 982.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "609011fd39c83054bf56d1d6176ee99e4ec588f33c0a15aaddaf2ee5bf49e8dd",
+      "ok": true,
+      "seed": 43,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 910.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "a08d52793d8415b187049859a0765260e8a548e9d79fdc5ccd72e9654104724f",
+      "ok": true,
+      "seed": 44,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 7,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 895.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 3,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "cece380d6a2ca99ad3bd539502724d2edc5f1fd303c3f3e8194a738362af74b2",
+      "ok": true,
+      "seed": 45,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 10,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 861.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 5,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "51bd7801ee2f2836ed5214911a509530e67606079269b17c946b0688953919e4",
+      "ok": true,
+      "seed": 46,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 12,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 858.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 7,
+          "longer than the length band": 3,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "857237e3a15d5dc12b0913275f899ee221b04e43f8267f8ff39e5995d4ef7bc5",
+      "ok": true,
+      "seed": 47,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 909.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "474626250d23ab6d5135e9118cbcefc731d504cd74c2eb89b240419a822d0ba6",
+      "ok": true,
+      "seed": 48,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 17,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1006.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "longer than the length band": 6,
+          "no pair of straights closes the loop": 3,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "2a5341ae76d5bcf4114f781943fec92e711df45417ddfbd056b50e284e03f71a",
+      "ok": true,
+      "seed": 49,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 826.4,
+        "rejects": {}
+      },
+      "gameplayHash": "352b4074dc35065e804ba7359b7513d9323c125e24e8bf582956adcfd889745a",
+      "ok": true,
+      "seed": 50,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 906.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "32bb2f67b24ae52f0cfccb6beb42ed4e0265f1ee9bf3daa9b3bc84b9dcfa85a5",
+      "ok": true,
+      "seed": 51,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 24,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 727.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 6,
+          "longer than the length band": 10,
+          "no pair of straights closes the loop": 3,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 3
+        }
+      },
+      "gameplayHash": "9758b1b5da36e143c59567781a515fdaf813f9f3f2e11e8aa4b239b8136763c3",
+      "ok": true,
+      "seed": 52,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 4,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 779.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "01b1d4b46146634099cdbaa1172d61afd624e3eb4a6ad0d5e84aa26a5f113a20",
+      "ok": true,
+      "seed": 53,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 907.8,
+        "rejects": {
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "7977d56a254fe4d3ee883d0b5e4f8aa42ac93ff8491a950f7be7547940bd52d5",
+      "ok": true,
+      "seed": 54,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 14,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 741.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 5,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "d54d6f153696427a450a95dabcc1f973b607d0976d38ea23616a43093539e8ac",
+      "ok": true,
+      "seed": 55,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 873.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 2
+        }
+      },
+      "gameplayHash": "d2fb133bc8178e1304fb71270db30c7462d639920867da2ca31f21b5d3a5032e",
+      "ok": true,
+      "seed": 56,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 852.9,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "ec9ee212e6b5003405def69f6051a15d49b8863fdd8b876d713ff5e107251c5e",
+      "ok": true,
+      "seed": 57,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1090.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 5,
+          "no pair of straights closes the loop": 2,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "9c44a14dc249d4ef0a733e9c454b096aa4e85dc54a495c7096927ed8f4e554fe",
+      "ok": true,
+      "seed": 58,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 21,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 992.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 8,
+          "longer than the length band": 5,
+          "no pair of straights closes the loop": 4,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "52316488308f1efa243b5f7f551b611f5f59be3203d0cba87b154f774b40ee75",
+      "ok": true,
+      "seed": 59,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 7,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 751.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "086717e6b497eb85b6bf87ebebea4a9696ac0c47f1a8e43a3b7d780add7b17f0",
+      "ok": true,
+      "seed": 60,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 789.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "29d7d9abc9c9b83f0e302350aa67ad19c23d0edbb55b735ee4612aa730e12d18",
+      "ok": true,
+      "seed": 61,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 16,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1019.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 8,
+          "longer than the length band": 5,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "6c114b8918cf38153f6eae620c8e6b9d2047e446b5044193849e92fd1a6031e3",
+      "ok": true,
+      "seed": 62,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 8,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 853.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 4
+        }
+      },
+      "gameplayHash": "aed563a65419623e10e323ce40f4b750f4af7f8352f0e2f078d2b8e00053c967",
+      "ok": true,
+      "seed": 63,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 729.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "d30acbb45f4181803cdd66159f732dd02ad5fed9b145fc93214c91ebbeda7b24",
+      "ok": true,
+      "seed": 64,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 14,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 895.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 7,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "15263a019864083bb9d1a1af687789c99ad09d43699b00cb395228e10a82738e",
+      "ok": true,
+      "seed": 65,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 4,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 0,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 986.7,
+        "rejects": {
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "081af89599864fe4178c7cca205a0db00a489d0a1943007c80147f8522d151d6",
+      "ok": true,
+      "seed": 66,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 10,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1027.9,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 3,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "db4c50e5f5d30fd7eb128c31d8895cd4f3de4522495f3f69e32045720598b8ca",
+      "ok": true,
+      "seed": 67,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 835.1,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "c575966f96697d9120ef60412938cf54fc06e9b8935d03014781447aff05c146",
+      "ok": true,
+      "seed": 68,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1004.7,
+        "rejects": {}
+      },
+      "gameplayHash": "17b4bc1f1a4e7c76b4ef12144990797bcea52b908d530d5f9fda47f3bb7029de",
+      "ok": true,
+      "seed": 69,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 14,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 816.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 6,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "da5b4aa1e13f9f9bfa7839d89c6688ea12952477163d644ed141476733b085b8",
+      "ok": true,
+      "seed": 70,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1077.8,
+        "rejects": {
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "a63fde9a5a268df2f6d5ba5f5bc85e106d648bdcc656406c4c61eeda002e767e",
+      "ok": true,
+      "seed": 71,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 940.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4
+        }
+      },
+      "gameplayHash": "288a435eb1a48895a865150d223b03f62a35ea110dd10cc5bb55e644c8443abb",
+      "ok": true,
+      "seed": 72,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 775.4,
+        "rejects": {}
+      },
+      "gameplayHash": "67569fea1690516aa2f5f16e667839a38be0b063ce2f0280c0c738e2e6dd7eda",
+      "ok": true,
+      "seed": 73,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 11,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 924.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 7,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "f10dee64a0779013ce68f79d5d866c86b501e2c52f9c647560fc65d224a4b54c",
+      "ok": true,
+      "seed": 74,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 4,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 965.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "8d988a5444c437aa9151ada4cb559d4b13200dd3bb0ffd384e810ca7f5f1ecfe",
+      "ok": true,
+      "seed": 75,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 711.5,
+        "rejects": {}
+      },
+      "gameplayHash": "7d21e133070e0c976002d576da58c9a4c92b4ac9ee5f774592ed3f6392ea569e",
+      "ok": true,
+      "seed": 76,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 12,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1019.2,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 3,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "4ef3824b73879b75ebceab945b942fe7aacee157609bcee71287eb126db8e903",
+      "ok": true,
+      "seed": 77,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 8,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 704.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "shorter than the length band": 2
+        }
+      },
+      "gameplayHash": "90dae20ac8f9d470ee69be0023fe9c9ecfca3c8d91832d00da2daff3181a95fa",
+      "ok": true,
+      "seed": 78,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 9,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1047.1,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 3,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "68ead85250811bb179d1361d1fdd228669fea191276685a99ed3e0a38f63445c",
+      "ok": true,
+      "seed": 79,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 17,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 902.3,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "longer than the length band": 9,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "89256bfa850a601c2b19d7c572eeda1ba506a3601c59fc52a821319368500c51",
+      "ok": true,
+      "seed": 80,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 6,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 760.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "27d20e2a01ada16fd5493f1057973bf23f70f3ad4b91fbe67490ff506a0cf256",
+      "ok": true,
+      "seed": 81,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 996.7,
+        "rejects": {}
+      },
+      "gameplayHash": "90c2f4490446bc4e7996480a935ba5a5e07fb2c9a3fa144daf5fc4dabb929328",
+      "ok": true,
+      "seed": 82,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 845.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "a70e3cfbe57c56ce4625844bf873c1072b55a73fc465a1642dd21dd7683f8b20",
+      "ok": true,
+      "seed": 83,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 7,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 993.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 4,
+          "longer than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "d61d5e176791952eb4e17111295393b8a42eaf3ce55f845b96f5efba94e6957e",
+      "ok": true,
+      "seed": 84,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 1023.5,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "919d4477669bd77714a81ee684c61f38e0ab6fbd95da639dc41c150452bd3f3c",
+      "ok": true,
+      "seed": 85,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 970.7,
+        "rejects": {}
+      },
+      "gameplayHash": "b58d7b9edc4ecb659bad94ba1bb4e7ca7c907747331ddd7624e5e8631656876f",
+      "ok": true,
+      "seed": 86,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 843.5,
+        "rejects": {
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 1
+        }
+      },
+      "gameplayHash": "af8f68b75cb18ba9573f71680e7d9fafb7d376e16921ac38c36a8fa1e31047bf",
+      "ok": true,
+      "seed": 87,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 10,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 1028.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 5,
+          "no pair of straights closes the loop": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "96b788fc67f0fc3d27e158cfc53d35beb54427466b9d6c90c3a0c2b455463286",
+      "ok": true,
+      "seed": 88,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 1,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 3
+        },
+        "fallback": false,
+        "lengthM": 846.9,
+        "rejects": {}
+      },
+      "gameplayHash": "960099da769b9480a6c11cec23dad363d34630a0bbb8de3092c79b27a339021f",
+      "ok": true,
+      "seed": 89,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 13,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 777.8,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "longer than the length band": 2,
+          "no pair of straights closes the loop": 2,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 2
+        }
+      },
+      "gameplayHash": "2ee60b242d79e7c0522ec26d4312182526a83e59d0124a95c434a313757de563",
+      "ok": true,
+      "seed": 90,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 859.1,
+        "rejects": {
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "c7c7bc1ab01e54b1597a60358a3e4b2a50c72df35a50575cbcf0f2877d30e29f",
+      "ok": true,
+      "seed": 91,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 5,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 2,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 756.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "longer than the length band": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "875b5a38281adf64962499bbce4ea3d6040205fd3b5949997b004cd73bc45edf",
+      "ok": true,
+      "seed": 92,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 9,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 2,
+          "medium": 0,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 823.6,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 2,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "739a2c5140ad7255c4d15e527d80fd566c6585ad87b64cdd43f240c5ccfc6a98",
+      "ok": true,
+      "seed": 93,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 2,
+          "medium": 1,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 776.3,
+        "rejects": {
+          "longer than the length band": 1
+        }
+      },
+      "gameplayHash": "9f7bfc0d7f3bf0d3911e58d832580d89c4f6446210b45a17ef77bb21c4d083e3",
+      "ok": true,
+      "seed": 94,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 2,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 1,
+          "medium": 1,
+          "sweeper": 2
+        },
+        "fallback": false,
+        "lengthM": 903.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1
+        }
+      },
+      "gameplayHash": "2dd2b5ad6ee3fa1771a0bc6d24c3559db98fb616b140860886cf69b14e74ddae",
+      "ok": true,
+      "seed": 95,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 10,
+        "corners": {
+          "chicane": 0,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 1
+        },
+        "fallback": false,
+        "lengthM": 797.7,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 3,
+          "longer than the length band": 4,
+          "shorter than the length band": 1,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "d87c1af3d7ce7b171ef7c3aee7845a8e85bbed8864ce268ca1224f90231ee04c",
+      "ok": true,
+      "seed": 96,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 27,
+        "corners": {
+          "chicane": 2,
+          "hairpin": 1,
+          "medium": 3,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 975.4,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 10,
+          "longer than the length band": 10,
+          "no pair of straights closes the loop": 3,
+          "shorter than the length band": 2,
+          "two hairpins back to back": 1
+        }
+      },
+      "gameplayHash": "e1d060ec9298256cc92c8fbeb0b2d497aa5cb7f1b9fa914d307aead1d10cec32",
+      "ok": true,
+      "seed": 97,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 3,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 3,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 943.9,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 1,
+          "no pair of straights closes the loop": 1
+        }
+      },
+      "gameplayHash": "fdad95b2285751aaf98cb90ac3e8c74aefb2525e5879273163c7e64c4a877c59",
+      "ok": true,
+      "seed": 98,
+      "violations": []
+    },
+    {
+      "course": {
+        "attempts": 14,
+        "corners": {
+          "chicane": 1,
+          "hairpin": 2,
+          "medium": 2,
+          "sweeper": 0
+        },
+        "fallback": false,
+        "lengthM": 737.0,
+        "rejects": {
+          "corner out of range after fitting the turn budget": 5,
+          "longer than the length band": 4,
+          "no pair of straights closes the loop": 1,
+          "shorter than the length band": 3
+        }
+      },
+      "gameplayHash": "f4cab931fc73257dfd35234ada9bf5f1edfb1746ce597c5b5cbbba087cbfdfae",
+      "ok": true,
+      "seed": 99,
+      "violations": []
+    }
+  ],
+  "seeds": [
+    0,
+    100
+  ],
+  "valid": 100
+}
