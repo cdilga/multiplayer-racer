@@ -21,7 +21,7 @@ A bead, test or older doc **cannot override** a ruling. If a bead, an old test o
 | Area | Rule |
 |---|---|
 | Separation | Joystick Jammers is completely separate from Physical Soccer: no shared code, crates, repos, deploy repo or imports. Borrow ideas only. (R1) |
-| Server | Rust replaces the Python game server from day 0; Asupersync, no Tokio. Python stays for Blender/offline tools only. (R2) |
+| Server | Rust replaces the Python game server from day 0; Asupersync, no Tokio. Python stays for Blender/offline tools only. (R2) **Licence (owner, 2026-10-03):** Asupersync's MIT + OpenAI/Anthropic rider is accepted, GPL-3.0 position included. Claude sessions treat it as an opaque dependency: cargo builds and links it, but no Claude session opens, reads or pastes its source or docs. Work on its internals goes to a non-Anthropic worker or waits for its author's written permission. |
 | Simulation | Authoritative game simulation is Rust (`jj-sim`, native `rapier3d`) compiled to WASM for the browser host and native for tests/tools. 120 Hz game time, interpolated rendering, named composable pauses. (R61, plan §13) |
 | **No caps** | **No arbitrary gameplay-count limits anywhere**: players, seats, controllers, tiles, fielded cars, live debris. No temporary/MVP/intermediate limits, queues, truncated arrays or count-triggered refusal. Test cohorts are samples, not limits. (R36, R47, R66) |
 | Debris | Detached parts and fragments stay **dynamic** bodies for the round (sleep/wake allowed). Never convert to static, delete oldest, merge or budget by count. A wrecked car's **husk** stays too, as a dynamic body on the track or in the derby arena, with no despawn during the round (owner confirmed 2026-10-03, Q-A2). (R58) |
