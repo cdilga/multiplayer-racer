@@ -1,0 +1,52 @@
+# P1-F04 local receipt
+date: 2026-10-03T01:15:25Z  machine: Mac  commit base: 97f86b6  br: br 0.7.4
+
+$ scripts/reconcile_plans_to_beads.py --gate
+# Plan -> bead reconciliation: 121 §15 tasks, 121 beads (docs/plans/v0.2-playtest-1-plan.md)
+
+PRESENT  121
+MISSING  0
+ORPHAN   0
+beads without a P1 ref (not judged): 0
+
+GATE PASS: every §15 task has a bead and every P1 bead names a §15 task.
+exit: 0
+
+# copy of .beads/issues.jsonl with the P1-N03 bead removed (120 of 121 beads)
+
+$ scripts/reconcile_plans_to_beads.py --gate --jsonl /private/tmp/claude-501/-Users-cdilga-Documents-dev-multiplayer-racer/48ffb49b-6b21-43e4-b025-03f1c1ee450f/scratchpad/issues-minus-n03.jsonl
+# Plan -> bead reconciliation: 121 §15 tasks, 120 beads (docs/plans/v0.2-playtest-1-plan.md)
+
+PRESENT  120
+MISSING  1
+  P1-N03
+ORPHAN   0
+beads without a P1 ref (not judged): 0
+
+GATE FAIL: P1-N03. Cut the missing tasks into br (or fix the orphans' refs), or allowlist them with a reason in scripts/reconcile_allowlist.txt.
+exit: 1
+
+# copy with the N03 bead's ref changed to P1-N99 (not a §15 task)
+
+$ scripts/reconcile_plans_to_beads.py --gate --jsonl /private/tmp/claude-501/-Users-cdilga-Documents-dev-multiplayer-racer/48ffb49b-6b21-43e4-b025-03f1c1ee450f/scratchpad/issues-orphan.jsonl
+# Plan -> bead reconciliation: 121 §15 tasks, 121 beads (docs/plans/v0.2-playtest-1-plan.md)
+
+PRESENT  120
+MISSING  1
+  P1-N03
+ORPHAN   1
+  P1-N99: br-p1-n03-4lo
+beads without a P1 ref (not judged): 0
+
+GATE FAIL: P1-N03, P1-N99. Cut the missing tasks into br (or fix the orphans' refs), or allowlist them with a reason in scripts/reconcile_allowlist.txt.
+exit: 1
+
+$ scripts/plan-ref.sh P1-N03 | grep "^====="   (block headers; full output is the N03 block plus both sections)
+===== P1-N03 (plan line 1900) =====
+===== §5.1 =====
+===== §5.2 =====
+lines printed: 90
+
+$ scripts/plan-ref.sh P1-ZZ9
+plan-ref: P1-ZZ9 is not a §15 task in docs/plans/v0.2-playtest-1-plan.md
+exit: 1
