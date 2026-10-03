@@ -232,6 +232,16 @@
    }
   }
  },
+ "interiors": {
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  }
+ },
  "anchors": {
   "cam_fp": [
    -0.35,

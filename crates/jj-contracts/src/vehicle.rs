@@ -5,8 +5,9 @@
 //!
 //! GLB layout: one scene root (the vehicle); its children are the parts (a node named by part id, translated to the
 //! part's pivot, with the part's mesh), the anchors (empty nodes named by anchor id) and, in the LOD0 file, the collider
-//! proxies (`collider_<part>`, meshes in vehicle space, never rendered). Units metres, +y up, +z forward, origin on the
-//! ground between the axles.
+//! proxies (`collider_<part>`, meshes in vehicle space, never rendered), and any interior blocks the sidecar declares
+//! (`interior_<id>`, meshes in vehicle space, drawn only when a part that exposes them is loose or gone; P1-V03). Units
+//! metres, +y up, +z forward, origin on the ground between the axles.
 
 use std::collections::BTreeMap;
 
@@ -34,6 +35,8 @@ pub const POSITION_TOLERANCE_M: f64 = 0.001;
 pub const GROUND_TOLERANCE_M: f64 = 0.02;
 pub const AXLE_CENTRE_TOLERANCE_M: f64 = 0.05;
 pub const MASS_SUM_TOLERANCE: f64 = 0.01;
+/// Triangles per interior block at any LOD (plan §6.3 asks ~40–60): drawn only when exposed, so outside `TRI_BUDGETS`.
+pub const INTERIOR_TRI_BUDGET: usize = 80;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -45,8 +48,18 @@ pub struct Sidecar {
     pub up: String,
     pub lods: Vec<Lod>,
     pub parts: BTreeMap<String, Part>,
+    /// Interior blocks by id (P1-V03): what shows through where a part is loose or gone. Optional.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub interiors: BTreeMap<String, Interior>,
     pub anchors: BTreeMap<String, [f64; 3]>,
     pub material: Material,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Interior {
+    /// The detachable parts whose loss (or swing) exposes this block.
+    pub exposed_by: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -126,6 +139,7 @@ pub enum Rule {
     OriginAxles,
     ColliderMissing,
     CabinProxyCuboid,
+    Interior,
 }
 
 impl Rule {
@@ -152,6 +166,7 @@ impl Rule {
             Self::OriginAxles => "origin-axles",
             Self::ColliderMissing => "collider-missing",
             Self::CabinProxyCuboid => "cabin-proxy-cuboid",
+            Self::Interior => "interior",
         }
     }
 }
@@ -301,6 +316,21 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
             );
         }
     }
+    for (id, b) in &s.interiors {
+        let bad: Vec<&String> = b
+            .exposed_by
+            .iter()
+            .filter(|p| p.as_str() == "core" || !PARTS.contains(&p.as_str()))
+            .collect();
+        if b.exposed_by.is_empty() || !bad.is_empty() {
+            add(
+                &mut v,
+                Rule::Interior,
+                &format!("interiors.{id}"),
+                format!("exposedBy {:?}: one or more detachable parts", b.exposed_by),
+            );
+        }
+    }
     for a in ANCHORS {
         if !s.anchors.contains_key(a) {
             add(
@@ -434,6 +464,50 @@ pub fn validate(sidecar: &Sidecar, mut load: impl FnMut(&str) -> Option<Vec<u8>>
                         Err(e) => add(&mut v, Rule::Glb, &at, format!("{p}: {e}")),
                     }
                 }
+            }
+        }
+        // Interior blocks: a node per declared block, in vehicle space, on the atlas material, within its budget.
+        for id in s.interiors.keys() {
+            let name = format!("interior_{id}");
+            let Some(mesh) = children
+                .get(&name)
+                .and_then(|&ni| glb.nodes()[ni].mesh.map(|m| (ni, m)))
+                .and_then(|(ni, m)| glb.mesh(m).map(|mesh| (ni, mesh)))
+            else {
+                add(&mut v, Rule::Interior, &at, format!("no {name} mesh"));
+                continue;
+            };
+            let (ni, mesh) = mesh;
+            if !close(apply(&world[&ni], [0.0; 3]), [0.0; 3], POSITION_TOLERANCE_M) {
+                add(
+                    &mut v,
+                    Rule::Interior,
+                    &at,
+                    format!("{name} isn't in vehicle space (its node moves it)"),
+                );
+            }
+            let mut block_tris = 0;
+            for prim in &mesh.primitives {
+                if prim.material != Some(0) {
+                    add(
+                        &mut v,
+                        Rule::Materials,
+                        &at,
+                        format!("{name} doesn't use the single atlas material"),
+                    );
+                }
+                match glb.triangles(prim) {
+                    Ok(t) => block_tris += t,
+                    Err(e) => add(&mut v, Rule::Glb, &at, format!("{name}: {e}")),
+                }
+            }
+            if block_tris > INTERIOR_TRI_BUDGET {
+                add(
+                    &mut v,
+                    Rule::Interior,
+                    &at,
+                    format!("{name}: {block_tris} triangles, budget {INTERIOR_TRI_BUDGET}"),
+                );
             }
         }
         if glb.material_count() != 1 {

@@ -11,6 +11,8 @@
 // - Part states from the snapshot (R86: intact -> loose -> detached): a loose part turns about its hinge at its pivot by
 //   the snapshot's angle; a detached part draws at its world pose, still in its owner's paint, and the core's dark bay
 //   shows where it was. Detached parts are debris: they stay for the round.
+// - Interior blocks (P1-V03: engine, seats, boot contents) draw only for cars where a part that exposes them isn't
+//   intact: one InstancedMesh per block and LOD class, holding just those cars, hidden when none.
 // - Buffers grow (doubling) with the field: no car or part cap (R66).
 import {
   Color,
@@ -62,6 +64,15 @@ interface Slot {
   mirror: boolean;
   wheel: boolean;
   front: boolean;
+}
+
+interface InteriorType {
+  id: string;
+  /** Indices in PART_IDS of the parts whose loss (or swing) exposes the block. */
+  exposedBy: number[];
+  meshes: InstancedMesh[];
+  matrix: InstancedBufferAttribute;
+  color: InstancedBufferAttribute;
 }
 
 interface PartType {
@@ -117,6 +128,7 @@ async function loadLods(): Promise<Map<string, BufferGeometry>[]> {
 
 export class VehicleRenderer {
   readonly types: PartType[] = [];
+  readonly interiors: InteriorType[] = [];
   readonly material: MeshStandardMaterial;
   /** Cars the buffers hold room for (grows by doubling). */
   capacity = 0;
@@ -178,6 +190,23 @@ export class VehicleRenderer {
       const t: PartType = { id, slots, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3) };
       this.types.push(t);
     }
+    const declared = (sidecar as { interiors?: Record<string, { exposedBy: string[] }> }).interiors ?? {};
+    for (const [id, b] of Object.entries(declared)) {
+      const meshes = lods.map((parts, lod) => {
+        const g = parts.get(`interior_${id}`);
+        if (!g) throw new Error(`LOD${lod} has no interior_${id}`);
+        const im = new InstancedMesh(g, this.material, 1);
+        im.name = `interior_${id}.lod${lod}`;
+        im.frustumCulled = false;
+        im.receiveShadow = true;
+        im.visible = false;
+        im.layers.set(lodLayer(lod));
+        scene.add(im);
+        return im;
+      });
+      const exposedBy = b.exposedBy.map((p) => PART_IDS.indexOf(p)).filter((k) => k >= 0);
+      this.interiors.push({ id, exposedBy, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3) });
+    }
     this.grow(capacity);
   }
 
@@ -200,6 +229,14 @@ export class VehicleRenderer {
         im.instanceColor = t.color;
       }
     }
+    for (const t of this.interiors) {
+      t.matrix = new InstancedBufferAttribute(new Float32Array(cap * 16), 16);
+      t.color = new InstancedBufferAttribute(new Float32Array(cap * 3), 3);
+      for (const im of t.meshes) {
+        im.instanceMatrix = t.matrix;
+        im.instanceColor = t.color;
+      }
+    }
     this.capacity = cap;
   }
 
@@ -209,6 +246,7 @@ export class VehicleRenderer {
     this.cars = s.cars;
     const f = s.frame;
     const byCar = partStates(f);
+    const exposed = this.interiors.map(() => 0);
     for (let i = 0; i < s.cars; i++) {
       const id = s.id[i]!;
       this.car.compose(this.v.fromArray(s.pos, i * 3), this.q.fromArray(s.rot, i * 4), this.one);
@@ -237,7 +275,24 @@ export class VehicleRenderer {
           this.c.toArray(t.color.array, at * 3);
         });
       }
+      // Interior blocks sit in vehicle space: the car's own matrix, only where a part that exposes them isn't intact.
+      if (states) {
+        this.interiors.forEach((t, k) => {
+          if (!t.exposedBy.some((part) => states.has(part))) return;
+          this.car.toArray(t.matrix.array, exposed[k]! * 16);
+          this.c.toArray(t.color.array, exposed[k]! * 3);
+          exposed[k]!++;
+        });
+      }
     }
+    this.interiors.forEach((t, k) => {
+      t.matrix.needsUpdate = true;
+      t.color.needsUpdate = true;
+      for (const im of t.meshes) {
+        im.count = exposed[k]!;
+        im.visible = exposed[k]! > 0;
+      }
+    });
     for (const t of this.types) {
       t.matrix.needsUpdate = true;
       t.color.needsUpdate = true;
@@ -290,11 +345,12 @@ export class VehicleRenderer {
               };
             }),
           );
-    return { capacity: this.capacity, cars: this.cars, drawsPerTile: this.drawsPerTile, types, parts };
+    const interiors = Object.fromEntries(this.interiors.map((t) => [t.id, t.meshes[0]!.count]));
+    return { capacity: this.capacity, cars: this.cars, drawsPerTile: this.drawsPerTile, types, parts, interiors };
   }
 
   dispose(): void {
-    for (const t of this.types) for (const im of t.meshes) this.scene.remove(im);
+    for (const t of [...this.types, ...this.interiors]) for (const im of t.meshes) this.scene.remove(im);
   }
 }
 

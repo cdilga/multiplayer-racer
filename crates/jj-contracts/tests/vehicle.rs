@@ -62,6 +62,7 @@ fn every_broken_vehicle_fails_with_the_rule_it_names() {
         "part-missing-at-lod",
         "anchor-missing",
         "tri-budget",
+        "interior",
     ] {
         assert!(
             broken.iter().any(|b| b == must),

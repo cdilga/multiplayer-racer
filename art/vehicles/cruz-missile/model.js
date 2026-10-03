@@ -273,6 +273,16 @@ function makeSoups(P, lod) {
     if (T.rim) { W.prism([x + s * hw, P.wheelR, z], [x + s * (hw + 0.012), P.wheelR, z], P.wheelR * 0.68, T.rim, 'trim', 'trim', Math.PI / 2, P.wheelR * 0.6); W.prism([x + s * (hw + 0.012), P.wheelR, z], [x + s * (hw + 0.03), P.wheelR, z], 0.07, 5, 'rim', 'rim'); }
   }
 
+  // ── interior blocks (P1-V03): what a missing panel shows, in vehicle space, the same at every LOD. Drawn only for a
+  // car whose part exposes them (vehicle.json `interiors`), so an undamaged field never pays for them. ──
+  { const I = S('interior_engine'), zm = (zA + P.zNose) / 2; // under the front piece
+    I.box(0, 0.6, zm, 0.95, 0.4, 0.7, 'chrome'); I.box(0, 0.86, zm - 0.05, 0.6, 0.12, 0.45, { all: 'trim', py: 'pink' }); }
+  { const I = S('interior_cabin'); // behind the doors: two front seats and the rear bench
+    for (const s of [1, -1]) I.box(s * 0.42, 0.72, (zA + P.zB) / 2 - 0.12, 0.5, 0.62, 0.5, 'trim');
+    I.box(0, 0.7, (P.zB + zC) / 2 - 0.1, 1.3, 0.56, 0.48, 'trim'); }
+  { const I = S('interior_boot'), zm = (zC + P.zTail) / 2; // under the back piece: the spare and a toolbox
+    I.prism([0.25, 0.42, zm], [0.25, 0.62, zm], 0.3, 6, 'tyre', 'rim'); I.box(-0.45, 0.55, zm, 0.4, 0.25, 0.5, 'pink'); }
+
   return { soups, stations: Z.length };
 }
 
@@ -287,7 +297,7 @@ export function pivots(P = DEFAULT_P) {
 }
 
 function pivotOf(P, id, positions) {
-  if (id === 'core') return [0, 0, 0];
+  if (id === 'core' || id.startsWith('interior_')) return [0, 0, 0];
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < positions.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], positions[i + k]); hi[k] = Math.max(hi[k], positions[i + k]); }
   if (id.startsWith('wheel')) return [Math.sign(hi[0] + lo[0]) * P.track, P.wheelR, id[6] === 'F' ? P.zFA : P.zRA];

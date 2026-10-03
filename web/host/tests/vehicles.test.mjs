@@ -56,9 +56,9 @@ test('a car with loose and detached parts renders in adjacent tiles at different
     assert.deepEqual(t.layers, [2, 4, 8], `${t.id} LOD layers`);
   }
   assert.equal(v.drawsPerTile, 8, 'core, front, back, four doors and one wheel type');
-  // Two tiles: each draws its LOD class's 8 part types plus the ground and grid (no other LOD's meshes), and the
-  // shadow map is drawn once for the frame (8 part types), not once per tile.
-  assert.equal(s.drawCalls, 2 * (8 + 2) + 8, `draws ${s.drawCalls}`);
+  // Two tiles: each draws its LOD class's 8 part types, the visible interior blocks (engine and cabin, P1-V03) and the
+  // ground and grid (no other LOD's meshes); the shadow map is drawn once for the frame (8 part types), not per tile.
+  assert.equal(s.drawCalls, 2 * (8 + 2 + 2) + 8, `draws ${s.drawCalls}`);
   const byPart = Object.fromEntries(v.parts.map((p) => [p.part, p]));
   const paint = byPart.core.colour;
   // Detached parts keep the owner's paint and lie away from the car; intact ones sit on it.
@@ -67,6 +67,9 @@ test('a car with loose and detached parts renders in adjacent tiles at different
     const d = Math.hypot(byPart[id].position[0] - byPart.core.position[0], byPart[id].position[2] - byPart.core.position[2]);
     assert.ok(d > 2.5, `${id} is off the car (${d.toFixed(2)} m)`);
   }
+  // Interior blocks (P1-V03) draw only where exposed: car 2's front, rear door and back expose engine, cabin and boot
+  // for that car alone; the undamaged car 0 exposes none (car 1's loose door adds a cabin).
+  assert.deepEqual(v.interiors, { engine: 1, cabin: 2, boot: 0 });
   const near = Math.hypot(byPart.wheel_FL.position[0] - byPart.core.position[0], byPart.wheel_FL.position[2] - byPart.core.position[2]);
   assert.ok(near < 2, 'an intact wheel is on the car');
   assert.deepEqual(errors, []);

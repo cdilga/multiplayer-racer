@@ -10,7 +10,7 @@ The Playtest-1 car, code-built from reference sheets (R81). P1-V02 moved Spike J
 | `model.js` | The model script: `soups(P, lod)` for the bake, `build(P, lod)` for three.js, `pivots(P)` |
 | `atlas.js` | The one atlas, drawn as data and rasterised without a DOM; `BAKE_COLOURS` paints pure white (the paint key) |
 | `params.json` | Spike J's final, pixel-fitted parameters (silhouette IoU 0.947 against `refs/lod-plus-1.png`) |
-| `vehicle.json` | Contract data the geometry doesn't carry: mass split, hinges (plan §6.3, P1-V03), collider kinds, anchors, LOD budgets |
+| `vehicle.json` | Contract data the geometry doesn't carry: mass split, hinges (plan §6.3, P1-V03), interior blocks and the parts that expose them, collider kinds, anchors, LOD budgets |
 | `refs/` | The owner's reference sheets (`lod-plus-1` ≈ LOD0, `lowest-lod` ≈ LOD2, `damage-med-lod`) |
 | `cruz-missile.asset.json`, `cruz-missile.lod{0,1,2}.glb`, `cruz-missile.atlas.png`, `cruz-missile.emissive.png` | The bake: never edit by hand |
 
@@ -22,6 +22,7 @@ node tools/vehicles/bake.mjs --check    # CI: a fresh bake must equal the commit
 node --test tools/vehicles/test/        # three.js load test against Spike J's model
 jj validate art/vehicles/cruz-missile/cruz-missile.asset.json
 node tools/vehicles/view/capture.mjs    # contact sheets (views, paints, LOD ladder, colliders)
+node tools/vehicles/compare-bakes.mjs <rev>  # the shape is unchanged since <rev> (pivot moves, interior blocks)
 ```
 
 Frame: metres, +Z nose, +Y up, origin on the ground between the axles. **+X is the car's left**

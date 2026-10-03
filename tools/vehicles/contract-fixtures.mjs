@@ -55,9 +55,12 @@ const proxy = (id) => {
   return { pos: g.pos.map((v, i) => v + p.pivot[i % 3]), idx: g.idx };
 };
 
+// An interior block (P1-V03): seats inside the core, exposed by the doors; in vehicle space.
+const INTERIORS = { cabin: { exposedBy: ['door_FL', 'door_FR', 'door_RL', 'door_RR'], geom: () => box(1.2, 0.5, 1.0, 0, 0.7, 0) } };
+
 function model(mut = {}) {
   const parts = Object.fromEntries(Object.entries(PARTS).map(([id, p]) => [id, { ...p, pivot: [...p.pivot] }]));
-  return { parts, anchors: structuredClone(ANCHORS), lodGeom: [null, null, null], skip: [{}, {}, {}], colliders: Object.fromEntries(Object.keys(PARTS).map((id) => [id, proxy(id)])), materials: 1, ...mut };
+  return { parts, interiors: INTERIORS, anchors: structuredClone(ANCHORS), lodGeom: [null, null, null], skip: [{}, {}, {}], colliders: Object.fromEntries(Object.keys(PARTS).map((id) => [id, proxy(id)])), materials: 1, ...mut };
 }
 
 // ---- GLB writer
@@ -110,6 +113,7 @@ function write(name, expect, m, sidecarMut = (s) => s) {
       const prims = m.extraPrim && id === 'core' ? [[g, 0], [box(0.1, 0.1, 0.1, 0, 1.2, 0), 0]] : [[g, m.materials > 1 && id === 'back' ? 1 : 0]];
       spec.push({ name: id, translation: pivot, prims });
     }
+    for (const [id, b] of Object.entries(m.interiors)) if (!(lod === 1 && m.dropInterior === id)) spec.push({ name: `interior_${id}`, prims: [[b.geom(), 0]] });
     for (const [a, t] of Object.entries(m.anchors)) if (!(lod === 0 && m.dropAnchor === a)) spec.push({ name: a, translation: t });
     if (lod === 0) for (const [id, g] of Object.entries(m.colliders)) if (g) spec.push({ name: `collider_${id}`, prims: [[g, 0]] });
     writeFileSync(join(dir, `toy.lod${lod}.glb`), writeGlb(spec, m.materials));
@@ -118,6 +122,7 @@ function write(name, expect, m, sidecarMut = (s) => s) {
     contract: 'jj.vehicle.v1', id: 'toy', units: 'm', forward: '+z', up: '+y',
     lods: [{ file: 'toy.lod0.glb', maxTris: 1300 }, { file: 'toy.lod1.glb', maxTris: 900 }, { file: 'toy.lod2.glb', maxTris: 600 }],
     parts: Object.fromEntries(Object.entries(PARTS).map(([id, p]) => [id, { pivot: (m.sidecarPivot && m.sidecarPivot[id]) || m.parts[id].pivot, hinge: p.hinge, massFraction: p.mass, collider: { type: p.collider } }])),
+    interiors: Object.fromEntries(Object.entries(m.interiors).map(([id, b]) => [id, { exposedBy: b.exposedBy }])),
     anchors: m.anchors,
     material: { count: 1, atlas: 'toy.atlas.png' },
   });
@@ -145,4 +150,6 @@ write('schema', 'schema', model(), (s) => { s.paintKey = '#ffffff'; return s; })
 write('collider-missing', 'collider-missing', model({ colliders: { ...model().colliders, wheel_RR: null } }));
 write('draws', 'draws', model({ extraPrim: true }));
 write('cabin-declared-cuboid', 'cabin-proxy-cuboid', model(), (s) => { s.parts.core.collider.type = 'cuboid'; return s; });
+write('interior-missing-at-lod', 'interior', model({ dropInterior: 'cabin' }));
+write('interior-exposed-by', 'interior', model(), (s) => { s.interiors.cabin.exposedBy = ['core']; return s; });
 console.log(`vehicle fixtures in ${root}`);

@@ -232,6 +232,26 @@
    }
   }
  },
+ "interiors": {
+  "engine": {
+   "exposedBy": [
+    "front"
+   ]
+  },
+  "cabin": {
+   "exposedBy": [
+    "door_FL",
+    "door_FR",
+    "door_RL",
+    "door_RR"
+   ]
+  },
+  "boot": {
+   "exposedBy": [
+    "back"
+   ]
+  }
+ },
  "anchors": {
   "cam_fp": [
    -0.38,

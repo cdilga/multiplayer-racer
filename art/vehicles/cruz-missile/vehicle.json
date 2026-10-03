@@ -19,6 +19,11 @@
   "wheel_RL": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" },
   "wheel_RR": { "massFraction": 0.0175, "hinge": { "axis": [0, 0, 1], "min": -6, "max": 6 }, "collider": "convex" }
  },
+ "interiors": {
+  "engine": { "exposedBy": ["front"] },
+  "cabin": { "exposedBy": ["door_FL", "door_FR", "door_RL", "door_RR"] },
+  "boot": { "exposedBy": ["back"] }
+ },
  "anchors": {
   "cam_fp": [-0.38, 1.25, -0.05],
   "cam_tp_target": [0, 1.1, 0.4],

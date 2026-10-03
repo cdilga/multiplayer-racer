@@ -55,7 +55,8 @@ for (const lod of [0, 1, 2]) {
     assert.equal(root.name, 'cruz-missile');
     const names = root.children.map((c) => c.name);
     const colliders = lod === 0 ? PARTS.map((p) => `collider_${p}`) : [];
-    assert.deepEqual(names, [...PARTS, ...ANCHORS, ...colliders]);
+    const interiors = Object.keys(JSON.parse(new TextDecoder().decode(first.files.get('cruz-missile.asset.json'))).interiors ?? {}).map((b) => `interior_${b}`);
+    assert.deepEqual(names, [...PARTS, ...interiors, ...ANCHORS, ...colliders]);
 
     // One material with the atlas and emissive map, shared by every part.
     const mats = new Set(PARTS.map((p) => root.getObjectByName(p).material));

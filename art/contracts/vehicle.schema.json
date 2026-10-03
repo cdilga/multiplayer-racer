@@ -30,6 +30,16 @@
         "wheel_FL": { "$ref": "#/$defs/part" }, "wheel_FR": { "$ref": "#/$defs/part" }, "wheel_RL": { "$ref": "#/$defs/part" }, "wheel_RR": { "$ref": "#/$defs/part" }
       }
     },
+    "interiors": {
+      "description": "Interior blocks (P1-V03): what shows through where a part is loose or gone. Each id has a GLB node interior_<id> in vehicle space on the atlas material, drawn only for a car whose exposedBy part isn't intact.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exposedBy"],
+        "properties": { "exposedBy": { "type": "array", "minItems": 1, "items": { "type": "string" } } }
+      }
+    },
     "anchors": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/vec3" },

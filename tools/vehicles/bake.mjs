@@ -117,6 +117,19 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
       breakdown[p] = part.tris;
       tris += part.tris;
     }
+    // Interior blocks (P1-V03): drawn only where a missing part exposes them; outside the part budget.
+    for (const b of Object.keys(V.interiors ?? {})) {
+      const part = parts[`interior_${b}`];
+      if (!part) throw new Error(`LOD${lod} has no interior_${b}`);
+      const uvs = part.uvs.map((v, i) => (i % 2 ? 1 - v : v));
+      j.meshes.push({ name: `interior_${b}`, primitives: [{ attributes: {
+        POSITION: g.floats(part.positions, 'VEC3', true),
+        NORMAL: (g.json.accessors.push({ bufferView: g.view(flatNormals(part.positions), 34962), componentType: 5126, count: part.positions.length / 3, type: 'VEC3' }), g.json.accessors.length - 1),
+        TEXCOORD_0: g.floats(uvs, 'VEC2'),
+      }, material: 0, mode: 4 }] });
+      child({ name: `interior_${b}`, mesh: j.meshes.length - 1 });
+      breakdown[`interior_${b}`] = part.tris;
+    }
     for (const [a, at] of Object.entries(V.anchors)) child({ name: a, translation: at });
     if (lod === 0) {
       for (const p of PARTS) {
@@ -152,6 +165,7 @@ export async function bake(vehicleDir = path.join(REPO, 'art/vehicles/cruz-missi
       massFraction: V.parts[p].massFraction,
       collider: { type: V.parts[p].collider },
     }])),
+    ...(V.interiors ? { interiors: V.interiors } : {}),
     anchors: V.anchors,
     material: { count: 1, atlas: `${id}.atlas.png` },
   };

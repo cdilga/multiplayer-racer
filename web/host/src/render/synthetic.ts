@@ -123,10 +123,12 @@ function stripParts(i: number): PartPose[] {
     if (p.state !== PART_DETACHED) return { car: i + 1, part: PART[p.part]!, state: p.state, angle: (p.angleDeg ?? 0) * deg };
     // Car space → world: the car faces +x, so its local +z is world +x and its local +x (left) is world -z.
     const piv = pivots[p.part]!.pivot;
-    const lie = [-i * STRIP_GAP + piv[2]! * 0.6, 0.25, -2.6 - k * 0.9];
-    // Turned a quarter about world z: a door or wheel (thin across the car) lies flat; the front and back lie on an end.
-    const flat = Math.PI / 2;
-    return { car: i + 1, part: PART[p.part]!, state: PART_DETACHED, pos: lie as [number, number, number], rot: [0, 0, Math.sin(flat / 2), Math.cos(flat / 2)] };
+    const lie = [-i * STRIP_GAP + piv[2]! * 0.4, 0.3, -3.6 - k * 1.4];
+    // A door or wheel (thin across the car) lies flat: a quarter turn about world z. The front and back lie upside
+    // down: a half turn about world x.
+    const rot: [number, number, number, number] =
+      p.part === 'front' || p.part === 'back' ? [1, 0, 0, 0] : [0, 0, Math.SQRT1_2, Math.SQRT1_2];
+    return { car: i + 1, part: PART[p.part]!, state: PART_DETACHED, pos: lie as [number, number, number], rot };
   });
 }
 
