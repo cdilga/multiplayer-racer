@@ -109,7 +109,10 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   ANISO = fx.af ?? 16;
   // trackTimestamp: GPU timestamp queries for the cost table (needs the 'timestamp-query' feature; ?ts=1 on the page).
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: false, forceWebGL, trackTimestamp });
-  renderer.setPixelRatio(1);
+  // R111 (owner 2026-10-04): render at the display's native pixels. ?res=native (default) or a step like 0.75 / 0.5 below it.
+  const resQ = new URLSearchParams(location.search).get('res');
+  const resStep = resQ && resQ !== 'native' && +resQ > 0 && +resQ <= 1 ? +resQ : 1;
+  renderer.setPixelRatio((window.devicePixelRatio || 1) * resStep);
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.shadowMap.enabled = fx.shadow !== 'off';
   renderer.shadowMap.type = SHADOW[fx.shadow] ?? THREE.PCFShadowMap;
@@ -881,7 +884,7 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   function resize(w, h) { renderer.setSize(w, h, false); }
 
   const kitStats = () => ({ brakeLampCars: fx.emissive !== false ? cars.length : 0, boostFlames: kit.boost?.count ?? 0, hazardBeacons: kit.beacons?.count ?? 0, roadsideFlares: kit.flares?.count ?? 0 });
-  const options = () => ({ look: lookNow?.id, ...current?.opts, shadow: fx.shadow ?? 'pcf', shadowSize: sun.shadow.mapSize.x, toneMapping: fx.tm ?? lookNow?.light.toneMapping, roadtex: fx.roadtex !== false, af: ANISO, emissive: fx.emissive !== false });
+  const options = () => ({ look: lookNow?.id, ...current?.opts, shadow: fx.shadow ?? 'pcf', shadowSize: sun.shadow.mapSize.x, toneMapping: fx.tm ?? lookNow?.light.toneMapping, roadtex: fx.roadtex !== false, af: ANISO, emissive: fx.emissive !== false, render: { pixelRatio: renderer.getPixelRatio(), step: resStep === 1 ? 'native' : resStep, canvasPx: [canvas.width, canvas.height] } });
   applyLook(LOOKS.looks.find((l) => l.id === fx.look) ?? LOOKS.looks.find((l) => l.id === LOOKS.recommended));
 
   return { renderer, backend, adapterInfo, scene, look, frames, graphics, trackLen, setCars, step, setTiles, aimTile, aimFixed, render, resize, placeSun, cars, array, colors, BOWL, staticStats, applyLook, options, kitStats };

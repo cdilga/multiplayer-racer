@@ -55,3 +55,5 @@ aa3e1828e9d02f35c149a649ff2731e2cd2ea5147c7c62796bc02ee6b99cb642  REFERENCE.md
   any other r183+ name in the installed build before copying a snippet.
 - Joystick Jammers rules win over anything here: no CDN imports, self-hosted libraries, no arbitrary caps on cars or
   tiles. The `jammers-look` skill is the entry point for our comic look; this skill is the TSL reference behind it.
+
+Owner approved the vendored MIT text and this note on 2026-10-04.

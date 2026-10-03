@@ -240,7 +240,7 @@ player, never use jargon (no "peer", "ICE", "session"), never shout in body copy
 
 **Button verbs:** Join, Ready, Start race, Identify, Sit out, Leave room, End round (everyone back to the
 lobby, the party stays), Disband room (everyone disconnected; master plan's End/Disband), Retry, Enter
-code, Scan QR code. Plan §11's join states read "Finding game…", "No game with code…"; the mocks follow
+code, Scan QR code. Join states read "Finding room…", "No room with code…" (R112); the mocks follow
 the plan and the owner decides room vs game at the design review. Sentence case, a verb first, two or three words.
 
 **States in words:** "Reconnecting as #7…", "Autopilot is driving your car. Everyone else keeps

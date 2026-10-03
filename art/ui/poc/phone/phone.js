@@ -405,9 +405,9 @@ function settings() {
 }
 
 const CARDS = {
-  finding: ['spin', 'Finding game ROO7…', 'Hang on, looking for the TV.', ['Cancel']],
-  'no-such-game': ['triangle-alert', 'No game with code K7QX', 'Check the code on the TV, or scan the QR again.', ['primary:Edit the code', 'Scan again']],
-  'game-ended': ['flag', 'That game has ended', 'Thanks for playing! You finished 3rd.', ['primary:Join another game']],
+  finding: ['spin', 'Finding room ROO7…', 'Hang on, looking for the TV.', ['Cancel']],
+  'no-such-game': ['triangle-alert', 'No room with code K7QX', 'Check the code on the TV, or scan the QR again.', ['primary:Edit the code', 'Scan again']],
+  'game-ended': ['flag', 'That room has ended', 'Thanks for playing! You finished 3rd.', ['primary:Join another room']],
   'preview-expired': ['timer', 'This test build has expired', 'Preview builds last a day. The preview index has the newest one.', ['primary:Open the preview index']],
   connecting: ['spin', 'Connecting…', 'Linking your controller to the TV.', []],
   'finding-relay': ['spin', 'Finding a relay…', 'Your network is fussy. Still trying on its own.', []],
