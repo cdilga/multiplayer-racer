@@ -24,7 +24,6 @@ let S = parse();
 const me = () => { const c = seatColor(tokens, S.seat); return { num: S.seat, name: S.p.get('name') ?? 'Dusty', hex: c.hex, on: c.on }; };
 const ordinal = (n) => { const s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'; return `${n}<sup>${s}</sup>`; };
 const landscape = () => matchMedia('(orientation: landscape)').matches;
-const TICKS = '<svg class="tk" viewBox="0 0 26 44" aria-hidden="true"><path d="M4 6 L22 15 M2 22 L22 22 M4 38 L22 29"/></svg>';
 
 // R102 shapes (U01.3): torn banners and brushed tags/strips, seeded by id, never animated.
 function paint(root) {
@@ -136,7 +135,7 @@ function identifyNow() {
 // ---- screens ----
 function strip(extra = '') {
   const m = me();
-  return `<div class="strip" data-box="strip" style="--seat:${m.hex};--seat-on:${m.on}"><div class="who"><span class="badge">#${m.num}</span><span class="nm">${m.name}</span></div>${extra}</div>`;
+  return `<div class="strip" data-box="strip" data-torn="hud" style="--seat:${m.hex};--seat-on:${m.on}"><div class="who"><span class="seatno">#${m.num}</span><span class="nm">${m.name}</span></div>${extra}</div>`;
 }
 const tools = (inline) => `<div class="tools${inline ? ' inline' : ''}" data-box="tools"><button class="btn identify" aria-label="Identify: flash my number on the TV">${icon('locate-fixed')}Identify</button><button class="btn quiet icon" aria-label="Camera: chase or in the car">${icon('video')}</button><button class="btn quiet icon" aria-label="Recover: put my car back on the road">${icon('rotate-ccw')}</button><button class="btn quiet icon" aria-label="Menu: help, settings, leave">${icon('menu')}</button></div>`;
 
@@ -277,7 +276,7 @@ function identify() {
 // model); the rest are silhouettes in your colour until theirs are built. Stats are mock 0-10 bars; the real ones are
 // measured by the sim (§7.6, "derived, not hand-typed").
 const ROSTER = [
-  { name: 'Cruz Missile', cls: 'Aussie classic', blurb: 'Honest all-rounder. Loves a kerb.', art: 'renders/cruz-missile-hero.png', stats: [6, 6, 7, 5] },
+  { name: 'Cruz Missile', cls: 'Aussie classic', blurb: 'Honest all-rounder. Loves a kerb.', art: 'brand/renders/cruz-missile-hero.png', stats: [6, 6, 7, 5] },
   { name: 'The Gull', cls: 'Aussie classic', blurb: 'Big family sedan. Wallows, then flies.', shape: 'sedan', stats: [8, 5, 4, 7] },
   { name: 'Laser Beam', cls: 'Aussie classic', blurb: 'Light hatch, tight turns, a bit fragile.', shape: 'hatch', stats: [6, 7, 8, 3] },
   { name: 'Tri-Tonne', cls: 'Ute', blurb: 'Bouncy tray, happy off the bitumen.', shape: 'ute', stats: [6, 5, 5, 7] },
@@ -307,7 +306,7 @@ function lobby() {
       <div class="side">
         <div class="thumbs" data-box="thumbs" role="listbox" aria-label="Cars">${ROSTER.map((c, i) => `<button class="thumb" role="option" data-i="${i}" aria-label="${c.name}">${carArt(c, m, false)}</button>`).join('')}</div>
         <div class="panel namep" data-box="name"><p class="label">Your name</p><div class="field"><input value="${m.name}" aria-label="Your name" maxlength="64"><button class="btn icon" aria-label="New random name">${icon('dices')}</button></div></div>
-        <div class="readyrow" data-box="ready"><span class="ticks">${TICKS}<button class="btn primary big">${ready ? `${icon('check')}You're ready` : 'Ready'}</button>${TICKS}</span></div>
+        <div class="readyrow" data-box="ready"><span class="slip" data-torn="slip-1"><button class="btn primary big">${ready ? `${icon('check')}You're ready` : 'Ready'}</button></span></div>
         <div class="waiting" data-box="waiting">${ready ? 'Tap again if you need a minute.' : 'Waiting for the host to start'} · 27 of 32 ready</div>
       </div>
     </div>`;
@@ -362,7 +361,7 @@ function gate() {
       <span class="bn gatebn" data-torn="gate">Get <span class="acc">set</span></span>
       <div class="phone-turn" aria-hidden="true">${icon('smartphone')}</div>
       <p class="lead">Turn your phone sideways, then tap to go full screen. We'll keep the screen awake while you play.</p>
-      <span class="ticks">${TICKS}<button class="btn primary big" data-act="go">${icon('maximize')}Tap to go full screen</button>${TICKS}</span>
+      <span class="slip" data-torn="slip-2"><button class="btn primary big" data-act="go">${icon('maximize')}Tap to go full screen</button></span>
       <div class="results" hidden></div>
       <p class="fallback">On iPhone there's no full screen in Safari: Add to Home Screen hides the browser bars. If your phone can't stay awake, it may dim; any tap wakes it.</p>
     </div></div>`;

@@ -291,9 +291,8 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .seg b.on { background: var(--c-cobalt); color: var(--c-paper); }
 .pacts { display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); margin-top: calc(var(--k) * 16px); }
 .pacts.row { flex-direction: row; gap: calc(var(--k) * 24px); }
-.ticks { display: inline-flex; align-items: center; gap: calc(var(--k) * 10px); }
-.ticks svg { width: calc(var(--k) * 30px); height: calc(var(--k) * 50px); fill: none; stroke: var(--c-cobalt); stroke-width: 6; stroke-linecap: square; }
-.ticks svg:last-child { scale: -1 1; }
+.slip { position: relative; isolation: isolate; display: inline-flex; padding: calc(var(--k) * 14px) calc(var(--k) * 26px); rotate: -1.4deg; }
+.slip .paint path { fill: var(--c-ink); }
 .pres { min-width: calc(var(--k) * 560px); min-height: calc(var(--k) * 84px); justify-content: center; font-size: calc(var(--k) * 40px); }
 .prow { display: flex; gap: calc(var(--k) * 16px); }
 .btn.danger-o { background: var(--c-paper); color: var(--c-danger); border-color: var(--c-danger); }

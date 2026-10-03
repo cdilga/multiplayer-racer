@@ -1,7 +1,7 @@
 // P1-U01 component sheet: every component in every state, as static classes (is-hover, is-pressed,
 // is-focus-kb, is-focus-gp, is-disabled, is-loading). Built from tokens.json through tokens-css.js.
 // P1-U01.3 (R102): section 00 shows the design language's primitives, and every section head, tab and free panel
-// uses them (torn banners, brush tags and strips, highlighter strokes, burst ticks, seeded tilts, a big render).
+// uses them (torn banners, brush tags and strips, highlighter strokes, the action slip, seeded tilts, a big render).
 import { applyTokens, paintPath, strokePath, tiltFor, wobblePath } from './tokens-css.js';
 
 const tokens = await applyTokens('desk');
@@ -72,8 +72,7 @@ const banner = (id, html, tagName = 'span', extra = '') => `<${tagName} class="$
 const tag = (id, text, kind = '', extra = '') => `<span class="${cls('tag', kind, extra)}" data-brush="${id}"><span>${text}</span></span>`;
 const strip = (id, html, kind = '', extra = '') => `<span class="${cls('strip', kind, extra)}" data-brush="${id}"><span>${html}</span></span>`;
 const ul = (id, text) => `<span class="ul" data-stroke="${id}">${text}</span>`;
-const tickSvg = '<svg viewBox="0 0 26 44" aria-hidden="true"><path d="M4 6 L22 15 M2 22 L22 22 M4 38 L22 29"/></svg>';
-const ticks = (html, extra = '') => `<span class="${cls('ticks', extra)}">${tickSvg}${html}${tickSvg}</span>`;
+const slip = (id, html, extra = '') => `<span class="${cls('slip', extra)}" data-torn="${id}">${html}</span>`;
 
 const section = (num, title, note, body) => `
   <section class="sec" id="s${num}"><header class="sec-head">${tag(`sec-${num}`, String(num).padStart(2, '0'))}${banner(`sec-${num}`, title, 'h2')}<p>${note}</p></header>${body}</section>`;
@@ -91,7 +90,7 @@ const SIX = [
   ['Big renders', 'the cut-out car is a first-class element, outlined in ink and nearly as tall as the panel'],
   ['Contrast banner behind heading type', 'torn ink banner, paper type, one saffron accent word'],
   ['Compact', 'tight 16 px padding, 8 px rows, three players and two actions in one small panel'],
-  ['Slants and high contrast', 'skewed tags, rotated banners, burst ticks round the one action that matters'],
+  ['Slants and high contrast', 'skewed tags, rotated banners, a torn ink slip behind the one action that matters'],
   ['Colour behind some text', 'tags, strips and a highlighter stroke behind short lines'],
 ];
 const langBody = `<div class="lang">
@@ -101,7 +100,7 @@ const langBody = `<div class="lang">
       ${tag('free-tag', 'This round')}
       ${strip('free-strip', `${ic('check')}Lap record: 1:12.4 by #9`)}
       <div class="rows">${rosterCard({ n: 9, name: 'Roo Boy', chipKind: 'ready' })}${rosterCard({ n: 14, name: 'Nina', chipKind: 'choosing' })}${rosterCard({ n: 5, name: 'Big Kev', chipKind: 'ready' })}</div>
-      <div class="acts">${ticks(btn({ label: 'Start race' }))}${btn({ label: 'Ready', variant: 'secondary' })}</div>
+      <div class="acts">${slip('slip-1', btn({ label: 'Start race' }))}${btn({ label: 'Ready', variant: 'secondary' })}</div>
     </div>
     <img class="render car" src="../${L.renders.sheetStandIn.split(' ')[0]}" alt="The Cruz Missile">
     ${strip('free-pts', 'Fastest lap <span class="lc">+5</span>', 'saffron big', 'pts')}
@@ -124,8 +123,8 @@ const langBody = `<div class="lang">
     <div class="blk">${strip('demo-s3', 'Host · ROO7', 'ink')}<span class="cap">paper on ink ${ratioOf(backing('paper-on-ink'))}:1</span></div>
     <div class="blk">${strip('demo-s4', 'Fastest lap <span class="lc">+5</span>', 'saffron big')}<span class="cap">ink on saffron ${ratioOf(backing('ink-on-saffron'))}:1</span></div>
   </div></div>
-<div class="lrow"><div class="rl"><b>Highlighter and burst ticks</b>A saffron stroke under the player's own word; cobalt ticks (saffron on ink) either side of the one action that matters, at most once a screen.</div>
-  <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${ticks(btn({ label: 'Start race' }))}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${ticks(btn({ label: 'Ready', variant: 'secondary' }))}</div></div></div>
+<div class="lrow"><div class="rl"><b>Highlighter and slip</b>A saffron stroke under the player's own word; a torn ink slip behind the one action that matters, at most once a screen.</div>
+  <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${slip('slip-2', btn({ label: 'Start race' }))}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${slip('slip-3', btn({ label: 'Ready', variant: 'secondary' }))}</div></div></div>
 <div class="lrow"><div class="rl"><b>Corners</b>${L.corners.rule}</div>
   <div class="corners">
     <div class="blk"><div class="cn-panel"></div><span class="cap"><b>Panel</b> ${L.corners.panelPx.desk} px (or wobbled)</span></div>
@@ -220,8 +219,8 @@ const ghost = `<div class="ghost" aria-hidden="true"><div class="gbar">${tag('gh
 const confirmsBody = `<div class="confirms">
   <div class="pblk"><span class="cap"><b>Destructive.</b> Focus starts on the safe action (Cancel). Danger fill only on the button that does the damage.</span>
     <div class="stage">${ghost}<div class="scrim"></div>
-      <div class="modal wb" data-wobble="modal-end" data-tilt="modal-end" role="alertdialog" aria-labelledby="m1">
-        <div class="modal-head"><span class="tile" style="--tile-bg:var(--c-danger)">${ic('triangle-alert')}</span><h3 class="h-display" id="m1">End the room?</h3></div>
+      <div class="modal wb" data-wobble="modal-end" data-tilt="modal-end" role="alertdialog" aria-label="End the room?">
+        <div class="modal-head"><span class="tile" style="--tile-bg:var(--c-danger)">${ic('triangle-alert')}</span>${banner('modal-end-bn', 'End the <span class="acc">room?</span>', 'h3', 'modal-bn')}</div>
         <p>Everyone is disconnected and the results are lost.</p>
         <div class="btnrow">${btn({ label: 'Cancel', variant: 'secondary', state: 'focus-kb' })}${btn({ label: 'Disband room', variant: 'destructive' })}</div>
       </div></div></div>
@@ -320,7 +319,7 @@ const tvBody = `<div class="tvwrap">
         <div class="tv-cards">${rosterCard({ n: 7, name: 'Dusty', chipKind: 'ready' })}${rosterCard({ n: 12, name: 'Pip', chipKind: 'choosing' })}${rosterCard({ n: 108, name: 'Ash', chipKind: 'ready' })}</div>
       </div>
       <div class="tv-prog"><div class="bar-head"><span>Preparing track…</span><span class="num">64%</span></div><div class="bar"><i></i></div></div>
-      <div class="tv-bottom">${ticks(btn({ label: 'Start race', state: 'focus-gp' }), 'on-ink')}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
+      <div class="tv-bottom">${slip('slip-4', btn({ label: 'Start race', state: 'focus-gp' }), 'on-ink')}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
     </div>
   </div>
   <div class="tv-spec">

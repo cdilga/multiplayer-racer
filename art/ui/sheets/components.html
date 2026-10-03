@@ -39,7 +39,7 @@ button, input { font: inherit; color: inherit; margin: 0; }
 .sec-head h2 { font-size: var(--fs-heading); }
 .sec-head p { color: var(--c-ink-soft); font-size: var(--fs-label); max-width: 82ch; }
 
-/* ---------- R102 language: heading banner, tag, strip, highlighter, burst ticks, renders (tokens.language) ---------- */
+/* ---------- R102 language: heading banner, tag, strip, highlighter, action slip, renders (tokens.language) ---------- */
 .bn { position: relative; isolation: isolate; display: inline-block; width: fit-content; padding: .1em .45em .14em; color: var(--c-paper); font: 900 italic var(--fs-display)/1 var(--font-display); letter-spacing: var(--ls-display); text-transform: uppercase; white-space: nowrap; rotate: var(--slant-heading); }
 .bn .acc { color: var(--c-saffron); }
 .bn .lc, .strip .lc { text-transform: none; }
@@ -60,10 +60,9 @@ button, input { font: inherit; color: inherit; margin: 0; }
 .strip.big { font: 900 italic var(--fs-heading)/1 var(--font-display); text-transform: none; }
 .ul { position: relative; isolation: isolate; white-space: nowrap; }
 .ul .paint-svg path { fill: var(--c-saffron); }
-.ticks { display: inline-flex; align-items: center; gap: var(--sp-2); --tick-c: var(--c-cobalt); }
-.ticks > svg { flex: none; width: 26px; height: 44px; fill: none; stroke: var(--tick-c); stroke-width: 6; stroke-linecap: square; }
-.ticks > svg:last-child { scale: -1 1; }
-.on-ink .ticks, .ticks.on-ink { --tick-c: var(--c-saffron); }
+.slip { position: relative; isolation: isolate; display: inline-flex; width: fit-content; padding: var(--sp-3) var(--sp-5); rotate: -1.4deg; }
+.slip .bn-svg path { fill: var(--c-ink); }
+.on-ink .slip .bn-svg path { fill: var(--c-ink-raised); }
 .render { display: block; filter: drop-shadow(var(--outline) 0 0 var(--c-ink)) drop-shadow(calc(-1 * var(--outline)) 0 0 var(--c-ink)) drop-shadow(0 var(--outline) 0 var(--c-ink)) drop-shadow(0 calc(-1 * var(--outline)) 0 var(--c-ink)) drop-shadow(0 var(--sh-y) 0 var(--shadow-c)); }
 
 /* ---------- 00 design language ---------- */
@@ -250,6 +249,7 @@ html.still .spinner { transform: rotate(40deg); }
 .scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--c-ink) 70%, transparent); }
 .modal { position: absolute; left: 50%; top: 50%; width: 470px; transform: translate(-50%, -50%); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
 .modal-head { display: flex; align-items: center; gap: var(--sp-3); }
+.modal-bn { font-size: var(--fs-heading); margin: 0; }
 .modal .btnrow { display: flex; justify-content: flex-end; gap: var(--sp-4); margin-top: var(--sp-3); padding-right: 4px; }
 
 /* ---------- progress, loading ---------- */

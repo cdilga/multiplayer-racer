@@ -433,7 +433,6 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
 }
 
 // The R102 shapes (U01.3) for the pause flow: torn banners, brushed tags and strips, seeded tilts.
-const TICKS = '<svg viewBox="0 0 26 44" aria-hidden="true"><path d="M4 6 L22 15 M2 22 L22 22 M4 38 L22 29"/></svg>';
 function paint(root) {
   const amp = tokens.language.banner.heading.tornAmplitudePx.tv * K();
   for (const e of root.querySelectorAll('[data-torn], [data-brush]')) {
@@ -629,7 +628,7 @@ const SETUP = {
     } else if (S.sub === 'end') {
       body = `<span class="bn pbn" data-torn="pause-end">End the <span class="acc">round</span>?</span>
         <p class="plead">Everyone goes back to the lobby and keeps their number. The room and ROO7 stay open.</p>
-        <div class="pacts row">${back}<span class="ticks">${TICKS}<button class="btn primary gp" type="button">${icon('flag')}End round</button>${TICKS}</span></div>`;
+        <div class="pacts row">${back}<span class="slip" data-torn="slip-1"><button class="btn primary gp" type="button">${icon('flag')}End round</button></span></div>`;
     } else if (S.sub === 'disband') {
       body = `<span class="bn pbn" data-torn="pause-disband">Disband <span class="acc">ROO7</span>?</span>
         <span class="strip danger" data-brush="pause-disband-strip"><span>${icon('triangle-alert')}This disconnects everyone</span></span>
@@ -646,7 +645,7 @@ const SETUP = {
             <p class="pnote">Changes apply now; laps from the next race.</p></div>
         </div>
         <div class="pacts">
-          <span class="ticks">${TICKS}<button class="btn primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button>${TICKS}</span>
+          <span class="slip" data-torn="slip-2"><button class="btn primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button></span>
           <div class="prow"><button class="btn" type="button" data-go="players">${icon('users')}Players and controllers</button><button class="btn" type="button" data-go="end">${icon('flag')}End round…</button><button class="btn danger-o" type="button" data-go="disband">${icon('log-out')}Disband room…</button></div>
           <p class="pnote">End round goes back to the lobby; everyone keeps their number. Disband disconnects everyone and ROO7 stops working.</p>
         </div>`;
@@ -681,7 +680,7 @@ const SETUP = {
         <div class="card warm-join" data-tilt="warm-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
         <div class="card warm-roster"><span class="tag" data-brush="warm-roster"><span><b class="tnum">${S.n}</b> players · <b class="tnum">${nReady}</b> ready</span></span>
           <div class="rlist"></div><div class="page-note"></div></div>
-        <div class="warm-go"><span class="ticks">${TICKS}<button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button>${TICKS}</span></div>
+        <div class="warm-go"><span class="slip" data-torn="slip-3"><button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button></span></div>
       </div>`;
     ui.append(s);
     // The footer keeps the host's fullscreen and menu; the join card already carries the room, so the footer's join hides.

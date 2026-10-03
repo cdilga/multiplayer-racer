@@ -85,7 +85,7 @@ const b = lang.banner ?? {};
 if (b.heading) for (const fg of [b.heading.text, b.heading.accent]) if (!backed(fg, b.heading.fill)) fail(`backing: heading banner ${fg} on ${b.heading.fill} has no textBacking pair`);
 for (const f of b.tag?.fills ?? []) if (!backed(b.tag.text, f)) fail(`backing: tag ${b.tag.text} on ${f} has no textBacking pair`);
 for (const f of b.strip?.fills ?? []) if (!(lang.textBacking ?? []).some((p) => p.bg === f)) fail(`backing: strip fill ${f} has no textBacking pair`);
-for (const r of [b.underline?.color, b.ticks?.onPaper, b.ticks?.onInk]) if (r) hex(r);
+for (const r of [b.underline?.color, b.slip?.fill]) if (r) hex(r);
 if (lang.renders?.sheetStandIn) {
   const f = lang.renders.sheetStandIn.split(' ')[0];
   if (!existsSync(join(here, f))) fail(`file: art/ui/${f} (language.renders.sheetStandIn) is missing`);

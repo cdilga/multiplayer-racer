@@ -199,7 +199,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 /* ---- P1-U03.2: the owner's round 1 (POC1-18 to 22), in the R102 language (U01.3) ---- */
 /* the player's colour, always on screen (POC1-21) */
 .idframe { position: fixed; inset: 0; z-index: 24; pointer-events: none; border: 5px solid var(--seat); border-radius: 0; }
-/* R102 shapes: torn banner, brushed tag and strip, burst ticks */
+/* R102 shapes: torn banner, brushed tag and strip, action slip */
 .paint { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
 .bn { position: relative; isolation: isolate; display: inline-block; padding: .1em .45em .14em; color: var(--c-paper); font: 900 italic 30px/1 var(--font-display); text-transform: uppercase; white-space: nowrap; rotate: var(--slant-heading); }
 .bn .paint path { fill: var(--c-ink); }
@@ -211,10 +211,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .goodstrip { --strip-bg: var(--c-success); position: relative; isolation: isolate; display: inline-flex; width: fit-content; padding: .2em .8em; color: var(--c-paper); font-weight: 700; transform: skewX(var(--skew-strip)); }
 .goodstrip > span { display: inline-block; transform: skewX(calc(-1 * var(--skew-strip))); }
 .goodstrip .paint path { fill: var(--strip-bg); }
-.ticks { display: inline-flex; align-items: center; gap: 6px; }
-.ticks svg.tk { flex: none; width: 20px; height: 34px; fill: none; stroke: var(--c-saffron); stroke-width: 6; stroke-linecap: square; }
-.ticks svg.tk:last-child { scale: -1 1; }
-.ticks .btn { flex: 1; }
+.slip { position: relative; isolation: isolate; display: flex; padding: 10px 16px; rotate: -1.4deg; }
+.slip .paint path { fill: var(--c-ink); }
+.slip .btn { flex: 1; }
 .btn, .field input, .seg { border-radius: 5px; }
 .panel { border-radius: 2px; }
 
@@ -293,7 +292,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .thumb { flex: none; width: 76px; height: 54px; padding: 4px; background: var(--c-ink-raised); border: 3px solid var(--c-ink-soft); border-radius: 4px; display: grid; place-items: center; }
 .thumb[aria-selected=true] { background: var(--c-paper); border-color: var(--seat); box-shadow: 0 0 0 3px var(--seat); }
 .thumb .carimg { max-width: 64px; }
-.readyrow .ticks { width: 100%; }
+.readyrow .slip { width: 100%; }
 .readyrow .btn.big { min-height: 72px; font-size: 26px; }
 @media (orientation: landscape) {
   .picker { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
@@ -311,7 +310,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 @keyframes turn { 0%, 30% { rotate: 0deg; } 55%, 90% { rotate: -90deg; } 100% { rotate: 0deg; } }
 @media (prefers-reduced-motion: reduce) { .phone-turn { animation: none; rotate: -90deg; } }
 .gatecard .lead { margin: 0; font-size: 18px; font-weight: 600; }
-.gatecard .ticks { width: 100%; }
+.gatecard .slip { width: 100%; }
 .gatecard .results { display: flex; flex-direction: column; gap: 4px; font-weight: 700; }
 .gatecard .fallback { margin: 0; font-size: 14px; font-weight: 500; color: var(--c-ink-soft); }
 .rotate-card { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(320px, calc(100% - 48px)); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--c-ink); }
@@ -321,3 +320,11 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .seg.mini { width: auto; }
 .seg.mini span { min-height: 40px; padding: 0 10px; font-size: 14px; }
 @media (orientation: landscape) { .rotate-card { display: none; } }
+
+/* Owner round 3: the HUD header follows the approved phone style frame: a torn ink bar with a saffron brush edge,
+   the seat number big, slanted and overhanging it in the player's colour, the name in paper italic. */
+.strip { position: relative; isolation: isolate; background: transparent; border-bottom: 0; padding: 14px 14px 12px 10px; min-height: 72px; }
+.strip .paint path { fill: var(--c-ink-raised); }
+.strip::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 4px; z-index: -1; background: var(--c-saffron); transform: skewX(-8deg) rotate(-.2deg); }
+.strip .seatno { flex: none; margin-top: -14px; font: 900 italic 52px/1 var(--font-display); color: var(--seat); -webkit-text-stroke: 5px var(--c-ink); paint-order: stroke fill; transform: skewX(-8deg) rotate(-3deg); font-variant-numeric: tabular-nums; }
+.strip .nm { font: 900 italic 28px/1 var(--font-display); text-transform: uppercase; color: var(--c-paper); }
