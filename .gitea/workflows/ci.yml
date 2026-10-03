@@ -1,6 +1,8 @@
-# CI stub from P1-F01: the checks the workspace scaffold guarantees. P1-D01 brings up the repo and the
-# shared runners; P1-F02 grows this into the fast/build/browser lanes (Playtest-1 plan §12.1) and
-# scripts/ci-status.sh.
+# CI from P1-F01, brought up on Gitea by P1-D01: the checks the workspace scaffold guarantees. P1-F02 grows this into
+# the fast/build/browser lanes (Playtest-1 plan §12.1); scripts/ci-status.sh reports the lanes for a commit.
+# The rust job runs on the shared ubuntu-latest runner with the toolchain and target/ in the actions cache, until a
+# shared `rust` runner with a persistent cargo cache serves this repo (P1-D01: the owner re-registers Physical
+# Soccer's repository-scoped `rust` runners as shared).
 name: CI
 
 on:
@@ -9,16 +11,29 @@ on:
 
 jobs:
   rust:
-    runs-on: rust
-    timeout-minutes: 30
-    env:
-      CARGO_HOME: /cargo-cache/cargo
-      RUSTUP_HOME: /cargo-cache/rustup
-      CARGO_TARGET_DIR: /cargo-cache/target-jammers
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            rust-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}-
+            rust-
       - name: Toolchain (rust-toolchain.toml)
-        run: rustup show active-toolchain || rustup toolchain install
+        run: |
+          if ! command -v rustup >/dev/null && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.cargo/bin/rustup" show active-toolchain || "$HOME/.cargo/bin/rustup" toolchain install
       - name: Format
         run: cargo fmt --all -- --check
       - name: Check (native)

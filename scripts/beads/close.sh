@@ -55,9 +55,8 @@ short=${sha:0:9}
 upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) || die "the branch has no upstream to push to"
 remote=${upstream%%/*} branch=$(git rev-parse --abbrev-ref HEAD)
 if [[ $(git rev-list --count "$upstream..HEAD") -gt 0 ]]; then
-    echo "close: pushing $branch to $remote"
-    git push -q "$remote" "$branch"
-    git lfs push --all "$remote" "$branch" >/dev/null 2>&1 || echo "close: note: git lfs push failed (no LFS here?)" >&2
+    echo "close: pushing $branch (Gitea, then the GitHub mirror)"
+    scripts/push.sh "$branch"
 fi
 git merge-base --is-ancestor "$sha" "$upstream" || die "$short isn't on $upstream yet"
 
