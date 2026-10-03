@@ -3,13 +3,14 @@
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
 // `?synthetic=<cars>[&freeze=<tick>][&damage]` (draw from the synthetic snapshot source instead of the sim), `?bench`
-// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]` (a plain chase-camera tile view until the grid, P1-R04).
+// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>` (a plain chase-camera tile view until the grid, P1-R04).
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountDrawer } from './input/drawer';
 import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
+import { MapRenderer } from './render/map/map';
 import { mountOverlay } from './render/overlay';
 import { SyntheticSource } from './render/synthetic';
 import { World } from './render/world';
@@ -37,6 +38,9 @@ async function boot(): Promise<void> {
   const scale = Number(params.get('res') ?? 1);
   const world = new World(backend, canvas, scale > 0 && scale <= 1 ? scale : 1);
   await world.loadVehicles();
+  // The greybox until the round flow prepares maps (G01/M08a); `?kitx=10` repeats its dressing (a draw-count probe).
+  const withMap = !params.has('synthetic') || params.has('map');
+  if (withMap) world.loadMap(JSON.parse(greybox), { repeat: Number(params.get('kitx')) || 1 });
   const list = (k: string) => params.get(k)?.split(',').map(Number);
   if (params.has('tiles')) world.tiles = { count: Number(params.get('tiles')) || 1, lods: list('lods'), follow: list('follow'), orbit: list('orbit') };
   mountOverlay(document.body, world, BUILD_LABEL);
@@ -44,6 +48,10 @@ async function boot(): Promise<void> {
     stats: () => ({ ...world.stats }),
     frame: () => world.frame(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
+    map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
+    kitBounds: () => MapRenderer.kitBounds(),
+    props: () => world.propCounts(),
+    project: (x: number, y: number, z: number) => world.project(x, y, z),
   };
 
   if (params.has('synthetic')) {

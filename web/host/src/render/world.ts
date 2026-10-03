@@ -1,15 +1,13 @@
 // The host renderer's foundation (P1-R01): one canvas at the display's native pixel resolution (R111), the world scene,
 // interpolated from snapshots (the sim worker's or the synthetic source's), and one overview camera. Cars are the
-// instanced vehicle renderer's (P1-R02); the map is a ground plane until P1-R03; the grid of player tiles is P1-R04 and
+// instanced vehicle renderer's (P1-R02) and the map and props the map renderer's (P1-R03); the grid of player tiles is P1-R04 and
 // the cameras P1-R05 (`tiles` is a plain chase-camera view until then). Instance buffers grow with the field: there is
 // no car or debris cap.
 import {
   Color,
-  ConeGeometry,
   DirectionalLight,
   GridHelper,
   HemisphereLight,
-  InstancedMesh,
   Matrix4,
   Mesh,
   MeshLambertMaterial,
@@ -18,13 +16,13 @@ import {
   Quaternion,
   Scene,
   Vector3,
-  type BufferGeometry,
 } from 'three';
 import type { Snapshot } from '../worker/client';
 import type { Backend } from './backend';
 import { Interpolator, type Sampled } from './interp';
 import { decodeSnapshot } from './snapshot';
 import type { SnapshotSource } from './synthetic';
+import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/map';
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 
 /** The host's Render resolution setting (R111): Native by default; the host may choose less. */
@@ -52,38 +50,6 @@ export interface TileView {
   follow?: number[];
   /** Degrees each tile's camera swings round its car from behind (captures of a car's side; P1-R05 owns cameras). */
   orbit?: number[];
-}
-
-/** An InstancedMesh that grows (doubling) when the field outgrows it. */
-class Growable {
-  mesh: InstancedMesh;
-  constructor(
-    private scene: Scene,
-    private geometry: BufferGeometry,
-    private material: MeshLambertMaterial,
-    capacity = 16,
-  ) {
-    this.mesh = this.make(capacity);
-  }
-  private make(capacity: number): InstancedMesh {
-    const m = new InstancedMesh(this.geometry, this.material, capacity);
-    m.frustumCulled = false;
-    m.castShadow = true;
-    m.count = 0;
-    this.scene.add(m);
-    return m;
-  }
-  ensure(n: number): InstancedMesh {
-    if (n > this.mesh.instanceMatrix.count) {
-      let cap = this.mesh.instanceMatrix.count;
-      while (cap < n) cap *= 2;
-      this.scene.remove(this.mesh);
-      this.mesh.dispose();
-      this.mesh = this.make(cap);
-    }
-    this.mesh.count = n;
-    return this.mesh;
-  }
 }
 
 export interface WorldStats {
@@ -116,15 +82,18 @@ export class World {
   /** Set for the plain multi-tile view; null draws the overview camera. */
   tiles: TileView | null = null;
   private tileCams: PerspectiveCamera[] = [];
-  private debris: Growable;
+  map: MapRenderer | null = null;
+  private props: PropRenderer;
+  private ground: Mesh;
+  private grid: GridHelper;
+  /** Where the map lies (metres: minX, maxX, minZ, maxZ), framed when nothing is on the field. */
+  private mapBox: [number, number, number, number] | null = null;
   private sample: Sampled | undefined;
   private raf = 0;
   private observer: ResizeObserver;
   private devicePx: [number, number] | null = null;
-  private m = new Matrix4();
   private q = new Quaternion();
   private v = new Vector3();
-  private s = new Vector3(1, 1, 1);
   private target = new Vector3();
   private half: [number, number] = [25, 25];
   readonly stats: WorldStats;
@@ -167,14 +136,14 @@ export class World {
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 400 });
     this.scene.add(sun, sun.target);
-    const ground = new Mesh(new PlaneGeometry(1000, 1000), new MeshLambertMaterial({ color: '#b59f82', polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+    const ground = (this.ground = new Mesh(new PlaneGeometry(1000, 1000), new MeshLambertMaterial({ color: '#b59f82', polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })));
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     // A 5 m grid, so an empty field still reads as ground with scale and depth (P1-R03 brings the map).
-    const grid = new GridHelper(1000, 200, '#8f7b62', '#a48e72');
+    const grid = (this.grid = new GridHelper(1000, 200, '#8f7b62', '#a48e72'));
     grid.position.y = 0.01;
     this.scene.add(ground, grid);
-    this.debris = new Growable(this.scene, new ConeGeometry(0.3, 0.7, 8), new MeshLambertMaterial({ color: '#ff7a2e' }), 64);
+    this.props = new PropRenderer(this.scene, null);
     this.observer = new ResizeObserver((entries) => {
       const e = entries[0];
       const box = e?.devicePixelContentBoxSize?.[0];
@@ -185,6 +154,31 @@ export class World {
     } catch {
       this.observer.observe(canvas);
     }
+  }
+
+  /** Draws a `jj.map.v1` map (P1-R03) and its props from the snapshot; the ground beyond it is off-track. */
+  loadMap(map: MapJson, opts: { repeat?: number } = {}): MapRenderer {
+    this.map?.group.removeFromParent();
+    this.map = new MapRenderer(map, opts).addTo(this.scene);
+    this.props = new PropRenderer(this.scene, map);
+    this.grid.visible = false;
+    (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
+    this.ground.position.y = -0.05;
+    const t = map.terrain;
+    this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
+    return this.map;
+  }
+
+  /** Instances drawn per prop type (map props, dropped cones, debris). */
+  propCounts(): Record<string, number> {
+    return this.props.counts();
+  }
+
+  /** Where world point (x, y, z) m lands on the canvas in CSS pixels, through the overview camera. */
+  project(x: number, y: number, z: number): [number, number] {
+    const p = new Vector3(x, y, z).project(this.camera);
+    const r = this.canvas.getBoundingClientRect();
+    return [r.left + ((p.x + 1) / 2) * r.width, r.top + ((1 - p.y) / 2) * r.height];
   }
 
   /** Loads the baked vehicle (P1-V02) and draws cars with it. */
@@ -321,14 +315,10 @@ export class World {
     };
     for (let i = 0; i < s.cars; i++) grow(s.pos[i * 3]!, s.pos[i * 3 + 2]!);
     const f = s.frame;
-    const debris = this.debris.ensure(f?.debris ?? 0);
-    for (let i = 0; f && i < f.debris; i++) {
-      this.v.fromArray(f.debrisPos, i * 3);
-      this.q.fromArray(f.debrisRot, i * 4);
-      debris.setMatrixAt(i, this.m.compose(this.v, this.q, this.s));
-      grow(this.v.x, this.v.z);
-    }
-    debris.instanceMatrix.needsUpdate = true;
+    this.props.update(f);
+    // With cars on the field the camera frames them and the props; with none, the whole map (or the props).
+    if (s.cars > 0 || !this.mapBox) for (let i = 0; f && i < f.debris; i++) grow(f.debrisPos[i * 3]!, f.debrisPos[i * 3 + 2]!);
+    else [box[0], box[1], box[2], box[3]] = this.mapBox;
     // The overview camera frames everything on the field (P1-R05 brings the real cameras): looking down at 50 degrees,
     // it starts close and backs off until the field's four corners all project inside the frame.
     if (box[0]! <= box[1]!) {
@@ -338,8 +328,8 @@ export class World {
     const tilt = (50 * Math.PI) / 180;
     const cam = this.camera;
     const [hx, hz] = this.half;
-    let dist = Math.max(hx, hz);
-    for (let k = 0; k < 40; k++, dist *= 1.08) {
+    let dist = Math.max(hx, hz) * 0.8;
+    for (let k = 0; k < 120; k++, dist *= 1.03) {
       cam.position.set(this.target.x, dist * Math.sin(tilt), this.target.z - dist * Math.cos(tilt));
       cam.near = Math.max(0.5, dist * 0.02); // depth precision for the grid at overview distances
       cam.far = dist * 4;

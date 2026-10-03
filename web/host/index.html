@@ -56,6 +56,19 @@
       [data-jj-input-drawer]:empty {
         display: none;
       }
+      /* A phone host: keep the drawer to a corner of the world. */
+      @media (max-width: 960px), (max-height: 500px) {
+        [data-jj-input-drawer] {
+          max-width: min(20rem, 45vw);
+          max-height: 35vh;
+          padding: 4px 8px;
+          font-size: 10px;
+        }
+        [data-jj-input-drawer] ul {
+          margin: 2px 0;
+          padding-left: 14px;
+        }
+      }
       .jj-unsupported {
         box-sizing: border-box;
         max-width: 36rem;

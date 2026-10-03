@@ -1,0 +1,140 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "surfaces": {
+    "colours": {
+      "tarmac": [
+        66,
+        65,
+        68
+      ],
+      "packed-dirt": [
+        148,
+        103,
+        64
+      ],
+      "off-track": [
+        215,
+        180,
+        120
+      ]
+    },
+    "deltaE": {
+      "tarmac/packed-dirt": 38.6,
+      "tarmac/off-track": 60.2,
+      "packed-dirt/off-track": 29.7
+    },
+    "props": {
+      "generic/cone": 3,
+      "generic/bin": 2
+    },
+    "stats": {
+      "terrainCells": 592,
+      "routePoints": 246,
+      "features": 2,
+      "kitTypes": 3,
+      "kitInstances": 80,
+      "draws": 6,
+      "kit": {
+        "generic/barrier": 75,
+        "generic/post": 2,
+        "generic/box-building": 3
+      }
+    }
+  },
+  "drawScaling": {
+    "1": {
+      "kitTypes": 3,
+      "kitInstances": 80,
+      "mapDraws": 6,
+      "frameDraws": 14,
+      "kit": {
+        "generic/barrier": 75,
+        "generic/post": 2,
+        "generic/box-building": 3
+      }
+    },
+    "10": {
+      "kitTypes": 3,
+      "kitInstances": 800,
+      "mapDraws": 6,
+      "frameDraws": 14,
+      "kit": {
+        "generic/barrier": 750,
+        "generic/post": 20,
+        "generic/box-building": 30
+      }
+    }
+  },
+  "kitBounds": [
+    {
+      "id": "generic/barrier",
+      "collider": [
+        4,
+        0.9,
+        0.4
+      ],
+      "rendered": [
+        4,
+        0.9,
+        0.4,
+        3.218650745928642e-9
+      ]
+    },
+    {
+      "id": "generic/bin",
+      "collider": [
+        0.6,
+        1.05,
+        0.7
+      ],
+      "rendered": [
+        0.6000000238418579,
+        1.0499999523162842,
+        0.699999988079071,
+        -1.4901161415892261e-9
+      ]
+    },
+    {
+      "id": "generic/box-building",
+      "collider": [
+        9,
+        4,
+        6
+      ],
+      "rendered": [
+        9,
+        4,
+        6,
+        4.7683716530855236e-8
+      ]
+    },
+    {
+      "id": "generic/cone",
+      "collider": [
+        0.36,
+        0.7,
+        0.36
+      ],
+      "rendered": [
+        0.36000001430511475,
+        0.699999988079071,
+        0.36000001430511475,
+        4.4703482582342247e-10
+      ]
+    },
+    {
+      "id": "generic/post",
+      "collider": [
+        0.3,
+        3,
+        0.3
+      ],
+      "rendered": [
+        0.3,
+        3,
+        0.3,
+        7.1525572131747595e-9
+      ]
+    }
+  ]
+}
