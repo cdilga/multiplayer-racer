@@ -1,0 +1,19 @@
+{
+  "id": "signs/arvo-servo",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "SERVO",
+    "OPEN ARVOS",
+    "1 KM"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Tourist/information sign, original wording; 'arvo' (afternoon) and 'servo' are owner-supplied terms; SERVO (fuel) plus its hours carry the meaning."
+  }
+}

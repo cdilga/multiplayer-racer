@@ -375,7 +375,7 @@ fn is_route(s: &str) -> bool {
 
 /// Every sign's data file, compiled in: `(id, JSON)`. A new sign is a new data file plus one line here (and its
 /// registry entry beside it); `tests/signs.rs` fails if a file on disk is missing from this list.
-pub const SIGN_DATA: [(&str, &str); 12] = [
+pub const SIGN_DATA: [(&str, &str); 15] = [
     (
         "signs/big-red-rock",
         include_str!("../../../../assets/kit/signs/data/big-red-rock.json"),
@@ -424,10 +424,22 @@ pub const SIGN_DATA: [(&str, &str); 12] = [
         "signs/unsealed-road",
         include_str!("../../../../assets/kit/signs/data/unsealed-road.json"),
     ),
+    (
+        "signs/servo",
+        include_str!("../../../../assets/kit/signs/data/servo.json"),
+    ),
+    (
+        "signs/arvo-servo",
+        include_str!("../../../../assets/kit/signs/data/arvo-servo.json"),
+    ),
+    (
+        "signs/the-institution",
+        include_str!("../../../../assets/kit/signs/data/the-institution.json"),
+    ),
 ];
 
 /// The sign kit's registry entries (`assets/kit/signs/<name>.json`), the same files `jj-map` validates against.
-pub const SIGN_PIECES: [(&str, &str); 12] = [
+pub const SIGN_PIECES: [(&str, &str); 15] = [
     (
         "signs/big-red-rock",
         include_str!("../../../../assets/kit/signs/big-red-rock.json"),
@@ -475,6 +487,18 @@ pub const SIGN_PIECES: [(&str, &str); 12] = [
     (
         "signs/unsealed-road",
         include_str!("../../../../assets/kit/signs/unsealed-road.json"),
+    ),
+    (
+        "signs/servo",
+        include_str!("../../../../assets/kit/signs/servo.json"),
+    ),
+    (
+        "signs/arvo-servo",
+        include_str!("../../../../assets/kit/signs/arvo-servo.json"),
+    ),
+    (
+        "signs/the-institution",
+        include_str!("../../../../assets/kit/signs/the-institution.json"),
     ),
 ];
 

@@ -1,0 +1,18 @@
+{
+  "id": "signs/servo",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "SERVO",
+    "3 KM"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Tourist/information sign (fuel services), original wording; 'servo' is the owner's term for a petrol station (docs/copy/australianisms.md)."
+  }
+}

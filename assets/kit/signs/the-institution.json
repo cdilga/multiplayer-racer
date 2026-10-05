@@ -1,0 +1,17 @@
+{
+  "id": "signs/the-institution",
+  "version": 1,
+  "what": "A tourist road sign on its post(s); its family, text and pictogram are data in data/lookout.json.",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 1800,
+      "y": 2500,
+      "z": 100
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 60000,
+    "cullBeyondMm": 300000
+  }
+}

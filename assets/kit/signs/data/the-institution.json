@@ -1,0 +1,19 @@
+{
+  "id": "signs/the-institution",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "THE INSTITUTION",
+    "MEALS",
+    "4 KM"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Pub sign in the existing tourist family (brown, white legend; no new shape or colour family); 'the institution' is the owner's term for a pub, with MEALS beside it as the plain word."
+  }
+}

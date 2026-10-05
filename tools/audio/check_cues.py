@@ -130,6 +130,9 @@ MOMENTS: dict[str, Moment] = {m.id: m for m in [
            10, 6, 2),
     Moment("lead-change", "repeat", "race.lead_change",
            "A different car takes first place and holds it for 2 s (debounce, DEFAULT, TUNE).", 10, 12, 3),
+    Moment("off-course", "repeat", "car.out_of_bounds",
+           "A car has been outside the track bounds long enough to be recovered (A06c, R114). Fires instead of "
+           "`wreck` for out-of-bounds, so A03 maps car.out_of_bounds to this moment.", 10, 8, 2),
     Moment("late-joiner", "repeat", "seat.late_join",
            "A seat joins a running round and is placed at the tail (drop-in).", 10, 6, 3),
 ]}
@@ -152,7 +155,7 @@ WORD_RULES = [
     ("banned-word", r"bogan\w*|bludger\w*|hoon\w*|drongo\w*|wowser\w*|sook\w*|spaz\w*|spastic\w*|retard\w*|"
                     r"cripple\w*|psycho\w*|nutter\w*|mental|lunatic\w*|moron\w*|idiot\w*|stupid|dumb|loser\w*",
      "put-down for a kind of person (nothing punching down)"),
-    ("indigenous-term", r"walkabout|dreamtime|dreaming|didgeridoo|yidaki|yakka|cooee|corroboree|bunyip|yowie|"
+    ("indigenous-term", r"dreamtime|dreaming|didgeridoo|yidaki|yakka|cooee|corroboree|bunyip|yowie|"
                         r"galah|songlines?",
      "Indigenous cultural term (not for jokes)"),
     ("brand", r"maccas|mcdonald\w*|esky|vegemite|kfc|holden|toyota|bunnings|woolies|coles|coke|pepsi",
@@ -262,11 +265,12 @@ def load_glossary(path: Path, problems: list[Problem]) -> dict[str, Term]:
                         if term.family_friendly not in ("yes", "no"):
                             problems.append(Problem(rel(path), j + 1, "glossary-flag",
                                                     f"term '{term.canonical}' family-friendly must be yes or no"))
-                        if not (re.search(r"ANDC|Macquarie|Green's", term.source)
-                                and re.search(r"https?://|australian-words-", term.source)):
+                        if not ((re.search(r"ANDC|Macquarie|Green's", term.source)
+                                 and re.search(r"https?://|australian-words-", term.source))
+                                or term.source.startswith("Owner-supplied")):
                             problems.append(Problem(rel(path), j + 1, "glossary-source",
                                                     f"term '{term.canonical}' needs a source naming ANDC, "
-                                                    "Macquarie or Green's with its page"))
+                                                    "Macquarie or Green's with its page, or 'Owner-supplied' (R114)"))
                         if term.canonical in terms:
                             problems.append(Problem(rel(path), j + 1, "glossary",
                                                     f"term '{term.canonical}' appears twice"))

@@ -5,7 +5,7 @@
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
 
 export const STATES = {
-  'In race': ['race', 'race&stick=touched', 'race&stick=preload', 'race&stick=cooldown', 'race&stick=disabled', 'race&stick=autopilot', 'identify', 'identify&at=150', 'menu', 'tutorial', 'tutorial&step=2', 'tutorial&step=4&won=1'],
+  'In race': ['race', 'race&stick=touched', 'race&stick=preload', 'race&stick=cooldown', 'race&stick=disabled', 'race&stick=autopilot', 'race&stick=offcourse', 'identify', 'identify&at=150', 'menu', 'tutorial', 'tutorial&step=2', 'tutorial&step=4&won=1'],
   'Lobby: pick your car': ['lobby', 'lobby&car=3', 'lobby&car=5&ready=1', 'join', 'settings'],
   'Landscape first (R101)': ['gate', 'rotate'],
   'Controller states (§11)': ['finding', 'no-such-game', 'game-ended', 'preview-expired', 'connecting', 'finding-relay', 'no-route', 'ready-to-join', 'joining', 'playing', 'reconnecting', 'host-gone', 'host-paused', 'another-tab', 'update-needed'],
@@ -197,6 +197,8 @@ function race() {
   });
   if (stickState === 'autopilot') area.classList.add('autopilot');
   if (stickState === 'autopilot') area.insertAdjacentHTML('beforeend', `<div class="banner bottom" data-overlay="banner">${icon('car')}<span>Autopilot is driving your car<small>Move a stick to take over. Everyone else keeps racing.</small></span></div>`);
+  // R114: "out past whoop whoop" is the out-of-bounds flavour; the plain instruction beside it carries the meaning.
+  if (stickState === 'offcourse') area.insertAdjacentHTML('beforeend', `<div class="banner bottom" data-overlay="banner">${icon('triangle-alert')}<span>Out past whoop whoop<small>Drive back onto the track.</small></span></div>`);
   if (S.name === 'tutorial') tutorial(area, s);
   if (S.name === 'menu') {
     area.insertAdjacentHTML('beforeend', `<div class="menusheet" data-overlay="menu"><h2 class="display italic">Menu</h2><div class="menu-grid">${[['locate-fixed', 'Identify: flash my number on the TV'], ['video', 'Camera: chase / in the car'], ['rotate-ccw', 'Recover my car'], ['circle-help', 'Help and tutorial'], ['settings', 'Settings'], ['log-out', 'Leave room']].map(([i, t], n) => `<button class="btn ${n === 5 ? 'danger' : n === 0 ? 'primary' : ''}" style="justify-content:flex-start">${icon(i)}${t}</button>`).join('')}<button class="btn">Close</button></div></div>`);
@@ -393,7 +395,7 @@ function gate() {
 function join() {
   app.insertAdjacentHTML('beforeend', `<div class="screen"><div class="scroll join" style="justify-content:center">
       <img alt="Joystick Jammers" src="${asset('brand/wordmark-on-ink.svg')}" style="width:min(260px,70%);align-self:center" data-box="wordmark">
-      <div class="panel" data-box="join"><h1 class="display italic" style="margin:0 0 10px;font-size:32px">Join a game</h1><p class="label">Room code on the TV</p>
+      <div class="panel" data-box="join"><h1 class="display italic" style="margin:0 0 10px;font-size:32px">Join a room</h1><p class="label">Room code on the TV</p>
         <div class="field"><input class="code" value="ROO7" aria-label="Room code" maxlength="8" autocapitalize="characters"><button class="btn">${icon('scan-qr-code')}Scan QR code</button></div>
         <div style="height:14px"></div><button class="btn primary big">Join</button></div>
       <div class="waiting" data-box="hint">Got a link from the TV? It opens this page with the code filled in.</div>
@@ -421,7 +423,7 @@ function settings() {
 const CARDS = {
   finding: ['spin', 'Finding room ROO7…', 'Hang on, looking for the TV.', ['Cancel']],
   'no-such-game': ['triangle-alert', 'No room with code K7QX', 'Check the code on the TV, or scan the QR again.', ['primary:Edit the code', 'Scan again']],
-  'game-ended': ['flag', 'That room has ended', 'Thanks for playing! You finished 3rd.', ['primary:Join another room']],
+  'game-ended': ['flag', 'That room has ended', 'Cheers for playing! You finished 3rd.', ['primary:Join another room']],
   'preview-expired': ['timer', 'This test build has expired', 'Preview builds last a day. The preview index has the newest one.', ['primary:Open the preview index']],
   connecting: ['spin', 'Connecting…', 'Linking your controller to the TV.', []],
   'finding-relay': ['spin', 'Finding a relay…', 'Your network is fussy. Still trying on its own.', []],

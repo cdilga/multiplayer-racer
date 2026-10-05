@@ -40,7 +40,7 @@ for a term to ship.
 | Term | Meaning | Where it fits | Family-friendly | Sensitivity note | Source | Used in |
 |---|---|---|---|---|---|---|
 | g'day | Familiar greeting, any hour; short for "good day". | Opening a line to the room. | yes | Worldwide cliche from 1980s tourism ads; use once or twice, not every line. | ANDC "g'day", `australian-words-g` | welcome, late-joiner |
-| mate | Address implying equality and goodwill (can also be ironic). | Friendly aside in a callout. | yes | Never aimed at one person by name or gender; keep it warm, not sarcastic. | ANDC "mate", `australian-words-m` | welcome, door-off, wreck |
+| mate | Address implying equality and goodwill (can also be ironic). | Friendly aside in a callout. | yes | Never aimed at one person by name or gender; keep it warm, not sarcastic. | ANDC "mate", `australian-words-m` | welcome, door-off, wreck, off-course |
 | no worries | No bother; all is well. First recorded in the 1960s. | Reassuring a newcomer or a loser. | yes | None. | ANDC "no worries", `australian-words-n` | welcome, time-up, late-joiner |
 | fair go | A reasonable chance, a fair deal; Australia sees itself as "the land of the fair go". | Everyone gets a turn; late joiners. | yes | A cherished value, so use it sincerely. ANDC notes it is also an exclamation of disbelief, so keep the plain meaning obvious. | ANDC "fair go", `australian-words-f` | late-joiner |
 | fair dinkum | Genuine, true, honest. "Dinkum" is from British dialect; Australian use from the 1890s. | Hyping something real: a close finish, a thriller. | yes | None. | ANDC "dinkum", `australian-words-d`; Macquarie "Fair dinkum true blue Aussie, mate", `https://www.macquariedictionary.com.au/fair-dinkum-true-blue-aussie-mate/` | photo-finish, lead-change |
@@ -64,6 +64,15 @@ for a term to ship.
 | rock up / rocks up / rocked up / rocking up | To arrive, usually without notice. Earliest quotation 1974. | A late joiner. | yes | None. Green's also records it in South African and Scots English. | Green's "rock, v.3" (sense "rock up"), `https://greensdictofslang.com/entry/zlfamhy` | late-joiner |
 | starve the lizards | Exclamation of surprise. First recorded in the 1920s. | Big air. | yes | Dated; Macquarie says it has fallen out of use, which is part of the joke. | Macquarie "Starve the lizards!", `https://macquariedictionary.com.au/blog/article/789` | big-air |
 | hooroo | A farewell; in use since at least 1916 and from "hooray". | Closing a round. | yes | None. | Macquarie "Ever leave a party without saying hooroo?", `https://www.macquariedictionary.com.au/ever-leave-a-party-without-saying-hooroo/` | next-round |
+| walkabout / gone walkabout / going walkabout | Wandering off, gone missing; here a car that has strayed off the track. | A car that has left the track or is missing/respawning. Never for a person. | yes | Owner ruling R114 supersedes the earlier hold-back (see the left-out table). Plain words (the car, the track) sit beside it. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | off-course |
+| out past whoop whoop | Very far away, in the middle of nowhere. | The out-of-bounds message, with the plain instruction beside it. | yes | The plain instruction (back onto the track) must always carry the meaning. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | off-course |
+| cheers | Thanks (also a toast). | Thank-yous and sign-offs. | yes | Plain and safe. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | time-up, winner, next-round |
+| sheila / sheilas | Slang for women. | Banter and flavour lines where the owner wants it. | yes | Owner-supplied; used per the owner's direction (R114). | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | welcome, winner |
+| blokes | Men, fellas. | Group address and banter. | yes | Owner-supplied. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | welcome, winner, next-round |
+| yeah nah / nah yeah / nah | Casual no; "yeah nah" a polite no, "nah yeah" a yes. | Playful reactions where the literal meaning doesn't matter. | yes | Confusing to non-Australians: only in lines that stay correct if read literally either way, and never in a warning, choice or confirmation. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | time-up |
+| arvo / arvos / arvo's / arvy | Afternoon. | Time-of-day banter, "this arvo's racing"; scenery and signs. | yes | Plain and safe. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | welcome |
+| servo / servos | A petrol or fuel station. | Scenery and signs, pit/repair spots, the Aussie roadside. | yes | Plain and safe. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | none yet |
+| the institution | A pub. | Signs, scenery, banter. | yes | Owner-supplied. Not in a cue line (the loader refuses the word pub and alcohol words in speech); lives on a sign, with MEALS beside it. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | none yet |
 
 Dropped by the owner 2026-10-04: ~~stone the crows~~ (not a phrase they've heard in Australian slang). The `big-air` line and its clip were removed and the remaining `big-air` variants renumbered 1-4. Earlier notes: Dated (Macquarie says it is dying out). Some listeners hear "stone" as violent, so drop it if the owner prefers; the announcer says the clean form only. Source: Macquarie "Starve the lizards!", `https://macquariedictionary.com.au/blog/article/789`
 
@@ -80,7 +89,7 @@ Same columns. Cleared for A06 (derby and items) or Full awards so the next pass 
 
 | Term | Why it is out |
 |---|---|
-| walkabout ("gone walkabout") | An Aboriginal cultural practice used as a joke. The audition sheet used it for a wheel; the real sheet does not. Not in the ANDC list either. |
+| walkabout ("gone walkabout") | Back in the Terms table: owner ruling R114 (2026-10-04) supersedes this hold-back, and the owner-supplied table says to use it freely for cars wandering off. Used only for a car off the track, never for a person. |
 | hard yakka | ANDC traces "yakka" to *yaga*, 'work', in the Yagara language of the Brisbane region. Indigenous-derived slang as a punchline is out by the rule above. |
 | cooee, galah, bunyip, yowie, yidaki, dreamtime | Indigenous-origin words or cultural terms. ANDC records "galah" as a bird name from Aboriginal languages that also means 'a fool'; it is both Indigenous-derived and an insult. |
 | boomerang (as a joke) | An Aboriginal tool. The item may keep its game name in A06's rows; no punchlines about it. Owner to decide if the item keeps the name. |
@@ -130,3 +139,33 @@ the top still apply: a slang term sits beside plain words that carry the meaning
 **Names.** Diminutive nicknames ("Davo", "Stevo", "Gazza", "Shazza", "Bazza", "Macca", "Robbo") belong in the autogenerated
 names someone gets if they don't pick one (P1-C03's curated prefill list, and the later name generator).
 
+## Where it's used (P1-A06c, br-ennm)
+
+Every term from the owner-supplied list that ships, with its exact line. Cue ids are `moment-variant` in
+`tools/audio/cues-playtest1.tsv`; each is also a clip `assets/audio/voice/<id>.ogg`. Terms the doc fits to places we have no copy for
+yet (scallop, cruiser, sanga) are not used. TV and host lines to follow are in `docs/evidence/P1-A06c/tv-copy-todo.md`.
+
+| Term | Line | Where |
+|---|---|---|
+| out past whoop whoop | "Out past whoop whoop! Drive back onto the track." | cue `off-course-1` |
+| out past whoop whoop | "You're out past whoop whoop! Steer back to the track." | cue `off-course-4` |
+| out past whoop whoop | "Out past whoop whoop" / "Drive back onto the track." | phone banner, `art/ui/poc/phone/phone.js:201` (state `#race&stick=offcourse`) |
+| walkabout | "That car's gone walkabout! Back onto the track, mate." | cue `off-course-2` |
+| walkabout | "Gone walkabout! Bring that car back onto the track." | cue `off-course-3` |
+| cheers | "Yeah nah, not this time. The round's over, cheers for racing." | cue `time-up-4` |
+| cheers | "Cheers for racing, sheilas and blokes! What a round that was." | cue `winner-4` |
+| cheers | "Cheers for that one, blokes. Next round's loading, so hang tight." | cue `next-round-4` |
+| cheers | "Cheers for playing! You finished 3rd." | phone state card `game-ended`, `art/ui/poc/phone/phone.js:426` |
+| fair dinkum | "A fair dinkum finish! Nobody gave an inch." | cue `photo-finish-4` |
+| sheila / sheilas | "Welcome, blokes and sheilas! Grab a controller, this arvo's racing is on." | cue `welcome-4` |
+| sheila / sheilas | "Cheers for racing, sheilas and blokes! What a round that was." | cue `winner-4` |
+| blokes | the `welcome-4`, `winner-4` and `next-round-4` lines above | cues |
+| blokes, sheilas, arvo | "Everyone races on one shared screen, steering from their own phone. Perfect for an arvo with the blokes and sheilas." | landing pitch, `web/landing/index.html:15` |
+| arvo | "...this arvo's racing is on." | cue `welcome-4` |
+| arvo, servo | `SERVO` / `OPEN ARVOS` / `1 KM` | sign `signs/arvo-servo` (`assets/kit/signs/data/arvo-servo.json`) |
+| servo | `SERVO` / `3 KM` | sign `signs/servo` |
+| the institution | `THE INSTITUTION` / `MEALS` / `4 KM` | sign `signs/the-institution`; tourist family (brown, white legend), because the grammar has no business-sign family and no new shape or colour family is allowed |
+| yeah nah | "Yeah nah, not this time. The round's over, cheers for racing." | cue `time-up-4`; read literally it is still true (this time did not go that way) |
+| fair dinkum, sheila, mate, etc. | unchanged earlier cues | see the "Used in" column of the Terms table |
+
+`the institution` is on a sign only: the cue loader refuses the word "pub" and alcohol words in speech, so no announcer line says it.
