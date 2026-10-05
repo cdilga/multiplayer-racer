@@ -9,7 +9,10 @@ use jj_map::Registry;
 use jj_procgen::signs::{self, Family, Shape, SignDef};
 
 fn bloody() -> SignDef {
-    signs::all().into_iter().find(|s| s.id == "signs/bloody-big-jumps").expect("the invented sign ships")
+    signs::all()
+        .into_iter()
+        .find(|s| s.id == "signs/bloody-big-jumps")
+        .expect("the invented sign ships")
 }
 
 fn json(s: &SignDef) -> serde_json::Value {
@@ -70,7 +73,10 @@ fn text_too_long_or_not_upper_case_fails() {
     s.lines = vec!["BLOODY BIG JUMPS AHEAD".into()];
     assert!(signs::validate(&s).iter().any(|m| m.contains("won't fit")));
     let f = signs::legend_cap_fraction(&bloody()).unwrap();
-    assert!((signs::MIN_CAP_FRACTION..0.2).contains(&f), "the invented sign fits legibly: {f}");
+    assert!(
+        (signs::MIN_CAP_FRACTION..0.2).contains(&f),
+        "the invented sign fits legibly: {f}"
+    );
     let mut s = bloody();
     s.lines = vec!["Bloody Big".into()];
     assert!(signs::validate(&s).iter().any(|m| m.contains("upper case")));
@@ -79,7 +85,10 @@ fn text_too_long_or_not_upper_case_fails() {
     assert!(!signs::validate(&s).is_empty());
     let mut s = bloody();
     s.lines = vec![];
-    assert!(!signs::validate(&s).is_empty(), "no legend and no pictogram");
+    assert!(
+        !signs::validate(&s).is_empty(),
+        "no legend and no pictogram"
+    );
 }
 
 #[test]
@@ -95,7 +104,10 @@ fn direction_and_tourist_grammar_hold() {
     let dir = all.iter().find(|s| s.family == Family::Direction).unwrap();
     let mut s = dir.clone();
     s.shield = Some("87A".into());
-    assert!(!signs::validate(&s).is_empty(), "a route shield is a letter then digits");
+    assert!(
+        !signs::validate(&s).is_empty(),
+        "a route shield is a letter then digits"
+    );
     let mut s = dir.clone();
     s.rows.clear();
     assert!(!signs::validate(&s).is_empty());
@@ -114,13 +126,20 @@ fn sidecars_record_family_and_a_real_copy_needs_its_commons_source_and_licence()
         assert_eq!(s.sidecar.family, s.family, "{}", s.id);
     }
     let mut s = bloody();
-    s.sidecar.source = "https://commons.wikimedia.org/wiki/File:Australian_road_sign_W5-1.svg".into();
+    s.sidecar.source =
+        "https://commons.wikimedia.org/wiki/File:Australian_road_sign_W5-1.svg".into();
     s.sidecar.licence = "original".into();
-    assert!(!signs::validate(&s).is_empty(), "a copied sign needs a real licence");
+    assert!(
+        !signs::validate(&s).is_empty(),
+        "a copied sign needs a real licence"
+    );
     s.sidecar.licence = "CC BY-SA 4.0".into();
     assert!(signs::validate(&s).is_empty());
     s.sidecar.source = "https://example.com/sign.png".into();
-    assert!(!signs::validate(&s).is_empty(), "the source must be a Commons file page");
+    assert!(
+        !signs::validate(&s).is_empty(),
+        "the source must be a Commons file page"
+    );
     let mut s = bloody();
     s.sidecar.family = Family::Tourist;
     assert!(!signs::validate(&s).is_empty());
@@ -138,9 +157,18 @@ fn data_files_registry_entries_and_the_compiled_lists_stay_paired() {
     };
     let entries = names(&dir);
     let data = names(&dir.join("data"));
-    let compiled: BTreeSet<String> = signs::SIGN_DATA.iter().map(|(id, _)| id.to_string()).collect();
-    let pieces: BTreeSet<String> = signs::SIGN_PIECES.iter().map(|(id, _)| id.to_string()).collect();
-    assert_eq!(entries, data, "every registry entry has a data file and back");
+    let compiled: BTreeSet<String> = signs::SIGN_DATA
+        .iter()
+        .map(|(id, _)| id.to_string())
+        .collect();
+    let pieces: BTreeSet<String> = signs::SIGN_PIECES
+        .iter()
+        .map(|(id, _)| id.to_string())
+        .collect();
+    assert_eq!(
+        entries, data,
+        "every registry entry has a data file and back"
+    );
     assert_eq!(data, compiled, "SIGN_DATA lists every data file");
     assert_eq!(entries, pieces, "SIGN_PIECES lists every registry entry");
     for s in signs::all() {

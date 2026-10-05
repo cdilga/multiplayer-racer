@@ -177,7 +177,9 @@ pub fn legend_cap_fraction(def: &SignDef) -> Option<f64> {
                 def.lines
                     .iter()
                     .enumerate()
-                    .map(|(i, l)| 2.0 * WARN_RT / (k(l) + 2.3 * (i as f64 - (n - 1.0) / 2.0).abs() + 1.0))
+                    .map(|(i, l)| {
+                        2.0 * WARN_RT / (k(l) + 2.3 * (i as f64 - (n - 1.0) / 2.0).abs() + 1.0)
+                    })
                     .fold(WARN_RT * 0.5, f64::min)
             };
             Some(h / panel)
@@ -207,14 +209,21 @@ pub fn legend_cap_fraction(def: &SignDef) -> Option<f64> {
 /// The lettering set (the renderer's stroke font has exactly these).
 pub fn lettering_ok(text: &str) -> bool {
     !text.is_empty()
-        && text
-            .chars()
-            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || matches!(c, ' ' | '.' | '-' | '/'))
+        && text.chars().all(|c| {
+            c.is_ascii_uppercase() || c.is_ascii_digit() || matches!(c, ' ' | '.' | '-' | '/')
+        })
         && text.trim() == text
 }
 
 /// Wikimedia Commons licences that allow reuse with the sidecar's record.
-const COMMONS_LICENCES: [&str; 6] = ["CC0", "Public domain", "CC BY 4.0", "CC BY-SA 4.0", "CC BY 3.0", "CC BY-SA 3.0"];
+const COMMONS_LICENCES: [&str; 6] = [
+    "CC0",
+    "Public domain",
+    "CC BY 4.0",
+    "CC BY-SA 4.0",
+    "CC BY 3.0",
+    "CC BY-SA 3.0",
+];
 
 /// Every way `def` breaks its family's grammar (empty = a valid sign).
 pub fn validate(def: &SignDef) -> Vec<String> {
@@ -222,49 +231,87 @@ pub fn validate(def: &SignDef) -> Vec<String> {
     let g = grammar(def.family);
     let mut bad = |m: String| out.push(format!("{}: {m}", def.id));
     if def.shape != g.shape {
-        bad(format!("{:?} signs are {:?}, not {:?} (no new shapes)", def.family, g.shape, def.shape));
+        bad(format!(
+            "{:?} signs are {:?}, not {:?} (no new shapes)",
+            def.family, g.shape, def.shape
+        ));
     }
     if def.background != g.background {
-        bad(format!("{:?} background must be {} (no new colour family), got {}", def.family, g.background, def.background));
+        bad(format!(
+            "{:?} background must be {} (no new colour family), got {}",
+            def.family, g.background, def.background
+        ));
     }
     if def.legend != g.legend {
-        bad(format!("{:?} legend must be {}, got {}", def.family, g.legend, def.legend));
+        bad(format!(
+            "{:?} legend must be {}, got {}",
+            def.family, g.legend, def.legend
+        ));
     }
     if def.sidecar.family != def.family {
         bad("sidecar family differs from the sign's family".into());
     }
     match (def.sidecar.source.as_str(), def.sidecar.licence.as_str()) {
         ("original", "original") => {}
-        (src, lic) if src.starts_with("https://commons.wikimedia.org/wiki/File:") && COMMONS_LICENCES.contains(&lic) => {}
-        (src, lic) => bad(format!("sidecar source/licence must be \"original\" or a Commons file page with a reuse licence, got {src:?} / {lic:?}")),
+        (src, lic)
+            if src.starts_with("https://commons.wikimedia.org/wiki/File:")
+                && COMMONS_LICENCES.contains(&lic) => {}
+        (src, lic) => bad(format!(
+            "sidecar source/licence must be \"original\" or a Commons file page with a reuse licence, got {src:?} / {lic:?}"
+        )),
     }
-    if def.id.strip_prefix("signs/").is_none_or(|n| n.is_empty() || !n.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')) {
+    if def.id.strip_prefix("signs/").is_none_or(|n| {
+        n.is_empty()
+            || !n
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    }) {
         bad("id must be signs/<kebab-name>".into());
     }
     // Only the road-name heading keeps a character bound (it is set beside the shield); legends are bounded by the fit.
     let line = |what: &str, text: &str, max: usize, out: &mut Vec<String>| {
         if !lettering_ok(text) {
-            out.push(format!("{}: {what} {text:?} must be upper case from A-Z 0-9 space . - /", def.id));
+            out.push(format!(
+                "{}: {what} {text:?} must be upper case from A-Z 0-9 space . - /",
+                def.id
+            ));
         }
         if text.chars().count() > max {
-            out.push(format!("{}: {what} {text:?} is longer than {max} characters and won't fit", def.id));
+            out.push(format!(
+                "{}: {what} {text:?} is longer than {max} characters and won't fit",
+                def.id
+            ));
         }
     };
     let mut extra = Vec::new();
     match def.family {
         Family::Warning | Family::Tourist => {
             if def.shield.is_some() || def.heading.is_some() || !def.rows.is_empty() {
-                extra.push(format!("{}: only direction signs carry a shield, heading or destination rows", def.id));
+                extra.push(format!(
+                    "{}: only direction signs carry a shield, heading or destination rows",
+                    def.id
+                ));
             }
-            let max_lines = if def.pictogram.is_some() { 1 } else { g.max_lines };
+            let max_lines = if def.pictogram.is_some() {
+                1
+            } else {
+                g.max_lines
+            };
             if def.lines.len() > max_lines {
-                extra.push(format!("{}: {} legend lines, at most {max_lines}", def.id, def.lines.len()));
+                extra.push(format!(
+                    "{}: {} legend lines, at most {max_lines}",
+                    def.id,
+                    def.lines.len()
+                ));
             }
             if def.pictogram.is_none() && def.lines.is_empty() {
                 extra.push(format!("{}: a sign needs a legend or a pictogram", def.id));
             }
             if def.family == Family::Tourist && def.pictogram.is_some() {
-                extra.push(format!("{}: tourist signs carry a white legend only", def.id));
+                extra.push(format!(
+                    "{}: tourist signs carry a white legend only",
+                    def.id
+                ));
             }
             for l in &def.lines {
                 line("legend", l, usize::MAX, &mut extra);
@@ -272,22 +319,36 @@ pub fn validate(def: &SignDef) -> Vec<String> {
         }
         Family::Direction => {
             if def.pictogram.is_some() || !def.lines.is_empty() {
-                extra.push(format!("{}: direction signs carry a shield, heading and destination rows only", def.id));
+                extra.push(format!(
+                    "{}: direction signs carry a shield, heading and destination rows only",
+                    def.id
+                ));
             }
             match &def.shield {
                 Some(s) if is_route(s) => {}
-                other => extra.push(format!("{}: route shield {other:?} must be a letter A/B/C/M/S plus 1-3 digits", def.id)),
+                other => extra.push(format!(
+                    "{}: route shield {other:?} must be a letter A/B/C/M/S plus 1-3 digits",
+                    def.id
+                )),
             }
             if let Some(h) = &def.heading {
                 line("heading", h, 12, &mut extra);
             }
             if def.rows.is_empty() || def.rows.len() > g.max_lines {
-                extra.push(format!("{}: direction signs list 1-{} destinations, got {}", def.id, g.max_lines, def.rows.len()));
+                extra.push(format!(
+                    "{}: direction signs list 1-{} destinations, got {}",
+                    def.id,
+                    g.max_lines,
+                    def.rows.len()
+                ));
             }
             for r in &def.rows {
                 line("destination", &r.text, usize::MAX, &mut extra);
                 if r.km > 9999 {
-                    extra.push(format!("{}: distance {} km has more than 4 digits", def.id, r.km));
+                    extra.push(format!(
+                        "{}: distance {} km has more than 4 digits",
+                        def.id, r.km
+                    ));
                 }
             }
         }
@@ -315,34 +376,106 @@ fn is_route(s: &str) -> bool {
 /// Every sign's data file, compiled in: `(id, JSON)`. A new sign is a new data file plus one line here (and its
 /// registry entry beside it); `tests/signs.rs` fails if a file on disk is missing from this list.
 pub const SIGN_DATA: [(&str, &str); 12] = [
-    ("signs/big-red-rock", include_str!("../../../../assets/kit/signs/data/big-red-rock.json")),
-    ("signs/bloody-big-jumps", include_str!("../../../../assets/kit/signs/data/bloody-big-jumps.json")),
-    ("signs/crest", include_str!("../../../../assets/kit/signs/data/crest.json")),
-    ("signs/jumps-crest", include_str!("../../../../assets/kit/signs/data/jumps-crest.json")),
-    ("signs/junction", include_str!("../../../../assets/kit/signs/data/junction.json")),
-    ("signs/kangaroo", include_str!("../../../../assets/kit/signs/data/kangaroo.json")),
-    ("signs/lookout", include_str!("../../../../assets/kit/signs/data/lookout.json")),
-    ("signs/red-centre", include_str!("../../../../assets/kit/signs/data/red-centre.json")),
-    ("signs/rest-area", include_str!("../../../../assets/kit/signs/data/rest-area.json")),
-    ("signs/steep-descent", include_str!("../../../../assets/kit/signs/data/steep-descent.json")),
-    ("signs/stuart-hwy", include_str!("../../../../assets/kit/signs/data/stuart-hwy.json")),
-    ("signs/unsealed-road", include_str!("../../../../assets/kit/signs/data/unsealed-road.json")),
+    (
+        "signs/big-red-rock",
+        include_str!("../../../../assets/kit/signs/data/big-red-rock.json"),
+    ),
+    (
+        "signs/bloody-big-jumps",
+        include_str!("../../../../assets/kit/signs/data/bloody-big-jumps.json"),
+    ),
+    (
+        "signs/crest",
+        include_str!("../../../../assets/kit/signs/data/crest.json"),
+    ),
+    (
+        "signs/jumps-crest",
+        include_str!("../../../../assets/kit/signs/data/jumps-crest.json"),
+    ),
+    (
+        "signs/junction",
+        include_str!("../../../../assets/kit/signs/data/junction.json"),
+    ),
+    (
+        "signs/kangaroo",
+        include_str!("../../../../assets/kit/signs/data/kangaroo.json"),
+    ),
+    (
+        "signs/lookout",
+        include_str!("../../../../assets/kit/signs/data/lookout.json"),
+    ),
+    (
+        "signs/red-centre",
+        include_str!("../../../../assets/kit/signs/data/red-centre.json"),
+    ),
+    (
+        "signs/rest-area",
+        include_str!("../../../../assets/kit/signs/data/rest-area.json"),
+    ),
+    (
+        "signs/steep-descent",
+        include_str!("../../../../assets/kit/signs/data/steep-descent.json"),
+    ),
+    (
+        "signs/stuart-hwy",
+        include_str!("../../../../assets/kit/signs/data/stuart-hwy.json"),
+    ),
+    (
+        "signs/unsealed-road",
+        include_str!("../../../../assets/kit/signs/data/unsealed-road.json"),
+    ),
 ];
 
 /// The sign kit's registry entries (`assets/kit/signs/<name>.json`), the same files `jj-map` validates against.
 pub const SIGN_PIECES: [(&str, &str); 12] = [
-    ("signs/big-red-rock", include_str!("../../../../assets/kit/signs/big-red-rock.json")),
-    ("signs/bloody-big-jumps", include_str!("../../../../assets/kit/signs/bloody-big-jumps.json")),
-    ("signs/crest", include_str!("../../../../assets/kit/signs/crest.json")),
-    ("signs/jumps-crest", include_str!("../../../../assets/kit/signs/jumps-crest.json")),
-    ("signs/junction", include_str!("../../../../assets/kit/signs/junction.json")),
-    ("signs/kangaroo", include_str!("../../../../assets/kit/signs/kangaroo.json")),
-    ("signs/lookout", include_str!("../../../../assets/kit/signs/lookout.json")),
-    ("signs/red-centre", include_str!("../../../../assets/kit/signs/red-centre.json")),
-    ("signs/rest-area", include_str!("../../../../assets/kit/signs/rest-area.json")),
-    ("signs/steep-descent", include_str!("../../../../assets/kit/signs/steep-descent.json")),
-    ("signs/stuart-hwy", include_str!("../../../../assets/kit/signs/stuart-hwy.json")),
-    ("signs/unsealed-road", include_str!("../../../../assets/kit/signs/unsealed-road.json")),
+    (
+        "signs/big-red-rock",
+        include_str!("../../../../assets/kit/signs/big-red-rock.json"),
+    ),
+    (
+        "signs/bloody-big-jumps",
+        include_str!("../../../../assets/kit/signs/bloody-big-jumps.json"),
+    ),
+    (
+        "signs/crest",
+        include_str!("../../../../assets/kit/signs/crest.json"),
+    ),
+    (
+        "signs/jumps-crest",
+        include_str!("../../../../assets/kit/signs/jumps-crest.json"),
+    ),
+    (
+        "signs/junction",
+        include_str!("../../../../assets/kit/signs/junction.json"),
+    ),
+    (
+        "signs/kangaroo",
+        include_str!("../../../../assets/kit/signs/kangaroo.json"),
+    ),
+    (
+        "signs/lookout",
+        include_str!("../../../../assets/kit/signs/lookout.json"),
+    ),
+    (
+        "signs/red-centre",
+        include_str!("../../../../assets/kit/signs/red-centre.json"),
+    ),
+    (
+        "signs/rest-area",
+        include_str!("../../../../assets/kit/signs/rest-area.json"),
+    ),
+    (
+        "signs/steep-descent",
+        include_str!("../../../../assets/kit/signs/steep-descent.json"),
+    ),
+    (
+        "signs/stuart-hwy",
+        include_str!("../../../../assets/kit/signs/stuart-hwy.json"),
+    ),
+    (
+        "signs/unsealed-road",
+        include_str!("../../../../assets/kit/signs/unsealed-road.json"),
+    ),
 ];
 
 /// All the signs, parsed. Panics on a malformed file (the tests catch it first).
