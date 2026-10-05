@@ -2,11 +2,39 @@
 <html lang="en-AU">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15203A" />
     <title>Joystick Jammers</title>
+    <link rel="icon" href="../../art/ui/brand/favicon.svg" />
+    <link rel="apple-touch-icon" href="../../art/ui/brand/apple-touch-icon-180.png" />
   </head>
   <body>
-    <main id="app"></main>
+    <main class="stage" id="app">
+      <section class="brand">
+        <h1 class="wordmark"><img src="../../art/ui/brand/wordmark.svg" alt="Joystick Jammers" width="720" height="292" /></h1>
+        <p class="pitch">Everyone races on one shared screen, steering from their own phone.</p>
+        <img class="car" src="../../art/ui/brand/renders/cruz-missile-hero.png" alt="" width="956" height="490" />
+      </section>
+
+      <div class="actions">
+        <section class="panel host" aria-labelledby="host-h">
+          <h2 class="kicker" id="host-h">On the big screen</h2>
+          <p>Open this on the laptop or TV that will show the race.</p>
+          <a class="btn btn-primary big wide display" id="host-link" href="host">Host a room</a>
+        </section>
+
+        <form class="panel join" id="join-form" novalidate aria-labelledby="join-h">
+          <h2 class="kicker" id="join-h">On your phone</h2>
+          <label class="field-label" for="code">Room code</label>
+          <div class="code-row">
+            <input class="field code" id="code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="ABCD" aria-describedby="code-error" />
+            <button class="btn btn-secondary btn-icon" id="scan" type="button" aria-label="Scan QR code"></button>
+          </div>
+          <p class="field-error" id="code-error" role="alert" hidden></p>
+          <button class="btn btn-primary big wide display" id="join" type="submit">Join a room</button>
+        </form>
+      </div>
+    </main>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

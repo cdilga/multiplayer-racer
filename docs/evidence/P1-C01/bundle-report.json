@@ -1,0 +1,80 @@
+{
+  "dist": "web/dist",
+  "landing": {
+    "page": "landing/index.html",
+    "files": [
+      {
+        "file": "assets/cruz-missile-hero-BGsSsvsn.png",
+        "bytes": 57526
+      },
+      {
+        "file": "assets/wordmark-C3SYZTe9.svg",
+        "bytes": 9537
+      },
+      {
+        "file": "assets/landing-BokFQQxn.css",
+        "bytes": 14993
+      },
+      {
+        "file": "assets/barlow-semi-condensed-700-D8oN59Yl.woff2",
+        "bytes": 35400
+      },
+      {
+        "file": "assets/barlow-semi-condensed-600-DUE0SVSJ.woff2",
+        "bytes": 35020
+      },
+      {
+        "file": "assets/barlow-semi-condensed-500-B0Zsh8-m.woff2",
+        "bytes": 34084
+      },
+      {
+        "file": "assets/barlow-condensed-900-italic-cIV6hM2u.woff2",
+        "bytes": 35464
+      },
+      {
+        "file": "assets/barlow-condensed-900-B48YGAGs.woff2",
+        "bytes": 33452
+      },
+      {
+        "file": "assets/barlow-condensed-800-DGdgwb4p.woff2",
+        "bytes": 34224
+      },
+      {
+        "file": "assets/modulepreload-polyfill-P2Xu9kJm.js",
+        "bytes": 670
+      },
+      {
+        "file": "assets/landing-S0OQRILq.js",
+        "bytes": 24889
+      },
+      {
+        "file": "assets/apple-touch-icon-180-Mn3cjl2B.png",
+        "bytes": 6452
+      },
+      {
+        "file": "assets/favicon-HYMeRXmZ.svg",
+        "bytes": 1367
+      }
+    ],
+    "totalBytes": 323078
+  },
+  "join": {
+    "page": "controller/index.html",
+    "files": [
+      {
+        "file": "assets/build-nVdqIQoG.js",
+        "bytes": 51
+      },
+      {
+        "file": "assets/modulepreload-polyfill-P2Xu9kJm.js",
+        "bytes": 670
+      },
+      {
+        "file": "assets/controller-GWPOObNH.js",
+        "bytes": 162
+      }
+    ],
+    "totalBytes": 883
+  },
+  "problems": []
+}

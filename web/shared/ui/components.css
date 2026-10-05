@@ -1,0 +1,100 @@
+/* Shared UI components (P1-C01): buttons, panels, badges, chips, fields, toasts, confirmations, focus states.
+   Built from the variables in tokens.generated.css only (no colour literals except through colour-mix of palette
+   variables). Mirrors art/ui/sheets/components.html; when the sheet and this file disagree, the sheet wins. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--c-ink); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; min-height: 100dvh; background: var(--c-ink); color: var(--c-ink);
+  font-family: var(--font-body); font-weight: 500; font-size: var(--fs-body); line-height: var(--lh-body);
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p { margin: 0; }
+button, input { font: inherit; color: inherit; margin: 0; }
+[hidden] { display: none !important; }
+
+.ic { display: inline-block; flex: none; width: 1.25em; height: 1.25em; background: currentColor; -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat; }
+.display { font-family: var(--font-display); font-weight: 900; font-style: italic; letter-spacing: var(--ls-display); text-transform: uppercase; line-height: var(--lh-display); }
+.on-ink { --shadow-c: var(--shadow-c-on-ink); color: var(--c-paper); }
+
+/* ---------- buttons ---------- */
+.btn {
+  --bg: var(--c-paper); --fg: var(--c-ink); --bd: var(--c-ink); --ov: transparent; --hov: transparent;
+  --sh: 0 var(--sh-y) 0 var(--shadow-c); --bw: var(--outline); --r: var(--radius);
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: var(--touch); min-width: var(--touch); padding: 0 var(--sp-4);
+  font: 700 var(--fs-body)/1 var(--font-body); white-space: nowrap; text-decoration: none; appearance: none; -webkit-appearance: none;
+  color: var(--fg); background: var(--bg); border: var(--outline) solid var(--bd); border-radius: var(--r);
+  box-shadow: var(--sh), inset 0 0 0 999px var(--ov); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { --bg: var(--c-saffron); --hov: color-mix(in srgb, var(--c-paper) 50%, transparent); }
+.btn-secondary { --bg: var(--c-paper); --hov: color-mix(in srgb, var(--c-saffron) 30%, transparent); }
+.btn-destructive { --bg: var(--c-danger); --fg: var(--c-paper); --hov: color-mix(in srgb, var(--c-paper) 22%, transparent); }
+.btn-quiet { --bg: transparent; --fg: var(--c-cobalt-deep); --bd: transparent; --sh: 0 0 0 0 transparent; }
+.btn-icon { width: var(--touch); padding: 0; }
+.btn.wide { width: 100%; }
+.btn.big { min-height: calc(var(--touch) * 1.25); font-size: var(--fs-title); }
+.btn:hover { --ov: var(--hov); }
+.btn-quiet:hover { --bg: var(--c-paper-shade); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.btn:active, .btn.is-pressed { --ov: color-mix(in srgb, var(--c-ink) 12%, transparent); --sh: 0 0 0 0 transparent; transform: translateY(var(--sh-y)); }
+.btn[disabled], .btn[aria-disabled="true"], .btn.is-disabled { --bg: var(--c-paper-shade); --fg: var(--c-ink-soft); --bd: var(--c-ink-soft); --ov: transparent; --sh: 0 0 0 0 transparent; cursor: not-allowed; transform: none; }
+.btn.is-loading { cursor: progress; background-image: repeating-linear-gradient(-45deg, transparent 0 9px, color-mix(in srgb, var(--c-ink) 9%, transparent) 9px 18px); }
+
+/* ---------- focus: keyboard (cobalt on paper, saffron on ink) and gamepad (saffron ring with an ink hairline) ---------- */
+:focus-visible { outline: var(--focus-kb-w) solid var(--c-cobalt); outline-offset: var(--focus-kb-off); }
+.on-ink :focus-visible, .on-ink:focus-visible { outline-color: var(--c-saffron); }
+.is-focus-gp { position: relative; transform: translateY(var(--lift-y)); outline: 0; }
+.is-focus-gp::after {
+  content: ""; position: absolute; pointer-events: none;
+  inset: calc(-1 * (var(--bw, 0px) + var(--focus-gp-off) + var(--focus-gp-w)));
+  border: var(--focus-gp-w) solid var(--c-saffron); border-radius: calc(var(--r, 0px) + var(--focus-gp-off) + var(--focus-gp-w));
+  box-shadow: 0 0 0 2px var(--c-ink), inset 0 0 0 2px var(--c-ink);
+}
+
+/* ---------- panels ---------- */
+.panel {
+  --bw: var(--outline); position: relative; padding: var(--sp-4); background: var(--c-paper); color: var(--c-ink);
+  border: var(--outline) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 var(--sh-y) 0 var(--shadow-c);
+}
+.panel-ink { background: var(--c-ink-raised); color: var(--c-paper); border-color: var(--c-ink-soft); --shadow-c: var(--shadow-c-on-ink); }
+.panel-error { background: var(--c-danger-tint); }
+
+/* ---------- R102 heading banner (torn ink behind display type; the shape is an SVG from paint.ts) ---------- */
+.banner-torn { position: relative; isolation: isolate; display: inline-block; width: fit-content; padding: .12em .45em .16em; color: var(--c-paper); font: 900 italic var(--fs-display)/1 var(--font-display); letter-spacing: var(--ls-display); text-transform: uppercase; rotate: var(--slant-heading); }
+.banner-torn .acc { color: var(--c-saffron); }
+.paint-svg { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
+.paint-svg path { fill: var(--paint, var(--c-ink)); }
+
+/* ---------- badges, chips ---------- */
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.4em; height: 1.7em; padding: 0 var(--sp-2); background: var(--b, var(--id-0)); color: var(--on, var(--id-0-on)); border: var(--outline) solid var(--c-ink); border-radius: var(--r-badge); box-shadow: 0 var(--sh-y) 0 var(--shadow-c); font: 900 italic var(--fs-heading)/1 var(--font-display); letter-spacing: var(--ls-display); white-space: nowrap; }
+.chip { --cbg: var(--c-paper-shade); --cfg: var(--c-ink-soft); display: inline-flex; align-items: center; gap: 6px; min-height: 1.9em; padding: 0 var(--sp-3); background: var(--cbg); color: var(--cfg); border: 2px solid var(--c-ink); border-radius: 999px; font: 700 var(--fs-label)/1 var(--font-body); white-space: nowrap; }
+.chip-ready { --cbg: var(--c-success); --cfg: var(--c-paper); }
+.chip-warn { --cbg: var(--c-warning); --cfg: var(--c-ink); }
+.chip-info { --cbg: var(--c-cobalt); --cfg: var(--c-paper); }
+
+/* ---------- fields ---------- */
+.field-label { display: block; margin-bottom: var(--sp-1); font-weight: 700; font-size: var(--fs-label); color: var(--c-ink); }
+.field { width: 100%; min-height: calc(var(--touch) * 1.2); padding: 0 var(--sp-3); background: var(--c-white); color: var(--c-ink); border: var(--outline) solid var(--c-ink); border-radius: var(--radius); font-weight: 700; font-size: var(--fs-title); box-shadow: inset 0 3px 0 color-mix(in srgb, var(--c-ink) 10%, transparent); }
+.field::placeholder { color: var(--c-ink-soft); opacity: 1; font-weight: 500; }
+.field[aria-invalid="true"] { border-color: var(--c-danger); background: var(--c-danger-tint); }
+.field-error { display: flex; align-items: flex-start; gap: var(--sp-2); margin-top: var(--sp-2); color: var(--c-danger); font-weight: 700; font-size: var(--fs-label); }
+
+/* ---------- toasts ---------- */
+.toasts { position: fixed; z-index: 50; left: 0; right: 0; top: max(var(--sp-4), env(safe-area-inset-top)); display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-4); pointer-events: none; }
+.toast { --tbg: var(--c-paper); --tile-bg: var(--c-cobalt); --tile-fg: var(--c-paper); pointer-events: auto; display: flex; align-items: center; gap: var(--sp-3); width: min(32em, 100%); min-height: calc(var(--touch) + var(--sp-2)); padding: var(--sp-2) var(--sp-3); background: var(--tbg); color: var(--c-ink); border: var(--outline) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 var(--sh-y) 0 var(--shadow-c); animation: toast-in var(--dur-base) var(--ease-enter) both; }
+.toast p { flex: 1; font-weight: 600; line-height: 1.25; }
+.toast-success { --tbg: var(--c-success-tint); --tile-bg: var(--c-success); }
+.toast-warning { --tbg: var(--c-warning-tint); --tile-bg: var(--c-warning); --tile-fg: var(--c-ink); }
+.toast-error { --tbg: var(--c-danger-tint); --tile-bg: var(--c-danger); }
+.tile { flex: none; display: grid; place-items: center; width: var(--touch); height: var(--touch); background: var(--tile-bg); color: var(--tile-fg); border: 2px solid var(--c-ink); border-radius: var(--r-badge); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+
+/* ---------- confirmation dialog ---------- */
+.scrim { position: fixed; z-index: 60; inset: 0; display: grid; place-items: center; padding: var(--sp-4); background: color-mix(in srgb, var(--c-ink) 70%, transparent); }
+.modal { width: min(28em, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: var(--sp-3); }
+.modal-title { font: 900 italic var(--fs-heading)/var(--lh-display) var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-display); }
+.modal .btnrow { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+  .btn:active, .btn.is-pressed { transform: none; }
+}

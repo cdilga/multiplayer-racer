@@ -1,0 +1,64 @@
+/* Landing page (P1-C01). Painted outback world behind the chrome (sandstone sky, ochre line, red earth: the guide's
+   world colours, backgrounds only), cream panels, ink outlines, saffron primary actions. Phone portrait is the
+   base layout; wider screens put the brand left and the two actions right. */
+body {
+  background:
+    radial-gradient(color-mix(in srgb, var(--c-ink) 14%, transparent) 28%, transparent 31%) 0 0 / 11px 11px,
+    linear-gradient(var(--c-sandstone) 0 56%, var(--c-ochre) 56% 62%, var(--c-red-earth) 62% 100%) fixed;
+}
+.stage {
+  min-height: 100vh; min-height: 100dvh; display: grid; align-content: center; gap: var(--sp-5);
+  width: min(100%, 34em); margin: 0 auto;
+  padding: max(var(--sp-4), env(safe-area-inset-top)) max(var(--sp-4), env(safe-area-inset-right)) max(var(--sp-4), env(safe-area-inset-bottom)) max(var(--sp-4), env(safe-area-inset-left));
+}
+.brand { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); text-align: center; }
+.wordmark { margin: 0; width: min(100%, 22em); }
+.wordmark img { display: block; width: 100%; height: auto; }
+.pitch { max-width: 24em; font: 700 var(--fs-title)/1.15 var(--font-body); color: var(--c-ink); text-wrap: balance; }
+.car { display: block; width: min(66%, 18em); height: auto; margin-top: var(--sp-1); }
+
+.actions { display: grid; gap: var(--sp-5); align-content: center; }
+.actions .panel { display: flex; flex-direction: column; gap: var(--sp-3); }
+.kicker { align-self: flex-start; padding: .06em .55em .1em; background: var(--c-saffron); color: var(--c-ink); font: 900 italic var(--fs-label)/1.1 var(--font-display); letter-spacing: .04em; text-transform: uppercase; transform: rotate(var(--rot-tag)) skewX(var(--skew-tag)); margin: calc(-1 * var(--sp-6)) 0 0 calc(-1 * var(--sp-2)); border: var(--outline) solid var(--c-ink); }
+.kicker { font-size: var(--fs-body); }
+.host p { color: var(--c-ink-soft); font-weight: 600; }
+.actions .btn.display { font-size: var(--fs-heading); line-height: 1; padding-top: .1em; }
+.code-row { display: flex; gap: var(--sp-3); align-items: stretch; }
+.code-row .btn-icon { width: calc(var(--touch) * 1.2); height: auto; }
+.code-row .btn-icon .ic { width: 1.6em; height: 1.6em; }
+.field.code { flex: 1; min-width: 0; font: 900 italic var(--fs-heading)/1 var(--font-display); letter-spacing: .18em; text-transform: uppercase; text-align: center; padding: 0 var(--sp-2); }
+.field.code::placeholder { font-style: normal; font-weight: 500; letter-spacing: .18em; opacity: .55; }
+
+/* Wider than a portrait phone: brand left, actions right. */
+@media (min-width: 720px) and (orientation: landscape) {
+  .stage { width: min(100%, 64em); grid-template-columns: minmax(0, 1fr) minmax(0, 26em); align-items: center; gap: var(--sp-7); }
+  .brand { align-items: flex-start; text-align: left; }
+  .car { margin-left: calc(-1 * var(--sp-3)); width: min(100%, 24em); }
+}
+/* Short portrait phones: shrink the car so the Join panel is closer to the first screen. */
+@media (max-height: 760px) and (orientation: portrait) {
+  .car { width: min(46%, 12em); }
+}
+/* Portrait phones: the visitor is almost always joining, so Join comes first and the brand shrinks until the code field
+   and the Join button are on the first screen (Host follows below). Visual order only; the DOM keeps Host first. */
+@media (max-width: 719px) and (orientation: portrait) {
+  .stage { gap: var(--sp-3); align-content: start; }
+  .wordmark { width: min(62%, 15em); }
+  .pitch { font-size: var(--fs-body); }
+  .car { width: min(36%, 9em); margin-top: 0; }
+  .actions { gap: var(--sp-5); }
+  .actions .join { order: -1; }
+  .actions { padding-top: var(--sp-4); }
+}
+@media (max-width: 719px) and (max-height: 700px) and (orientation: portrait) {
+  .wordmark { width: min(48%, 11em); }
+  .car { display: none; }
+}
+/* Short landscape phones: keep both panels on one screen. */
+@media (max-height: 480px) and (min-width: 720px) {
+  .stage { gap: var(--sp-5); padding-block: var(--sp-3); }
+  .car { display: none; }
+  .actions { gap: var(--sp-4); }
+  .actions .panel { gap: var(--sp-2); padding: var(--sp-3); }
+  .kicker { margin-top: calc(-1 * var(--sp-5)); }
+}

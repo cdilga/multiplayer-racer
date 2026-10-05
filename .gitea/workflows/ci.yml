@@ -109,6 +109,10 @@ jobs:
       - run: npm --prefix web run build
       - name: No test code in the shipped bundles (P1-F05b)
         run: node scripts/ci/bundle-check.mjs web/dist
+      - name: Token CSS is current, and no renderer or sim on the landing and join path (P1-C01)
+        run: |
+          npm --prefix web run tokens:check
+          node web/landing/tests/bundle-check.mjs web/dist
       - name: Runtime origins (P1-F03, R70)
         run: npm --prefix web run qualify && node scripts/ci/origin-scan.mjs web/dist web/dist-qualify
       - name: The S02 harness and the native jj (for the hash comparison)
@@ -121,6 +125,9 @@ jobs:
       # other's timers and the timing tests (input age, snapshot starvation) measure the runner, not the host.
       - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
         run: JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
+
+      - name: The landing page under / and /p/x/ in Chromium (P1-C01)
+        run: node --test --test-concurrency=1 web/landing/tests/
 
   checks:
     runs-on: ubuntu-latest

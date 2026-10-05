@@ -2,5 +2,5 @@
   "name": "@jj/landing",
   "private": true,
   "type": "module",
-  "description": "Landing page: HOST A GAME / JOIN A GAME."
+  "description": "Landing page: HOST A ROOM / JOIN A ROOM."
 }
