@@ -3,8 +3,8 @@
   "vehicle": "cruz-missile",
   "source": {
     "sidecar": "art/vehicles/cruz-missile/cruz-missile.asset.json",
-    "sidecar_sha256": "679470b8fe66e2b4cd257c418814b67e49d78735a531f0cfa0f63dfb92de8c4b",
-    "lod0_sha256": "3a4ad793cc800d4dae61f9cba7860b94f7dfc9849bbd69f5287ed23eb4bc6427"
+    "sidecar_sha256": "5075b9ad49b6f7298fb144a3a18241ab7282e91849b36cde2f423d14f47efdeb",
+    "lod0_sha256": "1063812662cb7fc8833a6e8edcb51dfed1836b29ca4e143c71a0ea63b5203f1c"
   },
   "geometry": {
     "hull": [
