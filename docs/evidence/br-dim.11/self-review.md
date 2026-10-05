@@ -7,7 +7,7 @@
 - `cmp/final-inkscale-big-crops.jpg`: one full-size TV tile A/B: identical (diff panel black). `cmp/final-inkscale-grid-crops.jpg`, TV 24-tile A/B + 4x crops: B shows body colours in bunched cars, near-car outlines thinner.
 - `cmp/final-dpr2-inkscale-phone64-crops.jpg`: 4x crop at DPR 2, 64 tiles: far cars now colour specks, mid cars keep a thin outside line.
 - `cmp/filt-dpr2-aniso-phone64-crops.jpg`, `cmp/filt-dpr2-mipbias-phone64-crops.jpg`: af and mip-bias crops: differences are road/cockpit texture softness, no change in car legibility.
-- Full-size single tile (`cmp/final-inkscale-big-b.jpg` removed after confirming a diff of 0): looked at before pruning.
+- Full-size single tile (its B frame was pruned after confirming a diff of 0; the A/B is in `cmp/final-inkscale-big-crops.jpg`): looked at before pruning.
 
 ## Defects found and fixed
 - First ink-check frames were black/magenta: the snapshot canvas must be read before its iframe is removed and JPEGs need an opaque background (script fixed).
