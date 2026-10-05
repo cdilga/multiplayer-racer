@@ -4,13 +4,16 @@
 // - Third person: the camera sits the preset's distance behind and above the car along a smoothed heading: the
 //   heading follows the car's on a critically damped spring (`follow`, rad/s), so turns swing the camera smoothly while
 //   the distance never stretches with speed; the aim looks further ahead the faster the car goes; when a barrier or
-//   building stands between the car and the camera, it pulls in in front of it.
+//   building stands between the car and the camera, it pulls in in front of it; when the car drives backwards for a
+//   moment (camera.json `reverse`, state machine in reverse.ts) the chase swings right round, eased, to look the way it
+//   travels, and swings back when it drives forward again. First person never swings (its mirror is the look-back).
 // - First person: an eye over the bonnet riding the car body (its pitch and roll, damped for comfort, are the
 //   suspension's head-bob), a speed FOV kick, and a rear-view mirror in a strip of the tile (segmented first person).
 // - A respawn cuts: the camera jumps straight to its new place, never swoops across the map.
 // The mode and distance never touch input: held steering means the same in either camera (master §4.1).
 import { Quaternion, Vector3, type PerspectiveCamera } from 'three';
 import profile from '../../../../assets/profiles/camera.json';
+import { newReverse, reverseYaw, stepReverse, type ReverseState } from './reverse';
 
 export type CameraMode = 'tp' | 'fp';
 export type Distance = 'near' | 'mid' | 'far';
@@ -48,6 +51,9 @@ interface SeatState {
    *  respawn (the camera travelling across the map) would show here. */
   maxGapM: number;
   pulledIn: boolean;
+  /** The reversing camera's state and the car's signed longitudinal speed (m/s, negative backwards). */
+  rev: ReverseState;
+  signedMps: number;
 }
 
 const UP = new Vector3(0, 1, 0);
@@ -74,7 +80,7 @@ export class CameraRig {
   private seat(id: number): SeatState {
     let s = this.seats.get(id);
     if (!s) {
-      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false };
+      s = { id, mode: 'tp', distance: null, pos: new Vector3(), look: new Vector3(), heading: 0, headingRate: 0, life: -1, init: false, last: new Vector3(), speed: 0, cuts: 0, maxGapM: 0, pulledIn: false, rev: newReverse(), signedMps: 0 };
       this.seats.set(id, s);
     }
     return s;
@@ -106,12 +112,17 @@ export class CameraRig {
     const step = Math.min(Math.max(dt, 0), profile.rig.maxDtS);
     const cut = !s.init || car.life !== s.life;
     if (!cut && dt > 0) s.speed = s.last.distanceTo(car.pos) / dt; // real time: a slow frame is not a fast car
-    if (cut) s.speed = 0;
-    s.last.copy(car.pos);
     // Heading on the ground plane: the chase never rolls or pitches with the car.
     this.fwd.set(0, 0, 1).applyQuaternion(car.rot).setY(0);
     if (this.fwd.lengthSq() < 1e-6) this.fwd.set(0, 0, 1);
     this.fwd.normalize();
+    // Signed speed along the car's own forward (negative: reversing), from the same real-time position delta.
+    s.signedMps = !cut && dt > 0 ? this.w.copy(car.pos).sub(s.last).dot(this.fwd) / dt : 0;
+    if (cut) {
+      s.speed = 0;
+      s.rev = newReverse(); // a respawn cuts straight to the chase from behind
+    } else stepReverse(s.rev, s.signedMps, step, profile.reverse);
+    s.last.copy(car.pos);
     if (s.mode === 'fp') this.firstPerson(s, cam, car);
     else this.chase(s, cam, car, step, cut);
     if (cut) {
@@ -136,7 +147,8 @@ export class CameraRig {
       s.headingRate += (om * om * err - 2 * om * s.headingRate) * dt;
       s.heading += s.headingRate * dt;
     }
-    const dir = this.fwd.set(Math.sin(s.heading), 0, Math.cos(s.heading));
+    const yaw = s.heading + reverseYaw(s.rev);
+    const dir = this.fwd.set(Math.sin(yaw), 0, Math.cos(yaw));
     const target = this.w.copy(car.pos).addScaledVector(dir, -R.backM);
     target.y = car.pos.y + R.upM;
     this.pullIn(s, car, target);
@@ -146,7 +158,8 @@ export class CameraRig {
     // goes, at the preset's pitch whatever the distance, so speed never tips the view up into the sky (R98).
     const ahead = R.lookAheadM + Math.min(profile.rig.lookAheadMaxM, s.speed * profile.rig.lookAheadPerMps);
     const pitch = Math.atan2(R.upM - R.lookUpM, R.backM + R.lookAheadM);
-    s.look.set(Math.sin(want), 0, Math.cos(want)).multiplyScalar(ahead).add(car.pos);
+    const lookYaw = want + reverseYaw(s.rev);
+    s.look.set(Math.sin(lookYaw), 0, Math.cos(lookYaw)).multiplyScalar(ahead).add(car.pos);
     const flat = Math.hypot(s.look.x - s.pos.x, s.look.z - s.pos.z);
     s.look.y = s.pos.y - Math.tan(pitch) * flat;
     if (cam.fov !== R.fovDeg) {
@@ -243,7 +256,8 @@ export class CameraRig {
     return Object.fromEntries(
       [...this.seats].map(([id, s]) => [
         id,
-        { mode: s.mode, distance: this.distance(id), cuts: s.cuts, maxGapM: +s.maxGapM.toFixed(2), speed: +s.speed.toFixed(2), pulledIn: s.pulledIn },
+        { mode: s.mode, distance: this.distance(id), cuts: s.cuts, maxGapM: +s.maxGapM.toFixed(2), speed: +s.speed.toFixed(2), pulledIn: s.pulledIn,
+          reverse: { reversing: s.rev.reversing, blend: +s.rev.t.toFixed(3), yawDeg: +((reverseYaw(s.rev) * 180) / Math.PI).toFixed(1), signedMps: +s.signedMps.toFixed(2) } },
       ]),
     );
   }

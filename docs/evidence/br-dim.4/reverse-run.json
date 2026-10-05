@@ -1,0 +1,139 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "runs": {
+    "phone-1tile-412x915": {
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "players": 1,
+      "firstReversing": {
+        "reversing": true,
+        "blend": 0.029,
+        "yawDeg": 0.4,
+        "signedMps": -4.34
+      },
+      "maxFrameYawStepDeg": 9.7,
+      "frames": 304,
+      "log": [
+        {
+          "label": "1-forward",
+          "reversing": false,
+          "blend": 0,
+          "yawDeg": 0,
+          "signedMps": 4.56,
+          "speed": 4.56,
+          "yawDegAfterShot": 0,
+          "cuts": 0
+        },
+        {
+          "label": "2-mid-swing",
+          "reversing": true,
+          "blend": 0.301,
+          "yawDeg": 39.2,
+          "signedMps": -3.47,
+          "speed": 3.47,
+          "yawDegAfterShot": 94.2,
+          "cuts": 0
+        },
+        {
+          "label": "3-reversing",
+          "reversing": true,
+          "blend": 1,
+          "yawDeg": 180,
+          "signedMps": -3.81,
+          "speed": 3.81,
+          "yawDegAfterShot": 180,
+          "cuts": 0
+        },
+        {
+          "label": "4-mid-swing-back",
+          "reversing": false,
+          "blend": 0.673,
+          "yawDeg": 134.8,
+          "signedMps": 4.48,
+          "speed": 4.48,
+          "yawDegAfterShot": 92.1,
+          "cuts": 0
+        },
+        {
+          "label": "5-back-forward",
+          "reversing": false,
+          "blend": 0,
+          "yawDeg": 0,
+          "signedMps": 6.27,
+          "speed": 6.27,
+          "yawDegAfterShot": 0,
+          "cuts": 0
+        }
+      ]
+    },
+    "tv-6tiles-1920x1080": {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "players": 6,
+      "firstReversing": {
+        "reversing": true,
+        "blend": 0.143,
+        "yawDeg": 10,
+        "signedMps": -2.05
+      },
+      "maxFrameYawStepDeg": 38.4,
+      "frames": 135,
+      "log": [
+        {
+          "label": "1-forward",
+          "reversing": false,
+          "blend": 0,
+          "yawDeg": 0,
+          "signedMps": 4.84,
+          "speed": 4.84,
+          "yawDegAfterShot": 0,
+          "cuts": 0
+        },
+        {
+          "label": "2-mid-swing",
+          "reversing": true,
+          "blend": 0.571,
+          "yawDeg": 109.2,
+          "signedMps": -1.94,
+          "speed": 1.94,
+          "yawDegAfterShot": 180,
+          "cuts": 0
+        },
+        {
+          "label": "3-reversing",
+          "reversing": true,
+          "blend": 1,
+          "yawDeg": 180,
+          "signedMps": -2.6,
+          "speed": 2.6,
+          "yawDegAfterShot": 180,
+          "cuts": 0
+        },
+        {
+          "label": "4-mid-swing-back",
+          "reversing": false,
+          "blend": 0.429,
+          "yawDeg": 70.8,
+          "signedMps": 4.3,
+          "speed": 4.3,
+          "yawDegAfterShot": 0,
+          "cuts": 0
+        },
+        {
+          "label": "5-back-forward",
+          "reversing": false,
+          "blend": 0,
+          "yawDeg": 0,
+          "signedMps": 5.9,
+          "speed": 5.9,
+          "yawDegAfterShot": 0,
+          "cuts": 0
+        }
+      ]
+    }
+  }
+}
