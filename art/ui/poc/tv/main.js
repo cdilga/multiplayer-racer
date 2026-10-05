@@ -19,6 +19,8 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>'
 const cooee = (num) => el('div', 'cooee', `<i class="flash"></i><b class="display">Cooee #${num}</b>`);
 
 const tokens = await loadTokens();
+// br-dim.7: the merged round screen's layout rule is data: the video's share of the screen per aspect band.
+const ROUND_LAYOUT = await (await fetch(new URL('./round-layout.json', import.meta.url))).json();
 // TV px at 1080p scaled by output height. A portrait screen is a phone host held at arm's length: scale by width,
 // never below the handheld profile's minimum text (13 px for the 24 px TV minimum).
 let kNow = 1;
@@ -800,63 +802,11 @@ const SETUP = {
     return { views: () => [{ x: 0, y: 0, w: W(), h: H() - footer.height(), kind: 'wide' }], update() {} };
   },
 
-  // End of round (POC1-17): the content the owner called fine (round complete, the podium with points, every player's
-  // standing, the next-race timer, the join QR, the host's actions) in the R102 language: a torn banner, brushed tags,
-  // tilted podium cards, colour behind text, and the winner's car as the hero render (point 2: at least 30% of the
-  // screen), with second and third live in their own windows. The highlights follow in the intermission (#intermission),
-  // so this screen is the result and nothing else.
-  results() {
-    world.setMode('race');
-    world.setCars(S.n, S.base);
-    clearColor = tokens.palette.paper.hex;
-    const st = mockStandings();
-    const s = el('div', 'screen k eor');
-    const pod = [1, 0, 2].map((i) => { const r = st[i], p = seatInfo(r.seat), [n, suf] = ordinal(r.place); return `<div class="podcard p${r.place}" data-tilt="pod-${r.place}" style="--seat:${p.color};--seat-on:${p.on}">${r.place === 1 ? '' : `<div class="podcar" data-seat="${r.seat}"></div>`}<div class="podinfo">${r.place === 1 ? `<span class="podwin">${icon('trophy')}Winner</span>` : ''}<div class="podwho"><span class="badge">#${p.num}</span><span class="nm">${esc(shortName(p.name, 10))}</span></div><div class="podnum"><span class="display italic place">${n}<span class="lc">${suf}</span></span><span class="display pts tnum">+${r.pts}</span></div></div></div>`; }).join('');
-    s.innerHTML = `<div class="eor-hero" data-seat="${st[0].seat}"></div>
-      <div class="eor-head"><span class="bn" data-torn="eor">Round 3 <span class="acc">complete</span></span>
-        <span class="strip ink" data-brush="eor-sub"><span>${icon('flag')}Rematch on the same track · everyone keeps their number</span></span></div>
-      <div class="eor-pod">${pod}</div>
-      <div class="card eor-table"><span class="tag" data-brush="eor-standings"><span>Standings</span></span><div class="table"></div><div class="page-note"></div></div>
-      ${joinBand({ mid: `<div class="jb-next"><span class="tag warning" data-brush="eor-next"><span>${icon('timer')}Next race in <b class="tnum">42<span class="lc">s</span></b></span></span><span class="jb-note">Highlights first, then the grid lines up.</span></div>`,
-        acts: [['play', 'Watch the highlights', 'Timer keeps running', 'intermission'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']] })}`;
-    ui.append(s);
-    standingsTable(s.querySelector('.eor-table .table'), s.querySelector('.eor-table .page-note'), st);
-    paint(s);
-    wireActs(s);
-    return {
-      views: () => [...s.querySelectorAll('.eor-hero, .podcar')].map((e) => { const r = e.getBoundingClientRect(), b = 5 * K(); return { x: Math.round(r.x + b), y: Math.round(r.y + b), w: Math.round(r.width - 2 * b), h: Math.round(r.height - 2 * b), kind: 'reel', seat: +e.dataset.seat }; }),
-      update() {},
-    };
-  },
-
-  // Intermission (POC1-16): the highlights, maximised. The main replay takes most of the screen; beside it the highlights
-  // still to come play live, so the sides are more highlights rather than chrome; the join band keeps the QR big, with the
-  // round's top three and the host's actions filling the rest of it (no empty space beside the QR).
-  intermission() {
-    world.setMode('race');
-    world.setCars(S.n, S.base);
-    clearColor = tokens.palette.paper.hex;
-    const st = mockStandings();
-    const who = (seat) => { const p = seatInfo(seat); return `<span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span>`; };
-    const pick = (k) => st[Math.min(st.length - 1, k)].seat;
-    const reel = [['Fastest lap', pick(4)], ['Closest finish', pick(1)], ['Most wrecks', pick(2)], ['Longest drift', pick(5)], ['Comeback of the round', pick(st.length - 1)]];
-    const now = 0;
-    const s = el('div', 'screen k inter');
-    s.innerHTML = `<div class="inter-head"><span class="bn ibn" data-torn="inter">Round <span class="acc">highlights</span></span>
-        <span class="strip ink" data-brush="inter-next"><span>${icon('timer')}Next round in <b class="tnum">42s</b></span></span></div>
-      <div class="inter-main"><div class="hl-view" data-seat="${reel[now][1]}"></div>
-        <span class="tag hl-cap" data-brush="hl-cap"><span>${reel[now][0]} · ${who(reel[now][1])} ${esc(shortName(seatInfo(reel[now][1]).name, 10))}</span></span>
-        <span class="hl-count tnum">${now + 1} / ${reel.length}</span><div class="hl-bar"><i style="width:38%"></i></div></div>
-      <div class="inter-side"><span class="tag" data-brush="hl-next"><span>Up next</span></span>
-        ${reel.slice(now + 1).map(([what, seat], i) => `<div class="hl-card" data-tilt="hl-${i}"><div class="hl-mini" data-seat="${seat}"></div><span class="hl-what">${who(seat)} ${what}</span></div>`).join('')}</div>
-      ${joinBand({ mid: `<div class="jb-top">${st.slice(0, 3).map((r) => { const [n, suf] = ordinal(r.place); return `<span class="jb-pod" data-tilt="jb-${r.place}">${who(r.seat)}<b class="display italic">${n}<span class="lc">${suf}</span></b><b class="display tnum pts">+${r.pts}</b></span>`; }).join('')}</div>`,
-        acts: [['chevron-right', 'Skip highlight', 'Next one plays', 'intermission'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']], row: true })}`;
-    ui.append(s);
-    paint(s);
-    wireActs(s);
-    const box = (e, kind) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), kind, seat: +e.dataset.seat }; };
-    return { views: () => [box(s.querySelector('.hl-view'), 'highlight'), ...[...s.querySelectorAll('.hl-mini')].map((e) => box(e, 'reel'))], update() {} };
-  },
+  // Round complete + highlights (br-dim.7): ONE screen. The owner merged the end-of-round card and the intermission because
+  // both ask the same thing of the TV (what happened, who's next, how to join, what to press) and the highlights ARE the
+  // fun of the round-complete screen. #results and #intermission both open it. See roundScreen() and round-layout.json.
+  results() { return roundScreen(); },
+  intermission() { return roundScreen(); },
 
   overview() {
     world.setCars(S.n, S.base);
@@ -911,6 +861,222 @@ function nameplates(layer, { suffix = () => '', badgesTo = Infinity } = {}) {
     }
     placed.length = 0;
   };
+}
+
+// ---------- the merged round-complete + highlights screen (br-dim.7) ----------
+// The video replay is the screen: its share of the whole screen area comes from round-layout.json (data, per aspect band),
+// expanding vertically on the left under the heading (landscape) or stacked on top at full width (portrait). Everything
+// else lives in the other region, compact and packed: the placings (richer rows for the top three: trophy, points, colour),
+// the join QR and code, the next-race chip and the host's buttons. The placings never truncate and never cap: the rows
+// that don't fit as full rows become denser cells by grid.js's rule (row, seat, number, then the tiniest), exactly as the
+// lobby roster does. The region's own scale grows (up to 1.5x) when few players leave room, so it never has a dead block.
+const REST_TIERS = [
+  { name: 'row', minW: 300, minH: 40, band: { min: 3, max: 24 }, em: 12.5 },
+  { name: 'seat', minW: 110, minH: 40, band: { min: 1.6, max: 8 }, em: 5.4 },
+  { name: 'num', minW: 80, minH: 36, band: { min: 1.3, max: 6 }, em: 3.8 },
+  { name: 'tiny', minW: 0, minH: 0, band: { min: 1, max: 6 }, em: 2.7 }, // below the legible floor: reported, never a cap
+];
+const TOP_RH = [76, 62, 50, 40]; // TV px: the top-three rows, richest first
+
+function roundScreen() {
+  world.setMode('race');
+  world.setCars(S.n, S.base);
+  clearColor = tokens.palette.paper.hex;
+  const n = S.n, st = mockStandings();
+  const sty = (seat) => { const p = seatInfo(seat); return `--seat:${p.color};--seat-on:${p.on}`; };
+  const who = (seat) => `<span class="badge" style="${sty(seat)}">#${seatInfo(seat).num}</span>`;
+  const pick = (i) => st[Math.min(st.length - 1, i)].seat;
+  const reel = [['Fastest lap', pick(4)], ['Closest finish', pick(1)], ['Most wrecks', pick(2)], ['Longest drift', pick(5)], ['Comeback of the round', pick(st.length - 1)]];
+  const now = 0;
+  const s = el('div', 'screen k round');
+  s.innerHTML = `<div class="rd-head"><span class="bn" data-torn="round">Round 3 <span class="acc">complete</span></span>
+      <span class="strip ink" data-brush="round-sub"><span>${icon('video')}Highlights · ${reel.length} to watch</span></span></div>
+    <div class="rd-video"><div class="hl-view" data-seat="${reel[now][1]}"></div>
+      <span class="tag hl-cap" data-brush="hl-cap"><span>${reel[now][0]} · ${who(reel[now][1])} ${esc(shortName(seatInfo(reel[now][1]).name, 10))}</span></span>
+      <span class="hl-count tnum">${now + 1} / ${reel.length}</span><div class="hl-bar"><i style="width:38%"></i></div></div>
+    <div class="rd-right">
+      <div class="rd-list"><span class="tag" data-brush="rd-results"><span>Results</span></span><div class="rd-top"></div><div class="rd-rest"></div></div>
+      <div class="rd-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="rd-code"><small>Jump in</small><b class="display code">ROO7</b><span class="rd-cap">Scan to join, or enter the code</span></div></div>
+      <span class="tag warning rd-next" data-brush="rd-next"><span>${icon('timer')}Next <span class="rd-lng">race </span>in <b class="tnum">42<span class="lc">s</span></b></span></span>
+      <div class="rd-acts">${[['chevron-right', 'Skip highlight', 'Next one plays', 'results'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']]
+        .map(([ic, label, sub, go, primary]) => `<button class="btn${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div>
+    </div>`;
+  ui.append(s);
+  wireActs(s);
+  const $ = (sel) => s.querySelector(sel);
+  const head = $('.rd-head'), bn = $('.rd-head .bn'), sub = $('.rd-head .strip'), vid = $('.rd-video'), right = $('.rd-right'), list = $('.rd-list'), tag = $('.rd-list > .tag'),
+    top = $('.rd-top'), rest = $('.rd-rest'), join = $('.rd-join'), qr = $('.rd-join .qr'), code = $('.rd-code'), nxt = $('.rd-next'), acts = $('.rd-acts');
+  const first = st.slice(0, 3), others = st.slice(3);
+  const nm = (p) => esc(shortName(p.name, 12));
+
+  // Fits the heading's banner inside `maxW` (a phone's width is far under the TV's), returns the heading's height.
+  const fitHead = (maxW) => {
+    bn.style.fontSize = '';
+    head.style.maxWidth = `${maxW}px`;
+    const bw = bn.offsetWidth;
+    if (bw > maxW) bn.style.fontSize = `${parseFloat(getComputedStyle(bn).fontSize) * (maxW / bw) * 0.97}px`;
+    return head.offsetHeight;
+  };
+
+  // The placings in a box W_ x H_ at scale q: the top-three rows (richest height that still leaves the rest a legible tier),
+  // then everyone else as grid cells, column by column in placing order. Returns the plan; write=true builds the DOM.
+  let tierCap = 2; // the poorest tier a plan may use and still count as fitting (arrange() raises it only when it must)
+  const planList = (W_, H_, q, tagH, write) => {
+    const gl = Math.max(5, 8 * q), gc = Math.max(3, 5 * q), t = Math.min(3, n);
+    let best = null;
+    for (const rh of TOP_RH.filter((v) => v >= 50 || tierCap > 1)) { // the top three stay rich unless the rest has nowhere else to go
+      const topH = t * rh * q + (t - 1) * gl, usedTop = tagH + gl + topH;
+      if (n <= 3) { const p = { rh, tier: null, idx: -1, used: usedTop, fits: usedTop <= H_, area: 1e9 }; if (p.fits || rh === TOP_RH.filter((v) => v >= 50 || tierCap > 1).pop()) { best = p; break; } continue; }
+      const restH = Math.max(14, H_ - usedTop - gl);
+      let pick = null;
+      for (let i = 0; i < REST_TIERS.length; i++) {
+        const T = REST_TIERS[i];
+        const g = layoutGrid(n - 3, { x: 0, y: 0, w: W_ + gc, h: restH + gc }, { band: T.band, min: T.minW ? { w: T.minW * q + gc, h: T.minH * q + gc } : null });
+        if (g) { pick = { i, T, g }; break; }
+      }
+      const { i, T, g } = pick;
+      const ch = Math.min(g.cell.h, 54 * q + gc), cw = g.cell.w;
+      const p = { rh, tier: T, idx: i, g, cw, ch, used: usedTop + gl + g.rows * ch - gc, fits: (i <= tierCap || tierCap > 2) && usedTop + gl + g.rows * ch - gc <= H_ + 1, area: g.cell.w * ch, restH };
+      if (!best || (p.fits && !best.fits) || (!best.fits && (p.idx < best.idx || (p.idx === best.idx && p.area > best.area)))) best = p;
+      if (p.fits) break;
+    }
+    if (write) {
+      const rh = best.rh * q, fs = Math.max(13, Math.min(rh * 0.5, W_ / 16.5, 34 * q));
+      top.innerHTML = first.map((r, k) => { const p = seatInfo(r.seat), [num, suf] = ordinal(r.place);
+        return `<div class="rd-row p${r.place}" style="${sty(r.seat)};top:${k * (rh + gl)}px;height:${rh}px;font-size:${fs}px"><span class="display italic rd-pl">${num}<span class="lc">${suf}</span></span><span class="badge">#${p.num}</span><span class="nm">${nm(p)}</span>${r.place === 1 ? icon('trophy') : ''}<b class="display tnum pts">+${r.pts}</b></div>`; }).join('');
+      top.style.cssText = `left:0;right:0;top:${tagH + gl}px`;
+      rest.innerHTML = '';
+      if (best.g) {
+        const { tier: T, g, cw, ch } = best, fsr = Math.max(8, Math.min(ch * 0.6, (cw - gc) / T.em, 30 * q));
+        rest.style.cssText = `left:0;top:${tagH + gl + t * rh + (t - 1) * gl + gl}px;width:${W_}px;height:${g.rows * ch}px`;
+        rest.className = `rd-rest t-${T.name}`;
+        rest.style.setProperty('--fs', `${fsr}px`);
+        rest.dataset.tier = T.name; rest.dataset.cols = g.cols; rest.dataset.rows = g.rows;
+        others.forEach((r, i) => {
+          const p = seatInfo(r.seat), c = el('div', 'rd-cell');
+          c.style.cssText = `${sty(r.seat)};left:${Math.floor(i / g.rows) * cw}px;top:${(i % g.rows) * ch}px;width:${cw - gc}px;height:${ch - gc}px`;
+          c.innerHTML = T.name === 'row' ? `<span class="rd-pl">${r.place}</span><span class="badge">#${p.num}</span><span class="nm">${nm(p)}</span><b class="pts tnum">+${r.pts}</b>`
+            : T.name === 'seat' ? `<span class="rd-pl">${r.place}</span><span class="badge">#${p.num}</span>` : `<span class="badge">${T.name === 'tiny' ? p.num : `#${p.num}`}</span>`;
+          c.title = `${r.place}. #${p.num} ${p.name} +${r.pts}`;
+          rest.append(c);
+        });
+      }
+    }
+    return best;
+  };
+
+  // Everything in the region R at one candidate (mode, scale, QR size): measured, never drawn, unless write.
+  const plan = (R, mode, sc, qrPx, swf, write) => {
+    // mode: 'stack' (list over join over buttons), 'split' (list beside a column of join, chip, buttons) or 'splitrow' (as
+    // split, with the chip beside the QR instead of under it: the shortest column, for a short phone).
+    const q = Math.max(K(), 0.5) * sc, g = Math.max(6, 10 * q), split = mode !== 'stack', row2 = mode === 'splitrow';
+    right.style.setProperty('--k', q);
+    right.classList.toggle('split', split);
+    right.classList.toggle('row2', row2);
+    const sw = split ? Math.min(R.w * swf, Math.max(R.w * 0.4, row2 ? 220 : 140)) : R.w;
+    const lw = split ? R.w - sw - g : R.w;
+    const qrS = Math.min(qrPx(q), row2 ? sw * 0.5 : split ? sw : sw * 0.62);
+    for (const e of [join, acts]) e.style.width = `${sw}px`;
+    nxt.style.width = row2 ? `${sw - qrS - g}px` : split ? `${sw}px` : '';
+    qr.style.width = qr.style.height = `${qrS}px`;
+    const tagH = tag.offsetHeight, hN = nxt.offsetHeight, hA = acts.offsetHeight, hC = code.offsetHeight;
+    const hJ = row2 ? Math.max(qrS, hC + 4 * q + hN) : split ? qrS + 6 * q + hC : Math.max(qrS, hC);
+    const gaps = row2 ? 1 : 2, col = hJ + (row2 ? 0 : hN) + hA + gaps * g;
+    const lh = split ? R.h : R.h - col - g;
+    const L = planList(lw, lh, q, tagH, write);
+    const total = split ? Math.max(col, L.used) : L.used + g + col;
+    // The unused block rule: whatever is left over is spread over the right-hand blocks' gaps (and, beside them, the list's own
+    // tail) and every such block stays under one button row.
+    const rowH = acts.firstElementChild.offsetHeight;
+    const gapOk = split ? g + Math.max(0, R.h - col) / gaps <= rowH && R.h - L.used <= rowH : g + Math.max(0, R.h - total) / 3 <= rowH;
+    const codeRoom = split && !row2 ? sw : sw - qrS - g; // the room code never spills out of its column
+    const widthOk = $('.rd-code .code').offsetWidth <= codeRoom - 8 && nxt.offsetWidth <= (row2 ? sw - qrS - g : sw) + 1 && [...acts.children].every((b) => b.scrollWidth <= b.clientWidth + 1);
+    const fits = total <= R.h + 1 && col <= R.h + 1 && L.fits && gapOk && widthOk;
+    if (write) {
+      list.style.cssText = `left:0;top:0;width:${lw}px;height:${L.used}px`;
+      const x = split ? lw + g : 0;
+      const gapUse = split ? g + Math.max(0, R.h - col) / gaps : g + Math.max(0, R.h - total) / 3;
+      let y = split ? 0 : L.used + gapUse;
+      join.style.cssText = `left:${x}px;top:${y}px;width:${sw}px`;
+      if (row2) { nxt.style.left = `${x + qrS + g}px`; nxt.style.top = `${y + hC + 4 * q}px`; y += hJ + gapUse; }
+      else { y += hJ + gapUse; nxt.style.left = `${x}px`; nxt.style.top = `${y}px`; y += hN + gapUse; }
+      acts.style.cssText = `left:${x}px;top:${y}px;width:${sw}px`;
+    }
+    return { fits, L, q, sc, qrS, mode, total, over: total > R.h + 1 ? 1 : 0, idx: L.idx, area: L.area ?? 0 };
+  };
+
+  const arrange = (R) => {
+    right.style.cssText = `left:${R.x}px;top:${R.y}px;width:${R.w}px;height:${R.h}px`;
+    const small = W() < 1200;
+    const qrSizes = (small ? [(q) => 260 * q, (q) => 200 * q, () => 140, () => 125, () => 110] : [260, 230, 200].map((v) => (q) => v * q));
+    // Tall regions (the TV's column) stack first, wide ones (a phone's strip under the video) put the list beside the rest.
+    const modes = R.h / R.w >= 1.3 ? ['stack', 'split', 'splitrow'] : ['split', 'splitrow', 'stack'];
+    let best = null, fallback = null;
+    search: for (tierCap = 0; tierCap <= 3; tierCap++) {
+      let widest = null; // tierCap 3 (everything allowed): the plan that gives the denser cells the most room
+      for (const mode of modes) {
+        for (const sc of [1.5, 1.4, 1.3, 1.2, 1.1, 1]) {
+          for (const swf of mode === 'stack' ? [1] : [0.4, 0.5, 0.6]) {
+            for (const qf of qrSizes) {
+              const p = plan(R, mode, sc, qf, swf, false);
+              if (p.fits && tierCap < 3) { best = { mode, sc, qf, swf }; break search; }
+              if (p.fits && (!widest || p.area > widest.p.area)) widest = { p, mode, sc, qf, swf };
+              if (tierCap === 3 && sc === 1 && (!fallback || p.over < fallback.p.over || (p.over === fallback.p.over && (p.idx < fallback.p.idx || (p.idx === fallback.p.idx && (p.qrS > fallback.p.qrS + 1 || (Math.abs(p.qrS - fallback.p.qrS) <= 1 && p.area > fallback.p.area))))))) fallback = { p, mode, sc, qf, swf };
+            }
+          }
+        }
+      }
+      if (widest) { best = widest; break; }
+    }
+    best ??= fallback;
+    tierCap = Math.min(tierCap, 3);
+    return plan(R, best.mode, best.sc, best.qf, best.swf, true);
+  };
+
+  const layout = () => {
+    const w = W(), h = H(), kc = Math.max(K(), 0.5), gap = Math.max(8, 14 * kc);
+    s.style.setProperty('--k', kc);
+    s.querySelectorAll('svg.paint').forEach((e) => e.remove());
+    const band = ROUND_LAYOUT.bands.find((b) => w / h <= b.maxAspect) ?? ROUND_LAYOUT.bands[ROUND_LAYOUT.bands.length - 1];
+    const small = w < 1200, mx = small ? Math.max(8, 0.02 * Math.min(w, h)) : 0.05 * w, my = small ? mx : 0.05 * h;
+    // The banner is tilted and its painted edge reaches past its box, so the heading sits a little inside the title-safe edge.
+    const hx = small ? 0 : 24 * kc, hy = small ? 0 : 20 * kc;
+    head.style.left = `${mx + hx}px`; head.style.top = `${my + hy}px`;
+    // On a phone held upright the banner takes the whole width, so the "Highlights" strip rides in the video's top-left corner.
+    const tight = band.stack === 'top' && w < 600;
+    (tight ? vid : head).append(sub);
+    sub.classList.toggle('in-video', tight);
+    let vx, vy, vw, vh, R;
+    if (band.stack === 'top') {
+      const hh = fitHead(w - 2 * mx) + hy;
+      vh = Math.ceil(band.video * h); vw = w; vx = 0; vy = my + hh + gap;
+      const ry = vy + vh + gap * 1.6;
+      R = { x: mx, y: ry, w: w - 2 * mx, h: h - ry - my };
+    } else {
+      const minRight = Math.max(300, 380 * kc);
+      const solve = (hh) => { vh = Math.floor(h - 2 * my - hh - gap); vw = Math.min(Math.ceil((band.video * w * h) / vh), Math.floor(w - 2 * mx - 2 * gap - minRight)); };
+      let hh = fitHead(0.6 * w - hx) + hy;
+      solve(hh); hh = fitHead(vw - hx) + hy; solve(hh);
+      vx = mx; vy = my + hh + gap;
+      R = { x: vx + vw + 2 * gap, y: my, w: w - mx - (vx + vw + 2 * gap), h: h - 2 * my };
+    }
+    vid.style.cssText = `left:${vx}px;top:${vy}px;width:${vw}px;height:${vh}px`;
+    arrange(R);
+    paint(s);
+  };
+  layout();
+  relayouts.push(layout);
+  // Text widths decide the packing: measure again once the page's fonts are in (and whenever more load).
+  // Anything that changes size after the plan (a late font, an icon) re-plans; a stable layout changes nothing, so it settles.
+  let replans = 0, queued = false;
+  const ro = new ResizeObserver(() => {
+    if (queued || replans > 8 || !s.isConnected) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; replans++; if (s.isConnected) layout(); });
+  });
+  for (const e of [acts, nxt, code, head, bn]) ro.observe(e);
+  const box = (e, kind) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), kind, seat: +e.dataset.seat }; };
+  return { views: () => [box($('.hl-view'), 'highlight')], update() {} };
 }
 
 // The round's mock result: every seat placed, points by place.

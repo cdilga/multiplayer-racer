@@ -395,66 +395,60 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .lob-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); padding: 0 .9em; transform: rotate(-2deg); }
 .plate .ok { font-style: normal; color: var(--c-teal); margin-left: .15em; }
 
-/* End of round: the winner's car as the hero, the podium breaking its lower edge, the standings, the join band. */
-.eor-head, .inter-head { position: absolute; left: calc(var(--k) * 112px); top: calc(var(--k) * 72px); display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--k) * 12px); }
-.eor-hero { position: absolute; left: calc(var(--k) * 96px); top: calc(var(--k) * 54px); width: calc(var(--k) * 1054px); height: calc(var(--k) * 650px); border: calc(var(--k) * 6px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); }
-.eor .eor-head { left: calc(var(--k) * 120px); top: calc(var(--k) * 74px); }
-.eor-pod { position: absolute; left: calc(var(--k) * 126px); top: calc(var(--k) * 400px); width: calc(var(--k) * 994px); height: calc(var(--k) * 330px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--k) * 28px); align-items: end; }
-.podcard { display: flex; flex-direction: column; gap: calc(var(--k) * 10px); }
-.podcar { height: calc(var(--k) * 150px); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); }
-.podwin { display: inline-flex; align-items: center; gap: .3em; margin-bottom: calc(var(--k) * 4px); font: 900 italic calc(var(--k) * 26px)/1 var(--font-display); text-transform: uppercase; }
-.podwin img { width: 1.1em; height: 1.1em; }
-.podcard.p1 .podinfo { padding-top: calc(var(--k) * 14px); padding-bottom: calc(var(--k) * 14px); }
-.podinfo { padding: calc(var(--k) * 10px) calc(var(--k) * 16px); background: var(--c-paper); border: calc(var(--k) * 4px) solid var(--c-ink); border-top: calc(var(--k) * 12px) solid var(--seat); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); }
-.podwho { display: flex; align-items: center; gap: calc(var(--k) * 10px); font-size: calc(var(--k) * 30px); font-weight: 700; min-width: 0; }
-.podwho .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.podnum { display: flex; align-items: baseline; justify-content: space-between; }
-.podnum .place { font-size: calc(var(--k) * 64px); }
-.podcard.p1 .podnum .place { font-size: calc(var(--k) * 84px); }
-.podnum .pts { font-size: calc(var(--k) * 40px); color: var(--c-cobalt); }
-.eor-table { position: absolute; left: calc(var(--k) * 1180px); right: calc(var(--k) * 96px); top: calc(var(--k) * 54px); bottom: calc(var(--k) * 360px); display: flex; flex-direction: column; padding: calc(var(--k) * 16px) calc(var(--k) * 20px); }
-.eor-table .tag { font-size: calc(var(--k) * 36px); }
-.eor-table .table { margin-top: calc(var(--k) * 12px); }
+/* Round complete + highlights (br-dim.7): one screen. The video is the screen (its share is round-layout.json's); everything
+   else is the packed region beside or under it, placed by main.js's roundScreen(). --k is the region's own scale. */
+.round .rd-head { position: absolute; display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--k) * 10px) calc(var(--k) * 18px); z-index: 2; }
+.round .rd-head .bn { font-size: calc(var(--k) * 76px); }
+.round .rd-head .strip { font-size: calc(var(--k) * 30px); white-space: normal; }
+.rd-video, .rd-right { position: absolute; }
+.rd-video .strip.in-video { position: absolute; left: calc(var(--k) * 16px); top: calc(var(--k) * 16px); z-index: 2; font-size: calc(var(--k) * 28px); }
+.rd-right > * { position: absolute; }
+.rd-list > .tag { font-size: calc(var(--k) * 36px); }
+.rd-top, .rd-rest { position: absolute; }
+.rd-row { position: absolute; left: 0; right: 0; box-sizing: border-box; display: flex; align-items: center; gap: .3em; padding: 0 .4em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-left: calc(var(--k) * 14px) solid var(--seat); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); overflow: hidden; min-width: 0; line-height: 1.1; }
+.rd-row.p1 { background: var(--c-saffron); }
+.rd-row .rd-pl { flex: none; min-width: 1.7em; font-size: 1.2em; }
+.rd-row .badge { font-size: .8em; }
+.rd-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.rd-row img { flex: none; width: 1.1em; height: 1.1em; }
+.rd-row .pts { flex: none; color: var(--c-cobalt); font-size: 1.05em; }
+.rd-row.p1 .pts { color: var(--c-ink); }
+.rd-cell { position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: .3em; min-width: 0; padding: 0 .3em; font-size: var(--fs); line-height: 1.1; background: var(--c-paper); border: calc(var(--k) * 2px) solid var(--c-ink); border-left: calc(var(--k) * 8px) solid var(--seat); border-radius: calc(var(--k) * 8px); overflow: hidden; white-space: nowrap; }
+.rd-cell .rd-pl { flex: none; min-width: 1.4em; text-align: right; font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums; }
+.rd-cell .badge { font-size: .85em; box-shadow: none; border-width: .08em; }
+.rd-cell .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+.rd-cell .pts { flex: none; color: var(--c-cobalt); font-family: var(--font-display); font-weight: 900; }
+.rd-rest.t-num .rd-cell, .rd-rest.t-tiny .rd-cell { justify-content: center; padding: 0; border-left-width: calc(var(--k) * 2px); background: var(--seat); }
+.rd-rest.t-num .rd-cell .badge, .rd-rest.t-tiny .rd-cell .badge { background: transparent; border: 0; min-width: 0; height: auto; padding: 0; color: var(--seat-on); }
+.rd-rest.t-seat .rd-cell { padding: 0 .15em; border-left-width: calc(var(--k) * 6px); }
+.rd-join { display: flex; align-items: center; gap: calc(var(--k) * 12px); }
+.rd-join .qr { flex: none; }
+.rd-code { display: flex; flex-direction: column; min-width: 0; line-height: 1.05; }
+.rd-code small { font: 700 calc(var(--k) * 24px)/1.1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; }
+.rd-code .code { font-size: calc(var(--k) * 56px); letter-spacing: .03em; background: var(--c-saffron); width: fit-content; padding: 0 .1em; box-shadow: 0 calc(var(--k) * 4px) 0 var(--c-ink); }
+.rd-cap { margin-top: calc(var(--k) * 6px); font: 500 calc(var(--k) * 24px)/1.25 var(--font-body); }
+.rd-next { font-size: calc(var(--k) * 40px); }
+.rd-next img { width: .9em; height: .9em; vertical-align: -.1em; margin-right: .2em; }
+.rd-acts { display: flex; flex-direction: column; gap: calc(var(--k) * 8px); }
+.rd-acts .btn { justify-content: flex-start; min-height: calc(var(--k) * 64px); font-size: calc(var(--k) * 30px); padding: 0 .6em; }
+.rd-acts .btn > span { text-align: left; }
+.rd-acts .btn .sub { font-size: calc(var(--k) * 24px); }
+.rd-right.split .rd-cap, .rd-right.split .rd-acts .btn .sub, .rd-right.split .rd-lng { display: none; }
+.rd-right.split .rd-code { align-items: center; }
+.rd-right.split .rd-join { flex-direction: column; align-items: center; gap: calc(var(--k) * 6px); }
+.rd-right.row2 .rd-join { flex-direction: row; align-items: flex-start; }
+.rd-right.row2 .rd-code { align-items: flex-start; }
+.rd-right.row2 .rd-next { text-align: left; }
+.rd-right.split .rd-next { display: block; text-align: center; font-size: calc(var(--k) * 34px); white-space: normal; }
+.rd-right.split .rd-acts .btn { white-space: normal; min-height: calc(var(--k) * 56px); font-size: calc(var(--k) * 28px); }
 
-/* The join band (end of round, intermission): the QR big at the left, the screen's extra in the middle, the actions right. */
-.jband { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--k) * 340px); display: flex; align-items: flex-start; gap: calc(var(--k) * 40px); padding: calc(var(--k) * 16px) calc(var(--k) * 96px) 0; background: var(--c-paper); border-top: calc(var(--k) * 6px) solid var(--c-ink); }
-.jb-join { flex: none; display: flex; align-items: center; gap: calc(var(--k) * 24px); }
-.jb-join .qr { width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
-.jb-code { display: block; font-size: calc(var(--k) * 84px); line-height: 1.05; }
-.jb-code .hi { background: var(--c-saffron); padding: 0 .12em; box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
-.jb-join .code-cap { display: block; max-width: calc(var(--k) * 480px); margin-top: calc(var(--k) * 10px); }
-.jb-mid { flex: 1; min-width: 0; align-self: stretch; display: flex; justify-content: center; align-items: center; padding-bottom: calc(var(--k) * 54px); }
-.jb-next { display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 12px); }
-.jb-next .tag { font-size: calc(var(--k) * 48px); }
-.jb-next .tag img { width: .9em; height: .9em; vertical-align: -.1em; margin-right: .2em; }
-.jb-note { font-size: calc(var(--k) * 24px); }
-.jb-acts { flex: none; display: flex; flex-direction: column; gap: calc(var(--k) * 12px); }
-.jb-acts .btn { justify-content: flex-start; min-width: calc(var(--k) * 470px); min-height: calc(var(--k) * 70px); font-size: calc(var(--k) * 30px); }
-.jb-acts .btn .sub { font-size: calc(var(--k) * 24px); }
-.jb-top { display: flex; flex-direction: column; align-items: stretch; gap: calc(var(--k) * 10px); width: 100%; max-width: calc(var(--k) * 440px); }
-.jb-pod { display: flex; align-items: center; gap: calc(var(--k) * 12px); padding: calc(var(--k) * 6px) calc(var(--k) * 16px); background: var(--c-paper); border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
-.jb-pod .badge { font-size: calc(var(--k) * 28px); }
-.jb-pod b { font-size: calc(var(--k) * 40px); }
-.jb-pod .pts { margin-left: auto; color: var(--c-cobalt); font-size: calc(var(--k) * 34px); }
-.jb-pod:first-child b { font-size: calc(var(--k) * 48px); }
-
-/* Intermission: the main replay as big as the safe area and the band allow, the highlights still to come beside it. */
-.inter-head { flex-direction: row; align-items: center; gap: calc(var(--k) * 24px); }
-.ibn { font-size: calc(var(--k) * 60px); }
-.inter-head .strip { font-size: calc(var(--k) * 36px); }
-.inter-main { position: absolute; left: calc(var(--k) * 96px); top: calc(var(--k) * 150px); width: calc(var(--k) * 1070px); height: calc(var(--k) * 586px); }
+/* The main replay (the merged screen's video): a broadcast tracking shot, inside the .rd-video box. */
 .hl-view { position: absolute; inset: 0; border: calc(var(--k) * 6px) solid var(--c-ink); border-radius: calc(var(--k) * 12px); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); }
 .hl-cap { position: absolute; left: calc(var(--k) * 28px); bottom: calc(var(--k) * 40px); font-size: calc(var(--k) * 44px); }
 .hl-cap .badge { font-size: .8em; vertical-align: .05em; }
 .hl-count { position: absolute; right: calc(var(--k) * 22px); top: calc(var(--k) * 20px); padding: calc(var(--k) * 4px) calc(var(--k) * 14px); background: var(--c-ink); color: var(--c-paper); border-radius: 999px; font: 700 calc(var(--k) * 26px)/1.2 var(--font-body); }
 .hl-bar { position: absolute; left: calc(var(--k) * 28px); right: calc(var(--k) * 28px); bottom: calc(var(--k) * 16px); height: calc(var(--k) * 10px); background: rgb(21 32 58 / .55); border-radius: 999px; overflow: hidden; }
 .hl-bar i { display: block; height: 100%; background: var(--c-saffron); }
-.inter-side { position: absolute; left: calc(var(--k) * 1196px); right: calc(var(--k) * 96px); top: calc(var(--k) * 146px); height: calc(var(--k) * 584px); display: flex; flex-direction: column; gap: calc(var(--k) * 14px); }
-.inter-side .tag { font-size: calc(var(--k) * 34px); }
-.hl-card { position: relative; flex: 1; min-height: 0; }
-.hl-mini { position: absolute; inset: 0; border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
-.hl-what { position: absolute; left: calc(var(--k) * 10px); top: calc(var(--k) * 10px); display: inline-flex; align-items: center; gap: .35em; padding: calc(var(--k) * 2px) calc(var(--k) * 10px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 6px); font: 700 calc(var(--k) * 24px)/1.25 var(--font-body); }
-.hl-what .badge { font-size: calc(var(--k) * 24px); }
 
 /* ---- narrow screens (a phone or tablet as the host): the pause flow is one column that fits the width and scrolls ---- */
 @media (max-width: 1000px) {
