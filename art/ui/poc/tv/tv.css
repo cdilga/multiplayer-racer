@@ -4,7 +4,9 @@
 /* Android Chromium (Brave included) may boost text sizes on its own; the HUD is sized to its tiles, so opt out. */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-weight: 600; }
-canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+/* Sized in px by world.resize() to innerWidth x innerHeight, the same box the tile maths uses: 100vw x 100vh is the LARGE
+   mobile viewport (bars hidden), so with the browser bars showing the image stretched and lower rows drifted (round 4). */
+canvas#world { position: fixed; left: 0; top: 0; display: block; }
 #ui { position: fixed; inset: 0; pointer-events: none; }
 #ui * { pointer-events: auto; }
 .k { --u: calc(var(--k) * 1px); }
@@ -193,9 +195,9 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 
 /* grid player frame + pseudocode panel */
 .gp-frame { position: absolute; border: calc(var(--k) * 4px) solid var(--c-ink); }
-.pseudo { position: absolute; top: calc(var(--k) * 40px); right: calc(var(--k) * 40px); bottom: calc(var(--k) * 40px); overflow-x: hidden; overflow-y: auto; }
+.pseudo { position: absolute; top: calc(var(--k) * 40px); right: calc(var(--k) * 40px); bottom: calc(var(--k) * 40px); overflow: hidden; } /* never a scroller: a scrolling layer over the WebGL canvas blanked the tiles on a portrait phone (round 4); main.js fits the text instead */
 .pseudo h2 { margin: 0 0 calc(var(--k) * 8px); font-size: calc(var(--k) * 44px); }
-.pseudo pre { margin: 0; white-space: pre-wrap; font: 600 calc(var(--k) * 19px)/1.32 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pseudo pre { margin: 0; white-space: pre-wrap; font: 600 calc(var(--k) * 19px * var(--fit, 1))/1.32 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pseudo .n { font-size: calc(var(--k) * 36px); margin-bottom: calc(var(--k) * 8px); }
 
 /* contents page */
@@ -392,7 +394,7 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .lob-roster.t-num .lcard.choosing, .lob-roster.t-tiny .lcard.choosing { background: var(--c-paper-shade); }
 .lob-roster.t-num .lcard.joining, .lob-roster.t-tiny .lcard.joining { background: var(--c-saffron); }
 .lob-go { position: absolute; display: flex; justify-content: center; }
-.lob-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); padding: 0 .9em; transform: rotate(-2deg); }
+.lob-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); }
 .plate .ok { font-style: normal; color: var(--c-teal); margin-left: .15em; }
 
 /* Round complete + highlights (br-dim.7): one screen. The video is the screen (its share is round-layout.json's); everything
@@ -472,10 +474,88 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .qrcard { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: var(--c-white, #fff); border-style: solid; border-color: var(--c-ink); border-radius: calc(var(--k) * 6px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); overflow: hidden; }
 .qrcard .code { flex: none; margin: auto 0; color: var(--c-ink); line-height: 1; letter-spacing: .06em; }
 .plist { position: absolute; display: flex; flex-direction: column; justify-content: center; background: var(--c-paper); border: max(2px, calc(var(--k) * 3px)) solid var(--c-ink); border-radius: calc(var(--k) * 8px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); padding: calc(var(--k) * 6px); overflow: hidden; font-size: calc(var(--rh) * .75); }
-.plist h3 { margin: 0; height: calc(var(--rh) * 1.4); line-height: calc(var(--rh) * 1.4); font-size: calc(var(--rh) * .9); text-align: center; }
+.plist h3 { margin: 0; height: calc(var(--rh) * 1.4); line-height: calc(var(--rh) * 1.4); font-size: min(calc(var(--rh) * .9), calc(var(--cw) * var(--cols) / 4.8)); text-align: center; white-space: nowrap; }
 .plist .rows { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--rows), var(--rh)); grid-template-columns: repeat(var(--cols), var(--cw)); justify-content: center; }
 .plist .srow { margin: 0; gap: .3em; height: var(--rh); padding: 0 .25em; min-width: 0; overflow: hidden; }
 .plist .srow .place { width: 1.8em; font-size: 1em; flex: none; }
 .plist .srow .badge { font-size: 1em; height: 1.25em; min-width: 2.1em; padding: 0 .2em; border-width: 1px; border-radius: .3em; box-shadow: none; }
 .plist .srow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plist.t-seats .srow .place { display: none; }
+
+/* Round 4 (owner 2026-10-06): brushed buttons (art/ui/sheets/brush-button.js) at the TV profile, in TV px × --k. The plain
+   .btn stays as the compact variant (footer toolbar, list-row actions). */
+.btn.brush { --bb-o: calc(var(--k) * 4px); --bb-sh: calc(var(--k) * 6px); --bb-kb: calc(var(--k) * 6px); --bb-gp: calc(var(--k) * 8px); --bb-off: calc(var(--k) * 4px); --bb-lift: calc(var(--k) * 2px); }
+.rd-acts .btn.brush { padding-inline: 1.05em; }
+
+/* ---- Round 4 (owner 2026-10-06): ONE brush language for every surface (art/ui/sheets/brush-button.js, "the brush system").
+   Badges are dabs, chips and HUD pills short strokes, cards and rows long strokes, panels hand-cut sheets; all share the
+   ink outline that follows the shape and the hard shadow under it, with any fill (a seat or state colour). On ink surfaces
+   (the footer) the outline is paper. Tiny tiers (a whole card in a state colour) stay plain so they read at a glance. */
+:is(.badge, .chip, .hud-name, .hud-tr, .hud-boost, .f-read, .fbtn, .hl-count, .wreck-back, .joinchip, .caption, .lcard, .rd-row, .rd-cell, .plist, .card) {
+  -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
+}
+:is(.chip, .hud-name, .hud-tr, .hud-boost, .wreck-back, .joinchip, .caption) { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin); }
+:is(.hud-tr, .chip.ready, .caption) { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin); }
+:is(.chip.choosing, .chip.joining, .wreck-back) { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin); }
+.badge { --bz-mask: var(--bz-badge-0-mask); --bz-skin: var(--bz-badge-0-skin); --bz-fill: var(--seat); padding-inline: .42em; }
+.tile:nth-child(2n) .badge, .srow:nth-child(2n) .badge, .lcard:nth-child(2n) .badge, .rd-row:nth-child(2n) .badge, .rd-cell:nth-child(2n) .badge { --bz-mask: var(--bz-badge-1-mask); --bz-skin: var(--bz-badge-1-skin); }
+.tile:nth-child(3n) .badge, .srow:nth-child(3n) .badge, .lcard:nth-child(3n) .badge, .rd-cell:nth-child(3n) .badge { --bz-mask: var(--bz-badge-2-mask); --bz-skin: var(--bz-badge-2-skin); }
+.chip.autopilot { --bz-fill: var(--c-cobalt); }
+.chip.reconnecting { --bz-fill: var(--c-warning); }
+.chip.ready { --bz-fill: var(--c-success); }
+.chip.choosing { --bz-fill: var(--c-paper-shade); }
+.chip.joining { --bz-fill: var(--c-saffron); }
+.chip { padding-inline: .8em; }
+.hud-name, .hud-tr { padding-inline: .65em; height: 1.65em; }
+.hud-name { line-height: calc(1.5em - calc(var(--k) * 4px)); }
+.hud-badge { height: 1.65em; }
+.tile.compact .hud-tr { padding-inline: .5em; }
+.hud-boost { --bz-fill: rgb(21 32 58 / .62); }
+.hud-boost i { background: var(--c-saffron); }
+.caption { --bz-fill: var(--c-ink); padding-inline: 1.1em; }
+.caption.player { --bz-fill: var(--c-paper); }
+.caption.footcap { --bz-fill: var(--c-saffron); }
+.hl-count { --bz-mask: var(--bz-chip-3-mask); --bz-skin: var(--bz-chip-3-skin-on-ink); --bz-fill: var(--c-ink); padding-inline: .8em; }
+/* the footer: ink pills and toolbar buttons with a paper outline */
+.f-read { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin-on-ink); --bz-fill: var(--c-ink-raised, #222f52); padding-inline: 1.1em; }
+.fbtn { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin-on-ink); --bz-fill: var(--c-ink); padding-inline: calc(var(--k) * 24px); }
+.fbtn.icon { --bz-mask: var(--bz-badge-3-mask); --bz-skin: var(--bz-badge-3-skin-on-ink); width: calc(var(--k) * 70px); }
+.fbtn.on, .f-pause { --bz-fill: var(--c-saffron); }
+.fbtn:focus-visible { --bz-fill: var(--c-cobalt); }
+.foot.qr-open .f-qr { outline: none; }
+/* cards and rows: long strokes, four seeded variants so neighbours never look stamped */
+.lob-roster:is(.t-num, .t-tiny) .lcard { -webkit-mask: none; mask: none; background: var(--bz-fill) !important; border-color: var(--c-ink) !important; border-radius: calc(var(--k) * 10px) !important; }
+.lob-roster:is(.t-num, .t-tiny) .lcard { --bz-fill: var(--c-success); }
+.lob-roster:is(.t-num, .t-tiny) .lcard.choosing { --bz-fill: var(--c-paper-shade); }
+.lob-roster:is(.t-num, .t-tiny) .lcard.joining { --bz-fill: var(--c-saffron); }
+:is(.lcard, .rd-row, .rd-cell) { --bz-mask: var(--bz-row-0-mask); --bz-skin: var(--bz-row-0-skin); border-left-width: calc(var(--k) * 3px); padding-inline: .8em; overflow: visible; }
+:is(.lcard, .rd-row, .rd-cell):nth-child(4n+2) { --bz-mask: var(--bz-row-1-mask); --bz-skin: var(--bz-row-1-skin); }
+:is(.lcard, .rd-row, .rd-cell):nth-child(4n+3) { --bz-mask: var(--bz-row-2-mask); --bz-skin: var(--bz-row-2-skin); }
+:is(.lcard, .rd-row, .rd-cell):nth-child(4n) { --bz-mask: var(--bz-row-3-mask); --bz-skin: var(--bz-row-3-skin); }
+.rd-row.p1 { --bz-fill: var(--c-saffron); }
+.rd-rest:is(.t-num, .t-tiny) .rd-cell { -webkit-mask: none; mask: none; background: var(--seat) !important; border-color: var(--c-ink) !important; border-radius: calc(var(--k) * 6px) !important; padding: 0; }
+.rd-rest:not(.t-num):not(.t-tiny) .rd-cell .nm { overflow: hidden; }
+.rd-acts { gap: calc(var(--k) * 14px); }
+/* panels: hand-cut paper sheets */
+:is(.plist, .card, .qrcard) { --bz-mask: var(--bz-panel-0-mask); --bz-skin: var(--bz-panel-0-skin); }
+.qrcard { background: var(--c-paper); } /* the QR covers the brushed outline, so the join card keeps a plain ink frame */
+.plist { --bz-mask: var(--bz-panel-2-mask); --bz-skin: var(--bz-panel-2-skin); }
+/* The join QR sits on paper, not in a white box (round 4): qr-roo7-paper.svg is ink modules on the paper colour, and a QR
+   that isn't already inside a card gets an ink outline and sticker shadow of its own (outline, so module px stay whole). */
+.qr { background: var(--c-paper); }
+.rd-join .qr { outline: max(2px, calc(var(--k) * 3px)) solid var(--c-ink); box-shadow: 0 calc(var(--k) * 5px) 0 rgb(21 32 58 / .85); }
+.qrcard .qr-label { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.qrcard .qr-label .code { letter-spacing: .06em; color: var(--c-ink); }
+.qrcard .qr-label small { font-weight: 700; color: var(--c-ink); margin-top: .15em; }
+.f-qr { background: var(--c-paper); }
+/* brushed shapes sit a little inside their box (the shadow takes the bottom): give text room so no outline grazes it */
+.chip { padding-block: .3em; }
+.tile .chip { height: 1.65em; }
+.lob-join { padding-bottom: calc(var(--k) * 34px); }
+.plist { padding-bottom: calc(var(--k) * 12px); }
+/* segmented settings (pause flow): long slabs like the controller's */
+.seg { -webkit-mask: var(--bz-row-1-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-row-1-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-row-1-skin) 0 0 / 100% 100% no-repeat, var(--c-paper) !important; border-color: transparent !important; border-radius: 0 !important; padding: 0 calc(var(--k) * 12px) calc(var(--k) * 5px); }
+/* tiny tiers: the cell is already the seat's colour, so its badge is just the number (no dab inside the cell) */
+:is(.rd-rest, .lob-roster):is(.t-num, .t-tiny) .badge { -webkit-mask: none; mask: none; background: transparent !important; }

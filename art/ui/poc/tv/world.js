@@ -579,6 +579,8 @@ export async function createWorld(canvas, { colors }) {
     if (clamped) { const f = lim / Math.max(bw, bh); bw = Math.max(1, Math.floor(bw * f)); bh = Math.max(1, Math.floor(bh * f)); }
     renderer.setPixelRatio(1);
     renderer.setSize(bw, bh, false);
+    renderer.domElement.style.width = `${w}px`; // the CSS box is exactly the box the tiles are laid out in (round 4)
+    renderer.domElement.style.height = `${h}px`;
     Object.assign(backing, { w: bw, h: bh, css: [w, h], dpr, clamped, limit: clamped ? lim : null });
   }
 

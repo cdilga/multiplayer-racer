@@ -3,6 +3,7 @@
 // two thumbs move two sticks independently), shows the indicators, the edge-safe zones and a thumb-reach overlay, and sends
 // nothing anywhere.
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
+import { paintBrushButtons, installBrushSkins } from '../../sheets/brush-button.js';
 
 export const STATES = {
   'In race': ['race', 'race&stick=touched', 'race&stick=preload', 'race&stick=cooldown', 'race&stick=disabled', 'race&stick=autopilot', 'race&stick=offcourse', 'identify', 'identify&at=150', 'menu', 'tutorial', 'tutorial&step=2', 'tutorial&step=4&won=1'],
@@ -13,6 +14,8 @@ export const STATES = {
 };
 
 const tokens = await loadTokens();
+// Round 4: the brush system (badges, pills, rows, meters) at the handheld outline width.
+installBrushSkins(document.documentElement, { stroke: 2.5, sy: 4, ink: tokens.palette.ink.hex, paper: tokens.palette.paper.hex });
 const app = document.getElementById('app');
 const icon = (n) => `<img class="i" alt="" src="${asset(`icons/${n}.svg`)}">`;
 const parse = () => {
@@ -35,6 +38,7 @@ function paint(root) {
     e.insertAdjacentHTML('afterbegin', `<svg class="paint" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${paintPath(torn ? e.dataset.torn : e.dataset.brush, w, h, amp, torn ? 'torn' : 'brush')}"/></svg>`);
   }
   for (const e of root.querySelectorAll('[data-tilt]')) e.style.rotate = `${tiltFor(e.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
+  paintBrushButtons(root); // round 4: brushed buttons (art/ui/sheets/brush-button.js)
 }
 
 // ---- sticks ----
@@ -266,7 +270,7 @@ function checkStep() {
     if (!tut) return;
     tut.advancing = false;
     if (tut.step < STEPS.length - 1) { tut.step++; tut.goals = {}; renderStep(); }
-    else { tut.card.innerHTML = `<h2 class="display italic">You're ready</h2><p>That's every control. The race waits for you.</p><button class="btn primary big" data-act="done">Let's race</button>`; tut.card.querySelector('[data-act=done]').addEventListener('click', () => tut?.card.remove()); tut.step = STEPS.length; }
+    else { tut.card.innerHTML = `<h2 class="display italic">You're ready</h2><p>That's every control. The race waits for you.</p><button class="btn brush primary big" data-act="done">Let's race</button>`; tut.card.querySelector('[data-act=done]').addEventListener('click', () => tut?.card.remove()); tut.step = STEPS.length; }
     window.__phone.tutorial = { step: tut.step, done: [...tut.done] };
   }, 700);
   window.__phone.tutorial = { step: tut.step, done: [...tut.done] };
@@ -322,7 +326,7 @@ function lobby() {
       <div class="side">
         <div class="thumbs" data-box="thumbs" role="listbox" aria-label="Cars">${ROSTER.map((c, i) => `<button class="thumb" role="option" data-i="${i}" aria-label="${c.name}">${carArt(c, m, false)}</button>`).join('')}</div>
         <div class="panel namep" data-box="name"><p class="label">Your name</p><div class="field"><input value="${m.name}" aria-label="Your name" maxlength="64"><button class="btn icon" aria-label="New random name">${icon('dices')}</button></div></div>
-        <div class="readyrow" data-box="ready"><span class="slip" data-torn="slip-1"><button class="btn primary big">${ready ? `${icon('check')}You're ready` : 'Ready'}</button></span></div>
+        <div class="readyrow" data-box="ready"><button class="btn brush primary big">${ready ? `${icon('check')}You're ready` : 'Ready'}</button></div>
         <div class="waiting" data-box="waiting">${ready ? 'Tap again if you need a minute.' : 'Waiting for the host to start'} · 27 of 32 ready</div>
       </div>
     </div>`;
@@ -370,24 +374,49 @@ async function goFullscreen() {
   return res;
 }
 document.addEventListener('visibilitychange', async () => { if (wake && document.visibilityState === 'visible') { try { wake = await navigator.wakeLock.request('screen'); } catch { /* stays as it was */ } } });
+// Round 4 (owner 2026-10-06): the controller works with the browser bars showing; full screen is offered, never required.
+// iPhone Safari has no Fullscreen API, so there the gate says how to get it (Add to Home Screen) and plays in the browser.
+// The card fits the screen with the bars showing in both orientations: on a short landscape screen it goes two-column.
+const canFullscreen = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const isIos = () => /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 function gate() {
   const s = document.createElement('div');
   s.className = 'screen gate';
+  const fsOk = canFullscreen() && !standalone() && S.p.get('fs') !== '0'; // &fs=0 previews the iPhone path anywhere
+  const ios = isIos() || S.p.get('fs') === '0';
+  const lead = fsOk ? "Turn your phone sideways. Full screen hides the browser bars; we'll keep the screen awake while you play."
+    : standalone() ? "Turn your phone sideways. We'll keep the screen awake while you play."
+      : "Turn your phone sideways. It plays fine with the browser bars showing; we'll keep the screen awake while you play.";
+  const tip = !standalone() && ios
+    ? `<p class="tip">${icon('share')}<span><b>For full screen:</b> tap Share, then <b>Add to Home Screen</b>, and open Jammers from there.</span></p>` : '';
   s.innerHTML = `<div class="centre"><div class="panel gatecard" data-box="gate" data-tilt="gate">
-      <span class="bn gatebn" data-torn="gate">Get <span class="acc">set</span></span>
-      <div class="phone-turn" aria-hidden="true">${icon('smartphone')}</div>
-      <p class="lead">Turn your phone sideways, then tap to go full screen. We'll keep the screen awake while you play.</p>
-      <span class="slip" data-torn="slip-2"><button class="btn primary big" data-act="go">${icon('maximize')}Tap to go full screen</button></span>
+      <div class="gate-a"><span class="bn gatebn" data-torn="gate">Get <span class="acc">set</span></span>
+      <div class="phone-turn" aria-hidden="true">${icon('smartphone')}</div></div>
+      <div class="gate-b"><p class="lead">${lead}</p>
+      ${fsOk ? `<button class="btn brush primary big" data-act="go">${icon('maximize')}Go full screen</button>
+        <button class="btn brush" data-act="stay">Play with the bars showing</button>`
+        : `<button class="btn brush primary big" data-act="stay">${icon('play')}Let's play</button>`}
+      ${tip}
       <div class="results" hidden></div>
-      <p class="fallback">On iPhone there's no full screen in Safari: Add to Home Screen hides the browser bars. If your phone can't stay awake, it may dim; any tap wakes it.</p>
+      <p class="fallback">If your phone can't stay awake it may dim; any tap wakes it.</p></div>
     </div></div>`;
   app.append(s);
-  s.querySelector('[data-act=go]').addEventListener('click', async () => {
-    const r = await goFullscreen();
+  const report = (r) => {
     const say = { on: '✓', locked: '✓', refused: 'refused', unsupported: 'not on this phone' };
     const box = s.querySelector('.results');
     box.innerHTML = `<span>Full screen: ${say[r.fullscreen]}</span><span>Sideways lock: ${say[r.orientation]}</span><span>Screen stays awake: ${say[r.wakeLock]}</span>`;
     box.hidden = false;
+  };
+  // Back to wherever the gate interrupted (the race or the lobby), after the receipt has been on screen for a moment.
+  const onward = () => { let to = 'race'; try { to = sessionStorage.getItem('jj-gate-from') || 'race'; } catch { /* default */ } setTimeout(() => { location.hash = to; }, 1400); };
+  s.querySelector('[data-act=go]')?.addEventListener('click', async () => { report(await goFullscreen()); onward(); });
+  s.querySelector('[data-act=stay]').addEventListener('click', async () => {
+    const res = { fullscreen: 'unsupported', orientation: 'unsupported', wakeLock: 'unsupported', order: [] };
+    if (screen.orientation?.lock) { try { await screen.orientation.lock('landscape'); res.orientation = 'locked'; } catch { res.orientation = 'refused'; } }
+    if (navigator.wakeLock?.request) { try { wake = await navigator.wakeLock.request('screen'); res.wakeLock = 'on'; } catch { res.wakeLock = 'refused'; } }
+    window.__phone.session = res;
+    report(res); onward();
   });
   requestAnimationFrame(() => paint(s));
 }
@@ -397,7 +426,7 @@ function join() {
       <img alt="Joystick Jammers" src="${asset('brand/wordmark-on-ink.svg')}" style="width:min(260px,70%);align-self:center" data-box="wordmark">
       <div class="panel" data-box="join"><h1 class="display italic" style="margin:0 0 10px;font-size:32px">Join a room</h1><p class="label">Room code on the TV</p>
         <div class="field"><input class="code" value="ROO7" aria-label="Room code" maxlength="8" autocapitalize="characters"><button class="btn">${icon('scan-qr-code')}Scan QR code</button></div>
-        <div style="height:14px"></div><button class="btn primary big">Join</button></div>
+        <div style="height:14px"></div><button class="btn brush primary big">Join</button></div>
       <div class="waiting" data-box="hint">Got a link from the TV? It opens this page with the code filled in.</div>
     </div></div>`);
 }
@@ -414,9 +443,9 @@ function settings() {
         <div style="height:8px"></div><div class="row">Vibration<span class="toggle on" role="switch" aria-checked="true"></span></div>
         <div style="height:8px"></div><div class="row"><span>Reduced motion<small>Fewer flashes, no shake</small></span><span class="toggle" role="switch" aria-checked="false"></span></div>
         <div style="height:8px"></div><div class="row"><span>Remember on this device<small>Until you clear browser data</small></span><span class="toggle on" role="switch" aria-checked="true"></span></div></div>
-      <div class="actions" data-box="actions"><button class="btn primary big">Save and back to driving</button>
-      <button class="btn">Test these controls</button>
-      <div style="display:flex;gap:10px"><button class="btn" style="flex:1">${icon('pause')}Sit out</button><button class="btn danger" style="flex:1">${icon('log-out')}Leave room</button></div></div>
+      <div class="actions" data-box="actions"><button class="btn brush primary big">Save and back to driving</button>
+      <button class="btn brush">Test these controls</button>
+      <div style="display:flex;gap:10px"><button class="btn brush" style="flex:1">${icon('pause')}Sit out</button><button class="btn brush danger" style="flex:1">${icon('log-out')}Leave room</button></div></div>
     </div></div>`);
 }
 
@@ -442,7 +471,7 @@ function card(name) {
   const m = me();
   const [kind, iname] = ic.includes(':') ? ic.split(':') : ['', ic];
   const head = ic === 'spin' ? '<div class="spin" aria-hidden="true"></div>' : `<div class="state-icon ${kind}">${icon(iname)}</div>`;
-  const actions = acts.map((a) => (a === 'field' ? `<div class="field"><input value="${m.name}" aria-label="Your name"><button class="btn icon" aria-label="New random name">${icon('dices')}</button></div>` : a.startsWith('primary:') ? `<button class="btn primary big">${a.slice(8)}</button>` : `<button class="btn">${a}</button>`)).join('');
+  const actions = acts.map((a) => (a === 'field' ? `<div class="field"><input value="${m.name}" aria-label="Your name"><button class="btn icon" aria-label="New random name">${icon('dices')}</button></div>` : a.startsWith('primary:') ? `<button class="btn brush primary big">${a.slice(8)}</button>` : `<button class="btn brush">${a}</button>`)).join('');
   app.insertAdjacentHTML('beforeend', `<div class="screen" style="--seat:${m.hex};--seat-on:${m.on}"><div class="centre"><div class="panel card on-paper" data-box="card">${head}<h1 class="display italic">${title}</h1><p>${body}</p><div class="acts">${actions}</div></div></div></div>`);
 }
 
@@ -483,7 +512,7 @@ function render() {
   let asked = true;
   try { asked = sessionStorage.getItem('jj-gate') === '1'; } catch { /* no storage: don't nag */ }
   if (!navigator.webdriver && !asked && S.chrome && ['race', 'lobby'].includes(S.name)) {
-    try { sessionStorage.setItem('jj-gate', '1'); } catch { /* ignore */ }
+    try { sessionStorage.setItem('jj-gate', '1'); sessionStorage.setItem('jj-gate-from', location.hash.slice(1) || 'race'); } catch { /* ignore */ }
     location.hash = 'gate';
     return;
   }

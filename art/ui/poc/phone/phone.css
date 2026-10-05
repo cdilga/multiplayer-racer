@@ -73,7 +73,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .reach i { position: absolute; bottom: -var(--r); width: var(--r); height: var(--r); border-radius: 50%; background: radial-gradient(circle, rgb(0 194 184 / .26) 55%, rgb(0 194 184 / .12) 56%, rgb(0 194 184 / .12) 100%); }
 
 /* full-screen and centred states */
-.centre { flex: 1; display: grid; place-items: center; padding: 24px; overflow: auto; }
+.centre { flex: 1; display: grid; place-items: safe center; padding: 24px; overflow: auto; touch-action: pan-y; } /* safe: a card taller than the screen starts at the top and scrolls, never clipped above it */
 .card { width: min(420px, 100%); text-align: center; }
 .card h1 { margin: 10px 0 8px; font-size: 32px; }
 .card p { margin: 0 0 16px; font-size: 17px; font-weight: 500; }
@@ -215,6 +215,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .slip .paint path { fill: var(--c-ink); }
 .slip .btn { flex: 1; }
 .btn, .field input, .seg { border-radius: 5px; }
+/* Round 4: the brushed button at the handheld profile (art/ui/sheets/brush-button.js). */
+.btn.brush { --bb-o: 2.5px; --bb-sh: 4px; --bb-kb: 3px; --bb-gp: 4px; --bb-off: 2px; --bb-lift: 2px; }
+.btn.brush:active { box-shadow: none; }
 .panel { border-radius: 2px; }
 
 /* POC1-18: boost and power-ups in a pod at the top centre, between the sticks */
@@ -323,7 +326,23 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 @keyframes turn { 0%, 30% { rotate: 0deg; } 55%, 90% { rotate: -90deg; } 100% { rotate: 0deg; } }
 @media (prefers-reduced-motion: reduce) { .phone-turn { animation: none; rotate: -90deg; } }
 .gatecard .lead { margin: 0; font-size: 18px; font-weight: 600; }
-.gatecard .slip { width: 100%; }
+.gatecard .btn.big { width: 100%; }
+.gatecard .btn.brush:not(.big) { width: 100%; }
+.gate-a, .gate-b { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.gatecard .tip { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 8px 10px; background: var(--c-paper); border: 2px solid var(--c-cobalt); border-radius: 4px; font-size: 15px; font-weight: 500; text-align: left; }
+.gatecard .tip img.i { flex: none; width: 20px; height: 20px; margin-top: 1px; }
+/* Short landscape screens (a phone sideways with the browser bars showing, about 325 px tall): two columns, tighter type. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .gate .centre { padding: 30px 16px 10px; }
+  .gatecard { width: min(760px, 100%); flex-direction: row; align-items: center; gap: 18px; padding: 26px 18px 12px; text-align: left; }
+  .gate-a { flex: 0 0 auto; width: auto; position: static; }
+  .gate-a .gatebn { left: 24px; translate: 0 -50%; font-size: 30px; }
+  .gate-b { flex: 1; align-items: stretch; gap: 8px; }
+  .gatecard .lead { font-size: 16px; }
+  .gatecard .btn.big { min-height: 52px; font-size: 19px; }
+  .gatecard .fallback { font-size: 13px; }
+  .gatecard .tip { font-size: 14px; padding: 6px 8px; }
+}
 .gatecard .results { display: flex; flex-direction: column; gap: 4px; font-weight: 700; }
 .gatecard .fallback { margin: 0; font-size: 14px; font-weight: 500; color: var(--c-ink-soft); }
 .rotate-card { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(320px, calc(100% - 48px)); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--c-ink); }
@@ -341,3 +360,66 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .strip::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 4px; z-index: -1; background: var(--c-saffron); transform: skewX(-8deg) rotate(-.2deg); }
 .strip .seatno { flex: none; margin-top: -14px; font: 900 italic 52px/1 var(--font-display); color: var(--seat); -webkit-text-stroke: 5px var(--c-ink); paint-order: stroke fill; transform: skewX(-8deg) rotate(-3deg); font-variant-numeric: tabular-nums; }
 .strip .nm { font: 900 italic 28px/1 var(--font-display); text-transform: uppercase; color: var(--c-paper); }
+
+/* ---- Round 4 (owner 2026-10-06): the brush system (art/ui/sheets/brush-button.js) on the phone. Badges are dabs, pills and
+   meters short strokes, settings rows long strokes; the outline follows the shape and the hard shadow sits under it. Panels
+   keep straight edges here because their torn banners overhang them, which a shape mask would cut off. */
+:is(.badge, .goal, .cooee-phone b, .meter, .row, .gatecard .tip) {
+  -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
+}
+.badge { --bz-mask: var(--bz-badge-0-mask); --bz-skin: var(--bz-badge-0-skin); --bz-fill: var(--seat); padding-inline: 12px; }
+:is(.goal, .cooee-phone b) { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin); padding-inline: 18px; padding-block: 4px; }
+.goal { --bz-fill: var(--c-paper-shade); }
+.cooee-phone b { --bz-fill: var(--seat); }
+.meter { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin-on-ink); --bz-fill: rgb(0 0 0 / .35); height: 22px; }
+.row { --bz-mask: var(--bz-row-0-mask); --bz-skin: var(--bz-row-0-skin); --bz-fill: var(--c-paper-shade); padding-inline: 20px; padding-bottom: 12px; }
+.row:nth-child(2n) { --bz-mask: var(--bz-row-1-mask); --bz-skin: var(--bz-row-1-skin); }
+.gatecard .tip { --bz-mask: var(--bz-row-2-mask); --bz-skin: var(--bz-row-2-skin); padding: 10px 16px 14px; }
+/* Round 4: a phone sideways with the browser bars showing (~325 px tall): the car picker fits, Ready always on screen. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .picker { padding: 8px 12px 10px; gap: 10px; touch-action: pan-y; }
+  .stage { padding-top: 16px; }
+  .carpanel { padding: 20px 46px 8px; gap: 4px; }
+  .carname { font-size: 24px; }
+  .carimg.big { width: auto; max-width: 100%; max-height: 118px; margin: -4px auto 0; }
+  .stats { gap: 2px 10px; }
+  .stat { font-size: 12px; }
+  .stat i { height: 7px; }
+  .blurb { font-size: 13px; }
+  .side { gap: 8px; }
+  .thumbs { padding-bottom: 4px; }
+  .thumb { width: 64px; height: 44px; }
+  .namep { padding-top: 8px; padding-bottom: 8px; }
+  .namep .field input { min-height: 44px; }
+  .readyrow { position: sticky; bottom: 0; }
+  .readyrow .btn.big { min-height: 54px; font-size: 22px; }
+}
+/* The controller is an ink surface: a brushed button's shadow is black at 55 % there (tokens.ink.stickerShadowOnInk), and
+   ink again inside paper panels. */
+.bb .bb-shadow { fill: rgb(0 0 0 / .55); stroke: rgb(0 0 0 / .55); }
+:is(.panel, .carpanel) .bb .bb-shadow { fill: rgb(21 32 58 / .85); stroke: rgb(21 32 58 / .85); }
+.btn.brush { --bb-sh: 5px; }
+/* Committing to the brush (owner, round 4): the top-bar tools, icon buttons, the status banner, segmented controls, text
+   fields and car thumbnails are slabs too. One language on the controller, top to bottom. */
+.scroll, .picker { touch-action: pan-y; }
+:is(.tools .btn, .strip-acts .btn, .btn.icon:not(.brush), .banner, .seg, .field input, .thumb) {
+  -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat;
+  background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important;
+  border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important;
+}
+:is(.tools .btn, .strip-acts .btn) { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin-on-ink); --bz-fill: var(--c-ink-raised); padding-inline: 16px; padding-bottom: 4px; }
+.tools .btn:nth-child(2n) { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin-on-ink); }
+:is(.tools, .strip-acts) .btn.identify { --bz-fill: var(--seat); }
+.btn.icon:not(.brush) { --bz-mask: var(--bz-badge-1-mask); --bz-skin: var(--bz-badge-1-skin); --bz-fill: var(--c-paper); width: 54px; padding-bottom: 4px; }
+.stage .arrow { --bz-fill: var(--c-saffron); }
+.banner { --bz-mask: var(--bz-row-3-mask); --bz-skin: var(--bz-row-3-skin); --bz-fill: var(--c-cobalt); padding: 10px 22px 14px; }
+.seg { --bz-mask: var(--bz-row-1-mask); --bz-skin: var(--bz-row-1-skin); padding: 0 10px 4px; }
+.field input { --bz-mask: var(--bz-row-2-mask); --bz-skin: var(--bz-row-2-skin); --bz-fill: #fff; padding-inline: 18px; padding-bottom: 4px; }
+.thumb { --bz-mask: var(--bz-badge-2-mask); --bz-skin: var(--bz-badge-2-skin-on-ink); --bz-fill: var(--c-ink-raised); padding-bottom: 6px; }
+.thumb[aria-selected=true] { --bz-skin: var(--bz-badge-2-skin); --bz-fill: var(--seat); }
+.stage { min-height: 0; }
+:is(.tools, .strip-acts) .btn.icon:not(.brush) { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin-on-ink); --bz-fill: var(--c-ink-raised); width: 58px; }
+:is(.tools, .strip-acts) .btn.icon.identify:not(.brush) { --bz-fill: var(--seat); }
+.stage .btn.icon.arrow:not(.brush) { --bz-fill: var(--c-saffron); }

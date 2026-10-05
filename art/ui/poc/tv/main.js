@@ -2,9 +2,10 @@
 // contents page at #). The 3D tiles are live (world.js); the HUD is one DOM layer positioned over the tile viewports,
 // built the way the game would build it, so its cost can be measured (window.__poc.perf).
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
+import { paintBrushButtons, installBrushSkins } from '../../sheets/brush-button.js';
 import { createWorld, FRAMING } from './world.js';
 import { layoutGrid, PSEUDOCODE } from './grid.js';
-import { solveHost, qrMin } from './host-layout.js';
+import { solveHost, qrMin, qrLabel } from './host-layout.js';
 import { STATES } from './states.js';
 
 
@@ -34,6 +35,8 @@ const setK = () => {
   document.documentElement.style.setProperty('--k', String(kNow));
   // The one minimum scannable QR size (qr-space.json): the lobby's QR never goes under it either.
   document.documentElement.style.setProperty('--qr-min', `${qrMin(QR_RULES, kNow, window.devicePixelRatio || 1).q}px`);
+  // Round 4: the brush system's skins (badges, chips, rows, panels) at this screen's outline width.
+  installBrushSkins(document.documentElement, { stroke: Math.max(1.5, 3 * kNow).toFixed(2), sy: 4, ink: tokens.palette.ink.hex, paper: tokens.palette.paper.hex });
 };
 setK();
 const colors = tokens.identity.colors.map((c) => c.hex);
@@ -189,11 +192,11 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     settled = !animate;
   }
 
-  // The join QR at the solver's size: whole device px per module so every module is crisp; the code under it when it fits.
+  // The join QR at the solver's size: whole device px per module so every module is crisp; the room code and address under it.
   function qrCard(q) {
     const c = el('div', 'qrcard');
     c.style.cssText = `left:${q.x}px;top:${q.y}px;width:${q.ow}px;height:${q.oh}px;border-width:${(q.ow - q.q) / 2}px`;
-    c.innerHTML = `<img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}" style="width:${q.q}px;height:${q.q}px">${q.lh ? `<div class="display code" style="font-size:${Math.max(14, q.q * 0.17)}px">ROO7</div>` : ''}`;
+    c.innerHTML = `<img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}" style="width:${q.q}px;height:${q.q}px">${q.lh ? `<div class="qr-label"><b class="display code" style="font-size:${qrLabel(q.q).code}px">ROO7</b><small style="font-size:${qrLabel(q.q).url}px">jammers.dilger.dev</small></div>` : ''}`;
     c.dataset.qr = String(q.q);
     return c;
   }
@@ -372,7 +375,7 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
   f.setAttribute('aria-label', 'Host toolbar');
   f.innerHTML = `<div class="f-diag" hidden></div>
     <div class="f-row">
-      <div class="f-join"><button class="f-qr" type="button" aria-label="Show the join code bigger (pauses the game)"><img class="qr" alt="" src="${asset('poc/shared/qr-roo7.svg')}"></button>
+      <div class="f-join"><button class="f-qr" type="button" aria-label="Show the join code bigger (pauses the game)"><img class="qr" alt="" src="${asset('poc/shared/qr-roo7-paper.svg')}"></button>
         <div class="f-room"><span class="f-code"><small>Room</small><b class="display code">ROO7</b></span><span class="f-sub">jammers.dilger.dev · <b class="f-n tnum">0</b> players</span></div></div>
       <div class="f-mid"></div>
       <div class="f-right"><img class="f-logo" alt="Joystick Jammers" src="${asset('brand/wordmark-on-ink.svg')}">
@@ -452,7 +455,7 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
   function showQrPop(hold = false) {
     clearTimeout(popTimer);
     if (!pop) {
-      pop = el('div', 'qr-pop k', `<div class="card"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div><div class="qr-note">${icon('pause')}Game paused while the code is up</div></div></div>`);
+      pop = el('div', 'qr-pop k', `<div class="card"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div><div class="qr-note">${icon('pause')}Game paused while the code is up</div></div></div>`);
       ui.append(pop);
       gamePaused = true;
       f.classList.add('qr-open');
@@ -488,9 +491,13 @@ function paint(root) {
   const amp = tokens.language.banner.heading.tornAmplitudePx.tv * K();
   for (const e of root.querySelectorAll('[data-torn], [data-brush]')) {
     const torn = e.dataset.torn != null, w = e.offsetWidth, h = e.offsetHeight;
+    if (!w || !h) continue;
+    // Round 4: repainted after every relayout (bars showing/hiding, rotation), so a shape never keeps an old size.
+    e.querySelector(':scope > svg.paint')?.remove();
     e.insertAdjacentHTML('afterbegin', `<svg class="paint" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${paintPath(torn ? e.dataset.torn : e.dataset.brush, w, h, amp, torn ? 'torn' : 'brush')}"/></svg>`);
   }
   for (const e of root.querySelectorAll('[data-tilt]')) e.style.rotate = `${tiltFor(e.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
+  paintBrushButtons(root);
 }
 
 // Gutters between tiles are the renderer's ink clear colour; screens without a grid clear to paper.
@@ -542,13 +549,25 @@ const SETUP = {
     const r0 = rect();
     ui.append(gutterBackground(r0));
     const frame = el('div', 'gp-frame');
-    Object.assign(frame.style, { left: `${r0.x - 4 * k}px`, top: `${r0.y - 4 * k}px`, width: `${r0.w + 8 * k}px`, height: `${r0.h + 8 * k}px` });
     const panel = el('div', 'card pseudo k');
-    if (stacked()) Object.assign(panel.style, { left: `${40 * k}px`, top: `${r0.y + r0.h + 40 * k}px` });
-    else panel.style.left = `${r0.x + r0.w + 40 * k}px`;
+    // Round 4: the frame and the rule panel follow every viewport change (a rotation left them where the old layout put them).
+    const place = () => {
+      const r1 = rect(), k1 = K();
+      Object.assign(frame.style, { left: `${r1.x - 4 * k1}px`, top: `${r1.y - 4 * k1}px`, width: `${r1.w + 8 * k1}px`, height: `${r1.h + 8 * k1}px` });
+      if (stacked()) Object.assign(panel.style, { left: `${40 * k1}px`, top: `${r1.y + r1.h + 40 * k1}px` });
+      else Object.assign(panel.style, { left: `${r1.x + r1.w + 40 * k1}px`, top: '' });
+      // The rule fits its panel (it never scrolls): shrink the code until it does, down to 8 px (an explainer, not game text: pinch to zoom).
+      panel.style.setProperty('--fit', '1');
+      for (let f = 1, i = 0; i < 8 && panel.scrollHeight > panel.clientHeight + 1 && 19 * k1 * f > 8; i++) {
+        f *= Math.max(0.6, Math.sqrt(panel.clientHeight / panel.scrollHeight));
+        panel.style.setProperty('--fit', f.toFixed(3));
+      }
+    };
+    relayouts.push(place);
     panel.innerHTML = `<h2 class="display italic">The grid rule</h2><div class="n display tnum">N = <span>1</span></div><pre></pre>`;
     panel.querySelector('pre').textContent = PSEUDOCODE;
     ui.append(frame, panel);
+    place();
     let active = [1];
     const seqUp = Array.from({ length: 31 }, (_, i) => ({ add: i + 2 }));
     const r = (() => { let s = 99; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); })();
@@ -675,7 +694,7 @@ const SETUP = {
     g.footer.update({ paused: true });
     const seg = (opts, on) => `<span class="seg">${opts.map((o, i) => `<b class="${i === on ? 'on' : ''}">${o}</b>`).join('')}</span>`;
     const row = (ic, label, control) => `<div class="pset"><span class="pic">${icon(ic)}</span><span>${label}</span>${control}</div>`;
-    const back = `<button class="btn" type="button" data-go="">${icon('chevron-left')}Back</button>`;
+    const back = `<button class="btn brush" type="button" data-go="">${icon('chevron-left')}Back</button>`;
     let body;
     if (S.sub === 'players') {
       const rows = [
@@ -690,12 +709,12 @@ const SETUP = {
     } else if (S.sub === 'end') {
       body = `<span class="bn pbn" data-torn="pause-end">End the <span class="acc">round</span>?</span>
         <p class="plead">Everyone goes back to the lobby and keeps their number. The room and ROO7 stay open.</p>
-        <div class="pacts row">${back}<span class="slip" data-torn="slip-1"><button class="btn primary gp" type="button">${icon('flag')}End round</button></span></div>`;
+        <div class="pacts row">${back}<button class="btn brush primary gp" type="button">${icon('flag')}End round</button></div>`;
     } else if (S.sub === 'disband') {
       body = `<span class="bn pbn" data-torn="pause-disband">Disband <span class="acc">ROO7</span>?</span>
         <span class="strip danger" data-brush="pause-disband-strip"><span>${icon('triangle-alert')}This disconnects everyone</span></span>
         <p class="plead">Phones are told the room ended and can't rejoin. Playing again needs a new room and code.</p>
-        <div class="pacts row"><button class="btn gp" type="button" data-go="">${icon('chevron-left')}Keep playing</button><button class="btn danger" type="button">${icon('log-out')}Disband room</button></div>`;
+        <div class="pacts row"><button class="btn brush gp" type="button" data-go="">${icon('chevron-left')}Keep playing</button><button class="btn brush danger" type="button">${icon('log-out')}Disband room</button></div>`;
     } else {
       body = `<span class="bn pbn" data-torn="pause">Race <span class="acc">paused</span></span>
         <span class="strip ink psub" data-brush="pause-sub"><span>${icon('pause')}Host pause · every car frozen where it is</span></span>
@@ -707,8 +726,8 @@ const SETUP = {
             <p class="pnote">Changes apply now; laps from the next race.</p></div>
         </div>
         <div class="pacts">
-          <span class="slip" data-torn="slip-2"><button class="btn primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button></span>
-          <div class="prow"><button class="btn" type="button" data-go="players">${icon('users')}Players and controllers</button><button class="btn" type="button" data-go="end">${icon('flag')}End round…</button><button class="btn danger-o" type="button" data-go="disband">${icon('log-out')}Disband room…</button></div>
+          <button class="btn brush primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button>
+          <div class="prow"><button class="btn brush" type="button" data-go="players">${icon('users')}Players and controllers</button><button class="btn brush" type="button" data-go="end">${icon('flag')}End round…</button><button class="btn brush danger-o" type="button" data-go="disband">${icon('log-out')}Disband room…</button></div>
           <p class="pnote">End round goes back to the lobby; everyone keeps their number. Disband disconnects everyone and ROO7 stops working.</p>
         </div>`;
     }
@@ -744,9 +763,9 @@ const SETUP = {
     s.innerHTML = `<div class="lob-head"><span class="bn wbn" data-torn="lobby">Lob<span class="acc">by</span></span>
         <span class="tag" data-brush="lobby-count"><span><b class="tnum">${S.n}</b> in the room · <b class="tnum">${count('ready')}</b> ready</span></span>
         <span class="strip ink" data-brush="lobby-sub"><span>${icon('car')}Pick a car on your phone · the host starts the race</span></span></div>
-      <div class="card lob-join" data-tilt="lobby-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
+      <div class="card lob-join" data-tilt="lobby-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
       <div class="lob-roster"></div>
-      <div class="lob-go"><span class="slip" data-torn="slip-3"><button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button></span></div>`;
+      <div class="lob-go"><button class="btn brush primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button></div>`;
     ui.append(s);
     const footer = makeFooter({ noPause: true });
     footer.update({ qr: false, join: false, players: S.n, caption: 'Late joiners welcome' });
@@ -767,12 +786,14 @@ const SETUP = {
       // The join card and Start race: a side column (landscape) or a row above and a button under the roster (portrait).
       let rect;
       joinEl.style.width = ''; joinEl.classList.toggle('row', !land);
-      head.style.left = `${m + 16 * k}px`; head.style.top = `${Math.max(12, 72 * k)}px`; head.style.maxWidth = `${(land ? w - 2 * m - sideW - 24 * k : w - 2 * m) - 16 * k}px`;
+      head.style.left = `${m + 16 * k}px`; head.style.top = `${Math.max(12, 72 * k)}px`; head.style.maxWidth = `${(land ? w - 2 * m - Math.max(sideW, joinEl.querySelector('.qr').offsetWidth + 40 * k) - 24 * k : w - 2 * m) - 16 * k}px`;
       const headB = head.getBoundingClientRect().bottom + 14 * k;
       if (land) {
-        joinEl.style.cssText = `right:${m}px;top:${Math.max(12, 54 * k)}px;width:${sideW}px`;
-        go.style.cssText = `right:${m}px;width:${sideW}px;top:${joinEl.getBoundingClientRect().bottom + 22 * k}px`;
-        rect = { x: m, y: headB, w: w - 2 * m - sideW - 24 * k, h: h - fh - 14 * k - headB };
+        // Round 4: the column is as wide as the scannable QR needs (plus the card's padding), never narrower.
+        const colW = Math.max(sideW, joinEl.querySelector('.qr').offsetWidth + 2 * 16 * k + 8 * k);
+        joinEl.style.cssText = `right:${m}px;top:${Math.max(12, 54 * k)}px;width:${colW}px`;
+        go.style.cssText = `right:${m}px;width:${colW}px;top:${joinEl.getBoundingClientRect().bottom + 22 * k}px`;
+        rect = { x: m, y: headB, w: w - 2 * m - colW - 24 * k, h: h - fh - 14 * k - headB };
       } else {
         joinEl.style.cssText = `left:${m}px;right:${m}px;top:${headB}px`;
         const jb = joinEl.getBoundingClientRect().bottom + 14 * k;
@@ -908,10 +929,10 @@ function roundScreen() {
       <span class="hl-count tnum">${now + 1} / ${reel.length}</span><div class="hl-bar"><i style="width:38%"></i></div></div>
     <div class="rd-right">
       <div class="rd-list"><span class="tag" data-brush="rd-results"><span>Results</span></span><div class="rd-top"></div><div class="rd-rest"></div></div>
-      <div class="rd-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="rd-code"><small>Jump in</small><b class="display code">ROO7</b><span class="rd-cap">Scan to join, or enter the code</span></div></div>
+      <div class="rd-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div class="rd-code"><small>Jump in</small><b class="display code">ROO7</b><span class="rd-cap">Scan to join, or enter the code</span></div></div>
       <span class="tag warning rd-next" data-brush="rd-next"><span>${icon('timer')}Next <span class="rd-lng">race </span>in <b class="tnum">42<span class="lc">s</span></b></span></span>
       <div class="rd-acts">${[['chevron-right', 'Skip highlight', 'Next one plays', 'results'], ['flag', 'Start next round now', 'Skips the timer', 'countdown', true], ['users', 'Return to lobby', 'Everyone stays connected', 'lobby']]
-        .map(([ic, label, sub, go, primary]) => `<button class="btn${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div>
+        .map(([ic, label, sub, go, primary]) => `<button class="btn brush${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div>
     </div>`;
   ui.append(s);
   wireActs(s);
@@ -1120,9 +1141,9 @@ function standingsTable(table, note, st) {
 // The join band of the between-rounds screens: the QR big at the left (joining mid-session is the point), what this screen
 // adds in the middle, the host's actions at the right. acts: [icon, label, sub, goes-to state, primary?]; row = side by side.
 function joinBand({ mid = '', acts = [], row = false } = {}) {
-  return `<div class="jband${row ? ' row' : ''}"><div class="jb-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div><span class="display italic jb-code"><span class="lc">Jump in</span> · <span class="hi">ROO7</span></span><span class="code-cap">Scan, or enter the code at jammers.dilger.dev. You'll race next round.</span></div></div>
+  return `<div class="jband${row ? ' row' : ''}"><div class="jb-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div><span class="display italic jb-code"><span class="lc">Jump in</span> · <span class="hi">ROO7</span></span><span class="code-cap">Scan, or enter the code at jammers.dilger.dev. You'll race next round.</span></div></div>
     <div class="jb-mid">${mid}</div>
-    <div class="jb-acts">${acts.map(([ic, label, sub, go, primary]) => `<button class="btn${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div></div>`;
+    <div class="jb-acts">${acts.map(([ic, label, sub, go, primary]) => `<button class="btn brush${primary ? ' primary gp' : ''}" type="button" data-go="${go}">${icon(ic)}<span>${label}<span class="sub">${sub}</span></span></button>`).join('')}</div></div>`;
 }
 // The mock's buttons work, so the review can click through the flow.
 const wireActs = (root) => root.addEventListener('click', (e) => { const go = e.target.closest('[data-go]')?.dataset.go; if (go) location.hash = `${go}&n=${S.n}`; });
@@ -1141,6 +1162,7 @@ function start() {
   world.resize(W(), H());
   const setup = SETUP[S.name] ?? SETUP.contents;
   scene = setup();
+  requestAnimationFrame(() => paintBrushButtons(ui)); // round 4: every brushed button on the screen, whoever built it
   document.title = `TV mock · ${S.name}`;
   window.__poc.hash = location.hash; // which state `ready` refers to (hash navigations don't reload the page)
   window.__poc.held = false;
@@ -1158,6 +1180,7 @@ const onViewport = () => {
     setK();
     world.resize(W(), H());
     for (const r of relayouts) r();
+    paint(ui);
   });
 };
 for (const [target, type] of [[window, 'resize'], [window, 'orientationchange'], [document, 'fullscreenchange'], [window.visualViewport, 'resize']]) {

@@ -25,15 +25,21 @@ const ctxOf = (rules, k, dpr) => ({
   rules,
 });
 const qOf = (d, c) => (c.modules * d) / c.dpr;
-const labelH = (q, c) => Math.round(Math.max(14, q * 0.17) * 1.15 + c.gap * 0.6);
+// Round 4 (owner 2026-10-06): a shown QR always carries the room code and the address under it, so nobody mistakes it for
+// anything but a join link. Two lines: the code (display face) and the address (body face, never under 11 px).
+export const qrLabel = (q) => ({ code: Math.max(14, q * 0.15), url: Math.max(11, q * 0.068) });
+const labelH = (q, c) => { const f = qrLabel(q); return Math.round(f.code * 1.1 + f.url * 1.55 + c.gap * 0.8); };
 
 /** The largest QR (whole device px per module) that fits an outer box w x h; null below the minimum size. */
 function fitQr(w, h, c, label = true) {
   const dMax = Math.floor(((Math.min(w, h) - 2 * c.b) * c.dpr) / c.modules + 1e-9);
   if (dMax < c.dMin) return null;
-  if (label) for (let d = dMax; d >= Math.max(c.dMin, Math.ceil(dMax * c.rules.qr.labelShare)); d--) {
-    const q = qOf(d, c), lh = labelH(q, c);
-    if (q + 2 * c.b + lh <= h && q + 2 * c.b <= w) return { d, q, lh, ow: q + 2 * c.b, oh: q + 2 * c.b + lh };
+  if (label) {
+    for (let d = dMax; d >= c.dMin; d--) {
+      const q = qOf(d, c), lh = labelH(q, c);
+      if (q + 2 * c.b + lh <= h && q + 2 * c.b <= w) return { d, q, lh, ow: q + 2 * c.b, oh: q + 2 * c.b + lh };
+    }
+    return null; // no room for the code and address: the footer's join line carries them instead
   }
   const q = qOf(dMax, c);
   return { d: dMax, q, lh: 0, ow: q + 2 * c.b, oh: q + 2 * c.b };
@@ -80,12 +86,13 @@ function place(regions, n, want, c) {
     if (want.qr) for (const r of [...rs].sort((a, b) => b.w * b.h - a.w * a.h).slice(0, 4)) {
       const box = outer(r), dMax = Math.floor(((Math.min(box.w, box.h) - 2 * c.b) * c.dpr) / c.modules + 1e-9);
       for (const mode of ['row', 'col']) for (let d = dMax; d >= c.dMin; d--) {
-        const q = qOf(d, c), o = q + 2 * c.b;
-        const rem = mode === 'row' ? { x: box.x + o + c.gap, y: box.y, w: box.w - o - c.gap, h: box.h } : { x: box.x, y: box.y + o + c.gap, w: box.w, h: box.h - o - c.gap };
+        const q = qOf(d, c), o = q + 2 * c.b, oh = o + labelH(q, c); // round 4: the code and address always come with it
+        if (oh > box.h || o > box.w) continue;
+        const rem = mode === 'row' ? { x: box.x + o + c.gap, y: box.y, w: box.w - o - c.gap, h: box.h } : { x: box.x, y: box.y + oh + c.gap, w: box.w, h: box.h - oh - c.gap };
         const lf = rem.w > 0 && rem.h > 0 ? fitList(n, rem.w, rem.h, c) : null;
         if (!lf) continue;
-        const qf = { d, q, lh: 0, ow: o, oh: o };
-        cands.push({ qr: { ...qf, ...(mode === 'row' ? { x: box.x, y: box.y + (box.h - o) / 2 } : { x: box.x + (box.w - o) / 2, y: box.y }) }, list: mode === 'col' ? { ...listAt(rem, lf), y: rem.y } : listAt(rem, lf), q, lq: lf.lq, used: [r.i] }); // stacked: the list sits right under the QR
+        const qf = { d, q, lh: oh - o, ow: o, oh };
+        cands.push({ qr: { ...qf, ...(mode === 'row' ? { x: box.x, y: box.y + (box.h - oh) / 2 } : { x: box.x + (box.w - o) / 2, y: box.y }) }, list: mode === 'col' ? { ...listAt(rem, lf), y: rem.y } : listAt(rem, lf), q, lq: lf.lq, used: [r.i] }); // stacked: the list sits right under the QR
         break;
       }
     }

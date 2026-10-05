@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1600">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Joystick Jammers component sheet</title>
 <!-- Inline on purpose: sheets/render.mjs serves no text/css MIME type, so a linked stylesheet would be refused. -->
 <style>
@@ -15,7 +15,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--c-paper); }
 body {
-  margin: 0; width: 1600px; background: var(--c-paper); color: var(--c-ink);
+  margin: 0; width: 1600px; max-width: 100%; background: var(--c-paper); color: var(--c-ink);
   font-family: var(--font-body); font-weight: 500; font-size: var(--fs-body); line-height: var(--lh-body);
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
 }
@@ -23,6 +23,21 @@ h1, h2, h3, p, dl, dd { margin: 0; }
 button, input { font: inherit; color: inherit; margin: 0; }
 
 /* ---------- sheet chrome ---------- */
+/* Round 4 (owner 2026-10-06): on a phone the sheet's words fit the screen and each section's components keep their
+   1600 px design size, scrolling sideways inside their own box; the page itself never scrolls sideways. */
+@media (max-width: 1599px) {
+  body { width: auto; }
+  body .page { padding: 0 16px 60px; }
+  .page .masthead { grid-template-columns: 1fr; gap: 16px; }
+  .page .sec-head { flex-wrap: wrap; }
+  .page .sec-head p { flex: 1 1 100%; min-width: 0; }
+  .masthead > * { min-width: 0; }
+  .masthead h1.bn { font-size: 40px; white-space: normal; }
+  .sec-head .bn { white-space: normal; max-width: 100%; }
+  .legend, .legend * { max-width: 100%; }
+  .sec-body { overflow-x: auto; overflow-y: hidden; padding: 12px 4px 14px; margin: -12px -4px 0; -webkit-overflow-scrolling: touch; }
+  .sec-body > * { min-width: 1504px; }
+}
 .band { height: 18px; background: repeating-linear-gradient(-45deg, var(--c-saffron) 0 14px, var(--c-ochre) 14px 28px); border-bottom: var(--outline) solid var(--c-ink); }
 .page { padding: 0 48px 80px; }
 .masthead { display: grid; grid-template-columns: 1fr 520px; gap: 48px; align-items: end; padding: var(--sp-6) 0 var(--sp-5); }
@@ -114,6 +129,8 @@ html.still .spinner { transform: rotate(40deg); }
 @media (prefers-reduced-motion: reduce) { .spinner, .sk { animation: none; } }
 
 /* ---------- buttons ---------- */
+/* The brushed button's sizes for the desk profile (its shapes and states live in brush-button.js). */
+.btn.brush { --bb-o: var(--outline); --bb-sh: var(--sh-y); --bb-kb: var(--focus-kb-w); --bb-gp: var(--focus-gp-w); --bb-off: var(--focus-kb-off); --bb-lift: calc(-1 * var(--lift-y)); }
 .btn {
   --bg: var(--c-paper); --fg: var(--c-ink); --bd: var(--c-ink); --ov: transparent; --hov: transparent;
   --sh: 0 var(--sh-y) 0 var(--shadow-c); --r: var(--radius); --bw: var(--outline);
@@ -221,6 +238,15 @@ html.still .spinner { transform: rotate(40deg); }
 .badges .blk { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
 .chip { --cbg: var(--c-paper-shade); --cfg: var(--c-ink-soft); display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--sp-3); background: var(--cbg); color: var(--cfg); border: 2px solid var(--c-ink); border-radius: 999px; box-shadow: 0 2px 0 var(--shadow-c); font: 700 var(--fs-label)/1 var(--font-body); white-space: nowrap; }
 .chip .ic { width: 16px; height: 16px; }
+/* Round 4: the brush system (brush-button.js installBrushSkins): chips are short slabs, toasts long ones, the same shapes
+   and outline the TV and the controller use. Badges keep their wobbled dab, which is the system's badge shape. */
+:is(.chip, .toast) { -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill) !important; border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important; }
+.chip { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin); --bz-fill: var(--cbg); height: 38px; padding: 0 18px 4px; }
+.chip-ready { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin); }
+.chip-warn { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin); }
+.toast { --bz-mask: var(--bz-row-0-mask); --bz-skin: var(--bz-row-0-skin); --bz-fill: var(--tbg); padding-left: 22px !important; padding-right: 22px !important; padding-bottom: 8px !important; }
+.toast-warning { --bz-mask: var(--bz-row-1-mask); --bz-skin: var(--bz-row-1-skin); }
+.toast-error { --bz-mask: var(--bz-row-2-mask); --bz-skin: var(--bz-row-2-skin); }
 .chip-ready { --cbg: var(--c-success); --cfg: var(--c-paper); font: 900 italic var(--fs-body)/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
 .chip-choosing { font-style: italic; font-weight: 600; }
 .chip-warn { --cbg: var(--c-warning); --cfg: var(--c-ink); }

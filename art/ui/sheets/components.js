@@ -1,8 +1,9 @@
 // P1-U01 component sheet: every component in every state, as static classes (is-hover, is-pressed,
 // is-focus-kb, is-focus-gp, is-disabled, is-loading). Built from tokens.json through tokens-css.js.
 // P1-U01.3 (R102): section 00 shows the design language's primitives, and every section head, tab and free panel
-// uses them (torn banners, brush tags and strips, highlighter strokes, the action slip, seeded tilts, a big render).
+// uses them (torn banners, brush tags and strips, highlighter strokes, brushed buttons, seeded tilts, a big render).
 import { applyTokens, paintPath, strokePath, tiltFor, wobblePath } from './tokens-css.js';
+import { paintBrushButtons, installBrushSkins } from './brush-button.js';
 
 const tokens = await applyTokens('desk');
 const app = document.getElementById('app');
@@ -42,10 +43,12 @@ const cls = (...a) => a.filter(Boolean).join(' ');
 const stateCls = (s) => (s ? `is-${s}` : '');
 const tab = (s) => (s === 'focus-gp' ? gpTab : '');
 
-function btn({ label, variant = 'primary', state = '', icon, iconOnly, aria, extra = '' }) {
+// Round 4 (owner 2026-10-06): the brushed button is the default; `plain: true` is the compact variant for tight places.
+function btn({ label, variant = 'primary', state = '', icon, iconOnly, aria, extra = '', plain = false, id = '' }) {
   const loading = state === 'loading';
   const inner = loading ? spinner() + (iconOnly ? '' : '<span>Starting…</span>') : iconOnly ? ic(iconOnly) : (icon ? ic(icon) : '') + `<span>${label}</span>`;
-  return `<button type="button" class="${cls('btn', `btn-${variant}`, iconOnly && 'btn-icon', stateCls(state), extra)}"${aria ? ` aria-label="${aria}"` : ''}${state === 'disabled' ? ' disabled' : ''}${loading ? ' aria-busy="true"' : ''}>${tab(state)}${inner}</button>`;
+  const brush = !plain && !iconOnly && variant !== 'quiet';
+  return `<button type="button" class="${cls('btn', `btn-${variant}`, brush && 'brush', iconOnly && 'btn-icon', stateCls(state), extra)}"${brush ? ` data-bb="${id || label}"` : ''}${aria ? ` aria-label="${aria}"` : ''}${state === 'disabled' ? ' disabled' : ''}${loading ? ' aria-busy="true"' : ''}>${tab(state)}${inner}</button>`;
 }
 
 const seatColor = (n) => (n - 1) % tokens.identity.colors.length;
@@ -72,10 +75,9 @@ const banner = (id, html, tagName = 'span', extra = '') => `<${tagName} class="$
 const tag = (id, text, kind = '', extra = '') => `<span class="${cls('tag', kind, extra)}" data-brush="${id}"><span>${text}</span></span>`;
 const strip = (id, html, kind = '', extra = '') => `<span class="${cls('strip', kind, extra)}" data-brush="${id}"><span>${html}</span></span>`;
 const ul = (id, text) => `<span class="ul" data-stroke="${id}">${text}</span>`;
-const slip = (id, html, extra = '') => `<span class="${cls('slip', extra)}" data-torn="${id}">${html}</span>`;
 
 const section = (num, title, note, body) => `
-  <section class="sec" id="s${num}"><header class="sec-head">${tag(`sec-${num}`, String(num).padStart(2, '0'))}${banner(`sec-${num}`, title, 'h2')}<p>${note}</p></header>${body}</section>`;
+  <section class="sec" id="s${num}"><header class="sec-head">${tag(`sec-${num}`, String(num).padStart(2, '0'))}${banner(`sec-${num}`, title, 'h2')}<p>${note}</p></header><div class="sec-body">${body}</div></section>`;
 
 // ---------- 0 design language (R102, P1-U01.3) ----------
 const L = tokens.language;
@@ -90,7 +92,7 @@ const SIX = [
   ['Big renders', 'the cut-out car is a first-class element, outlined in ink and nearly as tall as the panel'],
   ['Contrast banner behind heading type', 'torn ink banner, paper type, one saffron accent word'],
   ['Compact', 'tight 16 px padding, 8 px rows, three players and two actions in one small panel'],
-  ['Slants and high contrast', 'skewed tags, rotated banners, a torn ink slip behind the one action that matters'],
+  ['Slants and high contrast', 'skewed tags, rotated banners, brushed buttons whose outline follows the stroke'],
   ['Colour behind some text', 'tags, strips and a highlighter stroke behind short lines'],
 ];
 const langBody = `<div class="lang">
@@ -100,7 +102,7 @@ const langBody = `<div class="lang">
       ${tag('free-tag', 'This round')}
       ${strip('free-strip', `${ic('check')}Lap record: 1:12.4 by #9`)}
       <div class="rows">${rosterCard({ n: 9, name: 'Roo Boy', chipKind: 'ready' })}${rosterCard({ n: 14, name: 'Nina', chipKind: 'choosing' })}${rosterCard({ n: 5, name: 'Big Kev', chipKind: 'ready' })}</div>
-      <div class="acts">${slip('slip-1', btn({ label: 'Start race' }))}${btn({ label: 'Ready', variant: 'secondary' })}</div>
+      <div class="acts">${btn({ label: 'Start race' })}${btn({ label: 'Ready', variant: 'secondary' })}</div>
     </div>
     <img class="render car" src="../${L.renders.sheetStandIn.split(' ')[0]}" alt="The Cruz Missile">
     ${strip('free-pts', 'Fastest lap <span class="lc">+5</span>', 'saffron big', 'pts')}
@@ -123,14 +125,15 @@ const langBody = `<div class="lang">
     <div class="blk">${strip('demo-s3', 'Host · ROO7', 'ink')}<span class="cap">paper on ink ${ratioOf(backing('paper-on-ink'))}:1</span></div>
     <div class="blk">${strip('demo-s4', 'Fastest lap <span class="lc">+5</span>', 'saffron big')}<span class="cap">ink on saffron ${ratioOf(backing('ink-on-saffron'))}:1</span></div>
   </div></div>
-<div class="lrow"><div class="rl"><b>Highlighter and slip</b>A saffron stroke under the player's own word; a torn ink slip behind the one action that matters, at most once a screen.</div>
-  <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${slip('slip-2', btn({ label: 'Start race' }))}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${slip('slip-3', btn({ label: 'Ready', variant: 'secondary' }))}</div></div></div>
+<div class="lrow"><div class="rl"><b>Highlighter and brushed buttons</b>A saffron stroke under the player's own word; buttons are brush strokes with an ink outline that follows the stroke (round 4 replaced the torn slip behind the button).</div>
+  <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${btn({ label: 'Start race', id: 'prim-start' })}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${btn({ label: 'Ready', variant: 'secondary', id: 'prim-ready' })}</div></div></div>
 <div class="lrow"><div class="rl"><b>Corners</b>${L.corners.rule}</div>
   <div class="corners">
     <div class="blk"><div class="cn-panel"></div><span class="cap"><b>Panel</b> ${L.corners.panelPx.desk} px (or wobbled)</span></div>
     <div class="blk">${banner('demo-cn', 'Banner')}<span class="cap"><b>Banner</b> torn, ${L.corners.bannerPx.desk} px</span></div>
     <div class="blk">${tag('demo-cn', 'Tag')}<span class="cap"><b>Tag / strip</b> brushed, square</span></div>
-    <div class="blk">${btn({ label: 'Button' })}<span class="cap"><b>Button, field</b> ${tokens.layout.radiusPx.desk} px</span></div>
+    <div class="blk">${btn({ label: 'Button' })}<span class="cap"><b>Button</b> brushed, outline follows the stroke</span></div>
+    <div class="blk">${btn({ label: 'Compact', plain: true })}<span class="cap"><b>Compact button, field</b> ${tokens.layout.radiusPx.desk} px</span></div>
     <div class="blk">${badge(7, 'sm')}<span class="cap"><b>Badge</b> ${L.corners.badgePx.desk} px</span></div>
     <div class="blk">${chip('ready')}<span class="cap"><b>Status chip</b> pill</span></div>
     <div class="blk">${toggle({ on: true })}<span class="cap"><b>Toggle track</b> pill</span></div>
@@ -141,23 +144,25 @@ const STATES = [
   ['', 'Default', ''],
   ['hover', 'Hover', 'lighter fill'],
   ['pressed', 'Pressed', 'shadow collapses, drops 5 px'],
-  ['focus-kb', 'Keyboard focus', 'cobalt ring'],
+  ['focus-kb', 'Keyboard focus', 'cobalt ring traces the stroke'],
   ['focus-gp', 'Gamepad focus', 'saffron ring, tab, lift'],
-  ['disabled', 'Disabled', 'flat, not-allowed'],
+  ['disabled', 'Disabled', 'grey stroke, no shadow'],
   ['loading', 'Loading', 'spinner, striped'],
 ];
 const BTN_ROWS = [
-  { name: 'Primary', sub: 'Saffron fill, ink text', variant: 'primary', label: 'Start race' },
-  { name: 'Secondary', sub: 'Paper fill, ink outline', variant: 'secondary', label: 'Ready' },
-  { name: 'Destructive', sub: 'Danger fill, paper text', variant: 'destructive', label: 'Disband room' },
+  { name: 'Primary', sub: 'Brushed: saffron stroke, ink outline', variant: 'primary', label: 'Start race' },
+  { name: 'Secondary', sub: 'Brushed: paper stroke, ink outline', variant: 'secondary', label: 'Ready' },
+  { name: 'Destructive', sub: 'Brushed: danger stroke, paper text', variant: 'destructive', label: 'Disband room' },
+  { name: 'Leading icon', sub: 'Brushed, icon 20 px', variant: 'secondary', label: 'Find my car', icon: 'car' },
+  { name: 'Compact primary', sub: 'Plain variant: footers, rows, tight spots', variant: 'primary', label: 'Start race', plain: true },
+  { name: 'Compact secondary', sub: 'Plain variant', variant: 'secondary', label: 'Ready', plain: true },
   { name: 'Quiet (text)', sub: 'No outline, no shadow', variant: 'quiet', label: 'Cancel' },
-  { name: 'Leading icon', sub: 'Icon 20 px, gap sp-2', variant: 'secondary', label: 'Find my car', icon: 'car' },
-  { name: 'Leading icon, destructive', sub: 'Leave room', variant: 'destructive', label: 'Leave room', icon: 'log-out' },
+  { name: 'Leading icon, destructive', sub: 'Compact, leave room', variant: 'destructive', label: 'Leave room', icon: 'log-out', plain: true },
   { name: 'Icon button', sub: '48 px square, aria-label', variant: 'secondary', iconOnly: 'settings', aria: 'Settings' },
 ];
 const buttonsGrid = `<div class="states">
   <span></span>${STATES.map(([, n, sub]) => `<div class="ch">${n}<small>${sub}</small></div>`).join('')}
-  ${BTN_ROWS.map((r) => `<div class="rl"><b>${r.name}</b>${r.sub}</div>${STATES.map(([s]) => `<div class="cell">${btn({ ...r, state: s })}</div>`).join('')}`).join('')}
+  ${BTN_ROWS.map((r) => `<div class="rl"><b>${r.name}</b>${r.sub}</div>${STATES.map(([s]) => `<div class="cell">${btn({ ...r, state: s, id: `${r.name}-${s}` })}</div>`).join('')}`).join('')}
 </div>`;
 
 // ---------- 2 panels ----------
@@ -197,7 +202,7 @@ const SEATS = [1, 7, 12, 108, 999];
 const badgesBody = `
   <div class="lrow"><div class="rl"><b>Identity number badges</b>Seat n takes colour (n − 1) mod 12. Number in the display face, tabular digits, text colour from the colour's <i>on</i> value.</div>
     <div class="badges">${SEATS.map((n) => `<div class="blk">${badge(n)}<span class="cap"><b>#${n}</b> ${tokens.identity.colors[seatColor(n)].name}<br>colour ${seatColor(n)} · on ${tokens.identity.colors[seatColor(n)].on}</span></div>`).join('')}</div></div>
-  <div class="lrow"><div class="rl"><b>Status chips</b>32 px pill, ink outline, 2 px shadow. Icon plus word, never colour alone.</div>
+  <div class="lrow"><div class="rl"><b>Status chips</b>A short brushed slab: ink outline following the shape, hard shadow. Icon plus word, never colour alone.</div>
     <div class="badges">
       <div class="blk">${chip('ready')}<span class="cap">Success fill, paper text</span></div>
       <div class="blk">${chip('choosing')}<span class="cap">Paper-shade, italic: transient</span></div>
@@ -319,7 +324,7 @@ const tvBody = `<div class="tvwrap">
         <div class="tv-cards">${rosterCard({ n: 7, name: 'Dusty', chipKind: 'ready' })}${rosterCard({ n: 12, name: 'Pip', chipKind: 'choosing' })}${rosterCard({ n: 108, name: 'Ash', chipKind: 'ready' })}</div>
       </div>
       <div class="tv-prog"><div class="bar-head"><span>Preparing track…</span><span class="num">64%</span></div><div class="bar"><i></i></div></div>
-      <div class="tv-bottom">${slip('slip-4', btn({ label: 'Start race', state: 'focus-gp' }), 'on-ink')}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
+      <div class="tv-bottom">${btn({ label: 'Start race', state: 'focus-gp' })}${btn({ label: 'Ready', variant: 'secondary' })}${btn({ label: 'Disband room', variant: 'destructive' })}${toast('success', 'check', '<b>Saved</b>')}</div>
     </div>
   </div>
   <div class="tv-spec">
@@ -346,7 +351,7 @@ app.innerHTML = [
      <p>Every component in every state, forced with classes so the sheet is a still. Desk profile (laptop at 60 cm): type ${tokens.type.profiles.desk.scale.body} px body, outline ${tokens.ink.outlinePx.desk} px, buttons ${tokens.layout.radiusPx.desk} px corners, panels ${tokens.language.corners.panelPx.desk} px. Section 00 is the design language (R102); the TV profile is at the bottom, at half size.</p></div>
      <div class="legend"><span><i class="sw" style="background:var(--c-cobalt)"></i><b>Keyboard focus</b> cobalt ring on paper, saffron on ink</span><span><i class="sw" style="background:var(--c-saffron)"></i><b>Gamepad focus</b> saffron ring, chevron tab, lift</span><span><b>Hover</b> lighter fill · <b>Pressed</b> shadow collapses · <b>Disabled</b> flat and muted</span></div></header>`,
   section(0, 'Design language', 'Hand-made, not web-grid (R102): slants, banners behind headings, colour behind some text, big renders, compact, high contrast, no uniform rounded corners.', langBody),
-  section(1, 'Buttons', 'Sentence-case labels, 48 px minimum height, ink outline, hard sticker shadow. Pressed drops the button by the shadow offset; disabled has no shadow at all.', buttonsGrid),
+  section(1, 'Buttons', 'Brushed by default: the button is a brush stroke and its ink outline follows the stroke, so the shape itself is the highlight. Sentence-case labels, 48 px minimum height, hard sticker shadow; pressed drops it by the shadow offset, focus rings trace the stroke, disabled is grey with no shadow. The compact variant (a plain rounded box) is for footers, list rows and other tight spots.', buttonsGrid),
   section(2, 'Panels', 'Paper for the TV, ink for the controller, recessed rows for settings. Outlines wobble; text, content and hit boxes do not.', panels),
   section(3, 'Badges and chips', 'A number plus a colour identifies every seat for any N. Colours repeat after 12; the number never does.', badgesBody),
   section(4, 'Toasts', 'One line, one icon, one idea. Stays four seconds, except errors, which wait for the player.', toastsBody),
@@ -388,6 +393,8 @@ for (const el of document.querySelectorAll('[data-stroke]')) {
   const w = el.offsetWidth, h = Math.round(el.offsetHeight * tokens.language.banner.underline.heightEm * 1.6);
   el.insertAdjacentHTML('afterbegin', `<svg class="paint-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="top:auto;bottom:${-h * 0.15}px;rotate:${tokens.language.banner.underline.rotateDeg}deg" aria-hidden="true"><path d="${strokePath(el.dataset.stroke, w, h)}"/></svg>`);
 }
+paintBrushButtons(document);
+installBrushSkins(document.documentElement, { stroke: tokens.ink.outlinePx.desk, sy: 4, ink: tokens.palette.ink.hex, paper: tokens.palette.paper.hex });
 for (const el of document.querySelectorAll('[data-tilt]')) el.style.rotate = `${tiltFor(el.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
 
 await document.fonts.ready;
