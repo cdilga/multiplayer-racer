@@ -172,7 +172,8 @@ export class World {
     this.rig.groundAt = this.map.groundAt;
     this.grid.visible = false;
     (this.ground.material as MeshLambertMaterial).color.set(SURFACE_COLOURS['off-track']!);
-    this.ground.position.y = -0.05;
+    // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
+    this.ground.position.y = Math.min(0, ...map.terrain.heights.map((h) => h / 100)) - 0.05;
     const t = map.terrain;
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
     return this.map;

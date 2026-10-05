@@ -3,8 +3,8 @@
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
 // Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
 // `?synthetic=<cars>[&freeze=<tick>][&damage[=strip]]` (draw from the synthetic snapshot source instead of the sim), `?bench`
-// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far` (a plain chase-camera tile view until the grid, P1-R04).
-import greybox from '../../../maps/greybox-loop.json?raw';
+// (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far`, `?mapUrl=<url>` (a plain chase-camera tile view until the grid, P1-R04).
+import greyboxJson from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
 import { mountDrawer } from './input/drawer';
 import { mountGridOverlay } from './layout/overlay';
@@ -39,6 +39,9 @@ async function boot(): Promise<void> {
   const scale = Number(params.get('res') ?? 1);
   const world = new World(backend, canvas, scale > 0 && scale <= 1 ? scale : 1);
   await world.loadVehicles();
+  // `?mapUrl=<url>` drives a map from elsewhere (a procgen spike's output, P1-M02) instead of the greybox.
+  const mapUrl = params.get('mapUrl');
+  const greybox = mapUrl ? await (await fetch(mapUrl)).text() : greyboxJson;
   // The greybox until the round flow prepares maps (G01/M08a); `?kitx=10` repeats its dressing (a draw-count probe).
   const withMap = !params.has('synthetic') || params.has('map');
   if (withMap) world.loadMap(JSON.parse(greybox), { repeat: Number(params.get('kitx')) || 1 });

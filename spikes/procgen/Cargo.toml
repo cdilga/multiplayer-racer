@@ -1,0 +1,24 @@
+# P1-M02 · G-PROCSPIKE (throwaway): its own workspace, so nothing in crates/ can depend on it.
+[package]
+name = "jj-procgen-spike"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "procgen-spike"
+path = "src/main.rs"
+
+[dependencies]
+jj-procgen = { path = "../../crates/jj-procgen" }
+jj-map = { path = "../../crates/jj-map" }
+serde_json = "1.0.151"
+libm = "0.2.16"
+
+[profile.release]
+opt-level = 3

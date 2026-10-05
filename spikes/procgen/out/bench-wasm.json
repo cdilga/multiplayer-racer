@@ -1,0 +1,2887 @@
+{
+ "runtime": "Node v26.10.0 (V8 WASM), darwin/arm64",
+ "mismatches": 0,
+ "worstWasmGenMs": 144.12795899999946,
+ "rows": [
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 65.12704099999999,
+   "nativeGenMs": 13.854583,
+   "fnv": "0d2d3e266f8f72ce",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 29.29625,
+   "nativeGenMs": 7.2604999999999995,
+   "fnv": "1e0736a286879152",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 28.227249999999998,
+   "nativeGenMs": 6.843,
+   "fnv": "854c2181039eaeb1",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 42.954499999999996,
+   "nativeGenMs": 9.73675,
+   "fnv": "39faa824984142b0",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 43.35416699999999,
+   "nativeGenMs": 9.7685,
+   "fnv": "b4fe3bdc514aded7",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 37.906000000000006,
+   "nativeGenMs": 9.181958,
+   "fnv": "b89b3bd05d450495",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 42.813625,
+   "nativeGenMs": 10.0905,
+   "fnv": "8049ffec781e79e5",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 56.41720800000002,
+   "nativeGenMs": 12.603584,
+   "fnv": "67b9a3bfa17bc2fb",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 56.31508400000001,
+   "nativeGenMs": 10.753708000000001,
+   "fnv": "56e67e468c4acf60",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 31.65058399999998,
+   "nativeGenMs": 6.377416,
+   "fnv": "8aa2788bd9867ce0",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 29.489625000000046,
+   "nativeGenMs": 6.0004159999999995,
+   "fnv": "3a5cc28afeea1c31",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 45.18954199999996,
+   "nativeGenMs": 8.739792,
+   "fnv": "8817c254501b83fe",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 46.202790999999934,
+   "nativeGenMs": 8.968708000000001,
+   "fnv": "32336629bb783fca",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 42.84237500000006,
+   "nativeGenMs": 7.838875000000001,
+   "fnv": "fbebd20908cb2a69",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 46.844499999999925,
+   "nativeGenMs": 9.348958,
+   "fnv": "66678e3110e6e012",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 58.65529199999992,
+   "nativeGenMs": 12.894084,
+   "fnv": "89b9e0149140cec2",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 46.38104199999998,
+   "nativeGenMs": 9.595334000000001,
+   "fnv": "b585d870bbbba3b5",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 27.676500000000033,
+   "nativeGenMs": 6.114,
+   "fnv": "5e2787f11e5664d4",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 25.09191599999997,
+   "nativeGenMs": 5.547125,
+   "fnv": "ac7686ee6a0d9b6a",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 39.37629100000004,
+   "nativeGenMs": 8.126166000000001,
+   "fnv": "609b72a9d2c03976",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 38.85358400000007,
+   "nativeGenMs": 8.257375000000001,
+   "fnv": "f0fbd9bd36f46ce6",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 35.625999999999976,
+   "nativeGenMs": 8.069083,
+   "fnv": "4e1069c9e9979974",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 39.83995900000002,
+   "nativeGenMs": 8.410875,
+   "fnv": "654dcd65a2cb4295",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 49.107167000000004,
+   "nativeGenMs": 10.318707999999999,
+   "fnv": "3a2c477ce516749c",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 48.57491600000003,
+   "nativeGenMs": 11.821333,
+   "fnv": "d2133d78ddf2be12",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 29.185084000000188,
+   "nativeGenMs": 7.411791,
+   "fnv": "d367314dc32efe37",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 26.24616600000013,
+   "nativeGenMs": 6.822792000000001,
+   "fnv": "87fae443add54bed",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 40.55987500000015,
+   "nativeGenMs": 9.716249999999999,
+   "fnv": "2dabfbf7786714f9",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 40.63937499999997,
+   "nativeGenMs": 9.90425,
+   "fnv": "a0b0b580998c01e9",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 36.29404199999999,
+   "nativeGenMs": 9.121374999999999,
+   "fnv": "cd29209a43c2f021",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 40.69020800000021,
+   "nativeGenMs": 10.123375000000001,
+   "fnv": "70d2a5865bf15889",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 51.26262500000007,
+   "nativeGenMs": 12.088916999999999,
+   "fnv": "d7dfe9878b0ebfe8",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 53.291458999999804,
+   "nativeGenMs": 10.722542,
+   "fnv": "a22a614ba55125f9",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 30.183042000000114,
+   "nativeGenMs": 6.349292,
+   "fnv": "b559ad06f5a31c1c",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 28.492707999999993,
+   "nativeGenMs": 5.965666,
+   "fnv": "3f3efdca1942f0b8",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 48.33441599999992,
+   "nativeGenMs": 8.774042,
+   "fnv": "ea635e2e7a3b5798",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 45.234375,
+   "nativeGenMs": 8.935542,
+   "fnv": "a0ab0556e9c6b28f",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 40.787874999999985,
+   "nativeGenMs": 7.909166000000001,
+   "fnv": "04928eb049f4d671",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 46.00404200000003,
+   "nativeGenMs": 9.049083,
+   "fnv": "5801b21546c4a1d0",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 57.70049999999992,
+   "nativeGenMs": 11.008375000000001,
+   "fnv": "3a449699fecb7904",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 44.49416700000006,
+   "nativeGenMs": 9.554833,
+   "fnv": "b8db8b92d30f84d9",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 25.98629200000005,
+   "nativeGenMs": 5.660125,
+   "fnv": "e49ffea07b586fc8",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 23.845916999999872,
+   "nativeGenMs": 5.486083,
+   "fnv": "3971c27a5c8892c2",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 37.40795899999989,
+   "nativeGenMs": 7.9811250000000005,
+   "fnv": "ff7cbccf3f3dfcbf",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 37.74858399999994,
+   "nativeGenMs": 8.045,
+   "fnv": "6dd3ed9593893c78",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 33.65487499999995,
+   "nativeGenMs": 7.261209,
+   "fnv": "406b21ca2f98bb31",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 38.20170800000005,
+   "nativeGenMs": 8.263584,
+   "fnv": "74706b76a5ea238e",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 48.015249999999924,
+   "nativeGenMs": 10.146792,
+   "fnv": "48a85dc8ee560cdf",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 48.54533300000003,
+   "nativeGenMs": 13.000042,
+   "fnv": "aed8bbd14a1151de",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 29.20958399999995,
+   "nativeGenMs": 8.059917,
+   "fnv": "4fdeaa8631c37a51",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 26.689166000000114,
+   "nativeGenMs": 7.650791,
+   "fnv": "a3ddac278b52e848",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 41.472625000000335,
+   "nativeGenMs": 10.938583,
+   "fnv": "e06911abb9fbe540",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 41.446166000000176,
+   "nativeGenMs": 11.810333,
+   "fnv": "91dc1fe78e67aa11",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 37.19808299999977,
+   "nativeGenMs": 10.230791,
+   "fnv": "75865d25d55946b4",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 41.47375000000011,
+   "nativeGenMs": 11.206542,
+   "fnv": "8ac3a6b7f0216081",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 52.59620799999993,
+   "nativeGenMs": 13.818291,
+   "fnv": "3d386571b51f3e0f",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 54.28862499999968,
+   "nativeGenMs": 11.913333,
+   "fnv": "22fa388a8fdbc1ba",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 30.71033299999999,
+   "nativeGenMs": 7.148792,
+   "fnv": "9f33e4b2187c1c68",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 29.33050000000003,
+   "nativeGenMs": 6.753042,
+   "fnv": "98341eaf99f1950a",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 46.19558400000005,
+   "nativeGenMs": 9.940959,
+   "fnv": "48f2e3c5f92376e1",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 46.19125000000031,
+   "nativeGenMs": 10.154,
+   "fnv": "d9f1967dbd0eecc3",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 42.91262500000039,
+   "nativeGenMs": 9.112542,
+   "fnv": "b1880c6ccd0f9881",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 47.035499999999956,
+   "nativeGenMs": 10.253167000000001,
+   "fnv": "827d83bd278dd63c",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 58.339833,
+   "nativeGenMs": 13.032083,
+   "fnv": "86d5ab355b5ecfd4",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 45.84175000000005,
+   "nativeGenMs": 11.041083,
+   "fnv": "9cfdae6ef855e9a7",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 27.929125000000113,
+   "nativeGenMs": 6.6555,
+   "fnv": "cb42f96f7496a69a",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 26.31708299999991,
+   "nativeGenMs": 6.320167,
+   "fnv": "ee7fe95aa3dd0347",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 41.01533299999983,
+   "nativeGenMs": 9.954915999999999,
+   "fnv": "7b465f234920e841",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 41.85658299999977,
+   "nativeGenMs": 9.275333,
+   "fnv": "bc42d3a1408a14f1",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 36.11299999999983,
+   "nativeGenMs": 8.443709,
+   "fnv": "784d351390d1a359",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 47.81895800000029,
+   "nativeGenMs": 9.648625,
+   "fnv": "e08d0b0153b230c6",
+   "same": true
+  },
+  {
+   "biome": "town",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 56.91949999999997,
+   "nativeGenMs": 11.740583,
+   "fnv": "18a35af49139606b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 42.89712499999996,
+   "nativeGenMs": 7.4263330000000005,
+   "fnv": "94d3cfafd47ae2c7",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 23.925166999999874,
+   "nativeGenMs": 4.502458,
+   "fnv": "7167147fd7bc1a57",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 21.047375000000102,
+   "nativeGenMs": 4.12975,
+   "fnv": "281cbc13e56f8143",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 36.15300000000025,
+   "nativeGenMs": 6.280416,
+   "fnv": "285514bfb121afc9",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 33.18829199999982,
+   "nativeGenMs": 6.332542,
+   "fnv": "78b02e320b730b89",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 29.506624999999985,
+   "nativeGenMs": 5.671416000000001,
+   "fnv": "6bf24a55d4a8085e",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 32.9357500000001,
+   "nativeGenMs": 6.448459,
+   "fnv": "c5e96f41d02c72ca",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 41.92829099999972,
+   "nativeGenMs": 8.319666999999999,
+   "fnv": "d493c92d2783862e",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 37.74737499999992,
+   "nativeGenMs": 6.8445,
+   "fnv": "90ad129392bb3c26",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 21.56395799999973,
+   "nativeGenMs": 4.5461659999999995,
+   "fnv": "50389f63034019a6",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 20.581499999999778,
+   "nativeGenMs": 3.810041,
+   "fnv": "8a21ac461fcccbf6",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 31.73783400000002,
+   "nativeGenMs": 5.942792,
+   "fnv": "46ba93043b8ef3f8",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 31.476083000000017,
+   "nativeGenMs": 5.944625,
+   "fnv": "69cf3cb2b90c2c76",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 28.17599999999993,
+   "nativeGenMs": 5.919542,
+   "fnv": "2389b52f0f9c5237",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 31.478500000000167,
+   "nativeGenMs": 6.0614170000000005,
+   "fnv": "b32046c0fa1cb4d6",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 40.08412500000031,
+   "nativeGenMs": 7.481834,
+   "fnv": "3c448877db7c8d54",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 35.824833000000126,
+   "nativeGenMs": 6.7322500000000005,
+   "fnv": "fa733d41504fa06b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 20.832166000000143,
+   "nativeGenMs": 3.9814999999999996,
+   "fnv": "3789eb4f76f7f89f",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 19.47529200000008,
+   "nativeGenMs": 3.7457089999999997,
+   "fnv": "e33498f6dd2748d6",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 31.594792000000325,
+   "nativeGenMs": 5.808625,
+   "fnv": "606eac7d034b6046",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 31.67337499999985,
+   "nativeGenMs": 5.7903340000000005,
+   "fnv": "b94b96ed967efdbe",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 27.92833299999984,
+   "nativeGenMs": 5.0214170000000005,
+   "fnv": "4bead8a2395375b3",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 32.03608299999996,
+   "nativeGenMs": 5.8618749999999995,
+   "fnv": "c97d8c66dee38730",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 40.51441699999987,
+   "nativeGenMs": 7.2944580000000006,
+   "fnv": "c7ccb5e5ae95f3f5",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 37.99008300000014,
+   "nativeGenMs": 7.50575,
+   "fnv": "8f03ef7b3cc1347e",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 22.739416000000347,
+   "nativeGenMs": 4.56625,
+   "fnv": "4645486b03af4541",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 20.737625000000207,
+   "nativeGenMs": 4.184292,
+   "fnv": "8d6c53571ac4882f",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 32.90804100000014,
+   "nativeGenMs": 6.566583,
+   "fnv": "adcda6f86f27da80",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 32.78904199999988,
+   "nativeGenMs": 6.612334,
+   "fnv": "02c2b194b96c3a3a",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 29.276208000000224,
+   "nativeGenMs": 5.9149579999999995,
+   "fnv": "81a3f1a488a9c3a6",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 32.27979099999993,
+   "nativeGenMs": 6.5977500000000004,
+   "fnv": "dbfe00ddc97d6b13",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 41.23304199999984,
+   "nativeGenMs": 8.117291,
+   "fnv": "f45fc69d89873e7b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 37.30870899999991,
+   "nativeGenMs": 7.125791,
+   "fnv": "6b5fd4a359d0908b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 21.62479200000007,
+   "nativeGenMs": 4.2325,
+   "fnv": "bea01c42c16bee2a",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 20.244958999999653,
+   "nativeGenMs": 4.032709,
+   "fnv": "796cdbb7218d1617",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 31.62183300000015,
+   "nativeGenMs": 6.178125,
+   "fnv": "6a61c4a3976f4366",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 31.81491700000015,
+   "nativeGenMs": 6.311583,
+   "fnv": "8febd474828a05c5",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 28.363249999999425,
+   "nativeGenMs": 5.562374999999999,
+   "fnv": "99b79a14a1adf460",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 31.618000000000393,
+   "nativeGenMs": 6.096500000000001,
+   "fnv": "5e0dd3743c443e70",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 40.368209000000206,
+   "nativeGenMs": 7.7826249999999995,
+   "fnv": "ec8c4979738bd137",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 35.825959000000694,
+   "nativeGenMs": 6.9430000000000005,
+   "fnv": "238477a3cb76f3f5",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 21.050457999999708,
+   "nativeGenMs": 4.375125,
+   "fnv": "f32d798f76993adb",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 19.502709000000323,
+   "nativeGenMs": 4.049708,
+   "fnv": "e576e50770de011c",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 31.344041999999718,
+   "nativeGenMs": 6.045333,
+   "fnv": "ca79a3284a85a371",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 31.31787499999973,
+   "nativeGenMs": 5.9469579999999995,
+   "fnv": "73c12c8986d9fa6e",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 27.46258399999988,
+   "nativeGenMs": 5.231084,
+   "fnv": "89e24af06ef5b836",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 31.183374999999614,
+   "nativeGenMs": 6.09025,
+   "fnv": "06f75954eb45080c",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 39.982750000000124,
+   "nativeGenMs": 7.6015,
+   "fnv": "0eb79350386ab716",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 38.947791999999936,
+   "nativeGenMs": 9.067541,
+   "fnv": "950457a1010ed1d9",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 23.04583399999956,
+   "nativeGenMs": 5.544333,
+   "fnv": "4eeed164cd453b88",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 21.035165999999663,
+   "nativeGenMs": 5.144083,
+   "fnv": "25068cdd3949dd68",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 33.34583300000031,
+   "nativeGenMs": 7.992832999999999,
+   "fnv": "320ddc11fc745d65",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 32.82837499999914,
+   "nativeGenMs": 8.02975,
+   "fnv": "393f01386e663b69",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 29.48662500000046,
+   "nativeGenMs": 7.476458,
+   "fnv": "cd9e5d59bfd66485",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 32.79649999999947,
+   "nativeGenMs": 8.250709,
+   "fnv": "ad7181f21fe7f87b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 42.100249999999505,
+   "nativeGenMs": 9.809834,
+   "fnv": "9b9d842e659d99ec",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 38.56379199999992,
+   "nativeGenMs": 8.492083,
+   "fnv": "0f3baf5705ad4b1a",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 22.54462499999954,
+   "nativeGenMs": 5.054875,
+   "fnv": "be9cf6024682d89a",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 21.111167000000023,
+   "nativeGenMs": 4.7782919999999995,
+   "fnv": "6b98ef646d445960",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 33.23370799999975,
+   "nativeGenMs": 7.407375,
+   "fnv": "23e1e748e652dea0",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 34.299834000000374,
+   "nativeGenMs": 7.470125,
+   "fnv": "dea73ac4e30149e4",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 29.55687499999931,
+   "nativeGenMs": 6.649917,
+   "fnv": "381062fbcacec8ed",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 32.94812499999989,
+   "nativeGenMs": 7.9073340000000005,
+   "fnv": "ff8d45393dc9e712",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 41.66362500000014,
+   "nativeGenMs": 9.085833,
+   "fnv": "193310fc5485bd88",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 38.303625000000466,
+   "nativeGenMs": 8.265334,
+   "fnv": "e17c59423df75d3b",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 22.00799999999981,
+   "nativeGenMs": 5.1693750000000005,
+   "fnv": "720799ae92059463",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 20.278667000000496,
+   "nativeGenMs": 4.964958,
+   "fnv": "59139b7167fbee0e",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 32.56554200000028,
+   "nativeGenMs": 7.458791000000001,
+   "fnv": "2f2c1f4c56a4e92d",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 32.43491699999959,
+   "nativeGenMs": 7.393417,
+   "fnv": "5d87691cd3773c22",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 28.74091700000008,
+   "nativeGenMs": 6.3274170000000005,
+   "fnv": "d6d341149ac27fd2",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 31.925625000000764,
+   "nativeGenMs": 7.216916,
+   "fnv": "96ac645981d6c529",
+   "same": true
+  },
+  {
+   "biome": "rocks",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 41.11675000000014,
+   "nativeGenMs": 9.050374999999999,
+   "fnv": "87dc674c43a813eb",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 84.80016700000033,
+   "nativeGenMs": 21.686625,
+   "fnv": "d602786530c8e72a",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 53.861791999999696,
+   "nativeGenMs": 14.97725,
+   "fnv": "c5c41f902ff7caf3",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 46.1743749999996,
+   "nativeGenMs": 13.022041,
+   "fnv": "ab723776b03fb2bd",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 75.38508299999921,
+   "nativeGenMs": 20.543374999999997,
+   "fnv": "0ece00987f212c08",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 72.41070800000034,
+   "nativeGenMs": 20.463625,
+   "fnv": "0526f1f491c5f771",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 71.04520899999989,
+   "nativeGenMs": 18.127542,
+   "fnv": "b4402ba6d66d8007",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 83.05454200000077,
+   "nativeGenMs": 20.503125,
+   "fnv": "6b01593e6b190265",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 107.59166600000026,
+   "nativeGenMs": 25.021167000000002,
+   "fnv": "dcd6560c71e35bc5",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 133.5545000000002,
+   "nativeGenMs": 23.609916000000002,
+   "fnv": "14dc8544cda8e809",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 75.22479199999998,
+   "nativeGenMs": 13.761707999999999,
+   "fnv": "89ae05e13d375b86",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 66.06645800000024,
+   "nativeGenMs": 12.829625,
+   "fnv": "c8a83615e9b7731e",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 104.40054200000031,
+   "nativeGenMs": 18.184459,
+   "fnv": "830fb8763b600203",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 104.6596669999999,
+   "nativeGenMs": 19.150292,
+   "fnv": "160b00a84a388b9d",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 95.90845799999988,
+   "nativeGenMs": 17.375916,
+   "fnv": "6c5d917cfb1618d5",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 109.23504199999934,
+   "nativeGenMs": 19.822667,
+   "fnv": "5d845464854e4725",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 136.72862499999974,
+   "nativeGenMs": 24.382417,
+   "fnv": "bab024cbbd94ff58",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 81.04895800000031,
+   "nativeGenMs": 17.819083,
+   "fnv": "151f750589f4aad2",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 47.17433399999936,
+   "nativeGenMs": 11.027541,
+   "fnv": "8b5e960f4a8b8066",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 43.84504199999992,
+   "nativeGenMs": 10.247708,
+   "fnv": "6afb8e6efb4ef99e",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 74.07483400000001,
+   "nativeGenMs": 15.083334,
+   "fnv": "0e2597219eedce96",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 65.70275000000038,
+   "nativeGenMs": 14.295917,
+   "fnv": "dd5efeafb0610c37",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 64.84391600000072,
+   "nativeGenMs": 13.604041,
+   "fnv": "8f49143571164a77",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 74.58762500000012,
+   "nativeGenMs": 15.200958,
+   "fnv": "3fb7ea5802dc443d",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 89.67329199999949,
+   "nativeGenMs": 17.799042,
+   "fnv": "970289a1885890e6",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 90.9178750000001,
+   "nativeGenMs": 22.002208999999997,
+   "fnv": "66231365c2636f0a",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 58.560708000000886,
+   "nativeGenMs": 14.219209,
+   "fnv": "0c60a558ca959950",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 49.35895800000071,
+   "nativeGenMs": 13.571083,
+   "fnv": "29adc56e1d79079c",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 78.92404199999964,
+   "nativeGenMs": 18.568042,
+   "fnv": "5056d192fb1cbf5e",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 77.46316699999988,
+   "nativeGenMs": 18.299791,
+   "fnv": "9cd54556bfa66a9e",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 77.84887499999968,
+   "nativeGenMs": 17.193042,
+   "fnv": "2ce082bbdc2491eb",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 80.63316599999962,
+   "nativeGenMs": 19.320291,
+   "fnv": "a8ceaadf09aba3ab",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 99.2319579999994,
+   "nativeGenMs": 23.205,
+   "fnv": "06f4082ff9612a13",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 130.09062499999982,
+   "nativeGenMs": 23.185625,
+   "fnv": "b17e3aeac87dde62",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 73.66495900000064,
+   "nativeGenMs": 13.325541999999999,
+   "fnv": "1373567a8ceff42f",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 65.8194169999997,
+   "nativeGenMs": 12.132292,
+   "fnv": "d260b203985952cc",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 100.79766699999982,
+   "nativeGenMs": 17.717041,
+   "fnv": "2bd8eeab8efa0474",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 101.43591699999979,
+   "nativeGenMs": 18.170708,
+   "fnv": "38e9e991be60ede2",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 95.45024999999987,
+   "nativeGenMs": 16.569875,
+   "fnv": "4e04ae9e54e0bd5d",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 118.19020799999998,
+   "nativeGenMs": 19.112083,
+   "fnv": "00b73dc774569ecc",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 144.12795899999946,
+   "nativeGenMs": 23.502458999999998,
+   "fnv": "5d996e08138c1a48",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 84.40329100000054,
+   "nativeGenMs": 16.792167,
+   "fnv": "4fab02ccc8095797",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 48.46587499999987,
+   "nativeGenMs": 10.503167000000001,
+   "fnv": "38a3082c21b0be60",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 46.41541700000016,
+   "nativeGenMs": 9.752208,
+   "fnv": "dd4a67ccfc07e5a8",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 74.60754200000156,
+   "nativeGenMs": 14.455292,
+   "fnv": "0dc1a8acede99889",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 69.04854100000011,
+   "nativeGenMs": 14.189083,
+   "fnv": "3256e14ccd6f209f",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 63.34587499999907,
+   "nativeGenMs": 13.169917,
+   "fnv": "f4fb4f11651e9d4a",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 70.3073749999985,
+   "nativeGenMs": 14.714958,
+   "fnv": "3a52cf9cd63431d8",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 83.7104159999999,
+   "nativeGenMs": 18.413415999999998,
+   "fnv": "bb57a86409ec0da0",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 87.40799999999945,
+   "nativeGenMs": 23.178791,
+   "fnv": "461dc881affc36de",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 55.57099999999991,
+   "nativeGenMs": 15.1375,
+   "fnv": "73744782af2d6c43",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 48.48450000000048,
+   "nativeGenMs": 13.933084000000001,
+   "fnv": "6ed396a227f5b43a",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 78.18483299999934,
+   "nativeGenMs": 19.749375,
+   "fnv": "951d997412dca77a",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 73.6976250000007,
+   "nativeGenMs": 19.467125,
+   "fnv": "c857d868be96fbd0",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 70.63125000000036,
+   "nativeGenMs": 19.041709,
+   "fnv": "5b8d7a3ff26868bf",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 77.28237500000068,
+   "nativeGenMs": 21.189415999999998,
+   "fnv": "f276b174821bb48c",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 97.47341700000106,
+   "nativeGenMs": 25.781041000000002,
+   "fnv": "faec461abdeb5433",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 129.47412500000064,
+   "nativeGenMs": 24.641583,
+   "fnv": "6ccb94a02482450b",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 74.53541700000096,
+   "nativeGenMs": 14.28625,
+   "fnv": "dff3c9453203f5f8",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 67.9772920000014,
+   "nativeGenMs": 13.556292,
+   "fnv": "7a9fbd01075345e8",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 102.66233400000056,
+   "nativeGenMs": 19.601709,
+   "fnv": "ed23b0cf94f8f7dd",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 103.46620900000016,
+   "nativeGenMs": 21.776416,
+   "fnv": "e503a9e832df53fe",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 95.24408299999959,
+   "nativeGenMs": 18.018917,
+   "fnv": "fef43a7ca07d730b",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 112.84275000000162,
+   "nativeGenMs": 20.578415999999997,
+   "fnv": "ed96eabcf5485ce5",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 141.62858400000005,
+   "nativeGenMs": 25.503375,
+   "fnv": "cf17b9da73422cde",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 82.25137499999983,
+   "nativeGenMs": 18.504541999999997,
+   "fnv": "a74b147d7e0c968f",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 49.441417,
+   "nativeGenMs": 11.208375,
+   "fnv": "df55b59bf7512553",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 45.14125000000058,
+   "nativeGenMs": 10.795959000000002,
+   "fnv": "00f8e1f46d972d1d",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 74.890625,
+   "nativeGenMs": 16.013625,
+   "fnv": "c05e8c470215864e",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 66.46362500000032,
+   "nativeGenMs": 15.479833,
+   "fnv": "4d510bd987ec1c24",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 62.72358299999905,
+   "nativeGenMs": 14.211500000000001,
+   "fnv": "dc48fc73a1d8189f",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 74.14329200000066,
+   "nativeGenMs": 16.624084,
+   "fnv": "f88c4a2d9bb331bb",
+   "same": true
+  },
+  {
+   "biome": "outback-dirt",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 88.40954199999942,
+   "nativeGenMs": 20.004,
+   "fnv": "47491a35d09db5ab",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 53.73345799999879,
+   "nativeGenMs": 13.939,
+   "fnv": "b52308302e9a2d7a",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 35.607459000000745,
+   "nativeGenMs": 8.6235,
+   "fnv": "c9f19747e60e875e",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 31.75483399999939,
+   "nativeGenMs": 8.454375,
+   "fnv": "ee9f8791906b0166",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 49.76604100000077,
+   "nativeGenMs": 11.688209,
+   "fnv": "db3e4d0848c0f2fd",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 48.92058399999951,
+   "nativeGenMs": 11.824541,
+   "fnv": "d70d51121f032ef2",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 42.57379199999923,
+   "nativeGenMs": 10.830708,
+   "fnv": "dcebb83074fb4b77",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 46.629666999999245,
+   "nativeGenMs": 12.190667000000001,
+   "fnv": "c88e13814bfbca29",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 58.32508299999972,
+   "nativeGenMs": 14.320457999999999,
+   "fnv": "68f58480e8bcf9a4",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 66.00283300000046,
+   "nativeGenMs": 12.934249999999999,
+   "fnv": "c8c04c8f7f78bb28",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 37.356417000000874,
+   "nativeGenMs": 7.520709,
+   "fnv": "e9133a0735cc1022",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 34.47925000000032,
+   "nativeGenMs": 7.372708,
+   "fnv": "fbfe7fe7caaff565",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 52.89033299999937,
+   "nativeGenMs": 10.53975,
+   "fnv": "0b331e32fb47d2f7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 54.05083300000115,
+   "nativeGenMs": 10.714583999999999,
+   "fnv": "e7875732a0284bc4",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 47.30899999999929,
+   "nativeGenMs": 9.571042,
+   "fnv": "aa562e5b03cf1b5b",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 55.00945899999897,
+   "nativeGenMs": 11.040291,
+   "fnv": "3012f3a7344aea6f",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 68.8298330000016,
+   "nativeGenMs": 13.373875,
+   "fnv": "a31f59f94145dbd2",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 49.40716699999939,
+   "nativeGenMs": 11.075083,
+   "fnv": "57ba3a1c8082a90b",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 29.73466600000029,
+   "nativeGenMs": 6.999625,
+   "fnv": "1c6cbf1c10a65912",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 27.821207999999388,
+   "nativeGenMs": 6.500417,
+   "fnv": "f1ca996a9387d65e",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 41.719750000000204,
+   "nativeGenMs": 9.116958,
+   "fnv": "537f475149cc5368",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 42.5246670000015,
+   "nativeGenMs": 9.414041999999998,
+   "fnv": "abf7a72fdf817bd7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 38.08841600000051,
+   "nativeGenMs": 8.46,
+   "fnv": "852847ef61ac36b3",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 42.658166000001074,
+   "nativeGenMs": 9.723417,
+   "fnv": "a47412b968d4c792",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "flat",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 54.09504199999901,
+   "nativeGenMs": 11.802292000000001,
+   "fnv": "8941f34849505a5e",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 53.78533399999833,
+   "nativeGenMs": 13.981042,
+   "fnv": "d126c1890b52ac6d",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 31.932542000000467,
+   "nativeGenMs": 8.703707999999999,
+   "fnv": "5b2c25be14498819",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 29.471417000000656,
+   "nativeGenMs": 8.406917,
+   "fnv": "669bc8b0b5bf81a6",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 46.0630829999991,
+   "nativeGenMs": 12.079667,
+   "fnv": "27d98752bb7521bb",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 45.940999999998894,
+   "nativeGenMs": 12.728667000000002,
+   "fnv": "0f8978220176c80c",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 40.67879200000061,
+   "nativeGenMs": 11.126375000000001,
+   "fnv": "b70598534388417c",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 46.18316599999889,
+   "nativeGenMs": 12.883666999999999,
+   "fnv": "4b60c133a3f92315",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 58.041165999999066,
+   "nativeGenMs": 14.822917,
+   "fnv": "179e6a11f3f90148",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 68.41449999999895,
+   "nativeGenMs": 13.232000000000001,
+   "fnv": "98fc3032e656bd94",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 38.53754200000003,
+   "nativeGenMs": 7.823708000000001,
+   "fnv": "d4051214648a7e95",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 37.61620799999946,
+   "nativeGenMs": 7.6902919999999995,
+   "fnv": "301f8d5769ff2d60",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 60.1742090000007,
+   "nativeGenMs": 10.994917,
+   "fnv": "79cbb4026c9536fb",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 55.716707999999926,
+   "nativeGenMs": 11.052667,
+   "fnv": "208bb8ba6ea5594a",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 48.14116600000125,
+   "nativeGenMs": 9.963333,
+   "fnv": "7c67bb221432eabc",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 57.36320899999919,
+   "nativeGenMs": 11.381,
+   "fnv": "40ca3c55d2f35e16",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 77.32491699999991,
+   "nativeGenMs": 13.844375000000001,
+   "fnv": "b85a64b30560c6a8",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 52.91179200000079,
+   "nativeGenMs": 11.499625,
+   "fnv": "76fc3e55ed654093",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 31.413167000000612,
+   "nativeGenMs": 7.0602920000000005,
+   "fnv": "5d58481096319f12",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 29.184957999999824,
+   "nativeGenMs": 6.772292,
+   "fnv": "ab4fe72088fb1ffc",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 43.40695799999958,
+   "nativeGenMs": 9.321292,
+   "fnv": "cd5f9277e7f55062",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 44.714208999999755,
+   "nativeGenMs": 9.746542,
+   "fnv": "e993a7b48d12198a",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 39.98420899999837,
+   "nativeGenMs": 8.700583,
+   "fnv": "11cf523d2a11023c",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 44.32216700000026,
+   "nativeGenMs": 9.986333,
+   "fnv": "dcd1bafdf37de5ca",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "noise",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 55.98737499999879,
+   "nativeGenMs": 12.022417,
+   "fnv": "7a2157662f917c5d",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 1,
+   "wasmGenMs": 56.730750000000626,
+   "nativeGenMs": 15.513584,
+   "fnv": "84ec45bcee7c110f",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 2,
+   "wasmGenMs": 34.20225000000028,
+   "nativeGenMs": 9.671375,
+   "fnv": "e1d9fff5c639a28c",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 3,
+   "wasmGenMs": 33.25200000000041,
+   "nativeGenMs": 9.640667,
+   "fnv": "6efec00c6ae42dc3",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 4,
+   "wasmGenMs": 49.14391699999942,
+   "nativeGenMs": 13.100875,
+   "fnv": "ca8a35ba5f25cf4d",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 5,
+   "wasmGenMs": 48.64666699999907,
+   "nativeGenMs": 13.012708,
+   "fnv": "e05349ea4b96fe0b",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 6,
+   "wasmGenMs": 44.7515829999993,
+   "nativeGenMs": 12.1035,
+   "fnv": "22821971ea01e76c",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 7,
+   "wasmGenMs": 49.859042000000045,
+   "nativeGenMs": 13.842833,
+   "fnv": "092548d542bc3e32",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "poisson",
+   "seed": 8,
+   "wasmGenMs": 60.865999999999985,
+   "nativeGenMs": 16.223959,
+   "fnv": "6917f44259225966",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 1,
+   "wasmGenMs": 69.30374999999913,
+   "nativeGenMs": 14.656792,
+   "fnv": "ddaed62d76d3ebd9",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 2,
+   "wasmGenMs": 38.83791700000074,
+   "nativeGenMs": 8.60375,
+   "fnv": "259b9320f888cee7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 3,
+   "wasmGenMs": 36.41270799999984,
+   "nativeGenMs": 8.245542,
+   "fnv": "1540c1d698211ba7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 4,
+   "wasmGenMs": 55.727624999999534,
+   "nativeGenMs": 11.829459,
+   "fnv": "8aff9fd39380c9af",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 5,
+   "wasmGenMs": 56.5462920000009,
+   "nativeGenMs": 11.862209,
+   "fnv": "00abaeaadfa4fab7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 6,
+   "wasmGenMs": 51.90608400000019,
+   "nativeGenMs": 10.70475,
+   "fnv": "5e521b2f3b68a4ac",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 7,
+   "wasmGenMs": 59.49437500000022,
+   "nativeGenMs": 12.480583,
+   "fnv": "afaa405d7725b577",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "blue",
+   "seed": 8,
+   "wasmGenMs": 73.3913330000014,
+   "nativeGenMs": 14.953583,
+   "fnv": "4cec3c2cff751504",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 1,
+   "wasmGenMs": 54.36358300000029,
+   "nativeGenMs": 12.577875,
+   "fnv": "b828907f2fe55cf7",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 2,
+   "wasmGenMs": 31.568333000001076,
+   "nativeGenMs": 7.861458,
+   "fnv": "8ecb7074ec6ce262",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 3,
+   "wasmGenMs": 28.437667000000147,
+   "nativeGenMs": 7.2707500000000005,
+   "fnv": "71b55f0543b314ac",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 4,
+   "wasmGenMs": 43.31529199999932,
+   "nativeGenMs": 10.646958,
+   "fnv": "5e0578a27842bc5f",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 5,
+   "wasmGenMs": 46.16320799999994,
+   "nativeGenMs": 10.803291,
+   "fnv": "d58d3be0b0dae3fb",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 6,
+   "wasmGenMs": 39.99775000000045,
+   "nativeGenMs": 9.841292,
+   "fnv": "0a192af016b887e0",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 7,
+   "wasmGenMs": 45.000207999999475,
+   "nativeGenMs": 12.082958,
+   "fnv": "2895b4b18fe86c12",
+   "same": true
+  },
+  {
+   "biome": "outback-bitumen",
+   "undulation": "route",
+   "scatter": "cluster",
+   "seed": 8,
+   "wasmGenMs": 55.57966699999997,
+   "nativeGenMs": 13.451417000000001,
+   "fnv": "c046807cdcc2135f",
+   "same": true
+  }
+ ]
+}

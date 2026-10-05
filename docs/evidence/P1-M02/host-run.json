@@ -1,0 +1,51 @@
+{
+ "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+ "drives": {
+  "town": {
+   "map": "town-route-cluster-s1.json",
+   "ticks": 1568,
+   "pathM": 408.7,
+   "recoveries": 0,
+   "upY": 0.9999604225158691,
+   "errors": []
+  },
+  "rocks": {
+   "map": "rocks-route-cluster-s1.json",
+   "ticks": 1585,
+   "pathM": 396.8,
+   "recoveries": 0,
+   "upY": 0.9999663829803467,
+   "errors": []
+  },
+  "outback-dirt": {
+   "map": "outback-dirt-route-poisson-s1.json",
+   "ticks": 1708,
+   "pathM": 473.8,
+   "recoveries": 0,
+   "upY": 0.9999597072601318,
+   "errors": []
+  },
+  "outback-bitumen": {
+   "map": "outback-bitumen-route-blue-s1.json",
+   "ticks": 1615,
+   "pathM": 168.7,
+   "recoveries": 0,
+   "upY": 0.9991195797920227,
+   "errors": []
+  }
+ },
+ "wasm": {
+  "throttle1x": {
+   "worstMs": 89.10000002384186,
+   "meanMs": 44.98124999925494
+  },
+  "throttle4x": {
+   "worstMs": 373.30000001192093,
+   "meanMs": 188.5937500037253
+  },
+  "throttle6x": {
+   "worstMs": 566.5,
+   "meanMs": 283.8812500014901
+  }
+ }
+}
