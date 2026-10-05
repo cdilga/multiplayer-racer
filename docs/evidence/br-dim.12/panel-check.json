@@ -1,0 +1,204 @@
+{
+  "when": "2026-10-05T07:31:17.630Z",
+  "what": "look panel overlap with the view (fractions of the viewport), #grid&n=24",
+  "results": [
+    {
+      "size": "phone-portrait",
+      "viewport": "412x915",
+      "openMax": 0.03,
+      "closedMax": 0.03,
+      "problems": [],
+      "closed": {
+        "toggle": {
+          "shown": true,
+          "x": 362,
+          "y": 865,
+          "w": 44,
+          "h": 44,
+          "overlap": 0.005135550957610483,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "panel": {
+          "shown": false
+        }
+      },
+      "open": {
+        "toggle": {
+          "shown": false
+        },
+        "panel": {
+          "shown": true,
+          "x": 0,
+          "y": 603.90625,
+          "w": 412,
+          "h": 311.09375,
+          "overlap": 0.3399931693989071,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "view": {
+          "canvas": [
+            0,
+            0,
+            412,
+            604
+          ],
+          "panel": [
+            0,
+            603.90625,
+            412,
+            915
+          ],
+          "overlapOfView": 0.00015521523178807948,
+          "tiles": 24,
+          "tilesOutsideView": 0,
+          "tilesUnderPanel": 0,
+          "canvasPx": [
+            1071,
+            1570
+          ]
+        }
+      },
+      "openOverlap": 0.0002,
+      "dockedEqualsUndocked": true,
+      "undockedViewport": "412x604",
+      "dismissBy_close": true,
+      "dismissBy_escape": true,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "size": "phone-landscape",
+      "viewport": "915x412",
+      "openMax": 0.03,
+      "closedMax": 0.03,
+      "problems": [],
+      "closed": {
+        "toggle": {
+          "shown": true,
+          "x": 865,
+          "y": 362,
+          "w": 44,
+          "h": 44,
+          "overlap": 0.005135550957610483,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "panel": {
+          "shown": false
+        }
+      },
+      "open": {
+        "toggle": {
+          "shown": false
+        },
+        "panel": {
+          "shown": true,
+          "x": 655,
+          "y": 0,
+          "w": 260,
+          "h": 412,
+          "overlap": 0.28415300546448086,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "view": {
+          "canvas": [
+            0,
+            0,
+            655,
+            412
+          ],
+          "panel": [
+            655,
+            0,
+            915,
+            412
+          ],
+          "overlapOfView": 0,
+          "tiles": 24,
+          "tilesOutsideView": 0,
+          "tilesUnderPanel": 0,
+          "canvasPx": [
+            1702,
+            1071
+          ]
+        }
+      },
+      "openOverlap": 0,
+      "dockedEqualsUndocked": true,
+      "undockedViewport": "655x412",
+      "dismissBy_close": true,
+      "dismissBy_escape": true,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "size": "tv",
+      "viewport": "1920x1080",
+      "openMax": 0.03,
+      "closedMax": 0.03,
+      "problems": [],
+      "closed": {
+        "toggle": {
+          "shown": true,
+          "x": 1870,
+          "y": 1030,
+          "w": 44,
+          "h": 44,
+          "overlap": 0.0009336419753086419,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "panel": {
+          "shown": false
+        }
+      },
+      "open": {
+        "toggle": {
+          "shown": false
+        },
+        "panel": {
+          "shown": true,
+          "x": 1660,
+          "y": 0,
+          "w": 260,
+          "h": 1080,
+          "overlap": 0.13541666666666666,
+          "clippedX": false,
+          "scrolls": false
+        },
+        "view": {
+          "canvas": [
+            0,
+            0,
+            1660,
+            1080
+          ],
+          "panel": [
+            1660,
+            0,
+            1920,
+            1080
+          ],
+          "overlapOfView": 0,
+          "tiles": 24,
+          "tilesOutsideView": 0,
+          "tilesUnderPanel": 0,
+          "canvasPx": [
+            1660,
+            1080
+          ]
+        }
+      },
+      "openOverlap": 0,
+      "dockedEqualsUndocked": true,
+      "undockedViewport": "1660x1080",
+      "dismissBy_close": true,
+      "dismissBy_escape": true,
+      "pageErrors": [],
+      "pass": true
+    }
+  ]
+}

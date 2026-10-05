@@ -14,8 +14,19 @@ import { layoutGrid } from '../tv/grid.js';
 import { createWorld, BOWL, FRAMING, LOOKS } from './world.js';
 import { createOverviewRig, createRound0Rig } from '../shared/overview-camera.js';
 
+// #compare=gtao|smaa|shadows: the A/B compare page (compare.js): the same frozen frame with a setting on and off, a 4x crop and a
+// difference map. It drives this page twice (once per setting value) with &freeze=N below; nothing else of this file runs.
+if (location.hash.startsWith('#compare')) { await import('./compare.js'); await new Promise(() => {}); }
 const tokens = await loadTokens();
-const k = () => window.innerHeight / 1080;
+// The look panel docks (P1-U05, br-dim.12): with &panel=1 the world is laid out in the area the panel leaves (a right column in
+// landscape, a bottom sheet in portrait), so the panel never covers a tile; closing it reloads at full size.
+const panelOpen = new URLSearchParams(location.search).get('panel') === '1' && new URLSearchParams(location.search).get('bar') !== '0';
+const landscape = window.innerWidth >= window.innerHeight;
+const VW = panelOpen && landscape ? window.innerWidth - Math.min(260, Math.round(window.innerWidth * 0.3)) : window.innerWidth;
+const VH = panelOpen && !landscape ? window.innerHeight - Math.round(window.innerHeight * 0.34) : window.innerHeight;
+document.getElementById('world').style.cssText = `width:${VW}px;height:${VH}px`;
+document.getElementById('ui').style.cssText = `width:${VW}px;height:${VH}px;right:auto;bottom:auto`;
+const k = () => VH / 1080;
 document.documentElement.style.setProperty('--k', String(k()));
 const q = new URLSearchParams(location.search);
 const mode = q.get('mode') ?? 'full';
@@ -28,8 +39,13 @@ const fx = { look: q.get('look') ?? undefined, ink: q.get('ink') ?? undefined, a
 const colors = tokens.identity.colors.map((c) => c.hex);
 const NAMES = ['Dusty', 'Pip', 'Ash', 'Kai', 'Big Kev', 'Mia', 'Snag', 'Shaz', 'Roo Boy', 'Tiggy', 'Mack', 'Maximilian', 'Jojo', 'Nina', 'Bazza', 'Wren', 'Sakura', 'Zara', 'Tama', 'Lulu', 'Ned', 'Hamish', 'Priya', 'Wei', 'Sione', 'Ana', 'Jack', 'Ruby', 'Archie', 'Isla', 'Leo', 'Matilda'];
 
+// ?freeze=N (R90, settable and steppable): the sim runs N fixed 1/60 s steps (every frame, no wall clock), then the page stops on
+// that exact frame and keeps a pixel copy for window.__world.snapshot(). Same N and same options give the same frame
+// when &grain=0&shimmer=0 (the grain and the heat shimmer read the renderer's clock); compare.js checks it with a control pair.
+const FREEZE = q.has('freeze') ? Math.max(1, +q.get('freeze')) : 0;
+let snap = null;
 const canvas = document.getElementById('world');
-const W = window.innerWidth, H = window.innerHeight;
+const W = VW, H = VH;
 const rects = (() => {
   if (name === 'grid' || (name === 'shimmer' && P.has('n'))) return layoutGrid(N, { x: 0, y: 0, w: W, h: H }, { gutter: 6 * k() }).tiles.map((t) => ({ x: Math.round(t.x), y: Math.round(t.y), w: Math.round(t.w), h: Math.round(t.h) }));
   if (name === 'graphics') { const w = Math.floor(W / 2), h = Math.floor(H / 2); return [[0, 0], [w, 0], [0, h], [w, h]].map(([x, y]) => ({ x, y, w, h })); }
@@ -150,7 +166,7 @@ function aim(dt) {
 let last = performance.now(), frames = 0;
 const stats = { cpu: [], interval: [] };
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const dt = FREEZE ? 1 / 60 : Math.min(0.05, (now - last) / 1000);
   stats.interval.push(now - last);
   last = now;
   const t0 = performance.now();
@@ -165,10 +181,15 @@ function loop(now) {
     const cam = world.array.cameras[0];
     world.cars.forEach((c, i) => { const p = V.copy(c.pos).setY(2.4).project(cam); plates[i].style.left = `${(p.x * 0.5 + 0.5) * W}px`; plates[i].style.top = `${(-p.y * 0.5 + 0.5) * H}px`; });
   }
+  if (FREEZE && frames + 1 === FREEZE) { // the last frame: copy it in the same task as its render, before the canvas is presented
+    snap = document.createElement('canvas'); snap.width = canvas.width; snap.height = canvas.height;
+    snap.getContext('2d').drawImage(canvas, 0, 0);
+  }
   stats.cpu.push(performance.now() - t0);
   if (stats.cpu.length > 600) { stats.cpu.splice(0, 300); stats.interval.splice(0, 300); }
   frames++;
-  window.__world.ready = frames > 30;
+  window.__world.ready = FREEZE ? frames >= FREEZE : frames > 30;
+  if (FREEZE && frames >= FREEZE) return; // frozen: no more frames
   requestAnimationFrame(loop);
 }
 
@@ -230,6 +251,10 @@ window.__world = {
     return [...L, ...R.reverse()];
   },
   staticStats: world.staticStats,
+  /** ?freeze=N: the frozen frame as a 2D canvas (canvas pixels), or null before it. */
+  snapshot: () => snap,
+  /** The tile rectangles in canvas CSS pixels: the compare page's mask (the gutters between tiles are not the scene). */
+  tileRects: () => rects.map((r) => ({ ...r })),
   overviewZones,
   /** Frame cost: `rafFrames` vsync-bound frames (rAF interval) and `gpuFrames` frames timed by GPU timestamp queries (ms of GPU
    *  execution for every render pass of the frame: the scene pass over all tiles plus the post chain). Needs ?ts=1. */
@@ -248,10 +273,22 @@ window.__world = {
     return { state: location.hash || '#grid', mode, options: world.options(), viewport: `${W}x${H}`, tiles: rects.length, minTileH: Math.min(...rects.map((r) => r.h)), backend: world.backend, frame_ms_p50: +pct(iv, 0.5).toFixed(2), frame_ms_p95: +pct(iv, 0.95).toFixed(2), cpu_submit_ms_mean: +(cpu.reduce((a, b) => a + b, 0) / cpu.length).toFixed(2), gpu_ms_p50: gpu.length ? +pct(gpu, 0.5).toFixed(2) : null, gpu_ms_p95: gpu.length ? +pct(gpu, 0.95).toFixed(2) : null, gpu_samples: gpu.length };
   },
 };
-// ---- the look bar (P1-U05.5): looks switch live; the other options reload the page with the new parameter ----
+// ---- the look panel (P1-U05, br-dim.12): collapsed to a 44 px button in the corner by default (it never covers the view), docked to
+// the right (landscape) or the bottom (portrait) when open, and dismissed by its Close or Escape (the world re-lays out beside it: it never covers a tile). &panel=1 opens it. ----
+// Looks switch live; the other options reload the page with the new parameter. GTAO and SMAA are not in the panel: the A/B compare
+// (docs/evidence/br-dim.12/decisions.md) found no visible benefit at the sizes players see; ?ao=1 and ?smaa=1 still work for the compare page.
 const bar = el('div', 'look-bar');
 const markBar = () => { for (const b of bar.querySelectorAll('[data-look]')) b.classList.toggle('on', b.dataset.look === world.options().look); };
 if (q.get('bar') !== '0') {
+  const toggle = el('button', 'look-toggle', 'Look');
+  toggle.type = 'button'; toggle.title = 'Look settings'; toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', 'look-panel');
+  bar.id = 'look-panel';
+  // opening or closing re-lays the world out in the space left, so it reloads with &panel=1 (the state is in the URL)
+  const setOpen = (on) => { const u = new URL(location.href); if (on) u.searchParams.set('panel', '1'); else u.searchParams.delete('panel'); location.href = u.href; };
+  toggle.onclick = () => setOpen(true);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && panelOpen) setOpen(false); });
+  const head = el('div', 'look-head', '<span>Look settings</span>');
+  const close = el('button', null, 'Close'); close.type = 'button'; close.onclick = () => setOpen(false); head.append(close);
   const looks = el('div', 'look-row');
   for (const L of LOOKS.looks) {
     const b = el('button', null, `${L.name.replace(' (for comparison)', '')}${L.id === LOOKS.recommended ? ' <i>recommended</i>' : ''}`);
@@ -259,20 +296,22 @@ if (q.get('bar') !== '0') {
     b.onclick = () => { window.__world.setLook(L.id); const u = new URL(location.href); u.searchParams.set('look', L.id); history.replaceState(null, '', u); };
     looks.append(b);
   }
-  const reload = (k, v) => { const u = new URL(location.href); if (v == null) u.searchParams.delete(k); else u.searchParams.set(k, v); location.href = u.href; };
+  const reload = (k, v) => { const u = new URL(location.href); if (v == null) u.searchParams.delete(k); else u.searchParams.set(k, v); u.searchParams.set('panel', '1'); location.href = u.href; };
   const o = world.options();
   const pick = (label, k, values, now) => { const s = el('label', null, `${label} `); const sel = el('select'); for (const [v, t] of values) { const op = el('option', null, t); op.value = v; op.selected = String(now) === v; sel.append(op); } sel.onchange = () => reload(k, sel.value); s.append(sel); return s; };
   const opts = el('div', 'look-row small');
   opts.append(
     pick('Ink', 'ink', [['outer', 'outer silhouette (rec.)'], ['silhouette', 'silhouette only'], ['full', 'round 0 (everywhere)'], ['none', 'no ink']], o.ink),
     pick('Shadows', 'shadow', [['pcf', 'PCF 4096 (rec.)'], ['soft', 'PCF soft'], ['vsm', 'VSM'], ['csm', 'cascaded (1 view)'], ['off', 'off']], o.shadow),
-    pick('AO', 'ao', [['0', 'off (rec.)'], ['1', 'GTAO (1 view)']], o.ao ? '1' : '0'),
-    pick('AA', 'smaa', [['0', 'FXAA (rec.)'], ['1', 'SMAA']], o.smaa ? '1' : '0'),
     pick('Road', 'roadtex', [['1', 'textured + AF (rec.)'], ['0', 'round 1 lines']], o.roadtex ? '1' : '0'),
     pick('Emissive kit', 'emissive', [['1', 'on'], ['0', 'off']], o.emissive ? '1' : '0'),
   );
-  bar.append(looks, opts);
-  ui.append(bar);
+  // A/B compare: the same frozen frame with the setting on and off (compare.js)
+  const cmp = el('div', 'look-row small', 'A/B compare ');
+  for (const [k, t] of [['shadows', 'Shadows'], ['smaa', 'SMAA'], ['gtao', 'GTAO']]) { const b = el('button', null, t); b.type = 'button'; b.onclick = () => { const u = new URL(location.href); u.hash = `#compare=${k}`; const had = u.searchParams.delete('panel') || q.has('panel'); location.href = u.href; if (!had) location.reload(); }; cmp.append(b); }
+  bar.append(head, looks, opts, cmp);
+  document.body.append(bar, toggle); // outside #ui, which is sized to the view
+  bar.classList.toggle('open', panelOpen); toggle.hidden = panelOpen;
   markBar();
 }
 

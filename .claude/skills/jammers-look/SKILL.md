@@ -180,3 +180,16 @@ node .claude/skills/jammers-look/example/check-recipes.mjs      # recipes.md == 
 
 Look changes need captures: hero three-quarter, side, the 40 px thumbnail, plus the "before" with the plain material, and a
 `dbg=` channel for whatever you touched. Night and dusk variants must pass the same readability captures (12.1a guard rails).
+
+## Setting decisions from the A/B compare (P1-U05, br-dim.12)
+
+Measured on the world look page's A/B compare (`art/ui/poc/world/index.html#compare=gtao|smaa|shadows|control`; `capture-compare.mjs`;
+evidence `docs/evidence/br-dim.12/decisions.md`): same frozen frame, one setting on and off, grain and shimmer off, control A=B reads 0.
+Numbers are mean absolute difference (0-255) / % of scene pixels changed by more than 12, for one 1920x1080 tile / a 384x216 tile / a 24-tile grid.
+
+- **GTAO: remove.** 2.08 / 5.7%, 3.07 / 11.3%, 0 (not run in a grid). The change is artifacts, not contact shadows: it turns the W-beam
+  rail navy and stripes the far mesas. Single view only; not in the settings panel.
+- **SMAA: default-off.** 0.57 / 1.8%, 2.27 / 8.5%, 1.93 / 7.5%. Softens stair-steps only, visible in a 4x crop, not at 1:1. Keep FXAA
+  (4 tiles or fewer) and no AA in a grid (the outlines carry edges); grid AA is a TAA job for P1-R10. Not in the panel.
+- **Shadows: keep.** 2.31 / 4.4%, 1.65 / 4.6%, 1.70 / 3.8%. The cast shadow grounds the cars and carries the halftone dots; visible at
+  grid-tile size. Rule: a look option stays only if its A/B shows a named benefit at the sizes players see.

@@ -13,7 +13,16 @@
   .nameplate { position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center; gap: calc(var(--k) * 6px); padding: calc(var(--k) * 3px) calc(var(--k) * 10px) calc(var(--k) * 3px) calc(var(--k) * 3px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); font-size: calc(var(--k) * 22px); font-weight: 700; white-space: nowrap; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
   .nameplate .badge { font-size: inherit; }
   /* P1-U05.5 look bar: the looks switch live, the options reload */
-  .look-bar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); display: grid; gap: 6px; max-width: calc(100vw - 32px); padding: 8px 10px; background: var(--c-paper); border: 3px solid var(--c-ink); border-radius: 10px; box-shadow: 0 4px 0 rgb(21 32 58 / .85); font: 600 14px/1.2 var(--font-body, system-ui), sans-serif; color: var(--c-ink); pointer-events: auto; z-index: 5; }
+  .look-bar { position: fixed; display: none; gap: 8px; padding: 10px; background: var(--c-paper); border: 3px solid var(--c-ink); box-shadow: 0 4px 0 rgb(21 32 58 / .85); font: 600 14px/1.2 var(--font-body, system-ui), sans-serif; color: var(--c-ink); pointer-events: auto; z-index: 5; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; }
+  .look-bar.open { display: grid; align-content: start; }
+  /* docked, never floating over the middle: a right-hand column in landscape, a bottom sheet in portrait */
+  @media (min-aspect-ratio: 1/1) { .look-bar { top: 0; right: 0; bottom: 0; width: min(260px, 30vw); border-width: 0 0 0 3px; } }
+  @media (max-aspect-ratio: 1/1) { .look-bar { left: 0; right: 0; bottom: 0; height: 34vh; border-width: 3px 0 0; } }
+  .look-toggle { position: fixed; right: 6px; bottom: 6px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; background: var(--c-paper); color: var(--c-ink); border: 3px solid var(--c-ink); border-radius: 12px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 700 12px/1 var(--font-body, system-ui), sans-serif; cursor: pointer; pointer-events: auto; z-index: 6; }
+  .look-toggle[hidden] { display: none; }
+  .look-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .look-head button { font: inherit; padding: 4px 10px; border: 2px solid var(--c-ink); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+  .look-row.small label { display: flex; align-items: center; gap: 4px; }
   .look-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
   .look-row button { font: inherit; padding: 5px 10px; border: 2px solid var(--c-ink); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
   .look-row button.on { background: var(--c-ink); color: var(--c-paper); }
