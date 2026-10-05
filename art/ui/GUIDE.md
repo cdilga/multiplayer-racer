@@ -135,8 +135,34 @@ sheet draws each one and a free screen built only from them.
 | 6. Colour behind some text | **Strips** put success, cobalt, ink or saffron behind one short line (a result, a status, a points value), never behind a paragraph. A saffron **highlighter** stroke goes under the player's own word | `banner.strip`, `banner.underline` |
 
 **Corners (no uniform radius).** Panels are square (2 px desk, 3 px TV) or wobbled. Banners, tags and strips
-are torn or brushed. Buttons and fields get a small radius (4 px desk, 6 px TV, `layout.radiusPx`).
-Badges get 3 px desk, 4 px TV. Only status chips and toggle tracks are pills.
+are torn or brushed. Since round 4 (below) buttons, chips, badges, rows and fields are brushed slabs and dabs;
+the plain small radius (4 px desk, 6 px TV, `layout.radiusPx`) is left to the compact button variant and toggle
+tracks.
+
+## 5b. One brush system and the one caption (owner round 4, 2026-10-06)
+
+"A consistent brush adjacent style and design language for the lot … straight-ish edges, commit to the design."
+One shape family, `sheets/brush-button.js`, used by the sheet, the TV mocks and the controller (`banner.slab`):
+
+| Kind | Shape | Used for |
+|---|---|---|
+| Button | A brushed slab: straight-ish top and bottom, a forward lean (12 % of its height), ends that only hint at dry brush; the ink outline follows the slab | Every button with room. Hover lightens the fill, pressed drops it by the shadow, the keyboard (cobalt) and gamepad (saffron with ink hairlines, chevron, lift) rings trace the slab, disabled is grey with no shadow. The plain button is the **compact variant** for footers and list rows |
+| Chip | A short slab | Status chips, HUD name and position pills, boost meters, footer pills and toolbar buttons |
+| Row | A long slab | Roster cards, results rows, settings rows, segmented controls, fields |
+| Badge | A hand-cut dab (a gentle wobble: bristles fight a number this small) | Number badges |
+| Panel | A hand-cut sheet | List panels. Panels with an overhanging banner keep straight edges, since a shape would cut the banner |
+
+Every kind shares the ink outline that follows its shape and the hard sticker shadow under it (black at 55 % on
+ink surfaces); the fill is free (a seat colour, a state colour). Each kind is a mask plus a skin set once as CSS
+variables (`installBrushSkins`), so 100+ tiles cost no extra DOM. Tiny tiers whose whole cell is a state or seat
+colour stay plain so they read at a glance. The torn slip behind the main action is retired: the slab is enough.
+
+**The caption** (`banner.caption`, br-dim.8) is the intermission subtitle the owner picked: display italic caps
+on a brush strip, skewed like a tag, a −2° tilt (0 in a band), saffron by default, ink for a quiet line, teal
+for a positive callout; two lines at most, then it's cut with an ellipsis, so caption copy stays short (the announcer's lines are). One component (`.capt`) for every caption: replay
+annotations (bottom-left over the video), announcer lines and callouts (centred in a spare grid cell, or flat in
+the middle of the host footer). Never on one player's tile. Sizes: TV 30 px (44 over a replay or in a cell),
+desk 20, handheld 18. Contrast: ink on saffron 9.1:1, paper on ink 14.8:1, ink on teal 7.2:1.
 
 **Shapes are code, seeded and still:** `sheets/tokens-css.js` has `paintPath()` (torn banners, brushed
 tags and strips), `strokePath()` (the highlighter) and `tiltFor()`. They're seeded by the element's id

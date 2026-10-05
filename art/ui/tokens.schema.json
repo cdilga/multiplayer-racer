@@ -654,7 +654,9 @@
             "tag",
             "strip",
             "underline",
-            "slip"
+            "slip",
+            "caption",
+            "slab"
           ],
           "additionalProperties": false,
           "properties": {
@@ -809,6 +811,91 @@
                 },
                 "edge": {
                   "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "caption": {
+              "type": "object",
+              "description": "The one caption component (br-dim.8): the intermission subtitle's brush strip, used for every caption (announcer lines, replay annotations, callouts).",
+              "required": [
+                "fills",
+                "textOn",
+                "edge",
+                "tiltMaxDeg",
+                "sizePx",
+                "maxLines",
+                "placements",
+                "note"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "fills": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/paletteRef"
+                  }
+                },
+                "textOn": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/paletteRef"
+                  }
+                },
+                "edge": {
+                  "enum": [
+                    "torn",
+                    "brush",
+                    "square"
+                  ]
+                },
+                "tiltMaxDeg": {
+                  "type": "number"
+                },
+                "sizePx": {
+                  "$ref": "#/$defs/byProfile"
+                },
+                "maxLines": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "placements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            },
+            "slab": {
+              "type": "object",
+              "description": "Round 4's brush system (art/ui/sheets/brush-button.js): one shape family for buttons and every surface.",
+              "required": [
+                "leanOfHeight",
+                "endOfHeight",
+                "kinds",
+                "note"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "leanOfHeight": {
+                  "type": "number"
+                },
+                "endOfHeight": {
+                  "type": "number"
+                },
+                "kinds": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
                 },
                 "note": {
                   "type": "string"

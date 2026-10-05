@@ -154,7 +154,19 @@ function skinPair(kind, i, { stroke, sy, ink, shadow }) {
   return { mask: enc(mask), skin: enc(skin) };
 }
 
+// The one caption (br-dim.8, tokens.language.banner.caption): the intermission subtitle's brush strip for every caption.
+// The page paints the strip like any [data-brush] tag; --capt-size sets the profile size (TV/desk/handheld).
+//   .capt            saffron strip, ink text, tag skew and a -2° tilt, at most two lines
+//   .capt.ink/.teal  a quiet line / a positive callout      .capt.flat  no tilt (in a band)      .capt.one  one line, ellipsis
 const BZ_CSS = `
+.capt { --capt-fill: var(--c-saffron); --capt-fg: var(--c-ink); position: relative; isolation: isolate; display: inline-block; width: fit-content; max-width: 100%; box-sizing: border-box; padding: .1em .65em .14em; color: var(--capt-fg); font: 900 italic var(--capt-size, 30px)/1.05 var(--font-display); text-transform: uppercase; letter-spacing: .01em; text-align: center; transform: rotate(var(--capt-rot, -2deg)) skewX(var(--skew-tag, -10deg)); }
+.capt > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; transform: skewX(calc(-1 * var(--skew-tag, -10deg))); }
+.capt > svg path { fill: var(--capt-fill); }
+.capt.ink { --capt-fill: var(--c-ink); --capt-fg: var(--c-paper); }
+.capt.teal { --capt-fill: var(--c-teal); }
+.capt.flat { --capt-rot: 0deg; }
+.capt.one > span { display: block; white-space: nowrap; text-overflow: ellipsis; }
+.capt .badge { font-size: .8em; vertical-align: .05em; }
 .bz { -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important; border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important; }
 `;
 

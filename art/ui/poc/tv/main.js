@@ -172,9 +172,10 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       const e = el('div', `filler ${f.kind === 'strip' ? 'margin rail' : f.kind}`);
       e.dataset.role = f.used ? 'chrome' : roles[i];
       Object.assign(e.style, { left: `${f.x}px`, top: `${f.y}px`, width: `${f.w}px`, height: `${f.h}px` });
-      if (roles[i] === 'caption') e.append(el('div', 'caption cellcap', esc(caption)));
+      if (roles[i] === 'caption') e.insertAdjacentHTML('beforeend', `<span class="capt cellcap" data-brush="cap-cell"><span>${esc(caption)}</span></span>`); // br-dim.8: the one caption
       layer.prepend(e);
       fillerEls.push(e);
+      if (roles[i] === 'caption') requestAnimationFrame(() => paint(e));
     });
     for (const c of chromeEls) c.remove();
     chromeEls = [];
@@ -183,6 +184,8 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     if (chrome?.list) { listEl = playerList(chrome.list); chromeEls.push(listEl); }
     layer.append(...chromeEls);
     footer?.update({ qr: !hasQr, caption: capInCell ? null : caption, players: seats().length, layout });
+    // br-dim.8: the footer grew (or shrank) a caption row after the grid was laid out above it: lay out once more.
+    if (foot && !relayout.again && Math.abs(rect().h - r.h) > 0.5) { relayout.again = true; relayout(animate); relayout.again = false; }
     if (!foot && cornerChip && !hasQr && !hasCode && seats().length > 0 && S.p.get('qr') !== '0') {
       // No free space holds a QR at a scannable size (smaller than the minimum module px won't scan): the code only.
       joinChip = el('div', 'joinchip', `<span class="display" style="font-size:calc(var(--k)*32px);line-height:1">ROO7</span><small>jammers.dilger.dev</small>`);
@@ -373,7 +376,7 @@ const DIAG = { colPx: 330, gapPx: 16, rowPx: 34, headPx: 46 };
 function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, onDiag, action = null, noPause = false } = {}) {
   const f = el('footer', 'foot k');
   f.setAttribute('aria-label', 'Host toolbar');
-  f.innerHTML = `<div class="f-diag" hidden></div>
+  f.innerHTML = `<div class="f-diag" hidden></div><div class="f-caprow" hidden></div>
     <div class="f-row">
       <div class="f-join"><button class="f-qr" type="button" aria-label="Show the join code bigger (pauses the game)"><img class="qr" alt="" src="${asset('poc/shared/qr-roo7-paper.svg')}"></button>
         <div class="f-room"><span class="f-code"><small>Room</small><b class="display code">ROO7</b></span><span class="f-sub">jammers.dilger.dev · <b class="f-n tnum">0</b> players</span></div></div>
@@ -384,7 +387,11 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
         <button class="fbtn icon f-menu" type="button" aria-label="Host menu" aria-expanded="false">${icon('menu')}</button></div>
     </div>`;
   ui.append(f);
-  const mid = f.querySelector('.f-mid'), dEl = f.querySelector('.f-diag');
+  const mid = f.querySelector('.f-mid'), dEl = f.querySelector('.f-diag'), capRow = f.querySelector('.f-caprow');
+  // br-dim.8: a footer too narrow for the caption beside the join line and the controls (a phone as the host) gives the
+  // caption its own row on top of the band, and the grid reflows above it, the way diagnostics do.
+  const CAPROW = 62;
+  const capOwnRow = () => !!state.caption && !menu && W() < 760;
   // A readout shows whole or not at all: on a narrow footer (a phone as the host) one that doesn't fit is hidden rather
   // than clipped to a fragment. Re-fitted whenever the readouts or the space change size (late fonts, resizes).
   const fitMid = () => {
@@ -430,8 +437,13 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
     pb.innerHTML = `${icon(pIcon)}<span class="lbl">${pLabel}</span>`; // a narrow footer shows the icon; the label stays
     pb.setAttribute('aria-label', pLabel);
     f.querySelector('.f-n').textContent = String(state.players);
-    mid.innerHTML = menu ? menuRow() : state.caption ? `<span class="caption footcap">${esc(state.caption)}</span>` : readouts();
-    if (!menu && !state.caption) for (const c of mid.children) midFit.observe(c);
+    const capHtml = state.caption ? `<span class="capt flat one footcap" data-brush="cap-foot"><span>${esc(state.caption)}</span></span>` : '';
+    const own = capOwnRow();
+    capRow.hidden = !own;
+    capRow.innerHTML = own ? capHtml : '';
+    mid.innerHTML = menu ? menuRow() : state.caption && !own ? capHtml : readouts();
+    if (!menu && (own || !state.caption)) for (const c of mid.children) midFit.observe(c);
+    if (state.caption && !menu) requestAnimationFrame(() => paint(f)); // the caption's brush strip, at its laid-out size
     requestAnimationFrame(fitMid);
     const mb = f.querySelector('.f-menu');
     mb.setAttribute('aria-expanded', String(menu));
@@ -470,10 +482,10 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
   const t0 = performance.now();
   return {
     el: f,
-    height: () => (FOOT + diagPx()) * K(),
+    height: () => (FOOT + diagPx() + (capOwnRow() ? CAPROW : 0)) * K(),
     update(next) { state = { ...state, ...next }; render(); },
     tick(st) {
-      if (menu || state.caption) return;
+      if (menu || (state.caption && !capOwnRow())) return;
       const lead = st[0];
       const le = f.querySelector('.f-lead');
       if (lead && le) { const i = seatInfo(lead.seat); const html = `<span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span> ${esc(shortName(i.name, 10))}`; if (le.dataset.k !== html) { le.innerHTML = html; le.dataset.k = html; } }
@@ -925,7 +937,7 @@ function roundScreen() {
   s.innerHTML = `<div class="rd-head"><span class="bn" data-torn="round">Round 3 <span class="acc">complete</span></span>
       <span class="strip ink" data-brush="round-sub"><span>${icon('video')}Highlights · ${reel.length} to watch</span></span></div>
     <div class="rd-video"><div class="hl-view" data-seat="${reel[now][1]}"></div>
-      <span class="tag hl-cap" data-brush="hl-cap"><span>${reel[now][0]} · ${who(reel[now][1])} ${esc(shortName(seatInfo(reel[now][1]).name, 10))}</span></span>
+      <span class="capt hl-cap" data-brush="hl-cap"><span>${reel[now][0]} · ${who(reel[now][1])} ${esc(shortName(seatInfo(reel[now][1]).name, 10))}</span></span>
       <span class="hl-count tnum">${now + 1} / ${reel.length}</span><div class="hl-bar"><i style="width:38%"></i></div></div>
     <div class="rd-right">
       <div class="rd-list"><span class="tag" data-brush="rd-results"><span>Results</span></span><div class="rd-top"></div><div class="rd-rest"></div></div>
@@ -1162,7 +1174,7 @@ function start() {
   world.resize(W(), H());
   const setup = SETUP[S.name] ?? SETUP.contents;
   scene = setup();
-  requestAnimationFrame(() => paintBrushButtons(ui)); // round 4: every brushed button on the screen, whoever built it
+  requestAnimationFrame(() => paint(ui)); // round 4: every painted shape and brushed button on screen, captions included
   document.title = `TV mock · ${S.name}`;
   window.__poc.hash = location.hash; // which state `ready` refers to (hash navigations don't reload the page)
   window.__poc.held = false;

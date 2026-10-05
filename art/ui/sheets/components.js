@@ -127,6 +127,14 @@ const langBody = `<div class="lang">
   </div></div>
 <div class="lrow"><div class="rl"><b>Highlighter and brushed buttons</b>A saffron stroke under the player's own word; buttons are brush strokes with an ink outline that follows the stroke (round 4 replaced the torn slip behind the button).</div>
   <div class="prims"><span class="h-display">Seat ${ul('demo-ul', 'nine')} is you</span>${btn({ label: 'Start race', id: 'prim-start' })}<div class="ink-well on-ink" style="width:auto;padding:var(--sp-4) var(--sp-5)">${btn({ label: 'Ready', variant: 'secondary', id: 'prim-ready' })}</div></div></div>
+<div class="lrow"><div class="rl"><b>Caption</b>The one caption (br-dim.8): the intermission subtitle's brush strip, display italic caps, tag skew, −2° tilt. Saffron by default, ink for a quiet line, teal for a positive callout; flat in a band; two lines at most.</div>
+  <div class="prims">
+    <div class="blk"><span class="capt" data-brush="capt-demo-1"><span>Fastest lap · ${badge(5, 'sm')} Big Kev</span></span><span class="cap">saffron · replay annotation · ink on saffron ${'9.1'}:1</span></div>
+    <div class="blk"><span class="capt ink" data-brush="capt-demo-2"><span>Late joiners welcome</span></span><span class="cap">ink · a quiet line · paper on ink 14.8:1</span></div>
+    <div class="blk"><span class="capt teal" data-brush="capt-demo-3"><span>New lap record!</span></span><span class="cap">teal · a positive callout · ink on teal 7.2:1</span></div>
+    <div class="blk"><div class="ink-well on-ink" style="width:340px;padding:var(--sp-3) var(--sp-4)"><span class="capt flat one" data-brush="capt-demo-4"><span>Final lap! Give it everything!</span></span></div><span class="cap">flat, one line: the host footer band</span></div>
+    <div class="blk" style="width:260px"><span class="capt" data-brush="capt-demo-5"><span>Final lap! Give it everything, the pack is bunched up!</span></span><span class="cap">two lines at most, then an ellipsis: a spare grid cell</span></div>
+  </div></div>
 <div class="lrow"><div class="rl"><b>Corners</b>${L.corners.rule}</div>
   <div class="corners">
     <div class="blk"><div class="cn-panel"></div><span class="cap"><b>Panel</b> ${L.corners.panelPx.desk} px (or wobbled)</span></div>
@@ -364,6 +372,9 @@ app.innerHTML = [
   section(11, 'TV profile at half size', 'The same components at the TV scale: heavier outlines, bigger type, thicker rings, shown at 50%.', tvBody),
 ].join('');
 
+// The brush system's skins and the caption's CSS first, so every shape below is measured at its styled size.
+installBrushSkins(document.documentElement, { stroke: tokens.ink.outlinePx.desk, sy: 4, ink: tokens.palette.ink.hex, paper: tokens.palette.paper.hex });
+
 // ---------- wobble outlines: geometry from wobblePath, styling from CSS ----------
 for (const el of document.querySelectorAll('[data-wobble]')) {
   const cs = getComputedStyle(el);
@@ -394,7 +405,6 @@ for (const el of document.querySelectorAll('[data-stroke]')) {
   el.insertAdjacentHTML('afterbegin', `<svg class="paint-svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="top:auto;bottom:${-h * 0.15}px;rotate:${tokens.language.banner.underline.rotateDeg}deg" aria-hidden="true"><path d="${strokePath(el.dataset.stroke, w, h)}"/></svg>`);
 }
 paintBrushButtons(document);
-installBrushSkins(document.documentElement, { stroke: tokens.ink.outlinePx.desk, sy: 4, ink: tokens.palette.ink.hex, paper: tokens.palette.paper.hex });
 for (const el of document.querySelectorAll('[data-tilt]')) el.style.rotate = `${tiltFor(el.dataset.tilt, tokens.language.slant.panelTiltMaxDeg)}deg`;
 
 await document.fonts.ready;
