@@ -5,7 +5,8 @@
 // canvases that are zero-sized or one flat colour (a blank render surface). It saves a screenshot of each for the agent
 // to LOOK at (Read the PNGs) before it reports; passing is necessary, not sufficient.
 // Usage: node art/ui/lib/live-check.mjs [--base <url>] [--local] [--out <dir>] [--viewports 412x915,915x412,1920x1080]
-//                                       [--fullscreen] [path ...]
+//                                       [--fullscreen] [--tv] [path ...]
+//   --tv checks every TV mock state (poc/tv/states.js) at phone portrait/landscape, tablet and 1920x1080.
 //   default base https://jammers-preview.dilger.dev (the deployed copy: deploys can miss files); --local serves art/ui
 //   from this checkout instead. Default out docs/evidence/design-live/. --fullscreen reloads the check after a
 //   fullscreenchange-style resize (viewport shrink/grow) to catch layouts that only fix themselves on full screen.
@@ -23,8 +24,15 @@ const local = has('--local');
 const fullscreen = has('--fullscreen');
 let base = take('--base', 'https://jammers-preview.dilger.dev').replace(/\/$/, '');
 const out = take('--out', join(here, '..', '..', '..', 'docs', 'evidence', 'design-live'));
-const viewports = take('--viewports', '1600x900').split(',').map((v) => v.split('x').map(Number));
+const tv = has('--tv');
+const viewports = take('--viewports', tv ? '412x915,915x412,820x1180,1920x1080' : '1600x900').split(',').map((v) => v.split('x').map(Number));
 const paths = argv.length ? argv : ['/sheets/components.html', '/sheets/brand.html', '/poc/phone/index.html#race'];
+// --tv adds every TV mock state (poc/tv/states.js) on the phone, tablet and TV matrix: the pages the owner reviews.
+if (tv) {
+  const { STATES } = await import('../poc/tv/states.js');
+  if (!argv.length) paths.length = 0;
+  for (const s of new Set(Object.values(STATES).flat())) paths.push(`/poc/tv/index.html#${s}`);
+}
 mkdirSync(out, { recursive: true });
 
 let closeServer = async () => {};
@@ -39,6 +47,26 @@ const surfaceProblems = (vw) => {
   const bad = [];
   const over = document.documentElement.scrollWidth - vw;
   if (over > 2) bad.push(`horizontal overflow: page is ${over}px wider than the viewport`);
+  // Text or a control cut off by the screen edge: a page that hides its overflow (the TV mocks) can't be scrolled to it.
+  // Wholly off-screen elements (parked drawers) and anything inside a scrollable box don't count.
+  const clipped = [];
+  for (const e of document.body.querySelectorAll('*')) {
+    const control = e.matches('button, a[href], input, select, [role=button]');
+    if (!control && ![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+    const r = e.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) continue;
+    const inView = r.right > 0 && r.left < vw && r.bottom > 0 && r.top < window.innerHeight;
+    if (!inView || (r.left >= -1 && r.right <= vw + 1 && r.top >= -1 && r.bottom <= window.innerHeight + 1)) continue;
+    const cs = getComputedStyle(e);
+    if (cs.visibility !== 'visible' || Number(cs.opacity) === 0) continue;
+    let scroller = false;
+    for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+      const s = getComputedStyle(a);
+      if (/auto|scroll/.test(`${s.overflowX} ${s.overflowY}`)) { scroller = true; break; }
+    }
+    if (!scroller) clipped.push(`"${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 24)}"`);
+  }
+  if (clipped.length) bad.push(`cut off by the screen edge: ${[...new Set(clipped)].slice(0, 4).join(', ')}${clipped.length > 4 ? ` and ${clipped.length - 4} more` : ''}`);
   for (const c of document.querySelectorAll('canvas')) {
     const r = c.getBoundingClientRect();
     if (r.width < 2 || r.height < 2 || c.width < 2 || c.height < 2) { bad.push(`canvas is zero-sized (${c.id || c.className || 'canvas'})`); continue; }

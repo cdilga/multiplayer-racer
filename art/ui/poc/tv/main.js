@@ -519,13 +519,19 @@ const SETUP = {
     world.setMode('race');
     world.setCars(32);
     const k = K();
-    const rect = () => { const w = W() * 0.56, h = Math.min(H() - 80 * K(), (w * 9) / 16); return { x: 40 * K(), y: (H() - h) / 2, w, h }; };
+    // Portrait or narrow screens (a phone or tablet host): the grid sits on top at full width and the rule scrolls below it.
+    const stacked = () => W() < H() || W() < 700;
+    const rect = () => {
+      if (stacked()) { const w = W() - 80 * K(), h = Math.min(H() * 0.4, (w * 9) / 16); return { x: 40 * K(), y: 40 * K(), w, h }; }
+      const w = W() * 0.56, h = Math.min(H() - 80 * K(), (w * 9) / 16); return { x: 40 * K(), y: (H() - h) / 2, w, h };
+    };
     const r0 = rect();
     ui.append(gutterBackground(r0));
     const frame = el('div', 'gp-frame');
     Object.assign(frame.style, { left: `${r0.x - 4 * k}px`, top: `${r0.y - 4 * k}px`, width: `${r0.w + 8 * k}px`, height: `${r0.h + 8 * k}px` });
     const panel = el('div', 'card pseudo k');
-    panel.style.left = `${r0.x + r0.w + 40 * k}px`;
+    if (stacked()) Object.assign(panel.style, { left: `${40 * k}px`, top: `${r0.y + r0.h + 40 * k}px` });
+    else panel.style.left = `${r0.x + r0.w + 40 * k}px`;
     panel.innerHTML = `<h2 class="display italic">The grid rule</h2><div class="n display tnum">N = <span>1</span></div><pre></pre>`;
     panel.querySelector('pre').textContent = PSEUDOCODE;
     ui.append(frame, panel);

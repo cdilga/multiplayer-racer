@@ -194,7 +194,7 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 
 /* grid player frame + pseudocode panel */
 .gp-frame { position: absolute; border: calc(var(--k) * 4px) solid var(--c-ink); }
-.pseudo { position: absolute; top: calc(var(--k) * 40px); right: calc(var(--k) * 40px); bottom: calc(var(--k) * 40px); overflow: hidden; }
+.pseudo { position: absolute; top: calc(var(--k) * 40px); right: calc(var(--k) * 40px); bottom: calc(var(--k) * 40px); overflow-x: hidden; overflow-y: auto; }
 .pseudo h2 { margin: 0 0 calc(var(--k) * 8px); font-size: calc(var(--k) * 44px); }
 .pseudo pre { margin: 0; white-space: pre-wrap; font: 600 calc(var(--k) * 19px)/1.32 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pseudo .n { font-size: calc(var(--k) * 36px); margin-bottom: calc(var(--k) * 8px); }
@@ -300,14 +300,14 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .qr-note img { width: 1em; height: 1em; filter: invert(1); }
 
 /* ---- the pause flow (POC1-09/10) in the U01.3 language, after refs/owner-2026-10-03/tv-pause-menu.jpg ---- */
-.pause { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--k) * 88px); z-index: 15; display: grid; place-items: center; }
-.pause .scrim { position: absolute; inset: 0; background: rgb(21 32 58 / .62); }
-.pause .pcard { position: relative; width: calc(var(--k) * 1180px); max-width: 94%; padding: calc(var(--k) * 74px) calc(var(--k) * 44px) calc(var(--k) * 30px); background: var(--c-paper); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); }
+.pause { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--k) * 88px); z-index: 15; display: flex; padding: calc(var(--k) * 70px) 0 calc(var(--k) * 14px); overflow-x: hidden; overflow-y: auto; }
+.pause .scrim { position: fixed; inset: 0; background: rgb(21 32 58 / .62); }
+.pause .pcard { position: relative; flex: none; margin: auto; width: calc(var(--k) * 1180px); max-width: 94%; padding: calc(var(--k) * 74px) calc(var(--k) * 44px) calc(var(--k) * 30px); background: var(--c-paper); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 calc(var(--k) * 8px) 0 var(--c-ink); display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); }
 .paint { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
 .bn { position: relative; isolation: isolate; display: inline-block; padding: .1em .45em .14em; color: var(--c-paper); font: 900 italic calc(var(--k) * 84px)/1 var(--font-display); text-transform: uppercase; letter-spacing: .01em; white-space: nowrap; rotate: var(--slant-heading); }
 .bn .paint path { fill: var(--c-ink); }
 .bn .acc { color: var(--c-saffron); }
-.pbn { position: absolute; left: 50%; top: 0; translate: -50% -58%; }
+.pbn { position: absolute; left: 50%; top: 0; translate: -50% -58%; max-width: 100%; font-size: min(calc(var(--k) * 84px), 6.2vw); }
 .tag { --tag-fill: var(--c-saffron); position: relative; isolation: isolate; display: inline-block; width: fit-content; padding: .06em .55em .1em; color: var(--c-ink); font: 900 italic calc(var(--k) * 36px)/1.05 var(--font-display); text-transform: uppercase; white-space: nowrap; transform: rotate(var(--rot-tag)) skewX(var(--skew-tag)); }
 .tag > span { display: inline-block; transform: skewX(calc(-1 * var(--skew-tag))); }
 .tag .paint path { fill: var(--tag-fill); }
@@ -329,6 +329,8 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .seg b.on { background: var(--c-cobalt); color: var(--c-paper); }
 .pacts { display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 14px); margin-top: calc(var(--k) * 16px); }
 .pacts.row { flex-direction: row; gap: calc(var(--k) * 24px); }
+.pcard > .strip, .pcard > .pnote, .pcard > .plead { max-width: 100%; }
+.strip { max-width: 100%; }
 .slip { position: relative; isolation: isolate; display: inline-flex; padding: calc(var(--k) * 14px) calc(var(--k) * 26px); rotate: -1.4deg; }
 .slip .paint path { fill: var(--c-ink); }
 .pres { min-width: calc(var(--k) * 560px); min-height: calc(var(--k) * 84px); justify-content: center; font-size: calc(var(--k) * 40px); }
@@ -338,7 +340,7 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .plead { margin: 0; max-width: calc(var(--k) * 900px); font: 600 calc(var(--k) * 32px)/1.3 var(--font-body); text-align: center; }
 .plist { width: 100%; display: grid; grid-template-columns: 1fr; }
 .plist .src { grid-template-columns: auto 1fr auto; padding: calc(var(--k) * 8px) 0; }
-.sub-players .pbn, .sub-disband .pbn { font-size: calc(var(--k) * 64px); }
+.sub-players .pbn, .sub-disband .pbn { font-size: min(calc(var(--k) * 64px), 5vw); }
 .plist .src .badge { font-size: calc(var(--k) * 28px); }
 .srcacts { display: flex; gap: calc(var(--k) * 8px); }
 .srcacts .btn { min-height: calc(var(--k) * 48px); font-size: calc(var(--k) * 24px); padding: 0 .6em; }
@@ -450,3 +452,21 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .hl-mini { position: absolute; inset: 0; border: calc(var(--k) * 4px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 5px) 0 var(--c-ink); }
 .hl-what { position: absolute; left: calc(var(--k) * 10px); top: calc(var(--k) * 10px); display: inline-flex; align-items: center; gap: .35em; padding: calc(var(--k) * 2px) calc(var(--k) * 10px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 6px); font: 700 calc(var(--k) * 24px)/1.25 var(--font-body); }
 .hl-what .badge { font-size: calc(var(--k) * 24px); }
+
+/* ---- narrow screens (a phone or tablet as the host): the pause flow is one column that fits the width and scrolls ---- */
+@media (max-width: 1000px) {
+  .pause .pcard { padding-left: calc(var(--k) * 24px); padding-right: calc(var(--k) * 24px); }
+  .pause .pcard { --u: 1px; }
+  .pcols { grid-template-columns: 1fr; gap: calc(var(--k) * 18px); }
+  .pcol + .pcol { padding-left: 0; border-left: 0; padding-top: calc(var(--k) * 18px); border-top: calc(var(--k) * 3px) solid var(--c-paper-line); }
+  .pset { font-size: max(calc(var(--k) * 28px), 13px); grid-template-columns: calc(var(--k) * 36px) 1fr auto; }
+  .pset > span:nth-child(2) { min-width: 0; }
+  .seg { flex-wrap: wrap; }
+  .pres { min-width: 0; width: 100%; }
+  .slip { max-width: 100%; }
+  .pacts, .pacts.row, .prow { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+  .pcard .btn { white-space: normal; text-align: center; max-width: 100%; }
+  .strip, .tag { white-space: normal; }
+  .plist .src { grid-template-columns: auto 1fr; }
+  .plist .src .srcacts { grid-column: 1 / -1; flex-wrap: wrap; }
+}
