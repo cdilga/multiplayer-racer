@@ -15,9 +15,9 @@ lookout 20, rest-area 17.8, big-red-rock 22.9. Note: a real player passes a road
 same sign is 3-4x smaller on screen; that is a placement/scale question for M04, and the "far" sheet shows it.
 
 ## Looked at
-- `smallest-tile-192x108.jpg` / `-x3.jpg` (1x evidence, 3x nearest-neighbour enlargement to read it): all 12 signs, panel 85% of tile. Pictograms, shield, brown legends read; warning text legend (7 px caps) and direction rows (about 8 px) are readable but small.
-- `smallest-tile-far-192x108.jpg` / `-x3.jpg`: panel 40% of tile. Pictograms and tourist legends still read; warning text legend and direction rows do not (not legible).
-- `mid-tile-274x216.jpg` / `-x2.jpg` (32 players): all legible, nothing clipped.
+- `smallest-tile-192x108.jpg` / `smallest-tile-192x108-x3.jpg` (1x evidence, 3x nearest-neighbour enlargement to read it): all 12 signs, panel 85% of tile. Pictograms, shield, brown legends read; warning text legend (7 px caps) and direction rows (about 8 px) are readable but small.
+- `smallest-tile-far-192x108.jpg` / `smallest-tile-far-192x108-x3.jpg`: panel 40% of tile. Pictograms and tourist legends still read; warning text legend and direction rows do not (not legible).
+- `mid-tile-274x216.jpg` / `mid-tile-274x216-x2.jpg` (32 players): all legible, nothing clipped.
 - `large-480x360.jpg`: full detail; checked border, lettering, arrows, shield, post mounting.
 - `posts-in-world.jpg`: perspective, lit, on ground: posts and mounting heights read as real roadside signs.
 
