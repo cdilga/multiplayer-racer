@@ -711,47 +711,93 @@ const SETUP = {
     return g;
   },
 
-  // Warm-up (POC1-15, U02.4). How it works: joining drops your car straight into the warm-up yard (the derby bowl) beside
-  // everyone else's, and you can drive and Cooee at once, so you find your car by moving it. Ready is on your phone; the
-  // host starts the race (the side panel's one big action), and late joiners keep dropping into the yard. The TV shows the yard from the
-  // Overview camera (R107: smooth, near-fixed, frames every car) with a nameplate over each car, the join card big at the
-  // top right (joining is the lobby's one job) and the roster under it. Every seat is a car: nothing caps the yard.
+  // Lobby (br-dim.6, supersedes the warm-up yard of POC1-15). Nothing to drive: the background is a generic, non-interactive
+  // crane view of the upcoming track, and the screen is the roster: one card per player (seat number, name, state: joining,
+  // choosing car, ready), all visible at once at any N and any aspect. Density comes from the race grid's rule (grid.js
+  // layoutGrid, run on the roster's box with card aspect bands): the richest card tier whose cells stay legible, then
+  // thinner tiers (no state label, then number and state only), never a scroll, a page or a cap. The join QR and the host's
+  // Start race share the layout: a side column on landscape screens, a row above the roster on portrait ones.
   lobby() {
-    world.setCars(S.n, S.base);
-    world.setMode('warmup');
-    const ready = (seat) => seat % 6 !== 0;
-    const nReady = Array.from({ length: S.n }, (_, i) => ready(i + 1)).filter(Boolean).length;
-    const s = el('div', 'screen k warm');
-    s.innerHTML = `<div class="warm-head"><span class="bn wbn" data-torn="warm-up">Warm-<span class="acc">up</span></span>
-        <span class="strip ink" data-brush="warm-sub"><span>${icon('car')}Drive around while everyone joins · Cooee to find your car</span></span></div>
-      <div class="warm-side">
-        <div class="card warm-join" data-tilt="warm-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
-        <div class="card warm-roster"><span class="tag" data-brush="warm-roster"><span><b class="tnum">${S.n}</b> players · <b class="tnum">${nReady}</b> ready</span></span>
-          <div class="rlist"></div><div class="page-note"></div></div>
-        <div class="warm-go"><span class="slip" data-torn="slip-3"><button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button></span></div>
-      </div>`;
+    world.setMode('race');
+    world.setCars(0);
+    clearColor = tokens.palette.paper.hex;
+    const forced = S.p.get('st'); // &st=joining|choosing|ready forces every seat into one state (the review matrix)
+    const stateOf = (seat) => forced || (seat % 9 === 0 ? 'joining' : seat % 6 === 0 ? 'choosing' : 'ready');
+    const LABEL = { joining: 'Joining…', choosing: 'Choosing car…', ready: 'Ready' };
+    const seats = Array.from({ length: S.n }, (_, i) => i + 1);
+    const count = (st) => seats.filter((x) => stateOf(x) === st).length;
+    const s = el('div', 'screen k lobby');
+    s.innerHTML = `<div class="lob-head"><span class="bn wbn" data-torn="lobby">Lob<span class="acc">by</span></span>
+        <span class="tag" data-brush="lobby-count"><span><b class="tnum">${S.n}</b> in the room · <b class="tnum">${count('ready')}</b> ready</span></span>
+        <span class="strip ink" data-brush="lobby-sub"><span>${icon('car')}Pick a car on your phone · the host starts the race</span></span></div>
+      <div class="card lob-join" data-tilt="lobby-join"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}"><div class="wj-text"><small>Room</small><b class="display code">ROO7</b><span class="code-cap">Scan, or enter the code at jammers.dilger.dev</span></div></div>
+      <div class="lob-roster"></div>
+      <div class="lob-go"><span class="slip" data-torn="slip-3"><button class="btn primary gp" type="button" data-go="countdown">${icon('flag')}Start race</button></span></div>`;
     ui.append(s);
-    // The footer keeps the host's fullscreen and menu; the join card already carries the room, so the footer's join hides.
     const footer = makeFooter({ noPause: true });
-    footer.update({ qr: false, join: false, players: S.n, caption: 'Warm-up · late joiners drop into the yard and drive straight away' });
-    s.querySelector('.warm-side').style.bottom = `${Math.max(footer.height() + 20 * K(), 54 * K())}px`;
+    footer.update({ qr: false, join: false, players: S.n, caption: 'Late joiners welcome' });
     wireActs(s);
-    fitCards(s.querySelector('.rlist'), s.querySelector('.warm-roster .page-note'), S.n, (seat, chip) => {
-      const p = seatInfo(seat), r = ready(seat), c = el('div', `rcard${chip ? ' chip' : ''}`);
-      c.style.setProperty('--seat', p.color); c.style.setProperty('--seat-on', p.on);
-      c.innerHTML = `<span class="badge">#${p.num}</span><span class="nm"></span>${chip ? `<span class="tick${r ? '' : ' wait'}" title="${r ? 'Ready' : 'Choosing'}">${r ? '✓' : '…'}</span>` : r ? `<span class="chip ready">${icon('check')}Ready</span>` : '<span class="chip choosing">choosing…</span>'}`;
-      c.querySelector('.nm').textContent = p.name;
-      return c;
-    }, { readyNote: '✓ is Ready, … is still choosing.' });
-    // A roster that fits whole sizes to its content instead of leaving a blank panel (fresh-eyes review).
-    if (!s.querySelector('.warm-roster .page-note').textContent.startsWith('Page')) s.querySelector('.warm-roster').classList.add('fits');
     paint(s);
-    const plates = nameplates(s, { suffix: (seat) => (S.n <= 12 && ready(seat) ? '<i class="ok">✓</i>' : ''), badgesTo: 32 });
-    const side = () => s.querySelector('.warm-side').getBoundingClientRect();
-    return {
-      views: () => [{ x: 0, y: 0, w: Math.round(side().left - 16 * K()), h: Math.round(H() - footer.height()), kind: 'overview' }],
-      update(dt, views) { plates(views[0]); },
+    const head = s.querySelector('.lob-head'), joinEl = s.querySelector('.lob-join'), go = s.querySelector('.lob-go'), box = s.querySelector('.lob-roster');
+    // Card tiers, richest first: [name, minimum cell in TV px, card aspect band, text size in em of the cell's natural width].
+    const TIERS = [
+      { name: 'full', minW: 480, minH: 60, band: { min: 2.6, max: 12 }, em: 19 },
+      { name: 'name', minW: 330, minH: 44, band: { min: 2.6, max: 12 }, em: 13.5 },
+      { name: 'seat', minW: 120, minH: 44, band: { min: 1.6, max: 6 }, em: 5.6 },
+      { name: 'num', minW: 100, minH: 44, band: { min: 1.2, max: 4 }, em: 4.2 },
+      { name: 'tiny', minW: 0, minH: 0, band: { min: 1, max: 4 }, em: 4.2 }, // below the legible floor: reported, never a cap
+    ];
+    const layout = () => {
+      const k = K(), w = W(), h = H(), m = Math.max(16, 0.05 * w), land = w >= h * 1.1, fh = Math.max(footer.height(), ui.querySelector('.foot')?.offsetHeight ?? 0);
+      const sideW = 440 * k;
+      // The join card and Start race: a side column (landscape) or a row above and a button under the roster (portrait).
+      let rect;
+      joinEl.style.width = ''; joinEl.classList.toggle('row', !land);
+      head.style.left = `${m + 16 * k}px`; head.style.top = `${Math.max(12, 72 * k)}px`; head.style.maxWidth = `${(land ? w - 2 * m - sideW - 24 * k : w - 2 * m) - 16 * k}px`;
+      const headB = head.getBoundingClientRect().bottom + 14 * k;
+      if (land) {
+        joinEl.style.cssText = `right:${m}px;top:${Math.max(12, 54 * k)}px;width:${sideW}px`;
+        go.style.cssText = `right:${m}px;width:${sideW}px;top:${joinEl.getBoundingClientRect().bottom + 22 * k}px`;
+        rect = { x: m, y: headB, w: w - 2 * m - sideW - 24 * k, h: h - fh - 14 * k - headB };
+      } else {
+        joinEl.style.cssText = `left:${m}px;right:${m}px;top:${headB}px`;
+        const jb = joinEl.getBoundingClientRect().bottom + 14 * k;
+        go.style.cssText = `left:${m}px;right:${m}px;top:0`;
+        const goH = go.getBoundingClientRect().height;
+        go.style.top = `${h - fh - 14 * k - goH}px`;
+        rect = { x: m, y: jb, w: w - 2 * m, h: h - fh - 14 * k - goH - 14 * k - jb };
+      }
+      box.style.cssText = `left:${rect.x}px;top:${rect.y}px;width:${rect.w}px;height:${rect.h}px`;
+      const gap = 8 * k;
+      let tier = TIERS[TIERS.length - 1], g = null;
+      for (const t of TIERS) {
+        g = layoutGrid(S.n, { x: 0, y: 0, w: rect.w + gap, h: rect.h + gap }, { band: t.band, min: { w: t.minW * k + gap, h: t.minH * k + gap } });
+        if (g) { tier = t; break; }
+      }
+      // Cards never grow past a comfortable size; the block sits top-centre, so a few players read like a few.
+      const cw = Math.min(g.cell.w, 620 * k + gap), ch = Math.min(g.cell.h, 128 * k + gap);
+      const x0 = (rect.w + gap - g.cols * cw) / 2;
+      const fs = Math.max(8, Math.min(ch * 0.42, (cw - gap) / tier.em, 40 * k));
+      box.className = `lob-roster t-${tier.name}`;
+      box.style.setProperty('--fs', `${fs}px`);
+      box.dataset.tier = tier.name; box.dataset.cols = g.cols; box.dataset.rows = g.rows;
+      box.innerHTML = '';
+      for (const seat of seats) {
+        const p = seatInfo(seat), st = stateOf(seat), i = seat - 1, c = el('div', `lcard ${st}`);
+        c.style.cssText = `left:${x0 + (i % g.cols) * cw}px;top:${Math.floor(i / g.cols) * ch}px;width:${cw - gap}px;height:${ch - gap}px;--seat:${p.color};--seat-on:${p.on}`;
+        c.dataset.seat = seat; c.dataset.state = st;
+        const glyph = `<span class="tick ${st}" title="${LABEL[st]}">${st === 'ready' ? '✓' : '…'}</span>`;
+        c.innerHTML = tier.name === 'full' ? `<span class="badge">#${p.num}</span><span class="nm"></span><span class="chip ${st}">${st === 'ready' ? icon('check') : ''}${LABEL[st]}</span>`
+          : tier.name === 'name' ? `<span class="badge">#${p.num}</span><span class="nm"></span>${glyph}`
+          : tier.name === 'seat' ? `<span class="badge">#${p.num}</span>${glyph}` : `<span class="badge">#${p.num}</span>`;
+        c.querySelector('.nm')?.append(shortName(p.name, 12));
+        c.title = `#${p.num} ${p.name} · ${LABEL[st]}`;
+        box.append(c);
+      }
     };
+    layout();
+    relayouts.push(layout);
+    return { views: () => [{ x: 0, y: 0, w: W(), h: H() - footer.height(), kind: 'wide' }], update() {} };
   },
 
   // End of round (POC1-17): the content the owner called fine (round complete, the podium with points, every player's
@@ -837,9 +883,9 @@ const SETUP = {
   },
 };
 
-// ---------- shared by the warm-up, end of round, intermission and Overview (U02.4) ----------
+// ---------- shared by the lobby, end of round, intermission and Overview (U02.4) ----------
 // Nameplates over the cars in a wide view: the badge, the name while there's room (12 cars or fewer) and an optional suffix
-// (the warm-up's ready tick), pushed upward where two would overlap. Past `badgesTo` cars the plates go: a crowd of plates
+// (an optional tick), pushed upward where two would overlap. Past `badgesTo` cars the plates go: a crowd of plates
 // hides the cars, so the identity rings under them and the roster carry identity, and Cooee finds your own car. No
 // arbitrary cap on cars: this is per-view decluttering. Plates stay inside the title-safe area (GUIDE §4).
 function nameplates(layer, { suffix = () => '', badgesTo = Infinity } = {}) {
@@ -865,22 +911,6 @@ function nameplates(layer, { suffix = () => '', badgesTo = Infinity } = {}) {
     }
     placed.length = 0;
   };
-}
-
-// A roster that fits its box (the lobby rule): full cards in as many columns as fit, then number + name chips, then pages
-// that turn every 6 s (never truncated).
-function fitCards(list, note, n, item, { cardH = 58, chipH = 44, minCardW = 300, minChipW = 200, readyNote = '' } = {}) {
-  const k = K(), gap = 8 * k, area = list.getBoundingClientRect(), h = area.height;
-  const fit = (minW, rowH) => ({ cols: Math.max(1, Math.floor((area.width + gap) / (minW * k + gap))), rows: Math.max(1, Math.floor((h + gap) / (rowH * k + gap))) });
-  let chip = false, f = fit(minCardW, cardH);
-  if (f.cols * f.rows < n) { chip = true; f = fit(minChipW, chipH); }
-  const per = f.cols * f.rows, pages = Math.ceil(n / per);
-  list.style.gridTemplateColumns = `repeat(${f.cols}, minmax(0, 1fr))`;
-  list.style.gridAutoRows = `${(chip ? chipH : cardH) * k}px`;
-  const page = Math.min(pages - 1, Math.max(0, +(S.p.get('page') ?? 1) - 1));
-  for (let i = page * per + 1; i <= Math.min(n, (page + 1) * per); i++) list.append(item(i, chip));
-  note.textContent = pages > 1 ? `Page ${page + 1} of ${pages}; pages turn every 6 s.${chip ? ' ✓ is Ready.' : ''}` : chip ? readyNote : '';
-  return { chip, pages, per };
 }
 
 // The round's mock result: every seat placed, points by place.
@@ -1011,7 +1041,7 @@ window.__poc = {
   overviewTrace: (o) => world.overviewTrace(o),
   /** Per tile: how much of it the player's own car fills and where the horizon sits (P1-U05.2 framing evidence). */
   framing: () => lastViews.filter((v) => (v.kind === 'tp' || v.kind === 'fp') && v.camera).map((v) => ({ seat: v.seat, kind: v.kind, h: v.h, ...world.framingOf(v.seat, v.camera, v) })),
-  /** The wide views (warm-up yard, podium, highlights): for each, which seats' cars are inside it on screen (P1-U02.4). */
+  /** The wide views (podium, highlights): for each, which seats' cars are inside it on screen (P1-U02.4). */
   carsSeen: () => lastViews.filter((v) => v.camera && ['overview', 'reel', 'highlight', 'wide'].includes(v.kind)).map((v) => ({ kind: v.kind, seat: v.seat ?? null, x: v.x, y: v.y, w: v.w, h: v.h, inside: Array.from({ length: S.n }, (_, i) => i + 1).filter((seat) => { const p = world.project(seat, v.camera, v); return p && p.z < 1 && p.x >= v.x && p.x <= v.x + v.w && p.y >= v.y && p.y <= v.y + v.h; }) })),
   tokens,
   backend: world.backend,

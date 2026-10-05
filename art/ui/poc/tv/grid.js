@@ -23,7 +23,9 @@ export const PSEUDOCODE = `layout(N, screen) → tiles, fillers
   both fall out of the same rule. Nothing is ever black, no tile is ever larger; there is no maximum N.`;
 
 /** The equal-tile grid: every tile is `cell.w × cell.h` whole pixels, inset by the same half-gutter. */
-export function layoutGrid(n, rect, { band = BAND, gutter = 0 } = {}) {
+// `min` ({ w, h }, optional) rejects arrangements whose tile would be smaller; with it the result is null when none fits
+// (the lobby roster asks, tier by tier, for the biggest equal cards that stay legible; the race grid never passes it).
+export function layoutGrid(n, rect, { band = BAND, gutter = 0, min = null } = {}) {
   const X = Math.round(rect.x), Y = Math.round(rect.y), RW = Math.floor(rect.x + rect.w) - X, RH = Math.floor(rect.y + rect.h) - Y;
   const right = rect.x + rect.w, bottom = rect.y + rect.h;
   if (n <= 0) return { rows: 0, cols: 0, cell: null, tiles: [], fillers: [{ x: rect.x, y: rect.y, w: rect.w, h: rect.h, kind: 'margin' }] };
@@ -34,9 +36,11 @@ export function layoutGrid(n, rect, { band = BAND, gutter = 0 } = {}) {
     let w = Math.floor(RW / c), h = Math.floor(RH / r);
     if (w / h > band.max) w = Math.floor(h * band.max);
     if (w / h < band.min) h = Math.floor(w / band.min);
+    if (min && (w < min.w || h < min.h)) continue;
     const area = w * h, empty = c * r - n;
     if (!best || area > best.area || (area === best.area && empty < best.empty)) best = { rows: r, cols: c, w, h, area, empty };
   }
+  if (!best) return null;
   const { rows, cols, w, h } = best;
   const x0 = X + Math.floor((RW - cols * w) / 2), y0 = Y + Math.floor((RH - rows * h) / 2);
   const x1 = x0 + cols * w, y1 = y0 + rows * h;

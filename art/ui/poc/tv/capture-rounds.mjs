@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// P1-U02.4 evidence for the warm-up (lobby), the end of round and the intermission, in Chromium on this machine's GPU:
+// P1-U02.4 evidence for the lobby, the end of round and the intermission, in Chromium on this machine's GPU:
 // every state below is captured at 1080p (the 8- and 32-player ones also at 4K) and checked in the rendered page:
-//   - warm-up (POC1-15): every seat's car is inside the yard view and has a nameplate; the join card's QR is scannable
-//     size; the roster shows every player or says which page it is on; no box overflows the screen;
+//   - lobby (br-dim.6, replaces the warm-up yard): the roster shows every player at once (one card each, none paged);
+//     the join card's QR is scannable size; Start race is there; no box overflows the screen;
 //   - end of round (POC1-17): round complete, the podium (each car live in its window), every standing (or paged), the
 //     next-race timer, the join QR and the host's three actions are all present;
 //   - intermission (POC1-16): the share of the screen the main replay takes, the highlights beside it, the QR's size, and
@@ -17,7 +17,7 @@ import { serveArtUi } from '../../lib/serve.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const out = process.env.JJ_EVIDENCE_DIR ?? join(here, '..', '..', '..', '..', 'docs', 'evidence', 'P1-U02.4');
-const STATES = ['lobby&n=2', 'lobby&n=8', 'lobby&n=16', 'lobby&n=32', 'lobby&n=48', 'lobby&n=140', 'results&n=8', 'results&n=32', 'intermission&n=8', 'intermission&n=32'];
+const STATES = ['lobby&n=2', 'lobby&n=8', 'lobby&n=16', 'lobby&n=32', 'lobby&n=48', 'lobby&n=60', 'lobby&n=140', 'lobby&n=150', 'results&n=8', 'results&n=32', 'intermission&n=8', 'intermission&n=32'];
 const BIG = ['lobby&n=8', 'lobby&n=32', 'results&n=8', 'results&n=32', 'intermission&n=8', 'intermission&n=32'];
 const slug = (s) => s.replace(/&/g, '_').replace(/[^a-z0-9_=,-]/gi, '');
 const { base, close } = await serveArtUi();
@@ -38,7 +38,7 @@ const inspect = () => {
   const offscreen = [...document.querySelectorAll('#ui *')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.right > W + 1 || r.bottom > H + 1 || r.left < -1 || r.top < -1); }).map((e) => `${e.tagName.toLowerCase()}.${[...e.classList].join('.')}`);
   const views = window.__poc.carsSeen();
   const n = +(location.hash.match(/n=(\d+)/)?.[1] ?? 8);
-  const qr = q('.warm-join .qr, .jb-join .qr');
+  const qr = q('.lob-join .qr, .jb-join .qr');
   // GUIDE §4: text and the join QR inside title-safe (5 % of each dimension), other chrome inside action-safe (3.5 %); the 3D
   // views may bleed. The footer band is U02.3's own and isn't part of these screens.
   const ts = { l: 0.05 * W, r: 0.95 * W, t: 0.05 * H, b: 0.95 * H }, as = { l: 0.035 * W, r: 0.965 * W, t: 0.035 * H, b: 0.965 * H };
@@ -55,17 +55,12 @@ const inspect = () => {
   }
   const res = { n, offscreen: [...new Set(offscreen)].slice(0, 10), qrTvPx: qr ? tv(qr.getBoundingClientRect().width) : null, outsideTitleSafe: [...textOut].slice(0, 10), outsideActionSafe: [...chromeOut].slice(0, 10) };
   if (location.hash.startsWith('#lobby')) {
-    const yard = views.find((v) => v.kind === 'overview');
-    res.warmup = {
-      yardShare: yard ? +((yard.w * yard.h) / (W * H)).toFixed(3) : 0,
-      carsInYard: yard?.inside.length ?? 0,
-      plates: document.querySelectorAll('.plate').length,
-      rosterShown: document.querySelectorAll('.rlist .rcard').length,
-      rosterMode: q('.rlist .rcard.chip') ? 'chips' : 'cards',
-      pageNote: q('.warm-roster .page-note')?.textContent ?? '',
-      startRace: [...document.querySelectorAll('.warm-go button')].some((b) => /Start race/.test(b.textContent)),
+    res.lobby = {
+      rosterShown: document.querySelectorAll('.lob-roster .lcard').length,
+      rosterTier: q('.lob-roster')?.dataset.tier ?? '',
+      startRace: [...document.querySelectorAll('.lob-go button')].some((b) => /Start race/.test(b.textContent)),
     };
-    res.pass = res.warmup.carsInYard === n && res.warmup.plates === (n <= 32 ? n : 0) && (res.warmup.rosterShown === n || /Page 1 of/.test(res.warmup.pageNote)) && res.warmup.startRace && res.qrTvPx >= 260 && res.offscreen.length === 0;
+    res.pass = res.lobby.rosterShown === n && res.lobby.startRace && res.qrTvPx >= 260 && res.offscreen.length === 0;
   } else if (location.hash.startsWith('#results')) {
     const pods = views.filter((v) => v.kind === 'reel');
     res.endOfRound = {
@@ -121,6 +116,6 @@ await close();
 report.errors = errors; report.external = external;
 report.pass = Object.values(report.states).every((r) => r.pass) && !errors.length && !external.length;
 writeFileSync(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
-for (const [s, r] of Object.entries(report.states)) console.log(`${r.pass ? 'ok  ' : 'FAIL'} ${s} ${JSON.stringify(r.warmup ?? r.endOfRound ?? r.intermission)} qr ${r.qrTvPx} offscreen ${r.offscreen.length} title-safe ${r.outsideTitleSafe} action-safe ${r.outsideActionSafe}`);
+for (const [s, r] of Object.entries(report.states)) console.log(`${r.pass ? 'ok  ' : 'FAIL'} ${s} ${JSON.stringify(r.lobby ?? r.endOfRound ?? r.intermission)} qr ${r.qrTvPx} offscreen ${r.offscreen.length} title-safe ${r.outsideTitleSafe} action-safe ${r.outsideActionSafe}`);
 console.log(errors.length ? errors : 'no errors', external.length ? external : 'no external requests', report.pass ? 'PASS' : 'FAIL');
 process.exit(report.pass ? 0 : 1);

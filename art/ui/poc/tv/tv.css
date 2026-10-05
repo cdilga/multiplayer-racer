@@ -152,7 +152,6 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .start { position: absolute; right: calc(var(--k) * 96px); bottom: calc(var(--k) * 70px); display: flex; align-items: center; gap: calc(var(--k) * 24px); }
 .start .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); }
 .hint { font-size: calc(var(--k) * 26px); font-weight: 600; max-width: calc(var(--k) * 560px); text-align: right; background: rgb(255 244 222 / .92); padding: calc(var(--k) * 8px) calc(var(--k) * 14px); border-radius: calc(var(--k) * 8px); border: calc(var(--k) * 3px) solid var(--c-ink); }
-.warmup { position: absolute; left: calc(var(--k) * 96px); bottom: calc(var(--k) * 70px); font-size: calc(var(--k) * 26px); }
 .res-left { position: absolute; left: calc(var(--k) * 64px); top: calc(var(--k) * 168px); width: calc(var(--k) * 1010px); }
 .reel { position: relative; height: calc(var(--k) * 360px); border: calc(var(--k) * 5px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); box-shadow: 0 calc(var(--k) * 6px) 0 var(--c-ink); }
 .reel .tab { position: absolute; left: calc(var(--k) * 20px); top: calc(var(--k) * -26px); font-size: calc(var(--k) * 48px); }
@@ -361,35 +360,39 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
   .cd-flash b { transform: rotate(-4deg); animation: cd-held-num 1s steps(1, end) forwards; }
 }
 
-/* ---- P1-U02.4: warm-up, end of round, intermission (POC1-15/16/17) in the U01.3 language ---- */
+/* ---- P1-U02.4: lobby, end of round, intermission (POC1-15/16/17) in the U01.3 language ---- */
 /* Text and the join QR stay inside title-safe (5 %: 96 × 54 TV px), other chrome inside action-safe (GUIDE §4); the 3D
    views may bleed. No text under the TV minimum (24 px). */
-/* Warm-up: the yard from the Overview camera fills the left; the join card, the roster and Start race stand at the right. */
-.warm-head { position: absolute; left: calc(var(--k) * 112px); top: calc(var(--k) * 72px); display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--k) * 12px); z-index: 2; }
+/* Lobby (br-dim.6): the roster fills the screen, the join card and Start race share it. Cards are positioned by main.js from
+   grid.js's rule (--fs is the cell's text size); the tiers only change what a card holds. */
+.lob-head { position: absolute; display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--k) * 10px) calc(var(--k) * 16px); z-index: 2; }
 .wbn { font-size: calc(var(--k) * 80px); }
-.warm-side { position: absolute; right: calc(var(--k) * 96px); top: calc(var(--k) * 54px); width: calc(var(--k) * 560px); display: flex; flex-direction: column; gap: calc(var(--k) * 22px); }
-.warm-join { display: flex; align-items: center; gap: calc(var(--k) * 18px); padding: calc(var(--k) * 16px); }
-.warm-join .qr { flex: none; width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
+.lob-head .tag { font-size: calc(var(--k) * 34px); }
+.lob-join { position: absolute; display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 8px); padding: calc(var(--k) * 16px); text-align: center; }
+.lob-join .qr { flex: none; width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
+.lob-join.row { flex-direction: row; justify-content: center; gap: calc(var(--k) * 18px); text-align: left; }
+.lob-join.row .qr { width: calc(var(--k) * 200px); height: calc(var(--k) * 200px); }
+.lob-join.row .wj-text { align-items: flex-start; }
 .wj-text { display: flex; flex-direction: column; gap: calc(var(--k) * 4px); min-width: 0; }
+.lob-join:not(.row) .wj-text { align-items: center; }
 .wj-text small { font: 700 calc(var(--k) * 24px)/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; }
 .wj-text .code { font-size: calc(var(--k) * 92px); line-height: .95; letter-spacing: .04em; }
 .wj-text .code-cap { max-width: none; }
-.warm-roster { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: calc(var(--k) * 16px); }
-.warm-roster.fits { flex: 0 1 auto; }
-.warm-roster.fits .rlist { flex: none; }
-.warm-roster .tag { font-size: calc(var(--k) * 34px); }
-.rlist { flex: 1; min-height: 0; display: grid; gap: calc(var(--k) * 8px); align-content: start; margin-top: calc(var(--k) * 14px); }
-.rcard { display: flex; align-items: center; gap: calc(var(--k) * 10px); min-width: 0; padding: 0 calc(var(--k) * 10px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-left: calc(var(--k) * 10px) solid var(--seat); border-radius: calc(var(--k) * 10px); }
-.rcard .badge { font-size: calc(var(--k) * 26px); }
-.rcard .nm { flex: 1; min-width: 0; font-size: calc(var(--k) * 28px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rcard .chip { font-size: calc(var(--k) * 24px); }
-.rcard.chip { gap: calc(var(--k) * 8px); padding: 0 calc(var(--k) * 6px); border-left-width: calc(var(--k) * 3px); }
-.rcard.chip .badge, .rcard.chip .nm { font-size: calc(var(--k) * 24px); }
-.rcard .tick { flex: none; display: inline-grid; place-items: center; width: calc(var(--k) * 32px); height: calc(var(--k) * 32px); border-radius: 50%; border: calc(var(--k) * 3px) solid var(--c-ink); background: var(--c-success); color: var(--c-paper); font-size: calc(var(--k) * 24px); }
-.rcard .tick.wait { background: var(--c-paper-shade); color: var(--c-ink); }
-.warm-roster .page-note { margin-top: calc(var(--k) * 8px); }
-.warm-go { display: flex; justify-content: center; margin-top: auto; }
-.warm-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); padding: 0 .9em; transform: rotate(-2deg); }
+.lob-roster { position: absolute; }
+.lcard { position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: .4em; min-width: 0; padding: 0 .35em; font-size: var(--fs); line-height: 1.1; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-left: calc(var(--k) * 10px) solid var(--seat); border-radius: calc(var(--k) * 10px); overflow: hidden; }
+.lcard .badge { flex: none; font-size: 1em; }
+.lcard .nm { flex: 1; min-width: 0; font-size: 1em; font-weight: 700; white-space: nowrap; }
+.lcard .chip { flex: none; font-size: .9em; }
+.lcard .chip.joining { background: var(--c-saffron); font-style: italic; }
+.lcard .tick { flex: none; display: inline-grid; place-items: center; width: 1.3em; height: 1.3em; border-radius: 50%; border: calc(var(--k) * 3px) solid var(--c-ink); background: var(--c-success); color: var(--c-paper); font-size: 1em; font-weight: 700; line-height: 1; }
+.lcard .tick.choosing { background: var(--c-paper-shade); color: var(--c-ink); }
+.lcard .tick.joining { background: var(--c-saffron); color: var(--c-ink); }
+.lob-roster.t-seat .lcard, .lob-roster.t-num .lcard, .lob-roster.t-tiny .lcard { justify-content: center; gap: .25em; padding: 0 .15em; border-left-width: calc(var(--k) * 6px); }
+.lob-roster.t-num .lcard, .lob-roster.t-tiny .lcard { border-left-width: calc(var(--k) * 3px); background: var(--c-success); }
+.lob-roster.t-num .lcard.choosing, .lob-roster.t-tiny .lcard.choosing { background: var(--c-paper-shade); }
+.lob-roster.t-num .lcard.joining, .lob-roster.t-tiny .lcard.joining { background: var(--c-saffron); }
+.lob-go { position: absolute; display: flex; justify-content: center; }
+.lob-go .btn { font-size: calc(var(--k) * 44px); min-height: calc(var(--k) * 96px); padding: 0 .9em; transform: rotate(-2deg); }
 .plate .ok { font-style: normal; color: var(--c-teal); margin-left: .15em; }
 
 /* End of round: the winner's car as the hero, the podium breaking its lower edge, the standings, the join band. */

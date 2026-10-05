@@ -219,7 +219,7 @@ export async function createWorld(canvas, { colors }) {
     dust = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.55, 0), dustMat, cap * DUST_PER_CAR);
     dust.frustumCulled = false; dust.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(dust);
     rings = new THREE.InstancedMesh(new THREE.RingGeometry(2.6, 3.4, 32).rotateX(-Math.PI / 2), ringMat, cap);
-    rings.frustumCulled = false; rings.visible = mode === 'overview' || mode === 'warmup'; scene.add(rings);
+    rings.frustumCulled = false; rings.visible = mode === 'overview'; scene.add(rings);
     const col = new THREE.Color();
     for (let i = 0; i < cap; i++) {
       col.set(colors[(i + colorOffset) % colors.length]);
@@ -258,12 +258,9 @@ export async function createWorld(canvas, { colors }) {
     n = count;
   }
   let derbyRng = rng(7); // seeded, so the Overview traces replay the same derby
-  // 'warmup' (P1-U02.4) is the derby bowl as the warm-up yard: the same free driving, in a yard that grows with the room
-  // (about 12 m radius for two cars, the whole floor for 140), the cars starting spread evenly over it (a
-  // sunflower spiral). Its camera (the 'warmup' rig below) may frame closer than the derby's, so two cars are big.
-  let yardR = BOWL.r - 8;
+  let yardR = BOWL.r - 8; // the derby bowl's free-driving radius (the Overview mode)
   function setMode(m) {
-    const yard = m === 'overview' || m === 'warmup';
+    const yard = m === 'overview';
     if (yard) derbyRng = rng(7);
     mode = m;
     track.visible = scenery.visible = !yard;
@@ -272,12 +269,6 @@ export async function createWorld(canvas, { colors }) {
     if (m === 'overview') cars.forEach((c, i) => {
       const a = (i / Math.max(1, cars.length)) * Math.PI * 2;
       c.pos.set(BOWL.x + Math.cos(a) * 30, 0, BOWL.z + Math.sin(a) * 30); c.yaw = a + Math.PI / 2; c.camInit = false;
-    });
-    yardR = m === 'warmup' ? Math.min(BOWL.r - 8, 6 + 4 * Math.sqrt(cars.length)) : BOWL.r - 8;
-    if (m === 'warmup') ovRigs.warmup.reset();
-    if (m === 'warmup') cars.forEach((c, i) => {
-      const a = i * 2.39996, r = yardR * Math.sqrt((i + 0.5) / Math.max(1, cars.length));
-      c.pos.set(BOWL.x + Math.cos(a) * r, 0, BOWL.z + Math.sin(a) * r); c.yaw = a + Math.PI / 2; c.camInit = false;
     });
   }
 
@@ -288,7 +279,7 @@ export async function createWorld(canvas, { colors }) {
   function step(dt) {
     simTime += dt;
     for (const c of cars) {
-      if (mode === 'overview' || mode === 'warmup') {
+      if (mode === 'overview') {
         const w = c.wander;
         w.t -= dt;
         const dx = BOWL.x + w.x - c.pos.x, dz = BOWL.z + w.z - c.pos.z;
@@ -305,7 +296,6 @@ export async function createWorld(canvas, { colors }) {
         const bend = Math.acos(Math.min(1, t0.dot(t1)));
         const target = (34 - bend * 120) * c.skill + Math.sin(simTime * 0.7 + c.phase) * 2;
         c.speed += (Math.max(16, target) - c.speed) * Math.min(1, dt * 1.5);
-        if (mode === 'lobby') c.speed = Math.min(c.speed, 20);
         c.s += c.speed * dt;
         if (Math.random() < dt * 0.15) c.laneGoal = (Math.floor(Math.random() * 4) - 1.5) * 3.1;
         c.lane += (c.laneGoal - c.lane) * Math.min(1, dt * 0.8);
@@ -331,6 +321,7 @@ export async function createWorld(canvas, { colors }) {
   }
 
   function writeInstances() {
+    if (!blobs) return; // no cars built yet (an empty room's lobby is the first state opened)
     for (const set of Object.values(lodSets)) for (const im of set) {
       const { key, meshes } = im.userData;
       for (let i = 0; i < cars.length; i++) {
@@ -439,8 +430,7 @@ export async function createWorld(canvas, { colors }) {
   // The Derby Overview camera (P1-U05.4, R107): predictive, smoothed and anchored to the bowl (../shared/overview-camera.js,
   // values in framing.json `overview`); &cam=round0 shows round 0's per-frame refit for comparison.
   const anchorXZ = { x: BOWL.x, z: BOWL.z };
-  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ),
-    warmup: createOverviewRig({ ...FRAMING.overview, minFrameM: 22, maxDriftM: 40 }, anchorXZ) };
+  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ) };
   let ovLastT = null;
   const carsXZ = () => cars.map((c) => ({ x: c.pos.x, z: c.pos.z }));
   // One camera per wide view in a frame (the podium's three, the intermission's replay and its minis), so each view's
@@ -454,7 +444,7 @@ export async function createWorld(canvas, { colors }) {
       wideCam.clearViewOffset();
       const dt = ovLastT == null ? 1 / 60 : Math.max(1e-3, t - ovLastT);
       ovLastT = t;
-      const p = ovRigs[mode === 'warmup' ? 'warmup' : round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
+      const p = ovRigs[round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
       wideCam.fov = FRAMING.overview.fovDeg;  // (reel and highlight set their own)
       wideCam.position.set(...p.position);
       wideCam.lookAt(...p.target);
