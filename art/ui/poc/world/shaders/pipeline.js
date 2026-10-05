@@ -12,7 +12,7 @@
 import * as THREE from 'three/webgpu';
 import {
   Fn, float, vec2, vec3, vec4, uniform, property, mix, step, smoothstep, fract, length, abs, max, saturate, sin, cos, mat2,
-  dot, hash, luminance, fwidth, mrt, pass, output, emissive, normalView, time, directionToColor, colorToDirection,
+  dot, hash, luminance, fwidth, min, mrt, pass, output, emissive, normalView, time, directionToColor, colorToDirection,
   screenCoordinate, screenUV, screenSize, perspectiveDepthToViewZ, renderOutput, mx_noise_float, sample,
 } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
@@ -33,6 +33,8 @@ export function extendLook(look) {
     contrast: uniform(1), saturation: uniform(1), bleachHi: uniform(0),
     hazeColor: uniform(new THREE.Color('#E8B98A')), hazeAmt: uniform(0), hazeNear: uniform(60), hazeFar: uniform(420),
     shimmerAmt: uniform(0), outerPx: uniform(1.6), innerInk: uniform(0.45),
+    // ink that scales with the car's on-screen size (looks.json inkScale; world.js sets them): focalPx = tile height in device px / (2 tan(fov/2))
+    focalPx: uniform(1000), carSizeM: uniform(3), fullPx: uniform(160), minPx: uniform(1), fadeLoPx: uniform(8), fadeHiPx: uniform(28), fadeFloor: uniform(0.4), outsideBelowPx: uniform(0), innerLoPx: uniform(0), innerHiPx: uniform(0),
   });
   return look;
 }
@@ -40,7 +42,7 @@ export function extendLook(look) {
 export function jjPipeline(renderer, scene, camera, look, opts = {}) {
   extendLook(look);
   const { bloom: useBloom = true, halftone: useHalftone = true, ink = 'outer', fxaa: useFxaa = true, smaa: useSmaa = false,
-    ao: useAo = false, haze: useHaze = true, shimmer: useShimmer = false, halftoneOnCars = false, debug = null } = opts;
+    ao: useAo = false, inkScale: useInkScale = false, haze: useHaze = true, shimmer: useShimmer = false, halftoneOnCars = false, debug = null } = opts;
   const scenePass = pass(scene, camera, { samples: 0 });               // no MSAA: ids and normals must not blend
   scenePass.setMRT(mrt({
     output,
@@ -89,7 +91,32 @@ export function jjPipeline(renderer, scene, camera, look, opts = {}) {
   let edge = float(0);
   if (ink === 'full') edge = max(interior(r0), silhouette(r0));
   else if (ink === 'silhouette') edge = silhouette(r0);
-  else if (ink === 'outer') edge = max(silhouette(look.inkPx.mul(look.outerPx).mul(0.5).ceil().max(1)), interior(r0).mul(look.innerInk));
+  else if (ink === 'outer' && !useInkScale) edge = max(silhouette(look.inkPx.mul(look.outerPx).mul(0.5).ceil().max(1)), interior(r0).mul(look.innerInk));
+  else if (ink === 'outer') {
+    // Ink scales with the car (br-dim.11): the car's projected size in device px = carSizeM * focalPx / z of the nearest car pixel in
+    // reach (z from the depth of the dynamic pixels at the centre and the four taps at the full outer radius). Cars big enough
+    // (>= fullPx) get exactly the tuned width; smaller cars get a width proportional to their size, floored at minPx, an alpha
+    // that fades to fadeFloor between fadeHiPx and fadeLoPx, and below outsideBelowPx the line is drawn only on the background
+    // side so it never eats into the body colour, and the interior lines fade out between innerHiPx and innerLoPx (0 = never fade). Anything that isn't a car (no dynamic pixel in reach) is unchanged.
+    const wTier = look.inkPx.mul(look.outerPx), R0 = wTier.mul(0.5).ceil().max(1);
+    const carInfo = Fn(() => {
+      let zc = float(1e6), has = float(0);
+      [screenUV, ...tapsAt(R0)].forEach((u) => { const d = step(0.5, idTex.sample(u).g); has = max(has, d); zc = min(zc, mix(float(1e6), zOf(dAt(u)), d)); });
+      return vec2(mix(float(1e6), look.carSizeM.mul(look.focalPx).div(zc.max(0.01)), has), has);
+    })();
+    const carPx = carInfo.x;
+    const w = min(wTier, carPx.mul(wTier).div(look.fullPx)).max(look.minPx);
+    const r = w.mul(0.5).ceil().max(1);
+    const sil = Fn(() => {
+      const skyC = isSky(screenUV), idC = idTex.sample(screenUV).r, dynC = idTex.sample(screenUV).g;
+      let iD = float(0), skyEdge = float(0), dyn = dynC;
+      tapsAt(r).forEach((u) => { const idN = idTex.sample(u); iD = max(iD, step(0.02, abs(idN.r.sub(idC)))); skyEdge = max(skyEdge, abs(isSky(u).sub(skyC))); dyn = max(dyn, idN.g); });
+      const outsideOnly = mix(float(1), float(1).sub(dynC), step(carPx, look.outsideBelowPx));
+      return max(iD.mul(float(1).sub(skyC)), skyEdge.mul(dyn)).mul(outsideOnly);
+    })();
+    const fade = mix(look.fadeFloor, float(1), smoothstep(look.fadeLoPx, look.fadeHiPx, carPx));
+    edge = max(sil.mul(fade), interior(r0).mul(look.innerInk).mul(fade).mul(smoothstep(look.innerLoPx, look.innerHiPx.max(look.innerLoPx.add(0.001)), carPx)));
+  }
   edge = edge.mul(look.outline);
 
   // Halftone, on static surfaces only (objectId .g = 1 marks the cars and other dynamic things): POC2-13.

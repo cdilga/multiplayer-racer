@@ -156,13 +156,19 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   }
 
   const look = extendLook(createLook(tierFor(tileHeight)));
+  // ink that scales with the car's size (br-dim.11): the data is looks.json inkScale; ?inkscale=0|1 overrides its default
+  const IS = LOOKS.inkScale ?? {};
+  for (const k of ['carSizeM', 'fullPx', 'minPx', 'fadeLoPx', 'fadeHiPx', 'fadeFloor', 'outsideBelowPx', 'innerLoPx', 'innerHiPx']) if (IS[k] != null) look[k].value = fx.ink_ && fx.ink_[k] != null ? fx.ink_[k] : IS[k];
+  const useInkScale = fx.inkscale ?? IS.enabled ?? false;
+  // texture mip bias (br-dim.11 variant): ?mipbias=0.5 samples a blurrier mip of the car atlas and the road and ground textures
+  const mip = (t) => (fx.mipbias ? t.bias(fx.mipbias) : t);
   const flat = (hex, grit = {}) => makeComicMaterial(look, { colorNode: color(hex), grit });
   const vcol = (grit = {}) => makeComicMaterial(look, { colorNode: vertexColor(), grit });
 
   // ---- ground, track, kerbs, edge lines ----
   // Painted patches of lighter and darker earth: flat colour from noise, so the ground reads hand-painted without adding a
   // single ink line (the horizon clumping came from far-away props, not from colour).
-  const patches = texture(patchTexture(), positionWorld.xz.div(2400).add(0.5));
+  const patches = mip(texture(patchTexture(), positionWorld.xz.div(2400).add(0.5)));
   const groundColor = mix(mix(color(RED_EARTH), color('#DB8F55'), smoothstep(0.56, 0.59, patches.r)), color('#A84F27'), smoothstep(0.6, 0.63, patches.g));
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), makeComicMaterial(look, { colorNode: groundColor, grit: { space: positionWorld, cell: 28, patchFreq: 0.35 } }));
   ground.rotation.x = -Math.PI / 2;
@@ -249,7 +255,7 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     g.setIndex(idx);
     g.computeVertexNormals();
-    const m = new THREE.Mesh(g, makeComicMaterial(look, { colorNode: texture(tex, uv()).rgb, grit: { space: positionWorld, cell: 24, patchFreq: 0.5 } }));
+    const m = new THREE.Mesh(g, makeComicMaterial(look, { colorNode: mip(texture(tex, uv())).rgb, grit: { space: positionWorld, cell: 24, patchFreq: 0.5 } }));
     m.receiveShadow = true;
     return m;
   }
@@ -657,9 +663,10 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
   let P = DEFAULT_P;
   try { P = await (await fetch('../vendor/cruz/params.json')).json(); } catch { /* defaults */ }
   const atlas = makeAtlas({ paint: '#ffffff', pink: '#FFF4DE', lime: '#15203A' }); // livery bolts cream and navy: only the paint carries identity
-  const texel = texture(atlas.map).rgb;
+  if (fx.af != null) atlas.map.anisotropy = ANISO; // the car atlas is 4x unless ?af= says otherwise (br-dim.11 variant)
+  const texel = mip(texture(atlas.map)).rgb;
   // Brake lamps (POC2-14): the atlas's red emissive texels (the tail lamps) brighten with aKit.x, the car's braking 0..1.
-  const lamp = texture(atlas.emissiveMap).rgb, tail = tslStep(0.15, lamp.r.sub(max(lamp.g, lamp.b)));
+  const lamp = mip(texture(atlas.emissiveMap)).rgb, tail = tslStep(0.15, lamp.r.sub(max(lamp.g, lamp.b)));
   const carMaterial = makeComicMaterial(look, { colorNode: damageCreep(paintKey(texel), texel), emissiveNode: lamp.mul(1.6).mul(float(1).add(attribute('aKit', 'vec2').x.mul(tail).mul(2.4))), dynamicId: aCar.w, grit: { dust: aState.y } });
   const groups = {};
   for (const [name, mesh] of Object.entries(build(P, 1).parts)) (groups[name.startsWith('wheel') ? 'wheel' : name] ??= []).push(mesh);
@@ -849,7 +856,7 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     const single = rects.length === 1, few = rects.length <= 4;
     const opts = mode === 'plain' ? { bloom: false, halftone: false, ink: 'none', fxaa: false, haze: false }
       : { bloom: t.bloom > 0 && few, halftone: t.halftone > 0, ink: mode === 'ids' ? 'silhouette' : fx.ink ?? 'outer', fxaa: few && !fx.smaa, smaa: !!fx.smaa,
-        ao: !!fx.ao && single, haze: fx.haze !== false, shimmer: fx.shimmer ?? ((lookNow?.grade.shimmer ?? 0) > 0 && few), halftoneOnCars: !!fx.htcar, debug: fx.debug ?? null };
+        ao: !!fx.ao && single, inkScale: useInkScale, haze: fx.haze !== false, shimmer: fx.shimmer ?? ((lookNow?.grade.shimmer ?? 0) > 0 && few), halftoneOnCars: !!fx.htcar, debug: fx.debug ?? null };
     Object.assign(opts, overrides); // ?bloom=0&halftone=0&fxaa=0 isolate one effect's cost
     const key = JSON.stringify(opts);
     if (!postFor.has(key)) postFor.set(key, jjPipeline(renderer, scene, array, look, { ...opts, aoCamera: array.cameras[0] }).post);
@@ -880,12 +887,16 @@ export async function createWorld(canvas, { colors, tileHeight = 270, mode = 'fu
     const cam = array.cameras[i];
     cam.position.copy(pos); cam.fov = fov; cam.updateProjectionMatrix(); cam.lookAt(at); cam.updateMatrixWorld();
   }
-  function render() { current.render(); }
+  function render() {
+    const c0 = array.cameras[0];
+    if (c0) look.focalPx.value = (lastRects ? Math.min(...lastRects.map((r) => r.h)) : 1) * renderer.getPixelRatio() / (2 * Math.tan(THREE.MathUtils.degToRad(c0.fov) / 2));
+    current.render();
+  }
   function resize(w, h) { renderer.setSize(w, h, false); }
 
   const kitStats = () => ({ brakeLampCars: fx.emissive !== false ? cars.length : 0, boostFlames: kit.boost?.count ?? 0, hazardBeacons: kit.beacons?.count ?? 0, roadsideFlares: kit.flares?.count ?? 0 });
   const options = () => ({ look: lookNow?.id, ...current?.opts, shadow: fx.shadow ?? 'pcf', shadowSize: sun.shadow.mapSize.x, toneMapping: fx.tm ?? lookNow?.light.toneMapping, roadtex: fx.roadtex !== false, af: ANISO, emissive: fx.emissive !== false, render: { pixelRatio: renderer.getPixelRatio(), step: resStep === 1 ? 'native' : resStep, canvasPx: [canvas.width, canvas.height] } });
   applyLook(LOOKS.looks.find((l) => l.id === fx.look) ?? LOOKS.looks.find((l) => l.id === LOOKS.recommended));
 
-  return { renderer, backend, adapterInfo, scene, look, frames, graphics, trackLen, setCars, step, setTiles, aimTile, aimFixed, render, resize, placeSun, cars, array, colors, BOWL, staticStats, applyLook, options, kitStats };
+  return { renderer, backend, adapterInfo, scene, look, frames, graphics, trackLen, setCars, step, setTiles, aimTile, aimFixed, render, resize, carBox, placeSun, cars, array, colors, BOWL, staticStats, applyLook, options, kitStats };
 }

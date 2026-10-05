@@ -1,0 +1,168 @@
+{
+  "when": "2026-10-05T08:11:03.772Z",
+  "note": "meanAbsDiff is over scene pixels (tile interiors), mean of the three channel differences, 0-255; pctChanged* counts pixels whose largest channel differs by more than thr (or 32)",
+  "results": [
+    {
+      "setting": "aniso",
+      "case": "grid64",
+      "dpr": 1,
+      "view": "grid",
+      "tiles": 64,
+      "size": "1920x1080",
+      "canvasPx": [
+        1920,
+        1080
+      ],
+      "scenePixels": 1931904,
+      "meanAbsDiff": 1.6098,
+      "pctChangedOverThr": 3.9801,
+      "thr": 12,
+      "pctChangedOver32": 1.8885,
+      "maxDiff": 246,
+      "a": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": true,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 1,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 1,
+          "step": "native",
+          "canvasPx": [
+            1920,
+            1080
+          ]
+        }
+      },
+      "b": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": true,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 1,
+          "step": "native",
+          "canvasPx": [
+            1920,
+            1080
+          ]
+        }
+      },
+      "backend": "WebGPU",
+      "crop": {
+        "x": 520,
+        "y": 320,
+        "w": 160,
+        "h": 80
+      }
+    },
+    {
+      "setting": "mipbias",
+      "case": "grid64",
+      "dpr": 1,
+      "view": "grid",
+      "tiles": 64,
+      "size": "1920x1080",
+      "canvasPx": [
+        1920,
+        1080
+      ],
+      "scenePixels": 1931904,
+      "meanAbsDiff": 0.7999,
+      "pctChangedOverThr": 1.4953,
+      "thr": 12,
+      "pctChangedOver32": 0.5702,
+      "maxDiff": 246,
+      "a": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": true,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 1,
+          "step": "native",
+          "canvasPx": [
+            1920,
+            1080
+          ]
+        }
+      },
+      "b": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": true,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 1,
+          "step": "native",
+          "canvasPx": [
+            1920,
+            1080
+          ]
+        }
+      },
+      "backend": "WebGPU",
+      "crop": {
+        "x": 960,
+        "y": 720,
+        "w": 160,
+        "h": 80
+      }
+    }
+  ]
+}

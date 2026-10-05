@@ -24,6 +24,9 @@ export const SETTINGS = {
   gtao: { title: 'GTAO (ambient occlusion)', a: { ao: '1' }, b: { ao: '0' }, aName: 'GTAO on', bName: 'GTAO off', note: 'GTAO needs one camera, so it runs in a single-view tile only; in a grid the page leaves it out whatever ao= says.' },
   smaa: { title: 'SMAA', a: { smaa: '1' }, b: { smaa: '0' }, aName: 'SMAA', bName: 'default AA', note: 'default AA = FXAA on four tiles or fewer, none in a bigger grid (the outlines carry the edges).' },
   shadows: { title: 'Sun shadows', a: { shadow: 'pcf' }, b: { shadow: 'off' }, aName: 'shadows PCF 4096', bName: 'shadows off', note: 'Shadows also key the halftone dots, so off removes the dots in shade as well.' },
+  inkscale: { title: 'Ink scaled by car size', a: { inkscale: '0' }, b: { inkscale: '1' }, aName: 'ink: tier width', bName: 'ink: scales with car size', note: 'br-dim.11: A = the tier width everywhere (the look as it was), B = width, alpha and interior lines follow the car\'s projected size (looks.json inkScale; override with &inkp=fullPx:160,minPx:1,...). At a big tile the two must match (about 0 diff).' },
+  aniso: { title: 'Anisotropic filtering', a: { af: '1' }, b: { af: '16' }, aName: 'af 1 (off)', bName: 'af 16', note: 'br-dim.11: anisotropy of the car atlas, the road and the ground textures.' },
+  mipbias: { title: 'Texture mip bias', a: { mipbias: '0' }, b: { mipbias: '0.75' }, aName: 'mip bias 0', bName: 'mip bias +0.75', note: 'br-dim.11: sample a blurrier mip on the car atlas, road and ground textures.' },
   control: { title: 'Control (A = B)', a: {}, b: {}, aName: 'A', bName: 'B (same options)', note: 'The noise floor of the comparison: identical options twice. Anything above 0 here is run-to-run noise.' },
 };
 const spec = SETTINGS[setting];
@@ -87,7 +90,7 @@ function frameUrl(over) {
   const u = new URL(location.href);
   u.hash = view === 'grid' ? `#grid&n=${N}` : '#tv';
   const p = new URLSearchParams(q);
-  for (const k of ['bar', 'ao', 'smaa', 'shadow']) if (!(k in over)) p.delete(k); // the setting under test is set per frame
+  for (const k of ['bar', 'ao', 'smaa', 'shadow', 'inkscale', 'af', 'mipbias']) if (!(k in over)) p.delete(k); // the setting under test is set per frame
   p.set('bar', '0'); p.set('grain', '0'); p.set('shimmer', '0'); p.set('freeze', String(FREEZE));
   for (const [k, v] of Object.entries(over)) p.set(k, v);
   u.search = p.toString();

@@ -35,7 +35,7 @@ const P = new URLSearchParams(rest.join('&'));
 const name = state || 'grid';
 const N = +(P.get('n') ?? (name === 'grid' ? 24 : name === 'overview' ? 16 : 12));
 const bool = (k) => (q.has(k) ? q.get(k) !== '0' : undefined);
-const fx = { look: q.get('look') ?? undefined, ink: q.get('ink') ?? undefined, ao: bool('ao'), smaa: bool('smaa'), shadow: q.get('shadow') ?? undefined, shadowSize: q.has('shadowSize') ? +q.get('shadowSize') : undefined, tm: q.get('tm') ?? undefined, roadtex: bool('roadtex'), af: q.has('af') ? +q.get('af') : undefined, emissive: bool('emissive'), haze: bool('haze'), shimmer: bool('shimmer'), grain: bool('grain'), htcar: bool('htcar'), tierH: q.has('tierH') ? +q.get('tierH') : undefined, debug: q.get('debug') ?? undefined };
+const fx = { look: q.get('look') ?? undefined, ink: q.get('ink') ?? undefined, ao: bool('ao'), smaa: bool('smaa'), shadow: q.get('shadow') ?? undefined, shadowSize: q.has('shadowSize') ? +q.get('shadowSize') : undefined, tm: q.get('tm') ?? undefined, roadtex: bool('roadtex'), af: q.has('af') ? +q.get('af') : undefined, emissive: bool('emissive'), haze: bool('haze'), shimmer: bool('shimmer'), grain: bool('grain'), htcar: bool('htcar'), tierH: q.has('tierH') ? +q.get('tierH') : undefined, debug: q.get('debug') ?? undefined, inkscale: bool('inkscale'), mipbias: q.has('mipbias') ? +q.get('mipbias') : undefined, ink_: q.has('inkp') ? Object.fromEntries(q.get('inkp').split(',').map((kv) => kv.split(':')).map(([a, b]) => [a, +b])) : undefined };
 const colors = tokens.identity.colors.map((c) => c.hex);
 const NAMES = ['Dusty', 'Pip', 'Ash', 'Kai', 'Big Kev', 'Mia', 'Snag', 'Shaz', 'Roo Boy', 'Tiggy', 'Mack', 'Maximilian', 'Jojo', 'Nina', 'Bazza', 'Wren', 'Sakura', 'Zara', 'Tama', 'Lulu', 'Ned', 'Hamish', 'Priya', 'Wei', 'Sione', 'Ana', 'Jack', 'Ruby', 'Archie', 'Isla', 'Leo', 'Matilda'];
 
@@ -251,6 +251,32 @@ window.__world = {
     return [...L, ...R.reverse()];
   },
   staticStats: world.staticStats,
+  /** Each tile's cars as screen boxes (br-dim.11 ink check): the eight corners of the car box, projected through the tile's camera
+   *  (CSS px, canvas top-left), clipped to the tile; only cars wholly in front of the camera and at least one pixel big. */
+  carBoxes() {
+    const out = [], v = new THREE.Vector3(), cb = world.carBox;
+    rects.forEach((r, ti) => {
+      const cam = world.array.cameras[ti], list = [];
+      for (const c of world.cars) {
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, ok = true;
+        const yaw = Math.atan2(c.fwd.x, c.fwd.z), cs = Math.cos(yaw), sn = Math.sin(yaw);
+        for (const x of [cb.min.x, cb.max.x]) for (const y of [cb.min.y, cb.max.y]) for (const z of [cb.min.z, cb.max.z]) {
+          v.set(c.pos.x + x * cs + z * sn, y, c.pos.z - x * sn + z * cs).project(cam);
+          if (v.z >= 1 || v.z <= -1) { ok = false; break; }
+          const px = r.x + (v.x * 0.5 + 0.5) * r.w, py = r.y + (-v.y * 0.5 + 0.5) * r.h;
+          x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+        }
+        if (!ok) continue;
+        const cx0 = Math.max(x0, r.x), cy0 = Math.max(y0, r.y), cx1 = Math.min(x1, r.x + r.w), cy1 = Math.min(y1, r.y + r.h);
+        if (cx1 - cx0 < 1 || cy1 - cy0 < 1) continue;
+        const full = (x1 - x0) * (y1 - y0), vis = (cx1 - cx0) * (cy1 - cy0);
+        if (vis < 0.6 * full) continue; // mostly off the tile: not a fair box
+        list.push({ id: c.id, paint: c.paint, x: cx0, y: cy0, w: cx1 - cx0, h: cy1 - cy0 });
+      }
+      out.push({ tile: ti, rect: { ...r }, cars: list });
+    });
+    return out;
+  },
   /** ?freeze=N: the frozen frame as a 2D canvas (canvas pixels), or null before it. */
   snapshot: () => snap,
   /** The tile rectangles in canvas CSS pixels: the compare page's mask (the gutters between tiles are not the scene). */

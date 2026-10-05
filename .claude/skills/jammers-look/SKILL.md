@@ -193,3 +193,11 @@ Numbers are mean absolute difference (0-255) / % of scene pixels changed by more
   (4 tiles or fewer) and no AA in a grid (the outlines carry edges); grid AA is a TAA job for P1-R10. Not in the panel.
 - **Shadows: keep.** 2.31 / 4.4%, 1.65 / 4.6%, 1.70 / 3.8%. The cast shadow grounds the cars and carries the halftone dots; visible at
   grid-tile size. Rule: a look option stays only if its A/B shows a named benefit at the sizes players see.
+
+## Ink at small car sizes (br-dim.11)
+
+Kept: ink scales with the car's projected size (`art/ui/poc/world/shaders/pipeline.js` 'outer', data `looks.json` `inkScale`): full tuned
+width at >= 160 px, width proportional below with a 1 px floor, alpha fading 28 -> 8 px, outside-only line below 60 px, interior lines
+fading out 110 -> 40 px. Full-size tile diff 0. Bunched-car check (`art/ui/poc/world/ink-check.mjs`, 27 cells, DPR emulated): tiny-car
+ink/body p90 5.3 worst -> 0.46 worst, 0/27 -> 27/27 under 0.6. Native-res (R111) alone is not enough. Dropped: anisotropic filtering of
+the car atlas and texture mip bias (no change in the legibility metric; road/ground are already 16x). Evidence: docs/evidence/br-dim.11/.

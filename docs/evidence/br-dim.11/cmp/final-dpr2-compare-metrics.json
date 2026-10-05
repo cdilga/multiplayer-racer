@@ -1,0 +1,87 @@
+{
+  "when": "2026-10-05T08:16:18.346Z",
+  "note": "meanAbsDiff is over scene pixels (tile interiors), mean of the three channel differences, 0-255; pctChanged* counts pixels whose largest channel differs by more than thr (or 32)",
+  "results": [
+    {
+      "setting": "inkscale",
+      "case": "phone64",
+      "dpr": 2,
+      "view": "grid",
+      "tiles": 64,
+      "size": "412x915",
+      "canvasPx": [
+        824,
+        1830
+      ],
+      "scenePixels": 1266432,
+      "meanAbsDiff": 4.58,
+      "pctChangedOverThr": 9.1686,
+      "thr": 12,
+      "pctChangedOver32": 7.0759,
+      "maxDiff": 253,
+      "a": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": false,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 2,
+          "step": "native",
+          "canvasPx": [
+            824,
+            1830
+          ]
+        }
+      },
+      "b": {
+        "look": "fury-road",
+        "bloom": false,
+        "halftone": false,
+        "ink": "outer",
+        "fxaa": false,
+        "smaa": false,
+        "ao": false,
+        "inkScale": true,
+        "haze": true,
+        "shimmer": false,
+        "halftoneOnCars": false,
+        "debug": null,
+        "shadow": "pcf",
+        "shadowSize": 4096,
+        "toneMapping": "neutral",
+        "roadtex": true,
+        "af": 16,
+        "emissive": true,
+        "render": {
+          "pixelRatio": 2,
+          "step": "native",
+          "canvasPx": [
+            824,
+            1830
+          ]
+        }
+      },
+      "backend": "WebGPU",
+      "crop": {
+        "x": 0,
+        "y": 1530,
+        "w": 136,
+        "h": 68
+      }
+    }
+  ]
+}

@@ -133,3 +133,6 @@ the shimmer metric against a supersampled reference, and the headed frame-cost t
 - No light halos at 24 tiles (no bloom); the lamps read by colour alone.
 - The sun's shadow covers the whole track at about 0.13 m per texel, so car shadows are soft.
 - One biome only; the other three biomes' dressing is procgen work (P1-M beads).
+
+## Ink at small sizes (P1-U05, br-dim.11)
+`?inkscale=0|1` (default from `shaders/looks.json` `inkScale`, on), `&inkp=fullPx:160,outsideBelowPx:60,...` live overrides, `?mipbias=` and `?af=` filtering variants (dropped, kept as options). `node art/ui/poc/world/ink-check.mjs` is the bunched-car legibility check (sizes x 24/32/64 tiles x DPR 1/2/3, emulated); `capture-compare.mjs --dpr 2 --cases phone64` and `#compare=inkscale|aniso|mipbias` do the A/B.
