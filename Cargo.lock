@@ -404,6 +404,8 @@ dependencies = [
  "jj-map",
  "jj-types",
  "libm",
+ "serde",
+ "serde_json",
  "wasm-bindgen-test",
 ]
 
