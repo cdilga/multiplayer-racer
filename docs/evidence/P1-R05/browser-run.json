@@ -6,7 +6,7 @@
       "distance": "mid",
       "cuts": 0,
       "maxGapM": 1.83,
-      "speed": 30.72,
+      "speed": 26.88,
       "pulledIn": false
     },
     "2": {
@@ -14,7 +14,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 34.62,
+      "speed": 30.29,
       "pulledIn": false
     },
     "3": {
@@ -22,7 +22,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 38.52,
+      "speed": 33.71,
       "pulledIn": false
     },
     "4": {
@@ -30,7 +30,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 36.63,
+      "speed": 32.05,
       "pulledIn": false
     }
   },
@@ -40,7 +40,7 @@
       "distance": "mid",
       "cuts": 0,
       "maxGapM": 1.83,
-      "speed": 1.45,
+      "speed": 17.9,
       "pulledIn": false
     },
     "2": {
@@ -48,7 +48,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.45,
+      "speed": 17.87,
       "pulledIn": false
     },
     "3": {
@@ -56,7 +56,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.52,
+      "speed": 18.78,
       "pulledIn": false
     },
     "4": {
@@ -64,7 +64,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 1.67,
+      "speed": 20.69,
       "pulledIn": false
     },
     "5": {
@@ -72,7 +72,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.27,
+      "speed": 15.24,
       "pulledIn": false
     },
     "6": {
@@ -80,7 +80,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 1.45,
+      "speed": 16.17,
       "pulledIn": false
     },
     "7": {
@@ -88,7 +88,7 @@
       "distance": "mid",
       "cuts": 0,
       "maxGapM": 9.48,
-      "speed": 1.45,
+      "speed": 17.9,
       "pulledIn": false
     },
     "8": {
@@ -96,7 +96,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.63,
+      "speed": 20.3,
       "pulledIn": false
     },
     "9": {
@@ -104,7 +104,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 1.21,
+      "speed": 14.98,
       "pulledIn": false
     },
     "10": {
@@ -112,7 +112,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.37,
+      "speed": 16.88,
       "pulledIn": false
     },
     "11": {
@@ -120,7 +120,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 1.83,
-      "speed": 1.45,
+      "speed": 17.9,
       "pulledIn": false
     },
     "12": {
@@ -128,7 +128,7 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 1.45,
+      "speed": 16.17,
       "pulledIn": false
     }
   },
@@ -138,7 +138,7 @@
       "distance": "mid",
       "cuts": 0,
       "maxGapM": 9.48,
-      "speed": 15.91,
+      "speed": 20.32,
       "pulledIn": false
     },
     "2": {
@@ -146,22 +146,22 @@
       "distance": "mid",
       "cuts": 1,
       "maxGapM": 9.48,
-      "speed": 18.95,
+      "speed": 24.19,
       "pulledIn": false
     }
   },
   "toggle": {
     "tp": {
       "steer": -1,
-      "turn": -16.00244140625
+      "turn": -11.659164428710938
     },
     "fp": {
       "steer": -1,
-      "turn": -30.33245849609375
+      "turn": -28.13123321533203
     },
     "tpAgain": {
       "steer": -1,
-      "turn": -33.34615421295166
+      "turn": -39.362810134887695
     }
   }
 }

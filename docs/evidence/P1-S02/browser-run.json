@@ -5,43 +5,43 @@
       "renderHz": 30,
       "renderWorkMs": 20,
       "tick": 720,
-      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+      "hash": "d7656174dd13fdb41985fe1574ba83319be848c2307aab0de9b2dc7b7895fb59",
       "frames": 186,
-      "snapshots": 403,
-      "wallMs": 6185
+      "snapshots": 410,
+      "wallMs": 6191
     },
     {
       "renderHz": 60,
       "renderWorkMs": 8,
       "tick": 720,
-      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
-      "frames": 384,
-      "snapshots": 711,
-      "wallMs": 6153
+      "hash": "d7656174dd13fdb41985fe1574ba83319be848c2307aab0de9b2dc7b7895fb59",
+      "frames": 382,
+      "snapshots": 699,
+      "wallMs": 6123
     },
     {
       "renderHz": 144,
       "renderWorkMs": 2,
       "tick": 720,
-      "hash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
-      "frames": 1020,
-      "snapshots": 720,
-      "wallMs": 6123
+      "hash": "d7656174dd13fdb41985fe1574ba83319be848c2307aab0de9b2dc7b7895fb59",
+      "frames": 1017,
+      "snapshots": 719,
+      "wallMs": 6099
     }
   ],
   "ac2": {
     "tick": 720,
-    "localHash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
-    "wireHash": "fe330ab11c007e9ffcc358c287f23e25cc9d81d777af0bdfd3eca835cfbae6a6",
+    "localHash": "d7656174dd13fdb41985fe1574ba83319be848c2307aab0de9b2dc7b7895fb59",
+    "wireHash": "d7656174dd13fdb41985fe1574ba83319be848c2307aab0de9b2dc7b7895fb59",
     "welcomed": true,
     "joined": true
   },
   "ac3": {
     "visibility": "emulated: document.visibilityState + a dispatched visibilitychange (headless Chromium never hides a page)",
-    "hiddenTick": 245,
+    "hiddenTick": 240,
     "hiddenForMs": 2000,
-    "countdownMsAt200": 2801,
-    "countdownWallMs": 3022,
+    "countdownMsAt200": 2795,
+    "countdownWallMs": 3056,
     "ticksInFirstSecondAfterResume": 121,
     "rearm": {
       "pauseTick": 367,
@@ -52,18 +52,18 @@
   },
   "ac4": {
     "fed": {
-      "hash": "1625252b00b87f0d35b31e4ebdd55fd3a7de0822a01f3189120dae0961a9aca4",
-      "published": 719,
+      "hash": "6d748cc777e23175d182a48fbb502160f00b59444c83fbb2eba173a8e9bfb8f4",
+      "published": 720,
       "skipped": 0,
-      "wallMs": 6130,
-      "lines": 61
+      "wallMs": 6132,
+      "lines": 92
     },
     "starved": {
-      "hash": "1625252b00b87f0d35b31e4ebdd55fd3a7de0822a01f3189120dae0961a9aca4",
+      "hash": "6d748cc777e23175d182a48fbb502160f00b59444c83fbb2eba173a8e9bfb8f4",
       "published": 3,
-      "skipped": 717,
-      "wallMs": 6138,
-      "lines": 61,
+      "skipped": 716,
+      "wallMs": 6158,
+      "lines": 92,
       "held": 3
     },
     "seatJoined": 31,
@@ -76,8 +76,8 @@
     "faults": [
       "RuntimeError: unreachable"
     ],
-    "tickAtFault": 62,
-    "tickAfter500ms": 62,
+    "tickAtFault": 63,
+    "tickAfter500ms": 63,
     "statusMask": 16
   }
 }

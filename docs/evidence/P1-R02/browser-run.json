@@ -5,7 +5,7 @@
       0,
       2
     ],
-    "drawCalls": 28,
+    "drawCalls": 32,
     "parts": [
       {
         "part": "core",
@@ -32,8 +32,8 @@
         "type": "back",
         "position": [
           33.2,
-          0.848,
-          3.475
+          1.179,
+          4.195
         ],
         "colour": "#ffd23f"
       },
@@ -41,9 +41,9 @@
         "part": "door_FL",
         "type": "door_FL",
         "position": [
-          34.113,
+          34.166,
           0.629,
-          5.365
+          5.855
         ],
         "colour": "#ffd23f"
       },
@@ -51,9 +51,9 @@
         "part": "door_FR",
         "type": "door_FR",
         "position": [
-          32.287,
+          32.234,
           0.629,
-          5.365
+          5.855
         ],
         "colour": "#ffd23f"
       },
@@ -61,9 +61,9 @@
         "part": "door_RL",
         "type": "door_RL",
         "position": [
-          34.1,
+          34.14,
           0.648,
-          4.535
+          4.875
         ],
         "colour": "#ffd23f"
       },
@@ -71,9 +71,9 @@
         "part": "door_RR",
         "type": "door_RR",
         "position": [
-          32.3,
+          32.26,
           0.648,
-          4.535
+          4.875
         ],
         "colour": "#ffd23f"
       },
@@ -122,15 +122,15 @@
   "growth": {
     "4": {
       "capacity": 16,
-      "drawCalls": 18
+      "drawCalls": 20
     },
     "40": {
       "capacity": 64,
-      "drawCalls": 18
+      "drawCalls": 20
     },
     "130": {
       "capacity": 256,
-      "drawCalls": 18
+      "drawCalls": 20
     }
   }
 }

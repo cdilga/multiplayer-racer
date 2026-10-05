@@ -1,13 +1,102 @@
 {
   "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "unsupported": {
+    "mode": "unsupported",
+    "joinHref": "http://127.0.0.1:61126/controller/",
+    "fetched": [
+      "/host/",
+      "/assets/host-C3539qqA.js",
+      "/assets/build-DXdrtYyX.js"
+    ]
+  },
+  "interpolation": {
+    "live": {
+      "from": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1280,
+        "height": 720,
+        "cssWidth": 1280,
+        "cssHeight": 720,
+        "dpr": 1,
+        "scale": 1,
+        "resolution": "native",
+        "limitedBy": null,
+        "frames": 30,
+        "tick": 235.01199999928474,
+        "cars": 24,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 18,
+        "lods": [
+          0
+        ]
+      },
+      "to": {
+        "backend": "WebGL2 (WebGLRenderer)",
+        "width": 1280,
+        "height": 720,
+        "cssWidth": 1280,
+        "cssHeight": 720,
+        "dpr": 1,
+        "scale": 1,
+        "resolution": "native",
+        "limitedBy": null,
+        "frames": 60,
+        "tick": 411,
+        "cars": 24,
+        "debris": 0,
+        "snapped": 0,
+        "drawCalls": 18,
+        "lods": [
+          0
+        ]
+      }
+    },
+    "frozen": {
+      "203": {
+        "snapped": 1,
+        "expected": 1,
+        "drawnTick": 202.5
+      },
+      "600": {
+        "snapped": 0,
+        "expected": 0,
+        "drawnTick": 599.5
+      }
+    }
+  },
   "fallback": {
     "main": "WebGL2 (WebGLRenderer)",
     "fallback": "WebGL2 (WebGPURenderer)",
     "sameSize": true,
     "width": 1280,
     "height": 720,
-    "meanDiff": 0.1873828125,
-    "bigDiffShare": 0.0012934027777777779,
+    "meanDiff": 0.5662673611111111,
+    "bigDiffShare": 0.0038020833333333335,
     "colours": 64
+  },
+  "nativeResolution": {
+    "viewport": "915x412 @2.625",
+    "stats": {
+      "backend": "WebGL2 (WebGLRenderer)",
+      "width": 2402,
+      "height": 1082,
+      "cssWidth": 915,
+      "cssHeight": 412,
+      "dpr": 2.625,
+      "scale": 1,
+      "resolution": "native",
+      "limitedBy": null,
+      "frames": 20,
+      "tick": 195,
+      "cars": 0,
+      "debris": 5,
+      "snapped": 0,
+      "drawCalls": 4,
+      "lods": [
+        0
+      ]
+    },
+    "chip": "Joystick Jammers production · WebGL2 (WebGLRenderer) · 2402×1082 native"
   }
 }
