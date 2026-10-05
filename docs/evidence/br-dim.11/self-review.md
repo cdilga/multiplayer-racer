@@ -4,9 +4,9 @@
 - `ba-phone-p-dpr2-n64.jpg`, phone portrait 412x915 DPR 2 (emulated), 64 tiles, three columns: CSS-px backing / native / native + ink scaled. Checked pixel crispness, navy blobs where cars bunch, body colour inside outlines.
 - `ba-phone-p-dpr2-n24.jpg`, same, 24 tiles.
 - `ba-tv-dpr1-n64.jpg`, TV 1920x1080 DPR 1, 64 tiles (CSS-res = native here, so columns 1-2 match, as they should).
-- `cmp/final-inkscale-big-crops.jpg`: one full-size TV tile A/B: identical (diff panel black). `cmp/final-inkscale-grid-*.jpg`, TV 24-tile A/B + 4x crops: B shows body colours in bunched cars, near-car outlines thinner.
+- `cmp/final-inkscale-big-crops.jpg`: one full-size TV tile A/B: identical (diff panel black). `cmp/final-inkscale-grid-crops.jpg`, TV 24-tile A/B + 4x crops: B shows body colours in bunched cars, near-car outlines thinner.
 - `cmp/final-dpr2-inkscale-phone64-crops.jpg`: 4x crop at DPR 2, 64 tiles: far cars now colour specks, mid cars keep a thin outside line.
-- `cmp/filt-*-crops.jpg`: af and mip-bias crops: differences are road/cockpit texture softness, no change in car legibility.
+- `cmp/filt-dpr2-aniso-phone64-crops.jpg`, `cmp/filt-dpr2-mipbias-phone64-crops.jpg`: af and mip-bias crops: differences are road/cockpit texture softness, no change in car legibility.
 - Full-size single tile (`cmp/final-inkscale-big-b.jpg` removed after confirming a diff of 0): looked at before pruning.
 
 ## Defects found and fixed
