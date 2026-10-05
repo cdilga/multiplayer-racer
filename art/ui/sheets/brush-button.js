@@ -57,6 +57,8 @@ const CSS = `
 .bb .bb-shadow { fill: rgb(21 32 58 / .85); stroke: rgb(21 32 58 / .85); stroke-width: var(--bb-o, 3px); stroke-linejoin: round; transform: translateY(var(--bb-sh, 5px)); }
 .on-ink .bb .bb-shadow { fill: rgb(0 0 0 / .55); stroke: rgb(0 0 0 / .55); }
 .bb .bb-ring { display: none; fill: none; stroke-linejoin: round; }
+.bb .bb-ring.bb-sh { transform: translateY(var(--bb-sh, 5px)); }
+.btn.brush:is(.is-focus-gp, .gp) .bb-ring.bb-sh { transform: translateY(calc(var(--bb-sh, 5px) * 1.6)); }
 .bb .bb-kb { stroke: var(--bb-ring-kb); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-kb, 3px))); }
 .bb .bb-gp-edge { stroke: var(--c-ink); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-gp, 4px) + 2px)); }
 .bb .bb-gp { stroke: var(--c-saffron); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-gp, 4px))); }
@@ -83,8 +85,12 @@ function paintOne(el) {
   if (old && +old.getAttribute('width') === w && +old.getAttribute('height') === h) return;
   const id = el.dataset.bb || el.textContent.trim() || 'bb';
   const d = brushButtonPath(id, w, h);
+  // Focus rings wrap the whole sticker: each ring is drawn round the slab and again round its shadow (owner, round 4: the
+  // outline sits outside the bottom shadow, never under it), then the shadow and the slab go on top.
+  // Layer by layer (both ink edges, then both saffron rings, …) so one copy never paints over the other's colour.
+  const rings = ['bb-gp-edge', 'bb-gp', 'bb-gp-gap', 'bb-kb'].map((r) => `<path class="bb-ring ${r}" d="${d}"/><path class="bb-ring ${r} bb-sh" d="${d}"/>`).join('');
   const svg = `<svg class="bb" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">`
-    + `<path class="bb-ring bb-gp-edge" d="${d}"/><path class="bb-ring bb-gp" d="${d}"/><path class="bb-ring bb-gp-gap" d="${d}"/><path class="bb-ring bb-kb" d="${d}"/>`
+    + `<g class="bb-rings">${rings}</g>`
     + `<path class="bb-shadow" d="${d}"/><path class="bb-fill" d="${d}"/></svg>`; // round 4: clean slabs, no streaks (owner: straight-ish, commit)
   if (old) old.outerHTML = svg; else el.insertAdjacentHTML('afterbegin', svg);
 }
