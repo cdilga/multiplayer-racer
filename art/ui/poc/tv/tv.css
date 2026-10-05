@@ -369,9 +369,9 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
 .wbn { font-size: calc(var(--k) * 80px); }
 .lob-head .tag { font-size: calc(var(--k) * 34px); }
 .lob-join { position: absolute; display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 8px); padding: calc(var(--k) * 16px); text-align: center; }
-.lob-join .qr { flex: none; width: calc(var(--k) * 260px); height: calc(var(--k) * 260px); }
+.lob-join .qr { flex: none; width: max(calc(var(--k) * 260px), var(--qr-min, 0px)); height: max(calc(var(--k) * 260px), var(--qr-min, 0px)); }
 .lob-join.row { flex-direction: row; justify-content: center; gap: calc(var(--k) * 18px); text-align: left; }
-.lob-join.row .qr { width: calc(var(--k) * 200px); height: calc(var(--k) * 200px); }
+.lob-join.row .qr { width: max(calc(var(--k) * 200px), var(--qr-min, 0px)); height: max(calc(var(--k) * 200px), var(--qr-min, 0px)); }
 .lob-join.row .wj-text { align-items: flex-start; }
 .wj-text { display: flex; flex-direction: column; gap: calc(var(--k) * 4px); min-width: 0; }
 .lob-join:not(.row) .wj-text { align-items: center; }
@@ -467,3 +467,15 @@ canvas#world { position: fixed; inset: 0; width: 100vw; height: 100vh; display: 
   .plist .src { grid-template-columns: auto 1fr; }
   .plist .src .srcacts { grid-column: 1 / -1; flex-wrap: wrap; }
 }
+
+/* br-u02-qr-list-space-jdc: the join QR and the player list, placed by host-layout.js at the sizes it solved. */
+.qrcard { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: var(--c-white, #fff); border-style: solid; border-color: var(--c-ink); border-radius: calc(var(--k) * 6px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); overflow: hidden; }
+.qrcard .code { flex: none; margin: auto 0; color: var(--c-ink); line-height: 1; letter-spacing: .06em; }
+.plist { position: absolute; display: flex; flex-direction: column; justify-content: center; background: var(--c-paper); border: max(2px, calc(var(--k) * 3px)) solid var(--c-ink); border-radius: calc(var(--k) * 8px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); padding: calc(var(--k) * 6px); overflow: hidden; font-size: calc(var(--rh) * .75); }
+.plist h3 { margin: 0; height: calc(var(--rh) * 1.4); line-height: calc(var(--rh) * 1.4); font-size: calc(var(--rh) * .9); text-align: center; }
+.plist .rows { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--rows), var(--rh)); grid-template-columns: repeat(var(--cols), var(--cw)); justify-content: center; }
+.plist .srow { margin: 0; gap: .3em; height: var(--rh); padding: 0 .25em; min-width: 0; overflow: hidden; }
+.plist .srow .place { width: 1.8em; font-size: 1em; flex: none; }
+.plist .srow .badge { font-size: 1em; height: 1.25em; min-width: 2.1em; padding: 0 .2em; border-width: 1px; border-radius: .3em; box-shadow: none; }
+.plist .srow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plist.t-seats .srow .place { display: none; }

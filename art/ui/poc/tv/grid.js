@@ -16,9 +16,9 @@ export const PSEUDOCODE = `layout(N, screen) → tiles, fillers
     keep R if N × w × h beats the best (ties: fewer empty cells)
   the C × R block is centred; seats fill it in reading order
   the C × R − N empty cells sit at the end of the last row, each exactly a tile
-  fillers: the first that fits a scannable QR shows the join QR (none fits: the room code and address),
-           the next the live standings; the rest, and the margins, the painted backdrop
-  no filler for the join: a small join chip in the bottom-right corner, inside action-safe
+  chrome (host-layout.js): QR + player list use free cells/margins first, else the smallest strip;
+           QR = largest square that fits, never under the minimum scannable size
+  no QR fits at all: the room code in a small chip, bottom-right
   BAND = 1.2 … 2.0 (third person); portrait screens stack rows, ultrawide screens add columns,
   both fall out of the same rule. Nothing is ever black, no tile is ever larger; there is no maximum N.`;
 

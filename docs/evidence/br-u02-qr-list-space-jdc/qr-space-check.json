@@ -1,0 +1,2076 @@
+{
+  "failures": [],
+  "rules": {
+    "note": "br-u02-qr-list-space-jdc: the chrome's minimums, as data. Sizes with a K are TV px at 1080p x the page scale k; Px are CSS px. See host-layout.js.",
+    "qr": {
+      "modules": 37,
+      "minModuleCssPx": {
+        "tvAt1080": 8,
+        "handheld": 4
+      },
+      "borderK": 3,
+      "labelShare": 0.9
+    },
+    "padK": 8,
+    "gapK": 10,
+    "list": {
+      "cardPadK": 6,
+      "maxScale": 1.5,
+      "minRowPx": 18,
+      "tiers": [
+        {
+          "id": "names",
+          "wK": 250,
+          "hK": 32,
+          "minWPx": 150
+        },
+        {
+          "id": "badges",
+          "wK": 120,
+          "hK": 32,
+          "minWPx": 74
+        },
+        {
+          "id": "seats",
+          "wK": 80,
+          "hK": 32,
+          "minWPx": 50
+        }
+      ]
+    },
+    "areaTolerance": 0.0025,
+    "stripStepDivisor": 800,
+    "stripMaxShare": 0.6
+  },
+  "decoderFloor": {
+    "engine": "chromium",
+    "decodesAtDevicePxPerModule": {
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "8": true
+    },
+    "smallest": 1
+  },
+  "cases": [
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 1,
+      "mode": "qr",
+      "tile": [
+        1596,
+        986
+      ],
+      "tilesArea": 1589184,
+      "maxArea": 1589184,
+      "side": "right",
+      "strip": 318,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 1,
+      "mode": "list",
+      "tile": [
+        1796,
+        986
+      ],
+      "tilesArea": 1787584,
+      "maxArea": 1791552,
+      "side": "right",
+      "strip": 118,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          102,
+          98.625
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-seats",
+        "rowPx": 33.6,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 1,
+      "mode": "both",
+      "tile": [
+        1592,
+        986
+      ],
+      "tilesArea": 1585216,
+      "maxArea": 1589184,
+      "side": "right",
+      "strip": 322,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          306,
+          106.46875
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 36.864,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 1,
+      "mode": "neither",
+      "tile": [
+        1914,
+        986
+      ],
+      "tilesArea": 1904640,
+      "maxArea": 1904640,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 8,
+      "mode": "qr",
+      "tile": [
+        634,
+        324
+      ],
+      "tilesArea": 1689600,
+      "maxArea": 1689600,
+      "side": null,
+      "strip": 0,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 8,
+      "mode": "list",
+      "tile": [
+        634,
+        324
+      ],
+      "tilesArea": 1689600,
+      "maxArea": 1689600,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          618,
+          225.359375
+        ],
+        "rows": 8,
+        "cols": 2,
+        "tier": "t-names",
+        "rowPx": 38.4,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 8,
+      "mode": "both",
+      "tile": [
+        634,
+        324
+      ],
+      "tilesArea": 1689600,
+      "maxArea": 1689600,
+      "side": null,
+      "strip": 0,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          301.203125,
+          308
+        ],
+        "rows": 8,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 36.25,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 8,
+      "mode": "neither",
+      "tile": [
+        634,
+        324
+      ],
+      "tilesArea": 1689600,
+      "maxArea": 1689600,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "qr",
+      "tile": [
+        314,
+        192
+      ],
+      "tilesArea": 1520640,
+      "maxArea": 1520640,
+      "side": "right",
+      "strip": 316,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "list",
+      "tile": [
+        295,
+        242
+      ],
+      "tilesArea": 1791552,
+      "maxArea": 1791552,
+      "side": "right",
+      "strip": 110,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          98,
+          830.796875
+        ],
+        "rows": 24,
+        "cols": 1,
+        "tier": "t-seats",
+        "rowPx": 32,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "both",
+      "tile": [
+        314,
+        192
+      ],
+      "tilesArea": 1520640,
+      "maxArea": 1520640,
+      "side": "right",
+      "strip": 316,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          304,
+          528.984375
+        ],
+        "rows": 24,
+        "cols": 2,
+        "tier": "t-badges",
+        "rowPx": 38.13333333333333,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "neither",
+      "tile": [
+        314,
+        242
+      ],
+      "tilesArea": 1904640,
+      "maxArea": 1904640,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "qr",
+      "tile": [
+        172,
+        135
+      ],
+      "tilesArea": 1505880,
+      "maxArea": 1505880,
+      "side": "right",
+      "strip": 310,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "list",
+      "tile": [
+        186,
+        137
+      ],
+      "tilesArea": 1647360,
+      "maxArea": 1647360,
+      "side": "bottom",
+      "strip": 129,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          1684.65625,
+          118
+        ],
+        "rows": 60,
+        "cols": 20,
+        "tier": "t-seats",
+        "rowPx": 33.333333333333336,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "both",
+      "tile": [
+        172,
+        135
+      ],
+      "tilesArea": 1505880,
+      "maxArea": 1505880,
+      "side": "right",
+      "strip": 310,
+      "qrPx": 296,
+      "qrMinPx": 296,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          260.25,
+          664
+        ],
+        "rows": 60,
+        "cols": 3,
+        "tier": "t-seats",
+        "rowPx": 32.3,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "neither",
+      "tile": [
+        186,
+        154
+      ],
+      "tilesArea": 1843200,
+      "maxArea": 1843200,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 296,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "resize 1860x1040",
+      "tilesArea": 1411872,
+      "maxArea": 1411872,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "resize 1920x1080",
+      "tilesArea": 1520640,
+      "maxArea": 1520640,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "resize 1080x1920",
+      "tilesArea": 1632960,
+      "maxArea": 1632960,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 24,
+      "mode": "resize 1920x1080",
+      "tilesArea": 1520640,
+      "maxArea": 1520640,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "resize 1860x1040",
+      "tilesArea": 1370880,
+      "maxArea": 1370880,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "resize 1920x1080",
+      "tilesArea": 1505880,
+      "maxArea": 1505880,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "resize 1080x1920",
+      "tilesArea": 1632960,
+      "maxArea": 1632960,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1920x1080",
+      "n": 60,
+      "mode": "resize 1920x1080",
+      "tilesArea": 1505880,
+      "maxArea": 1505880,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 1,
+      "mode": "qr",
+      "tile": [
+        1124,
+        701
+      ],
+      "tilesArea": 795240,
+      "maxArea": 795240,
+      "side": "right",
+      "strip": 238,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 1,
+      "mode": "list",
+      "tile": [
+        1278,
+        701
+      ],
+      "tilesArea": 903810,
+      "maxArea": 905925,
+      "side": "right",
+      "strip": 84,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          72.609375,
+          70.203125
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-seats",
+        "rowPx": 24.035555555555554,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 1,
+      "mode": "both",
+      "tile": [
+        1122,
+        701
+      ],
+      "tilesArea": 793830,
+      "maxArea": 795240,
+      "side": "right",
+      "strip": 240,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          228.609375,
+          78.90625
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 27.65937777777778,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 1,
+      "mode": "neither",
+      "tile": [
+        1362,
+        701
+      ],
+      "tilesArea": 963030,
+      "maxArea": 963030,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 8,
+      "mode": "qr",
+      "tile": [
+        372,
+        231
+      ],
+      "tilesArea": 706880,
+      "maxArea": 706880,
+      "side": "right",
+      "strip": 236,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 8,
+      "mode": "list",
+      "tile": [
+        451,
+        231
+      ],
+      "tilesArea": 855400,
+      "maxArea": 855400,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          439.609375,
+          160.125
+        ],
+        "rows": 8,
+        "cols": 2,
+        "tier": "t-names",
+        "rowPx": 27.333688888888886,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 8,
+      "mode": "both",
+      "tile": [
+        372,
+        231
+      ],
+      "tilesArea": 706880,
+      "maxArea": 706880,
+      "side": "right",
+      "strip": 236,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          226.609375,
+          270.125
+        ],
+        "rows": 8,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 27.40337777777778,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 8,
+      "mode": "neither",
+      "tile": [
+        451,
+        231
+      ],
+      "tilesArea": 855400,
+      "maxArea": 855400,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "qr",
+      "tile": [
+        221,
+        137
+      ],
+      "tilesArea": 761400,
+      "maxArea": 761400,
+      "side": "right",
+      "strip": 238,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "list",
+      "tile": [
+        210,
+        172
+      ],
+      "tilesArea": 903936,
+      "maxArea": 903936,
+      "side": "right",
+      "strip": 78,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          70.609375,
+          602.703125
+        ],
+        "rows": 24,
+        "cols": 1,
+        "tier": "t-seats",
+        "rowPx": 23.235555555555553,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "both",
+      "tile": [
+        221,
+        137
+      ],
+      "tilesArea": 761400,
+      "maxArea": 761400,
+      "side": "right",
+      "strip": 238,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          229.609375,
+          400.390625
+        ],
+        "rows": 24,
+        "cols": 2,
+        "tier": "t-badges",
+        "rowPx": 28.945185185185185,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "neither",
+      "tile": [
+        223,
+        172
+      ],
+      "tilesArea": 958848,
+      "maxArea": 958848,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "qr",
+      "tile": [
+        121,
+        96
+      ],
+      "tilesArea": 750000,
+      "maxArea": 750000,
+      "side": "right",
+      "strip": 234,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "list",
+      "tile": [
+        132,
+        98
+      ],
+      "tilesArea": 832320,
+      "maxArea": 832320,
+      "side": "bottom",
+      "strip": 88,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          1171.046875,
+          82.03125
+        ],
+        "rows": 60,
+        "cols": 20,
+        "tier": "t-seats",
+        "rowPx": 23.170370370370367,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "both",
+      "tile": [
+        119,
+        96
+      ],
+      "tilesArea": 738000,
+      "maxArea": 738000,
+      "side": "right",
+      "strip": 252,
+      "qrPx": 222,
+      "qrMinPx": 222,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          247.609375,
+          398.078125
+        ],
+        "rows": 60,
+        "cols": 4,
+        "tier": "t-seats",
+        "rowPx": 23.50888888888889,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "neither",
+      "tile": [
+        132,
+        109
+      ],
+      "tilesArea": 922080,
+      "maxArea": 922080,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 222,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "resize 1306x728",
+      "tilesArea": 679896,
+      "maxArea": 679896,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "resize 1366x768",
+      "tilesArea": 761400,
+      "maxArea": 761400,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "resize 768x1366",
+      "tilesArea": 817152,
+      "maxArea": 817152,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 24,
+      "mode": "resize 1366x768",
+      "tilesArea": 761400,
+      "maxArea": 761400,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "resize 1306x728",
+      "tilesArea": 672600,
+      "maxArea": 672600,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "resize 1366x768",
+      "tilesArea": 738000,
+      "maxArea": 738000,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "resize 768x1366",
+      "tilesArea": 814080,
+      "maxArea": 814080,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "tv-1366x768",
+      "n": 60,
+      "mode": "resize 1366x768",
+      "tilesArea": 738000,
+      "maxArea": 738000,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 1,
+      "mode": "qr",
+      "tile": [
+        386,
+        321
+      ],
+      "tilesArea": 126750,
+      "maxArea": 126750,
+      "side": "bottom",
+      "strip": 1,
+      "qrPx": 370,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 1,
+      "mode": "list",
+      "tile": [
+        386,
+        321
+      ],
+      "tilesArea": 126750,
+      "maxArea": 126750,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          235.5,
+          75.296875
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 27,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 1,
+      "mode": "both",
+      "tile": [
+        386,
+        321
+      ],
+      "tilesArea": 126750,
+      "maxArea": 126750,
+      "side": "bottom",
+      "strip": 1,
+      "qrPx": 370,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          235.5,
+          75.296875
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 27,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 1,
+      "mode": "neither",
+      "tile": [
+        386,
+        321
+      ],
+      "tilesArea": 126750,
+      "maxArea": 126750,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 8,
+      "mode": "qr",
+      "tile": [
+        191,
+        150
+      ],
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "side": "bottom",
+      "strip": 177,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 8,
+      "mode": "list",
+      "tile": [
+        191,
+        158
+      ],
+      "tilesArea": 252720,
+      "maxArea": 252720,
+      "side": "bottom",
+      "strip": 1,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          381.328125,
+          130.640625
+        ],
+        "rows": 8,
+        "cols": 2,
+        "tier": "t-names",
+        "rowPx": 22.249999999999996,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 8,
+      "mode": "both",
+      "tile": [
+        191,
+        150
+      ],
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "side": "bottom",
+      "strip": 177,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          178.375,
+          171.65625
+        ],
+        "rows": 8,
+        "cols": 1,
+        "tier": "t-names",
+        "rowPx": 20.14583333333334,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 8,
+      "mode": "neither",
+      "tile": [
+        191,
+        158
+      ],
+      "tilesArea": 252720,
+      "maxArea": 252720,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "qr",
+      "tile": [
+        126,
+        73
+      ],
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "side": "bottom",
+      "strip": 173,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "list",
+      "tile": [
+        126,
+        84
+      ],
+      "tilesArea": 274560,
+      "maxArea": 274560,
+      "side": "bottom",
+      "strip": 85,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          315.359375,
+          83.65625
+        ],
+        "rows": 24,
+        "cols": 6,
+        "tier": "t-seats",
+        "rowPx": 18.291666666666675,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "both",
+      "tile": [
+        126,
+        73
+      ],
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "side": "bottom",
+      "strip": 173,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          178.375,
+          171.65625
+        ],
+        "rows": 24,
+        "cols": 3,
+        "tier": "t-seats",
+        "rowPx": 20.14583333333334,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "neither",
+      "tile": [
+        126,
+        95
+      ],
+      "tilesArea": 308880,
+      "maxArea": 308880,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "qr",
+      "tile": [
+        74,
+        47
+      ],
+      "tilesArea": 238680,
+      "maxArea": 238680,
+      "side": "bottom",
+      "strip": 173,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "list",
+      "tile": [
+        74,
+        47
+      ],
+      "tilesArea": 238680,
+      "maxArea": 238680,
+      "side": "bottom",
+      "strip": 173,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          367.328125,
+          175.65625
+        ],
+        "rows": 60,
+        "cols": 7,
+        "tier": "t-seats",
+        "rowPx": 18.35185185185186,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "both",
+      "tile": [
+        61,
+        39
+      ],
+      "tilesArea": 167700,
+      "maxArea": 167700,
+      "side": "bottom",
+      "strip": 357,
+      "qrPx": 166.5,
+      "qrMinPx": 166.5,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          380.484375,
+          181.75
+        ],
+        "rows": 60,
+        "cols": 7,
+        "tier": "t-seats",
+        "rowPx": 19.02777777777778,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "neither",
+      "tile": [
+        93,
+        49
+      ],
+      "tilesArea": 308460,
+      "maxArea": 308460,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 166.5,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "resize 330x804",
+      "tilesArea": 171600,
+      "maxArea": 171600,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "resize 390x844",
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "resize 844x390",
+      "tilesArea": 241368,
+      "maxArea": 241368,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 24,
+      "mode": "resize 390x844",
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "resize 330x804",
+      "tilesArea": 125400,
+      "maxArea": 125400,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "resize 390x844",
+      "tilesArea": 167700,
+      "maxArea": 167700,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "resize 844x390",
+      "tilesArea": 175500,
+      "maxArea": 175500,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-390x844",
+      "n": 60,
+      "mode": "resize 390x844",
+      "tilesArea": 167700,
+      "maxArea": 167700,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 1,
+      "mode": "qr",
+      "tile": [
+        684,
+        356
+      ],
+      "tilesArea": 245588,
+      "maxArea": 245588,
+      "side": "right",
+      "strip": 158,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 1,
+      "mode": "list",
+      "tile": [
+        714,
+        356
+      ],
+      "tilesArea": 256328,
+      "maxArea": 256328,
+      "side": "right",
+      "strip": 1,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          121,
+          74.796875
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-badges",
+        "rowPx": 27,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 1,
+      "mode": "both",
+      "tile": [
+        684,
+        356
+      ],
+      "tilesArea": 245588,
+      "maxArea": 245588,
+      "side": "right",
+      "strip": 158,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          121,
+          74.796875
+        ],
+        "rows": 1,
+        "cols": 1,
+        "tier": "t-badges",
+        "rowPx": 27,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 1,
+      "mode": "neither",
+      "tile": [
+        714,
+        356
+      ],
+      "tilesArea": 256328,
+      "maxArea": 256328,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 8,
+      "mode": "qr",
+      "tile": [
+        226,
+        117
+      ],
+      "tilesArea": 217056,
+      "maxArea": 217056,
+      "side": "right",
+      "strip": 158,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 8,
+      "mode": "list",
+      "tile": [
+        209,
+        160
+      ],
+      "tilesArea": 273456,
+      "maxArea": 273456,
+      "side": "bottom",
+      "strip": 33,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          609.296875,
+          28.21875
+        ],
+        "rows": 8,
+        "cols": 8,
+        "tier": "t-badges",
+        "rowPx": 18.22222222222223,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 8,
+      "mode": "both",
+      "tile": [
+        226,
+        117
+      ],
+      "tilesArea": 217056,
+      "maxArea": 217056,
+      "side": "right",
+      "strip": 158,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": {
+        "card": [
+          217.609375,
+          111
+        ],
+        "rows": 8,
+        "cols": 2,
+        "tier": "t-badges",
+        "rowPx": 25.25,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 8,
+      "mode": "neither",
+      "tile": [
+        209,
+        173
+      ],
+      "tilesArea": 295400,
+      "maxArea": 295400,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "qr",
+      "tile": [
+        112,
+        87
+      ],
+      "tilesArea": 243504,
+      "maxArea": 243504,
+      "side": "right",
+      "strip": 155,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "list",
+      "tile": [
+        119,
+        87
+      ],
+      "tilesArea": 258456,
+      "maxArea": 258456,
+      "side": "right",
+      "strip": 113,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          112,
+          256.015625
+        ],
+        "rows": 24,
+        "cols": 2,
+        "tier": "t-seats",
+        "rowPx": 18.36,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "both",
+      "tile": [
+        111,
+        87
+      ],
+      "tilesArea": 241368,
+      "maxArea": 241368,
+      "side": "right",
+      "strip": 161,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          160,
+          179.1875
+        ],
+        "rows": 24,
+        "cols": 3,
+        "tier": "t-seats",
+        "rowPx": 18,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "neither",
+      "tile": [
+        138,
+        87
+      ],
+      "tilesArea": 299040,
+      "maxArea": 299040,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "qr",
+      "tile": [
+        74,
+        49
+      ],
+      "tilesArea": 232560,
+      "maxArea": 232560,
+      "side": "right",
+      "strip": 155,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": true,
+      "decoded": true,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "list",
+      "tile": [
+        68,
+        52
+      ],
+      "tilesArea": 226800,
+      "maxArea": 226800,
+      "side": "bottom",
+      "strip": 84,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": {
+        "card": [
+          762.3125,
+          82.21875
+        ],
+        "rows": 60,
+        "cols": 15,
+        "tier": "t-seats",
+        "rowPx": 18.055555555555557,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "both",
+      "tile": [
+        73,
+        37
+      ],
+      "tilesArea": 175500,
+      "maxArea": 175500,
+      "side": "right",
+      "strip": 313,
+      "qrPx": 148,
+      "qrMinPx": 148,
+      "qrFeasible": true,
+      "qrLabel": false,
+      "decoded": true,
+      "list": {
+        "card": [
+          313,
+          191.796875
+        ],
+        "rows": 60,
+        "cols": 6,
+        "tier": "t-seats",
+        "rowPx": 18.18,
+        "clipped": 0
+      },
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "neither",
+      "tile": [
+        82,
+        57
+      ],
+      "tilesArea": 297360,
+      "maxArea": 297360,
+      "side": null,
+      "strip": 0,
+      "qrPx": null,
+      "qrMinPx": 148,
+      "qrFeasible": false,
+      "qrLabel": null,
+      "decoded": null,
+      "list": null,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "resize 784x350",
+      "tilesArea": 197760,
+      "maxArea": 197760,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "resize 844x390",
+      "tilesArea": 241368,
+      "maxArea": 241368,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "resize 390x844",
+      "tilesArea": 240240,
+      "maxArea": 240240,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 24,
+      "mode": "resize 844x390",
+      "tilesArea": 241368,
+      "maxArea": 241368,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "resize 784x350",
+      "tilesArea": 124800,
+      "maxArea": 124800,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "resize 844x390",
+      "tilesArea": 175500,
+      "maxArea": 175500,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "resize 390x844",
+      "tilesArea": 167700,
+      "maxArea": 167700,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    },
+    {
+      "engine": "chromium",
+      "screen": "phone-844x390",
+      "n": 60,
+      "mode": "resize 844x390",
+      "tilesArea": 175500,
+      "maxArea": 175500,
+      "qrCards": 1,
+      "lists": 1,
+      "problems": []
+    }
+  ]
+}

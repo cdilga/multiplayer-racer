@@ -99,7 +99,9 @@ const mirrorCheck = () => {
 for (const [w, h] of [[1920, 1080], [412, 915]]) {
   for (const [n, fp] of [[1, '1'], [32, '6,13,27'], [100, '6,50,99']]) {
     for (const on of [true, false]) {
-      const hash = `#hud&n=${n}&fp=${fp}&states=matrix${on ? '' : '&mirror=0'}`;
+      // &qr=0&list=0: this measures the mirror against the tile HUD at the grid's own tile sizes; the join QR and the player
+      // list (br-u02-qr-list-space-jdc) take space on a phone host and are covered by qr-space-check.mjs.
+      const hash = `#hud&n=${n}&fp=${fp}&states=matrix&qr=0&list=0${on ? '' : '&mirror=0'}`;
       const page = await open(w, h, hash);
       const r = await page.evaluate(mirrorCheck);
       const want = fp.split(',').length;

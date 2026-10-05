@@ -77,6 +77,7 @@ const inspect = () => {
     qrPop: qrPop && { scannable: qrPop.getBoundingClientRect().width >= 296 * k, sizeTvPx: Math.round(qrPop.getBoundingClientRect().width / k) },
     caption: cap && { where: cap.classList.contains('footcap') ? 'footer' : 'cell', onTile: !!cap.closest('.tile') },
     cells: [...document.querySelectorAll('.filler.cell')].map((f) => f.dataset.role),
+    gridQr: (() => { const q = document.querySelector('.qrcard .qr'); return q ? { scannable: q.getBoundingClientRect().width >= 296 * k, sizeTvPx: Math.round(q.getBoundingClientRect().width / k) } : null; })(),
     pauseCard: document.querySelector('.pcard')?.className ?? null,
     pauseButton: foot?.querySelector('.f-pause')?.textContent.trim(),
   };
@@ -122,9 +123,10 @@ for (const n of [8, 24, 32, 99]) {
   const f = by(`grid&n=${n}`)?.footer;
   need(f && f.join.code === 'ROO7' && /jammers\.dilger\.dev/.test(f.join.address) && f.buttons.includes('Pause') && f.buttons.includes('Fullscreen') && f.buttons.includes('Host menu') && f.logo, `footer at N=${n}`);
 }
-need(by('grid&n=3').cells.includes('qr') && !by('grid&n=3').footer.join.qr, 'dynamic N=3: the QR moves to a spare cell, not the footer');
-need(!by('grid&n=3&layout=static').cells.some((c) => c !== 'backdrop') && by('grid&n=3&layout=static').footer.join.qr, 'static N=3: QR in the footer, spare cells backdrop');
-need(by('grid&n=32').footer.join.qr, 'N=32: no cell fits the QR, so it is in the footer');
+need(by('grid&n=3').gridQr?.scannable && !by('grid&n=3').footer.join.qr, 'dynamic N=3: the QR is in the grid at a scannable size, not the footer');
+need(!by('grid&n=3&layout=static').gridQr && !by('grid&n=3&layout=static').cells.some((c) => c !== 'backdrop') && by('grid&n=3&layout=static').footer.join.qr, 'static N=3: QR in the footer, spare cells backdrop');
+// br-u02-qr-list-space-jdc: the QR hides only when the screen cannot hold it at a scannable size, never at a player count.
+need(by('grid&n=32').gridQr?.scannable && !by('grid&n=32').footer.join.qr, 'N=32 at 1080p: the QR is in the grid at a scannable size (a reserved strip), not the footer');
 need(['Players', 'Diagnostics', 'Dynamic', 'Static', 'Settings…'].every((b) => by('menu&n=8').footer.buttons.includes(b)) && !by('menu&n=8').paused, 'menu: the host buttons in the footer, game still running');
 need(by('qr-hover&n=32').paused && by('qr-hover&n=32').qrPop?.scannable, 'QR hover: a scannable QR and the game paused');
 for (const s of ['diagnostics&n=8', 'diagnostics&n=32']) need(by(s).diag && by(s).footer.heightTvPx > 88 && !by(s).paused, `${s}: footer grows, game running`);

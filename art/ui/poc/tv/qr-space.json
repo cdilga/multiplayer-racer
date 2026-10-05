@@ -1,0 +1,24 @@
+{
+  "note": "br-u02-qr-list-space-jdc: the chrome's minimums, as data. Sizes with a K are TV px at 1080p x the page scale k; Px are CSS px. See host-layout.js.",
+  "qr": {
+    "modules": 37,
+    "minModuleCssPx": { "tvAt1080": 8, "handheld": 4 },
+    "borderK": 3,
+    "labelShare": 0.9
+  },
+  "padK": 8,
+  "gapK": 10,
+  "list": {
+    "cardPadK": 6,
+    "maxScale": 1.5,
+    "minRowPx": 18,
+    "tiers": [
+      { "id": "names", "wK": 250, "hK": 32, "minWPx": 150 },
+      { "id": "badges", "wK": 120, "hK": 32, "minWPx": 74 },
+      { "id": "seats", "wK": 80, "hK": 32, "minWPx": 50 }
+    ]
+  },
+  "areaTolerance": 0.0025,
+  "stripStepDivisor": 800,
+  "stripMaxShare": 0.6
+}

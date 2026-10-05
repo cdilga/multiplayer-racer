@@ -4,6 +4,7 @@
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
 import { createWorld, FRAMING } from './world.js';
 import { layoutGrid, PSEUDOCODE } from './grid.js';
+import { solveHost, qrMin } from './host-layout.js';
 import { STATES } from './states.js';
 
 
@@ -19,6 +20,8 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>'
 const cooee = (num) => el('div', 'cooee', `<i class="flash"></i><b class="display">Cooee #${num}</b>`);
 
 const tokens = await loadTokens();
+// br-u02-qr-list-space-jdc: the chrome's minimums (QR module px, list rows, margins) are data; host-layout.js solves with them.
+const QR_RULES = await (await fetch(new URL('./qr-space.json', import.meta.url))).json();
 // br-dim.7: the merged round screen's layout rule is data: the video's share of the screen per aspect band.
 const ROUND_LAYOUT = await (await fetch(new URL('./round-layout.json', import.meta.url))).json();
 // TV px at 1080p scaled by output height. A portrait screen is a phone host held at arm's length: scale by width,
@@ -29,6 +32,8 @@ const setK = () => {
   const minK = tokens.type.profiles.handheld.minTextPx / tokens.type.profiles.tv.minTextPx;
   kNow = portrait ? Math.max(minK, window.innerWidth / 1080) : window.innerHeight / 1080;
   document.documentElement.style.setProperty('--k', String(kNow));
+  // The one minimum scannable QR size (qr-space.json): the lobby's QR never goes under it either.
+  document.documentElement.style.setProperty('--qr-min', `${qrMin(QR_RULES, kNow, window.devicePixelRatio || 1).q}px`);
 };
 setK();
 const colors = tokens.identity.colors.map((c) => c.hex);
@@ -75,7 +80,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
   const tiles = new Map(); // seat → { el, cur, tgt, t0, from, hud refs }
   let fillerEls = [];
   let joinChip = null;
-  let lay = null;
+  let lay = null, chrome = null, listEl = null, listKey = '', chromeEls = [];
 
   function makeTile(seat) {
     const info = seatInfo(seat);
@@ -119,7 +124,12 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
   function relayout(animate) {
     const r = rect();
     const k = K();
-    lay = layoutGrid(seats().length, r, { gutter: 6 * k });
+    // Dynamic (and the grid player, which has no footer): one solver places the tiles, the join QR and the player list so the
+    // tiles keep the most area the chrome allows (host-layout.js). Static keeps them in the footer: a plain grid.
+    const solved = foot && layout === 'static' ? null : solveHost(seats().length, r, { rules: QR_RULES, k, dpr: window.devicePixelRatio || 1, gutter: 6 * k, qr: S.p.get('qr') !== '0', list: S.p.get('list') !== '0' });
+    lay = solved ?? layoutGrid(seats().length, r, { gutter: 6 * k });
+    chrome = solved?.chrome ?? null;
+    window.__poc.chrome = chrome ? { ...chrome, cell: lay.cell, rect: r, k, dpr: window.devicePixelRatio || 1, n: seats().length, fillers: lay.fillers.map((f) => ({ x: f.x, y: f.y, w: f.w, h: f.h, kind: f.kind, used: !!f.used })) } : null;
     const now = performance.now();
     const live = new Set(seats());
     for (const [seat, t] of tiles) if (!live.has(seat)) { t.el.remove(); tiles.delete(seat); }
@@ -144,53 +154,55 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     fillerEls = [];
     joinChip?.remove();
     joinChip = null;
-    // Filler roles (R95): empty cells first, in reading order, then margins, largest first. With the footer (R96):
-    // dynamic puts the join QR in the first spare cell that fits a scannable QR, then the standings, then a global caption;
-    // whatever doesn't fit stays in the footer. Static leaves all three in the footer. Without a footer (the grid player)
-    // joining comes first: the QR or, with no room for one, the room code. Everything else is the painted backdrop.
-    const QR = 37 * tokens.qr.minModulePx.tv * k; // 8 px per module at 1080p: scannable from the couch
-    const fits = { qr: (f) => f.w >= QR + 40 * k && f.h >= QR + 40 * k, standings: (f) => f.w >= 260 * k && f.h >= 200 * k, code: (f) => f.w >= 220 * k && f.h >= 120 * k, caption: (f) => f.w >= 300 * k && f.h >= 120 * k };
+    // Filler roles (R95): the join QR and the player list sit where the solver put them (the biggest square the free
+    // space allows, every player in the list); a global caption takes a spare cell or margin that nothing else uses and
+    // that fits it; the rest, and the margins, are the painted backdrop. Without a footer (the grid player) a QR the
+    // free space cannot hold at a scannable size shows the room code instead.
+    const hasQr = !!chrome?.qr;
+    let hasCode = false, capInCell = false;
     const roles = lay.fillers.map(() => 'backdrop');
-    const give = (role) => { const i = lay.fillers.findIndex((f, j) => roles[j] === 'backdrop' && fits[role](f)); if (i >= 0) roles[i] = role; return i >= 0; };
-    let hasQr = false, hasCode = false, capInCell = false;
-    if (!foot) { hasQr = give('qr'); hasCode = !hasQr && give('code'); give('standings'); }
-    else if (layout === 'dynamic') { hasQr = give('qr'); give('standings'); capInCell = !!caption && give('caption'); }
+    if (chrome && foot && caption) {
+      const i = lay.fillers.findIndex((f) => !f.used && f.w >= 300 * k && f.h >= 120 * k);
+      if (i >= 0) { roles[i] = 'caption'; capInCell = true; }
+    }
     lay.fillers.forEach((f, i) => {
-      const e = el('div', `filler ${f.kind}`);
-      e.dataset.role = roles[i];
+      const e = el('div', `filler ${f.kind === 'strip' ? 'margin rail' : f.kind}`);
+      e.dataset.role = f.used ? 'chrome' : roles[i];
       Object.assign(e.style, { left: `${f.x}px`, top: `${f.y}px`, width: `${f.w}px`, height: `${f.h}px` });
-      if (roles[i] === 'qr') e.append(joinCard(f.w < f.h * 1.3));
-      else if (roles[i] === 'standings') e.append(standingsCard(Math.max(3, Math.min(8, Math.floor((f.h / k - 80) / 38)))));
-      else if (roles[i] === 'code') e.append(codeCard());
-      else if (roles[i] === 'caption') e.append(el('div', 'caption cellcap', esc(caption)));
+      if (roles[i] === 'caption') e.append(el('div', 'caption cellcap', esc(caption)));
       layer.prepend(e);
       fillerEls.push(e);
     });
+    for (const c of chromeEls) c.remove();
+    chromeEls = [];
+    listEl = null; listKey = '';
+    if (chrome?.qr) chromeEls.push(qrCard(chrome.qr));
+    if (chrome?.list) { listEl = playerList(chrome.list); chromeEls.push(listEl); }
+    layer.append(...chromeEls);
     footer?.update({ qr: !hasQr, caption: capInCell ? null : caption, players: seats().length, layout });
-    if (!foot && cornerChip && !hasQr && !hasCode) {
-      // One player: a full-size corner QR (plan §10). More players and no free cell: the code only, because a QR
-      // smaller than 8 px per module won't scan from the couch (tokens.qr).
-      joinChip = seats().length === 1
-        ? el('div', 'joinchip', `<img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:${QR}px;height:${QR}px"><div><span class="display code">ROO7</span><small>Scan to join</small></div>`)
-        : el('div', 'joinchip', `<span class="display" style="font-size:calc(var(--k)*32px);line-height:1">ROO7</span><small>jammers.dilger.dev</small>`);
+    if (!foot && cornerChip && !hasQr && !hasCode && seats().length > 0 && S.p.get('qr') !== '0') {
+      // No free space holds a QR at a scannable size (smaller than the minimum module px won't scan): the code only.
+      joinChip = el('div', 'joinchip', `<span class="display" style="font-size:calc(var(--k)*32px);line-height:1">ROO7</span><small>jammers.dilger.dev</small>`);
       Object.assign(joinChip.style, { right: `${W() - (r.x + r.w) + 0.035 * W()}px`, bottom: `${H() - (r.y + r.h) + 0.035 * H()}px` });
       layer.append(joinChip);
     }
     settled = !animate;
   }
 
-  function joinCard(stack) {
-    const c = el('div', `card join${stack ? ' stack' : ''}`);
-    c.innerHTML = `<img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:calc(var(--k)*296px);height:calc(var(--k)*296px)"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div></div>`;
+  // The join QR at the solver's size: whole device px per module so every module is crisp; the code under it when it fits.
+  function qrCard(q) {
+    const c = el('div', 'qrcard');
+    c.style.cssText = `left:${q.x}px;top:${q.y}px;width:${q.ow}px;height:${q.oh}px;border-width:${(q.ow - q.q) / 2}px`;
+    c.innerHTML = `<img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7.svg')}" style="width:${q.q}px;height:${q.q}px">${q.lh ? `<div class="display code" style="font-size:${Math.max(14, q.q * 0.17)}px">ROO7</div>` : ''}`;
+    c.dataset.qr = String(q.q);
     return c;
   }
-  function codeCard() {
-    return el('div', 'card join stack codecard', `<div class="display code">ROO7</div><div class="code-cap">Join at jammers.dilger.dev</div>`);
-  }
-  function standingsCard(rows) {
-    const c = el('div', 'card standings');
-    c.dataset.rows = rows;
-    c.innerHTML = `<h3 class="display">Standings</h3><div class="rows"></div>`;
+  // The player list: every player, in standings order, in as many columns as it takes (never a count, never a cut).
+  function playerList(l) {
+    const c = el('div', `plist t-${l.tier}`);
+    c.style.cssText = `left:${l.x}px;top:${l.y}px;width:${l.w}px;height:${l.h}px;--rh:${l.r}px;--cw:${l.cw}px;--rows:${l.rows};--cols:${l.cols}`;
+    c.dataset.cols = l.cols; c.dataset.rows = l.rows;
+    c.innerHTML = `${l.head ? '<h3 class="display">Players</h3>' : ''}<div class="rows"></div>`;
     return c;
   }
 
@@ -248,15 +260,15 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
       const b = Math.round((hudStates[seat]?.boost ?? s.boost) * 100);
       if (t.last.boost !== b) { t.boost.style.width = `${b}%`; t.last.boost = b; }
     }
-    // filler standings
-    for (const f of fillerEls) {
-      const card = f.querySelector('.standings');
-      if (!card) continue;
-      const rows = +card.dataset.rows;
-      const key = st.slice(0, rows).map((s) => s.seat).join(',');
-      if (card.dataset.key === key) continue;
-      card.dataset.key = key;
-      card.querySelector('.rows').innerHTML = st.slice(0, rows).map((s) => { const i = seatInfo(s.seat); return `<div class="srow"><span class="place">${s.place}</span><span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span><span>${esc(shortName(i.name, 10))}</span></div>`; }).join('');
+    // the player list: every player, in standings order, rebuilt only when the order changes
+    if (listEl) {
+      const live = new Set(seats()), mine = st.filter((x) => live.has(x.seat)); // only the players in this grid
+      const key = mine.map((x) => x.seat).join(',');
+      if (key !== listKey) {
+        listKey = key;
+        const names = listEl.classList.contains('t-names');
+        listEl.querySelector('.rows').innerHTML = mine.map((x, ix) => { const i = seatInfo(x.seat); return `<div class="srow"><span class="place">${ix + 1}</span><span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span>${names ? `<span class="nm">${esc(shortName(i.name, 10))}</span>` : ''}</div>`; }).join('');
+      }
     }
     footer?.tick(st);
     if (overlays) drawOverlays(views);

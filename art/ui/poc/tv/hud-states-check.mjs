@@ -53,7 +53,9 @@ const combos = new Set();
 for (const [w, h] of SCREENS) {
   const page = await browser.newPage({ viewport: { width: w, height: h } });
   for (const n of NS) {
-    const hash = `#hud&n=${n}&states=matrix`;
+    // &qr=0&list=0: the per-tile HUD is measured at the grid's own tile sizes; the join QR and the player list take space
+    // on a phone host (br-u02-qr-list-space-jdc, qr-space-check.mjs), which at 100 players on 412 px leaves a ~38 px tile.
+    const hash = `#hud&n=${n}&states=matrix&qr=0&list=0`;
     await page.goto('about:blank');
     await page.goto(`${base}/poc/tv/index.html${hash}`);
     await page.waitForFunction((x) => window.__poc?.ready === true && window.__poc.hash === x, hash, { timeout: 30000 });
