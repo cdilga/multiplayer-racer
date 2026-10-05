@@ -258,7 +258,7 @@ motion reel from these values.
 
 | Question | Proposal | Why |
 |---|---|---|
-| Lobby | The warm-up drive behind the QR and the player strip | Players are already driving while friends join |
+| Lobby | Every player on one screen (joining / choosing / ready) over a still view of the upcoming track, the QR sharing the layout (R110; the warm-up drive is gone) | Everyone can see who's in and who's ready at a glance |
 | Grids with a gap | Balanced rows; the last row centred, its tiles wider within the aspect band; any cell still free shows the join QR and live standings | Gameplay area first (master §6.2), nothing black |
 | Cameras | Third person by default, first person per seat from the controller; mocks show a mixed grid | Per-seat choice (R3) has to read side by side |
 | In-world look | Master §12.1's comic treatment; if it costs too much at 24 tiles, outlines on cars and debris only | Keeps the look where players look |

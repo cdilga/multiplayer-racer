@@ -34,7 +34,7 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 
 - [ ] **D0 Hello room:** host on the TV from the index; your phone joins by QR and moves a marker; diagnostics say direct or relay.
 - [ ] **D1 Free drive:** phones and a keyboard drive Cruz Missiles on the greybox; first-person and chase views; recovery works. First feel notes.
-- [ ] **D2 Race:** lobby warm-up, Ready / Start now, a race, results, next round on its own; Identify from the phone's button and its menu, a pad's View/Select and a keyboard's Identify key (your number flashes big in your colour on the TV and your phone); a late joiner; a phone dropping out and back.
+- [ ] **D2 Race:** lobby (every player on one screen; no warm-up since R110), Ready / Start now, a race, results, next round on its own; Identify from the phone's button and its menu, a pad's View/Select and a keyboard's Identify key (your number flashes big in your colour on the TV and your phone); a late joiner; a phone dropping out and back.
 - [ ] **D3 Crash:** doors and wheels go loose then fly off and stay; wrecks respawn in about 2 s; husks stay; OI! and cones.
 - [ ] **D4 Outback:** generated tracks through town, rocks, outback dirt and bitumen.
 - [ ] **D5 Party-ready:** QR scanner, tutorial, phone as host, voice and music, engine sound, effects (dust, smoke, sparks, fire, glows),

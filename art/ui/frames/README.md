@@ -6,7 +6,7 @@ They show the house style; they are not mocks of the real UI (those are `../poc/
 | Frame | What it shows |
 |---|---|
 | `tv-race-grid.webp` | The TV during a race with eight players: a 4 × 2 grid of live views (six chase, two bonnet cameras) with the per-tile HUD (badge, name, position, lap, boost) and nothing else on screen |
-| `lobby-32.webp` | The TV lobby at 32 players: QR and room code, the roster in four columns with Ready ticks and "choosing…", the Start race button, the painted warm-up behind the chrome |
+| `lobby-32.webp` | The TV lobby at 32 players: QR and room code, the roster in four columns with Ready ticks and "choosing…", the Start race button, the painted warm-up behind the chrome (superseded by R110: no warm-up behind the lobby) |
 | `phone-controller.webp` | The phone controller, sideways, in a dark room (DRIVE and ACTION sticks, boost meter, HUD strip, Find my car) beside the phone lobby, upright (badge, name reroll, car still, Ready) |
 | `tv-derby-overview.webp` | The derby from a fixed high camera: sixteen battered cars in a quarry bowl with nameplates, debris lying where it fell |
 
