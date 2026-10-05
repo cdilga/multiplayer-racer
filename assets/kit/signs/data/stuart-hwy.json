@@ -1,0 +1,28 @@
+{
+  "id": "signs/stuart-hwy",
+  "version": 1,
+  "family": "direction",
+  "shape": "rectangle",
+  "background": "#00693c",
+  "legend": "#ffffff",
+  "shield": "A87",
+  "heading": "STUART HWY",
+  "rows": [
+    {
+      "text": "ALICE SPRINGS",
+      "km": 1500,
+      "arrow": "ahead"
+    },
+    {
+      "text": "DARWIN",
+      "km": 1500,
+      "arrow": "ahead"
+    }
+  ],
+  "sidecar": {
+    "family": "direction",
+    "source": "original",
+    "licence": "original",
+    "note": "Route shield + highway name + destinations with distances; drawn in code from the grammar, no Commons image copied."
+  }
+}

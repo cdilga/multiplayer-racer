@@ -1,0 +1,101 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "sheets": {
+    "smallest-tile-192x108": {
+      "w": 1152,
+      "h": 216,
+      "cell": {
+        "w": 192,
+        "h": 108
+      },
+      "fill": 0.85,
+      "signs": [
+        "signs/bloody-big-jumps",
+        "signs/crest",
+        "signs/jumps-crest",
+        "signs/kangaroo",
+        "signs/steep-descent",
+        "signs/unsealed-road",
+        "signs/junction",
+        "signs/red-centre",
+        "signs/stuart-hwy",
+        "signs/big-red-rock",
+        "signs/lookout",
+        "signs/rest-area"
+      ],
+      "errors": []
+    },
+    "mid-tile-274x216": {
+      "w": 1096,
+      "h": 648,
+      "cell": {
+        "w": 274,
+        "h": 216
+      },
+      "fill": 0.85,
+      "signs": [
+        "signs/bloody-big-jumps",
+        "signs/crest",
+        "signs/jumps-crest",
+        "signs/kangaroo",
+        "signs/steep-descent",
+        "signs/unsealed-road",
+        "signs/junction",
+        "signs/red-centre",
+        "signs/stuart-hwy",
+        "signs/big-red-rock",
+        "signs/lookout",
+        "signs/rest-area"
+      ],
+      "errors": []
+    },
+    "large-480x360": {
+      "w": 1440,
+      "h": 1440,
+      "cell": {
+        "w": 480,
+        "h": 360
+      },
+      "fill": 0.88,
+      "signs": [
+        "signs/bloody-big-jumps",
+        "signs/crest",
+        "signs/jumps-crest",
+        "signs/kangaroo",
+        "signs/steep-descent",
+        "signs/unsealed-road",
+        "signs/junction",
+        "signs/red-centre",
+        "signs/stuart-hwy",
+        "signs/big-red-rock",
+        "signs/lookout",
+        "signs/rest-area"
+      ],
+      "errors": []
+    },
+    "smallest-tile-far-192x108": {
+      "w": 1152,
+      "h": 216,
+      "cell": {
+        "w": 192,
+        "h": 108
+      },
+      "fill": 0.4,
+      "signs": [
+        "signs/bloody-big-jumps",
+        "signs/crest",
+        "signs/jumps-crest",
+        "signs/kangaroo",
+        "signs/steep-descent",
+        "signs/unsealed-road",
+        "signs/junction",
+        "signs/red-centre",
+        "signs/stuart-hwy",
+        "signs/big-red-rock",
+        "signs/lookout",
+        "signs/rest-area"
+      ],
+      "errors": []
+    }
+  }
+}

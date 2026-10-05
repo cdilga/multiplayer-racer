@@ -1,0 +1,15 @@
+{
+  "id": "signs/crest",
+  "version": 1,
+  "family": "warning",
+  "shape": "diamond",
+  "background": "#ffd100",
+  "legend": "#111111",
+  "pictogram": "crest",
+  "sidecar": {
+    "family": "warning",
+    "source": "original",
+    "licence": "original",
+    "note": "Crest/jump pictogram drawn in code from the real symbol convention (a vehicle on a rise); no Commons image copied."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "signs/lookout",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "SCENIC",
+    "LOOKOUT",
+    "2 KM"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Tourist/information sign: brown, white legend; original wording."
+  }
+}

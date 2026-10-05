@@ -1,0 +1,15 @@
+{
+  "id": "signs/kangaroo",
+  "version": 1,
+  "family": "warning",
+  "shape": "diamond",
+  "background": "#ffd100",
+  "legend": "#111111",
+  "pictogram": "kangaroo",
+  "sidecar": {
+    "family": "warning",
+    "source": "original",
+    "licence": "original",
+    "note": "Animals (kangaroo) pictogram drawn in code from the real convention; no Commons image copied."
+  }
+}

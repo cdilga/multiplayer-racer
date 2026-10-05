@@ -12,6 +12,7 @@
 pub mod assemble;
 pub mod course;
 pub mod seed;
+pub mod signs;
 
 use std::collections::BTreeMap;
 

@@ -1,0 +1,19 @@
+{
+  "id": "signs/bloody-big-jumps",
+  "version": 1,
+  "family": "warning",
+  "shape": "diamond",
+  "background": "#ffd100",
+  "legend": "#111111",
+  "lines": [
+    "BLOODY BIG",
+    "JUMPS",
+    "AHEAD"
+  ],
+  "sidecar": {
+    "family": "warning",
+    "source": "original",
+    "licence": "original",
+    "note": "Invented joke sign: warning grammar (yellow diamond, black upper-case legend), the joke is only in the wording."
+  }
+}

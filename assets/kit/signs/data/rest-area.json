@@ -1,0 +1,18 @@
+{
+  "id": "signs/rest-area",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "REST AREA",
+    "5 KM"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Tourist/information sign, original wording."
+  }
+}

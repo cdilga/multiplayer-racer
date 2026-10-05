@@ -1,0 +1,33 @@
+{
+  "id": "signs/red-centre",
+  "version": 1,
+  "family": "direction",
+  "shape": "rectangle",
+  "background": "#00693c",
+  "legend": "#ffffff",
+  "shield": "B83",
+  "heading": "LASSETER HWY",
+  "rows": [
+    {
+      "text": "ULURU",
+      "km": 244,
+      "arrow": "ahead"
+    },
+    {
+      "text": "KINGS CANYON",
+      "km": 305,
+      "arrow": "left"
+    },
+    {
+      "text": "KATHLEEN",
+      "km": 12,
+      "arrow": "right"
+    }
+  ],
+  "sidecar": {
+    "family": "direction",
+    "source": "original",
+    "licence": "original",
+    "note": "Three-destination direction sign (stress case for text fit); original wording."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "signs/big-red-rock",
+  "version": 1,
+  "family": "tourist",
+  "shape": "rectangle",
+  "background": "#6b3410",
+  "legend": "#ffffff",
+  "lines": [
+    "BIG RED",
+    "ROCK"
+  ],
+  "sidecar": {
+    "family": "tourist",
+    "source": "original",
+    "licence": "original",
+    "note": "Tourist/information sign, original wording."
+  }
+}

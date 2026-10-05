@@ -1,0 +1,28 @@
+{
+  "id": "signs/junction",
+  "version": 1,
+  "family": "direction",
+  "shape": "rectangle",
+  "background": "#00693c",
+  "legend": "#ffffff",
+  "shield": "A1",
+  "heading": "PRINCES HWY",
+  "rows": [
+    {
+      "text": "ADELAIDE",
+      "km": 380,
+      "arrow": "left"
+    },
+    {
+      "text": "MELBOURNE",
+      "km": 640,
+      "arrow": "right"
+    }
+  ],
+  "sidecar": {
+    "family": "direction",
+    "source": "original",
+    "licence": "original",
+    "note": "Junction sign with turn arrows; original wording, grammar from real direction signs."
+  }
+}

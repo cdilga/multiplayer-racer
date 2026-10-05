@@ -6,6 +6,7 @@ import { bin } from './generic/bin';
 import { boxBuilding } from './generic/box-building';
 import { cone } from './generic/cone';
 import { post } from './generic/post';
+import { SIGN_MODULES } from '../signs'; // P1-M09: one module per assets/kit/signs/data/*.json
 import type { KitModule, Params } from './types';
 
 type Size = number | { param: string; scale?: number };
@@ -26,6 +27,7 @@ export const MODULES: Record<string, KitModule> = {
   'generic/box-building': boxBuilding,
   'generic/cone': cone,
   'generic/bin': bin,
+  ...SIGN_MODULES,
 };
 
 /** A placement's params with the entry's defaults filled in. */

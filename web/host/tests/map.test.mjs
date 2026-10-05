@@ -125,7 +125,7 @@ test('draws scale with kit-piece types, not instances (1× and 10× the dressing
 test("each registry entry's collider proxy and its rendered bounds agree within tolerance", async () => {
   const { page, errors } = await open('');
   const bounds = await page.evaluate(() => window.__jjRender.kitBounds());
-  const entries = (await import('node:fs')).readdirSync(join(repo, 'assets/kit/generic')).filter((f) => f.endsWith('.json'));
+  const entries = (await import('node:fs')).readdirSync(join(repo, 'assets/kit'), { recursive: true }).filter((f) => /^[^/]+\/[^/]+\.json$/.test(f)); // every family (generic, signs, ...)
   assert.equal(bounds.length, entries.length, 'every registry entry has a module');
   for (const b of bounds) {
     assert.equal(b.rendered.length, 4, `${b.id} has a geometry module`);

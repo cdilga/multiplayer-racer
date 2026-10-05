@@ -1,0 +1,18 @@
+{
+  "id": "signs/jumps-crest",
+  "version": 1,
+  "family": "warning",
+  "shape": "diamond",
+  "background": "#ffd100",
+  "legend": "#111111",
+  "pictogram": "crest",
+  "lines": [
+    "JUMPS"
+  ],
+  "sidecar": {
+    "family": "warning",
+    "source": "original",
+    "licence": "original",
+    "note": "Invented: crest pictogram with a one-word legend, warning grammar."
+  }
+}

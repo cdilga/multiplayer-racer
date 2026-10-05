@@ -1,0 +1,17 @@
+{
+  "id": "signs/red-centre",
+  "version": 1,
+  "what": "A direction road sign on its post(s); its family, text and pictogram are data in data/red-centre.json.",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 2400,
+      "y": 3100,
+      "z": 100
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 60000,
+    "cullBeyondMm": 300000
+  }
+}
