@@ -1,0 +1,1402 @@
+{
+ "lede": "Is there a broad Australian, excited, nasal-drawl announcer we can get by prompt, by restyling the reference once, or by recording again? Every player says one of the same 8 cues. Numbers sit under each clip (measured on the raw renders; the players are level-matched to -20 LUFS so loudness does not bias the comparison).",
+ "caveat": "Speaker similarity (cosine to the owner's reference, Qwen speaker encoder), Whisper large-v3 word error rate against the line, pitch spread (10th-90th percentile, semitones) and loudness (integrated LUFS) can reject a broken clip. They cannot judge 'sounds like a broad Australian announcer'. That is your ear's call.",
+ "footer": "P1-A01b. Prompt-only and clone renders: eris (Qwen3-TTS 1.7B, bf16). FrankenTTS 0.6B int8: Mac CPU. Metrics: Qwen3-TTS speaker encoder and faster-whisper large-v3 on eris. No full 61-row render has been run; that waits for your pick.",
+ "groups": [
+  {
+   "id": "refs",
+   "short": "References",
+   "title": "References",
+   "blurb": "The recordings every clone starts from: today's excited reference, the owner's own, and the two new restyle-once references.",
+   "blocks": [
+    {
+     "letter": "A",
+     "title": "Current voice: E4f reference",
+     "sub": "excited reference behind the 61 P1-A01 clips",
+     "detail": "Seed-VC F0 conversion of a VoiceDesign read into the owner's timbre (+4 semitones). Transcript: And they're off! What a start from number seven, flat out into the first corner! Oh, he's sideways, he's sideways, and he holds it! Unbelievable! Here comes the pack, doors flying everywhere, this is absolutely bonkers! What a race!",
+     "clips": [
+      {
+       "speaker_sim": 0.9862,
+       "wer": 0.051,
+       "spread_semitones": 6.64,
+       "median_hz": 175.8,
+       "lufs": -22.3,
+       "seconds": 16.8,
+       "heard": "and they're off what a start from number seven flat out into the first quarter oh he's sideways he's sideways and he holds it unbelievable here comes the pack doors flying everywhere this is absolutely bonkers what a raise",
+       "label": "REF",
+       "text": "And they're off! What a start from number seven, flat out into the first corner! Oh, he's sideways, he's sideways, and he holds it! Unbelievable! Here comes the pack, doors flying everywhere, this is absolutely bonkers! What a race!",
+       "src": "clips/refs/E4F.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "B",
+     "title": "Owner reference (ref-B)",
+     "sub": "the owner's own calm recording, as used for the warm rows",
+     "detail": "Transcript kept private: it is the owner's own words, not for the public page. Metrics were scored against it.",
+     "clips": [
+      {
+       "speaker_sim": 1.0,
+       "wer": 0.0,
+       "spread_semitones": 5.54,
+       "median_hz": 119.4,
+       "lufs": -27.9,
+       "seconds": 25.64,
+       "heard": null,
+       "label": "REF",
+       "text": "(the owner's own words)",
+       "src": "clips/refs/OWNER.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "C",
+     "title": "Owner raw recording",
+     "sub": "chris-hq.m4a, the unprocessed source of ref-B",
+     "detail": "No transcript on file, so no word-accuracy or similarity number; loudness only.",
+     "clips": [
+      {
+       "label": "RAW",
+       "text": "(the owner's own words)",
+       "speaker_sim": null,
+       "wer": null,
+       "spread_semitones": null,
+       "median_hz": null,
+       "lufs": -28.6,
+       "seconds": null,
+       "src": "clips/refs/OWNER-RAW.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "D",
+     "title": "Restyle-once reference R1",
+     "sub": "VoiceDesign 'Slow drawl' (C2), converted to the owner's timbre",
+     "detail": "Read of the phonetically rich passage plus announcer lines, Seed-VC F0 --lift 4. Transcript: Please call Stella. Ask her to bring these things with her from the store: six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. And they're off! What a start, flat out into the first corner! Oh, she's sideways, she's sideways, and she holds it! Fair dinkum, what a ripper!",
+     "clips": [
+      {
+       "speaker_sim": 0.9809,
+       "wer": 0.0,
+       "spread_semitones": 3.86,
+       "median_hz": 158.4,
+       "lufs": -24.5,
+       "seconds": 20.48,
+       "heard": "please call stella ask her to bring these things with her from the store six spoons of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob and they're off what a start flat out into the first corner oh she's sideways she's sideways and she holds it fair dinkum what a ripper",
+       "label": "REF",
+       "text": "Please call Stella. Ask her to bring these things with her from the store: six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. And they're off! What a start, flat out into the first corner! Oh, she's sideways, she's sideways, and she holds it! Fair dinkum, what a ripper!",
+       "src": "clips/refs/R1.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "E",
+     "title": "Restyle-once reference R2",
+     "sub": "VoiceDesign 'Bright nasal' (C3), converted to the owner's timbre",
+     "detail": "Read of the phonetically rich passage plus announcer lines, Seed-VC F0 --lift 4. Transcript: Please call Stella. Ask her to bring these things with her from the store: six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. And they're off! What a start, flat out into the first corner! Oh, she's sideways, she's sideways, and she holds it! Fair dinkum, what a ripper!",
+     "clips": [
+      {
+       "speaker_sim": 0.981,
+       "wer": 0.0,
+       "spread_semitones": 5.25,
+       "median_hz": 149.5,
+       "lufs": -24.6,
+       "seconds": 21.99,
+       "heard": "please call stella ask her to bring these things with her from the store six spoons of fresh snow peas five thick slabs of blue cheese and maybe a snack for her brother bob and they're off what a start flat out into the first corner oh she's sideways she's sideways and she holds it fair dinkum what a ripper",
+       "label": "REF",
+       "text": "Please call Stella. Ask her to bring these things with her from the store: six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob. And they're off! What a start, flat out into the first corner! Oh, she's sideways, she's sideways, and she holds it! Fair dinkum, what a ripper!",
+       "src": "clips/refs/R2.m4a"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "prompt",
+   "short": "Prompt only",
+   "title": "Prompt-only candidates",
+   "blurb": "Four written descriptions of a broad Australian excited announcer, each saying the same 8 cues. This answers whether a prompt alone gets there, with no owner timbre.",
+   "blocks": [
+    {
+     "letter": "F",
+     "title": "C1 Fast ocker",
+     "sub": "VoiceDesign 1.7B, prompt only, no reference audio (eris)",
+     "detail": "A male Australian motorsport announcer with a strong, broad ocker accent and a nasal twang, medium pitch, fast pace, shouting with excitement, punchy stress on every key word, like a V8 Supercars commentator on the last lap.",
+     "clips": [
+      {
+       "speaker_sim": 0.8857,
+       "wer": 0.0,
+       "spread_semitones": 6.43,
+       "median_hz": 344.1,
+       "lufs": -19.7,
+       "seconds": 5.76,
+       "heard": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/cand/C1/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.8748,
+       "wer": 0.0,
+       "spread_semitones": 3.59,
+       "median_hz": 381.0,
+       "lufs": -20.6,
+       "seconds": 2.08,
+       "heard": "Three, two, one, go, go, go!",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/cand/C1/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.87,
+       "wer": 0.4,
+       "spread_semitones": 6.85,
+       "median_hz": 363.6,
+       "lufs": -13.9,
+       "seconds": 4.24,
+       "heard": "LOOK AT THAT AIIIIIIIIIIISTS TRUTH!",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/cand/C1/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.8903,
+       "wer": 0.0,
+       "spread_semitones": 4.98,
+       "median_hz": 296.3,
+       "lufs": -17.1,
+       "seconds": 2.48,
+       "heard": "He's gone out past Whoop Whoop Legends!",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/cand/C1/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.8967,
+       "wer": 0.0,
+       "spread_semitones": 1.89,
+       "median_hz": 280.7,
+       "lufs": -16.9,
+       "seconds": 2.72,
+       "heard": "Fair dinkum! That was a ripper of a lap!",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/cand/C1/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.8892,
+       "wer": 0.0,
+       "spread_semitones": 10.72,
+       "median_hz": 410.3,
+       "lufs": -19.0,
+       "seconds": 2.96,
+       "heard": "It's a photo finish! What a ripper of a race!",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/cand/C1/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.8994,
+       "wer": 0.143,
+       "spread_semitones": 6.57,
+       "median_hz": 235.3,
+       "lufs": -18.7,
+       "seconds": 3.28,
+       "heard": "Next track's loading, same again, two right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/cand/C1/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.8865,
+       "wer": 0.0,
+       "spread_semitones": 3.51,
+       "median_hz": 347.8,
+       "lufs": -19.5,
+       "seconds": 2.64,
+       "heard": "That's the round, mates! Cheers for playing!",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/cand/C1/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "G",
+     "title": "C2 Slow drawl",
+     "sub": "VoiceDesign 1.7B, prompt only, no reference audio (eris)",
+     "detail": "A male Australian race caller with a very broad, lazy drawl and a deep, low pitch, nasal, slow and amused, exaggerated stretched vowels, excited but never hurried, like an outback pub storyteller calling a demolition derby.",
+     "clips": [
+      {
+       "speaker_sim": 0.8916,
+       "wer": 0.143,
+       "spread_semitones": 6.71,
+       "median_hz": 228.6,
+       "lufs": -19.7,
+       "seconds": 7.2,
+       "heard": "Good day and welcome to joystick jammers grab a controller and make a spectacular mess",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/cand/C2/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.8832,
+       "wer": 0.0,
+       "spread_semitones": 6.88,
+       "median_hz": 326.5,
+       "lufs": -16.5,
+       "seconds": 3.36,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/cand/C2/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.9051,
+       "wer": 0.0,
+       "spread_semitones": 9.79,
+       "median_hz": 192.8,
+       "lufs": -18.5,
+       "seconds": 2.56,
+       "heard": "Look at that air, struth.",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/cand/C2/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.8964,
+       "wer": 0.0,
+       "spread_semitones": 5.41,
+       "median_hz": 258.1,
+       "lufs": -17.6,
+       "seconds": 2.4,
+       "heard": "He's gone out past whoop, whoop, legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/cand/C2/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.8827,
+       "wer": 0.0,
+       "spread_semitones": 10.35,
+       "median_hz": 266.7,
+       "lufs": -18.7,
+       "seconds": 2.96,
+       "heard": "Fair dinkum, that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/cand/C2/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.8954,
+       "wer": 0.0,
+       "spread_semitones": 5.27,
+       "median_hz": 313.7,
+       "lufs": -18.0,
+       "seconds": 4.0,
+       "heard": "It's a photo finish! What a ripper of a race!",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/cand/C2/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.9127,
+       "wer": 0.143,
+       "spread_semitones": 10.11,
+       "median_hz": 231.9,
+       "lufs": -18.0,
+       "seconds": 3.12,
+       "heard": "Next track's loading. Same again, two right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/cand/C2/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.8941,
+       "wer": 0.0,
+       "spread_semitones": 11.73,
+       "median_hz": 290.9,
+       "lufs": -18.4,
+       "seconds": 2.56,
+       "heard": "That's the round, mates! Cheers for playing!",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/cand/C2/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "H",
+     "title": "C3 Bright nasal",
+     "sub": "VoiceDesign 1.7B, prompt only, no reference audio (eris)",
+     "detail": "A male Australian showman with a bright, higher-pitched, very nasal broad accent, fast and breathless, cheeky and over-the-top excited, like a kids' TV host announcing a monster-truck show.",
+     "clips": [
+      {
+       "speaker_sim": 0.8898,
+       "wer": 0.143,
+       "spread_semitones": 8.76,
+       "median_hz": 313.7,
+       "lufs": -20.6,
+       "seconds": 5.76,
+       "heard": "Good day and welcome to joystick jammers grab a controller and make a spectacular mess",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/cand/C3/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.8727,
+       "wer": 0.0,
+       "spread_semitones": 10.79,
+       "median_hz": 355.6,
+       "lufs": -18.3,
+       "seconds": 3.6,
+       "heard": "Three, two, one, go, go, go!",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/cand/C3/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.8702,
+       "wer": 0.0,
+       "spread_semitones": 4.0,
+       "median_hz": 390.2,
+       "lufs": -15.2,
+       "seconds": 2.32,
+       "heard": "Look at that air! Struth!",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/cand/C3/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.8807,
+       "wer": 0.0,
+       "spread_semitones": 1.56,
+       "median_hz": 280.7,
+       "lufs": -20.5,
+       "seconds": 2.16,
+       "heard": "He's gone out past Whoop Whoop, Legends!",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/cand/C3/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.8994,
+       "wer": 0.0,
+       "spread_semitones": 8.84,
+       "median_hz": 238.8,
+       "lufs": -19.1,
+       "seconds": 3.44,
+       "heard": "Fair dinkum! That was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/cand/C3/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.8987,
+       "wer": 0.0,
+       "spread_semitones": 11.63,
+       "median_hz": 307.7,
+       "lufs": -18.5,
+       "seconds": 3.04,
+       "heard": "It's a photo finish! What a ripper of a race!",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/cand/C3/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.907,
+       "wer": 0.143,
+       "spread_semitones": 3.9,
+       "median_hz": 283.2,
+       "lufs": -19.4,
+       "seconds": 2.96,
+       "heard": "Next track's loading, same again, to right!",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/cand/C3/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.8881,
+       "wer": 0.0,
+       "spread_semitones": 7.96,
+       "median_hz": 340.4,
+       "lufs": -19.1,
+       "seconds": 2.56,
+       "heard": "That's the round, mates! Cheers for playing!",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/cand/C3/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "I",
+     "title": "C4 Booming gravel",
+     "sub": "VoiceDesign 1.7B, prompt only, no reference audio (eris)",
+     "detail": "A male Australian stadium announcer with a gravelly, booming voice, mid-low pitch, slightly nasal, broad accent, medium pace with big dramatic emphasis and long drawn-out words, like the grand final announcer at the footy.",
+     "clips": [
+      {
+       "speaker_sim": 0.8861,
+       "wer": 0.214,
+       "spread_semitones": 5.51,
+       "median_hz": 285.7,
+       "lufs": -19.8,
+       "seconds": 6.24,
+       "heard": "Good day and welcome to Joystick Yammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/cand/C4/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.8987,
+       "wer": 0.0,
+       "spread_semitones": 2.48,
+       "median_hz": 390.2,
+       "lufs": -17.2,
+       "seconds": 4.0,
+       "heard": "Three, two, one, go, go, go!",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/cand/C4/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.8868,
+       "wer": 0.0,
+       "spread_semitones": 6.4,
+       "median_hz": 333.3,
+       "lufs": -18.2,
+       "seconds": 2.0,
+       "heard": "Look at that air! Struth!",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/cand/C4/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.8899,
+       "wer": 0.0,
+       "spread_semitones": 3.63,
+       "median_hz": 280.7,
+       "lufs": -19.0,
+       "seconds": 3.6,
+       "heard": "He's gone out past Whoop Whoop Legends!",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/cand/C4/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.8919,
+       "wer": 0.0,
+       "spread_semitones": 4.04,
+       "median_hz": 280.7,
+       "lufs": -18.4,
+       "seconds": 2.72,
+       "heard": "Fair dinkum, that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/cand/C4/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.8708,
+       "wer": 0.0,
+       "spread_semitones": 4.54,
+       "median_hz": 372.1,
+       "lufs": -20.3,
+       "seconds": 3.76,
+       "heard": "It's a photo finish! What a ripper of a race!",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/cand/C4/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.8962,
+       "wer": 0.143,
+       "spread_semitones": 5.16,
+       "median_hz": 296.3,
+       "lufs": -18.4,
+       "seconds": 3.52,
+       "heard": "Next track's loading. Same again, two right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/cand/C4/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.8926,
+       "wer": 0.0,
+       "spread_semitones": 4.51,
+       "median_hz": 290.9,
+       "lufs": -18.3,
+       "seconds": 3.12,
+       "heard": "That's the round, mates! Cheers for playing!",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/cand/C4/cheers.m4a"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "engines",
+   "short": "Engines",
+   "title": "Same reference, two engines",
+   "blurb": "Each reference cloned by the 1.7B bf16 pipeline on eris (left) and by the 0.6B int8 FrankenTTS on the Mac (right), same 8 lines (the eris renders use seed 7; ftts has no sampler seed to set). Hear what the cheap local engine costs.",
+   "blocks": [
+    {
+     "letter": "J",
+     "title": "E4F on Qwen3-TTS 1.7B bf16",
+     "sub": "eris GPU, the P1-A01 pipeline",
+     "clips": [
+      {
+       "speaker_sim": 0.9706,
+       "wer": 0.143,
+       "spread_semitones": 3.63,
+       "median_hz": 144.1,
+       "lufs": -26.1,
+       "seconds": 4.88,
+       "heard": "Kid day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/clone/E4F/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.9705,
+       "wer": 0.0,
+       "spread_semitones": 3.66,
+       "median_hz": 160.0,
+       "lufs": -21.9,
+       "seconds": 3.2,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/clone/E4F/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.9706,
+       "wer": 0.4,
+       "spread_semitones": 0.54,
+       "median_hz": 166.7,
+       "lufs": -24.1,
+       "seconds": 2.4,
+       "heard": "Look at that air. It's truth.",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/clone/E4F/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.9804,
+       "wer": 0.0,
+       "spread_semitones": 3.05,
+       "median_hz": 136.8,
+       "lufs": -24.7,
+       "seconds": 3.2,
+       "heard": "He's gone out past whoop whoop legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/clone/E4F/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.9711,
+       "wer": 0.0,
+       "spread_semitones": 6.02,
+       "median_hz": 146.8,
+       "lufs": -21.5,
+       "seconds": 2.32,
+       "heard": "Fair dinkum, that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/clone/E4F/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.9778,
+       "wer": 0.0,
+       "spread_semitones": 10.16,
+       "median_hz": 192.8,
+       "lufs": -20.3,
+       "seconds": 3.28,
+       "heard": "It's a photo finish. What a ripper of a race!",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/clone/E4F/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.9721,
+       "wer": 0.0,
+       "spread_semitones": 2.56,
+       "median_hz": 156.9,
+       "lufs": -25.5,
+       "seconds": 2.96,
+       "heard": "Next track's loading. Same again too, right?",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/clone/E4F/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.9785,
+       "wer": 0.0,
+       "spread_semitones": 3.74,
+       "median_hz": 153.1,
+       "lufs": -24.4,
+       "seconds": 2.88,
+       "heard": "That's the round mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/clone/E4F/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "K",
+     "title": "E4F on FrankenTTS 0.6B int8",
+     "sub": "Mac CPU, ftts say from the enrolled .ftvoice",
+     "clips": [
+      {
+       "speaker_sim": 0.9656,
+       "wer": 0.0,
+       "spread_semitones": 2.86,
+       "median_hz": 170.2,
+       "lufs": -23.4,
+       "seconds": 6.0,
+       "heard": "Gidday, and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/ftts/E4F/welcome.m4a",
+       "render_s": 15.6
+      },
+      {
+       "speaker_sim": 0.9485,
+       "wer": 0.0,
+       "spread_semitones": 3.67,
+       "median_hz": 213.3,
+       "lufs": -17.8,
+       "seconds": 3.12,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/ftts/E4F/countdown.m4a",
+       "render_s": 10.8
+      },
+      {
+       "speaker_sim": 0.946,
+       "wer": 0.0,
+       "spread_semitones": 0.9,
+       "median_hz": 210.5,
+       "lufs": -21.4,
+       "seconds": 2.48,
+       "heard": "Look at that air! Struth!",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/ftts/E4F/big-air.m4a",
+       "render_s": 7.7
+      },
+      {
+       "speaker_sim": 0.9602,
+       "wer": 0.0,
+       "spread_semitones": 6.92,
+       "median_hz": 161.6,
+       "lufs": -23.2,
+       "seconds": 3.76,
+       "heard": "He's gone out past, whoop, whoop, legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/ftts/E4F/whoop-whoop.m4a",
+       "render_s": 11.3
+      },
+      {
+       "speaker_sim": 0.9688,
+       "wer": 0.0,
+       "spread_semitones": 3.42,
+       "median_hz": 126.0,
+       "lufs": -23.3,
+       "seconds": 2.4,
+       "heard": "fair dinkum. That was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/ftts/E4F/fair-dinkum.m4a",
+       "render_s": 10.1
+      },
+      {
+       "speaker_sim": 0.9629,
+       "wer": 0.0,
+       "spread_semitones": 1.86,
+       "median_hz": 152.4,
+       "lufs": -22.3,
+       "seconds": 3.0,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/ftts/E4F/photo-finish.m4a",
+       "render_s": 8.7
+      },
+      {
+       "speaker_sim": 0.953,
+       "wer": 0.143,
+       "spread_semitones": 3.92,
+       "median_hz": 210.5,
+       "lufs": -20.7,
+       "seconds": 3.76,
+       "heard": "Next tracks loading same again to right",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/ftts/E4F/next-round.m4a",
+       "render_s": 10.0
+      },
+      {
+       "speaker_sim": 0.9585,
+       "wer": 0.0,
+       "spread_semitones": 3.92,
+       "median_hz": 127.0,
+       "lufs": -22.4,
+       "seconds": 3.52,
+       "heard": "That's the round, mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/ftts/E4F/cheers.m4a",
+       "render_s": 11.0
+      }
+     ]
+    },
+    {
+     "letter": "L",
+     "title": "OWNER on Qwen3-TTS 1.7B bf16",
+     "sub": "eris GPU, the P1-A01 pipeline",
+     "clips": [
+      {
+       "speaker_sim": 0.9788,
+       "wer": 0.143,
+       "spread_semitones": 5.85,
+       "median_hz": 123.1,
+       "lufs": -26.3,
+       "seconds": 4.32,
+       "heard": "Gid day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/clone/OWNER/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.9763,
+       "wer": 0.0,
+       "spread_semitones": 27.55,
+       "median_hz": 118.5,
+       "lufs": -27.5,
+       "seconds": 2.4,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/clone/OWNER/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.9709,
+       "wer": 0.4,
+       "spread_semitones": 18.19,
+       "median_hz": 152.4,
+       "lufs": -28.8,
+       "seconds": 1.44,
+       "heard": "look at that Airstreuth",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/clone/OWNER/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.9763,
+       "wer": 0.143,
+       "spread_semitones": 4.98,
+       "median_hz": 438.4,
+       "lufs": -31.7,
+       "seconds": 1.44,
+       "heard": "he's gone out past whoop whoop legend",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/clone/OWNER/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.9799,
+       "wer": 0.0,
+       "spread_semitones": 3.01,
+       "median_hz": 127.0,
+       "lufs": -28.8,
+       "seconds": 2.32,
+       "heard": "fair dinkum that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/clone/OWNER/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.9765,
+       "wer": 0.0,
+       "spread_semitones": 4.31,
+       "median_hz": 139.1,
+       "lufs": -29.3,
+       "seconds": 2.4,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/clone/OWNER/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.9781,
+       "wer": 0.0,
+       "spread_semitones": 6.52,
+       "median_hz": 104.9,
+       "lufs": -30.9,
+       "seconds": 2.32,
+       "heard": "Next track's loading, same again too, right?",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/clone/OWNER/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.9789,
+       "wer": 0.0,
+       "spread_semitones": 2.45,
+       "median_hz": 115.1,
+       "lufs": -30.6,
+       "seconds": 1.76,
+       "heard": "That's the round, mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/clone/OWNER/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "M",
+     "title": "OWNER on FrankenTTS 0.6B int8",
+     "sub": "Mac CPU, ftts say from the enrolled .ftvoice",
+     "clips": [
+      {
+       "speaker_sim": 0.9667,
+       "wer": 0.0,
+       "spread_semitones": 7.25,
+       "median_hz": 135.6,
+       "lufs": -29.3,
+       "seconds": 6.08,
+       "heard": "G'day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/ftts/OWNER/welcome.m4a",
+       "render_s": 16.7
+      },
+      {
+       "speaker_sim": 0.9577,
+       "wer": 0.0,
+       "spread_semitones": 22.49,
+       "median_hz": 133.3,
+       "lufs": -24.0,
+       "seconds": 11.52,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/ftts/OWNER/countdown.m4a",
+       "render_s": 23.6
+      },
+      {
+       "speaker_sim": 0.949,
+       "wer": 0.6,
+       "spread_semitones": null,
+       "median_hz": null,
+       "lufs": -30.1,
+       "seconds": 10.56,
+       "heard": "Look at that A.S. truth.",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/ftts/OWNER/big-air.m4a",
+       "render_s": 21.3
+      },
+      {
+       "speaker_sim": 0.9573,
+       "wer": 0.286,
+       "spread_semitones": 9.83,
+       "median_hz": 136.8,
+       "lufs": -29.7,
+       "seconds": 11.52,
+       "heard": "He's gone out past Warp Warp Legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/ftts/OWNER/whoop-whoop.m4a",
+       "render_s": 24.5
+      },
+      {
+       "speaker_sim": 0.9642,
+       "wer": 0.111,
+       "spread_semitones": 22.54,
+       "median_hz": 113.5,
+       "lufs": -28.2,
+       "seconds": 2.8,
+       "heard": "Fair dinkum. That was a ripper of a latch.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/ftts/OWNER/fair-dinkum.m4a",
+       "render_s": 13.7
+      },
+      {
+       "speaker_sim": 0.9692,
+       "wer": 0.0,
+       "spread_semitones": 14.57,
+       "median_hz": 131.1,
+       "lufs": -26.7,
+       "seconds": 4.32,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/ftts/OWNER/photo-finish.m4a",
+       "render_s": 15.6
+      },
+      {
+       "speaker_sim": 0.9643,
+       "wer": 0.143,
+       "spread_semitones": 12.35,
+       "median_hz": 150.9,
+       "lufs": -32.3,
+       "seconds": 4.32,
+       "heard": "Next track's loading, same again, 2 right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/ftts/OWNER/next-round.m4a",
+       "render_s": 14.5
+      },
+      {
+       "speaker_sim": 0.9605,
+       "wer": 0.0,
+       "spread_semitones": 5.02,
+       "median_hz": 121.2,
+       "lufs": -32.4,
+       "seconds": 2.32,
+       "heard": "That's the round, mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/ftts/OWNER/cheers.m4a",
+       "render_s": 10.2
+      }
+     ]
+    },
+    {
+     "letter": "N",
+     "title": "R1 on Qwen3-TTS 1.7B bf16",
+     "sub": "eris GPU, the P1-A01 pipeline",
+     "clips": [
+      {
+       "speaker_sim": 0.9581,
+       "wer": 0.143,
+       "spread_semitones": 5.95,
+       "median_hz": 120.3,
+       "lufs": -23.8,
+       "seconds": 5.2,
+       "heard": "Gid day and welcome to joystick jammers grab a controller and make a spectacular mess",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/clone/R1/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.9675,
+       "wer": 0.0,
+       "spread_semitones": 2.0,
+       "median_hz": 140.4,
+       "lufs": -24.2,
+       "seconds": 3.04,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/clone/R1/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.9386,
+       "wer": 0.0,
+       "spread_semitones": 17.45,
+       "median_hz": 124.0,
+       "lufs": -22.6,
+       "seconds": 1.92,
+       "heard": "Look at that air. Struth!",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/clone/R1/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.97,
+       "wer": 0.0,
+       "spread_semitones": 3.4,
+       "median_hz": 132.2,
+       "lufs": -21.6,
+       "seconds": 2.88,
+       "heard": "he's gone out past whoop whoop legends",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/clone/R1/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.9686,
+       "wer": 0.0,
+       "spread_semitones": 21.9,
+       "median_hz": 123.1,
+       "lufs": -26.9,
+       "seconds": 2.72,
+       "heard": "Fair dinkum, that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/clone/R1/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.955,
+       "wer": 0.0,
+       "spread_semitones": 2.25,
+       "median_hz": 200.0,
+       "lufs": -20.5,
+       "seconds": 2.88,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/clone/R1/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.9437,
+       "wer": 0.0,
+       "spread_semitones": 7.94,
+       "median_hz": 200.0,
+       "lufs": -27.1,
+       "seconds": 2.96,
+       "heard": "Next track's loading. Same again, too, right?",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/clone/R1/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.9729,
+       "wer": 0.0,
+       "spread_semitones": 12.21,
+       "median_hz": 128.0,
+       "lufs": -28.1,
+       "seconds": 2.88,
+       "heard": "That's the round, mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/clone/R1/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "O",
+     "title": "R1 on FrankenTTS 0.6B int8",
+     "sub": "Mac CPU, ftts say from the enrolled .ftvoice",
+     "clips": [
+      {
+       "speaker_sim": 0.9656,
+       "wer": 0.143,
+       "spread_semitones": 4.24,
+       "median_hz": 163.3,
+       "lufs": -26.2,
+       "seconds": 5.36,
+       "heard": "Good day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/ftts/R1/welcome.m4a",
+       "render_s": 20.2
+      },
+      {
+       "speaker_sim": 0.9472,
+       "wer": 0.0,
+       "spread_semitones": 3.86,
+       "median_hz": 140.4,
+       "lufs": -23.4,
+       "seconds": 2.47,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/ftts/R1/countdown.m4a",
+       "render_s": 15.4
+      },
+      {
+       "speaker_sim": 0.9471,
+       "wer": 0.2,
+       "spread_semitones": 13.71,
+       "median_hz": 173.9,
+       "lufs": -24.8,
+       "seconds": 2.18,
+       "heard": "look at that air",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/ftts/R1/big-air.m4a",
+       "render_s": 14.4
+      },
+      {
+       "speaker_sim": 0.9535,
+       "wer": 0.0,
+       "spread_semitones": 4.98,
+       "median_hz": 173.9,
+       "lufs": -24.1,
+       "seconds": 2.62,
+       "heard": "He's gone out past whoop, whoop, legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/ftts/R1/whoop-whoop.m4a",
+       "render_s": 11.5
+      },
+      {
+       "speaker_sim": 0.9511,
+       "wer": 0.0,
+       "spread_semitones": 12.74,
+       "median_hz": 170.2,
+       "lufs": -24.4,
+       "seconds": 2.56,
+       "heard": "Fair dinkum. That was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/ftts/R1/fair-dinkum.m4a",
+       "render_s": 15.0
+      },
+      {
+       "speaker_sim": 0.9459,
+       "wer": 0.0,
+       "spread_semitones": 1.25,
+       "median_hz": 190.5,
+       "lufs": -25.2,
+       "seconds": 2.72,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/ftts/R1/photo-finish.m4a",
+       "render_s": 13.8
+      },
+      {
+       "speaker_sim": 0.9597,
+       "wer": 0.143,
+       "spread_semitones": 8.58,
+       "median_hz": 177.8,
+       "lufs": -25.6,
+       "seconds": 3.6,
+       "heard": "Next track's loading, same again, to right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/ftts/R1/next-round.m4a",
+       "render_s": 16.0
+      },
+      {
+       "speaker_sim": 0.9494,
+       "wer": 0.0,
+       "spread_semitones": 3.03,
+       "median_hz": 175.8,
+       "lufs": -24.0,
+       "seconds": 3.03,
+       "heard": "That's the round mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/ftts/R1/cheers.m4a",
+       "render_s": 14.9
+      }
+     ]
+    },
+    {
+     "letter": "P",
+     "title": "R2 on Qwen3-TTS 1.7B bf16",
+     "sub": "eris GPU, the P1-A01 pipeline",
+     "clips": [
+      {
+       "speaker_sim": 0.9808,
+       "wer": 0.143,
+       "spread_semitones": 7.71,
+       "median_hz": 148.1,
+       "lufs": -23.8,
+       "seconds": 5.76,
+       "heard": "Gid day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/clone/R2/welcome.m4a"
+      },
+      {
+       "speaker_sim": 0.9738,
+       "wer": 0.0,
+       "spread_semitones": 4.27,
+       "median_hz": 152.4,
+       "lufs": -23.8,
+       "seconds": 3.2,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/clone/R2/countdown.m4a"
+      },
+      {
+       "speaker_sim": 0.9727,
+       "wer": 0.0,
+       "spread_semitones": 0.69,
+       "median_hz": 158.4,
+       "lufs": -24.4,
+       "seconds": 2.4,
+       "heard": "Look at that air. Struth.",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/clone/R2/big-air.m4a"
+      },
+      {
+       "speaker_sim": 0.9755,
+       "wer": 0.0,
+       "spread_semitones": 5.92,
+       "median_hz": 177.8,
+       "lufs": -24.6,
+       "seconds": 3.12,
+       "heard": "He's gone out past whoop whoop legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/clone/R2/whoop-whoop.m4a"
+      },
+      {
+       "speaker_sim": 0.9776,
+       "wer": 0.0,
+       "spread_semitones": 2.55,
+       "median_hz": 152.4,
+       "lufs": -26.6,
+       "seconds": 2.72,
+       "heard": "fair dinkum that was a ripper of a lap",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/clone/R2/fair-dinkum.m4a"
+      },
+      {
+       "speaker_sim": 0.9719,
+       "wer": 0.0,
+       "spread_semitones": 2.85,
+       "median_hz": 172.0,
+       "lufs": -25.8,
+       "seconds": 3.12,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/clone/R2/photo-finish.m4a"
+      },
+      {
+       "speaker_sim": 0.9796,
+       "wer": 0.143,
+       "spread_semitones": 3.69,
+       "median_hz": 141.6,
+       "lufs": -25.0,
+       "seconds": 3.04,
+       "heard": "Next track's loading, same again, two, right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/clone/R2/next-round.m4a"
+      },
+      {
+       "speaker_sim": 0.9791,
+       "wer": 0.0,
+       "spread_semitones": 11.01,
+       "median_hz": 158.4,
+       "lufs": -29.2,
+       "seconds": 2.8,
+       "heard": "That's the round, mates. Cheers for playing!",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/clone/R2/cheers.m4a"
+      }
+     ]
+    },
+    {
+     "letter": "Q",
+     "title": "R2 on FrankenTTS 0.6B int8",
+     "sub": "Mac CPU, ftts say from the enrolled .ftvoice",
+     "clips": [
+      {
+       "speaker_sim": 0.9643,
+       "wer": 0.0,
+       "spread_semitones": 3.58,
+       "median_hz": 166.7,
+       "lufs": -24.4,
+       "seconds": 5.89,
+       "heard": "G'day and welcome to Joystick Jammers. Grab a controller and make a spectacular mess.",
+       "label": "1",
+       "text": "G'day and welcome to Joystick Jammers! Grab a controller and make a spectacular mess!",
+       "src": "clips/ftts/R2/welcome.m4a",
+       "render_s": 20.5
+      },
+      {
+       "speaker_sim": 0.952,
+       "wer": 0.0,
+       "spread_semitones": 10.52,
+       "median_hz": 183.9,
+       "lufs": -21.0,
+       "seconds": 2.88,
+       "heard": "Three, two, one, go, go, go.",
+       "label": "2",
+       "text": "Three! Two! One! Go, go, go!",
+       "src": "clips/ftts/R2/countdown.m4a",
+       "render_s": 14.3
+      },
+      {
+       "speaker_sim": 0.949,
+       "wer": 0.0,
+       "spread_semitones": 4.61,
+       "median_hz": 144.1,
+       "lufs": -23.5,
+       "seconds": 3.04,
+       "heard": "Look at that air. Struth.",
+       "label": "3",
+       "text": "Look at that air! Strewth!",
+       "src": "clips/ftts/R2/big-air.m4a",
+       "render_s": 14.4
+      },
+      {
+       "speaker_sim": 0.9696,
+       "wer": 0.0,
+       "spread_semitones": 2.4,
+       "median_hz": 136.8,
+       "lufs": -26.2,
+       "seconds": 2.16,
+       "heard": "He's gone out past whoop, whoop legends.",
+       "label": "4",
+       "text": "He's gone out past whoop whoop, legends!",
+       "src": "clips/ftts/R2/whoop-whoop.m4a",
+       "render_s": 12.8
+      },
+      {
+       "speaker_sim": 0.9474,
+       "wer": 0.0,
+       "spread_semitones": 3.9,
+       "median_hz": 172.0,
+       "lufs": -25.9,
+       "seconds": 2.4,
+       "heard": "Fair dinkum, that was a ripper of a lap.",
+       "label": "5",
+       "text": "Fair dinkum, that was a ripper of a lap!",
+       "src": "clips/ftts/R2/fair-dinkum.m4a",
+       "render_s": 11.2
+      },
+      {
+       "speaker_sim": 0.9575,
+       "wer": 0.0,
+       "spread_semitones": 4.17,
+       "median_hz": 163.3,
+       "lufs": -23.7,
+       "seconds": 3.04,
+       "heard": "It's a photo finish. What a ripper of a race.",
+       "label": "6",
+       "text": "It's a photo finish! What a ripper of a race!",
+       "src": "clips/ftts/R2/photo-finish.m4a",
+       "render_s": 12.0
+      },
+      {
+       "speaker_sim": 0.9551,
+       "wer": 0.0,
+       "spread_semitones": 7.15,
+       "median_hz": 161.6,
+       "lufs": -26.1,
+       "seconds": 4.32,
+       "heard": "Next track's loading. Same again too. Right.",
+       "label": "7",
+       "text": "Next track's loading. Same again? Too right!",
+       "src": "clips/ftts/R2/next-round.m4a",
+       "render_s": 11.4
+      },
+      {
+       "speaker_sim": 0.9659,
+       "wer": 0.0,
+       "spread_semitones": 5.34,
+       "median_hz": 149.5,
+       "lufs": -24.1,
+       "seconds": 2.31,
+       "heard": "That's the round, mates. Cheers for playing.",
+       "label": "8",
+       "text": "That's the round, mates. Cheers for playing!",
+       "src": "clips/ftts/R2/cheers.m4a",
+       "render_s": 9.2
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

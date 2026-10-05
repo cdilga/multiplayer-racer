@@ -18,8 +18,12 @@ if grep -rl --exclude-dir=vendor '^version https://git-lfs.github.com/spec' "$ro
 fi
 # The POC pages reach siblings of art/ui/poc/ (../brand, ../frames, ../sheets, ../GUIDE.md, ...), so the whole
 # art/ui/ tree is mirrored, minus generation scratch; the edge serves /poc/ and those siblings from it.
+# poc/audio/voice/clips/ (the P1-A01b audition audio) is never committed (R89, only the picked voice's exports are):
+# it's excluded here, so --delete leaves an uploaded copy alone. The owner uploads it by hand when they want it
+# public: rsync -az -e "$ssh_cmd" art/ui/poc/audio/voice/clips/ "${dest}poc/audio/voice/clips/"
 rsync -az --delete --exclude '.DS_Store' --exclude '*.log' --exclude 'frames/prompts/' --exclude 'frames/ledger.jsonl' \
   --exclude 'frames/generate.mjs' --exclude 'brand/make.py' --exclude 'check.mjs' --exclude 'poc/vendor.mjs' \
+  --exclude 'poc/audio/voice/clips/' \
   -e "$ssh_cmd" "$root/art/ui/" "$dest"
 sleep 1
 code=$(curl -s -o /dev/null -w '%{http_code}' "https://jammers-preview.dilger.dev/poc/")
