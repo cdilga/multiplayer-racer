@@ -1211,6 +1211,8 @@ window.__poc = {
   carsSeen: () => lastViews.filter((v) => v.camera && ['overview', 'reel', 'highlight', 'wide'].includes(v.kind)).map((v) => ({ kind: v.kind, seat: v.seat ?? null, x: v.x, y: v.y, w: v.w, h: v.h, inside: Array.from({ length: S.n }, (_, i) => i + 1).filter((seat) => { const p = world.project(seat, v.camera, v); return p && p.z < 1 && p.x >= v.x && p.x <= v.x + v.w && p.y >= v.y && p.y <= v.y + v.h; }) })),
   tokens,
   backend: world.backend,
+  /** Canvas backing store vs CSS size (R111): w/h device px, css [w,h], dpr, clamped (only by a real GL limit). */
+  backing: () => ({ ...world.backing, canvas: [canvas.width, canvas.height] }),
   /** Frame cost over `frames` frames: rAF interval, sim step, render submit and HUD update times (ms). */
   perf(framesWanted = 300) {
     return new Promise((resolve) => {

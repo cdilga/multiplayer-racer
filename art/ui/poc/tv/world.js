@@ -486,7 +486,9 @@ export async function createWorld(canvas, { colors }) {
    */
   function render(views, dt, size, clear = '#fff4de') {
     placeOutlines();
-    const H = size.h;
+    // R111: views and size are CSS px (HUD overlays align to them); the backing store is CSS x DPR, so viewports are scaled.
+    const rx = backing.w / size.w, ry = backing.h / size.h;
+    const H = backing.h;
     renderer.setScissorTest(false);
     renderer.setClearColor(clear, 1);
     renderer.clear();
@@ -496,10 +498,11 @@ export async function createWorld(canvas, { colors }) {
       if (v.w < 2 || v.h < 2) continue;
       const aspect = v.w / v.h;
       const cam = v.kind === 'wide' || v.kind === 'overview' || v.kind === 'reel' || v.kind === 'highlight' ? wideCamera(aspect, v.kind, simTime, v.seat, wideIdx++) : cameraFor(v.seat - 1, v.kind, aspect, dt);
-      showLod(v.h >= 540 ? 0 : v.h >= 200 ? 1 : 2);
-      const y = H - v.y - v.h;
-      renderer.setViewport(v.x, y, v.w, v.h);
-      renderer.setScissor(v.x, y, v.w, v.h);
+      showLod(v.h * ry >= 540 ? 0 : v.h * ry >= 200 ? 1 : 2);
+      const dx = Math.round(v.x * rx), dw = Math.round((v.x + v.w) * rx) - dx, dtop = Math.round(v.y * ry), dh = Math.round((v.y + v.h) * ry) - dtop;
+      const y = H - dtop - dh;
+      renderer.setViewport(dx, y, dw, dh);
+      renderer.setScissor(dx, y, dw, dh);
       renderer.render(scene, cam);
       draws += renderer.info.render.calls;
       v.camera = cam;
@@ -566,7 +569,18 @@ export async function createWorld(canvas, { colors }) {
     return [...cars].sort((a, b) => b.s - a.s).map((c, i) => ({ seat: c.seat, place: i + 1, lap: Math.min(LAPS, Math.max(1, Math.floor((c.s - trackLen * 3) / trackLen) + 1)), boost: c.boost }));
   }
 
-  function resize(w, h) { renderer.setSize(w, h, false); }
+  // R111: backing store = CSS size x devicePixelRatio (rounded), no cap. Only a real GL limit clamps it, and says so in `backing`.
+  const backing = { w: 0, h: 0, css: [0, 0], dpr: 1, clamped: false, limit: null };
+  function resize(w, h) {
+    const dpr = window.devicePixelRatio || 1;
+    const lim = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+    let bw = Math.max(1, Math.round(w * dpr)), bh = Math.max(1, Math.round(h * dpr));
+    const clamped = bw > lim || bh > lim;
+    if (clamped) { const f = lim / Math.max(bw, bh); bw = Math.max(1, Math.floor(bw * f)); bh = Math.max(1, Math.floor(bh * f)); }
+    renderer.setPixelRatio(1);
+    renderer.setSize(bw, bh, false);
+    Object.assign(backing, { w: bw, h: bh, css: [w, h], dpr, clamped, limit: clamped ? lim : null });
+  }
 
-  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, overviewTrace, standings, setOutlines, resize, get n() { return n; }, laps: LAPS };
+  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, overviewTrace, standings, setOutlines, resize, backing, get n() { return n; }, laps: LAPS };
 }

@@ -1,0 +1,510 @@
+{
+ "note": "deviceScaleFactor is EMULATED (Playwright), headless chromium; forced-1x = window.devicePixelRatio overridden to 1 (the pre-R111 POC behaviour)",
+ "rows": [
+  {
+   "viewport": "412x915",
+   "n": 4,
+   "dpr": 1,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    412,
+    915
+   ],
+   "want": [
+    412,
+    915
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 404,
+    "h": 208
+   },
+   "lapVar_native": 2890.91,
+   "lapVar_forced1x": 2901.92,
+   "sharper_x": 1,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 4,
+   "dpr": 2,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    824,
+    1830
+   ],
+   "want": [
+    824,
+    1830
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 404,
+    "h": 208
+   },
+   "lapVar_native": 1141.63,
+   "lapVar_forced1x": 788.58,
+   "sharper_x": 1.45,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 4,
+   "dpr": 3,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    1236,
+    2745
+   ],
+   "want": [
+    1236,
+    2745
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 404,
+    "h": 208
+   },
+   "lapVar_native": 760.61,
+   "lapVar_forced1x": 510.98,
+   "sharper_x": 1.49,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 12,
+   "dpr": 1,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    412,
+    915
+   ],
+   "want": [
+    412,
+    915
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 198,
+    "h": 136
+   },
+   "lapVar_native": 5221.8,
+   "lapVar_forced1x": 5255.15,
+   "sharper_x": 0.99,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 12,
+   "dpr": 2,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    824,
+    1830
+   ],
+   "want": [
+    824,
+    1830
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 198,
+    "h": 136
+   },
+   "lapVar_native": 2129.44,
+   "lapVar_forced1x": 1522.13,
+   "sharper_x": 1.4,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 12,
+   "dpr": 3,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    1236,
+    2745
+   ],
+   "want": [
+    1236,
+    2745
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 5,
+    "w": 198,
+    "h": 136
+   },
+   "lapVar_native": 1361.61,
+   "lapVar_forced1x": 953.66,
+   "sharper_x": 1.43,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 32,
+   "dpr": 1,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    412,
+    915
+   ],
+   "want": [
+    412,
+    915
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 8,
+    "w": 129,
+    "h": 70
+   },
+   "lapVar_native": 8467.04,
+   "lapVar_forced1x": 8618.47,
+   "sharper_x": 0.98,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 32,
+   "dpr": 2,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    824,
+    1830
+   ],
+   "want": [
+    824,
+    1830
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 8,
+    "w": 129,
+    "h": 70
+   },
+   "lapVar_native": 3385.87,
+   "lapVar_forced1x": 2344.41,
+   "sharper_x": 1.44,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "412x915",
+   "n": 32,
+   "dpr": 3,
+   "css": [
+    412,
+    915
+   ],
+   "canvas": [
+    1236,
+    2745
+   ],
+   "want": [
+    1236,
+    2745
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 4,
+    "y": 8,
+    "w": 129,
+    "h": 70
+   },
+   "lapVar_native": 2224.45,
+   "lapVar_forced1x": 1504.5,
+   "sharper_x": 1.48,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 4,
+   "dpr": 1,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    1920,
+    1080
+   ],
+   "want": [
+    1920,
+    1080
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 7,
+    "w": 946,
+    "h": 482
+   },
+   "lapVar_native": 1155.69,
+   "lapVar_forced1x": 1117.77,
+   "sharper_x": 1.03,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 4,
+   "dpr": 2,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    3840,
+    2160
+   ],
+   "want": [
+    3840,
+    2160
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 7,
+    "w": 946,
+    "h": 482
+   },
+   "lapVar_native": 586.15,
+   "lapVar_forced1x": 419.91,
+   "sharper_x": 1.4,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 4,
+   "dpr": 3,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    5760,
+    3240
+   ],
+   "want": [
+    5760,
+    3240
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 7,
+    "w": 946,
+    "h": 482
+   },
+   "lapVar_native": 366.51,
+   "lapVar_forced1x": 281.71,
+   "sharper_x": 1.3,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 12,
+   "dpr": 1,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    1920,
+    1080
+   ],
+   "want": [
+    1920,
+    1080
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 8,
+    "w": 466,
+    "h": 316
+   },
+   "lapVar_native": 2220.18,
+   "lapVar_forced1x": 2210.19,
+   "sharper_x": 1,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 12,
+   "dpr": 2,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    3840,
+    2160
+   ],
+   "want": [
+    3840,
+    2160
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 8,
+    "w": 466,
+    "h": 316
+   },
+   "lapVar_native": 1118.58,
+   "lapVar_forced1x": 835.2,
+   "sharper_x": 1.34,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 12,
+   "dpr": 3,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    5760,
+    3240
+   ],
+   "want": [
+    5760,
+    3240
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 7,
+    "y": 8,
+    "w": 466,
+    "h": 316
+   },
+   "lapVar_native": 745.08,
+   "lapVar_forced1x": 553.6,
+   "sharper_x": 1.35,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 32,
+   "dpr": 1,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    1920,
+    1080
+   ],
+   "want": [
+    1920,
+    1080
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 8,
+    "y": 8,
+    "w": 260,
+    "h": 184
+   },
+   "lapVar_native": 4124.5,
+   "lapVar_forced1x": 4109.1,
+   "sharper_x": 1,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 32,
+   "dpr": 2,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    3840,
+    2160
+   ],
+   "want": [
+    3840,
+    2160
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 8,
+    "y": 8,
+    "w": 260,
+    "h": 184
+   },
+   "lapVar_native": 2061.35,
+   "lapVar_forced1x": 1629.65,
+   "sharper_x": 1.26,
+   "canvas_ok": true
+  },
+  {
+   "viewport": "1920x1080",
+   "n": 32,
+   "dpr": 3,
+   "css": [
+    1920,
+    1080
+   ],
+   "canvas": [
+    5760,
+    3240
+   ],
+   "want": [
+    5760,
+    3240
+   ],
+   "clamped": false,
+   "tile0_css": {
+    "x": 8,
+    "y": 8,
+    "w": 260,
+    "h": 184
+   },
+   "lapVar_native": 1394.35,
+   "lapVar_forced1x": 1065.9,
+   "sharper_x": 1.31,
+   "canvas_ok": true
+  }
+ ],
+ "failures": []
+}
