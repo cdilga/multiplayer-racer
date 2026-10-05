@@ -266,7 +266,7 @@ function buildLobby(n, { hidden = false } = {}) {
   s.innerHTML = `<img class="wordmark" style="left:calc(var(--k)*96px);top:calc(var(--k)*70px)" src="${asset('brand/wordmark.svg')}" alt="Joystick Jammers">
     <div class="card lobby-qr"><div class="join stack"><img class="qr" src="${asset('poc/shared/qr-roo7.svg')}" style="width:calc(var(--k)*300px);height:calc(var(--k)*300px)"><div class="display code">ROO7</div><div class="code-cap" style="max-width:none">Scan to join, or enter the code at jammers.dilger.dev</div></div></div>
     <div class="card roster"><h2 class="display italic"><span class="num tnum">${n}</span> players · <span class="num tnum">${ready}</span> ready</h2><div class="sub">Late joiners start a few seconds behind the last car. There's no player limit.</div><div class="cards" style="grid-template-columns:minmax(0,1fr)"></div></div>
-    <div class="warmup"><span class="chip choosing">Warm-up: drive around while everyone joins</span></div>
+    <div class="warmup"><span class="chip choosing">Lobby: pick a car on your phone</span></div>
     <div class="start"><button class="btn primary gp">${icon('flag')}Start race</button></div>`;
   layer.append(s);
   const cards = s.querySelector('.cards');
