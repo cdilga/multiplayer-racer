@@ -1,7 +1,7 @@
 // The host page. Until the round flow (G01) lands, it boots the sim worker on the greybox and draws it (P1-R01).
 // `?test` (held, frame-stepped) or `?test=live` loads the test surface chunk (P1-F05b): a production-realm server
 // doesn't serve that chunk, so there the import fails and the host runs as shipped.
-// Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (the Render resolution setting, R111),
+// Renderer options: `?renderer=webgpu|webgl2|webgl` (backend.ts), `?res=0.75` (override of the Render resolution setting, R111; also turns auto-lowering off), `?autores=off|injected`, `?maxcanvas=<px>` (test: a small browser canvas limit),
 // `?synthetic=<cars>[&freeze=<tick>][&damage[=strip]]` (draw from the synthetic snapshot source instead of the sim), `?bench`
 // (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far`, `?mapUrl=<url>` (a plain chase-camera tile view until the grid, P1-R04).
 import greyboxJson from '../../../maps/greybox-loop.json?raw';
@@ -13,6 +13,8 @@ import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
 import { mountOverlay } from './render/overlay';
+import { loadChoice, saveChoice } from './render/resolution';
+import { mountResolutionSetting } from './render/settings';
 import { SyntheticSource } from './render/synthetic';
 import { World } from './render/world';
 import { SimClient } from './worker/client';
@@ -36,8 +38,14 @@ async function boot(): Promise<void> {
   canvas.className = 'jj-world';
   app.replaceChildren(canvas);
   const backend = await createBackend(backendFromQuery(params), canvas);
-  const scale = Number(params.get('res') ?? 1);
-  const world = new World(backend, canvas, scale > 0 && scale <= 1 ? scale : 1);
+  // The Render resolution (R111): `?res=` overrides (tests), otherwise the host's saved choice, otherwise Native.
+  const override = params.has('res') ? Number(params.get('res')) : null;
+  const chosen = override !== null && override > 0 && override <= 1 ? override : (loadChoice() ?? 1);
+  const maxCanvas = Number(params.get('maxcanvas')); // test hook: pretends the browser's max canvas edge is this small
+  if (maxCanvas > 0) backend.maxSize = Math.min(backend.maxSize, maxCanvas);
+  const world = new World(backend, canvas, chosen);
+  world.autoLower = override === null && params.get('autores') !== 'off';
+  world.realFrameTimes = params.get('autores') !== 'injected';
   await world.loadVehicles();
   // `?mapUrl=<url>` drives a map from elsewhere (a procgen spike's output, P1-M02) instead of the greybox.
   const mapUrl = params.get('mapUrl');
@@ -57,7 +65,8 @@ async function boot(): Promise<void> {
     const camdist = params.get('camdist');
     if (camdist === 'near' || camdist === 'mid' || camdist === 'far') world.rig.hostDistance = camdist;
   }
-  mountOverlay(document.body, world, BUILD_LABEL);
+  const chip = mountOverlay(document.body, world, BUILD_LABEL);
+  mountResolutionSetting(document.body, world, chip);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
     frame: () => world.frame(),
@@ -68,6 +77,20 @@ async function boot(): Promise<void> {
     cameras: () => world.rig.inspect(),
     setCamera: (seat: number, mode: 'fp' | 'tp') => world.rig.setMode(seat, mode),
     project: (x: number, y: number, z: number) => world.project(x, y, z),
+    /** The host's Render resolution choice, as the setting does it (applied live, saved). */
+    setResolution: (scale: number) => {
+      world.setUserScale(scale);
+      saveChoice(scale);
+    },
+    /** Test hook: feeds `seconds` of frame intervals of `ms` each to the frame budget, as if measured (virtual time). */
+    injectFrameTimes: (ms: number, seconds: number) => {
+      for (let t = 0; t < seconds * 1000; t += ms) world.noteFrameTime(ms);
+      world.frame();
+    },
+    /** Per tile: its device-pixel rect on the canvas backing store (null without the grid). */
+    tileRects: () => world.tileRects(),
+    /** Per tile: on-screen size of the other cars (the far car's N px). */
+    farCars: () => world.farCars(),
   };
 
   if (params.has('synthetic')) {

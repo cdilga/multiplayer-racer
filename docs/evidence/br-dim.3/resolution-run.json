@@ -1,0 +1,947 @@
+{
+  "label": "P1-R br-dim.3 resolution run (R111)",
+  "hardware": "Apple M1 Pro x8, darwin/arm64",
+  "browser": "headed Google Chrome (system GPU), Chromium 154.0.8037.95 (Playwright)",
+  "dprNote": "DPR other than the machine’s own is EMULATED by Playwright deviceScaleFactor; not a real high-DPR display or phone.",
+  "coverage": [
+    {
+      "display": "3840x2160 CSS @ DPR 1",
+      "tiles": 1,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8234500,
+      "tileShareOfDisplayPct": 99.3,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.4,
+        "p95Ms": 16.7,
+        "maxMs": 19.9
+      }
+    },
+    {
+      "display": "3840x2160 CSS @ DPR 1",
+      "tiles": 4,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8174800,
+      "tileShareOfDisplayPct": 98.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.3,
+        "p95Ms": 15.7,
+        "maxMs": 18.2
+      }
+    },
+    {
+      "display": "3840x2160 CSS @ DPR 1",
+      "tiles": 12,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8094000,
+      "tileShareOfDisplayPct": 97.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.3,
+        "p95Ms": 15.9,
+        "maxMs": 33.1
+      }
+    },
+    {
+      "display": "3840x2160 CSS @ DPR 1",
+      "tiles": 32,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 7265152,
+      "tileShareOfDisplayPct": 87.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.7,
+        "p95Ms": 16.9,
+        "maxMs": 40.3
+      }
+    },
+    {
+      "display": "1920x1080 CSS @ DPR 2 (emulated)",
+      "tiles": 1,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8234500,
+      "tileShareOfDisplayPct": 99.3,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.4,
+        "p95Ms": 15.8,
+        "maxMs": 16.7
+      }
+    },
+    {
+      "display": "1920x1080 CSS @ DPR 2 (emulated)",
+      "tiles": 4,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8174800,
+      "tileShareOfDisplayPct": 98.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.3,
+        "p95Ms": 16.3,
+        "maxMs": 25.3
+      }
+    },
+    {
+      "display": "1920x1080 CSS @ DPR 2 (emulated)",
+      "tiles": 12,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 8094000,
+      "tileShareOfDisplayPct": 97.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.4,
+        "p95Ms": 16.6,
+        "maxMs": 32.3
+      }
+    },
+    {
+      "display": "1920x1080 CSS @ DPR 2 (emulated)",
+      "tiles": 32,
+      "displayGrid": [
+        3840,
+        2160
+      ],
+      "canvasBackingStore": [
+        3840,
+        2160
+      ],
+      "canvasEqualsDisplayGrid": true,
+      "resolution": "native",
+      "limitedBy": null,
+      "displayPixels": 8294400,
+      "canvasPixels": 8294400,
+      "tileBackingPixels": 7265152,
+      "tileShareOfDisplayPct": 87.6,
+      "note": "the rest is the 5 % safe margin, gutters and spare cells (QR/code), drawn in the same backing store",
+      "tilesInsideCanvas": true,
+      "frameCost": {
+        "frames": 90,
+        "medianMs": 8.4,
+        "p95Ms": 17,
+        "maxMs": 33.9
+      }
+    }
+  ],
+  "dprMatrix": [
+    {
+      "dpr": 1,
+      "dprEmulated": false,
+      "tiles": 4,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 580.11,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 3,
+          "smallestCarPxAcrossTiles": 4.6,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            27.7,
+            5,
+            4.6
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 9.9,
+          "maxMs": 10.2
+        }
+      },
+      "half": {
+        "backingStore": [
+          640,
+          360
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 229.39
+      },
+      "sharpnessNativeOverHalf": 2.53
+    },
+    {
+      "dpr": 1,
+      "dprEmulated": false,
+      "tiles": 12,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 921.88,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 11,
+          "smallestCarPxAcrossTiles": 2.2,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            18.4,
+            3.3,
+            3.1,
+            17.4,
+            16.7,
+            12.9,
+            2.2,
+            10,
+            3.7,
+            12.6,
+            10.9
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 9.9,
+          "maxMs": 10.1
+        }
+      },
+      "half": {
+        "backingStore": [
+          640,
+          360
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 284.87
+      },
+      "sharpnessNativeOverHalf": 3.24
+    },
+    {
+      "dpr": 1,
+      "dprEmulated": false,
+      "tiles": 32,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 1348.72,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 31,
+          "smallestCarPxAcrossTiles": 0.4,
+          "largestFarthestCarM": 122.1,
+          "perTileMinPx": [
+            10.9,
+            1.9,
+            1.8,
+            10.3,
+            9.9,
+            7.7,
+            1.3,
+            5.9,
+            2.2,
+            7.5,
+            6.5,
+            3.1,
+            0.7,
+            1.6,
+            6.3,
+            11.3,
+            9,
+            1.3,
+            0.4,
+            2.5,
+            9,
+            7.5,
+            4.1,
+            1.2,
+            0.5,
+            2.7,
+            3.7,
+            11.3,
+            1.5,
+            0.5,
+            0.4
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 9.9,
+          "maxMs": 10
+        }
+      },
+      "half": {
+        "backingStore": [
+          640,
+          360
+        ],
+        "canvasCssDevicePx": [
+          1280,
+          720
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          1280,
+          720
+        ],
+        "sharpnessLaplacianVar": 207.7
+      },
+      "sharpnessNativeOverHalf": 6.49
+    },
+    {
+      "dpr": 2,
+      "dprEmulated": true,
+      "tiles": 4,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          2560,
+          1440
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 296.66,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 3,
+          "smallestCarPxAcrossTiles": 9.3,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            55.7,
+            9.9,
+            9.3
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 9.9,
+          "maxMs": 10.2
+        }
+      },
+      "half": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 101.67
+      },
+      "sharpnessNativeOverHalf": 2.92
+    },
+    {
+      "dpr": 2,
+      "dprEmulated": true,
+      "tiles": 12,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          2560,
+          1440
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 466.05,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 11,
+          "smallestCarPxAcrossTiles": 4.4,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            36.9,
+            6.6,
+            6.1,
+            34.9,
+            33.5,
+            25.9,
+            4.4,
+            20.1,
+            7.4,
+            25.2,
+            22
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 10,
+          "maxMs": 10.3
+        }
+      },
+      "half": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 126.13
+      },
+      "sharpnessNativeOverHalf": 3.69
+    },
+    {
+      "dpr": 2,
+      "dprEmulated": true,
+      "tiles": 32,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          2560,
+          1440
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 727.14,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 31,
+          "smallestCarPxAcrossTiles": 0.8,
+          "largestFarthestCarM": 122.1,
+          "perTileMinPx": [
+            22,
+            3.9,
+            3.7,
+            20.7,
+            19.9,
+            15.4,
+            2.6,
+            11.9,
+            4.4,
+            15,
+            13.1,
+            6.3,
+            1.5,
+            3.2,
+            12.8,
+            22.8,
+            18.2,
+            2.7,
+            0.8,
+            5.1,
+            18.2,
+            15,
+            8.2,
+            2.4,
+            1,
+            5.4,
+            7.4,
+            22.8,
+            3.1,
+            1,
+            0.8
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 10,
+          "maxMs": 10.3
+        }
+      },
+      "half": {
+        "backingStore": [
+          1280,
+          720
+        ],
+        "canvasCssDevicePx": [
+          2560,
+          1440
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          2560,
+          1440
+        ],
+        "sharpnessLaplacianVar": 111.81
+      },
+      "sharpnessNativeOverHalf": 6.5
+    },
+    {
+      "dpr": 3,
+      "dprEmulated": true,
+      "tiles": 4,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          3840,
+          2160
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 195.29,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 3,
+          "smallestCarPxAcrossTiles": 13.9,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            83.4,
+            14.9,
+            13.9
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.4,
+          "p95Ms": 10.1,
+          "maxMs": 34.3
+        }
+      },
+      "half": {
+        "backingStore": [
+          1920,
+          1080
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 61.59
+      },
+      "sharpnessNativeOverHalf": 3.17
+    },
+    {
+      "dpr": 3,
+      "dprEmulated": true,
+      "tiles": 12,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          3840,
+          2160
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 327.8,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 11,
+          "smallestCarPxAcrossTiles": 6.6,
+          "largestFarthestCarM": 113.7,
+          "perTileMinPx": [
+            55.3,
+            9.9,
+            9.2,
+            52.2,
+            50.1,
+            38.8,
+            6.6,
+            30.1,
+            11.1,
+            37.8,
+            32.9
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.4,
+          "p95Ms": 15.6,
+          "maxMs": 18.3
+        }
+      },
+      "half": {
+        "backingStore": [
+          1920,
+          1080
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 79.8
+      },
+      "sharpnessNativeOverHalf": 4.11
+    },
+    {
+      "dpr": 3,
+      "dprEmulated": true,
+      "tiles": 32,
+      "viewportCss": [
+        1280,
+        720
+      ],
+      "native": {
+        "backingStore": [
+          3840,
+          2160
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          1,
+          1
+        ],
+        "sceneEqualsDeviceGrid": true,
+        "resolution": "native",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 516.06,
+        "farCar": {
+          "tilesWithOtherCarsVisible": 31,
+          "smallestCarPxAcrossTiles": 1.3,
+          "largestFarthestCarM": 122.1,
+          "perTileMinPx": [
+            32.9,
+            5.9,
+            5.5,
+            31,
+            29.8,
+            23.1,
+            3.9,
+            17.9,
+            6.6,
+            22.5,
+            19.6,
+            9.4,
+            2.2,
+            4.8,
+            8.2,
+            34.1,
+            27.3,
+            4,
+            1.3,
+            7.6,
+            27.3,
+            22.5,
+            12.3,
+            3.5,
+            1.5,
+            8,
+            11.1,
+            34.1,
+            4.7,
+            1.4,
+            1.3
+          ]
+        },
+        "frameCost": {
+          "frames": 90,
+          "medianMs": 8.3,
+          "p95Ms": 17.2,
+          "maxMs": 34.2
+        }
+      },
+      "half": {
+        "backingStore": [
+          1920,
+          1080
+        ],
+        "canvasCssDevicePx": [
+          3840,
+          2160
+        ],
+        "backingToDevicePxRatio": [
+          0.5,
+          0.5
+        ],
+        "sceneEqualsDeviceGrid": false,
+        "resolution": "user",
+        "screenshotPx": [
+          3840,
+          2160
+        ],
+        "sharpnessLaplacianVar": 74.2
+      },
+      "sharpnessNativeOverHalf": 6.95
+    }
+  ],
+  "errors": []
+}

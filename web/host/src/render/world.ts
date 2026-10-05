@@ -26,13 +26,14 @@ import { MapRenderer, PropRenderer, SURFACE_COLOURS, type MapJson } from './map/
 import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
+import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
 const PAPER = new Color('#FFF4DE');
 const SKY = new Color('#9fc6d8');
 
 /** The host's Render resolution setting (R111): Native by default; the host may choose less. */
-export type ResolutionMode = 'native' | 'user' | 'auto';
+export type ResolutionMode = Source;
 
 /** The tiled view (P1-R04's grid; a plain chase camera per tile until the cameras, P1-R05). */
 export interface TileView {
@@ -57,8 +58,20 @@ export interface WorldStats {
   cssWidth: number;
   cssHeight: number;
   dpr: number;
+  /** The scale actually drawn at (the choice, or lower after an automatic step). */
   scale: number;
+  /** The host's chosen scale (1 = Native). */
+  userScale: number;
+  /** Where the resolution comes from: native, the host's choice (user), or an automatic measured last resort (auto). */
   resolution: ResolutionMode;
+  /** The native size the canvas wanted (device pixels), before the setting or any browser limit. */
+  nativeWidth: number;
+  nativeHeight: number;
+  /** Automatic lowerings so far (each after a measured frame-budget miss), and the last frame interval / p95 seen. */
+  autoEvents: AutoEvent[];
+  frameMs: number;
+  p95Ms: number;
+  budgetMs: number;
   /** Set when the browser's limit (max canvas/texture size) stopped native resolution. */
   limitedBy: string | null;
   frames: number;
@@ -104,6 +117,17 @@ export class World {
   private target = new Vector3();
   private half: [number, number] = [25, 25];
   readonly stats: WorldStats;
+  private userScale: number;
+  /** Set only by a measured frame-budget miss; always below the user's choice; cleared only by choosing a setting. */
+  private autoScale: number | null;
+  readonly budget = new FrameBudget();
+  /** Automatic lowering is a last resort; tests and `?res=` overrides switch it off. */
+  autoLower = true;
+  /** Test hook (`?autores=injected`): the budget sees only injected frame times, so tests are deterministic. */
+  realFrameTimes = true;
+  private lastRaf = 0;
+  /** Called when the effective resolution changes (the settings panel and overlay refresh). */
+  onResolution: () => void = () => {};
   /** Called after each drawn frame. */
   onFrame: (stats: WorldStats) => void = () => {};
 
@@ -111,8 +135,11 @@ export class World {
     readonly backend: Backend,
     readonly canvas: HTMLCanvasElement,
     /** The Render resolution setting: 1 is native; lower steps are the host's choice (R111). */
-    readonly scale = 1,
+    userScale = 1,
   ) {
+    this.userScale = userScale;
+    this.autoScale = null;
+    const scale = userScale;
     this.stats = {
       backend: backend.label,
       width: 0,
@@ -121,7 +148,14 @@ export class World {
       cssHeight: 0,
       dpr: 1,
       scale,
+      userScale: scale,
       resolution: scale === 1 ? 'native' : 'user',
+      nativeWidth: 0,
+      nativeHeight: 0,
+      autoEvents: [],
+      frameMs: 0,
+      p95Ms: 0,
+      budgetMs: 0,
       limitedBy: null,
       frames: 0,
       tick: 0,
@@ -207,9 +241,45 @@ export class World {
     };
   }
 
+  /** The scale drawn at now. */
+  get scale(): number {
+    return this.autoScale ?? this.userScale;
+  }
+
+  /** The host chose a Render resolution: honoured as given, applied on the next frame, and any automatic step is cleared
+   *  (the host's choice is never silently overridden or raised). */
+  setUserScale(scale: number): void {
+    this.userScale = scale;
+    this.autoScale = null;
+    this.budget.reset();
+    this.stats.autoEvents = [];
+    this.changed();
+  }
+
+  /** Feeds a frame interval (ms) to the budget; a measured miss lowers one step (never below the lowest, never raised). */
+  noteFrameTime(dtMs: number): void {
+    this.stats.frameMs = dtMs;
+    this.stats.budgetMs = this.budget.cfgMs;
+    const p95 = this.budget.push(dtMs);
+    this.stats.p95Ms = this.budget.p95Ms;
+    if (p95 === null || !this.autoLower) return;
+    const to = stepBelow(this.scale);
+    if (to === null) return;
+    this.stats.autoEvents.push({ from: this.scale, to, p95Ms: p95, budgetMs: this.budget.cfgMs, seconds: this.budget.cfgSeconds, atFrame: this.stats.frames });
+    this.autoScale = to;
+    this.changed();
+  }
+
+  private changed(): void {
+    this.resize();
+    this.onResolution();
+  }
+
   start(): void {
-    const loop = () => {
+    const loop = (now: number) => {
       this.raf = requestAnimationFrame(loop);
+      if (this.lastRaf && this.realFrameTimes) this.noteFrameTime(now - this.lastRaf);
+      this.lastRaf = now;
       this.frame();
     };
     this.raf = requestAnimationFrame(loop);
@@ -228,8 +298,9 @@ export class World {
     // to rounding (emulated DPRs, as in Playwright, report it at 1×).
     let [dw, dh] = [Math.round(css.width * dpr), Math.round(css.height * dpr)];
     if (this.devicePx && Math.abs(this.devicePx[0] - dw) <= 2 && Math.abs(this.devicePx[1] - dh) <= 2) [dw, dh] = this.devicePx;
-    let w = Math.max(1, Math.round(dw * this.scale));
-    let h = Math.max(1, Math.round(dh * this.scale));
+    const scale = this.scale;
+    let w = Math.max(1, Math.round(dw * scale));
+    let h = Math.max(1, Math.round(dh * scale));
     const max = this.backend.maxSize;
     let limitedBy: string | null = null;
     if (w > max || h > max) {
@@ -244,7 +315,8 @@ export class World {
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
     }
-    Object.assign(st, { width: w, height: h, cssWidth: Math.round(css.width), cssHeight: Math.round(css.height), dpr, limitedBy });
+    const resolution: ResolutionMode = scale >= 1 ? 'native' : this.autoScale !== null ? 'auto' : 'user';
+    Object.assign(st, { width: w, height: h, cssWidth: Math.round(css.width), cssHeight: Math.round(css.height), dpr, limitedBy, scale, userScale: this.userScale, resolution, nativeWidth: dw, nativeHeight: dh });
   }
 
   /** Draws one frame at the interpolator's render tick. */
@@ -359,6 +431,52 @@ export class World {
     r.setScissorTest(false);
     r.autoClear = true;
     return lods;
+  }
+
+  /** Each tile's rect on the backing store, in device pixels (what the viewports drew into), for the receipts. */
+  tileRects(): { seat: number; x: number; y: number; w: number; h: number }[] | null {
+    if (!this.tileGrid) return null;
+    return this.tileGrid.tiles(performance.now()).map((t) => ({ seat: t.seat, x: Math.round(t.x), y: Math.round(t.y), w: Math.round(t.w), h: Math.round(t.h) }));
+  }
+
+  /** Per tile, how large the other cars are on its screen: the on-screen length (device px) of a 4.4 m span along each
+   *  visible car, smallest first. The far car's size N of the P1-R acceptance, measured through the tile's own camera. */
+  farCars(): { seat: number; tileW: number; tileH: number; visible: number; minPx: number; maxPx: number; farthestM: number }[] {
+    const s = this.sample;
+    const rects = this.tileRects();
+    if (!s || !rects) return [];
+    const out = [];
+    const a = new Vector3();
+    const b = new Vector3();
+    const dir = new Vector3();
+    const q = new Quaternion();
+    for (const t of rects) {
+      const k = t.seat - 1;
+      const cam = this.tileCams[k];
+      if (!cam || t.w < 1) continue;
+      cam.updateMatrixWorld();
+      const self = this.tiles?.follow?.[k] ?? k;
+      let [visible, minPx, maxPx, farthest] = [0, Infinity, 0, 0];
+      for (let i = 0; i < s.cars; i++) {
+        if (i === self % Math.max(1, s.cars)) continue;
+        q.fromArray(s.rot, i * 4);
+        dir.set(0, 0, 2.2).applyQuaternion(q);
+        a.fromArray(s.pos, i * 3).setY(s.pos[i * 3 + 1]! + 0.6);
+        b.copy(a).sub(dir);
+        a.add(dir);
+        const dist = cam.position.distanceTo(a);
+        a.project(cam);
+        b.project(cam);
+        if ([a, b].some((p) => Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z > 1)) continue;
+        const px = Math.hypot(((a.x - b.x) * t.w) / 2, ((a.y - b.y) * t.h) / 2);
+        visible++;
+        minPx = Math.min(minPx, px);
+        maxPx = Math.max(maxPx, px);
+        farthest = Math.max(farthest, dist);
+      }
+      out.push({ seat: t.seat, tileW: t.w, tileH: t.h, visible, minPx: visible ? +minPx.toFixed(1) : 0, maxPx: +maxPx.toFixed(1), farthestM: +farthest.toFixed(1) });
+    }
+    return out;
   }
 
   private place(s: Sampled): void {
