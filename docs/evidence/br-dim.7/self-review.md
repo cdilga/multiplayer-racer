@@ -18,6 +18,8 @@ Files here are `results-n<N>-<W>x<H>.jpg` (and `intermission-n8-…`, same scree
 - 915x412 n=1, 8, 32, 150 (phone landscape): video left 52 %, list beside QR/chip/buttons in the right column.
 - 820x1180 n=1, 8, 32, 150 (tablet portrait): video on top, columns of numbered cells below.
 
+Images looked at: `intermission-n8-1366x768.jpg`, `intermission-n8-1920x1080.jpg`, `intermission-n8-375x667.jpg`, `intermission-n8-412x915.jpg`, `intermission-n8-820x1180.jpg`, `intermission-n8-915x412.jpg`, `results-n1-1366x768.jpg`, `results-n1-1920x1080.jpg`, `results-n1-375x667.jpg`, `results-n1-412x915.jpg`, `results-n1-820x1180.jpg`, `results-n1-915x412.jpg`, `results-n150-1366x768.jpg`, `results-n150-1920x1080.jpg`, `results-n150-375x667.jpg`, `results-n150-412x915.jpg`, `results-n150-820x1180.jpg`, `results-n150-915x412.jpg`, `results-n32-1366x768.jpg`, `results-n32-1920x1080.jpg`, `results-n32-375x667.jpg`, `results-n32-412x915.jpg`, `results-n32-820x1180.jpg`, `results-n32-915x412.jpg`, `results-n8-1366x768.jpg`, `results-n8-1920x1080.jpg`, `results-n8-375x667.jpg`, `results-n8-412x915.jpg`, `results-n8-820x1180.jpg`, `results-n8-915x412.jpg`.
+
 ## Defects found and fixed
 - First pass: the top-three row's name truncated to "Du..." at n=1 (font scaled past the row width): font now capped by the row width.
 - First pass: the room code and next-race chip spilled past the right edge at n=1 on TV (scaled text); the plan now rejects a scale where they don't fit.
