@@ -123,7 +123,7 @@ class Corrupted(unittest.TestCase):
         self.assertIn("variants-short", check_mutated(rows))
 
     def test_variant_floor_once(self) -> None:
-        rows = [r for r in real_rows() if not (r[0] == "winner" and r[1] in ("2", "3"))]
+        rows = [r for r in real_rows() if not (r[0] == "winner" and r[1] != "1")]  # one variant, under the once floor
         self.assertIn("variants-short", check_mutated(rows))
 
     def test_required_moment_missing(self) -> None:
@@ -167,7 +167,11 @@ class Corrupted(unittest.TestCase):
         self.assertIn("banned-word", self.mutate("final-lap", "text", "Last lap! Bloody hold on!", "2"))
 
     def test_indigenous_joke(self) -> None:
-        self.assertIn("indigenous-term", self.mutate("wheel-off", "text", "That wheel's gone walkabout!"))
+        self.assertIn("indigenous-term", self.mutate("wheel-off", "text", "That wheel's gone bunyip hunting!"))
+
+    def test_walkabout_approved(self) -> None:
+        # Owner, 2026-10-06: "walkabout is categorically approved forever" (R114). It must never be flagged.
+        self.assertNotIn("indigenous-term", self.mutate("wheel-off", "text", "That wheel's gone walkabout!"))
 
     def test_glossary_dont_say(self) -> None:
         self.assertIn("glossary-dont-say", self.mutate("final-lap", "text", "Last lap! Check your device!", "2"))
