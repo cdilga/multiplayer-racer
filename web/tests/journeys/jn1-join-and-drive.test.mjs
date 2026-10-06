@@ -98,8 +98,8 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.match(code, /^[A-Z2-9]{4}$/);
 
   at('QR shows');
-  await wait(host, () => document.querySelector('.jj-qr svg'), undefined, 30_000);
-  const png = PNG.sync.read(await host.locator('.jj-qr svg').first().screenshot());
+  await wait(host, () => document.querySelector('.jj-drive-qr svg'), undefined, 30_000);
+  const png = PNG.sync.read(await host.locator('.jj-drive-qr svg').first().screenshot());
   const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
   assert.equal(decoded?.data, joinUrl, 'the QR carries the join URL');
   at('phone A joins by QR');

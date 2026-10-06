@@ -12,6 +12,7 @@ import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
+import { paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
@@ -153,6 +154,13 @@ async function openFreeDrive(client: SimClient, world: World, params: URLSearchP
   }
   const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
   const overlay = mountGridOverlay(app, joinUrl);
+  // Free drive always shows the paper QR with the code (the lobby's join panel is R07's), so phones can join any time.
+  if (bridge.hub.code) {
+    const card = paperQrCard({ url: joinUrl, code: bridge.hub.code, domain: new URL(joinUrl).host, size: 160 });
+    card.classList.add('jj-drive-qr');
+    card.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2;margin:0';
+    app.append(card);
+  }
   world.onLayout = (layout, scale) => overlay.render(layout, scale);
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
   (window as unknown as { __jjNet: unknown }).__jjNet = {
