@@ -178,6 +178,8 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
     await c.page.waitForTimeout(300);
     await c.page.setViewportSize({ width: 390, height: 844 });
     await c.page.waitForTimeout(300);
+    await shot(c.page, 'phone-portrait-390x844-turn-sideways');
+    await c.page.getByRole('button', { name: 'Play upright anyway' }).click();
     await shot(c.page, 'phone-portrait-390x844-playing');
     await b.page.screenshot({ path: `${CAPTURE}/phone-landscape-844x390-identify.png` }).then(() => b.page.getByRole('button', { name: /Identify/ }).click());
     await b.page.waitForTimeout(120);

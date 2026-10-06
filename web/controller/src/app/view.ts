@@ -21,6 +21,8 @@ const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string
   'update-needed': () => ({ title: 'Updating…', body: 'Loading the new version.' }),
 };
 
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
+
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
 
@@ -63,11 +65,16 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
       <div class="strip" data-box="strip"><div class="who"><span class="seatno">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
-      <div class="tools" data-box="tools"><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div></div>
+</div>
     </section>`;
-    // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18).
+    // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
+    // the tools ride in the strip in landscape and get their own row under it in portrait, so the name keeps its room.
     const screenEl = app.querySelector<HTMLElement>('.screen')!;
     const land = matchMedia('(orientation: landscape)').matches;
+    const toolsHolder = document.createElement('div');
+    toolsHolder.innerHTML = TOOLS;
+    if (land) screenEl.querySelector('.strip')!.append(toolsHolder.firstElementChild!);
+    else screenEl.append(toolsHolder.firstElementChild!);
     const area = document.createElement('div');
     area.className = `sticks${land ? ' with-pod' : ''}`;
     const dz = stickZone('drive');
@@ -80,6 +87,17 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       area.append(dz, az);
     }
     screenEl.append(area);
+    // R101: landscape first. Upright, the controller asks once a visit to turn sideways; it still works upright.
+    if (!land && !uprightOk) {
+      area.insertAdjacentHTML(
+        'beforeend',
+        `<div class="rotate-card panel" data-overlay="rotate"><b class="display italic">Turn sideways</b><p>The sticks get the whole width, and your thumbs sit where they rest.</p><button class="btn" data-act="upright">Play upright anyway</button></div>`,
+      );
+      area.querySelector('[data-act=upright]')!.addEventListener('click', (e) => {
+        uprightOk = true;
+        (e.target as HTMLElement).closest('.rotate-card')?.remove();
+      });
+    }
     const push = () => sticks && session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
     sticks = { drive: attachStick(dz, push), action: attachStick(az, push) };
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
@@ -112,6 +130,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   session.onIdentify = () => flash(app, session);
   render();
 }
+
+/** The portrait 'Turn sideways' card was dismissed this visit. */
+let uprightOk = false;
 
 let leaveArmed = 0;
 /** Leave needs a second tap within 3 s (no browser dialogs: they block the page). */
