@@ -1103,6 +1103,7 @@ dependencies = [
  "jj-input",
  "jj-protocol",
  "jj-types",
+ "serde_json",
  "wasm-bindgen",
 ]
 
