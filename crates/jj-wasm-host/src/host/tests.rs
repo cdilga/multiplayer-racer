@@ -753,3 +753,58 @@ fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the
         "the cone's debris record says cone"
     );
 }
+
+#[test]
+fn a_reloaded_controller_says_hello_again_and_gets_its_seat_back() {
+    // P1-C03/G04: a reload or a rebuilt link is a new connection, so its Hello must be answered with the same seat.
+    let hello = || {
+        net(
+            "phone",
+            Channel::Cmd,
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId("phone".into()),
+                resume: Some("secret".into()),
+            }
+            .encode(),
+        )
+    };
+    let claim = net(
+        "phone",
+        Channel::Cmd,
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        }
+        .encode(),
+    );
+    let mut h = Host::new(&init()).unwrap();
+    h.schedule(0, &hello()).unwrap();
+    h.schedule(0, &claim).unwrap();
+    h.schedule(60, &hello()).unwrap();
+    h.stop_at(120);
+    let mut now = 0;
+    let mut welcomes = Vec::new();
+    while h.tick() < 120 {
+        h.advance(now);
+        now += 16_667;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                channel: Channel::Cmd,
+                bytes,
+                ..
+            } = m
+                && let Ok(HostCmd::Welcome { seat, number, .. }) = HostCmd::decode(&bytes)
+            {
+                welcomes.push((seat, number));
+            }
+        }
+    }
+    assert_eq!(
+        welcomes.len(),
+        2,
+        "a Welcome for the claim and one for the reload: {welcomes:?}"
+    );
+    assert_eq!(welcomes[0], welcomes[1], "the same seat and number");
+}

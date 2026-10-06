@@ -129,6 +129,8 @@ pub struct Host {
     seats: Seats,
     inputs: BTreeMap<SeatId, SeatInput>,
     conns: BTreeMap<EndpointId, ConnId>,
+    /// Connections that have said Hello.
+    helloed: BTreeSet<ConnId>,
     locals: BTreeMap<LocalSourceId, ConnId>,
     local_buttons: BTreeMap<LocalSourceId, LocalButtons>,
     next_conn: ConnId,
@@ -214,6 +216,7 @@ impl Host {
             }),
             inputs: BTreeMap::new(),
             conns: BTreeMap::new(),
+            helloed: BTreeSet::new(),
             locals: BTreeMap::new(),
             local_buttons: BTreeMap::new(),
             next_conn: 1,
@@ -586,7 +589,16 @@ impl Host {
     }
 
     fn controller_cmd(&mut self, endpoint: EndpointId, cmd: ControllerCmd) {
-        let conn = self.conn_for(&endpoint);
+        let mut conn = self.conn_for(&endpoint);
+        // Hello is the first message on a connection (plan §5.4): a Hello on an endpoint that already said one is a new
+        // connection (a reloaded page, a rebuilt link), so it gets a fresh ConnId; the seat reducer then fences the old
+        // one and welcomes the new one back to its seat.
+        if matches!(cmd, ControllerCmd::Hello { .. }) && !self.helloed.insert(conn) {
+            conn = self.next_conn;
+            self.next_conn += 1;
+            self.conns.insert(endpoint.clone(), conn);
+            self.helloed.insert(conn);
+        }
         let outputs = match cmd {
             ControllerCmd::Hello {
                 endpoint: claimed,
