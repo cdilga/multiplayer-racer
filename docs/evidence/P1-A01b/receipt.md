@@ -33,3 +33,8 @@ Counts: 32 VoiceDesign candidate clips; 32 clips on Qwen3 1.7B bf16 (eris); 32 o
 - Pitch median is a crude torchaudio tracker and reads high for VoiceDesign clips (~260-330 Hz); use spread as a relative number only.
 - Metrics cannot judge "sounds like a broad Australian announcer"; the page says so.
 - Publishing: see self-review.md "Remaining defects".
+
+## 2026-10-07 close: re-render with the trimmed hype reference
+- Render on eris (log `~/Work/dev/jammers-audio/logs/p1a01.log`), 1.7B bf16, manifest `assets/audio/voice/manifest.json` (generated 2026-10-06T22:14Z): 65/70 rows pass every screen; `tools/audio/check_cues.py` OK.
+- The five that fail the WER screen (wreck-1, wreck-4, late-joiner-4, late-joiner-5, off-course-3) are Whisper folds of Aussie slang ("Cooey", "Good day", "walk about"). Owner accepted them as Whisper misses on 2026-10-07.
+- Published to https://jammers-preview.dilger.dev/poc/audio/voice/ ("Current announcer lines" group first; clips rsynced by hand per scripts/poc-publish.sh, never committed).
