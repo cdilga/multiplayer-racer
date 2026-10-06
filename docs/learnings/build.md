@@ -83,3 +83,11 @@
   arrives as 0x8000_0000), but don't compare it with `>` in JS.
 - Two clocks: main's and a worker's `performance.now()` have different origins. Ages across them use
   `performance.timeOrigin + performance.now()` on both sides.
+
+## 2026-10-07 · A new crate dependency needs `Cargo.lock` in the same commit (P1-C02)
+
+- **Symptom:** CI (`--locked`) and `scripts/remote/eris.sh` builds fail right after a push that added a dependency to a
+  crate's `Cargo.toml`; an unlocked build on eris rewrites its clone's `Cargo.lock`, and eris.sh then refuses to run
+  ("eris's clone has local changes").
+- **Fix:** commit `Cargo.lock` with the manifest change (`git commit -- … Cargo.lock`); build on eris with `--locked`.
+  If the clone is already dirty, `git stash push -- Cargo.lock` there (never discard), then push the lock from the Mac.

@@ -25,7 +25,27 @@ after(async () => {
   await server?.close();
 });
 
-const wait = async (page, fn, arg, ms = 20_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
+let step = '';
+const wait = async (page, fn, arg, ms = 20_000) => {
+  try {
+    return await page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
+  } catch (e) {
+    const diag = await page
+      .evaluate(() => ({
+        url: location.href,
+        host: document.documentElement.dataset.jjHost ?? null,
+        net: window.__jjNet?.inspect?.() ?? null,
+        ctl: window.__jjController?.inspect?.() ?? null,
+        body: document.body.innerText.slice(0, 300),
+      }))
+      .catch((x) => String(x));
+    throw new Error(`${step}: ${e.message}\n${JSON.stringify(diag, null, 1)}`);
+  }
+};
+const at = (name) => {
+  step = name;
+  console.log(`# ${name}`);
+};
 
 async function phone() {
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
@@ -70,21 +90,24 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const host = await hostCtx.newPage();
   const hostErrors = [];
   host.on('pageerror', (e) => hostErrors.push(e.message));
+  at('host opens a room');
   await host.goto(`${server.origin}${BASE}host?drive&test=live`);
   await wait(host, () => window.__jjNet?.code() && window.__jjTest, undefined, 60_000);
   const code = await host.evaluate(() => window.__jjNet.code());
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   assert.match(code, /^[A-Z2-9]{4}$/);
 
-  // Phone A: the QR on the TV, decoded from a screenshot of it.
+  at('QR shows');
   await wait(host, () => document.querySelector('.jj-qr svg'), undefined, 30_000);
   const png = PNG.sync.read(await host.locator('.jj-qr svg').first().screenshot());
   const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
   assert.equal(decoded?.data, joinUrl, 'the QR carries the join URL');
+  at('phone A joins by QR');
   const a = await phone();
   const youA = await joinAndClaim(a, decoded.data, 'Davo');
 
   // Phone B: types the code on the landing page.
+  at('phone B joins by code');
   const b = await phone();
   await b.page.goto(`${server.origin}${BASE}`);
   await b.page.locator('#code').pressSequentially(code.toLowerCase());
@@ -92,13 +115,13 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const youB = await joinAndClaim(b, null, 'Shazza');
   assert.notEqual(youA.you.number, youB.you.number);
 
-  // A key cluster on the host (P1-C05) drives beside them.
+  at('keys claim');
   await host.keyboard.down('KeyW');
   for (const t0 = Date.now(); (await observe(host)).host.seats.length < 3; await host.waitForTimeout(100)) {
     assert.ok(Date.now() - t0 < 15_000, 'the key cluster never got a seat');
   }
 
-  // A drives straight on, B drives and steers right.
+  at('drive');
   const epA = youA.link.endpointId;
   const epB = youB.link.endpointId;
   const hold = (p, d) => p.page.evaluate((d) => window.__jjController.setSticks({ ...d, touch: true }, { x: 0, y: 0, touch: false }), d);
@@ -118,7 +141,7 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const tiles = await host.evaluate(() => window.__jjRender.tileRects().length);
   assert.equal(tiles, 3);
 
-  // A fourth seat (phone C) joins mid-drive: a car and a tile, the others keep going.
+  at('phone C joins mid-drive');
   const c = await phone();
   const youC = await joinAndClaim(c, joinUrl, 'Robbo');
   const after1 = await driveTicks(host, 120);
@@ -127,7 +150,7 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.ok(carOf(after1.now, epA).forwardSpeed > 4, 'A undisturbed');
   await wait(host, () => window.__jjRender.tileRects().length === 4);
 
-  // Reloading A comes back to the same seat and car.
+  at('reload resumes');
   const carA = carOf(after1.now, epA).car;
   await a.page.reload();
   await wait(a.page, () => window.__jjController?.inspect().phase === 'playing', undefined, 30_000);
