@@ -65,6 +65,7 @@ pub struct Streams {
     pub structure: Rng,
     pub dressing: Rng,
     pub terrain: Rng,
+    pub features: Rng,
 }
 
 impl Streams {
@@ -74,6 +75,7 @@ impl Streams {
             structure: Rng::stream(seed, "structure"),
             dressing: Rng::stream(seed, "dressing"),
             terrain: Rng::stream(seed, "terrain"),
+            features: Rng::stream(seed, "features"),
         }
     }
 }

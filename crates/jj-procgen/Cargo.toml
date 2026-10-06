@@ -18,5 +18,9 @@ serde_json.workspace = true
 [dev-dependencies]
 wasm-bindgen-test.workspace = true
 
+# The jump scenarios drive generated maps through the real sim (native only; the WASM parity test needs none of it).
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+jj-sim.workspace = true
+
 [lints]
 workspace = true

@@ -4,6 +4,7 @@
 //! - [`course`] (P1-M03b): the structure stream designs a closed loop of corners and straights.
 //! - [`assemble`] (P1-M03a): a centerline plus dressing → a canonical `jj.map.v1` through `jj-map`.
 //!
+//! - [`features`] (P1-M03d): jumps, crests, whoops and creek dips composed into the route and baked into the heights.
 //! - [`terrain`] (P1-M03c): undulation along the route with per-biome grade, curvature and bank limits.
 //!
 //! Dressing still comes from a placeholder (box buildings and cones around the route) until the biome beads (M04–M07)
@@ -13,6 +14,7 @@
 
 pub mod assemble;
 pub mod course;
+pub mod features;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
@@ -27,7 +29,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "3";
+pub const GENERATOR_VERSION: &str = "4";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -67,6 +69,7 @@ pub fn generate_from(mut st: Streams) -> (Map, Report) {
         props,
     });
     terrain::undulate(&mut map, &mut st.terrain, &terrain::params(biomes[0]));
+    features::place(&mut map, &mut st.features, biomes[0]);
     (map, report(&course))
 }
 

@@ -198,6 +198,10 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
         .map(|&c| libm::tan(f64::from(c) * core::f64::consts::PI / 18_000.0))
         .collect();
 
+    // Bank sign (jj.map.v1 `bank`, centidegrees): positive leans the road toward its LEFT, i.e. the left edge is the
+    // lower one, which is what a left-hand corner wants. "Left" is the left of travel; with the sim's handedness (+y up,
+    // a car facing +z has +x on its left) that is the (tz, -tx) side of the tangent, and `lateral` in the validator's
+    // `Near` (positive on (-tz, tx)) is the right. A right-hand corner gets a negative bank.
     for (i, q) in map.route.points.iter_mut().enumerate() {
         q.y = libm::round(h[i] * 1000.0) as i32;
         q.bank = bank_cdeg[i];

@@ -346,11 +346,17 @@ fn the_painted_road_edge_has_no_cell_sized_saw_tooth() {
 fn undulation_is_idempotent_and_leaves_the_route_plan_alone() {
     for seed in [0u64, 7, 42, u64::MAX] {
         let base = generate(seed);
+        // Undulation then features is the generator's pipeline: running it again on the map gives the same map.
         let mut again = base.clone();
         undulate(
             &mut again,
             &mut Rng::stream(seed, "terrain"),
             &params(Biome::Greybox),
+        );
+        jj_procgen::features::place(
+            &mut again,
+            &mut Rng::stream(seed, "features"),
+            Biome::Greybox,
         );
         assert_eq!(base, again, "seed {seed}");
         let mut other = base.clone();
@@ -380,7 +386,6 @@ fn writes_the_evidence_images() {
         out.extend(px.iter().flatten());
         std::fs::write(dir.join(name), out).unwrap();
     };
-    // Overview: seed 1, one image per biome, one pixel per grid cell, sun from the north-west.
     for biome in BIOMES {
         let mut map = generate(1);
         undulate(&mut map, &mut Rng::stream(1, "terrain"), &params(biome));
@@ -413,7 +418,6 @@ fn writes_the_evidence_images() {
             &px,
         );
     }
-    // Diagonal-straight crop: the straightest ~45 degree run among the first seeds.
     let mut best: Option<(f64, Map, usize)> = None;
     for seed in 0..40 {
         let map = generate(seed);
@@ -439,7 +443,6 @@ fn writes_the_evidence_images() {
     let r = route(&map);
     let centre = r.pts[(i + 6) % r.pts.len()];
     let paint = |spacing: f64| {
-        // Cell (vertex) centred on the grid; a pixel takes the class of its nearest vertex.
         let (size, scale) = (40.0f64, 8.0f64);
         let wpx = (size * scale) as usize;
         let mut px = Vec::with_capacity(wpx * wpx);

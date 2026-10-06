@@ -1,0 +1,18 @@
+features placed over 100 seeds x 5 biomes, every one passing check_envelope and validate:
+{
+    "Greybox CreekDip": 81,
+    "Greybox Crest": 128,
+    "Greybox Jump": 173,
+    "Greybox Whoops": 54,
+    "OutbackBitumen CreekDip": 83,
+    "OutbackBitumen Crest": 181,
+    "OutbackBitumen Jump": 37,
+    "OutbackDirt CreekDip": 128,
+    "OutbackDirt Crest": 92,
+    "OutbackDirt Jump": 173,
+    "OutbackDirt Whoops": 83,
+    "Rocks Crest": 160,
+    "Rocks Jump": 215,
+    "Rocks Whoops": 23,
+    "Town Crest": 95,
+}

@@ -22,3 +22,21 @@
   route (width, y and bank are all on the route points) removes it.
 - **Debug test time.** The 100-seed × 5-biome bank takes ~9 s in release and ~140 s in debug, so it samples 30 seeds in a
   debug build (`JJ_SEEDS=N` overrides; 600 seeds passed in release).
+
+## 2026-10-07 · Feature pieces (P1-M03d)
+
+- **Follow-up for the host map renderer (not done here):** draw the road as a ribbon along the route (its `width`, `y`
+  and `bank` are all on the route points) instead of painting the surface per grid cell; that removes the cell-sized
+  saw-tooth on diagonals that a finer grid only shrinks (M03c).
+- **The sim reads only the heightfield.** `jj-sim` ignores `map.features`, so a feature's geometry has to be baked into
+  `terrain.heights`; the `Feature` record is metadata for the validator, the envelope check and the renderer. A ramp is
+  therefore only as sharp as the 2.5 m grid: the lip's drop takes a cell or two, and a 4 m ramp is ~1.6 cells wide.
+- **Standard line = over the ramp.** The validator wants 4 m of bypass beside a ramp, so a ramp centred on the 12 m road
+  is at most 4 m wide; the autopilot (centerline) takes it, a human can take the bypass. Harder jumps (opt-in) aren't
+  generated yet.
+- **Whoops are exempt from the curvature limit** (they are rough by design: grade only); crests keep 0.012 (a car at
+  25 m/s stays grounded), creek dips 0.045 (they only compress the suspension).
+- **Regenerating the pipeline.** `terrain::undulate` rewrites heights from scratch; `features::place` adds to them, so
+  call it exactly once after `undulate` (the idempotence test runs both).
+- **jj-sim is a native-only dev-dependency** of jj-procgen (`cfg(not(target_arch = "wasm32"))`), so the WASM parity
+  build never compiles Rapier.
