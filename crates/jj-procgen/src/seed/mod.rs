@@ -57,12 +57,14 @@ impl Rng {
     }
 }
 
-/// The streams one map uses. Structure shapes the route; dressing places pieces and props around it.
+/// The streams one map uses. Structure shapes the route; dressing places pieces and props around it; terrain draws the
+/// undulation (P1-M03c), so reshaping the ground never moves the route or the dressing's draws.
 #[derive(Clone, Debug)]
 pub struct Streams {
     pub seed: u64,
     pub structure: Rng,
     pub dressing: Rng,
+    pub terrain: Rng,
 }
 
 impl Streams {
@@ -71,6 +73,7 @@ impl Streams {
             seed,
             structure: Rng::stream(seed, "structure"),
             dressing: Rng::stream(seed, "dressing"),
+            terrain: Rng::stream(seed, "terrain"),
         }
     }
 }

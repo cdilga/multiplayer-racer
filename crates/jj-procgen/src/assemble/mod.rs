@@ -15,7 +15,8 @@ pub const GATE_SPACING_M: f64 = 40.0;
 /// The finish line sits this far along the route, so the start corridor fits behind it.
 pub const FINISH_AT_M: f64 = 60.0;
 pub const START_LENGTH_M: f64 = 48.0;
-pub const TERRAIN_SPACING_M: f64 = 10.0;
+/// Fine enough that the painted road edge's saw-tooth stays under 1.8 m (the 10 m grid's was 7 m).
+pub const TERRAIN_SPACING_M: f64 = 2.5;
 /// Margin around everything for the bounds.
 pub const BOUNDS_MARGIN_M: f64 = 60.0;
 
@@ -134,18 +135,30 @@ pub fn assemble(spec: &TrackSpec) -> Map {
     let cols = ((bounds.max_x - origin_x) / spacing + 2) as u32;
     let rows = ((bounds.max_z - origin_z) / spacing + 2) as u32;
     let half = spec.width_m / 2.0;
-    let mut surfaces = Vec::with_capacity((cols * rows) as usize);
-    for r in 0..rows {
-        for c in 0..cols {
-            let p = (
-                f64::from(origin_x + c as i32 * spacing) / 1000.0,
-                f64::from(origin_z + r as i32 * spacing) / 1000.0,
-            );
-            surfaces.push(if distance_to_loop(pts, p) <= half {
-                spec.surface
-            } else {
-                Surface::OffTrack
-            });
+    // Road wherever a cell's corner lies within half the width of a route segment; off-track elsewhere.
+    let mut surfaces = vec![Surface::OffTrack; (cols * rows) as usize];
+    let sp = f64::from(spacing) / 1000.0;
+    let (ox, oz) = (f64::from(origin_x) / 1000.0, f64::from(origin_z) / 1000.0);
+    for i in 0..n {
+        let (a, b) = (pts[i], pts[(i + 1) % n]);
+        let (dx, dz) = (b.0 - a.0, b.1 - a.1);
+        let len2 = dx * dx + dz * dz;
+        let c0 = libm::floor((a.0.min(b.0) - half - ox) / sp).max(0.0) as u32;
+        let c1 = (libm::ceil((a.0.max(b.0) + half - ox) / sp).max(0.0) as u32).min(cols - 1);
+        let r0 = libm::floor((a.1.min(b.1) - half - oz) / sp).max(0.0) as u32;
+        let r1 = (libm::ceil((a.1.max(b.1) + half - oz) / sp).max(0.0) as u32).min(rows - 1);
+        for r in r0..=r1 {
+            for c in c0..=c1 {
+                let p = (ox + f64::from(c) * sp, oz + f64::from(r) * sp);
+                let t = if len2 == 0.0 {
+                    0.0
+                } else {
+                    (((p.0 - a.0) * dx + (p.1 - a.1) * dz) / len2).clamp(0.0, 1.0)
+                };
+                if libm::hypot(p.0 - (a.0 + t * dx), p.1 - (a.1 + t * dz)) <= half {
+                    surfaces[(r * cols + c) as usize] = spec.surface;
+                }
+            }
         }
     }
 

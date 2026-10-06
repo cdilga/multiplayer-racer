@@ -4,8 +4,10 @@
 //! - [`course`] (P1-M03b): the structure stream designs a closed loop of corners and straights.
 //! - [`assemble`] (P1-M03a): a centerline plus dressing → a canonical `jj.map.v1` through `jj-map`.
 //!
+//! - [`terrain`] (P1-M03c): undulation along the route with per-biome grade, curvature and bank limits.
+//!
 //! Dressing still comes from a placeholder (box buildings and cones around the route) until the biome beads (M04–M07)
-//! and seeded scatter (M03e) replace it. Terrain stays flat until M03c.
+//! and seeded scatter (M03e) replace it.
 
 #![forbid(unsafe_code)]
 
@@ -13,6 +15,7 @@ pub mod assemble;
 pub mod course;
 pub mod seed;
 pub mod signs;
+pub mod terrain;
 
 use std::collections::BTreeMap;
 
@@ -24,7 +27,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "2";
+pub const GENERATOR_VERSION: &str = "3";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -51,17 +54,19 @@ pub fn generate_from(mut st: Streams) -> (Map, Report) {
     let course = course::design(&mut st.structure);
     let centerline = centred(&resample(&course.points));
     let (dressing, props) = placeholder_dressing(&mut st, &centerline);
-    let map = assemble(&TrackSpec {
+    let biomes = vec![Biome::Greybox];
+    let mut map = assemble(&TrackSpec {
         seed: st.seed,
         generator_id: GENERATOR_ID.into(),
         generator_version: GENERATOR_VERSION.into(),
-        biomes: vec![Biome::Greybox],
+        biomes: biomes.clone(),
         centerline,
         width_m: WIDTH_M,
         surface: Surface::Tarmac,
         dressing,
         props,
     });
+    terrain::undulate(&mut map, &mut st.terrain, &terrain::params(biomes[0]));
     (map, report(&course))
 }
 
