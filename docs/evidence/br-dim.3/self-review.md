@@ -5,11 +5,11 @@ Hardware/browser: Apple M1 Pro, headed Google Chrome 154 (system GPU) via Playwr
 
 ## Looked at
 - coverage-4k-dpr1-12tiles.jpg, coverage-1080css-dpr2-12tiles.jpg (12 tiles, 3840x2160 backing store both ways)
-- dpr1/2/3-12tiles-native.jpg and dpr1/2/3-12tiles-half.jpg (native vs deliberately 0.5; DPR 2 pair and DPR 3 32-tile viewed in detail)
+- dpr1-12tiles-native.jpg, dpr2-12tiles-native.jpg, dpr3-12tiles-native.jpg and dpr1-12tiles-half.jpg, dpr2-12tiles-half.jpg, dpr3-12tiles-half.jpg (native vs deliberately 0.5; DPR 2 pair and DPR 3 32-tile viewed in detail)
 - dpr2-12tiles-setting-open.jpg (popover open above the chip) and dpr2-12tiles-native.jpg (closed: only the chip, with a keyboard focus ring after Escape)
 - dpr3-32tiles-native.jpg (32 tiles, spare cells show join QR/standings, chip and select in the corner)
 
-- poc-before-412x915-n32-dpr2.jpg, poc-after-412x915-n32-dpr2.jpg (TV POC 32-tile grid, tile 1, DPR 2 emulated: forced 1x vs native); poc-dpr-check.json; design-live poc_tv_index_html_grid_n_32_1920x1080.png (HUD pills still aligned to tiles)
+- poc-before-412x915-n32-dpr2.jpg, poc-after-412x915-n32-dpr2.jpg (TV POC 32-tile grid, tile 1, DPR 2 emulated: forced 1x vs native); poc-dpr-check.json; the live-check TV grid capture at n=32, 1920x1080 (local `docs/evidence/design-live/`, not committed; HUD pills still aligned to tiles)
 
 ## Findings
 - At 3840x2160 (CSS 3840x2160 @ DPR1, and CSS 1920x1080 @ DPR2 emulated) for 1, 4, 12, 32 tiles the single canvas backing store was exactly 3840x2160 = the display grid, and all tile rects sit inside it. Tiles are 99.3 / 98.6 / 97.6 / 87.6 % of the display pixels (the rest is the 5 % safe margin, gutters and spare cells, all in the same native backing store).
