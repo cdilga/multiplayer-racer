@@ -3,8 +3,9 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 // One multi-page build; each page bundles only what it imports, so the controller never pulls the
-// host's renderer or sim (Playtest-1 plan §4.1). The base path comes from the deployment:
-// `/` in production, `/p/<id>/` in a preview (§5.1, §12).
+// host's renderer or sim (Playtest-1 plan §4.1). The base is relative, so ONE build serves under any deployment base
+// (`/` in production, `/p/<id>/` in a preview, §5.1, §12): jj-server rewrites the pages' asset links to the base and
+// tells the apps where it is with `<meta name="jj-base">` (web/shared/src/base.ts).
 //
 // The host's test surface (P1-F05b) is its own lazily loaded chunk, worker and WASM, all written under `test/`
 // (their names carry "testing"): a production-realm server answers that whole directory with 404, and
@@ -26,7 +27,7 @@ function commit(): string {
 }
 
 export default defineConfig({
-  base: process.env.JJ_BASE ?? '/',
+  base: process.env.JJ_BASE ?? './',
   define: { __JJ_COMMIT__: JSON.stringify(process.env.JJ_COMMIT ?? commit()) },
   worker: { format: 'es', rollupOptions: { output } },
   build: {

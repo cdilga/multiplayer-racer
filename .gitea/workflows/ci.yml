@@ -119,7 +119,7 @@ jobs:
       - name: The S02 harness and the native jj (for the hash comparison)
         run: |
           npx --prefix web vite build --config web/host/tests/vite.config.ts
-          cargo build --locked -q -p jj-tools --bin jj
+          cargo build --locked -q -p jj-tools --bin jj -p jj-server
       - name: Chromium headless shell (Playwright 1.62.1)
         run: npx playwright install --with-deps --only-shell chromium
       # One file at a time: every host page renders on the CPU here (software GL), so parallel files starve each
@@ -127,8 +127,10 @@ jobs:
       - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
         run: JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
 
-      - name: The landing page under / and /p/x/ in Chromium (P1-C01)
-        run: node --test --test-concurrency=1 web/landing/tests/
+      - name: The landing page from one build on jj-server under /, /p/x/ and /p/y/ in Chromium (P1-C01, P1-N02)
+        run: JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/landing/tests/
+      - name: jj-server SSE through a proxy for 5 minutes, slow reader, Last-Event-ID resume (P1-N02)
+        run: JJ_SOAK_S=300 JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test crates/jj-server/tests/sse.test.mjs
 
   checks:
     runs-on: ubuntu-latest

@@ -34,6 +34,11 @@ asupersync = { version = "=0.5.0", default-features = false, features = ["native
 rapier3d = { version = "0.36.0", features = ["enhanced-determinism"] }
 # Procgen maths (P1-M03a): pure-Rust libm, so sin/cos/atan2 give the same bits natively and in WASM.
 libm = "0.2.16"
+# Server crypto (P1-N03/N04): room tickets (HMAC-SHA256), TURN REST credentials (HMAC-SHA1), base64, OS randomness.
+hmac = "0.13.0"
+sha1 = "0.11.0"
+base64 = "0.23.1"
+getrandom = "0.4.3"
 # Map hashing (P1-M01): the gameplay hash is SHA-256 of the canonical bytes.
 sha2 = "0.11.0"
 # Player names (P1-N07a): grapheme count and NFC, per plan §9.

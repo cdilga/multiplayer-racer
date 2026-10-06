@@ -1016,7 +1016,15 @@ name = "jj-server"
 version = "0.2.0"
 dependencies = [
  "asupersync",
+ "base64",
+ "getrandom 0.4.3",
+ "hmac",
  "jj-protocol",
+ "jj-types",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2 0.11.0",
 ]
 
 [[package]]

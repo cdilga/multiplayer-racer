@@ -2,10 +2,11 @@
 // transport is imported here; the host app and the controller app are separate pages under the deployment base.
 import { applyProfile, icon, toast } from '../../shared/ui';
 import './landing.css';
+import { basePath } from '../../shared/src/base';
 import { checkCode, normaliseCode } from './code';
 
 // All routes sit under the deployment base path B: `/` in production, `/p/<id>/` in a preview (plan §5.1).
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const base = basePath();
 const routes = { host: `${base}host`, join: (code: string) => `${base}j/${code}` };
 
 applyProfile();

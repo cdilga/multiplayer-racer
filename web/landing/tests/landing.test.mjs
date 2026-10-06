@@ -12,16 +12,15 @@ import { analyse } from './bundle-check.mjs';
 import { build, serve } from './lib/site.mjs';
 
 const web = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const BASES = { '/': 'c01-root', '/p/x/': 'c01-p-x' };
+// One build, served at three bases (P1-N02: no root-relative leak anywhere).
+const BASES = ['/', '/p/x/', '/p/y/'];
 const sites = {};
 let browser;
 
 before(async () => {
   browser = await chromium.launch();
-  for (const [base, name] of Object.entries(BASES)) {
-    const dist = build(base, name);
-    sites[base] = { dist, ...(await serve(dist, base)) };
-  }
+  const dist = build('./', 'c01-any');
+  for (const base of BASES) sites[base] = { dist, ...(await serve(dist, base)) };
 });
 after(async () => {
   await browser?.close();
@@ -35,12 +34,13 @@ const open = async (base, viewport = { width: 390, height: 844 }) => {
   page.on('response', (r) => r.status() >= 400 && problems.push(`${r.status()} ${r.url()}`));
   page.on('request', (r) => {
     if (!r.url().startsWith(sites[base].origin)) problems.push(`off-origin request: ${r.url()}`);
+    else if (!new URL(r.url()).pathname.startsWith(base)) problems.push(`outside the base ${base}: ${r.url()}`);
   });
   await page.goto(sites[base].origin + base, { waitUntil: 'networkidle' });
   return { page, problems };
 };
 
-for (const base of Object.keys(BASES)) {
+for (const base of BASES) {
   describe(`landing under ${base}`, () => {
     test('renders both actions, loads every asset from the base, makes no off-origin request', async () => {
       const { page, problems } = await open(base);
@@ -217,7 +217,7 @@ describe('token build step', () => {
 });
 
 describe('bundle: the join path stays light', () => {
-  for (const base of Object.keys(BASES)) {
+  for (const base of BASES) {
     test(`no Three.js, renderer, sim or WASM reachable from the landing or controller pages (${base})`, () => {
       const { report, problems } = analyse(sites[base].dist);
       assert.deepEqual(problems, []);

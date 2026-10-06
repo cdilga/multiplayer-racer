@@ -1,5 +1,290 @@
-//! Game server: static serving, rooms, signalling, ICE provider and health (Asupersync, no Tokio).
+//! `jj-server`: the Asupersync adapter (R2, no Tokio). It parses HTTP/1.1 into the runtime-free [`App`], writes the
+//! response back, and keeps SSE streams open with a 15 s heartbeat. Configuration is environment only:
+//!
+//! | Variable | Default | Meaning |
+//! |---|---|---|
+//! | `JJ_BIND` | `0.0.0.0:8080` | listen address |
+//! | `JJ_DIST` | `web/dist` | the built web bundle |
+//! | `JJ_BASE_PATH` | `/` | deployment base (`/p/<id>/` in a preview) |
+//! | `JJ_BUILD` | `dev` | build id for `/version` |
+//! | `JJ_REALM` | `dev` | `production` hides the test surface |
+//! | `JJ_ROOM_KEY` | a fixed dev key | room-ticket key; must survive restarts in a deployment |
+//! | `JJ_PUBLIC_ORIGIN` | from the request | origin for join URLs |
+//! | `TURN_STATIC_AUTH_SECRET` | none (STUN only) | coturn `use-auth-secret` |
+
+use std::future::poll_fn;
+use std::num::NonZeroUsize;
+use std::path::PathBuf;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use asupersync::bytes::{Buf, Bytes};
+use asupersync::combinator::select::{Either, Select};
+use asupersync::cx::Cx;
+use asupersync::http::body::{Body as _, Frame};
+use asupersync::http::h1::HttpError;
+use asupersync::http::h1::server::HostPolicy;
+use asupersync::http::h1::{
+    Http1Config, Http1Listener, Http1ListenerConfig, Http1ProducedResponse, IncomingRequestBody,
+    Method, StreamingServerRequest,
+};
+use asupersync::runtime::RuntimeBuilder;
+use asupersync::time::{sleep, wall_now};
+
+use jj_server::app::{App, Config, SSE_HEARTBEAT, SSE_HEARTBEAT_MS, sse_event};
+use jj_server::crypto::OsEntropy;
+use jj_server::http::{Body, MAX_BODY_BYTES, MAX_HEADER_BYTES, Request, Response, SseOpen};
+use jj_server::ice::CoturnProvider;
+use jj_server::statics::Bundle;
+
+fn now_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+fn env(name: &str) -> Option<String> {
+    std::env::var(name).ok().filter(|v| !v.is_empty())
+}
+
+fn method_name(m: &Method) -> String {
+    match m {
+        Method::Get => "GET".into(),
+        Method::Head => "HEAD".into(),
+        Method::Post => "POST".into(),
+        Method::Put => "PUT".into(),
+        Method::Delete => "DELETE".into(),
+        Method::Options => "OPTIONS".into(),
+        Method::Patch => "PATCH".into(),
+        other => format!("{other:?}").to_ascii_uppercase(),
+    }
+}
+
+fn reason(status: u16) -> &'static str {
+    match status {
+        200 => "OK",
+        201 => "Created",
+        202 => "Accepted",
+        204 => "No Content",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        410 => "Gone",
+        413 => "Payload Too Large",
+        429 => "Too Many Requests",
+        503 => "Service Unavailable",
+        _ => "Status",
+    }
+}
+
+async fn read_body(mut body: IncomingRequestBody) -> Result<Vec<u8>, ()> {
+    let mut out = Vec::new();
+    loop {
+        match poll_fn(|c| Pin::new(&mut body).poll_frame(c)).await {
+            None => return Ok(out),
+            Some(Err(_)) => return Err(()),
+            Some(Ok(Frame::Data(mut d))) => {
+                while d.has_remaining() {
+                    let n = d.chunk().len();
+                    out.extend_from_slice(d.chunk());
+                    d.advance(n);
+                }
+                if out.len() > MAX_BODY_BYTES {
+                    return Err(());
+                }
+            }
+            Some(Ok(_)) => {}
+        }
+    }
+}
+
+fn fixed(resp: Response, head: bool) -> Http1ProducedResponse {
+    let bytes = match resp.body {
+        Body::Bytes(b) => b,
+        Body::Sse(_) => Vec::new(),
+    };
+    let len = bytes.len() as u64;
+    let cap = NonZeroUsize::new(4).expect("non-zero");
+    let mut out = if head {
+        Http1ProducedResponse::with_content_length(
+            cap,
+            resp.status,
+            reason(resp.status),
+            len,
+            |cx, mut s| async move {
+                s.finish(&cx)?;
+                Ok(s)
+            },
+        )
+    } else {
+        Http1ProducedResponse::with_content_length(
+            cap,
+            resp.status,
+            reason(resp.status),
+            len,
+            move |cx, mut s| {
+                async move {
+                    // The server's frame cap is 64 KiB; split larger bodies.
+                    let bytes = Bytes::from(bytes);
+                    let mut off = 0;
+                    while off < bytes.len() {
+                        let end = (off + 60 * 1024).min(bytes.len());
+                        s.send_bytes(&cx, bytes.slice(off..end)).await?;
+                        off = end;
+                    }
+                    s.finish(&cx)?;
+                    Ok(s)
+                }
+            },
+        )
+    };
+    for (k, v) in resp.headers {
+        out = out.with_header(k, v);
+    }
+    out
+}
+
+fn sse(app: Arc<App>, open: SseOpen, headers: Vec<(String, String)>) -> Http1ProducedResponse {
+    let cap = NonZeroUsize::new(16).expect("non-zero");
+    let mut out = Http1ProducedResponse::chunked(cap, 200, "OK", move |cx, mut s| async move {
+        if !app.sse_opened(&open, now_ms()) {
+            s.finish(&cx)?;
+            return Ok(s);
+        }
+        let mut cursor = open.last_event_id;
+        // A comment first, so proxies flush the headers straight away.
+        let result: Result<(), HttpError> = async {
+            s.send_bytes(&cx, Bytes::from_static(b": open\n\n")).await?;
+            while let Some(events) = app.sse_take(&open, cursor) {
+                if !events.is_empty() {
+                    let mut chunk = String::new();
+                    for e in &events {
+                        chunk.push_str(&sse_event(e));
+                        cursor = e.id;
+                    }
+                    s.send_bytes(&cx, Bytes::from(chunk)).await?;
+                    continue;
+                }
+                let wait = Box::pin(app.sse_wait(&open, cursor));
+                let tick = Box::pin(sleep(wall_now(), Duration::from_millis(SSE_HEARTBEAT_MS)));
+                match Select::new(wait, tick).await {
+                    Ok(Either::Left(())) => {}
+                    Ok(Either::Right(_)) => {
+                        s.send_bytes(&cx, Bytes::from_static(SSE_HEARTBEAT.as_bytes()))
+                            .await?
+                    }
+                    Err(_) => break,
+                }
+            }
+            Ok(())
+        }
+        .await;
+        app.sse_closed(&open, now_ms());
+        result?;
+        s.finish(&cx)?;
+        Ok(s)
+    });
+    for (k, v) in headers {
+        out = out.with_header(k, v);
+    }
+    out
+}
+
+async fn serve(app: Arc<App>, req: StreamingServerRequest) -> Http1ProducedResponse {
+    let head = req.head;
+    let peer = req
+        .peer_addr
+        .map(|a| a.ip().to_string())
+        .unwrap_or_default();
+    let Ok(body) = read_body(req.body).await else {
+        return fixed(Response::text(413, "body too large"), false);
+    };
+    let mut r = Request::new(&method_name(&head.method), &head.uri);
+    r.headers = head
+        .headers
+        .into_iter()
+        .map(|(k, v)| (k.to_ascii_lowercase(), v))
+        .collect();
+    r.client_ip = r
+        .header("cf-connecting-ip")
+        .map(str::to_owned)
+        .unwrap_or(peer);
+    r.body = body;
+    let resp = app.handle(&r, now_ms());
+    match resp.body {
+        Body::Sse(open) => sse(app, open, resp.headers),
+        Body::Bytes(_) => fixed(resp, r.method == "HEAD"),
+    }
+}
 
 fn main() {
-    println!("jj-server {}", env!("CARGO_PKG_VERSION"));
+    let bind = env("JJ_BIND").unwrap_or_else(|| "0.0.0.0:8080".into());
+    let dist = PathBuf::from(env("JJ_DIST").unwrap_or_else(|| "web/dist".into()));
+    let dev = Config::dev();
+    let cfg = Config {
+        base: env("JJ_BASE_PATH").unwrap_or(dev.base),
+        build: env("JJ_BUILD").unwrap_or(dev.build),
+        realm: env("JJ_REALM").unwrap_or(dev.realm),
+        room_key: env("JJ_ROOM_KEY")
+            .map(String::into_bytes)
+            .unwrap_or(dev.room_key),
+        public_origin: env("JJ_PUBLIC_ORIGIN"),
+    };
+    let base = jj_server::app::normalise_base(&cfg.base);
+    let bundle = match Bundle::load(&dist, &base) {
+        Ok(b) => b,
+        Err(e) => {
+            eprintln!(
+                "jj-server: can't load the bundle at {}: {e}",
+                dist.display()
+            );
+            std::process::exit(1);
+        }
+    };
+    let ice = CoturnProvider::new(env("TURN_STATIC_AUTH_SECRET").map(String::into_bytes));
+    eprintln!(
+        "jj-server {}: {} assets from {}, base {base}, realm {}, ice {}",
+        cfg.build,
+        bundle.file_count(),
+        dist.display(),
+        cfg.realm,
+        jj_server::ice::IceProvider::status(&ice)
+    );
+    let app = Arc::new(App::new(cfg, bundle, Box::new(ice), Box::new(OsEntropy)));
+
+    let rt = RuntimeBuilder::new()
+        .build()
+        .expect("the Asupersync runtime starts");
+    let handle = rt.handle();
+    rt.block_on(async move {
+        let http = Http1Config::default()
+            .host_policy(HostPolicy::AllowAll)
+            .max_body_size(MAX_BODY_BYTES)
+            .max_headers_size(MAX_HEADER_BYTES);
+        // No connection cap: rooms, endpoints and streams are never counted (R66).
+        let cfg = Http1ListenerConfig::default()
+            .http_config(http)
+            .max_connections(None);
+        let handler = move |_cx: Cx, req: StreamingServerRequest| serve(Arc::clone(&app), req);
+        let listener =
+            match Http1Listener::bind_produced_with_config(bind.clone(), handler, cfg).await {
+                Ok(l) => l,
+                Err(e) => {
+                    eprintln!("jj-server: can't bind {bind}: {e}");
+                    std::process::exit(1);
+                }
+            };
+        eprintln!(
+            "jj-server: listening on {}",
+            listener.local_addr().map(|a| a.to_string()).unwrap_or(bind)
+        );
+        if let Err(e) = listener.run_produced(&handle).await {
+            eprintln!("jj-server: stopped: {e}");
+            std::process::exit(1);
+        }
+    });
 }
