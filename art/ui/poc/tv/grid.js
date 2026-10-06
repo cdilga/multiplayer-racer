@@ -14,18 +14,21 @@ export const PSEUDOCODE = `layout(N, screen) → tiles, fillers
     if w / h > BAND.max: w ← floor(h × BAND.max)          # too wide: narrow every tile
     if w / h < BAND.min: h ← floor(w / BAND.min)          # too tall: shorten every tile
     keep R if N × w × h beats the best (ties: fewer empty cells)
-  the C × R block is centred; seats fill it in reading order
+  the race grid then FILLS the area: w ← floor(screen.w / C), h ← floor(screen.h / R)   # no gaps (owner round 5)
+  seats fill the C × R block in reading order
   the C × R − N empty cells sit at the end of the last row, each exactly a tile
-  chrome (host-layout.js): QR + player list use free cells/margins first, else the smallest strip;
-           QR = largest square that fits, never under the minimum scannable size
-  no QR fits at all: the room code in a small chip, bottom-right
-  BAND = 1.2 … 2.0 (third person); portrait screens stack rows, ultrawide screens add columns,
+  chrome (host-layout.js): QR + player list only in those empty cells, never a strip taken from the tiles;
+           QR = largest square that fits with "Join now", never under the minimum scannable size
+  no room: the QR and the positions dock in the footer; clicking the QR pauses and shows it big
+  BAND = 1.2 … 2.0 picks the arrangement; portrait screens stack rows, ultrawide screens add columns,
   both fall out of the same rule. Nothing is ever black, no tile is ever larger; there is no maximum N.`;
 
 /** The equal-tile grid: every tile is `cell.w × cell.h` whole pixels, inset by the same half-gutter. */
 // `min` ({ w, h }, optional) rejects arrangements whose tile would be smaller; with it the result is null when none fits
 // (the lobby roster asks, tier by tier, for the biggest equal cards that stay legible; the race grid never passes it).
-export function layoutGrid(n, rect, { band = BAND, gutter = 0, min = null } = {}) {
+// `fill` (the race grid, owner round 5): the band picks the arrangement, then the tiles stretch to fill the area, so there
+// are no bands of backdrop above, below or beside them; every tile still has exactly the same size.
+export function layoutGrid(n, rect, { band = BAND, gutter = 0, min = null, fill = false } = {}) {
   const X = Math.round(rect.x), Y = Math.round(rect.y), RW = Math.floor(rect.x + rect.w) - X, RH = Math.floor(rect.y + rect.h) - Y;
   const right = rect.x + rect.w, bottom = rect.y + rect.h;
   if (n <= 0) return { rows: 0, cols: 0, cell: null, tiles: [], fillers: [{ x: rect.x, y: rect.y, w: rect.w, h: rect.h, kind: 'margin' }] };
@@ -41,7 +44,8 @@ export function layoutGrid(n, rect, { band = BAND, gutter = 0, min = null } = {}
     if (!best || area > best.area || (area === best.area && empty < best.empty)) best = { rows: r, cols: c, w, h, area, empty };
   }
   if (!best) return null;
-  const { rows, cols, w, h } = best;
+  const { rows, cols } = best;
+  const w = fill ? Math.floor(RW / cols) : best.w, h = fill ? Math.floor(RH / rows) : best.h;
   const x0 = X + Math.floor((RW - cols * w) / 2), y0 = Y + Math.floor((RH - rows * h) / 2);
   const x1 = x0 + cols * w, y1 = y0 + rows * h;
   const hg = Math.round(gutter / 2); // whole pixels, so every tile stays the same size

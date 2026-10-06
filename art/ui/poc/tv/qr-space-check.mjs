@@ -2,10 +2,10 @@
 // br-u02-qr-list-space-jdc: the host grid's join QR and player list take the least space they need and the QR is as big as
 // the free space allows (host-layout.js, rules in qr-space.json). For TV 1920x1080 and 1366x768, phone 390x844 and 844x390,
 // with QR only, list only, both and neither (&qr=0 / &list=0), for 1, 8, 24 and 60 players, in the real page:
-//   - game area: the tiles' area is within the tolerance of a brute-force oracle (every strip side and size at 1 px, the
-//     same feasibility rules, written here independently of the solver's sweep), so the chrome takes no more than it needs;
-//   - the QR is at least the minimum scannable size, and is present whenever ANY free region (or reserved strip) fits it
-//     (the oracle says whether one exists); the list has a row for every player, clipped by nothing;
+//   - game area (owner round 5): the tiles' area equals the plain filled grid's, so the chrome takes only space the layout
+//     wastes anyway (its empty cells);
+//   - the QR is at least the minimum scannable size and is in the grid whenever its spare space fits it, otherwise it is
+//     docked in the footer; every player has a row in the grid's list, or a position in the footer when the list is docked;
 //   - nothing overlaps (tiles, QR, list, footer) and everything is on screen;
 //   - the QR decodes: the captured screenshot is run through jsQR (web/node_modules) and must read the room URL.
 // Also: the decoder floor (the smallest px per module jsQR reads from a clean render) that the minimum module sizes are set from.
@@ -41,26 +41,15 @@ const TOL = rules.areaTolerance;
 const failures = [];
 const report = { rules, decoderFloor: null, cases: [] };
 
-// The brute-force oracle: every strip side at every pixel size, the same feasibility rules (host-layout.js place), the grid
-// from grid.js. Returns the best tile area, and whether any option at all holds the QR at the minimum size.
+// The oracle for the owner's round-5 rule: the chrome never takes space the layout wouldn't have wasted anyway. The tiles'
+// area must EQUAL the plain filled grid's (grid.js, no chrome), and the QR must be in the grid whenever that grid's own
+// spare space can hold it (host-layout.js place, the same feasibility rules).
 function oracle(n, rect, { k, dpr, gutter, qr, list }) {
   const c = ctxOf(rules, k, dpr), want = { qr, list: list && n > 0 };
-  const area = (g) => (g?.cell ? n * g.cell.w * g.cell.h : 0);
-  const opts = [];
-  const add = (grid, side, s) => { const r = regionsOf(grid, rect, side, s); const p = place(r.regions, n, want, c); if (p) opts.push({ area: area(grid), qr: !!p.qr, q: p.qr?.q ?? 0, side, s }); };
-  if (!want.qr && !want.list) return { area: area(layoutGrid(n, rect, { gutter })), qrFeasible: false };
-  add(layoutGrid(n, rect, { gutter }), null, 0);
-  for (const side of ['right', 'left', 'bottom', 'top']) {
-    const dim = side === 'right' || side === 'left' ? rect.w : rect.h;
-    for (let s = 1; s <= dim * rules.stripMaxShare; s++) {
-      const r2 = side === 'right' ? { ...rect, w: rect.w - s } : side === 'left' ? { ...rect, x: rect.x + s, w: rect.w - s } : side === 'bottom' ? { ...rect, h: rect.h - s } : { ...rect, y: rect.y + s, h: rect.h - s };
-      const g = layoutGrid(n, r2, { gutter });
-      if (g) add(g, side, s);
-    }
-  }
-  const qrFeasible = want.qr && opts.some((o) => o.qr);
-  const pool = opts.filter((o) => !qrFeasible || o.qr);
-  return { area: Math.max(0, ...pool.map((o) => o.area)), qrFeasible };
+  const grid = layoutGrid(n, rect, { gutter, fill: true });
+  const area = grid?.cell ? n * grid.cell.w * grid.cell.h : 0;
+  const p = want.qr || want.list ? place(regionsOf(grid, rect, null, 0).regions, n, want, c) : null;
+  return { area, qrFeasible: !!(want.qr && p?.qr) };
 }
 
 const measure = () => {
@@ -73,7 +62,7 @@ const measure = () => {
   const qrEl = document.querySelector('.qrcard'), listEl = document.querySelector('.plist');
   const items = [...tiles];
   const problems = [];
-  const res = { tiles: tiles.length, tile: tiles[0] ? [Math.round(tiles[0].b.w), Math.round(tiles[0].b.h)] : null, qr: null, list: null, chrome: window.__poc.chrome };
+  const res = { tiles: tiles.length, tile: tiles[0] ? [Math.round(tiles[0].b.w), Math.round(tiles[0].b.h)] : null, qr: null, list: null, chrome: window.__poc.chrome, footQr: foot.classList.contains('has-qr'), footPos: document.querySelectorAll('.f-pos .fp-run:first-child .fp-item').length };
   if (qrEl) { const img = qrEl.querySelector('img'); const b = box(qrEl); items.push({ name: 'qr card', b }); res.qr = { card: [b.w, b.h], px: img.getBoundingClientRect().width, at: [b.l, b.t], label: !!qrEl.querySelector('.code') }; if (!inside(b)) problems.push('QR card leaves the grid area'); }
   if (listEl) {
     const b = box(listEl); items.push({ name: 'player list', b });
@@ -131,20 +120,23 @@ for (const [engineName, engine, launch] of useWebkit ? [['webkit', webkit, {}]] 
       await page.evaluate((h) => { location.hash = h; }, hash);
       await page.waitForFunction((h) => window.__poc?.hash === h && window.__poc.ready === true, hash, { timeout: 30000 });
       await page.waitForTimeout(150);
+      await page.waitForTimeout(250); // the footer's positions fill on the next frame
       const r = await page.evaluate(measure);
       const where = `${engineName} ${s.id} n=${n} ${mode}`;
       const problems = [...r.problems];
       const ch = r.chrome;
       const k = ch.k, rect = ch.rect;
       const o = oracle(n, rect, { k, dpr: s.dpr, gutter: 6 * k, qr: !!qr, list: !!list });
-      if (ch.area < o.area * (1 - TOL)) problems.push(`game area ${ch.area} is below the maximum ${o.area}`);
+      if (Math.abs(ch.area - o.area) > 1) problems.push(`game area ${ch.area} is not the plain grid's ${o.area}: the chrome took space from the tiles`);
       const domArea = r.tiles * (r.tile[0] + 2 * Math.round(3 * k)) * (r.tile[1] + 2 * Math.round(3 * k));
       if (Math.abs(domArea - ch.area) > ch.area * 0.01) problems.push(`rendered tile area ${domArea} differs from the solved ${ch.area}`);
       const min = qrMin(rules, k, s.dpr);
       if (qr && !r.qr && o.qrFeasible) problems.push('the QR is hidden although a free region (or a strip) fits it');
       if (qr && r.qr && r.qr.px < min.q - 0.5) problems.push(`QR ${r.qr.px}px is below the minimum ${min.q}px`);
       if (!qr && r.qr) problems.push('a QR is shown with &qr=0');
-      if (list && n > 0 && (!r.list || r.list.rows !== n)) problems.push(`the list shows ${r.list?.rows ?? 0} of ${n} players`);
+      if (qr && !r.qr && !r.footQr) problems.push('the QR is neither in the grid nor docked in the footer');
+      if (list && n > 0 && r.list && r.list.rows !== n) problems.push(`the list shows ${r.list.rows} of ${n} players`);
+      if (list && n > 0 && !r.list && r.footPos !== n) problems.push(`the footer shows ${r.footPos} of ${n} positions`);
       if (!list && r.list) problems.push('a list is shown with &list=0');
       let decoded = null, decodedOk = null;
       if (r.qr) {
@@ -167,14 +159,15 @@ for (const [engineName, engine, launch] of useWebkit ? [['webkit', webkit, {}]] 
       for (const [w2, h2] of [[s.w - 60, s.h - 40], [s.w, s.h], [s.h, s.w], [s.w, s.h]]) {
         await page.setViewportSize({ width: w2, height: h2 });
         await page.waitForTimeout(500);
-        const r = await page.evaluate(() => ({ qr: document.querySelectorAll('.qrcard').length, list: document.querySelectorAll('.plist').length, rows: document.querySelectorAll('.plist .srow').length, area: window.__poc.chrome.area, rect: window.__poc.chrome.rect, k: window.__poc.chrome.k, hit: (() => { const a = document.querySelector('.qrcard')?.getBoundingClientRect(), b = document.querySelector('.plist')?.getBoundingClientRect(); return !!(a && b && Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5); })() }));
+        await page.waitForTimeout(300);
+        const r = await page.evaluate(() => ({ footPos: document.querySelectorAll('.f-pos .fp-run:first-child .fp-item').length, qr: document.querySelectorAll('.qrcard').length, list: document.querySelectorAll('.plist').length, rows: document.querySelectorAll('.plist .srow').length, area: window.__poc.chrome.area, rect: window.__poc.chrome.rect, k: window.__poc.chrome.k, hit: (() => { const a = document.querySelector('.qrcard')?.getBoundingClientRect(), b = document.querySelector('.plist')?.getBoundingClientRect(); return !!(a && b && Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5); })() }));
         const o = oracle(n, r.rect, { k: r.k, dpr: s.dpr, gutter: 6 * r.k, qr: true, list: true });
         const where = `${engineName} ${s.id} n=${n} resize ${w2}x${h2}`;
         const bad = [];
-        if (r.qr !== 1 || r.list !== 1) bad.push(`${r.qr} QR card(s) and ${r.list} list(s) after a resize`);
-        if (r.rows !== n) bad.push(`the list shows ${r.rows} of ${n}`);
+        if (r.qr > 1 || r.list > 1) bad.push(`${r.qr} QR card(s) and ${r.list} list(s) after a resize`);
+        if (r.list ? r.rows !== n : r.footPos !== n) bad.push(r.list ? `the list shows ${r.rows} of ${n}` : `the footer shows ${r.footPos} of ${n} positions`);
         if (r.hit) bad.push('the QR card and the list overlap');
-        if (r.area < o.area * (1 - TOL)) bad.push(`game area ${r.area} is below the maximum ${o.area}`);
+        if (Math.abs(r.area - o.area) > 1) bad.push(`game area ${r.area} is not the plain grid's ${o.area}`);
         for (const p of bad) failures.push(`${where}: ${p}`);
         report.cases.push({ engine: engineName, screen: s.id, n, mode: `resize ${w2}x${h2}`, tilesArea: r.area, maxArea: o.area, qrCards: r.qr, lists: r.list, problems: bad });
       }

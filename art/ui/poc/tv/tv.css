@@ -568,3 +568,67 @@ canvas#world { position: fixed; left: 0; top: 0; display: block; }
 .f-caprow { display: flex; justify-content: center; align-items: center; height: calc(var(--k) * 62px); padding: 0 calc(var(--k) * 14px); border-bottom: calc(var(--k) * 2px) dashed var(--c-ink-soft); }
 .f-caprow[hidden] { display: none; }
 .f-caprow .footcap { --capt-size: calc(var(--k) * 30px); }
+
+/* Round 5: the run of empty cells looks like its cells; a full QR leads with a "Join now" strip */
+.filler.run { box-shadow: inset 0 0 0 calc(var(--k) * 3px) var(--c-paper-line, rgb(21 32 58 / .25)); }
+.qrcard .qr-join { flex: none; margin: .25em 0 .3em; --capt-rot: -2deg; }
+
+/* ---- Round 5 (owner 2026-10-06) ---- */
+/* Docked positions in the footer: every player, a ticker when they don't all fit (never cut); reduced motion pages. */
+.f-pos { flex: 1 1 0; min-width: 0; overflow: hidden; height: calc(var(--k) * 46px); display: flex; align-items: center; }
+.f-pos:has(.tick) { -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+.f-pos-track { display: flex; flex: none; }
+.f-pos-track.tick { animation: fp-tick var(--fp-s, 20s) linear infinite; }
+@keyframes fp-tick { to { transform: translateX(calc(-1 * var(--fp-w))); } }
+@media (prefers-reduced-motion: reduce) { .f-pos-track.tick { animation-timing-function: steps(4, jump-none); animation-duration: calc(var(--fp-s, 20s) * 2); } }
+.fp-run { display: flex; flex: none; gap: calc(var(--k) * 14px); padding-right: calc(var(--k) * 14px); }
+.fp-item { display: inline-flex; align-items: center; gap: calc(var(--k) * 5px); font: 700 calc(var(--k) * 24px)/1 var(--font-body); color: var(--c-paper); white-space: nowrap; }
+.fp-item b { color: var(--c-saffron); font-family: var(--font-display); font-weight: 900; }
+.fp-item .badge { font-size: calc(var(--k) * 22px); }
+/* The pause menu: the join card beside it, always (people can join while it's paused). */
+.pause .pwrap { position: relative; margin: auto; display: flex; align-items: center; justify-content: center; gap: calc(var(--k) * 28px); flex-wrap: wrap; max-width: 96%; }
+.pause .pwrap .pcard { margin: 0; }
+.pjcard { --bz-mask: var(--bz-panel-1-mask); --bz-skin: var(--bz-panel-1-skin); position: relative; display: flex; flex-direction: column; align-items: center; gap: calc(var(--k) * 8px); padding: calc(var(--k) * 22px) calc(var(--k) * 24px) calc(var(--k) * 30px); color: var(--c-ink); cursor: zoom-in; font: inherit; }
+.pjcard .qr { width: max(calc(var(--k) * 300px), var(--qr-min, 0px)); height: max(calc(var(--k) * 300px), var(--qr-min, 0px)); }
+.pjcard .code { font-size: calc(var(--k) * 72px); line-height: .95; letter-spacing: .05em; }
+.pj-url { font: 700 calc(var(--k) * 26px)/1.1 var(--font-body); }
+.pjcard .capt { --capt-size: calc(var(--k) * 36px); }
+.pj-big { display: flex; align-items: center; gap: calc(var(--k) * 40px); margin: calc(var(--k) * 10px) 0; }
+.pj-big .qr { width: max(min(calc(var(--k) * 560px), 52vh), var(--qr-min, 0px)); height: max(min(calc(var(--k) * 560px), 52vh), var(--qr-min, 0px)); outline: max(2px, calc(var(--k) * 4px)) solid var(--c-ink); }
+.pj-text { display: flex; flex-direction: column; gap: calc(var(--k) * 8px); max-width: calc(var(--k) * 420px); }
+.pj-text small { font: 700 calc(var(--k) * 26px)/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; }
+.pj-text .code { font-size: calc(var(--k) * 150px); line-height: .9; letter-spacing: .04em; }
+.pj-text .pj-url { font-size: calc(var(--k) * 34px); }
+.pj-text .pnote { text-align: left; }
+@media (max-width: 1000px) { .pj-big { flex-direction: column; gap: calc(var(--k) * 14px); } .pj-text { align-items: center; text-align: center; } .pj-text .pnote { text-align: center; } }
+.plock { -webkit-mask: var(--bz-chip-3-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-chip-3-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-chip-3-skin) 0 0 / 100% 100% no-repeat, var(--c-paper-shade); padding: calc(var(--k) * 6px) calc(var(--k) * 18px) calc(var(--k) * 10px); font: 700 calc(var(--k) * 24px)/1 var(--font-body); color: var(--c-ink-soft); white-space: nowrap; }
+.pcol.pown { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; gap: calc(var(--k) * 12px) calc(var(--k) * 20px); padding: calc(var(--k) * 14px) 0 0; border-top: calc(var(--k) * 3px) solid var(--c-paper-line); }
+.pcol.pown .pnote { flex: 1 1 calc(var(--k) * 500px); text-align: left; }
+/* A pad or keyboard player's own settings, over their own tile only (container units: it fits any tile size). */
+.padset { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(21 32 58 / .45); z-index: 3; }
+.ps-card { --bz-mask: var(--bz-panel-2-mask); --bz-skin: var(--bz-panel-2-skin); font-size: clamp(9px, 5.2cqh, 30px); width: min(92cqw, 30em); padding: .7em .9em 1em; display: flex; flex-direction: column; gap: .45em; }
+.ps-head { display: flex; align-items: center; gap: .45em; font-weight: 700; }
+.ps-head .badge { font-size: 1em; }
+.ps-head .capt { --capt-size: .85em; margin-left: auto; }
+.ps-row { display: flex; align-items: center; justify-content: space-between; gap: .6em; font-weight: 700; }
+.ps-row .seg b { font-size: .85em; padding: .25em .6em; }
+.ps-hint { display: flex; align-items: center; gap: .4em; font-size: .75em; font-weight: 600; color: var(--c-ink-soft); }
+.ps-hint img { width: 1.2em; height: 1.2em; }
+/* Tiny tiers stay brushed: a compact dab in the seat (results) or state (lobby) colour. */
+.rd-rest:is(.t-num, .t-tiny) .rd-cell { -webkit-mask: var(--bz-badge-0-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-badge-0-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-badge-0-skin) 0 0 / 100% 100% no-repeat, var(--seat) !important; border-color: transparent !important; border-radius: 0 !important; padding-bottom: .12em; }
+.rd-rest:is(.t-num, .t-tiny) .rd-cell:nth-child(3n+1) { -webkit-mask-image: var(--bz-badge-1-mask); mask-image: var(--bz-badge-1-mask); background-image: var(--bz-badge-1-skin) !important; }
+.rd-rest:is(.t-num, .t-tiny) .rd-cell:nth-child(3n+2) { -webkit-mask-image: var(--bz-badge-2-mask); mask-image: var(--bz-badge-2-mask); }
+.lob-roster:is(.t-num, .t-tiny) .lcard { -webkit-mask: var(--bz-badge-0-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-badge-0-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-badge-0-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill) !important; border-color: transparent !important; border-radius: 0 !important; }
+
+/* On the ink footer an ink outline can't show: footer badges keep the dab's shape, filled with the seat colour only. */
+:is(.fp-item, .f-read) .badge { background: var(--seat) !important; padding-inline: .35em; }
+.pcol.pown { padding-top: calc(var(--k) * 10px); }
+.pcol.pown .pnote { font-size: calc(var(--k) * 22px); }
+.pcol.pown .tag { font-size: calc(var(--k) * 30px); }
+.ps-t { margin-left: auto; font: 900 italic .8em/1 var(--font-display); text-transform: uppercase; color: var(--c-ink-soft); }
+.qrcard.late, .plist.late { animation: chrome-in .18s ease-out .34s both; }
+@keyframes chrome-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .qrcard.late, .plist.late { animation-duration: .01s; } }
+/* tiny tiles: the card keeps the settings themselves and stays inside the tile */
+.padset { overflow: hidden; }
+@container (max-width: 260px) { .ps-t, .ps-hint, .ps-head b { display: none; } .ps-card { padding: .4em .5em .6em; gap: .3em; } .ps-row .seg b { padding: .2em .35em; } }

@@ -27,8 +27,9 @@ const ctxOf = (rules, k, dpr) => ({
 const qOf = (d, c) => (c.modules * d) / c.dpr;
 // Round 4 (owner 2026-10-06): a shown QR always carries the room code and the address under it, so nobody mistakes it for
 // anything but a join link. Two lines: the code (display face) and the address (body face, never under 11 px).
-export const qrLabel = (q) => ({ code: Math.max(14, q * 0.15), url: Math.max(11, q * 0.068) });
-const labelH = (q, c) => { const f = qrLabel(q); return Math.round(f.code * 1.1 + f.url * 1.55 + c.gap * 0.8); };
+// Round 5: a full QR says what it is: a saffron "Join now" strip over it, the code and the address under it.
+export const qrLabel = (q) => ({ join: Math.max(13, q * 0.1), code: Math.max(14, q * 0.15), url: Math.max(11, q * 0.068) });
+const labelH = (q, c) => { const f = qrLabel(q); return Math.round(f.join * 1.5 + f.code * 1.1 + f.url * 1.55 + c.gap * 1.2); };
 
 /** The largest QR (whole device px per module) that fits an outer box w x h; null below the minimum size. */
 function fitQr(w, h, c, label = true) {
@@ -70,7 +71,8 @@ function fitList(n, w, h, c) {
 function place(regions, n, want, c) {
   const rs = [];
   const seen = new Set();
-  for (const [i, r] of regions.entries()) { const key = `${Math.round(r.w)}x${Math.round(r.h)}`; if (r.kind === 'cell' && seen.has(key)) continue; seen.add(key); rs.push({ ...r, i }); }
+  // Every region counts (two equal spare cells can hold the QR and the list); only identical boxes are skipped.
+  for (const [i, r] of regions.entries()) { const key = `${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.w)}x${Math.round(r.h)}`; if (seen.has(key)) continue; seen.add(key); rs.push({ ...r, i }); }
   const outer = (r) => ({ x: r.x + c.pad, y: r.y + c.pad, w: r.w - 2 * c.pad, h: r.h - 2 * c.pad });
   const centre = (box, w, h) => ({ x: box.x + (box.w - w) / 2, y: box.y + (box.h - h) / 2 });
   const qrAt = (box, f) => ({ ...centre(box, f.ow, f.oh), ...f });
@@ -96,6 +98,8 @@ function place(regions, n, want, c) {
         break;
       }
     }
+    // The list fits nowhere: the QR still takes its spare space, and the positions dock in the footer (owner round 5).
+    if (!cands.some((x) => x.qr)) for (const a of qrs) cands.push({ qr: qrAt(outer(a.r), a.f), list: null, q: a.f.q, lq: 0, used: [a.r.i] });
   }
   if (!cands.length) return null;
   // The QR hides only when no candidate holds it: with one, the largest QR first, then the better list.
@@ -106,7 +110,16 @@ function place(regions, n, want, c) {
 function regionsOf(grid, rect, side, s) {
   // No strip: the grid's own fillers (spare cells, aspect-band margins). A strip on `side`: the block hugs the opposite
   // edge, so the strip, the margin beside the block and the strip's own width are one region.
-  if (!side) return { tiles: grid.tiles, regions: grid.fillers.map((f) => ({ ...f })), block: null };
+  if (!side) {
+    // Round 5: the empty cells at the end of the last row also count as one run, so the QR and the list can share it.
+    const regions = grid.fillers.map((f) => ({ ...f }));
+    const cells = regions.filter((f) => f.kind === 'cell');
+    if (cells.length > 1) {
+      const x0 = Math.min(...cells.map((f) => f.x)), x1 = Math.max(...cells.map((f) => f.x + f.w));
+      regions.push({ x: x0, y: cells[0].y, w: x1 - x0, h: cells[0].h, kind: 'run' });
+    }
+    return { tiles: grid.tiles, regions, block: null };
+  }
   const { cols, rows, cell } = grid, bw = cols * cell.w, bh = rows * cell.h;
   const horiz = side === 'right' || side === 'left';
   const dx = horiz ? (side === 'right' ? rect.x - cell.x0 : rect.x + rect.w - (cell.x0 + bw)) : 0;
@@ -134,38 +147,28 @@ export function solveHost(n, rect, { rules, k = 1, dpr = 1, gutter = 0, qr = tru
   const c = ctxOf(rules, k, dpr), want = { qr, list: list && n > 0 };
   const area = (g) => (g?.cell ? n * g.cell.w * g.cell.h : 0);
   const mk = (grid, side, s) => { const r = regionsOf(grid, rect, side, s); return { grid, side, s, ...r, area: area(grid) }; };
-  const none = layoutGrid(n, rect, { gutter });
+  const none = layoutGrid(n, rect, { gutter, fill: true });
   const opts = [];
   const consider = (o) => { o.place = place(o.regions, n, want, c); if (o.place) opts.push(o); };
   const base = mk(none, null, 0);
   if (n <= 0 || (!want.qr && !want.list)) { base.place = { qr: null, list: null, q: 0, lq: 0, used: [] }; opts.push(base); } else {
     consider(base);
-    let bestQr = base.place?.qr ? base.area : 0, bestAny = base.place ? base.area : 0;
-    const tol = 1 - rules.areaTolerance;
-    for (const side of ['right', 'left', 'bottom', 'top']) {
-      const dim = side === 'right' || side === 'left' ? rect.w : rect.h;
-      const step = Math.max(1, Math.round(dim / rules.stripStepDivisor));
-      for (let s = step; s <= dim * rules.stripMaxShare; s += step) {
-        const r2 = side === 'right' ? { ...rect, w: rect.w - s } : side === 'left' ? { ...rect, x: rect.x + s, w: rect.w - s } : side === 'bottom' ? { ...rect, h: rect.h - s } : { ...rect, y: rect.y + s, h: rect.h - s };
-        const g = layoutGrid(n, r2, { gutter });
-        if (!g) continue;
-        const a = area(g);
-        if (a < (want.qr ? bestQr : bestAny) * tol) continue;
-        const o = mk(g, side, s);
-        consider(o);
-        if (o.place) { bestAny = Math.max(bestAny, a); if (o.place.qr) bestQr = Math.max(bestQr, a); }
-      }
-    }
+    // Owner round 5: the QR and the list go only where the layout wastes space anyway (its empty cells). No strip is ever
+    // taken from the tiles; whatever doesn't fit docks in the footer.
   }
   if (!opts.length) { base.place = { qr: null, list: null, q: 0, lq: 0, used: [] }; opts.push(base); }
   const qrAny = want.qr && opts.some((o) => o.place.qr);
   const pool = opts.filter((o) => !qrAny || o.place.qr);
+  // Round 5: the QR and the list together, else the QR alone (joining matters most), else the list alone.
+  const rank = (p) => (p.qr ? 2 : 0) + (p.list ? 1 : 0);
   const top = Math.max(...pool.map((o) => o.area));
-  const best = pool.filter((o) => o.area >= top * (1 - rules.areaTolerance)).sort((a, b) => b.place.q - a.place.q || b.place.lq - a.place.lq || a.s - b.s)[0];
+  const best = pool.filter((o) => o.area >= top * (1 - rules.areaTolerance)).sort((a, b) => rank(b.place) - rank(a.place) || b.place.q - a.place.q || b.place.lq - a.place.lq || a.s - b.s)[0];
   const used = new Set(best.place.used);
+  // A used run covers its cells: they go, and the run carries the chrome. An unused run is just its cells again.
+  const runUsed = best.regions.some((r, i) => r.kind === 'run' && used.has(i));
   return {
     rows: best.grid.rows, cols: best.grid.cols, cell: best.cell ?? best.grid.cell, tiles: best.tiles,
-    fillers: best.regions.map((r, i) => ({ ...r, used: used.has(i) })),
+    fillers: best.regions.map((r, i) => ({ ...r, used: used.has(i) })).filter((r) => (r.kind === 'run' ? r.used : !(runUsed && r.kind === 'cell'))),
     chrome: { qr: best.place.qr, list: best.place.list, side: best.side, strip: best.s, area: best.area, qrMin: qrMin(rules, k, dpr), wanted: want, optionsTried: opts.length },
   };
 }

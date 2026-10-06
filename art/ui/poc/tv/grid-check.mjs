@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // P1-U02.2 (POC1-04, R95): the TV grid rule gives every player tile exactly the same area at any N, and nothing is black.
 // For N = 1..40, 64 and 99 on every reference screen, asserts:
-//   - N tiles, all exactly the same whole-pixel size (max/min area = 1), in the playable aspect band, in reading order;
+//   - N tiles, all exactly the same whole-pixel size (max/min area = 1), in reading order, in the arrangement the playable
+//     aspect band picks, filling the screen (no gap beyond whole-pixel rounding; owner round 5);
 //   - every empty cell is exactly a tile's size and sits after the last tile (no tile is ever larger);
 //   - tiles, empty cells and margins cover the screen exactly once (the gutters are the tiles' and cells' own insets),
 //     so every pixel is a tile, a filler (QR, standings, code or the painted backdrop) or a gutter line, never black.
@@ -26,7 +27,7 @@ for (const s of SCREENS) {
   const gutter = 6 * k;
   for (const n of NS) {
     const where = `${s.id} N=${n}`;
-    const lay = layoutGrid(n, { x: 0, y: 0, w: s.w, h: s.h }, { gutter });
+    const lay = layoutGrid(n, { x: 0, y: 0, w: s.w, h: s.h }, { gutter, fill: true }); // the race grid fills (owner round 5)
     const { cols, rows: r, cell } = lay;
     if (lay.tiles.length !== n) fail(where, `${lay.tiles.length} tiles`);
     const areas = lay.tiles.map((t) => t.w * t.h);
@@ -34,8 +35,10 @@ for (const s of SCREENS) {
     if (ratio !== 1) fail(where, `tile areas differ: max/min ${ratio}`);
     if (!lay.tiles.every((t) => Number.isInteger(t.x) && Number.isInteger(t.y) && Number.isInteger(t.w) && Number.isInteger(t.h))) fail(where, 'a tile is not on whole pixels');
     if (!(cell.w > 0 && cell.h > 0)) fail(where, `empty tile ${cell.w}x${cell.h}`);
-    const aspect = cell.w / cell.h;
-    if (aspect < BAND.min - 0.01 || aspect > BAND.max + 0.01) fail(where, `aspect ${aspect.toFixed(3)} outside ${BAND.min}..${BAND.max}`);
+    // Round 5: the band picks the arrangement and the tiles fill the area: no margin beyond whole-pixel rounding.
+    for (const m of lay.fillers.filter((f) => f.kind === 'margin')) if (m.w > cols && m.h > r) fail(where, `a ${m.w}x${m.h} gap beside the tiles`);
+    const chosen = layoutGrid(n, { x: 0, y: 0, w: s.w, h: s.h }, { gutter });
+    if (chosen.cols !== cols || chosen.rows !== r) fail(where, `fill changed the band's arrangement ${chosen.cols}x${chosen.rows} to ${cols}x${r}`);
     for (let i = 1; i < n; i++) {
       const a = lay.tiles[i - 1], b = lay.tiles[i];
       if (!(b.y > a.y || (b.y === a.y && b.x > a.x))) fail(where, `seat ${i + 1} is not after seat ${i} in reading order`);

@@ -4,7 +4,7 @@
 import { loadTokens, seatColor, asset, paintPath, tiltFor } from '../shared/tokens.js';
 import { paintBrushButtons, installBrushSkins } from '../../sheets/brush-button.js';
 import { createWorld, FRAMING } from './world.js';
-import { layoutGrid, PSEUDOCODE } from './grid.js';
+import { layoutGrid } from './grid.js';
 import { solveHost, qrMin, qrLabel } from './host-layout.js';
 import { STATES } from './states.js';
 
@@ -130,7 +130,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     // Dynamic (and the grid player, which has no footer): one solver places the tiles, the join QR and the player list so the
     // tiles keep the most area the chrome allows (host-layout.js). Static keeps them in the footer: a plain grid.
     const solved = foot && layout === 'static' ? null : solveHost(seats().length, r, { rules: QR_RULES, k, dpr: window.devicePixelRatio || 1, gutter: 6 * k, qr: S.p.get('qr') !== '0', list: S.p.get('list') !== '0' });
-    lay = solved ?? layoutGrid(seats().length, r, { gutter: 6 * k });
+    lay = solved ?? layoutGrid(seats().length, r, { gutter: 6 * k, fill: true });
     chrome = solved?.chrome ?? null;
     window.__poc.chrome = chrome ? { ...chrome, cell: lay.cell, rect: r, k, dpr: window.devicePixelRatio || 1, n: seats().length, fillers: lay.fillers.map((f) => ({ x: f.x, y: f.y, w: f.w, h: f.h, kind: f.kind, used: !!f.used })) } : null;
     const now = performance.now();
@@ -182,8 +182,10 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
     listEl = null; listKey = '';
     if (chrome?.qr) chromeEls.push(qrCard(chrome.qr));
     if (chrome?.list) { listEl = playerList(chrome.list); chromeEls.push(listEl); }
+    if (animate) for (const c of chromeEls) c.classList.add('late'); // round 5: in after the tiles land, never over a moving tile
     layer.append(...chromeEls);
-    footer?.update({ qr: !hasQr, caption: capInCell ? null : caption, players: seats().length, layout });
+    requestAnimationFrame(() => { for (const c of chromeEls) paint(c); }); // the Join now strip
+    footer?.update({ qr: !hasQr, caption: capInCell ? null : caption, players: seats().length, layout, positions: !chrome?.list });
     // br-dim.8: the footer grew (or shrank) a caption row after the grid was laid out above it: lay out once more.
     if (foot && !relayout.again && Math.abs(rect().h - r.h) > 0.5) { relayout.again = true; relayout(animate); relayout.again = false; }
     if (!foot && cornerChip && !hasQr && !hasCode && seats().length > 0 && S.p.get('qr') !== '0') {
@@ -199,7 +201,7 @@ function gridScene({ rect, seats, fp = new Set(), hudStates = {}, overlays = fal
   function qrCard(q) {
     const c = el('div', 'qrcard');
     c.style.cssText = `left:${q.x}px;top:${q.y}px;width:${q.ow}px;height:${q.oh}px;border-width:${(q.ow - q.q) / 2}px`;
-    c.innerHTML = `<img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}" style="width:${q.q}px;height:${q.q}px">${q.lh ? `<div class="qr-label"><b class="display code" style="font-size:${qrLabel(q.q).code}px">ROO7</b><small style="font-size:${qrLabel(q.q).url}px">jammers.dilger.dev</small></div>` : ''}`;
+    c.innerHTML = `${q.lh ? `<span class="capt teal qr-join" data-brush="qr-join" style="--capt-size:${qrLabel(q.q).join}px"><span>Join now</span></span>` : ''}<img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}" style="width:${q.q}px;height:${q.q}px">${q.lh ? `<div class="qr-label"><b class="display code" style="font-size:${qrLabel(q.q).code}px">ROO7</b><small style="font-size:${qrLabel(q.q).url}px">jammers.dilger.dev</small></div>` : ''}`;
     c.dataset.qr = String(q.q);
     return c;
   }
@@ -407,13 +409,17 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
   const midFit = new ResizeObserver(fitMid);
   midFit.observe(mid);
   document.fonts?.ready.then(fitMid);
-  let state = { qr: true, caption: null, players: S.n, layout };
+  let state = { qr: true, caption: null, players: S.n, layout, positions: false };
   const diagRows = () => {
     const cols = Math.max(1, Math.floor((W() / K() - 56 + DIAG.gapPx) / (DIAG.colPx + DIAG.gapPx)));
     return Math.ceil(state.players / cols);
   };
   const diagPx = () => (diag ? DIAG.headPx + diagRows() * DIAG.rowPx + 8 : 0);
-  const readouts = () => `<span class="f-read"><b>Race</b> · <span class="f-lap tnum">Lap 1/3</span></span><span class="f-read">Leader <span class="f-lead"></span></span><span class="f-read tnum f-time">0:00</span>`;
+  // Round 5: with no spare cell for the player list, every player's position docks here (a ticker when they don't all fit:
+  // never a cut). Otherwise the leader readout stays.
+  const readouts = () => `<span class="f-read"><b>Race</b> · <span class="f-lap tnum">Lap 1/3</span></span>${state.positions
+    ? '<span class="f-pos" aria-label="Positions" data-ticker><span class="f-pos-track"></span></span>'
+    : '<span class="f-read">Leader <span class="f-lead"></span></span>'}<span class="f-read tnum f-time">0:00</span>`;
   const menuRow = () => `<button class="fbtn" type="button" data-go="players">${icon('users')}Players</button>`
     + `<button class="fbtn${diag ? ' on' : ''}" type="button" data-go="diag" aria-pressed="${diag}">${icon('bug')}Diagnostics</button>`
     + `<span class="fseg" role="group" aria-label="Player list, QR and captions"><span>Layout</span><button type="button" data-go="dynamic" class="${state.layout === 'dynamic' ? 'on' : ''}">Dynamic</button><button type="button" data-go="static" class="${state.layout === 'static' ? 'on' : ''}">Static</button></span>`
@@ -462,22 +468,8 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
     else if (go === 'diag') { diag = !diag; render(); onDiag?.(diag); }
     else { state.layout = go; render(); onLayout?.(go); }
   });
-  let pop = null, popTimer = 0;
-  const hidePop = () => { pop?.remove(); pop = null; gamePaused = false; f.classList.remove('qr-open'); };
-  function showQrPop(hold = false) {
-    clearTimeout(popTimer);
-    if (!pop) {
-      pop = el('div', 'qr-pop k', `<div class="card"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div><div class="display code">ROO7</div><div class="code-cap">Scan to join, or enter the code at jammers.dilger.dev</div><div class="qr-note">${icon('pause')}Game paused while the code is up</div></div></div>`);
-      ui.append(pop);
-      gamePaused = true;
-      f.classList.add('qr-open');
-    }
-    if (!hold) popTimer = setTimeout(hidePop, 10000); // "for a while": then the race carries on
-  }
-  const qrBtn = f.querySelector('.f-qr');
-  qrBtn.addEventListener('mouseenter', () => showQrPop());
-  qrBtn.addEventListener('focus', () => showQrPop());
-  qrBtn.addEventListener('mouseleave', () => { clearTimeout(popTimer); popTimer = setTimeout(hidePop, 1500); });
+  // Round 5: the footer QR opens the pause menu with the join card big (the game pauses so people can join).
+  f.querySelector('.f-qr').addEventListener('click', () => { location.hash = `paused&n=${S.n}&layout=${state.layout}&sub=join`; });
   render();
   const t0 = performance.now();
   return {
@@ -487,6 +479,19 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
     tick(st) {
       if (menu || (state.caption && !capOwnRow())) return;
       const lead = st[0];
+      const pt = f.querySelector('.f-pos-track');
+      if (pt) {
+        const key = st.map((x) => x.seat).join(',');
+        if (pt.dataset.k !== key) {
+          pt.dataset.k = key;
+          const one = st.map((x, i) => { const s2 = seatInfo(x.seat); return `<span class="fp-item"><b class="tnum">${i + 1}</b><span class="badge" style="--seat:${s2.color};--seat-on:${s2.on}">#${s2.num}</span></span>`; }).join('');
+          pt.innerHTML = `<span class="fp-run">${one}</span>`;
+          const box = pt.parentElement, run = pt.firstElementChild;
+          const over = run.scrollWidth > box.clientWidth + 1;
+          pt.classList.toggle('tick', over);
+          if (over) { pt.insertAdjacentHTML('beforeend', `<span class="fp-run" aria-hidden="true">${one}</span>`); pt.style.setProperty('--fp-s', `${Math.max(8, run.scrollWidth / (60 * K()))}s`); pt.style.setProperty('--fp-w', `${run.scrollWidth}px`); }
+        }
+      }
       const le = f.querySelector('.f-lead');
       if (lead && le) { const i = seatInfo(lead.seat); const html = `<span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span> ${esc(shortName(i.name, 10))}`; if (le.dataset.k !== html) { le.innerHTML = html; le.dataset.k = html; } }
       const lap = f.querySelector('.f-lap');
@@ -494,7 +499,6 @@ function makeFooter({ menu = false, diag = false, layout = 'dynamic', onLayout, 
       const tm = f.querySelector('.f-time');
       if (tm) { const sec = Math.floor((performance.now() - t0) / 1000); tm.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
     },
-    showQrPop,
   };
 }
 
@@ -545,69 +549,39 @@ const SETUP = {
   },
 
   grid() {
-    return raceGrid();
-  },
-
-  'grid-player'() {
+    if (S.p.get('reflow') !== '1') return raceGrid();
+    // 1 → 32 → 1: seats join one by one, then leave in a seeded random order; only joins and leaves reflow (300 ms).
     world.setMode('race');
     world.setCars(32);
-    const k = K();
-    // Portrait or narrow screens (a phone or tablet host): the grid sits on top at full width and the rule scrolls below it.
-    const stacked = () => W() < H() || W() < 700;
-    const rect = () => {
-      if (stacked()) { const w = W() - 80 * K(), h = Math.min(H() * 0.4, (w * 9) / 16); return { x: 40 * K(), y: 40 * K(), w, h }; }
-      const w = W() * 0.56, h = Math.min(H() - 80 * K(), (w * 9) / 16); return { x: 40 * K(), y: (H() - h) / 2, w, h };
-    };
-    const r0 = rect();
-    ui.append(gutterBackground(r0));
-    const frame = el('div', 'gp-frame');
-    const panel = el('div', 'card pseudo k');
-    // Round 4: the frame and the rule panel follow every viewport change (a rotation left them where the old layout put them).
-    const place = () => {
-      const r1 = rect(), k1 = K();
-      Object.assign(frame.style, { left: `${r1.x - 4 * k1}px`, top: `${r1.y - 4 * k1}px`, width: `${r1.w + 8 * k1}px`, height: `${r1.h + 8 * k1}px` });
-      if (stacked()) Object.assign(panel.style, { left: `${40 * k1}px`, top: `${r1.y + r1.h + 40 * k1}px` });
-      else Object.assign(panel.style, { left: `${r1.x + r1.w + 40 * k1}px`, top: '' });
-      // The rule fits its panel (it never scrolls): shrink the code until it does, down to 8 px (an explainer, not game text: pinch to zoom).
-      panel.style.setProperty('--fit', '1');
-      for (let f = 1, i = 0; i < 8 && panel.scrollHeight > panel.clientHeight + 1 && 19 * k1 * f > 8; i++) {
-        f *= Math.max(0.6, Math.sqrt(panel.clientHeight / panel.scrollHeight));
-        panel.style.setProperty('--fit', f.toFixed(3));
-      }
-    };
-    relayouts.push(place);
-    panel.innerHTML = `<h2 class="display italic">The grid rule</h2><div class="n display tnum">N = <span>1</span></div><pre></pre>`;
-    panel.querySelector('pre').textContent = PSEUDOCODE;
-    ui.append(frame, panel);
-    place();
+    ui.append(gutterBackground());
     let active = [1];
-    const seqUp = Array.from({ length: 31 }, (_, i) => ({ add: i + 2 }));
-    const r = (() => { let s = 99; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); })();
-    const seqDown = [];
-    { const pool = Array.from({ length: 32 }, (_, i) => i + 1); while (pool.length > 1) seqDown.push({ remove: pool.splice(Math.floor(r() * pool.length), 1)[0] }); }
-    const seq = [...seqUp, ...seqDown];
+    const r = (() => { let x = 99; return () => ((x = (x * 1103515245 + 12345) >>> 0) / 4294967296); })();
+    const down = [];
+    { const pool = Array.from({ length: 32 }, (_, i) => i + 1); while (pool.length > 1) down.push({ remove: pool.splice(Math.floor(r() * pool.length), 1)[0] }); }
+    const seq = [...Array.from({ length: 31 }, (_, i) => ({ add: i + 2 })), ...down];
     let idx = 0, next = performance.now() + 900;
-    const g = gridScene({ rect, seats: () => active, cornerChip: false, foot: false });
+    const g = gridScene({ seats: () => active });
     g.relayout(false);
-    const freeze = S.p.get('at');
-    if (freeze) { active = Array.from({ length: +freeze }, (_, i) => i + 1); g.relayout(false); panel.querySelector('.n span').textContent = String(active.length); }
     return {
       views: g.views,
       update(dt, views) {
-        if (!freeze && performance.now() > next) {
+        if (performance.now() > next) {
           const step = seq[idx % seq.length];
           if (idx % seq.length === 0) active = [1];
           if (step.add) active = [...active, step.add].sort((a, b) => a - b);
-          if (step.remove) active = active.filter((s) => s !== step.remove);
+          if (step.remove) active = active.filter((x) => x !== step.remove);
           idx++;
           next = performance.now() + (step.add ? 650 : 750);
           g.relayout(true);
-          panel.querySelector('.n span').textContent = String(active.length);
         }
         g.update(dt, views);
       },
     };
   },
+
+  // Round 5: the separate grid-player view is retired (it duplicated the grid); the join/leave reflow plays on the real
+  // host layout instead (#grid&reflow=1), with the QR, the list and the footer behaving as they will in the game.
+  'grid-player'() { location.hash = 'grid&n=32&reflow=1'; return { views: () => [], update() {} }; },
 
   hud() {
     world.setMode('race');
@@ -686,10 +660,23 @@ const SETUP = {
     return raceGrid({ menu: true });
   },
 
-  // Hovering the footer QR shows it big and pauses the game for a while (POC1-08, R97).
-  'qr-hover'() {
-    const g = raceGrid();
-    g.footer.showQrPop(true);
+  // Round 5: the footer QR opens the pause menu's join card (old hash kept so links don't break).
+  'qr-hover'() { location.hash = `paused&n=${S.n}&sub=join`; return { views: () => [], update() {} }; },
+
+  // A controller player's own settings (round 5): pads and keyboards open them over their OWN tile (phones use the phone).
+  // Only that tile is covered and only while that player is in it; their car drives on autopilot meanwhile.
+  padsettings() {
+    const seat = S.seat || 3;
+    const g = raceGrid({ hudStates: { [seat]: { status: 'autopilot' } } });
+    const p = seatInfo(seat), t = g.tiles.get(seat);
+    const seg = (opts, on) => `<span class="seg">${opts.map((o, i) => `<b class="${i === on ? 'on' : ''}">${o}</b>`).join('')}</span>`;
+    const ov = el('div', 'padset', `<div class="ps-card card"><div class="ps-head"><span class="badge" style="--seat:${p.color};--seat-on:${p.on}">#${p.num}</span><b>${esc(shortName(p.name, 12))}</b><span class="ps-t">Your settings</span></div>
+      <div class="ps-row"><span>Camera</span>${seg(['Chase', 'Bonnet'], 0)}</div>
+      <div class="ps-row"><span>Distance</span>${seg(['Near', 'Mid', 'Far'], 1)}</div>
+      <div class="ps-row"><span>Rear view</span>${seg(['On', 'Off'], 0)}</div>
+      <div class="ps-hint">${icon('gamepad-2')}<span><b>◀ ▶</b> change · <b>▲ ▼</b> move · <b>B</b> back to racing</span></div></div>`);
+    t.el.append(ov);
+    requestAnimationFrame(() => paint(ov));
     return g;
   },
 
@@ -718,6 +705,12 @@ const SETUP = {
         <p class="pnote">How each player is connected. Press <b>A</b> on a pad, or a cluster's keys, to join from this laptop.</p>
         <div class="plist">${rows.map(([seat, what, how, cls]) => { const i = seatInfo(seat); return `<div class="src"><span class="badge" style="--seat:${i.color};--seat-on:${i.on}">#${i.num}</span><span><b>${esc(shortName(i.name))}</b> · ${what}<br><span class="how ${cls}">${how}</span></span><span class="srcacts"><button class="btn" type="button">${icon('eye-off')}Sit out</button><button class="btn" type="button">${icon('user-minus')}Remove</button></span></div>`; }).join('')}</div>
         <div class="pacts">${back}</div>`;
+    } else if (S.sub === 'join') {
+      // Round 5: the join card, big, over the paused race: everyone can join while it's paused.
+      body = `<span class="bn pbn" data-torn="pause-join">Join <span class="acc">now</span></span>
+        <div class="pj-big"><img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><div class="pj-text"><small>Room</small><b class="display code">ROO7</b>
+          <span class="pj-url">jammers.dilger.dev</span><span class="pnote">Scan with your phone camera, or enter the code. New players start at the back.</span></div></div>
+        <div class="pacts row"><button class="btn brush" type="button" data-go="">${icon('chevron-left')}Pause menu</button><button class="btn brush primary gp" type="button" data-go="resume">${icon('play')}Resume race</button></div>`;
     } else if (S.sub === 'end') {
       body = `<span class="bn pbn" data-torn="pause-end">End the <span class="acc">round</span>?</span>
         <p class="plead">Everyone goes back to the lobby and keeps their number. The room and ROO7 stay open.</p>
@@ -732,23 +725,27 @@ const SETUP = {
         <span class="strip ink psub" data-brush="pause-sub"><span>${icon('pause')}Host pause · every car frozen where it is</span></span>
         <div class="pcols">
           <div class="pcol"><span class="tag" data-brush="t-tv"><span>On this TV</span></span>
-            ${row('video', 'Camera', seg(['Chase', 'High'], 0))}${row('monitor', 'View', seg(['Grid', 'Overview'], 0))}${row('volume-2', 'Sound', seg(['On', 'Off'], 0))}${row('eye-off', 'Reduced motion', seg(['Off', 'On'], 0))}</div>
+            ${row('monitor', 'View', seg(['Grid', 'Overview'], 0))}${row('volume-2', 'Sound', seg(['On', 'Off'], 0))}${row('eye-off', 'Reduced motion', seg(['Off', 'On'], 0))}</div>
           <div class="pcol"><span class="tag warning" data-brush="t-room"><span>This room</span></span>
-            ${row('locate-fixed', 'Camera distance', seg(['Near', 'Mid', 'Far'], 1))}${row('qr-code', 'QR, players, captions', seg(['Dynamic', 'Static'], S.layout === 'static' ? 1 : 0))}${row('flag', 'Laps', seg(['3', '5', '8'], 0))}${row('user-plus', 'Late joiners', seg(['Join now', 'Next race'], 0))}
-            <p class="pnote">Changes apply now; laps from the next race.</p></div>
+            ${row('qr-code', 'QR, players, captions', seg(['Dynamic', 'Static'], S.layout === 'static' ? 1 : 0))}${row('flag', 'Laps', '<span class="plock">3 · set in the lobby</span>')}${row('user-plus', 'Late joiners', seg(['Join now', 'Next race'], 0))}
+            <p class="pnote">Changes apply now. Laps are locked during a race.</p></div>
+          <div class="pcol pown"><span class="tag teal" data-brush="t-own"><span>Each player's own</span></span>
+            <p class="pnote">Camera and distance (near, mid, far) belong to each player. <b>Phones</b> set them on the phone. <b>Pads and keyboards</b> press Menu (or Esc) for settings over their own tile.</p>
+            <button class="btn brush" type="button" data-go="@padsettings">${icon('gamepad-2')}See a pad player's settings</button></div>
         </div>
         <div class="pacts">
           <button class="btn brush primary gp pres" type="button" data-go="resume">${icon('play')}Resume race</button>
           <div class="prow"><button class="btn brush" type="button" data-go="players">${icon('users')}Players and controllers</button><button class="btn brush" type="button" data-go="end">${icon('flag')}End round…</button><button class="btn brush danger-o" type="button" data-go="disband">${icon('log-out')}Disband room…</button></div>
-          <p class="pnote">End round goes back to the lobby; everyone keeps their number. Disband disconnects everyone and ROO7 stops working.</p>
         </div>`;
     }
-    const shell = el('div', 'pause k', `<div class="scrim"></div><div class="pcard${S.sub ? ` sub-${S.sub}` : ''}" data-tilt="pause-${S.sub || 'main'}">${body}</div>`);
+    const joinCard = S.sub ? '' : `<button class="pjcard card" type="button" data-go="join" aria-label="Show the join code big"><span class="capt teal" data-brush="pj-join"><span>Join now</span></span>
+        <img class="qr" alt="Join QR" src="${asset('poc/shared/qr-roo7-paper.svg')}"><b class="display code">ROO7</b><span class="pj-url">jammers.dilger.dev</span></button>`;
+    const shell = el('div', 'pause k', `<div class="scrim"></div><div class="pwrap"><div class="pcard${S.sub ? ` sub-${S.sub}` : ''}" data-tilt="pause-${S.sub || 'main'}">${body}</div>${joinCard}</div>`);
     shell.addEventListener('click', (e) => {
       const go = e.target.closest('[data-go]')?.dataset.go;
       if (go == null) return;
       const base = `n=${S.n}&layout=${S.layout}`;
-      location.hash = go === 'resume' ? `grid&${base}` : `paused&${base}${go ? `&sub=${go}` : ''}`;
+      location.hash = go === 'resume' ? `grid&${base}` : go.startsWith('@') ? `${go.slice(1)}&${base}` : `paused&${base}${go ? `&sub=${go}` : ''}`;
     });
     ui.append(shell);
     paint(shell);

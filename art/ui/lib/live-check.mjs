@@ -62,7 +62,7 @@ const surfaceProblems = (vw) => {
     let scroller = false;
     for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
       const s = getComputedStyle(a);
-      if (/auto|scroll/.test(`${s.overflowX} ${s.overflowY}`)) { scroller = true; break; }
+      if (/auto|scroll/.test(`${s.overflowX} ${s.overflowY}`) || a.hasAttribute('data-ticker')) { scroller = true; break; } // a ticker scrolls its items past its edge on purpose
     }
     if (!scroller) clipped.push(`"${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 24)}"`);
   }
