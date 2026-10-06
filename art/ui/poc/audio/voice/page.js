@@ -85,11 +85,13 @@ function block(b) {
   $('caveat').replaceChildren(el('b', {}, 'What the numbers cannot tell you. '), data.caveat);
   const app = $('app'); app.replaceChildren();
   const jump = $('jump');
+  const fin = await fetch(rel('./final.json')).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (fin) data.groups.unshift(fin);
   for (const g of data.groups) {
     jump.append(el('a', { href: `#${g.id}` }, g.short));
     app.append(el('section', { class: 'group', id: g.id },
       el('h2', {}, g.title), el('p', {}, g.blurb),
-      el('div', { class: `blocks${g.blocks.length > 1 ? ' two' : ''}` }, g.blocks.map(block))));
+      el('div', { class: `blocks${g.blocks.length > 1 && g.id !== 'final' ? ' two' : ''}` }, g.blocks.map(block))));
   }
   $('foot').replaceChildren(data.footer);
   document.body.dataset.ready = 'true';

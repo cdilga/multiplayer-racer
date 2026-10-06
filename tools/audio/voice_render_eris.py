@@ -76,10 +76,10 @@ def read_json(path: pathlib.Path, default=None):
 # ---- references -----------------------------------------------------------------------------------------------
 
 def refs(args) -> dict:
-    """The two clone references: the owner's own recording and the excited (E4f) reference in the owner's timbre."""
+    """The two clone references: the owner's own recording and the excited reference (the owner's performed announcer take, Aussie reading)."""
     return {
-        "owner": {"id": "owner-ref-B", "wav": pathlib.Path(args.owner_ref), "text_file": pathlib.Path(args.owner_ref_text)},
-        "excited": {"id": "excited-ref-E4f", "wav": pathlib.Path(args.excited_ref),
+        "owner": {"id": "owner-ref-aussie-warm", "wav": pathlib.Path(args.owner_ref), "text_file": pathlib.Path(args.owner_ref_text)},
+        "excited": {"id": "excited-ref-aussie-hype", "wav": pathlib.Path(args.excited_ref),
                     "text_file": pathlib.Path(args.excited_ref_text)},
     }
 
@@ -397,6 +397,7 @@ def mmss(t: float) -> str:
 
 def choose_excited_reference() -> dict:
     """Evidence for which excited reference the hype rows clone: the experiment metrics (voice_energy.py -> metrics.json)."""
+    return {"chosen": "aussie-hype", "evidence": "the owner's own performed announcer take (Aussie reading, 2026-10-06); no experiment needed"}
     m = read_json(VOICE / "energy/metrics.json")
     if not m:
         return {"chosen": "e4f", "evidence": "metrics.json not found"}
@@ -506,7 +507,7 @@ def phase_finish(job: dict, wanted: dict, args) -> None:
     header = [
         "Audition reel (P1-A01): every picked announcer clip in cue-sheet order, in the owner's cloned voice.",
         f"Gap: 0.5 s between variants of a moment, 1.2 s between moments. Total {mmss(t)}. {len(lines)} clips.",
-        "hype rows clone the excited reference (E4f); warm rows the owner's own. wer = word error vs the line (0 = word-perfect);",
+        "hype rows clone the excited reference (owner's Aussie announcer take); warm rows the owner's own. wer = word error vs the line (0 = word-perfect);",
         "sim = speaker similarity to the owner's reference. These are candidates: the owner's ear overrides any pick.", ""]
     (reel_dir / "audition-reel-index.txt").write_text("\n".join(header + lines) + "\n")
 
@@ -529,12 +530,12 @@ def phase_finish(job: dict, wanted: dict, args) -> None:
                   "asr": "faster-whisper large-v3, float16, beam 5", "speaker_similarity": "cosine of Qwen3-TTS speaker embeddings (first 8 s) vs the owner reference",
                   "loudness": "ffmpeg ebur128 (ITU-R BS.1770 integrated LUFS, 4x-oversampled true peak)"},
         "references": {
-            "owner": {"id": "owner-ref-B", "use": "warm rows; speaker-similarity target for every row",
+            "owner": {"id": "owner-ref-aussie-warm", "use": "warm rows; speaker-similarity target for every row",
                       "sha256_12": ref_key(refs(args)["owner"])[:12], **{k: v for k, v in (check.get("owner") or {}).items() if k in ("seconds", "median_hz", "wer_vs_stored_transcript")},
                       "transcript": "FrankenWhisper (fw transcribe, whisper.cpp backend, ggml-large-v3) on the Mac; the stored transcript matches it, "
                                     "and faster-whisper large-v3 on eris agrees at the WER shown (the text and audio stay private)"},
-            "excited": {"id": "excited-ref-E4f", "use": "hype rows",
-                        "pipeline": "Qwen3-TTS VoiceDesign (high-energy announcer instruction) -> Seed-VC F0-conditioned conversion into the owner's timbre, +4 semitones (voice_energy.py --vc-mode f0 --lift 4)",
+            "excited": {"id": "excited-ref-aussie-hype", "use": "hype rows",
+                        "pipeline": "the owner's own performed announcer take from the Big Aussie Accent - True Blue Version reading (2026-10-06); no voice conversion",
                         "sha256_12": ref_key(refs(args)["excited"])[:12], "text": pathlib.Path(args.excited_ref_text).read_text().strip(),
                         **{k: v for k, v in (check.get("excited") or {}).items() if k in ("seconds", "median_hz", "wer_vs_stored_transcript")},
                         "selection": choose_excited_reference()},
@@ -569,10 +570,10 @@ def main() -> int:
     ap.add_argument("--max-candidates", type=int, default=16, help="stop adding seeds at this many takes per row")
     ap.add_argument("--dtype", choices=["auto", "bf16", "fp32", "fp16"], default="auto")
     ap.add_argument("--only", help="comma-separated moment ids to (re)render; other rows keep their cached takes")
-    ap.add_argument("--owner-ref", default=str(VOICE / "ref-B.wav"))
-    ap.add_argument("--owner-ref-text", default=str(VOICE / "ref-B.txt"))
-    ap.add_argument("--excited-ref", default=str(VOICE / "energy/ref/excited-reff.wav"))
-    ap.add_argument("--excited-ref-text", default=str(VOICE / "energy/ref/excited-ref.txt"))
+    ap.add_argument("--owner-ref", default=str(VOICE / "aussie/warm.wav"))
+    ap.add_argument("--owner-ref-text", default=str(VOICE / "aussie/warm.txt"))
+    ap.add_argument("--excited-ref", default=str(VOICE / "aussie/hype.wav"))
+    ap.add_argument("--excited-ref-text", default=str(VOICE / "aussie/hype.txt"))
     ap.add_argument("--export-dir", default=str(HOME / "exports/voice"))
     ap.add_argument("--m4a-twin", action="store_true", help="also write an AAC .m4a twin from the same master (Apple hosts)")
     args = ap.parse_args()

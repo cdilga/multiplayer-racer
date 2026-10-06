@@ -22,7 +22,7 @@ the loader both of them go through, and the guardrail that keeps the sheet insid
   * No player names (R69): no placeholders such as {name} or <player>, no capitalised word mid-sentence
     other than the allowed few, no name from the curated name list if one exists.
   * No car numbers or colours in Playtest 1 (Q-A5), no digits in speech.
-  * No swearing, alcohol or violence words, no put-downs, no Indigenous cultural terms, no brands, none of
+  * No swearing, alcohol or violence words, no put-downs, no brands, none of
     GUIDE §11's "don't say" words, US spellings refused (Australian English).
   * In-race callouts are about 8 words: the hard limit per moment is in MOMENTS.
 
@@ -155,9 +155,6 @@ WORD_RULES = [
     ("banned-word", r"bogan\w*|bludger\w*|hoon\w*|drongo\w*|wowser\w*|sook\w*|spaz\w*|spastic\w*|retard\w*|"
                     r"cripple\w*|psycho\w*|nutter\w*|mental|lunatic\w*|moron\w*|idiot\w*|stupid|dumb|loser\w*",
      "put-down for a kind of person (nothing punching down)"),
-    ("indigenous-term", r"dreamtime|dreaming|didgeridoo|yidaki|yakka|cooee|corroboree|bunyip|yowie|"
-                        r"galah|songlines?",
-     "Indigenous cultural term (not for jokes)"),
     ("brand", r"maccas|mcdonald\w*|esky|vegemite|kfc|holden|toyota|bunnings|woolies|coles|coke|pepsi",
      "brand name"),
     ("glossary-dont-say", r"lobby|session|server|vehicle|kart|ride|seat|slot|remote|client|device|admin|heat|"

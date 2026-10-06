@@ -146,7 +146,7 @@ class Corrupted(unittest.TestCase):
         self.assertIn("slang-missing", self.mutate("welcome", "slang_terms", ""))
 
     def test_unknown_slang_term(self) -> None:
-        self.assertIn("slang-unknown", self.mutate("welcome", "slang_terms", "g'day; legend"))
+        self.assertIn("slang-unknown", self.mutate("welcome", "slang_terms", "g'day; zzz-not-a-term"))
 
     def test_slang_listed_but_unused(self) -> None:
         self.assertIn("slang-unused", self.mutate("welcome", "slang_terms", "g'day; crikey"))
@@ -166,12 +166,11 @@ class Corrupted(unittest.TestCase):
     def test_swearing(self) -> None:
         self.assertIn("banned-word", self.mutate("final-lap", "text", "Last lap! Bloody hold on!", "2"))
 
-    def test_indigenous_joke(self) -> None:
-        self.assertIn("indigenous-term", self.mutate("wheel-off", "text", "That wheel's gone bunyip hunting!"))
-
-    def test_walkabout_approved(self) -> None:
-        # Owner, 2026-10-06: "walkabout is categorically approved forever" (R114). It must never be flagged.
-        self.assertNotIn("indigenous-term", self.mutate("wheel-off", "text", "That wheel's gone walkabout!"))
+    def test_indigenous_derived_slang_allowed(self) -> None:
+        # Owner, 2026-10-06 (R114): Indigenous-derived Australian slang is welcome; the old hold-back is lifted.
+        for word in ("walkabout", "hard yakka", "galah", "cooee"):
+            codes = self.mutate("wheel-off", "text", f"That wheel's gone {word}!")
+            self.assertNotIn("indigenous-term", codes)
 
     def test_glossary_dont_say(self) -> None:
         self.assertIn("glossary-dont-say", self.mutate("final-lap", "text", "Last lap! Check your device!", "2"))

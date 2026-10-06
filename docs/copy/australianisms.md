@@ -14,7 +14,7 @@ words that carry the meaning.
 
 - Family friendly: no swearing (including "bloody"), nothing about alcohol or violence against people.
 - Nothing punching down: no insults for a kind of person, no class or ability jokes.
-- No Indigenous cultural terms used as jokes, and no Indigenous-derived slang as a punchline.
+- Indigenous-derived Australian slang (walkabout, hard yakka, galah, cooee and the like) is welcome, by owner ruling R114 (2026-10-06). It is part of how Australians talk, so use it the way the owner does.
 - No player names (R69), and in Playtest 1 no car numbers or colours (Q-A5; a spliced number catalogue stays Full).
 - No brand names.
 
@@ -40,10 +40,10 @@ for a term to ship.
 | Term | Meaning | Where it fits | Family-friendly | Sensitivity note | Source | Used in |
 |---|---|---|---|---|---|---|
 | g'day | Familiar greeting, any hour; short for "good day". | Opening a line to the room. | yes | Worldwide cliche from 1980s tourism ads; use once or twice, not every line. | ANDC "g'day", `australian-words-g` | welcome, late-joiner |
-| mate | Address implying equality and goodwill (can also be ironic). | Friendly aside in a callout. | yes | Never aimed at one person by name or gender; keep it warm, not sarcastic. | ANDC "mate", `australian-words-m` | welcome, door-off, wreck, off-course |
-| no worries | No bother; all is well. First recorded in the 1960s. | Reassuring a newcomer or a loser. | yes | None. | ANDC "no worries", `australian-words-n` | welcome, time-up, late-joiner |
+| mate | Address implying equality and goodwill (can also be ironic). | Friendly aside in a callout. | yes | Never aimed at one person by name or gender; keep it warm, not sarcastic. | ANDC "mate", `australian-words-m` | door-off, off-course, welcome |
+| no worries | No bother; all is well. First recorded in the 1960s. | Reassuring a newcomer or a loser. | yes | None. | ANDC "no worries", `australian-words-n` | late-joiner, time-up, welcome, wreck |
 | fair go | A reasonable chance, a fair deal; Australia sees itself as "the land of the fair go". | Everyone gets a turn; late joiners. | yes | A cherished value, so use it sincerely. ANDC notes it is also an exclamation of disbelief, so keep the plain meaning obvious. | ANDC "fair go", `australian-words-f` | late-joiner |
-| fair dinkum | Genuine, true, honest. "Dinkum" is from British dialect; Australian use from the 1890s. | Hyping something real: a close finish, a thriller. | yes | None. | ANDC "dinkum", `australian-words-d`; Macquarie "Fair dinkum true blue Aussie, mate", `https://www.macquariedictionary.com.au/fair-dinkum-true-blue-aussie-mate/` | photo-finish, lead-change |
+| fair dinkum | Genuine, true, honest. "Dinkum" is from British dialect; Australian use from the 1890s. | Hyping something real: a close finish, a thriller. | yes | None. | ANDC "dinkum", `australian-words-d`; Macquarie "Fair dinkum true blue Aussie, mate", `https://www.macquariedictionary.com.au/fair-dinkum-true-blue-aussie-mate/` | all-ready, bodywork-off, lead-change, photo-finish |
 | she'll be right | It will be fine. Australian English often uses "she" where standard English uses "it". | Cosmetic car damage; consoling a loser. | yes | The phrase can brush off real problems, so never use it for a connection or join fault; damage only. | ANDC "apples: she's apples", `australian-words-a` (the entry explains this "she") | door-off, next-round |
 | she'll be apples / she's apples | Everything is fine. Began as rhyming slang (apple and spice, nice); first recorded in the 1920s. | Same as "she'll be right"; vary the two. | yes | Same as "she'll be right". | ANDC "apples: she's apples", `australian-words-a` | bodywork-off |
 | bonzer | Surpassingly good, splendid. Early 20th century. | Praising a drive or a win. | yes | Dated; it reads as affectionate and old-fashioned, which suits the tone. | ANDC "bonzer", `australian-words-b`; Green's "bonzer, adj.", `https://greensdictofslang.com/entry/2ztbvba` (Aus/NZ) | winner, wheel-off |
@@ -55,7 +55,7 @@ for a term to ship.
 | strewth / 'strewth / struth | Mild exclamation of surprise, short for "God's truth". Earliest quotation 1883. | Surprise: close finish, big air. | yes | A minced oath. It is very mild and common in family media; drop it if the owner prefers no religious roots. | Green's "'strewth!, excl.", `https://greensdictofslang.com/entry/qmsiify` (no ANDC entry found) | photo-finish, big-air |
 | crikey | Exclamation of surprise; a softened form of "Christ!". | Surprise at damage. | yes | A minced oath. Strongly tied to Steve Irwin in family media; mild. | Green's "crikey!, excl.", `https://greensdictofslang.com/entry/ghmqtca`; Macquarie "Crikey! Aussie slang overseas", `https://www.macquariedictionary.com.au/crikey-aussie-slang-overseas/` | door-off |
 | ripper | Something excellent ("a ripper of a race"). Green's labels it British and Australian; it is strongly Australian today. | Praising a race, a pass. | yes | Not the "murderer" sense; keep it to "a ripper of a ...". | Green's "ripper, n.1", `https://greensdictofslang.com/entry/o4wu2yy` | all-ready, photo-finish, lead-change |
-| too right | Exclamation of agreement: yes, absolutely. Originally Australian; earliest quotation 1918. | Agreeing with the question just asked. | yes | None. | Green's "too right!, excl.", `https://greensdictofslang.com/entry/hyxv4dq` | next-round |
+| too right | Exclamation of agreement: yes, absolutely. Originally Australian; earliest quotation 1918. | Agreeing with the question just asked. | yes | None. | Green's "too right!, excl.", `https://greensdictofslang.com/entry/hyxv4dq` | next-round, winner |
 | good on ya / good on you / good on yer | Well done. Green's labels it Australian and Irish, now equally common in the UK and Ireland. | Congratulating the winner. | yes | None. | Green's "good, adj.1" (phrase "good on you"), `https://greensdictofslang.com/entry/63gk4oy` | winner |
 | you beauty / you little beauty | Appreciative cheer: excellent! | A cheer for the winner or a pass. | yes | Aimed at what happened, not at a person's looks. | Green's "beauty!, excl.", `https://greensdictofslang.com/entry/avneojy` | winner, lead-change |
 | pearler | Something outstanding. Green's Australian citation is from 1901. | Praising a jump. | yes | None. | Green's "purler, n." (spelt pearler), `https://greensdictofslang.com/entry/cmx6sea` | big-air |
@@ -73,6 +73,15 @@ for a term to ship.
 | arvo / arvos / arvo's / arvy | Afternoon. | Time-of-day banter, "this arvo's racing"; scenery and signs. | yes | Plain and safe. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | welcome |
 | servo / servos | A petrol or fuel station. | Scenery and signs, pit/repair spots, the Aussie roadside. | yes | Plain and safe. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | none yet |
 | the institution | A pub. | Signs, scenery, banter. | yes | Owner-supplied. Not in a cue line (the loader refuses the word pub and alcohol words in speech); lives on a sign, with MEALS beside it. | Owner-supplied (R114, 2026-10-04); dictionary citation still to come | none yet |
+| legend / legends / you legend | A great person; a warm form of address to a group. | Greeting or cheering the room. | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | all-ready, countdown, final-lap, late-joiner, next-round, time-up, welcome |
+| righto | Right then; okay. | Starting a line or a round. | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | time-up, welcome |
+| reckon / reckons | Think, suppose. | Hedging a call: "I reckon...". | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | first-finisher, lead-change, wheel-off |
+| dead set | Absolutely, truly. | Emphasis: "dead set, who needs doors". | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | door-off |
+| snag / snags | A sausage. | Banter between rounds; the sausage sizzle. | yes | Food only. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | next-round |
+| barbie | A barbecue. | Banter between rounds. | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | next-round |
+| hard yakka | Hard work. From *yaga*, 'work', in the Yagara language; ANDC. | Effort, the last lap, a long round. | yes | None; plain words beside it. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | final-lap, wheel-off |
+| galah / galahs | A noisy cockatoo; affectionately, a silly person. From Yuwaalaraay *gilaa*; ANDC. | Cheerful ribbing of the room or a daft move, never a kind of person. | yes | Affectionate use only. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | first-finisher, wreck |
+| cooee | A call to attract attention across distance. From Dharug *gu-weei*; ANDC. | Calling to the room; the Identify flash is already called Cooee. | yes | None. | Owner-supplied (R114, 2026-10-06); the owner's Big Aussie Accent reading, dictionary citation still to come | late-joiner |
 
 Dropped by the owner 2026-10-04: ~~stone the crows~~ (not a phrase they've heard in Australian slang). The `big-air` line and its clip were removed and the remaining `big-air` variants renumbered 1-4. Earlier notes: Dated (Macquarie says it is dying out). Some listeners hear "stone" as violent, so drop it if the owner prefers; the announcer says the clean form only. Source: Macquarie "Starve the lizards!", `https://macquariedictionary.com.au/blog/article/789`
 
@@ -90,12 +99,10 @@ Same columns. Cleared for A06 (derby and items) or Full awards so the next pass 
 | Term | Why it is out |
 |---|---|
 | walkabout ("gone walkabout") | Back in the Terms table: owner ruling R114 (2026-10-04) supersedes this hold-back, and the owner-supplied table says to use it freely for cars wandering off. Used only for a car off the track, never for a person. |
-| hard yakka | ANDC traces "yakka" to *yaga*, 'work', in the Yagara language of the Brisbane region. Indigenous-derived slang as a punchline is out by the rule above. |
-| cooee, galah, bunyip, yowie, yidaki, dreamtime | Indigenous-origin words or cultural terms. ANDC records "galah" as a bird name from Aboriginal languages that also means 'a fool'; it is both Indigenous-derived and an insult. |
-| boomerang (as a joke) | An Aboriginal tool. The item may keep its game name in A06's rows; no punchlines about it. Owner to decide if the item keeps the name. |
+| hard yakka, cooee, galah, bunyip, yowie, boomerang | Back in: owner ruling R114 (2026-10-06) lifts the hold-back on Indigenous-derived Australian slang. hard yakka, galah and cooee are now in the Terms table. |
 | hoon | ANDC: a lout, especially one who drives dangerously, so it points at real reckless driving. Left out of a game about cars. Owner decision if wanted. |
 | bogan, bludger, drongo, wowser | Put-downs for a kind of person (ANDC: bogan "uncultured", though now sometimes affectionate; bludger "an idler"; drongo "a fool"). Nothing punching down, so master plan §10.10's "Bogan of the Day" is not recommended. |
-| legend ("you legend", "legends") | Ubiquitous, but I could not verify it in a dictionary or published glossary, so it is out. The audition line "legends" is not carried over. |
+| legend ("you legend", "legends") | Back in: owner-supplied (R114, 2026-10-06) and now in the Terms table. |
 | Maccas, Esky and other brand names | "Maccas Run" (master plan) names a brand. ANDC notes Esky began as a proprietary brand. No brand names in lines. |
 | "Couldn't organise a piss-up in a brewery" | Swearing and alcohol. The master plan already asks for a family-friendly variant; none is verified. |
 | Dropped a clanger, Servo Pie | Not verified as Australian in any source I read, so they stay out until someone can cite them. |

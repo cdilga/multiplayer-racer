@@ -32,3 +32,19 @@
 - **Engine synth: hash only single-layer renders.** Chromium sums a node's inputs in no fixed order, so a render with
   several live layers (including layers muted at t=0 that are still gliding out) differs in the last float32 bit run to
   run. Compare multi-layer renders by max difference (< 1e-6, -120 dBFS), as R1/R3/SL3 do.
+
+## 2026-10-06 · A clipped clone reference leaks its missing words into every take (P1-A01b)
+
+- **The reference audio must end where its transcript ends, on a word boundary.** The owner's Aussie hype reference was
+  cut at exactly 23.0 s, mid-word ("and the wheelie..."), but its transcript ran on to "...bin is airborne". Qwen3-TTS
+  in-context cloning continues from the prompt, so every one of the 52 hype takes opened with "is airborne" (WER 0.2-0.6,
+  52/52 failing). Fix: trim in a pause (Whisper word timestamps), 30 ms fade, 0.35 s silence, cut the transcript to
+  match. The uncut file stays beside it on eris as `hype-uncut-23s.wav`.
+- **Read the `heard` field before blaming the accent.** A shared leading phrase across every failing take is a reference
+  problem; scattered spelling misses ("Cooey", "Good day") are Whisper folds.
+- **Longer references raise the peak:** with the 23-25 s Aussie references, the 1.7B bf16 render runs out of memory on
+  some takes even with only desktop apps (~1.5 GiB) on the card. The worker skips those seeds and tries more.
+- **Transcribe a slang-heavy reference twice.** Unprimed Whisper turned the warm reference's "hard yakka", "sparrow's
+  fart" and "number 8 wire" into "hard jackets", "Barrett's fight" and "number 8 wine". A second pass primed with the
+  expected slang fixes those; where the two passes disagree, keep the unprimed reading, because priming pulls toward the
+  prompt. The raw transcript stays on eris as `warm-whisper-raw.txt`.
