@@ -12,6 +12,14 @@ import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 
 const BASE = '/p/jn1/';
+// `JJ_CAPTURE_DIR=<dir>`: also save the visual self-review matrix (TV, phones portrait/landscape, a resize) there.
+const CAPTURE = process.env.JJ_CAPTURE_DIR;
+const shot = async (page, name) => {
+  if (!CAPTURE) return;
+  const { mkdirSync } = await import('node:fs');
+  mkdirSync(CAPTURE, { recursive: true });
+  await page.screenshot({ path: `${CAPTURE}/${name}.png` });
+};
 let browser;
 let server;
 
@@ -58,6 +66,7 @@ async function phone() {
 async function joinAndClaim(p, url, name) {
   if (url) await p.page.goto(url);
   await wait(p.page, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  await shot(p.page, `phone-join-card-${name}`);
   await p.page.locator('#name').fill(name);
   await p.page.getByRole('button', { name: 'Join the race' }).click();
   await wait(p.page, () => window.__jjController.inspect().phase === 'playing');
@@ -127,7 +136,9 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const hold = (p, d) => p.page.evaluate((d) => window.__jjController.setSticks({ ...d, touch: true }, { x: 0, y: 0, touch: false }), d);
   await hold(a, { x: 0, y: -1 });
   await hold(b, { x: 0.9, y: -0.8 });
+  await shot(a.page, 'phone-landscape-844x390-driving');
   const { start, now } = await driveTicks(host, 300);
+  await shot(host, 'tv-1280x720-three-seats');
   const resA = { speed: carOf(now, epA).forwardSpeed, turn: turn(carOf(now, epA).headingDeg, carOf(start, epA).headingDeg) };
   const resB = { speed: carOf(now, epB).forwardSpeed, turn: turn(carOf(now, epB).headingDeg, carOf(start, epB).headingDeg) };
   console.log(`# A ${JSON.stringify(resA)} B ${JSON.stringify(resB)}`);
@@ -158,6 +169,18 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.ok(carOf(after1.now, youC.link.endpointId), 'C has a car');
   assert.ok(carOf(after1.now, epA).forwardSpeed > 4, 'A undisturbed');
   await wait(host, () => window.__jjRender.tileRects().length === 4);
+  await shot(host, 'tv-1280x720-four-seats');
+  if (CAPTURE) {
+    await host.setViewportSize({ width: 1920, height: 1080 });
+    await host.waitForTimeout(800);
+    await shot(host, 'tv-1920x1080-four-seats-resized');
+    await c.page.setViewportSize({ width: 390, height: 844 });
+    await c.page.waitForTimeout(300);
+    await shot(c.page, 'phone-portrait-390x844-playing');
+    await b.page.screenshot({ path: `${CAPTURE}/phone-landscape-844x390-identify.png` }).then(() => b.page.getByRole('button', { name: /Identify/ }).click());
+    await b.page.waitForTimeout(120);
+    await shot(b.page, 'phone-landscape-844x390-identify-flash');
+  }
 
   at('reload resumes');
   const carA = carOf(after1.now, epA).car;
