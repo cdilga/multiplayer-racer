@@ -159,6 +159,13 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   await a.page.getByRole('button', { name: /Camera/ }).click();
   await wait(host, (k) => window.__jjRender.cameras()[k + 1]?.mode === 'tp', carIdxA);
 
+  at('recover');
+  const recoveries = (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries;
+  await a.page.getByRole('button', { name: /Recover/ }).click();
+  for (const t0 = Date.now(); (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries <= recoveries; await host.waitForTimeout(100)) {
+    assert.ok(Date.now() - t0 < 10_000, 'Recover put the car back on the road');
+  }
+
   // Each seat has its own tile.
   const tiles = await host.evaluate(() => window.__jjRender.tileRects().length);
   assert.equal(tiles, 3);
