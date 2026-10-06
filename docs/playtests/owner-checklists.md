@@ -23,7 +23,7 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] The motion reel (countdown, join, Identify, wreck and respawn, phase changes, results), and its reduced-motion version.
 - [ ] Phone controller on your own phone, once in a dim room: thumb reach, the two sticks, the dark-room base, every state screen.
 - [ ] **Engine synth:** the Cruz Missile's engine across RPM, throttle, boost, surfaces and damage, and the scripted lap.
-- [ ] **Announcer voice (not yet approved):** listen to the side-by-side audition at `/poc/audio/voice/` (current E4f, prompt-only Australian-announcer candidates, restyle-once candidates in your timbre, your raw recording; same 8 lines). Is it broad, excited, nasal-drawl enough? Pick one, or ask for a new recording. If prompting can't get there, approve (or not) the one-off FAL reference set with its $1 cap (P1-A01c). Also give the full engine synth and the announcer's lines a listen on the TV.
+- [x] **Announcer voice:** approved 2026-10-06: clones of your own Aussie warm and hype recordings (FrankenTTS 0.6B fallback approved for any line the eris render can't finish). The paid FAL set (P1-A01c) isn't needed. Still give the full engine synth and the announcer's lines a listen on the TV.
 - [ ] **Announcer copy** (`docs/copy/australianisms.md`, `tools/audio/cues-playtest1.tsv`): the mild minced oaths: strewth and crikey are approved, "stone the crows" dropped (owner 2026-10-04); the 26 shipped terms and the ones left out (with reasons) read right to you.
 - [x] **"Room" or "game":** "room" (owner 2026-10-04, R112).
 - [x] **Shader skill licence:** the vendored MIT text and note are approved (owner 2026-10-04).
