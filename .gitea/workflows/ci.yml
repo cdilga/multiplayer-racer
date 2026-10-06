@@ -123,7 +123,8 @@ jobs:
       - name: The S02 harness and the native jj (for the hash comparison)
         run: |
           npx --prefix web vite build --config web/host/tests/vite.config.ts
-          cargo build --locked -q -p jj-tools --bin jj -p jj-server
+          cargo build --locked -q -p jj-tools --bin jj
+          cargo build --locked -q -p jj-server --bin jj-server
       - name: Chromium headless shell (Playwright 1.62.1)
         run: npx playwright install --with-deps --only-shell chromium
       # One file at a time: every host page renders on the CPU here (software GL), so parallel files starve each
