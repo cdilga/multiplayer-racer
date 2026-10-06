@@ -358,6 +358,14 @@ fn undulation_is_idempotent_and_leaves_the_route_plan_alone() {
             &mut Rng::stream(seed, "features"),
             Biome::Greybox,
         );
+        assert_eq!(base.terrain, again.terrain, "seed {seed} terrain");
+        assert_eq!(base.route, again.route, "seed {seed} route");
+        assert_eq!(base.features, again.features, "seed {seed} features");
+        assert_eq!(base.props, again.props, "seed {seed} props");
+        assert_eq!(base.dressing.len(), again.dressing.len());
+        for (a, b) in base.dressing.iter().zip(&again.dressing) {
+            assert_eq!(a, b, "seed {seed} dressing");
+        }
         assert_eq!(base, again, "seed {seed}");
         let mut other = base.clone();
         undulate(

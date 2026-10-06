@@ -1,0 +1,6 @@
+radius(m)  pieces(mean)  nnCv(mean)   (M02: poisson 12 m 0.25, best-candidate 0.30, cluster 0.68)
+        8           443        0.25
+       12           202        0.26
+       18            89        0.26   <- shipped
+       24            52        0.27
+       32            29        0.29

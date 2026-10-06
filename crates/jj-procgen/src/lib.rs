@@ -5,9 +5,10 @@
 //! - [`assemble`] (P1-M03a): a centerline plus dressing → a canonical `jj.map.v1` through `jj-map`.
 //!
 //! - [`features`] (P1-M03d): jumps, crests, whoops and creek dips composed into the route and baked into the heights.
+//! - [`scatter`] (P1-M03e): clumped or even dressing around the route from the dressing stream, clear of the road.
 //! - [`terrain`] (P1-M03c): undulation along the route with per-biome grade, curvature and bank limits.
 //!
-//! Dressing still comes from a placeholder (box buildings and cones around the route) until the biome beads (M04–M07)
+//! Props still come from a placeholder (cones by the road) and the scatter's pieces are the generic kit until the biome beads (M04–M07)
 //! and seeded scatter (M03e) replace it.
 
 #![forbid(unsafe_code)]
@@ -15,21 +16,22 @@
 pub mod assemble;
 pub mod course;
 pub mod features;
+pub mod scatter;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
 
 use std::collections::BTreeMap;
 
-use jj_map::{Biome, Dressing, Map, Pose, Prop, Surface};
+use jj_map::{Biome, Map, Pose, Prop, Surface};
 
-use crate::assemble::{TrackSpec, arc_lengths, assemble, distance_to_loop, mm};
+use crate::assemble::{TrackSpec, arc_lengths, assemble, mm};
 use crate::course::{CornerKind, Course, WIDTH_M};
 use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "4";
+pub const GENERATOR_VERSION: &str = "5";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -55,7 +57,7 @@ pub fn generate_report(seed: u64) -> (Map, Report) {
 pub fn generate_from(mut st: Streams) -> (Map, Report) {
     let course = course::design(&mut st.structure);
     let centerline = centred(&resample(&course.points));
-    let (dressing, props) = placeholder_dressing(&mut st, &centerline);
+    let props = placeholder_props(&mut st, &centerline);
     let biomes = vec![Biome::Greybox];
     let mut map = assemble(&TrackSpec {
         seed: st.seed,
@@ -65,11 +67,17 @@ pub fn generate_from(mut st: Streams) -> (Map, Report) {
         centerline,
         width_m: WIDTH_M,
         surface: Surface::Tarmac,
-        dressing,
+        dressing: Vec::new(),
         props,
     });
     terrain::undulate(&mut map, &mut st.terrain, &terrain::params(biomes[0]));
     features::place(&mut map, &mut st.features, biomes[0]);
+    scatter::scatter(
+        &mut map,
+        &mut st.dressing,
+        &scatter::spec(biomes[0]),
+        &jj_map::Registry::generic(),
+    );
     (map, report(&course))
 }
 
@@ -128,9 +136,8 @@ fn centred(points: &[(f64, f64)]) -> Vec<(f64, f64)> {
     points.iter().map(|&(x, z)| (x - cx, z - cz)).collect()
 }
 
-/// Buildings beside the route and cones by the road (dressing stream only). A draw that lands too near any part of the
-/// road is redrawn, so the dressing never constrains the route.
-fn placeholder_dressing(st: &mut Streams, line: &[(f64, f64)]) -> (Vec<Dressing>, Vec<Prop>) {
+/// Cones by the road (dressing stream only) until the biome kits bring their own props.
+fn placeholder_props(st: &mut Streams, line: &[(f64, f64)]) -> Vec<Prop> {
     let d = &mut st.dressing;
     let (s, total) = arc_lengths(line);
     // A point `off` metres to the side of the route at arc length `dist`.
@@ -140,35 +147,6 @@ fn placeholder_dressing(st: &mut Streams, line: &[(f64, f64)]) -> (Vec<Dressing>
         let len = libm::hypot(b.0 - a.0, b.1 - a.1).max(1e-9);
         (a.0 - (b.1 - a.1) / len * off, a.1 + (b.0 - a.0) / len * off)
     };
-    let mut dressing = Vec::new();
-    let buildings = 6 + (d.next_u64() % 5) as usize;
-    for _ in 0..buildings {
-        for _attempt in 0..64 {
-            let side = if d.unit() < 0.5 { -1.0 } else { 1.0 };
-            let p = beside(
-                d.range(0.0, total),
-                side * d.range(WIDTH_M / 2.0 + 22.0, WIDTH_M / 2.0 + 45.0),
-            );
-            if distance_to_loop(line, p) > WIDTH_M / 2.0 + 20.0 {
-                dressing.push(Dressing {
-                    kit_piece: "generic/box-building".into(),
-                    pose: Pose {
-                        x: mm(p.0),
-                        y: 0,
-                        z: mm(p.1),
-                        yaw: (d.next_u64() % 36_000) as i32,
-                    },
-                    params: BTreeMap::from([
-                        ("widthMm".into(), 9_000),
-                        ("depthMm".into(), 6_000),
-                        ("heightCm".into(), 450),
-                    ]),
-                    collides: true,
-                });
-                break;
-            }
-        }
-    }
     let mut props = Vec::new();
     for _ in 0..4 {
         // Clear of the start corridor (it runs back from the finish at 60 m).
@@ -186,5 +164,5 @@ fn placeholder_dressing(st: &mut Streams, line: &[(f64, f64)]) -> (Vec<Dressing>
             params: BTreeMap::new(),
         });
     }
-    (dressing, props)
+    props
 }

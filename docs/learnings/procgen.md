@@ -40,3 +40,19 @@
   call it exactly once after `undulate` (the idempotence test runs both).
 - **jj-sim is a native-only dev-dependency** of jj-procgen (`cfg(not(target_arch = "wasm32"))`), so the WASM parity
   build never compiles Rapier.
+
+## 2026-10-07 · Dressing scatter (P1-M03e)
+
+- **Scatter is not road furniture.** `scatter` places only the pieces a biome's `Spec` lists, off the road. Corner chevrons
+  (R104: a row of posts, one chevron each), Australian W-beam guard rail on posts (R105), and the finish gantry (R106: no
+  "Checkpoint N") are deterministic roadside pieces tied to corners and the finish, not scatter, and belong with the sign
+  kit and the biome beads. The generic `generic/barrier` registry entry still says "tyre wall, rail or concrete": its
+  description should lose "tyre wall" when someone touches the kit (R105). Real-format Australian signs (R113) stay the
+  sign kit's (`signs/`); scatter never invents signage.
+- **A hard-core footprint rule flattens clumping.** Piece footprints (8-18 m buildings) are as big as a cluster's spread,
+  so the no-overlap rule packs a cluster evenly and Clark-Evans R barely drops below 1. Judge clumping by Clark-Evans R and
+  the share of empty 30 m squares, not nnCv alone (nnCv is also high for isolated outliers).
+- **Ground at the rounded pose.** Poses are whole millimetres; read the ground at the rounded x/z, or a later re-grounding
+  (undulate, features) moves `y` by 1 mm and breaks idempotence.
+- **Bounds bind the scatter.** `assemble` grows the bounds from route + dressing + props, so scatter (which runs after
+  assembly) fills the route's bounds-plus-60 m margin only and keeps every footprint inside it.

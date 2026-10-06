@@ -1,0 +1,6 @@
+biome            algorithm  pieces(mean)  nnCv(mean)  Clark-Evans R  empty 30 m squares(mean)
+Greybox          poisson              90        0.26           1.19        0.57
+Town             cluster              31        0.40           0.66        0.85
+OutbackBitumen   poisson              90        0.26           1.19        0.57
+OutbackDirt      poisson             752        0.09           1.44        0.18
+Rocks            cluster              20        0.94           0.75        0.90
