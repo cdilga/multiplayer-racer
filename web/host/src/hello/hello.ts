@@ -85,6 +85,7 @@ export async function mountHello(app: HTMLElement): Promise<void> {
     markers: () => Object.fromEntries([...markers].map(([ep, m]) => [ep, { x: m.x, y: m.y, colour: m.colour, updates: m.updates }])),
     transport: () => hub.inspect(),
     paths: () => hub.paths(),
+    dropPeer: (ep: string) => hub.dropPeer(ep),
   };
   document.documentElement.dataset.jjHost = 'hello';
 }

@@ -175,7 +175,14 @@ export class ControllerLink {
       const ch = this.channels[name];
       ch.onmessage = (e) => this.events.onMessage?.(name, e.data as ArrayBuffer);
     }
-    this.channels.cmd.onopen = () => this.channels && this.events.onOpen?.(this.channels);
+    const channels = this.channels;
+    channels.cmd.onopen = () => {
+      if (this.pc !== pc) return;
+      this.watch(pc);
+      this.events.onOpen?.(channels);
+    };
+    // The host closing its side (or the SCTP association dying) closes the channel: recover at once.
+    channels.cmd.onclose = () => this.watch(pc);
     pc.onicecandidate = (e) => {
       if (e.candidate && this.pc === pc) void this.send('candidate', JSON.stringify(e.candidate.toJSON()));
     };
@@ -186,25 +193,45 @@ export class ControllerLink {
     await this.send('offer', pc.localDescription!.sdp);
   }
 
+  /** Connected means ICE/DTLS up and the reliable channel open. */
+  private healthy(pc: RTCPeerConnection): boolean {
+    return pc.connectionState === 'connected' && this.channels?.cmd.readyState === 'open';
+  }
+
+  /** Dead means nothing on this connection can come back: rebuild rather than restart ICE. */
+  private dead(pc: RTCPeerConnection): boolean {
+    return pc.connectionState === 'closed' || pc.signalingState === 'closed' || this.channels?.cmd.readyState === 'closed';
+  }
+
   private watch(pc: RTCPeerConnection): void {
     if (pc !== this.pc || this.ended) return;
     const s = pc.connectionState;
-    if (s === 'connected') {
+    if (this.healthy(pc)) {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = undefined;
       this.set('connected');
-    } else if (s === 'disconnected' || s === 'failed') {
-      if (this.recoveryTimer === undefined) {
-        this.recoveryTimer = setTimeout(() => void this.recover(), s === 'failed' ? 0 : RESTART_AFTER_MS);
-      }
+    } else if (this.dead(pc) || s === 'failed') {
+      clearTimeout(this.recoveryTimer);
+      this.recoveryTimer = setTimeout(() => void this.recover(), 0);
+    } else if (s === 'disconnected' && this.recoveryTimer === undefined) {
+      this.recoveryTimer = setTimeout(() => void this.recover(), RESTART_AFTER_MS);
     }
+  }
+
+  private rebuild(): void {
+    this.recoveryTimer = undefined;
+    this.rebuilds += 1;
+    this.set('rebuilding');
+    void this.build();
   }
 
   /** Step 1: ICE restart on the same connection (gen + 1); step 2 after 5 s more: a new connection (gen + 1). */
   async recover(): Promise<void> {
     const pc = this.pc;
     if (!pc || this.ended) return;
-    if (pc.connectionState === 'connected') return void (this.recoveryTimer = undefined);
+    if (this.healthy(pc)) return void (this.recoveryTimer = undefined);
+    // A closed connection or channel can't be restarted: straight to a new connection.
+    if (this.dead(pc)) return this.rebuild();
     this.restarts += 1;
     this.set('restarting');
     this.gen += 1;
@@ -219,11 +246,7 @@ export class ControllerLink {
     }
     this.recoveryTimer = setTimeout(() => {
       this.recoveryTimer = undefined;
-      if (this.pc === pc && pc.connectionState !== 'connected' && !this.ended) {
-        this.rebuilds += 1;
-        this.set('rebuilding');
-        void this.build();
-      }
+      if (this.pc === pc && !this.healthy(pc) && !this.ended) this.rebuild();
     }, REBUILD_AFTER_MS);
   }
 
@@ -235,7 +258,7 @@ export class ControllerLink {
 
   /** Page resume: check the link and recover straight away if it isn't connected. */
   resume(): void {
-    if (this.pc && this.pc.connectionState !== 'connected' && this.recoveryTimer === undefined) void this.recover();
+    if (this.pc && !this.healthy(this.pc) && this.recoveryTimer === undefined) void this.recover();
   }
 
   private async onSignal(m: SignalMessage): Promise<void> {
@@ -509,6 +532,11 @@ export class HostHub {
     } as HostPeer;
     this.peers.set(ep, holder);
     return holder;
+  }
+
+  /** Test hook: closes one controller's connection from the host side, as a network loss would. */
+  dropPeer(endpointId: string): void {
+    this.peers.get(endpointId)?.pc.close();
   }
 
   /** Ends the room for everyone (Disband): a `bye` to each controller, then `POST end`. */

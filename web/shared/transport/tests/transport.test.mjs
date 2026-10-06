@@ -95,7 +95,7 @@ describe('hello room over loopback WebRTC', () => {
     const c = await startController(origin, host.code);
     const ep = await moveAndSee(host, c, 0.5, 0.5);
     const before = await c.link();
-    await c.page.evaluate(() => window.__jjHello.breakLink());
+    await host.page.evaluate((ep) => window.__jjHello.dropPeer(ep), ep);
     await until(c.page, (gen) => window.__jjHello.link().state === 'connected' && window.__jjHello.link().gen > gen, before.gen, 30_000);
     const afterLink = await c.link();
     assert.equal(afterLink.endpointId, before.endpointId, 'the same endpoint');
@@ -114,7 +114,7 @@ describe('hello room over loopback WebRTC', () => {
     await until(c.page, () => window.__jjHello.link().sseReconnects >= 1 && window.__jjHello.link().sse === 'open');
     // A fresh negotiation still needs signalling: force a rebuild and see it connect.
     const gen = (await c.link()).gen;
-    await c.page.evaluate(() => window.__jjHello.breakLink());
+    await host.page.evaluate((ep) => window.__jjHello.dropPeer(ep), (await c.link()).endpointId);
     await until(c.page, (gen) => window.__jjHello.link().state === 'connected' && window.__jjHello.link().gen > gen, gen, 30_000);
     await moveAndSee(host, c, 0.1, -0.9);
     for (const x of [host, c]) await x.ctx.close();
