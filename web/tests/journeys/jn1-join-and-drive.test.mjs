@@ -160,11 +160,20 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   await wait(host, (k) => window.__jjRender.cameras()[k + 1]?.mode === 'tp', carIdxA);
 
   at('recover');
+  // Recover is for a stuck car (slow for a second, or upside down): brake to a stop first, then ask.
+  await hold(a, { x: 0, y: 1 });
+  for (const t0 = Date.now(); Math.abs(carOf(await observe(host), epA).forwardSpeed) > 0.5; await host.waitForTimeout(100)) {
+    assert.ok(Date.now() - t0 < 15_000, 'A never stopped');
+  }
+  await a.page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  await driveTicks(host, 150);
   const recoveries = (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries;
   await a.page.getByRole('button', { name: /Recover/ }).click();
   for (const t0 = Date.now(); (await observe(host)).cars.find((x) => x.car === carIdxA).race.recoveries <= recoveries; await host.waitForTimeout(100)) {
     assert.ok(Date.now() - t0 < 10_000, 'Recover put the car back on the road');
   }
+  await hold(a, { x: 0, y: -1 });
+  await driveTicks(host, 240);
 
   // Each seat has its own tile.
   const tiles = await host.evaluate(() => window.__jjRender.tileRects().length);
