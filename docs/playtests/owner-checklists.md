@@ -40,6 +40,9 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] **D5 Party-ready:** QR scanner, tutorial, phone as host, voice and music, engine sound, effects (dust, smoke, sparks, fire, glows),
       the hub (a second laptop with pads, a keyboard-only laptop, a phone with a pad, each showing how it's connected), removing someone
       who left, downloading a session bundle, crash and UI sounds, and the Credits page.
+- [ ] **Native resolution (report whenever you play, br-dim.3 hardware):** on the TCL at 4K, 1/12/24/32 tiles at Native: the
+      overlay shows 3840x2160 and no auto-lowering (or names it), frame cost noted, and the cars look crisp. On your Android:
+      the host overlay's render size equals the screen's physical pixels, or it says which browser limit stopped it.
 
 ## 3. Playtest 1 (waits for you): the couch test on the pinned build
 
