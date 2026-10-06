@@ -5,11 +5,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-tree=$(cargo tree --workspace --locked --target all --edges normal,build --prefix none --format '{p}')
+# The targets 0.2 ships for (the same list as deny.toml's [graph] targets). `--target all` would also walk
+# emscripten-only optional edges (wasm-bindgen-futures -> tokio, reached through Asupersync) that never build.
+targets=(x86_64-unknown-linux-gnu aarch64-apple-darwin wasm32-unknown-unknown)
+tree=$(for t in "${targets[@]}"; do
+    cargo tree --workspace --locked --target "$t" --edges normal,build --prefix none --format '{p}'
+done)
 if grep -Eq '^tokio(-[a-z-]+)? v' <<<"$tree"; then
     echo "no-tokio: FAIL: Tokio is in the shipping graph (R2). Who pulls it in:" >&2
     for pkg in $(grep -Eo '^tokio(-[a-z-]+)? ' <<<"$tree" | sort -u); do
-        cargo tree --workspace --locked --target all --edges normal,build --invert "$pkg" >&2
+        for t in "${targets[@]}"; do
+            cargo tree --workspace --locked --target "$t" --edges normal,build --invert "$pkg" >&2 || true
+        done
     done
     exit 1
 fi

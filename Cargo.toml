@@ -28,6 +28,8 @@ wasm-bindgen = "=0.2.129"
 serde = { version = "1.0.229", features = ["derive"] }
 postcard = { version = "1.1.3", default-features = false, features = ["alloc"] }
 serde_json = "1.0.151"
+# Server runtime (P1-F03 pin, R2/R115): Asupersync, no Tokio; native runtime + rustls with the webpki root list.
+asupersync = { version = "=0.5.0", default-features = false, features = ["native-runtime", "tls-webpki-roots"] }
 # Physics (P1-F03 pin, P1-S01 uses it): enhanced-determinism forces libm maths so replays are bit-identical across targets.
 rapier3d = { version = "0.36.0", features = ["enhanced-determinism"] }
 # Procgen maths (P1-M03a): pure-Rust libm, so sin/cos/atan2 give the same bits natively and in WASM.

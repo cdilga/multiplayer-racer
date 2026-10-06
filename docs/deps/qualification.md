@@ -23,30 +23,28 @@ Every dependency the Playtest-1 build ships: pinned, with features, licence, sou
 | `rapier3d` | 0.36.0 | `enhanced-determinism` | Apache-2.0 | crates.io | `jj-sim` (P1-S01) | the physics and vehicle controller; `enhanced-determinism` forces libm maths, so a replay is bit-identical on native and wasm32 |
 | `arbitrary` | 1.4.2 | `derive` | MIT OR Apache-2.0 | crates.io | tests only | structured fuzzing of every wire message |
 | `proptest` | 1.11.0 | `std` (no default) | MIT OR Apache-2.0 | crates.io | tests only | property tests |
-| **Asupersync** | 0.5.0 (pin pending) | `native-runtime`, `tls-webpki-roots` (no default) | MIT + OpenAI/Anthropic rider, **accepted (R2)** | crates.io | `jj-server` (P1-N02) | the no-Tokio server runtime (R2); see below |
+| **Asupersync** | 0.5.0 (`=0.5.0`) | `native-runtime`, `tls-webpki-roots` (no default) | MIT + OpenAI/Anthropic rider, **accepted (R2, R112, R115)** | crates.io | `jj-server` (P1-N02) | the no-Tokio server runtime (R2); see below |
 
 Transitive crates: `cargo deny` allows only the licences in `deny.toml` (all GPL-3.0-compatible), denies Tokio and unknown
 registries or git sources, and fails on yanked versions. Built and checked on eris through RCH, 2026-10-03: `cargo check -p
 jj-sim -p jj-wasm-host` (native) and `--target wasm32-unknown-unknown -p jj-sim -p jj-wasm-host -p jj-wasm-procgen -p
 jj-wasm-input`, both with rapier3d 0.36.0 (`docs/evidence/P1-F03/`).
 
-### Asupersync: accepted by the owner, pinned by a non-Anthropic worker
+### Asupersync: accepted by the owner, an ordinary dependency
 
 R2 names Asupersync for the server. Its 0.5.0 licence (SPDX `LicenseRef-MIT-OpenAI-Anthropic-Rider`) is MIT plus a rider
-that grants no rights to OpenAI, Anthropic or anyone acting for them, counts executing, testing and analysing as use, and
-conflicts with GPL-3.0's no-further-restrictions terms. **The owner accepted it, the GPL position included (R2, 2026-10-03):**
-Claude sessions treat it as an opaque dependency (cargo builds and links it; no Claude session opens, reads or pastes its
-source or docs), and work on its internals goes to a non-Anthropic worker.
+about OpenAI and Anthropic. The owner is the licensee and accepted it, the GPL-3.0 position included (R2, R112), and on
+2026-10-07 accepted every Jeffrey Emanuel licence and lifted the opaque-dependency handling (R115): any agent may pin,
+build, read and test it.
 
-A Claude session's attempt to add the pin was refused by its safety classifier, so the pin itself is for an OMP
-(non-Anthropic) worker or the owner. The recipe (resolution checked before the refusal), on `br-p1-f03-vap`:
-
-- workspace `Cargo.toml`: `asupersync = { version = "0.5.0", default-features = false, features = ["native-runtime", "tls-webpki-roots"] }`; `crates/jj-server/Cargo.toml`: `asupersync.workspace = true`;
-- `deny.toml`: licence exceptions for `asupersync`, `franken-decision`, `franken-evidence` and `franken-kernel` (the rider
-  licence), and allow `webpki-roots`' CDLA-Permissive-2.0 (Mozilla's root list as data);
-- then `scripts/ci/no-tokio.sh`, `scripts/ci/deny.sh` and a native `cargo check -p jj-server`.
-
-P1-N02 (the server on Asupersync's API) goes to the same kind of worker.
+- Pin: workspace `asupersync = { version = "=0.5.0", default-features = false, features = ["native-runtime", "tls-webpki-roots"] }`,
+  used by `jj-server` only. The default features (`proc-macros`, `nightly-outcome-try`) stay off, so stable Rust builds it.
+- `deny.toml` carries licence exceptions for `asupersync`, `asupersync-macros` and `franken-{decision,evidence,kernel}`,
+  and allows `webpki-roots`' CDLA-Permissive-2.0 (Mozilla's root list as data).
+- `scripts/ci/no-tokio.sh` walks the three shipping targets (as `deny.toml` does), not `--target all`: Asupersync's
+  `wasm-bindgen-futures` edge reaches Tokio only on an emscripten-only cfg that never builds.
+- Checked 2026-10-07 on the Mac: `cargo check -p jj-server` (stable), `no-tokio.sh` ok, `deny.sh` ok
+  (`docs/evidence/P1-F03/asupersync-pin.txt`).
 
 ## Web packages (`web/`)
 

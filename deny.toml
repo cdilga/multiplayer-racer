@@ -31,6 +31,17 @@ confidence-threshold = 0.9
 # Allowances for licences the graph will use as P1-F03 qualifies dependencies (Rapier, Asupersync, …).
 unused-allowed-license = "allow"
 
+# Asupersync and its franken-* crates carry Jeffrey Emanuel's MIT + OpenAI/Anthropic rider licence, accepted by the
+# owner for this project (R2, R112, R115). webpki-roots ships Mozilla's root list as data under CDLA-Permissive-2.0.
+exceptions = [
+    { crate = "asupersync", allow = ["LicenseRef-MIT-OpenAI-Anthropic-Rider"] },
+    { crate = "asupersync-macros", allow = ["LicenseRef-MIT-OpenAI-Anthropic-Rider"] },
+    { crate = "franken-decision", allow = ["LicenseRef-MIT-OpenAI-Anthropic-Rider"] },
+    { crate = "franken-evidence", allow = ["LicenseRef-MIT-OpenAI-Anthropic-Rider"] },
+    { crate = "franken-kernel", allow = ["LicenseRef-MIT-OpenAI-Anthropic-Rider"] },
+    { crate = "webpki-roots", allow = ["CDLA-Permissive-2.0"] },
+]
+
 [licenses.private]
 # Our own crates are `publish = false`; they carry the workspace licence.
 ignore = true
