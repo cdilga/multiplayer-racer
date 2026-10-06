@@ -39,7 +39,11 @@ jobs:
         run: |
           cargo clippy --workspace --all-targets --locked -- -D warnings
           cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
+      - name: coturn for the TURN credential allocation test (P1-N04)
+        run: command -v turnserver >/dev/null || (apt-get update -qq && apt-get install -y -qq coturn python3)
       - name: Test
+        env:
+          JJ_COTURN_REQUIRED: "1"
         run: |
           cargo test --workspace --locked
           cargo test -p jj-wasm-host --features testing --locked
@@ -129,6 +133,12 @@ jobs:
 
       - name: The landing page from one build on jj-server under /, /p/x/ and /p/y/ in Chromium (P1-C01, P1-N02)
         run: JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/landing/tests/
+      - name: Host and controllers over loopback WebRTC through jj-server, restarts, refresh, coturn relay (P1-N05, P1-G00)
+        env:
+          JJ_COTURN_REQUIRED: "1"
+        run: |
+          command -v turnserver >/dev/null || (apt-get update -qq && apt-get install -y -qq coturn)
+          JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/shared/transport/tests/
       - name: jj-server SSE through a proxy for 5 minutes, slow reader, Last-Event-ID resume (P1-N02)
         run: JJ_SOAK_S=300 JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test crates/jj-server/tests/sse.test.mjs
 

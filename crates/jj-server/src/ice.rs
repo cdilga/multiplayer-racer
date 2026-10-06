@@ -62,12 +62,18 @@ pub fn mint_turn_credential(secret: &[u8], expiry_unix_s: u64, label: &str) -> (
 impl IceProvider for CoturnProvider {
     fn initial(&self, endpoint_id: &str, now_ms: u64) -> (Vec<IceServer>, u64) {
         let expiry_s = now_ms / 1000 + self.ttl_s;
-        let mut list = vec![IceServer {
-            urls: self.stun_urls.clone(),
-            username: None,
-            credential: None,
-        }];
-        if let Some(secret) = &self.secret {
+        // An entry with no URLs would make RTCPeerConnection throw, so empty lists are left out.
+        let mut list = Vec::new();
+        if !self.stun_urls.is_empty() {
+            list.push(IceServer {
+                urls: self.stun_urls.clone(),
+                username: None,
+                credential: None,
+            });
+        }
+        if let Some(secret) = &self.secret
+            && !self.turn_urls.is_empty()
+        {
             let (username, credential) = mint_turn_credential(secret, expiry_s, endpoint_id);
             list.push(IceServer {
                 urls: self.turn_urls.clone(),

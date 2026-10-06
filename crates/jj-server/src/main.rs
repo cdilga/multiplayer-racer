@@ -11,6 +11,8 @@
 //! | `JJ_ROOM_KEY` | a fixed dev key | room-ticket key; must survive restarts in a deployment |
 //! | `JJ_PUBLIC_ORIGIN` | from the request | origin for join URLs |
 //! | `TURN_STATIC_AUTH_SECRET` | none (STUN only) | coturn `use-auth-secret` |
+//! | `JJ_STUN_URLS`, `JJ_TURN_URLS` | Cloudflare STUN, `turn.dilger.dev:3479` UDP | comma-separated (tests: a local coturn) |
+//! | `JJ_TURN_TTL_S` | 7200 | TURN credential lifetime |
 
 use std::future::poll_fn;
 use std::num::NonZeroUsize;
@@ -245,7 +247,22 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let ice = CoturnProvider::new(env("TURN_STATIC_AUTH_SECRET").map(String::into_bytes));
+    let mut ice = CoturnProvider::new(env("TURN_STATIC_AUTH_SECRET").map(String::into_bytes));
+    let list = |v: String| {
+        v.split(',')
+            .map(|u| u.trim().to_owned())
+            .filter(|u| !u.is_empty())
+            .collect()
+    };
+    if let Some(v) = env("JJ_STUN_URLS") {
+        ice.stun_urls = list(v);
+    }
+    if let Some(v) = env("JJ_TURN_URLS") {
+        ice.turn_urls = list(v);
+    }
+    if let Some(ttl) = env("JJ_TURN_TTL_S").and_then(|v| v.parse().ok()) {
+        ice.ttl_s = ttl;
+    }
     eprintln!(
         "jj-server {}: {} assets from {}, base {base}, realm {}, ice {}",
         cfg.build,
