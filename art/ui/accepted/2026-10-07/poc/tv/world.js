@@ -1,0 +1,588 @@
+// world.js — the live 3D behind the TV mocks (P1-U02): a greybox outback loop, Spike J's Cruz Missile in every seat colour
+// driving scripted laps, dust, scattered debris and a sky, plus a greybox derby bowl for the Overview reference. One
+// WebGLRenderer draws every tile into its own viewport (scissored), the way Spike J's 24×24 bench does; cars are
+// instanced per part and per LOD, so draws per tile stay constant in N. Nothing here is game code: it exists so the HUD
+// and chrome are judged over real motion and their cost is measured, not guessed.
+import * as THREE from 'three';
+import { build, DEFAULT_P } from '../vendor/cruz/model.js';
+import { carMaterial } from '../vendor/cruz/atlas.js';
+import { createOverviewRig, createRound0Rig, motionStats } from '../shared/overview-camera.js';
+
+const UP = new THREE.Vector3(0, 1, 0);
+const TRACK_PTS = [[0, 0], [120, -10], [200, 40], [210, 120], [150, 170], [80, 140], [20, 190], [-80, 200], [-150, 140], [-160, 50], [-110, -20]];
+const ROAD_W = 14;
+const BOWL = { x: 2000, z: 0, r: 58 };
+const LAPS = 3;
+// Race-tile framing (P1-U05.2, R98): data shared with the in-world mock; the TUNE inputs for P1-R05.
+export const FRAMING = await (await fetch(new URL('../shared/framing.json', import.meta.url))).json();
+
+function rng(seed) {
+  let s = seed >>> 0 || 1;
+  return () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+}
+
+export async function createWorld(canvas, { colors }) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.autoClear = false;
+  const gl = renderer.getContext();
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const backend = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+
+  let P = DEFAULT_P;
+  try { P = await (await fetch('../vendor/cruz/params.json')).json(); } catch { /* defaults */ }
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog('#f0d9b0', 160, 620);
+  scene.add(new THREE.HemisphereLight('#fff6e6', '#9a6b45', 1.6));
+  const sun = new THREE.DirectionalLight('#fff1d6', 2.0);
+  sun.position.set(60, 120, 40);
+  scene.add(sun);
+
+  // Sky dome: a vertex-coloured gradient, cream at the horizon to festival blue overhead.
+  {
+    const g = new THREE.SphereGeometry(900, 24, 12);
+    const col = [];
+    const top = new THREE.Color('#5fa8e0'), hor = new THREE.Color('#f6e2bd');
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const t = Math.max(0, pos.getY(i) / 900);
+      const c = hor.clone().lerp(top, Math.pow(t, 0.55));
+      col.push(c.r, c.g, c.b);
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    const sky = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
+    sky.renderOrder = -1;
+    scene.add(sky);
+  }
+
+  // Ground: red earth with gentle colour noise.
+  {
+    const g = new THREE.PlaneGeometry(2400, 2400, 60, 60);
+    g.rotateX(-Math.PI / 2);
+    const r = rng(7), col = [], base = new THREE.Color('#c8622e');
+    for (let i = 0; i < g.attributes.position.count; i++) {
+      const c = base.clone().offsetHSL(0, 0, (r() - 0.5) * 0.06);
+      col.push(c.r, c.g, c.b);
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    scene.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true })));
+  }
+
+  // Track: a closed loop of packed dirt with red and white kerbs.
+  const curve = new THREE.CatmullRomCurve3(TRACK_PTS.map(([x, z]) => new THREE.Vector3(x, 0, z)), true, 'centripetal');
+  const trackLen = curve.getLength();
+  const SAMPLES = 600;
+  const frames = [];
+  for (let i = 0; i <= SAMPLES; i++) {
+    const u = i / SAMPLES, p = curve.getPointAt(u % 1), t = curve.getTangentAt(u % 1);
+    frames.push({ p, t, n: new THREE.Vector3().crossVectors(UP, t).normalize() });
+  }
+  function ribbon(off0, off1, y, colorAt) {
+    const pos = [], col = [], idx = [];
+    for (let i = 0; i <= SAMPLES; i++) {
+      const { p, n } = frames[i];
+      const c = colorAt(i);
+      for (const o of [off0, off1]) { pos.push(p.x + n.x * o, y, p.z + n.z * o); col.push(c.r, c.g, c.b); }
+      if (i < SAMPLES) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true }));
+  }
+  const dirt = new THREE.Color('#d39a62'), rut = new THREE.Color('#b9804c');
+  const track = new THREE.Group();
+  track.add(ribbon(-ROAD_W / 2, ROAD_W / 2, 0.02, () => dirt));
+  track.add(ribbon(-3.2, -2.2, 0.03, () => rut), ribbon(2.2, 3.2, 0.03, () => rut));
+  const red = new THREE.Color('#d8382c'), white = new THREE.Color('#f4efe4');
+  track.add(ribbon(-ROAD_W / 2 - 1.2, -ROAD_W / 2, 0.05, (i) => ((i >> 2) & 1 ? red : white)));
+  track.add(ribbon(ROAD_W / 2, ROAD_W / 2 + 1.2, 0.05, (i) => ((i >> 2) & 1 ? red : white)));
+  scene.add(track);
+
+  // Scenery: mesas on the horizon, spinifex, gum trees, tyre stacks, a windmill and some loose panels (debris).
+  const scenery = new THREE.Group();
+  scene.add(scenery);
+  const R = rng(42);
+  const offRoad = (minD, maxD) => {
+    for (;;) {
+      const a = R() * Math.PI * 2, d = minD + R() * (maxD - minD);
+      const x = 25 + Math.cos(a) * d, z = 95 + Math.sin(a) * d;
+      let near = Infinity;
+      for (let i = 0; i < SAMPLES; i += 6) near = Math.min(near, Math.hypot(frames[i].p.x - x, frames[i].p.z - z));
+      if (near > ROAD_W) return [x, z];
+    }
+  };
+  function instanced(geo, mat, count, place) {
+    const im = new THREE.InstancedMesh(geo, mat, count), m = new THREE.Matrix4();
+    for (let i = 0; i < count; i++) { place(m, i); im.setMatrixAt(i, m); }
+    scenery.add(im);
+    return im;
+  }
+  const q = new THREE.Quaternion(), s = new THREE.Vector3(), v = new THREE.Vector3();
+  instanced(new THREE.CylinderGeometry(0.75, 1, 1, 7), new THREE.MeshLambertMaterial({ color: '#b9572c' }), 14, (m, i) => {
+    const a = (i / 14) * Math.PI * 2 + R() * 0.3, d = 520 + R() * 160;
+    v.set(25 + Math.cos(a) * d, 0, 95 + Math.sin(a) * d); s.set(40 + R() * 60, 30 + R() * 45, 40 + R() * 60);
+    m.compose(v.setY(s.y / 2), q.setFromAxisAngle(UP, R() * 3), s);
+  });
+  instanced(new THREE.ConeGeometry(0.9, 1.1, 6), new THREE.MeshLambertMaterial({ color: '#c8b048' }), 420, (m) => {
+    const [x, z] = offRoad(10, 330); s.setScalar(0.7 + R() * 0.8); m.compose(v.set(x, s.y * 0.5, z), q.setFromAxisAngle(UP, R() * 3), s);
+  });
+  const trunkG = new THREE.CylinderGeometry(0.25, 0.4, 7, 6); trunkG.translate(0, 3.5, 0);
+  const crownG = new THREE.IcosahedronGeometry(3.4, 0); crownG.translate(0, 8.4, 0);
+  const treeAt = Array.from({ length: 46 }, () => offRoad(18, 300));
+  for (const [geo, color] of [[trunkG, '#e9e2d6'], [crownG, '#7d8e57']]) {
+    instanced(geo, new THREE.MeshLambertMaterial({ color, flatShading: true }), treeAt.length, (m, i) => {
+      s.setScalar(0.8 + ((i * 37) % 10) / 20); m.compose(v.set(treeAt[i][0], 0, treeAt[i][1]), q.setFromAxisAngle(UP, i), s);
+    });
+  }
+  instanced(new THREE.CylinderGeometry(0.6, 0.6, 0.45, 10), new THREE.MeshLambertMaterial({ color: '#2a2a2c' }), 80, (m, i) => {
+    const f = frames[(Math.floor(i / 4) * 31) % SAMPLES], side = (i >> 1) & 1 ? 1 : -1;
+    v.copy(f.p).addScaledVector(f.n, side * (ROAD_W / 2 + 2.6 + (i & 1) * 1.2)).setY(0.25 + ((i >> 2) % 2) * 0.45);
+    m.compose(v, q.identity(), s.setScalar(1));
+  });
+  {
+    const wm = new THREE.Group();
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 16, 0.4), new THREE.MeshLambertMaterial({ color: '#8d8f93' }));
+    leg.position.y = 8;
+    const fan = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.2, 12), new THREE.MeshLambertMaterial({ color: '#c9ccd1' }));
+    fan.rotation.x = Math.PI / 2; fan.position.set(0, 16, 0.4);
+    wm.add(leg, fan); wm.position.set(70, 0, 60); scenery.add(wm);
+  }
+  const debrisColors = colors.map((c) => new THREE.Color(c));
+  const debris = instanced(new THREE.BoxGeometry(1.2, 0.08, 0.9), new THREE.MeshLambertMaterial({ color: '#ffffff' }), 22, (m, i) => {
+    const f = frames[(i * 97 + 40) % SAMPLES];
+    v.copy(f.p).addScaledVector(f.n, (R() - 0.5) * (ROAD_W + 4)).setY(0.06);
+    m.compose(v, q.setFromEuler(new THREE.Euler(R() * 0.4, R() * 6, R() * 0.4)), s.setScalar(1));
+  });
+  for (let i = 0; i < 22; i++) debris.setColorAt(i, debrisColors[i % debrisColors.length]);
+
+  // Derby bowl (Overview reference only): a flat floor inside a lip, rocks round the outside.
+  const bowl = new THREE.Group();
+  {
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(BOWL.r, 48), new THREE.MeshLambertMaterial({ color: '#d39a62' }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = 0.03; bowl.add(floor);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(BOWL.r + 2, 2.2, 6, 48), new THREE.MeshLambertMaterial({ color: '#b9572c', flatShading: true }));
+    lip.rotation.x = Math.PI / 2; lip.position.y = 0.6; bowl.add(lip);
+    const rr = rng(11);
+    const rock = new THREE.DodecahedronGeometry(1, 0);
+    for (let i = 0; i < 26; i++) {
+      const a = (i / 26) * Math.PI * 2, d = BOWL.r + 9 + rr() * 10, sc = 3 + rr() * 5;
+      const m = new THREE.Mesh(rock, new THREE.MeshLambertMaterial({ color: '#c1652f', flatShading: true }));
+      m.position.set(Math.cos(a) * d, sc * 0.5, Math.sin(a) * d); m.scale.set(sc, sc * (0.7 + rr()), sc); m.rotation.y = rr() * 6;
+      bowl.add(m);
+    }
+    bowl.position.set(BOWL.x, 0, BOWL.z);
+    scene.add(bowl);
+  }
+
+  // Cars: one InstancedMesh per part and LOD; per-car paint via instanceColor on the white paint key.
+  const carMat = carMaterial({}, { paintKey: true });
+  const lodSets = {};
+  const cars = [];
+  const blobMat = new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.28, depthWrite: false });
+  let blobs = null;
+  const dustMat = new THREE.MeshLambertMaterial({ color: '#ecd2ad', transparent: true, opacity: 0.32, depthWrite: false, flatShading: true });
+  let dust = null;
+  const DUST_PER_CAR = 18;
+  const ringMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+  let rings = null;
+  const outlineGroup = new THREE.Group();
+  scene.add(outlineGroup);
+  const templates = { 0: build(P, 0), 1: build(P, 1), 2: build(P, 2) };
+  const outlineGeo = (() => { const g = templates[1].parts.core.geometry.clone(); return g; })();
+
+  let colorOffset = 0;
+  function rebuildCars(n) {
+    for (const set of Object.values(lodSets)) for (const im of set) { scene.remove(im); im.dispose(); }
+    if (blobs) { scene.remove(blobs); blobs.dispose(); }
+    if (dust) { scene.remove(dust); dust.dispose(); }
+    if (rings) { scene.remove(rings); rings.dispose(); }
+    const cap = Math.max(n, 1);
+    for (const lod of [0, 1, 2]) {
+      const groups = {};
+      for (const [id, mesh] of Object.entries(templates[lod].parts)) (groups[id.startsWith('wheel') ? 'wheel' : id] ??= []).push(mesh);
+      lodSets[lod] = Object.entries(groups).map(([key, meshes]) => {
+        const im = new THREE.InstancedMesh(meshes[0].geometry, carMat, cap * meshes.length);
+        im.userData = { key, meshes };
+        im.frustumCulled = false;
+        im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        scene.add(im);
+        return im;
+      });
+    }
+    blobs = new THREE.InstancedMesh(new THREE.CircleGeometry(1.6, 16).rotateX(-Math.PI / 2).scale(1, 1, 1.6), blobMat, cap);
+    blobs.frustumCulled = false; blobs.renderOrder = 1; scene.add(blobs);
+    dust = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.55, 0), dustMat, cap * DUST_PER_CAR);
+    dust.frustumCulled = false; dust.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(dust);
+    rings = new THREE.InstancedMesh(new THREE.RingGeometry(2.6, 3.4, 32).rotateX(-Math.PI / 2), ringMat, cap);
+    rings.frustumCulled = false; rings.visible = mode === 'overview'; scene.add(rings);
+    const col = new THREE.Color();
+    for (let i = 0; i < cap; i++) {
+      col.set(colors[(i + colorOffset) % colors.length]);
+      for (const set of Object.values(lodSets)) for (const im of set) for (let k = 0; k < im.userData.meshes.length; k++) im.setColorAt(i * im.userData.meshes.length + k, col);
+      rings.setColorAt(i, col);
+    }
+  }
+
+  function seedCars(n) {
+    const r = rng(1234);
+    while (cars.length < n) {
+      const i = cars.length;
+      cars.push({
+        seat: i + 1,
+        s: trackLen * 0.02 - (i % 4) * 0 - Math.floor(i / 4) * 9 + trackLen * 3, // grid rows of four, 9 m apart
+        lane: ((i % 4) - 1.5) * 3.1,
+        laneGoal: ((i % 4) - 1.5) * 3.1,
+        skill: 0.9 + r() * 0.2,
+        boost: r(),
+        phase: r() * 10,
+        pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1), yaw: 0, speed: 0, spin: 0,
+        wander: { x: (r() - 0.5) * 60, z: (r() - 0.5) * 60, t: 0 },
+        dust: Array.from({ length: DUST_PER_CAR }, () => ({ p: new THREE.Vector3(0, -50, 0), age: 9 })),
+        dustNext: 0,
+        camPos: new THREE.Vector3(), camLook: new THREE.Vector3(), camInit: false,
+      });
+    }
+    cars.length = n;
+  }
+
+  let mode = 'race';
+  let n = 0;
+  function setCars(count, offset = 0) {
+    seedCars(count);
+    if (count !== n || offset !== colorOffset) { colorOffset = offset; rebuildCars(count); }
+    n = count;
+  }
+  let derbyRng = rng(7); // seeded, so the Overview traces replay the same derby
+  let yardR = BOWL.r - 8; // the derby bowl's free-driving radius (the Overview mode)
+  function setMode(m) {
+    const yard = m === 'overview';
+    if (yard) derbyRng = rng(7);
+    mode = m;
+    track.visible = scenery.visible = !yard;
+    bowl.visible = yard;
+    if (rings) rings.visible = yard;
+    if (m === 'overview') cars.forEach((c, i) => {
+      const a = (i / Math.max(1, cars.length)) * Math.PI * 2;
+      c.pos.set(BOWL.x + Math.cos(a) * 30, 0, BOWL.z + Math.sin(a) * 30); c.yaw = a + Math.PI / 2; c.camInit = false;
+    });
+  }
+
+  const m4 = new THREE.Matrix4(), carM = new THREE.Matrix4(), off = new THREE.Matrix4(), spinM = new THREE.Matrix4(), mirror = new THREE.Matrix4().makeRotationY(Math.PI);
+  const tmp = new THREE.Vector3();
+  let simTime = 0;
+
+  function step(dt) {
+    simTime += dt;
+    for (const c of cars) {
+      if (mode === 'overview') {
+        const w = c.wander;
+        w.t -= dt;
+        const dx = BOWL.x + w.x - c.pos.x, dz = BOWL.z + w.z - c.pos.z;
+        if (w.t <= 0 || Math.hypot(dx, dz) < 4) { const a = derbyRng() * Math.PI * 2, d = derbyRng() * yardR; w.x = Math.cos(a) * d; w.z = Math.sin(a) * d; w.t = 3 + derbyRng() * 3; }
+        const want = Math.atan2(dx, dz);
+        let dy = want - c.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+        c.yaw += Math.max(-1.6 * dt, Math.min(1.6 * dt, dy));
+        c.speed = 11 * c.skill;
+        c.fwd.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
+        c.pos.addScaledVector(c.fwd, c.speed * dt);
+      } else {
+        const u = ((c.s % trackLen) + trackLen) % trackLen / trackLen;
+        const t0 = curve.getTangentAt(u), t1 = curve.getTangentAt((u + 0.02) % 1);
+        const bend = Math.acos(Math.min(1, t0.dot(t1)));
+        const target = (34 - bend * 120) * c.skill + Math.sin(simTime * 0.7 + c.phase) * 2;
+        c.speed += (Math.max(16, target) - c.speed) * Math.min(1, dt * 1.5);
+        c.s += c.speed * dt;
+        if (Math.random() < dt * 0.15) c.laneGoal = (Math.floor(Math.random() * 4) - 1.5) * 3.1;
+        c.lane += (c.laneGoal - c.lane) * Math.min(1, dt * 0.8);
+        const uu = ((c.s % trackLen) + trackLen) % trackLen / trackLen;
+        const p = curve.getPointAt(uu), t = curve.getTangentAt(uu);
+        tmp.crossVectors(UP, t).normalize();
+        c.pos.copy(p).addScaledVector(tmp, c.lane);
+        c.fwd.copy(t);
+        c.yaw = Math.atan2(t.x, t.z);
+      }
+      c.spin += (c.speed / P.wheelR) * dt;
+      c.boost = Math.max(0, Math.min(1, c.boost + (Math.sin(simTime * 0.4 + c.phase) * 0.12) * dt));
+      // dust puffs behind the rear wheels
+      c.dustNext -= dt;
+      if (c.dustNext <= 0 && c.speed > 8) {
+        c.dustNext = 0.07;
+        const d = c.dust.reduce((a, b) => (b.age > a.age ? b : a));
+        d.age = 0; d.p.copy(c.pos).addScaledVector(c.fwd, -2.4).add(tmp.set((Math.random() - 0.5) * 1.6, 0.15, 0));
+      }
+      for (const d of c.dust) d.age += dt;
+    }
+    writeInstances();
+  }
+
+  function writeInstances() {
+    if (!blobs) return; // no cars built yet (an empty room's lobby is the first state opened)
+    for (const set of Object.values(lodSets)) for (const im of set) {
+      const { key, meshes } = im.userData;
+      for (let i = 0; i < cars.length; i++) {
+        const c = cars[i];
+        carM.makeRotationY(c.yaw).setPosition(c.pos);
+        for (let k = 0; k < meshes.length; k++) {
+          const pm = meshes[k];
+          off.makeTranslation(...pm.userData.rest);
+          if (key === 'wheel') {
+            if (pm.name.endsWith('L')) off.multiply(mirror);
+            off.multiply(spinM.makeRotationX(pm.name.endsWith('L') ? -c.spin : c.spin));
+          }
+          m4.multiplyMatrices(carM, off);
+          im.setMatrixAt(i * meshes.length + k, m4);
+        }
+      }
+      im.count = cars.length * meshes.length;
+      im.instanceMatrix.needsUpdate = true;
+    }
+    for (let i = 0; i < cars.length; i++) {
+      const c = cars[i];
+      m4.makeRotationY(c.yaw).setPosition(c.pos.x, 0.04, c.pos.z);
+      blobs.setMatrixAt(i, m4);
+      rings.setMatrixAt(i, m4.makeTranslation(c.pos.x, 0.06, c.pos.z));
+      for (let k = 0; k < DUST_PER_CAR; k++) {
+        const d = c.dust[k], life = 0.9, a = Math.min(1, d.age / life);
+        const sc = d.age > life ? 0 : (0.25 + a * 0.9) * (1 - a * 0.6);
+        m4.makeScale(sc, sc * 0.6, sc).setPosition(d.p.x, d.p.y + a * 0.5, d.p.z);
+        dust.setMatrixAt(i * DUST_PER_CAR + k, m4);
+      }
+    }
+    blobs.count = rings.count = cars.length;
+    dust.count = cars.length * DUST_PER_CAR;
+    blobs.instanceMatrix.needsUpdate = rings.instanceMatrix.needsUpdate = dust.instanceMatrix.needsUpdate = true;
+  }
+
+  // Identify outline: an inverted hull of the body in the seat colour, drawn in every tile (master §5.2).
+  function setOutlines(seats) {
+    outlineGroup.clear();
+    for (const seat of seats) {
+      const mesh = new THREE.Mesh(outlineGeo, new THREE.MeshBasicMaterial({ color: colors[(seat - 1 + colorOffset) % colors.length], side: THREE.BackSide }));
+      mesh.userData.seat = seat;
+      mesh.scale.setScalar(1.09);
+      outlineGroup.add(mesh);
+    }
+  }
+  function placeOutlines() {
+    for (const m of outlineGroup.children) {
+      const c = cars[m.userData.seat - 1];
+      if (!c) continue;
+      const rest = templates[1].parts.core.userData.rest;
+      m.position.set(rest[0], rest[1], rest[2]).applyAxisAngle(UP, c.yaw).add(c.pos);
+      m.rotation.set(0, c.yaw, 0);
+    }
+  }
+
+  // Camera distance is a setting (R98): the host's default, and each player's own override for their tile.
+  let distDefault = FRAMING.distance.default, round0 = false;
+  const distBySeat = new Map();
+  function setFraming({ distance = FRAMING.distance.default, perSeat = new Map(), rig = 'framing' } = {}) {
+    distDefault = FRAMING.chase[distance] ? distance : FRAMING.distance.default;
+    distBySeat.clear();
+    for (const [seat, d] of perSeat) if (FRAMING.chase[d]) distBySeat.set(seat, d);
+    round0 = rig === 'round0';
+  }
+  const rigFor = (seat) => (round0 ? FRAMING.round0 : FRAMING.chase[distBySeat.get(seat) ?? distDefault]);
+
+  const cams = [], mirrors = [];
+  function cameraFor(i, kind, aspect, dt) {
+    const c = cars[i];
+    const cam = kind === 'mirror' ? (mirrors[i] ??= new THREE.PerspectiveCamera(46, 1, 0.1, 1200)) : (cams[i] ??= new THREE.PerspectiveCamera(62, 1, 0.1, 1200));
+    cam.aspect = aspect;
+    if (kind === 'fp' || kind === 'mirror') {
+      // Driver's eye on the right (right-hand drive). Segmented first person: the eye pitches down so the road gets the
+      // tile, and the mirror looks back from the same eye into the strip of sky it frees.
+      const F = FRAMING.firstPerson;
+      tmp.crossVectors(UP, c.fwd).normalize();
+      cam.position.copy(c.pos).addScaledVector(c.fwd, F.eye.forwardM).addScaledVector(tmp, F.eye.rightM).add(tmp.set(0, F.eye.upM, 0));
+      if (kind === 'mirror') {
+        cam.fov = F.mirror.fovDeg;
+        cam.position.y = c.pos.y + F.mirror.eyeUpM;
+        cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, -F.mirror.lookBackM).setY(F.mirror.lookUpM));
+      } else {
+        cam.fov = F.fovDeg;
+        cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, F.lookAheadM).setY(F.lookUpM));
+      }
+    } else if (kind === 'back') {
+      cam.fov = 62;
+      cam.position.copy(c.pos).addScaledVector(c.fwd, 9).add(tmp.set(0, 2.2, 0));
+      cam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, 30).setY(1));
+    } else {
+      // Chase: higher and further back than round 0, aimed down the track (R98, framing.json).
+      const R = rigFor(i + 1);
+      cam.fov = R.fovDeg;
+      const want = tmp.copy(c.pos).addScaledVector(c.fwd, -R.backM).setY(c.pos.y + R.upM);
+      if (!c.camInit) { c.camPos.copy(want); c.camInit = true; }
+      c.camPos.lerp(want, Math.min(1, dt * R.follow));
+      cam.position.copy(c.camPos);
+      c.camLook.copy(c.pos).addScaledVector(c.fwd, R.lookAheadM).setY(R.lookUpM);
+      cam.lookAt(c.camLook);
+    }
+    cam.updateProjectionMatrix();
+    return cam;
+  }
+
+  // The Derby Overview camera (P1-U05.4, R107): predictive, smoothed and anchored to the bowl (../shared/overview-camera.js,
+  // values in framing.json `overview`); &cam=round0 shows round 0's per-frame refit for comparison.
+  const anchorXZ = { x: BOWL.x, z: BOWL.z };
+  const ovRigs = { framing: createOverviewRig(FRAMING.overview, anchorXZ), round0: createRound0Rig(FRAMING.overview, anchorXZ) };
+  let ovLastT = null;
+  const carsXZ = () => cars.map((c) => ({ x: c.pos.x, z: c.pos.z }));
+  // One camera per wide view in a frame (the podium's three, the intermission's replay and its minis), so each view's
+  // camera stays valid after the frame for projecting nameplates and for the checks.
+  const wideCams = [];
+  let wideCam = null;
+  function wideCamera(aspect, kind, t, seat = 1, idx = 0) {
+    wideCam = wideCams[idx] ??= new THREE.PerspectiveCamera(48, 1, 0.5, 2000);
+    wideCam.aspect = aspect;
+    if (kind === 'overview') {
+      wideCam.clearViewOffset();
+      const dt = ovLastT == null ? 1 / 60 : Math.max(1e-3, t - ovLastT);
+      ovLastT = t;
+      const p = ovRigs[round0 ? 'round0' : 'framing'].update(carsXZ(), dt, aspect);
+      wideCam.fov = FRAMING.overview.fovDeg;  // (reel and highlight set their own)
+      wideCam.position.set(...p.position);
+      wideCam.lookAt(...p.target);
+    } else if (kind === 'reel') { // a slow orbit round one seat's car (the podium, the up-next highlights)
+      wideCam.clearViewOffset();
+      const c = cars[seat - 1] ?? cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
+      const a = t * 0.35 + seat * 1.3;
+      wideCam.fov = 46;
+      wideCam.position.copy(c.pos).add(tmp.set(Math.cos(a) * 5.6, 3.1, Math.sin(a) * 5.6));
+      wideCam.lookAt(tmp.copy(c.pos).setY(0.7));
+    } else if (kind === 'highlight') { // a broadcast tracking shot beside one seat's car (the intermission's main replay)
+      wideCam.clearViewOffset();
+      const c = cars[seat - 1] ?? cars[0] ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
+      const side = tmp.crossVectors(UP, c.fwd).normalize();
+      wideCam.fov = 42;
+      wideCam.position.copy(c.pos).addScaledVector(c.fwd, -2.5).addScaledVector(side, 6).setY(2.6);
+      wideCam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, 2.5).setY(1));
+    } else {
+      // a slow crane over the pack (the backdrop of the screens without a grid)
+      wideCam.fov = 48;
+      const lead = cars.reduce((a, b) => (b.s > (a?.s ?? -Infinity) ? b : a), null);
+      const c = lead ?? { pos: new THREE.Vector3(), fwd: new THREE.Vector3(0, 0, 1) };
+      const a = t * 0.05;
+      wideCam.position.copy(c.pos).addScaledVector(c.fwd, -20).add(tmp.set(Math.cos(a) * 12, 12, Math.sin(a) * 12));
+      wideCam.lookAt(tmp.copy(c.pos).addScaledVector(c.fwd, -8).setY(0));
+      const fw = aspect * 1000;
+      wideCam.setViewOffset(fw, 1000, 0.3 * fw, -280, fw, 1000); // pack at about (20 %, 78 %) of the screen
+    }
+    wideCam.updateProjectionMatrix();
+    return wideCam;
+  }
+
+  function showLod(lod) {
+    for (const [l, set] of Object.entries(lodSets)) for (const im of set) im.visible = +l === lod;
+  }
+
+  /**
+   * Draw tiles. views: [{ x, y, w, h (CSS px, top-left origin), seat, kind: 'tp'|'fp'|'back'|'wide'|'overview'|'reel' }]
+   */
+  function render(views, dt, size, clear = '#fff4de') {
+    placeOutlines();
+    // R111: views and size are CSS px (HUD overlays align to them); the backing store is CSS x DPR, so viewports are scaled.
+    const rx = backing.w / size.w, ry = backing.h / size.h;
+    const H = backing.h;
+    renderer.setScissorTest(false);
+    renderer.setClearColor(clear, 1);
+    renderer.clear();
+    renderer.setScissorTest(true);
+    let draws = 0, wideIdx = 0;
+    for (const v of views) {
+      if (v.w < 2 || v.h < 2) continue;
+      const aspect = v.w / v.h;
+      const cam = v.kind === 'wide' || v.kind === 'overview' || v.kind === 'reel' || v.kind === 'highlight' ? wideCamera(aspect, v.kind, simTime, v.seat, wideIdx++) : cameraFor(v.seat - 1, v.kind, aspect, dt);
+      showLod(v.h * ry >= 540 ? 0 : v.h * ry >= 200 ? 1 : 2);
+      const dx = Math.round(v.x * rx), dw = Math.round((v.x + v.w) * rx) - dx, dtop = Math.round(v.y * ry), dh = Math.round((v.y + v.h) * ry) - dtop;
+      const y = H - dtop - dh;
+      renderer.setViewport(dx, y, dw, dh);
+      renderer.setScissor(dx, y, dw, dh);
+      renderer.render(scene, cam);
+      draws += renderer.info.render.calls;
+      v.camera = cam;
+    }
+    return { draws };
+  }
+
+  function project(seat, cam, view) {
+    const c = cars[seat - 1];
+    if (!c) return null;
+    const p = tmp.copy(c.pos).setY(2.3).project(cam);
+    return { x: view.x + (p.x * 0.5 + 0.5) * view.w, y: view.y + (-p.y * 0.5 + 0.5) * view.h, z: p.z, dist: cam.position.distanceTo(c.pos), ndc: { x: p.x, y: p.y } };
+  }
+
+  /** How much of a view the seat's own car fills, and where the horizon sits (fractions of the view, from the top). */
+  const box = new THREE.Box3(), corner = new THREE.Vector3();
+  function framingOf(seat, cam, view) {
+    const c = cars[seat - 1];
+    if (!c) return null;
+    box.makeEmpty();
+    tmp.crossVectors(UP, c.fwd).normalize();
+    for (const a of [-2.2, 2.2]) for (const b of [-0.9, 0.9]) for (const h of [0.05, 1.45]) {
+      corner.copy(c.pos).addScaledVector(c.fwd, a).addScaledVector(tmp, b).setY(h).project(cam);
+      box.expandByPoint(corner);
+    }
+    const far = corner.copy(c.pos).addScaledVector(c.fwd, 2000).setY(0).project(cam);
+    return { carHeight: +((box.max.y - box.min.y) / 2).toFixed(3), carWidth: +((box.max.x - box.min.x) / 2).toFixed(3), horizonFromTop: +((1 - far.y) / 2).toFixed(3) };
+  }
+
+  /**
+   * The Overview camera's motion over `seconds` of derby at a fixed step, for both rigs on the SAME car motion (recorded
+   * once, replayed into each), after a `warmupS` settle: acceleration and jerk of the camera path (and when the worst
+   * jerk happened), cars outside or near the frame's edge, and the predictive test: of the cars' actual positions
+   * `aheadS` later, how many the current frame already shows.
+   */
+  function overviewTrace({ seconds = 30, dt = 1 / 60, aspect = 16 / 9, warmupS = 2, aheadS = 1.5 } = {}) {
+    const rec = [];
+    const total = Math.round((seconds + aheadS) / dt), skip = Math.round(warmupS / dt), ahead = Math.round(aheadS / dt);
+    for (let i = 0; i < total; i++) { step(dt); rec.push(carsXZ()); }
+    const cam = new THREE.PerspectiveCamera(FRAMING.overview.fovDeg, aspect, 0.5, 2000);
+    const inFrame = (c, m = 1) => { const q = tmp.set(c.x, 0.6, c.z).project(cam); return Math.abs(q.x) <= m && Math.abs(q.y) <= m; };
+    const out = { seconds, dtS: dt, warmupS, aheadS, cars: cars.length };
+    for (const name of ['round0', 'framing']) {
+      const r = ovRigs[name];
+      r.reset();
+      const pos = [];
+      let outside = 0, edge = 0, futureShown = 0, futureAll = 0, n = 0;
+      rec.slice(0, total - ahead).forEach((cs, i) => {
+        const p = r.update(cs, dt, aspect);
+        if (i < skip) return;
+        pos.push(p.position);
+        cam.position.set(...p.position); cam.lookAt(...p.target); cam.updateMatrixWorld();
+        for (const c of cs) { if (!inFrame(c)) outside++; else if (!inFrame(c, 0.9)) edge++; n++; }
+        for (const c of rec[i + ahead]) { futureAll++; if (inFrame(c, 0.9)) futureShown++; }
+      });
+      const m = motionStats(pos, dt);
+      out[name] = { ...m, carSamples: n, outsideFrame: outside, nearEdge: edge, futureInsideShare: +(futureShown / futureAll).toFixed(4) };
+    }
+    ovLastT = null;
+    return out;
+  }
+
+  function standings() {
+    return [...cars].sort((a, b) => b.s - a.s).map((c, i) => ({ seat: c.seat, place: i + 1, lap: Math.min(LAPS, Math.max(1, Math.floor((c.s - trackLen * 3) / trackLen) + 1)), boost: c.boost }));
+  }
+
+  // R111: backing store = CSS size x devicePixelRatio (rounded), no cap. Only a real GL limit clamps it, and says so in `backing`.
+  const backing = { w: 0, h: 0, css: [0, 0], dpr: 1, clamped: false, limit: null };
+  function resize(w, h) {
+    const dpr = window.devicePixelRatio || 1;
+    const lim = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+    let bw = Math.max(1, Math.round(w * dpr)), bh = Math.max(1, Math.round(h * dpr));
+    const clamped = bw > lim || bh > lim;
+    if (clamped) { const f = lim / Math.max(bw, bh); bw = Math.max(1, Math.floor(bw * f)); bh = Math.max(1, Math.floor(bh * f)); }
+    renderer.setPixelRatio(1);
+    renderer.setSize(bw, bh, false);
+    renderer.domElement.style.width = `${w}px`; // the CSS box is exactly the box the tiles are laid out in (round 4)
+    renderer.domElement.style.height = `${h}px`;
+    Object.assign(backing, { w: bw, h: bh, css: [w, h], dpr, clamped, limit: clamped ? lim : null });
+  }
+
+  return { renderer, backend, setCars, setMode, step, render, project, framingOf, setFraming, overviewTrace, standings, setOutlines, resize, backing, get n() { return n; }, laps: LAPS };
+}

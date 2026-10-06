@@ -1,0 +1,64 @@
+/* Motion reel (P1-U05). Loads on top of ../tv/tv.css (U02): the tile, HUD, lobby and results classes are U02's; this file adds
+   the stage frame, the annotation bar and the CSS variables the reel's tweens drive (--s scale, --o opacity, --settle degrees,
+   --ring tile ring thickness, --bs badge scale). No durations live here: every timing is set from tokens.json by reel.js. */
+html, body { background: var(--c-ink, #15203a); }
+body { margin: 0; overflow: hidden; }
+
+/* The TV stage: 16:9, centred under the annotation bar. reel.js sets left/top/width/height and --k (stage height / 1080). */
+canvas#world, #ui { position: fixed; inset: auto; }
+#ui { overflow: hidden; }
+.stage { position: absolute; inset: 0; --u: calc(var(--k) * 1px); }
+
+/* ---- annotation bar (not part of the TV UI: it names the transition and its token duration) ---- */
+#bar { position: fixed; left: 0; right: 0; top: 0; height: calc(var(--vk, 1) * 96px); z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: calc(var(--vk, 1) * 24px); padding: 0 calc(var(--vk, 1) * 64px); background: var(--c-ink); color: var(--c-paper); border-bottom: calc(var(--vk, 1) * 4px) solid var(--c-saffron); box-sizing: border-box; }
+.bar-l { min-width: 0; flex: 1; }
+.bar-name { font-size: calc(var(--vk, 1) * 30px); color: var(--c-saffron); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1; }
+.bar-detail { font-size: calc(var(--vk, 1) * 22px); font-weight: 600; line-height: 1.15; margin-top: calc(var(--vk, 1) * 3px); }
+.bar-detail > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-name .rtag { margin-left: .7em; padding: .1em .55em; border-radius: 999px; background: var(--c-paper); color: var(--c-ink); font-family: var(--font-body); font-size: .65em; font-style: normal; font-weight: 800; letter-spacing: .02em; vertical-align: .15em; }
+#bar-measured { color: #7fe3a4; min-height: 1.15em; }
+.bar-r { display: flex; align-items: center; gap: calc(var(--vk, 1) * 16px); flex: none; }
+.steps { display: flex; gap: calc(var(--vk, 1) * 6px); }
+.steps button, .rswitch button { font: inherit; font-family: var(--font-body); font-weight: 700; font-size: calc(var(--vk, 1) * 24px); line-height: 1; color: var(--c-paper); background: transparent; border: calc(var(--vk, 1) * 3px) solid var(--c-paper); border-radius: calc(var(--vk, 1) * 8px); padding: calc(var(--vk, 1) * 6px) calc(var(--vk, 1) * 12px); cursor: pointer; pointer-events: auto; }
+.steps button { text-transform: uppercase; }
+.steps button.play { background: var(--c-saffron); color: var(--c-ink); border-color: var(--c-saffron); }
+.steps button.on { background: var(--c-paper); color: var(--c-ink); }
+.steps button.done { border-color: #7fe3a4; color: #7fe3a4; }
+.steps button.on.done { color: var(--c-ink); }
+.rswitch { display: inline-flex; border: calc(var(--vk, 1) * 3px) solid var(--c-paper); border-radius: 999px; overflow: hidden; }
+.rswitch button { border: 0; border-radius: 0; padding: calc(var(--vk, 1) * 6px) calc(var(--vk, 1) * 14px); }
+.rswitch button.on { background: var(--c-saffron); color: var(--c-ink); }
+
+/* ---- tile ring and HUD margin follow --ring (U02's tile is 2 / 7 / 9 px = ring 5); identify drives it ---- */
+.tile { --ring: 5; --bs: 1; box-shadow: inset 0 0 0 calc(var(--k) * 2px) var(--c-paper), inset 0 0 0 calc(var(--k) * (2 + var(--ring)) * 1px) var(--seat), inset 0 0 0 calc(var(--k) * (4 + var(--ring)) * 1px) var(--c-paper); transform-origin: 50% 50%; }
+.tile .hud-top { left: calc(var(--k) * (9 + var(--ring)) * 1px); right: calc(var(--k) * (9 + var(--ring)) * 1px); top: calc(var(--k) * (9 + var(--ring)) * 1px); }
+.tile .hud-boost { left: calc(var(--k) * (9 + var(--ring)) * 1px); bottom: calc(var(--k) * (9 + var(--ring)) * 1px); }
+.tile .hud-tl { transform: rotate(var(--settle, 0deg)); transform-origin: 0 0; }
+.tile .hud-badge { transform: scale(var(--bs, 1)); transform-origin: 0 50%; }
+.tile .hud-name { transform: translateX(var(--bnx, 0px)); }
+.tile.step-on .hud-badge { box-shadow: 0 0 0 calc(var(--k) * 4px) var(--seat), 0 0 0 calc(var(--k) * 7px) var(--c-paper), 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); }
+.tile.top { z-index: 2; }
+.tile .veil { position: absolute; inset: 0; background: var(--c-ink); opacity: var(--veil, 0); pointer-events: none; }
+
+/* stickers: scale / settle / opacity vars; U02's own transforms are kept as the base */
+.tile .burst { transform: translate(-50%, -50%) rotate(calc(-4deg + var(--settle, 0deg))) scale(var(--s, 1)); opacity: var(--o, 1); }
+.tile .hud-centre { transform: translate(-50%, -50%) rotate(calc(-3deg + var(--settle, 0deg))) scale(var(--s, 1)); opacity: var(--o, 1); }
+.tile .tile-count { transform: translate(-50%, -50%) rotate(-4deg) scale(var(--s, 1)); opacity: var(--o, 1); }
+.tile .tile-count.go { color: var(--c-success); }
+
+/* reel's own pieces */
+.fillers { position: absolute; inset: 0; }
+.stage .podium .card { will-change: transform; }
+.res-left, .res-right, .res-bottom { z-index: 0; }
+.podium { position: relative; z-index: 3; }
+
+/* P1-U05.2: the countdown overlay and the Cooee flash are driven frame by frame from the tweens above, not by tv.css's
+   keyframes; the reel has no footer, so the countdown covers the whole stage. */
+.cd-flash.js { bottom: 0; }
+.cd-flash.js .flash, .cd-flash.js b, .cooee.js .flash, .cooee.js b { animation: none; }
+
+/* P1-U05.6 (POC2-15): the version playing, flagged on the stage; Reduced has no flash at all */
+.mode-flag { position: fixed; right: calc(var(--vk, 1) * 40px); top: calc(var(--vk, 1) * 116px); z-index: 11; padding: .12em .6em .16em; background: var(--c-saffron); color: var(--c-ink); border: calc(var(--vk, 1) * 4px) solid var(--c-ink); box-shadow: 0 calc(var(--vk, 1) * 5px) 0 var(--c-ink); font-size: calc(var(--vk, 1) * 44px); transform: rotate(-2deg) skewX(-6deg); pointer-events: none; }
+.mode-flag.reduced { background: var(--c-teal); }
+body.embed #bar { display: none; }
+body.embed .mode-flag { top: calc(var(--vk, 1) * 24px); }

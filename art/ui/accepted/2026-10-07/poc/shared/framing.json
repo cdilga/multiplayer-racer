@@ -1,0 +1,39 @@
+{
+  "//": "Race-tile camera framing for the design POC (P1-U05.2, R98). The TV mock (poc/tv/world.js) and the in-world mock (poc/world/world.js) both read it. Once the owner accepts it at G-DESIGN, these are the TUNE inputs for P1-R05. Distances are metres from the car's origin (on the ground between the axles); lookAhead is how far down the car's heading the camera aims. Distance is a setting: the host picks the default, and each player may override it for their own tile. A tile shows the host default unless that player overrode it.",
+  "format": "jj.framing.v1",
+  "distance": {
+    "default": "mid",
+    "order": ["near", "mid", "far"],
+    "note": "Fewer, bigger tiles can afford near; 24+ small tiles read better at mid or far (the car stays legible and the road ahead shows). The playtests pick per count; nothing here caps anything."
+  },
+  "chase": {
+    "near": { "backM": 6.6, "upM": 3.3, "lookAheadM": 12, "lookUpM": 0.6, "fovDeg": 60, "follow": 6 },
+    "mid": { "backM": 8.4, "upM": 4.4, "lookAheadM": 17, "lookUpM": 0.3, "fovDeg": 58, "follow": 6 },
+    "far": { "backM": 11.5, "upM": 6.2, "lookAheadM": 24, "lookUpM": 0, "fovDeg": 56, "follow": 5 }
+  },
+  "round0": { "backM": 5.2, "upM": 2.05, "lookAheadM": 4, "lookUpM": 0.95, "fovDeg": 62, "follow": 6, "note": "The round-0 rig the owner found too close (POC1-12); kept only for before/after captures (&cam=round0)." },
+  "overview": {
+    "note": "The Derby Overview camera (P1-U05.4, R107; poc/shared/overview-camera.js), the TUNE inputs for P1-R11. Fixed pitch and heading, never rotating. It frames each car now and lookAheadS ahead from its velocity, follows on critically damped springs (smooth times in seconds, speed limits in m/s of centre and of framed ground), zooms out quicker than in, ignores target moves inside the dead zone, and stays within maxDriftM of the arena centre, showing between minFrameM and maxFrameM of ground height. Near-fixed: the smallest frame still holds the whole bowl, so the arena's dressing (P1-M10's zones) is always in view.",
+    "pitchDeg": 60,
+    "fovDeg": 48,
+    "lookAheadS": 1.6,
+    "velocitySmoothS": 0.3,
+    "goalSmoothS": 0.45,
+    "marginM": 9,
+    "deadZoneM": 2.5,
+    "deadZoneFrame": 0.06,
+    "smoothTimeS": { "pan": 0.9, "zoomOut": 0.8, "zoomIn": 2.4 },
+    "maxPanMps": 14,
+    "maxZoomMps": 12,
+    "maxDriftM": 12,
+    "minFrameM": 120,
+    "maxFrameM": 165
+  },
+  "firstPerson": {
+    "eye": { "rightM": 0, "upM": 1.5, "forwardM": 0.45 },
+    "lookAheadM": 26,
+    "lookUpM": -0.3,
+    "fovDeg": 72,
+    "mirror": { "x": 0.32, "y": 0.04, "w": 0.36, "h": 0.17, "fovDeg": 46, "eyeUpM": 2.3, "lookBackM": 30, "lookUpM": 0.4, "note": "Segmented first person: a bonnet-cam eye over the front of the bonnet, pitched a touch down, gives the road most of the tile and keeps a strip of bonnet so it reads as first person, and a rear-view mirror takes the strip of sky that would otherwise be wasted, looking back from above the roof so the car's own wing doesn't fill it. Rects are fractions of the tile." }
+  }
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-world look</title>
+<link rel="icon" href="../../brand/favicon.svg">
+<link rel="stylesheet" href="../tv/tv.css">
+<style>
+  .paint-title { position: fixed; left: 50%; top: calc(var(--k) * 40px); transform: translateX(-50%); font-size: calc(var(--k) * 56px); color: var(--c-ink); }
+  .graphics-label { position: absolute; padding: .15em .5em; background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 8px); font-size: calc(var(--k) * 28px); box-shadow: 0 calc(var(--k) * 4px) 0 rgb(21 32 58 / .85); }
+  .paint-badge { position: absolute; transform: translate(-50%, 0); }
+  .nameplate { position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center; gap: calc(var(--k) * 6px); padding: calc(var(--k) * 3px) calc(var(--k) * 10px) calc(var(--k) * 3px) calc(var(--k) * 3px); background: var(--c-paper); border: calc(var(--k) * 3px) solid var(--c-ink); border-radius: calc(var(--k) * 10px); font-size: calc(var(--k) * 22px); font-weight: 700; white-space: nowrap; box-shadow: 0 calc(var(--k) * 3px) 0 rgb(21 32 58 / .85); }
+  .nameplate .badge { font-size: inherit; }
+  /* P1-U05.5 look bar: the looks switch live, the options reload */
+  .look-bar { position: fixed; display: none; gap: 8px; padding: 10px; background: var(--c-paper); border: 3px solid var(--c-ink); box-shadow: 0 4px 0 rgb(21 32 58 / .85); font: 600 14px/1.2 var(--font-body, system-ui), sans-serif; color: var(--c-ink); pointer-events: auto; z-index: 5; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; }
+  .look-bar.open { display: grid; align-content: start; }
+  /* docked, never floating over the middle: a right-hand column in landscape, a bottom sheet in portrait */
+  @media (min-aspect-ratio: 1/1) { .look-bar { top: 0; right: 0; bottom: 0; width: min(260px, 30vw); border-width: 0 0 0 3px; } }
+  @media (max-aspect-ratio: 1/1) { .look-bar { left: 0; right: 0; bottom: 0; height: 34vh; border-width: 3px 0 0; } }
+  .look-toggle { position: fixed; right: 6px; bottom: 6px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; background: var(--c-paper); color: var(--c-ink); border: 3px solid var(--c-ink); border-radius: 12px; box-shadow: 0 3px 0 rgb(21 32 58 / .85); font: 700 12px/1 var(--font-body, system-ui), sans-serif; cursor: pointer; pointer-events: auto; z-index: 6; }
+  .look-toggle[hidden] { display: none; }
+  .look-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .look-head button { font: inherit; padding: 4px 10px; border: 2px solid var(--c-ink); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+  .look-row.small label { display: flex; align-items: center; gap: 4px; }
+  .look-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+  .look-row button { font: inherit; padding: 5px 10px; border: 2px solid var(--c-ink); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+  .look-row button.on { background: var(--c-ink); color: var(--c-paper); }
+  .look-row button i { font-style: normal; font-size: 11px; padding: 1px 5px; margin-left: 4px; border-radius: 5px; background: #FFD23F; color: var(--c-ink); }
+  .look-row.small { font-size: 12px; gap: 10px; }
+  .look-row select { font: inherit; border: 2px solid var(--c-ink); border-radius: 6px; background: var(--c-paper); color: inherit; padding: 2px 4px; }
+</style>
+<!-- Self-hosted only (R70). 'three' and 'three/webgpu' are the same URL so the vendored Cruz model (which imports 'three') and the
+     comic look (which imports 'three/webgpu') share one module instance (jammers-look setup facts). -->
+<script type="importmap">{ "imports": {
+  "three": "../vendor/three/three.webgpu.min.js",
+  "three/webgpu": "../vendor/three/three.webgpu.min.js",
+  "three/tsl": "../vendor/three/three.tsl.min.js",
+  "three/addons/": "../vendor/three/addons/" } }</script>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div id="ui"></div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

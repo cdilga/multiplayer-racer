@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design guide</title>
+<link rel="icon" href="../brand/favicon.svg">
+<style>
+  body { margin: 0; background: var(--c-paper, #FFF4DE); color: var(--c-ink, #15203A); font-family: var(--font-body, system-ui); font-weight: 500; font-size: 18px; line-height: 1.5; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1, h2, h3 { font-family: var(--font-display, system-ui); font-weight: 900; text-transform: uppercase; line-height: 1; }
+  h1 { font-style: italic; font-size: 48px; }
+  h2 { font-size: 32px; margin-top: 40px; border-bottom: 4px solid var(--c-saffron, #FFB400); padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 12px 0; }
+  th, td { border: 2px solid var(--c-ink, #15203A); padding: 6px 10px; vertical-align: top; text-align: left; }
+  th { background: var(--c-paper-shade, #F1E2C2); }
+  code { font-size: .9em; background: var(--c-paper-shade, #F1E2C2); padding: 0 4px; border-radius: 4px; }
+  a { color: var(--c-cobalt-deep, #1442C4); font-weight: 700; }
+  .back { display: inline-block; margin-bottom: 16px; }
+  /* Long paths and code never push the page sideways: they break inside their cell or line (dim.9). */
+  code { overflow-wrap: anywhere; }
+  p, li { overflow-wrap: break-word; }
+  img { max-width: 100%; height: auto; }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    main { padding: 20px 14px 60px; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 24px; }
+    table { font-size: 13px; }
+    th, td { padding: 4px 6px; }
+  }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./index.html">← Gallery</a>
+<div id="doc">Loading the guide…</div>
+</main>
+<script type="module">
+  import { loadTokens } from './shared/tokens.js';
+  await loadTokens();
+  // A small Markdown renderer for GUIDE.md (headings, paragraphs, lists, tables, code, bold, links): no library.
+  // ?f=<path> renders any Markdown file under art/ui (the frames README, round notes); default is the guide.
+  const md = await (await fetch(new URLSearchParams(location.search).get('f') || '../GUIDE.md')).text();
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, h) => `<a href="${h.startsWith('http') || h.startsWith('#') ? h : `../${h}`}">${t}</a>`);
+  const out = [];
+  const lines = md.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^#{1,3} /.test(l)) { const n = l.match(/^#+/)[0].length; out.push(`<h${n}>${inline(l.slice(n + 1))}</h${n}>`); continue; }
+    if (l.startsWith('|')) {
+      const rows = [];
+      while (i < lines.length && lines[i].startsWith('|')) rows.push(lines[i++]);
+      i--;
+      const cells = (r) => r.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+      out.push(`<table><tr>${cells(rows[0]).map((c) => `<th>${inline(c)}</th>`).join('')}</tr>${rows.slice(2).map((r) => `<tr>${cells(r).map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</table>`);
+      continue;
+    }
+    if (/^(\d+\.|-) /.test(l)) {
+      const ordered = /^\d+\./.test(l), items = [];
+      while (i < lines.length && /^(\d+\.|-) /.test(lines[i])) { let item = lines[i++].replace(/^(\d+\.|-) /, ''); while (i < lines.length && /^ {2,}\S/.test(lines[i])) item += ' ' + lines[i++].trim(); items.push(item); }
+      i--;
+      out.push(`<${ordered ? 'ol' : 'ul'}>${items.map((x) => `<li>${inline(x)}</li>`).join('')}</${ordered ? 'ol' : 'ul'}>`);
+      continue;
+    }
+    if (l.trim() === '') continue;
+    let p = l;
+    while (i + 1 < lines.length && lines[i + 1].trim() !== '' && !/^(#|\||- |\d+\. )/.test(lines[i + 1])) p += ' ' + lines[++i];
+    out.push(`<p>${inline(p)}</p>`);
+  }
+  document.getElementById('doc').innerHTML = out.join('\n');
+</script>
+</body>
+</html>

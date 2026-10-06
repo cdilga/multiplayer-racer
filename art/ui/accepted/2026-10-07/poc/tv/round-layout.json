@@ -1,0 +1,10 @@
+{
+  "format": "jj.round-layout.v1",
+  "note": "br-dim.7: the merged round-complete + highlights screen. video = the replay's share of the whole screen area, by aspect band (width/height, first band whose maxAspect holds); the owner's rule is 0.50 to 0.67. stack = where the video sits: 'left' (under the heading, full height; everything else in a column on its right) or 'top' (full width; everything else below). The other region is searched for the largest scale that fits: stacked (list, join, buttons) first, then list beside join+buttons; the list never truncates (denser cells instead).",
+  "limits": { "min": 0.5, "max": 0.67 },
+  "bands": [
+    { "name": "portrait", "maxAspect": 1.0, "video": 0.5, "stack": "top" },
+    { "name": "landscape", "maxAspect": 1.9, "video": 0.52, "stack": "left" },
+    { "name": "wide", "maxAspect": 99, "video": 0.52, "stack": "left" }
+  ]
+}
