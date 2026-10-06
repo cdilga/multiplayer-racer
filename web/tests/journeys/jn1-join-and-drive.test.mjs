@@ -145,6 +145,8 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   assert.ok(carOf(now, epA).car !== carOf(now, epB).car, 'two cars');
   assert.ok(resA.speed > 4 && resA.turn < 10, `A drives straight: ${JSON.stringify(resA)}`);
   assert.ok(resB.speed > 2 && resB.turn > 15, `B turns: ${JSON.stringify(resB)}`);
+  // Each phone gets its HUD (boost meter, pause) on its state channel.
+  await wait(a.page, () => window.__jjController.inspect().hud !== null);
   const keys = carOf(now, 'local:1');
   assert.ok(keys && keys.forwardSpeed > 4, 'the key cluster drives too');
 

@@ -25,7 +25,7 @@ use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
 use jj_map::{LoadedMap, Registry, load_canonical};
 use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimEvent, SimToMain, UiCommand};
 use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd};
-use jj_protocol::state::{StateFlags, StateMessage};
+use jj_protocol::state::{Hud, HudUpdate, PauseReason, StateFlags, StateMessage};
 use jj_session::seats::{self, ConnId, SeatConfig, Seats};
 use jj_sim::race::Event;
 use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, UtilityEvent, UtilityKind, VehicleProfile};
@@ -114,6 +114,9 @@ struct LocalButtons {
     /// How many seats this source has had (its endpoint is `local:<id>`, then `local:<id>#2`…).
     generation: u32,
 }
+
+/// The controller HUD's cadence: 12 ticks at 120 Hz is 10 Hz.
+const HUD_EVERY_TICKS: u64 = 12;
 
 /// How many recent action ids a seat remembers for deduplication.
 const SEEN_ACTIONS: usize = 32;
@@ -382,8 +385,60 @@ impl Host {
     }
 
     /// One tick, in the contract's order.
+    /// The controllers' light HUD (P1-C02): every `HUD_EVERY_TICKS` ticks each seated controller gets its car's boost
+    /// meter and the pause state on its `state` channel (unreliable: a lost one is replaced by the next).
+    fn send_huds(&mut self, tick: u64) {
+        let pause = if self.pauses.contains(&Pause::Manual) {
+            Some(PauseReason::Host)
+        } else if self.pauses.contains(&Pause::HostHidden) {
+            Some(PauseReason::HostHidden)
+        } else if self.pauses.contains(&Pause::RendererUnavailable) {
+            Some(PauseReason::RenderLost)
+        } else if self.pauses.contains(&Pause::Fault) {
+            Some(PauseReason::Fault)
+        } else {
+            None
+        };
+        let mut out = Vec::new();
+        for seat in self.seats.seats() {
+            let Some(endpoint) = seat.conn.and_then(|c| self.endpoint_of(c)) else {
+                continue;
+            };
+            if endpoint.0.starts_with("local:") {
+                continue;
+            }
+            let boost = self
+                .inputs
+                .get(&seat.id)
+                .and_then(|i| i.car)
+                .and_then(|car| self.sim.action_state(car))
+                .map_or(0, |a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8);
+            let hud = Hud {
+                position: None,
+                lap: None,
+                boost,
+                connection: None,
+                pause,
+                tick: Tick(tick),
+            };
+            out.push(SimToMain::Outbound {
+                endpoint,
+                channel: Channel::State,
+                bytes: HudUpdate {
+                    minor: jj_protocol::state::STATE_MINOR,
+                    hud,
+                }
+                .encode(),
+            });
+        }
+        self.out.extend(out);
+    }
+
     pub fn step_one(&mut self) {
         let tick = self.sim.tick();
+        if tick % HUD_EVERY_TICKS == 0 {
+            self.send_huds(tick);
+        }
         for msg in self.scheduled.remove(&tick).unwrap_or_default() {
             self.apply(msg, tick);
         }
