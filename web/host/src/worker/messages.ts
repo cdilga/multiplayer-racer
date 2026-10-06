@@ -69,6 +69,8 @@ export type FromWorker =
   | { kind: 'messages'; list: Uint8Array[]; lines?: string[] }
   /** Bytes the sim sends to one controller endpoint (Welcome, RoomState, HUD…); main hands them to the transport. */
   | { kind: 'outbound'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
+  /** A batch of sim events as JSON (`jj_protocol::abi::SimEvent`, externally tagged). */
+  | { kind: 'events'; json: string }
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
   | { kind: 'fault'; message: string }

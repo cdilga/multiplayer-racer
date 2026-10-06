@@ -38,6 +38,8 @@ export interface WasmHost<S extends Sim> {
   encode_ui(command: number, ui: string, on: boolean): Uint8Array;
   /** The controller message in a drained `SimToMain`, if it is one (routed to the transport by main). */
   outbound_of(message: Uint8Array): { endpoint: string; state: boolean; bytes: Uint8Array; free(): void } | undefined;
+  /** A drained `Events` batch as JSON, for main. */
+  events_json(message: Uint8Array): string | undefined;
 }
 
 /** What the test chunk's worker adds. */
@@ -129,6 +131,8 @@ export class SimWorker<S extends Sim> {
         o.free();
         if (!this.describe) continue;
       }
+      const ev = this.wasm.events_json(m);
+      if (ev) this.post({ kind: 'events', json: ev });
       list.push(m);
     }
     if (!list.length) return;

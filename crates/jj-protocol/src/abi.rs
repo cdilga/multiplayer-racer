@@ -137,6 +137,13 @@ pub enum SimEvent {
         seat: SeatId,
         debris: u32,
     },
+    /// The seat's player chose a camera for its tile (P1-R05; `SetCamera` from the controller). `car` is the seat's car
+    /// index in the snapshot, which is what the host's tiles follow.
+    CameraSet {
+        seat: SeatId,
+        car: u32,
+        camera: CameraMode,
+    },
 }
 
 /// Sim → main.

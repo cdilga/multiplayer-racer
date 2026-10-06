@@ -29,6 +29,8 @@ export class SimClient {
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
   /** Encoded `SimToMain` events and outbound controller bytes, in order (`lines`: as text, from a describing worker). */
   onMessages: (list: Uint8Array[], lines?: string[]) => void = () => {};
+  /** Sim events (seats joining, cameras, identify flashes...). */
+  onEvents: (events: SimEventJson[]) => void = () => {};
   /** Bytes for one controller endpoint (the network bridge sends them on that peer's channel). */
   onOutbound: (endpoint: string, channel: 'state' | 'cmd', bytes: Uint8Array) => void = () => {};
   onPause: (reasons: PauseReason[], countdownMs: number) => void = () => {};
@@ -58,6 +60,9 @@ export class SimClient {
         return;
       case 'outbound':
         this.onOutbound(m.endpoint, m.channel, m.bytes);
+        return;
+      case 'events':
+        this.onEvents(JSON.parse(m.json) as SimEventJson[]);
         return;
       case 'pause':
         this.mask = m.mask;
@@ -129,3 +134,6 @@ export class SimClient {
     return reasons;
   }
 }
+
+/** One `SimEvent` as serde JSON: `{"CameraSet":{"seat":3,"car":2,"camera":"FirstPerson"}}`. */
+export type SimEventJson = Record<string, Record<string, unknown>>;

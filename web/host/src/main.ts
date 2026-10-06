@@ -138,6 +138,13 @@ async function boot(): Promise<void> {
   // Free drive (P1-G04, a dev/test flag; the lobby never shows driving cars, R110): a room on the server, phones join
   // over WebRTC and drive Cruz Missiles on the greybox beside the host's pads and keys, one tile per car.
   if (params.has('drive')) await openFreeDrive(client, world, params);
+  // A phone's camera toggle (SetCamera, P1-R05) switches its own tile: tiles follow cars, tile k is car k.
+  client.onEvents = (events) => {
+    for (const e of events) {
+      const cam = e.CameraSet;
+      if (cam) world.rig.setMode(Number(cam.car) + 1, cam.camera === 'FirstPerson' ? 'fp' : 'tp');
+    }
+  };
   world.attach(client);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';

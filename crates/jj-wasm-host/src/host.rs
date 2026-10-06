@@ -621,6 +621,18 @@ impl Host {
             ControllerCmd::Leave => self.seats.apply(seats::Input::Leave { conn }),
             ControllerCmd::SitOut => self.seats.apply(seats::Input::SitOut { conn, on: true }),
             ControllerCmd::Identify => self.seats.apply(seats::Input::Identify { conn }),
+            ControllerCmd::SetCamera { camera } => {
+                if let Some(seat) = self.seats.seat_of(conn)
+                    && let Some(car) = self.inputs.get(&seat).and_then(|i| i.car)
+                {
+                    self.events.push(SimEvent::CameraSet {
+                        seat,
+                        car: car.0,
+                        camera,
+                    });
+                }
+                vec![]
+            }
             ControllerCmd::Recover => {
                 if let Some(car) = self
                     .seats

@@ -137,6 +137,15 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   const keys = carOf(now, 'local:1');
   assert.ok(keys && keys.forwardSpeed > 4, 'the key cluster drives too');
 
+  at('camera toggles per seat');
+  const carIdxA = carOf(now, epA).car;
+  const carIdxB = carOf(now, epB).car;
+  await a.page.getByRole('button', { name: /Camera/ }).click();
+  await wait(host, (k) => window.__jjRender.cameras()[k + 1]?.mode === 'fp', carIdxA);
+  assert.notEqual((await host.evaluate(() => window.__jjRender.cameras()))[carIdxB + 1]?.mode, 'fp', "B's tile keeps its camera");
+  await a.page.getByRole('button', { name: /Camera/ }).click();
+  await wait(host, (k) => window.__jjRender.cameras()[k + 1]?.mode === 'tp', carIdxA);
+
   // Each seat has its own tile.
   const tiles = await host.evaluate(() => window.__jjRender.tileRects().length);
   assert.equal(tiles, 3);

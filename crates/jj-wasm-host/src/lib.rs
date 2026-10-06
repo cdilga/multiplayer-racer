@@ -250,6 +250,16 @@ pub fn outbound_of(message: &[u8]) -> Option<Outbound> {
     }
 }
 
+/// A drained `SimToMain::Events` batch as JSON (serde's externally tagged form, e.g. `[{"CameraSet":{...}}]`), so main
+/// can react to sim events (cameras, identify flashes, laps) without loading the codec; `None` for other messages.
+#[wasm_bindgen]
+pub fn events_json(message: &[u8]) -> Option<String> {
+    match jj_protocol::abi::SimToMain::decode(message) {
+        Ok(jj_protocol::abi::SimToMain::Events { batch }) => serde_json::to_string(&batch).ok(),
+        _ => None,
+    }
+}
+
 /// Test-side encoders and a message describer (`testing` build only): a real controller encodes its frames in
 /// `jj-wasm-input`.
 #[cfg(feature = "testing")]
