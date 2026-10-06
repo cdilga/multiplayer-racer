@@ -23,6 +23,11 @@ const app = document.querySelector<HTMLElement>('#app')!;
 
 async function boot(): Promise<void> {
   const params = new URLSearchParams(location.search);
+  // The walking skeleton (P1-G00): a room, a QR and one marker per controller.
+  if (params.has('hello')) {
+    (await import('./hello/hello')).mountHello(app);
+    return;
+  }
   if (params.has('bench')) {
     (await import('./render/bench')).mountBench(app);
     return;
