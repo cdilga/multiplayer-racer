@@ -163,7 +163,7 @@ async function openFreeDrive(client: SimClient, world: World, params: URLSearchP
   const overlay = mountGridOverlay(app, joinUrl);
   // Free drive always shows the paper QR with the code (the lobby's join panel is R07's), so phones can join any time.
   if (bridge.hub.code) {
-    const card = paperQrCard({ url: joinUrl, code: bridge.hub.code, domain: new URL(joinUrl).host, size: 160 });
+    const card = paperQrCard({ url: joinUrl, code: bridge.hub.code, domain: new URL(joinUrl).host, size: 112 });
     card.classList.add('jj-drive-qr');
     card.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2;margin:0';
     app.append(card);

@@ -174,6 +174,8 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
     await host.setViewportSize({ width: 1920, height: 1080 });
     await host.waitForTimeout(800);
     await shot(host, 'tv-1920x1080-four-seats-resized');
+    await c.page.evaluate(() => document.fullscreenElement && document.exitFullscreen());
+    await c.page.waitForTimeout(300);
     await c.page.setViewportSize({ width: 390, height: 844 });
     await c.page.waitForTimeout(300);
     await shot(c.page, 'phone-portrait-390x844-playing');
