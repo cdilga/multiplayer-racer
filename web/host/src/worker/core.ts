@@ -36,6 +36,8 @@ export interface WasmHost<S extends Sim> {
   encode_local_source(source: number, dx: number, dy: number, ax: number, ay: number, buttons: number, seq: number): Uint8Array;
   encode_net_bytes(endpoint: string, state: boolean, bytes: Uint8Array): Uint8Array;
   encode_ui(command: number, ui: string, on: boolean): Uint8Array;
+  /** The controller message in a drained `SimToMain`, if it is one (routed to the transport by main). */
+  outbound_of(message: Uint8Array): { endpoint: string; state: boolean; bytes: Uint8Array; free(): void } | undefined;
 }
 
 /** What the test chunk's worker adds. */
@@ -118,7 +120,17 @@ export class SimWorker<S extends Sim> {
 
   private drain(s: S): void {
     const list: Uint8Array[] = [];
-    for (let m = s.next_message(); m !== undefined; m = s.next_message()) list.push(m);
+    for (let m = s.next_message(); m !== undefined; m = s.next_message()) {
+      // Controller-bound bytes go straight to main's transport; everything else in order as messages.
+      const o = this.wasm.outbound_of(m);
+      if (o) {
+        const bytes = o.bytes;
+        this.post({ kind: 'outbound', endpoint: o.endpoint, channel: o.state ? 'state' : 'cmd', bytes }, [bytes.buffer as ArrayBuffer]);
+        o.free();
+        if (!this.describe) continue;
+      }
+      list.push(m);
+    }
     if (!list.length) return;
     const lines = this.describe && this.ext.describe ? list.flatMap((m) => this.ext.describe!(m)) : undefined;
     this.post({ kind: 'messages', list, lines }, list.map((b) => b.buffer as ArrayBuffer));

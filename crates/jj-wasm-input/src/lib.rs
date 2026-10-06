@@ -13,6 +13,8 @@
 //! plus `jj-protocol` must stay ≤ 150 KB gzipped (plan DEFAULT; measured in
 //! `docs/evidence/P1-N06/`).
 
+pub mod cmd;
+
 use jj_input::curve::StickCurve;
 use jj_input::scheduler::SendScheduler;
 use jj_input::source::{Neutralise, SampleFlags, SourceState};

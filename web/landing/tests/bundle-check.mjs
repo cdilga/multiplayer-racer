@@ -10,6 +10,11 @@ import { dirname, join, posix } from 'node:path';
 
 const FORBIDDEN_NAMES = /three|webgpu|webgl|sim\.worker|jj_wasm|\.wasm$|\.glb$|host-[\w-]+\.js$/i;
 const FORBIDDEN_CONTENT = ['WebGLRenderer', 'WebGPURenderer', 'WebAssembly.instantiate', 'WebAssembly.compile', 'REVISION="', 'jj_wasm'];
+// The join path may load the controller's input facade (P1-N06 `jj-wasm-input`: encoding only, no sim or renderer)
+// and nothing else that's WASM: its module file is allowed by name, and the WASM loader markers are allowed in JS
+// that names only that module. The sim (`jj_wasm_host`) stays forbidden everywhere.
+const JOIN_ALLOWED_NAME = /jj_wasm_input/;
+const isInputGlue = (text) => text.includes('jj_wasm_input') && !text.includes('jj_wasm_host');
 const PAGES = { landing: 'landing/index.html', join: 'controller/index.html' };
 
 /** Everything a page pulls in, as dist-relative paths. */
@@ -58,10 +63,15 @@ export function analyse(dist, pages = PAGES) {
       return { file: f, bytes: bytes.length };
     });
     for (const f of files) {
-      if (FORBIDDEN_NAMES.test(f)) problems.push(`${name}: ${f} is a renderer/sim/model file`);
+      const inputOk = name === 'join' && JOIN_ALLOWED_NAME.test(f);
+      if (FORBIDDEN_NAMES.test(f) && !inputOk) problems.push(`${name}: ${f} is a renderer/sim/model file`);
       if (/\.js$/.test(f)) {
         const text = readFileSync(join(dist, f), 'utf8');
-        for (const marker of FORBIDDEN_CONTENT) if (text.includes(marker)) problems.push(`${name}: ${f} contains "${marker}"`);
+        const glue = name === 'join' && isInputGlue(text);
+        for (const marker of FORBIDDEN_CONTENT) {
+          if (glue && ['WebAssembly.instantiate', 'WebAssembly.compile', 'jj_wasm'].includes(marker)) continue;
+          if (text.includes(marker)) problems.push(`${name}: ${f} contains "${marker}"`);
+        }
       }
     }
     report[name] = { page, files: rows.map(({ file, bytes }) => ({ file, bytes })), totalBytes: rows.reduce((n, r) => n + r.bytes, 0) };

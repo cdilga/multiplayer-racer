@@ -48,6 +48,8 @@ export interface TileView {
   orbit?: number[];
   /** Each seat's starting camera mode (the controller's SetCamera changes it). */
   modes?: CameraMode[];
+  /** Free drive (P1-G04): one tile per car in the snapshot, growing and shrinking as seats join and leave. */
+  auto?: boolean;
 }
 
 export interface WorldStats {
@@ -352,6 +354,7 @@ export class World {
   /** The grid (P1-R04): each seat's tile chases its car with its own camera at its LOD class; spare cells and gutters
    *  are the paper backdrop. The shadow map was drawn once already. */
   private drawTiles(s: Sampled, view: TileView): number[] {
+    if (view.auto) view.count = Math.max(1, s.cars);
     const r = this.backend.renderer;
     const { width: w, height: h } = this.stats;
     const display = { x: 0, y: 0, w, h };

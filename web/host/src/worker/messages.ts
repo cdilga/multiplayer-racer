@@ -67,6 +67,8 @@ export type FromWorker =
   | { kind: 'snapshot'; buf: ArrayBuffer; bytes: number; tick: number }
   /** Encoded `SimToMain` messages (events, outbound controller bytes), in the order the sim produced them. */
   | { kind: 'messages'; list: Uint8Array[]; lines?: string[] }
+  /** Bytes the sim sends to one controller endpoint (Welcome, RoomState, HUD…); main hands them to the transport. */
+  | { kind: 'outbound'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
   | { kind: 'fault'; message: string }

@@ -29,6 +29,8 @@ export class SimClient {
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
   /** Encoded `SimToMain` events and outbound controller bytes, in order (`lines`: as text, from a describing worker). */
   onMessages: (list: Uint8Array[], lines?: string[]) => void = () => {};
+  /** Bytes for one controller endpoint (the network bridge sends them on that peer's channel). */
+  onOutbound: (endpoint: string, channel: 'state' | 'cmd', bytes: Uint8Array) => void = () => {};
   onPause: (reasons: PauseReason[], countdownMs: number) => void = () => {};
   onFault: (message: string) => void = () => {};
   /** Messages only the test chunk's worker sends (web/host/src/testing/). */
@@ -53,6 +55,9 @@ export class SimClient {
         return;
       case 'messages':
         this.onMessages(m.list, m.lines);
+        return;
+      case 'outbound':
+        this.onOutbound(m.endpoint, m.channel, m.bytes);
         return;
       case 'pause':
         this.mask = m.mask;

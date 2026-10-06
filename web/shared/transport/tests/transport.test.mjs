@@ -40,7 +40,7 @@ async function startController(origin, code, query = '') {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(`${origin}${BASE}j/${code}${query}`);
+  await page.goto(`${origin}${BASE}j/${code}?hello${query.replace(/^\?/, '&')}`);
   await until(page, () => window.__jjHello?.link().state === 'connected');
   return { ctx, page, errors, link: () => page.evaluate(() => window.__jjHello.link()) };
 }

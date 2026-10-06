@@ -12,6 +12,7 @@ import { LocalInput } from './input/local';
 import { backendFromQuery, createBackend } from './render/backend';
 import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
+import { NetBridge } from './net/bridge';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
@@ -133,9 +134,34 @@ async function boot(): Promise<void> {
   input.start();
   mountDrawer(document.body, input);
   testing?.attach(client, { mapJson: greybox, seed, input });
+  // Free drive (P1-G04, a dev/test flag; the lobby never shows driving cars, R110): a room on the server, phones join
+  // over WebRTC and drive Cruz Missiles on the greybox beside the host's pads and keys, one tile per car.
+  if (params.has('drive')) await openFreeDrive(client, world, params);
   world.attach(client);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
+}
+
+async function openFreeDrive(client: SimClient, world: World, params: URLSearchParams): Promise<void> {
+  const bridge = new NetBridge(client, () => {}, { iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
+  world.tiles = { count: 1, auto: true };
+  try {
+    await bridge.open();
+  } catch (e) {
+    // No server (a bare dev server): drive locally with pads and keys only.
+    console.warn('jj: no room server; free drive is local only', e);
+  }
+  const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
+  const overlay = mountGridOverlay(app, joinUrl);
+  world.onLayout = (layout, scale) => overlay.render(layout, scale);
+  world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
+  (window as unknown as { __jjNet: unknown }).__jjNet = {
+    code: () => bridge.hub.code,
+    joinUrl: () => bridge.hub.joinUrl,
+    inspect: () => bridge.inspect(),
+    paths: () => bridge.hub.paths(),
+    dropPeer: (ep: string) => bridge.hub.dropPeer(ep),
+  };
 }
 
 void boot();

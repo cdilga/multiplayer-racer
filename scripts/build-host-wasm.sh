@@ -19,5 +19,9 @@ cargo build "${flags[@]}"
 wasm-bindgen --target web --out-dir web/host/src/worker/pkg "$wasm"
 cargo build "${flags[@]}" --features testing
 wasm-bindgen --target web --out-dir web/host/src/testing/pkg --out-name jj_wasm_host_testing "$wasm"
+# The controller's input facade (P1-N06/C02): encoding and the cmd protocol, no sim.
+cargo build --locked --target wasm32-unknown-unknown -p jj-wasm-input $([[ $profile == release ]] && echo --release)
+wasm-bindgen --target web --out-dir web/controller/src/pkg "$target/wasm32-unknown-unknown/$profile/jj_wasm_input.wasm"
+ls -l web/controller/src/pkg/jj_wasm_input_bg.wasm | awk '{ print $NF ":", $5, "bytes" }'
 ls -l web/host/src/worker/pkg/jj_wasm_host_bg.wasm web/host/src/testing/pkg/jj_wasm_host_testing_bg.wasm |
   awk '{ print $NF ":", $5, "bytes" }'

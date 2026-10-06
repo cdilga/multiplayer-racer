@@ -1,0 +1,411 @@
+// The controller's session (P1-C02 sending, P1-C03 join/claim/resume): one endpoint, one WebRTC link (N05), the
+// `jj-wasm-input` facade (N06) for StateBatches and Actions, and the §11 controller states. UI-free: the view renders
+// `Session.phase` and calls the methods; tests drive it through `window.__jjController`.
+//
+// Identity (§5.5): the endpoint id and secret live in localStorage, namespaced by realm and room, so a reload or a
+// tab that comes back gets the same seat (`Hello{resume: secret}`); rooms reported ended/not-found are pruned. Storage
+// that throws still plays, with `persisted = false` for the honest note.
+import { underBase } from '../../../shared/src/base';
+import { ApiError, ControllerLink, type LinkState, type TransportOptions } from '../../../shared/transport';
+import init, * as wasm from '../pkg/jj_wasm_input.js';
+
+export type Phase =
+  | 'finding'
+  | 'no-such-room'
+  | 'room-ended'
+  | 'preview-expired'
+  | 'connecting'
+  | 'finding-relay'
+  | 'no-route'
+  | 'ready-to-join'
+  | 'joining'
+  | 'playing'
+  | 'reconnecting'
+  | 'host-gone'
+  | 'host-paused'
+  | 'another-tab'
+  | 'update-needed';
+
+export interface You {
+  seat: number;
+  number: number;
+  rgb: [number, number, number];
+  source: number;
+}
+
+export interface Hud {
+  position: number | null;
+  lap: [number, number] | null;
+  boost: number;
+  pause: string | null;
+}
+
+interface Stored {
+  endpointId: string;
+  secret: string;
+  requestId: number;
+  seated: boolean;
+}
+
+/** `jj-wasm-input`'s neutralise reasons (Rust consts, not exported to JS). */
+const WHY_HIDDEN = 1;
+const WHY_DISCONNECTED = 2;
+
+/** The send loop's period: the scheduler decides what's due (60 Hz on change, 20 Hz refresh, prompt neutral). */
+const POLL_MS = 8;
+/** Reconnecting for this long without the room answering `available` means the host has gone (§11). */
+const HOST_GONE_MS = 120_000;
+
+let wasmReady: Promise<unknown> | null = null;
+export function loadInput(): Promise<unknown> {
+  wasmReady ??= init();
+  return wasmReady;
+}
+
+function storage(): Storage | null {
+  try {
+    const s = window.localStorage;
+    s.setItem('jj.probe', '1');
+    s.removeItem('jj.probe');
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+export interface Stick {
+  x: number;
+  y: number;
+  touch: boolean;
+}
+
+export class Session {
+  phase: Phase = 'finding';
+  code = '';
+  realm = 'dev';
+  build = 'dev';
+  you: You | null = null;
+  hud: Hud | null = null;
+  roomPhase: string | null = null;
+  persisted = true;
+  name = '';
+  link: ControllerLink | null = null;
+  /** Counters for tests and the debug readout. */
+  stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0 };
+  onChange: () => void = () => {};
+  onIdentify: () => void = () => {};
+
+  private endpoint: wasm.WasmEndpoint | null = null;
+  private srcIdx = -1;
+  private stored: Stored | null = null;
+  private store = storage();
+  private pollTimer: ReturnType<typeof setInterval> | undefined;
+  private lostAt = 0;
+  private drive: Stick = { x: 0, y: 0, touch: false };
+  private action: Stick = { x: 0, y: 0, touch: false };
+  private tabs: BroadcastChannel | null = null;
+  private readonly tabId = Math.random().toString(36).slice(2);
+
+  constructor(private readonly opts: TransportOptions = {}) {}
+
+  private set(p: Phase): void {
+    if (this.phase === p) return;
+    this.phase = p;
+    this.onChange();
+  }
+
+  private key(): string {
+    return `jj.ctl.${this.realm}.${this.code}`;
+  }
+
+  private save(): void {
+    if (!this.stored) return;
+    try {
+      this.store?.setItem(this.key(), JSON.stringify(this.stored));
+    } catch {
+      this.persisted = false;
+    }
+  }
+
+  private forget(): void {
+    try {
+      this.store?.removeItem(this.key());
+    } catch {
+      // Nothing kept.
+    }
+  }
+
+  /** Joins the room by code: identity from storage (or new), then connect. Opening a URL never claims a seat. */
+  async start(code: string): Promise<void> {
+    this.code = code.toUpperCase();
+    this.set('finding');
+    await loadInput();
+    try {
+      const v = (await (await fetch(underBase('version'), { cache: 'no-store' })).json()) as { build: string; realm: string };
+      this.realm = v.realm;
+      this.build = v.build;
+    } catch {
+      // Defaults stand; the server will say what it needs.
+    }
+    this.persisted = this.store !== null;
+    try {
+      const raw = this.store?.getItem(this.key());
+      if (raw) this.stored = JSON.parse(raw) as Stored;
+    } catch {
+      this.stored = null;
+    }
+    this.name = this.loadName();
+    this.claimTab();
+    const link = new ControllerLink(
+      {
+        onState: (s) => this.onLink(s),
+        onOpen: () => this.hello(),
+        onMessage: (ch, data) => this.onMessage(ch, data),
+      },
+      this.opts,
+      this.stored ? { endpointId: this.stored.endpointId, secret: this.stored.secret } : undefined,
+    );
+    this.link = link;
+    this.stored ??= { endpointId: link.endpointId, secret: link.secret, requestId: 1 + Math.floor(Math.random() * 1e9), seated: false };
+    this.save();
+    try {
+      await link.join(this.code);
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg === 'room-ended') return this.ended();
+      if (e instanceof ApiError && e.status === 410) return this.set('preview-expired');
+      if (msg === 'room-not-found') {
+        if (this.stored.seated) this.set('host-gone');
+        else this.set('no-such-room');
+        this.forget();
+        return;
+      }
+      this.set('no-route');
+    }
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.pollTimer = setInterval(() => this.poll(), POLL_MS);
+  }
+
+  private onLink(s: LinkState): void {
+    if (s === 'connecting' && !this.you) this.set('connecting');
+    else if (s === 'restarting' || s === 'rebuilding') {
+      this.lostAt ||= Date.now();
+      if (this.you) this.set('reconnecting');
+      if (this.endpoint && this.srcIdx >= 0) this.endpoint.neutralise(this.srcIdx, WHY_DISCONNECTED);
+    } else if (s === 'ended') this.ended();
+    if (s === 'connected') this.lostAt = 0;
+    if (this.lostAt && Date.now() - this.lostAt > HOST_GONE_MS) this.set('host-gone');
+  }
+
+  private ended(): void {
+    this.forget();
+    this.stop();
+    this.set('room-ended');
+  }
+
+  private send(ch: 'state' | 'cmd', bytes: Uint8Array): void {
+    const c = this.link?.channels?.[ch];
+    if (!c || c.readyState !== 'open') return;
+    c.send(bytes as Uint8Array<ArrayBuffer>);
+    if (ch === 'cmd') this.stats.cmds += 1;
+  }
+
+  /** Every (re)connection starts with Hello; a seated controller gets its seat back, a new one waits for Join. */
+  private hello(): void {
+    if (!this.stored) return;
+    this.send('cmd', wasm.encodeHello(this.build, this.stored.endpointId, this.stored.secret));
+    if (this.stored.seated) {
+      // Hello{resume} brings the seat back; Welcome confirms it.
+      this.set(this.you ? 'reconnecting' : 'joining');
+    } else this.set('ready-to-join');
+  }
+
+  /** Join the race: Claim with a stable request id (a lost reply retried gives one seat). */
+  claim(name: string): void {
+    if (!this.stored) return;
+    this.name = name;
+    this.saveName(name);
+    this.set('joining');
+    this.send('cmd', wasm.encodeClaim(this.stored.requestId, name));
+  }
+
+  private onMessage(ch: 'state' | 'cmd', data: ArrayBuffer): void {
+    const bytes = new Uint8Array(data);
+    if (ch === 'state') {
+      const j = wasm.decodeHud(bytes);
+      if (!j) return;
+      const h = (JSON.parse(j) as { hud: { position: number | null; lap: [number, number] | null; boost: number; pause: string | null } }).hud;
+      this.hud = { position: h.position, lap: h.lap, boost: h.boost, pause: h.pause };
+      if (h.pause === 'HostHidden' && this.you) this.set('host-paused');
+      else if (this.phase === 'host-paused') this.set('playing');
+      this.onChange();
+      return;
+    }
+    const j = wasm.decodeHostCmd(bytes);
+    if (!j) return;
+    const cmd = JSON.parse(j) as Record<string, unknown> | string;
+    if (cmd === 'Ended') return this.ended();
+    if (typeof cmd !== 'object') return;
+    if ('Welcome' in cmd) {
+      const w = cmd.Welcome as { seat: number; number: number; colour: { rgb: [number, number, number] }; source: number };
+      this.you = { seat: w.seat, number: w.number, rgb: w.colour.rgb, source: w.source };
+      this.stored!.seated = true;
+      this.save();
+      this.endpoint?.free();
+      this.endpoint = new wasm.WasmEndpoint();
+      this.srcIdx = this.endpoint.addSource(w.source);
+      this.set('playing');
+      this.onChange();
+    } else if ('ClaimRejected' in cmd) {
+      const r = (cmd.ClaimRejected as { reason: string }).reason;
+      if (r === 'Build') {
+        this.set('update-needed');
+        if (!sessionStorage.getItem('jj.reloaded')) {
+          sessionStorage.setItem('jj.reloaded', '1');
+          location.reload();
+        }
+      } else if (r === 'Ended') this.ended();
+      else this.set('ready-to-join');
+    } else if ('RoomState' in cmd) {
+      const rs = cmd.RoomState as { phase: string };
+      this.roomPhase = rs.phase;
+      this.onChange();
+    }
+  }
+
+  /** Stick input at input-event rate (shaped −1..1; y down is positive, as the screen). */
+  setSticks(drive: Stick, action: Stick): void {
+    this.drive = drive;
+    this.action = action;
+    this.sample();
+  }
+
+  private sample(): void {
+    if (!this.endpoint || this.srcIdx < 0) return;
+    const q = (v: number) => wasm.quantise(v);
+    // The wire's drive Y is up-positive (throttle); the screen's is down-positive.
+    const actions = this.endpoint.sample(
+      this.srcIdx,
+      q(this.drive.x),
+      q(-this.drive.y),
+      q(this.action.x),
+      q(-this.action.y),
+      this.drive.touch,
+      this.action.touch,
+      performance.now(),
+    );
+    for (const a of actions) {
+      const r = this.you;
+      this.send('cmd', wasm.encodeAction(a.id, r?.source ?? 0, a.kindTag, a.preloadMs, 0, 0, a.atSourceSeq));
+      this.stats.actions += 1;
+      a.free();
+    }
+  }
+
+  private poll(): void {
+    if (!this.endpoint) return;
+    this.sample();
+    const flush = this.endpoint.poll(performance.now());
+    if (!flush) return;
+    for (let i = 0; i < flush.batchCount; i++) {
+      const b = flush.batch(i);
+      this.send('state', b);
+      this.stats.batches += 1;
+      this.stats.stateBytes += b.byteLength;
+    }
+    flush.free();
+  }
+
+  identify(): void {
+    this.send('cmd', wasm.encodeIdentify());
+    this.onIdentify();
+  }
+
+  setCamera(firstPerson: boolean): void {
+    this.send('cmd', wasm.encodeSetCamera(firstPerson));
+  }
+
+  recover(): void {
+    this.send('cmd', wasm.encodeRecover());
+  }
+
+  ready(on: boolean): void {
+    this.send('cmd', wasm.encodeReady(on));
+  }
+
+  leave(): void {
+    this.send('cmd', wasm.encodeLeave());
+    this.forget();
+    this.stop();
+    this.you = null;
+    this.set('room-ended');
+  }
+
+  private onVisibility = (): void => {
+    if (!this.endpoint || this.srcIdx < 0) return;
+    if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
+    else {
+      this.endpoint.resume(this.srcIdx);
+      this.link?.resume();
+    }
+  };
+
+  /** One tab per seat (§11): a newer tab for the same room fences this one; "Use this one" takes it back. */
+  private claimTab(): void {
+    try {
+      this.tabs?.close();
+      this.tabs = new BroadcastChannel(`jj.tab.${this.realm}.${this.code}`);
+      this.tabs.onmessage = (e: MessageEvent<{ tab: string }>) => {
+        if (e.data.tab === this.tabId || this.phase === 'another-tab') return;
+        this.stop();
+        this.set('another-tab');
+      };
+      this.tabs.postMessage({ tab: this.tabId });
+    } catch {
+      // No BroadcastChannel: the host's resume fencing still holds.
+    }
+  }
+
+  /** "Use this one": take the seat back in this tab. */
+  async takeOver(): Promise<void> {
+    this.you = null;
+    await this.start(this.code);
+  }
+
+  stop(): void {
+    clearInterval(this.pollTimer);
+    document.removeEventListener('visibilitychange', this.onVisibility);
+    this.link?.end();
+    this.link = null;
+  }
+
+  private loadName(): string {
+    try {
+      return this.store?.getItem(`jj.name.${this.realm}`) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  private saveName(name: string): void {
+    try {
+      this.store?.setItem(`jj.name.${this.realm}`, name);
+    } catch {
+      this.persisted = false;
+    }
+  }
+
+  inspect(): Record<string, unknown> {
+    return {
+      phase: this.phase,
+      code: this.code,
+      you: this.you,
+      hud: this.hud,
+      roomPhase: this.roomPhase,
+      persisted: this.persisted,
+      stats: { ...this.stats },
+      link: this.link?.inspect() ?? null,
+      drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
+    };
+  }
+}

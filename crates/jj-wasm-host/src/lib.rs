@@ -206,6 +206,50 @@ pub mod codec {
     }
 }
 
+/// A `SimToMain::Outbound` split out for the transport: which controller endpoint, which channel, what bytes.
+#[wasm_bindgen]
+pub struct Outbound {
+    endpoint: String,
+    state: bool,
+    bytes: Vec<u8>,
+}
+
+#[wasm_bindgen]
+impl Outbound {
+    #[wasm_bindgen(getter)]
+    pub fn endpoint(&self) -> String {
+        self.endpoint.clone()
+    }
+
+    /// True for the `state` channel, false for `cmd`.
+    #[wasm_bindgen(getter)]
+    pub fn state(&self) -> bool {
+        self.state
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn bytes(&self) -> Vec<u8> {
+        self.bytes.clone()
+    }
+}
+
+/// The outbound controller message in an encoded `SimToMain`, if it is one (the worker routes it to the transport).
+#[wasm_bindgen]
+pub fn outbound_of(message: &[u8]) -> Option<Outbound> {
+    match jj_protocol::abi::SimToMain::decode(message) {
+        Ok(jj_protocol::abi::SimToMain::Outbound {
+            endpoint,
+            channel,
+            bytes,
+        }) => Some(Outbound {
+            endpoint: endpoint.0,
+            state: channel == jj_protocol::abi::Channel::State,
+            bytes,
+        }),
+        _ => None,
+    }
+}
+
 /// Test-side encoders and a message describer (`testing` build only): a real controller encodes its frames in
 /// `jj-wasm-input`.
 #[cfg(feature = "testing")]

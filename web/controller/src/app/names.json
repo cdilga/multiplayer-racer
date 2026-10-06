@@ -1,0 +1,198 @@
+{
+ "schema": "jj.names.v1",
+ "note": "Prefill names for the join card (P1-C03, plan \u00a79): a small curated list; only familyFriendly rows are offered. The full generator with reroll is V2-112.",
+ "names": [
+  {
+   "name": "Davo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Stevo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Gazza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Shazza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Robbo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Tommo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Jacko",
+   "familyFriendly": true
+  },
+  {
+   "name": "Macca",
+   "familyFriendly": true
+  },
+  {
+   "name": "Johnno",
+   "familyFriendly": true
+  },
+  {
+   "name": "Bazza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Kylie",
+   "familyFriendly": true
+  },
+  {
+   "name": "Dazza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Smithy",
+   "familyFriendly": true
+  },
+  {
+   "name": "Hendo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Fitzy",
+   "familyFriendly": true
+  },
+  {
+   "name": "Sully",
+   "familyFriendly": true
+  },
+  {
+   "name": "Woody",
+   "familyFriendly": true
+  },
+  {
+   "name": "Thommo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Jonesy",
+   "familyFriendly": true
+  },
+  {
+   "name": "Bluey",
+   "familyFriendly": true
+  },
+  {
+   "name": "Ronnie",
+   "familyFriendly": true
+  },
+  {
+   "name": "Tezza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Bec",
+   "familyFriendly": true
+  },
+  {
+   "name": "Jules",
+   "familyFriendly": true
+  },
+  {
+   "name": "Nev",
+   "familyFriendly": true
+  },
+  {
+   "name": "Kev",
+   "familyFriendly": true
+  },
+  {
+   "name": "Trev",
+   "familyFriendly": true
+  },
+  {
+   "name": "Dusty",
+   "familyFriendly": true
+  },
+  {
+   "name": "Spud",
+   "familyFriendly": true
+  },
+  {
+   "name": "Snowy",
+   "familyFriendly": true
+  },
+  {
+   "name": "Blinky",
+   "familyFriendly": true
+  },
+  {
+   "name": "Skip",
+   "familyFriendly": true
+  },
+  {
+   "name": "Possum",
+   "familyFriendly": true
+  },
+  {
+   "name": "Wombat",
+   "familyFriendly": true
+  },
+  {
+   "name": "Galah",
+   "familyFriendly": true
+  },
+  {
+   "name": "Dingo",
+   "familyFriendly": true
+  },
+  {
+   "name": "Bandit",
+   "familyFriendly": true
+  },
+  {
+   "name": "Pearl",
+   "familyFriendly": true
+  },
+  {
+   "name": "Mate",
+   "familyFriendly": true
+  },
+  {
+   "name": "Larrikin",
+   "familyFriendly": true
+  },
+  {
+   "name": "Sheila",
+   "familyFriendly": true
+  },
+  {
+   "name": "Cobber",
+   "familyFriendly": true
+  },
+  {
+   "name": "Ripper",
+   "familyFriendly": true
+  },
+  {
+   "name": "Bonza",
+   "familyFriendly": true
+  },
+  {
+   "name": "Stubbie",
+   "familyFriendly": true
+  },
+  {
+   "name": "Thongs",
+   "familyFriendly": true
+  },
+  {
+   "name": "Sunnies",
+   "familyFriendly": true
+  },
+  {
+   "name": "Ute",
+   "familyFriendly": true
+  }
+ ]
+}

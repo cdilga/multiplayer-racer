@@ -58,11 +58,14 @@ export interface ControllerEvents {
 /** One controller endpoint's link to the host. */
 export class ControllerLink {
   state: LinkState = 'idle';
-  gen = 0;
+  /** Seeded from the clock (tenths of a second since 2023-11), so a reloaded page with the same endpoint is always a
+   *  newer generation than anything its last life sent; each negotiation adds one. Fits u32 until the 2030s. */
+  gen = Math.floor((Date.now() - 1_700_000_000_000) / 100);
   roomId = '';
   code = '';
-  readonly endpointId = newId('c');
-  private readonly secret = newSecret();
+  readonly endpointId: string;
+  /** The endpoint secret: the bearer for signalling, and `Hello{resume}` to get the same seat back. */
+  readonly secret: string;
   private iceServers: IceServer[] = [];
   private iceExpiresAt = 0;
   pc: RTCPeerConnection | null = null;
@@ -85,7 +88,11 @@ export class ControllerLink {
   constructor(
     private readonly events: ControllerEvents = {},
     private readonly opts: TransportOptions = {},
-  ) {}
+    identity?: { endpointId: string; secret: string },
+  ) {
+    this.endpointId = identity?.endpointId ?? newId('c');
+    this.secret = identity?.secret ?? newSecret();
+  }
 
   private set(s: LinkState): void {
     if (this.state === s) return;
