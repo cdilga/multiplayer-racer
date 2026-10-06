@@ -1,0 +1,765 @@
+{
+  "reference": "art/ui/sheets/components.html (desk profile, 1600x1000, DPR 1)",
+  "tolerance": {
+    "channel": 40,
+    "ratio": 0.05
+  },
+  "rows": [
+    {
+      "button": "Primary / default",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.013
+    },
+    {
+      "button": "Primary / hover",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.015
+    },
+    {
+      "button": "Primary / pressed",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.0142
+    },
+    {
+      "button": "Primary / focus-kb",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.0182
+    },
+    {
+      "button": "Primary / focus-gp",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.0203
+    },
+    {
+      "button": "Primary / disabled",
+      "kit": [
+        107.515625,
+        48
+      ],
+      "sheet": [
+        107.515625,
+        48
+      ],
+      "differingShare": 0.031
+    },
+    {
+      "button": "Primary / loading",
+      "kit": [
+        135.53125,
+        48
+      ],
+      "sheet": [
+        135.53125,
+        48
+      ],
+      "differingShare": 0.0228
+    },
+    {
+      "button": "Secondary / default",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0128
+    },
+    {
+      "button": "Secondary / hover",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0137
+    },
+    {
+      "button": "Secondary / pressed",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0149
+    },
+    {
+      "button": "Secondary / focus-kb",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0185
+    },
+    {
+      "button": "Secondary / focus-gp",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0197
+    },
+    {
+      "button": "Secondary / disabled",
+      "kit": [
+        82.484375,
+        48
+      ],
+      "sheet": [
+        82.484375,
+        48
+      ],
+      "differingShare": 0.0281
+    },
+    {
+      "button": "Secondary / loading",
+      "kit": [
+        135.53125,
+        48
+      ],
+      "sheet": [
+        135.53125,
+        48
+      ],
+      "differingShare": 0.0226
+    },
+    {
+      "button": "Destructive / default",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.0128
+    },
+    {
+      "button": "Destructive / hover",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.0127
+    },
+    {
+      "button": "Destructive / pressed",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.0166
+    },
+    {
+      "button": "Destructive / focus-kb",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.0198
+    },
+    {
+      "button": "Destructive / focus-gp",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.024
+    },
+    {
+      "button": "Destructive / disabled",
+      "kit": [
+        131.40625,
+        48
+      ],
+      "sheet": [
+        131.40625,
+        48
+      ],
+      "differingShare": 0.0373
+    },
+    {
+      "button": "Destructive / loading",
+      "kit": [
+        135.53125,
+        48
+      ],
+      "sheet": [
+        135.53125,
+        48
+      ],
+      "differingShare": 0.0214
+    },
+    {
+      "button": "Leading icon / default",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.0131
+    },
+    {
+      "button": "Leading icon / hover",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.014
+    },
+    {
+      "button": "Leading icon / pressed",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.0193
+    },
+    {
+      "button": "Leading icon / focus-kb",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.0246
+    },
+    {
+      "button": "Leading icon / focus-gp",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.0199
+    },
+    {
+      "button": "Leading icon / disabled",
+      "kit": [
+        145.328125,
+        48
+      ],
+      "sheet": [
+        145.328125,
+        48
+      ],
+      "differingShare": 0.0351
+    },
+    {
+      "button": "Leading icon / loading",
+      "kit": [
+        135.53125,
+        48
+      ],
+      "sheet": [
+        135.53125,
+        48
+      ],
+      "differingShare": 0.0226
+    },
+    {
+      "button": "Compact primary / default",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.0128
+    },
+    {
+      "button": "Compact primary / hover",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.0142
+    },
+    {
+      "button": "Compact primary / pressed",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.0159
+    },
+    {
+      "button": "Compact primary / focus-kb",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.0188
+    },
+    {
+      "button": "Compact primary / focus-gp",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.02
+    },
+    {
+      "button": "Compact primary / disabled",
+      "kit": [
+        102.734375,
+        48
+      ],
+      "sheet": [
+        102.734375,
+        48
+      ],
+      "differingShare": 0.0376
+    },
+    {
+      "button": "Compact primary / loading",
+      "kit": [
+        130.75,
+        48
+      ],
+      "sheet": [
+        130.75,
+        48
+      ],
+      "differingShare": 0.0291
+    },
+    {
+      "button": "Compact secondary / default",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.0129
+    },
+    {
+      "button": "Compact secondary / hover",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.012
+    },
+    {
+      "button": "Compact secondary / pressed",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.0177
+    },
+    {
+      "button": "Compact secondary / focus-kb",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.0214
+    },
+    {
+      "button": "Compact secondary / focus-gp",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.0176
+    },
+    {
+      "button": "Compact secondary / disabled",
+      "kit": [
+        77.703125,
+        48
+      ],
+      "sheet": [
+        77.703125,
+        48
+      ],
+      "differingShare": 0.038
+    },
+    {
+      "button": "Compact secondary / loading",
+      "kit": [
+        130.75,
+        48
+      ],
+      "sheet": [
+        130.75,
+        48
+      ],
+      "differingShare": 0.0291
+    },
+    {
+      "button": "Quiet (text) / default",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.0127
+    },
+    {
+      "button": "Quiet (text) / hover",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.0123
+    },
+    {
+      "button": "Quiet (text) / pressed",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.0161
+    },
+    {
+      "button": "Quiet (text) / focus-kb",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.0272
+    },
+    {
+      "button": "Quiet (text) / focus-gp",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.017
+    },
+    {
+      "button": "Quiet (text) / disabled",
+      "kit": [
+        81.53125,
+        48
+      ],
+      "sheet": [
+        81.53125,
+        48
+      ],
+      "differingShare": 0.027
+    },
+    {
+      "button": "Quiet (text) / loading",
+      "kit": [
+        130.75,
+        48
+      ],
+      "sheet": [
+        130.75,
+        48
+      ],
+      "differingShare": 0.0229
+    },
+    {
+      "button": "Leading icon, destructive / default",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0133
+    },
+    {
+      "button": "Leading icon, destructive / hover",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0129
+    },
+    {
+      "button": "Leading icon, destructive / pressed",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0179
+    },
+    {
+      "button": "Leading icon, destructive / focus-kb",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0202
+    },
+    {
+      "button": "Leading icon, destructive / focus-gp",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0348
+    },
+    {
+      "button": "Leading icon, destructive / disabled",
+      "kit": [
+        141.328125,
+        48
+      ],
+      "sheet": [
+        141.328125,
+        48
+      ],
+      "differingShare": 0.0356
+    },
+    {
+      "button": "Leading icon, destructive / loading",
+      "kit": [
+        130.75,
+        48
+      ],
+      "sheet": [
+        130.75,
+        48
+      ],
+      "differingShare": 0.0283
+    },
+    {
+      "button": "Icon button / default",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0278
+    },
+    {
+      "button": "Icon button / hover",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0278
+    },
+    {
+      "button": "Icon button / pressed",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0269
+    },
+    {
+      "button": "Icon button / focus-kb",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0278
+    },
+    {
+      "button": "Icon button / focus-gp",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0405
+    },
+    {
+      "button": "Icon button / disabled",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0.0265
+    },
+    {
+      "button": "Icon button / loading",
+      "kit": [
+        48,
+        48
+      ],
+      "sheet": [
+        48,
+        48
+      ],
+      "differingShare": 0
+    }
+  ]
+}

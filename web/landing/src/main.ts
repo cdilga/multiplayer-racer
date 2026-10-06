@@ -1,6 +1,6 @@
 // The front door (P1-C01): Host a room, or Join a room with the code from the big screen. No renderer, sim or
 // transport is imported here; the host app and the controller app are separate pages under the deployment base.
-import { applyProfile, icon, toast } from '../../shared/ui';
+import { applyProfile, icon, paintKit, toast } from '../../shared/ui';
 import './landing.css';
 import { basePath } from '../../shared/src/base';
 import { checkCode, normaliseCode } from './code';
@@ -10,6 +10,7 @@ const base = basePath();
 const routes = { host: `${base}host`, join: (code: string) => `${base}j/${code}` };
 
 applyProfile();
+paintKit(); // the brushed Host and Join buttons (the kit paints their slab and keeps it through resizes)
 
 const $ = <T extends HTMLElement>(id: string) => {
   const el = document.getElementById(id);

@@ -131,6 +131,8 @@ jobs:
       - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
         run: JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
 
+      - name: The UI kit page, focus rings at DPR 1-3, paper QR decode (P1-U06)
+        run: node --test --test-concurrency=1 web/shared/ui/tests/
       - name: The landing page from one build on jj-server under /, /p/x/ and /p/y/ in Chromium (P1-C01, P1-N02)
         run: JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/landing/tests/
       - name: Host and controllers over loopback WebRTC through jj-server, restarts, refresh, coturn relay (P1-N05, P1-G00)

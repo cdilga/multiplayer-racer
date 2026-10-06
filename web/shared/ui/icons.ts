@@ -1,5 +1,5 @@
-// The vendored Lucide icons (art/ui/icons, ISC), as bundled asset URLs: no CDN, no network at run time (R70).
-const urls = import.meta.glob<string>('../../../art/ui/icons/*.svg', { eager: true, query: '?url', import: 'default' });
+// The vendored Lucide icons (web/shared/ui/icons, copied from art/ui/icons; ISC), as bundled asset URLs: no CDN, no network at run time (R70).
+const urls = import.meta.glob<string>('./icons/*.svg', { eager: true, query: '?url', import: 'default' });
 
 const byName = new Map<string, string>();
 for (const [path, url] of Object.entries(urls)) byName.set(path.slice(path.lastIndexOf('/') + 1, -4), url);

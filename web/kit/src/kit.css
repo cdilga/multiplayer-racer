@@ -1,0 +1,21 @@
+/* The kit page's own layout (not part of the kit). Everything else is web/shared/ui. */
+html { background: var(--c-paper); }
+body { background: var(--c-paper); color: var(--c-ink); font-size: var(--fs-body); }
+#kit { width: max-content; min-width: 100%; padding: 32px 32px 64px; }
+.kit-h { margin: 56px 0 8px; font: 900 italic var(--fs-heading)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-display); }
+.kit-note { max-width: 70ch; margin: 0 0 24px; color: var(--c-ink-soft); font-weight: 600; }
+.kit-grid { display: grid; grid-template-columns: 200px repeat(7, max-content); gap: 56px 44px; align-items: center; }
+.kit-grid .rl { font-weight: 700; font-size: var(--fs-label); }
+.kit-grid .rl small { display: block; color: var(--c-ink-soft); font-weight: 500; }
+.kit-grid .ch { font-weight: 700; font-size: var(--fs-caption); letter-spacing: .07em; text-transform: uppercase; color: var(--c-ink-soft); }
+.kit-ink { background: var(--c-ink); padding: 24px 32px; width: max-content; display: flex; gap: 40px; align-items: center; }
+.kit-row { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: center; max-width: 900px; }
+.kit-row.col { flex-direction: column; align-items: flex-start; }
+.kit-cap { display: block; margin-top: 6px; color: var(--c-ink-soft); font-size: var(--fs-caption); font-weight: 600; }
+.kit-blk { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.kit-table { border-collapse: collapse; font-size: var(--fs-label); }
+.kit-table th, .kit-table td { padding: 6px 14px 6px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--c-paper-line); }
+.kit-toasts { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.kit-toasts .toast { animation: none; }
+.kit-table { max-width: 1100px; margin-bottom: 24px; }
+.kit-table caption { text-align: left; font-weight: 700; }

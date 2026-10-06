@@ -1,6 +1,7 @@
 /* Shared UI components (P1-C01): buttons, panels, badges, chips, fields, toasts, confirmations, focus states.
    Built from the variables in tokens.generated.css only (no colour literals except through colour-mix of palette
-   variables). Mirrors art/ui/sheets/components.html; when the sheet and this file disagree, the sheet wins. */
+   variables). Mirrors art/ui/sheets/components.html; when the sheet and this file disagree, the sheet wins. The brush system (buttons, chips,
+   badges, caption) is brush.css. */
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--c-ink); -webkit-text-size-adjust: 100%; }
 body {
@@ -33,22 +34,31 @@ button, input { font: inherit; color: inherit; margin: 0; }
 .btn-icon { width: var(--touch); padding: 0; }
 .btn.wide { width: 100%; }
 .btn.big { min-height: calc(var(--touch) * 1.25); font-size: var(--fs-title); }
-.btn:hover { --ov: var(--hov); }
-.btn-quiet:hover { --bg: var(--c-paper-shade); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.btn:hover, .btn.is-hover { --ov: var(--hov); }
+.btn-quiet:hover, .btn-quiet.is-hover { --bg: var(--c-paper-shade); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
 .btn:active, .btn.is-pressed { --ov: color-mix(in srgb, var(--c-ink) 12%, transparent); --sh: 0 0 0 0 transparent; transform: translateY(var(--sh-y)); }
 .btn[disabled], .btn[aria-disabled="true"], .btn.is-disabled { --bg: var(--c-paper-shade); --fg: var(--c-ink-soft); --bd: var(--c-ink-soft); --ov: transparent; --sh: 0 0 0 0 transparent; cursor: not-allowed; transform: none; }
+.btn-quiet.is-pressed { --bg: var(--c-paper-line); transform: none; }
+.btn-quiet.is-disabled { --bg: transparent; --bd: transparent; }
 .btn.is-loading { cursor: progress; background-image: repeating-linear-gradient(-45deg, transparent 0 9px, color-mix(in srgb, var(--c-ink) 9%, transparent) 9px 18px); }
 
 /* ---------- focus: keyboard (cobalt on paper, saffron on ink) and gamepad (saffron ring with an ink hairline) ---------- */
-:focus-visible { outline: var(--focus-kb-w) solid var(--c-cobalt); outline-offset: var(--focus-kb-off); }
-.on-ink :focus-visible, .on-ink:focus-visible { outline-color: var(--c-saffron); }
-.is-focus-gp { position: relative; transform: translateY(var(--lift-y)); outline: 0; }
+:focus-visible, .is-focus-kb { outline: var(--focus-kb-w) solid var(--c-cobalt); outline-offset: var(--focus-kb-off); }
+.on-ink :focus-visible, .on-ink:focus-visible, .on-ink .is-focus-kb { outline-color: var(--c-saffron); }
+.is-focus-gp { position: relative; transform: translateY(var(--lift-y)); outline: 0; --sh: 0 calc(var(--sh-y) * 1.6) 0 var(--shadow-c); }
+.btn-quiet.is-focus-gp { --sh: 0 0 0 0 transparent; }
+.is-focus-gp > .gp-tab { display: block; }
 .is-focus-gp::after {
   content: ""; position: absolute; pointer-events: none;
   inset: calc(-1 * (var(--bw, 0px) + var(--focus-gp-off) + var(--focus-gp-w)));
   border: var(--focus-gp-w) solid var(--c-saffron); border-radius: calc(var(--r, 0px) + var(--focus-gp-off) + var(--focus-gp-w));
   box-shadow: 0 0 0 2px var(--c-ink), inset 0 0 0 2px var(--c-ink);
 }
+
+/* ---------- spinner (a loading button's, and the Reduced variant turns slowly rather than stopping: it shows progress) ---------- */
+.spinner { flex: none; width: 1.25em; height: 1.25em; border-radius: 50%; border: 3px solid color-mix(in srgb, currentColor 28%, transparent); border-top-color: currentColor; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+html.still .spinner { animation: none; transform: rotate(40deg); } /* a still for deterministic captures */
 
 /* ---------- panels ---------- */
 .panel {
@@ -65,11 +75,14 @@ button, input { font: inherit; color: inherit; margin: 0; }
 .paint-svg path { fill: var(--paint, var(--c-ink)); }
 
 /* ---------- badges, chips ---------- */
-.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.4em; height: 1.7em; padding: 0 var(--sp-2); background: var(--b, var(--id-0)); color: var(--on, var(--id-0-on)); border: var(--outline) solid var(--c-ink); border-radius: var(--r-badge); box-shadow: 0 var(--sh-y) 0 var(--shadow-c); font: 900 italic var(--fs-heading)/1 var(--font-display); letter-spacing: var(--ls-display); white-space: nowrap; }
-.chip { --cbg: var(--c-paper-shade); --cfg: var(--c-ink-soft); display: inline-flex; align-items: center; gap: 6px; min-height: 1.9em; padding: 0 var(--sp-3); background: var(--cbg); color: var(--cfg); border: 2px solid var(--c-ink); border-radius: 999px; font: 700 var(--fs-label)/1 var(--font-body); white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.4em; height: 1.9em; padding: 0 var(--sp-2) .3em; color: var(--on, var(--id-0-on)); font: 900 italic var(--fs-heading)/1 var(--font-display); letter-spacing: var(--ls-display); white-space: nowrap; }
+.chip { --cbg: var(--c-paper-shade); --cfg: var(--c-ink-soft); display: inline-flex; align-items: center; gap: 6px; min-height: 2.6em; padding: 0 1.2em .3em; color: var(--cfg); font: 700 var(--fs-label)/1 var(--font-body); white-space: nowrap; }
 .chip-ready { --cbg: var(--c-success); --cfg: var(--c-paper); }
 .chip-warn { --cbg: var(--c-warning); --cfg: var(--c-ink); }
-.chip-info { --cbg: var(--c-cobalt); --cfg: var(--c-paper); }
+.chip-info, .chip-auto { --cbg: var(--c-cobalt); --cfg: var(--c-paper); }
+.chip-ready { font: 900 italic var(--fs-body)/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
+.chip-choosing { font-style: italic; font-weight: 600; }
+.chip .ic { width: 1.1em; height: 1.1em; }
 
 /* ---------- fields ---------- */
 .field-label { display: block; margin-bottom: var(--sp-1); font-weight: 700; font-size: var(--fs-label); color: var(--c-ink); }
@@ -94,7 +107,22 @@ button, input { font: inherit; color: inherit; margin: 0; }
 .modal-title { font: 900 italic var(--fs-heading)/var(--lh-display) var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-display); }
 .modal .btnrow { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-2); }
 
+/* ---------- paper QR (qr.ts): ink on paper with its full quiet zone, the code and the domain beside it ---------- */
+.qr-card { --qr-size: calc(37 * 4px); display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); margin: 0; padding: var(--sp-2); background: var(--c-paper); color: var(--c-ink); border: var(--outline) solid var(--c-ink); border-radius: var(--r-panel); box-shadow: 0 var(--sh-y) 0 var(--shadow-c); }
+.qr-card .qr { display: block; width: var(--qr-size); height: var(--qr-size); image-rendering: pixelated; }
+.qr-card figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.qr-card .qr-code { font-size: calc(var(--qr-size) * .26); line-height: 1; letter-spacing: .06em; }
+.qr-card .qr-domain { font: 700 var(--fs-label)/1.1 var(--font-body); }
+
+/* ---------- motion: Full is the default; Reduced (the OS setting, or data-motion="reduced" on <html>) drops scale, shake, flash and overshoot ---------- */
+.is-identifying { outline: var(--focus-gp-w) solid var(--c-saffron); outline-offset: 2px; }
+:root[data-motion="reduced"] .spinner { animation-duration: 3s; }
+:root[data-motion="reduced"] .toast { animation: toast-fade var(--dur-fast) linear both; }
+:root[data-motion="reduced"] .btn:active, :root[data-motion="reduced"] .btn.is-pressed, :root[data-motion="reduced"] .btn.brush.is-pressed, :root[data-motion="reduced"] .btn.brush:not([disabled]):active { transform: none; }
+@keyframes toast-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .toast { animation: none; }
-  .btn:active, .btn.is-pressed { transform: none; }
+  .toast { animation: toast-fade var(--dur-fast) linear both; }
+  .btn:active, .btn.is-pressed, .btn.brush.is-pressed, .btn.brush:not([disabled]):active { transform: none; }
 }
+
+.btn-quiet.is-loading { background-image: none; }

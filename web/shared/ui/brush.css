@@ -1,0 +1,64 @@
+/* The brush system's styles (P1-U06). Ported from art/ui/sheets/brush-button.js (CSS and BZ_CSS), accepted 2026-10-07.
+   Brushed buttons: states are CSS on the per-button SVG that brush.ts paints. Brushed chips, badges and the caption: the
+   mask + skin shapes brush.ts installs as --bz-* variables. Sizes come from the profile tokens (--outline, --sh-y, ...). */
+
+/* The brushed button's sizes from the profile (its shapes and states are below). */
+.btn.brush { --bb-o: var(--outline); --bb-sh: var(--sh-y); --bb-kb: var(--focus-kb-w); --bb-gp: var(--focus-gp-w); --bb-off: var(--focus-kb-off); --bb-lift: calc(-1 * var(--lift-y)); }
+.btn.brush { position: relative; isolation: isolate; background: transparent !important; border-color: transparent !important; box-shadow: none !important; outline: none !important; padding-inline: var(--bb-pad, 1.15em); --bb-base: var(--c-paper); --bb-hov: color-mix(in srgb, var(--c-saffron) 32%, var(--c-paper)); --bb-fill: var(--bb-base); --bb-ink: var(--c-ink); --bb-ring-kb: var(--c-cobalt); }
+.btn.brush::after { content: none !important; }
+.btn.brush > svg.bb { position: absolute; left: 0; top: 0; z-index: -1; overflow: visible; pointer-events: none; }
+.btn.brush:is(.primary, .btn-primary) { --bb-base: var(--c-saffron); --bb-hov: color-mix(in srgb, var(--c-saffron) 55%, var(--c-paper)); }
+.btn.brush:is(.danger, .btn-destructive) { --bb-base: var(--c-danger); --bb-hov: color-mix(in srgb, var(--c-danger) 78%, var(--c-paper)); }
+.btn.brush.cobalt { --bb-base: var(--c-cobalt); --bb-hov: color-mix(in srgb, var(--c-cobalt) 78%, var(--c-paper)); color: var(--c-paper); }
+.btn.brush.danger-o { --bb-ink: var(--c-danger); }
+.btn.brush.is-hover { --bb-fill: var(--bb-hov); }
+@media (hover: hover) { .btn.brush:not([disabled]):hover { --bb-fill: var(--bb-hov); } }
+.on-ink .btn.brush, .btn.brush.on-ink { --bb-ring-kb: var(--c-saffron); }
+.bb .bb-fill { fill: var(--bb-fill); stroke: var(--bb-ink); stroke-width: var(--bb-o, 3px); stroke-linejoin: round; }
+.bb .bb-shadow { fill: rgb(21 32 58 / .85); stroke: rgb(21 32 58 / .85); stroke-width: var(--bb-o, 3px); stroke-linejoin: round; transform: translateY(var(--bb-sh, 5px)); }
+.on-ink .bb .bb-shadow { fill: rgb(0 0 0 / .55); stroke: rgb(0 0 0 / .55); }
+.bb .bb-ring { display: none; fill: none; stroke-linejoin: round; }
+.bb .bb-ring.bb-sh { transform: translateY(var(--bb-sh, 5px)); }
+.btn.brush:is(.is-focus-gp, .gp) .bb-ring.bb-sh { transform: translateY(calc(var(--bb-sh, 5px) * 1.6)); }
+.bb .bb-kb { stroke: var(--bb-ring-kb); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-kb, 3px))); }
+.bb .bb-gp-edge { stroke: var(--c-ink); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-gp, 4px) + 2px)); }
+.bb .bb-gp { stroke: var(--c-saffron); stroke-width: calc(var(--bb-o, 3px) + 2 * (var(--bb-off, 2px) + var(--bb-gp, 4px))); }
+.bb .bb-gp-gap { stroke: var(--c-ink); stroke-width: calc(var(--bb-o, 3px) + 2 * var(--bb-off, 2px)); }
+.btn.brush.is-pressed, .btn.brush:not([disabled]):active { transform: translateY(var(--bb-sh, 5px)); }
+.btn.brush.is-pressed .bb-shadow, .btn.brush:not([disabled]):active .bb-shadow { display: none; }
+.btn.brush.is-pressed .bb-fill, .btn.brush:not([disabled]):active .bb-fill { fill: color-mix(in srgb, var(--bb-fill) 86%, var(--c-ink)); }
+.btn.brush.is-focus-kb .bb-kb, .btn.brush:focus-visible:not(.gp):not(.is-focus-gp) .bb-kb { display: block; }
+.btn.brush.is-focus-gp, .btn.brush.gp { transform: translateY(calc(-1 * var(--bb-lift, 2px))); }
+.btn.brush.is-focus-gp .bb-shadow, .btn.brush.gp .bb-shadow { transform: translateY(calc(var(--bb-sh, 5px) * 1.6)); }
+.btn.brush.is-focus-gp :is(.bb-gp-edge, .bb-gp, .bb-gp-gap), .btn.brush.gp :is(.bb-gp-edge, .bb-gp, .bb-gp-gap) { display: block; }
+.btn.brush.is-disabled, .btn.brush[disabled] { --bb-fill: var(--c-paper-shade) !important; --bb-ink: var(--c-ink-soft); color: var(--c-ink-soft) !important; transform: none; cursor: not-allowed; }
+.btn.brush.is-disabled .bb-shadow, .btn.brush[disabled] .bb-shadow { display: none; }
+.btn.brush.is-disabled img, .btn.brush[disabled] img { opacity: .55; }
+
+/* The chevron tab on the leading edge of a gamepad-focused button: on a TV it and the ring are the only cursor. */
+.gp-tab { display: none; position: absolute; top: 50%; width: 21px; height: 37px; margin-top: -18.5px; overflow: visible; pointer-events: none; z-index: 2; inset-inline-start: calc(-1 * (var(--bw, 0px) + var(--focus-gp-off) + var(--focus-gp-w)) - 17px); fill: var(--c-saffron); stroke: var(--c-ink); stroke-width: 2.5; stroke-linejoin: round; }
+.btn.brush:is(.is-focus-gp, .gp) > .gp-tab { display: block; }
+[dir=rtl] .gp-tab { transform: scaleX(-1); }
+
+/* ---------- brushed chips and number badges (mask + skin from brush.ts; the fill is any colour) ---------- */
+.capt { --capt-fill: var(--c-saffron); --capt-fg: var(--c-ink); position: relative; isolation: isolate; display: inline-block; width: fit-content; max-width: 100%; box-sizing: border-box; padding: .1em .65em .14em; color: var(--capt-fg); font: 900 italic var(--capt-size, 30px)/1.05 var(--font-display); text-transform: uppercase; letter-spacing: .01em; text-align: center; transform: rotate(var(--capt-rot, -2deg)) skewX(var(--skew-tag, -10deg)); }
+.capt > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; transform: skewX(calc(-1 * var(--skew-tag, -10deg))); }
+.capt > svg path { fill: var(--capt-fill); }
+.capt.ink { --capt-fill: var(--c-ink); --capt-fg: var(--c-paper); }
+.capt.teal { --capt-fill: var(--c-teal); }
+.capt.flat { --capt-rot: 0deg; }
+.capt.one > span { display: block; white-space: nowrap; text-overflow: ellipsis; }
+.capt .badge { font-size: .8em; vertical-align: .05em; }
+.bz, .chip, .badge { -webkit-mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; mask: var(--bz-mask) 0 0 / 100% 100% no-repeat; background: var(--bz-skin) 0 0 / 100% 100% no-repeat, var(--bz-fill, var(--c-paper)) !important; border-color: transparent !important; border-radius: 0 !important; box-shadow: none !important; }
+
+.chip, .badge { --bz-mask: var(--bz-chip-0-mask); --bz-skin: var(--bz-chip-0-skin); }
+.chip:nth-child(4n+2) { --bz-mask: var(--bz-chip-1-mask); --bz-skin: var(--bz-chip-1-skin); }
+.chip:nth-child(4n+3) { --bz-mask: var(--bz-chip-2-mask); --bz-skin: var(--bz-chip-2-skin); }
+.chip:nth-child(4n+4) { --bz-mask: var(--bz-chip-3-mask); --bz-skin: var(--bz-chip-3-skin); }
+.badge { --bz-mask: var(--bz-badge-0-mask); --bz-skin: var(--bz-badge-0-skin); --bz-fill: var(--b, var(--id-0)); }
+.badge:nth-child(4n+2) { --bz-mask: var(--bz-badge-1-mask); --bz-skin: var(--bz-badge-1-skin); }
+.badge:nth-child(4n+3) { --bz-mask: var(--bz-badge-2-mask); --bz-skin: var(--bz-badge-2-skin); }
+.badge:nth-child(4n+4) { --bz-mask: var(--bz-badge-3-mask); --bz-skin: var(--bz-badge-3-skin); }
+.chip { --bz-fill: var(--cbg); }
+.on-ink .chip, .on-ink .badge, .chip.on-ink { --bz-skin: var(--bz-chip-0-skin-on-ink); }
+.on-ink .badge { --bz-skin: var(--bz-badge-0-skin-on-ink); }
