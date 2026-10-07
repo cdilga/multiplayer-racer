@@ -41,3 +41,5 @@ docs/evidence/**/*.jpg filter=lfs diff=lfs merge=lfs -text
 docs/evidence/**/*.webm filter=lfs diff=lfs merge=lfs -text
 assets/**/*.m4a filter=lfs diff=lfs merge=lfs -text
 docs/evidence/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+*.jjclip filter=lfs diff=lfs merge=lfs -text
+*.jjsession filter=lfs diff=lfs merge=lfs -text

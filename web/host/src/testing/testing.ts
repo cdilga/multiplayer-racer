@@ -8,6 +8,10 @@
 // overlay and capture metadata.
 import type { LocalInput } from '../input/local';
 import { SimClient, type Snapshot } from '../worker/client';
+import { ClipRecorder, installHotkey } from '../clips/recorder';
+import { SessionRecorder, type SessionOptions } from '../clips/session';
+import { IdbStore } from '../clips/store';
+import type { TapStats } from '../clips/tap';
 import type { TestFromWorker, TestInput, TestToWorker, WorkerStatus } from './messages';
 
 /** The bundle check (scripts/ci/bundle-check.mjs) fails a build where this appears outside the `test/` output. */
@@ -68,6 +72,13 @@ export class TestClient {
     const r = await this.ask((id) => ({ kind: 'status', id }));
     if (r.kind !== 'status') throw new Error('unexpected reply');
     return r.status;
+  }
+
+  /** What the worker's journal stream (bug clips) has cost so far. */
+  async tapStats(): Promise<TapStats> {
+    const r = await this.ask((id) => ({ kind: 'tapStats', id }));
+    if (r.kind !== 'tapStats') throw new Error('unexpected reply');
+    return r.stats;
   }
 
   input(input: TestInput): void {
@@ -162,8 +173,12 @@ class Overlay {
 }
 
 /** Puts the surface on `window.__jjTest` for the page that loaded this chunk. */
-export function attach(client: SimClient, ctx: { mapJson: string; seed: number; input?: LocalInput }) {
+export function attach(client: SimClient, ctx: { mapJson: string; seed: number; input?: LocalInput; session?: SessionOptions }) {
   const test = new TestClient(client);
+  // Bug clips (P1-F07) and the session recorder (P1-F12) keep the sim's journal on main; Ctrl/⌘+Shift+B saves a clip.
+  const clips = new ClipRecorder().attach(client);
+  const session = new SessionRecorder(clips, { store: new IdbStore(), ...ctx.session }).start(client);
+  installHotkey(clips);
   const overlay = new Overlay(ctx.mapJson);
   const fakes = new Map<string, FakeController>();
   const lines: string[] = [];
@@ -197,6 +212,18 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     hash: () => test.command<{ tick: number; stateHash: string }>({ cmd: 'hash' }),
     outcome: () => test.command({ cmd: 'outcome' }),
     status: () => test.status(),
+    /** Bug clips: the recorder, a save (returns the clip and what saving cost the page), and the worker stream's cost. */
+    clips,
+    saveClip: (note?: string) => clips.save({ note }),
+    tapStats: () => test.tapStats(),
+    /** The session recorder (P1-F12): the live summary, a save as a `*.jjsession` document, and the stored sessions. */
+    session,
+    sessionSummary: () => session.summary(),
+    saveSession: () => session.save(),
+    /** Breaks the worker on purpose (the fault path: clips and the session record must survive it). */
+    panic: () => test.panic(),
+    /** Fake transport notes (the real bridge calls `session.noteConnection`). */
+    noteConnection: (endpoint: string, path: string) => session.noteConnection(endpoint, path),
     lines: () => lines.slice(),
     pauseReasons: () => client.pauseReasons(),
     /** Host pads and key clusters (P1-C05): the drawer's list and each source's host-applied input age. */

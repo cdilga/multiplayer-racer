@@ -5,5 +5,5 @@
     "lib": ["ES2023", "WebWorker"],
     "types": []
   },
-  "include": ["testing.worker.ts", "messages.ts", "../worker/core.ts", "../worker/messages.ts"]
+  "include": ["testing.worker.ts", "messages.ts", "../clips/tap.ts", "../clips/types.ts", "../worker/core.ts", "../worker/messages.ts"]
 }

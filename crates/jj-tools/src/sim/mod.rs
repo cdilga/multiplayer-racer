@@ -35,6 +35,7 @@
 //! `expect` without `atTick` is checked at the end of the run.
 
 mod compare;
+mod replay;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -262,6 +263,7 @@ pub const HELP: &str = "jj sim: load a fixture, set up cars, seats and the round
 
 usage: jj sim [--json] [--trace] [--out <dir>] [--set <field>=<value>]… <fixture.json>…
        jj sim --sweep <field>=<from>..<to>[:<steps>] [--set …] <fixture.json>…   (one CSV row per value × car)
+       jj sim --replay [--json] [--trace] [--out <dir>] [--build <id>|--any-build] <clip.jjclip|session.jjsession>…
        jj sim [--json] <fixture.json> --compare <accepted trace|run dir>   (runs CURRENT, plus TUNED with --set)
        jj sim [--json] --compare <accepted> <current> [<tuned>]          (traces or run dirs)
 
@@ -269,7 +271,12 @@ Each run writes target/jj-runs/sim-<scenario>/ (outcome.json, journal.bin, trace
 replays its journal to the same full-state hash, and exits 0 when every envelope holds and the replay
 matches, 1 when not (printing what it observed against the outcome signature), 2 on usage or I/O.
 
+--replay re-simulates what a host saved (a bug clip, F07, or a session recording, F12): every world from its map bytes, seed
+and journal, checking each full-state hash the host took, and printing the end hash and the state at the marked moment.
+A clip from another build is refused (check that build out, or --any-build); --trace writes trace.jsonl rows per world.
+
 examples:
+  jj sim --replay docs/evidence/BUG-1/bug.jjclip --trace
   jj sim scenarios/straight-throttle.json
   jj sim --json scenarios/*.json                       # the scenario bank, one JSON array
   jj sim --json crates/jj-tools/tests/fixtures/sim/three-seats.json   # 3 cars, 3 seats, 600 ticks
@@ -365,6 +372,9 @@ pub fn command(args: &[String]) -> ExitCode {
         ExitCode::from(2)
     };
     let mut comparing = false;
+    let mut replaying = false;
+    let mut build: Option<String> = None;
+    let mut any_build = false;
     let mut sweep: Option<Sweep> = None;
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -383,6 +393,12 @@ pub fn command(args: &[String]) -> ExitCode {
                 None => return usage("--set needs <field>=<value>"),
             },
             "--compare" => comparing = true,
+            "--replay" => replaying = true,
+            "--any-build" => any_build = true,
+            "--build" => match it.next() {
+                Some(b) => build = Some(b.clone()),
+                None => return usage("--build needs a commit id"),
+            },
             "--sweep" => match it.next().map(|s| Sweep::parse(s)) {
                 Some(Ok(s)) => sweep = Some(s),
                 Some(Err(e)) => return usage(&e),
@@ -391,6 +407,18 @@ pub fn command(args: &[String]) -> ExitCode {
             _ if comparing => compare.push(PathBuf::from(a)),
             _ => files.push(PathBuf::from(a)),
         }
+    }
+    if replaying {
+        return replay::command(
+            &files,
+            &replay::Options {
+                json: json_out,
+                trace: opts.trace,
+                out: opts.out.clone(),
+                build,
+                any_build,
+            },
+        );
     }
     if comparing {
         return compare::command(&files, &compare, &opts, json_out);

@@ -17,6 +17,10 @@ export interface TestInit {
   describe?: boolean;
   /** Run on the worker's clock instead of starting held (frame-stepped). */
   live?: boolean;
+  /** Ticks the journal stream waits between polls (default 12; a test host that steps by single ticks wants 1). */
+  clipEveryTicks?: number;
+  /** Ticks between checkpoint hashes in the journal stream (default 600). */
+  clipHashEvery?: number;
 }
 
 export type TestToWorker =
@@ -24,7 +28,10 @@ export type TestToWorker =
   | { kind: 'schedule'; tick: number; input: TestInput }
   | { kind: 'stopAt'; tick: number }
   | { kind: 'status'; id: number }
-  | { kind: 'panic' };
+  | { kind: 'tapStats'; id: number }
+  | { kind: 'panic' }
+  /** Poll the journal now (bug clips, P1-F07), with a state hash; answered with `journalAck` after the `journal` message. */
+  | { kind: 'journalPoll'; id: number; hash: boolean };
 
 export interface WorkerStatus {
   tick: number;
@@ -38,4 +45,7 @@ export interface WorkerStatus {
 
 export type TestFromWorker =
   | { kind: 'testResult'; id: number; ok: boolean; value?: unknown; error?: string }
-  | { kind: 'status'; id: number; status: WorkerStatus };
+  | { kind: 'status'; id: number; status: WorkerStatus }
+  | { kind: 'journalAck'; id: number }
+  /** The journal stream's cost so far (`jj-test` surface `clipTapStats`). */
+  | { kind: 'tapStats'; id: number; stats: import('../clips/tap').TapStats };

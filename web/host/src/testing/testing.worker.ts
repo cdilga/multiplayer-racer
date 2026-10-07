@@ -4,6 +4,7 @@
 import * as wasm from './pkg/jj_wasm_host_testing.js';
 import { SimWorker, type Extension } from '../worker/core';
 import { PAUSE_BITS } from '../worker/messages';
+import { JournalTap } from '../clips/tap';
 import type { TestInit, TestInput, TestToWorker, WorkerStatus } from './messages';
 
 type Sim = wasm.HostSim;
@@ -50,12 +51,30 @@ function status(w: SimWorker<Sim>): WorkerStatus {
   }
 }
 
+/** The shipped loop plus the journal stream (P1-F07): after each published step or pause change, main gets what the
+ *  journal gained (a few bytes most of the time), so a bug clip survives a worker fault. */
+class TestingWorker extends SimWorker<Sim> {
+  tap = new JournalTap();
+
+  override post(msg: Parameters<SimWorker<Sim>['post']>[0], transfer: Transferable[] = []): void {
+    super.post(msg, transfer);
+    if (msg.kind === 'snapshot' || msg.kind === 'pause') this.pump();
+  }
+
+  pump(opts: { force?: boolean; hash?: boolean } = {}): void {
+    if (!this.sim || this.faulted) return;
+    const m = this.tap.poll(this.sim as unknown as Parameters<JournalTap['poll']>[0], opts);
+    if (m) super.post(m as unknown as Parameters<SimWorker<Sim>['post']>[0]);
+  }
+}
+
 const ext: Extension<Sim> = {
   encode,
   describe: (bytes) => wasm.describe_message(bytes),
   init(w, init) {
     const t = init as TestInit;
     w.describe = t.describe ?? false;
+    (w as TestingWorker).tap = new JournalTap(t.clipEveryTicks ?? 12, t.clipHashEvery ?? 600);
     if (!t.live) w.sim!.test('{"cmd":"hold","on":true}');
   },
   message(w, raw) {
@@ -73,6 +92,7 @@ const ext: Extension<Sim> = {
           }
         });
         if (!w.faulted) w.flush(STEPPING.has(String(msg.command.cmd)));
+        (w as TestingWorker).pump();
         w.post({ kind: 'testResult', id: msg.id, ...reply });
         return true;
       }
@@ -81,6 +101,13 @@ const ext: Extension<Sim> = {
         return true;
       case 'stopAt':
         w.guard((s) => s.stop_at(msg.tick));
+        return true;
+      case 'journalPoll':
+        (w as TestingWorker).pump({ force: true, hash: msg.hash });
+        w.post({ kind: 'journalAck', id: msg.id });
+        return true;
+      case 'tapStats':
+        w.post({ kind: 'tapStats', id: msg.id, stats: (w as TestingWorker).tap.stats });
         return true;
       case 'panic':
         w.guard((s) => s.debug_panic());
@@ -94,4 +121,4 @@ const ext: Extension<Sim> = {
   },
 };
 
-new SimWorker(wasm, ext);
+const worker = new TestingWorker(wasm, ext);

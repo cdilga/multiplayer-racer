@@ -14,6 +14,7 @@
 //! let recorded = h.finish();
 //! ```
 
+pub mod clip;
 pub mod run;
 pub mod session;
 

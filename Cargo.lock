@@ -956,12 +956,14 @@ dependencies = [
 name = "jj-fixture"
 version = "0.2.0"
 dependencies = [
+ "base64",
  "jj-input",
  "jj-map",
  "jj-protocol",
  "jj-session",
  "jj-sim",
  "jj-types",
+ "postcard",
  "serde",
  "serde_json",
 ]
