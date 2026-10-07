@@ -251,11 +251,14 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-intermission');
 
   at('Intermission and Lobby: shrink to 2');
-  for (const p of phones.slice(2, 8)) await leave(p); // Bazza … Thommo; Jonesy and Sheila stay
-  await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters
-  // The host takes the room back to the Lobby (before the next round's countdown), and both key clusters leave there.
+  // One phone leaves in the Intermission itself; the results screen counts down to the next round, and on a slow host
+  // six leaves outlast it (run 1656), so the host takes the room back to the Lobby next and the rest leave there.
+  await leave(phones[2]); // Bazza
   await host.getByRole('button', { name: 'Return to lobby' }).click();
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
+  for (const p of phones.slice(3, 8)) await leave(p); // … Thommo; Jonesy and Sheila stay
+  await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters
+  // Both key clusters leave in the Lobby.
   // Both key clusters leave from the drawer (the sitting-out one too).
   // (The drawer rebuilds its rows when a source's state changes, so a click can land on a row just replaced: retry.)
   // Until only Jonesy and Sheila are left (a removal can land after the click that caused it, so the count isn't taken
