@@ -13,6 +13,7 @@
 use jj_map::{Biome, GENERIC_PIECES, Registry, Surface};
 
 use crate::features::Density;
+use crate::lineside::{Lineside, SignRule};
 use crate::scatter::Spec;
 use crate::terrain::TerrainParams;
 
@@ -40,6 +41,10 @@ pub struct BiomeData {
     pub terrain: TerrainParams,
     pub features: Density,
     pub scatter: Spec,
+    /// Pieces placed by rule along the road (houses facing the street, posts, lane lines, side streets), in this order.
+    pub lineside: &'static [Lineside],
+    /// Signs placed by rule (a warning before each crest or jump, a direction sign at each junction, one where the biome begins).
+    pub signs: &'static [SignRule],
     /// Extra segment names this biome may label stretches of its road with (beyond its own name).
     pub segment_types: &'static [&'static str],
 }
@@ -104,12 +109,146 @@ pub const WAYFINDING_PIECES: [(&str, &str); 3] = [
     ),
 ];
 
+/// The biome families' registry entries (`assets/kit/<biome>/`, P1-M04-M07), compiled in with the generic kit and the sign kit.
+pub const BIOME_PIECES: [(&str, &str); 16] = [
+    (
+        "town/house",
+        include_str!("../../../../assets/kit/town/house.json"),
+    ),
+    (
+        "town/shopfront",
+        include_str!("../../../../assets/kit/town/shopfront.json"),
+    ),
+    (
+        "town/power-pole",
+        include_str!("../../../../assets/kit/town/power-pole.json"),
+    ),
+    (
+        "town/mailbox",
+        include_str!("../../../../assets/kit/town/mailbox.json"),
+    ),
+    (
+        "town/water-tower",
+        include_str!("../../../../assets/kit/town/water-tower.json"),
+    ),
+    (
+        "town/gum-tree",
+        include_str!("../../../../assets/kit/town/gum-tree.json"),
+    ),
+    (
+        "town/side-street",
+        include_str!("../../../../assets/kit/town/side-street.json"),
+    ),
+    (
+        "rocks/dome",
+        include_str!("../../../../assets/kit/rocks/dome.json"),
+    ),
+    (
+        "rocks/shrub",
+        include_str!("../../../../assets/kit/rocks/shrub.json"),
+    ),
+    (
+        "rocks/spinifex",
+        include_str!("../../../../assets/kit/rocks/spinifex.json"),
+    ),
+    (
+        "outback_dirt/spinifex",
+        include_str!("../../../../assets/kit/outback_dirt/spinifex.json"),
+    ),
+    (
+        "outback_dirt/desert-oak",
+        include_str!("../../../../assets/kit/outback_dirt/desert-oak.json"),
+    ),
+    (
+        "outback_bitumen/centre-line",
+        include_str!("../../../../assets/kit/outback_bitumen/centre-line.json"),
+    ),
+    (
+        "outback_bitumen/edge-line",
+        include_str!("../../../../assets/kit/outback_bitumen/edge-line.json"),
+    ),
+    (
+        "outback_bitumen/reflector-post",
+        include_str!("../../../../assets/kit/outback_bitumen/reflector-post.json"),
+    ),
+    (
+        "outback_bitumen/delineator",
+        include_str!("../../../../assets/kit/outback_bitumen/delineator.json"),
+    ),
+];
+
+/// The sign kit's registry entries (`assets/kit/signs/`, P1-M09): the biomes place them by rule.
+pub const SIGN_PIECES: [(&str, &str); 15] = [
+    (
+        "signs/arvo-servo",
+        include_str!("../../../../assets/kit/signs/arvo-servo.json"),
+    ),
+    (
+        "signs/big-red-rock",
+        include_str!("../../../../assets/kit/signs/big-red-rock.json"),
+    ),
+    (
+        "signs/bloody-big-jumps",
+        include_str!("../../../../assets/kit/signs/bloody-big-jumps.json"),
+    ),
+    (
+        "signs/crest",
+        include_str!("../../../../assets/kit/signs/crest.json"),
+    ),
+    (
+        "signs/jumps-crest",
+        include_str!("../../../../assets/kit/signs/jumps-crest.json"),
+    ),
+    (
+        "signs/junction",
+        include_str!("../../../../assets/kit/signs/junction.json"),
+    ),
+    (
+        "signs/kangaroo",
+        include_str!("../../../../assets/kit/signs/kangaroo.json"),
+    ),
+    (
+        "signs/lookout",
+        include_str!("../../../../assets/kit/signs/lookout.json"),
+    ),
+    (
+        "signs/red-centre",
+        include_str!("../../../../assets/kit/signs/red-centre.json"),
+    ),
+    (
+        "signs/rest-area",
+        include_str!("../../../../assets/kit/signs/rest-area.json"),
+    ),
+    (
+        "signs/servo",
+        include_str!("../../../../assets/kit/signs/servo.json"),
+    ),
+    (
+        "signs/steep-descent",
+        include_str!("../../../../assets/kit/signs/steep-descent.json"),
+    ),
+    (
+        "signs/stuart-hwy",
+        include_str!("../../../../assets/kit/signs/stuart-hwy.json"),
+    ),
+    (
+        "signs/the-institution",
+        include_str!("../../../../assets/kit/signs/the-institution.json"),
+    ),
+    (
+        "signs/unsealed-road",
+        include_str!("../../../../assets/kit/signs/unsealed-road.json"),
+    ),
+];
+
 /// The registry generated maps validate against: the generic kit plus the wayfinding family.
 pub fn registry() -> Registry {
     Registry::from_json(
         GENERIC_PIECES
             .iter()
             .chain(WAYFINDING_PIECES.iter())
+            .chain(BIOME_PIECES.iter())
+            .chain(SIGN_PIECES.iter())
             .map(|(id, json)| (*id, json.as_bytes())),
     )
 }

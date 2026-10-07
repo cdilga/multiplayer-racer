@@ -1,0 +1,16 @@
+{
+  "id": "outback_bitumen/delineator",
+  "version": 1,
+  "what": "A yellow roadside delineator (at junctions and culverts).",
+  "params": {},
+  "collider": {
+    "cylinder": {
+      "radius": 70,
+      "height": 1000
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

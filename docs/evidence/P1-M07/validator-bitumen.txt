@@ -1,0 +1,23 @@
+Outback bitumen (P1-M07): 10 seeds, `jj_procgen::validate::check` (jj-map rules + transitions + envelopes + wayfinding)
+seed 0: ok, plan requested, 1004 pieces, 4 props, 4 features, gameplay hash 3eca90b2643f53c87092dcc7c63a761653825dff1a25b906598e08ddf0236271
+seed 1: ok, plan requested, 1117 pieces, 4 props, 3 features, gameplay hash 8a9935ac215c39e424921bd88a654f87338339cc31e69d613ade1952ce0c8358
+seed 2: ok, plan requested, 941 pieces, 4 props, 3 features, gameplay hash 26a0c65e07dff224ee87cdbbd884bdcaac6c1b2016763100d7dd02d8f0e4754c
+seed 3: ok, plan requested, 857 pieces, 4 props, 3 features, gameplay hash 959bbbb0ba2b17fb41c18bcef29bd78709c213b3060a49732570518f8f89b1e1
+seed 4: ok, plan requested, 1148 pieces, 4 props, 3 features, gameplay hash a3c62f8f720cc9d5a5a0f35267b252115d2b9b99881c062581c7a8c5e5d605fe
+seed 5: ok, plan requested, 1156 pieces, 4 props, 3 features, gameplay hash 09ef5a3ec2a2f678eb52b83b1a76c17ebaad46116bbc609b43965c7a622aa799
+seed 6: ok, plan requested, 1093 pieces, 4 props, 3 features, gameplay hash 57394d003b75494c32d416a9d9fd3c8df6bf8e6ea01c1e3a485a804040349ad4
+seed 7: ok, plan requested, 1095 pieces, 4 props, 3 features, gameplay hash 273096c63c7a1f063d5ec883f8b192d9bd6d0e3a5d034acb452ecb7326918984
+seed 8: ok, plan requested, 1232 pieces, 4 props, 5 features, gameplay hash 21d8ba6e3781d5fda4d7189df53c40d829b8175328ccaf15556111c8a32661f9
+seed 9: ok, plan requested, 1216 pieces, 4 props, 4 features, gameplay hash 33488971a2171fbe3719310d0e0be91d1e04da4d99a117a3fa706ef187b77574
+
+bitumen <-> placeholder transitions (greybox -> bitumen -> greybox):
+seed 0: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 1: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 2: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 3: ["greybox", "outback-bitumen", "greybox"] plan Redrawn(1)
+seed 4: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 5: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 6: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 7: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 8: ["greybox", "outback-bitumen", "greybox"] plan Requested
+seed 9: ["greybox", "outback-bitumen", "greybox"] plan Requested

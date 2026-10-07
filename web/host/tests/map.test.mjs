@@ -18,7 +18,7 @@ let greybox;
 
 before(async () => {
   browser = await chromium.launch();
-  server = await serve(join(repo, 'web/dist'));
+  server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
   greybox = JSON.parse(await readFile(join(repo, 'maps/greybox-loop.json'), 'utf8'));
   await mkdir(evidenceDir, { recursive: true });
 });

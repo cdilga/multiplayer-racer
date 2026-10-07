@@ -86,6 +86,12 @@ fn streams(seed: u64, draw: u32) -> Streams {
 
 /// The seed's track for `recipe`, validated, with the ladder's log. Deterministic native and WASM.
 pub fn prepare(seed: u64, recipe: &[Biome]) -> Prepared {
+    prepare_with(seed, recipe, MAX_DRAWS)
+}
+
+/// [`prepare`] with `draws` course draws for the full recipe (the Playtest-1 recipe allows more, so every track keeps all
+/// four biomes: [`crate::playtest`]). The ladder stays bounded: `draws` + recipe length + `draws` generations at most.
+pub fn prepare_with(seed: u64, recipe: &[Biome], draws: u32) -> Prepared {
     let registry = biome::registry();
     let mut lap: Vec<Biome> = Vec::new();
     for &b in recipe {
@@ -123,7 +129,7 @@ pub fn prepare(seed: u64, recipe: &[Biome]) -> Prepared {
     };
 
     // 1. The full recipe on the seed's own course, then derived draws.
-    for draw in 0..MAX_DRAWS {
+    for draw in 0..draws {
         if let Some((map, course)) = try_one(&lap, draw) {
             let plan = if draw == 0 {
                 Plan::Requested
@@ -153,7 +159,7 @@ pub fn prepare(seed: u64, recipe: &[Biome]) -> Prepared {
         }
     }
     // 3. The conservative recipe, on the seed's own course (and, if that is somehow rejected, the next draws).
-    for draw in 0..if lap.len() > 1 { MAX_DRAWS } else { 0 } {
+    for draw in 0..if lap.len() > 1 { draws } else { 0 } {
         if let Some((map, course)) = try_one(&lap[..1], draw) {
             return Prepared {
                 map,

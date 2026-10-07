@@ -1,0 +1,16 @@
+Outback dirt (P1-M06): 10 seeds, `jj_procgen::validate::check` (jj-map rules + transitions + envelopes + wayfinding)
+seed 0: ok, plan requested, 1726 pieces, 4 props, 4 features, gameplay hash 10ab05e6b96ceb9d622ca9f94457579203f00b34085a029a0b7dea7310c9d03f
+seed 1: ok, plan requested, 2072 pieces, 4 props, 6 features, gameplay hash 8c219b127b3b5c2f515b38e893c81fe13ff90cbf7015afc6f7b8208f86c30efa
+seed 2: ok, plan requested, 1553 pieces, 4 props, 4 features, gameplay hash 8c534dadaceba7b0e85f2e7da6bd264934179d400fc4d0c61bef2a06e62a0f01
+seed 3: ok, plan requested, 1282 pieces, 4 props, 3 features, gameplay hash a8f31f4e63a9c7ade615647d5283ad5cba3d4cd442bb7dd8ce15523f3cbfac85
+seed 4: ok, plan requested, 2024 pieces, 4 props, 7 features, gameplay hash 5887c87fa8c0cd21b4866239d121f81e4e2b8f3a2c20dd2e75d9c309f60754e2
+seed 5: ok, plan requested, 2070 pieces, 4 props, 5 features, gameplay hash d7f1947bc3f9225e740e48705408f5cc89ef364c257753589c96cd5c21cd90fe
+seed 6: ok, plan requested, 1987 pieces, 4 props, 3 features, gameplay hash c53c8bc5a2da5899035338223475aee2bc0decea96a2e5c31985f777efcbb32b
+seed 7: ok, plan requested, 2124 pieces, 4 props, 5 features, gameplay hash 8c3d8669a98bea7c0bf588894bcc3c0fad175613eeaa31971c1cbbaecf82949b
+seed 8: ok, plan requested, 2378 pieces, 4 props, 6 features, gameplay hash 5725fd751b473642bd9b322192289b55e23dd0c2be432800e2379eb010639096
+seed 9: ok, plan requested, 2296 pieces, 4 props, 5 features, gameplay hash 1ebe1daf5cfad465a32adda1da1f8c0f31a9ecc8384eef3bc833866631356e19
+
+autopilot, three laps, unaided, on the single-biome dirt track:
+seed 0: 3 laps in 191 s, 0 recoveries, 0 wrecks
+seed 1: 3 laps in 201 s, 0 recoveries, 0 wrecks
+seed 2: 3 laps in 180 s, 0 recoveries, 0 wrecks

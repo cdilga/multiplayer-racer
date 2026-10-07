@@ -1,0 +1,25 @@
+{
+  "id": "outback_bitumen/centre-line",
+  "version": 1,
+  "what": "A dash of yellow centre line, flat on the sealed road.",
+  "params": {
+    "lengthMm": {
+      "min": 1000,
+      "max": 6000,
+      "default": 3000
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "lengthMm"
+      },
+      "y": 10,
+      "z": 150
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

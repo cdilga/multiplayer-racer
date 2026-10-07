@@ -119,5 +119,27 @@
   (the session seed is 1 today). Keep session seeds below 2^53 or move the seed to a string in the event.
 - **Not warmed up.** `stageMap` builds geometry, but the GPU upload happens at the first draw after `commitMap`; there is
   no shader/upload warm-up before `MapReady` yet (master 11.2a asks for one).
+- **Biome pieces: the collider is the bounds.** `map.test.mjs` fails a kit module whose drawn extents differ from its
+  registry collider by more than 3 %, so a tree's canopy is the cylinder radius (and the tree never collides), a power
+  pole has no crossarm, a house's `heightCm` is the ridge height, and a flat disc at a tussock's rim keeps its bounds exact.
+  One kit id has one geometry: a parameter that would change the shape (a house's roof pitch) can't vary what is drawn.
+- **Rules before scatter.** `lineside::place` (houses facing the street, lane lines, junction stubs, signs) runs before the
+  scatter, which treats everything placed as an obstacle and clears only its own pieces (`rule_ids` names the rest).
+  A rule piece anchored to the edge keeps its whole footprint clear of every part of the route; a centre-anchored one (a
+  lane line) lies on the road and is lifted by the ribbon's height (`ROAD_SURFACE_LIFT_M`) or it hides under it.
+- **Sign panels aren't colliders.** The sign kit's panels are 100 mm thick: placed with `collides: false`, or the validator's
+  250 mm wall rule rejects the map. Signs try spots a little ahead, behind and across the road before giving up.
+- **The road is a ribbon.** The map renderer draws the road as strips that follow the heightfield and never paints it into
+  the ground cells (which stepped at the grid's spacing). The ribbon sits 5 cm above the ground; anything meant to be seen
+  on the road is lifted by about 7 cm.
+- **Captures: step the sim, don't drive open-loop.** An open-loop stick leaves the road at the first bend and the capture shows
+  a wreck on bare earth. `biome-capture.mjs` puts the cars on the test surface's autopilot and steps until the lead car is at a
+  named point of a named biome stretch (`__jjPrepare.mapInfo()` gives the segments and route). `world.project` projects through
+  the overview camera, not a chase tile's, so colour checks (`readability.test.mjs`) find the road in the picture itself: between
+  the cream edge lines on a row above the car, with the ground just outside them.
+- **Surface colours need a margin.** Graded dirt against red earth was only ~20 apart (CIE76) in flat colour; the pair is now
+  `#e0b684` / `#a4502e` (~40, and ~40 measured on screen at 1080p and in a 640x360 tile).
+- **Four biomes need course draws.** The selector's boundary search is wide (0.9 of a gap) and the Playtest-1 recipe gets 8
+  course draws before the ladder drops a biome: 76 of 100 seeds on their own course, 24 on a derived draw, none dropped.
 - **Dev map.** `?test&map=<name>` (with `&room`) validates `maps/<name>.json` through `validateMap` (the sim's registry)
   and refuses a broken one with the validator's `rule at: detail` lines in a banner; the director then settles in the Lobby.

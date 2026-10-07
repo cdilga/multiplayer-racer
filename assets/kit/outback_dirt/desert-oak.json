@@ -1,0 +1,32 @@
+{
+  "id": "outback_dirt/desert-oak",
+  "version": 1,
+  "what": "A desert oak: slim dark trunk, drooping grey-green crown (decoration; the collider is the crown).",
+  "params": {
+    "radiusMm": {
+      "min": 1200,
+      "max": 2600,
+      "default": 1800
+    },
+    "heightCm": {
+      "min": 350,
+      "max": 800,
+      "default": 550
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

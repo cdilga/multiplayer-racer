@@ -1,0 +1,75 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "1080p": {
+    "viewport": [
+      1920,
+      1080
+    ],
+    "road": [
+      234,
+      186,
+      129
+    ],
+    "ground": [
+      172,
+      82,
+      45
+    ],
+    "deltaE": 40.9,
+    "roadSamples": 68,
+    "groundSamples": 24,
+    "rows": [
+      [
+        540,
+        834,
+        1281
+      ],
+      [
+        583,
+        726,
+        1290
+      ],
+      [
+        626,
+        630,
+        1300
+      ],
+      [
+        670,
+        544,
+        1319
+      ]
+    ]
+  },
+  "small-tile": {
+    "viewport": [
+      640,
+      360
+    ],
+    "road": [
+      234,
+      185,
+      129
+    ],
+    "ground": [
+      172,
+      82,
+      45
+    ],
+    "deltaE": 40.4,
+    "roadSamples": 35,
+    "groundSamples": 12,
+    "rows": [
+      [
+        209,
+        209,
+        435
+      ],
+      [
+        223,
+        182,
+        442
+      ]
+    ]
+  }
+}

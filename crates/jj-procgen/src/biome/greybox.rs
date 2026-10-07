@@ -65,6 +65,8 @@ impl BiomeDef for Greybox {
                 },
                 pieces: PIECES,
             },
+            lineside: &[],
+            signs: &[],
             segment_types: &[],
         }
     }

@@ -1,0 +1,32 @@
+{
+  "id": "town/water-tower",
+  "version": 1,
+  "what": "A corrugated water tank on a steel stand (the town's landmark).",
+  "params": {
+    "heightCm": {
+      "min": 700,
+      "max": 1100,
+      "default": 900
+    },
+    "radiusMm": {
+      "min": 1600,
+      "max": 2800,
+      "default": 2100
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

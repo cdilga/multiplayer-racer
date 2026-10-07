@@ -85,7 +85,7 @@ pub fn spec(biome: Biome) -> Spec {
 pub const BITUMEN_RADIUS_M: f64 = 18.0;
 
 /// Fast "how far is this point from the route": segments bucketed on a grid, searched in rings.
-struct RoadIndex {
+pub(crate) struct RoadIndex {
     pts: Vec<(f64, f64)>,
     cell: f64,
     x0: f64,
@@ -96,7 +96,7 @@ struct RoadIndex {
 }
 
 impl RoadIndex {
-    fn new(pts: Vec<(f64, f64)>, x0: f64, z0: f64, w: f64, h: f64) -> Self {
+    pub(crate) fn new(pts: Vec<(f64, f64)>, x0: f64, z0: f64, w: f64, h: f64) -> Self {
         let cell = 16.0;
         let (cols, rows) = (
             libm::ceil(w / cell) as usize + 1,
@@ -140,7 +140,7 @@ impl RoadIndex {
     }
 
     /// Distance from `p` to the nearest route segment, and that segment's index.
-    fn nearest(&self, p: (f64, f64)) -> (f64, usize) {
+    pub(crate) fn nearest(&self, p: (f64, f64)) -> (f64, usize) {
         let cx = (libm::floor((p.0 - self.x0) / self.cell) as i64).clamp(0, self.cols as i64 - 1);
         let cz = (libm::floor((p.1 - self.z0) / self.cell) as i64).clamp(0, self.rows as i64 - 1);
         let (mut best, mut at) = (f64::INFINITY, 0usize);
@@ -272,6 +272,7 @@ pub fn scatter(map: &mut Map, rng: &mut Rng, spec: &Spec, registry: &Registry) {
 /// Pieces the core places (road furniture under `wayfinding/`) are kept through a scatter and treated as obstacles.
 pub fn is_furniture(d: &Dressing) -> bool {
     d.kit_piece.starts_with("wayfinding/")
+        || crate::lineside::rule_ids().contains(&d.kit_piece.as_str())
 }
 
 /// [`scatter`] for a route that crosses biomes. A candidate is kept with probability `weight(i)`, where `i` is the
@@ -287,7 +288,10 @@ pub fn scatter_masked(
     weight: &dyn Fn(usize) -> f64,
 ) {
     if fresh {
-        map.dressing.retain(is_furniture);
+        let kept = crate::lineside::rule_ids();
+        map.dressing.retain(|d| {
+            d.kit_piece.starts_with("wayfinding/") || kept.contains(&d.kit_piece.as_str())
+        });
     }
     let b = map.header.bounds;
     let (x0, z0) = (f64::from(b.min_x) / 1000.0, f64::from(b.min_z) / 1000.0);

@@ -53,6 +53,11 @@ export async function startPreparation(client: SimClient, world: World, params: 
     stats: () => ({ ...preparer.stats }),
     seeds: () => preparer.seeds.map((s) => ({ ...s })),
     room: () => client.room?.preparation ?? null,
+    /** The shown map's segments and route (x, z, y in metres), so a capture can step the cars to a biome. */
+    mapInfo: () => {
+      const m = preparer.committed as unknown as { route: { points: { x: number; y: number; z: number }[]; segments?: { name: string; span: { from: number; to: number } }[] } } | null;
+      return m ? { segments: (m.route.segments ?? []).map((s) => ({ name: s.name, from: s.span.from, to: s.span.to })), route: m.route.points.map((q) => [q.x / 1000, q.z / 1000, q.y / 1000]) } : null;
+    },
     reroll: () => preparer.reroll(),
   };
   return preparer;

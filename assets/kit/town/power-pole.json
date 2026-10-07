@@ -1,0 +1,32 @@
+{
+  "id": "town/power-pole",
+  "version": 1,
+  "what": "A timber power pole with its crossarm insulators, inside the collider's width.",
+  "params": {
+    "heightCm": {
+      "min": 650,
+      "max": 1000,
+      "default": 800
+    },
+    "radiusMm": {
+      "min": 120,
+      "max": 200,
+      "default": 150
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

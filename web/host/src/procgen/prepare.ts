@@ -62,6 +62,8 @@ export class RoundPreparer {
   /** The newest preparation the sim asked for, and the newest map main handed it. */
   current = 0;
   delivered = 0;
+  /** The map now shown (the last one committed at a Countdown), for the R90 readout and the captures. */
+  committed: MapJson | null = null;
   private staged: { preparation: number; map: StagedMap } | null = null;
   private failedLast = false;
   private unsub: Array<() => void> = [];
@@ -173,6 +175,7 @@ export class RoundPreparer {
     if ((room.phase === 'Countdown' || room.phase === 'Running') && p.verdict === 'ok' && !p.prepared && staged.preparation === this.delivered) {
       this.staged = null;
       this.o.presenter.commitMap(staged.map);
+      this.committed = staged.map.map;
       this.stats.committed++;
     } else if (room.phase === 'Lobby' && !p.pending && p.verdict !== 'ok') {
       this.discard();

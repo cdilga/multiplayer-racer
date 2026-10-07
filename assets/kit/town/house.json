@@ -1,0 +1,45 @@
+{
+  "id": "town/house",
+  "version": 1,
+  "what": "The one town house (P1-M04 playtest scope): a low weatherboard house under a corrugated gable roof with a front verandah. Varies by size parameters only; `heightCm` is the whole height to the ridge, `roofPitchDeg` splits it between wall and roof. Front is +z.",
+  "params": {
+    "widthMm": {
+      "min": 5000,
+      "max": 14000,
+      "default": 9000
+    },
+    "depthMm": {
+      "min": 4500,
+      "max": 10000,
+      "default": 6500
+    },
+    "heightCm": {
+      "min": 280,
+      "max": 480,
+      "default": 380
+    },
+    "roofPitchDeg": {
+      "min": 10,
+      "max": 40,
+      "default": 24
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "widthMm"
+      },
+      "y": {
+        "param": "heightCm",
+        "scale": 10
+      },
+      "z": {
+        "param": "depthMm"
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

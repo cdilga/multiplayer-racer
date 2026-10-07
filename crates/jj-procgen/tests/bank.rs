@@ -46,7 +46,7 @@ fn every_seed_prepares_a_valid_track_and_every_fallback_is_counted() {
     let mut rows = String::from("seed plan            attempts  rejected-on-the-way\n");
     let mut total_attempts = 0;
     for seed in 0..seeds() {
-        let p = prepare(seed, &RECIPE);
+        let p = jj_procgen::playtest::prepare(seed);
         assert!(p.valid, "seed {seed}: {:?}", p.attempts.last());
         // The accepted attempt is the last one and has no rejections; every earlier one has a reason.
         let (last, earlier) = p.attempts.split_last().unwrap();
@@ -66,12 +66,13 @@ fn every_seed_prepares_a_valid_track_and_every_fallback_is_counted() {
         // Deterministic: the same seed and recipe give the same bytes.
         assert_eq!(
             canonical_bytes(&p.map),
-            canonical_bytes(&prepare(seed, &RECIPE).map),
+            canonical_bytes(&jj_procgen::playtest::prepare(seed).map),
             "seed {seed}"
         );
         // Bounded: the ladder is a handful of generations, not an open-ended reroll.
         assert!(
-            p.attempts.len() <= (jj_procgen::validate::MAX_DRAWS as usize) * 2 + RECIPE.len() + 1
+            p.attempts.len()
+                <= (jj_procgen::playtest::PLAYTEST_DRAWS as usize) * 2 + RECIPE.len() + 1
         );
         total_attempts += p.attempts.len();
         *plans.entry(plan_name(&p.plan)).or_default() += 1;
@@ -202,7 +203,7 @@ fn the_autopilot_laps_three_seeds_and_the_bot_playtest_flags_any_softlock() {
     let mut softlocks = Vec::new();
     let mut ratios = Vec::new();
     for seed in 0..seeds() {
-        let p = prepare(seed, &RECIPE);
+        let p = jj_procgen::playtest::prepare(seed);
         let map = loaded(&p);
         // Three laps on the first three seeds (unaided), one lap on the rest of the bank.
         let laps = if seed < 3 && !cfg!(debug_assertions) {

@@ -1,25 +1,28 @@
-//! Outback bitumen (placeholder data until P1-M07): a sealed road through flat country, fence posts and the odd shed.
+//! Outback bitumen (P1-M07, playtest scope): a sealed highway across flat red country: yellow centre dashes and white edge
+//! lines as placed pieces, guide posts every 50 m, the shared W-beam guard rail in short runs (culvert ends), spinifex
+//! beyond the verge. A direction sign where it begins and a warning before each crest or jump.
 
-use jj_map::{Biome, Surface};
+use jj_map::{Biome, FeatureKind, Surface};
 
 use super::{BiomeData, BiomeDef};
 use crate::features::Density;
+use crate::lineside::{Anchor, Lineside, Side, SignRule, Trigger, Yaw};
 use crate::scatter::{Algorithm, BITUMEN_RADIUS_M, PieceSpec, Spec, piece};
 use crate::terrain::TerrainParams;
 
 pub struct OutbackBitumen;
 
-const PIECES: &[PieceSpec] = &[
+const SCATTER: &[PieceSpec] = &[
     piece(
-        "generic/post",
-        4.0,
-        &[("heightCm", 100, 140), ("radiusMm", 60, 90)],
-        (4.0, 8.0),
+        "outback_dirt/spinifex",
+        8.0,
+        &[("radiusMm", 300, 900), ("heightCm", 30, 100)],
+        (4.0, 100.0),
         false,
     ),
     piece(
         "generic/box-building",
-        0.6,
+        0.25,
         &[
             ("widthMm", 6_000, 12_000),
             ("depthMm", 5_000, 9_000),
@@ -28,13 +31,83 @@ const PIECES: &[PieceSpec] = &[
         (25.0, 70.0),
         true,
     ),
-    piece(
-        "generic/post",
-        3.0,
-        &[("heightCm", 50, 120), ("radiusMm", 250, 500)],
-        (8.0, 80.0),
-        false,
-    ),
+];
+
+const fn line(kit_piece: &'static str, side: Side, offset: f64) -> Lineside {
+    Lineside {
+        kit_piece,
+        spacing_m: (3.0, 3.0),
+        side,
+        anchor: Anchor::Centre,
+        offset_m: (offset, offset),
+        params: &[("lengthMm", 3_000, 3_000)],
+        collides: false,
+        yaw: Yaw::Along,
+        skip: 0.0,
+        avoid_corners: false,
+        stretch: None,
+        prop: false,
+    }
+}
+
+const ROAD: &[Lineside] = &[
+    // Yellow centre dashes: 3 m on, 6 m off (a 3 m piece every 9 m).
+    Lineside {
+        spacing_m: (9.0, 9.0),
+        ..line("outback_bitumen/centre-line", Side::Right, 0.0)
+    },
+    // White edge lines, continuous along both edges.
+    line("outback_bitumen/edge-line", Side::Both, 5.5),
+    // Guide posts every 50 m, both sides.
+    Lineside {
+        spacing_m: (50.0, 50.0),
+        anchor: Anchor::Edge,
+        offset_m: (2.6, 2.6),
+        params: &[],
+        yaw: Yaw::Random,
+        avoid_corners: true,
+        ..line("outback_bitumen/reflector-post", Side::Both, 0.0)
+    },
+    // Short runs of the shared W-beam rail at culvert ends: 24 m of rail every 160 m, both sides.
+    Lineside {
+        kit_piece: "wayfinding/guard-rail",
+        spacing_m: (4.0, 4.0),
+        side: Side::Both,
+        anchor: Anchor::Edge,
+        offset_m: (3.6, 3.6),
+        params: &[
+            ("lengthMm", 4_000, 4_000),
+            ("heightCm", 80, 80),
+            ("thicknessMm", 300, 300),
+        ],
+        collides: true,
+        yaw: Yaw::Along,
+        skip: 0.0,
+        avoid_corners: true,
+        stretch: Some((24.0, 136.0)),
+        prop: false,
+    },
+];
+
+const SIGNS: &[SignRule] = &[
+    SignRule {
+        kit_piece: "signs/stuart-hwy",
+        trigger: Trigger::BiomeEntry,
+        before_m: 0.0,
+        offset_m: 3.0,
+    },
+    SignRule {
+        kit_piece: "signs/crest",
+        trigger: Trigger::Feature(FeatureKind::Crest),
+        before_m: 70.0,
+        offset_m: 3.0,
+    },
+    SignRule {
+        kit_piece: "signs/jumps-crest",
+        trigger: Trigger::Feature(FeatureKind::Jump),
+        before_m: 60.0,
+        offset_m: 3.0,
+    },
 ];
 
 impl BiomeDef for OutbackBitumen {
@@ -62,8 +135,10 @@ impl BiomeDef for OutbackBitumen {
                 algorithm: Algorithm::Poisson {
                     radius_m: BITUMEN_RADIUS_M,
                 },
-                pieces: PIECES,
+                pieces: SCATTER,
             },
+            lineside: ROAD,
+            signs: SIGNS,
             segment_types: &[],
         }
     }

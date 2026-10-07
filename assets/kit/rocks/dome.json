@@ -1,0 +1,32 @@
+{
+  "id": "rocks/dome",
+  "version": 1,
+  "what": "A towering banded red dome (the Olgas): one parametric family, seeded height and footprint scale. Ledges and stacks are the same rule at a smaller scale, set on a bigger one.",
+  "params": {
+    "radiusMm": {
+      "min": 3000,
+      "max": 40000,
+      "default": 14000
+    },
+    "heightCm": {
+      "min": 1200,
+      "max": 9000,
+      "default": 4000
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

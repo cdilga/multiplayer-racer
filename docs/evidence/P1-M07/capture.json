@@ -1,0 +1,189 @@
+{
+  "mode": "headed Google Chrome (system GPU)",
+  "recipe": "outback-bitumen",
+  "shots": [
+    {
+      "name": "highway-tv-1080p",
+      "players": 1,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "where": {
+        "segment": "outback-bitumen",
+        "targetPoint": 160,
+        "reached": true,
+        "tick": 4919,
+        "car0Point": 158,
+        "segments": [
+          {
+            "name": "outback-bitumen",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 171,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "generic/box-building": 4,
+        "outback_bitumen/centre-line": 89,
+        "outback_bitumen/edge-line": 536,
+        "outback_bitumen/reflector-post": 18,
+        "outback_dirt/spinifex": 184,
+        "signs/crest": 2,
+        "signs/stuart-hwy": 1,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 69
+      }
+    },
+    {
+      "name": "highway-tiles-1080p",
+      "players": 4,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "where": {
+        "segment": "outback-bitumen",
+        "targetPoint": 160,
+        "reached": true,
+        "tick": 5560,
+        "car0Point": 158,
+        "segments": [
+          {
+            "name": "outback-bitumen",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 224,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "generic/box-building": 4,
+        "outback_bitumen/centre-line": 89,
+        "outback_bitumen/edge-line": 536,
+        "outback_bitumen/reflector-post": 18,
+        "outback_dirt/spinifex": 184,
+        "signs/crest": 2,
+        "signs/stuart-hwy": 1,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 69
+      }
+    },
+    {
+      "name": "highway-laptop-1366",
+      "players": 4,
+      "viewport": [
+        1366,
+        768
+      ],
+      "where": {
+        "segment": "outback-bitumen",
+        "targetPoint": 160,
+        "reached": true,
+        "tick": 9803,
+        "car0Point": 158,
+        "segments": [
+          {
+            "name": "outback-bitumen",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 209,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "generic/box-building": 4,
+        "outback_bitumen/centre-line": 89,
+        "outback_bitumen/edge-line": 536,
+        "outback_bitumen/reflector-post": 18,
+        "outback_dirt/spinifex": 184,
+        "signs/crest": 2,
+        "signs/stuart-hwy": 1,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 69
+      }
+    }
+  ]
+}

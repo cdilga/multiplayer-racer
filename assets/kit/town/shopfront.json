@@ -1,0 +1,40 @@
+{
+  "id": "town/shopfront",
+  "version": 1,
+  "what": "The one town shopfront (P1-M04): a false-front store with a verandah and a signboard. Front is +z.",
+  "params": {
+    "widthMm": {
+      "min": 7000,
+      "max": 16000,
+      "default": 11000
+    },
+    "depthMm": {
+      "min": 6000,
+      "max": 12000,
+      "default": 8000
+    },
+    "heightCm": {
+      "min": 380,
+      "max": 600,
+      "default": 480
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "widthMm"
+      },
+      "y": {
+        "param": "heightCm",
+        "scale": 10
+      },
+      "z": {
+        "param": "depthMm"
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

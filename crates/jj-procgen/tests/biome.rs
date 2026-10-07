@@ -73,6 +73,8 @@ impl BiomeDef for Flat {
                 algorithm: Algorithm::Poisson { radius_m: 20.0 },
                 pieces: FLAT_PIECES,
             },
+            lineside: &[],
+            signs: &[],
             segment_types: &["flat-run"],
         }
     }

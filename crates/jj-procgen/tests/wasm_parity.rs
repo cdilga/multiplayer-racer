@@ -60,11 +60,10 @@ fn generate_and_validate_in_wasm_stays_inside_the_laptop_budget() {
         #[wasm_bindgen::prelude::wasm_bindgen(js_namespace = Date, js_name = now)]
         fn date_now() -> f64;
     }
-    use jj_map::Biome::{OutbackBitumen, OutbackDirt, Rocks, Town};
     let (mut worst, mut total) = (0.0f64, 0.0f64);
     for seed in 0..24u64 {
         let t = date_now();
-        let p = jj_procgen::prepare(seed, &[Town, Rocks, OutbackDirt, OutbackBitumen]);
+        let p = jj_procgen::playtest::prepare(seed);
         let ms = date_now() - t;
         assert!(p.valid, "seed {seed}");
         worst = worst.max(ms);

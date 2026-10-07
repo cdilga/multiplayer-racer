@@ -1,0 +1,32 @@
+{
+  "id": "town/gum-tree",
+  "version": 1,
+  "what": "A gum tree: pale trunk, grey-green canopy. The collider is the canopy, so it never collides (decoration).",
+  "params": {
+    "heightCm": {
+      "min": 500,
+      "max": 1100,
+      "default": 800
+    },
+    "radiusMm": {
+      "min": 1800,
+      "max": 3400,
+      "default": 2500
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

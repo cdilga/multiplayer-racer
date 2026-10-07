@@ -1,0 +1,17 @@
+{
+  "id": "town/mailbox",
+  "version": 1,
+  "what": "A roadside mailbox on its post.",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 420,
+      "y": 1150,
+      "z": 300
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

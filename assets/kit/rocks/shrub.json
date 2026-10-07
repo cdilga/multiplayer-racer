@@ -1,0 +1,32 @@
+{
+  "id": "rocks/shrub",
+  "version": 1,
+  "what": "A flowering desert shrub (decoration).",
+  "params": {
+    "radiusMm": {
+      "min": 400,
+      "max": 1200,
+      "default": 700
+    },
+    "heightCm": {
+      "min": 50,
+      "max": 160,
+      "default": 100
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

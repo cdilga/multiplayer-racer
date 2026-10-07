@@ -14,7 +14,7 @@ pub fn build_info() -> String {
 }
 
 /// Playtest 1's lap: four biomes in order, ending back in the first (the M03g ladder handles the seeds that can't fit it).
-pub const PLAYTEST1_RECIPE: &str = "town,rocks,outback-dirt,outback-bitumen";
+pub const PLAYTEST1_RECIPE: &str = jj_procgen::playtest::RECIPE_NAMES;
 
 /// The Playtest-1 recipe, as a comma-separated list of biome names.
 #[wasm_bindgen(js_name = defaultRecipe)]
@@ -89,7 +89,8 @@ impl Prepared {
 #[wasm_bindgen]
 pub fn prepare(seed: f64, recipe: &str) -> Result<Prepared, JsError> {
     let recipe = parse_recipe(recipe).map_err(|e| JsError::new(&e))?;
-    let p = jj_procgen::prepare(seed as u64, &recipe);
+    // The Playtest-1 course-draw budget: every track keeps all four biomes (a few tens of milliseconds a draw).
+    let p = jj_procgen::prepare_with(seed as u64, &recipe, jj_procgen::playtest::PLAYTEST_DRAWS);
     let log = serde_json::json!(
         p.attempts
             .iter()

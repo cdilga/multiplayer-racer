@@ -19,13 +19,15 @@ pub mod assemble;
 pub mod biome;
 pub mod course;
 pub mod features;
+pub mod lineside;
+pub mod playtest;
 pub mod scatter;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
 pub mod validate;
 
-pub use validate::{Plan, Prepared, prepare};
+pub use validate::{Plan, Prepared, prepare, prepare_with};
 
 use std::collections::BTreeMap;
 
@@ -37,7 +39,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "6";
+pub const GENERATOR_VERSION: &str = "7";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -126,6 +128,35 @@ pub fn generate_recipe_from(
     features::place_in(&mut map, &mut st.features, &ranges);
     biome::wayfinding::place(&mut map);
     let registry = biome::registry();
+    // Each biome's rules along its own stretches (houses facing the street, lane lines, signs...), before the scatter fills
+    // the ground around them.
+    for b in sel.biomes() {
+        let data = biome::def(b).data();
+        let entries: Vec<f64> = sel
+            .segments()
+            .iter()
+            .filter(|(bb, _, _)| *bb == b)
+            .map(|&(_, from, _)| {
+                if from == 0 {
+                    90.0
+                } else {
+                    sel.s[from] + biome::TRANSITION_M / 2.0 + 10.0
+                }
+            })
+            .collect();
+        lineside::place(
+            &mut map,
+            &mut st.dressing,
+            &lineside::Context {
+                biome: b,
+                registry: &registry,
+                weight: &|i| sel.weight(b, i),
+                entries: &entries,
+            },
+            data.lineside,
+            data.signs,
+        );
+    }
     for (k, b) in sel.biomes().into_iter().enumerate() {
         scatter::scatter_masked(
             &mut map,

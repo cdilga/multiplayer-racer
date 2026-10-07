@@ -46,11 +46,14 @@ export interface MapJson {
 /** Surface colours: distinguishable at a glance (P1-R10 owns the final look). */
 export const SURFACE_COLOURS: Record<string, string> = {
   tarmac: '#3f3f46',
-  'packed-dirt': '#a8713f',
+  'packed-dirt': '#e0b684',
   gravel: '#a8a092',
   rock: '#7a5546',
-  'off-track': '#cdb07a',
+  'off-track': '#a4502e',
 };
+
+/** The surface classes a route ribbon draws (everything but the ground beside it). */
+const ROAD_SURFACES = new Set(['tarmac', 'packed-dirt', 'gravel']);
 
 const mm = (v: number) => v / 1000;
 const col = new Color();
@@ -138,7 +141,9 @@ export class MapRenderer {
         const [h00, h01, h10, h11] = [h(i, j), h(i, j + 1), h(i + 1, j), h(i + 1, j + 1)];
         const c = (h00 + h01 + h10 + h11) / 4;
         const e = { n: (h00 + h01) / 2, s: (h10 + h11) / 2, w: (h00 + h10) / 2, e: (h01 + h11) / 2 };
-        const paint = (ii: number, jj: number) => SURFACE_COLOURS[t.surfaces[at(ii, jj)]!] ?? SURFACE_COLOURS['off-track']!;
+        // The road is the route ribbon's (smooth edges, banked with the road); the ground cells never paint it, or its edge
+        // would step at the grid's spacing on a diagonal.
+        const paint = (ii: number, jj: number) => (ROAD_SURFACES.has(t.surfaces[ii * t.cols + jj]!) ? SURFACE_COLOURS['off-track']! : SURFACE_COLOURS[t.surfaces[at(ii, jj)]!] ?? SURFACE_COLOURS['off-track']!);
         // Each quarter belongs to the sample at its corner (the sim's nearest-sample rule). Wound to face +y.
         s.quad([x0, h00, z0], [x0, e.w, zm], [xm, c, zm], [xm, e.n, z0], paint(i, j));
         s.quad([xm, e.n, z0], [xm, c, zm], [x1, e.e, zm], [x1, h01, z0], paint(i, j + 1));
@@ -168,13 +173,16 @@ export class MapRenderer {
     const r = this.map.route;
     const p = r.points;
     const s = new Soup();
-    const lift = 0.03;
+    const lift = 0.05;
     const edge = 0.3;
     const segs = r.closed ? p.length : p.length - 1;
+    // A point at lateral offset `off` from route point `k`, `y` above the ground the sim collides with there (the road lies
+    // on the heightfield, so a ramp narrower than the road, or a banked corner, never leaves the ribbon floating).
     const rail = (k: number, off: number, y: number) => {
       const q = p[k % p.length]!;
       const [nx, nz] = this.side(k % p.length);
-      return [mm(q.x) + nx * off, mm(q.y) + y, mm(q.z) + nz * off];
+      const [x, z] = [mm(q.x) + nx * off, mm(q.z) + nz * off];
+      return [x, this.groundAt(x, z) + y, z];
     };
     for (let k = 0; k < segs; k++) {
       const a = p[k]!;
@@ -184,9 +192,14 @@ export class MapRenderer {
       // A band between two lateral offsets (right to left, so it faces +y).
       const band = (r0: number, r1: number, l0: number, l1: number, y: number, colour: string) =>
         s.quad(rail(k, r0, y), rail(k + 1, r1, y), rail(k + 1, l1, y), rail(k, l0, y), colour);
-      band(-wa, -wb, wa, wb, lift, surface);
-      band(wa - edge, wb - edge, wa, wb, lift + 0.005, '#f2efe6');
-      band(-wa, -wb, -wa + edge, -wb + edge, lift + 0.005, '#f2efe6');
+      // The road in strips about a metre wide, each following the ground.
+      const strips = Math.max(1, Math.ceil((2 * wa) / 1.2));
+      for (let j = 0; j < strips; j++) {
+        const [f0, f1] = [j / strips, (j + 1) / strips];
+        band(-wa + 2 * wa * f0, -wb + 2 * wb * f0, -wa + 2 * wa * f1, -wb + 2 * wb * f1, lift, surface);
+      }
+      band(wa - edge, wb - edge, wa, wb, lift + 0.01, '#f2efe6');
+      band(-wa, -wb, -wa + edge, -wb + edge, lift + 0.01, '#f2efe6');
     }
     // The start line: a chequered band across the road at the start point.
     const k = r.start.at;
@@ -201,7 +214,10 @@ export class MapRenderer {
         const l1 = -w + (2 * w * (c + 1)) / cells;
         const f0 = row * 0.6 - 0.6;
         const f1 = f0 + 0.6;
-        const pt = (l: number, f: number) => [mm(q.x) + nx * l + tx * f, mm(q.y) + lift + 0.01, mm(q.z) + nz * l + tz * f];
+        const pt = (l: number, f: number) => {
+          const [x, z] = [mm(q.x) + nx * l + tx * f, mm(q.z) + nz * l + tz * f];
+          return [x, this.groundAt(x, z) + lift + 0.02, z];
+        };
         s.quad(pt(l0, f0), pt(l0, f1), pt(l1, f1), pt(l1, f0), (c + row) % 2 ? '#f2efe6' : '#1d1c21');
       }
     }

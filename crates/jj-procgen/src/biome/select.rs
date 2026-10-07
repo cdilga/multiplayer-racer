@@ -166,7 +166,7 @@ pub fn select(
         let target = lo + spacing * (j + 1) as f64 + rng.range(-0.1, 0.1) * spacing;
         let mut chosen = None;
         let mut d = 0.0;
-        while d <= spacing / 2.0 && chosen.is_none() {
+        while d <= spacing * 0.9 && chosen.is_none() {
             for sign in [1.0, -1.0] {
                 let c = target + sign * d;
                 let prev = cut_s.last().copied().unwrap_or(f64::NEG_INFINITY);

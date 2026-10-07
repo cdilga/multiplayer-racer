@@ -1,0 +1,13 @@
+Rocks (P1-M05): 10 seeds, `jj_procgen::validate::check` (jj-map rules + transitions + envelopes + wayfinding)
+seed 0: ok, plan requested, 582 pieces, 4 props, 6 features, gameplay hash c88e875ac8ba33e6d3e8341f8d50dc8b9bf037c3d0813e93e05854845a85059a
+seed 1: ok, plan requested, 664 pieces, 4 props, 5 features, gameplay hash 6f37b00fbc13b60d03496805fab21b915f5e7449593e21c98aa5bab09e0f7c19
+seed 2: ok, plan requested, 562 pieces, 4 props, 3 features, gameplay hash 2adde2fcaa297ec5582e600d79b034219709086310fb3e8f262a4f13aa9ee6ee
+seed 3: ok, plan requested, 486 pieces, 4 props, 4 features, gameplay hash a8b0157b18ebd01e011c9b9b16e8a9e60635dfafdb8cd48704c8d7ea045aa73e
+seed 4: ok, plan requested, 634 pieces, 4 props, 5 features, gameplay hash 71e057b477150632691cdffdf39c7eea83782fe75f73fa0f88b97f89a4c1664b
+seed 5: ok, plan requested, 674 pieces, 4 props, 6 features, gameplay hash f846da642e73996d65cd7a77ccee845cb83356b6d2860ec23a7d1014e688855b
+seed 6: ok, plan requested, 653 pieces, 4 props, 3 features, gameplay hash e508f6920da7ee736e055bd96c4699e8a75813df0edccb03712795b2f3c1808c
+seed 7: ok, plan requested, 688 pieces, 4 props, 5 features, gameplay hash e67939236ddc507a9f8c5eb7c98e4ab191395ce78c95a7c2e72588d91143d04c
+seed 8: ok, plan requested, 753 pieces, 4 props, 5 features, gameplay hash 45879d9f15e7dcfbb88d7395c806977782bafd1e5a082bb1892f32a622a94a80
+seed 9: ok, plan requested, 782 pieces, 4 props, 4 features, gameplay hash dcade4b6265d3c0e0639d82bfafa99f9261a1968861ba6c95590e2bdabf7b2a1
+
+across the seeds: 23 jumps, 17 crests (core features), domes differ per seed: 10 distinct height sets

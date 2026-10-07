@@ -1,33 +1,48 @@
-//! Outback dirt (placeholder data until P1-M07): open plain, even scrub, a packed-dirt road.
+//! Outback dirt (P1-M06, playtest scope): a winding graded red-dirt track through spinifex and desert oak; two vegetation
+//! species scattered clear of the route; straight and curve segments only (the core's course); a driveable normal line.
+//! An unsealed-road warning where it begins and a warning before each crest.
 
-use jj_map::{Biome, Surface};
+use jj_map::{Biome, FeatureKind, Surface};
 
 use super::{BiomeData, BiomeDef};
 use crate::features::Density;
+use crate::lineside::{SignRule, Trigger};
 use crate::scatter::{Algorithm, PieceSpec, Spec, piece};
 use crate::terrain::TerrainParams;
 
 pub struct OutbackDirt;
 
-const PIECES: &[PieceSpec] = &[
+/// The two species: a spinifex tussock (even cover) and one tree.
+const SCATTER: &[PieceSpec] = &[
     piece(
-        "generic/post",
-        6.0,
-        &[("heightCm", 60, 160), ("radiusMm", 250, 550)],
-        (3.0, 70.0),
+        "outback_dirt/spinifex",
+        9.0,
+        &[("radiusMm", 300, 900), ("heightCm", 30, 100)],
+        (3.0, 140.0),
         false,
     ),
     piece(
-        "generic/box-building",
-        0.3,
-        &[
-            ("widthMm", 6_000, 10_000),
-            ("depthMm", 5_000, 8_000),
-            ("heightCm", 300, 450),
-        ],
-        (20.0, 60.0),
-        true,
+        "outback_dirt/desert-oak",
+        1.0,
+        &[("radiusMm", 1_200, 2_600), ("heightCm", 350, 800)],
+        (4.0, 140.0),
+        false,
     ),
+];
+
+const SIGNS: &[SignRule] = &[
+    SignRule {
+        kit_piece: "signs/unsealed-road",
+        trigger: Trigger::BiomeEntry,
+        before_m: 0.0,
+        offset_m: 3.0,
+    },
+    SignRule {
+        kit_piece: "signs/crest",
+        trigger: Trigger::Feature(FeatureKind::Crest),
+        before_m: 70.0,
+        offset_m: 3.0,
+    },
 ];
 
 impl BiomeDef for OutbackDirt {
@@ -52,9 +67,11 @@ impl BiomeDef for OutbackDirt {
                 creek: 1.5,
             },
             scatter: Spec {
-                algorithm: Algorithm::Poisson { radius_m: 9.0 },
-                pieces: PIECES,
+                algorithm: Algorithm::Poisson { radius_m: 6.5 },
+                pieces: SCATTER,
             },
+            lineside: &[],
+            signs: SIGNS,
             segment_types: &[],
         }
     }

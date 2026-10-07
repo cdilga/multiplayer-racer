@@ -6,6 +6,10 @@ import { bin } from './generic/bin';
 import { boxBuilding } from './generic/box-building';
 import { cone } from './generic/cone';
 import { post } from './generic/post';
+import { OUTBACK_BITUMEN_MODULES } from './outback_bitumen';
+import { OUTBACK_DIRT_MODULES } from './outback_dirt';
+import { ROCKS_MODULES } from './rocks';
+import { TOWN_MODULES } from './town';
 import { WAYFINDING_MODULES } from './wayfinding'; // P1-M03f/M08a stand-ins until P1-R10
 import { SIGN_MODULES } from '../signs'; // P1-M09: one module per assets/kit/signs/data/*.json
 import type { KitModule, Params } from './types';
@@ -33,6 +37,10 @@ export const MODULES: Record<string, KitModule> = {
   'generic/bin': bin,
   ...SIGN_MODULES,
   ...WAYFINDING_MODULES,
+  ...TOWN_MODULES,
+  ...ROCKS_MODULES,
+  ...OUTBACK_DIRT_MODULES,
+  ...OUTBACK_BITUMEN_MODULES,
 };
 
 /** A placement's params with the entry's defaults filled in. */

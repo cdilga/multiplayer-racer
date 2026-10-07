@@ -17,7 +17,7 @@ interface StartOptions {
   fail?: 'all' | 'full';
 }
 
-const presented = { staged: 0, committed: 0, disposed: 0, commitMaps: [] as string[] };
+const presented = { staged: 0, committed: 0, disposed: 0, commitMaps: [] as string[], commitSegments: [] as string[][] };
 let client: SimClient;
 let test: TestClient;
 let preparer: RoundPreparer;
@@ -64,6 +64,7 @@ const api = {
         commitMap(staged) {
           presented.committed++;
           // The map's header names the seed it was generated for: what the clip would say.
+          presented.commitSegments.push((staged.map as unknown as { route: { segments: { name: string }[] } }).route.segments.map((x) => x.name));
           presented.commitMaps.push(String((staged.map as unknown as { header: { seed: number } }).header.seed));
         },
       },
@@ -74,13 +75,16 @@ const api = {
     test.input({ type: 'controller', endpoint: 'p1', frame: { claim: 'Ava' } });
   },
   startRound: () => client.input({ type: 'ui', ui: 'start' }),
+  /** A test-surface command (`autopilot`, `step`...). */
+  command: (c: Record<string, unknown>) => test.command(c),
+  laps: (n: number) => client.input({ type: 'ui', ui: `laps:${n}` }),
   reroll: () => preparer.reroll(),
   /** A `MapReady` for a preparation the director has moved past (what a late job would send). */
   sendStale: (preparation: number) => client.input({ type: 'map-ready', preparation, bytes: new Uint8Array([1, 2, 3]) }),
   room: () => client.room,
   stats: () => ({ ...preparer.stats }),
   seeds: () => preparer.seeds.map((s) => ({ ...s })),
-  presented: () => ({ ...presented, commitMaps: [...presented.commitMaps] }),
+  presented: () => ({ ...presented, commitMaps: [...presented.commitMaps], commitSegments: presented.commitSegments.map((x) => [...x]) }),
   stagedFor: () => preparer.stagedFor,
   refused: () => [...refused],
 };

@@ -1,0 +1,32 @@
+{
+  "id": "outback_dirt/spinifex",
+  "version": 1,
+  "what": "A spinifex tussock on red dirt (decoration): the dirt biome's ground cover.",
+  "params": {
+    "radiusMm": {
+      "min": 300,
+      "max": 900,
+      "default": 550
+    },
+    "heightCm": {
+      "min": 30,
+      "max": 100,
+      "default": 60
+    }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": {
+        "param": "radiusMm"
+      },
+      "height": {
+        "param": "heightCm",
+        "scale": 10
+      }
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

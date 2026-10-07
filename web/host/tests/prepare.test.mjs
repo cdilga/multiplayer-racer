@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 
 const repo = resolve(import.meta.dirname, '../../..');
-const dist = join(repo, 'web/dist-test');
+const dist = process.env.JJ_DIST_TEST ?? join(repo, 'web/dist-test');
 const evidencePath = process.env.JJ_EVIDENCE ?? join(repo, 'docs/evidence/P1-M08a/browser-run.json');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };
 const SEED = 3;
@@ -215,4 +215,61 @@ test('a dev map goes through the validator: a good one races, a broken one is re
     evidence.runs.brokenDevMap = { message, stats: await api('stats') };
     await page.close();
   }
+});
+
+test('two rounds back to back play two different generated four-biome tracks', { timeout: 90_000 }, async () => {
+  const { page, errors, api } = await open();
+  const t0 = Date.now();
+  await api('laps', 1);
+  await api('startRound');
+  await waitFor(page, () => window.__prep.presented().committed === 1, 'the first track to be shown');
+  const firstReady = Date.now() - t0;
+  await waitFor(page, () => window.__prep.room()?.phase === 'Running', 'round 1 to run', 30_000);
+  // The cars race one lap hands-off (the test surface's autopilot), the sim stepped ahead of the wall clock; the round
+  // ends on the lap and the director parks in Intermission, preparing the next track while the results show.
+  await api('command', { cmd: 'autopilot', on: true });
+  for (let k = 0; k < 40 && (await phase(page)) !== 'Intermission'; k++) {
+    await api('command', { cmd: 'step', ticks: 1200 });
+    await sleep(100);
+  }
+  assert.equal(await phase(page), 'Intermission', 'the lap ended the round');
+  await waitFor(page, () => window.__prep.stats().delivered === 2, 'the next track to be prepared during the Intermission', 30_000);
+  const remaining = await page.evaluate(() => window.__prep.room().remainingMs);
+  assert.ok(remaining > 30_000, `the next track was ready with ${remaining} ms of the Intermission to spare`);
+  await api('startRound'); // Start now
+  await waitFor(page, () => window.__prep.presented().committed === 2, 'the second track to be shown', 30_000);
+  const shown = await api('presented');
+  const seeds = await api('seeds');
+  assert.equal(seeds.length, 2);
+  assert.notEqual(seeds[0].seed, seeds[1].seed, 'two different seeds');
+  assert.notEqual(shown.commitMaps[0], shown.commitMaps[1]);
+  const lap = ['town', 'rocks', 'outback-dirt', 'outback-bitumen', 'town'];
+  assert.deepEqual(shown.commitSegments, [lap, lap], 'each is a four-biome lap, dirt then bitumen');
+  assert.deepEqual(errors, []);
+  evidence.runs.twoRounds = { seeds, presented: shown, firstTrackReadyMs: firstReady, intermissionRemainingWhenReadyMs: remaining };
+  await page.close();
+});
+
+test('preparation finishes well inside the intermission with the page CPU throttled 6x (phone-host stand-in)', { timeout: 120_000 }, async () => {
+  const { page, errors, api } = await open();
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+  const times = [];
+  for (let k = 1; k <= 4; k++) {
+    const t0 = Date.now();
+    await api('reroll');
+    await page.waitForFunction((n) => window.__prep.stats().delivered >= n, k, { timeout: 60_000 });
+    times.push(Date.now() - t0);
+  }
+  const seeds = await api('seeds');
+  const workerMs = seeds.map((s) => s.ms);
+  const intermissionMs = 60_000;
+  // The page's main thread ran 6x slower (the staging of the map's meshes included); the generator's own worker thread
+  // isn't throttled by this emulation, so its measured time is also shown multiplied by 6 as the stand-in estimate.
+  const worst = Math.max(...times);
+  assert.ok(worst < intermissionMs / 2, `reroll to staged map took ${worst} ms under 6x throttle`);
+  assert.ok(Math.max(...workerMs) * 6 < intermissionMs / 2, `the generator, scaled by 6: ${Math.max(...workerMs) * 6} ms`);
+  assert.deepEqual(errors, []);
+  evidence.runs.throttled6x = { rerollToStagedMs: times, generatorWorkerMs: workerMs, generatorScaledBy6Ms: workerMs.map((m) => m * 6), intermissionMs, note: 'Emulation.setCPUThrottlingRate=6 on the page; the procgen worker thread is not throttled by it' };
+  await page.close();
 });

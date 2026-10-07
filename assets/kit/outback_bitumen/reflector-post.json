@@ -1,0 +1,16 @@
+{
+  "id": "outback_bitumen/reflector-post",
+  "version": 1,
+  "what": "A white roadside guide post with a red reflector band.",
+  "params": {},
+  "collider": {
+    "cylinder": {
+      "radius": 60,
+      "height": 1100
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}
