@@ -4,7 +4,7 @@
 // phone its place (an idle phone gets the takeover cue, P1-G03); the next round starts. `JJ_CAPTURE_DIR=<dir>` saves the visual self-review matrix.
 //   node --test web/tests/journeys/jn3-round-loop.test.mjs
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
@@ -69,6 +69,26 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
+  // P1-R06: Identify from the phone pulses that seat's tile on the TV; press-to-visible over loopback WebRTC.
+  const seatA = (await host.evaluate(() => window.__jjRoom.view().seats)).find((s) => s.name === 'Davo').seat;
+  const identify = [];
+  for (let k = 0; k < 5; k++) {
+    const before = await host.evaluate(() => window.__jjRoom.identified().length);
+    const pressed = await a.page.evaluate(() => {
+      const t = Date.now();
+      document.querySelector('[data-act=identify]').click();
+      return t;
+    });
+    await wait(host, (n) => window.__jjRoom.identified().length > n, before, 5000);
+    const shown = (await host.evaluate(() => window.__jjRoom.identified())).at(-1);
+    assert.equal(shown.seat, seatA, "the pulse is on Davo's tile");
+    identify.push(shown.wall - pressed);
+    if (k === 0) await shot(host, 'tv-identify');
+    await host.waitForTimeout(1800);
+  }
+  console.log(`# identify press → TV pulse (ms): ${identify.join(', ')}`);
+  if (process.env.JJ_EVIDENCE_DIR) writeFileSync(`${process.env.JJ_EVIDENCE_DIR}/identify.json`, `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', samplesMs: identify }, null, 1)}\n`);
+  assert.ok(Math.max(...identify) <= 150, `press-to-visible ${identify} ms (≤ 150 ms)`);
   // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
   await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
     const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);

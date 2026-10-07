@@ -15,7 +15,7 @@ import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
 import { paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
-import { mountRoundScreens } from './round/screens';
+import { mountRoundScreens, type RoundScreens } from './round/screens';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
@@ -24,6 +24,9 @@ import { World } from './render/world';
 import { SimClient } from './worker/client';
 
 const app = document.querySelector<HTMLElement>('#app')!;
+
+/** The room's round screens (lobby, results, per-tile HUD), once a real room has opened. */
+let roundScreens: RoundScreens | null = null;
 
 async function boot(): Promise<void> {
   const params = new URLSearchParams(location.search);
@@ -162,8 +165,12 @@ async function boot(): Promise<void> {
     end: () => client.input({ type: 'ui', ui: 'end' }),
     /** The room's recent sim events with the host time they arrived (introspection, R90): the newest 500. */
     events: () => recentEvents.slice(),
+    /** Identify pulses shown on the TV: seat, when the event arrived and the pulse went up (performance.now()), and
+     *  the wall clock then (to time a phone's press on the same machine). */
+    identified: () => identified.slice(),
   };
   const recentEvents: Array<{ at: number; event: Record<string, unknown> }> = [];
+  const identified: Array<{ seat: number; at: number; shownAt: number; wall: number }> = [];
   // Each player's camera choice belongs to their car; tiles reflow as seats come and go, so it's reapplied per tile.
   const camOfCar = new Map<number, 'fp' | 'tp'>();
   const applyCams = () => {
@@ -180,6 +187,9 @@ async function boot(): Promise<void> {
     for (const e of events) {
       recentEvents.push({ at, event: e as Record<string, unknown> });
       if (recentEvents.length > 500) recentEvents.shift();
+      // Identify (P1-R06): the seat's tile pulses; when it showed is recorded for the press-to-visible samples.
+      const id = (e as { Identify?: { seat: number } }).Identify;
+      if (id && roundScreens?.hud.identify(id.seat)) identified.push({ seat: id.seat, at, shownAt: performance.now(), wall: Date.now() });
       const cam = e.CameraSet;
       if (!cam) continue;
       camOfCar.set(Number(cam.car), cam.camera === 'FirstPerson' ? 'fp' : 'tp');
@@ -190,6 +200,8 @@ async function boot(): Promise<void> {
   let seatPaint = new Map<number, string>();
   let painted = false;
   client.watchRoom((room) => {
+    // The page knows the round's phase (the input drawer folds away while racing so it covers no tile).
+    document.body.dataset.jjPhase = room.phase;
     // In a room the grid's tiles are the seated cars in seat-number order: a car withdrawn by Leave or Sit out stays in
     // the world as scenery but loses its tile, so the grid reflows (G02).
     if (world.tiles?.auto) {
@@ -235,6 +247,7 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
   // The round screens (P1-R07) own the lobby and results; the per-tile HUD follows the tile rects the grid reports.
   const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl }) : null;
+  roundScreens = screens;
   world.onLayout = (layout, scale) => {
     overlay.render(layout, scale);
     screens?.place(world.tileRects(), scale);

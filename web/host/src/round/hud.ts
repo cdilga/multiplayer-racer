@@ -27,6 +27,8 @@ export interface Hud {
   update(room: RoomView): void;
   /** Show or hide the whole layer (only races show it). */
   show(on: boolean): void;
+  /** Identify (P1-R06): that seat's tile pulses in its colour with "Cooee #N"; returns false if it has no tile now. */
+  identify(seat: number): boolean;
 }
 
 export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
@@ -120,6 +122,26 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     show(on) {
       layer.hidden = !on;
       if (on) paint();
+    },
+    identify(seat) {
+      if (layer.hidden) return false;
+      const tile = [...boxes.keys()].find((t) => seatOf(t)?.seat === seat);
+      const box = tile === undefined ? undefined : boxes.get(tile);
+      const s = tile === undefined ? undefined : seatOf(tile);
+      if (!box || !s) return false;
+      box.querySelector('.hud-cooee')?.remove();
+      const c = document.createElement('div');
+      c.className = 'hud-cooee display';
+      c.textContent = `Cooee #${s.number}`;
+      box.append(c);
+      box.classList.remove('identify');
+      void box.offsetWidth; // restart the pulse when it fires again
+      box.classList.add('identify');
+      setTimeout(() => {
+        c.remove();
+        box.classList.remove('identify');
+      }, 1600);
+      return true;
     },
   };
 }
