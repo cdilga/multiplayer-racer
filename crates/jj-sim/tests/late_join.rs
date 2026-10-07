@@ -131,6 +131,10 @@ fn run(
         !sim.debris_footprints().iter().any(|d| overlaps(&mine, d)),
         "husk {husk} debris {debris} parked {parked}: placed on debris or a husk"
     );
+    assert!(
+        !barriers.iter().any(|b| overlaps(&mine, b)),
+        "husk {husk} debris {debris} parked {parked}: placed in a barrier"
+    );
     if std::env::var("JJ_LATE_PRINT").is_ok() {
         println!(
             "target x {tx:.1}; placed at {start:?} protected {}",
