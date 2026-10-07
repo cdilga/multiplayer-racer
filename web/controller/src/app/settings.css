@@ -62,3 +62,8 @@
 /* The card keeps to the screen: the name field shrinks to make room for the button, never the other way round. */
 .join-card { grid-template-columns: minmax(0, 1fr); }
 .name-field input { flex: 1 1 auto; width: auto; min-width: 0; }
+
+/* §11 host paused: the card sits over the dimmed sticks and takes no touch. */
+.paused-card { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 6; text-align: center; pointer-events: none; padding: 12px 22px; }
+.paused-card b { display: block; font-size: 26px; }
+.paused-card p { margin: 4px 0 0; font-weight: 500; }

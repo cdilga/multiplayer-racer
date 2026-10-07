@@ -242,6 +242,12 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
     app.querySelector<HTMLElement>('[data-hud=boost]')?.style.setProperty('--v', `${Math.round(((h?.boost ?? 0) / 255) * 100)}%`);
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
+    // §11 host hidden: the wording over the dimmed sticks (the car stays yours; nothing here asks for input).
+    const playEl = app.querySelector<HTMLElement>('.screen.play');
+    const paused = session.phase === 'host-paused';
+    const card = playEl?.querySelector('[data-overlay=paused]');
+    if (paused && playEl && !card) playEl.insertAdjacentHTML('beforeend', '<div class="panel paused-card" data-overlay="paused" role="status"><b class="display italic">Host paused</b><p>Back in a moment.</p></div>');
+    else if (!paused) card?.remove();
   };
 
   session.onChange = render;

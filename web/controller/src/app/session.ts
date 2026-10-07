@@ -317,8 +317,8 @@ export class Session {
 
   /** Stick input at input-event rate (shaped −1..1; y down is positive, as the screen). */
   setSticks(drive: Stick, action: Stick): void {
-    this.drive = drive;
-    this.action = action;
+    this.drive = { ...drive };
+    this.action = { ...action };
     this.onSticks(drive, action);
     if (this.idleCueAt !== null && Math.max(Math.hypot(drive.x, drive.y), Math.hypot(action.x, action.y)) > 0.3) {
       // Deliberate input: the host hands the car back (if the autopilot had it), so the cue goes.
@@ -390,6 +390,11 @@ export class Session {
     if (!this.endpoint || this.srcIdx < 0) return;
     if (on) this.endpoint.neutralise(this.srcIdx, WHY_DISCONNECTED);
     else this.endpoint.resume(this.srcIdx);
+  }
+
+  /** Test surface (R90): hands this session a host message as if it had arrived on the channel. */
+  receive(ch: 'state' | 'cmd', bytes: Uint8Array): void {
+    this.onMessage(ch, bytes.slice().buffer);
   }
 
   /** Sit out (the settings sheet, C07): the seat steps out of the next round and the car is parked. */
@@ -478,6 +483,7 @@ export class Session {
       results: this.results,
       persisted: this.persisted,
       cameraDistance: this.cameraDistance,
+      sticks: { drive: { ...this.drive }, action: { ...this.action } },
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
