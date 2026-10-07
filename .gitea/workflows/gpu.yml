@@ -1,0 +1,54 @@
+# The GPU journeys (docs/infra/ci.md): R06's 24-120 tiles and C06's 150 ms press-to-visible Identify bound need a real
+# GPU (a hardware fact, R93), so they run here with JJ_CHROMIUM_GPU=1 (ANGLE on Vulkan) on the `gpu` runner, eris's
+# RTX 2080 Super (a host executor). CI's browser slots still run both files on SwiftShader as before (R06 skips there),
+# so the CI lanes never wait on this workflow: eris is a desktop that is sometimes off, and a queued run here simply
+# waits for it. Its statuses are named `CI GPU / …`; scripts/ci-status.sh lists them as "(not a lane)".
+name: CI GPU
+
+on:
+  push:
+  schedule:
+    - cron: "47 15 * * *"
+  workflow_dispatch:
+
+# Only the newest commit matters here: a newer push cancels a GPU run in progress.
+concurrency:
+  group: gpu-${{ gitea.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gpu:
+    runs-on: gpu
+    timeout-minutes: 40
+    env:
+      CARGO_TARGET_DIR: /home/cdilga/.cache/jj-ci/target-gpu
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 300
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        env:
+          GITEA_TOKEN: ${{ github.token }}
+        run: |
+          full=""
+          if [ "${{ github.event_name }}" != push ]; then full=--full; fi
+          node scripts/ci/plan.mjs $full --github-output "$GITHUB_OUTPUT"
+      - name: Vehicle, brand and audio LFS objects
+        if: steps.plan.outputs.gpu_any == 'true'
+        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+      - name: Build (WASM, pages, jj-server)
+        if: steps.plan.outputs.gpu_any == 'true'
+        run: |
+          scripts/build-host-wasm.sh
+          npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
+          npm --prefix web run build
+          cargo build --locked -q -p jj-server --bin jj-server
+      - name: GPU journeys (JJ_CHROMIUM_GPU=1, ANGLE on Vulkan)
+        if: steps.plan.outputs.gpu_any == 'true'
+        env:
+          GPU_FILES: ${{ steps.plan.outputs.gpu }}
+        run: |
+          nvidia-smi --query-gpu=name,driver_version,memory.used,utilization.gpu --format=csv,noheader
+          files=$(node -e 'console.log(JSON.parse(process.env.GPU_FILES).join(" "))')
+          JJ_CHROMIUM_GPU=1 JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 $files

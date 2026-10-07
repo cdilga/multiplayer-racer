@@ -1,210 +1,74 @@
-# CI from P1-F01, brought up on Gitea by P1-D01: the checks the workspace scaffold guarantees. P1-F02 grows this into
-# the fast/build/browser lanes (Playtest-1 plan §12.1); scripts/ci-status.sh reports the lanes for a commit.
-# The rust job runs on the shared `rust` runners (truenas-rust, triton-rust: instance-wide since 2026-10-03), whose
-# job containers mount a persistent /cargo-cache. rustup, the pinned toolchain and cargo tools install there once;
-# Jammers keeps its own target dir so Physical Soccer's builds on the same cache don't evict ours (P1-D01 AC1/AC3).
+# CI (docs/infra/ci.md). A push runs only what its changes can affect, spread across every runner slot:
+#   plan      picks the suites from the paths changed since the last commit CI passed on (scripts/ci/plan.mjs) and
+#             prints the selection; a shared contract (the Cargo workspace, a crate others depend on, web/shared,
+#             maps, assets, the build config, this file) widens it to everything that depends on it.
+#   rust-*    lint (fmt, check, clippy, deny, jj validate) and tests (nextest at opt-level 1, the selected crates and
+#             their dependents), on the `rust` runners' persistent /cargo-cache.
+#   build     the one web build (WASM, Vite pages, the S02 harness, jj and jj-server), keyed by its inputs and cached
+#             per host, handed to the browser slots as one artifact.
+#   browser   a static matrix of slots; plan packs the selected test files into them, longest first, one file per
+#             slot when there are enough. The SSE soak is 20 s on a push and 300 s in the full run.
+#   checks, image as before (image only when its inputs changed).
+# The full matrix (every suite, the 300 s soak) runs nightly and on a manual dispatch: same coverage, different timing.
+# Jobs run in the jj-ci image (scripts/ci/ci-image.Dockerfile, built on each runner host by scripts/ci/ci-image.sh):
+# node, Playwright's Chromium and its libraries, coturn, git-lfs, wasm-bindgen and nextest are baked in.
 # No actions/cache: truenas-shared's cache server times out from job containers (run 996).
 name: CI
 
 on:
   push:
+  schedule:
+    - cron: "17 15 * * *" # 01:17 AEST, the full matrix
   workflow_dispatch:
 
 # One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
-# run still waiting, since its commit contains the older ones. The runners are shared across the owner's projects.
+# run still waiting; the next run's plan diffs from the last green commit, so nothing a replaced run held is lost.
 concurrency:
   group: ci-${{ gitea.ref }}
   cancel-in-progress: false
 
+env:
+  CARGO_HOME: /cargo-cache/cargo
+  RUSTUP_HOME: /cargo-cache/rustup
+  CARGO_INCREMENTAL: "0"
+  npm_config_cache: /cargo-cache/npm
+
 jobs:
-  rust:
-    runs-on: rust
-    timeout-minutes: 45
-    env:
-      CARGO_HOME: /cargo-cache/cargo
-      RUSTUP_HOME: /cargo-cache/rustup
-      CARGO_TARGET_DIR: /cargo-cache/target-jammers
-      CARGO_BUILD_JOBS: "12"
+  plan:
+    runs-on: ubuntu-latest
+    container:
+      image: jj-ci:5890cf2da9ac
+    timeout-minutes: 5
+    outputs:
+      rust: ${{ steps.plan.outputs.rust }}
+      crates: ${{ steps.plan.outputs.crates }}
+      build: ${{ steps.plan.outputs.build }}
+      slots: ${{ steps.plan.outputs.slots }}
+      n: ${{ steps.plan.outputs.n }}
+      image: ${{ steps.plan.outputs.image }}
+      soak: ${{ steps.plan.outputs.soak }}
     steps:
       - uses: actions/checkout@v4
-      - name: Toolchain (rust-toolchain.toml) on the persistent cache
-        run: |
-          test -w /cargo-cache
-          if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
-          fi
-          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
-          "$CARGO_HOME/bin/rustup" show active-toolchain || "$CARGO_HOME/bin/rustup" toolchain install
-      - name: Format
-        run: cargo fmt --all -- --check
-      - name: Check (native)
-        run: cargo check --workspace --all-targets --locked
-      - name: Check (wasm facades)
-        run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-procgen -p jj-wasm-input
-      - name: Clippy
-        run: |
-          cargo clippy --workspace --all-targets --locked -- -D warnings
-          cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
-      - name: coturn for the TURN credential allocation test (P1-N04)
-        run: command -v turnserver >/dev/null || (apt-get update -qq && apt-get install -y -qq coturn python3)
-      - name: Test
-        env:
-          JJ_COTURN_REQUIRED: "1"
-        run: |
-          cargo test --workspace --locked
-          cargo test -p jj-wasm-host --features testing --locked
-      - name: WASM parity in Node (jj-map P1-M01, jj-procgen P1-M03a)
-        run: |
-          if ! wasm-bindgen-test-runner --version 2>/dev/null | grep -q ' 0\.2\.129'; then
-            curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
-            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen-test-runner "$CARGO_HOME/bin/"
-          fi
-          cargo test --locked --target wasm32-unknown-unknown -p jj-map -p jj-procgen --test wasm_parity
-      - name: The greybox validates (jj validate)
-        run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
-      - name: A generated map validates (jj procgen, P1-M03a)
-        run: cargo run --locked -q -p jj-tools --bin jj -- procgen --seed 42 --json
-      - name: The Cruz Missile's committed bake validates, and its profile still matches it (jj validate, P1-V02, P1-S03a)
-        run: |
-          command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
-          git lfs install --local
-          git lfs pull --include="art/vehicles/cruz-missile/cruz-missile.*"
-          cargo run --locked -q -p jj-tools --bin jj -- validate art/vehicles/cruz-missile/cruz-missile.asset.json assets/profiles/cruz-missile.json maps/test/surface-strips.json
-      - name: No Tokio (R2)
-        run: scripts/ci/no-tokio.sh
-      - name: cargo deny
-        run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
-
-  # The web build, on a rust runner since the host bundles the sim worker's WASM (P1-S02): both jj-wasm-host builds,
-  # the pages, the bundle and origin checks, then the host in headless Chromium: the sim worker (P1-S02) and the test
-  # surface against the native `jj sim` hash (P1-F05b). Its own target dir so it never waits on the rust job's lock.
-  web:
-    runs-on: rust
-    timeout-minutes: 30
-    env:
-      CARGO_HOME: /cargo-cache/cargo
-      RUSTUP_HOME: /cargo-cache/rustup
-      CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
-      CARGO_BUILD_JOBS: "12"
-      PLAYWRIGHT_BROWSERS_PATH: /cargo-cache/ms-playwright
-    steps:
-      - uses: actions/checkout@v4
-      # The host bundles the baked vehicles (P1-R02) and the landing page the brand renders (P1-C01); both are LFS
-      # objects: fetch those (not the audio) from Gitea.
-      - name: Vehicle and brand LFS objects
-        run: |
-          command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
-          git lfs install --local && git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
-      - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
-      - name: Toolchain and wasm-bindgen 0.2.129 on the persistent cache
-        run: |
-          test -w /cargo-cache
-          if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
-          fi
-          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
-          "$CARGO_HOME/bin/rustup" show active-toolchain || "$CARGO_HOME/bin/rustup" toolchain install
-          if ! "$CARGO_HOME/bin/wasm-bindgen" --version 2>/dev/null | grep -q ' 0\.2\.129'; then
-            curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
-            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen "$CARGO_HOME/bin/"
-          fi
-      - name: The sim worker's WASM, shipped and testing builds (scripts/build-host-wasm.sh)
-        run: scripts/build-host-wasm.sh
-      - run: npm ci && npm --prefix web ci
-      - name: Typecheck the two workers (their own WebWorker programs)
-        run: |
-          npx --prefix web tsc --noEmit -p web/host/src/worker/tsconfig.json
-          npx --prefix web tsc --noEmit -p web/host/src/testing/tsconfig.json
-      - run: npm --prefix web run build
-      - name: No test code in the shipped bundles (P1-F05b)
-        run: node scripts/ci/bundle-check.mjs web/dist
-      - name: Token CSS is current, and no renderer or sim on the landing and join path (P1-C01)
-        run: |
-          npm --prefix web run tokens:check
-          node web/landing/tests/bundle-check.mjs web/dist
-      - name: Runtime origins (P1-F03, R70)
-        run: npm --prefix web run qualify && node scripts/ci/origin-scan.mjs web/dist web/dist-qualify
-      - name: The S02 harness and the native jj (for the hash comparison)
-        run: |
-          npx --prefix web vite build --config web/host/tests/vite.config.ts
-          cargo build --locked -q -p jj-tools --bin jj
-          cargo build --locked -q -p jj-server --bin jj-server
-      - name: Chromium headless shell (Playwright 1.62.1)
-        run: npx playwright install --with-deps --only-shell chromium
-      # One file at a time: every host page renders on the CPU here (software GL), so parallel files starve each
-      # other's timers and the timing tests (input age, snapshot starvation) measure the runner, not the host.
-      - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
-        run: JJ_NO_WEBKIT=1 JJ_NO_CAPTURES=1 JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
-
-      - name: The UI kit page, focus rings at DPR 1-3, paper QR decode (P1-U06)
-        run: node --test --test-concurrency=1 web/shared/ui/tests/
-      - name: The landing page from one build on jj-server under /, /p/x/ and /p/y/ in Chromium (P1-C01, P1-N02)
-        run: JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/landing/tests/
-
-  # The WebRTC lanes: transport, the journeys and the SSE soak, beside the web job (together they ran past 30 min).
-  journeys:
-    runs-on: rust
-    timeout-minutes: 45
-    env:
-      CARGO_HOME: /cargo-cache/cargo
-      RUSTUP_HOME: /cargo-cache/rustup
-      CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
-      CARGO_BUILD_JOBS: "12"
-      PLAYWRIGHT_BROWSERS_PATH: /cargo-cache/ms-playwright
-    steps:
-      - uses: actions/checkout@v4
-      # The host bundles the baked vehicles (P1-R02) and the landing page the brand renders (P1-C01); both are LFS
-      # objects: fetch those (not the audio) from Gitea.
-      - name: Vehicle and brand LFS objects
-        run: |
-          command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
-          git lfs install --local && git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - name: Toolchain and wasm-bindgen 0.2.129 on the persistent cache
-        run: |
-          test -w /cargo-cache
-          if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --default-toolchain none
-          fi
-          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
-          "$CARGO_HOME/bin/rustup" show active-toolchain || "$CARGO_HOME/bin/rustup" toolchain install
-          if ! "$CARGO_HOME/bin/wasm-bindgen" --version 2>/dev/null | grep -q ' 0\.2\.129'; then
-            curl -sSfL https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp
-            cp /tmp/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen "$CARGO_HOME/bin/"
-          fi
-      - name: The sim worker's WASM, shipped and testing builds (scripts/build-host-wasm.sh)
-        run: scripts/build-host-wasm.sh
-      - run: npm ci && npm --prefix web ci
-      - run: npm --prefix web run build
-      - name: jj-server
-        run: cargo build --locked -q -p jj-server --bin jj-server
-      - name: Chromium headless shell (Playwright 1.62.1)
-        run: npx playwright install --with-deps --only-shell chromium
-      - name: Host and controllers over loopback WebRTC through jj-server, restarts, refresh, coturn relay (P1-N05, P1-G00)
+          fetch-depth: 300
+          lfs: false
+      - name: Select the suites
+        id: plan
         env:
-          JJ_COTURN_REQUIRED: "1"
+          GITEA_TOKEN: ${{ github.token }}
         run: |
-          command -v turnserver >/dev/null || (apt-get update -qq && apt-get install -y -qq coturn)
-          JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/shared/transport/tests/
-      - name: Journeys (JN1/3/5/6/7, C06, R06) over loopback WebRTC
-        run: JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test --test-concurrency=1 web/tests/journeys/
-      - name: jj-server SSE through a proxy for 5 minutes, slow reader, Last-Event-ID resume (P1-N02)
-        run: JJ_SOAK_S=300 JJ_SERVER_BIN="$CARGO_TARGET_DIR/debug/jj-server" node --test crates/jj-server/tests/sse.test.mjs
+          full=""
+          if [ "${{ github.event_name }}" = schedule ] || [ "${{ github.event_name }}" = workflow_dispatch ]; then full=--full; fi
+          node scripts/ci/plan.mjs $full --github-output "$GITHUB_OUTPUT"
 
   checks:
     runs-on: ubuntu-latest
+    container:
+      image: jj-ci:5890cf2da9ac
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - run: npm ci
-      - run: npm --prefix web ci
+      - run: npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
       - name: UI tokens (P1-U01)
         run: node art/ui/check.mjs
       - name: TV grid rule, equal tiles at any N (P1-U02.2, R95)
@@ -220,10 +84,122 @@ jobs:
       - name: Vehicle bake is reproducible and committed; loads in three.js (P1-V02)
         run: node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/
 
+  # Format, check, clippy, the supply-chain and Tokio bans and the committed data validating: always the whole
+  # workspace (cheap on the warm cache), whenever any Rust is selected.
+  rust-lint:
+    needs: plan
+    if: needs.plan.outputs.rust == 'true'
+    runs-on: rust
+    container:
+      image: jj-ci:5890cf2da9ac
+    timeout-minutes: 30
+    env:
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain (rust-toolchain.toml) on the persistent cache
+        run: scripts/ci/toolchain.sh
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check (native)
+        run: cargo check --workspace --all-targets --locked
+      - name: Check (wasm facades)
+        run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-input -p jj-wasm-procgen
+      - name: Clippy
+        run: |
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
+      - name: The greybox validates (jj validate)
+        run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
+      - name: A generated map validates (jj procgen, P1-M03a)
+        run: cargo run --locked -q -p jj-tools --bin jj -- procgen --seed 42 --json >/dev/null
+      - name: The Cruz Missile's committed bake validates, and its profile still matches it (jj validate, P1-V02, P1-S03a)
+        run: |
+          git lfs pull --include="art/vehicles/cruz-missile/cruz-missile.*"
+          cargo run --locked -q -p jj-tools --bin jj -- validate art/vehicles/cruz-missile/cruz-missile.asset.json assets/profiles/cruz-missile.json maps/test/surface-strips.json
+      - name: No Tokio (R2)
+        run: scripts/ci/no-tokio.sh
+      - name: cargo deny
+        run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
+
+  # The tests of the selected crates and everything that depends on them, at opt-level 1 (debug assertions and overflow
+  # checks stay on; the sim and procgen banks run ~8x faster than unoptimised), every test binary in parallel.
+  rust-test:
+    needs: plan
+    if: needs.plan.outputs.rust == 'true'
+    runs-on: rust
+    container:
+      image: jj-ci:5890cf2da9ac
+    timeout-minutes: 30
+    env:
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers-o1
+      CARGO_PROFILE_DEV_OPT_LEVEL: "1"
+      CARGO_PROFILE_TEST_OPT_LEVEL: "1"
+      JJ_COTURN_REQUIRED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain (rust-toolchain.toml) on the persistent cache
+        run: scripts/ci/toolchain.sh
+      - name: Test (${{ needs.plan.outputs.crates }})
+        run: scripts/ci/rust-test.sh ${{ needs.plan.outputs.crates }}
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    runs-on: rust
+    container:
+      image: jj-ci:5890cf2da9ac
+    timeout-minutes: 30
+    env:
+      CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
+    steps:
+      - uses: actions/checkout@v4
+      # The host bundles the baked vehicles (P1-R02), the brand (P1-C01) and the audio; all LFS objects.
+      - name: Vehicle, brand and audio LFS objects
+        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+      - name: Toolchain (rust-toolchain.toml) on the persistent cache
+        run: scripts/ci/toolchain.sh
+      - name: Build (or reuse this host's build of the same inputs)
+        run: scripts/ci/build-web.sh web-build.tar.zst
+      - uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: web-build.tar.zst
+          retention-days: 1
+
+  browser:
+    needs: [plan, build]
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.build == 'true' && fromJSON(needs.plan.outputs.n) >= matrix.slot }}
+    runs-on: ubuntu-latest
+    container:
+      image: jj-ci:5890cf2da9ac
+      options: --shm-size=2g
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vehicle, brand and audio LFS objects
+        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+      - uses: actions/download-artifact@v3
+        with:
+          name: web-build
+      - name: Unpack the build
+        run: tar -I zstd -xf web-build.tar.zst && rm web-build.tar.zst
+      - name: Slot ${{ matrix.slot }}
+        env:
+          JJ_SOAK_S: ${{ needs.plan.outputs.soak }}
+          SLOTS: ${{ needs.plan.outputs.slots }}
+        run: node scripts/ci/run-slot.mjs ${{ matrix.slot }} "$SLOTS"
+
   # The jj-server image (P1-D02), built natively for linux/amd64 on the Jammers runner (the only one whose jobs get the
   # host's Docker socket), smoked as two previews of the same digest, then pushed to the Gitea registry by commit and
   # recorded by digest. Pushing through 127.0.0.1 keeps the registry on the host (Docker allows loopback over HTTP).
   image:
+    needs: plan
+    if: needs.plan.outputs.image == 'true'
     runs-on: jammers-docker
     timeout-minutes: 45
     env:
@@ -245,15 +221,17 @@ jobs:
           test "$(docker inspect -f '{{.Config.User}}' "$IMAGE:$TAG")" = 10001
           ! docker history --no-trunc --format '{{.CreatedBy}}' "$IMAGE:$TAG" | grep -Ei 'token=|secret=|password=|_KEY='
           ! docker inspect -f '{{json .Config.Env}}' "$IMAGE:$TAG" | grep -Ei 'token|secret|password|_key'
+      # One long-lived curl container answers every probe (a `docker run` per probe cost ~8 s each on this host).
       - name: Two previews of one image under /p/a/ and /p/b/ (version, health, no root-relative leak)
         run: |
           net="jj-smoke-$TAG-$GITHUB_RUN_ID"
           docker network create "$net"
-          trap 'docker rm -f "a-$net" "b-$net" >/dev/null 2>&1; docker network rm "$net" >/dev/null 2>&1' EXIT
+          trap 'docker rm -f "a-$net" "b-$net" "c-$net" >/dev/null 2>&1; docker network rm "$net" >/dev/null 2>&1' EXIT
           docker run -d --name "a-$net" --network "$net" -e JJ_BASE_PATH=/p/a/ -e JJ_BUILD=a "$IMAGE:$TAG"
           docker run -d --name "b-$net" --network "$net" -e JJ_BASE_PATH=/p/b/ -e JJ_BUILD=b "$IMAGE:$TAG"
-          curl_() { docker run --rm --network "$net" curlimages/curl:8.16.0 -s "$@"; }
-          for i in $(seq 30); do curl_ -f "http://a-$net:8080/p/a/healthz" >/dev/null && curl_ -f "http://b-$net:8080/p/b/healthz" >/dev/null && break; sleep 1; done
+          docker run -d --name "c-$net" --network "$net" --entrypoint sleep curlimages/curl:8.16.0 600
+          curl_() { docker exec "c-$net" curl -s "$@"; }
+          for i in $(seq 60); do curl_ -f "http://a-$net:8080/p/a/healthz" >/dev/null && curl_ -f "http://b-$net:8080/p/b/healthz" >/dev/null && break; sleep 0.5; done
           curl_ -f "http://a-$net:8080/p/a/version" | tee /dev/stderr | grep -q '"build":"a"'
           curl_ -f "http://b-$net:8080/p/b/version" | grep -q '"build":"b"'
           curl_ "http://a-$net:8080/p/a/healthz" | grep -q '"relayFallback":"unavailable"'
