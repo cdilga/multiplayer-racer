@@ -4,7 +4,7 @@
 // NOTE: today each source is its own endpoint (the protocol seats one endpoint with one seat), so "one connection" and the
 // N08 per-endpoint receipt are not asserted; per-source bytes are logged ('# bytes ...').
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, afterEach, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
@@ -48,10 +48,21 @@ after(async () => {
 closeContextsAfterEach(() => browser);
 
 // A software-rendered CI runner with three browser contexts open is several times slower than eris: generous waits.
+/** Every context a test opens is closed after it: three software-rendered hosts at once starve each other. */
+const contexts = [];
+const newContext = async (opts) => {
+  const c = await browser.newContext(opts);
+  contexts.push(c);
+  return c;
+};
+afterEach(async () => {
+  for (const c of contexts.splice(0)) await c.close().catch(() => {});
+});
+
 const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
 async function openHost(mode) {
-  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  const host = await (await newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
   await wait(host, () => window.__jjNet?.code() && (window.__jjTest || window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 180_000); // opening a room on a busy runner
   return { host, code: await host.evaluate(() => window.__jjNet.code()), joinUrl: await host.evaluate(() => window.__jjNet.joinUrl()) };
@@ -77,7 +88,7 @@ const PADS = () => {
 };
 
 async function hubPage(joinUrl) {
-  const page = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+  const page = await (await newContext({ viewport: { width: 1100, height: 700 } })).newPage();
   await page.addInitScript(PADS);
   await page.goto(`${joinUrl}?hub`);
   await wait(page, () => window.__jjHub);
@@ -139,10 +150,12 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   // Early, before the driven cars can reach a neighbour on the grid: the four others haven't moved.
   const early = await obs();
   for (const id of ['pad0', 'keys1', 'B-pad0', 'B-pad1']) assert.ok(movedSince(early, ep[id]) < 1.5, `${id} stayed put (${movedSince(early, ep[id]).toFixed(2)} m)`);
-  await host.waitForTimeout(5000);
-  const now = await obs();
-  assert.ok(movedSince(now, ep.pad1) > 5, 'pad 2 drove its car');
-  assert.ok(movedSince(now, ep.keys2) > 5, 'keys B drove its car');
+  // A software-rendered host steps slowly in wall time: wait for the distance, not for a fixed few seconds.
+  let now = await obs();
+  for (const t0 = Date.now(); movedSince(now, ep.pad1) <= 5 || movedSince(now, ep.keys2) <= 5; now = await obs()) {
+    assert.ok(Date.now() - t0 < 60_000, `the driven cars moved ${movedSince(now, ep.pad1).toFixed(1)} and ${movedSince(now, ep.keys2).toFixed(1)} m in 60 s`);
+    await host.waitForTimeout(500);
+  }
   await hub.keyboard.up('KeyI');
   await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0]));
 
@@ -200,7 +213,7 @@ test('each source leaves on its own; the hub shows seat, kind, state and path; I
 
 test('a phone with one paired pad holds two seats and shows the connection badge', { timeout: 480_000 }, async () => {
   const { host, joinUrl } = await openHost('room');
-  const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const ctx = await newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
   await page.addInitScript(PADS);
   await page.goto(joinUrl);
