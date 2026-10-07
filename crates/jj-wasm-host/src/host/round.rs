@@ -228,6 +228,8 @@ impl Host {
         match self.driving() {
             Driving::FreeDrive => Some(self.sim.spawn_grid(1)[0]),
             Driving::Racing => Some(self.sim.drop_in()),
+            // A late joiner in the Countdown takes the next grid slot, held with the rest until GO (G02).
+            Driving::Held if self.phase() == Phase::Countdown => Some(self.sim.spawn_grid(1)[0]),
             Driving::Held => None,
         }
     }

@@ -160,10 +160,16 @@ async function boot(): Promise<void> {
     view: () => client.room,
     start: () => client.input({ type: 'ui', ui: 'start' }),
     end: () => client.input({ type: 'ui', ui: 'end' }),
+    /** The room's recent sim events with the host time they arrived (introspection, R90): the newest 500. */
+    events: () => recentEvents.slice(),
   };
+  const recentEvents: Array<{ at: number; event: Record<string, unknown> }> = [];
   // A phone's camera toggle (SetCamera, P1-R05) switches its own tile: tiles follow cars, tile k is car k.
   client.onEvents = (events) => {
+    const at = performance.now();
     for (const e of events) {
+      recentEvents.push({ at, event: e as Record<string, unknown> });
+      if (recentEvents.length > 500) recentEvents.shift();
       const cam = e.CameraSet;
       if (cam) world.rig.setMode(Number(cam.car) + 1, cam.camera === 'FirstPerson' ? 'fp' : 'tp');
     }

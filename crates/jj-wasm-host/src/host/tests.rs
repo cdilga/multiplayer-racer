@@ -1337,6 +1337,21 @@ fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
     for p in &first {
         cmd(&mut h, p, ControllerCmd::Ready { on: true });
     }
+    step(&mut h, 2, &mut now);
+    assert_eq!(h.phase(), jj_session::director::Phase::Countdown);
+    // A joiner in the Countdown takes the next grid slot.
+    join(&mut h, "c0");
+    step(&mut h, 2, &mut now);
+    assert!(
+        !room(&h)["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["name"] == "C0")
+            .unwrap()["car"]
+            .is_null(),
+        "a Countdown joiner is on the grid"
+    );
     for _ in 0..(120 * 10) {
         step(&mut h, 1, &mut now);
         if h.phase() == jj_session::director::Phase::Running {
@@ -1344,7 +1359,7 @@ fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
         }
     }
     assert_eq!(h.phase(), jj_session::director::Phase::Running);
-    assert_eq!(h.sim.cars().count(), 32, "the grid holds all 32");
+    assert_eq!(h.sim.cars().count(), 33, "the grid holds all 33");
     step(&mut h, 240, &mut now);
 
     // Mid-race churn: 8 leave, 4 sit out, 6 drop in.
@@ -1363,7 +1378,7 @@ fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
     let seats = r["seats"].as_array().unwrap();
     assert_eq!(
         seats.len(),
-        32 - 8 + 6,
+        33 - 8 + 6,
         "leavers are gone, newcomers are in: {}",
         seats.len()
     );
