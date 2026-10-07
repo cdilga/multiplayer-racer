@@ -1116,6 +1116,7 @@ version = "0.2.0"
 dependencies = [
  "jj-map",
  "jj-procgen",
+ "serde_json",
  "wasm-bindgen",
 ]
 

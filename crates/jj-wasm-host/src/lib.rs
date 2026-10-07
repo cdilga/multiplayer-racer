@@ -159,6 +159,16 @@ pub mod codec {
         .encode()
     }
 
+    /// A prepared round map (canonical bytes) for preparation `preparation`: sent once the renderer has built it (P1-M08a).
+    #[wasm_bindgen]
+    pub fn encode_map_ready(preparation: u32, map_bytes: &[u8]) -> Vec<u8> {
+        MainToSim::MapReady {
+            preparation: jj_types::PreparationId(preparation),
+            map_bytes: map_bytes.to_vec(),
+        }
+        .encode()
+    }
+
     #[wasm_bindgen]
     pub fn encode_lifecycle(visible: bool, render_ok: bool) -> Vec<u8> {
         MainToSim::Lifecycle { visible, render_ok }.encode()
@@ -173,6 +183,7 @@ pub mod codec {
             "disband" => UiCommand::DisbandRoom,
             "free-drive" => UiCommand::FreeDrive { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
+            "reroll" => UiCommand::Reroll,
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

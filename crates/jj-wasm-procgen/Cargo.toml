@@ -14,6 +14,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 jj-procgen.workspace = true
 jj-map.workspace = true
+serde_json.workspace = true
 wasm-bindgen.workspace = true
 
 [lints]

@@ -416,6 +416,8 @@ impl Host {
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
             UiCommand::SetLaps { laps } => self.round.laps = laps.max(1),
             UiCommand::PrepareMaps { on } => self.round.prepare_maps = on,
+            // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
+            UiCommand::Reroll => self.director_apply(DirIn::Reroll),
             UiCommand::FreeDrive { on } => {
                 self.round.free_drive = on;
                 let cfg = DirectorConfig {
