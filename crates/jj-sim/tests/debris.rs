@@ -157,6 +157,11 @@ fn debris_persists_dynamic_sleeps_and_wakes_on_contact() {
         );
     }
     let count = sim.prop_kinds().len();
+    // The bumper came off a car at rest and lies across it, so it hasn't turned solid yet (a fresh part ignores cars until it
+    // has cleared every one: turning solid inside its owner would wedge it there). The owner drives off, and the bumper
+    // is an ordinary prop again.
+    sim.place_car(CarId(0), at(-60.0, -60.0, 0.0), 0.0, [0.0; 3]);
+    steps(&mut sim, S, |_, _| {});
     // A car drives into the sleeping bumper: it wakes.
     let p = sim.debris_poses()[front].0;
     sim.place_car(CarId(1), at(p[0] - 12.0, p[2], 90.0), 0.0, [10.0, 0.0, 0.0]);

@@ -409,6 +409,19 @@ fn respawns_go_through_the_placement_service() {
     steps(&mut s, 2 * S);
     // Park car 1 exactly on car 0's anchor (its grid slot), then throw car 0 out of bounds.
     let anchor = s.race().car(0).unwrap().anchor;
+    // (Car 0 stands off to one side first: car 1 teleported into its slot would stack the two cars, which is a different
+    // test.)
+    s.place_car(
+        cars[0],
+        SpawnPose {
+            x: 60.0,
+            y: 0.1,
+            z: 0.0,
+            heading: 90f32.to_radians(),
+        },
+        0.0,
+        [0.0; 3],
+    );
     s.place_car(cars[1], anchor, 0.0, [0.0; 3]);
     steps(&mut s, S);
     s.place_car(

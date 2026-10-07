@@ -92,15 +92,19 @@ test('a loose door swings on the car and a detached bumper stays behind as debri
 test('a detached bumper stays on the road as debris while the car backs away, in the running host', { timeout: 180_000 }, async () => {
   const { page, errors, me } = await drivingHost(35, 16);
   const car = me.car;
+  // The clock is held: the sim moves only when this test steps it (untilFact re-sends the held stick as a phone would), so
+  // the sequence is the same every run; a live clock let a slow runner's timing change how the car met its own bumper.
+  await page.evaluate(() => window.__jjTest.hold(true));
+  const stick = (v) => page.evaluate(([e, v]) => { window.__stick = v; window.__jjTest.drive(e, v); }, [me.endpoint, v]);
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed >= 6, { maxTicks: 1500, every: 6 }));
   // The bumper goes: debris (a dynamic body) stays where it came off while the car drives on.
-  await page.evaluate(() => { window.__stick = [0, 20000]; });
+  await stick([0, 20000]);
   await damage(page, car, 'front', 0);
   // The bumper leaves at the car's speed; the car brakes, the bumper slides on and settles ahead of it.
   // Brake to a stop, then back away gently (a hard reverse can spin the car into a wreck).
-  await page.evaluate(() => { window.__stick = [0, -20000]; });
+  await stick([0, -20000]);
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed < 0.6, { maxTicks: 900, every: 6 }));
-  await page.evaluate(() => { window.__stick = [0, -9000]; });
+  await stick([0, -9000]);
   await page.evaluate(() =>
     window.__jjTest.untilFact(
       (s) => {
@@ -111,7 +115,7 @@ test('a detached bumper stays on the road as debris while the car backs away, in
       { maxTicks: 900, every: 6 },
     ),
   );
-  await page.evaluate(() => { window.__stick = [0, 0]; });
+  await stick([0, 0]);
   // Let the bumper come to rest (the render lags the sim a little under software GL), then look.
   for (let k = 0; k < 40; k++) {
     const d0 = (await observe(page)).debris.find((x) => x.kind === 'Part');
@@ -146,7 +150,7 @@ test('a detached bumper stays on the road as debris while the car backs away, in
   const obs = await observe(page);
   assert.equal(stats.debris, obs.debris.filter((d) => d.kind !== 'Part').length, 'the detached bumper is drawn as a part, not as a box of debris');
   assert.ok(obs.debris.length >= 1, 'the sim has the bumper as a debris body');
-  await page.evaluate(() => { window.__stick = [0, 0]; });
+  await stick([0, 0]);
   await page.screenshot({ path: join(evidenceDir, 'ingame-detached-bumper.jpg'), quality: 82 });
   runs.detached = { bumperDistanceM: +dist.toFixed(1), paint: by.front.colour, interiors: after.interiors, simDebris: obs.debris.length };
   assert.deepEqual(errors, []);

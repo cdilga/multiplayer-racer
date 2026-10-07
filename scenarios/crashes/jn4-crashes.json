@@ -136,7 +136,8 @@
  ],
  "driveAway": {
   "throttle": 1.0,
-  "ticks": 720,
-  "minTravelM": 8.0
+  "ticks": 1500,
+  "minTravelM": 8.0,
+  "handToAutopilotAfterTicks": 360
  }
 }

@@ -61,7 +61,14 @@ struct DriveAway {
     ticks: u64,
     /// A car that wasn't wrecked has moved at least this far (m) from where the stage left it.
     min_travel_m: f32,
+    /// A car still under `STUCK_M` of travel after this many ticks (two cars nose to nose with a fallen bumper between them
+    /// can't both push through) goes to the autopilot, which presses Recover after 3 s stuck: the car respawns at its anchor
+    /// after the 2 s hold. The room never waits on it.
+    hand_to_autopilot_after_ticks: u64,
 }
+
+/// Under this much travel by `hand_to_autopilot_after_ticks` counts as stuck.
+const STUCK_M: f32 = 3.0;
 
 fn q(v: f32) -> i16 {
     (v.clamp(-1.0, 1.0) * 32767.0) as i16
@@ -169,10 +176,24 @@ fn run(c: &Crashes, print: bool) -> Outcome {
     if let Some(d) = &c.drive_away {
         let before: Vec<[f32; 3]> = (0..cars).map(|car| pos(&sim, car)).collect();
         let wrecks0: Vec<u32> = (0..cars)
-            .map(|car| sim.race().car(car).map_or(0, |c| c.wrecks))
+            .map(|car| sim.race().car(car).map_or(0, |c| c.wrecks + c.recoveries))
             .collect();
-        for _ in 0..d.ticks {
+        for t in 0..d.ticks {
+            if t == d.hand_to_autopilot_after_ticks {
+                for car in 0..cars {
+                    let (a, b) = (before[car as usize], pos(&sim, car));
+                    if ((a[0] - b[0]).powi(2) + (a[2] - b[2]).powi(2)).sqrt() < STUCK_M {
+                        sim.set_autopilot(CarId(car), true);
+                        if print {
+                            println!("drive-away car {car}: stuck, handed to the autopilot");
+                        }
+                    }
+                }
+            }
             for car in 0..cars {
+                if sim.has_autopilot(CarId(car)) {
+                    continue;
+                }
                 sim.set_input(
                     CarId(car),
                     DriveInput {
@@ -186,7 +207,9 @@ fn run(c: &Crashes, print: bool) -> Outcome {
         for car in 0..cars {
             let (a, b) = (before[car as usize], pos(&sim, car));
             let moved = ((a[0] - b[0]).powi(2) + (a[2] - b[2]).powi(2)).sqrt();
-            let wrecked = sim.race().car(car).map_or(0, |c| c.wrecks) > wrecks0[car as usize];
+            // Wrecked, or recovered (the autopilot pressed Recover): respawned at its anchor either way.
+            let wrecked =
+                sim.race().car(car).map_or(0, |c| c.wrecks + c.recoveries) > wrecks0[car as usize];
             if print {
                 println!("drive-away car {car}: moved {moved:.1} m, wrecked {wrecked}");
             }

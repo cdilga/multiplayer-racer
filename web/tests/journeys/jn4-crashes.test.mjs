@@ -184,25 +184,43 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
   }
   run.stages = stages;
   const settled = await observe();
-  const wreckedBefore = cars.map((c) => settled.cars.find((x) => x.car === c).race.wrecks);
+  const respawns = (race) => race.wrecks + (race.recoveries ?? 0);
+  const wreckedBefore = cars.map((c) => respawns(settled.cars.find((x) => x.car === c).race));
   const at0 = cars.map((c) => settled.cars.find((x) => x.car === c).position);
   const debrisSettled = debrisOfPieces(settled);
 
   // Nobody stays stuck: every controller holds DRIVE forward. Each car drives away, or wrecks and is back at its anchor in
   // about 2 s (the respawn hold). The room never pauses meanwhile.
   const da = scenario.driveAway;
-  await page.evaluate(
-    async ({ da, endpoints }) => {
-      for (const e of endpoints) window.__jjTest.drive(e, [0, Math.round(da.throttle * 32767)]);
-      await window.__jjTest.untilFact(() => false, { maxTicks: da.ticks, every: 6 });
+  // A car still under 3 m of travel when `handToAutopilotAfterTicks` are up (two cars nose to nose with a fallen bumper between
+  // them can't both push through) goes to the autopilot, which presses Recover after 3 s stuck: it respawns at its anchor
+  // after the 2 s hold. Same rule as the native calibration.
+  const handed = await page.evaluate(
+    async ({ da, endpoints, cars, at0 }) => {
+      const s = window.__jjTest;
+      for (const e of endpoints) s.drive(e, [0, Math.round(da.throttle * 32767)]);
+      await s.untilFact(() => false, { maxTicks: da.handToAutopilotAfterTicks, every: 6 });
+      const o = await s.observe();
+      const stuck = [];
+      for (const [k, c] of cars.entries()) {
+        const p = o.cars.find((x) => x.car === c).position;
+        if (Math.hypot(p[0] - at0[k][0], p[2] - at0[k][2]) < 3) {
+          stuck.push(k);
+          s.drive(endpoints[k], null);
+          await s.command({ cmd: 'autopilot', car: c, on: true });
+        }
+      }
+      await s.untilFact(() => false, { maxTicks: da.ticks - da.handToAutopilotAfterTicks, every: 6 });
+      return stuck;
     },
-    { da, endpoints },
+    { da, endpoints, cars, at0 },
   );
+  run.handedToAutopilot = handed;
   const after = await observe();
   const away = cars.map((c, k) => {
     const o = after.cars.find((x) => x.car === c);
     const moved = Math.hypot(o.position[0] - at0[k][0], o.position[2] - at0[k][2]);
-    return { car: k, moved: +moved.toFixed(1), wrecked: o.race.wrecks > wreckedBefore[k], speed: +o.speed.toFixed(1), held: o.race.held ?? null };
+    return { car: k, moved: +moved.toFixed(1), wrecked: respawns(o.race) > wreckedBefore[k], speed: +o.speed.toFixed(1), held: o.race.held ?? null };
   });
   run.driveAway = away;
   for (const a of away) assert.ok(a.wrecked || a.moved >= da.minTravelM, `car ${a.car} stayed stuck: ${JSON.stringify(a)}`);

@@ -1117,9 +1117,27 @@ impl Sim {
             } else {
                 CAR_RAYS
             };
+            // A suspension ray that starts inside a solid it isn't standing on (a detached part lying across the wheel arch,
+            // a car shoved into this one) would read "ground at distance 0": full suspension force, and the contact rises
+            // with the car, so the chassis climbs and tips. A wheel's ray ignores any non-world collider that contains
+            // its own origin; the colliders push apart on their own.
+            let origins: Vec<Vector> = car
+                .vehicle
+                .wheels()
+                .iter()
+                .map(|w| w.raycast_info().hard_point_ws)
+                .collect();
+            let not_around_a_wheel = |_: ColliderHandle, c: &Collider| {
+                c.collision_groups().memberships.contains(GROUP_WORLD)
+                    || c.collision_groups().memberships.contains(GROUP_TERRAIN)
+                    || !origins
+                        .iter()
+                        .any(|&o| c.shape().contains_point(c.position(), o))
+            };
             let filter = QueryFilter::default()
                 .exclude_rigid_body(car.body)
-                .groups(rays);
+                .groups(rays)
+                .predicate(&not_around_a_wheel);
             let queries = self.world.broad_phase.as_query_pipeline_mut(
                 self.world.narrow_phase.query_dispatcher(),
                 &mut self.world.bodies,
@@ -1491,12 +1509,39 @@ impl Sim {
         c.incarnation += 1;
     }
 
-    /// Fresh debris that has had its clearing time collides with everything like any other prop.
+    /// Fresh debris that has had its clearing time, and no longer overlaps any car, collides with everything like any other
+    /// prop. A part that came off a car at rest has only slid a few centimetres: it still lies across the chassis, and
+    /// turning solid there would wedge it against its owner for ever (and shove the owner about: the car creeping up its
+    /// own bumper). Like spawn protection, it ends only once clear of every car.
     fn clear_fresh_debris(&mut self) {
         let tick = self.tick;
         let mut keep = Vec::new();
+        let cars: Vec<Rect> = self.cars().filter_map(|c| self.footprint(c)).collect();
         for &(idx, until) in &self.fresh_debris {
             if tick < until {
+                keep.push((idx, until));
+                continue;
+            }
+            let under = self
+                .world
+                .bodies
+                .get(self.props[idx as usize])
+                .into_iter()
+                .flat_map(|b| b.colliders().iter())
+                .filter_map(|&c| self.world.colliders.get(c))
+                .any(|col| {
+                    let aabb = col.compute_aabb();
+                    let (mid, half) = (aabb.center(), aabb.half_extents());
+                    let fp = Rect {
+                        x: mid.x,
+                        z: mid.z,
+                        heading: 0.0,
+                        half_w: half.x,
+                        half_l: half.z,
+                    };
+                    cars.iter().any(|c| overlaps(&fp, c))
+                });
+            if under {
                 keep.push((idx, until));
                 continue;
             }

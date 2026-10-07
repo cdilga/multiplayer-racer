@@ -236,3 +236,22 @@ not feel targets.
   husk, a prop off the edge. It lands, sleeps and costs nothing; nothing is despawned.
 - **Settable state.** `Sim::set_part_health` is a journaled command (`Setup::PartHealth`, fixtures' `damage` list); a
   state change by command raises the same loose/detached event as a hit, cause scenery.
+
+## A car tipping over its own bumper (P1-S04b follow-up, reverse-after-detach)
+
+- **Symptom.** After losing its front, a car braking to a stop and backing away at ~0.3 m/s crept *forward*, its front-left
+  corner rose from 0.0 to 0.46 m over 15 s, `upY` fell to 0.49 and the stuck-flip rule wrecked it. Seen in the live host (the
+  `damage.test.mjs` bumper test failed 1 run in 3 on eris), reproduced to the tick by replaying that run's clip and then as the
+  fixture `scenarios/affordances/reverse-after-detach.json`.
+- **Cause 1: a suspension ray that starts inside a solid.** The fallen bumper's proxy box (1.6 × 1.0 × 2.0 m) lay across the
+  front-left wheel arch, so that wheel's raycast origin was *inside* it. A ray that starts inside a collider reports a hit at
+  distance 0: full suspension force, and the "ground" point rises with the car, so the chassis climbs and rolls. A wheel's ray
+  now ignores any non-world collider that contains its own origin (`Sim::step`, the `QueryFilter` predicate).
+- **Cause 2: a part that came off a car at rest never cleared it.** The 1.5 m/s detach kick slides a part ~0.13 m, so a
+  stationary car's bumper stayed across the chassis; after `detach_clear_ms` it turned solid *inside* its owner, jammed there
+  and never slept (the old `debris_persists_dynamic_sleeps_and_wakes_on_contact` only passed because cause 1 made the car
+  walk off the part). A fresh part now becomes solid only once its footprint overlaps no car (`clear_fresh_debris`), like spawn
+  protection. While it lies under its owner it is intangible to *every* car; the debris test moves the owner away first.
+- **Knock-ons.** Two solid cars teleported on top of each other are no longer pushed apart by their wheel rays treating the
+  other's roof as ground (`placement.rs` parked car 1 on car 0's slot; it now stands car 0 aside first). Two cars nose to nose
+  with a fallen bumper between them can both be stuck: JN4's drive-away hands them to the autopilot, which presses Recover.
