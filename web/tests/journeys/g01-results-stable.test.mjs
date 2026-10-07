@@ -50,13 +50,17 @@ test('results screen: Ready and presence churn leaves the same buttons in the pa
     window.__list = document.querySelector('[data-results]');
   });
 
-  // The roster churns: Ready on and off, Identify, a hello again (a heartbeat flap).
+  // The roster churns: one player's Ready on and off and Identify, over and over. (Never both Ready at once: that starts
+  // the next round early, which is a phase change and a legitimate rebuild.)
+  await frame(host, 'syn2', { ready: false });
+  await frame(host, 'syn1', { ready: false });
+  await host.waitForTimeout(500);
   for (let k = 0; k < 6; k++) {
     await frame(host, 'syn1', { ready: k % 2 === 0 });
-    await frame(host, 'syn2', { ready: k % 2 === 1 });
     await frame(host, 'syn1', { identify: true });
     await host.waitForTimeout(400);
   }
+  await frame(host, 'syn1', { ready: false });
   const same = await host.evaluate(() => ({
     start: window.__start.isConnected && window.__start === document.querySelector('[data-act=start]'),
     lobby: window.__lobby.isConnected && window.__lobby === document.querySelector('[data-act=lobby]'),
