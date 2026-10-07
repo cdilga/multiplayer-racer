@@ -89,9 +89,16 @@ fi
 setup="cd $clone && exec 9>>$lock && flock -s 9"
 setup+=" && { [ \"\$(git rev-parse HEAD)\" = $mac_head ] || { echo 'eris.sh: eris moved during the sync wait; rerun' >&2; exit 3; }; }"
 setup+=' && export PATH="$HOME/.cargo/bin:$PATH"'
+after=""
 if [[ -n $run_id ]]; then
+    # Outputs default into the run dir (tests honour JJ_EVIDENCE_DIR / JJ_CAPTURE_DIR), so evidence and captures never
+    # land in the clone; the command can still override them.
     setup+=" && mkdir -p ~/Work/runs/$run_id && export JJ_RUN_DIR=\$HOME/Work/runs/$run_id"
+    setup+=' && export JJ_EVIDENCE_DIR=${JJ_EVIDENCE_DIR:-$JJ_RUN_DIR/ev} JJ_CAPTURE_DIR=${JJ_CAPTURE_DIR:-$JJ_RUN_DIR/shots}'
+    # Whatever a run still leaves in the clone (a test with a hard-coded evidence path) goes to the run dir's stray/
+    # (paths kept) and the clone is restored, so the next sync never finds it dirty.
+    after='; rc=$?; ~/Work/dev/multiplayer-racer/scripts/remote/eris-tidy.sh "$JJ_RUN_DIR"; exit $rc'
 fi
 tty=(-T)
 [[ -t 0 && -t 1 ]] && tty=(-t)
-exec ssh "${ssh_opts[@]}" "${tty[@]}" "$host" "$setup && bash -c $(printf %q "$cmd") 9>&-"
+exec ssh "${ssh_opts[@]}" "${tty[@]}" "$host" "$setup && { bash -c $(printf %q "$cmd") 9>&-$after; }"
