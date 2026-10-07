@@ -1434,7 +1434,7 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
     };
     let mut now = 0u64;
     let mut removed_to = Vec::new();
-    let mut step = |h: &mut Host, ticks: u64, now: &mut u64, removed_to: &mut Vec<String>| {
+    let step = |h: &mut Host, ticks: u64, now: &mut u64, removed_to: &mut Vec<String>| {
         for _ in 0..ticks {
             h.advance(*now);
             *now += 8_334;
