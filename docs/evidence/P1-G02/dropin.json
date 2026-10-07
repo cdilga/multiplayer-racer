@@ -1,0 +1,27 @@
+{
+ "transport": "loopback WebRTC (Playwright Chromium)",
+ "samples": [
+  {
+   "name": "Macca",
+   "ms": 1284
+  },
+  {
+   "name": "Robbo",
+   "ms": 1372
+  },
+  {
+   "name": "Gazza",
+   "ms": 2472
+  },
+  {
+   "name": "Thommo",
+   "ms": 1785
+  },
+  {
+   "name": "Jonesy",
+   "ms": 1612
+  }
+ ],
+ "p95Ms": 2472,
+ "targetP95Ms": 3000
+}
