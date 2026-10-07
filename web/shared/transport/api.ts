@@ -78,7 +78,13 @@ async function call<T>(method: string, path: string, body?: unknown, bearer?: st
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await r.text();
-  const json = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  // Errors from the edge (a retired preview) or a proxy may not be JSON.
+  let json: Record<string, unknown> = {};
+  try {
+    json = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  } catch {
+    json = { reason: r.status === 410 ? 'preview-expired' : r.statusText };
+  }
   if (!r.ok) throw new ApiError(r.status, String(json.reason ?? r.statusText), Number(json.retryAfterMs ?? 0));
   return json as T;
 }

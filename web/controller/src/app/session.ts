@@ -178,7 +178,7 @@ export class Session {
     } catch (e) {
       const msg = (e as Error).message;
       if (msg === 'room-ended') return this.ended();
-      if (e instanceof ApiError && e.status === 410) return this.set('preview-expired');
+      if (e instanceof ApiError && (e.status === 410 || e.reason === 'preview-expired')) return this.set('preview-expired');
       if (msg === 'room-not-found') {
         if (this.stored.seated) this.set('host-gone');
         else this.set('no-such-room');
