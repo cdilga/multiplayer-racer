@@ -78,6 +78,18 @@ export async function androidPlatform({ api, port, log, opt }) {
         await sleep(2500);
       }
     },
+    /** Runs `expr` in the page (CDP Runtime.evaluate, by value, awaiting a promise). */
+    async evaluate(expr) { return withCdp(async () => (await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true })).result?.value); },
+    /** Taps Chrome's camera permission prompt the way a player would ("Allow" / "While using the app"). */
+    async allowCamera() {
+      adbShell('uiautomator dump /sdcard/jj-f08.xml');
+      const xml = adbShell('cat /sdcard/jj-f08.xml').out;
+      for (const t of ['While using the app', 'Allow', 'Allow only this time']) {
+        const m = xml.match(new RegExp(`text="${t}"[^>]*?bounds="\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]"`));
+        if (m) { adbShell(`input tap ${(+m[1] + +m[3]) >> 1} ${(+m[2] + +m[4]) >> 1}`); log('allowed camera via', t); return true; }
+      }
+      return false;
+    },
     async settle() { for (let i = 0; i < 4; i++) { await sleep(1200); if (!dismissPass()) break; } },
     async tap(rect) { await withCdp(async () => { const p = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2, id: 1 }; await touch('touchStart', [p]); await sleep(60); await touch('touchEnd', []); }); },
     async holdTwo(fingers, ms) {

@@ -4,6 +4,7 @@
 // (art/ui/accepted/2026-10-07/poc/tv: Lobby br-dim.6, Round complete br-dim.7, Per-tile HUD, Countdown R99). Driven by the
 // worker's room view (`SimClient.onRoom`). Any N, any aspect: the roster and the placings pick the richest card tier that
 // stays legible and never cap, scroll or page (fit.ts). Copy says room and round, never game (R112).
+import roster from '../../../shared/src/roster.json' with { type: 'json' };
 import { installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
@@ -52,8 +53,17 @@ export const screenK = (w = window.innerWidth, h = window.innerHeight): number =
 
 const colourVars = (i: number) => `--b:var(--id-${i % tokenData.seatColors.length});--on:var(--id-${i % tokenData.seatColors.length}-on)`;
 const nameOf = (s: RoomView['seats'][number]) => s.name || (s.local ? 'Host keys' : 'Player');
-const stateOf = (s: RoomView['seats'][number]): 'ready' | 'choosing' | 'away' => (s.presence === 'Left' ? 'away' : s.ready ? 'ready' : 'choosing');
-const LABEL = { ready: 'Ready', choosing: 'Choosing car…', away: 'Away' } as const;
+type LobbyState = 'ready' | 'choosing' | 'picked' | 'away';
+/** Ready; a car picked and the picker closed; away; else still choosing (no pick yet, or the picker is open). */
+const stateOf = (s: RoomView['seats'][number]): LobbyState => (s.presence === 'Left' ? 'away' : s.ready ? 'ready' : s.vehicle && !s.choosing ? 'picked' : 'choosing');
+const LABEL = { ready: 'Ready', choosing: 'Choosing car…', picked: 'Picked', away: 'Away' } as const;
+const CAR_NAMES = new Map((roster.cars as Array<{ id: string; name: string }>).map((c) => [c.id, c.name]));
+/** What the card says: the car's name once it is picked (a roster id the host doesn't know shows tidied up). */
+const labelOf = (st: LobbyState, s: RoomView['seats'][number]): string => {
+  if (st !== 'picked' || !s.vehicle) return LABEL[st];
+  const id = s.vehicle;
+  return CAR_NAMES.get(id) ?? id.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+};
 
 export interface JoinInfo {
   code: string;
@@ -125,12 +135,12 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     joinEl.append(qrCard(Math.min(window.innerHeight * 0.44, 380 * screenK())));
     const cardHtml = (s: RoomView['seats'][number], tier: string) => {
       const st = stateOf(s);
-      const tick = `<span class="tick ${st}" aria-label="${LABEL[st]}">${st === 'ready' ? '✓' : st === 'away' ? '–' : '…'}</span>`;
+      const tick = `<span class="tick ${st}" aria-label="${esc(labelOf(st, s))}">${st === 'ready' ? '✓' : st === 'away' ? '–' : st === 'picked' ? '•' : '…'}</span>`;
       const badge = `<span class="badge" style="${colourVars(s.colourIndex)}">#${s.number}</span>`;
       const nm = `<span class="nm">${esc(shortName(nameOf(s)))}</span>`;
       const body =
-        tier === 'full' ? `${badge}${nm}<span class="chip lb-state ${st}">${LABEL[st]}</span>` : tier === 'name' ? `${badge}${nm}${tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
-      return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${LABEL[st]} (select to remove)">${body}</div>`;
+        tier === 'full' ? `${badge}${nm}<span class="chip lb-state ${st}">${esc(labelOf(st, s))}</span>` : tier === 'name' ? `${badge}${nm}${tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
+      return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${esc(labelOf(st, s))} (select to remove)">${body}</div>`;
     };
     relayout = () => {
       const k = screenK();

@@ -2,10 +2,10 @@
 // car big in a tilted panel with its class tag, name, four stat bars and a line about it, arrows and a swipe through the roster,
 // and a row of thumbnails. The roster is data (roster.json): any number of cars, no cap; with one car the arrows and thumbnails
 // stay out of the way. Ready is never blocked by it: the sheet is opened from a button, and closing it changes nothing else.
-// The pick is kept per device and realm; there is no wire message for it yet, so the host (and the TV's "choosing" state) don't
-// see it.
+// The pick is kept per device and realm and goes to the host as `Pick{vehicle, open}` (the TV shows "Choosing car…" while the picker
+// is open, then the car's name); the roster lives in web/shared so the TV can name what was picked.
 import { icon } from '../../../shared/ui';
-import data from './roster.json' with { type: 'json' };
+import data from '../../../shared/src/roster.json' with { type: 'json' };
 
 export interface RosterCar {
   id: string;

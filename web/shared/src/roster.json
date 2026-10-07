@@ -1,6 +1,6 @@
 {
   "schema": "jj.roster.v1",
-  "note": "The cars a player can pick in the lobby (P1-C03, R101/R110). Data, any number of rows, no cap. Playtest 1 ships the Cruz Missile only (R81's canonical model); a row without `art` is drawn as a silhouette in the player's colour (`shape`). Stats are 0-10 bars; the real ones are measured by the sim, not typed (master 7.6). The pick is a per-device preference today: there is no wire message for it yet, so the host does not see it.",
+  "note": "The cars a player can pick in the lobby (P1-C03, R101/R110). Data, any number of rows, no cap. Playtest 1 ships the Cruz Missile only (R81's canonical model); a row without `art` is drawn as a silhouette in the player's colour (`shape`). Stats are 0-10 bars; the real ones are measured by the sim, not typed (master 7.6). The pick goes to the host in `Pick{vehicle: id, open}` (jj-protocol); the TV names it from this file, and shows an unknown id tidied up.",
   "cars": [
     { "id": "cruz-missile", "name": "Cruz Missile", "cls": "Aussie classic", "blurb": "Honest all-rounder. Loves a kerb.", "art": "cruz-missile-hero.png", "stats": [6, 6, 7, 5] }
   ],

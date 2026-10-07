@@ -165,6 +165,10 @@ fn controller_samples() -> Vec<ControllerCmd> {
         ControllerCmd::Leave,
         ControllerCmd::Menu { open: true },
         ControllerCmd::Ping { t: 4_000_000_000 },
+        ControllerCmd::Pick {
+            vehicle: "cruz-missile".into(),
+            open: false,
+        },
     ]
 }
 
@@ -183,9 +187,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::Leave => "leave",
         ControllerCmd::Menu { .. } => "menu",
         ControllerCmd::Ping { .. } => "ping",
+        ControllerCmd::Pick { .. } => "pick",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 12] = [
+const CONTROLLER_VARIANTS: [&str; 13] = [
     "hello",
     "claim",
     "action",
@@ -198,6 +203,7 @@ const CONTROLLER_VARIANTS: [&str; 12] = [
     "leave",
     "menu",
     "ping",
+    "pick",
 ];
 
 fn host_samples() -> Vec<HostCmd> {

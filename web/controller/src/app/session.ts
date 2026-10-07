@@ -169,6 +169,11 @@ export class Session {
     }
     this.persisted = this.store !== null;
     try {
+      this.carChoice = this.store?.getItem(`jj.car.${this.realm}`) ?? '';
+    } catch {
+      this.carChoice = '';
+    }
+    try {
       const raw = this.store?.getItem(this.key());
       if (raw) this.stored = JSON.parse(raw) as Stored;
     } catch {
@@ -304,6 +309,7 @@ export class Session {
       this.endpoint = new wasm.WasmEndpoint();
       this.srcIdx = this.endpoint.addSource(w.source);
       this.set('playing');
+      if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
       this.onChange();
     } else if ('ClaimRejected' in cmd) {
       const r = (cmd.ClaimRejected as { reason: string }).reason;
@@ -414,9 +420,10 @@ export class Session {
     else this.endpoint.resume(this.srcIdx);
   }
 
-  /** Test surface (R90): hands this session a host message as if it had arrived on the channel. */
-  receive(ch: 'state' | 'cmd', bytes: Uint8Array): void {
-    this.onMessage(ch, bytes.slice().buffer);
+  /** The lobby's car pick goes to the host: a roster id, and whether the picker is still open (the TV says "Choosing car…"). */
+  pick(vehicle: string, open: boolean): void {
+    this.carChoice = vehicle;
+    this.send('cmd', wasm.encodePick(vehicle, open));
   }
 
   /** Sit out (the settings sheet, C07): the seat steps out of the next round and the car is parked. */

@@ -74,6 +74,16 @@ pub fn encode_leave() -> Vec<u8> {
     ControllerCmd::Leave.encode()
 }
 
+/// The lobby's car pick: a roster id and whether the picker is still open.
+#[wasm_bindgen(js_name = encodePick)]
+pub fn encode_pick(vehicle: &str, open: bool) -> Vec<u8> {
+    ControllerCmd::Pick {
+        vehicle: vehicle.to_owned(),
+        open,
+    }
+    .encode()
+}
+
 #[wasm_bindgen(js_name = encodeMenu)]
 pub fn encode_menu(open: bool) -> Vec<u8> {
     ControllerCmd::Menu { open }.encode()
@@ -146,6 +156,13 @@ mod tests {
         assert_eq!(
             ControllerCmd::decode(&encode_ready(true)).unwrap(),
             ControllerCmd::Ready { on: true }
+        );
+        assert_eq!(
+            ControllerCmd::decode(&encode_pick("cruz-missile", true)).unwrap(),
+            ControllerCmd::Pick {
+                vehicle: "cruz-missile".into(),
+                open: true
+            }
         );
     }
 

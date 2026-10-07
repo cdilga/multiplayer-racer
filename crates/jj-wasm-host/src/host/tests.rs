@@ -1672,3 +1672,162 @@ fn a_hidden_host_still_tells_the_phones_why_the_room_is_paused() {
         "the pause reached the phone {heard} times in a second"
     );
 }
+
+#[test]
+fn a_hello_for_another_protocol_is_answered_with_claim_rejected_build_and_no_seat() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let hello = |protocol: u16| {
+        net(
+            "old-phone",
+            Channel::Cmd,
+            ControllerCmd::Hello {
+                protocol,
+                build: BuildId("t".into()),
+                endpoint: EndpointId("old-phone".into()),
+                resume: None,
+            }
+            .encode(),
+        )
+    };
+    h.handle(&hello(PROTOCOL_VERSION + 1)).unwrap();
+    h.handle(&net(
+        "old-phone",
+        Channel::Cmd,
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        }
+        .encode(),
+    ))
+    .unwrap();
+    let mut rejected = 0;
+    let mut welcomed = 0;
+    let mut t = 0;
+    for _ in 0..30 {
+        h.advance(t);
+        t += 16_667;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                channel: Channel::Cmd,
+                bytes,
+                ..
+            } = m
+            {
+                match HostCmd::decode(&bytes) {
+                    Ok(HostCmd::ClaimRejected { reason })
+                        if reason == jj_protocol::cmd::ClaimRejection::Build =>
+                    {
+                        rejected += 1
+                    }
+                    Ok(HostCmd::Welcome { .. }) => welcomed += 1,
+                    _ => {}
+                }
+            }
+        }
+    }
+    assert_eq!(
+        (rejected, welcomed),
+        (1, 0),
+        "told to update, never welcomed"
+    );
+    // The same phone built for this protocol joins as normal.
+    h.handle(&hello(PROTOCOL_VERSION)).unwrap();
+    h.handle(&net(
+        "old-phone",
+        Channel::Cmd,
+        ControllerCmd::Claim {
+            request: RequestId(2),
+            name: "Ava".into(),
+        }
+        .encode(),
+    ))
+    .unwrap();
+    let mut now = t;
+    let mut joined = false;
+    for _ in 0..60 {
+        h.advance(now);
+        now += 16_667;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound { bytes, .. } = m
+                && let Ok(HostCmd::Welcome { .. }) = HostCmd::decode(&bytes)
+            {
+                joined = true;
+            }
+        }
+    }
+    assert!(joined, "a controller on the right protocol is welcomed");
+}
+
+#[test]
+fn a_pick_reaches_the_room_view_and_a_bad_id_does_not() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&phone(c)).unwrap();
+    }
+    let mut now = 0;
+    let mut step = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    step(&mut h, 60);
+    let seat = |h: &Host| -> serde_json::Value {
+        let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        v["seats"][0].clone()
+    };
+    assert_eq!(
+        seat(&h)["vehicle"],
+        serde_json::Value::Null,
+        "nothing picked yet"
+    );
+    // The picker opens on a car: the TV says "choosing", with the car being looked at.
+    h.handle(&phone(ControllerCmd::Pick {
+        vehicle: "test-car-41".into(),
+        open: true,
+    }))
+    .unwrap();
+    step(&mut h, 10);
+    assert_eq!(
+        (seat(&h)["vehicle"].clone(), seat(&h)["choosing"].clone()),
+        ("test-car-41".into(), true.into())
+    );
+    // Done: the pick stands and the picker is closed.
+    h.handle(&phone(ControllerCmd::Pick {
+        vehicle: "cruz-missile".into(),
+        open: false,
+    }))
+    .unwrap();
+    step(&mut h, 10);
+    assert_eq!(
+        (seat(&h)["vehicle"].clone(), seat(&h)["choosing"].clone()),
+        ("cruz-missile".into(), false.into())
+    );
+    // Ids that aren't plain slugs, empty or too long change nothing.
+    for bad in ["", "Cruz Missile", "<b>", &"a".repeat(33)] {
+        h.handle(&phone(ControllerCmd::Pick {
+            vehicle: bad.to_owned(),
+            open: true,
+        }))
+        .unwrap();
+    }
+    step(&mut h, 10);
+    assert_eq!(
+        (seat(&h)["vehicle"].clone(), seat(&h)["choosing"].clone()),
+        ("cruz-missile".into(), false.into())
+    );
+}

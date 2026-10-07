@@ -80,6 +80,12 @@ pub enum ControllerCmd {
     Ping {
         t: u32,
     },
+    /// The car the player has picked in the lobby: an id from the roster (`[a-z0-9-]`, at most 32 bytes) and whether the
+    /// picker is still open (the TV shows "Choosing car…" while it is, then the car). Any roster size.
+    Pick {
+        vehicle: String,
+        open: bool,
+    },
 }
 
 /// Why a claim was refused. There is no "room full": seats aren't capped (R36).

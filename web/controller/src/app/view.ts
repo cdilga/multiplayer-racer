@@ -272,12 +272,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     } catch {
       // No storage: the pick lasts for this visit.
     }
+    const current = () => roster.find((r) => r.id === (session.carChoice || saved)) ?? roster[0]!;
+    session.pick(current().id, true); // the picker is open: the TV says so
     cars = new CarSheet(host, {
       roster,
       start: Math.max(0, roster.findIndex((r) => r.id === saved)),
       colour: hex(session.you.rgb),
       onPick: (car) => {
-        session.carChoice = car.id;
+        session.pick(car.id, true);
         try {
           localStorage.setItem(key, car.id);
         } catch {
@@ -286,6 +288,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       },
       onClose: () => {
         cars = null;
+        session.pick(current().id, false);
       },
     });
   };

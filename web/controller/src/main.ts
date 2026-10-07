@@ -45,8 +45,6 @@ async function boot(root: HTMLElement): Promise<void> {
     claim: (name: string) => session.claim(name),
     setSticks: (d: { x: number; y: number; touch: boolean }, a: { x: number; y: number; touch: boolean }) => session.setSticks(d, a),
     identify: () => session.identify(),
-    /** R90: deliver a host message (cmd or state channel bytes) as if it had arrived, to script a §11 cause. */
-    deliver: (ch: 'state' | 'cmd', bytes: number[]) => session.receive(ch, Uint8Array.from(bytes)),
     wakeHeld,
   };
   // A state opener (#state=…): draw that §11 screen with no connection at all (R90's test surface).

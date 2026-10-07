@@ -46,7 +46,7 @@
   background: var(--c-paper); border: calc(3px * var(--k)) solid var(--c-ink); border-radius: calc(8px * var(--k)); box-shadow: 0 calc(3px * var(--k)) 0 rgb(21 32 58 / .85);
 }
 .lcard.ready { background: color-mix(in srgb, var(--c-success) 14%, var(--c-paper)); }
-.lcard.choosing { background: var(--c-paper-shade); }
+.lcard.choosing, .lcard.picked { background: var(--c-paper-shade); }
 .lcard.away { opacity: .6; background: var(--c-paper-shade); }
 .lcard .badge { flex: none; font-size: 1em; height: 1.7em; min-width: 2.2em; padding: 0 .3em .22em; }
 .lcard .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
@@ -55,6 +55,7 @@
 .lcard .lb-state { flex: none; min-height: 0; height: 1.6em; padding: 0 .8em .15em; font-size: .78em; }
 .lcard .lb-state.ready { --cbg: var(--c-success); --cfg: var(--c-paper); font: 900 italic .78em/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; }
 .lcard .lb-state.choosing { font-style: italic; }
+.lcard .lb-state.picked { --cbg: var(--c-cobalt); --cfg: var(--c-paper); }
 .t-num .lcard, .t-tiny .lcard { justify-content: center; padding: 0; border-width: calc(2.5px * var(--k)); }
 .t-num .lcard.ready, .t-tiny .lcard.ready { box-shadow: inset 0 0 0 calc(3px * var(--k)) var(--c-success), 0 calc(2px * var(--k)) 0 rgb(21 32 58 / .85); }
 .t-tiny .lcard .badge { font-size: .9em; min-width: 0; padding: 0 .1em; }

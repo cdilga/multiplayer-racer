@@ -49,6 +49,8 @@ pub const STALE_MS: u64 = 250;
 pub const DROPOUT_MS: u64 = 2_000;
 /// A connected seat that gives no deliberate input this long while racing gets the takeover cue (G03, §9)...
 pub const IDLE_MS: u64 = 15_000;
+/// The longest vehicle id a controller may pick (bytes): a text-field bound, never a limit on how many cars exist.
+const MAX_VEHICLE_ID: usize = 32;
 /// While the sim is paused the controllers' HUD (with the pause reason) still goes out this often (µs).
 const PAUSED_HUD_US: u64 = 100_000;
 /// ...and the autopilot this long after the cue, unless it steers first.
@@ -147,6 +149,9 @@ pub struct Host {
     conns: BTreeMap<EndpointId, ConnId>,
     /// Connections that have said Hello.
     helloed: BTreeSet<ConnId>,
+    /// The car each seat picked in the lobby and whether its picker is still open (the TV shows "Choosing car…"). An id from
+    /// the controller's roster; the host keeps it as given (any roster size) and only checks it is a plain slug.
+    picks: BTreeMap<SeatId, (String, bool)>,
     locals: BTreeMap<LocalSourceId, ConnId>,
     local_buttons: BTreeMap<LocalSourceId, LocalButtons>,
     next_conn: ConnId,
@@ -239,6 +244,7 @@ impl Host {
             inputs: BTreeMap::new(),
             conns: BTreeMap::new(),
             helloed: BTreeSet::new(),
+            picks: BTreeMap::new(),
             locals: BTreeMap::new(),
             local_buttons: BTreeMap::new(),
             next_conn: 1,
@@ -756,6 +762,14 @@ impl Host {
             self.helloed.insert(conn);
         }
         let outputs = match cmd {
+            // A controller built for another protocol is told so (the page says "Updating…" and reloads once) and never
+            // reaches the seat reducer: its Claim has no connection to land on.
+            ControllerCmd::Hello { protocol, .. } if protocol != jj_protocol::PROTOCOL_VERSION => {
+                vec![seats::Output::ClaimRejected {
+                    conn,
+                    reason: jj_protocol::cmd::ClaimRejection::Build,
+                }]
+            }
             ControllerCmd::Hello {
                 endpoint: claimed,
                 resume,
@@ -786,6 +800,17 @@ impl Host {
                     .and_then(|s| self.inputs.get_mut(&s))
                 {
                     input.menu_open = open;
+                }
+                vec![]
+            }
+            ControllerCmd::Pick { vehicle, open } => {
+                let slug = !vehicle.is_empty()
+                    && vehicle.len() <= MAX_VEHICLE_ID
+                    && vehicle
+                        .bytes()
+                        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
+                if slug && let Some(seat) = self.seats.seat_of(conn) {
+                    self.picks.insert(seat, (vehicle, open));
                 }
                 vec![]
             }

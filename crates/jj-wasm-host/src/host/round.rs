@@ -400,6 +400,8 @@ impl Host {
                     "rgb": s.colour.rgb,
                     "colourIndex": s.colour.index,
                     "ready": d.is_ready(s.id),
+                    "vehicle": self.picks.get(&s.id).map(|p| p.0.as_str()),
+                    "choosing": self.picks.get(&s.id).is_some_and(|p| p.1),
                     "presence": format!("{:?}", s.presence),
                     "local": s.endpoint.0.starts_with("local:"),
                     "car": car,

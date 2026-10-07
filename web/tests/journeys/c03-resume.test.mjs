@@ -173,12 +173,32 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   });
   await wait(watcher.page, () => window.__jjController.inspect().phase === 'playing', undefined, 20_000);
 
-  // Protocol mismatch: the host answers with ClaimRejected{Build} (bytes: cmd version 1, variant 1, reason 0); the page says
-  // it is updating and reloads itself once.
-  await live.page.evaluate(() => sessionStorage.removeItem('jj.reloaded'));
-  await live.page.evaluate(() => window.__jjController.deliver('cmd', [1, 1, 0]));
-  await wait(live.page, () => window.__jjController.inspect().phase === 'update-needed' || document.body.textContent.includes('Updating'), undefined, 10_000).catch(() => {});
-  assert.equal(await live.page.evaluate(() => sessionStorage.getItem('jj.reloaded')), '1', 'it reloads itself, once');
+  // Protocol mismatch, for real: a phone whose Hello carries another protocol (its first cmd message is patched on the way
+  // out) is answered by the host with ClaimRejected{Build}; the page says it is updating and reloads itself once, and the
+  // reloaded page (not patched: the new build) joins. No test hook delivers anything.
+  console.log('# §11 step: protocol mismatch');
+  const stale = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  await stale.addInitScript(() => {
+    const send = RTCDataChannel.prototype.send;
+    RTCDataChannel.prototype.send = function (d) {
+      // Hello is the first thing on the cmd channel: [cmd version, variant 0, protocol (a one-byte varint), ...]. A page the
+      // server has already told to update (jj.reloaded) is the new build and sends the real one.
+      if (this.label === 'cmd' && !sessionStorage.getItem('jj.reloaded') && !window.__patched) {
+        window.__patched = true;
+        const b = new Uint8Array(d);
+        b[2] = 99;
+        return send.call(this, b);
+      }
+      return send.call(this, d);
+    };
+  });
+  const old = await stale.newPage();
+  await old.goto(joinUrl);
+  await wait(old, () => document.body.textContent.includes('Updating'), undefined, 30_000);
+  assert.match(await text(old), /A newer build is out/i);
+  await wait(old, () => window.__jjController?.inspect().phase === 'ready-to-join' && sessionStorage.getItem('jj.reloaded') === '1', undefined, 30_000);
+  await old.getByRole('button', { name: 'Join the race' }).click();
+  await wait(old, () => window.__jjController.inspect().phase === 'playing', undefined, 30_000);
 
   console.log('# §11 step: host gone');
   // Host gone: the phone has a seat, then the room can't be found when it comes back.
