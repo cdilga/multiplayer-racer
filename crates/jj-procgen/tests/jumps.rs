@@ -4,14 +4,14 @@
 //! (`jump-land` on the S03 flat fixture is S03's; these run on the generated heightfield.)
 #![cfg(not(target_arch = "wasm32"))]
 
-use jj_map::{FeatureKind, LoadedMap, Registry, canonical_bytes, load_canonical};
+use jj_map::{FeatureKind, LoadedMap, canonical_bytes, load_canonical};
 use jj_procgen::generate;
 use jj_sim::{Sim, TICK_HZ, VehicleProfile, route_spawn};
 
 const S: u64 = TICK_HZ as u64;
 
 fn loaded(seed: u64) -> LoadedMap {
-    load_canonical(&canonical_bytes(&generate(seed)), &Registry::generic())
+    load_canonical(&canonical_bytes(&generate(seed)), &jj_procgen::registry())
         .expect("generated maps load")
 }
 
@@ -42,7 +42,12 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
     let pts = &map.map.route.points;
     let n = pts.len();
     let start = (base + n - 24) % n; // 60 m before the ramp
-    let mut sim = Sim::new(map, &Registry::generic(), sim_seed, VehicleProfile::cruz());
+    let mut sim = Sim::new(
+        map,
+        &jj_procgen::registry(),
+        sim_seed,
+        VehicleProfile::cruz(),
+    );
     let car = sim.spawn_grid(1)[0];
     let pose = route_spawn(map, start, 0.0, 0.5);
     let v = [speed * pose.heading.sin(), 0.0, speed * pose.heading.cos()];

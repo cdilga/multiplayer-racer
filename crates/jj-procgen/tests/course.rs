@@ -3,13 +3,13 @@
 
 use std::collections::BTreeMap;
 
-use jj_map::{Registry, Rule, validate};
+use jj_map::{Rule, validate};
 use jj_procgen::course::{CLEARANCE_M, LENGTH_BAND_M, self_clear};
 use jj_procgen::generate_report;
 
 #[test]
 fn a_hundred_seeds_design_valid_closed_loops_and_report_the_corner_mix() {
-    let registry = Registry::generic();
+    let registry = jj_procgen::registry();
     let mut histogram: BTreeMap<&str, u32> = BTreeMap::new();
     let (mut fallbacks, mut attempts) = (0, 0);
     for seed in 0..100u64 {

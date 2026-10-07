@@ -1,0 +1,16 @@
+{
+  "id": "wayfinding/chevron-post",
+  "version": 1,
+  "what": "Stand-in for P1-R10's corner chevron: one post carrying a single chevron (R104). Placed in a row along the outside of a corner, facing the road.",
+  "params": {
+    "heightCm": { "min": 100, "max": 150, "default": 140 },
+    "radiusMm": { "min": 40, "max": 100, "default": 60 }
+  },
+  "collider": {
+    "cylinder": {
+      "radius": { "param": "radiusMm" },
+      "height": { "param": "heightCm", "scale": 10 }
+    }
+  },
+  "lod": { "simplifyBeyondMm": 80000, "cullBeyondMm": 400000 }
+}

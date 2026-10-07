@@ -107,13 +107,16 @@ pub fn command(args: &[String]) -> ExitCode {
     }
     let registry = match crate::find_kit(Path::new(".")) {
         Some(dir) => match crate::load_registry(&dir) {
-            Ok(r) => r,
+            // Until P1-R10's `assets/kit/wayfinding/` lands, the checked-in kit has no wayfinding family, which every
+            // generated route uses: validate against procgen's registry (the generic kit plus stand-ins) instead.
+            Ok(r) if r.get("wayfinding/chevron-post").is_some() => r,
+            Ok(_) => jj_procgen::registry(),
             Err(e) => {
                 eprintln!("jj procgen: reading the registry at {}: {e}", dir.display());
                 return ExitCode::from(2);
             }
         },
-        None => jj_map::Registry::generic(),
+        None => jj_procgen::registry(),
     };
     if let Some((from, to)) = seeds {
         return bank(from, to, json, &registry);

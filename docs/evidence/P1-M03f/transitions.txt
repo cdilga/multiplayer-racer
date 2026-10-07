@@ -1,0 +1,3 @@
+recipe (the lap ends in the first biome)       result
+greybox -> outback-dirt (-> greybox)            92/100 seeds found every boundary (8 had no straight), worst route grade 1.66 %
+town, rocks, outback-dirt, outback-bitumen      55/100 seeds found every boundary (45 had no straight), worst route grade 1.66 %

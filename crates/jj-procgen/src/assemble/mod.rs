@@ -30,7 +30,9 @@ pub struct TrackSpec {
     /// A closed loop, metres (x, z), roughly evenly spaced.
     pub centerline: Vec<(f64, f64)>,
     pub width_m: f64,
+    /// The road surface; `point_surfaces` (one per centerline point, or empty for this everywhere) overrides it.
     pub surface: Surface,
+    pub point_surfaces: Vec<Surface>,
     pub dressing: Vec<Dressing>,
     pub props: Vec<Prop>,
 }
@@ -77,15 +79,17 @@ pub fn assemble(spec: &TrackSpec) -> Map {
     let (s, total) = arc_lengths(pts);
     let width = mm(spec.width_m) as u32;
 
+    let surface_at = |i: usize| spec.point_surfaces.get(i).copied().unwrap_or(spec.surface);
     let points: Vec<RoutePoint> = pts
         .iter()
-        .map(|&(x, z)| RoutePoint {
+        .enumerate()
+        .map(|(i, &(x, z))| RoutePoint {
             x: mm(x),
             y: 0,
             z: mm(z),
             width,
             bank: 0,
-            surface: spec.surface,
+            surface: surface_at(i),
         })
         .collect();
     let finish = index_at(&s, FINISH_AT_M);
@@ -137,6 +141,7 @@ pub fn assemble(spec: &TrackSpec) -> Map {
     let half = spec.width_m / 2.0;
     // Road wherever a cell's corner lies within half the width of a route segment; off-track elsewhere.
     let mut surfaces = vec![Surface::OffTrack; (cols * rows) as usize];
+    let mut nearest = vec![f64::INFINITY; (cols * rows) as usize];
     let sp = f64::from(spacing) / 1000.0;
     let (ox, oz) = (f64::from(origin_x) / 1000.0, f64::from(origin_z) / 1000.0);
     for i in 0..n {
@@ -155,8 +160,11 @@ pub fn assemble(spec: &TrackSpec) -> Map {
                 } else {
                     (((p.0 - a.0) * dx + (p.1 - a.1) * dz) / len2).clamp(0.0, 1.0)
                 };
-                if libm::hypot(p.0 - (a.0 + t * dx), p.1 - (a.1 + t * dz)) <= half {
-                    surfaces[(r * cols + c) as usize] = spec.surface;
+                let d = libm::hypot(p.0 - (a.0 + t * dx), p.1 - (a.1 + t * dz));
+                let at = (r * cols + c) as usize;
+                if d <= half && d < nearest[at] {
+                    nearest[at] = d;
+                    surfaces[at] = surface_at(i);
                 }
             }
         }

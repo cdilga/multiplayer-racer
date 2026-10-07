@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use jj_map::{Biome, FeatureKind, Map, Registry, validate};
+use jj_map::{Biome, FeatureKind, Map, validate};
 use jj_procgen::features::{check_envelope, place};
 use jj_procgen::generate;
 use jj_procgen::seed::Rng;
@@ -35,7 +35,7 @@ fn biome_map(seed: u64, biome: Biome) -> Map {
 
 #[test]
 fn every_placed_feature_passes_its_envelope_and_the_validator_across_the_seed_bank() {
-    let registry = Registry::generic();
+    let registry = jj_procgen::registry();
     let mut tally: BTreeMap<String, usize> = BTreeMap::new();
     for seed in 0..seeds() {
         for biome in BIOMES {

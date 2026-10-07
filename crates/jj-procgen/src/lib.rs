@@ -5,6 +5,7 @@
 //! - [`assemble`] (P1-M03a): a centerline plus dressing → a canonical `jj.map.v1` through `jj-map`.
 //!
 //! - [`features`] (P1-M03d): jumps, crests, whoops and creek dips composed into the route and baked into the heights.
+//! - [`biome`] (P1-M03f): the biome interface (pure data), the selector, transition rules and the wayfinding family.
 //! - [`scatter`] (P1-M03e): clumped or even dressing around the route from the dressing stream, clear of the road.
 //! - [`terrain`] (P1-M03c): undulation along the route with per-biome grade, curvature and bank limits.
 //!
@@ -14,6 +15,7 @@
 #![forbid(unsafe_code)]
 
 pub mod assemble;
+pub mod biome;
 pub mod course;
 pub mod features;
 pub mod scatter;
@@ -31,7 +33,7 @@ use crate::seed::Streams;
 
 pub const GENERATOR_ID: &str = "jj.procgen.course";
 /// Bump when generated output changes on purpose (and re-bless `tests/goldens/seeds.txt`).
-pub const GENERATOR_VERSION: &str = "5";
+pub const GENERATOR_VERSION: &str = "6";
 const STEP_M: f64 = 2.5;
 
 /// What a generation produced, for `jj procgen` and the seed bank.
@@ -53,32 +55,90 @@ pub fn generate_report(seed: u64) -> (Map, Report) {
     generate_from(Streams::new(seed))
 }
 
-/// The map from explicit streams (tests swap one stream to show it moves nothing else).
-pub fn generate_from(mut st: Streams) -> (Map, Report) {
+/// The map from explicit streams (tests swap one stream to show it moves nothing else): one biome, the placeholder.
+pub fn generate_from(st: Streams) -> (Map, Report) {
+    generate_recipe_from(st, &[Biome::Greybox]).expect("a single biome needs no boundary")
+}
+
+/// The map for `seed` crossing the recipe's biomes in order, ending the lap in the first (see [`biome::select`]).
+/// Fails when a boundary can't find a straight stretch (the fallback recipe is P1-M03g's).
+pub fn generate_recipe(seed: u64, recipe: &[Biome]) -> Result<(Map, Report), biome::SelectError> {
+    generate_recipe_from(Streams::new(seed), recipe)
+}
+
+/// [`generate_recipe`] from explicit streams. The pipeline: course, biome selection, assembly (route surfaces by biome),
+/// terrain, features, the shared wayfinding family, then each biome's scatter.
+pub fn generate_recipe_from(
+    mut st: Streams,
+    recipe: &[Biome],
+) -> Result<(Map, Report), biome::SelectError> {
     let course = course::design(&mut st.structure);
     let centerline = centred(&resample(&course.points));
+    let sel = biome::select(&centerline, recipe, &mut st.structure)?;
     let props = placeholder_props(&mut st, &centerline);
-    let biomes = vec![Biome::Greybox];
+    let n = centerline.len();
+    let blend: Vec<(Biome, Biome, f64)> = (0..n).map(|i| sel.blend_at(i)).collect();
+    let road = |b: Biome| biome::def(b).data().road;
+    let point_surfaces: Vec<Surface> = blend
+        .iter()
+        .map(|&(a, b, t)| road(if t < 0.5 { a } else { b }))
+        .collect();
     let mut map = assemble(&TrackSpec {
         seed: st.seed,
         generator_id: GENERATOR_ID.into(),
         generator_version: GENERATOR_VERSION.into(),
-        biomes: biomes.clone(),
+        biomes: sel.biomes(),
         centerline,
         width_m: WIDTH_M,
-        surface: Surface::Tarmac,
+        surface: road(sel.lap[0]),
+        point_surfaces,
         dressing: Vec::new(),
         props,
     });
-    terrain::undulate(&mut map, &mut st.terrain, &terrain::params(biomes[0]));
-    features::place(&mut map, &mut st.features, biomes[0]);
-    scatter::scatter(
-        &mut map,
-        &mut st.dressing,
-        &scatter::spec(biomes[0]),
-        &jj_map::Registry::generic(),
-    );
-    (map, report(&course))
+    let along: Vec<terrain::TerrainParams> = blend
+        .iter()
+        .map(|&(a, b, t)| terrain::params(a).lerp(&terrain::params(b), t))
+        .collect();
+    terrain::undulate_along(&mut map, &mut st.terrain, &along);
+    // Features stay inside their biome's stretch, clear of the transition zones at its ends.
+    let ranges: Vec<(f64, f64, features::Density)> = sel
+        .segments()
+        .into_iter()
+        .map(|(b, from, to)| {
+            let lo = sel.s[from]
+                + if from > 0 {
+                    biome::TRANSITION_M / 2.0
+                } else {
+                    0.0
+                };
+            let hi = if to + 1 < n {
+                sel.s[to] - biome::TRANSITION_M / 2.0
+            } else {
+                sel.total
+            };
+            (lo, hi, features::density(b))
+        })
+        .collect();
+    features::place_in(&mut map, &mut st.features, &ranges);
+    biome::wayfinding::place(&mut map);
+    let registry = biome::registry();
+    for (k, b) in sel.biomes().into_iter().enumerate() {
+        scatter::scatter_masked(
+            &mut map,
+            &mut st.dressing,
+            &scatter::spec(b),
+            &registry,
+            k == 0,
+            &|seg| sel.weight(b, seg),
+        );
+    }
+    map.route.segments = sel.route_segments();
+    Ok((map, report(&course)))
+}
+
+/// The registry generated maps validate against: the generic kit plus the wayfinding family.
+pub fn registry() -> jj_map::Registry {
+    biome::registry()
 }
 
 fn report(course: &Course) -> Report {

@@ -50,30 +50,51 @@ pub struct TerrainParams {
     pub blend_m: f64,
 }
 
-/// Town and bitumen are flatter and gentler than rocks (the spike's single 6.1 % bound was too steep for them).
+/// The biome's terrain data (each biome's numbers live in its own `biome/<name>.rs`).
 pub fn params(biome: Biome) -> TerrainParams {
-    let (relief_m, ground_relief_m, wavelength_m, max_grade, max_curvature, max_bank_cdeg, blend_m) =
-        match biome {
-            Biome::Greybox => (2.0, 2.0, 100.0, 0.03, 0.0020, 200, 20.0),
-            Biome::Town => (3.0, 3.0, 60.0, 0.03, 0.0020, 200, 20.0),
-            Biome::OutbackBitumen => (4.0, 4.0, 220.0, 0.035, 0.0015, 400, 24.0),
-            Biome::OutbackDirt => (5.0, 5.0, 120.0, 0.05, 0.0030, 500, 20.0),
-            Biome::Rocks => (10.0, 10.0, 80.0, 0.06, 0.0040, 600, 20.0),
-        };
-    TerrainParams {
-        relief_m,
-        ground_relief_m,
-        wavelength_m,
-        max_grade,
-        max_curvature,
-        max_bank_cdeg,
-        blend_m,
+    crate::biome::def(biome).data().terrain
+}
+
+impl TerrainParams {
+    /// Blend toward `to` by `t` in 0..=1 (a transition between biomes).
+    pub fn lerp(&self, to: &Self, t: f64) -> Self {
+        let m = |a: f64, b: f64| a + (b - a) * t;
+        Self {
+            relief_m: m(self.relief_m, to.relief_m),
+            ground_relief_m: m(self.ground_relief_m, to.ground_relief_m),
+            wavelength_m: m(self.wavelength_m, to.wavelength_m),
+            max_grade: m(self.max_grade, to.max_grade),
+            max_curvature: m(self.max_curvature, to.max_curvature),
+            max_bank_cdeg: libm::round(m(
+                f64::from(self.max_bank_cdeg),
+                f64::from(to.max_bank_cdeg),
+            )) as i16,
+            blend_m: m(self.blend_m, to.blend_m),
+        }
     }
 }
 
 /// Applies undulation to `map`: heights, route `y` and `bank`, and every dressing and prop pose's `y` (grounded).
 /// Idempotent: it overwrites what an earlier call set.
 pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
+    undulate_along(map, rng, &vec![*p; map.route.points.len()]);
+}
+
+/// [`undulate`] with a biome's parameters at every route point (`along[i]` for point `i`), for a route that crosses
+/// biomes. The profile's relief, grade and curvature limits are the strictest along the route (so every stretch stays
+/// inside its own biome's limits); the bank limit follows each point; ground relief, wavelength and blend distance are
+/// blended smoothly into the cells around the road by the same inverse-distance weights as the heights, so there is no
+/// step where two biomes meet.
+pub fn undulate_along(map: &mut Map, rng: &mut Rng, along: &[TerrainParams]) {
+    let min = |f: &dyn Fn(&TerrainParams) -> f64| along.iter().map(f).fold(f64::INFINITY, f64::min);
+    let p = &TerrainParams {
+        relief_m: min(&|q| q.relief_m),
+        max_grade: min(&|q| q.max_grade),
+        max_curvature: min(&|q| q.max_curvature),
+        blend_m: along.iter().map(|q| q.blend_m).fold(0.0, f64::max),
+        ..along[0]
+    };
+    let uniform = along.windows(2).all(|w| w[0] == w[1]);
     let pts: Vec<(f64, f64)> = map
         .route
         .points
@@ -170,9 +191,12 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
     let h: Vec<f64> = h.iter().map(|v| v * gain).collect();
 
     // Bank (as tan of the angle): toward the corner, then rate-limited so the edges stay inside the grade budget.
-    let max_tan = libm::tan(f64::from(p.max_bank_cdeg) * core::f64::consts::PI / 18_000.0);
     let target: Vec<f64> = (0..n)
-        .map(|i| max_tan * (kappa[i] * FULL_BANK_RADIUS_M).clamp(-1.0, 1.0))
+        .map(|i| {
+            let max_tan =
+                libm::tan(f64::from(along[i].max_bank_cdeg) * core::f64::consts::PI / 18_000.0);
+            max_tan * (kappa[i] * FULL_BANK_RADIUS_M).clamp(-1.0, 1.0)
+        })
         .collect();
     let rate = BANK_GRADE_SHARE * p.max_grade / half;
     let mut bank = target;
@@ -222,6 +246,8 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
     let mut wsum = vec![0.0f64; cols * rows];
     let mut hsum = vec![0.0f64; cols * rows];
     let mut dmin = vec![f64::INFINITY; cols * rows];
+    // Ground relief, wavelength and blend per cell: the same weights, so biome changes are continuous.
+    let mut gsum = vec![[0.0f64; 3]; if uniform { 0 } else { cols * rows }];
     for i in 0..n {
         let (px, pz) = pts[i];
         let (tx, tz) = tangent(i);
@@ -243,6 +269,12 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
                 let at = r * cols + c;
                 wsum[at] += w;
                 hsum[at] += w * (h[i] + lateral * bank[i]);
+                if !uniform {
+                    let q = &along[i];
+                    gsum[at][0] += w * q.ground_relief_m;
+                    gsum[at][1] += w * q.wavelength_m;
+                    gsum[at][2] += w * q.blend_m;
+                }
                 dmin[at] = dmin[at].min(d2);
             }
         }
@@ -253,10 +285,16 @@ pub fn undulate(map: &mut Map, rng: &mut Rng, p: &TerrainParams) {
         for c in 0..cols {
             let at = r * cols + c;
             let (x, z) = (ox + c as f64 * sp, oz + r as f64 * sp);
-            let ground = p.ground_relief_m * fbm(nseed, x, z, p.wavelength_m);
+            let (relief, wavelength, blend) = if uniform || wsum[at] <= 0.0 {
+                (along[0].ground_relief_m, along[0].wavelength_m, p.blend_m)
+            } else {
+                let g = gsum[at];
+                (g[0] / wsum[at], g[1] / wsum[at], g[2] / wsum[at])
+            };
+            let ground = relief * fbm(nseed, x, z, wavelength);
             let v = if wsum[at] > 0.0 {
                 let road = hsum[at] / wsum[at];
-                let k = ((libm::sqrt(dmin[at]) - bed) / p.blend_m).clamp(0.0, 1.0);
+                let k = ((libm::sqrt(dmin[at]) - bed) / blend).clamp(0.0, 1.0);
                 let k = k * k * (3.0 - 2.0 * k);
                 road + (ground - road) * k
             } else {

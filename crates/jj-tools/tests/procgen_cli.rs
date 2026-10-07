@@ -30,7 +30,7 @@ fn jj_procgen_generates_validates_and_dumps() {
     let bin = std::fs::read(out.join("map.bin")).unwrap();
     let json = std::fs::read(out.join("map.json")).unwrap();
     let loaded =
-        jj_map::load_json(&json, &jj_map::Registry::generic()).unwrap_or_else(|r| panic!("{r:?}"));
+        jj_map::load_json(&json, &jj_procgen::registry()).unwrap_or_else(|r| panic!("{r:?}"));
     assert_eq!(loaded.canonical, bin);
     assert_eq!(report["gameplayHash"], jj_map::hex(&loaded.hash));
     let written: serde_json::Value =

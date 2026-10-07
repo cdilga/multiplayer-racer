@@ -1,0 +1,18 @@
+{
+  "id": "wayfinding/guard-rail",
+  "version": 1,
+  "what": "Stand-in for P1-R10's Australian steel W-beam guard rail on posts (R105): one section, placed end to end along the outer edge of a corner.",
+  "params": {
+    "lengthMm": { "min": 1000, "max": 8000, "default": 4000 },
+    "heightCm": { "min": 60, "max": 100, "default": 80 },
+    "thicknessMm": { "min": 250, "max": 600, "default": 300 }
+  },
+  "collider": {
+    "box": {
+      "x": { "param": "lengthMm" },
+      "y": { "param": "heightCm", "scale": 10 },
+      "z": { "param": "thicknessMm" }
+    }
+  },
+  "lod": { "simplifyBeyondMm": 80000, "cullBeyondMm": 400000 }
+}

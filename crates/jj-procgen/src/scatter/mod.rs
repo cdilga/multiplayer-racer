@@ -60,7 +60,7 @@ pub struct Spec {
     pub pieces: &'static [PieceSpec],
 }
 
-const fn piece(
+pub const fn piece(
     kit_piece: &'static str,
     weight: f64,
     params: &'static [(&'static str, i64, i64)],
@@ -76,125 +76,9 @@ const fn piece(
     }
 }
 
-const TOWN: &[PieceSpec] = &[
-    piece(
-        "generic/box-building",
-        5.0,
-        &[
-            ("widthMm", 8_000, 18_000),
-            ("depthMm", 6_000, 12_000),
-            ("heightCm", 350, 900),
-        ],
-        (3.0, 150.0),
-        true,
-    ),
-    piece(
-        "generic/post",
-        2.0,
-        &[("heightCm", 400, 700), ("radiusMm", 130, 200)],
-        (3.0, 6.0),
-        true,
-    ),
-];
-const ROCKS: &[PieceSpec] = &[
-    piece(
-        "generic/box-building",
-        3.0,
-        &[
-            ("widthMm", 18_000, 42_000),
-            ("depthMm", 16_000, 36_000),
-            ("heightCm", 900, 2_400),
-        ],
-        (18.0, 90.0),
-        true,
-    ),
-    piece(
-        "generic/post",
-        2.0,
-        &[("heightCm", 80, 200), ("radiusMm", 300, 600)],
-        (4.0, 40.0),
-        true,
-    ),
-];
-const DIRT: &[PieceSpec] = &[
-    piece(
-        "generic/post",
-        6.0,
-        &[("heightCm", 60, 160), ("radiusMm", 250, 550)],
-        (3.0, 70.0),
-        false,
-    ),
-    piece(
-        "generic/box-building",
-        0.3,
-        &[
-            ("widthMm", 6_000, 10_000),
-            ("depthMm", 5_000, 8_000),
-            ("heightCm", 300, 450),
-        ],
-        (20.0, 60.0),
-        true,
-    ),
-];
-const BITUMEN: &[PieceSpec] = &[
-    piece(
-        "generic/post",
-        4.0,
-        &[("heightCm", 100, 140), ("radiusMm", 60, 90)],
-        (4.0, 8.0),
-        false,
-    ),
-    piece(
-        "generic/box-building",
-        0.6,
-        &[
-            ("widthMm", 6_000, 12_000),
-            ("depthMm", 5_000, 9_000),
-            ("heightCm", 300, 500),
-        ],
-        (25.0, 70.0),
-        true,
-    ),
-    piece(
-        "generic/post",
-        3.0,
-        &[("heightCm", 50, 120), ("radiusMm", 250, 500)],
-        (8.0, 80.0),
-        false,
-    ),
-];
-
-/// A biome's scatter (placeholder pieces over the generic kit). Town and rocks clump, dirt and bitumen are even; bitumen's
-/// Poisson radius is the one the P1-M03e evidence settled (see `docs/evidence/P1-M03e/`).
+/// The biome's scatter (each biome's pieces and distribution live in its own `biome/<name>.rs`).
 pub fn spec(biome: Biome) -> Spec {
-    match biome {
-        Biome::Town => Spec {
-            algorithm: Algorithm::Cluster {
-                parent_radius_m: 120.0,
-                children: (10, 30),
-                sigma_m: 14.0,
-            },
-            pieces: TOWN,
-        },
-        Biome::Rocks => Spec {
-            algorithm: Algorithm::Cluster {
-                parent_radius_m: 150.0,
-                children: (10, 30),
-                sigma_m: 22.0,
-            },
-            pieces: ROCKS,
-        },
-        Biome::OutbackDirt => Spec {
-            algorithm: Algorithm::Poisson { radius_m: 9.0 },
-            pieces: DIRT,
-        },
-        Biome::OutbackBitumen | Biome::Greybox => Spec {
-            algorithm: Algorithm::Poisson {
-                radius_m: BITUMEN_RADIUS_M,
-            },
-            pieces: BITUMEN,
-        },
-    }
+    crate::biome::def(biome).data().scatter
 }
 
 /// Bitumen's Poisson radius, m (M02 recommended "a larger radius than the 12 m the spike drew with").
@@ -255,11 +139,11 @@ impl RoadIndex {
         libm::hypot(p.0 - (a.0 + t * dx), p.1 - (a.1 + t * dz))
     }
 
-    /// Distance from `p` to the nearest route segment.
-    fn distance(&self, p: (f64, f64)) -> f64 {
+    /// Distance from `p` to the nearest route segment, and that segment's index.
+    fn nearest(&self, p: (f64, f64)) -> (f64, usize) {
         let cx = (libm::floor((p.0 - self.x0) / self.cell) as i64).clamp(0, self.cols as i64 - 1);
         let cz = (libm::floor((p.1 - self.z0) / self.cell) as i64).clamp(0, self.rows as i64 - 1);
-        let mut best = f64::INFINITY;
+        let (mut best, mut at) = (f64::INFINITY, 0usize);
         let max_ring = self.cols.max(self.rows) as i64;
         for ring in 0..=max_ring {
             for r in (cz - ring).max(0)..=(cz + ring).min(self.rows as i64 - 1) {
@@ -268,7 +152,10 @@ impl RoadIndex {
                         continue;
                     }
                     for &i in &self.buckets[r as usize * self.cols + c as usize] {
-                        best = best.min(self.seg_distance(i as usize, p));
+                        let d = self.seg_distance(i as usize, p);
+                        if d < best || (d == best && (i as usize) < at) {
+                            (best, at) = (d, i as usize);
+                        }
                     }
                 }
             }
@@ -277,7 +164,7 @@ impl RoadIndex {
                 break;
             }
         }
-        best
+        (best, at)
     }
 }
 
@@ -379,7 +266,29 @@ pub fn reach_m(fp: &Footprint) -> f64 {
 /// Replaces `map.dressing` with the spec's scatter: clear of the road, the start corridor and each other, standing on
 /// the ground. Draws only from `rng` (the dressing stream).
 pub fn scatter(map: &mut Map, rng: &mut Rng, spec: &Spec, registry: &Registry) {
-    map.dressing.clear();
+    scatter_masked(map, rng, spec, registry, true, &|_| 1.0);
+}
+
+/// Pieces the core places (road furniture under `wayfinding/`) are kept through a scatter and treated as obstacles.
+pub fn is_furniture(d: &Dressing) -> bool {
+    d.kit_piece.starts_with("wayfinding/")
+}
+
+/// [`scatter`] for a route that crosses biomes. A candidate is kept with probability `weight(i)`, where `i` is the
+/// route segment nearest it (so a biome's pieces thin out across a transition while the next biome's pass fills in).
+/// `fresh` clears the earlier scatter (never the road furniture); a second biome's pass sets it false to add to the
+/// first's.
+pub fn scatter_masked(
+    map: &mut Map,
+    rng: &mut Rng,
+    spec: &Spec,
+    registry: &Registry,
+    fresh: bool,
+    weight: &dyn Fn(usize) -> f64,
+) {
+    if fresh {
+        map.dressing.retain(is_furniture);
+    }
     let b = map.header.bounds;
     let (x0, z0) = (f64::from(b.min_x) / 1000.0, f64::from(b.min_z) / 1000.0);
     let (w, h) = (
@@ -404,6 +313,18 @@ pub fn scatter(map: &mut Map, rng: &mut Rng, spec: &Spec, registry: &Registry) {
     );
     let mut placed: Vec<Vec<(f64, f64, f64)>> = vec![Vec::new(); gc * gr];
     let max_reach = 60.0;
+    // Everything already placed (road furniture, an earlier biome's pass) is an obstacle.
+    for d in &map.dressing {
+        let reach = registry
+            .get(&d.kit_piece)
+            .and_then(|k| k.footprint(&d.params))
+            .map_or(0.5, |fp| reach_m(&fp));
+        let (x, z) = (f64::from(d.pose.x) / 1000.0, f64::from(d.pose.z) / 1000.0);
+        if x >= x0 && z >= z0 && x <= x0 + w && z <= z0 + h {
+            placed[((z - z0) / cell) as usize * gc + ((x - x0) / cell) as usize]
+                .push((x, z, reach));
+        }
+    }
 
     for c in candidates(spec.algorithm, rng, x0, z0, w, h) {
         // Every draw happens whether or not the candidate survives, so one rejection never shifts the stream.
@@ -437,7 +358,12 @@ pub fn scatter(map: &mut Map, rng: &mut Rng, spec: &Spec, registry: &Registry) {
             continue;
         };
         let reach = reach_m(&fp);
-        let edge = road.distance(c) - half;
+        let (near, seg) = road.nearest(c);
+        let edge = near - half;
+        let keep = weight(seg);
+        if keep < 1.0 && rng.unit() >= keep {
+            continue;
+        }
         if edge - reach < piece.setback_m.0.max(CLEAR_M) || edge > piece.setback_m.1 + reach {
             continue;
         }

@@ -1,7 +1,7 @@
 {
   "id": "generic/barrier",
   "version": 1,
-  "what": "A straight barrier section (tyre wall, rail or concrete), placed along route edges.",
+  "what": "A straight barrier section (Australian steel W-beam guard rail on posts, or concrete; R105: never a tyre wall), placed along route edges.",
   "params": {
     "lengthMm": {
       "min": 1000,

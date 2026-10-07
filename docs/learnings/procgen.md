@@ -56,3 +56,24 @@
   (undulate, features) moves `y` by 1 mm and breaks idempotence.
 - **Bounds bind the scatter.** `assemble` grows the bounds from route + dressing + props, so scatter (which runs after
   assembly) fills the route's bounds-plus-60 m margin only and keeps every footprint inside it.
+
+## 2026-10-07 · Biome trait, selector, transitions, wayfinding (P1-M03f)
+
+- **A biome is one file.** `biome/<name>.rs` is a unit struct implementing `BiomeDef` (just `data()`), and its line in
+  `biome::def`. `terrain::params`, `features::density` and `scatter::spec` now delegate to it, so the M04-M07 tasks edit
+  no other procgen file. `biome::check_data` is the data check a biome runs on itself.
+- **The lap ends in the first biome.** `[A, B]` is segments `A, B, A`: a closed loop's seam (start corridor, finish) must
+  not carry a transition. Boundaries are placed on straights (<= 0.12 rad of turn within 25 m), 60 m apart, 40 m blend
+  zones. `generate_recipe` returns `NoStraight` when a boundary can't be placed: 92 % of seeds fit `[greybox, dirt]`, 55 %
+  fit a four-biome lap, so P1-M03g's fallback recipe (retry another structure draw, fewer biomes) is real work.
+- **Judge a straight with margin.** Select checks the turn on the float centerline, validation re-checks it on the
+  mm-rounded map; a corner starting at the window's last point flips between them. Select widens its window by one point.
+- **Wayfinding is stand-ins until P1-R10.** `crates/jj-procgen/kit/wayfinding/*.json` (chevron-post, guard-rail,
+  finish-gantry) are compiled into `jj_procgen::registry()` (generic kit plus these); R10's `assets/kit/wayfinding/`
+  replaces them under the same ids. Generated maps validate against that registry, not `Registry::generic()`; `jj procgen`
+  falls back to it while the checked-in kit lacks the family.
+- **Wayfinding goes before scatter; scatter sees it as obstacles** (and never clears it). Tests that measure the
+  scatter's own spacing filter the `wayfinding/` pieces out: rails 4 m apart would fail any overlap or nnCv test.
+- **Terrain across biomes.** `undulate_along` takes parameters per route point: the profile's grade/curvature/relief are the
+  strictest on the route; bank limit, ground relief, wavelength and blend follow the point and are blended into the cells
+  by the heights' own inverse-distance weights, so there's no step at a boundary.

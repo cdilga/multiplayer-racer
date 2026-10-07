@@ -3,7 +3,7 @@
 //! generated maps pass the `jj-map` validator. Re-bless the goldens after an intended generator change with
 //! `JJ_BLESS=1 cargo test -p jj-procgen --test procgen` (and bump `GENERATOR_VERSION`).
 
-use jj_map::{Registry, canonical_bytes, gameplay_hash, hex, validate};
+use jj_map::{canonical_bytes, gameplay_hash, hex, validate};
 use jj_procgen::seed::{Rng, Streams};
 use jj_procgen::{generate, generate_from};
 
@@ -45,7 +45,7 @@ fn seeds_hash_to_the_committed_goldens() {
 
 #[test]
 fn generated_maps_pass_the_validator() {
-    let registry = Registry::generic();
+    let registry = jj_procgen::registry();
     for seed in (0..64).chain(GOLDEN_SEEDS) {
         let map = generate(seed);
         let report = validate(&map, &registry);
@@ -72,7 +72,7 @@ fn changing_only_the_dressing_stream_never_moves_the_route() {
                 swapped.dressing, base.dressing,
                 "seed {seed}: the swapped stream should redress the map"
             );
-            assert!(validate(&swapped, &Registry::generic()).ok);
+            assert!(validate(&swapped, &jj_procgen::registry()).ok);
         }
     }
 }

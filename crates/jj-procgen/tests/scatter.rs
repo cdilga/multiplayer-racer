@@ -3,7 +3,7 @@
 //! and the bitumen Poisson radius is checked against M02's recommendation. `JJ_EVIDENCE_DIR` writes the tables and the
 //! capture (`docs/evidence/P1-M03e/`).
 
-use jj_map::{Biome, FeatureKind, Footprint, Map, Registry, Surface, validate};
+use jj_map::{Biome, FeatureKind, Footprint, Map, Surface, validate};
 use jj_procgen::assemble::distance_to_loop;
 use jj_procgen::features::place;
 use jj_procgen::generate;
@@ -40,9 +40,18 @@ fn map_with(seed: u64, biome: Biome, spec: &Spec) -> Map {
         &mut m,
         &mut Rng::stream(seed, "dressing.test"),
         spec,
-        &Registry::generic(),
+        &jj_procgen::registry(),
     );
     m
+}
+
+/// The scatter's own pieces (not the road furniture the core places).
+fn scattered(map: &Map) -> Vec<jj_map::Dressing> {
+    map.dressing
+        .iter()
+        .filter(|d| !d.kit_piece.starts_with("wayfinding/"))
+        .cloned()
+        .collect()
 }
 
 fn biome_map(seed: u64, biome: Biome) -> Map {
@@ -107,7 +116,7 @@ fn surface_at(map: &Map, x: f64, z: f64) -> Surface {
 
 #[test]
 fn nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_seed_bank() {
-    let registry = Registry::generic();
+    let registry = jj_procgen::registry();
     let mut total = 0;
     for seed in 0..seeds() {
         for biome in BIOMES {
@@ -163,7 +172,9 @@ fn nothing_is_placed_in_the_route_band_corridor_surfaces_or_landings_across_the_
                         assert!(far > 3.0, "seed {seed} {biome:?}: a piece stands on a jump");
                     }
                 }
-                reaches.push((x, z, reach_m(&fp)));
+                if !d.kit_piece.starts_with("wayfinding/") {
+                    reaches.push((x, z, reach_m(&fp)));
+                }
             }
             // No two footprints overlap (circumradii, so conservative).
             for i in 0..reaches.len() {
@@ -205,7 +216,7 @@ fn scatter_is_a_pure_function_of_the_dressing_stream() {
             &mut b,
             &mut Rng::stream(seed ^ 1, "dressing.test"),
             &spec(Biome::OutbackDirt),
-            &Registry::generic(),
+            &jj_procgen::registry(),
         );
         assert_ne!(
             a.dressing, b.dressing,
@@ -224,7 +235,7 @@ fn clearing_share(map: &Map) -> f64 {
         ((b.max_z - b.min_z) / cell + 1) as usize,
     );
     let mut used = vec![false; cols * rows];
-    for d in &map.dressing {
+    for d in &scattered(map) {
         used[((d.pose.z - b.min_z) / cell) as usize * cols
             + ((d.pose.x - b.min_x) / cell) as usize] = true;
     }
@@ -241,12 +252,12 @@ fn poisson_biomes_are_even_and_cluster_biomes_clump_with_clearings() {
         let (mut count, mut cv, mut empty, mut ce) = (0.0, 0.0, 0.0, 0.0);
         for seed in 0..n {
             let m = biome_map(seed, biome);
-            count += m.dressing.len() as f64;
-            cv += nn_stats(&m.dressing).1;
+            count += scattered(&m).len() as f64;
+            cv += nn_stats(&scattered(&m)).1;
             empty += clearing_share(&m);
             let bb = m.header.bounds;
             ce += clark_evans(
-                &m.dressing,
+                &scattered(&m),
                 f64::from(bb.max_x - bb.min_x) * f64::from(bb.max_z - bb.min_z) / 1.0e6,
             );
         }
@@ -296,8 +307,8 @@ fn bitumen_poisson_radius_confirms_m02s_recommendation() {
         let (mut count, mut cv) = (0.0, 0.0);
         for seed in 0..n {
             let m = map_with(seed, Biome::OutbackBitumen, &sp);
-            count += m.dressing.len() as f64;
-            cv += nn_stats(&m.dressing).1;
+            count += scattered(&m).len() as f64;
+            cv += nn_stats(&scattered(&m)).1;
         }
         let (count, cv) = (count / n as f64, cv / n as f64);
         table += &format!(

@@ -82,20 +82,9 @@ pub struct Density {
     pub creek: f64,
 }
 
+/// The biome's feature mix (each biome's numbers live in its own `biome/<name>.rs`).
 pub fn density(biome: Biome) -> Density {
-    let (jump, crest, whoops, creek) = match biome {
-        Biome::Greybox => (2.0, 1.5, 1.5, 1.0),
-        Biome::Town => (0.0, 1.0, 0.0, 0.0),
-        Biome::Rocks => (2.5, 2.0, 1.0, 0.0),
-        Biome::OutbackDirt => (2.0, 1.0, 2.0, 1.5),
-        Biome::OutbackBitumen => (0.5, 2.0, 0.0, 1.0),
-    };
-    Density {
-        jump,
-        crest,
-        whoops,
-        creek,
-    }
+    crate::biome::def(biome).data().features
 }
 
 /// The route in metres, with arc lengths and headings.
@@ -183,39 +172,53 @@ fn zone_of(kind: FeatureKind, base: f64, p: &BTreeMap<String, i64>) -> Zone {
     }
 }
 
+/// How far a feature's envelope reaches before and after its base along the route (m): offsets `(from, to)`.
+pub fn extent_m(f: &Feature) -> (f64, f64) {
+    let z = zone_of(f.kind, 0.0, &f.params);
+    (z.from, z.to)
+}
+
 /// Adds the biome's features to `map` (replacing any it has): heights, route `y`, recovery spans, dressing and props
 /// regrounded. Call once, right after [`crate::terrain::undulate`].
 pub fn place(map: &mut Map, rng: &mut Rng, biome: Biome) {
+    let total = Line::new(map).total;
+    place_in(map, rng, &[(0.0, total, density(biome))]);
+}
+
+/// [`place`] for a route that crosses biomes: `ranges` are `(from, to)` arc lengths (m) with the density that applies
+/// there. A piece's whole envelope stays inside one range, so no piece straddles a biome boundary.
+pub fn place_in(map: &mut Map, rng: &mut Rng, ranges: &[(f64, f64, Density)]) {
     map.features.clear();
     let line = Line::new(map);
-    let dens = density(biome);
-    let km = line.total / 1000.0;
-    // Counts: whole expected number plus one more with the fractional probability.
-    let mut kinds: Vec<FeatureKind> = Vec::new();
-    for (kind, per_km) in [
-        (FeatureKind::Jump, dens.jump),
-        (FeatureKind::Crest, dens.crest),
-        (FeatureKind::Whoops, dens.whoops),
-        (FeatureKind::CreekDip, dens.creek),
-    ] {
-        let want = per_km * km;
-        let n = libm::floor(want) as usize + usize::from(rng.unit() < want - libm::floor(want));
-        kinds.extend(std::iter::repeat_n(kind, n));
+    // Counts per range: whole expected number plus one more with the fractional probability.
+    let mut kinds: Vec<(FeatureKind, f64, f64)> = Vec::new();
+    for &(from, to, dens) in ranges {
+        let km = (to - from) / 1000.0;
+        for (kind, per_km) in [
+            (FeatureKind::Jump, dens.jump),
+            (FeatureKind::Crest, dens.crest),
+            (FeatureKind::Whoops, dens.whoops),
+            (FeatureKind::CreekDip, dens.creek),
+        ] {
+            let want = per_km * km;
+            let n = libm::floor(want) as usize + usize::from(rng.unit() < want - libm::floor(want));
+            kinds.extend(std::iter::repeat_n((kind, from, to), n));
+        }
     }
     let mut zones: Vec<Zone> = Vec::new();
-    for kind in kinds {
+    for (kind, from, to) in kinds {
         for _ in 0..ATTEMPTS {
             let params = draw_params(kind, rng);
             let span = zone_of(kind, 0.0, &params);
-            let lo = LIMITS.earliest_m + (span.base - span.from);
-            let hi = line.total - LIMITS.seam_m - (span.to - span.base);
+            let lo = from.max(LIMITS.earliest_m) + (span.base - span.from);
+            let hi = to.min(line.total - LIMITS.seam_m) - (span.to - span.base);
             if hi <= lo {
                 continue;
             }
             // Snap to a route point so the pose sits exactly on the centerline.
             let i0 = line.index_at(rng.range(lo, hi));
             let zone = zone_of(kind, line.s[i0], &params);
-            if zone_ok(map, &line, kind, &zone, &zones) {
+            if zone.from >= from && zone.to <= to && zone_ok(map, &line, kind, &zone, &zones) {
                 let (x, z) = line.pts[i0];
                 let t = line.tangent(i0);
                 map.features.push(Feature {

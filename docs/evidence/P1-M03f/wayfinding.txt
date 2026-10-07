@@ -1,0 +1,6 @@
+seed  corners  chevron posts  rail sections  gantry legs
+   0        5             36              52            2
+   0        5             36              52            2
+   1        5             32              44            2
+
+200 routes, 1288 corners: every one with a chevron row and a rail; every route a 2-leg gantry; no checkpoint pieces.

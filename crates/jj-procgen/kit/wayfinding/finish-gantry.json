@@ -1,0 +1,17 @@
+{
+  "id": "wayfinding/finish-gantry",
+  "version": 1,
+  "what": "Stand-in for P1-R10's race-banner finish gantry (R106, no 'Checkpoint N'): one leg; two are placed, one each side of the road at the line, and the renderer hangs the banner between them across `spanMm`.",
+  "params": {
+    "spanMm": { "min": 8000, "max": 30000, "default": 16000 },
+    "heightCm": { "min": 400, "max": 700, "default": 520 }
+  },
+  "collider": {
+    "box": {
+      "x": 600,
+      "y": { "param": "heightCm", "scale": 10 },
+      "z": 600
+    }
+  },
+  "lod": { "simplifyBeyondMm": 120000, "cullBeyondMm": 600000 }
+}

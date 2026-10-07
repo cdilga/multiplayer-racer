@@ -4,7 +4,7 @@
 //! within the biome's bank limit, and the road edge painted on the grid is smooth on diagonals. Set `JJ_EVIDENCE_DIR` to
 //! write the seed-bank table and the edge image (`docs/evidence/P1-M03c/`).
 
-use jj_map::{Biome, Map, Registry, Surface, validate};
+use jj_map::{Biome, Map, Surface, validate};
 use jj_procgen::generate;
 use jj_procgen::seed::Rng;
 use jj_procgen::terrain::{ground_height_m, params, undulate};
@@ -180,7 +180,7 @@ fn grade_curvature_and_bank_stay_inside_each_biomes_limits_along_the_route_band(
             "seed {seed} {biome:?}: ground below the kill height"
         );
         assert!(
-            validate(&map, &Registry::generic()).ok,
+            validate(&map, &jj_procgen::registry()).ok,
             "seed {seed} {biome:?}"
         );
         if seed < 3 {
