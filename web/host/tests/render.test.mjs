@@ -153,7 +153,8 @@ test('the forced fallback path renders the same frame (capture comparison)', asy
 });
 
 test('the host draws the sim worker’s snapshots at native resolution (R111)', async () => {
-  const { page, mode, errors } = await open('', { viewport: { width: 915, height: 412 }, deviceScaleFactor: 2.625 });
+  // autores=off: this checks native drawing, so a slow runner's auto-lowering stays out of it.
+  const { page, mode, errors } = await open('?autores=off', { viewport: { width: 915, height: 412 }, deviceScaleFactor: 2.625 });
   assert.equal(mode, 'ready');
   const s = await untilFrames(page, 20);
   // The backing store is the canvas's on-screen size in device pixels, and the chip names it.
@@ -166,7 +167,7 @@ test('the host draws the sim worker’s snapshots at native resolution (R111)', 
   const now = await page.evaluate(() => ({ chip: document.querySelector('[data-testid="render-chip"]').innerText, s: window.__jjRender.stats() }));
   const chip = now.chip;
   assert.ok(chip.includes(`${now.s.width}×${now.s.height}`), `${chip} vs ${JSON.stringify(now.s)}`);
-  if (now.s.resolution === 'native') assert.match(chip, new RegExp(`${now.s.width}×${now.s.height} native`));
+  assert.match(chip, new RegExp(`${s.width}×${s.height} native`));
   assert.ok(s.tick > 0, 'snapshots from the sim worker arrive');
   assert.deepEqual(errors, []);
   runs.nativeResolution = { viewport: '915x412 @2.625', stats: s, chip };
