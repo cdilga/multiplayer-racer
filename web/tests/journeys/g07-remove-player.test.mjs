@@ -79,8 +79,10 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     await host.evaluate(() => window.__jjTest.input({ type: 'ui', ui: 'remove-seat:3' }));
     assert.deepEqual(await seats(host), [1, 2, 4]);
     // Rejoin is a fresh claim: a new seat number, never #3 again.
-    await join(host, 5, 5);
-    assert.ok(!(await seats(host)).includes(3));
+    await frame(host, 'syn5', { hello: true });
+    await frame(host, 'syn5', { claim: 'Racer 5' });
+    await wait(host, () => window.__jjRoom.view().seats.length === 4);
+    assert.ok(!(await seats(host)).includes(3), 'a fresh claim gets a new number, never #3 again');
     assert.deepEqual(host.errors, []);
   } finally {
     await host.context().close();

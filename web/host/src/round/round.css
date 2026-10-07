@@ -175,7 +175,7 @@
 .jj-foot {
   position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot); box-sizing: border-box; z-index: 3; pointer-events: auto;
   display: flex; align-items: center; gap: calc(var(--foot) * .35); padding: 0 max(8px, 1.4vw) 0 max(56px, 1.4vw); overflow: hidden; /* clears the mute button (fixed, left 12 + 36 wide) */
-  background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot) * .46), 3.6vw)/1 var(--font-body); white-space: nowrap;
+  background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot) * .46), 3.6vw)/1.35 var(--font-body); white-space: nowrap;
 }
 .foot-btn {
   flex: none; height: 76%; padding: 0 .9em .1em; font: inherit; color: var(--c-ink); background: var(--c-saffron); border: calc(var(--foot) * .06) solid var(--c-paper); border-radius: calc(var(--foot) * .14); cursor: pointer;
@@ -224,9 +224,10 @@
 .jj-diag td, .jj-diag th { padding: calc(3px * var(--k)) calc(10px * var(--k)) calc(3px * var(--k)) 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .jj-diag td.nm { max-width: calc(260px * var(--k)); overflow: hidden; text-overflow: ellipsis; }
 .jj-diag .badge { font-size: .85em; }
+.jj-diag td { padding-right: calc(22px * var(--k)); }
 .jj-diag .dg-note { margin: calc(8px * var(--k)) 0 0; color: var(--c-ink-soft); font-size: .85em; }
 .mn-view { display: flex; flex-wrap: wrap; gap: calc(12px * var(--k)); }
-.mn-view .btn { flex: 1 1 calc(150px * var(--k)); min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
+.mn-view .btn { flex: 1 1 auto; padding-inline: .7em; white-space: nowrap; min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
 .mn-hint { color: var(--c-ink-soft); }
 
 /* The footer already shows the room code and address, so the grid's join chip would only float over a tile (it stays where there is no footer). */

@@ -97,7 +97,7 @@ test('footer: in a race the tiles stay above it (the grid keeps its bottom safe 
     const f = await box(page, '.jj-foot');
     for (const t of await page.locator('.hud-tile[data-seat]').all()) {
       const b = await t.boundingBox();
-      assert.ok(b.y + b.height <= f.y + 0.5, 'tile ends above the footer');
+      assert.ok(b.y + b.height <= f.y + 0.5, `tile ends above the footer: bottom ${b.y + b.height} vs footer top ${f.y}`);
     }
     assert.equal((await page.locator('[data-act=menu]').innerText()).trim(), 'Pause');
   } finally {

@@ -268,7 +268,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       room = r;
       const n = r.seats.length;
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;
-      footer.querySelector('[data-foot-count]')!.textContent = racing() || r.phase === 'Intermission' ? `${n} racing${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
+      footer.querySelector('[data-foot-count]')!.textContent = racing() ? `${n} racing${r.round ? ` · round ${r.round}` : ''}` : r.phase === 'Intermission' ? `${n} in the room${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
       menuBtn.textContent = racing() ? 'Pause' : 'Host menu';
       // Whatever changed under an open menu or overlay is redrawn (a player left; the phase moved).
       if (state.menu) {
