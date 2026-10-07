@@ -47,7 +47,9 @@ export function mountDrawer(root: HTMLElement, input: LocalInput, everyMs = 500)
       }
       return `<li data-source="${s.source}" data-kind="${s.kind}" data-state="${state}">${s.label}: ${state}${detail}${controls}</li>`;
     });
-    const html = `<ul>${rows.join('')}</ul><ul>${input
+    // The head is what shows while a race collapses the drawer (it expands on hover or keyboard focus).
+    const seated = input.list().filter((s) => s.connected && s.claimed && !s.left).length;
+    const html = `<div class="drawer-head" tabindex="0">Keys &amp; pads${seated ? ` · ${seated} playing` : ''}</div><ul>${rows.join('')}</ul><ul>${input
       .clusters()
       .map((c) => `<li>${legend(c)}</li>`)
       .join('')}</ul>`;
