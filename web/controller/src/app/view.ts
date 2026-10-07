@@ -258,6 +258,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       tilt,
       onSitOut: () => session.sitOut(),
       onLeave: () => session.leave(),
+      onIdentify: () => session.identify(),
     });
   };
 

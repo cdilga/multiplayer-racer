@@ -110,6 +110,8 @@ export interface SettingsDeps {
   onClose: () => void;
   onSitOut: () => void;
   onLeave: () => void;
+  /** Identify from the menu: the same command as the tools row's button (the sheet stays open). */
+  onIdentify?: () => void;
   you: { number: number; colour: string; name: string };
   /** Whether a reset needs a confirmation the page supplies (default: a second tap). */
   confirm?: (title: string) => Promise<boolean>;
@@ -175,6 +177,7 @@ export class SettingsSheet {
       </div>
       <div class="actions" data-box="actions">
         <button type="button" class="btn primary big" data-act="save">Save and back to driving</button>
+        <button type="button" class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button>
         <button type="button" class="btn" data-act="test">Test these controls</button>
         <button type="button" class="btn" data-act="reset">Reset controls</button>
         <div class="pair"><button type="button" class="btn" data-act="sitout">Sit out</button><button type="button" class="btn danger" data-act="leave">Leave room</button></div>
@@ -243,6 +246,7 @@ export class SettingsSheet {
     on('save', () => this.close());
     on('back', () => this.close());
     on('test', () => this.startTest());
+    on('identify', () => this.d.onIdentify?.());
     on('reset', () => void this.reset());
     on('sitout', () => {
       this.close();
