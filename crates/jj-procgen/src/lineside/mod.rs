@@ -26,6 +26,8 @@ pub const CLEAR_M: f64 = 2.5;
 /// How far the drawn road surface sits above the heightfield (the map renderer's route ribbon), so lane lines placed on
 /// it show: they are lifted by this much, m.
 pub const ROAD_SURFACE_LIFT_M: f64 = 0.07;
+/// The longest gap a [`Lineside::link`] is strung across, m.
+pub const LINK_MAX_M: f64 = 60.0;
 /// Footprints keep this much air between them, m.
 pub const GAP_M: f64 = 0.3;
 
@@ -82,6 +84,9 @@ pub struct Lineside {
     pub stretch: Option<(f64, f64)>,
     /// Placed as a dynamic prop (a wheelie bin) instead of static dressing.
     pub prop: bool,
+    /// Strung between neighbours of this rule on one side: a piece of this id (power lines, `lengthMm` the gap, `heightCm` the
+    /// lower pole's) is placed between each consecutive pair less than [`LINK_MAX_M`] apart.
+    pub link: Option<&'static str>,
 }
 
 /// A sign placed by rule.
@@ -111,6 +116,7 @@ pub fn rule_ids() -> Vec<&'static str> {
     for b in crate::biome::ALL {
         let d = crate::biome::def(b).data();
         ids.extend(d.lineside.iter().filter(|r| !r.prop).map(|r| r.kit_piece));
+        ids.extend(d.lineside.iter().filter_map(|r| r.link));
         ids.extend(d.signs.iter().map(|s| s.kit_piece));
     }
     ids.sort_unstable();
@@ -284,6 +290,7 @@ pub fn place(
         let Some(kit) = ctx.registry.get(rule.kit_piece) else {
             continue;
         };
+        let mut linked: Vec<(f64, f64, Pose, i64)> = Vec::new();
         let mut at = rng.range(0.0, rule.spacing_m.1);
         while at < total {
             let (lo, hi) = rule.spacing_m;
@@ -480,7 +487,56 @@ pub fn place(
                     if rule.yaw == Yaw::Across {
                         junctions.push((here, side));
                     }
+                    if rule.link.is_some() {
+                        linked.push((
+                            side,
+                            here,
+                            pose,
+                            params.get("heightCm").copied().unwrap_or(800),
+                        ));
+                    }
                 }
+            }
+        }
+        // Strung between neighbours on one side (power lines): a piece centred between each close pair, along their line.
+        if let Some(link) = rule.link {
+            linked.sort_by(|a, b| {
+                (a.0, a.1)
+                    .partial_cmp(&(b.0, b.1))
+                    .unwrap_or(core::cmp::Ordering::Equal)
+            });
+            for w in linked.windows(2) {
+                let ((sa, ta, pa, ha), (sb, tb, pb, hb)) = (w[0], w[1]);
+                let (dx, dz) = (
+                    f64::from(pb.x - pa.x) / 1000.0,
+                    f64::from(pb.z - pa.z) / 1000.0,
+                );
+                let dist = libm::hypot(dx, dz);
+                if sa != sb || tb - ta > LINK_MAX_M || dist < 8.0 || dist > LINK_MAX_M {
+                    continue;
+                }
+                let mid = ((pa.x + pb.x) / 2, (pa.z + pb.z) / 2);
+                let y = libm::round(
+                    ground_height_m(
+                        &map.terrain,
+                        f64::from(mid.0) / 1000.0,
+                        f64::from(mid.1) / 1000.0,
+                    ) * 1000.0,
+                ) as i32;
+                dressing.push(Dressing {
+                    kit_piece: link.into(),
+                    pose: Pose {
+                        x: mid.0,
+                        y,
+                        z: mid.1,
+                        yaw: yaw_cdeg(dx, dz),
+                    },
+                    params: BTreeMap::from([
+                        ("lengthMm".into(), libm::round(dist * 1000.0) as i64),
+                        ("heightCm".into(), ha.min(hb)),
+                    ]),
+                    collides: false,
+                });
             }
         }
     }

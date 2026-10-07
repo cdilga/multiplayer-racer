@@ -44,6 +44,7 @@ const DOMES: &[Lineside] = &[
         avoid_corners: false,
         stretch: None,
         prop: false,
+        link: None,
     },
     // Ledges and stacks: the same rule at a smaller scale, close to the track.
     Lineside {
@@ -59,6 +60,7 @@ const DOMES: &[Lineside] = &[
         avoid_corners: true,
         stretch: None,
         prop: false,
+        link: None,
     },
 ];
 

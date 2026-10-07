@@ -239,6 +239,9 @@ export class MapRenderer {
     return { point: p[best]!, left: [nx, nz] as const, fwd: [-nz, nx] as const };
   }
 
+  /** The core's features as painted markings and ramp walls on the ground they lie on (never floating pads): a jump is a ramp
+   *  with low stone walls along its sides and white lines across it; a creek dip is a muddy wash; crests and whoops show as
+   *  the ground itself. Everything follows the heightfield. */
   private features(): Mesh {
     const s = new Soup();
     for (const f of this.map.features) {
@@ -247,26 +250,45 @@ export class MapRenderer {
       const [lx, lz] = near.left;
       const ox = mm(f.pose.x);
       const oz = mm(f.pose.z);
-      const y = mm(f.pose.y) + 0.06;
-      // A rectangle from `a` to `b` metres along the route and `half` metres either side of the feature's position.
-      const rect = (a: number, b: number, half: number, colour: string, dy = 0) => {
-        const pt = (f2: number, l: number) => [ox + fx * f2 + lx * l, y + dy, oz + fz * f2 + lz * l];
-        s.quad(pt(a, -half), pt(b, -half), pt(b, half), pt(a, half), colour);
+      const at = (along: number, lat: number, lift: number): number[] => {
+        const [x, z] = [ox + fx * along + lx * lat, oz + fz * along + lz * lat];
+        return [x, this.groundAt(x, z) + lift, z];
+      };
+      // Paint on the ground over `a..b` metres along the route and `half` metres either side, in squares about a metre across.
+      const paint = (a: number, b: number, half: number, colour: string, lift: number) => {
+        const [na, nl] = [Math.max(1, Math.ceil((b - a) / 1)), Math.max(1, Math.ceil((2 * half) / 1))];
+        for (let i = 0; i < na; i++) {
+          for (let j = 0; j < nl; j++) {
+            const [a0, a1] = [a + ((b - a) * i) / na, a + ((b - a) * (i + 1)) / na];
+            const [l0, l1] = [-half + (2 * half * j) / nl, -half + (2 * half * (j + 1)) / nl];
+            s.quad(at(a0, l0, lift), at(a1, l0, lift), at(a1, l1, lift), at(a0, l1, lift), colour);
+          }
+        }
+      };
+      // A low stone wall along `a..b`, centred `lat` metres from the route (positive left), 0.5 m wide and standing 0.55 m high.
+      const wall = (a: number, b: number, lat: number, colour: string) => {
+        const n = Math.max(1, Math.ceil((b - a) / 1));
+        for (let i = 0; i < n; i++) {
+          const [a0, a1] = [a + ((b - a) * i) / n, a + ((b - a) * (i + 1)) / n];
+          const [l0, l1] = [lat - 0.25, lat + 0.25];
+          const top = (aa: number, ll: number) => at(aa, ll, 0.55);
+          const foot = (aa: number, ll: number) => at(aa, ll, -0.1);
+          s.quad(top(a0, l0), top(a1, l0), top(a1, l1), top(a0, l1), colour);
+          s.quad(foot(a0, l0), foot(a1, l0), top(a1, l0), top(a0, l0), '#7a3a26');
+          s.quad(top(a0, l1), top(a1, l1), foot(a1, l1), foot(a0, l1), '#7a3a26');
+        }
       };
       if (f.kind === 'jump') {
         const ramp = mm(f.params.rampLengthMm ?? 8000);
-        const land = mm(f.params.landingLengthMm ?? 20000);
-        rect(ramp, ramp + land, mm(f.params.landingWidthMm ?? 6000) / 2, '#e7d27a');
-        // Hazard chevrons over the ramp's footprint: alternating yellow and black bands.
-        const bands = 8;
-        for (let b = 0; b < bands; b++) {
-          rect((ramp * b) / bands, (ramp * (b + 1)) / bands, mm(f.params.rampWidthMm ?? 4500) / 2, b % 2 ? '#1d1c21' : '#f5c518', 0.01);
-        }
+        const width = mm(f.params.rampWidthMm ?? 4500) / 2;
+        for (const k of [0.3, 0.55, 0.8]) paint(ramp * k, ramp * k + 0.18, width, '#f2efe6', 0.075);
+        wall(0, ramp, -width - 0.1, '#a2502f');
+        wall(0, ramp, width + 0.1, '#a2502f');
+      } else if (f.kind === 'creek-dip') {
+        paint(0, mm(f.params.lengthMm ?? 20000), 6, '#8f6a45', 0.07);
       } else if (f.kind === 'kerb') {
         const depth = mm(f.params.depthMm ?? 400);
-        for (let b = 0; b < 8; b++) rect(b * 0.75 - 3, (b + 1) * 0.75 - 3, depth / 2, b % 2 ? '#f2efe6' : '#d8432f');
-      } else {
-        rect(-2, 2, 2, '#9b7bff');
+        for (let b = 0; b < 8; b++) paint(b * 0.75 - 3, (b + 1) * 0.75 - 3, depth / 2, b % 2 ? '#f2efe6' : '#d8432f', 0.06);
       }
     }
     const m = s.mesh(this.material);

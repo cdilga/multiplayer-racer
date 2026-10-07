@@ -1,5 +1,5 @@
 {
-  "mode": "headed Google Chrome (system GPU)",
+  "mode": "headless Chromium (SwiftShader/software GL)",
   "recipe": "outback-bitumen",
   "shots": [
     {
@@ -13,8 +13,8 @@
         "segment": "outback-bitumen",
         "targetPoint": 160,
         "reached": true,
-        "tick": 4919,
-        "car0Point": 158,
+        "tick": 4989,
+        "car0Point": 161,
         "segments": [
           {
             "name": "outback-bitumen",
@@ -24,7 +24,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -35,7 +34,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 171,
+          "ms": 120,
           "attempts": 1
         }
       ],
@@ -51,16 +50,15 @@
       },
       "phase": "Running",
       "kit": {
-        "generic/box-building": 4,
+        "generic/box-building": 7,
         "outback_bitumen/centre-line": 89,
-        "outback_bitumen/edge-line": 536,
-        "outback_bitumen/reflector-post": 18,
-        "outback_dirt/spinifex": 184,
+        "outback_bitumen/reflector-post": 16,
+        "outback_dirt/spinifex": 185,
         "signs/crest": 2,
         "signs/stuart-hwy": 1,
         "wayfinding/chevron-post": 36,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 69
+        "wayfinding/guard-rail": 67
       }
     },
     {
@@ -74,8 +72,8 @@
         "segment": "outback-bitumen",
         "targetPoint": 160,
         "reached": true,
-        "tick": 5560,
-        "car0Point": 158,
+        "tick": 14058,
+        "car0Point": 162,
         "segments": [
           {
             "name": "outback-bitumen",
@@ -85,7 +83,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -96,13 +93,20 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 224,
+          "ms": 118,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 3,
+          "plan": "requested",
+          "ms": 98,
           "attempts": 1
         }
       ],
       "stats": {
-        "requested": 1,
-        "delivered": 1,
+        "requested": 2,
+        "delivered": 2,
         "superseded": 0,
         "failed": 0,
         "refused": 0,
@@ -110,18 +114,17 @@
         "lastPlan": "requested",
         "lastError": ""
       },
-      "phase": "Running",
+      "phase": "Intermission",
       "kit": {
-        "generic/box-building": 4,
+        "generic/box-building": 7,
         "outback_bitumen/centre-line": 89,
-        "outback_bitumen/edge-line": 536,
-        "outback_bitumen/reflector-post": 18,
-        "outback_dirt/spinifex": 184,
+        "outback_bitumen/reflector-post": 16,
+        "outback_dirt/spinifex": 185,
         "signs/crest": 2,
         "signs/stuart-hwy": 1,
         "wayfinding/chevron-post": 36,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 69
+        "wayfinding/guard-rail": 67
       }
     },
     {
@@ -135,8 +138,8 @@
         "segment": "outback-bitumen",
         "targetPoint": 160,
         "reached": true,
-        "tick": 9803,
-        "car0Point": 158,
+        "tick": 5246,
+        "car0Point": 159,
         "segments": [
           {
             "name": "outback-bitumen",
@@ -146,7 +149,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -157,7 +159,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 209,
+          "ms": 122,
           "attempts": 1
         }
       ],
@@ -173,16 +175,15 @@
       },
       "phase": "Running",
       "kit": {
-        "generic/box-building": 4,
+        "generic/box-building": 7,
         "outback_bitumen/centre-line": 89,
-        "outback_bitumen/edge-line": 536,
-        "outback_bitumen/reflector-post": 18,
-        "outback_dirt/spinifex": 184,
+        "outback_bitumen/reflector-post": 16,
+        "outback_dirt/spinifex": 185,
         "signs/crest": 2,
         "signs/stuart-hwy": 1,
         "wayfinding/chevron-post": 36,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 69
+        "wayfinding/guard-rail": 67
       }
     }
   ]

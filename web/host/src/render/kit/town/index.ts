@@ -2,7 +2,7 @@
 // by the params, so one geometry serves every size and its bounds are the registry collider's. One parametric house and one
 // parametric shopfront (their only variation is size), power pole, mailbox, water tower, gum tree and a side street's stub.
 // Boxes: x = width/length, y = height, z = depth, front +z. Cylinders: unit radius and height.
-import { ExtrudeGeometry, Shape, SphereGeometry, type BufferGeometry } from 'three';
+import { BoxGeometry, ExtrudeGeometry, Shape, SphereGeometry, type BufferGeometry } from 'three';
 import { drum, merge, paint, slab } from '../shapes';
 import type { KitModule } from '../types';
 
@@ -25,7 +25,7 @@ const VERANDAH = '#3d6b4c';
 
 /** Three windows and a door on the front face (inset a hair so the bounds stay the collider's). */
 function frontage(y0: number, y1: number, doors = true): BufferGeometry[] {
-  const f = 0.498;
+  const f = 0.506; // a hair proud of the wall (z-fighting with it dithered the windows)
   const parts = [slab(0.14, y0, y1, 0.004, GLASS).translate(-0.3, 0, f), slab(0.14, y0, y1, 0.004, GLASS).translate(0.3, 0, f)];
   if (doors) parts.push(slab(0.12, 0.02, y1, 0.004, '#5b3d2a').translate(0, 0, f));
   return parts;
@@ -51,12 +51,12 @@ export const shopfront: KitModule = {
       slab(1, 0, 0.78, 1, '#c9b48b'),
       // The false front above the verandah, and its signboard.
       slab(1, 0.78, 1, 0.1, '#d6cba9').translate(0, 0, 0.45),
-      slab(0.7, 0.84, 0.96, 0.02, '#f0e6c8').translate(0, 0, 0.395),
+      slab(0.7, 0.84, 0.96, 0.016, '#f0e6c8').translate(0, 0, 0.508),
       slab(0.96, 0.46, 0.5, 0.22, '#4b6a8c').translate(0, 0, 0.39),
       slab(0.03, 0, 0.46, 0.03, '#efe9d8').translate(-0.45, 0, 0.47),
       slab(0.03, 0, 0.46, 0.03, '#efe9d8').translate(0.45, 0, 0.47),
-      slab(0.3, 0.12, 0.42, 0.004, GLASS).translate(-0.25, 0, 0.498),
-      slab(0.3, 0.12, 0.42, 0.004, GLASS).translate(0.25, 0, 0.498),
+      slab(0.3, 0.12, 0.42, 0.004, GLASS).translate(-0.25, 0, 0.506),
+      slab(0.3, 0.12, 0.42, 0.004, GLASS).translate(0.25, 0, 0.506),
     ]),
   scale: (p) => [p.widthMm! / 1000, p.heightCm! / 100, p.depthMm! / 1000],
 };
@@ -64,6 +64,30 @@ export const shopfront: KitModule = {
 export const powerPole: KitModule = {
   geometry: () => merge([drum(1, 0, 1, '#6b5339'), drum(1, 0.9, 0.96, '#4a3a28'), drum(1, 0.96, 1, '#cfd4d8')]),
   scale: (p) => [p.radiusMm! / 1000, p.heightCm! / 100, p.radiusMm! / 1000],
+};
+
+/** A span of power line between two poles (unit size, length along x, `heightCm` the poles'): a crossarm at each end and three
+ *  sagging wires. The ghost poles at the ends stand inside the real poles (they only keep the bounds standing on the ground). */
+export const powerLine: KitModule = {
+  geometry: () => {
+    const parts: BufferGeometry[] = [];
+    for (const x of [-0.499, 0.499]) {
+      parts.push(slab(0.002, 0.955, 0.975, 1, '#5b4630').translate(x, 0, 0), slab(0.002, 0, 1, 0.01, '#6b5339').translate(x, 0, 0));
+    }
+    const n = 8;
+    for (const z of [-0.32, 0, 0.32]) {
+      for (let i = 0; i < n; i++) {
+        const [t0, t1] = [i / n, (i + 1) / n];
+        const sag = (t: number) => 0.965 - 0.06 * 4 * t * (1 - t);
+        const [x0, x1] = [t0 - 0.5, t1 - 0.5];
+        const [y0, y1] = [sag(t0), sag(t1)];
+        const len = Math.hypot(x1 - x0, y1 - y0);
+        parts.push(paint(new BoxGeometry(len, 0.003, 0.012).rotateZ(Math.atan2(y1 - y0, x1 - x0)).translate((x0 + x1) / 2, (y0 + y1) / 2, z), '#26252a'));
+      }
+    }
+    return merge(parts);
+  },
+  scale: (p) => [p.lengthMm! / 1000, p.heightCm! / 100, 1.4],
 };
 
 export const mailbox: KitModule = {
@@ -102,6 +126,7 @@ export const TOWN_MODULES: Record<string, KitModule> = {
   'town/house': house,
   'town/shopfront': shopfront,
   'town/power-pole': powerPole,
+  'town/power-line': powerLine,
   'town/mailbox': mailbox,
   'town/water-tower': waterTower,
   'town/gum-tree': gumTree,

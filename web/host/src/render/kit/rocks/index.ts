@@ -4,13 +4,14 @@ import { SphereGeometry } from 'three';
 import { drum, merge, paint, spire } from '../shapes';
 import type { KitModule } from '../types';
 
-/** The dome: stacked frustums narrowing upward, each a band of red rock, so the faces read as layered. */
+/** The dome: stacked frustums following a hemisphere's profile (radius sqrt(1 - t^2)), each a band of red rock in turn, so the
+ *  top is rounded, not conical. Unit radius and height. */
 export const dome: KitModule = {
   geometry: () => {
-    const radii = [1, 0.97, 0.9, 0.79, 0.64, 0.45, 0.24];
-    const colours = ['#a8472a', '#bb5632', '#9a3f25', '#c4623b', '#a34429', '#b24f2e'];
-    const bands = radii.slice(0, -1).map((r, k) => spire(r, radii[k + 1]!, k / 6, (k + 1) / 6, colours[k]!, 20));
-    return merge(bands);
+    const n = 12;
+    const colours = ['#a8472a', '#bb5632', '#9a3f25', '#c4623b', '#a34429', '#b24f2e', '#8f3b22'];
+    const radius = (k: number) => Math.sqrt(Math.max(0, 1 - (k / n) ** 2));
+    return merge(Array.from({ length: n }, (_, k) => spire(radius(k), radius(k + 1), k / n, (k + 1) / n, colours[(k * 5) % colours.length]!, 20)));
   },
   scale: (p) => [p.radiusMm! / 1000, p.heightCm! / 100, p.radiusMm! / 1000],
 };

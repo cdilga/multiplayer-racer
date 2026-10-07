@@ -1,5 +1,5 @@
-//! Outback bitumen (P1-M07, playtest scope): a sealed highway across flat red country: yellow centre dashes and white edge
-//! lines as placed pieces, guide posts every 50 m, the shared W-beam guard rail in short runs (culvert ends), spinifex
+//! Outback bitumen (P1-M07, playtest scope): a sealed highway across flat red country: yellow centre dashes as placed pieces
+//! (the white edge line is the road ribbon's own), guide posts every 50 m, the shared W-beam guard rail in short runs (culvert ends), spinifex
 //! beyond the verge. A direction sign where it begins and a warning before each crest or jump.
 
 use jj_map::{Biome, FeatureKind, Surface};
@@ -47,6 +47,7 @@ const fn line(kit_piece: &'static str, side: Side, offset: f64) -> Lineside {
         avoid_corners: false,
         stretch: None,
         prop: false,
+        link: None,
     }
 }
 
@@ -56,8 +57,6 @@ const ROAD: &[Lineside] = &[
         spacing_m: (9.0, 9.0),
         ..line("outback_bitumen/centre-line", Side::Right, 0.0)
     },
-    // White edge lines, continuous along both edges.
-    line("outback_bitumen/edge-line", Side::Both, 5.5),
     // Guide posts every 50 m, both sides.
     Lineside {
         spacing_m: (50.0, 50.0),
@@ -86,6 +85,7 @@ const ROAD: &[Lineside] = &[
         avoid_corners: true,
         stretch: Some((24.0, 136.0)),
         prop: false,
+        link: None,
     },
 ];
 

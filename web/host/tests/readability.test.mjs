@@ -50,7 +50,7 @@ async function dirtView(width, height, name) {
   const page = await browser.newPage({ viewport: { width, height } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await openHost(page, `${server.url}/host/?test=live&room&laps=1`);
+  await openHost(page, `${server.url}/host/?test=live&room&res=1&autores=off&laps=1`);
   await page.waitForFunction(() => window.__jjPrepare !== undefined, null, { timeout: 60_000 });
   await page.evaluate(() => window.__jjTest.join('Ava', { lobby: true }));
   await page.evaluate(() => window.__jjRoom.start());

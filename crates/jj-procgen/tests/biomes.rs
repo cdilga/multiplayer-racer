@@ -130,11 +130,12 @@ fn surface_at(map: &Map, x: f64, z: f64) -> Surface {
     t.surfaces[r * t.cols as usize + c]
 }
 
-/// Lane lines lie on the road and a side street joins it: the only pieces allowed to touch the route band.
+/// Lane lines lie on the road, a side street joins it, and a power line hangs overhead between its poles: the only pieces
+/// exempt from the clearance and overlap checks.
 fn on_road_by_design(d: &Dressing) -> bool {
     matches!(
         d.kit_piece.as_str(),
-        "outback_bitumen/centre-line" | "outback_bitumen/edge-line" | "town/side-street"
+        "outback_bitumen/centre-line" | "town/side-street" | "town/power-line"
     )
 }
 
@@ -198,6 +199,39 @@ fn town_houses_face_straight_streets_with_junctions_and_signs() {
             h > 0 && s > 0 && st > 0,
             "seed {seed}: {h} houses, {s} shops, {st} side streets"
         );
+        // Poles in a line with power lines strung between them: each line's ends are on two poles.
+        let poles: Vec<(f64, f64)> = map
+            .dressing
+            .iter()
+            .filter(|d| d.kit_piece == "town/power-pole")
+            .map(|d| (f64::from(d.pose.x) / 1000.0, f64::from(d.pose.z) / 1000.0))
+            .collect();
+        let lines: Vec<&Dressing> = map
+            .dressing
+            .iter()
+            .filter(|d| d.kit_piece == "town/power-line")
+            .collect();
+        assert!(
+            !lines.is_empty() && lines.len() < poles.len(),
+            "seed {seed}: {} lines over {} poles",
+            lines.len(),
+            poles.len()
+        );
+        for l in &lines {
+            let (x, z) = (f64::from(l.pose.x) / 1000.0, f64::from(l.pose.z) / 1000.0);
+            let half = l.params["lengthMm"] as f64 / 2000.0;
+            let a = f64::from(l.pose.yaw) / 100.0 * core::f64::consts::PI / 180.0;
+            let ends = [
+                (x - a.cos() * half, z - a.sin() * half),
+                (x + a.cos() * half, z + a.sin() * half),
+            ];
+            for e in ends {
+                assert!(
+                    poles.iter().any(|p| (p.0 - e.0).hypot(p.1 - e.1) < 0.05),
+                    "seed {seed}: a power line ends off its pole"
+                );
+            }
+        }
         houses += h;
         shops += s;
         streets += st;
@@ -418,18 +452,16 @@ fn bitumen_lane_lines_posts_and_rail_are_pieces_and_it_meets_the_placeholder() {
     for seed in 0..SEEDS {
         let map = track(seed, &[Biome::OutbackBitumen]);
         assert_clear(&map, &format!("bitumen seed {seed}"));
-        let (centre, edge, posts) = (
+        let (centre, posts) = (
             count(&map, "outback_bitumen/centre-line"),
-            count(&map, "outback_bitumen/edge-line"),
             count(&map, "outback_bitumen/reflector-post"),
         );
-        // About one dash per 9 m, an edge length per 3 m a side, a post per 50 m a side: lines and posts as placed pieces.
+        // About one dash per 9 m and a post per 50 m a side: the centre line and the posts as placed pieces (the white edge
+        // line is the road ribbon's own, so it isn't doubled).
         let len_m = f64::from(map.header.ref_lap_ms) / 1000.0 * jj_procgen::assemble::REF_SPEED_MPS;
         assert!(
-            centre as f64 > len_m / 12.0
-                && edge as f64 > len_m / 4.0
-                && posts as f64 > len_m / 80.0,
-            "seed {seed}: {centre} dashes, {edge} edge lengths, {posts} posts over {len_m:.0} m"
+            centre as f64 > len_m / 12.0 && posts as f64 > len_m / 80.0,
+            "seed {seed}: {centre} dashes, {posts} posts over {len_m:.0} m"
         );
         assert!(
             map.dressing

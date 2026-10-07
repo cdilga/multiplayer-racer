@@ -53,10 +53,23 @@ export async function startPreparation(client: SimClient, world: World, params: 
     stats: () => ({ ...preparer.stats }),
     seeds: () => preparer.seeds.map((s) => ({ ...s })),
     room: () => client.room?.preparation ?? null,
-    /** The shown map's segments and route (x, z, y in metres), so a capture can step the cars to a biome. */
+    /** The shown map's segments, route (x, z, y in metres), features and the town pieces the captures aim at, so a capture can
+     *  step the cars to a biome and to what it shows. */
     mapInfo: () => {
-      const m = preparer.committed as unknown as { route: { points: { x: number; y: number; z: number }[]; segments?: { name: string; span: { from: number; to: number } }[] } } | null;
-      return m ? { segments: (m.route.segments ?? []).map((s) => ({ name: s.name, from: s.span.from, to: s.span.to })), route: m.route.points.map((q) => [q.x / 1000, q.z / 1000, q.y / 1000]) } : null;
+      const m = preparer.committed as unknown as {
+        route: { points: { x: number; y: number; z: number }[]; segments?: { name: string; span: { from: number; to: number } }[] };
+        features: { kind: string; pose: { x: number; z: number } }[];
+        dressing: { kitPiece: string; pose: { x: number; z: number } }[];
+      } | null;
+      const aimed = new Set(['town/house', 'town/shopfront', 'town/side-street', 'town/power-pole', 'signs/junction']);
+      return m
+        ? {
+            segments: (m.route.segments ?? []).map((s) => ({ name: s.name, from: s.span.from, to: s.span.to })),
+            route: m.route.points.map((q) => [q.x / 1000, q.z / 1000, q.y / 1000]),
+            features: m.features.map((f) => ({ kind: f.kind, x: f.pose.x / 1000, z: f.pose.z / 1000 })),
+            pieces: m.dressing.filter((d) => aimed.has(d.kitPiece)).map((d) => ({ id: d.kitPiece, x: d.pose.x / 1000, z: d.pose.z / 1000 })),
+          }
+        : null;
     },
     reroll: () => preparer.reroll(),
   };

@@ -1,5 +1,5 @@
 {
-  "mode": "headed Google Chrome (system GPU)",
+  "mode": "headless Chromium (SwiftShader/software GL)",
   "recipe": "rocks",
   "shots": [
     {
@@ -13,7 +13,7 @@
         "segment": "rocks",
         "targetPoint": 160,
         "reached": true,
-        "tick": 4916,
+        "tick": 4942,
         "car0Point": 158,
         "segments": [
           {
@@ -24,7 +24,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -35,7 +34,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 249,
+          "ms": 230,
           "attempts": 1
         }
       ],
@@ -72,7 +71,7 @@
         "segment": "rocks",
         "targetPoint": 160,
         "reached": true,
-        "tick": 5122,
+        "tick": 14868,
         "car0Point": 158,
         "segments": [
           {
@@ -83,7 +82,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -94,7 +92,72 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 242,
+          "ms": 216,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 3,
+          "plan": "requested",
+          "ms": 147,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 2,
+        "delivered": 2,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Intermission",
+      "kit": {
+        "rocks/dome": 42,
+        "rocks/shrub": 91,
+        "rocks/spinifex": 333,
+        "signs/big-red-rock": 1,
+        "signs/steep-descent": 2,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "domes-laptop-1366",
+      "players": 4,
+      "viewport": [
+        1366,
+        768
+      ],
+      "where": {
+        "segment": "rocks",
+        "targetPoint": 160,
+        "reached": true,
+        "tick": 5182,
+        "car0Point": 162,
+        "segments": [
+          {
+            "name": "rocks",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 221,
           "attempts": 1
         }
       ],
@@ -121,18 +184,18 @@
       }
     },
     {
-      "name": "domes-laptop-1366",
-      "players": 4,
+      "name": "jump-tv-1080p",
+      "players": 1,
       "viewport": [
-        1366,
-        768
+        1920,
+        1080
       ],
       "where": {
         "segment": "rocks",
-        "targetPoint": 160,
+        "targetPoint": 132,
         "reached": true,
-        "tick": 5037,
-        "car0Point": 158,
+        "tick": 4247,
+        "car0Point": 131,
         "segments": [
           {
             "name": "rocks",
@@ -142,7 +205,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -153,7 +215,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 256,
+          "ms": 225,
           "attempts": 1
         }
       ],

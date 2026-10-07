@@ -50,6 +50,7 @@ const fn rule(
         avoid_corners: true,
         stretch: None,
         prop: false,
+        link: None,
     }
 }
 
@@ -85,7 +86,9 @@ const STREET: &[Lineside] = &[
         collides: true,
         yaw: Yaw::Random,
         params: &[("heightCm", 750, 850), ("radiusMm", 140, 170)],
-        ..rule("town/power-pole", (38.0, 46.0), Side::Right, (2.5, 3.0))
+        // Poles in a line with a power line strung between each pair (a crossarm and three sagging wires).
+        link: Some("town/power-line"),
+        ..rule("town/power-pole", (38.0, 46.0), Side::Right, (3.8, 4.4))
     },
     Lineside {
         skip: 0.4,
@@ -95,6 +98,7 @@ const STREET: &[Lineside] = &[
     Lineside {
         skip: 0.45,
         prop: true,
+        link: None,
         yaw: Yaw::Random,
         ..rule("generic/bin", (22.0, 40.0), Side::Both, (3.2, 5.0))
     },

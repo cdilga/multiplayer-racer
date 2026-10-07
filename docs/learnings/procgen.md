@@ -143,3 +143,11 @@
   course draws before the ladder drops a biome: 76 of 100 seeds on their own course, 24 on a derived draw, none dropped.
 - **Dev map.** `?test&map=<name>` (with `&room`) validates `maps/<name>.json` through `validateMap` (the sim's registry)
   and refuses a broken one with the validator's `rule at: detail` lines in a banner; the director then settles in the Lobby.
+
+## Capture honesty (second review round)
+- Add `&res=1&autores=off` to any capture or measurement URL; otherwise the host lowers the render resolution and a "1080p"
+  frame is really 960x540 (`readability.json` records the real viewport now).
+- Hide chrome (`.jj-chip`, `.jj-render-chip`, `aside`, `.jj-hud`, buttons) with an injected style for evidence frames only.
+- A route's segment list can name a biome twice (town at both ends of the lap); `filter(name)[0]` picks the first.
+- Z-fighting between a decal slab and its wall shows up as "dithered" textures; push decals 5 mm or more proud.
+- A power line is a linked span between consecutive poles (`Lineside.link`), not a per-pole piece.

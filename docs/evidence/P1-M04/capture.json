@@ -1,5 +1,5 @@
 {
-  "mode": "headed Google Chrome (system GPU)",
+  "mode": "headless Chromium (SwiftShader/software GL)",
   "recipe": "town",
   "shots": [
     {
@@ -11,10 +11,10 @@
       ],
       "where": {
         "segment": "town",
-        "targetPoint": 38,
+        "targetPoint": 22,
         "reached": true,
-        "tick": 1631,
-        "car0Point": 37,
+        "tick": 1357,
+        "car0Point": 23,
         "segments": [
           {
             "name": "town",
@@ -24,8 +24,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -36,7 +34,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 157,
+          "ms": 121,
           "attempts": 1
         }
       ],
@@ -58,6 +56,7 @@
         "town/gum-tree": 96,
         "town/house": 28,
         "town/mailbox": 9,
+        "town/power-line": 5,
         "town/power-pole": 9,
         "town/shopfront": 9,
         "town/side-street": 1,
@@ -76,10 +75,10 @@
       ],
       "where": {
         "segment": "town",
-        "targetPoint": 38,
+        "targetPoint": 22,
         "reached": true,
-        "tick": 1711,
-        "car0Point": 36,
+        "tick": 1348,
+        "car0Point": 24,
         "segments": [
           {
             "name": "town",
@@ -89,7 +88,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -100,7 +98,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 146,
+          "ms": 119,
           "attempts": 1
         }
       ],
@@ -122,6 +120,7 @@
         "town/gum-tree": 96,
         "town/house": 28,
         "town/mailbox": 9,
+        "town/power-line": 5,
         "town/power-pole": 9,
         "town/shopfront": 9,
         "town/side-street": 1,
@@ -140,10 +139,10 @@
       ],
       "where": {
         "segment": "town",
-        "targetPoint": 38,
+        "targetPoint": 22,
         "reached": true,
-        "tick": 1707,
-        "car0Point": 36,
+        "tick": 1347,
+        "car0Point": 24,
         "segments": [
           {
             "name": "town",
@@ -153,7 +152,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -164,7 +162,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 139,
+          "ms": 120,
           "attempts": 1
         }
       ],
@@ -186,6 +184,7 @@
         "town/gum-tree": 96,
         "town/house": 28,
         "town/mailbox": 9,
+        "town/power-line": 5,
         "town/power-pole": 9,
         "town/shopfront": 9,
         "town/side-street": 1,

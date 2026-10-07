@@ -1,5 +1,5 @@
 {
-  "mode": "headed Google Chrome (system GPU)",
+  "mode": "headless Chromium (SwiftShader/software GL)",
   "recipe": "outback-dirt",
   "shots": [
     {
@@ -13,8 +13,8 @@
         "segment": "outback-dirt",
         "targetPoint": 160,
         "reached": true,
-        "tick": 4921,
-        "car0Point": 158,
+        "tick": 13686,
+        "car0Point": 159,
         "segments": [
           {
             "name": "outback-dirt",
@@ -24,7 +24,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -35,13 +34,20 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 430,
+          "ms": 396,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 3,
+          "plan": "requested",
+          "ms": 285,
           "attempts": 1
         }
       ],
       "stats": {
-        "requested": 1,
-        "delivered": 1,
+        "requested": 2,
+        "delivered": 2,
         "superseded": 0,
         "failed": 0,
         "refused": 0,
@@ -49,7 +55,7 @@
         "lastPlan": "requested",
         "lastError": ""
       },
-      "phase": "Running",
+      "phase": "Intermission",
       "kit": {
         "outback_dirt/desert-oak": 122,
         "outback_dirt/spinifex": 1336,
@@ -71,8 +77,8 @@
         "segment": "outback-dirt",
         "targetPoint": 160,
         "reached": true,
-        "tick": 5399,
-        "car0Point": 158,
+        "tick": 5708,
+        "car0Point": 159,
         "segments": [
           {
             "name": "outback-dirt",
@@ -82,7 +88,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -93,29 +98,43 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 416,
+          "ms": 403,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 3,
+          "plan": "requested",
+          "ms": 286,
+          "attempts": 1
+        },
+        {
+          "preparation": 3,
+          "seed": 4,
+          "plan": "requested",
+          "ms": 556,
           "attempts": 1
         }
       ],
       "stats": {
-        "requested": 1,
-        "delivered": 1,
+        "requested": 3,
+        "delivered": 3,
         "superseded": 0,
         "failed": 0,
         "refused": 0,
-        "committed": 1,
+        "committed": 3,
         "lastPlan": "requested",
         "lastError": ""
       },
       "phase": "Running",
       "kit": {
-        "outback_dirt/desert-oak": 122,
-        "outback_dirt/spinifex": 1336,
+        "outback_dirt/desert-oak": 194,
+        "outback_dirt/spinifex": 1743,
         "signs/crest": 1,
         "signs/unsealed-road": 1,
-        "wayfinding/chevron-post": 36,
+        "wayfinding/chevron-post": 34,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 55
+        "wayfinding/guard-rail": 49
       }
     },
     {
@@ -129,8 +148,8 @@
         "segment": "outback-dirt",
         "targetPoint": 160,
         "reached": true,
-        "tick": 5393,
-        "car0Point": 158,
+        "tick": 14548,
+        "car0Point": 160,
         "segments": [
           {
             "name": "outback-dirt",
@@ -140,7 +159,6 @@
         ]
       },
       "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
       "missing404": [
@@ -151,13 +169,20 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 406,
+          "ms": 391,
+          "attempts": 1
+        },
+        {
+          "preparation": 2,
+          "seed": 3,
+          "plan": "requested",
+          "ms": 282,
           "attempts": 1
         }
       ],
       "stats": {
-        "requested": 1,
-        "delivered": 1,
+        "requested": 2,
+        "delivered": 2,
         "superseded": 0,
         "failed": 0,
         "refused": 0,
@@ -165,7 +190,7 @@
         "lastPlan": "requested",
         "lastError": ""
       },
-      "phase": "Running",
+      "phase": "Intermission",
       "kit": {
         "outback_dirt/desert-oak": 122,
         "outback_dirt/spinifex": 1336,

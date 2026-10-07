@@ -120,6 +120,10 @@ pub const BIOME_PIECES: [(&str, &str); 16] = [
         include_str!("../../../../assets/kit/town/shopfront.json"),
     ),
     (
+        "town/power-line",
+        include_str!("../../../../assets/kit/town/power-line.json"),
+    ),
+    (
         "town/power-pole",
         include_str!("../../../../assets/kit/town/power-pole.json"),
     ),
@@ -162,10 +166,6 @@ pub const BIOME_PIECES: [(&str, &str); 16] = [
     (
         "outback_bitumen/centre-line",
         include_str!("../../../../assets/kit/outback_bitumen/centre-line.json"),
-    ),
-    (
-        "outback_bitumen/edge-line",
-        include_str!("../../../../assets/kit/outback_bitumen/edge-line.json"),
     ),
     (
         "outback_bitumen/reflector-post",

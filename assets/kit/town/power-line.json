@@ -1,0 +1,33 @@
+{
+  "id": "town/power-line",
+  "version": 1,
+  "what": "A span of power line between two poles: a crossarm and three sagging wires at the poles' height (decoration, never colliding); strung by the power-pole rule between each pair of poles.",
+  "params": {
+    "lengthMm": {
+      "min": 8000,
+      "max": 60000,
+      "default": 40000
+    },
+    "heightCm": {
+      "min": 600,
+      "max": 1000,
+      "default": 800
+    }
+  },
+  "collider": {
+    "box": {
+      "x": {
+        "param": "lengthMm"
+      },
+      "y": {
+        "param": "heightCm",
+        "scale": 10
+      },
+      "z": 1400
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 80000,
+    "cullBeyondMm": 400000
+  }
+}

@@ -1,4 +1,4 @@
-// The outback bitumen biome's kit pieces (P1-M07, playtest scope): lane lines (a yellow centre dash, a white edge length),
+// The outback bitumen biome's kit pieces (P1-M07, playtest scope): lane lines (a yellow centre dash (the white edge line is the road ribbon's, so it isn't drawn twice)),
 // a white guide post with a red reflector band and a yellow delineator, all placed as pieces.
 import { drum, merge, slab } from '../shapes';
 import type { KitModule } from '../types';
@@ -20,7 +20,6 @@ export const delineator: KitModule = {
 
 export const OUTBACK_BITUMEN_MODULES: Record<string, KitModule> = {
   'outback_bitumen/centre-line': lane('#e0b422'),
-  'outback_bitumen/edge-line': lane('#efeee8'),
   'outback_bitumen/reflector-post': reflectorPost,
   'outback_bitumen/delineator': delineator,
 };
