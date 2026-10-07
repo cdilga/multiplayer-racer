@@ -116,8 +116,11 @@ export class ControllerLink {
       secret: this.secret,
       onMessage: (m) => this.enqueue(m),
       onUnknown: async (reason) => {
-        if (reason === 'unknown-room' || reason === 'unknown-endpoint') await this.register();
-        else throw new Error(reason);
+        if (reason !== 'unknown-room' && reason !== 'unknown-endpoint') throw new Error(reason);
+        // A server restart forgets the room (re-register); a host that ended it left a tombstone: the room is over.
+        const found = await api.lookup(this.code).catch(() => null);
+        if (found?.status === 'ended') return this.end();
+        await this.register();
       },
     });
     this.stream.start();

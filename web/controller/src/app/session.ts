@@ -339,6 +339,8 @@ export class Session {
   }
 
   private poll(): void {
+    // The link can retry for ever without changing state (a host that vanished): the liveness check runs here too.
+    if (this.lostAt && this.phase === 'reconnecting' && Date.now() - this.lostAt > HOST_GONE_MS) this.set('host-gone');
     if (!this.endpoint) return;
     this.sample();
     const flush = this.endpoint.poll(performance.now());

@@ -66,13 +66,14 @@ test('force-start: Start race with one player not ready warns, counts down and r
   await host.locator('[data-act=start]').click();
   await wait(host, () => ['Preparing', 'Countdown'].includes(window.__jjRoom.view().phase));
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
-  const shown = (await host.evaluate(async () => (await window.__jjTest.observe()).host.countdownMs)) / 1000;
+  await wait(host, () => Number(document.querySelector('[data-screen=countdown]')?.dataset.count) > 0);
+  const shown = Number(await host.evaluate(() => document.querySelector('[data-screen=countdown]')?.dataset.count));
   await shot(host, 'tv-force-countdown');
   const v = await view(host);
   assert.deepEqual(v.seats.map((s) => s.car !== null), [true, true], 'both seats, ready or not, are on the grid');
   assert.equal(await cars(host), 2, 'the not-ready player races too');
   // The not-ready player gets a longer warning than a normal 3-2-1.
-  assert.ok(shown > 3, `the force-start warning lengthens the countdown (${shown} s left just after it began)`);
+  assert.ok(shown > 3, `the force-start warning lengthens the countdown (${shown} on the TV as it began)`);
 
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 30_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
@@ -104,9 +105,12 @@ test('End mid-round voids the round, the Lobby has no cars and nobody ready, and
   await wait(host, () => document.querySelector('[data-act=start]') !== null);
   await shot(host, 'tv-end-lobby');
 
-  // The room goes on: ready again and the next round runs.
+  // The room goes on. End disarms the all-ready auto-start (the director's `end` sets armed = false), so the host
+  // starts the next round with Start race, after both ready up again.
   await frame(host, 'syn1', { ready: true });
   await frame(host, 'syn2', { ready: true });
+  await wait(host, () => window.__jjRoom.view().seats.every((s) => s.ready));
+  await host.locator('[data-act=start]').click();
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 60_000);
   assert.equal(await cars(host), 2, 'the next round puts both on the grid');
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 30_000);
