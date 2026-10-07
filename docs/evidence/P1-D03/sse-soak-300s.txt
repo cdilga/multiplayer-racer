@@ -1,0 +1,23 @@
+0.1s room 8J9S through https://jammers-preview.dilger.dev/p/v02-f4d0e2ef/
+0.1s stream open (text/event-stream, cf-ray a46d73582bdbd72f-BNE)
+30.2s signal 1 arrived
+30.2s sent signal 1 (202); heartbeats so far 3, longest silence 15.0 s
+60.2s signal 2 arrived
+60.2s sent signal 2 (202); heartbeats so far 5, longest silence 15.0 s
+90.2s signal 3 arrived
+90.2s sent signal 3 (202); heartbeats so far 7, longest silence 15.0 s
+120.2s signal 4 arrived
+120.2s sent signal 4 (202); heartbeats so far 9, longest silence 15.0 s
+150.2s signal 5 arrived
+150.3s sent signal 5 (202); heartbeats so far 11, longest silence 15.0 s
+180.3s signal 6 arrived
+180.3s sent signal 6 (202); heartbeats so far 13, longest silence 15.0 s
+210.3s signal 7 arrived
+210.3s sent signal 7 (202); heartbeats so far 15, longest silence 15.0 s
+240.3s signal 8 arrived
+240.3s sent signal 8 (202); heartbeats so far 17, longest silence 15.0 s
+270.4s signal 9 arrived
+270.4s sent signal 9 (202); heartbeats so far 19, longest silence 15.0 s
+300.4s signal 10 arrived
+300.4s sent signal 10 (202); heartbeats so far 21, longest silence 15.0 s
+sse-soak: PASS held 305 s, stream still open, 21 heartbeats, longest silence 15.0 s, signals 10/10

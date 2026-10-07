@@ -1,0 +1,13 @@
+14:09:19 stop jammers-preview-edge: ok
+14:09:24 stop jjp-v02-f4d0e2ef: ok
+14:09:56 edge down -> 000
+14:09:56 start jjp-v02-f4d0e2ef: ok
+14:10:06 start jammers-preview-edge: ok
+14:10:19 healthz via edge after start: 200
+[{"name": "jammers-preview-edge", "state": "RUNNING"}, {"name": "jjp-v02-f4d0e2ef", "state": "RUNNING"}]
+2026-10-07T14:10:25Z
+/                            200 6460B <!doctype html> <html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" conte
+/p/v02-f4d0e2ef/version      200 55B {"build":"v02-f4d0e2ef","protocol":1,"realm":"preview"}
+/p/v02-f4d0e2ef/healthz      200 125B {"assets":126,"build":"v02-f4d0e2ef","ice":"stun+coturn","ok":true,"realm":"preview","rela
+/poc/                        200 12189B <!doctype html> <html lang="en-AU"> <head> <meta charset="utf-8"> <meta name="viewport" co
+/poc/audio/engine/           200 26561B <!doctype html> <html lang="en-AU"> <head> <meta charset="utf-8"> <meta name="viewport" co

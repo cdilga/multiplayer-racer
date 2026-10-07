@@ -1,0 +1,1 @@
+smoke: FAIL step drive: after room 5W4W, join-webrtc (host, 1 ms), input, resume: page.waitForFunction: Timeout 60000ms exceeded.
