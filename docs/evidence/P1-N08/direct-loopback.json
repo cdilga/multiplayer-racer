@@ -1,0 +1,59 @@
+{
+  "row": "direct-loopback",
+  "capturedAt": "2026-10-07T08:24:48.233Z",
+  "hardware": "eris (Linux, 12 threads, load 21.87), headless Chromium via Playwright, loopback",
+  "browser": "chromium 151.0.7922.34",
+  "build": "8cf874a",
+  "topology": "host and controller pages on one machine, no TURN (loopback host candidates)",
+  "cohort": "1 host page, 1 controller page, 10 s at 60 Hz",
+  "clock": {
+    "mode": "same-clock (one machine)",
+    "uncertaintyMs": 0
+  },
+  "ice": {
+    "policy": "all",
+    "rewriteTurn": "no",
+    "restrictedToUrlsContaining": null,
+    "dropStun": false
+  },
+  "netem": "none",
+  "result": {
+    "selectedPath": {
+      "kind": "host",
+      "localType": "host",
+      "remoteType": "host",
+      "protocol": "udp",
+      "relayProtocol": null,
+      "relayVia": null,
+      "rttMs": 1
+    },
+    "expected": "any",
+    "pathMatchesExpectation": true,
+    "inputAge": {
+      "sent": 600,
+      "seen": 571,
+      "lost": 29,
+      "p50Ms": 21,
+      "p95Ms": 22,
+      "p99Ms": 23,
+      "maxMs": 24,
+      "uncertaintyMs": 0.5
+    },
+    "input": {
+      "hz": 60,
+      "seconds": 10,
+      "endpoint": "redacted",
+      "unobservedNote": "values the host never showed (coalesced by the sender or dropped) count as lost"
+    },
+    "bytes": {
+      "payloadBytesPerSecond": 309,
+      "transportBytesPerSecond": 3585,
+      "layers": "payload = RTCDataChannel bytesSent (application messages); transport = RTCTransport bytesSent (adds SCTP/DTLS/UDP headers as the browser counts them). Neither is billed relay usage (R92)."
+    },
+    "payloadBudget": {
+      "limitBytesPerSecond": 2000,
+      "verdict": "pass"
+    }
+  },
+  "problems": []
+}

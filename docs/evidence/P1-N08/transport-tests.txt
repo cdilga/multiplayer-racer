@@ -1,0 +1,15 @@
+  ✔ two controllers join and each moves its own marker; diagnostics show the selected path (1405.969692ms)
+  ✔ a lost connection restarts, then rebuilds at gen + 1 on the same endpoint without re-registering; stale gens are fenced (752.097953ms)
+  ✔ a dropped signalling stream reconnects with Last-Event-ID and keeps working (1174.0564ms)
+✔ hello room over loopback WebRTC (3472.859698ms)
+  ✔ the data channel stays up, the host re-registers its code and the controller its endpoint (1699.693655ms)
+✔ server restart mid-session (1700.205972ms)
+  ✔ credentials refresh at 75 % of the TTL through /ice without dropping the data channels (6263.378021ms)
+✔ ICE credential refresh (6263.710232ms)
+  ✔ a healthy connection never asks for Cloudflare credentials (10458.315404ms)
+  ✔ relay-only with coturn unreachable asks exactly once, later than 3 s; a 503 keeps the existing path (no broker) (11644.271392ms)
+✔ Cloudflare fallback triggers (P1-N04b) (22103.247019ms)
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+ℹ skipped 0
