@@ -76,3 +76,7 @@
 .join-card { text-align: center; }
 .join-card .name-field { text-align: left; }
 .join-card .aussie-note { justify-content: center; }
+/* The wrapper div carries the POC's `.field` class, which the kit also uses for text inputs: no kit box round the row. */
+.field.name-field { width: 100%; min-height: 0; padding: 0; background: none; border: 0; box-shadow: none; border-radius: 0; font-size: inherit; display: flex; gap: 10px; align-items: stretch; }
+/* Place over lap, as the mock has it. */
+.strip .race { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }

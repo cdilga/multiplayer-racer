@@ -14,11 +14,13 @@
 @media (orientation: landscape) and (max-height: 440px) {
   .strip { min-height: 52px; padding: 4px 10px; gap: 8px; }
   .strip .who { flex: 1 1 110px; min-width: 110px; }
-  .strip .seatno { font-size: 30px; }
+  .strip .seatno { font-size: 40px; }
+  .strip .pos { font-size: 24px; }
+  .strip .tools .btn.identify { font-size: 15px; }
   .strip .nm { font-size: 17px; }
   .strip .tools { flex: 0 1 auto; flex-wrap: nowrap; gap: 5px; padding: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
   .strip .tools .btn { flex: none; min-height: 44px; padding: 0 8px; font-size: 13px; }
-  .strip .race { margin-left: 0; display: flex; align-items: center; }
+  .strip .race { margin-left: 0; }
   .zone { margin: 0 16px 12px; }
   .round-banner { top: auto; bottom: 10px; transform: translateX(-50%); padding: 4px 12px; font-size: 18px; white-space: nowrap; }
   .pod { padding: 4px 6px 2px; }
@@ -29,7 +31,7 @@
 @media (orientation: landscape) and (max-height: 440px) and (max-width: 700px) {
   .strip { gap: 5px; padding: 4px 6px; }
   .strip .who { flex: 0 1 auto; min-width: 0; gap: 6px; }
-  .strip .seatno { font-size: 26px; }
+  .strip .seatno { font-size: 30px; }
   .strip .nm { font-size: 15px; }
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
   .strip .tools { gap: 3px; }

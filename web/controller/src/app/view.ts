@@ -94,7 +94,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (key.startsWith('play:')) return playScreen();
     const c = CARDS[session.phase]?.(session) ?? { title: session.phase, body: '' };
     const head = c.spin ? '<div class="spin" aria-hidden="true"></div>' : c.icon ? `<div class="state-icon ${c.tone ?? ''}"><i data-ico="${c.icon}"></i></div>` : '';
-    const acts = (c.actions ?? []).map(([act, label], i) => `<button class="btn brush${i === 0 ? ' primary big' : ''}" data-act="${act}">${esc(label)}</button>`).join('');
+    const acts = (c.actions ?? []).map(([act, label], i) => `<button class="btn brush${i === 0 && act !== 'cancel' ? ' primary big' : ''}" data-act="${act}">${esc(label)}</button>`).join('');
     app.innerHTML = `<section class="screen card-screen" data-state="${session.phase}"><div class="panel state-card card">${head}<h1 class="display italic">${esc(c.title)}</h1>${c.body ? `<p>${esc(c.body)}</p>` : ''}${acts ? `<div class="acts">${acts}</div>` : ''}</div></section>`;
     dress(app);
     paintKit(app);
