@@ -1,13 +1,14 @@
 // P1-U06 kit tests (Playwright, real Chromium):
 //   AC1  every component renders in every state, Full and Reduced; the buttons match the POC component sheet within a
 //        recorded pixel tolerance (the frozen frames are whole-screen mocks, so the reference is the sheet the frames were
-//        built from: art/ui/sheets/components.html, same labels and seeds);
+//        built from: art/ui/sheets/components.html, same labels and seeds, pinned to the 2026-10-07 freeze);
 //   AC2  the focus rings wrap the whole brushed slab, shadow included, at DPR 1, 2 and 3 (geometry and pixels);
 //   AC3  the paper QR decodes (jsqr) to the join URL at the TV's smallest size, carries code and domain, keeps its quiet zone;
 //   AC4  the landing page uses the kit and no bundle on the landing or join path holds Three.js (uses landing/tests/bundle-check.mjs).
 //   node --test --test-concurrency=1 web/shared/ui/tests/
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { dirname, extname, join } from 'node:path';
@@ -79,6 +80,24 @@ async function crop(page, box, pad) {
 }
 
 describe('AC1: every component in every state, matching the POC sheet', () => {
+  // The frozen set (art/ui/accepted/2026-10-07/, from commit 532617856b88) holds the tokens and the gallery but not the
+  // component sheet it links; the compare below loads the live sheet, so it is pinned to the bytes of that commit. A
+  // changed sheet or tokens.json means the reference drifted from what the owner accepted: re-freeze, don't re-pin.
+  test('the compare reference is the accepted one (sheet sources and tokens as frozen on 2026-10-07)', () => {
+    const artUi = join(web, '..', 'art', 'ui');
+    const sha = (p) => createHash('sha256').update(readFileSync(join(artUi, p))).digest('hex').slice(0, 16);
+    assert.deepEqual(
+      Object.fromEntries(['sheets/components.html', 'sheets/components.js', 'sheets/brush-button.js', 'sheets/tokens-css.js'].map((p) => [p, sha(p)])),
+      {
+        'sheets/components.html': 'bbc47a3843f539dd',
+        'sheets/components.js': '3c1623b2ac7e94fd',
+        'sheets/brush-button.js': '57b125a58da25d01',
+        'sheets/tokens-css.js': 'bac50ffb1d3deef8',
+      },
+    );
+    assert.equal(sha('tokens.json'), sha('accepted/2026-10-07/tokens.json'), 'art/ui/tokens.json (read by the sheet) is the accepted tokens.json');
+  });
+
   test('buttons: kit vs art/ui/sheets/components.html, every row and state, within the recorded tolerance', async () => {
     const sheetCtx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1 });
     const sheet = await sheetCtx.newPage();
