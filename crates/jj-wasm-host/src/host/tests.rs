@@ -1401,5 +1401,11 @@ fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
         );
     }
     step(&mut h, 120, &mut now);
+    let late: Vec<SeatId> = h.round.late.clone();
+    assert_eq!(late.len(), 6, "the six drop-ins race as late entrants");
+    assert!(
+        late.iter().all(|s| h.round.cohort.contains(s)),
+        "and get standings rows"
+    );
     // Intermission churn and kept standings are JN5's (12 controllers race to results through the real host page).
 }

@@ -26,6 +26,8 @@ pub(super) struct RoundState {
     /// The round on now (Countdown to Intermission), and its seats.
     pub round: Option<RoundId>,
     pub cohort: Vec<SeatId>,
+    /// Seats that dropped in after the start (late entrants in the results).
+    pub late: Vec<SeatId>,
     /// The last results, for Intermission and the controllers' end card.
     pub results: Option<Vec<ResultRow>>,
     pub seed: u64,
@@ -49,6 +51,7 @@ impl RoundState {
             free_drive: false,
             round: None,
             cohort: Vec::new(),
+            late: Vec::new(),
             results: None,
             seed,
             prepare_maps: false,
@@ -121,6 +124,7 @@ impl Host {
             DirOut::RoundStarted { round, seats, .. } => {
                 self.round.round = Some(round);
                 self.round.cohort = seats;
+                self.round.late.clear();
                 self.sim.start_race(self.round.laps);
                 self.room_state_all();
                 vec![]
@@ -256,7 +260,7 @@ impl Host {
                     progress_mm: standing.map_or(0, |s| (s.progress_m.max(0.0) * 1000.0) as u64),
                     progress_tick: self.sim.tick(),
                     withdrawn: car.is_none(),
-                    late: false,
+                    late: self.round.late.contains(&seat),
                 }
             })
             .collect();

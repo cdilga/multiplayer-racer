@@ -926,11 +926,19 @@ impl Host {
             seats::Output::CarAdded { seat } => {
                 // Through the placement service: a drop-in once a round is running, a grid slot in free drive; in the
                 // Lobby (R110) and the held phases the seat waits for the next Countdown's grid.
-                let car = self.car_wanted();
-                if let Some(input) = self.inputs.get_mut(&seat)
-                    && input.car.is_none()
-                {
-                    input.car = car;
+                if self.inputs.get(&seat).is_some_and(|i| i.car.is_none()) {
+                    let car = self.car_wanted();
+                    if let Some(input) = self.inputs.get_mut(&seat) {
+                        input.car = car;
+                    }
+                    // A drop-in races as a late entrant: it gets a standings row like everyone else (G02, N07c).
+                    if car.is_some()
+                        && self.round.round.is_some()
+                        && !self.round.cohort.contains(&seat)
+                    {
+                        self.round.cohort.push(seat);
+                        self.round.late.push(seat);
+                    }
                 }
                 self.session_rev += 1;
             }
