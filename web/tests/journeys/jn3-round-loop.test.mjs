@@ -1,7 +1,7 @@
 // Journey JN3 (P1-G01): the party loop through the real host page (`B/host?room&test=live&laps=1`) and real phones over
 // WebRTC. Two players join; the Lobby has no driving cars (R110); both tap Ready; the countdown puts them on the grid;
 // the autopilot races a 1-lap round (test surface `autopilot`); Round complete shows both results on the TV and each
-// phone its place; the next round starts. `JJ_CAPTURE_DIR=<dir>` saves the visual self-review matrix.
+// phone its place (an idle phone gets the takeover cue, P1-G03); the next round starts. `JJ_CAPTURE_DIR=<dir>` saves the visual self-review matrix.
 //   node --test web/tests/journeys/jn3-round-loop.test.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -69,11 +69,16 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
+  // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
+  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000);
+  await shot(a.page, 'phone-idle-cue');
+  await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);
+  await shot(a.page, 'phone-idle-autopilot');
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
   const results = await host.evaluate(() => window.__jjRoom.view().results);
   assert.equal(results.length, 2, JSON.stringify(results));
   assert.deepEqual(results.map((r) => r.place).sort(), [1, 2]);
-  await wait(host, () => document.querySelectorAll('[data-results] tbody tr').length === 2);
+  await wait(host, () => document.querySelectorAll('[data-results] [data-row]').length === 2);
   await shot(host, 'tv-round-complete');
   await wait(a.page, () => /You came/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''));
   await shot(a.page, 'phone-results');
