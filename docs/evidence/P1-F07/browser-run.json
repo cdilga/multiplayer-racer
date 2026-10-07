@@ -1,0 +1,78 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), linux/x64",
+  "takenAt": "2026-10-07T08:44:51.076Z",
+  "ac1": {
+    "tick": 739,
+    "browserHash": "457839bcdfcf13881700ba67232f9b1a87c62c35482d8ed2aee892007f166a3f",
+    "replayHash": "457839bcdfcf13881700ba67232f9b1a87c62c35482d8ed2aee892007f166a3f",
+    "build": "4c1860beb8e9",
+    "clipBytes": 13518,
+    "checkpoints": 3
+  },
+  "ac2": {
+    "faultTick": 439,
+    "message": "RuntimeError: unreachable",
+    "replayTicks": 439,
+    "replayHash": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48",
+    "browserHash": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48"
+  },
+  "ac3": {
+    "clipBuild": "4c1860beb8e9",
+    "replayerBuild": "0c1860beb8e9",
+    "exit": 2,
+    "message": "jj sim --replay: /home/cdilga/Work/runs/f07/ev/P1-F07/free-drive-short.jjclip: this clip was saved by build 4c1860beb8e9 and this checkout is build 0c1860beb8e9. A replay by another build isn't a replay: check out 4c1860beb8e9 (git checkout 4c1860beb8e9) and rebuild `jj`, or pass --any-build to replay anyway (hashes will likely differ)."
+  },
+  "ac4": {
+    "saves": [
+      {
+        "saveMs": 0.5,
+        "maxFrameMs": 0,
+        "bytes": 14407
+      },
+      {
+        "saveMs": 2.400000035762787,
+        "maxFrameMs": 0,
+        "bytes": 14505
+      },
+      {
+        "saveMs": 0.40000003576278687,
+        "maxFrameMs": 0,
+        "bytes": 14603
+      },
+      {
+        "saveMs": 0.30000001192092896,
+        "maxFrameMs": 0,
+        "bytes": 14701
+      },
+      {
+        "saveMs": 0.3999999761581421,
+        "maxFrameMs": 0,
+        "bytes": 14814
+      }
+    ],
+    "framePacingBefore": {
+      "frames": 1924,
+      "kept": 1924,
+      "meanMs": 66.57736382536365,
+      "p50Ms": 66.59999999999854,
+      "p95Ms": 116.59999999999854,
+      "p99Ms": 166.59999999999945,
+      "maxMs": 449.89999999999986,
+      "over33ms": 1747,
+      "over100ms": 128
+    },
+    "framePacingAfter": {
+      "frames": 1956,
+      "kept": 1956,
+      "meanMs": 66.50206952965219,
+      "p50Ms": 66.59999999999854,
+      "p95Ms": 116.59999999999854,
+      "p99Ms": 166.59999999999945,
+      "maxMs": 449.89999999999986,
+      "over33ms": 1778,
+      "over100ms": 128
+    },
+    "simTicksDuringSaves": 224,
+    "hotkeyDownload": "jj-clip-4c1860beb8e9-w0-t6421.jjclip"
+  }
+}

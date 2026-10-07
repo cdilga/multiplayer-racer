@@ -1,0 +1,84 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), linux/x64",
+  "takenAt": "2026-10-07T08:44:51.076Z",
+  "trackSeeds": [
+    {
+      "world": 1,
+      "label": "round 1",
+      "preparation": 1,
+      "trackSeed": 2,
+      "mapHash": "3471b364621e68fcd5b5803f529cb822643e523a00a00f0c79804f984048831a"
+    },
+    {
+      "world": 2,
+      "label": "round 2",
+      "preparation": 2,
+      "trackSeed": 3,
+      "mapHash": "a6a04935759242c7b3dd44a74505eb665aa614585a5ef6ea59dbc9adebc06e77"
+    }
+  ],
+  "rounds": [
+    {
+      "world": 0,
+      "label": "preparing",
+      "trackSeed": null,
+      "ticks": 336,
+      "endHash": "95dede3ca7554b7a1ea8e6cc457cebc8fba5004b67d94858d918e1dafac8f4c8",
+      "checkpoints": 1
+    },
+    {
+      "world": 1,
+      "label": "round 1",
+      "trackSeed": 2,
+      "ticks": 8371,
+      "endHash": "15bc6a4710cc0d63bb8ea4167fcf5d3c0abc77a4543ac533745f9061eb29e6fa",
+      "checkpoints": 14
+    },
+    {
+      "world": 2,
+      "label": "round 2",
+      "trackSeed": 3,
+      "ticks": 2104,
+      "endHash": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+      "checkpoints": 2
+    }
+  ],
+  "roundOneBrowserHash": "15bc6a4710cc0d63bb8ea4167fcf5d3c0abc77a4543ac533745f9061eb29e6fa",
+  "roundTwoBrowserHash": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+  "tapCost": {
+    "polls": 107,
+    "meanMs": 0.15887850522994995,
+    "maxMs": 4,
+    "chunkChars": 228
+  },
+  "sessionCost": {
+    "journalMessages": 107,
+    "workerPollMeanMs": 0.15887850522994995,
+    "workerPollMaxMs": 4,
+    "mainIntakeMeanMs": 0.018691588785046728,
+    "mainIntakeMaxMs": 1.800000011920929,
+    "journalChars": 228,
+    "flushes": 33,
+    "flushMeanMs": 3195.8090909087296,
+    "flushMaxMs": 6603.400000035763,
+    "records": 114
+  },
+  "framePacing": {
+    "frames": 241,
+    "kept": 241,
+    "meanMs": 379.860165975104,
+    "p50Ms": 399.90000000000146,
+    "p95Ms": 533.2999999999956,
+    "p99Ms": 666.5999999999913,
+    "maxMs": 833.3000000000029,
+    "over33ms": 237,
+    "over100ms": 230
+  },
+  "sessionFileBytes": 314346,
+  "uploaded": false,
+  "outgoingBodiesChecked": 0,
+  "afterFault": {
+    "worlds": 3,
+    "replayOk": true
+  }
+}

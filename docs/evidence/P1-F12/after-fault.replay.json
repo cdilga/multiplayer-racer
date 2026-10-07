@@ -1,0 +1,154 @@
+{
+  "build": "4c1860beb8e9",
+  "fault": {
+    "message": "RuntimeError: unreachable",
+    "tick": 2104,
+    "world": 2
+  },
+  "format": "jj.session.v1",
+  "mark": null,
+  "ok": true,
+  "worlds": [
+    {
+      "checkpoints": [
+        {
+          "actual": "174eab9bd7f728e03b35454dd865522b74146bc69d4f6fd03a935e4223046651",
+          "expected": "174eab9bd7f728e03b35454dd865522b74146bc69d4f6fd03a935e4223046651",
+          "ok": true,
+          "tick": 0
+        }
+      ],
+      "endHash": "95dede3ca7554b7a1ea8e6cc457cebc8fba5004b67d94858d918e1dafac8f4c8",
+      "index": 0,
+      "label": "preparing",
+      "mapHash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774",
+      "ok": true,
+      "round": null,
+      "sessionSeed": 1,
+      "ticks": 336,
+      "trackSeed": null
+    },
+    {
+      "checkpoints": [
+        {
+          "actual": "fa8823a56131c1fe7e1064c62fc69375eb2f39d6eb9042dcf45fbff8bd7243f4",
+          "expected": "fa8823a56131c1fe7e1064c62fc69375eb2f39d6eb9042dcf45fbff8bd7243f4",
+          "ok": true,
+          "tick": 845
+        },
+        {
+          "actual": "5737005d716d1335fd93d4d071a440c84007b5c7baa1a2358c467f35eea24367",
+          "expected": "5737005d716d1335fd93d4d071a440c84007b5c7baa1a2358c467f35eea24367",
+          "ok": true,
+          "tick": 1447
+        },
+        {
+          "actual": "995f1f23f4f523f81bef9eeae9295c20d2599b298313cd6bac6f924fa0e4535e",
+          "expected": "995f1f23f4f523f81bef9eeae9295c20d2599b298313cd6bac6f924fa0e4535e",
+          "ok": true,
+          "tick": 2049
+        },
+        {
+          "actual": "5cce35b0dfb36a9728cfb4acbd107f461e4c4fbb08b9b7d0a63690da0d5d5b82",
+          "expected": "5cce35b0dfb36a9728cfb4acbd107f461e4c4fbb08b9b7d0a63690da0d5d5b82",
+          "ok": true,
+          "tick": 2651
+        },
+        {
+          "actual": "048f571d12838df83135b320a47091407d6061f15a11c98bf68590878d8df8d3",
+          "expected": "048f571d12838df83135b320a47091407d6061f15a11c98bf68590878d8df8d3",
+          "ok": true,
+          "tick": 3253
+        },
+        {
+          "actual": "95a09eb71539ca404d2726ca015da6ee10ea923aac4342a338a23f9550742880",
+          "expected": "95a09eb71539ca404d2726ca015da6ee10ea923aac4342a338a23f9550742880",
+          "ok": true,
+          "tick": 3855
+        },
+        {
+          "actual": "300fca16e1ad82203c09fca4bda33e21fe89eb38e42e756d47495410733334e8",
+          "expected": "300fca16e1ad82203c09fca4bda33e21fe89eb38e42e756d47495410733334e8",
+          "ok": true,
+          "tick": 4457
+        },
+        {
+          "actual": "d54ced91145b65ef6ef1e62d425379023ca09560721087ed5b357ec77204681c",
+          "expected": "d54ced91145b65ef6ef1e62d425379023ca09560721087ed5b357ec77204681c",
+          "ok": true,
+          "tick": 5059
+        },
+        {
+          "actual": "7489af22ba0b578837fdddda144b5b8e0d9b5dac99cfb02e25d81436ca771025",
+          "expected": "7489af22ba0b578837fdddda144b5b8e0d9b5dac99cfb02e25d81436ca771025",
+          "ok": true,
+          "tick": 5661
+        },
+        {
+          "actual": "a9a4b7a2356c0fc44f48d3966bc65a948ea15b196a3be228b75358b92e88c5da",
+          "expected": "a9a4b7a2356c0fc44f48d3966bc65a948ea15b196a3be228b75358b92e88c5da",
+          "ok": true,
+          "tick": 6263
+        },
+        {
+          "actual": "1af1b156b2ba49927b37ed0bed52f135c7471085c3086084e2afdac443335ea3",
+          "expected": "1af1b156b2ba49927b37ed0bed52f135c7471085c3086084e2afdac443335ea3",
+          "ok": true,
+          "tick": 6865
+        },
+        {
+          "actual": "6a4b6ccf67ff77a10829dfbedc6a2a7ab426b805eb69e732ec5ae86bacc1ebb0",
+          "expected": "6a4b6ccf67ff77a10829dfbedc6a2a7ab426b805eb69e732ec5ae86bacc1ebb0",
+          "ok": true,
+          "tick": 7467
+        },
+        {
+          "actual": "ceffc3c69dd571272f3dafdffa5c4766238fceeba9c8e5e964a3a506435f5311",
+          "expected": "ceffc3c69dd571272f3dafdffa5c4766238fceeba9c8e5e964a3a506435f5311",
+          "ok": true,
+          "tick": 8069
+        },
+        {
+          "actual": "15bc6a4710cc0d63bb8ea4167fcf5d3c0abc77a4543ac533745f9061eb29e6fa",
+          "expected": "15bc6a4710cc0d63bb8ea4167fcf5d3c0abc77a4543ac533745f9061eb29e6fa",
+          "ok": true,
+          "tick": 8371
+        }
+      ],
+      "endHash": "15bc6a4710cc0d63bb8ea4167fcf5d3c0abc77a4543ac533745f9061eb29e6fa",
+      "index": 1,
+      "label": "round 1",
+      "mapHash": "3471b364621e68fcd5b5803f529cb822643e523a00a00f0c79804f984048831a",
+      "ok": true,
+      "round": 1,
+      "sessionSeed": 1,
+      "ticks": 8371,
+      "trackSeed": 2
+    },
+    {
+      "checkpoints": [
+        {
+          "actual": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+          "expected": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+          "ok": true,
+          "tick": 2104
+        },
+        {
+          "actual": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+          "expected": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+          "ok": true,
+          "tick": 2104
+        }
+      ],
+      "endHash": "f18c353d76c712da06a7ae8ceccc6a4051d2a5a2f50f9fbaffb62069b7568ab7",
+      "index": 2,
+      "label": "round 2",
+      "mapHash": "a6a04935759242c7b3dd44a74505eb665aa614585a5ef6ea59dbc9adebc06e77",
+      "ok": true,
+      "round": 2,
+      "sessionSeed": 1,
+      "ticks": 2104,
+      "trackSeed": 3
+    }
+  ]
+}

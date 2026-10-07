@@ -1,0 +1,217 @@
+{
+  "build": "4c1860beb8e9",
+  "fault": {
+    "message": "RuntimeError: unreachable",
+    "tick": 439,
+    "world": 0
+  },
+  "format": "jj.clip.v1",
+  "mark": {
+    "cars": [
+      {
+        "action": {
+          "boost": 0.9389943480491638,
+          "boosting": false,
+          "cones": 0,
+          "drift": 0,
+          "oi": 0,
+          "wheelie": false
+        },
+        "angvel": [
+          1.1745861172585137e-7,
+          8.026427439355999e-11,
+          0.000001156443431682419
+        ],
+        "authorisedJ": 227744.0782022475,
+        "autopilot": null,
+        "car": 0,
+        "energyJ": 168124.56371498108,
+        "forwardSpeed": 16.379724502563477,
+        "headingDeg": 90,
+        "husks": 0,
+        "input": {
+          "brake": 0,
+          "steer": 0,
+          "throttle": 1
+        },
+        "linvel": [
+          16.387849807739258,
+          -0.030618153512477875,
+          3.3963735290853947e-7
+        ],
+        "parts": [
+          {
+            "angleDeg": 0,
+            "health": 0,
+            "part": "core",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 100,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 60,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "angleDeg": 0,
+            "health": 80,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ],
+        "position": [
+          128.74722290039062,
+          0.007790327072143555,
+          -3.5
+        ],
+        "progress": {
+          "distanceM": 128.74722290039062,
+          "fraction": 0.20925053182331738,
+          "lateralM": -3.5,
+          "routePoint": 51
+        },
+        "race": {
+          "anchorRoutePoint": null,
+          "assisting": false,
+          "finishedAt": null,
+          "gatesPassed": 0,
+          "ghost": false,
+          "held": false,
+          "laps": 0,
+          "late": false,
+          "progressM": 0,
+          "protected": false,
+          "recoveries": 0,
+          "wrecks": 0
+        },
+        "rotation": [
+          -0.010492769069969654,
+          0.7070289254188538,
+          0.01049276813864708,
+          0.7070289254188538
+        ],
+        "speed": 16.38787841796875,
+        "upY": 0.9995596408843994,
+        "wheels": [
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 1.7124501994203456e-7,
+            "slipDeg": -2.585477716365858e-7,
+            "steering": 0,
+            "suspensionForce": 2177.469970703125,
+            "suspensionLength": 0.2442941963672638
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 0,
+            "sideImpulse": 1.7124501994203456e-7,
+            "slipDeg": -2.585477716365858e-7,
+            "steering": 0,
+            "suspensionForce": 2177.469970703125,
+            "suspensionLength": 0.24429425597190857
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 29.166667938232422,
+            "sideImpulse": 1.7127742069078522e-7,
+            "slipDeg": -2.266243654958089e-7,
+            "steering": 0,
+            "suspensionForce": 3705.774658203125,
+            "suspensionLength": 0.1647307574748993
+          },
+          {
+            "contact": true,
+            "forwardImpulse": 29.166667938232422,
+            "sideImpulse": 1.7127742069078522e-7,
+            "slipDeg": -2.266243654958089e-7,
+            "steering": 0,
+            "suspensionForce": 3705.7744140625,
+            "suspensionLength": 0.16473081707954407
+          }
+        ],
+        "wheelsInContact": 4
+      }
+    ],
+    "note": "AC2: after the fault",
+    "stateHash": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48",
+    "tick": 439,
+    "world": 0
+  },
+  "ok": true,
+  "worlds": [
+    {
+      "checkpoints": [
+        {
+          "actual": "174eab9bd7f728e03b35454dd865522b74146bc69d4f6fd03a935e4223046651",
+          "expected": "174eab9bd7f728e03b35454dd865522b74146bc69d4f6fd03a935e4223046651",
+          "ok": true,
+          "tick": 0
+        },
+        {
+          "actual": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48",
+          "expected": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48",
+          "ok": true,
+          "tick": 439
+        }
+      ],
+      "endHash": "eca17d095e1ee226e2e4c8c1fe6559990ffd08445c15c895672df7e5c4955c48",
+      "index": 0,
+      "label": "free drive",
+      "mapHash": "ea2ff4608e97632101d5d52ac04777ea80f25eb593f66ff1a2ea25d680347774",
+      "ok": true,
+      "round": null,
+      "sessionSeed": 1,
+      "ticks": 439,
+      "trackSeed": null
+    }
+  ]
+}
