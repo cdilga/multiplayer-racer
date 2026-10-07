@@ -1,0 +1,26 @@
+/* The play screen holds down to the shortest real landscape viewport (a phone with its browser chrome showing: about
+   844x340, or 640x300 with a toolbar). Sticks size from their own zone, the tools row stays on one line, and the round
+   banner sits low between the sticks instead of over the tools. Imported after controller.css, so it wins. */
+.zone { container-type: size; --sz: min(150px, 72cqh); }
+@media (orientation: landscape) {
+  .zone { --sz: min(130px, 72cqh); }
+  .base { width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2); }
+  .preload { width: calc(var(--sz) * 1.2); height: calc(var(--sz) * 1.2); margin: calc(var(--sz) * -.6) 0 0 calc(var(--sz) * -.6); -webkit-mask: radial-gradient(circle, transparent calc(var(--sz) * .53), #000 calc(var(--sz) * .53 + 1px)); mask: radial-gradient(circle, transparent calc(var(--sz) * .53), #000 calc(var(--sz) * .53 + 1px)); }
+  .knob { width: calc(var(--sz) * .48); height: calc(var(--sz) * .48); margin: calc(var(--sz) * -.24) 0 0 calc(var(--sz) * -.24); }
+}
+
+.round-banner { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; padding: 10px 18px; border-radius: 12px; background: var(--c-saffron); --bz-fill: var(--c-saffron); color: var(--c-ink); font-size: 26px; font-weight: 800; }
+
+@media (orientation: landscape) and (max-height: 440px) {
+  .strip { min-height: 52px; padding: 4px 10px; gap: 8px; }
+  .strip .who { flex: 1 1 110px; min-width: 110px; }
+  .strip .seatno { font-size: 30px; }
+  .strip .nm { font-size: 17px; }
+  .strip .tools { flex: 0 1 auto; flex-wrap: nowrap; gap: 5px; padding: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .strip .tools .btn { flex: none; min-height: 44px; padding: 0 8px; font-size: 13px; }
+  .strip .race { margin-left: 0; display: flex; align-items: center; }
+  .zone { margin: 0 16px 12px; }
+  .round-banner { top: auto; bottom: 10px; transform: translateX(-50%); padding: 4px 12px; font-size: 18px; white-space: nowrap; }
+  .pod { padding: 4px 6px 2px; }
+  .pod .meter { height: 16px; }
+}

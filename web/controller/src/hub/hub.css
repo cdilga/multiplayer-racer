@@ -4,10 +4,11 @@
 .hub-head p { margin: 0; font-weight: 500; }
 .hub-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .hub-row { display: grid; grid-template-columns: 56px minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 10px 12px; padding: 8px 12px; background: var(--c-ink-raised); border: 3px solid var(--c-ink-soft); border-left: 10px solid var(--seat); border-radius: 10px; }
-.hub-row.flash { background: var(--seat); color: var(--c-ink); border-color: var(--c-paper); }
+.hub-row.hub-flash { background: var(--seat); color: var(--c-ink); border-color: var(--c-paper); }
 .hub-row[data-state=unplugged] { opacity: .75; border-style: dashed; }
 .hub-badge { display: grid; place-items: center; min-width: 52px; height: 40px; border: 3px solid var(--c-ink); border-radius: 8px; color: var(--c-ink); font: 900 24px/1 var(--font-display); }
 .hub-badge.none { background: var(--c-ink); color: var(--c-paper); border-color: var(--c-ink-soft); }
+.hub-kind .ic { width: 22px; height: 22px; flex: none; }
 .hub-kind { display: flex; align-items: center; gap: 8px; font-weight: 700; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hub-state { padding: 2px 10px 4px; border-radius: 6px; background: var(--c-paper-shade); color: var(--c-ink); font-weight: 800; font-size: 14px; white-space: nowrap; }
 .hub-state[data-chip=connected] { background: var(--c-success); color: var(--c-paper); }
@@ -16,9 +17,15 @@
 .hub-path { font-weight: 600; font-size: 14px; }
 .hub-bytes { grid-column: 2 / -1; font-size: 12px; opacity: .7; }
 .hub-row:not(:has(.hub-bytes:not(:empty))) .hub-bytes { display: none; }
-.hub.tray { position: static; width: auto; padding: 8px; }
-.hub-tray { position: fixed; left: 8px; bottom: 8px; z-index: 8; width: min(420px, calc(100% - 16px)); max-height: 40dvh; overflow: auto; background: rgb(21 32 58 / .94); border-radius: 12px; }
-.hub-tray .hub-head h1 { font-size: 20px; }
-.hub-tray .hub-head p { display: none; }
+.hub.tray { position: static; width: auto; padding: 6px; gap: 4px; }
+/* The phone's tray: a slim list low in the middle, between the sticks, that never takes a touch. */
+.hub-tray { position: fixed; left: 50%; transform: translateX(-50%); bottom: 8px; z-index: 8; width: min(250px, 42%); pointer-events: none; background: rgb(21 32 58 / .94); border-radius: 12px; }
+.hub-tray .hub-head, .hub-tray .hub-path, .hub-tray .hub-bytes { display: none; }
+.hub-tray .hub-list { gap: 4px; }
+.hub-tray .hub-row { grid-template-columns: 34px minmax(0, 1fr) auto; padding: 4px 8px; border-width: 2px; border-left-width: 8px; }
+.hub-tray .hub-badge { min-width: 30px; height: 28px; font-size: 18px; border-width: 2px; }
+.hub-tray .hub-state { font-size: 12px; padding: 1px 6px 3px; }
+.hub-tray .hub-kind { font-size: 14px; }
+@media (orientation: portrait) { .hub-tray { width: min(250px, 70%); bottom: 12px; } }
 @media (max-width: 520px) { .hub-row { grid-template-columns: 52px minmax(0, 1fr) auto; } .hub-path { grid-column: 2 / -1; } }
 

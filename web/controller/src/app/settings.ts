@@ -301,6 +301,11 @@ export class SettingsSheet {
     if (r) r.textContent = `Drive ${f(this.testValues.drive)}   Action ${f(this.testValues.action)}`;
   }
 
+  /** The play screen was rebuilt (the phone turned): carry the open sheet onto the new one. */
+  rehost(host: HTMLElement): void {
+    host.append(this.el);
+  }
+
   /** The live test stick values (for the journey test). */
   inspectTest(): { drive: Stick; action: Stick } | null {
     return this.test ? { drive: { ...this.testValues.drive }, action: { ...this.testValues.action } } : null;

@@ -7,6 +7,7 @@ import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
 import './settings.css';
+import './layout-short.css';
 import { watchBadge } from '../hub/badge';
 import { Preferences, SettingsSheet, shape } from './settings';
 
@@ -207,8 +208,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
   (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {
+    // Turning the phone rebuilds the play screen; an open settings sheet moves onto the new one (still open, Menu still held).
+    const keep = sheet?.open ? sheet : null;
     shown = null;
     render();
+    const screenEl = app.querySelector<HTMLElement>('.screen.play');
+    if (keep && screenEl) {
+      sheet = keep;
+      keep.rehost(screenEl);
+    }
   });
   session.onIdentify = () => {
     flash(app, session);
@@ -228,8 +236,7 @@ function roundBanner(app: HTMLElement, session: Session): void {
   if (!b) {
     b = document.createElement('div');
     b.dataset.roundBanner = '';
-    b.className = 'banner';
-    b.style.cssText = 'position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;padding:10px 18px;border-radius:12px;background:var(--c-saffron);--bz-fill:var(--c-saffron);color:var(--c-ink);font-size:26px;font-weight:800';
+    b.className = 'banner round-banner';
     screen.append(b);
   }
   let text = '';

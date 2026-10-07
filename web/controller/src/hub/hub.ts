@@ -256,13 +256,13 @@ export class Hub {
 
   private row(s: Source): string {
     const you = s.session?.you;
-    const seat = you ? `<b class="hub-badge" style="background:${hex(you.rgb)}">#${you.number}</b>` : '<b class="hub-badge none">–</b>';
+    const seat = you ? `<b class="hub-badge" style="background:${hex(you.rgb)}">${you.number}</b>` : '<b class="hub-badge none">–</b>';
     const flash = performance.now() < s.flashUntil;
     const what = s.kind === 'keys' ? 'keyboard' : s.kind === 'pad' ? 'gamepad-2' : 'smartphone';
-    const iconUrl = (icon(what).style.getPropertyValue('--ic') || '').toString();
+    const iconUrl = (icon(what).style.getPropertyValue('--ic') || '').toString().replace(/"/g, "'");
     const state = { idle: 'Press to join', connecting: 'Joining…', connected: s.session?.isReady ? 'Ready' : 'Connected', unplugged: 'Unplugged', autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
     const st = s.session?.stats;
-    return `<li class="hub-row${flash ? ' flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${you ? hex(you.rgb) : 'transparent'};--ic:${iconUrl}">
+    return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${you ? hex(you.rgb) : 'transparent'};--ic:${iconUrl}">
       ${seat}<span class="hub-kind"><i class="ic" aria-hidden="true"></i>${esc(s.label)}</span><span class="hub-state" data-chip="${s.state}">${state}</span>
       <span class="hub-path" data-path>${esc(s.session ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
   }
