@@ -43,6 +43,8 @@ class Run {
   async start(): Promise<void> {
     const o = this.opts;
     await this.client.start({ mapJson: greybox, seed: o.seed ?? 3, poolSize: o.poolSize ?? 3 }, { describe: true, live: true });
+    // Claimed seats drive at once (G04's free drive, as the host page's `?test` does; the real Lobby holds cars, R110).
+    this.client.input({ type: 'ui', ui: 'free-drive', on: true });
     for (const { tick, input } of o.script ?? []) this.test.schedule(tick, input);
     if (o.stopAt !== undefined) this.test.stopAt(o.stopAt);
     const hz = o.renderHz ?? 60;
