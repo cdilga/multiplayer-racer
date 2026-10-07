@@ -84,7 +84,7 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
     assert.equal(shown.seat, seatA, "the pulse is on Davo's tile");
     identify.push(shown.wall - pressed);
     if (k === 0) await shot(host, 'tv-identify');
-    await host.waitForTimeout(1800);
+    await host.waitForTimeout(3300); // Identify is one per 3 s per seat (master §5.2)
   }
   console.log(`# identify press → TV pulse (ms): ${identify.join(', ')}`);
   if (process.env.JJ_EVIDENCE_DIR) writeFileSync(`${process.env.JJ_EVIDENCE_DIR}/identify.json`, `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', samplesMs: identify }, null, 1)}\n`);
