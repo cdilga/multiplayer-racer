@@ -47,10 +47,12 @@ if [ -n "\$(git -C $clone status --porcelain)" ] && [ -z "\$(git -C $clone statu
   (cd $clone && git ls-files -z --others --exclude-standard -- docs/evidence | while IFS= read -r -d '' f; do mkdir -p "\$tidy/\$(dirname "\$f")" && mv "\$f" "\$tidy/\$f"; done)
   echo "eris.sh: moved stray evidence out of the clone to \$tidy" >&2
 fi
-if flock -n -x 9; then ru sync --non-interactive --quiet || echo "RU_SYNC_EXIT=\$?"
+# A sync interrupted earlier (a killed eris.sh) leaves ru wanting --resume/--restart: restart it unattended.
+rusync() { ru sync --non-interactive --quiet || ru sync --restart --non-interactive --quiet; }
+if flock -n -x 9; then rusync || echo "RU_SYNC_EXIT=\$?"
 elif at_head "\$1"; then echo "RU_SYNC=skipped (runs in progress; clone already at \${1:0:12})"
 else echo "eris.sh: waiting for runs on eris to finish before syncing" >&2
-     flock -w 3600 -x 9 && { ru sync --non-interactive --quiet || echo "RU_SYNC_EXIT=\$?"; }
+     flock -w 3600 -x 9 && { rusync || echo "RU_SYNC_EXIT=\$?"; }
 fi
 echo "ERIS_HEAD=\$(git -C $clone rev-parse HEAD)"
 echo "ERIS_BRANCH=\$(git -C $clone symbolic-ref --short -q HEAD)"
