@@ -38,7 +38,8 @@ const wait = async (page, fn, arg, ms = 30_000) => {
   try {
     return await page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
   } catch (e) {
-    throw new Error(`${step}: ${e.message}`);
+    const room = await page.evaluate(() => window.__jjRoom?.view()?.seats.map((s) => `${s.name}:${s.presence}`)).catch(() => null);
+    throw new Error(`${step}: ${e.message} ${room ? `seats ${JSON.stringify(room)}` : ''}`);
   }
 };
 const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png` });
