@@ -19,14 +19,22 @@ Run: JN4 on eris at 945743e (Chromium 151, headless, linux/x64, `JJ_CHROMIUM_GPU
   involved cars sees a piece of debris; nobody stuck, moved 80, 33, 8 and 43 m; no pause reason at any step; the debris
   moved 23 m when a car drove into it and none was removed.)
 
+## Second pass (commit 11479814)
+
+- Stage 1 and 2 captures retaken with `&camdist=near` and a wait for the tile grid to settle. **Grid defect fixed**: all four tiles are
+  now the same size in `stage-1-side-swipe.png` and `stage-2-t-bone.png`.
+- **Camera defect not fixed**: the near setting frames the cars as before (a few metres behind, roof and tail), so a loose
+  door or a missing bumper still isn't legible in the stills. It is the host's default distance setting, which the tile
+  chase cameras don't seem to take in this page; a real fix is an orbit or side-on shot of the involved car
+  (`?tiles=<n>&orbit=…` as P1-S04b's captures use) a moment after the hit.
+- That run failed an assertion (not the captures): "head-on: car 2's detached front is drawn 0.99 m from its core", the
+  renderer a frame short of drawing the part off the car. The journey now polls up to 10 s for the renderer to catch up
+  before asserting (`jn4-crashes.test.mjs`); needs a commit and one more eris run. Stage 3 and drove-away captures are from the
+  first (passing) run.
+
 ## Remaining defects
 
-- The captures are taken the moment the stage ends, so the damage itself is hard to see: after a stage the chase
-  cameras show the cars from behind at a few metres, and a loose door or a missing bumper isn't legible in any of the four
-  stills. The numbers prove it; the pictures don't show it. A follow-up capture of the involved car's tile a second after the
-  hit (or the orbit camera, as P1-S04b's captures use) would.
-- Stage 1's top row is mid-layout (the two top tiles differ in height by a few pixels): the grid was still animating after
-  the joins. A short wait before the first capture would fix it.
+- The damage itself isn't legible in the stills (above). The numbers in `browser-run.json` prove it; the pictures don't.
 - Host overlays (the Keys & pads panel, the join QR and pill, the welcome banner) cover parts of tiles. They belong to the
   host UI beads (P1-R04/R07), not to G05.
 

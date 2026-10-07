@@ -143,14 +143,23 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
     const stats = await page.evaluate(() => window.__jjRender.stats());
     const see = await tilesSee(obs);
     // Each detached part is drawn off its car (the renderer follows the debris body), not on it.
-    const offCar = await page.evaluate(
-      (cs) =>
-        cs.map((c) => {
-          const by = Object.fromEntries(window.__jjRender.vehicles(c).parts.map((p) => [p.part, p]));
-          return Object.fromEntries(Object.entries(by).map(([k, p]) => [k, +Math.hypot(p.position[0] - by.core.position[0], p.position[2] - by.core.position[2]).toFixed(2)]));
-        }),
-      cars,
-    );
+    const measure = () =>
+      page.evaluate(
+        (cs) =>
+          cs.map((c) => {
+            const by = Object.fromEntries(window.__jjRender.vehicles(c).parts.map((p) => [p.part, p]));
+            return Object.fromEntries(Object.entries(by).map(([k, p]) => [k, +Math.hypot(p.position[0] - by.core.position[0], p.position[2] - by.core.position[2]).toFixed(2)]));
+          }),
+        cars,
+      );
+    // The renderer lags the sim a little (software or shared GL): give it up to 10 s to draw the parts off their cars.
+    let offCar = await measure();
+    for (let tries = 0; tries < 40; tries++) {
+      const settled = cars.every((c, k) => Object.entries(damaged(obs, c)).every(([part, state]) => state !== 'detached' || offCar[k][part] > 1.0));
+      if (settled) break;
+      await page.waitForTimeout(250);
+      offCar = await measure();
+    }
     cars.forEach((c, k) => {
       for (const [part, state] of Object.entries(damaged(obs, c))) {
         if (state === 'detached') assert.ok(offCar[k][part] > 1.0, `${stage.name}: car ${k}'s detached ${part} is drawn ${offCar[k][part]} m from its core: off the car`);
