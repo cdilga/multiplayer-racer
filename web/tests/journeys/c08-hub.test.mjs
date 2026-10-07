@@ -126,14 +126,22 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   const start = await obs();
   await hub.evaluate(() => window.__padSet(1, [0, -1, 0, 0]));
   await hub.keyboard.down('KeyI');
-  await host.waitForTimeout(6000);
-  const now = await obs();
+  // What each source's endpoint holds at once: only the two driven sources have a throttle.
+  await hub.waitForTimeout(700);
+  const held = Object.fromEntries((await hubState(hub)).map((s) => [s.id, s.drive?.throttle ?? 0]));
+  assert.ok(held.pad1 > 0.5 && held.keys2 > 0.5, `the pressed sources drive: ${JSON.stringify(held)}`);
+  assert.ok(held.pad0 === 0 && held.keys1 === 0, `the others hold nothing: ${JSON.stringify(held)}`);
+  assert.equal((await hubState(hubB)).filter((s) => (s.drive?.throttle ?? 0) !== 0).length, 0, "hub B's sources hold nothing");
   const ep = Object.fromEntries(src.map((s) => [s.id, s.endpoint]));
   const carOf = (state, e) => state.cars.find((c) => c.car === state.host.seats.find((s) => s.endpoint === e)?.car);
-  const moved = (e) => Math.hypot(...carOf(now, e).position.map((v, i) => v - carOf(start, e).position[i]));
-  assert.ok(moved(ep.pad1) > 5, 'pad 2 drove its car');
-  assert.ok(moved(ep.keys2) > 5, 'keys B drove its car');
-  for (const id of ['pad0', 'keys1', 'B-pad0', 'B-pad1']) assert.ok(moved(ep[id]) < 1.5, `${id} stayed put (${moved(ep[id]).toFixed(2)} m)`);
+  const movedSince = (state, e) => Math.hypot(...carOf(state, e).position.map((v, i) => v - carOf(start, e).position[i]));
+  // Early, before the driven cars can reach a neighbour on the grid: the four others haven't moved.
+  const early = await obs();
+  for (const id of ['pad0', 'keys1', 'B-pad0', 'B-pad1']) assert.ok(movedSince(early, ep[id]) < 1.5, `${id} stayed put (${movedSince(early, ep[id]).toFixed(2)} m)`);
+  await host.waitForTimeout(5000);
+  const now = await obs();
+  assert.ok(movedSince(now, ep.pad1) > 5, 'pad 2 drove its car');
+  assert.ok(movedSince(now, ep.keys2) > 5, 'keys B drove its car');
   await hub.keyboard.up('KeyI');
   await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0]));
 
