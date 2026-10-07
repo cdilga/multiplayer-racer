@@ -9,6 +9,7 @@ import { createServer } from 'node:net';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { chromiumArgs } from './lib/chromium.mjs';
 
 const BASE = '/p/jn6/';
 let browser;
@@ -16,7 +17,7 @@ let dist;
 
 before(async () => {
   dist = build('./', 'jn6');
-  browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  browser = await chromium.launch({ args: chromiumArgs });
 });
 after(() => browser?.close());
 

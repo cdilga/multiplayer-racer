@@ -7,6 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { chromiumArgs } from './lib/chromium.mjs';
 
 const BASE = '/p/c06/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
@@ -15,7 +16,7 @@ let server;
 
 before(async () => {
   server = await serve(build('./', 'c06'), BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  browser = await chromium.launch({ args: chromiumArgs });
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
 after(async () => {

@@ -10,6 +10,7 @@ import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { chromiumArgs } from './lib/chromium.mjs';
 
 const BASE = '/p/jn1/';
 // `JJ_CAPTURE_DIR=<dir>`: also save the visual self-review matrix (TV, phones portrait/landscape, a resize) there.
@@ -26,7 +27,7 @@ let server;
 before(async () => {
   const dist = build('./', 'jn1');
   server = await serve(dist, BASE, { JJ_STUN_URLS: '' });
-  browser = await chromium.launch({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  browser = await chromium.launch({ args: chromiumArgs });
 });
 after(async () => {
   await browser?.close();
