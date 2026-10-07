@@ -192,7 +192,12 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
     const before = (await view(host)).seats.length;
     for (let tries = 0; (await view(host)).seats.length === before; tries++) {
       assert.ok(tries < 10, `a key cluster never left: ${JSON.stringify(await names(host))}`);
-      await host.locator('[data-jj-input-drawer] button[data-act="leave"]').first().dispatchEvent('click');
+      const leaveBtn = host.locator('[data-jj-input-drawer] button[data-act="leave"]');
+      if ((await leaveBtn.count()) === 0) {
+        const rows = await host.evaluate(() => [...document.querySelectorAll('[data-jj-input-drawer] li[data-source]')].map((li) => `${li.dataset.source}:${li.dataset.state}`));
+        assert.fail(`no Leave in the drawer: rows ${JSON.stringify(rows)}, seats ${JSON.stringify((await view(host)).seats.map((s) => `${s.name}:${s.presence}`))}`);
+      }
+      await leaveBtn.first().dispatchEvent('click');
       await host.waitForTimeout(500);
     }
   }
