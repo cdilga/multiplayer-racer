@@ -40,7 +40,7 @@ const STATES = {
   'update-needed': ['update-needed', /Updating/i, null],
   playing: ['playing&seat=12', /#12/i, 'Ready'],
 };
-const SIZES = { 'phone-landscape-844x390': [844, 390], 'phone-portrait-390x844': [390, 844], 'phone-small-375x667': [375, 667] };
+const SIZES = { 'phone-landscape-844x390': [844, 390], 'phone-portrait-390x844': [390, 844], 'phone-small-375x667': [375, 667], 'phone-short-640x300': [640, 300] };
 
 async function open(state, [width, height]) {
   const page = await (await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true })).newPage();
@@ -61,6 +61,13 @@ for (const [state, [, wording, action]] of Object.entries(STATES)) {
       assert.match(text, wording, `${state}: ${label}`);
       assert.doesNotMatch(text, /\bgame\b/i, `${state}: R112 says room, never game`);
       if (action) assert.ok((await page.getByRole('button', { name: action }).count()) >= 1, `${state}: has "${action}"`);
+      if (action) {
+        // Short screens (a phone with its browser bars showing): the action is reachable, by scrolling the card if it must.
+        const b = page.getByRole('button', { name: action }).first();
+        await b.scrollIntoViewIfNeeded();
+        const r = await b.boundingBox();
+        assert.ok(r && r.y >= 0 && r.y + r.height <= size[1] + 1 && r.x >= 0 && r.x + r.width <= size[0] + 1, `${state} ${label}: "${action}" is off the screen (${JSON.stringify(r)})`);
+      }
       const fit = await page.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, vover: document.documentElement.scrollHeight - innerHeight }));
       assert.ok(fit.over <= 1 && fit.vover <= 1, `${state} ${label}: the page scrolls (${JSON.stringify(fit)})`);
       assert.deepEqual(errors, [], `${state}: no errors or failed requests`);

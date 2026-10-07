@@ -85,3 +85,5 @@
 .screen:has(.car-sheet) .rotate-card { display: none; }
 .stage .carname { position: absolute; left: 10px; top: 0; z-index: 3; padding: 2px 12px 4px; background: var(--c-ink); color: var(--c-paper); }
 .stage .carname .acc { color: var(--c-saffron); }
+/* A card taller than the screen (a phone sideways with its browser bars showing) scrolls instead of losing its buttons. */
+.card-screen { overflow-y: auto; touch-action: pan-y; align-content: safe center; }

@@ -1,0 +1,32 @@
+{
+  "label": "Android emulator",
+  "qr": "http://localhost:7471/j/QRSC",
+  "steps": {
+    "scanButton": {
+      "x": 774.5952758789062,
+      "y": 212.4166717529297,
+      "w": 57.595237731933594,
+      "h": 57.595237731933594
+    },
+    "joined": true
+  },
+  "machine": {
+    "host": "eris",
+    "kernel": "Linux 7.2.5-3-omarchy",
+    "cpus": 12,
+    "memGiB": 31
+  },
+  "target": {
+    "avd": "jj-ctrl-api37-play",
+    "model": "sdk_gphone64_x86_64",
+    "android": "17 (API 37)",
+    "browser": "Chrome 145.0.7632.218",
+    "orientation": "landscape",
+    "camera": "virtualscene (QR posters round the lens)"
+  },
+  "scanner": {
+    "barcodeDetector": true,
+    "url": "http://localhost:7471/j/QRSC"
+  },
+  "pass": true
+}
