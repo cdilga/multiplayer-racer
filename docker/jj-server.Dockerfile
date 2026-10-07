@@ -10,7 +10,7 @@
 ARG RUST_VERSION=1.99.0
 ARG NODE_VERSION=26.10.0
 
-# ---- Rust: the server and the browser WASM (sim worker, controller input) ----
+# ---- Rust: the server and the browser WASM (sim worker, controller input, procgen worker) ----
 FROM rust:${RUST_VERSION}-slim-trixie AS rust
 ARG WASM_BINDGEN=0.2.129
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/* \
@@ -43,8 +43,10 @@ RUN --mount=type=cache,target=/root/.npm cd web && npm ci --no-audit --no-fund
 COPY art art
 COPY assets assets
 COPY maps maps
+COPY tools/audio/cues-playtest1.tsv tools/audio/
 COPY web web
 COPY --from=rust /src/web/host/src/worker/pkg web/host/src/worker/pkg
+COPY --from=rust /src/web/host/src/procgen/pkg web/host/src/procgen/pkg
 COPY --from=rust /src/web/host/src/testing/pkg web/host/src/testing/pkg
 COPY --from=rust /src/web/controller/src/pkg web/controller/src/pkg
 RUN cd web && JJ_COMMIT=${JJ_BUILD} npm run build

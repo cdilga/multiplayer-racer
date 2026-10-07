@@ -1,4 +1,5 @@
-# Only what docker/jj-server.Dockerfile copies: crates, web, art, assets, maps, scenarios and the manifests.
+# Only what docker/jj-server.Dockerfile copies: crates, web, art, assets, maps, scenarios, the announcer's cue sheet
+# (tools/audio) and the manifests.
 target
 **/node_modules
 web/dist
