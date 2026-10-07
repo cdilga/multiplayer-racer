@@ -22,15 +22,29 @@ reload with `end` blocked didn't reach "host gone" (see Open).
 - `phone-reload-room-ended.png`: the old room's phone after the host page reloaded: "That room has ended · Thanks for
   playing. · Join another room".
 
-## Defects seen (outside this bead's owned files, reported)
+## Rerun at 8cf874a (eris run `g01-edges5`, GPU host)
 
-- After End the Lobby still says "Everyone ready starts the race on its own", but End disarms the all-ready start
-  (director `end` sets `armed = false`); only Start race works. Re-arm on End or change the hint.
-- The bottom bar's "Host menu" button sits under the sound icon at bottom-left (its first letter is clipped).
-- The "Join at 127.0.0.1:..." chip floats over the sky on tile 2 during the race and the countdown.
+Passed: JN2, force-start, End mid-round, reload with `end` allowed. The blocked-`end` reload test failed: the phone showed
+room-ended, because the unload's keepalive request isn't seen by Playwright routes (neither page- nor context-level). The
+test now makes the page's own `fetch` refuse `.../rooms/<id>/end` (init script plus an evaluate on the live page); that
+version is not yet run.
+
+Looked at again after the UI fixes (round.css):
+
+- `tv-force-countdown.png`: the "9" is about two thirds of its old size and no longer hides the gantry banner or either car
+  (it still crosses the seam between the tiles, mid-pop and translucent). The footer reads "Pause · C55X · 127.0.0.1:... ·
+  2 racing"; the sound icon sits clear of the button.
+- `tv-end-racing.png`: no "Join at" chip over tile 2 any more (the footer carries the code and address); both HUDs clear.
+- `tv-end-lobby.png`: "Host menu" is whole beside the sound icon; after End the hint now reads "Start race when
+  everyone's ready", which is true of a disarmed room (host-screens lane's change).
+- `tv-reload-new-room.png`: the reloaded host page's new room "6RFF", 0 in the room, Start race disabled with
+  "Scan to join on your phone, or press a key cluster or pad".
+
+## Defects still seen (not mine to fix here)
+
+- In the fresh room's Lobby the "WELCOME, MATE! SCAN THE CODE..." shout banner overlaps the top of the Diagnostics button
+  in the footer (`tv-reload-new-room.png`).
 
 ## Open
 
-- `phone-reload-reconnecting.png` / `phone-reload-host-gone.png` still to capture: the blocked-`end` test needs the
-  context-level route (the page-level route doesn't catch the unload's keepalive request, so the room ended and the phone
-  showed room-ended instead of reconnecting) in the edited test file, which is not on eris yet.
+- `phone-reload-reconnecting.png` and `phone-reload-host-gone.png`: captured by the blocked-`end` test once it passes.

@@ -143,7 +143,16 @@ async function reloadScenario({ blockEnd }) {
   await a.page.getByRole('button', { name: /^Ready/ }).click();
   await b.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
-  if (blockEnd) await host.context().route('**/api/v1/rooms/*/end', (r) => r.abort()); // the whole context: the unload's keepalive request too
+  if (blockEnd) {
+    // Playwright routes don't see the unload's keepalive request, so the page's own fetch refuses every `end` (this page
+    // and the one it reloads into: init scripts run in both).
+    const refuse = () => {
+      const real = window.fetch.bind(window);
+      window.fetch = (input, init) => (/\/rooms\/[^/]+\/end$/.test(String(input?.url ?? input)) ? Promise.reject(new TypeError('end blocked by the test')) : real(input, init));
+    };
+    await host.context().addInitScript(refuse);
+    await host.evaluate(refuse);
+  }
   const oldCode = await host.evaluate(() => window.__jjNet.code());
   host.on('dialog', (d) => d.accept()); // the page may ask before unload
   await host.reload();
