@@ -3,7 +3,7 @@
 # planner (scripts/ci/plan.mjs) from a git range and run with the same scripts (scripts/ci/verify-lanes.sh), for when
 # CI is down or a batch_pending wave needs one revision-bound receipt.
 #
-#   scripts/beads/batch-verify.sh plan  [--base <ref>]                 # the lanes and batch_pending beads, no execution
+#   scripts/beads/batch-verify.sh plan  [--base <ref>] [--head <ref>]  # the lanes and batch_pending beads, no execution
 #   scripts/beads/batch-verify.sh run   [--base <ref>] [--local] [--allow-dirty]
 #       runs the lanes on eris (scripts/remote/eris.sh: HEAD must be pushed) or, with --local, on this machine;
 #       writes .beads/receipts/wave-NNN.json (base, head, tree, dirty inventory, toolchain, lockfile hashes, each lane's
@@ -23,6 +23,7 @@ RECEIPTS=.beads/receipts
 LOGS=$RECEIPTS/logs
 ACTOR=${AGENT_NAME:-}
 BASE=""
+HEADREF=HEAD
 ALLOW_DIRTY=0
 LOCAL=0
 MATRIX=
@@ -45,11 +46,11 @@ resolve_base() {
 pending_beads() { br list --status batch_pending --json --limit 0 2>/dev/null | jq -r '(.issues // .)[] | .id'; }
 
 # plan_to <file>: the planner's key=value outputs for BASE..HEAD; prints its one-line summary.
-plan_to() { node scripts/ci/plan.mjs --base "$BASE" --head HEAD --github-output "$1" | head -1; }
+plan_to() { node scripts/ci/plan.mjs --base "$BASE" --head "$HEADREF" --github-output "$1" | head -1; }
 
 cmd_plan() {
     resolve_base
-    note "range $(git rev-parse --short "$BASE")..$(git rev-parse --short HEAD), $(git diff --name-only "$BASE" HEAD | wc -l | tr -d ' ') changed paths"
+    note "range $(git rev-parse --short "$BASE")..$(git rev-parse --short "$HEADREF"), $(git diff --name-only "$BASE" "$HEADREF" | wc -l | tr -d ' ') changed paths"
     local tmp; tmp=$(mktemp)
     plan_to "$tmp"
     note "lanes: $(sed -n 's/^lanes=//p' "$tmp" | sed 's/^$/checks only/')"
@@ -189,6 +190,7 @@ args=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         --base) BASE=$2; shift 2 ;;
+        --head) HEADREF=$2; shift 2 ;;   # plan only: an older range, e.g. to compare with that CI run
         --allow-dirty) ALLOW_DIRTY=1; shift ;;
         --local) LOCAL=1; shift ;;
         --matrix) MATRIX=$2; shift 2 ;;
