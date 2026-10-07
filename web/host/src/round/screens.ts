@@ -238,12 +238,16 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);
     if (phase === 'Intermission') {
-      if (shown === key) {
+      // The results screen shows the round's results and nothing of the roster's churn: it is rebuilt only when the results
+      // themselves change. Keyed on the seats (ready, presence) it rebuilt every time a phone's heartbeat flapped, which on
+      // a slow host replaced the "Start next round now" button faster than a click could find it still.
+      const rkey = `${phase}:${room.round}:${(room.results ?? []).map((r) => `${r.number}:${r.place}:${r.points}:${r.time_ms}`).join()}`;
+      if (shown === rkey) {
         const next = screen.querySelector('[data-next]');
         if (next) next.textContent = `Next race in ${secs(room.remainingMs)} s`;
         return;
       }
-      shown = key;
+      shown = rkey;
       return results(room);
     }
     if (phase === 'Lobby' || phase === 'Disbanded') {
