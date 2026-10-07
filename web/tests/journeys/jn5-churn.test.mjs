@@ -146,8 +146,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Running: two phones leave, a key cluster sits out');
   await leave(phones[0]);
   await leave(phones[1]);
-  // The drawer's buttons are dispatched: the round screens may sit over the drawer.
-  await host.getByRole('button', { name: 'Sit out' }).first().dispatchEvent('click');
+  // The drawer's buttons are dispatched by their data attributes: the round screens may sit over the drawer, and it
+  // folds to its head on the grid and in the race (its buttons stay in the page, at no size).
+  await host.locator('[data-jj-input-drawer] button[data-act="sit-out"]').first().dispatchEvent('click');
   await wait(host, () => window.__jjRoom.view().seats.length === 10 && window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
   assert.ok(!(await names(host)).includes('Davo') && !(await names(host)).includes('Shazza'), 'no phantom seats');
   // The grid reflows to the seated cars: the leavers' and the sitter's withdrawn cars keep no tile.
@@ -184,7 +185,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
     const before = (await view(host)).seats.length;
     for (let tries = 0; (await view(host)).seats.length === before; tries++) {
       assert.ok(tries < 10, `a key cluster never left: ${JSON.stringify(await names(host))}`);
-      await host.getByRole('button', { name: 'Leave' }).first().dispatchEvent('click');
+      await host.locator('[data-jj-input-drawer] button[data-act="leave"]').first().dispatchEvent('click');
       await host.waitForTimeout(500);
     }
   }
