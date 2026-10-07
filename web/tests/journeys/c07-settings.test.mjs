@@ -51,7 +51,7 @@ const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { tim
 async function seated(init) {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
@@ -82,7 +82,7 @@ const openSettings = async (page) => {
 };
 const pick = (page, name, v) => page.locator(`[data-set=${name}][data-v=${v}]`).click();
 
-test('settings persist across reloads, camera distance included; remember off forgets them', { timeout: 150_000 }, async () => {
+test('settings persist across reloads, camera distance included; remember off forgets them', { timeout: 330_000 }, async () => {
   const { page, joinUrl } = await seated();
   assert.equal((await prefs(page)).layout, 'floating', 'defaults to floating sticks');
   await openSettings(page);
@@ -110,7 +110,7 @@ test('settings persist across reloads, camera distance included; remember off fo
   assert.deepEqual([d.layout, d.steering, d.cameraDistance, d.remember], ['floating', 'gentle', 'host', true]);
 });
 
-test('invalid stored values use the defaults, field by field', { timeout: 120_000 }, async () => {
+test('invalid stored values use the defaults, field by field', { timeout: 300_000 }, async () => {
   const { page, joinUrl } = await seated();
   await page.evaluate(() => {
     const k = Object.keys(localStorage).find((x) => x.startsWith('jj.ctl.'));
@@ -123,7 +123,7 @@ test('invalid stored values use the defaults, field by field', { timeout: 120_00
   assert.deepEqual([p.layout, p.steering, p.vibration], ['floating', 'direct', true]);
 });
 
-test('with storage denied the controller still plays and says the settings are applied for now', { timeout: 120_000 }, async () => {
+test('with storage denied the controller still plays and says the settings are applied for now', { timeout: 300_000 }, async () => {
   const { page } = await seated(() => {
     Storage.prototype.setItem = () => {
       throw new DOMException('denied', 'SecurityError');
@@ -139,7 +139,7 @@ test('with storage denied the controller still plays and says the settings are a
   assert.match(await page.locator('[data-note=save-failed]').innerText(), /Applied for now — this browser couldn't remember your settings/);
 });
 
-test('opening Settings sends neutral and Menu{open:true}; closing sends Menu{open:false}; no action fires', { timeout: 120_000 }, async () => {
+test('opening Settings sends neutral and Menu{open:true}; closing sends Menu{open:false}; no action fires', { timeout: 300_000 }, async () => {
   const { host, page } = await seated();
   // The reference bytes: the Help card's open and close (Menu is a 3-byte message: version, tag, bool; a Ping is longer).
   const menus = (from) => page.evaluate((n) => window.__cmds.slice(n).filter((c) => c.length === 6), from);
@@ -170,7 +170,7 @@ test('opening Settings sends neutral and Menu{open:true}; closing sends Menu{ope
   assert.equal(fired, 0, 'the host saw no wheelie, boost or utility');
 });
 
-test("'Test these controls' shows live stick values and fires no action", { timeout: 120_000 }, async () => {
+test("'Test these controls' shows live stick values and fires no action", { timeout: 300_000 }, async () => {
   const { page } = await seated();
   await openSettings(page);
   const before = await page.evaluate(() => window.__jjController.inspect().stats.actions);

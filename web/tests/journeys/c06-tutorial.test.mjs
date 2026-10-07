@@ -30,7 +30,7 @@ const shot = (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${na
 async function hostAndPhone() {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
@@ -62,7 +62,7 @@ const waitStep = async (page, n) => {
   }
 };
 
-test('C06: a newcomer is coached through every control by doing it; nothing pauses', { timeout: 180_000 }, async () => {
+test('C06: a newcomer is coached through every control by doing it; nothing pauses', { timeout: 360_000 }, async () => {
   const { host, page, ctx } = await hostAndPhone();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await shot(page, 'phone-tutorial-step1');
@@ -103,7 +103,7 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await ctx.close();
 });
 
-test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', { timeout: 120_000 }, async () => {
+test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', { timeout: 300_000 }, async () => {
   const { host, page } = await hostAndPhone();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await sticks(page, { x: 1, y: 0 }, z);

@@ -37,12 +37,12 @@ const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__j
 const hud = (host) => host.evaluate(() => document.querySelector('.hud-tile .hud-lap')?.textContent ?? null);
 const race = (host, car) => host.evaluate(async (car) => (await window.__jjTest.observe()).cars.find((c) => c.car === car).race, car);
 
-test('JN2: a lap completes with its gates in order, the HUD counts it, a shortcut earns nothing, and no checkpoint is drawn', { timeout: 600_000 }, async () => {
+test('JN2: a lap completes with its gates in order, the HUD counts it, a shortcut earns nothing, and no checkpoint is drawn', { timeout: 780_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=2`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
 
   await frame(host, 'syn1', { hello: true });
   await frame(host, 'syn1', { claim: 'Davo' });

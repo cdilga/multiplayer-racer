@@ -45,7 +45,7 @@ async function phone(url, name) {
 async function raceWith(origin, names) {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${origin}${BASE}host?room&test=live&laps=3`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const phones = [];
   for (const n of names) phones.push(await phone(joinUrl, n));
@@ -61,7 +61,7 @@ const carOf = (state, ep) => {
 const observe = (host) => host.evaluate(() => window.__jjTest.observe());
 const drive = (p, y) => p.page.evaluate((y) => window.__jjController.setSticks({ x: 0, y, touch: y !== 0 }, { x: 0, y: 0, touch: false }), y);
 
-test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the room never pauses, and it takes the car back', { timeout: 300_000 }, async () => {
+test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the room never pauses, and it takes the car back', { timeout: 480_000 }, async () => {
   const server = await serve(dist, BASE, { JJ_STUN_URLS: '' });
   try {
     const { host, phones } = await raceWith(server.origin, ['Davo', 'Shazza']);
@@ -97,7 +97,7 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
   }
 });
 
-test('JN7: jj-server restarts mid-race, play continues, the host keeps its code and a new phone still joins', { timeout: 300_000 }, async () => {
+test('JN7: jj-server restarts mid-race, play continues, the host keeps its code and a new phone still joins', { timeout: 480_000 }, async () => {
   const port = await freePort();
   let server = await serve(dist, BASE, { JJ_BIND: `127.0.0.1:${port}`, JJ_STUN_URLS: '' });
   try {

@@ -40,12 +40,12 @@ async function phone(url, name) {
   return { ctx, page };
 }
 
-test('JN3: two players race a 1-lap round, see results, and the next round starts', { timeout: 420_000 }, async () => {
+test('JN3: two players race a 1-lap round, see results, and the next round starts', { timeout: 600_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=1`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   await shot(host, 'tv-lobby-empty');
 

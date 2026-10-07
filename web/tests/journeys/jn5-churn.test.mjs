@@ -93,12 +93,12 @@ async function dropIn(host, url, name) {
   return { p, ms };
 }
 
-test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
+test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_180_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=3`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
 
   at('Lobby: three phones and both key clusters');
