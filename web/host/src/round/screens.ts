@@ -118,7 +118,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
         <span class="strip">Pick a car on your phone · the host starts the race</span></header>
       <div class="lb-side"><div class="lb-join"></div>
       <div class="lb-go"><button class="btn brush primary big" data-act="start" type="button" ${n ? '' : 'disabled'}>Start race</button>
-        <p class="lb-hint">${n ? `Everyone ready starts the race on its own · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p></div></div>
+        <p class="lb-hint">${n ? `${room.armed ? 'Everyone ready starts the race on its own' : 'Start race when everyone\'s ready'} · ${room.laps} lap${room.laps === 1 ? '' : 's'}` : 'Scan to join on your phone, or press a key cluster or pad'}</p></div></div>
       <div class="lb-roster" data-players></div></section>`;
     const box = screen.querySelector<HTMLElement>('.lb-roster')!;
     const joinEl = screen.querySelector<HTMLElement>('.lb-join')!;
@@ -233,7 +233,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
-    const key = `${phase}:${room.round}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);

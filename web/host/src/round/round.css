@@ -71,8 +71,8 @@
 
 /* ---------- Countdown (R99): one full-screen 3-2-1-GO ---------- */
 .countdown { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none !important; background: radial-gradient(circle, rgb(21 32 58 / .35), rgb(21 32 58 / 0) 65%); }
-.cd-num { font-size: min(46vh, 46vw); line-height: .9; color: var(--c-saffron); -webkit-text-stroke: calc(10px * var(--k)) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(14px * var(--k)) 0 var(--c-ink); animation: jj-pop .9s cubic-bezier(.2, .7, .3, 1) both; }
-.cd-num.go { font-size: min(40vh, 36vw); color: var(--c-paper); }
+.cd-num { font-size: min(30vh, 30vw); line-height: .9; color: var(--c-saffron); -webkit-text-stroke: calc(10px * var(--k)) var(--c-ink); paint-order: stroke fill; text-shadow: 0 calc(14px * var(--k)) 0 var(--c-ink); animation: jj-pop .9s cubic-bezier(.2, .7, .3, 1) both; }
+.cd-num.go { font-size: min(28vh, 26vw); color: var(--c-paper); }
 .countdown.prep .cd-num { font-size: min(14vh, 14vw); animation: none; }
 @keyframes jj-pop { 0% { transform: scale(1.5); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 100% { transform: scale(.92); opacity: .95; } }
 
@@ -174,7 +174,7 @@
 /* ---------- Footer chrome (R96) ---------- */
 .jj-foot {
   position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot); box-sizing: border-box; z-index: 3; pointer-events: auto;
-  display: flex; align-items: center; gap: calc(var(--foot) * .35); padding: 0 max(8px, 1.4vw); overflow: hidden;
+  display: flex; align-items: center; gap: calc(var(--foot) * .35); padding: 0 max(8px, 1.4vw) 0 max(56px, 1.4vw); overflow: hidden; /* clears the mute button (fixed, left 12 + 36 wide) */
   background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot) * .46), 3.6vw)/1 var(--font-body); white-space: nowrap;
 }
 .foot-btn {
@@ -228,3 +228,6 @@
 .mn-view { display: flex; flex-wrap: wrap; gap: calc(12px * var(--k)); }
 .mn-view .btn { flex: 1 1 calc(150px * var(--k)); min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
 .mn-hint { color: var(--c-ink-soft); }
+
+/* The footer already shows the room code and address, so the grid's join chip would only float over a tile (it stays where there is no footer). */
+body:has(.jj-foot) .jj-chip { display: none; }
