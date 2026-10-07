@@ -44,6 +44,10 @@ COPY art art
 COPY assets assets
 COPY maps maps
 COPY tools/audio/cues-playtest1.tsv tools/audio/
+# The procgen kit stand-ins (P1-M03f/M08a): the host's kit registry globs them into the bundle. Without them the image's
+# pages had no `wayfinding/chevron-post` entry, every round preparation failed ("no kit module"), and the first preview
+# (v02-f4d0e2ef) never left the Lobby; CI's own build has the whole tree, so only the image showed it.
+COPY crates/jj-procgen/kit crates/jj-procgen/kit
 COPY web web
 COPY --from=rust /src/web/host/src/worker/pkg web/host/src/worker/pkg
 COPY --from=rust /src/web/host/src/procgen/pkg web/host/src/procgen/pkg
