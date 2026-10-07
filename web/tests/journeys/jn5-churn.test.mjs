@@ -153,6 +153,16 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await wait(host, () => window.__jjRender.tileRects().filter(Boolean).length === window.__jjRoom.view().seats.filter((s) => s.car !== null).length);
   assert.equal((await host.evaluate(() => window.__jjRender.tileRects())).filter(Boolean).length, 9, '12 − 2 left − 1 sitting out');
   await host.waitForTimeout(1500); // the reflow animates
+  // Each tile's HUD sits inside its tile once the grid settles (the DOM layer follows the final rects).
+  const misplaced = await host.evaluate(() => {
+    const dpr = devicePixelRatio;
+    return window.__jjRender.tileRects().flatMap((t) => {
+      const box = document.querySelector(`.hud-tile[data-tile="${t.seat}"]`)?.getBoundingClientRect();
+      const inside = box && box.left >= t.x / dpr - 2 && box.top >= t.y / dpr - 2 && box.right <= (t.x + t.w) / dpr + 2 && box.bottom <= (t.y + t.h) / dpr + 2;
+      return inside ? [] : [{ tile: t.seat, box: box && [box.left, box.top, box.right, box.bottom].map(Math.round) }];
+    });
+  });
+  assert.deepEqual(misplaced, [], 'every HUD inside its tile');
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');

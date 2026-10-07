@@ -128,6 +128,8 @@ export class World {
   private userScale: number;
   /** Set only by a measured frame-budget miss; always below the user's choice; cleared only by choosing a setting. */
   private autoScale: number | null;
+  /** The tile grid moved or animated last frame (one more layout callback once it settles). */
+  private layoutMoving = false;
   readonly budget = new FrameBudget();
   /** Automatic lowering is a last resort; tests and `?res=` overrides switch it off. */
   autoLower = true;
@@ -387,7 +389,11 @@ export class World {
     const seats = Array.from({ length: view.count }, (_, k) => k + 1);
     const now = performance.now();
     const moved = this.tileGrid.update(seats, now, display, safe);
-    if (moved || this.tileGrid.animating(now)) this.onLayout(this.tileGrid.layout, this.stats.dpr * this.scale);
+    // While the grid moves, and once more when it settles: on a slow host a whole reflow can fall inside one frame, and
+    // the DOM layers (per-tile HUD, frames, join chip) must end on the final rects, not the first frame's (G02).
+    const animating = this.tileGrid.animating(now);
+    if (moved || animating || this.layoutMoving) this.onLayout(this.tileGrid.layout, this.stats.dpr * this.scale);
+    this.layoutMoving = moved || animating;
     const lods: number[] = [];
     r.autoClear = false;
     r.setScissorTest(false);
