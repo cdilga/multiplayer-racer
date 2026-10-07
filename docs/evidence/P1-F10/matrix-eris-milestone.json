@@ -1,0 +1,112 @@
+{
+  "journey": "F10 demo on the G00 hello room, per lane",
+  "tier": "milestone",
+  "takenAt": "2026-10-07T14:08:59.201Z",
+  "machine": {
+    "host": "eris",
+    "platform": "linux/x64",
+    "kernel": "Linux 7.2.5-3-omarchy",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12400",
+    "cpus": 12,
+    "memGiB": 31
+  },
+  "loopback": {
+    "ok": true
+  },
+  "preflight": [
+    {
+      "id": "chromium",
+      "label": "Chromium (linux, Playwright)",
+      "available": true
+    },
+    {
+      "id": "webkit",
+      "label": "WebKit (Playwright; not Safari)",
+      "available": false,
+      "reason": "webkit isn't installed for Playwright here (/home/cdilga/.cache/ms-playwright/webkit-2336/pw_run.sh)"
+    },
+    {
+      "id": "firefox",
+      "label": "Firefox (Playwright)",
+      "available": false,
+      "reason": "firefox isn't installed for Playwright here (/home/cdilga/.cache/ms-playwright/firefox-1538/firefox/firefox)"
+    },
+    {
+      "id": "ios-simulator",
+      "label": "iOS Simulator",
+      "available": false,
+      "reason": "iOS Simulator runs on macOS only"
+    },
+    {
+      "id": "android-emulator",
+      "label": "Android emulator",
+      "available": true
+    },
+    {
+      "id": "macos-chrome-headed",
+      "label": "macOS Chrome headed (real GPU)",
+      "available": false,
+      "reason": "macOS only"
+    },
+    {
+      "id": "macos-safari",
+      "label": "macOS Safari",
+      "available": false,
+      "reason": "no lane: the owner checks it in Q02"
+    },
+    {
+      "id": "windows",
+      "label": "Windows browsers",
+      "available": false,
+      "reason": "no lane: the owner checks them in Q02"
+    },
+    {
+      "id": "real-devices",
+      "label": "Real phones, pads and the TCL",
+      "available": false,
+      "reason": "no lane: owner playtests"
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "chromium",
+      "label": "Chromium (linux, Playwright)",
+      "machine": "eris",
+      "status": "passed",
+      "seconds": 247,
+      "receipt": "demo-chromium.json",
+      "peak": 12
+    },
+    {
+      "lane": "webkit",
+      "label": "WebKit (Playwright; not Safari)",
+      "machine": "eris",
+      "status": "unavailable",
+      "reason": "webkit isn't installed for Playwright here (/home/cdilga/.cache/ms-playwright/webkit-2336/pw_run.sh)"
+    },
+    {
+      "lane": "firefox",
+      "label": "Firefox (Playwright)",
+      "machine": "eris",
+      "status": "unavailable",
+      "reason": "firefox isn't installed for Playwright here (/home/cdilga/.cache/ms-playwright/firefox-1538/firefox/firefox)"
+    },
+    {
+      "lane": "android-emulator",
+      "label": "Android emulator",
+      "machine": "eris",
+      "status": "passed",
+      "seconds": 255,
+      "receipt": "demo-chromium+android.json",
+      "peak": 12,
+      "avd": "jj-ctrl-api37-play"
+    },
+    {
+      "lane": "ios-simulator",
+      "label": "iOS Simulator",
+      "machine": "eris",
+      "status": "unavailable",
+      "reason": "iOS Simulator runs on macOS only"
+    }
+  ]
+}
