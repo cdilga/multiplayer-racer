@@ -13,7 +13,6 @@ import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const evidenceDir = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-R07');
-const JOIN_URL = 'https://jammers.dilger.dev/j/ROO7';
 const fixture = async (name) => JSON.parse(await readFile(join(import.meta.dirname, 'fixtures', `${name}.json`), 'utf8'));
 const VP = { '1080p': [1920, 1080], '4k': [3840, 2160], '21x9': [3440, 1440], phone: [412, 915] };
 
@@ -167,7 +166,7 @@ test('the lobby QR decodes to the join URL after downscaling to what a phone see
         );
         const side = Math.round(modules * Math.min(4, modulePx));
         const got = jsQR(Uint8ClampedArray.from(px), side, side);
-        assert.equal(got?.data, JOIN_URL, `${spec} ${vpName}: decoded`);
+        assert.equal(got?.data, `${new URL(server.url).origin}/j/ROO7`, `${spec} ${vpName}: decoded`);
       } finally {
         await page.close();
       }

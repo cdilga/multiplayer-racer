@@ -72,7 +72,7 @@ export function mountFixture(app: HTMLElement, world: World, spec: string): void
     },
     input: (i) => void inputs.push(i),
   };
-  const joinUrl = 'https://jammers.dilger.dev/j/ROO7';
+  const joinUrl = `${location.origin}/j/ROO7`;
   const screens = mountRoundScreens(client, { code: 'ROO7', joinUrl });
   const overlay = mountGridOverlay(app, joinUrl);
   // Only a race draws a tile per player; the lobby and results screens cover the world, so it stays cheap there.
