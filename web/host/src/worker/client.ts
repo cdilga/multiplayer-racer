@@ -32,6 +32,12 @@ export class SimClient {
   /** The latest room view (P1-G01) and its listener. */
   room: RoomView | null = null;
   onRoom: (room: RoomView) => void = () => {};
+  private roomWatchers = new Set<(room: RoomView) => void>();
+  /** Another room listener beside `onRoom` (car paint, audio...); returns the unsubscribe. */
+  watchRoom(f: (room: RoomView) => void): () => void {
+    this.roomWatchers.add(f);
+    return () => this.roomWatchers.delete(f);
+  }
   /** Sim events (seats joining, cameras, identify flashes...). */
   onEvents: (events: SimEventJson[]) => void = () => {};
   /** Bytes for one controller endpoint (the network bridge sends them on that peer's channel). */
@@ -70,6 +76,7 @@ export class SimClient {
       case 'room':
         this.room = JSON.parse(m.json) as RoomView;
         this.onRoom(this.room);
+        for (const f of this.roomWatchers) f(this.room);
         return;
       case 'pause':
         this.mask = m.mask;

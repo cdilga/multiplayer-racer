@@ -158,6 +158,17 @@ async function boot(): Promise<void> {
       if (cam) world.rig.setMode(Number(cam.car) + 1, cam.camera === 'FirstPerson' ? 'fp' : 'tp');
     }
   };
+  // Identity (P1-R06): each car is painted in its seat's colour, the same colour as that player's phone.
+  let seatPaint = new Map<number, string>();
+  let painted = false;
+  client.watchRoom((room) => {
+    seatPaint = new Map(room.seats.filter((st) => st.car !== null).map((st) => [st.car!, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`]));
+    const v = world.vehicles;
+    if (!v || painted) return;
+    painted = true;
+    const palette = v.paintOf;
+    v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
+  });
   world.attach(client);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
