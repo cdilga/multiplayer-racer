@@ -182,7 +182,11 @@ function roundBanner(app: HTMLElement, session: Session): void {
     screen.append(b);
   }
   let text = '';
-  if (session.roomPhase === 'Countdown') {
+  if (session.idleCueAt !== null && session.roomPhase === 'Racing') {
+    // G03: idle while racing. The countdown to the autopilot, then who's driving until the player steers.
+    const left = session.idleCueMs - (performance.now() - session.idleCueAt);
+    text = left > 0 ? `Still there? Steer to keep your car: ${Math.ceil(left / 1000)}` : 'The autopilot is driving: steer to take over';
+  } else if (session.roomPhase === 'Countdown') {
     const left = (session.countdownMs ?? 0) - (performance.now() - session.countdownAt);
     text = left > 0 ? `Get ready: ${Math.ceil(left / 1000)}` : 'Go!';
   } else if (session.roomPhase === 'Results' && session.results && session.you) {

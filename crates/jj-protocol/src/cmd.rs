@@ -184,6 +184,11 @@ pub enum HostCmd {
     },
     /// The room is over; the controller shows the end card.
     Ended,
+    /// The seat has given no deliberate input while racing (G03): the autopilot takes the car in `autopilot_in_ms`
+    /// unless the player steers; the phone shows the cue.
+    IdleCue {
+        autopilot_in_ms: u32,
+    },
 }
 
 macro_rules! codec {

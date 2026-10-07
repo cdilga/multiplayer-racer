@@ -1173,29 +1173,47 @@ fn an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over() {
     let src = SourceHandle(1);
     let mut now = 0u64;
     let mut seq = 0u16;
-    let mut cues = 0;
+    // (TV events, phone messages) of the idle cue.
+    let mut cues = [0u32; 2];
     // Steps `ms` of host time sending `drive` every 50 ms (fresh, so never a dropout).
-    let run =
-        |h: &mut Host, ms: u64, drive: [i16; 2], now: &mut u64, seq: &mut u16, cues: &mut u32| {
-            let end = *now + ms * 1000;
-            while *now < end {
-                if (*now / 8_334).is_multiple_of(6) {
-                    *seq = seq.wrapping_add(1);
-                    h.handle(&net("p1", Channel::State, record(src, *seq, drive)))
-                        .unwrap();
-                }
-                h.advance(*now);
-                *now += 8_334;
-                while let Some(m) = h.next_message() {
-                    if let SimToMain::Events { batch } = m {
-                        *cues += batch
+    let run = |h: &mut Host,
+               ms: u64,
+               drive: [i16; 2],
+               now: &mut u64,
+               seq: &mut u16,
+               cues: &mut [u32; 2]| {
+        let end = *now + ms * 1000;
+        while *now < end {
+            if (*now / 8_334).is_multiple_of(6) {
+                *seq = seq.wrapping_add(1);
+                h.handle(&net("p1", Channel::State, record(src, *seq, drive)))
+                    .unwrap();
+            }
+            h.advance(*now);
+            *now += 8_334;
+            while let Some(m) = h.next_message() {
+                match m {
+                    SimToMain::Events { batch } => {
+                        cues[0] += batch
                             .iter()
                             .filter(|e| matches!(e, SimEvent::IdleCue { .. }))
                             .count() as u32;
                     }
+                    SimToMain::Outbound {
+                        channel: Channel::Cmd,
+                        bytes,
+                        ..
+                    } => {
+                        if let Ok(HostCmd::IdleCue { autopilot_in_ms }) = HostCmd::decode(&bytes) {
+                            assert_eq!(autopilot_in_ms, IDLE_CUE_MS as u32);
+                            cues[1] += 1;
+                        }
+                    }
+                    _ => {}
                 }
             }
-        };
+        }
+    };
     run(&mut h, 4_000, [0, 0], &mut now, &mut seq, &mut cues);
     assert_eq!(h.phase(), jj_session::director::Phase::Running);
     let car = CarId(0);
@@ -1204,14 +1222,14 @@ fn an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over() {
     run(&mut h, 14_000, [0, 0], &mut now, &mut seq, &mut cues);
     assert_eq!(
         (cues, h.sim.has_autopilot(car)),
-        (0, false),
+        ([0, 0], false),
         "under 15 s idle: nothing yet"
     );
     run(&mut h, 2_000, [0, 0], &mut now, &mut seq, &mut cues);
     assert_eq!(
         (cues, h.sim.has_autopilot(car)),
-        (1, false),
-        "15 s idle: the cue, not yet the autopilot"
+        ([1, 1], false),
+        "15 s idle: the cue on the TV and the phone, not yet the autopilot"
     );
     run(&mut h, 3_000, [0, 0], &mut now, &mut seq, &mut cues);
     assert!(h.sim.has_autopilot(car), "18 s idle: the autopilot drives");

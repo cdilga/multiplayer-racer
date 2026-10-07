@@ -528,6 +528,24 @@ impl Host {
         }
         for seat in cues {
             self.events.push(SimEvent::IdleCue { seat });
+            // The phone shows the cue too (a host pad's player sees the TV's).
+            let endpoint = self
+                .seats
+                .seat(seat)
+                .and_then(|s| s.conn)
+                .and_then(|c| self.endpoint_of(c))
+                .filter(|e| !e.0.starts_with("local:"));
+            if let Some(endpoint) = endpoint {
+                let bytes = HostCmd::IdleCue {
+                    autopilot_in_ms: IDLE_CUE_MS as u32,
+                }
+                .encode();
+                self.out.push(SimToMain::Outbound {
+                    endpoint,
+                    channel: Channel::Cmd,
+                    bytes,
+                });
+            }
         }
         let held = self.driving() == jj_session::director::Driving::Held;
         for input in self.inputs.values() {

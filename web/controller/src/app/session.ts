@@ -91,6 +91,9 @@ export class Session {
   isReady = false;
   countdownMs: number | null = null;
   countdownAt = 0;
+  /** G03's idle cue: when it arrived (null once the player steers) and the autopilot's delay after it. */
+  idleCueAt: number | null = null;
+  idleCueMs = 0;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null = null;
   persisted = true;
   name = '';
@@ -275,6 +278,11 @@ export class Session {
         }
       } else if (r === 'Ended') this.ended();
       else this.set('ready-to-join');
+    } else if ('IdleCue' in cmd) {
+      // G03: no deliberate input while racing; the autopilot takes over unless the player steers.
+      this.idleCueAt = performance.now();
+      this.idleCueMs = (cmd.IdleCue as { autopilot_in_ms: number }).autopilot_in_ms;
+      this.onChange();
     } else if ('RoomState' in cmd) {
       const rs = cmd.RoomState as {
         phase: string;
@@ -283,6 +291,7 @@ export class Session {
         results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
       };
       this.roomPhase = rs.phase;
+      if (rs.phase !== 'Racing') this.idleCueAt = null;
       this.isReady = rs.you?.ready ?? false;
       this.countdownMs = rs.countdown_ms;
       this.countdownAt = performance.now();
@@ -296,6 +305,11 @@ export class Session {
     this.drive = drive;
     this.action = action;
     this.onSticks(drive, action);
+    if (this.idleCueAt !== null && Math.max(Math.hypot(drive.x, drive.y), Math.hypot(action.x, action.y)) > 0.3) {
+      // Deliberate input: the host hands the car back (if the autopilot had it), so the cue goes.
+      this.idleCueAt = null;
+      this.onChange();
+    }
     this.sample();
   }
 
