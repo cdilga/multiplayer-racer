@@ -6,8 +6,8 @@
 #             their dependents), on the `rust` runners' persistent /cargo-cache.
 #   build     the one web build (WASM, Vite pages, the S02 harness, jj and jj-server), keyed by its inputs and cached
 #             per host, handed to the browser slots as one artifact.
-#   browser   a static matrix of slots; plan packs the selected test files into them, longest first, one file per
-#             slot when there are enough. The SSE soak is 20 s on a push and 300 s in the full run.
+#   browser   a static matrix of 6 slots on the `browser` runners (3 per host, no CPU quota: SwiftShader pages
+#             contend for cores); plan packs the selected test files into them, longest first. The SSE soak is 20 s on a push and 300 s in the full run.
 #   checks, image as before (image only when its inputs changed).
 # The full matrix (every suite, the 300 s soak) runs nightly and on a manual dispatch: same coverage, different timing.
 # Jobs run in the jj-ci image (scripts/ci/ci-image.Dockerfile, built on each runner host by scripts/ci/ci-image.sh):
@@ -167,7 +167,7 @@ jobs:
   browser:
     needs: [plan, build]
     if: ${{ !cancelled() && !failure() && needs.plan.outputs.build == 'true' && fromJSON(needs.plan.outputs.n) >= matrix.slot }}
-    runs-on: ubuntu-latest
+    runs-on: browser
     container:
       image: jj-ci:5890cf2da9ac
       options: --shm-size=2g
@@ -175,7 +175,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        slot: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        slot: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v4
       - name: Vehicle, brand and audio LFS objects

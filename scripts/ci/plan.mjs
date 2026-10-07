@@ -32,7 +32,8 @@ const list = (dir, re = /\.test\.mjs$/) =>
     : [];
 const HOST = list('web/host/tests');
 const TRANSPORT = list('web/shared/transport/tests');
-const JOURNEYS = list('web/tests/journeys');
+// The journeys and the public smoke flow (P1-D07): WebRTC tests through a local jj-server, one suite here.
+const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
 // Hardware fact (R93): these measure host frame time or need 24-120 GPU-rendered tiles, so they run on a `gpu` runner
 // with JJ_CHROMIUM_GPU=1 (on SwiftShader R06 skips itself and C06's 150 ms identify bound is loose).
 const GPU = JOURNEYS.filter((f) => /\/(r06-identify|c06-identify-menu)\.test\.mjs$/.test(f));
@@ -132,8 +133,8 @@ const rules = [
   // Web: a test file alone selects itself; anything a test file imports widens to its suite.
   [/^web\/host\/tests\/[^/]+\.test\.mjs$/, (p) => sel.host.add(p)],
   [/^web\/host\/tests\//, () => (sel.hostAll = true)],
-  [/^web\/tests\/journeys\/[^/]+\.test\.mjs$/, (p) => sel.journeys.add(p)],
-  [/^web\/tests\/journeys\//, () => (sel.journeysAll = true)],
+  [/^web\/tests\/(journeys|smoke)\/[^/]+\.test\.mjs$/, (p) => sel.journeys.add(p)],
+  [/^web\/tests\/(journeys|smoke)\//, () => (sel.journeysAll = true)],
   [/^web\/shared\/transport\/tests\/[^/]+\.test\.mjs$/, (p) => sel.transport.add(p)],
   [/^web\/shared\/transport\/tests\//, () => (sel.transportAll = true)],
   [/^web\/shared\/ui\/tests\//, () => (sel.kit = true)],
@@ -186,7 +187,9 @@ const gpu = journeyFiles.filter((f) => GPU.includes(f));
 // Pack the targets into the workflow's static matrix of browser slots (Gitea can't build a matrix from job outputs):
 // longest first onto the least-loaded slot, so with enough slots every file gets its own runner. Durations are the
 // `slot-timing` lines of earlier runs (scripts/ci/durations.json); an unknown file counts as 60 s.
-const SLOTS = Number(opt('--slots') ?? 16);
+// 6 slots = the `browser` runners' capacity (3 on triton, 3 on TrueNAS): more SwiftShader pages at once than the
+// hosts have cores made every page 2-4x slower and the timing tests fail (run 1461).
+const SLOTS = Number(opt('--slots') ?? 6);
 let durations = {};
 try {
   durations = JSON.parse(readFileSync(join(repoRoot, 'scripts/ci/durations.json'), 'utf8'));

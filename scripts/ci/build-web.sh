@@ -14,7 +14,7 @@ cd "$(dirname "$0")/../.."
 out=${1:?usage: build-web.sh <out.tar.zst>}
 cache=${JJ_PREBUILT:-/cargo-cache/jj-prebuilt}
 
-key=$(git ls-files -s | grep -vE $'\t''(docs/|spikes/|\.beads/|\.claude/|\.apr/|\.ntm/|\.gitea/|web/tests/journeys/|art/(audio|references|style)/|tools/(maps|vehicles|turn-guard)/|scripts/(beads|emulators|remote)/|scripts/ci/(plan\.mjs|run-slot\.mjs|durations\.mjs|durations\.json)$|[^/]*\.md$|.*\.md$|.*\.test\.mjs$)' |
+key=$(git ls-files -s | grep -vE $'\t''(docs/|spikes/|\.beads/|\.claude/|\.apr/|\.ntm/|\.gitea/|web/tests/(journeys|smoke)/|art/(audio|references|style)/|tools/(maps|vehicles|turn-guard)/|scripts/(beads|emulators|remote)/|scripts/ci/(plan\.mjs|run-slot\.mjs|durations\.mjs|durations\.json)$|[^/]*\.md$|.*\.md$|.*\.test\.mjs$)' |
     sha256sum | cut -c1-24)
 echo "key=$key"
 mkdir -p "$cache"
