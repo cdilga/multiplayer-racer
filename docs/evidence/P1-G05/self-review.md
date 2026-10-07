@@ -6,7 +6,7 @@ Run: JN4 on eris at 945743e (Chromium 151, headless, linux/x64, `JJ_CHROMIUM_GPU
 
 ## Looked at
 
-- `stage-1-side-swipe.png`, `stage-2-t-bone.png`, `stage-3-head-on.png`, `drove-away.png`: the four-tile host view at 1280x720
+- `captures/stage-1-side-swipe.png`, `captures/stage-2-t-bone.png`, `captures/stage-3-head-on.png`, `captures/drove-away.png`: the four-tile host view at 1280x720
   right after each stage and after the drive-away. Every tile draws its own chase camera on its own car. Stage 1: the blue
   and red cars door to door in the top tiles. Stage 2: the orange car is square on the blue car's side in the top right
   tile. Stage 3: the cars are apart again and the tiles show the road, the idle cars and the buildings. Drive-away: all four
@@ -22,7 +22,7 @@ Run: JN4 on eris at 945743e (Chromium 151, headless, linux/x64, `JJ_CHROMIUM_GPU
 ## Second pass (commit 11479814)
 
 - Stage 1 and 2 captures retaken with `&camdist=near` and a wait for the tile grid to settle. **Grid defect fixed**: all four tiles are
-  now the same size in `stage-1-side-swipe.png` and `stage-2-t-bone.png`.
+  now the same size in `captures/stage-1-side-swipe.png` and `captures/stage-2-t-bone.png`.
 - **Camera defect not fixed**: the near setting frames the cars as before (a few metres behind, roof and tail), so a loose
   door or a missing bumper still isn't legible in the stills. It is the host's default distance setting, which the tile
   chase cameras don't seem to take in this page; a real fix is an orbit or side-on shot of the involved car

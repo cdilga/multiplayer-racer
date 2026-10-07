@@ -13,7 +13,7 @@ HUD hidden, seed 2, autopilot cars at point 159-162 of the bitumen). Reference:
   crosses the tarmac with broken white marks either side (a creek-dip wash). It reads as a floodway, but it is a flat
   rectangle of paint; I'd call it acceptable but crude. A yellow warning sign stands at the far right.
 - `highway-laptop-1366.jpg`: same at laptop size (checked in the contact set, nothing clipped).
-- `plot-bitumen.png`, `validator-bitumen.txt`: regenerated; the counts now cover centre dashes and posts only.
+- `plot-outback-bitumen.png`, `validator-bitumen.txt`: regenerated; the counts now cover centre dashes and posts only.
 
 ## Fixed this round
 - Double edge line removed (piece, rule, data, kit render module, and the registry entry).

@@ -16,7 +16,7 @@ Reference: `art/references/australia/generated/biome-outback-dirt-and-bitumen.pn
   the 640x360 tile (threshold in the test is lower and passes; 1 of 1 test). These two measurement shots still show the
   join pill, "Keys & pads" button and render chip (they are test screenshots, not evidence frames); the render chip reads
   "1920x1080 native", confirming no auto-lowering.
-- `plot-dirt.png`, `validator-and-autopilot-dirt.txt`: regenerated.
+- `plot-outback-dirt.png`, `validator-and-autopilot-dirt.txt`: regenerated.
 
 ## Fixed this round
 - 1080p readability is measured at true 1080p.

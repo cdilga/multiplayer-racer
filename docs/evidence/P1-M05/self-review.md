@@ -2,7 +2,7 @@
 
 Captured with `JJ_HEADLESS=1 node web/host/tests/biome-capture.mjs rocks` (headless Chromium, software GL; `res=1&autores=off`;
 HUD, join pill and chips hidden for the shot only; seed 2; autopilot cars stepped to a named point). Reference:
-`art/references/australia/generated/biome-rocks.png`.
+`art/references/australia/generated/biome-rocks-olgas.png`.
 
 ## Looked at
 - `domes-tv-1080p.jpg` (1920x1080, point 162): graded-dirt road bending between tall banded red rock domes; the nearest dome on
