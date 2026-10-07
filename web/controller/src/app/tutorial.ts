@@ -78,6 +78,8 @@ export class Tutorial {
   constructor(
     private readonly area: HTMLElement,
     private readonly onOpen: (open: boolean) => void = () => {},
+    /** The menu's Identify entry (R99): the same flash as the tools row's button. */
+    private readonly onIdentify: () => void = () => {},
   ) {}
 
   show(from = 0): void {
@@ -110,18 +112,21 @@ export class Tutorial {
 
   private render(won = false): void {
     if (!this.card) return;
+    const identify = `<button class="btn quiet-ink" data-act="menu-identify" aria-label="Identify: flash my number on the TV">Identify</button>`;
     if (this.step >= STEPS.length) {
-      this.card.innerHTML = `<h2 class="display italic">You're ready</h2><p>That's every control. Tap Ready when you are.</p><button class="btn primary big" data-act="done">Let's race</button>`;
+      this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Help</span></span>${identify}</div><h2 class="display italic">You're ready</h2><p>That's every control. Tap Ready when you are.</p><button class="btn primary big" data-act="done">Let's race</button>`;
       this.card.querySelector('[data-act=done]')!.addEventListener('click', () => this.close(true));
+      this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
       return;
     }
     const st = STEPS[this.step]!;
     const goals = st.goals.map(([k, label]) => `<span class="goal${this.goals[k] || won ? ' on' : ''}">${this.goals[k] || won ? '✓ ' : ''}${label}</span>`).join('');
     const dots = STEPS.map((_, i) => `<i class="${i < this.step ? 'done' : i === this.step ? 'on' : ''}"></i>`).join('');
-    this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Step ${this.step + 1} of ${STEPS.length}</span></span><button class="btn quiet-ink" data-act="skip">Skip tutorial</button></div>
+    this.card.innerHTML = `<div class="coach-top"><span class="tag"><span>Step ${this.step + 1} of ${STEPS.length}</span></span><span>${identify}<button class="btn quiet-ink" data-act="skip">Skip tutorial</button></span></div>
       <h2 class="display italic">${st.title}</h2><p>${st.text}</p><div class="goals">${goals}</div>
       ${won ? '<span class="goodstrip"><span>Nice! On to the next one</span></span>' : `<div class="dots">${dots}</div>`}`;
     this.card.querySelector('[data-act=skip]')!.addEventListener('click', () => this.close(false));
+    this.card.querySelector('[data-act=menu-identify]')!.addEventListener('click', () => this.onIdentify());
   }
 
   private check(): void {
