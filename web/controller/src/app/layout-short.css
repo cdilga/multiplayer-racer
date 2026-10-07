@@ -20,6 +20,7 @@
   .strip .nm { font-size: 17px; }
   .strip .tools { flex: 0 1 auto; flex-wrap: nowrap; gap: 5px; padding: 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
   .strip .tools .btn { flex: none; min-height: 44px; padding: 0 8px; font-size: 13px; }
+  .strip .tools .btn.icon { width: 44px; padding: 0; }
   .strip .race { margin-left: 0; }
   .zone { margin: 0 16px 12px; }
   .round-banner { top: auto; bottom: 10px; transform: translateX(-50%); padding: 4px 12px; font-size: 18px; white-space: nowrap; }
@@ -36,4 +37,7 @@
   .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
   .strip .tools { gap: 3px; }
   .strip .tools .btn { padding: 0 5px; font-size: 12px; min-width: 40px; }
+  /* Icon-only tools are squares; seven of them plus Identify's label must fit 640 px beside the number and the place. */
+  .strip .tools .btn.icon { width: 40px; padding: 0; }
+  .strip .tools .btn.identify { font-size: 13px; padding: 0 8px; }
 }
