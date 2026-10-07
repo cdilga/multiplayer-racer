@@ -1,0 +1,39 @@
+{
+ "duel": "boost-placement-duel",
+ "fixtures": [
+  "boost-placement-duel.plain.json",
+  "boost-placement-duel.straight.json",
+  "boost-placement-duel.corner.json",
+  "boost-placement-duel.mash-a.json",
+  "boost-placement-duel.mash-b.json"
+ ],
+ "gate": {
+  "metric": "progressM",
+  "at": 110.0,
+  "maxOffsetM": 12.0
+ },
+ "labels": [
+  "plain",
+  "straight",
+  "corner",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "straight",
+   "slower": "corner",
+   "byS": 0.5
+  },
+  {
+   "faster": "straight",
+   "slower": "plain",
+   "byS": 0.5
+  },
+  {
+   "faster": "straight",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

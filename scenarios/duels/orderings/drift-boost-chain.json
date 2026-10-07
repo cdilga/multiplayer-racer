@@ -1,0 +1,46 @@
+{
+ "duel": "drift-boost-chain",
+ "fixtures": [
+  "drift-boost-chain.plain.json",
+  "drift-boost-chain.grip.json",
+  "drift-boost-chain.well.json",
+  "drift-boost-chain.botched.json",
+  "drift-boost-chain.mash-a.json",
+  "drift-boost-chain.mash-b.json"
+ ],
+ "gate": {
+  "metric": "progressM",
+  "at": 150.0,
+  "maxOffsetM": 12.0
+ },
+ "labels": [
+  "plain",
+  "grip",
+  "well",
+  "botched",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "well",
+   "slower": "grip",
+   "byS": 0.2
+  },
+  {
+   "faster": "grip",
+   "slower": "plain",
+   "byS": 0.5
+  },
+  {
+   "faster": "grip",
+   "slower": "botched",
+   "byS": 0.0
+  },
+  {
+   "faster": "well",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

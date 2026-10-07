@@ -1,0 +1,28 @@
+{
+ "duel": "drift-straight-penalty",
+ "fixture": "drift-straight-penalty.json",
+ "gate": {
+  "metric": "progressM",
+  "at": 150.0,
+  "maxOffsetM": 9.0
+ },
+ "labels": [
+  "plain",
+  "drift-short",
+  "drift-long",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "plain",
+   "slower": "drift-*",
+   "byS": 0.02
+  },
+  {
+   "faster": "plain",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

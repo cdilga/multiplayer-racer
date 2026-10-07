@@ -1,0 +1,53 @@
+{
+ "scenario": "drift-corner-duel.botched",
+ "what": "\u00a77.3b drift-corner-duel (P1-S09): the greybox hairpin at 18 m/s entry, every car but the mashers on the autopilot's line, the ACTION stick the only difference. plain: nothing. straight-boost: the starting boost spent on the straight. exit-boost: boost spent on the exit. well: the handbrake held through the corner (the drift charges the meter) and the banked boost spent on the exit. botched: the handbrake held from 1.0 s, far too early, which spins it out. Known gap: well beats plain, but exit-boost does as well as well does (the corner's drift adds nothing over the boost it feeds).",
+ "map": "scenarios/duels/yard/duel-yard.json",
+ "seed": 91,
+ "ticks": 1680,
+ "cars": [
+  {
+   "pose": {
+    "x": 110,
+    "y": 0.1,
+    "z": 0,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  }
+ ],
+ "autopilot": [
+  {
+   "tick": 0,
+   "car": 0,
+   "on": true
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 120
+  },
+  {
+   "car": 0,
+   "fromTick": 120,
+   "toTick": 540,
+   "drift": true
+  },
+  {
+   "car": 0,
+   "fromTick": 540,
+   "toTick": 828,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 828
+  }
+ ],
+ "expect": []
+}

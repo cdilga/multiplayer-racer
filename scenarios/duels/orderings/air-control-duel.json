@@ -1,0 +1,32 @@
+{
+ "duel": "air-control-duel",
+ "fixture": "air-control-duel.json",
+ "gate": {
+  "metric": "travel",
+  "at": 70.0
+ },
+ "labels": [
+  "plain",
+  "well",
+  "over",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "well",
+   "slower": "plain",
+   "byS": 0.1
+  },
+  {
+   "faster": "plain",
+   "slower": "over",
+   "byS": 0.2
+  },
+  {
+   "faster": "well",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

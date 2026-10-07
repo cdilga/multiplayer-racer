@@ -1,0 +1,49 @@
+{
+ "duel": "drift-corner-duel",
+ "fixtures": [
+  "drift-corner-duel.plain.json",
+  "drift-corner-duel.straight-boost.json",
+  "drift-corner-duel.exit-boost.json",
+  "drift-corner-duel.well.json",
+  "drift-corner-duel.botched.json",
+  "drift-corner-duel.mash-a.json",
+  "drift-corner-duel.mash-b.json"
+ ],
+ "gate": {
+  "metric": "progressM",
+  "at": 110.0,
+  "maxOffsetM": 12.0
+ },
+ "labels": [
+  "plain",
+  "straight-boost",
+  "exit-boost",
+  "well",
+  "botched",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "well",
+   "slower": "plain",
+   "byS": 0.5
+  },
+  {
+   "faster": "plain",
+   "slower": "botched",
+   "byS": 0.1
+  },
+  {
+   "faster": "well",
+   "slower": "mash-*",
+   "byS": 0.0
+  },
+  {
+   "faster": "well",
+   "slower": "exit-boost",
+   "byS": 0.2,
+   "gap": "the drift's charge buys no time over the same boost spent without drifting (S09 search: in the hairpin the best drift line ties the best boost-only one)"
+  }
+ ]
+}

@@ -1,0 +1,2545 @@
+{
+ "scenario": "boost-placement-duel.mash-a",
+ "what": "\u00a77.3b boost-placement-duel (P1-S09): the same boost spent on the straight beats it spent in the corner. Five Cruz Missiles enter the greybox hairpin at 18 m/s, three on the autopilot's line (the same line for all), the ACTION stick the only difference. plain: no boost. straight: the starting meter (1.4 s of boost) spent on the straight before the corner. corner: the same boost spent through the corner. mash: two seeded random scripts. Gate: 110 m along the route.",
+ "map": "scenarios/duels/yard/duel-yard.json",
+ "seed": 91,
+ "ticks": 1680,
+ "cars": [
+  {
+   "pose": {
+    "x": 110,
+    "y": 0.1,
+    "z": 0,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 6,
+   "throttle": -0.66,
+   "steer": 0.37,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 6,
+   "toTick": 12,
+   "throttle": 0.9,
+   "steer": 0.69,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 12,
+   "toTick": 18,
+   "throttle": -0.07,
+   "steer": 0.65,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 18,
+   "toTick": 24,
+   "throttle": 0.21,
+   "steer": -0.26,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 24,
+   "toTick": 30,
+   "throttle": 0.93,
+   "steer": -0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 30,
+   "toTick": 36,
+   "throttle": 0.53,
+   "steer": -0.83,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 36,
+   "toTick": 42,
+   "throttle": -0.1,
+   "steer": 0.09,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 42,
+   "toTick": 48,
+   "throttle": 0.11,
+   "steer": 0.92,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 48,
+   "toTick": 54,
+   "throttle": 0.47,
+   "steer": 0.57,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 54,
+   "toTick": 60,
+   "throttle": 0.38,
+   "steer": -0.14,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 60,
+   "toTick": 66,
+   "throttle": -0.23,
+   "steer": -0.25,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 66,
+   "toTick": 72,
+   "throttle": 0.66,
+   "steer": -0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 72,
+   "toTick": 78,
+   "throttle": -0.91,
+   "steer": 0.86,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 78,
+   "toTick": 84,
+   "throttle": -0.22,
+   "steer": -0.63,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 84,
+   "toTick": 90,
+   "throttle": 0.88,
+   "steer": -0.13,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 90,
+   "toTick": 96,
+   "throttle": 0.66,
+   "steer": 0.05,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 96,
+   "toTick": 102,
+   "throttle": 0.54,
+   "steer": 0.21,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 102,
+   "toTick": 108,
+   "throttle": 0.77,
+   "steer": 0.35,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 108,
+   "toTick": 114,
+   "throttle": 0.8,
+   "steer": 0.64,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 114,
+   "toTick": 120,
+   "throttle": 0.33,
+   "steer": -0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 120,
+   "toTick": 126,
+   "throttle": 0.25,
+   "steer": -0.64,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 126,
+   "toTick": 132,
+   "throttle": 0.42,
+   "steer": 0.76,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 132,
+   "toTick": 138,
+   "throttle": 0.16,
+   "steer": 0.1,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 138,
+   "toTick": 144,
+   "throttle": -0.18,
+   "steer": -0.98,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 144,
+   "toTick": 150,
+   "throttle": 0.81,
+   "steer": -0.68,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 150,
+   "toTick": 156,
+   "throttle": 0.19,
+   "steer": -0.98,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 156,
+   "toTick": 162,
+   "throttle": -0.4,
+   "steer": -0.25,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 162,
+   "toTick": 168,
+   "throttle": 0.67,
+   "steer": 0.3,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 168,
+   "toTick": 174,
+   "throttle": 0.14,
+   "steer": -0.16,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 174,
+   "toTick": 180,
+   "throttle": -0.58,
+   "steer": 0.37,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 180,
+   "toTick": 186,
+   "throttle": 0.78,
+   "steer": -0.46,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 186,
+   "toTick": 192,
+   "throttle": -0.64,
+   "steer": -0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 192,
+   "toTick": 198,
+   "throttle": 0.8,
+   "steer": -0.18,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 198,
+   "toTick": 204,
+   "throttle": -0.8,
+   "steer": -0.18,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 204,
+   "toTick": 210,
+   "throttle": 0.26,
+   "steer": -0.03,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 210,
+   "toTick": 216,
+   "throttle": -0.58,
+   "steer": -0.54,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 216,
+   "toTick": 222,
+   "throttle": 0.47,
+   "steer": 0.31,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 222,
+   "toTick": 228,
+   "throttle": 0.13,
+   "steer": 0.92,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 228,
+   "toTick": 234,
+   "throttle": -0.68,
+   "steer": 0.94,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 234,
+   "toTick": 240,
+   "throttle": 0.8,
+   "steer": 0.67,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 240,
+   "toTick": 246,
+   "throttle": 0.98,
+   "steer": -0.48,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 246,
+   "toTick": 252,
+   "throttle": -0.55,
+   "steer": 0.51,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 252,
+   "toTick": 258,
+   "throttle": -0.11,
+   "steer": 0.55,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 258,
+   "toTick": 264,
+   "throttle": -0.37,
+   "steer": -0.69,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 264,
+   "toTick": 270,
+   "throttle": 0.69,
+   "steer": 0.28,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 270,
+   "toTick": 276,
+   "throttle": -0.79,
+   "steer": -0.32,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 276,
+   "toTick": 282,
+   "throttle": 0.0,
+   "steer": -0.44,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 282,
+   "toTick": 288,
+   "throttle": -0.07,
+   "steer": 0.94,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 288,
+   "toTick": 294,
+   "throttle": -0.92,
+   "steer": -0.72,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 294,
+   "toTick": 300,
+   "throttle": 0.37,
+   "steer": 0.11,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 300,
+   "toTick": 306,
+   "throttle": 0.48,
+   "steer": 0.4,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 306,
+   "toTick": 312,
+   "throttle": -0.63,
+   "steer": 0.75,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 312,
+   "toTick": 318,
+   "throttle": -0.21,
+   "steer": 0.4,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 318,
+   "toTick": 324,
+   "throttle": -0.83,
+   "steer": -0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 324,
+   "toTick": 330,
+   "throttle": 0.66,
+   "steer": 0.36,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 330,
+   "toTick": 336,
+   "throttle": 0.74,
+   "steer": 0.11,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 336,
+   "toTick": 342,
+   "throttle": 0.91,
+   "steer": 0.8,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 342,
+   "toTick": 348,
+   "throttle": 0.9,
+   "steer": -0.47,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 348,
+   "toTick": 354,
+   "throttle": 0.05,
+   "steer": 0.35,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 354,
+   "toTick": 360,
+   "throttle": 0.95,
+   "steer": -0.85,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 360,
+   "toTick": 366,
+   "throttle": 0.44,
+   "steer": 0.55,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 366,
+   "toTick": 372,
+   "throttle": 0.8,
+   "steer": -0.36,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 372,
+   "toTick": 378,
+   "throttle": 0.64,
+   "steer": 0.74,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 378,
+   "toTick": 384,
+   "throttle": 0.21,
+   "steer": 0.79,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 384,
+   "toTick": 390,
+   "throttle": -0.71,
+   "steer": 0.2,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 390,
+   "toTick": 396,
+   "throttle": -0.57,
+   "steer": 0.55,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 396,
+   "toTick": 402,
+   "throttle": 0.97,
+   "steer": -0.8,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 402,
+   "toTick": 408,
+   "throttle": 0.66,
+   "steer": -0.21,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 408,
+   "toTick": 414,
+   "throttle": -0.46,
+   "steer": 0.76,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 414,
+   "toTick": 420,
+   "throttle": -0.35,
+   "steer": -0.93,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 420,
+   "toTick": 426,
+   "throttle": -0.75,
+   "steer": 0.43,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 426,
+   "toTick": 432,
+   "throttle": 0.8,
+   "steer": -0.85,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 432,
+   "toTick": 438,
+   "throttle": -0.86,
+   "steer": 0.22,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 438,
+   "toTick": 444,
+   "throttle": 0.11,
+   "steer": -0.52,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 444,
+   "toTick": 450,
+   "throttle": 0.03,
+   "steer": 0.31,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 450,
+   "toTick": 456,
+   "throttle": 0.55,
+   "steer": 0.73,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 456,
+   "toTick": 462,
+   "throttle": 0.93,
+   "steer": -0.45,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 462,
+   "toTick": 468,
+   "throttle": -0.62,
+   "steer": -0.32,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 468,
+   "toTick": 474,
+   "throttle": 0.75,
+   "steer": 0.82,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 474,
+   "toTick": 480,
+   "throttle": -0.08,
+   "steer": -0.07,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 480,
+   "toTick": 486,
+   "throttle": 0.35,
+   "steer": -0.18,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 486,
+   "toTick": 492,
+   "throttle": 0.31,
+   "steer": -0.28,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 492,
+   "toTick": 498,
+   "throttle": 0.45,
+   "steer": 0.94,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 498,
+   "toTick": 504,
+   "throttle": 0.11,
+   "steer": 0.77,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 504,
+   "toTick": 510,
+   "throttle": 0.08,
+   "steer": -0.48,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 510,
+   "toTick": 516,
+   "throttle": 0.54,
+   "steer": 0.15,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 516,
+   "toTick": 522,
+   "throttle": -0.16,
+   "steer": -0.56,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 522,
+   "toTick": 528,
+   "throttle": -0.22,
+   "steer": -0.54,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 528,
+   "toTick": 534,
+   "throttle": 0.13,
+   "steer": 0.09,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 534,
+   "toTick": 540,
+   "throttle": 0.24,
+   "steer": 0.61,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 540,
+   "toTick": 546,
+   "throttle": 0.02,
+   "steer": -0.43,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 546,
+   "toTick": 552,
+   "throttle": -0.46,
+   "steer": -0.41,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 552,
+   "toTick": 558,
+   "throttle": 0.81,
+   "steer": -0.24,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 558,
+   "toTick": 564,
+   "throttle": 0.05,
+   "steer": -0.63,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 564,
+   "toTick": 570,
+   "throttle": 0.7,
+   "steer": -0.1,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 570,
+   "toTick": 576,
+   "throttle": 0.34,
+   "steer": -0.03,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 576,
+   "toTick": 582,
+   "throttle": 0.38,
+   "steer": 0.86,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 582,
+   "toTick": 588,
+   "throttle": 0.88,
+   "steer": 0.65,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 588,
+   "toTick": 594,
+   "throttle": -0.1,
+   "steer": 0.05,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 594,
+   "toTick": 600,
+   "throttle": -0.06,
+   "steer": 0.93,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 600,
+   "toTick": 606,
+   "throttle": 0.34,
+   "steer": -0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 606,
+   "toTick": 612,
+   "throttle": -0.51,
+   "steer": 0.87,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 612,
+   "toTick": 618,
+   "throttle": -0.59,
+   "steer": 0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 618,
+   "toTick": 624,
+   "throttle": 0.7,
+   "steer": 0.29,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 624,
+   "toTick": 630,
+   "throttle": 0.42,
+   "steer": 0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 630,
+   "toTick": 636,
+   "throttle": 0.08,
+   "steer": 0.63,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 636,
+   "toTick": 642,
+   "throttle": 0.05,
+   "steer": 0.96,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 642,
+   "toTick": 648,
+   "throttle": 0.47,
+   "steer": 0.6,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 648,
+   "toTick": 654,
+   "throttle": 0.89,
+   "steer": 0.63,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 654,
+   "toTick": 660,
+   "throttle": 0.38,
+   "steer": -0.87,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 660,
+   "toTick": 666,
+   "throttle": 0.55,
+   "steer": 0.49,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 666,
+   "toTick": 672,
+   "throttle": -0.87,
+   "steer": 0.8,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 672,
+   "toTick": 678,
+   "throttle": -0.11,
+   "steer": -0.06,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 678,
+   "toTick": 684,
+   "throttle": -0.77,
+   "steer": -0.89,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 684,
+   "toTick": 690,
+   "throttle": -0.43,
+   "steer": -0.93,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 690,
+   "toTick": 696,
+   "throttle": -0.69,
+   "steer": 0.88,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 696,
+   "toTick": 702,
+   "throttle": -0.76,
+   "steer": 0.21,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 702,
+   "toTick": 708,
+   "throttle": 0.76,
+   "steer": -0.44,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 708,
+   "toTick": 714,
+   "throttle": 0.28,
+   "steer": -0.95,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 714,
+   "toTick": 720,
+   "throttle": -0.96,
+   "steer": 0.93,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 720,
+   "toTick": 726,
+   "throttle": -0.91,
+   "steer": -0.9,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 726,
+   "toTick": 732,
+   "throttle": -0.76,
+   "steer": 0.17,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 732,
+   "toTick": 738,
+   "throttle": -0.68,
+   "steer": -0.86,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 738,
+   "toTick": 744,
+   "throttle": 0.37,
+   "steer": -0.97,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 744,
+   "toTick": 750,
+   "throttle": -0.44,
+   "steer": -0.86,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 750,
+   "toTick": 756,
+   "throttle": 0.46,
+   "steer": -0.22,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 756,
+   "toTick": 762,
+   "throttle": -0.7,
+   "steer": 0.92,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 762,
+   "toTick": 768,
+   "throttle": -0.9,
+   "steer": -0.42,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 768,
+   "toTick": 774,
+   "throttle": -0.5,
+   "steer": -0.82,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 774,
+   "toTick": 780,
+   "throttle": -0.05,
+   "steer": 0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 780,
+   "toTick": 786,
+   "throttle": -0.88,
+   "steer": -0.85,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 786,
+   "toTick": 792,
+   "throttle": 0.51,
+   "steer": -0.32,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 792,
+   "toTick": 798,
+   "throttle": 0.79,
+   "steer": 0.09,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 798,
+   "toTick": 804,
+   "throttle": -0.37,
+   "steer": 0.99,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 804,
+   "toTick": 810,
+   "throttle": 0.95,
+   "steer": 0.33,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 810,
+   "toTick": 816,
+   "throttle": -0.83,
+   "steer": -0.44,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 816,
+   "toTick": 822,
+   "throttle": 0.68,
+   "steer": 0.94,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 822,
+   "toTick": 828,
+   "throttle": 0.12,
+   "steer": 0.16,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 828,
+   "toTick": 834,
+   "throttle": -0.14,
+   "steer": -0.26,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 834,
+   "toTick": 840,
+   "throttle": 0.33,
+   "steer": -0.41,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 840,
+   "toTick": 846,
+   "throttle": -0.37,
+   "steer": -0.39,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 846,
+   "toTick": 852,
+   "throttle": -0.6,
+   "steer": -0.89,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 852,
+   "toTick": 858,
+   "throttle": 0.23,
+   "steer": 0.37,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 858,
+   "toTick": 864,
+   "throttle": 0.94,
+   "steer": -0.52,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 864,
+   "toTick": 870,
+   "throttle": -0.56,
+   "steer": 0.38,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 870,
+   "toTick": 876,
+   "throttle": 0.11,
+   "steer": 0.62,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 876,
+   "toTick": 882,
+   "throttle": 0.37,
+   "steer": 0.26,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 882,
+   "toTick": 888,
+   "throttle": 0.88,
+   "steer": 0.59,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 888,
+   "toTick": 894,
+   "throttle": -0.13,
+   "steer": 0.14,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 894,
+   "toTick": 900,
+   "throttle": -0.33,
+   "steer": -0.55,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 900,
+   "toTick": 906,
+   "throttle": -0.46,
+   "steer": -0.73,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 906,
+   "toTick": 912,
+   "throttle": -0.79,
+   "steer": 0.22,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 912,
+   "toTick": 918,
+   "throttle": -0.45,
+   "steer": 0.3,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 918,
+   "toTick": 924,
+   "throttle": 0.99,
+   "steer": 0.27,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 924,
+   "toTick": 930,
+   "throttle": 0.78,
+   "steer": 0.68,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 930,
+   "toTick": 936,
+   "throttle": 0.66,
+   "steer": -0.95,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 936,
+   "toTick": 942,
+   "throttle": 0.95,
+   "steer": -0.16,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 942,
+   "toTick": 948,
+   "throttle": 0.19,
+   "steer": 0.09,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 948,
+   "toTick": 954,
+   "throttle": 0.37,
+   "steer": 0.08,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 954,
+   "toTick": 960,
+   "throttle": 0.47,
+   "steer": 0.71,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 960,
+   "toTick": 966,
+   "throttle": -0.86,
+   "steer": -0.15,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 966,
+   "toTick": 972,
+   "throttle": 0.46,
+   "steer": -0.38,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 972,
+   "toTick": 978,
+   "throttle": -0.77,
+   "steer": 0.14,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 978,
+   "toTick": 984,
+   "throttle": -0.26,
+   "steer": 0.15,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 984,
+   "toTick": 990,
+   "throttle": -0.68,
+   "steer": -0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 990,
+   "toTick": 996,
+   "throttle": 0.27,
+   "steer": 0.28,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 996,
+   "toTick": 1002,
+   "throttle": 0.69,
+   "steer": -0.75,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1002,
+   "toTick": 1008,
+   "throttle": 0.67,
+   "steer": -0.22,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1008,
+   "toTick": 1014,
+   "throttle": 0.28,
+   "steer": -0.18,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1014,
+   "toTick": 1020,
+   "throttle": 0.61,
+   "steer": -0.86,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1020,
+   "toTick": 1026,
+   "throttle": 0.17,
+   "steer": 0.68,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1026,
+   "toTick": 1032,
+   "throttle": 0.3,
+   "steer": -0.94,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1032,
+   "toTick": 1038,
+   "throttle": -0.9,
+   "steer": -0.53,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1038,
+   "toTick": 1044,
+   "throttle": -0.09,
+   "steer": 0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1044,
+   "toTick": 1050,
+   "throttle": -0.74,
+   "steer": 0.45,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1050,
+   "toTick": 1056,
+   "throttle": 0.35,
+   "steer": -0.81,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1056,
+   "toTick": 1062,
+   "throttle": -0.97,
+   "steer": -0.91,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1062,
+   "toTick": 1068,
+   "throttle": 0.68,
+   "steer": -0.42,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1068,
+   "toTick": 1074,
+   "throttle": 0.45,
+   "steer": 0.96,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1074,
+   "toTick": 1080,
+   "throttle": 0.2,
+   "steer": -0.31,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1080,
+   "toTick": 1086,
+   "throttle": -0.32,
+   "steer": -0.39,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1086,
+   "toTick": 1092,
+   "throttle": 0.02,
+   "steer": -0.59,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1092,
+   "toTick": 1098,
+   "throttle": -0.06,
+   "steer": -0.78,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1098,
+   "toTick": 1104,
+   "throttle": -0.18,
+   "steer": -0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1104,
+   "toTick": 1110,
+   "throttle": -0.2,
+   "steer": 0.6,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1110,
+   "toTick": 1116,
+   "throttle": -0.35,
+   "steer": 0.87,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1116,
+   "toTick": 1122,
+   "throttle": -0.76,
+   "steer": 0.86,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1122,
+   "toTick": 1128,
+   "throttle": -0.82,
+   "steer": 0.67,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1128,
+   "toTick": 1134,
+   "throttle": -0.06,
+   "steer": -0.79,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1134,
+   "toTick": 1140,
+   "throttle": -0.73,
+   "steer": 0.04,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1140,
+   "toTick": 1146,
+   "throttle": 0.77,
+   "steer": 0.97,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1146,
+   "toTick": 1152,
+   "throttle": -0.92,
+   "steer": 0.78,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1152,
+   "toTick": 1158,
+   "throttle": 0.78,
+   "steer": 0.26,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1158,
+   "toTick": 1164,
+   "throttle": -0.98,
+   "steer": -0.53,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1164,
+   "toTick": 1170,
+   "throttle": -0.39,
+   "steer": 0.52,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1170,
+   "toTick": 1176,
+   "throttle": -0.43,
+   "steer": -0.17,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1176,
+   "toTick": 1182,
+   "throttle": -0.27,
+   "steer": -0.89,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1182,
+   "toTick": 1188,
+   "throttle": 0.37,
+   "steer": -0.56,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1188,
+   "toTick": 1194,
+   "throttle": 0.04,
+   "steer": 0.56,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1194,
+   "toTick": 1200,
+   "throttle": -0.8,
+   "steer": -0.67,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1200,
+   "toTick": 1206,
+   "throttle": 0.21,
+   "steer": 0.34,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1206,
+   "toTick": 1212,
+   "throttle": 0.37,
+   "steer": 0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1212,
+   "toTick": 1218,
+   "throttle": 0.75,
+   "steer": -0.92,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1218,
+   "toTick": 1224,
+   "throttle": 0.92,
+   "steer": 0.56,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1224,
+   "toTick": 1230,
+   "throttle": -0.37,
+   "steer": -0.58,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1230,
+   "toTick": 1236,
+   "throttle": 0.61,
+   "steer": 0.09,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1236,
+   "toTick": 1242,
+   "throttle": 0.71,
+   "steer": -1.0,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1242,
+   "toTick": 1248,
+   "throttle": -0.83,
+   "steer": 0.16,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1248,
+   "toTick": 1254,
+   "throttle": -0.69,
+   "steer": -0.33,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1254,
+   "toTick": 1260,
+   "throttle": 0.03,
+   "steer": 0.11,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1260,
+   "toTick": 1266,
+   "throttle": 0.32,
+   "steer": -0.99,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1266,
+   "toTick": 1272,
+   "throttle": -0.65,
+   "steer": 0.67,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1272,
+   "toTick": 1278,
+   "throttle": -0.64,
+   "steer": -0.92,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1278,
+   "toTick": 1284,
+   "throttle": 0.01,
+   "steer": -0.22,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1284,
+   "toTick": 1290,
+   "throttle": 0.92,
+   "steer": 0.0,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1290,
+   "toTick": 1296,
+   "throttle": -0.23,
+   "steer": -0.92,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1296,
+   "toTick": 1302,
+   "throttle": -0.18,
+   "steer": 0.6,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1302,
+   "toTick": 1308,
+   "throttle": 0.79,
+   "steer": 0.56,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1308,
+   "toTick": 1314,
+   "throttle": -0.24,
+   "steer": 0.87,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1314,
+   "toTick": 1320,
+   "throttle": 0.18,
+   "steer": 0.68,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1320,
+   "toTick": 1326,
+   "throttle": -0.85,
+   "steer": 0.07,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1326,
+   "toTick": 1332,
+   "throttle": -0.16,
+   "steer": -0.41,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1332,
+   "toTick": 1338,
+   "throttle": -0.84,
+   "steer": 0.85,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1338,
+   "toTick": 1344,
+   "throttle": 0.03,
+   "steer": -0.68,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1344,
+   "toTick": 1350,
+   "throttle": 0.8,
+   "steer": -0.91,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1350,
+   "toTick": 1356,
+   "throttle": -0.97,
+   "steer": 0.4,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1356,
+   "toTick": 1362,
+   "throttle": -0.33,
+   "steer": 0.72,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1362,
+   "toTick": 1368,
+   "throttle": -0.2,
+   "steer": 0.12,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1368,
+   "toTick": 1374,
+   "throttle": 0.63,
+   "steer": 0.52,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1374,
+   "toTick": 1380,
+   "throttle": 0.22,
+   "steer": 0.8,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1380,
+   "toTick": 1386,
+   "throttle": -0.18,
+   "steer": -0.07,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1386,
+   "toTick": 1392,
+   "throttle": -0.28,
+   "steer": 0.59,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1392,
+   "toTick": 1398,
+   "throttle": 0.79,
+   "steer": -0.92,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1398,
+   "toTick": 1404,
+   "throttle": 0.22,
+   "steer": -0.1,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1404,
+   "toTick": 1410,
+   "throttle": 0.84,
+   "steer": 0.75,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1410,
+   "toTick": 1416,
+   "throttle": 0.9,
+   "steer": 0.16,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1416,
+   "toTick": 1422,
+   "throttle": 0.92,
+   "steer": 0.69,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1422,
+   "toTick": 1428,
+   "throttle": -0.35,
+   "steer": 0.29,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1428,
+   "toTick": 1434,
+   "throttle": 0.3,
+   "steer": 0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1434,
+   "toTick": 1440,
+   "throttle": 0.59,
+   "steer": 0.49,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1440,
+   "toTick": 1446,
+   "throttle": 0.03,
+   "steer": 0.25,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1446,
+   "toTick": 1452,
+   "throttle": -0.54,
+   "steer": -0.51,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1452,
+   "toTick": 1458,
+   "throttle": 0.88,
+   "steer": -0.69,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1458,
+   "toTick": 1464,
+   "throttle": -0.14,
+   "steer": 0.53,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1464,
+   "toTick": 1470,
+   "throttle": -0.36,
+   "steer": 0.99,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1470,
+   "toTick": 1476,
+   "throttle": 0.08,
+   "steer": -0.94,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1476,
+   "toTick": 1482,
+   "throttle": -0.87,
+   "steer": 0.04,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1482,
+   "toTick": 1488,
+   "throttle": 0.25,
+   "steer": -0.79,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1488,
+   "toTick": 1494,
+   "throttle": -0.33,
+   "steer": 0.14,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1494,
+   "toTick": 1500,
+   "throttle": -0.13,
+   "steer": -0.83,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1500,
+   "toTick": 1506,
+   "throttle": 0.26,
+   "steer": -0.39,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1506,
+   "toTick": 1512,
+   "throttle": 0.79,
+   "steer": 0.43,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1512,
+   "toTick": 1518,
+   "throttle": -0.73,
+   "steer": 0.52,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1518,
+   "toTick": 1524,
+   "throttle": 0.07,
+   "steer": 0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1524,
+   "toTick": 1530,
+   "throttle": 0.17,
+   "steer": -0.06,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1530,
+   "toTick": 1536,
+   "throttle": -0.15,
+   "steer": 0.04,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1536,
+   "toTick": 1542,
+   "throttle": 0.33,
+   "steer": 0.85,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1542,
+   "toTick": 1548,
+   "throttle": -0.17,
+   "steer": 0.85,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1548,
+   "toTick": 1554,
+   "throttle": -0.58,
+   "steer": -0.25,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1554,
+   "toTick": 1560,
+   "throttle": -0.3,
+   "steer": -0.4,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1560,
+   "toTick": 1566,
+   "throttle": 0.26,
+   "steer": 0.7,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1566,
+   "toTick": 1572,
+   "throttle": -0.16,
+   "steer": 0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1572,
+   "toTick": 1578,
+   "throttle": -0.44,
+   "steer": 0.65,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1578,
+   "toTick": 1584,
+   "throttle": -0.34,
+   "steer": 0.95,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1584,
+   "toTick": 1590,
+   "throttle": -0.03,
+   "steer": -0.87,
+   "drift": true,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1590,
+   "toTick": 1596,
+   "throttle": 0.49,
+   "steer": 0.33,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1596,
+   "toTick": 1602,
+   "throttle": 0.32,
+   "steer": 0.43,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1602,
+   "toTick": 1608,
+   "throttle": -0.26,
+   "steer": -0.57,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1608,
+   "toTick": 1614,
+   "throttle": 0.42,
+   "steer": -0.13,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1614,
+   "toTick": 1620,
+   "throttle": -0.61,
+   "steer": 0.9,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1620,
+   "toTick": 1626,
+   "throttle": 0.32,
+   "steer": 0.4,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1626,
+   "toTick": 1632,
+   "throttle": 0.93,
+   "steer": -0.98,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1632,
+   "toTick": 1638,
+   "throttle": 0.32,
+   "steer": 0.93,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1638,
+   "toTick": 1644,
+   "throttle": -0.29,
+   "steer": -0.19,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1644,
+   "toTick": 1650,
+   "throttle": -0.61,
+   "steer": -0.59,
+   "drift": false,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 1650,
+   "toTick": 1656,
+   "throttle": 0.48,
+   "steer": -0.17,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1656,
+   "toTick": 1662,
+   "throttle": -0.52,
+   "steer": 0.0,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1662,
+   "toTick": 1668,
+   "throttle": 0.19,
+   "steer": -0.47,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1668,
+   "toTick": 1674,
+   "throttle": -0.9,
+   "steer": -0.17,
+   "drift": false,
+   "boost": false
+  },
+  {
+   "car": 0,
+   "fromTick": 1674,
+   "toTick": 1680,
+   "throttle": 0.92,
+   "steer": -0.06,
+   "drift": false,
+   "boost": false
+  }
+ ],
+ "expect": []
+}

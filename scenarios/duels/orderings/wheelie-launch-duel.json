@@ -1,0 +1,45 @@
+{
+ "duel": "wheelie-launch-duel",
+ "fixture": "wheelie-launch-duel.json",
+ "gate": {
+  "metric": "travel",
+  "at": 40.0
+ },
+ "labels": [
+  "plain",
+  "well",
+  "early",
+  "late",
+  "held",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "well",
+   "slower": "plain",
+   "byS": 0.3,
+   "gap": "the preload pull brakes a rolling car (and reverses one at rest) for the 0.35 s it takes, and the launch drive (+15 % for 0.8 s) never repays it; see docs/evidence/P1-S09/search-log.md"
+  },
+  {
+   "faster": "plain",
+   "slower": "early",
+   "byS": 0.0
+  },
+  {
+   "faster": "plain",
+   "slower": "late",
+   "byS": 0.1
+  },
+  {
+   "faster": "plain",
+   "slower": "held",
+   "byS": 0.1
+  },
+  {
+   "faster": "well",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

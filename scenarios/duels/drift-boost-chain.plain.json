@@ -1,0 +1,31 @@
+{
+ "scenario": "drift-boost-chain.plain",
+ "what": "\u00a77.3b drift-boost-chain (P1-S09): the greybox's S-bend (a left then a right) and the straight after it, entered at 18 m/s, every car but the mashers on the autopilot's line. plain: nothing. grip: the starting boost spent (the best place the search found). well: the handbrake through each bend (each drift charges the meter) and the banked boost spent on the straight. botched: the handbrake the whole way with the same boost. Gate: 150 m along the route.",
+ "map": "scenarios/duels/yard/duel-yard.json",
+ "seed": 111,
+ "ticks": 1920,
+ "cars": [
+  {
+   "pose": {
+    "x": 107.5,
+    "y": 0.1,
+    "z": 30,
+    "headingDeg": 270
+   },
+   "linvel": [
+    -18,
+    0,
+    0
+   ]
+  }
+ ],
+ "autopilot": [
+  {
+   "tick": 0,
+   "car": 0,
+   "on": true
+  }
+ ],
+ "inputs": [],
+ "expect": []
+}

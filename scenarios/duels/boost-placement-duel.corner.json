@@ -1,0 +1,47 @@
+{
+ "scenario": "boost-placement-duel.corner",
+ "what": "\u00a77.3b boost-placement-duel (P1-S09): the same boost spent on the straight beats it spent in the corner. Five Cruz Missiles enter the greybox hairpin at 18 m/s, three on the autopilot's line (the same line for all), the ACTION stick the only difference. plain: no boost. straight: the starting meter (1.4 s of boost) spent on the straight before the corner. corner: the same boost spent through the corner. mash: two seeded random scripts. Gate: 110 m along the route.",
+ "map": "scenarios/duels/yard/duel-yard.json",
+ "seed": 91,
+ "ticks": 1680,
+ "cars": [
+  {
+   "pose": {
+    "x": 110,
+    "y": 0.1,
+    "z": 0,
+    "headingDeg": 90
+   },
+   "linvel": [
+    18,
+    0,
+    0
+   ]
+  }
+ ],
+ "autopilot": [
+  {
+   "tick": 0,
+   "car": 0,
+   "on": true
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 420
+  },
+  {
+   "car": 0,
+   "fromTick": 420,
+   "toTick": 588,
+   "boost": true
+  },
+  {
+   "car": 0,
+   "fromTick": 588
+  }
+ ],
+ "expect": []
+}
