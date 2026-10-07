@@ -3,7 +3,7 @@
 import { basePath } from '../../shared/src/base';
 import { applyProfile } from '../../shared/ui';
 import './app/controller.css';
-import names from './app/names.json';
+import { prefillName } from './app/names';
 import { Session } from './app/session';
 import { mountController, wakeHeld } from './app/view';
 
@@ -13,11 +13,6 @@ const params = new URLSearchParams(location.search);
 function codeFromPath(): string | null {
   const m = /^j\/([A-Za-z0-9]{4})$/.exec(location.pathname.slice(basePath().length));
   return m?.[1] ? m[1].toUpperCase() : null;
-}
-
-function prefillName(): string {
-  const ok = names.names.filter((n) => n.familyFriendly);
-  return ok[Math.floor(Math.random() * ok.length)]?.name ?? 'Mate';
 }
 
 function mountTray(): HTMLElement {

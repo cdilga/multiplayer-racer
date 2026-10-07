@@ -1,198 +1,256 @@
 {
- "schema": "jj.names.v1",
- "note": "Prefill names for the join card (P1-C03, plan \u00a79): a small curated list; only familyFriendly rows are offered. The full generator with reroll is V2-112.",
- "names": [
-  {
-   "name": "Davo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Stevo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Gazza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Shazza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Robbo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Tommo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Jacko",
-   "familyFriendly": true
-  },
-  {
-   "name": "Macca",
-   "familyFriendly": true
-  },
-  {
-   "name": "Johnno",
-   "familyFriendly": true
-  },
-  {
-   "name": "Bazza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Kylie",
-   "familyFriendly": true
-  },
-  {
-   "name": "Dazza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Smithy",
-   "familyFriendly": true
-  },
-  {
-   "name": "Hendo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Fitzy",
-   "familyFriendly": true
-  },
-  {
-   "name": "Sully",
-   "familyFriendly": true
-  },
-  {
-   "name": "Woody",
-   "familyFriendly": true
-  },
-  {
-   "name": "Thommo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Jonesy",
-   "familyFriendly": true
-  },
-  {
-   "name": "Bluey",
-   "familyFriendly": true
-  },
-  {
-   "name": "Ronnie",
-   "familyFriendly": true
-  },
-  {
-   "name": "Tezza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Bec",
-   "familyFriendly": true
-  },
-  {
-   "name": "Jules",
-   "familyFriendly": true
-  },
-  {
-   "name": "Nev",
-   "familyFriendly": true
-  },
-  {
-   "name": "Kev",
-   "familyFriendly": true
-  },
-  {
-   "name": "Trev",
-   "familyFriendly": true
-  },
-  {
-   "name": "Dusty",
-   "familyFriendly": true
-  },
-  {
-   "name": "Spud",
-   "familyFriendly": true
-  },
-  {
-   "name": "Snowy",
-   "familyFriendly": true
-  },
-  {
-   "name": "Blinky",
-   "familyFriendly": true
-  },
-  {
-   "name": "Skip",
-   "familyFriendly": true
-  },
-  {
-   "name": "Possum",
-   "familyFriendly": true
-  },
-  {
-   "name": "Wombat",
-   "familyFriendly": true
-  },
-  {
-   "name": "Galah",
-   "familyFriendly": true
-  },
-  {
-   "name": "Dingo",
-   "familyFriendly": true
-  },
-  {
-   "name": "Bandit",
-   "familyFriendly": true
-  },
-  {
-   "name": "Pearl",
-   "familyFriendly": true
-  },
-  {
-   "name": "Mate",
-   "familyFriendly": true
-  },
-  {
-   "name": "Larrikin",
-   "familyFriendly": true
-  },
-  {
-   "name": "Sheila",
-   "familyFriendly": true
-  },
-  {
-   "name": "Cobber",
-   "familyFriendly": true
-  },
-  {
-   "name": "Ripper",
-   "familyFriendly": true
-  },
-  {
-   "name": "Bonza",
-   "familyFriendly": true
-  },
-  {
-   "name": "Stubbie",
-   "familyFriendly": true
-  },
-  {
-   "name": "Thongs",
-   "familyFriendly": true
-  },
-  {
-   "name": "Sunnies",
-   "familyFriendly": true
-  },
-  {
-   "name": "Ute",
-   "familyFriendly": true
-  }
- ]
+  "schema": "jj.names.v2",
+  "note": "Prefill names for the join card (P1-C03, plan §9): curated Australian names, the -o/-a/-za diminutive style mixed with plain names and animals. Only familyFriendly rows are offered; `style` is 'diminutive' or 'plain'. No cap on the list. Validated by web/tests/journeys/c03-names.test.mjs. The full generator with reroll is V2-112.",
+  "names": [
+    {
+      "name": "Davo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Stevo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Gazza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Shazza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Robbo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Tommo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Jacko",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Macca",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Johnno",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Bazza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Kylie",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Dazza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Smithy",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Hendo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Fitzy",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Sully",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Woody",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Thommo",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Jonesy",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Bluey",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Ronnie",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Tezza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Bec",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Jules",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Nev",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Kev",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Trev",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Dusty",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Spud",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Snowy",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Blinky",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Skip",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Possum",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Wombat",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Galah",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Dingo",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Bandit",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Pearl",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Mate",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Larrikin",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Sheila",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Cobber",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Ripper",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Bonza",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Stubbie",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Thongs",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Sunnies",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Ute",
+      "familyFriendly": true,
+      "style": "plain"
+    },
+    {
+      "name": "Kazza",
+      "familyFriendly": true,
+      "style": "diminutive"
+    },
+    {
+      "name": "Tez",
+      "familyFriendly": true,
+      "style": "diminutive"
+    }
+  ]
 }

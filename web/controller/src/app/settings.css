@@ -53,3 +53,9 @@
 
 /* The "Turn sideways" prompt belongs to the play screen: it stays under an open settings sheet. */
 .screen:has(.settings-sheet) .rotate-card { display: none; }
+
+/* The Australian name button on the join card (P1-C03 later). */
+.name-field .btn { flex: none; min-height: 52px; }
+.aussie-note { margin: 6px 0 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.aussie-note[hidden] { display: none; }
+.aussie-note .btn { min-height: 40px; padding: 0 12px; font-size: 14px; }

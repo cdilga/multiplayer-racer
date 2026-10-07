@@ -9,6 +9,7 @@ import { Tutorial } from './tutorial';
 import './settings.css';
 import './layout-short.css';
 import { watchBadge } from '../hub/badge';
+import { ausName } from './ausname';
 import { Preferences, SettingsSheet, shape } from './settings';
 
 const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string; action?: [string, string] }>> = {
@@ -68,7 +69,29 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const joinCard = () => {
-    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card"><h1 class="display italic">Room ${esc(session.code)}</h1>${session.removed ? '<p class="note" data-note="removed">The host removed you. Join again whenever you like.</p>' : ''}<label for="name">Your name</label><input id="name" name="name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button class="btn primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card"><h1 class="display italic">Room ${esc(session.code)}</h1>${session.removed ? '<p class="note" data-note="removed">The host removed you. Join again whenever you like.</p>' : ''}<label for="name">Your name</label><div class="field name-field"><input id="name" name="name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    // The Australian name button: only on a tap, and one tap of Undo puts back what was typed.
+    const nameEl = app.querySelector<HTMLInputElement>('#name')!;
+    const aussieBtn = app.querySelector<HTMLButtonElement>('[data-act=aussie]')!;
+    const aussieNote = app.querySelector<HTMLElement>('[data-note=aussie]')!;
+    aussieBtn.addEventListener('click', async () => {
+      const typed = nameEl.value;
+      aussieBtn.disabled = true;
+      const r = await ausName(typed);
+      aussieBtn.disabled = false;
+      aussieNote.hidden = false;
+      if (r.how === 'none' || r.how === 'same') {
+        aussieNote.textContent = r.how === 'same' ? 'That already sounds Australian.' : "No Australian version of that one, so it's left as typed.";
+        return;
+      }
+      nameEl.value = r.name;
+      aussieNote.innerHTML = `<b>${esc(r.name)}</b> instead of ${esc(typed.trim())}. <button type="button" class="btn quiet" data-act="aussie-undo">Undo</button>`;
+      aussieNote.querySelector('[data-act=aussie-undo]')!.addEventListener('click', () => {
+        nameEl.value = typed;
+        aussieNote.hidden = true;
+        nameEl.focus();
+      });
+    });
     app.querySelector('form')!.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = app.querySelector<HTMLInputElement>('#name')!.value.trim().normalize('NFC') || prefillName();
