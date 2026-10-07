@@ -795,6 +795,13 @@ impl Sim {
         self.race.start(self.tick, laps);
     }
 
+    /// Ends the race now, as the finish window closing would (a journaled command, R90 "settable": scenarios and the test
+    /// surface can finish a round on demand). Returns whether it ended.
+    pub fn end_race_now(&mut self) -> bool {
+        self.journal.setup.push((self.tick, Setup::EndRace));
+        self.race.end_now(self.tick)
+    }
+
     /// A player's Recover button (a journaled command). Returns whether it was accepted: after 1 s under 3 m/s, or when
     /// inverted; the car then respawns at its anchor and is held for the 2 s penalty.
     pub fn recover(&mut self, car: CarId) -> bool {
@@ -2023,6 +2030,9 @@ impl Sim {
                     }
                     Setup::Wreck { car } => {
                         sim.wreck(CarId(*car));
+                    }
+                    Setup::EndRace => {
+                        sim.end_race_now();
                     }
                 }
             }

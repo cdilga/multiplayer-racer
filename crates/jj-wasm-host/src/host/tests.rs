@@ -1036,6 +1036,81 @@ fn four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars() {
     assert_eq!(room["results"].as_array().unwrap().len(), 4);
 }
 
+/// P1-G01 (R90 "settable"): the race can be finished on demand. A running 99-lap round with four racers plus
+/// `end_race_now` (what the test surface's `finishRace` calls) freezes the result as the finish window closing would:
+/// the race rules emit RaceOver, the director goes Running -> Finalising -> Intermission the normal way, and the standings
+/// hold every racer.
+#[test]
+fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_racer() {
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(1),
+            ui: UiCommand::SetLaps { laps: 99 },
+        }
+        .encode(),
+    )
+    .unwrap();
+    for (k, p) in ["p1", "p2", "p3", "p4"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+        h.handle(&net(p, Channel::Cmd, ControllerCmd::Ready { on: true }.encode()))
+            .unwrap();
+    }
+    let mut now = 0u64;
+    let mut step = |h: &mut Host, ticks: u64| {
+        for _ in 0..ticks {
+            h.advance(now);
+            now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        step(&mut h, 60);
+        guard += 1;
+        assert!(guard < 600, "the round starts on its own");
+    }
+    for c in 0..h.sim.cars().count() {
+        h.sim.set_autopilot(CarId(c as u32), true);
+    }
+    step(&mut h, 600);
+    assert_eq!(h.phase(), jj_session::director::Phase::Running, "99 laps are far off");
+    assert!(h.sim.race().over.is_none());
+    assert!(h.sim.end_race_now(), "a running race ends on demand");
+    assert!(!h.sim.end_race_now(), "and only once");
+    for _ in 0..200 {
+        if h.phase() == jj_session::director::Phase::Intermission {
+            break;
+        }
+        step(&mut h, 60);
+    }
+    assert_eq!(
+        h.phase(),
+        jj_session::director::Phase::Intermission,
+        "RaceOver took the director through Finalising to Intermission"
+    );
+    assert_eq!(
+        h.sim.race().over.map(|(_, why)| why),
+        Some(jj_sim::race::RaceEnd::Window)
+    );
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["results"].as_array().unwrap().len(), 4, "every racer is placed");
+    assert_eq!(room["standings"].as_array().unwrap().len(), 4);
+}
+
 /// P1-M08a (host side): with main preparing maps, the director's request becomes a `PrepareRequested` event with the
 /// session seed plus the preparation id; a `MapReady` for another preparation is dropped and counted; the right one is
 /// validated and the next Countdown builds the round on it.

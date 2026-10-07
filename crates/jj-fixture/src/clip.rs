@@ -390,6 +390,9 @@ fn apply(sim: &mut Sim, s: &Setup) {
         Setup::Wreck { car } => {
             sim.wreck(CarId(*car));
         }
+        Setup::EndRace => {
+            sim.end_race_now();
+        }
     }
 }
 

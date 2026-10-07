@@ -12,6 +12,7 @@
 //! | `spawn` `{cars: [CarSpec]}` | more cars, as a fixture's `cars` entries (journaled) | `{cars: [id]}` |
 //! | `inputs` `{spans: [InputSpan]}` | more scripted input spans (a seated car follows its seat, not the script) | `{spans}` |
 //! | `place` `{car, pose, linvel?}` | teleports a car with a velocity (journaled, so clips replay it) | `{tick, car}` |
+//! | `finishRace` | ends the running race now as the finish window closing would (result frozen, `RaceOver`) | `{tick, ended}` |
 //! | `step` `{ticks}` | exactly that many ticks, held or not | `{tick}` |
 //! | `until` `{until, maxTicks}` | steps until a car's metric is in range (`Until`, as in fixtures) | `{tick, ticks, held}` |
 //! | `observe` | cars (as `jj sim` observations), debris, the fixture's session, the host's seats and pauses | state |
@@ -82,6 +83,9 @@ enum Command {
         car: Option<u32>,
         on: bool,
     },
+    /// Ends the running race now, as the finish window closing would: the race rules freeze the result and emit `RaceOver`,
+    /// and the director goes Running → Finalising → Intermission the normal way (R90 "settable", P1-G01).
+    FinishRace,
     Step {
         ticks: u64,
     },
@@ -239,6 +243,10 @@ impl Host {
                     self.sim.set_autopilot(c, on);
                 }
                 json!({ "cars": cars.len(), "on": on })
+            }
+            Command::FinishRace => {
+                let ended = self.sim.end_race_now();
+                json!({ "tick": self.sim.tick(), "ended": ended })
             }
             Command::Step { ticks } => {
                 for _ in 0..ticks {

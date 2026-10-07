@@ -646,6 +646,19 @@ impl Race {
         }
     }
 
+    /// Ends the race now the way the finish window closing would (`RaceEnd::Window`): the result freezes at this tick with
+    /// every car ranked as `standings` ranks it (finishers by finish time, the rest by legal progress). Returns whether it
+    /// ended: refused before the start or once the race is over.
+    pub fn end_now(&mut self, tick: u64) -> bool {
+        if self.started_at.is_none() || self.over.is_some() {
+            return false;
+        }
+        let why = RaceEnd::Window;
+        self.over = Some((tick, why));
+        self.events.push((tick, Event::RaceOver { why }));
+        true
+    }
+
     /// Laps completed.
     pub fn laps_completed(&self, car: u32) -> u32 {
         let n = self.course.gates.len() as u32;

@@ -110,6 +110,10 @@ pub enum Setup {
     Wreck {
         car: u32,
     },
+    /// Ends the race now as the finish window closing would (scenario setup, R90 "settable"): the result freezes with the
+    /// running order, unfinished cars ranked by legal progress, and the race rules emit `RaceOver`. Refused before the
+    /// start or once the race is over.
+    EndRace,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

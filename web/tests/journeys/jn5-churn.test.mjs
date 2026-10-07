@@ -1,5 +1,5 @@
 // Journey JN5 (P1-G02): mixed controllers join and leave through every phase of a round on the real host page
-// (`B/host?room&test=live&laps=99`, the host ends the round) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
+// (`B/host?room&test=live&laps=99`, the test surface finishes the round) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
 // the Countdown, five more drop in mid-race (each timed from its accepted claim to its car moving under its own
 // throttle, and each gets its Identify flash and a tile), the room grows to 12, then Leave and Sit out shrink it to 2
 // through Intermission. The room never lists a seat that left, nobody is refused and the standings keep their rows.
@@ -245,8 +245,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
-  // The round runs 99 laps so a slow host (2 s frames) never finishes it mid-churn (run 1659); the host ends it here.
-  await host.evaluate(() => window.__jjTest.input({ type: 'ui', ui: 'end' }));
+  // The round runs 99 laps so a slow host (2 s frames) never finishes it mid-churn (run 1659); the test surface finishes the race here, as the finish window closing would
+  // (`finishRace`: the race rules freeze the result and the director takes the normal way to Intermission).
+  await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 120_000);
   const atResults = await view(host);
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
