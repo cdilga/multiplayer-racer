@@ -62,6 +62,8 @@ const CASES = [
   [9, [3840, 2160], 0],
   [2, [915, 412], 0],
   [8, [1920, 1080], 1],
+  [7, [1366, 768], 2],
+  [3, [412, 915], 0],
 ];
 
 for (const [n, vp, spare] of CASES) {
@@ -81,6 +83,15 @@ for (const [n, vp, spare] of CASES) {
       const dock = await page.evaluate(() => document.documentElement.dataset.gridDock);
       const qr = page.locator('.jj-foot .foot-qr');
       const pos = page.locator('.jj-foot [data-foot-pos]');
+      if (spare >= 2) {
+        assert.equal(dock, '');
+        assert.equal(await qr.isVisible(), false, 'the QR is in its cell');
+        assert.equal(await page.locator('.jj-filler[data-kind=standings] .jj-players li').count(), Number(await pos.getAttribute('data-count')), 'the Players cell lists every racer');
+        for (const x of tiles) assert.ok(x.y + x.h <= foot.y + 0.5, 'a tile ends above the footer');
+        assert.deepEqual(page.errors, []);
+        await capture(page, `race-${n}-${vp.join('x')}`);
+        return;
+      }
       if (spare === 0) {
         assert.equal(dock, 'qr positions');
         assert.ok(await qr.isVisible(), 'the docked QR shows in the footer');
@@ -107,6 +118,25 @@ for (const [n, vp, spare] of CASES) {
     }
   });
 }
+
+test('a resize re-fills: race-8 from 1920x1080 to 1366x768 and back keeps every tile equal and the grid edge to edge', async () => {
+  const page = await open('race-8', [1920, 1080]);
+  try {
+    for (const vp of [[1366, 768], [1920, 1080]]) {
+      await page.setViewportSize({ width: vp[0], height: vp[1] });
+      await page.waitForTimeout(600);
+      const { tiles, cells, foot } = await grid(page, 8);
+      const all = [...tiles, ...cells];
+      const slack = Math.round(Math.max(2, Math.round(Math.min(...vp) * 0.004)) / 2) + 3;
+      assert.ok(Math.max(...all.map((x) => x.x + x.w)) >= vp[0] - slack && Math.max(...all.map((x) => x.y + x.h)) >= foot.y - slack, `${vp}: edge to edge after the resize`);
+      for (const x of tiles) assert.ok(Math.abs(x.w - tiles[0].w) < 1 && Math.abs(x.h - tiles[0].h) < 1, `${vp}: tiles equal`);
+      await capture(page, `race-8-resized-${vp.join('x')}`);
+    }
+    assert.deepEqual(page.errors, []);
+  } finally {
+    await page.close();
+  }
+});
 
 test('the docked QR opens the menu, which pauses the race', async () => {
   const page = await open('race-4', [1920, 1080]);
