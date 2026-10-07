@@ -1,0 +1,46 @@
+/* The grid's spare cells (P1-R04, look P1-R04.style, accepted set art/ui/accepted/2026-10-07/ poc/tv grid states):
+   dotted paper, never black; the join cell is the paper QR card under a saffron "Join now" strip; the Players cell a
+   paper panel in ink with every racer in race order. Sizes come from the cell (overlay.ts), so any N and any screen. */
+.jj-grid { position: absolute; inset: 0; pointer-events: none; }
+.jj-filler, .jj-chip {
+  position: absolute; box-sizing: border-box; display: grid; place-items: center; overflow: hidden;
+  color: var(--c-ink); text-align: center;
+  background: var(--c-paper) radial-gradient(rgb(200 98 46 / 0.14) 22%, transparent 24%) 0 0 / 14px 14px;
+  font: 700 clamp(10px, 2.2vmin, 40px) / 1.2 var(--font-body);
+}
+/* A spare cell reads as one of the grid's cells: the same paper-line frame inset as the tiles' gutter. */
+.jj-filler:not([data-kind='margin']) { box-shadow: inset 0 0 0 3px var(--c-paper-line); container-type: size; }
+
+/* The join card: strip, QR, code and address, centred in the cell. */
+.jj-join { display: flex; flex-direction: column; align-items: center; gap: calc(var(--q) * 0.04); }
+.jj-join .jj-join-now { --capt-size: max(14px, calc(var(--q) * 0.13)); position: relative; z-index: 1; margin-bottom: calc(var(--q) * -0.05); --capt-rot: -2deg; }
+.jj-join .qr-card { --sh-y: max(3px, calc(var(--q) * 0.025)); padding: calc(var(--q) * 0.05) calc(var(--q) * 0.05) calc(var(--q) * 0.04); border-width: max(2px, calc(var(--q) * 0.012)); }
+.jj-join .qr-card .qr-code { font-size: max(16px, calc(var(--qr-size) * 0.17)); }
+.jj-join .qr-card .qr-domain { font-size: max(11px, calc(var(--qr-size) * 0.07)); }
+
+/* Too small for a scannable QR: the code and the address, big enough to type from the couch. */
+.jj-join-text { display: flex; flex-direction: column; align-items: center; gap: 0.2em; max-width: 92%; }
+.jj-join-text .capt { --capt-size: clamp(12px, 9cqmin, 40px); }
+.jj-join-text .jj-code { font-size: clamp(18px, 26cqmin, 120px); line-height: 0.95; letter-spacing: 0.05em; }
+.jj-join-text .jj-domain { font-size: clamp(10px, 8cqmin, 32px); overflow-wrap: anywhere; }
+
+/* The Players card: a paper panel with an ink outline and sticker shadow, the kit's badges, every racer. */
+.jj-players {
+  box-sizing: border-box; width: 92%; max-height: 92%; display: flex; flex-direction: column; align-items: stretch;
+  gap: calc(var(--pl-fs, 20px) * 0.4); padding: calc(var(--pl-fs, 20px) * 0.6) calc(var(--pl-fs, 20px) * 0.9);
+  background: var(--c-paper); border: max(2px, calc(var(--pl-fs, 20px) * 0.12)) solid var(--c-ink); border-radius: var(--r-panel);
+  box-shadow: 0 max(3px, calc(var(--pl-fs, 20px) * 0.2)) 0 var(--shadow-c);
+}
+.jj-pl-head { margin: 0; font-size: max(14px, calc(var(--pl-fs, 20px) * 1.2)); line-height: 1; letter-spacing: 0.02em; }
+.jj-pl-none { margin: 0; font-size: clamp(11px, 5cqmin, 26px); color: var(--c-ink-soft); }
+.jj-players ol { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; gap: calc(var(--pl-fs) * 0.25) calc(var(--pl-fs) * 1.1); font-size: var(--pl-fs); text-align: left; }
+.jj-players li { display: flex; align-items: center; gap: 0.35em; min-width: 0; white-space: nowrap; }
+.jj-players li b { min-width: 1.3em; text-align: right; font: 900 1em/1 var(--font-display); }
+.jj-players li .badge { flex: none; font-size: 0.85em; height: 1.45em; padding: 0 0.25em 0.12em; }
+.jj-players li .nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+.jj-chip {
+  display: flex; gap: 0.4em; padding: 0 0.8em; border-radius: 999px; background: var(--c-ink); color: var(--c-paper);
+  font-size: clamp(9px, 1.6vmin, 30px); white-space: nowrap; max-width: 60vw; text-overflow: ellipsis; box-shadow: 0 2px 10px rgb(0 0 0 / 0.3);
+}
+@media (max-width: 960px), (max-height: 500px) { .jj-chip span { display: none; } }

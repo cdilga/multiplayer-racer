@@ -9,6 +9,7 @@ import type { SimInput } from '../worker/messages';
 import { esc, shortName } from './format';
 import { paperQrSvg, tokenData } from '../../../shared/ui';
 import { enterFullscreen, fullscreenSupport } from '../layout/fullscreen';
+import { setPositions } from '../layout/positions';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
 
 type Seat = RoomView['seats'][number] & { endpoint?: string };
@@ -92,6 +93,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     const key = order.map((s) => `${s.seat}:${s.position}`).join();
     if (key === posKey) return;
     posKey = key;
+    // The grid's Players cell reads the same list (layout/overlay.ts).
+    setPositions(order.map((s) => ({ place: s.position!, number: s.number, name: shortName(seatName(s)), colour: s.colourIndex % tokenData.seatColors.length })));
     posEl.dataset.count = String(order.length);
     posTrack.innerHTML = order.length
       ? `<span class="fp-run">${order.map((s) => `<span class="fp-item"><b>${s.position}</b><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s)))}</span></span>`).join('')}</span>`
