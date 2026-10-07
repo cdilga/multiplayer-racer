@@ -5,7 +5,7 @@ Captures: `c08-hub.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`
 ## Looked at
 - Hub page: heading "Hub · room XXXX" with the one-line instructions, a row per source (seat number in its colour, keyboard or gamepad icon, label, state chip, direct/relay and RTT, bytes and batches). Idle key clusters read "Press to join" with a dash for the seat.
 - `c08-hub-four-sources-*` and `c08-hub-pad1-unplugged-1100x700.png`: six rows on one hub page (Keys A, Keys B, four pads) each with its number in its colour, Connected, "Direct · 3 ms" and its own bytes; with pad 1 unplugged only its row turns to the orange Unplugged chip with a dashed outline and the other five stay Connected. Resized to 390x844, 844x390 and 1920x1080 and back, all six rows stay readable.
-- `B/hub` entry (`c08-hub-entry-then-hub-1100x700.png`): a room-code field and "Open the hub"; a bad code shows the red line and stays.
+- `B/hub` entry (`c08-hub-entry-1100x700.png`, `c08-hub-entry-bad-code-1100x700.png`, `c08-hub-entry-then-hub-1100x700.png`): a room-code field and "Open the hub"; a bad code shows the red line and stays; the real code lands on the hub page with its Keys rows idle.
 - Identify flash: only Pad 1's row turns its colour (red) with dark text, Pad 2 stays calm.
 - Phone with a paired pad: a slim tray low and centred between the sticks ("This phone" and "Pad 1", each with its number, icon and Connected chip); the strip shows the "Direct · 1 ms" badge. Landscape and portrait.
 
