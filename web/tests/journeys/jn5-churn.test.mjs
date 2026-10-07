@@ -162,7 +162,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
       return inside ? [] : [{ tile: t.seat, box: box && [box.left, box.top, box.right, box.bottom].map(Math.round) }];
     });
   });
-  assert.deepEqual(misplaced, [], 'every HUD inside its tile');
+  const rectsNow = await host.evaluate(() => window.__jjRender.tileRects());
+  assert.deepEqual(misplaced, [], `every HUD inside its tile: ${JSON.stringify({ misplaced, rectsNow })}`);
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
