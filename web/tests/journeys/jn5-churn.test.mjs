@@ -87,13 +87,15 @@ async function phone(url, name) {
   return { ctx, page, name, endpoint };
 }
 
-async function leave(p) {
+async function leave(host, p) {
   // Leave asks for a second tap within 3 s (no browser dialogs).
   const btn = p.page.getByRole('button', { name: /Leave/ });
   await btn.click();
   await btn.click();
+  // The host has the Leave before the phone goes: closing the page sooner (run 1706: 500 ms on a slow runner) lost the
+  // command, and a vanished phone is a dropout whose seat is held for its return, not a leave.
+  await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
   // A phone that has left is finished with: close its context so a slow runner isn't left rendering pages nobody reads.
-  await p.page.waitForTimeout(500);
   await p.ctx.close().catch(() => {});
 }
 
@@ -194,8 +196,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   assert.ok(p95 <= limit, `drop-in p95 ${p95} ms > ${limit} ms (${renderer})`);
 
   at('Running: two phones leave, a key cluster sits out');
-  await leave(phones[0]);
-  await leave(phones[1]);
+  await leave(host, phones[0]);
+  await leave(host, phones[1]);
   // The drawer's buttons are dispatched by their data attributes: the round screens may sit over the drawer, and it
   // folds to its head on the grid and in the race (its buttons stay in the page, at no size).
   await host.locator('[data-jj-input-drawer] button[data-act="sit-out"]').first().dispatchEvent('click');
@@ -256,10 +258,10 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission and Lobby: shrink to 2');
   // One phone leaves in the Intermission itself; the results screen counts down to the next round, and on a slow host
   // six leaves outlast it (run 1656), so the host takes the room back to the Lobby next and the rest leave there.
-  await leave(phones[2]); // Bazza
+  await leave(host, phones[2]); // Bazza
   await host.getByRole('button', { name: 'Return to lobby' }).click();
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
-  for (const p of phones.slice(3, 8)) await leave(p); // … Thommo; Jonesy and Sheila stay
+  for (const p of phones.slice(3, 8)) await leave(host, p); // … Thommo; Jonesy and Sheila stay
   await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters
   // Both key clusters leave in the Lobby.
   // Both key clusters leave from the drawer (the sitting-out one too).

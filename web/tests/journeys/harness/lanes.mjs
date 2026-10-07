@@ -26,8 +26,17 @@ async function playwrightLane(id, label, browserType) {
     const { chromium, webkit, firefox } = await import('playwright');
     const type = { chromium, webkit, firefox }[browserType];
     const exe = type.executablePath();
-    if (!exe || !existsSync(exe)) return { id, label, available: false, reason: `${browserType} isn't installed for Playwright here (${exe || 'no path'})` };
-    return { id, label, available: true, executable: exe };
+    if (exe && existsSync(exe)) return { id, label, available: true, executable: exe };
+    // A headless run may use Playwright's headless shell instead of the full browser (the CI image ships only that), so a
+    // missing full binary isn't proof: a launch is.
+    try {
+      const b = await type.launch();
+      const version = b.version();
+      await b.close();
+      return { id, label, available: true, executable: `${browserType} (Playwright default, ${version})` };
+    } catch {
+      return { id, label, available: false, reason: `${browserType} isn't installed for Playwright here (${exe || 'no path'})` };
+    }
   } catch (e) {
     return { id, label, available: false, reason: e.message.split('\n')[0] };
   }

@@ -121,10 +121,12 @@ test(`a stream through the proxy stays up ${SOAK_S} s with heartbeats at most 15
     sent += 1;
     await s.next(sent);
   }
-  const times = [start, ...s.beats];
+  // The server beats after 15 s of silence, and any event restarts that timer, so with an event every 20 s there is one
+  // beat per window. What a proxy needs is the stream never silent past 15 s: gaps between any traffic, beats or events.
+  const times = [start, ...s.beats, ...s.events.map((e) => e.at)].sort((a, b) => a - b);
   const gaps = times.slice(1).map((t, i) => t - times[i]);
-  assert.ok(s.beats.length >= Math.floor(SOAK_S / 15) - 1, `${s.beats.length} heartbeats in ${SOAK_S} s`);
-  assert.ok(Math.max(...gaps) <= 16_500, `largest heartbeat gap ${Math.max(...gaps)} ms`);
+  assert.ok(s.beats.length >= Math.floor(SOAK_S / 20) - 1, `${s.beats.length} heartbeats in ${SOAK_S} s (one per 20 s quiet window)`);
+  assert.ok(Math.max(...gaps) <= 16_500, `longest silence on the stream ${Math.max(...gaps)} ms`);
   assert.deepEqual(s.events.map((e) => e.msg.payload), Array.from({ length: sent }, (_, i) => `t${i}`));
   s.close();
   await s.done;
