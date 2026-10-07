@@ -46,7 +46,8 @@ after(async () => {
   await server?.close();
 });
 
-const wait = (page, fn, arg, ms = 40_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
+// A software-rendered CI runner with three browser contexts open is several times slower than eris: generous waits.
+const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
 async function openHost(mode) {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
@@ -89,7 +90,7 @@ const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats);
 // is HTTP/2 behind the tunnel; a single multi-source connection is the real fix. The six seats of the acceptance are four
 // pads and two key clusters on TWO hub pages (two browser contexts, so two connection pools): hub A has pads 1-2 and both
 // key clusters, hub B has pads 3-4.
-test('four pads and two key clusters hold six seats across two hubs; each drives only its own car; one unplugged pad goes alone', { timeout: 300_000 }, async () => {
+test('four pads and two key clusters hold six seats across two hubs; each drives only its own car; one unplugged pad goes alone', { timeout: 900_000 }, async () => {
   const { host, joinUrl } = await openHost('drive');
   const hub = await hubPage(joinUrl);
   const hubB = await hubPage(joinUrl);
@@ -109,7 +110,8 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   assert.equal(new Set(src.map((s) => s.seat)).size, 6, 'six distinct seats');
   assert.deepEqual(src.map((s) => s.kind).sort(), ['keys', 'keys', 'pad', 'pad', 'pad', 'pad']);
   assert.equal((await joined(hub)) + (await joined(hubB)), 6);
-  await wait(host, () => window.__jjTest.observe()?.host?.seats?.length === 6);
+  const hostSeats = () => host.evaluate(async () => (await window.__jjTest.observe()).host.seats.length);
+  for (const t0 = Date.now(); (await hostSeats()) !== 6; await host.waitForTimeout(200)) assert.ok(Date.now() - t0 < 30_000, 'the host never saw six seats');
   await matrix(hub, 'c08-hub-four-sources', { width: 1100, height: 700 });
   console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
 
@@ -139,7 +141,7 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   assert.equal((await hubState(hubB)).filter((s) => s.state === 'unplugged').length, 0, "hub B's pads are untouched");
   await shot(hub, 'c08-hub-pad1-unplugged-1100x700');
   await host.waitForTimeout(3500);
-  assert.equal(await host.evaluate(() => window.__jjTest.observe().host.seats.length), 6, 'no seat was lost');
+  assert.equal(await hostSeats(), 6, 'no seat was lost');
 });
 
 test('each source leaves on its own; the hub shows seat, kind, state and path; Identify flashes that row', { timeout: 240_000 }, async () => {

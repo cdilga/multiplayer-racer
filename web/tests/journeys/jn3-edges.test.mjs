@@ -30,7 +30,19 @@ after(async () => {
   await server?.close();
 });
 
-const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
+// A slow (software-rendered, shared) CI runner takes far longer than eris to open a room, join phones and start a round, so
+// the defaults are generous and a timeout names the step that was waiting.
+let step = '';
+const at = (name) => {
+  step = name;
+};
+const wait = async (page, fn, arg, ms = 90_000) => {
+  try {
+    return await page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
+  } catch (e) {
+    throw new Error(`${step}: ${e.message.split('\n')[0]}`);
+  }
+};
 const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png`, timeout: 120_000 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 const view = (host) => host.evaluate(() => window.__jjRoom.view());
@@ -42,7 +54,7 @@ async function openHost() {
   host.errors = [];
   host.on('pageerror', (e) => host.errors.push(e.message));
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=1`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   return host;
 }
 
@@ -75,7 +87,7 @@ test('force-start: Start race with one player not ready warns, counts down and r
   // The not-ready player gets a longer warning than a normal 3-2-1.
   assert.ok(shown > 3, `the force-start warning lengthens the countdown (${shown} on the TV as it began)`);
 
-  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 30_000);
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 280_000);
   const results = (await view(host)).results;
@@ -89,7 +101,7 @@ test('End mid-round voids the round, the Lobby has no cars and nobody ready, and
   await synthetic(host, ['Davo', 'Shazza']);
   await frame(host, 'syn1', { ready: true });
   await frame(host, 'syn2', { ready: true });
-  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 180_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   assert.equal(await cars(host), 2);
@@ -111,9 +123,9 @@ test('End mid-round voids the round, the Lobby has no cars and nobody ready, and
   await frame(host, 'syn2', { ready: true });
   await wait(host, () => window.__jjRoom.view().seats.every((s) => s.ready));
   await host.locator('[data-act=start]').click();
-  await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 60_000);
+  await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 180_000);
   assert.equal(await cars(host), 2, 'the next round puts both on the grid');
-  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 30_000);
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 280_000);
   assert.equal((await view(host)).results.length, 2, 'the fresh round finishes with results');
@@ -135,14 +147,17 @@ const phase = (p) => p.evaluate(() => window.__jjController.inspect().phase);
 
 /** Two phones in a running round, then the host page reloads (with `end` blocked or not). */
 async function reloadScenario({ blockEnd }) {
+  at('reload: opening the host');
   const host = await openHost();
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
+  at('reload: phones joining');
   const a = await phone(joinUrl, 'Davo');
   const b = await phone(joinUrl, 'Shazza');
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  at('reload: both ready, round starting');
   await a.page.getByRole('button', { name: /^Ready/ }).click();
   await b.page.getByRole('button', { name: /^Ready/ }).click();
-  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 180_000);
   if (blockEnd) {
     // Playwright routes don't see the unload's keepalive request, so the page's own fetch refuses every `end` (this page
     // and the one it reloads into: init scripts run in both).
@@ -155,17 +170,18 @@ async function reloadScenario({ blockEnd }) {
   }
   const oldCode = await host.evaluate(() => window.__jjNet.code());
   host.on('dialog', (d) => d.accept()); // the page may ask before unload
+  at('reload: the reloaded page opening a new room');
   await host.reload();
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const newCode = await host.evaluate(() => window.__jjNet.code());
   assert.notEqual(newCode, oldCode, 'the reloaded page opens a new room');
   return { host, a, b };
 }
 
-test('host page reload: the old room\'s phones show "That room has ended"', { timeout: 180_000 }, async () => {
+test('host page reload: the old room\'s phones show "That room has ended"', { timeout: 600_000 }, async () => {
   const { host, a, b } = await reloadScenario({ blockEnd: false });
   for (const p of [a, b]) {
-    await wait(p.page, () => window.__jjController.inspect().phase === 'room-ended', undefined, 40_000).catch(async (e) => {
+    await wait(p.page, () => window.__jjController.inspect().phase === 'room-ended', undefined, 90_000).catch(async (e) => {
       throw new Error(`the phone is in ${await phase(p.page)} (the page's best-effort end of the room it remembered never reached the server): ${e.message}`);
     });
   }
@@ -176,10 +192,10 @@ test('host page reload: the old room\'s phones show "That room has ended"', { ti
   await b.ctx.close();
 });
 
-test('host page reload with the best-effort end blocked: the phones show "Host gone" once the liveness timer passes', { timeout: 300_000 }, async () => {
+test('host page reload with the best-effort end blocked: the phones show "Host gone" once the liveness timer passes', { timeout: 900_000 }, async () => {
   const { a, b } = await reloadScenario({ blockEnd: true });
   const started = Date.now();
-  await wait(a.page, () => ['reconnecting', 'host-gone'].includes(window.__jjController.inspect().phase), undefined, 60_000).catch(async (e) => {
+  await wait(a.page, () => ['reconnecting', 'host-gone'].includes(window.__jjController.inspect().phase), undefined, 180_000).catch(async (e) => {
     throw new Error(`the phone is in ${await phase(a.page)}, link ${JSON.stringify(await a.page.evaluate(() => window.__jjController.inspect().link))}: ${e.message}`);
   });
   await shot(a.page, 'phone-reload-reconnecting');

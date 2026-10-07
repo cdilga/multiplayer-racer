@@ -102,6 +102,7 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   }
   console.log(`# identify press → TV pulse (ms): ${identify.join(', ')}`);
   const renderer = gpu ? 'host on a GPU (ANGLE Vulkan)' : 'host on SwiftShader (software WebGL)';
+  if (process.env.JJ_EVIDENCE_DIR) mkdirSync(process.env.JJ_EVIDENCE_DIR, { recursive: true });
   if (process.env.JJ_EVIDENCE_DIR) writeFileSync(`${process.env.JJ_EVIDENCE_DIR}/identify.json`, `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', renderer, samplesMs: identify }, null, 1)}\n`);
   // The 150 ms target holds for a host drawing on a GPU. On software WebGL each host frame takes ~150 ms and both the
   // press and the event wait behind one (CI's busy runner: 0.7-1 s), so there the samples get a loose bound only.
