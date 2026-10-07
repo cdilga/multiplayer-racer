@@ -1,0 +1,105 @@
+{
+ "what": "jj-wasm-procgen prepare(seed, default four-biome recipe) per seed (generate + validate through the fallback ladder), on the page main thread in Chromium",
+ "budgetMs": {
+  "unthrottled": 1500,
+  "throttled": 4000
+ },
+ "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL)",
+ "host": {
+  "os": "linux/x64",
+  "cpu": "12th Gen Intel(R) Core(TM) i5-12400",
+  "cores": 12
+ },
+ "build": {
+  "procgen": "jj-wasm-procgen 0.2.0",
+  "commit": "1ef04e8"
+ },
+ "seeds": 24,
+ "note": "Emulation.setCPUThrottlingRate on the page via CDP; the work runs on the main thread so the throttle applies (it doesn't reach workers)",
+ "runs": [
+  {
+   "throttle": 1,
+   "worstMs": 292.4,
+   "meanMs": 189.8,
+   "allValid": true,
+   "worstSeed": 23,
+   "plans": {
+    "requested": 15,
+    "redrawn-1": 6,
+    "redrawn-2": 3
+   }
+  },
+  {
+   "throttle": 6,
+   "worstMs": 1825.4,
+   "meanMs": 1193.7,
+   "allValid": true,
+   "worstSeed": 23,
+   "plans": {
+    "requested": 15,
+    "redrawn-1": 6,
+    "redrawn-2": 3
+   }
+  }
+ ],
+ "perSeed": [
+  {
+   "throttle": 1,
+   "ms": [
+    133.6,
+    217.7,
+    193.1,
+    200.9,
+    231.9,
+    183.6,
+    154,
+    165.9,
+    244.1,
+    287.1,
+    163.4,
+    262,
+    203.1,
+    109.9,
+    207.1,
+    182.1,
+    176.8,
+    144.9,
+    215.8,
+    175.9,
+    124.3,
+    148.5,
+    138.2,
+    292.4
+   ]
+  },
+  {
+   "throttle": 6,
+   "ms": [
+    803.3,
+    1376.2,
+    1236.3,
+    1266.5,
+    1460,
+    1124.8,
+    970.5,
+    1055.3,
+    1520.8,
+    1782.3,
+    1011.9,
+    1620.2,
+    1272,
+    707.3,
+    1327.8,
+    1167.9,
+    1143.9,
+    916.4,
+    1360.1,
+    1116.9,
+    763.1,
+    952.6,
+    866.6,
+    1825.4
+   ]
+  }
+ ]
+}

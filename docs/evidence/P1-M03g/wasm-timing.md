@@ -17,5 +17,19 @@ wayfinding), per seed, 24 seeds (0..24). Test: `crates/jj-procgen/tests/wasm_par
 Reproduce the numbers (the test prints them only by failing): `JJ_WASM_BUDGET_MS=0 cargo test --locked --release --target
 wasm32-unknown-unknown -p jj-procgen --test wasm_parity`.
 
-**Not measured here (open `ev:hardware` rows):** Chromium at 6x CPU throttle against the 4 s stand-in budget (the node
-figure scaled by 6 is ~1.1 s worst, an estimate, not a measurement), and the real phone host (P1-Q02 checklist).
+## Browser measurement (Chromium, with and without the 6x CPU throttle)
+
+`web/host/tests/procgen-browser-timing.mjs` runs the same `prepare(seed, default recipe)` for seeds 0..23 on the page's main
+thread in headless Chromium (software GL) on eris (Intel i5-12400, 12 cores, linux/x64; Chromium 151.0.7922.34; procgen
+build `jj-wasm-procgen 0.2.0`, script from commit bd37214, run on eris at 1ef04e8). The throttle is
+`Emulation.setCPUThrottlingRate` through CDP; it slows the page's main thread, which is why the generator runs there (it
+doesn't reach workers). Raw numbers: `browser-timing.json`.
+
+| Throttle | Worst seed | Mean | Budget | Plans (24 seeds) |
+|---|---|---|---|---|
+| none | 292 ms (seed 23) | 190 ms | <= 1.5 s (laptop) | 15 requested, 6 redrawn-1, 3 redrawn-2 |
+| 6x | 1825 ms (seed 23) | 1194 ms | <= 4 s (phone-host stand-in) | same |
+
+Every seed is valid in both runs. The 6x figure is a measurement in a real browser, not the node figure times six (which
+predicted ~1.1 s; the browser is about 1.7x worse than that estimate, still well inside the 4 s stand-in). The real phone
+host stays an open row for the P1-Q02 checklist.
