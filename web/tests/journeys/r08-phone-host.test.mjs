@@ -68,6 +68,7 @@ for (const dpr of [2, 3]) {
             boxes: [...document.querySelectorAll('.hud-tile[data-seat]')].map(rect),
             tiles: window.__jjRender.tileRects(),
             limitedBy: window.__jjRender.stats().limitedBy,
+            scale: window.__jjRender.stats().scale ?? 1,
             canvas: { w: c.width, h: c.height, cssW: c.clientWidth, cssH: c.clientHeight },
           };
         });
@@ -79,11 +80,14 @@ for (const dpr of [2, 3]) {
           for (let j = i + 1; j < r.boxes.length; j++) assert.ok(!overlap(b, r.boxes[j]), `tiles ${i}/${j} overlap`);
         }
         if (!r.limitedBy) {
-          assert.equal(r.canvas.w, Math.round(r.canvas.cssW * dpr));
-          assert.equal(r.canvas.h, Math.round(r.canvas.cssH * dpr));
+          // A slow (software-rendered) host lowers its Render resolution to keep its frame budget (`scale` < 1, the
+          // chip says "auto-lowered"): the backing store is then that fraction of the device pixels, still exactly.
+          const px = dpr * r.scale;
+          assert.ok(Math.abs(r.canvas.w - r.canvas.cssW * px) <= 1.5, `canvas width ${r.canvas.w} = ${r.canvas.cssW} css px x ${px}`);
+          assert.ok(Math.abs(r.canvas.h - r.canvas.cssH * px) <= 1.5, `canvas height ${r.canvas.h} = ${r.canvas.cssH} css px x ${px}`);
           for (const t of r.tiles) {
             const b = r.boxes[t.seat - 1];
-            assert.ok(Math.abs(t.w - b.w * dpr) <= 1.5 && Math.abs(t.h - b.h * dpr) <= 1.5, `tile ${t.seat} backing store = on-screen device px`);
+            assert.ok(Math.abs(t.w - b.w * px) <= 1.5 && Math.abs(t.h - b.h * px) <= 1.5, `tile ${t.seat} backing store = on-screen px x the Render resolution`);
           }
         }
         assert.deepEqual(errors, []);

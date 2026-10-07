@@ -221,11 +221,13 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
   await page.waitForTimeout(3300);
   const before = await identified();
   assert.deepEqual([...before].sort(), Object.values(id).sort(), 'one join flash per seat');
+  // Keys and pads are sampled once per host frame, and a software-rendered CI host takes up to ~1 s a frame: a 150 ms
+  // tap can fall between two samples and never be seen. Hold each across several frames (Identify fires on the press).
   await page.keyboard.down('KeyQ');
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(1800);
   await page.keyboard.up('KeyQ');
   await page.evaluate(() => window.__pads.buttons(1, [8]));
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(1800);
   await page.evaluate(() => window.__pads.buttons(1, []));
   await page.waitForTimeout(300);
   const flashes = (await identified()).slice(before.length);
