@@ -194,12 +194,19 @@ function roundBanner(app: HTMLElement, session: Session): void {
     text = left > 0 ? `Get ready: ${Math.ceil(left / 1000)}` : 'Go!';
   } else if (session.roomPhase === 'Results' && session.results && session.you) {
     const me = session.results.find((r) => r.number === session.you?.number);
-    text = me ? `You came ${me.place || '–'} · ${me.points} points` : 'Round complete';
+    text = me ? `You came ${me.place ? ordinal(me.place) : '–'} · ${me.points} points` : 'Round complete';
   } else if (session.roomPhase === 'Lobby') {
     text = session.isReady ? 'Ready! Waiting for the others' : 'Tap Ready when you are';
   }
   b.textContent = text;
   b.hidden = text === '';
+}
+
+/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st. */
+function ordinal(n: number): string {
+  const t = n % 100;
+  const suffix = t >= 11 && t <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
+  return `${n}${suffix}`;
 }
 
 let leaveArmed = 0;
