@@ -1715,11 +1715,9 @@ fn a_hello_for_another_protocol_is_answered_with_claim_rejected_build_and_no_sea
             } = m
             {
                 match HostCmd::decode(&bytes) {
-                    Ok(HostCmd::ClaimRejected { reason })
-                        if reason == jj_protocol::cmd::ClaimRejection::Build =>
-                    {
-                        rejected += 1
-                    }
+                    Ok(HostCmd::ClaimRejected {
+                        reason: jj_protocol::cmd::ClaimRejection::Build,
+                    }) => rejected += 1,
                     Ok(HostCmd::Welcome { .. }) => welcomed += 1,
                     _ => {}
                 }
