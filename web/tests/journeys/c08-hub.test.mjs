@@ -150,7 +150,7 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad0').state === 'unplugged');
   const after2 = await hubState(hub);
   for (const s of after2) assert.equal(s.state === 'unplugged', s.id === 'pad0', `${s.id} is ${s.state}`);
-  assert.match(await hub.locator('[data-source=pad0]').innerText(), /Unplugged/);
+  await hub.locator('[data-source=pad0]', { hasText: /Unplugged/ }).waitFor({ timeout: 5000 }); // the list repaints every 250 ms
   assert.match(await hub.locator('[data-source=pad1]').innerText(), /Connected|Ready/);
   assert.equal((await hubState(hubB)).filter((s) => s.state === 'unplugged').length, 0, "hub B's pads are untouched");
   await shot(hub, 'c08-hub-pad1-unplugged-1100x700');
