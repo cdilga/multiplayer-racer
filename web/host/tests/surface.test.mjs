@@ -4,11 +4,11 @@
 // Writes its evidence to docs/evidence/P1-F05b/ (JJ_EVIDENCE_DIR overrides).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
-import { assertTestable, openHost, serve } from './lib/surface.mjs';
+import { assertTestable, openHost, serve, serveReal, track } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
 const dist = join(repo, 'web/dist');
@@ -107,28 +107,48 @@ test('AC2: a helper session joins three fake controllers, drives one until a fac
   for (const k of ['commit', 'map', 'seed', 'viewport', 'browser', 'backend', 'stateHash', 'tick']) assert.ok(session.meta[k] !== undefined, `capture metadata has ${k}`);
 });
 
-test('AC4 (host side): no URL flag never loads the test chunk; a production realm answering 404 leaves the host as shipped', { timeout: 60_000 }, async () => {
-  const before = preview.requests.length;
-  const { page, mode } = await hostPage(preview, '');
-  await page.waitForTimeout(500);
-  const plain = { mode, surface: await page.evaluate(() => window.__jjTest !== undefined), testRequests: preview.requests.slice(before).filter((p) => p.startsWith('/test/')) };
-  await page.close();
-  const production = await serve(dist, 'production');
-  const prod = await hostPage(production, '?test');
-  await prod.page.waitForTimeout(500);
-  const gated = {
-    mode: prod.mode,
-    surface: await prod.page.evaluate(() => window.__jjTest !== undefined),
-    testRequests: production.requests.filter((p) => p.startsWith('/test/')),
-    ticking: (await prod.page.evaluate(() => new Promise((r) => setTimeout(() => r(true), 50)))) && true,
-  };
-  await prod.page.close();
-  production.close();
-  runs.ac4 = { noFlag: plain, productionRealm: gated, guardrail: '' };
-  assert.deepEqual(plain, { mode: 'ready', surface: false, testRequests: [] });
-  assert.equal(gated.mode, 'ready', 'the host booted as shipped');
-  assert.equal(gated.surface, false);
-  assert.ok(gated.testRequests.length >= 1, 'it asked for the chunk and got 404');
-  assert.throws(() => assertTestable('https://jammers.dilger.dev/host/?test'), /refusing/);
-  runs.ac4.guardrail = 'assertTestable refuses https://jammers.dilger.dev/host/?test';
+test('AC4: against the real jj-server, no URL flag never loads the test chunk and a production realm answering 404 leaves the host as shipped', { timeout: 120_000 }, async () => {
+  // The preview realm serves the test chunk like any asset; production answers every path under /test/ with 404, and /host with 200.
+  const previewReal = await serveReal(dist, 'preview');
+  const productionReal = await serveReal(dist, 'production');
+  try {
+    const status = async (server, path) => (await fetch(`${server.url}${path}`)).status;
+    const chunk = (await readdir(join(dist, 'test'))).find((f) => f.endsWith('.js'));
+    assert.ok(chunk, 'the build has a test/ chunk');
+    assert.equal(await status(productionReal, '/host'), 200, 'production: /host is served');
+    assert.equal(await status(productionReal, `/test/${chunk}`), 404, 'production: the test chunk is 404');
+    assert.equal(await status(productionReal, '/test/'), 404, 'production: /test/ is 404');
+    assert.equal(await status(previewReal, '/host'), 200, 'preview: /host is served');
+    assert.equal(await status(previewReal, `/test/${chunk}`), 200, 'preview: the test chunk is served');
+
+    // No URL flag: the page never asks for anything under /test/ and has no surface.
+    const plainPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    track(previewReal, plainPage);
+    const plainMode = await openHost(plainPage, `${previewReal.url}/host`);
+    await plainPage.waitForTimeout(500);
+    const plain = { mode: plainMode, surface: await plainPage.evaluate(() => window.__jjTest !== undefined), testRequests: previewReal.requests.filter((p) => p.startsWith('/test/')) };
+    await plainPage.close();
+    // `?test` on a production realm: the chunk is asked for, gets 404, and the host runs as shipped.
+    const prodPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    prodPage.on('pageerror', (e) => console.error('pageerror', e.message));
+    track(productionReal, prodPage);
+    const prodMode = await openHost(prodPage, `${productionReal.url}/host?test`);
+    await prodPage.waitForTimeout(500);
+    const gated = {
+      mode: prodMode,
+      surface: await prodPage.evaluate(() => window.__jjTest !== undefined),
+      testRequests: productionReal.requests.filter((p) => p.startsWith('/test/')),
+    };
+    await prodPage.close();
+    runs.ac4 = { server: 'jj-server (real), realms preview and production', noFlag: plain, productionRealm: gated, guardrail: '' };
+    assert.deepEqual(plain, { mode: 'ready', surface: false, testRequests: [] });
+    assert.equal(gated.mode, 'ready', 'the host booted as shipped');
+    assert.equal(gated.surface, false);
+    assert.ok(gated.testRequests.length >= 1, 'it asked for the chunk and got 404');
+    assert.throws(() => assertTestable('https://jammers.dilger.dev/host/?test'), /refusing/);
+    runs.ac4.guardrail = 'assertTestable refuses https://jammers.dilger.dev/host/?test';
+  } finally {
+    await previewReal.close();
+    await productionReal.close();
+  }
 });

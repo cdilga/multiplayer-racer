@@ -3,6 +3,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
+import { serve as serveGameServer } from '../../../landing/tests/lib/site.mjs';
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json', '.css': 'text/css' };
 /** Hosts the test surface may be driven on: local runs and previews. `JJ_TEST_HOSTS` adds more (comma-separated). */
@@ -35,6 +36,19 @@ export async function serve(dist, realm = 'preview') {
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   return { url: `http://127.0.0.1:${server.address().port}`, requests, close: () => server.close() };
+}
+
+/** Serves a web build with the REAL game server (`jj-server`, JJ_SERVER_BIN or the workspace's debug build) in `realm`
+ *  (`production` answers everything under `/test/` with 404; any other realm serves it, P1-F05b.1). Same shape as `serve`:
+ *  `url`, `requests` (the paths the pages asked for: record them with `track(server, page)`), `close`. */
+export async function serveReal(dist, realm = 'preview') {
+  const game = await serveGameServer(dist, '/', { JJ_REALM: realm, JJ_STUN_URLS: '' });
+  return { url: game.origin, requests: [], realm, close: () => game.close() };
+}
+
+/** Records the path of every request `page` makes into `server.requests`. */
+export function track(server, page) {
+  page.on('request', (r) => server.requests.push(new URL(r.url()).pathname));
 }
 
 /** Opens the host page and waits until it has booted (`data-jj-host` is `test` or `ready`). */
