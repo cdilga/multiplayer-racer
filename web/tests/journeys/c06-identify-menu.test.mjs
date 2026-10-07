@@ -63,7 +63,7 @@ test("keys A's Identify key (Q) in a race sends an Identify event and pulses tha
   await wait(host, () => window.__jjRoom.view().seats.length === 1);
   await host.keyboard.up('KeyW');
   const seat = await host.evaluate(() => window.__jjRoom.view().seats[0].seat);
-  await host.keyboard.press('KeyE');
+  await host.keyboard.press('KeyE', { delay: 250 }); // keys are sampled per frame: hold READY
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 60_000);
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
   await host.waitForTimeout(3300);
