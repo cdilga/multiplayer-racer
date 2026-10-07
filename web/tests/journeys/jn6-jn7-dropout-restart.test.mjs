@@ -69,7 +69,10 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
     await host.waitForTimeout(1500);
     const before = carOf(await observe(host), a.ep);
     assert.ok(before && !before.autopilot, 'A drives itself');
-    await a.ctx.setOffline(true);
+    // The phone drops off (its page and connection gone: a dead network, a locked phone, a crashed tab). Playwright's
+    // offline mode doesn't stop WebRTC data channels, so the page itself goes.
+    const url = a.page.url();
+    await a.page.goto('about:blank');
     const t0 = Date.now();
     for (;;) {
       const st = await observe(host);
@@ -78,10 +81,11 @@ test('JN6: a phone that loses its network goes to the autopilot within ~2 s, the
       await host.waitForTimeout(200);
     }
     const tookMs = Date.now() - t0;
-    console.log(`# autopilot after ${tookMs} ms offline`);
-    assert.equal((await host.evaluate(() => window.__jjRoom.view().phase)), 'Running', 'the room never pauses');
-    await a.ctx.setOffline(false);
-    await wait(a.page, () => window.__jjController.inspect().link?.state === 'connected', undefined, 60_000);
+    console.log(`# autopilot after ${tookMs} ms without the phone`);
+    assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the room never pauses');
+    // Back again (a reload of the join link): the same seat, and the first deliberate input takes the car back.
+    await a.page.goto(url);
+    await wait(a.page, () => window.__jjController?.inspect().phase === 'playing', undefined, 60_000);
     await drive(a, -1);
     for (const t1 = Date.now(); carOf(await observe(host), a.ep)?.autopilot; await host.waitForTimeout(200)) {
       assert.ok(Date.now() - t1 < 15_000, 'a deliberate input took the car back');
