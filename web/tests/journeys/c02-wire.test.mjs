@@ -70,13 +70,16 @@ test('the sticks arrive as DRIVE and ACTION: throttle, brake, steer, boost and d
   const down = await until('brake', (s) => s.brake > 0.5 || s.throttle < -0.5);
   assert.ok(!(down.throttle > 0.1), `down is not throttle: ${JSON.stringify(down)}`);
   // ACTION right: boost asked for, and it leaves DRIVE alone (steer stays 0, throttle stays what DRIVE says).
+  const meter0 = (await seen()).action.boost;
   await set({ x: 0, y: -1 }, { x: 1, y: 0 });
-  const boost = await until('boost', (s) => s.action.boosting === true || s.action.boost > 0);
+  const boost = await until('boost', (s) => s.throttle > 0.8 && (s.action.boosting === true || s.action.boost < meter0 - 0.02), 30_000);
   assert.ok(Math.abs(boost.steer) < 0.1 && boost.throttle > 0.8, `the action stick does not steer or lift the throttle: ${JSON.stringify(boost)}`);
-  // ACTION left: drift, and again no leak into steer.
+  // ACTION left: drift (when the car is moving fast enough to), and again no leak into steer.
   await set({ x: 0, y: -1 }, { x: -1, y: 0 });
-  const drift = await until('drift', (s) => s.action.drift > 0 || s.action.drifting === true, 20_000).catch(() => null);
-  if (drift) assert.ok(Math.abs(drift.steer) < 0.1, 'drift does not steer');
+  const drift = await until('drift', (s) => s.throttle > 0.8 && (s.action.drift > 0 || s.action.drifting === true), 20_000).catch(() => null);
+  const steady = await until('drive holds', (s) => s.throttle > 0.8);
+  assert.ok(Math.abs(steady.steer) < 0.1, `the action stick's drift side does not steer: ${JSON.stringify(steady)}`);
+  if (drift) console.log('# drift seen at the host');
   await set(still, still);
   await until('neutral', (s) => Math.abs(s.steer) < 0.05 && s.throttle < 0.05 && s.brake < 0.05);
 });

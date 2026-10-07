@@ -55,6 +55,8 @@ const WHY_DISCONNECTED = 2;
 const POLL_MS = 8;
 /** Reconnecting for this long without the room answering `available` means the host has gone (§11). */
 const HOST_GONE_MS = 120_000;
+/** With the relay unavailable and the link still down this long, the card says the network can't reach the host. */
+const RELAY_GIVE_UP_MS = 8_000;
 
 let wasmReady: Promise<unknown> | null = null;
 export function loadInput(): Promise<unknown> {
@@ -117,6 +119,8 @@ export class Session {
   private store = storage();
   private pollTimer: ReturnType<typeof setInterval> | undefined;
   private lostAt = 0;
+  private relayTimer: ReturnType<typeof setInterval> | undefined;
+  private relayGaveUpAt = 0;
   private drive: Stick = { x: 0, y: 0, touch: false };
   private action: Stick = { x: 0, y: 0, touch: false };
   private tabs: BroadcastChannel | null = null;
@@ -200,6 +204,24 @@ export class Session {
     }
     document.addEventListener('visibilitychange', this.onVisibility);
     this.pollTimer = setInterval(() => this.poll(), POLL_MS);
+    this.watchRelay();
+  }
+
+  /** §11 "Finding a relay…" while the link asks for a relay credential, and "Can't reach the host" once it has none to try and
+   *  the link still isn't up (the relay said no: 503). A link that connects after all carries straight on. */
+  private watchRelay(): void {
+    clearInterval(this.relayTimer);
+    this.relayGaveUpAt = 0;
+    this.relayTimer = setInterval(() => {
+      const link = this.link;
+      if (!link || this.you || this.phase === 'ready-to-join' || this.phase === 'joining' || this.phase === 'playing') return;
+      const r = (link.inspect().relayFallback ?? {}) as { state?: string };
+      if (r.state === 'finding') this.set('finding-relay');
+      else if (r.state === 'unavailable' && link.state !== 'connected') {
+        this.relayGaveUpAt ||= Date.now();
+        if (Date.now() - this.relayGaveUpAt > RELAY_GIVE_UP_MS) this.set('no-route');
+      }
+    }, 400);
   }
 
   private onLink(s: LinkState): void {
@@ -450,6 +472,7 @@ export class Session {
 
   stop(): void {
     clearInterval(this.pollTimer);
+    clearInterval(this.relayTimer);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.link?.end();
     this.link = null;

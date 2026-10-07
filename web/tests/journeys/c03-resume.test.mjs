@@ -49,21 +49,13 @@ const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s)
 
 test('the page hidden for 30 s with its network cut, then shown: the same seat within 3 s', { timeout: 240_000 }, async () => {
   const { host, joinUrl } = await openHost();
-  // Every peer connection is kept so "the network" can really be cut (Playwright's offline mode doesn't touch WebRTC).
-  const p = await joined(joinUrl, 'Marlene', () => {
-    window.__pcs = [];
-    const PC = window.RTCPeerConnection;
-    window.RTCPeerConnection = function (...a) {
-      const pc = new PC(...a);
-      window.__pcs.push(pc);
-      return pc;
-    };
-    window.RTCPeerConnection.prototype = PC.prototype;
-  });
+  const p = await joined(joinUrl, 'Marlene');
   const before = p.you;
+  // The network goes: the phone's HTTP (signalling) is cut, and the host's side of the peer connection is dropped
+  // (Playwright's offline mode doesn't touch WebRTC, so the host closes its end, as a network loss would). The page is hidden.
   await p.ctx.setOffline(true);
+  await host.evaluate((ep) => window.__jjNet.dropPeer(ep), p.endpoint);
   await p.page.evaluate(() => {
-    for (const pc of window.__pcs) pc.close();
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
@@ -135,16 +127,19 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   const { host, joinUrl } = await openHost();
   const code = joinUrl.split('/').at(-1);
 
+  console.log('# §11 step: unknown code');
   // Unknown code: no such room.
   let page = await phoneAt(`${server.origin}${BASE}j/ZZZZ`);
   await wait(page, () => window.__jjController?.inspect().phase === 'no-such-room');
   assert.match(await text(page), /No room with code ZZZZ/i);
 
+  console.log('# §11 step: expired preview');
   // Expired preview: the lookup answers 410.
   page = await phoneAt(joinUrl, (p) => p.route('**/api/v1/rooms/*', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 410, contentType: 'application/json', body: '{"reason":"preview-expired"}' }) : r.continue())));
   await wait(page, () => window.__jjController?.inspect().phase === 'preview-expired');
   assert.match(await text(page), /This test build has expired/i);
 
+  console.log('# §11 step: relay 429/503');
   // A network that won't connect, with the relay answering 429 then 503: "Finding a relay…", then the way out.
   let fallbackCalls = 0;
   page = await phoneAt(`${joinUrl}?ice=relay`, (p) =>
@@ -160,6 +155,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   assert.match(await text(page), /Can't reach the host from this network/i);
   assert.ok(fallbackCalls >= 2, `the relay was asked ${fallbackCalls} times (429 then 503)`);
 
+  console.log('# §11 step: host hidden');
   // Ended room: the host ends it.
   const live = await joined(joinUrl, 'Marlene');
   // Host hidden: the host page loses focus (its pause), the phone says so; back again clears it.
@@ -175,6 +171,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   });
   await wait(live.page, () => window.__jjController.inspect().phase === 'playing', undefined, 20_000);
 
+  console.log('# §11 step: protocol mismatch');
   // Protocol mismatch: the host answers with ClaimRejected{Build} (bytes: cmd version 1, variant 1, reason 0); the page says
   // it is updating and reloads itself once.
   await live.page.evaluate(() => sessionStorage.removeItem('jj.reloaded'));
@@ -182,6 +179,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   await wait(live.page, () => window.__jjController.inspect().phase === 'update-needed' || document.body.textContent.includes('Updating'), undefined, 10_000).catch(() => {});
   assert.equal(await live.page.evaluate(() => sessionStorage.getItem('jj.reloaded')), '1', 'it reloads itself, once');
 
+  console.log('# §11 step: host gone');
   // Host gone: the phone has a seat, then the room can't be found when it comes back.
   const seated = await joined(joinUrl, 'Shazza');
   await seated.page.route('**/api/v1/rooms/*', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'not-found' }) }) : r.continue()));
@@ -189,6 +187,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   await wait(seated.page, () => window.__jjController?.inspect().phase === 'host-gone', undefined, 30_000);
   assert.match(await text(seated.page), /The host seems to have gone/i);
 
+  console.log('# §11 step: ended');
   // Ended room.
   await host.evaluate(() => window.__jjRoom.end());
   await wait(live.page, () => window.__jjController.inspect().phase === 'room-ended', undefined, 60_000).catch(async () => {
@@ -233,6 +232,8 @@ test('Leave asks for a second tap, then the seat goes; Sit out from Settings par
   const p = await joined(joinUrl, 'Marlene');
   const q = await joined(joinUrl, 'Shazza');
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  await wait(q.page, () => window.__jjTutorial.inspect()?.open === true);
+  await q.page.getByRole('button', { name: 'Skip tutorial' }).click();
   await q.page.getByRole('button', { name: /Settings/ }).click();
   await q.page.getByRole('button', { name: 'Sit out' }).click();
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
