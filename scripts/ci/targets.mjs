@@ -60,7 +60,13 @@ export function nodeArgs(durations, target, concurrency = true) {
   const file = at < 0 ? target : target.slice(0, at);
   const name = at < 0 ? null : target.slice(at + 2);
   const args = ['--test', ...(concurrency ? ['--test-concurrency=1'] : [])];
-  if (name === REST) for (const n of learnedNames(durations, file)) args.push('--test-skip-pattern', anchored(n));
+  // A rest target skips most of a file's tests, and node then never reaches the hook that closes what before() opened
+  // (the browser, jj-server): without --test-force-exit the process stays alive after its last test (run 1607:
+  // phone-host and r08-phone-host rest targets hung for 15+ min; with it, 0.6 s on the same build).
+  if (name === REST) {
+    args.push('--test-force-exit');
+    for (const n of learnedNames(durations, file)) args.push('--test-skip-pattern', anchored(n));
+  }
   else if (name !== null) args.push('--test-name-pattern', anchored(name));
   return [...args, file];
 }
