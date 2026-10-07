@@ -11,7 +11,7 @@
 // the page to navigate to /j/QRSC (the probe reports every page load). The scanner uses BarcodeDetector or the bundled
 // jsQR, whichever Chrome offers; the result records which.
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
@@ -67,10 +67,16 @@ async function main() {
   if (sh(ADB, ['devices']).out.includes('emulator-')) { sh(ADB, ['emu', 'kill']); await sleep(8000); }
   const cfg = readFileSync(AVD_CONFIG, 'utf8');
   const posters = readFileSync(POSTERS, 'utf8');
-  const restore = () => { writeFileSync(AVD_CONFIG, cfg); writeFileSync(POSTERS, posters); };
+  const restore = () => { writeFileSync(AVD_CONFIG, cfg); writeFileSync(POSTERS, posters); try { unlinkSync(path.join(path.dirname(POSTERS), 'jj-scan-qr.png')); } catch {} };
   writeFileSync(AVD_CONFIG, cfg.replace(/^hw\.camera\.back=.*$/m, 'hw.camera.back=virtualscene'));
   // Both posters (the wall's and the table's) show the QR, so whichever the virtual camera faces reads.
-  writeFileSync(POSTERS, posters.replace(/(poster (?:wall|table)[\s\S]*?default )\S+/g, `$1${png}`));
+  // The emulator reads poster images from its resources folder (a path outside it isn't picked up).
+  const posterFile = path.join(path.dirname(POSTERS), 'jj-scan-qr.png');
+  copyFileSync(png, posterFile);
+  // The two shipped posters, plus a ring of QR posters 2.2 m out round the camera's start (it faces one of them whichever way the
+  // scene's axes run), so a QR is in front of the lens without moving the virtual camera.
+  const ring = [[0, -2.2, 0], [0, 2.2, 180], [2.2, 0, 90], [-2.2, 0, -90]].map(([x, z, yaw], i) => `\nposter qr${i}\nsize 1.2 1.2\nposition ${x} 0 ${z}\nrotation 0 ${yaw} 0\ndefault jj-scan-qr.png\n`).join('');
+  writeFileSync(POSTERS, posters.replace(/(poster (?:wall|table)[\s\S]*?default )\S+/g, '$1jj-scan-qr.png') + ring);
 
   const api = { events: async () => stack.events };
   let plat;
@@ -78,7 +84,7 @@ async function main() {
   try {
     plat = await androidPlatform({ api, port: stack.port, log, opt });
     result.machine = plat.machine;
-    result.target = { ...plat.target, camera: 'virtualscene (wall poster = the QR)' };
+    result.target = { ...plat.target, camera: 'virtualscene (QR posters round the lens)' };
     sh(ADB, ['shell', 'pm', 'grant', 'com.android.chrome', 'android.permission.CAMERA']);
     await plat.open(`http://localhost:${stack.port}/`);
     await until('landing page load', () => stack.events.some((e) => e.kind === 'load' && e.data.path === '/'), 90000, 500);
@@ -94,7 +100,7 @@ async function main() {
       if (!allowed) allowed = await plat.allowCamera();
       return stack.events.some((e) => e.kind === 'load' && e.data.path === '/j/QRSC');
     }, 120000, 1500);
-    await sleep(6000);
+    await sleep(1200);
     await plat.shot('scan-open');
     await joined;
     await sleep(1500);

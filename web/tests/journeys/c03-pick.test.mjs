@@ -101,6 +101,7 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
 test('Ready is never behind the pick: a seat can be ready without choosing, and picking afterwards leaves it ready', { timeout: 180_000 }, async () => {
   const { host, joinUrl } = await room();
   const p = await phone(joinUrl, 'Shazza');
+  await phone(joinUrl, 'Davo'); // a second player who isn't ready keeps the room in the Lobby (everyone ready starts the race)
   await p.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.ready === true);
   assert.equal((await card(host, 'Shazza', 'ready')).state, 'ready', 'ready with no car picked');
