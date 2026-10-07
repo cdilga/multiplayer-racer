@@ -94,7 +94,7 @@ jobs:
       - name: Vehicle and brand LFS objects
         run: |
           command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
-          git lfs install --local && git lfs pull --include "art/vehicles/**,art/ui/brand/**"
+          git lfs install --local && git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
