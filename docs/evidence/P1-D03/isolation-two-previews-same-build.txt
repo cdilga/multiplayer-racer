@@ -1,0 +1,16 @@
+2026-10-07T16:45:09Z
+$ node scripts/isolation.mjs https://jammers-preview.dilger.dev/p/v02-eceaeeb8/ https://jammers-preview.dilger.dev/p/v02-eceaeeb8-2/   (eris, Chromium headless shell, fresh context per page)
+ok   /p/v02-eceaeeb8/host?room: 64 requests, all under /p/v02-eceaeeb8/
+ok   /p/v02-eceaeeb8/c: 17 requests, all under /p/v02-eceaeeb8/
+ok   /p/v02-eceaeeb8-2/host?room: 62 requests, all under /p/v02-eceaeeb8-2/
+ok   /p/v02-eceaeeb8-2/c: 17 requests, all under /p/v02-eceaeeb8-2/
+ok   root-relative /assets/ answers 404
+ok   root-relative /host answers 404
+ok   root-relative /api/v1/rooms/ABCD answers 404
+ok   root-relative /version answers 404
+ok   room 5EE5 resolves under its own /p/v02-eceaeeb8/ (200)
+ok   room 5EE5 does not resolve under /p/v02-eceaeeb8-2/ (200 {"status":"not-found","build":"v02-eceaeeb8-2","realm":"preview"})
+ok   room Q3RN resolves under its own /p/v02-eceaeeb8-2/ (200)
+ok   room Q3RN does not resolve under /p/v02-eceaeeb8/ (200 {"status":"not-found","build":"v02-eceaeeb8","realm":"preview"})
+isolation: PASS
+exit 0

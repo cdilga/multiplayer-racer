@@ -1,0 +1,4 @@
+$ date -u; SMOKE_OTHERS=https://jammers-preview.dilger.dev/p/v02-f4d0e2ef/ node scripts/smoke.mjs https://jammers-preview.dilger.dev/p/v02-eceaeeb8/ room,join-webrtc,input,resume,drive,hud,round   (from eris, jammers-deploy 29ef4e6 smoke.mjs)
+2026-10-07T15:51:28Z
+smoke: PASS room NPXT, isolated from 1 other preview(s), join-webrtc (host, 0 ms), input, resume, drive, hud, round
+exit 0 after 85 s

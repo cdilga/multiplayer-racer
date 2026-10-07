@@ -1,0 +1,24 @@
+2026-10-07T16:45:02Z
+v02-eceaeeb8     /version: {"build":"v02-eceaeeb8","protocol":1,"realm":"preview"}
+v02-eceaeeb8-2   /version: {"build":"v02-eceaeeb8-2","protocol":1,"realm":"preview"}
+container env (secret values replaced by the first 12 hex of their sha256):
+== jjp-v02-eceaeeb8 image sha256:8ff62df6db6a
+  TURN_STATIC_AUTH_SECRET sha256:0f06add1426e
+  JJ_BASE_PATH /p/v02-eceaeeb8/
+  JJ_BUILD v02-eceaeeb8
+  JJ_PUBLIC_ORIGIN https://jammers-preview.dilger.dev
+  JJ_REALM preview
+  JJ_ROOM_KEY sha256:1ae9afaf4a5c
+  JJ_BIND 0.0.0.0:8080
+  JJ_DIST /app/web
+  env names matching cloudflare|cf_|tunnel: 0
+== jjp-v02-eceaeeb8-2 image sha256:8ff62df6db6a
+  JJ_REALM preview
+  JJ_ROOM_KEY sha256:82a8aae9b001
+  TURN_STATIC_AUTH_SECRET sha256:0f06add1426e
+  JJ_BASE_PATH /p/v02-eceaeeb8-2/
+  JJ_BUILD v02-eceaeeb8-2
+  JJ_PUBLIC_ORIGIN https://jammers-preview.dilger.dev
+  JJ_BIND 0.0.0.0:8080
+  JJ_DIST /app/web
+  env names matching cloudflare|cf_|tunnel: 0

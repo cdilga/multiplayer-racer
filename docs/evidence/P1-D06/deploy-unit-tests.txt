@@ -1,0 +1,22 @@
+test_escaping (test_publish_index.Index.test_escaping) ... ok
+test_explicit_pin_stays_first_even_when_old_and_page_has_no_dollar (test_publish_index.Index.test_explicit_pin_stays_first_even_when_old_and_page_has_no_dollar) ... ok
+test_pinned_first_then_newest_first_then_retired (test_publish_index.Index.test_pinned_first_then_newest_first_then_retired) ... ok
+test_status_keep_links_and_reasons (test_publish_index.Index.test_status_keep_links_and_reasons) ... ok
+test_styled_from_the_token_file_and_phone_safe (test_publish_index.Index.test_styled_from_the_token_file_and_phone_safe) ... ok
+test_a_republish_gets_a_fresh_id (test_publish_index.Publish.test_a_republish_gets_a_fresh_id) ... ok
+test_an_orphaned_app_is_adopted_not_created_twice (test_publish_index.Publish.test_an_orphaned_app_is_adopted_not_created_twice) ... ok
+test_failed_smoke_is_not_playable_with_the_reason (test_publish_index.Publish.test_failed_smoke_is_not_playable_with_the_reason) ... ok
+test_latest_is_the_newest_playable (test_publish_index.Publish.test_latest_is_the_newest_playable) ... ok
+test_no_declared_steps_is_not_playable (test_publish_index.Publish.test_no_declared_steps_is_not_playable) ... ok
+test_other_previews_for_the_room_isolation_check (test_publish_index.Publish.test_other_previews_for_the_room_isolation_check) ... ok
+test_passing_smoke_is_playable (test_publish_index.Publish.test_passing_smoke_is_playable) ... ok
+test_preview_env_has_no_cloudflare_token_and_a_per_preview_room_key (test_publish_index.Publish.test_preview_env_has_no_cloudflare_token_and_a_per_preview_room_key) ... ok
+test_unhealthy_and_any_exception_are_not_playable (test_publish_index.Publish.test_unhealthy_and_any_exception_are_not_playable) ... ok
+test_unknown_smoke_step_fails_the_publish (test_publish_index.Publish.test_unknown_smoke_step_fails_the_publish) ... ok
+test_idempotent_after_retiring (test_retention.Retention.test_idempotent_after_retiring) ... ok
+test_publishes_pins_and_time_skips (test_retention.Retention.test_publishes_pins_and_time_skips) ... ok
+test_dropping_a_mandatory_step_fails_naming_it (test_smoke_manifest.SmokeManifest.test_dropping_a_mandatory_step_fails_naming_it) ... ok
+test_the_mandatory_list_can_be_narrowed_for_an_older_build (test_smoke_manifest.SmokeManifest.test_the_mandatory_list_can_be_narrowed_for_an_older_build) ... ok
+test_unknown_and_empty_manifests_fail_at_the_manifest (test_smoke_manifest.SmokeManifest.test_unknown_and_empty_manifests_fail_at_the_manifest) ... ok
+Ran 20 tests in 0.358s
+OK

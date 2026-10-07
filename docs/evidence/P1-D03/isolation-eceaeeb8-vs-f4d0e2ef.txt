@@ -1,0 +1,16 @@
+2026-10-07T16:19:53Z
+$ node scripts/isolation.mjs https://jammers-preview.dilger.dev/p/v02-eceaeeb8/ https://jammers-preview.dilger.dev/p/v02-f4d0e2ef/   (from eris, after jammers-deploy 0fd3976 applied the edge)
+ok   /p/v02-eceaeeb8/host?room: 52 requests, all under /p/v02-eceaeeb8/
+ok   /p/v02-eceaeeb8/c: 17 requests, all under /p/v02-eceaeeb8/
+ok   /p/v02-f4d0e2ef/host?room: 51 requests, all under /p/v02-f4d0e2ef/
+ok   /p/v02-f4d0e2ef/c: 17 requests, all under /p/v02-f4d0e2ef/
+ok   root-relative /assets/ answers 404
+ok   root-relative /host answers 404
+ok   root-relative /api/v1/rooms/ABCD answers 404
+ok   root-relative /version answers 404
+ok   room SFFH resolves under its own /p/v02-eceaeeb8/ (200)
+ok   room SFFH does not resolve under /p/v02-f4d0e2ef/ (200 {"status":"not-found","build":"v02-f4d0e2ef","realm":"preview"})
+ok   room D8XQ resolves under its own /p/v02-f4d0e2ef/ (200)
+ok   room D8XQ does not resolve under /p/v02-eceaeeb8/ (200 {"status":"not-found","build":"v02-eceaeeb8","realm":"preview"})
+isolation: PASS
+exit 0

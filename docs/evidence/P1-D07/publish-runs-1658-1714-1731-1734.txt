@@ -1,0 +1,13 @@
+publish: jjp-v02-f4d0e2ef <- f4d0e2ef3ca3 sha256:e6b0c05cf9703463d8223332ee53dfa0992e048f180cc822ab28e23c7509b50a
+smoke: FAIL step drive: mandatory step drive is missing from smoke.json
+publish: v02-f4d0e2ef not playable FAIL step drive: mandatory step drive is missing from smoke.json
+publish: jjp-v02-eceaeeb8 <- eceaeeb890bc sha256:b2a4bd76727c141b5f62a829ff1430f1cf8ef14c69a44843e27a9f54bb14d082
+smoke: PASS room 7QZH, join-webrtc (host, 2 ms), input, resume, drive, hud, round
+publish: v02-eceaeeb8 playable 
+publish: jjp-v02-eceaeeb8-2 <- eceaeeb890bc sha256:b2a4bd76727c141b5f62a829ff1430f1cf8ef14c69a44843e27a9f54bb14d082
+smoke: PASS room FCWD, isolated from 1 other preview(s), join-webrtc (host, 1 ms), input, resume, drive, hud, round
+publish: v02-eceaeeb8-2 playable 
+publish: jjp-v02-eceaeeb8-3 <- eceaeeb890bc sha256:b2a4bd76727c141b5f62a829ff1430f1cf8ef14c69a44843e27a9f54bb14d082
+smoke: FAIL step round: after room K8DD, isolated from 2 other preview(s), join-webrtc (host, 1 ms), input, resume, drive, hud: locator.click: Timeout 30000ms exceeded.
+publish: v02-eceaeeb8-3 not playable FAIL step round: after room K8DD, isolated from 2 other preview(s), join-webrtc (host, 1 ms), input, resume, drive, hud: locator.click: Timeout 30000ms exceeded.
+publish: retired v02-f4d0e2ef
