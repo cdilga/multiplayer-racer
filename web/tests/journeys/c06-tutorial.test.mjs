@@ -65,7 +65,6 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   const { host, page, ctx } = await hostAndPhone();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await shot(page, 'phone-tutorial-step1');
-  const tick0 = await host.evaluate(() => window.__jjTest.observe().tick);
   await sticks(page, { x: 1, y: 0 }, z);
   await sticks(page, { x: -1, y: 0 }, z);
   await waitStep(page, 1);
@@ -86,7 +85,7 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await waitStep(page, 7);
   await shot(page, 'phone-tutorial-done');
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Lobby', 'the tutorial never starts or holds anything');
-  assert.ok((await host.evaluate(() => window.__jjTest.observe().tick)) > tick0, 'the host never paused');
+  assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'the host never paused');
   await page.getByRole('button', { name: "Let's race" }).click();
   assert.equal((await page.evaluate(() => window.__jjTutorial.inspect())).open, false);
   // Help shows it again from the start.
