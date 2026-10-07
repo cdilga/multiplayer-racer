@@ -131,16 +131,16 @@
       [data-jj-input-drawer] .drawer-head {
         font-weight: 700;
       }
-      /* While racing the drawer folds to its head, bottom centre, so it covers no tile's name or place; hovering or
+      /* On the grid and while racing the drawer folds to its head, bottom centre, so it covers no tile's name or place; hovering or
          focusing it opens it there. */
-      [data-jj-phase='Running'] [data-jj-input-drawer] {
+      :is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer] {
         top: auto;
         bottom: 8px;
         left: 50%;
         width: max-content;
         translate: -50% 0;
       }
-      [data-jj-phase='Running'] [data-jj-input-drawer]:not(:hover):not(:focus-within) ul {
+      :is([data-jj-phase='Countdown'], [data-jj-phase='Running']) [data-jj-input-drawer]:not(:hover):not(:focus-within) ul {
         width: 0;
         max-height: 0;
         margin: 0;
