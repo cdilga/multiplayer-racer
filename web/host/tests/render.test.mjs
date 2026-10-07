@@ -161,8 +161,12 @@ test('the host draws the sim worker’s snapshots at native resolution (R111)', 
   assert.equal(s.width, Math.round(915 * 2.625));
   assert.equal(s.height, Math.round(412 * 2.625));
   assert.equal(s.backend, 'WebGL2 (WebGLRenderer)');
-  const chip = await page.getByTestId('render-chip').innerText();
-  assert.match(chip, new RegExp(`${s.width}×${s.height} native`));
+  // The chip names the backing store it shows. Read it with the stats in one step: on a slow runner the auto resolution
+  // can lower the scale between two separate reads, which is correct and only the reads would disagree.
+  const now = await page.evaluate(() => ({ chip: document.querySelector('[data-testid="render-chip"]').innerText, s: window.__jjRender.stats() }));
+  const chip = now.chip;
+  assert.ok(chip.includes(`${now.s.width}×${now.s.height}`), `${chip} vs ${JSON.stringify(now.s)}`);
+  if (now.s.resolution === 'native') assert.match(chip, new RegExp(`${now.s.width}×${now.s.height} native`));
   assert.ok(s.tick > 0, 'snapshots from the sim worker arrive');
   assert.deepEqual(errors, []);
   runs.nativeResolution = { viewport: '915x412 @2.625', stats: s, chip };
