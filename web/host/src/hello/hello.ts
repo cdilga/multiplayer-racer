@@ -14,7 +14,7 @@ interface Marker {
   updates: number;
 }
 
-const COLOURS = ['#e4572e', '#29335c', '#f3a712', '#669bbc', '#a8c686', '#c879ff', '#00a6a6', '#ff6f91'];
+const COLOURS = ['#e4572e', '#5bc0eb', '#f3a712', '#669bbc', '#a8c686', '#c879ff', '#00a6a6', '#ff6f91'];
 
 export async function mountHello(app: HTMLElement): Promise<void> {
   const params = new URLSearchParams(location.search);
