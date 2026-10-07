@@ -137,6 +137,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       readyBtn.setAttribute('aria-pressed', String(session.isReady));
     }
     roundBanner(app, session);
+    // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
+    // the autopilot. Help shows it again.
+    if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false);
     // The Lobby state can arrive just after the play screen: offer the tutorial once then.
     if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby') {
       tutorialOffered = true;
