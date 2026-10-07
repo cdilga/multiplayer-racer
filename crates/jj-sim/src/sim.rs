@@ -24,6 +24,7 @@ use jj_map::{Footprint, LoadedMap, Registry, Terrain};
 
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
 use crate::damage::episodes::{CarParts, Episodes, PreStep, TAG_CAR, TAG_PROP};
+use crate::damage::springs::{Hinge, Spring};
 use crate::damage::{self, CarDamage, DamageEvent, PARTS, PartState};
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
 use crate::placement::{
@@ -52,6 +53,8 @@ pub const GROUP_TERRAIN: Group = Group::GROUP_6;
 /// A car's wheel colliders (P1-S04a): they touch cars, debris and scenery but not the terrain, so a wheel strike on
 /// a barrier registers without fighting the raycast suspension standing on the ground.
 pub const GROUP_WHEEL: Group = Group::GROUP_7;
+/// A part that just came off a car (P1-S04b): it touches only the world until it has cleared the chassis it left.
+pub const GROUP_FRESH: Group = Group::GROUP_8;
 const fn groups(memberships: Group, filter: Group) -> InteractionGroups {
     InteractionGroups::new(memberships, filter, InteractionTestMode::And)
 }
@@ -76,6 +79,7 @@ const WHEEL_GROUPS: InteractionGroups = groups(
         .union(GROUP_CAR)
         .union(GROUP_WHEEL),
 );
+const FRESH_DEBRIS_GROUPS: InteractionGroups = groups(GROUP_FRESH, SOLID_WORLD);
 const GHOST_WHEEL_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
 const PROTECTED_WHEEL_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
 
@@ -125,6 +129,23 @@ struct Car {
     life: u32,
     /// The ACTION stick's state: boost meter and drift (P1-S03b).
     action: vehicle::ActionState,
+    /// Each loose part's hinge spring (P1-S04b), in part order; closed and at rest while a part isn't loose.
+    springs: [Spring; PARTS],
+    /// Parts whose collider has left the chassis (detached into debris).
+    removed: [bool; PARTS],
+    /// The chassis' linear velocity at the end of the last step, for its acceleration (the hinge springs' drive).
+    last_linvel: Vector,
+}
+
+/// Angular damping on detached parts, 1/s (rolling resistance, so debris comes to rest and can sleep).
+const DEBRIS_ANGULAR_DAMPING: f32 = 2.0;
+
+/// What a part is, from the profile (P1-S04b): where its mass sits, how much, and how it swings.
+#[derive(Clone, Copy)]
+struct PartPhys {
+    com: Vector,
+    mass: f32,
+    hinge: Option<Hinge>,
 }
 
 /// What a car looks like right now (for scenarios, receipts and the introspection surface).
@@ -172,6 +193,15 @@ pub struct Sim {
     props: Vec<RigidBodyHandle>,
     /// What each prop is, for renderers (P1-S08: map props and debris, or dropped cones).
     prop_kinds: Vec<PropKind>,
+    /// Which car's part each `Part` debris body is, by prop index (P1-S04b).
+    part_debris: std::collections::BTreeMap<u32, (u32, u8)>,
+    /// Fresh part debris and the tick it starts colliding with cars again.
+    fresh_debris: Vec<(u32, u64)>,
+    /// Per-part mass, centre of mass and hinge, from the profile.
+    part_phys: Vec<PartPhys>,
+    /// Work the sim itself authorises into the bodies, J: engine force, air control, flip assist, wheelie lift, the roll
+    /// correction and detach kicks. The energy accounting subtracts it (`Sim::energy_j`).
+    ledger: f64,
     /// Accepted ACTION utilities, with the tick they fired at (P1-S08).
     utility_events: Vec<(u64, UtilityEvent)>,
     /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
@@ -280,6 +310,7 @@ impl Sim {
             setup: Vec::new(),
             entries: Vec::new(),
         };
+        let phys = part_phys(&profile);
         Self {
             world,
             chassis_half: profile.chassis_half(),
@@ -287,6 +318,10 @@ impl Sim {
             terrain: m.terrain.clone(),
             cars: Vec::new(),
             prop_kinds: vec![PropKind::Debris; props.len()],
+            part_debris: std::collections::BTreeMap::new(),
+            fresh_debris: Vec::new(),
+            part_phys: phys,
+            ledger: 0.0,
             utility_events: Vec::new(),
             props,
             episodes: Episodes::default(),
@@ -660,7 +695,10 @@ impl Sim {
         };
         c.life = c.life.wrapping_add(1);
         let c = &self.cars[car.0 as usize];
+        let g = self.world.gravity;
+        let mut moved = 0.0f64;
         if let Some(b) = self.world.bodies.get_mut(c.body) {
+            let before = f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g));
             let rotation = Rotation::from_axis_angle(Vector::Y, pose.heading)
                 * Rotation::from_axis_angle(Vector::Z, roll);
             b.set_position(
@@ -669,7 +707,13 @@ impl Sim {
             );
             b.set_linvel(Vector::new(linvel[0], linvel[1], linvel[2]), true);
             b.set_angvel(Vector::ZERO, true);
+            self.cars[car.0 as usize].last_linvel = Vector::new(linvel[0], linvel[1], linvel[2]);
+            // A teleport (placement, respawn) is setup, not physics: the energy it gives or takes is authorised.
+            let b = &self.world.bodies[self.cars[car.0 as usize].body];
+            moved =
+                f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)) - before;
         }
+        self.ledger += moved;
         self.race.placed(car.0);
     }
 
@@ -730,7 +774,9 @@ impl Sim {
         let iso = *b.position();
         let front = iso * Vector::new(0.0, 0.0, self.profile.axle_front_z());
         let up = iso.rotation * Vector::Y;
-        b.apply_impulse_at_point(up * (t.wheelie_lift_impulse * lift), front, true);
+        let impulse = up * (t.wheelie_lift_impulse * lift);
+        self.ledger += f64::from(impulse.dot(b.velocity_at_point(front)));
+        b.apply_impulse_at_point(impulse, front, true);
         if f32::from(preload_ms) >= t.wheelie_good_min_ms {
             c.action.wheelie_ticks = libm::roundf(t.wheelie_drive_s * TICK_HZ as f32) as u32;
         }
@@ -889,6 +935,9 @@ impl Sim {
             applied: DriveInput::default(),
             life: 0,
             action: vehicle::ActionState::new(p),
+            springs: [Spring::default(); PARTS],
+            removed: [false; PARTS],
+            last_linvel: Vector::ZERO,
         });
     }
 
@@ -981,11 +1030,32 @@ impl Sim {
                 }
                 let commands =
                     vehicle::wheel_commands(&p, input, car.action, forward_speed, grip, DT);
-                for (w, c) in car.vehicle.wheels_mut().iter_mut().zip(commands) {
+                let dt_ = &p.tuning.damage;
+                for (i, (w, c)) in car
+                    .vehicle
+                    .wheels_mut()
+                    .iter_mut()
+                    .zip(commands)
+                    .enumerate()
+                {
                     w.steering = c.steering;
                     w.engine_force = c.engine_force;
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
+                    match car.damage.state(damage::WHEEL_FL + i, dt_) {
+                        PartState::Intact => {}
+                        // A loose wheel grips less.
+                        PartState::Loose => w.friction_slip *= 1.0 - dt_.loose_wheel_grip_loss,
+                        // A detached wheel is out of the vehicle controller: no suspension force, no grip, no drive
+                        // (Rapier 0.36 has no remove-wheel API; tests/rapier_api.rs pins this), so its corner drops.
+                        PartState::Detached => {
+                            w.engine_force = 0.0;
+                            w.brake = 0.0;
+                            w.friction_slip = 0.0;
+                            w.max_suspension_force = 0.0;
+                        }
+                    }
+                    self.ledger += f64::from(w.engine_force * forward_speed * DT);
                 }
                 let airborne = car
                     .vehicle
@@ -994,7 +1064,9 @@ impl Sim {
                     .all(|w| !w.raycast_info().is_in_contact);
                 if airborne && !input.is_neutral() {
                     let [tx, ty, tz] = vehicle::air_torque(&p, input);
-                    b.apply_torque_impulse(iso.rotation * Vector::new(tx, ty, tz) * DT, true);
+                    let ti = iso.rotation * Vector::new(tx, ty, tz) * DT;
+                    self.ledger += f64::from(ti.dot(b.angvel()));
+                    b.apply_torque_impulse(ti, true);
                 }
             }
             // Only a positive engine force wakes a sleeping chassis in Rapier: wake it on any control input.
@@ -1012,7 +1084,9 @@ impl Sim {
                 let (up, fwd, w) = (r * Vector::Y, r * Vector::Z, b.angvel());
                 let t =
                     Race::assist_torque([up.x, up.y, up.z], [fwd.x, fwd.y, fwd.z], [w.x, w.y, w.z]);
-                b.apply_torque_impulse(Vector::new(t[0], t[1], t[2]) * DT, true);
+                let ti = Vector::new(t[0], t[1], t[2]) * DT;
+                self.ledger += f64::from(ti.dot(b.angvel()));
+                b.apply_torque_impulse(ti, true);
             }
             let rays = if car.protected_since.is_some() {
                 PROTECTED_RAYS
@@ -1051,6 +1125,7 @@ impl Sim {
                     let h = up.dot(ri.contact_point_ws - com);
                     torque += (up * (h * extra)).cross(axle * w.side_impulse);
                 }
+                self.ledger += f64::from(torque.dot(b.angvel()));
                 b.apply_torque_impulse(torque, true);
             }
         }
@@ -1105,6 +1180,290 @@ impl Sim {
         }
         self.damage_events
             .extend(events.into_iter().map(|e| (self.tick, e)));
+        self.step_springs();
+        self.detach_parts();
+        self.clear_fresh_debris();
+    }
+
+    /// Integrates every loose part's hinge spring on the chassis' acceleration this tick (P1-S04b).
+    fn step_springs(&mut self) {
+        let t = &self.profile.tuning.damage;
+        for car in &mut self.cars {
+            let Some(b) = self.world.bodies.get(car.body) else {
+                continue;
+            };
+            // The chassis' acceleration over the whole tick (suspension, tyres, contacts and gravity); the part feels
+            // gravity minus that, in vehicle space.
+            let accel = (b.linvel() - car.last_linvel) / DT;
+            car.last_linvel = b.linvel();
+            let force = b.position().rotation.inverse() * (Vector::new(0.0, -9.81, 0.0) - accel);
+            for part in 1..PARTS {
+                let spring = &mut car.springs[part];
+                match (car.damage.state(part, t), self.part_phys[part].hinge) {
+                    (PartState::Loose, Some(h)) => {
+                        spring.step(&h, force, t.spring_stiffness, t.spring_damping, DT);
+                    }
+                    // Intact is closed; detached has left.
+                    _ => *spring = Spring::default(),
+                }
+            }
+        }
+    }
+
+    /// Detaches every part whose health ran out (P1-S04b), at the end of the tick: its collider leaves the chassis and a
+    /// dynamic debris body shaped like its sidecar proxy takes its place at the same pose, carrying its share of the mass
+    /// and the chassis' velocity at its centre (`v + ω × r`) plus a small outward kick. The chassis' mass properties are
+    /// recomputed. The debris stays a dynamic body for the round.
+    fn detach_parts(&mut self) {
+        let t = self.profile.tuning.damage.clone();
+        for ci in 0..self.cars.len() {
+            for part in 1..PARTS {
+                if self.cars[ci].removed[part]
+                    || self.cars[ci].damage.state(part, &t) != PartState::Detached
+                {
+                    continue;
+                }
+                self.cars[ci].removed[part] = true;
+                self.detach_part(ci, part, &t);
+            }
+        }
+    }
+
+    fn detach_part(&mut self, ci: usize, part: usize, t: &crate::profile::DamageTuning) {
+        let (body, handle, core) = {
+            let c = &self.cars[ci];
+            (c.body, c.parts[part], c.collider)
+        };
+        let Some(b) = self.world.bodies.get(body) else {
+            return;
+        };
+        let (iso, v, w, com) = (*b.position(), b.linvel(), b.angvel(), b.center_of_mass());
+        self.world.colliders.remove(
+            handle,
+            &mut self.world.islands,
+            &mut self.world.bodies,
+            &mut self.world.soft_bodies,
+            true,
+        );
+        // The chassis keeps the rest: total mass minus every part gone, the centre of mass moved off them, the
+        // inertia scaled with the mass.
+        let p = &self.profile;
+        let (m0, [cx, cy, cz]) = (p.tuning.mass, p.geometry.com);
+        let (mut gone, mut moment) = (0.0f32, Vector::ZERO);
+        for (i, &r) in self.cars[ci].removed.iter().enumerate() {
+            if r {
+                gone += self.part_phys[i].mass;
+                moment += self.part_phys[i].com * self.part_phys[i].mass;
+            }
+        }
+        let rest = (m0 - gone).max(1.0);
+        let com_rest = (Vector::new(cx, cy, cz) * m0 - moment) / rest;
+        let (lo, hi) = p.hull_bounds();
+        let [w_, h_, l_] = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+        let k = rest / 12.0 * p.tuning.inertia_scale;
+        let inertia = Vector::new(
+            k * (h_ * h_ + l_ * l_),
+            k * (w_ * w_ + l_ * l_),
+            k * (w_ * w_ + h_ * h_),
+        );
+        if let Some(col) = self.world.colliders.get_mut(core) {
+            col.set_mass_properties(MassProperties::new(com_rest, rest, inertia));
+        }
+        if let Some(b) = self.world.bodies.get_mut(body) {
+            b.recompute_mass_properties_from_colliders(&self.world.colliders);
+        }
+        // The debris: the proxy's convex hull in vehicle space on a body at the chassis' pose, so a renderer draws the
+        // part mesh at the body's pose. Fresh debris touches only the world until it has cleared the chassis.
+        let phys = self.part_phys[part];
+        let points: Vec<Vector> = p.geometry.parts[part]
+            .points
+            .iter()
+            .map(|&[x, y, z]| Vector::new(x, y, z))
+            .collect();
+        let builder = ColliderBuilder::convex_hull(&points)
+            .unwrap_or_else(|| ColliderBuilder::ball(0.05))
+            .mass(phys.mass)
+            .friction(0.6)
+            .collision_groups(FRESH_DEBRIS_GROUPS);
+        let idx = self.props.len() as u32;
+        let com_world = iso * phys.com;
+        let radial = com_world - com;
+        let inherited = v + w.cross(radial);
+        let kick = radial.normalize_or_zero() * t.detach_kick_mps;
+        let body = RigidBodyBuilder::dynamic()
+            .pose(iso)
+            .linvel(inherited + kick)
+            .angvel(w)
+            // Rapier has no rolling friction, so a rounded part would roll on for ever and never sleep: a little angular
+            // damping stands in for it (a loss, never a source).
+            .angular_damping(DEBRIS_ANGULAR_DAMPING)
+            .user_data(TAG_PROP | u128::from(idx));
+        let (h, _) = self.world.insert(body, builder);
+        // What the kick put in, authorised: ½m(|v + k|² − |v|²).
+        let (v1, v0) = (inherited + kick, inherited);
+        self.ledger += f64::from(0.5 * phys.mass * (v1.length_squared() - v0.length_squared()));
+        self.props.push(h);
+        self.prop_kinds.push(PropKind::Part);
+        self.part_debris.insert(idx, (ci as u32, part as u8));
+        let until =
+            self.tick + (libm::roundf(t.detach_clear_ms * 0.001 * TICK_HZ as f32) as u64).max(1);
+        self.fresh_debris.push((idx, until));
+    }
+
+    /// Fresh debris that has had its clearing time collides with everything like any other prop.
+    fn clear_fresh_debris(&mut self) {
+        let tick = self.tick;
+        let mut keep = Vec::new();
+        for &(idx, until) in &self.fresh_debris {
+            if tick < until {
+                keep.push((idx, until));
+                continue;
+            }
+            if let Some(b) = self.world.bodies.get(self.props[idx as usize]) {
+                for &c in b.colliders() {
+                    if let Some(col) = self.world.colliders.get_mut(c) {
+                        col.set_collision_groups(PROP_GROUPS);
+                    }
+                }
+            }
+        }
+        self.fresh_debris = keep;
+    }
+
+    /// Sets a part's health (a journaled setup command, R90 "settable"): clamped to 0..its starting health. The core has
+    /// none. The damage state, springs and detaching follow like after any hit.
+    pub fn set_part_health(&mut self, car: CarId, part: u8, health: f32) {
+        self.journal.setup.push((
+            self.tick,
+            Setup::PartHealth {
+                car: car.0,
+                part,
+                health,
+            },
+        ));
+        let t = &self.profile.tuning.damage;
+        if let Some(c) = self.cars.get_mut(car.0 as usize)
+            && (1..PARTS).contains(&usize::from(part))
+        {
+            let i = usize::from(part);
+            let was = c.damage.state(i, t);
+            c.damage.health[i] = health.clamp(0.0, c.damage.start[i]);
+            let now = c.damage.state(i, t);
+            // A state change by command is a state change all the same, with no body to blame.
+            if now != was {
+                let (cause, instigator) = (damage::OtherBody::Scenery, None);
+                let e = match now {
+                    PartState::Detached => DamageEvent::PartDetached {
+                        car: car.0,
+                        part,
+                        cause,
+                        instigator,
+                    },
+                    _ => DamageEvent::PartLoose {
+                        car: car.0,
+                        part,
+                        cause,
+                        instigator,
+                    },
+                };
+                self.damage_events.push((self.tick, e));
+            }
+        }
+    }
+
+    /// Every loose part's hinge angle, radians, in part order (0 when not loose).
+    pub fn part_angles(&self, car: CarId) -> Option<[f32; PARTS]> {
+        self.cars
+            .get(car.0 as usize)
+            .map(|c| std::array::from_fn(|i| c.springs[i].angle))
+    }
+
+    /// The part records for the snapshot (P1-S04b): every part that isn't intact, as `(car, part, state, hinge angle,
+    /// debris body index)`, in car then part order. A detached part's pose is its debris body's (`debris_poses`).
+    pub fn part_records(&self) -> Vec<(u32, u8, PartState, f32, Option<u32>)> {
+        let t = &self.profile.tuning.damage;
+        let mut out = Vec::new();
+        for (ci, c) in self.cars.iter().enumerate() {
+            for part in 1..PARTS {
+                let state = c.damage.state(part, t);
+                if state == PartState::Intact {
+                    continue;
+                }
+                let debris = self
+                    .part_debris
+                    .iter()
+                    .find(|(_, v)| v.0 == ci as u32 && usize::from(v.1) == part)
+                    .map(|(&i, _)| i);
+                out.push((ci as u32, part as u8, state, c.springs[part].angle, debris));
+            }
+        }
+        out
+    }
+
+    /// Whether debris body `index` is asleep (dynamic bodies may sleep and wake; nothing freezes them).
+    pub fn debris_sleeping(&self, index: usize) -> Option<bool> {
+        self.world
+            .bodies
+            .get(*self.props.get(index)?)
+            .map(RigidBody::is_sleeping)
+    }
+
+    /// Whether debris body `index` is dynamic (always, for the round).
+    pub fn debris_dynamic(&self, index: usize) -> Option<bool> {
+        self.world
+            .bodies
+            .get(*self.props.get(index)?)
+            .map(RigidBody::is_dynamic)
+    }
+
+    /// A debris body's linear velocity (of its centre of mass), m/s.
+    pub fn debris_linvel(&self, index: usize) -> Option<[f32; 3]> {
+        let v = self.world.bodies.get(*self.props.get(index)?)?.linvel();
+        Some([v.x, v.y, v.z])
+    }
+
+    /// A debris body's mass, kg.
+    pub fn debris_mass(&self, index: usize) -> Option<f32> {
+        self.world
+            .bodies
+            .get(*self.props.get(index)?)
+            .map(RigidBody::mass)
+    }
+
+    /// A car chassis' mass now, kg (less every detached part).
+    pub fn car_mass(&self, car: CarId) -> Option<f32> {
+        let c = self.cars.get(car.0 as usize)?;
+        self.world.bodies.get(c.body).map(RigidBody::mass)
+    }
+
+    /// Which car's part debris body `index` is.
+    pub fn debris_part(&self, index: usize) -> Option<(CarId, &'static str)> {
+        self.part_debris
+            .get(&(index as u32))
+            .map(|&(c, p)| (CarId(c), damage::PART_NAMES[usize::from(p)]))
+    }
+
+    /// Kinetic plus potential energy over every dynamic body, J, and the authorised-work ledger (engine force, air
+    /// control, flip assist, wheelie lift, the roll correction, detach kicks): the energy accounting of plan §13b.1. What
+    /// matters is `energy − ledger` over a run: it may fall (friction, impacts) but a rise past the solver's tolerance is a
+    /// bug candidate.
+    pub fn energy_j(&self) -> (f64, f64) {
+        let g = self.world.gravity;
+        let e = self
+            .world
+            .bodies
+            .iter()
+            .filter(|(_, b)| b.is_dynamic())
+            .map(|(_, b)| f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g)))
+            .sum();
+        (e, self.ledger)
+    }
+
+    /// Scales the solver's iterations (the TGS substeps) for the stress rerun of the energy tests; not a journaled
+    /// command, so replays don't see it.
+    #[doc(hidden)]
+    pub fn scale_solver_iterations(&mut self, factor: usize) {
+        self.world.integration_parameters.num_solver_iterations *= factor.max(1);
     }
 
     /// Every finished damage episode and part-state change so far, with the tick it happened (P1-S04a): the records
@@ -1256,6 +1615,16 @@ impl Sim {
         self.race.hash_into(&mut race);
         for c in &self.cars {
             c.damage.hash_into(&mut race);
+            for (s, r) in c.springs.iter().zip(c.removed) {
+                race.extend(s.angle.to_bits().to_le_bytes());
+                race.extend(s.rate.to_bits().to_le_bytes());
+                race.push(u8::from(r));
+            }
+        }
+        race.extend(self.ledger.to_bits().to_le_bytes());
+        for &(i, until) in &self.fresh_debris {
+            race.extend(i.to_le_bytes());
+            race.extend(until.to_le_bytes());
         }
         self.episodes.hash_into(&mut race);
         for c in &self.cars {
@@ -1333,6 +1702,9 @@ impl Sim {
                     Setup::Utility { car, kind } => {
                         sim.utility(CarId(*car), *kind);
                     }
+                    Setup::PartHealth { car, part, health } => {
+                        sim.set_part_health(CarId(*car), *part, *health);
+                    }
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {
@@ -1359,4 +1731,38 @@ pub fn route_spawn(map: &LoadedMap, index: usize, lateral: f32, lift: f32) -> Sp
         z: a.z as f32 / 1000.0 + nz * lateral,
         heading: dx.atan2(dz),
     }
+}
+
+/// Each part's mass, centre of mass and hinge from the profile (P1-S04b): the proxy hull's centroid, its mass fraction of
+/// the car, and the hinge's pivot-to-centre arm and limits.
+fn part_phys(p: &VehicleProfile) -> Vec<PartPhys> {
+    (0..PARTS)
+        .map(|i| {
+            let Some(g) = p.geometry.parts.get(i) else {
+                return PartPhys {
+                    com: Vector::ZERO,
+                    mass: 0.0,
+                    hinge: None,
+                };
+            };
+            let points: Vec<Vector> = g
+                .points
+                .iter()
+                .map(|&[x, y, z]| Vector::new(x, y, z))
+                .collect();
+            let com = SharedShape::convex_hull(&points)
+                .map_or(Vector::ZERO, |s| s.mass_properties(1.0).local_com);
+            let hinge = g.hinge.map(|([ax, ay, az], lo, hi)| Hinge {
+                axis: Vector::new(ax, ay, az).normalize_or_zero(),
+                arm: com - Vector::new(g.pivot[0], g.pivot[1], g.pivot[2]),
+                lo: lo.to_radians(),
+                hi: hi.to_radians(),
+            });
+            PartPhys {
+                com,
+                mass: g.mass_fraction * p.tuning.mass,
+                hinge,
+            }
+        })
+        .collect()
 }

@@ -377,6 +377,71 @@ fn snapshots_carry_cars_and_skip_when_the_buffer_is_short() {
 }
 
 #[test]
+fn loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_events() {
+    // P1-S04b through the real host path: a loose door and a detached bumper are part records in the snapshot (state,
+    // hinge angle, the debris body's pose) and PartLoose / PartDetached events with their cause; the detached bumper keeps
+    // its debris slot (kind 2) so debris indices stay stable.
+    use jj_protocol::abi::{DamageCause, SimEvent};
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(&local(1, [0, 20_000])).unwrap();
+    let mut now = 0;
+    for _ in 0..30 {
+        h.advance(now);
+        now += 8_334;
+    }
+    h.sim.set_part_health(CarId(0), 3, 5.0);
+    h.sim.set_part_health(CarId(0), 1, 0.0);
+    for _ in 0..30 {
+        h.advance(now);
+        now += 8_334;
+    }
+    let mut events = Vec::new();
+    while let Some(m) = h.next_message() {
+        if let SimToMain::Events { batch } = m {
+            events.extend(batch);
+        }
+    }
+    // The bumper is gone, its cause the scenery (the setup command isn't a hit, so `Scenery`).
+    let _ = DamageCause::Scenery;
+    let mut buf = vec![0; h.snapshot_size()];
+    let n = h.write_snapshot(&mut buf);
+    assert_eq!(n, buf.len());
+    let u32_at = |o: usize| u32::from_le_bytes(buf[o..o + 4].try_into().unwrap());
+    let u16_at = |o: usize| u16::from_le_bytes(buf[o..o + 2].try_into().unwrap());
+    let (cars, debris, parts) = (u32_at(28), u32_at(32) as usize, u32_at(36) as usize);
+    assert_eq!((cars, debris >= 1, parts), (1, true, 2), "two part records");
+    let at = SNAPSHOT_HEADER + SNAPSHOT_CAR + SNAPSHOT_DEBRIS * debris;
+    let rec = |i: usize| at + i * SNAPSHOT_PART;
+    assert_eq!(
+        (u32_at(rec(0)), u16_at(rec(0) + 4), u16_at(rec(0) + 6)),
+        (0, 1, 2),
+        "the bumper: detached"
+    );
+    assert_eq!(
+        (u32_at(rec(1)), u16_at(rec(1) + 4), u16_at(rec(1) + 6)),
+        (0, 3, 1),
+        "the door: loose"
+    );
+    let kinds: Vec<u32> = (0..debris)
+        .map(|i| u32_at(SNAPSHOT_HEADER + SNAPSHOT_CAR + i * SNAPSHOT_DEBRIS + 28))
+        .collect();
+    assert!(
+        kinds.contains(&2),
+        "the bumper's debris slot is kind 2: {kinds:?}"
+    );
+    // Events are only seat events when a seat drives the car; the local source's seat does.
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, SimEvent::PartDetached { part: 1, .. }))
+            && events
+                .iter()
+                .any(|e| matches!(e, SimEvent::PartLoose { part: 3, .. })),
+        "{events:?}"
+    );
+}
+
+#[test]
 fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
     // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.

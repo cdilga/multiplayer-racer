@@ -8,6 +8,7 @@
 //! doors (FL, FR, RL, RR), the four wheels (FL, FR, RL, RR). `core` has a collider but no health.
 
 pub mod episodes;
+pub mod springs;
 
 use serde::{Deserialize, Serialize};
 

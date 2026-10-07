@@ -1,0 +1,23 @@
+{
+ "scenario": "detach-energy",
+ "what": "Energy accounting through the fixture runner (P1-S04b, plan §13b.1): a car at 14 m/s loses its front bumper, a door and a wheel on the same tick, with every kick in the authorised-work ledger. `energyGainJ`, the most kinetic + potential energy minus the ledger ever rose above its start, stays under the solver's tolerance (it falls: friction and the ground take energy, nothing makes it). The cars wait out spawn protection first; the second car sits parked as a bystander.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 12,
+ "ticks": 600,
+ "cars": [
+  {"pose": {"x": -60.0, "y": 0.1, "z": -20.0, "headingDeg": 0}},
+  {"pose": {"x": -48.0, "y": 0.1, "z": -20.0, "headingDeg": 0}}
+ ],
+ "place": [
+  {"tick": 240, "car": 0, "pose": {"x": 10.0, "y": 0.05, "z": -30.0, "headingDeg": 90}, "linvel": [14, 0, 0]}
+ ],
+ "damage": [
+  {"tick": 270, "car": 0, "part": "front", "health": 0},
+  {"tick": 270, "car": 0, "part": "door_FL", "health": 0},
+  {"tick": 270, "car": 0, "part": "wheel_RR", "health": 0}
+ ],
+ "expect": [
+  {"car": 0, "metric": "energyGainJ", "min": 0, "max": 250},
+  {"car": 0, "metric": "wrecks", "min": 0, "max": 0}
+ ]
+}

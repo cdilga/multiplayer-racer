@@ -189,3 +189,34 @@ not feel targets.
   chains don't propagate an owner yet.
 - **Test timing.** Scenarios place cars 0.5 m from the target with the speed they're named for; `place_car` at
   `y = 0.05` (the design pose is ~0), and wait 2 s in the open first or the cars are still under spawn protection.
+
+## 2026-10-07 · Loose springs, detach and debris (P1-S04b)
+
+- **Mass changes land at once or the energy table lies.** Removing a part's collider and calling `set_mass_properties` on
+  the core only takes effect at the next `step`; for one tick the chassis kept its full mass *and* the debris had its
+  share, which read as +7 kJ at 14 m/s. `recompute_mass_properties_from_colliders` on the body right after fixes it.
+  Chassis mass = profile mass − Σ detached fractions, centre of mass moved off them, inertia scaled with mass (not a
+  parallel-axis recompute: a few percent off, inside the energy tolerance).
+- **Hinge springs need the *whole tick's* acceleration.** `v_end − v_start_of_step` misses the suspension impulses that
+  `update_vehicle` applies before `step` (and reads gravity as the chassis' own acceleration), so the apparent force was
+  ~0 and every door stayed shut. The spring takes `(v − last end-of-step v) / dt`, and the part feels `g − a` in
+  vehicle space. Placement resets that velocity so a teleport isn't an acceleration.
+- **Springs never touch the body.** They are state (angle, rate, clamped to the sidecar's limits with an inelastic stop)
+  published for the renderer; the loose part's collider stays at the attached pose. So they can't inject energy.
+- **Detached = a dynamic body at the chassis pose with the proxy hull in vehicle space.** The renderer draws the part
+  mesh at the body's pose (the part record's pose). Mass is exact (`ColliderBuilder::mass`), velocity is `v + ω × r`
+  at the part's centre plus a 1.5 m/s outward kick, spin the chassis'. The kick's energy goes in the authorised-work
+  ledger.
+- **Fresh debris ignores cars for 250 ms.** It's created overlapping the chassis (same pose); letting the solver separate
+  them is a violent energy source. A fresh-debris group touches only the world, then flips to the ordinary prop group.
+- **Rapier has no rolling friction.** A detached bumper rolled at 0.5 m/s for 20+ s and never slept. Angular damping 2/s
+  on debris (a loss, not a source) lets it come to rest, sleep, and wake on contact.
+- **Detached wheels** zero engine force, brake, friction slip and `max_suspension_force` every tick (the pinned
+  `rapier_api` way); their corner drops. A loose wheel is friction slip × 0.85.
+- **Energy ledger.** `Sim::energy_j()` = Σ(kinetic + potential) over dynamic bodies and a ledger of authorised work: engine
+  force·v, air torque, flip assist, wheelie lift, the roll correction, detach kicks and teleports (placement, respawn).
+  `Metric::EnergyJ` is E − ledger, `Metric::EnergyGainJ` the most it ever rose above its first reading. Measured
+  gains: coast −291 J, loose slalom −391 J, detach kicks −291 J, 20-part pile +5 J (+7 J at doubled solver iterations);
+  tolerance 250 J.
+- **Settable state.** `Sim::set_part_health` is a journaled command (`Setup::PartHealth`, fixtures' `damage` list); a
+  state change by command raises the same loose/detached event as a hit, cause scenery.

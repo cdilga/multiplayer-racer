@@ -76,6 +76,9 @@ pub enum PropKind {
     #[default]
     Debris,
     Cone,
+    /// A detached car part (P1-S04b): a dynamic debris body shaped like its sidecar proxy, listed in the debris records
+    /// (so indices stay stable) and described by the snapshot's part records.
+    Part,
 }
 
 impl PropKind {
@@ -84,6 +87,7 @@ impl PropKind {
         match self {
             Self::Debris => 0,
             Self::Cone => 1,
+            Self::Part => 2,
         }
     }
 }

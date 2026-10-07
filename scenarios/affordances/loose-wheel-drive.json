@@ -1,0 +1,37 @@
+{
+ "scenario": "loose-wheel-drive",
+ "what": "§7.3a 'keep driving with one loose wheel' (P1-S04b): car 0's front left wheel is loose (health 10 of 80, so it loses 15 % of its friction slip) while car 1's wheels are all intact; both roll at 15 m/s on the main straight, 4 m either side of the centreline, with the same inputs: a little throttle, full left lock from 1 s to 2 s, then straight. The loose-wheel car keeps its speed, stays upright on all four wheels, and still steers with authority (within a few degrees of the intact car's heading change). Baselines: no input doesn't turn; mashing doesn't end where the deliberate drive does.",
+ "map": "maps/greybox-loop.json",
+ "seed": 41,
+ "ticks": 240,
+ "cars": [
+  {"routePoint": 20, "lateral": -4, "linvel": [15, 0, 0]},
+  {"routePoint": 20, "lateral": 4, "linvel": [15, 0, 0]}
+ ],
+ "damage": [
+  {"tick": 1, "car": 0, "part": "wheel_FL", "health": 10}
+ ],
+ "inputs": [
+  {"car": 0, "fromTick": 0, "toTick": 60, "throttle": 0.3},
+  {"car": 0, "fromTick": 60, "toTick": 120, "throttle": 0.3, "steer": 1.0},
+  {"car": 0, "fromTick": 120, "throttle": 0.3},
+  {"car": 1, "fromTick": 0, "toTick": 60, "throttle": 0.3},
+  {"car": 1, "fromTick": 60, "toTick": 120, "throttle": 0.3, "steer": 1.0},
+  {"car": 1, "fromTick": 120, "throttle": 0.3}
+ ],
+ "observe": [120, 240],
+ "expect": [
+  {"car": 0, "metric": "travel", "min": 20, "max": 40},
+  {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
+  {"car": 0, "atTick": 240, "metric": "wheelsInContact", "min": 4, "max": 4},
+  {"car": 0, "atTick": 120, "metric": "headingChangeDeg", "min": 15, "max": 30},
+  {"car": 1, "atTick": 120, "metric": "headingChangeDeg", "min": 15, "max": 30}
+ ],
+ "baselines": {
+  "kinds": ["no-input", "mash", "hold"],
+  "differ": [
+   {"car": 0, "metric": "headingChangeDeg", "atTick": 120, "by": 5.0},
+   {"car": 0, "metric": "travel", "by": 3.0}
+  ]
+ }
+}

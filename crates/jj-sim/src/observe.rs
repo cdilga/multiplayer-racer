@@ -139,6 +139,8 @@ pub struct PartObs {
     pub part: String,
     pub health: f32,
     pub state: crate::damage::PartState,
+    /// The hinge spring's angle, degrees (0 unless loose).
+    pub angle_deg: f32,
 }
 
 /// One car at one tick.
@@ -167,6 +169,10 @@ pub struct CarObs {
     pub action: ActionObs,
     /// Every part's health and state, in `damage::PART_NAMES` order (P1-S04a).
     pub parts: Vec<PartObs>,
+    /// The world's kinetic plus potential energy and the sim's authorised-work ledger, J (P1-S04b, plan §13b.1): the same
+    /// for every car (it's the whole world's).
+    pub energy_j: f64,
+    pub authorised_j: f64,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -241,15 +247,19 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             .part_health(car)
             .zip(sim.part_states(car))
             .map(|(h, s)| {
+                let angles = sim.part_angles(car).unwrap_or([0.0; crate::damage::PARTS]);
                 (0..crate::damage::PARTS)
                     .map(|i| PartObs {
                         part: crate::damage::PART_NAMES[i].to_owned(),
                         health: h[i],
                         state: s[i],
+                        angle_deg: angles[i].to_degrees(),
                     })
                     .collect()
             })
             .unwrap_or_default(),
+        energy_j: sim.energy_j().0,
+        authorised_j: sim.energy_j().1,
         action: sim
             .action_state(car)
             .map_or_else(ActionObs::default, |a| ActionObs {
@@ -338,10 +348,15 @@ pub enum Metric {
     /// The ACTION utilities (P1-S08): "OI!" flashes fired and cones dropped over the run.
     OiFired,
     ConesDropped,
+    /// Energy (P1-S04b, plan §13b.1): the world's kinetic plus potential energy minus the authorised-work ledger, J, and
+    /// the most it ever rose above its first reading over the run (a positive number is energy the sim made up: a bug
+    /// candidate once it's past the solver's tolerance).
+    EnergyJ,
+    EnergyGainJ,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 39] = [
+    pub const ALL: [Metric; 41] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -381,6 +396,8 @@ impl Metric {
         Metric::WheelieDriveS,
         Metric::OiFired,
         Metric::ConesDropped,
+        Metric::EnergyJ,
+        Metric::EnergyGainJ,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -425,6 +442,8 @@ impl Metric {
             Metric::WheelieDriveS => "wheelieDriveS",
             Metric::OiFired => "oiFired",
             Metric::ConesDropped => "conesDropped",
+            Metric::EnergyJ => "energyJ",
+            Metric::EnergyGainJ => "energyGainJ",
         }
     }
 }
@@ -461,6 +480,8 @@ pub struct SignatureTracker {
     max_nose_up: f64,
     front_air_ticks: u64,
     wheelie_drive_ticks: u64,
+    energy0: Option<f64>,
+    energy_gain: f64,
 }
 
 /// A body's pitch (nose up positive) and roll (left side up positive) from its rotation, degrees.
@@ -507,11 +528,16 @@ impl SignatureTracker {
             max_nose_up: 0.0,
             front_air_ticks: 0,
             wheelie_drive_ticks: 0,
+            energy0: None,
+            energy_gain: 0.0,
         }
     }
 
     /// Takes the car's observation after each tick (and once before the first).
     pub fn update(&mut self, o: &CarObs) {
+        let energy = o.energy_j - o.authorised_j;
+        let e0 = *self.energy0.get_or_insert(energy);
+        self.energy_gain = self.energy_gain.max(energy - e0);
         self.max_speed = self.max_speed.max(f64::from(o.speed));
         self.max_yaw_rate = self
             .max_yaw_rate
@@ -660,6 +686,8 @@ impl SignatureTracker {
             Metric::WheelieDriveS => self.wheelie_drive_ticks as f64 / f64::from(TICK_HZ),
             Metric::OiFired => f64::from(o.action.oi),
             Metric::ConesDropped => f64::from(o.action.cones),
+            Metric::EnergyJ => o.energy_j - o.authorised_j,
+            Metric::EnergyGainJ => self.energy_gain,
             Metric::SlipDeg => o
                 .wheels
                 .iter()

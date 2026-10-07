@@ -59,6 +59,9 @@ pub struct Fixture {
     /// Dynamic debris bodies (cuboids, half extents in m) injected at a tick.
     #[serde(default)]
     pub debris: Vec<DebrisSpec>,
+    /// Part health set at a tick (R90 "settable", P1-S04b): the damage state without a crash.
+    #[serde(default)]
+    pub damage: Vec<PartHealthSpec>,
     /// The autopilot takes a car (`on`) or hands it back (P1-S07).
     #[serde(default)]
     pub autopilot: Vec<AutopilotSpec>,
@@ -179,6 +182,16 @@ pub struct AutopilotSpec {
     pub tick: u64,
     pub car: u32,
     pub on: bool,
+}
+
+/// A part's health set at a tick: `part` is a contract part name (`front`, `door_FL`, `wheel_RR`…).
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PartHealthSpec {
+    pub tick: u64,
+    pub car: u32,
+    pub part: String,
+    pub health: f32,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -492,6 +505,11 @@ impl Harness {
                 p.pose.roll_deg.to_radians(),
                 p.linvel,
             );
+        }
+        for d in fx.damage.iter().filter(|d| d.tick == t) {
+            if let Some(part) = jj_sim::damage::part_index(&d.part) {
+                sim.set_part_health(CarId(d.car), part as u8, d.health);
+            }
         }
         for r in fx.recover.iter().filter(|r| r.tick == t) {
             sim.recover(CarId(r.car));

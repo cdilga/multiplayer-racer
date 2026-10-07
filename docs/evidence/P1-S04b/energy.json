@@ -1,0 +1,25 @@
+{
+  "rows": [
+    {
+      "energyGainJ": -291.34375,
+      "energyGainJAtDoubledIterations": -290.84375,
+      "scenario": "baseline-coast"
+    },
+    {
+      "energyGainJ": -390.95612460561097,
+      "energyGainJAtDoubledIterations": -390.45612460561097,
+      "scenario": "loose-springs-slalom"
+    },
+    {
+      "energyGainJ": -291.34375,
+      "energyGainJAtDoubledIterations": -290.84375,
+      "scenario": "detach-kicks"
+    },
+    {
+      "energyGainJ": 4.8759765625,
+      "energyGainJAtDoubledIterations": 6.8779296875,
+      "scenario": "debris-pile-20"
+    }
+  ],
+  "toleranceJ": 250.0
+}

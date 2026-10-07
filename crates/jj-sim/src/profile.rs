@@ -146,7 +146,7 @@ pub struct Tuning {
 
 /// The damage model's numbers (plan §6.3, DEFAULT/TUNE; calibrated by `scenarios/damage/`, never by formula).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, default)]
 pub struct DamageTuning {
     /// Starting health per part kind.
     pub health_front: f32,
@@ -167,6 +167,17 @@ pub struct DamageTuning {
     /// A hit on the core (it has no health) belongs to the nearest part within this distance, m: the sidecar's core
     /// proxy bulges past the door skins, so a side hit lands on it first.
     pub attribution_margin_m: f32,
+    /// Loose parts (P1-S04b): the hinge spring's stiffness (1/s², the square of its natural angular frequency) and damping
+    /// (1/s). Visual springs on the chassis' accelerations; they never push back on the body.
+    pub spring_stiffness: f32,
+    pub spring_damping: f32,
+    /// A loose wheel loses this fraction of its friction slip.
+    pub loose_wheel_grip_loss: f32,
+    /// A detaching part leaves at this much extra speed, m/s, away from the chassis' centre of mass (an authorised input
+    /// to the energy ledger).
+    pub detach_kick_mps: f32,
+    /// A fresh debris part ignores cars for this long, ms, so it clears the chassis it came off without being shoved.
+    pub detach_clear_ms: f32,
 }
 
 impl Default for DamageTuning {
@@ -185,6 +196,11 @@ impl Default for DamageTuning {
             window_ms: 50.0,
             min_closing_mps: 4.0,
             attribution_margin_m: 0.3,
+            spring_stiffness: 60.0,
+            spring_damping: 6.0,
+            loose_wheel_grip_loss: 0.15,
+            detach_kick_mps: 1.5,
+            detach_clear_ms: 250.0,
         }
     }
 }

@@ -98,6 +98,13 @@ pub enum Setup {
         car: u32,
         kind: crate::utility::UtilityKind,
     },
+    /// Sets a part's health (scenario setup, R90 "settable", P1-S04b): the damage state without a crash. Clamped to
+    /// 0..its starting health; the next tick's state change follows from it like any other.
+    PartHealth {
+        car: u32,
+        part: u8,
+        health: f32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

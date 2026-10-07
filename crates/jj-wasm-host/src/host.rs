@@ -61,6 +61,7 @@ pub const SNAPSHOT_MAGIC: u32 = 0x4a4a_5331; // "JJS1"
 pub const SNAPSHOT_HEADER: usize = 40;
 pub const SNAPSHOT_CAR: usize = 64;
 pub const SNAPSHOT_DEBRIS: usize = 32;
+pub const SNAPSHOT_PART: usize = 40;
 
 /// Why the sim isn't stepping. Bits in [`Host::pause_mask`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -1039,15 +1040,19 @@ impl Host {
         SNAPSHOT_HEADER
             + SNAPSHOT_CAR * self.sim.cars().count()
             + SNAPSHOT_DEBRIS * self.sim.debris_poses().len()
+            + SNAPSHOT_PART * self.sim.part_records().len()
     }
 
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
     ///
     /// Header: magic u32, version u16, flags u16, tick u64, session_rev u32, pause mask u32, countdown ms u32, cars u32,
-    /// debris u32, parts u32 (the part records after the debris, P1-R02's layout in web/host/src/render/snapshot.ts;
-    /// written 0 until the sim reports loose and detached parts: every part intact). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
+    /// debris u32, parts u32 (the part records after the debris, P1-R02's layout in web/host/src/render/snapshot.ts:
+    /// one 40 B record per part that isn't intact, P1-S04b: car u32, part u16 (the sidecar's `parts` order), state u16
+    /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
+    /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
-    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08).
+    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
+    /// car part, P1-S04b: it is drawn from its part record, not as a box, and keeps its slot so debris indices stay stable).
     pub fn write_snapshot(&self, buf: &mut [u8]) -> usize {
         let need = self.snapshot_size();
         if buf.len() < need {
@@ -1065,7 +1070,8 @@ impl Host {
         w.u32((self.countdown_us() / 1000) as u32);
         w.u32(cars.len() as u32);
         w.u32(debris.len() as u32);
-        w.u32(0); // parts
+        let parts = self.sim.part_records();
+        w.u32(parts.len() as u32);
         let race = self.sim.race();
         for car in cars {
             let s = self.sim.car_state(car).expect("listed car");
@@ -1092,9 +1098,22 @@ impl Host {
             w.f32(action.boost);
             w.u32(0);
         }
-        for ((p, r), k) in debris.into_iter().zip(self.sim.prop_kinds()) {
-            p.iter().chain(&r).for_each(|&v| w.f32(v));
+        for ((p, r), k) in debris.iter().zip(self.sim.prop_kinds()) {
+            p.iter().chain(r).for_each(|&v| w.f32(v));
             w.u32(k.code());
+        }
+        for (car, part, state, angle, body) in parts {
+            w.u32(car);
+            w.u16(u16::from(part));
+            w.u16(match state {
+                jj_sim::damage::PartState::Detached => 2,
+                _ => 1,
+            });
+            w.f32(angle);
+            let (p, r) = body
+                .and_then(|i| debris.get(i as usize).copied())
+                .unwrap_or(([0.0; 3], [0.0, 0.0, 0.0, 1.0]));
+            p.iter().chain(&r).for_each(|&v| w.f32(v));
         }
         w.at
     }
