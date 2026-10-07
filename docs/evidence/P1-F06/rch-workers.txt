@@ -1,0 +1,33 @@
+2026-10-07T23:40:57Z
+(the Mac, Chriss-MacBook-Pro)
+$ rch --version
+rch 2.1.15 (commit 62f637837a38)
+$ rch workers list
+
+Configured Workers
+------------------
+
+  ● devbox ubuntu@devbox
+    Slots : 0  Priority : 100
+    Disk: 11.6 GiB free (2.5% free, daemon); pressure: CRITICAL (cached daemon)
+
+  ● eris cdilga@eris
+    Slots : 6  Priority : 200
+    Disk: 1347.6 GiB free (72.4% free, daemon); pressure: healthy (cached daemon)
+
+Total: 2 worker(s)
+$ rch status | Workers/Issues
+  Posture : degraded (Some workers unavailable or pressure-blocked, partial remote capability)
+  Workers : 2/2 healthy, 6/6 slots available
+  ● [error] Worker 'devbox' in critical pressure state (disk_critical_without_fresh_telemetry)
+  ● [warning] 90 local fallback build(s) on this host in the last 24h (43× remote execution failed; remote retries exhausted; 42× no admissible workers: critical_pressure=1,active_project_exclusion=1; 5× no admissible workers: critical_pressure=1)
+  !! Worker devbox under critical storage pressure (11.6 GB free) [devbox]
+    Fix: ssh ubuntu@devbox 'df -h / /tmp && du -sh /tmp/rch-* /tmp/rch_target_* /data/projects/*/.rch-target-* /data/projects/*/target* 2>/dev/null'
+$ rch exec -- cargo check --locked -q -p jj-map   (which worker; pinned toolchain from rust-toolchain.toml)
+  2026-10-07T23:40:57.796225Z  INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.1)
+  2026-10-07T23:40:59.677220Z  INFO rch::hook::transfer_orchestration: Syncing project to worker eris...
+$ rch exec -- cargo check --locked -q -p jj-sim   (which worker; pinned toolchain from rust-toolchain.toml)
+  2026-10-07T23:41:07.287530Z  INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.1)
+  2026-10-07T23:41:08.750506Z  INFO rch::hook::transfer_orchestration: Syncing project to worker eris...
+$ two builds at once
+  A:   2026-10-07T23:41:15.814009Z  INFO rch::hook: Selected worker: eris at cdilga@eris (4 slots remaining after reservation, speed 78.1)

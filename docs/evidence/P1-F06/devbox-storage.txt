@@ -1,0 +1,16 @@
+2026-10-07T23:41:30Z
+$ ssh devbox-lan df -h / ; lxc storage (devbox is an LXD container on triton)
+/dev/nvme0n1p2  458G  423G   12G  98% /
+6.0G	/home/ubuntu/.cache
+$ ssh triton zpool status tank | head; df -h / /mnt/unit
+  pool: tank
+ state: DEGRADED
+status: One or more devices has experienced an error resulting in data
+	corruption.  Applications may be affected.
+action: Restore the file in question if possible.  Otherwise restore the
+	entire pool from backup.
+   see: http://zfsonlinux.org/msg/ZFS-8000-8A
+  scan: resilvered 3.69T in 7 days 06:59:27 with 0 errors on Tue Oct  6 13:51:21 2026
+errors: List of errors unavailable: permission denied
+/dev/nvme0n1p2  458G  423G   12G  98% /
+tank            7.1T  3.9T  3.2T  56% /mnt/unit

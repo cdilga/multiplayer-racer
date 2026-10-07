@@ -1,0 +1,23 @@
+2026-10-07T23:41:22Z
+$ scripts/remote/eris.sh npx playwright --version
+eris.sh: note: uncommitted Mac changes don't reach eris; it runs 2055da7c7f0a.
+Version 1.62.1
+$ ssh eris ru status
+ℹ Repository Status (1 repos)
+ℹ Fetching remotes for accurate status...
+
+Repository                Status       Branch          Ahead/Behind
+------------------------  ------------ --------------- ------------
+cdilga/multiplayer-racer  current      v0.2-revamp     0/0
+
+ℹ Legend: * = uncommitted changes, mismatch = remote URL differs from config
+$ ssh eris 'cat ~/.config/ru/repos.d/*' (non-comment lines)
+cdilga/multiplayer-racer@v0.2-revamp
+$ two runs at once, each with its own --run dir
+  run b: RU_SYNC=skipped (runs in progress; clone already at 2055da7c7f0a)
+  run b: eris.sh: note: uncommitted Mac changes don't reach eris; it runs 2055da7c7f0a.
+  run b: b 2055da7 /home/cdilga/Work/runs/f06-b
+  run a: eris.sh: note: uncommitted Mac changes don't reach eris; it runs 2055da7c7f0a.
+  run a: a 2055da7 /home/cdilga/Work/runs/f06-a
+$ ssh eris git -C ~/Work/dev/multiplayer-racer status --porcelain (nothing edited by hand)
+(end; 0 tracked changes)

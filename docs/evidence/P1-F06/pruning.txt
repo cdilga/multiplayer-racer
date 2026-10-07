@@ -1,0 +1,19 @@
+2026-10-07T23:41:41Z
+$ scripts/reclaim-target.sh --dry-run
+target/: 7.98 GiB (budget 15 GiB)
+target/: 7.98 GiB -> 7.98 GiB (dry run: nothing removed)
+$ scripts/prune-caches.sh --dry-run
+  0        /home/cdilga/Work/runs/.pruned
+  656M     /home/cdilga/.cache/ms-playwright
+  706M     /home/cdilga/.npm
+  626M     /home/cdilga/.cargo/registry
+  1.5G     /home/cdilga/.rustup
+  3.8G     /home/cdilga/Android/Sdk
+  1.1G     /home/cdilga/.android/avd
+  4.0K     /tmp/rch
+  6.7G     /Users/cdilga/Documents/dev
+  67M      /home/cdilga/Work/dev/multiplayer-racer/node_modules
+  2.1G     /home/cdilga/Work/dev/multiplayer-racer/target
+  Filesystem        Size  Used Avail Use% Mounted on
+  /dev/mapper/root  1.9T  515G  1.4T  28% /home
+  /dev/mapper/root  1.9T  515G  1.4T  28% /
