@@ -44,8 +44,13 @@ const capture = async (page, name) => {
 async function grid(page, n) {
   await page.waitForFunction((k) => document.querySelectorAll('.hud-tile[data-seat]').length === k, n, { timeout: 30_000 });
   await page.waitForTimeout(400); // past the 300 ms reflow
-  const tiles = [];
-  for (const t of await page.locator('.hud-tile[data-seat]').all()) tiles.push(await box(t));
+  // The kernel's own rects (device px; these tests run at DPR 1, so CSS px), not the HUD boxes laid over them.
+  const tiles = await page.evaluate(() => {
+    const c = document.querySelector('canvas');
+    const k = c.width / Math.max(1, c.clientWidth); // backing-store px per CSS px (a downscaled render is still the same grid)
+    return window.__jjRoundFixture.tileRects().map(({ x, y, w, h }) => ({ x: x / k, y: y / k, w: w / k, h: h / k }));
+  });
+  assert.equal(tiles.length, n);
   const cells = [];
   for (const c of await page.locator('.jj-filler:not([data-kind=margin])').all()) cells.push(await box(c));
   return { tiles, cells, foot: await box(page.locator('.jj-foot')) };
@@ -68,7 +73,8 @@ for (const [n, vp, spare] of CASES) {
       // rounding only, under a CSS pixel per column or row).
       const all = [...tiles, ...cells];
       const [l, r, t, b] = [Math.min(...all.map((x) => x.x)), Math.max(...all.map((x) => x.x + x.w)), Math.min(...all.map((x) => x.y)), Math.max(...all.map((x) => x.y + x.h))];
-      const slack = 8; // gutter half-insets plus whole-pixel rounding
+      // The gutter's half-inset (world.ts gutterOf: 0.4 % of the short side) plus whole-pixel rounding, nothing more.
+      const slack = Math.round(Math.max(2, Math.round(Math.min(...vp) * 0.004)) / 2) + 3;
       assert.ok(l <= slack && r >= vp[0] - slack && t <= slack && b >= foot.y - slack, `grid spans ${l},${t} to ${r},${b} above a footer at ${foot.y}`);
       assert.equal(cells.length, spare, 'spare cells');
       for (const x of tiles) assert.ok(Math.abs(x.w - tiles[0].w) < 1 && Math.abs(x.h - tiles[0].h) < 1, 'every tile the same size');

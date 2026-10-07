@@ -99,6 +99,8 @@ export function mountFixture(app: HTMLElement, world: World, spec: string): void
     inputs: () => inputs,
     setPaths: (p: Record<string, PathStats | null>) => void (paths = p),
     disbands: () => disbands,
+    /** Per tile: its device-pixel rect (the grid kernel's, P1-R04.3 checks), null without the grid. */
+    tileRects: () => world.tileRects(),
   };
   world.start();
   document.documentElement.dataset.jjHost = 'fixture';

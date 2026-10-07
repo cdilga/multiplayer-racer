@@ -61,7 +61,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     ${opts.joinUrl ? `<button class="foot-qr" type="button" data-act="qr" aria-label="Show the join code bigger (pauses the game)"><img alt="" decoding="sync" src="data:image/svg+xml,${encodeURIComponent(paperQrSvg(opts.joinUrl).svg)}"></button>` : ''}
     <span class="foot-code" data-foot-code><b>${esc(opts.code)}</b><span class="foot-domain"> · ${esc(opts.domain)}</span></span>
     <span class="foot-count" data-foot-count></span>
-    <span class="foot-pos" data-foot-pos aria-label="Positions"><span class="foot-pos-track"></span></span>
+    <span class="foot-pos" data-foot-pos data-count="0" aria-label="Positions"><span class="foot-pos-track"></span></span>
     <button class="foot-btn quiet" type="button" data-act="diagnostics" aria-pressed="false">Diagnostics</button>
     <span class="foot-readouts" data-readouts></span>
     <span class="foot-logo display">Joystick Jammers</span>`;
