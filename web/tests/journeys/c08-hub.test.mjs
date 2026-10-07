@@ -109,7 +109,7 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   assert.equal(new Set(src.map((s) => s.seat)).size, 6, 'six distinct seats');
   assert.deepEqual(src.map((s) => s.kind).sort(), ['keys', 'keys', 'pad', 'pad', 'pad', 'pad']);
   assert.equal((await joined(hub)) + (await joined(hubB)), 6);
-  await wait(host, () => window.__jjTest.observe().host.seats.length === 6);
+  await wait(host, () => window.__jjTest.observe()?.host?.seats?.length === 6);
   await matrix(hub, 'c08-hub-four-sources', { width: 1100, height: 700 });
   console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
 

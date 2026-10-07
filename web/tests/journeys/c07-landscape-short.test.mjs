@@ -71,6 +71,7 @@ test('at short landscape heights nothing overlaps on the play screen', { timeout
         toolsSpread: Math.max(...tools.map((t) => t.t)) - Math.min(...tools.map((t) => t.t)),
         toolsRight: Math.max(...tools.map((t) => t.r)),
         toolsClippedLeft: Math.min(...tools.map((t) => t.l)),
+        toolsScroll: document.querySelector('.tools').scrollWidth - document.querySelector('.tools').clientWidth,
         nameCut: nm.scrollWidth > nm.clientWidth + 1,
         basesInside: zones.every(({ z, b }) => b.l >= z.l - 1 && b.r <= z.r + 1 && b.t >= z.t - 1 && b.b <= z.b + 1),
         meterTrack: fill.getBoundingClientRect().width < meter.getBoundingClientRect().width * 0.5,
@@ -84,6 +85,7 @@ test('at short landscape heights nothing overlaps on the play screen', { timeout
     assert.ok(m.bannerInside, `${at}: the banner is on screen`);
     assert.ok(m.toolsSpread < 6, `${at}: the tools wrapped (${m.toolsSpread}px apart)`);
     assert.ok(m.toolsRight <= m.iw + 1 && m.toolsClippedLeft >= 0, `${at}: tools run off the screen`);
+    assert.ok(m.toolsScroll <= 1, `${at}: the tools row scrolls sideways (${m.toolsScroll}px hidden)`);
     assert.equal(m.nameCut, false, `${at}: the name is cut off`);
     assert.ok(m.basesInside, `${at}: a stick base overflows its zone`);
     assert.ok(m.meterTrack, `${at}: the boost meter has no track`);

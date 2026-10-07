@@ -24,3 +24,14 @@
   .pod { padding: 4px 6px 2px; }
   .pod .meter { height: 16px; }
 }
+
+/* Narrow and short (640x300 with a toolbar): everything tightens a notch so all seven tools stay in view without scrolling. */
+@media (orientation: landscape) and (max-height: 440px) and (max-width: 700px) {
+  .strip { gap: 5px; padding: 4px 6px; }
+  .strip .who { flex: 0 1 auto; min-width: 0; gap: 6px; }
+  .strip .seatno { font-size: 26px; }
+  .strip .nm { font-size: 15px; }
+  .strip .conn { margin-right: 2px; font-size: 11px; padding: 1px 4px 2px; }
+  .strip .tools { gap: 3px; }
+  .strip .tools .btn { padding: 0 5px; font-size: 12px; min-width: 40px; }
+}

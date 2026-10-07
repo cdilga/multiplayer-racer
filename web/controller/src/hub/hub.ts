@@ -259,17 +259,18 @@ export class Hub {
     const seat = you ? `<b class="hub-badge" style="background:${hex(you.rgb)}">${you.number}</b>` : '<b class="hub-badge none">–</b>';
     const flash = performance.now() < s.flashUntil;
     const what = s.kind === 'keys' ? 'keyboard' : s.kind === 'pad' ? 'gamepad-2' : 'smartphone';
-    const iconUrl = (icon(what).style.getPropertyValue('--ic') || '').toString().replace(/"/g, "'");
     const state = { idle: 'Press to join', connecting: 'Joining…', connected: s.session?.isReady ? 'Ready' : 'Connected', unplugged: 'Unplugged', autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
     const st = s.session?.stats;
-    return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${you ? hex(you.rgb) : 'transparent'};--ic:${iconUrl}">
-      ${seat}<span class="hub-kind"><i class="ic" aria-hidden="true"></i>${esc(s.label)}</span><span class="hub-state" data-chip="${s.state}">${state}</span>
+    return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${you ? hex(you.rgb) : 'transparent'};" data-icon="${what}">
+      ${seat}<span class="hub-kind">${esc(s.label)}</span><span class="hub-state" data-chip="${s.state}">${state}</span>
       <span class="hub-path" data-path>${esc(s.session ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
   }
 
   private render(): void {
     if (!this.list) return;
     this.list.innerHTML = [...this.sources.values()].map((s) => this.row(s)).join('');
+    // The kit's icon element carries its own mask URL, so it is added as an element, not written into the markup.
+    for (const li of this.list.querySelectorAll<HTMLElement>('[data-icon]')) li.querySelector('.hub-kind')?.prepend(icon(li.dataset.icon!));
   }
 
   /** Readout for tests and the debug overlay (R90): per source seat, kind, state, path and wire counters. */

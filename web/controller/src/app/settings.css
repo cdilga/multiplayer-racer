@@ -50,3 +50,6 @@
   .strip .who { flex: 1 1 96px; min-width: 96px; }
   .strip .conn { margin-right: 6px; padding: 1px 6px 3px; font-size: 12px; }
 }
+
+/* The "Turn sideways" prompt belongs to the play screen: it stays under an open settings sheet. */
+.screen:has(.settings-sheet) .rotate-card { display: none; }
