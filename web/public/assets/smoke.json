@@ -1,0 +1,5 @@
+{
+  "schema": "jj.smoke.v1",
+  "note": "The public smoke steps this build supports (P1-D04 runs its own fixed script for each; this file names them, never commands). G00's hello room: room, join-webrtc, input, resume.",
+  "steps": ["room", "join-webrtc", "input", "resume"]
+}
