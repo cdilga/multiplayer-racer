@@ -82,7 +82,7 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await sticks(page, z, { x: 0, y: 1 }, 80);
   await waitStep(page, 6);
   // The wheelie: pull the left stick all the way back, hold for the preload, let go.
-  await sticks(page, { x: 0, y: 1 }, z, 1200);
+  await sticks(page, { x: 0, y: 1 }, z, 600);
   await waitStep(page, 7);
   await shot(page, 'phone-tutorial-done');
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Lobby', 'the tutorial never starts or holds anything');
