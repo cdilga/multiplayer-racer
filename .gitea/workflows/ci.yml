@@ -136,7 +136,7 @@ jobs:
       # One file at a time: every host page renders on the CPU here (software GL), so parallel files starve each
       # other's timers and the timing tests (input age, snapshot starvation) measure the runner, not the host.
       - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
-        run: JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
+        run: JJ_NO_CAPTURES=1 JJ_BIN="$CARGO_TARGET_DIR/debug/jj" node --test --test-concurrency=1 web/host/tests/
 
       - name: The UI kit page, focus rings at DPR 1-3, paper QR decode (P1-U06)
         run: node --test --test-concurrency=1 web/shared/ui/tests/
