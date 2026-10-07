@@ -69,6 +69,27 @@ test('footer: the host menu, room code and domain, count and diagnostics sit in 
   }
 });
 
+test('footer: the announcer caption (WELCOME, MATE!) sits above the footer, clear of its buttons', async () => {
+  for (const vp of [VP['1080p'], VP.phone]) {
+    const page = await open('lobby-1', vp);
+    try {
+      // The announcer's own element and inline style (web/host/src/audio/announcer.ts), with a caption in it.
+      await page.evaluate(() => {
+        const el = document.createElement('div');
+        el.id = 'jj-caption';
+        el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:6;max-width:min(80vw,900px);text-align:center;pointer-events:none';
+        el.innerHTML = '<span style="display:inline-block;padding:8px 20px;font:900 28px sans-serif">WELCOME, MATE!</span>';
+        document.body.append(el);
+      });
+      const cap = await box(page, '#jj-caption');
+      const f = await box(page, '.jj-foot');
+      assert.ok(!overlap(cap, f) && cap.y + cap.h <= f.y + 0.5, `caption above the footer: ${JSON.stringify([cap, f])}`);
+    } finally {
+      await page.close();
+    }
+  }
+});
+
 test('footer: in a race the tiles stay above it (the grid keeps its bottom safe margin)', async () => {
   const page = await open('race-8');
   try {

@@ -231,3 +231,6 @@
 
 /* The footer already shows the room code and address, so the grid's join chip would only float over a tile (it stays where there is no footer). */
 body:has(.jj-foot) .jj-chip { display: none; }
+
+/* The announcer's caption (audio/announcer.ts sets bottom:28px inline) stays above the footer, never over its buttons. */
+#jj-caption { bottom: calc(max(5vh, 30px) + 12px) !important; }
