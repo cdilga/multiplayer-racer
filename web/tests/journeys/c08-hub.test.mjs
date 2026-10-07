@@ -4,7 +4,7 @@
 // NOTE: today each source is its own endpoint (the protocol seats one endpoint with one seat), so "one connection" and the
 // N08 per-endpoint receipt are not asserted; per-source bytes are logged ('# bytes ...').
 import assert from 'node:assert/strict';
-import { after, afterEach, before, test } from 'node:test';
+import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
@@ -48,21 +48,10 @@ after(async () => {
 closeContextsAfterEach(() => browser);
 
 // A software-rendered CI runner with three browser contexts open is several times slower than eris: generous waits.
-/** Every context a test opens is closed after it: three software-rendered hosts at once starve each other. */
-const contexts = [];
-const newContext = async (opts) => {
-  const c = await browser.newContext(opts);
-  contexts.push(c);
-  return c;
-};
-afterEach(async () => {
-  for (const c of contexts.splice(0)) await c.close().catch(() => {});
-});
-
 const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
 async function openHost(mode) {
-  const host = await (await newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
   await wait(host, () => window.__jjNet?.code() && (window.__jjTest || window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 180_000); // opening a room on a busy runner
   return { host, code: await host.evaluate(() => window.__jjNet.code()), joinUrl: await host.evaluate(() => window.__jjNet.joinUrl()) };
@@ -88,7 +77,7 @@ const PADS = () => {
 };
 
 async function hubPage(joinUrl) {
-  const page = await (await newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+  const page = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
   await page.addInitScript(PADS);
   await page.goto(`${joinUrl}?hub`);
   await wait(page, () => window.__jjHub);
@@ -127,7 +116,7 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   await matrix(hub, 'c08-hub-four-sources', { width: 1100, height: 700 });
   console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
 
-  // Only hub A's pad 2 and keys B drive; the other four stay where they are.
+  // Two hub-A sources drive (the ones in front on the grid); the other four stay where they are.
   const obs = () => host.evaluate(() => window.__jjTest.observe());
   // The claim presses boosted a few cars: let every one coast to a stop before measuring.
   for (const t0 = Date.now(); ; await host.waitForTimeout(500)) {
@@ -136,28 +125,37 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
     assert.ok(Date.now() - t0 < 40_000, 'the cars never came to rest');
   }
   const start = await obs();
-  await hub.evaluate(() => window.__padSet(1, [0, -1, 0, 0]));
-  await hub.keyboard.down('KeyI');
-  // What each source's endpoint holds at once: only the two driven sources have a throttle.
-  await hub.waitForTimeout(700);
-  const held = Object.fromEntries((await hubState(hub)).map((s) => [s.id, s.drive?.throttle ?? 0]));
-  assert.ok(held.pad1 > 0.5 && held.keys2 > 0.5, `the pressed sources drive: ${JSON.stringify(held)}`);
-  assert.ok(held.pad0 === 0 && held.keys1 === 0, `the others hold nothing: ${JSON.stringify(held)}`);
-  assert.equal((await hubState(hubB)).filter((s) => (s.drive?.throttle ?? 0) !== 0).length, 0, "hub B's sources hold nothing");
   const ep = Object.fromEntries(src.map((s) => [s.id, s.endpoint]));
   const carOf = (state, e) => state.cars.find((c) => c.car === state.host.seats.find((s) => s.endpoint === e)?.car);
   const movedSince = (state, e) => Math.hypot(...carOf(state, e).position.map((v, i) => v - carOf(start, e).position[i]));
-  // Early, before the driven cars can reach a neighbour on the grid: the four others haven't moved.
+  // Grid slots depend on join order and the cars start in a column along +x: a car behind another is blocked by it, so
+  // drive the two hub-A sources whose cars are in front.
+  const sources = {
+    pad0: { on: () => hub.evaluate(() => window.__padSet(0, [0, -1, 0, 0])), off: () => hub.evaluate(() => window.__padSet(0, [0, 0, 0, 0])) },
+    pad1: { on: () => hub.evaluate(() => window.__padSet(1, [0, -1, 0, 0])), off: () => hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0])) },
+    keys1: { on: () => hub.keyboard.down('KeyW'), off: () => hub.keyboard.up('KeyW') },
+    keys2: { on: () => hub.keyboard.down('KeyI'), off: () => hub.keyboard.up('KeyI') },
+  };
+  const front = Object.keys(sources).sort((a, b) => carOf(start, ep[b]).position[0] - carOf(start, ep[a]).position[0]);
+  const driven = front.slice(0, 2);
+  const idle = [...front.slice(2), 'B-pad0', 'B-pad1'];
+  for (const id of driven) await sources[id].on();
+  // What each source's endpoint holds at once: only the two driven sources have a throttle.
+  await hub.waitForTimeout(700);
+  const held = Object.fromEntries((await hubState(hub)).map((s) => [s.id, s.drive?.throttle ?? 0]));
+  for (const id of driven) assert.ok(held[id] > 0.5, `${id} drives: ${JSON.stringify(held)}`);
+  for (const id of front.slice(2)) assert.ok(held[id] === 0, `${id} holds nothing: ${JSON.stringify(held)}`);
+  assert.equal((await hubState(hubB)).filter((s) => (s.drive?.throttle ?? 0) !== 0).length, 0, "hub B's sources hold nothing");
+  // Early, before a driven car can reach a neighbour: the others haven't moved.
   const early = await obs();
-  for (const id of ['pad0', 'keys1', 'B-pad0', 'B-pad1']) assert.ok(movedSince(early, ep[id]) < 1.5, `${id} stayed put (${movedSince(early, ep[id]).toFixed(2)} m)`);
+  for (const id of idle) assert.ok(movedSince(early, ep[id]) < 1.5, `${id} stayed put (${movedSince(early, ep[id]).toFixed(2)} m)`);
   // A software-rendered host steps slowly in wall time: wait for the distance, not for a fixed few seconds.
   let now = await obs();
-  for (const t0 = Date.now(); movedSince(now, ep.pad1) <= 5 || movedSince(now, ep.keys2) <= 5; now = await obs()) {
-    assert.ok(Date.now() - t0 < 60_000, `the driven cars moved ${movedSince(now, ep.pad1).toFixed(1)} and ${movedSince(now, ep.keys2).toFixed(1)} m in 60 s`);
+  for (const t0 = Date.now(); driven.some((id) => movedSince(now, ep[id]) <= 5); now = await obs()) {
+    assert.ok(Date.now() - t0 < 60_000, `the driven cars (${driven}) moved ${driven.map((id) => movedSince(now, ep[id]).toFixed(1))} m in 60 s`);
     await host.waitForTimeout(500);
   }
-  await hub.keyboard.up('KeyI');
-  await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0]));
+  for (const id of driven) await sources[id].off();
 
   // Unplug hub A's pad 1: only its row and seat change.
   await hub.evaluate(() => window.__padUnplug(0));
@@ -213,7 +211,7 @@ test('each source leaves on its own; the hub shows seat, kind, state and path; I
 
 test('a phone with one paired pad holds two seats and shows the connection badge', { timeout: 480_000 }, async () => {
   const { host, joinUrl } = await openHost('room');
-  const ctx = await newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
   await page.addInitScript(PADS);
   await page.goto(joinUrl);

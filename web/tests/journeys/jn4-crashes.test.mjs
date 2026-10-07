@@ -157,8 +157,9 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
         cars,
       );
     // The mesh origin and the body's footprint centre aren't the same point (the debris body is the part's proxy box): the
-    // first run measured 0.34 m on a door, so the tolerance is 0.75 m, well under the distance between two parts' bodies.
-    const TOL = 0.75;
+    // measured offsets on eris (software GL): a door 0.34 m, a bumper 0.77 m (its mesh origin sits at the bumper's top and
+    // end, 1.2 m up), so the tolerance is 1.0 m, still well under the 24 m between this stage's two Part bodies.
+    const TOL = 1.0;
     const nearest = (drawn, k, part) => (drawn[k][part] ? Math.min(...parts.map((d) => Math.hypot(d.x - drawn[k][part][0], d.z - drawn[k][part][2]))) : Infinity);
     const matches = (drawn) => detached.every(({ k, part }) => nearest(drawn, k, part) < TOL);
     // The renderer lags the sim a little: give it up to 10 s to draw each part where its body is.
