@@ -1,0 +1,156 @@
+{
+ "phase": "Running",
+ "remainingMs": null,
+ "round": 3,
+ "laps": 3,
+ "freeDrive": false,
+ "armed": false,
+ "seats": [
+  {
+   "seat": 1,
+   "number": 1,
+   "name": "Dusty",
+   "rgb": [
+    229,
+    50,
+    45
+   ],
+   "colourIndex": 0,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 0,
+   "laps": 0,
+   "position": 1,
+   "finished": false
+  },
+  {
+   "seat": 2,
+   "number": 2,
+   "name": "Pip",
+   "rgb": [
+    37,
+    99,
+    235
+   ],
+   "colourIndex": 1,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 1,
+   "laps": 1,
+   "position": 6,
+   "finished": false
+  },
+  {
+   "seat": 3,
+   "number": 3,
+   "name": "Ash",
+   "rgb": [
+    255,
+    122,
+    26
+   ],
+   "colourIndex": 2,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 2,
+   "laps": 2,
+   "position": 3,
+   "finished": false
+  },
+  {
+   "seat": 4,
+   "number": 4,
+   "name": "Kai",
+   "rgb": [
+    0,
+    181,
+    184
+   ],
+   "colourIndex": 3,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 3,
+   "laps": 0,
+   "position": 8,
+   "finished": false
+  },
+  {
+   "seat": 5,
+   "number": 5,
+   "name": "Big Kev",
+   "rgb": [
+    255,
+    210,
+    63
+   ],
+   "colourIndex": 4,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 4,
+   "laps": 1,
+   "position": 5,
+   "finished": false
+  },
+  {
+   "seat": 6,
+   "number": 6,
+   "name": "Mia",
+   "rgb": [
+    255,
+    79,
+    163
+   ],
+   "colourIndex": 5,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 5,
+   "laps": 2,
+   "position": 2,
+   "finished": false
+  },
+  {
+   "seat": 7,
+   "number": 7,
+   "name": "Snag",
+   "rgb": [
+    42,
+    45,
+    52
+   ],
+   "colourIndex": 6,
+   "ready": true,
+   "presence": "Left",
+   "local": false,
+   "car": 6,
+   "laps": 0,
+   "position": 7,
+   "finished": false
+  },
+  {
+   "seat": 8,
+   "number": 8,
+   "name": "Shaz",
+   "rgb": [
+    34,
+    164,
+    71
+   ],
+   "colourIndex": 7,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": 7,
+   "laps": 1,
+   "position": 4,
+   "finished": false
+  }
+ ],
+ "results": null,
+ "standings": []
+}

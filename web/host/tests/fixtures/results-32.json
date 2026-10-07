@@ -1,0 +1,813 @@
+{
+ "phase": "Intermission",
+ "remainingMs": 42000,
+ "round": 3,
+ "laps": 3,
+ "freeDrive": false,
+ "armed": false,
+ "seats": [
+  {
+   "seat": 1,
+   "number": 1,
+   "name": "Dusty",
+   "rgb": [
+    229,
+    50,
+    45
+   ],
+   "colourIndex": 0,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 2,
+   "number": 2,
+   "name": "Pip",
+   "rgb": [
+    37,
+    99,
+    235
+   ],
+   "colourIndex": 1,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 3,
+   "number": 3,
+   "name": "Ash",
+   "rgb": [
+    255,
+    122,
+    26
+   ],
+   "colourIndex": 2,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 4,
+   "number": 4,
+   "name": "Kai",
+   "rgb": [
+    0,
+    181,
+    184
+   ],
+   "colourIndex": 3,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 5,
+   "number": 5,
+   "name": "Big Kev",
+   "rgb": [
+    255,
+    210,
+    63
+   ],
+   "colourIndex": 4,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 6,
+   "number": 6,
+   "name": "Mia",
+   "rgb": [
+    255,
+    79,
+    163
+   ],
+   "colourIndex": 5,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 7,
+   "number": 7,
+   "name": "Snag",
+   "rgb": [
+    42,
+    45,
+    52
+   ],
+   "colourIndex": 6,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 8,
+   "number": 8,
+   "name": "Shaz",
+   "rgb": [
+    34,
+    164,
+    71
+   ],
+   "colourIndex": 7,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 9,
+   "number": 9,
+   "name": "Roo Boy",
+   "rgb": [
+    244,
+    241,
+    234
+   ],
+   "colourIndex": 8,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 10,
+   "number": 10,
+   "name": "Tiggy",
+   "rgb": [
+    139,
+    63,
+    217
+   ],
+   "colourIndex": 9,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 11,
+   "number": 11,
+   "name": "Mack",
+   "rgb": [
+    142,
+    27,
+    63
+   ],
+   "colourIndex": 10,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 12,
+   "number": 12,
+   "name": "Maximilian Alexander Fitzgerald!",
+   "rgb": [
+    94,
+    200,
+    255
+   ],
+   "colourIndex": 11,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 13,
+   "number": 13,
+   "name": "Jojo",
+   "rgb": [
+    229,
+    50,
+    45
+   ],
+   "colourIndex": 0,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 14,
+   "number": 14,
+   "name": "Nina",
+   "rgb": [
+    37,
+    99,
+    235
+   ],
+   "colourIndex": 1,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 15,
+   "number": 15,
+   "name": "Bazza",
+   "rgb": [
+    255,
+    122,
+    26
+   ],
+   "colourIndex": 2,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 16,
+   "number": 16,
+   "name": "Wren",
+   "rgb": [
+    0,
+    181,
+    184
+   ],
+   "colourIndex": 3,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 17,
+   "number": 17,
+   "name": "さくら",
+   "rgb": [
+    255,
+    210,
+    63
+   ],
+   "colourIndex": 4,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 18,
+   "number": 18,
+   "name": "Zara",
+   "rgb": [
+    255,
+    79,
+    163
+   ],
+   "colourIndex": 5,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 19,
+   "number": 19,
+   "name": "Tama",
+   "rgb": [
+    42,
+    45,
+    52
+   ],
+   "colourIndex": 6,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 20,
+   "number": 20,
+   "name": "Lulu",
+   "rgb": [
+    34,
+    164,
+    71
+   ],
+   "colourIndex": 7,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 21,
+   "number": 21,
+   "name": "Ned",
+   "rgb": [
+    244,
+    241,
+    234
+   ],
+   "colourIndex": 8,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 22,
+   "number": 22,
+   "name": "Hamish",
+   "rgb": [
+    139,
+    63,
+    217
+   ],
+   "colourIndex": 9,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 23,
+   "number": 23,
+   "name": "Priya",
+   "rgb": [
+    142,
+    27,
+    63
+   ],
+   "colourIndex": 10,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 24,
+   "number": 24,
+   "name": "Wei",
+   "rgb": [
+    94,
+    200,
+    255
+   ],
+   "colourIndex": 11,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 25,
+   "number": 25,
+   "name": "Sione",
+   "rgb": [
+    229,
+    50,
+    45
+   ],
+   "colourIndex": 0,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 26,
+   "number": 26,
+   "name": "Ana",
+   "rgb": [
+    37,
+    99,
+    235
+   ],
+   "colourIndex": 1,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 27,
+   "number": 27,
+   "name": "Jack",
+   "rgb": [
+    255,
+    122,
+    26
+   ],
+   "colourIndex": 2,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 28,
+   "number": 28,
+   "name": "Ruby",
+   "rgb": [
+    0,
+    181,
+    184
+   ],
+   "colourIndex": 3,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 29,
+   "number": 29,
+   "name": "Archie",
+   "rgb": [
+    255,
+    210,
+    63
+   ],
+   "colourIndex": 4,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 30,
+   "number": 30,
+   "name": "Isla",
+   "rgb": [
+    255,
+    79,
+    163
+   ],
+   "colourIndex": 5,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 31,
+   "number": 31,
+   "name": "Leo",
+   "rgb": [
+    42,
+    45,
+    52
+   ],
+   "colourIndex": 6,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  },
+  {
+   "seat": 32,
+   "number": 32,
+   "name": "Matilda",
+   "rgb": [
+    34,
+    164,
+    71
+   ],
+   "colourIndex": 7,
+   "ready": true,
+   "presence": "Active",
+   "local": false,
+   "car": null,
+   "laps": null,
+   "position": null,
+   "finished": false
+  }
+ ],
+ "results": [
+  {
+   "number": 1,
+   "name": "Dusty",
+   "place": 1,
+   "time_ms": 92000,
+   "points": 30
+  },
+  {
+   "number": 14,
+   "name": "Nina",
+   "place": 2,
+   "time_ms": 93436,
+   "points": 29
+  },
+  {
+   "number": 27,
+   "name": "Jack",
+   "place": 3,
+   "time_ms": 94795,
+   "points": 28
+  },
+  {
+   "number": 6,
+   "name": "Mia",
+   "place": 4,
+   "time_ms": 96165,
+   "points": 27
+  },
+  {
+   "number": 19,
+   "name": "Tama",
+   "place": 5,
+   "time_ms": 97524,
+   "points": 26
+  },
+  {
+   "number": 32,
+   "name": "Matilda",
+   "place": 6,
+   "time_ms": 98883,
+   "points": 25
+  },
+  {
+   "number": 11,
+   "name": "Mack",
+   "place": 7,
+   "time_ms": 100253,
+   "points": 24
+  },
+  {
+   "number": 24,
+   "name": "Wei",
+   "place": 8,
+   "time_ms": 101612,
+   "points": 23
+  },
+  {
+   "number": 3,
+   "name": "Ash",
+   "place": 9,
+   "time_ms": 102982,
+   "points": 22
+  },
+  {
+   "number": 16,
+   "name": "Wren",
+   "place": 10,
+   "time_ms": 104341,
+   "points": 21
+  },
+  {
+   "number": 29,
+   "name": "Archie",
+   "place": 11,
+   "time_ms": 105700,
+   "points": 20
+  },
+  {
+   "number": 8,
+   "name": "Shaz",
+   "place": 12,
+   "time_ms": 107070,
+   "points": 19
+  },
+  {
+   "number": 21,
+   "name": "Ned",
+   "place": 13,
+   "time_ms": 108506,
+   "points": 18
+  },
+  {
+   "number": 13,
+   "name": "Jojo",
+   "place": 14,
+   "time_ms": 109865,
+   "points": 17
+  },
+  {
+   "number": 26,
+   "name": "Ana",
+   "place": 15,
+   "time_ms": 111224,
+   "points": 16
+  },
+  {
+   "number": 5,
+   "name": "Big Kev",
+   "place": 16,
+   "time_ms": 112594,
+   "points": 15
+  },
+  {
+   "number": 18,
+   "name": "Zara",
+   "place": 17,
+   "time_ms": 113953,
+   "points": 14
+  },
+  {
+   "number": 31,
+   "name": "Leo",
+   "place": 18,
+   "time_ms": 115312,
+   "points": 13
+  },
+  {
+   "number": 10,
+   "name": "Tiggy",
+   "place": 19,
+   "time_ms": 116682,
+   "points": 12
+  },
+  {
+   "number": 23,
+   "name": "Priya",
+   "place": 20,
+   "time_ms": 118041,
+   "points": 11
+  },
+  {
+   "number": 2,
+   "name": "Pip",
+   "place": 21,
+   "time_ms": 119411,
+   "points": 10
+  },
+  {
+   "number": 15,
+   "name": "Bazza",
+   "place": 22,
+   "time_ms": 120770,
+   "points": 9
+  },
+  {
+   "number": 28,
+   "name": "Ruby",
+   "place": 23,
+   "time_ms": 122206,
+   "points": 8
+  },
+  {
+   "number": 7,
+   "name": "Snag",
+   "place": 24,
+   "time_ms": 123576,
+   "points": 7
+  },
+  {
+   "number": 20,
+   "name": "Lulu",
+   "place": 25,
+   "time_ms": 124935,
+   "points": 6
+  },
+  {
+   "number": 12,
+   "name": "Maximilian Alexander Fitzgerald!",
+   "place": 26,
+   "time_ms": 126294,
+   "points": 5
+  },
+  {
+   "number": 25,
+   "name": "Sione",
+   "place": 27,
+   "time_ms": 127653,
+   "points": 4
+  },
+  {
+   "number": 4,
+   "name": "Kai",
+   "place": 28,
+   "time_ms": 129023,
+   "points": 3
+  },
+  {
+   "number": 17,
+   "name": "さくら",
+   "place": 29,
+   "time_ms": 130382,
+   "points": 2
+  },
+  {
+   "number": 30,
+   "name": "Isla",
+   "place": 30,
+   "time_ms": 131741,
+   "points": 1
+  },
+  {
+   "number": 9,
+   "name": "Roo Boy",
+   "place": 31,
+   "time_ms": 133111,
+   "points": 1
+  },
+  {
+   "number": 22,
+   "name": "Hamish",
+   "place": 32,
+   "time_ms": 134470,
+   "points": 1
+  }
+ ],
+ "standings": []
+}
