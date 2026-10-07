@@ -74,11 +74,16 @@ export class Tutorial {
     return !remembered();
   }
 
-  constructor(private readonly area: HTMLElement) {}
+  /** `onOpen(open)` fires when the card opens or closes: it's the controller's menu (G03's `Menu{open}`). */
+  constructor(
+    private readonly area: HTMLElement,
+    private readonly onOpen: (open: boolean) => void = () => {},
+  ) {}
 
   show(from = 0): void {
     this.step = from;
     this.goals = {};
+    const was = this.open;
     this.card?.remove();
     this.card = document.createElement('div');
     this.card.className = 'panel coach';
@@ -86,13 +91,16 @@ export class Tutorial {
     this.area.classList.add('coaching');
     this.area.append(this.card);
     this.render();
+    if (!was) this.onOpen(true);
   }
 
   close(finished: boolean): void {
+    const was = this.open;
     this.card?.remove();
     this.card = null;
     this.area.classList.remove('coaching');
     remember();
+    if (was) this.onOpen(false);
     void finished;
   }
 

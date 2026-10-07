@@ -104,7 +104,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area);
+    tutorial = new Tutorial(area, (open) => session.menu(open));
     if (session.roomPhase === 'Lobby') {
       tutorialOffered = true;
       if (Tutorial.wanted()) tutorial.show();

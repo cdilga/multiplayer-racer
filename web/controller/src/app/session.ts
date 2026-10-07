@@ -349,6 +349,11 @@ export class Session {
     this.send('cmd', wasm.encodeRecover());
   }
 
+  /** A menu (Help) opened or closed: the host's autopilot drives while it's open (G03). */
+  menu(open: boolean): void {
+    this.send('cmd', wasm.encodeMenu(open));
+  }
+
   ready(on: boolean): void {
     this.send('cmd', wasm.encodeReady(on));
   }
