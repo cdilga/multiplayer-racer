@@ -1,0 +1,33 @@
+{
+ "scenario": "bump-4",
+ "what": "Plan \u00a76.3 calibration row: a 4 m/s nudge into another car does no damage (P1-S04a). Car 0 rolls at 4 m/s into the parked car 1's tail from 0.3 m; the 0.15 /s linear damping has it closing at just under the 4 m/s qualifying speed, so no contact counts and no part loses any health.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 20.0,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    4,
+    0,
+    0
+   ]
+  },
+  {
+   "x": 24.85,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "ticks": 120,
+ "expect": {
+  "damagedOnly": [],
+  "maxEpisodes": 0
+ }
+}

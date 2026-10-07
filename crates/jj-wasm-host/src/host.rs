@@ -23,10 +23,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use jj_input::{Neutralise, SampleFlags, SourceSemantics, SourceState};
 use jj_map::{LoadedMap, Registry, load_canonical};
-use jj_protocol::abi::{ABI_VERSION, Channel, MainToSim, SimEvent, SimToMain, UiCommand};
+use jj_protocol::abi::{
+    ABI_VERSION, Channel, DamageCause, EpisodeRecord, HitBody, MainToSim, SimEvent, SimToMain,
+    UiCommand,
+};
 use jj_protocol::cmd::{ActionKind, ControllerCmd, HostCmd};
 use jj_protocol::state::{Hud, HudUpdate, PauseReason, StateFlags, StateMessage};
 use jj_session::seats::{self, ConnId, SeatConfig, Seats};
+use jj_sim::damage::{DamageEvent, OtherBody as DamageOther};
 use jj_sim::race::Event;
 use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, UtilityEvent, UtilityKind, VehicleProfile};
 
@@ -153,6 +157,8 @@ pub struct Host {
     seen_race_events: usize,
     /// How many of the sim's utility events have become seat events (P1-S08).
     seen_utility_events: usize,
+    /// How many of the sim's damage events have become seat events (P1-S04a).
+    seen_damage_events: usize,
     session_rev: u32,
     /// The test surface's state (P1-F05b): only in the `testing` build, never in the shipped worker.
     #[cfg(feature = "testing")]
@@ -236,6 +242,7 @@ impl Host {
             events: Vec::new(),
             seen_race_events: 0,
             seen_utility_events: 0,
+            seen_damage_events: 0,
             session_rev: 0,
             #[cfg(feature = "testing")]
             test: testing::TestState {
@@ -436,7 +443,7 @@ impl Host {
 
     pub fn step_one(&mut self) {
         let tick = self.sim.tick();
-        if tick % HUD_EVERY_TICKS == 0 {
+        if tick.is_multiple_of(HUD_EVERY_TICKS) {
             self.send_huds(tick);
         }
         for msg in self.scheduled.remove(&tick).unwrap_or_default() {
@@ -496,6 +503,7 @@ impl Host {
         }
         self.collect_race_events();
         self.collect_utility_events();
+        self.collect_damage_events();
     }
 
     fn apply(&mut self, msg: MainToSim, tick: u64) {
@@ -886,6 +894,78 @@ impl Host {
         self.seen_utility_events = fired.len();
     }
 
+    /// The sim's damage episodes and part-state changes since the last step, as seat events (P1-S04a).
+    fn collect_damage_events(&mut self) {
+        let fresh = self.sim.damage_events()[self.seen_damage_events..].to_vec();
+        self.seen_damage_events += fresh.len();
+        let body = |o: DamageOther| match o {
+            DamageOther::Car { car } => (
+                HitBody::Car {
+                    seat: self.seat_of_car(car),
+                },
+                DamageCause::Car,
+            ),
+            DamageOther::Prop { prop } => (HitBody::Debris { index: prop }, DamageCause::Debris),
+            DamageOther::Scenery => (HitBody::Scenery, DamageCause::Scenery),
+        };
+        let mut out = Vec::new();
+        for (_, e) in fresh {
+            let event = match e {
+                DamageEvent::Episode(r) => {
+                    let (Some(seat), (other, _)) = (self.seat_of_car(r.car), body(r.other)) else {
+                        continue;
+                    };
+                    SimEvent::Episode {
+                        record: EpisodeRecord {
+                            seat,
+                            part: u16::from(r.part),
+                            other,
+                            owner: r.other_owner.and_then(|o| self.seat_of_car(o.car)),
+                            owner_tick: r.other_owner.map(|o| Tick(o.tick)),
+                            impulse_ns: r.impulse.round() as u32,
+                            closing_mm_s: (r.closing_mps * 1000.0).round() as u32,
+                            tick: Tick(r.tick),
+                        },
+                    }
+                }
+                DamageEvent::PartLoose {
+                    car,
+                    part,
+                    cause,
+                    instigator,
+                } => {
+                    let Some(seat) = self.seat_of_car(car) else {
+                        continue;
+                    };
+                    SimEvent::PartLoose {
+                        seat,
+                        part: u16::from(part),
+                        cause: body(cause).1,
+                        instigator: instigator.and_then(|c| self.seat_of_car(c)),
+                    }
+                }
+                DamageEvent::PartDetached {
+                    car,
+                    part,
+                    cause,
+                    instigator,
+                } => {
+                    let Some(seat) = self.seat_of_car(car) else {
+                        continue;
+                    };
+                    SimEvent::PartDetached {
+                        seat,
+                        part: u16::from(part),
+                        cause: body(cause).1,
+                        instigator: instigator.and_then(|c| self.seat_of_car(c)),
+                    }
+                }
+            };
+            out.push(event);
+        }
+        self.events.extend(out);
+    }
+
     fn collect_race_events(&mut self) {
         let race = self.sim.race().events().to_vec();
         for (_, e) in &race[self.seen_race_events..] {
@@ -918,10 +998,20 @@ impl Host {
                 }
                 Event::Respawned {
                     car,
-                    why: jj_sim::race::Respawned::OutOfBounds | jj_sim::race::Respawned::FlipWreck,
+                    why:
+                        why
+                        @ (jj_sim::race::Respawned::OutOfBounds | jj_sim::race::Respawned::FlipWreck),
                 } => {
                     if let Some(seat) = self.seat_of_car(car) {
-                        self.events.push(SimEvent::Wrecked { seat });
+                        let cause = match why {
+                            jj_sim::race::Respawned::OutOfBounds => DamageCause::OutOfBounds,
+                            _ => DamageCause::Flipped,
+                        };
+                        self.events.push(SimEvent::Wrecked {
+                            seat,
+                            cause,
+                            instigator: None,
+                        });
                     }
                 }
                 _ => {}

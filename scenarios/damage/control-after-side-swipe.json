@@ -1,0 +1,107 @@
+{
+ "scenario": "control-after-side-swipe",
+ "what": "\u00a77.3a control-after-hit, side hit (P1-S04a): after the 8 m/s side swipe of side-swipe-8 the swiped car (car 0, on half throttle) is back under control within about 1 s: 1 s after the hit it is upright, on all four wheels and no longer spinning; steering right (away from the other car, which is on its left) for the next half second then turns it clearly more than not steering does.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 60.0,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    10,
+    0,
+    0
+   ]
+  },
+  {
+   "x": 60.9,
+   "z": -32.1,
+   "headingDeg": 90,
+   "linvel": [
+    10,
+    0,
+    8
+   ]
+  }
+ ],
+ "ticks": 240,
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 0.4
+  },
+  {
+   "car": 0,
+   "fromTick": 130,
+   "toTick": 190,
+   "throttle": 0.4,
+   "steer": -1.0
+  }
+ ],
+ "expect": {
+  "states": {
+   "0": {
+    "door_FL": "loose"
+   },
+   "1": {
+    "door_RR": "loose"
+   }
+  },
+  "damagedOnly": [
+   {
+    "car": 0,
+    "part": "door_FL"
+   },
+   {
+    "car": 1,
+    "part": "door_RR"
+   }
+  ],
+  "hitTick": [
+   1,
+   20
+  ],
+  "control": [
+   {
+    "car": 0,
+    "metric": "upY",
+    "afterHit": [
+     120
+    ],
+    "min": 0.9,
+    "max": 1.01
+   },
+   {
+    "car": 0,
+    "metric": "wheelsInContact",
+    "afterHit": [
+     120
+    ],
+    "min": 4,
+    "max": 4
+   },
+   {
+    "car": 0,
+    "metric": "yawRateDegS",
+    "afterHit": [
+     120
+    ],
+    "min": 0,
+    "max": 30
+   },
+   {
+    "car": 0,
+    "metric": "headingChangeDeg",
+    "afterHit": [
+     120,
+     180
+    ],
+    "min": 5,
+    "max": 90,
+    "differsFromNoSteerBy": 5
+   }
+  ]
+ }
+}

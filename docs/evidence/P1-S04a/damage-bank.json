@@ -1,0 +1,1260 @@
+[
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      },
+      {
+        "car": 1,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [],
+    "scenario": "bump-4",
+    "stateHash": "666a3fb73579cecdd8ea81ef09b9fd3b65999832a0952b859c52def322d7b0f5",
+    "ticks": 120,
+    "what": "Plan §6.3 calibration row: a 4 m/s nudge into another car does no damage (P1-S04a). Car 0 rolls at 4 m/s into the parked car 1's tail from 0.3 m; the 0.15 /s linear damping has it closing at just under the 4 m/s qualifying speed, so no contact counts and no part loses any health."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [],
+    "scenario": "rest-60",
+    "stateHash": "6a28d312601d3c3c44dd4955325bee24548a18d1f34010b8648c3e6f4a9b3c2c",
+    "ticks": 7200,
+    "what": "Plan §6.3 calibration row: parked against a wall for 60 s does no damage (P1-S04a). The car starts 2 cm off the wall's face and holds half throttle for the whole minute, so it presses on the wall all the while: a steady contact with no closing speed, which never counts."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 18.238677978515625,
+            "part": "door_FL",
+            "state": "loose"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      },
+      {
+        "car": 1,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 18.238677978515625,
+            "part": "door_RR",
+            "state": "loose"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 246,
+        "damage": {
+          "car": 0,
+          "closingMps": 7.910144805908203,
+          "damage": 41.761322021484375,
+          "event": "episode",
+          "health": 18.238677978515625,
+          "impulse": 2982.951416015625,
+          "lastTick": 241,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 241
+          },
+          "part": 3,
+          "startTick": 241,
+          "tick": 246
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "car": 1,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 1,
+          "part": 3
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 1,
+          "closingMps": 7.910144805908203,
+          "damage": 41.761322021484375,
+          "event": "episode",
+          "health": 18.238677978515625,
+          "impulse": 2982.951416015625,
+          "lastTick": 241,
+          "other": {
+            "car": 0,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 0,
+            "tick": 241
+          },
+          "part": 6,
+          "startTick": 241,
+          "tick": 246
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 1,
+          "cause": {
+            "car": 0,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 0,
+          "part": 6
+        }
+      }
+    ],
+    "scenario": "side-swipe-8",
+    "stateHash": "f16d4fc567326db5d438bea1cde0b38c9bc22252333640d7cffb65cfd5ca550c",
+    "ticks": 90,
+    "what": "Plan §6.3 calibration row: an 8 m/s door-to-door side swipe sends that door loose and nothing detaches (P1-S04a). Both cars run +x at 10 m/s, side by side 0.2 m apart, car 1 (on the right-hand side, -z) offset 0.9 m ahead so its rear right door meets car 0's front left door, and car 1 sliding toward car 0 at 8 m/s. Each of those doors loses most of its health and hangs loose; every other part keeps full health."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 0.0,
+            "part": "front",
+            "state": "detached"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "closingMps": 14.906597137451172,
+          "damage": 100.0,
+          "event": "episode",
+          "health": 0.0,
+          "impulse": 18125.513671875,
+          "lastTick": 246,
+          "other": {
+            "kind": "scenery"
+          },
+          "otherOwner": null,
+          "part": 1,
+          "startTick": 246,
+          "tick": 251
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "kind": "scenery"
+          },
+          "event": "partDetached",
+          "instigator": null,
+          "part": 1
+        }
+      }
+    ],
+    "scenario": "wall-head-on-15",
+    "stateHash": "5eef1ca888f3f2b58c7e0bda1bdbad2847103b541f61623734920e584d4bb594",
+    "ticks": 90,
+    "what": "Plan §6.3 calibration row: a 15 m/s head-on into a wall detaches the front (P1-S04a). The car starts 0.5 m from a 3 m high wall's face at 15 m/s; only the front bumper takes the hit, so only it goes (health 0, detached) and every other part keeps full health."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 39.459102630615234,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 0.0,
+            "part": "door_RR",
+            "state": "detached"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 74.61751556396484,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      },
+      {
+        "car": 1,
+        "parts": [
+          {
+            "health": 47.23771667480469,
+            "part": "front",
+            "state": "loose"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.682348251342773,
+          "damage": 20.540897369384766,
+          "event": "episode",
+          "health": 39.459102630615234,
+          "impulse": 1467.2069091796875,
+          "lastTick": 246,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 246
+          },
+          "part": 4,
+          "startTick": 246,
+          "tick": 251
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.682348251342773,
+          "damage": 60.0,
+          "event": "episode",
+          "health": 0.0,
+          "impulse": 5091.62841796875,
+          "lastTick": 246,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 246
+          },
+          "part": 6,
+          "startTick": 246,
+          "tick": 251
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "car": 1,
+            "kind": "car"
+          },
+          "event": "partDetached",
+          "instigator": 1,
+          "part": 6
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.880029678344727,
+          "damage": 5.382484436035156,
+          "event": "episode",
+          "health": 74.61751556396484,
+          "impulse": 978.6334228515625,
+          "lastTick": 246,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 246
+          },
+          "part": 8,
+          "startTick": 246,
+          "tick": 251
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 1,
+          "closingMps": 11.880029678344727,
+          "damage": 52.76228332519531,
+          "event": "episode",
+          "health": 47.23771667480469,
+          "impulse": 7537.46875,
+          "lastTick": 246,
+          "other": {
+            "car": 0,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 0,
+            "tick": 246
+          },
+          "part": 1,
+          "startTick": 246,
+          "tick": 251
+        }
+      },
+      {
+        "at": 251,
+        "damage": {
+          "car": 1,
+          "cause": {
+            "car": 0,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 0,
+          "part": 1
+        }
+      }
+    ],
+    "scenario": "t-bone-12",
+    "stateHash": "3b0292495f211ccada4ce2b91641821b43924bdeba0ce8ebe6f849fb3aba326f",
+    "ticks": 90,
+    "what": "Plan §6.3 calibration row: a 12 m/s T-bone into a door detaches that door (P1-S04a). Car 0 is parked facing +z; car 1 drives +x at 12 m/s from 0.5 m away into its right-hand side, its flat nose spanning the seam between the two doors. The nose's two corners take the load, and the rear door takes the main blow: it detaches. The front door beside it and the front wheel (both clipped by the other corner) lose some health and stay intact; the T-boning car's own front takes a loose-grade hit; nothing else changes."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 29.537281036376953,
+            "part": "wheel_FL",
+            "state": "loose"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 252,
+        "damage": {
+          "car": 0,
+          "closingMps": 10.7999849319458,
+          "damage": 50.46271896362305,
+          "event": "episode",
+          "health": 29.537281036376953,
+          "impulse": 9175.0400390625,
+          "lastTick": 247,
+          "other": {
+            "kind": "scenery"
+          },
+          "otherOwner": null,
+          "part": 7,
+          "startTick": 247,
+          "tick": 252
+        }
+      },
+      {
+        "at": 252,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "kind": "scenery"
+          },
+          "event": "partLoose",
+          "instigator": null,
+          "part": 7
+        }
+      }
+    ],
+    "scenario": "wheel-kerb-12",
+    "stateHash": "16b449a8bb7f2160fd0455c71b34128ee2eb031c0e269e6d6af99ff35723f6fa",
+    "ticks": 90,
+    "what": "Plan §6.3 calibration row: a 12 m/s wheel strike on a barrier's end sends that wheel loose (P1-S04a). The car runs +x at 12 m/s, lined up so its left front wheel meets the end face of a 0.9 m barrier (the body's side is clear of it). The wheel collider (a part of its own, excluded from the terrain) registers the strike; only that wheel loses health."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 18.21780014038086,
+            "part": "door_FL",
+            "state": "loose"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      },
+      {
+        "car": 1,
+        "parts": [
+          {
+            "health": 100.0,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 18.21780014038086,
+            "part": "door_RR",
+            "state": "loose"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 246,
+        "damage": {
+          "car": 0,
+          "closingMps": 7.911850452423096,
+          "damage": 41.78219985961914,
+          "event": "episode",
+          "health": 18.21780014038086,
+          "impulse": 2984.44287109375,
+          "lastTick": 241,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 241
+          },
+          "part": 3,
+          "startTick": 241,
+          "tick": 246
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "car": 1,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 1,
+          "part": 3
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 1,
+          "closingMps": 7.911850452423096,
+          "damage": 41.78219985961914,
+          "event": "episode",
+          "health": 18.21780014038086,
+          "impulse": 2984.44287109375,
+          "lastTick": 241,
+          "other": {
+            "car": 0,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 0,
+            "tick": 241
+          },
+          "part": 6,
+          "startTick": 241,
+          "tick": 246
+        }
+      },
+      {
+        "at": 246,
+        "damage": {
+          "car": 1,
+          "cause": {
+            "car": 0,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 0,
+          "part": 6
+        }
+      }
+    ],
+    "scenario": "control-after-side-swipe",
+    "stateHash": "973560eab2e1df5bdbbce8c086ac78641cb33b1ee1573e9f1449db23e52dc2c5",
+    "ticks": 240,
+    "what": "§7.3a control-after-hit, side hit (P1-S04a): after the 8 m/s side swipe of side-swipe-8 the swiped car (car 0, on half throttle) is back under control within about 1 s: 1 s after the hit it is upright, on all four wheels and no longer spinning; steering right (away from the other car, which is on its left) for the next half second then turns it clearly more than not steering does."
+  },
+  {
+    "cars": [
+      {
+        "car": 0,
+        "parts": [
+          {
+            "health": 99.7026138305664,
+            "part": "front",
+            "state": "intact"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 36.79639434814453,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 0.0,
+            "part": "door_RR",
+            "state": "detached"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 78.4369125366211,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      },
+      {
+        "car": 1,
+        "parts": [
+          {
+            "health": 45.175472259521484,
+            "part": "front",
+            "state": "loose"
+          },
+          {
+            "health": 100.0,
+            "part": "back",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_FR",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RL",
+            "state": "intact"
+          },
+          {
+            "health": 60.0,
+            "part": "door_RR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_FR",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RL",
+            "state": "intact"
+          },
+          {
+            "health": 80.0,
+            "part": "wheel_RR",
+            "state": "intact"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "at": 274,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.195919036865234,
+          "damage": 0.29738616943359375,
+          "event": "episode",
+          "health": 99.7026138305664,
+          "impulse": 42.48407745361328,
+          "lastTick": 269,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 269
+          },
+          "part": 1,
+          "startTick": 269,
+          "tick": 274
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.403252601623535,
+          "damage": 23.20360565185547,
+          "event": "episode",
+          "health": 36.79639434814453,
+          "impulse": 1657.4002685546875,
+          "lastTick": 269,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 269
+          },
+          "part": 4,
+          "startTick": 269,
+          "tick": 274
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 0,
+          "closingMps": 11.403252601623535,
+          "damage": 60.0,
+          "event": "episode",
+          "health": 0.0,
+          "impulse": 5847.99267578125,
+          "lastTick": 269,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 269
+          },
+          "part": 6,
+          "startTick": 269,
+          "tick": 274
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 0,
+          "cause": {
+            "car": 1,
+            "kind": "car"
+          },
+          "event": "partDetached",
+          "instigator": 1,
+          "part": 6
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 0,
+          "closingMps": 10.703157424926758,
+          "damage": 1.5630874633789062,
+          "event": "episode",
+          "health": 78.4369125366211,
+          "impulse": 284.1978454589844,
+          "lastTick": 269,
+          "other": {
+            "car": 1,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 1,
+            "tick": 269
+          },
+          "part": 8,
+          "startTick": 269,
+          "tick": 274
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 1,
+          "closingMps": 11.403252601623535,
+          "damage": 54.824527740478516,
+          "event": "episode",
+          "health": 45.175472259521484,
+          "impulse": 7832.0751953125,
+          "lastTick": 269,
+          "other": {
+            "car": 0,
+            "kind": "car"
+          },
+          "otherOwner": {
+            "car": 0,
+            "tick": 269
+          },
+          "part": 1,
+          "startTick": 269,
+          "tick": 274
+        }
+      },
+      {
+        "at": 274,
+        "damage": {
+          "car": 1,
+          "cause": {
+            "car": 0,
+            "kind": "car"
+          },
+          "event": "partLoose",
+          "instigator": 0,
+          "part": 1
+        }
+      }
+    ],
+    "scenario": "control-after-t-bone",
+    "stateHash": "daf98394fb0c3acf4d46762c0af581663173c69b751159e4b84c404a53cc7189",
+    "ticks": 240,
+    "what": "§7.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does."
+  }
+]

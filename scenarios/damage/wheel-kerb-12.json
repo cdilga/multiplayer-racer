@@ -1,0 +1,43 @@
+{
+ "scenario": "wheel-kerb-12",
+ "what": "Plan \u00a76.3 calibration row: a 12 m/s wheel strike on a barrier's end sends that wheel loose (P1-S04a). The car runs +x at 12 m/s, lined up so its left front wheel meets the end face of a 0.9 m barrier (the body's side is clear of it). The wheel collider (a part of its own, excluded from the terrain) registers the strike; only that wheel loses health.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 97.76,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    12,
+    0,
+    0
+   ]
+  }
+ ],
+ "ticks": 90,
+ "expect": {
+  "states": {
+   "0": {
+    "wheel_FL": "loose"
+   }
+  },
+  "damagedOnly": [
+   {
+    "car": 0,
+    "part": "wheel_FL"
+   }
+  ],
+  "episodes": [
+   {
+    "car": 0,
+    "part": "wheel_FL",
+    "other": "scenery"
+   }
+  ],
+  "closingMps": [
+   10.0,
+   12.1
+  ]
+ }
+}

@@ -8,6 +8,7 @@
 #![forbid(unsafe_code)]
 
 pub mod autopilot;
+pub mod damage;
 pub mod journal;
 pub mod observe;
 pub mod placement;

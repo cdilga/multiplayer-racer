@@ -132,6 +132,15 @@ pub struct RaceObs {
     pub protected: bool,
 }
 
+/// One part's health and state (P1-S04a): `core` has no health and is always intact.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PartObs {
+    pub part: String,
+    pub health: f32,
+    pub state: crate::damage::PartState,
+}
+
 /// One car at one tick.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -156,6 +165,8 @@ pub struct CarObs {
     pub autopilot: Option<crate::autopilot::AutopilotState>,
     /// The ACTION stick (P1-S03b): the boost meter (0..1), boosting now, and how far into a drift (0 grip, 1 drift).
     pub action: ActionObs,
+    /// Every part's health and state, in `damage::PART_NAMES` order (P1-S04a).
+    pub parts: Vec<PartObs>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -226,6 +237,19 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
         } else {
             None
         },
+        parts: sim
+            .part_health(car)
+            .zip(sim.part_states(car))
+            .map(|(h, s)| {
+                (0..crate::damage::PARTS)
+                    .map(|i| PartObs {
+                        part: crate::damage::PART_NAMES[i].to_owned(),
+                        health: h[i],
+                        state: s[i],
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
         action: sim
             .action_state(car)
             .map_or_else(ActionObs::default, |a| ActionObs {

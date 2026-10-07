@@ -1,0 +1,16 @@
+{
+ "scenario": "damage-t-bone-12",
+ "what": "The t-bone-12 calibration row (scenarios/damage/t-bone-12.json) as a jj-fixture scenario, so `jj sim --trace scenarios/damage/fixtures/t-bone-12.json` shows the damage introspection (P1-S04a): each part's health and state in every car observation, and in the trace the contact episodes (car, part, other body, its causal owner, summed impulse, closing speed) and the part-loose and part-detached transitions with their cause and instigator, at their ticks.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "ticks": 330,
+ "cars": [
+  {"pose": {"x": -60.0, "y": 0.1, "z": -20.0, "headingDeg": 0}},
+  {"pose": {"x": -48.0, "y": 0.1, "z": -20.0, "headingDeg": 0}}
+ ],
+ "place": [
+  {"tick": 240, "car": 0, "pose": {"x": 60.0, "y": 0.05, "z": -30.0, "headingDeg": 0}, "linvel": [0, 0, 0]},
+  {"tick": 240, "car": 1, "pose": {"x": 56.25, "y": 0.05, "z": -29.66, "headingDeg": 90}, "linvel": [12, 0, 0]}
+ ],
+ "expect": []
+}

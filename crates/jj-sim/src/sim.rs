@@ -23,6 +23,8 @@ use sha2::{Digest, Sha256};
 use jj_map::{Footprint, LoadedMap, Registry, Terrain};
 
 use crate::autopilot::{Autopilot, AutopilotState, Mode, Path, Pose2};
+use crate::damage::episodes::{CarParts, Episodes, PreStep, TAG_CAR, TAG_PROP};
+use crate::damage::{self, CarDamage, DamageEvent, PARTS, PartState};
 use crate::journal::{DriveInput, Entry, Journal, Setup, SpawnPose};
 use crate::placement::{
     CLEARANCE_M, PROTECT_TICKS, Rect, RouteLine, SEARCH_LATERAL_M, SEARCH_STEP_M, SEARCH_STEPS,
@@ -45,19 +47,59 @@ pub const GROUP_PROP: Group = Group::GROUP_3;
 pub const GROUP_GHOST: Group = Group::GROUP_4;
 /// Spawn protection (P1-S06): like a ghost, touching only the world, until the car is clear.
 pub const GROUP_PROTECTED: Group = Group::GROUP_5;
+/// The ground (P1-S04a): the heightfield, apart from the static dressing so wheel colliders can exclude it.
+pub const GROUP_TERRAIN: Group = Group::GROUP_6;
+/// A car's wheel colliders (P1-S04a): they touch cars, debris and scenery but not the terrain, so a wheel strike on
+/// a barrier registers without fighting the raycast suspension standing on the ground.
+pub const GROUP_WHEEL: Group = Group::GROUP_7;
 const fn groups(memberships: Group, filter: Group) -> InteractionGroups {
     InteractionGroups::new(memberships, filter, InteractionTestMode::And)
 }
 const WORLD_GROUPS: InteractionGroups = groups(GROUP_WORLD, Group::ALL);
+const TERRAIN_GROUPS: InteractionGroups = groups(GROUP_TERRAIN, Group::ALL);
+/// Everything static a ghost or protected car's body touches: the ground and the dressing.
+const SOLID_WORLD: Group = GROUP_WORLD.union(GROUP_TERRAIN);
 const PROP_GROUPS: InteractionGroups = groups(GROUP_PROP, Group::ALL);
 const CAR_GROUPS: InteractionGroups = groups(GROUP_CAR, Group::ALL);
-const GHOST_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
+const GHOST_GROUPS: InteractionGroups = groups(GROUP_GHOST, SOLID_WORLD);
 /// What a racing car's wheel rays hit (everything but ghosts), and a ghost's (only the world).
 const CAR_RAYS: InteractionGroups =
-    groups(GROUP_CAR, GROUP_WORLD.union(GROUP_PROP).union(GROUP_CAR));
-const GHOST_RAYS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
-const PROTECTED_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
-const PROTECTED_RAYS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
+    groups(GROUP_CAR, SOLID_WORLD.union(GROUP_PROP).union(GROUP_CAR));
+const GHOST_RAYS: InteractionGroups = groups(GROUP_GHOST, SOLID_WORLD);
+const PROTECTED_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, SOLID_WORLD);
+const PROTECTED_RAYS: InteractionGroups = groups(GROUP_PROTECTED, SOLID_WORLD);
+/// A wheel collider's groups (never the terrain): racing, ghost and protected like the chassis' own.
+const WHEEL_GROUPS: InteractionGroups = groups(
+    GROUP_WHEEL,
+    GROUP_WORLD
+        .union(GROUP_PROP)
+        .union(GROUP_CAR)
+        .union(GROUP_WHEEL),
+);
+const GHOST_WHEEL_GROUPS: InteractionGroups = groups(GROUP_GHOST, GROUP_WORLD);
+const PROTECTED_WHEEL_GROUPS: InteractionGroups = groups(GROUP_PROTECTED, GROUP_WORLD);
+
+/// How a car collides now: racing, a finished ghost, or under spawn protection.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Solidity {
+    Racing,
+    Ghost,
+    Protected,
+}
+
+impl Solidity {
+    /// The groups for a part's collider (`wheel`: the four wheel colliders).
+    fn groups(self, wheel: bool) -> InteractionGroups {
+        match (self, wheel) {
+            (Self::Racing, false) => CAR_GROUPS,
+            (Self::Racing, true) => WHEEL_GROUPS,
+            (Self::Ghost, false) => GHOST_GROUPS,
+            (Self::Ghost, true) => GHOST_WHEEL_GROUPS,
+            (Self::Protected, false) => PROTECTED_GROUPS,
+            (Self::Protected, true) => PROTECTED_WHEEL_GROUPS,
+        }
+    }
+}
 
 /// A car's id: its index in spawn order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -65,7 +107,12 @@ pub struct CarId(pub u32);
 
 struct Car {
     body: RigidBodyHandle,
+    /// The core's collider (the cabin, which carries the car's mass properties).
     collider: ColliderHandle,
+    /// Every part's collider in part order (`crate::damage::PART_NAMES`); `parts[0]` is `collider`.
+    parts: Vec<ColliderHandle>,
+    /// Part health (P1-S04a).
+    damage: CarDamage,
     vehicle: DynamicRayCastVehicleController,
     input: DriveInput,
     /// Under spawn protection since this tick (P1-S06).
@@ -127,6 +174,11 @@ pub struct Sim {
     prop_kinds: Vec<PropKind>,
     /// Accepted ACTION utilities, with the tick they fired at (P1-S08).
     utility_events: Vec<(u64, UtilityEvent)>,
+    /// Damage episodes (P1-S04a): the open ones, prop owners, every finished record and part-state change.
+    episodes: Episodes,
+    damage_events: Vec<(u64, DamageEvent)>,
+    /// The bodies' state before each step, for the contacts' closing speeds.
+    pre_step: PreStep,
     tick: u64,
     rng: Rng,
     journal: Journal,
@@ -175,7 +227,7 @@ impl Sim {
                 t.origin_z as f32 / 1000.0 + sz / 2.0,
             ))
             .friction(0.9)
-            .collision_groups(WORLD_GROUPS);
+            .collision_groups(TERRAIN_GROUPS);
         world.insert_collider(ground, None);
 
         // Static dressing with `collides`: the registry's collider proxies, standing on the ground at their pose.
@@ -215,7 +267,10 @@ impl Sim {
                     p.pose.z as f32 / 1000.0,
                 ))
                 .rotation(yaw_rotation(p.pose.yaw));
-            let (h, _) = world.insert(body, builder.density(80.0).collision_groups(PROP_GROUPS));
+            let (h, _) = world.insert(
+                body.user_data(TAG_PROP | props.len() as u128),
+                builder.density(80.0).collision_groups(PROP_GROUPS),
+            );
             props.push(h);
         }
 
@@ -234,6 +289,9 @@ impl Sim {
             prop_kinds: vec![PropKind::Debris; props.len()],
             utility_events: Vec::new(),
             props,
+            episodes: Episodes::default(),
+            damage_events: Vec::new(),
+            pre_step: PreStep::default(),
             tick: 0,
             rng: Rng::stream(seed, "sim"),
             journal,
@@ -321,7 +379,8 @@ impl Sim {
             .push((self.tick, Setup::SpawnDebris { pose, half }));
         let body = RigidBodyBuilder::dynamic()
             .translation(Vector::new(pose.x, pose.y, pose.z))
-            .rotation(Vector::new(0.0, pose.heading, 0.0));
+            .rotation(Vector::new(0.0, pose.heading, 0.0))
+            .user_data(TAG_PROP | self.props.len() as u128);
         let collider = ColliderBuilder::cuboid(half[0], half[1], half[2])
             .density(150.0)
             .collision_groups(PROP_GROUPS);
@@ -376,7 +435,8 @@ impl Sim {
                         base.y + rules::CONE_HALF_HEIGHT_M + 0.02,
                         base.z,
                     ))
-                    .rotation(Vector::new(0.0, heading, 0.0));
+                    .rotation(Vector::new(0.0, heading, 0.0))
+                    .user_data(TAG_PROP | self.props.len() as u128);
                 let collider =
                     ColliderBuilder::cone(rules::CONE_HALF_HEIGHT_M, rules::CONE_RADIUS_M)
                         .density(utility::cone_density())
@@ -528,8 +588,19 @@ impl Sim {
         let tick = self.tick;
         if let Some(c) = self.cars.get_mut(car.0 as usize) {
             c.protected_since = Some(tick);
-            if let Some(col) = self.world.colliders.get_mut(c.collider) {
-                col.set_collision_groups(PROTECTED_GROUPS);
+            for (i, &h) in c.parts.iter().enumerate() {
+                if let Some(col) = self.world.colliders.get_mut(h) {
+                    col.set_collision_groups(Solidity::Protected.groups(damage::is_wheel(i)));
+                }
+            }
+        }
+    }
+
+    /// Sets every one of car `i`'s part colliders to `solidity`'s groups.
+    fn set_solidity(&mut self, i: usize, solidity: Solidity) {
+        for (part, &h) in self.cars[i].parts.iter().enumerate() {
+            if let Some(col) = self.world.colliders.get_mut(h) {
+                col.set_collision_groups(solidity.groups(damage::is_wheel(part)));
             }
         }
     }
@@ -554,15 +625,13 @@ impl Sim {
                     && f.is_some_and(|f| overlaps(&me, &f))
             }) || debris.iter().any(|d| overlaps(&me, d));
             if !blocked {
-                let groups = if self.race.is_finished(i as u32) {
-                    GHOST_GROUPS
+                let solidity = if self.race.is_finished(i as u32) {
+                    Solidity::Ghost
                 } else {
-                    CAR_GROUPS
+                    Solidity::Racing
                 };
                 self.cars[i].protected_since = None;
-                if let Some(col) = self.world.colliders.get_mut(self.cars[i].collider) {
-                    col.set_collision_groups(groups);
-                }
+                self.set_solidity(i, solidity);
             }
         }
     }
@@ -690,11 +759,12 @@ impl Sim {
             }
             Effect::Ghost { car } => {
                 // A protected car turns ghost (not solid) when its protection ends.
-                if let Some(c) = self.cars.get(car as usize)
-                    && c.protected_since.is_none()
-                    && let Some(col) = self.world.colliders.get_mut(c.collider)
+                if self
+                    .cars
+                    .get(car as usize)
+                    .is_some_and(|c| c.protected_since.is_none())
                 {
-                    col.set_collision_groups(GHOST_GROUPS);
+                    self.set_solidity(car as usize, Solidity::Ghost);
                 }
                 // A finished car coasts its cool-down laps on autopilot.
                 let seed = self.journal.seed;
@@ -719,13 +789,8 @@ impl Sim {
             // Never asleep: Rapier's update_vehicle pumps suspension impulses into a sleeping chassis' velocity
             // without waking it (tests/rapier_api.rs), which would jolt the car when it woke.
             .can_sleep(false)
-            .ccd_enabled(true);
-        let points: Vec<Vector> = p
-            .geometry
-            .hull
-            .iter()
-            .map(|&[x, y, z]| Vector::new(x, y, z))
-            .collect();
+            .ccd_enabled(true)
+            .user_data(TAG_CAR | self.cars.len() as u128);
         let (lo, hi) = p.hull_bounds();
         let [w, h, l] = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
         // The hull's box inertia at the car's mass (scaled by the profile), about the sidecar's centre of mass.
@@ -736,16 +801,56 @@ impl Sim {
             k * (w * w + h * h),
         );
         let [cx, cy, cz] = p.geometry.com;
-        let collider = ColliderBuilder::convex_hull(&points)
-            .unwrap_or_else(|| ColliderBuilder::cuboid(w / 2.0, h / 2.0, l / 2.0))
-            .mass_properties(MassProperties::new(
-                Vector::new(cx, cy, cz),
-                t.mass,
-                inertia,
-            ))
-            .friction(0.6)
-            .collision_groups(CAR_GROUPS);
-        let (handle, collider) = self.world.insert(body, collider);
+        // One convex collider per part (P1-S04a): a contact's collider names the part. The core carries the whole car's
+        // mass properties (S04b recomputes them when parts detach); the other parts are massless, so the chassis feels
+        // as it did when it was one hull.
+        let hull_box = || ColliderBuilder::cuboid(w / 2.0, h / 2.0, l / 2.0);
+        let part_collider = |i: usize| {
+            let points: Vec<Vector> = p
+                .geometry
+                .parts
+                .get(i)
+                .map(|g| {
+                    g.points
+                        .iter()
+                        .map(|&[x, y, z]| Vector::new(x, y, z))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let builder = ColliderBuilder::convex_hull(&points).unwrap_or_else(|| {
+                if i == damage::CORE {
+                    let hull: Vec<Vector> = p
+                        .geometry
+                        .hull
+                        .iter()
+                        .map(|&[x, y, z]| Vector::new(x, y, z))
+                        .collect();
+                    ColliderBuilder::convex_hull(&hull).unwrap_or_else(hull_box)
+                } else {
+                    // A profile without this part's proxy has no collider for it: a tiny inert ball at its pivot.
+                    let [x, y, z] = p.geometry.parts.get(i).map_or([0.0; 3], |g| g.pivot);
+                    ColliderBuilder::ball(0.01).translation(Vector::new(x, y, z))
+                }
+            });
+            let builder = if i == damage::CORE {
+                builder.mass_properties(MassProperties::new(
+                    Vector::new(cx, cy, cz),
+                    t.mass,
+                    inertia,
+                ))
+            } else {
+                builder.density(0.0)
+            };
+            builder
+                .friction(0.6)
+                .user_data(i as u128)
+                .collision_groups(Solidity::Racing.groups(damage::is_wheel(i)))
+        };
+        let (handle, collider) = self.world.insert(body, part_collider(damage::CORE));
+        let mut parts = vec![collider];
+        for i in 1..PARTS {
+            parts.push(self.world.insert_collider(part_collider(i), Some(handle)));
+        }
 
         let mut vehicle = DynamicRayCastVehicleController::new(handle);
         vehicle.index_up_axis = 1;
@@ -775,6 +880,8 @@ impl Sim {
         self.cars.push(Car {
             body: handle,
             collider,
+            parts,
+            damage: CarDamage::new(&p.tuning.damage),
             vehicle,
             input: DriveInput::default(),
             protected_since: None,
@@ -953,8 +1060,10 @@ impl Sim {
                 self.apply(effect);
             }
         }
+        self.pre_step.capture(&self.world.bodies);
         self.world.step();
         self.tick += 1;
+        self.step_damage();
         let views: Vec<crate::race::CarView> = self
             .cars
             .iter()
@@ -973,6 +1082,58 @@ impl Sim {
             self.apply(effect);
         }
         self.settle_protection();
+    }
+
+    /// Reads this step's contacts into damage episodes, then closes the ones whose window ran out (P1-S04a).
+    fn step_damage(&mut self) {
+        let cars: Vec<CarParts<'_>> = self
+            .cars
+            .iter()
+            .enumerate()
+            .map(|(i, c)| CarParts {
+                car: i as u32,
+                parts: &c.parts,
+            })
+            .collect();
+        let t = &self.profile.tuning.damage;
+        self.episodes
+            .scan(&self.world, &self.pre_step, &cars, t, self.tick);
+        let mut health: Vec<CarDamage> = self.cars.iter().map(|c| c.damage.clone()).collect();
+        let events = self.episodes.close(self.tick, t, &mut health);
+        for (c, h) in self.cars.iter_mut().zip(health) {
+            c.damage = h;
+        }
+        self.damage_events
+            .extend(events.into_iter().map(|e| (self.tick, e)));
+    }
+
+    /// Every finished damage episode and part-state change so far, with the tick it happened (P1-S04a): the records
+    /// S04b, the host's events and the traces read.
+    pub fn damage_events(&self) -> &[(u64, DamageEvent)] {
+        &self.damage_events
+    }
+
+    /// The prop's causal owner: the car that last put a qualifying impulse into it, and when.
+    pub fn prop_owner(&self, prop: u32) -> Option<damage::Owner> {
+        self.episodes.owner_of_prop(prop)
+    }
+
+    /// A car's part health, in part order (`damage::PART_NAMES`; the core has none).
+    pub fn part_health(&self, car: CarId) -> Option<[f32; PARTS]> {
+        self.cars.get(car.0 as usize).map(|c| c.damage.health)
+    }
+
+    /// A car's part states, in part order.
+    pub fn part_states(&self, car: CarId) -> Option<[PartState; PARTS]> {
+        self.cars
+            .get(car.0 as usize)
+            .map(|c| c.damage.states(&self.profile.tuning.damage))
+    }
+
+    /// A part's state by name (`front`, `door_FL`…).
+    pub fn part_state(&self, car: CarId, part: &str) -> Option<PartState> {
+        let i = damage::part_index(part)?;
+        self.part_states(car).map(|s| s[i])
     }
 
     pub fn car_state(&self, car: CarId) -> Option<CarState> {
@@ -1093,6 +1254,10 @@ impl Sim {
         }
         let mut race = Vec::new();
         self.race.hash_into(&mut race);
+        for c in &self.cars {
+            c.damage.hash_into(&mut race);
+        }
+        self.episodes.hash_into(&mut race);
         for c in &self.cars {
             race.extend(c.protected_since.unwrap_or(u64::MAX).to_le_bytes());
             match &c.autopilot {

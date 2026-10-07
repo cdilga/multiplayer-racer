@@ -401,11 +401,61 @@ fn event_samples() -> Vec<SimEvent> {
             number: SeatNumber(108),
         },
         SimEvent::SeatLeft { seat: SeatId(3) },
+        SimEvent::PartLoose {
+            seat: SeatId(7),
+            part: 3,
+            cause: DamageCause::Car,
+            instigator: Some(SeatId(2)),
+        },
         SimEvent::PartDetached {
             seat: SeatId(7),
             part: 2,
+            cause: DamageCause::Scenery,
+            instigator: None,
         },
-        SimEvent::Wrecked { seat: SeatId(7) },
+        SimEvent::Wrecked {
+            seat: SeatId(7),
+            cause: DamageCause::Debris,
+            instigator: Some(SeatId(2)),
+        },
+        SimEvent::Episode {
+            record: EpisodeRecord {
+                seat: SeatId(7),
+                part: 4,
+                other: HitBody::Car {
+                    seat: Some(SeatId(2)),
+                },
+                owner: Some(SeatId(2)),
+                owner_tick: Some(Tick(7_194)),
+                impulse_ns: 7_557,
+                closing_mm_s: 11_590,
+                tick: Tick(7_200),
+            },
+        },
+        SimEvent::Episode {
+            record: EpisodeRecord {
+                seat: SeatId(3),
+                part: 8,
+                other: HitBody::Debris { index: 12 },
+                owner: Some(SeatId(7)),
+                owner_tick: Some(Tick(7_100)),
+                impulse_ns: 980,
+                closing_mm_s: 5_200,
+                tick: Tick(7_206),
+            },
+        },
+        SimEvent::Episode {
+            record: EpisodeRecord {
+                seat: SeatId(7),
+                part: 1,
+                other: HitBody::Scenery,
+                owner: None,
+                owner_tick: None,
+                impulse_ns: 17_645,
+                closing_mm_s: 14_500,
+                tick: Tick(7_400),
+            },
+        },
         SimEvent::Lap {
             seat: SeatId(7),
             lap: 2,
@@ -586,7 +636,11 @@ fn every_variant_has_a_golden() {
         SIM_VARIANTS.into_iter().collect()
     );
     assert_eq!(ui_samples().len(), 7, "every UiCommand variant");
-    assert_eq!(event_samples().len(), 8, "every SimEvent variant");
+    assert_eq!(
+        event_samples().len(),
+        12,
+        "every SimEvent variant, plus extra episode shapes"
+    );
 }
 
 #[test]

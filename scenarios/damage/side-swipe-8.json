@@ -1,0 +1,65 @@
+{
+ "scenario": "side-swipe-8",
+ "what": "Plan \u00a76.3 calibration row: an 8 m/s door-to-door side swipe sends that door loose and nothing detaches (P1-S04a). Both cars run +x at 10 m/s, side by side 0.2 m apart, car 1 (on the right-hand side, -z) offset 0.9 m ahead so its rear right door meets car 0's front left door, and car 1 sliding toward car 0 at 8 m/s. Each of those doors loses most of its health and hangs loose; every other part keeps full health.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 60.0,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    10,
+    0,
+    0
+   ]
+  },
+  {
+   "x": 60.9,
+   "z": -32.1,
+   "headingDeg": 90,
+   "linvel": [
+    10,
+    0,
+    8
+   ]
+  }
+ ],
+ "ticks": 90,
+ "expect": {
+  "states": {
+   "0": {
+    "door_FL": "loose"
+   },
+   "1": {
+    "door_RR": "loose"
+   }
+  },
+  "damagedOnly": [
+   {
+    "car": 0,
+    "part": "door_FL"
+   },
+   {
+    "car": 1,
+    "part": "door_RR"
+   }
+  ],
+  "episodes": [
+   {
+    "car": 0,
+    "part": "door_FL",
+    "other": "car:1"
+   },
+   {
+    "car": 1,
+    "part": "door_RR",
+    "other": "car:0"
+   }
+  ],
+  "closingMps": [
+   7.0,
+   8.5
+  ]
+ }
+}

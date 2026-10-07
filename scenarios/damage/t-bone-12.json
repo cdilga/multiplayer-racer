@@ -1,0 +1,29 @@
+{
+ "scenario": "t-bone-12",
+ "what": "Plan §6.3 calibration row: a 12 m/s T-bone into a door detaches that door (P1-S04a). Car 0 is parked facing +z; car 1 drives +x at 12 m/s from 0.5 m away into its right-hand side, its flat nose spanning the seam between the two doors. The nose's two corners take the load, and the rear door takes the main blow: it detaches. The front door beside it and the front wheel (both clipped by the other corner) lose some health and stay intact; the T-boning car's own front takes a loose-grade hit; nothing else changes.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {"x": 60.0, "z": -30.0, "headingDeg": 0, "linvel": [0, 0, 0]},
+  {"x": 56.25, "z": -29.66, "headingDeg": 90, "linvel": [12, 0, 0]}
+ ],
+ "ticks": 90,
+ "expect": {
+  "states": {"0": {"door_RR": "detached"}, "1": {"front": "loose"}},
+  "damagedOnly": [
+   {"car": 0, "part": "door_RR"},
+   {"car": 0, "part": "door_FR"},
+   {"car": 0, "part": "wheel_FR"},
+   {"car": 1, "part": "front"}
+  ],
+  "episodes": [
+   {"car": 0, "part": "door_RR", "other": "car:1"},
+   {"car": 1, "part": "front", "other": "car:0"}
+  ],
+  "health": [
+   {"car": 0, "part": "door_FR", "min": 30.5, "max": 59.9},
+   {"car": 0, "part": "wheel_FR", "min": 40.5, "max": 79.9}
+  ],
+  "closingMps": [11.0, 12.1]
+ }
+}

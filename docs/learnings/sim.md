@@ -151,3 +151,41 @@ not feel targets.
   protection, then places its cars (`place` doesn't re-protect).
 - **A cone's cost is its mass.** A 4.5 kg cone cost a 20 m/s follower 0.08 m; 8 kg costs about 0.3 m with a visible
   jolt and never wrecks. That's the TUNE lever, not a scripted slowdown.
+
+## 2026-10-07 · Contact episodes and part health (P1-S04a)
+
+- **One collider per part, mass on the core.** The chassis is eleven convex colliders on one body (`core`, `front`,
+  `back`, four doors, four wheels), from the sidecar's proxies (`geometry.parts` in the profile, written by `jj vehicle
+  sync`). Only the core carries mass properties (density 0 elsewhere), so the car feels as it did as one hull: the feel,
+  affordance, placement and race banks all pass unchanged. S04b recomputes mass when a part leaves.
+- **Wheel colliders need their own group, and so does the ground.** The heightfield is `GROUP_TERRAIN` (not `WORLD`), the
+  wheels `GROUP_WHEEL`, whose filter leaves terrain out, so a wheel strike on a barrier registers while the raycast
+  suspension owns the ground. Everything that filtered on `WORLD` (ghost, protected, wheel rays) now filters on
+  `WORLD | TERRAIN`. Ghost and protected wheels touch dressing only.
+- **Read contacts from `narrow_phase.contact_pairs_with(collider)`, but take velocities from before `step`.** After the
+  step the solver has removed the approach, so closing speed is `(v₁ − v₂)·n` from a pre-step snapshot (`PreStep`), at
+  each contact point (`v + ω × (p − com)`). `ContactData::impulse` is the step's normal impulse per point.
+  Closing speeds read ~3 % under the placement speed at 0.5 m because of the 0.15/s linear damping.
+- **The cabin proxy bulges past the door skins.** The core's hull is up to 0.2 m wider than the doors at shoulder height,
+  so a side hit lands on the *core* first. A contact on the core belongs to the nearest part within
+  `attribution_margin_m` (0.3 m) of the contact point in vehicle space; farther it's the core's and costs nothing.
+  Attribution is per contact point: a flat nose straddling two doors splits its impulse between them.
+- **A T-bone's nose corners decide which door.** Rapier puts the load on the nose face's corners, not its middle, so a 1.3 m
+  wide nose into a 0.7–1.0 m door loads the doors on both sides of where it's aimed. The calibration row aims at the seam
+  and asserts the rear door detaches, the front door and wheel beside it are damaged but intact.
+- **Calibration** (`DamageTuning` in the profile; `tests/damage.rs`): per N·s of qualifying impulse, front/back 0.007,
+  door 0.014, wheel 0.0055. At those, 15 m/s head-on is ~17 kN·s (front 122 of 100 → detached), 8 m/s door-to-door is
+  ~3 kN·s (door 42 of 60 lost → loose), 12 m/s T-bone ~5 kN·s on the struck door (detached) and ~7.5 kN·s on the T-boning
+  car's own front (loose), 12 m/s wheel on a barrier end ~9.5 kN·s (wheel 52 of 80 → loose). A 5 m/s bump costs ~20.
+- **`bump-4` is below the threshold by damping.** A car placed at 4 m/s closes at ~3.96 m/s after 0.3 m, so nothing counts.
+  The same bump at 5 m/s counts (closing 4.95) and costs 20 health, no state change.
+- **A side shove spins the car for about a second.** A 12 m/s T-bone into a coasting car at 10 m/s yaws it at 65–75 °/s until
+  its sideways slide (saturated tyres, ~8 m/s²) has bled off to about the yaw's own slip speed, about 1.1 s after the hit;
+  holding throttle through it keeps the rears saturated and the spin lasts as long. `control-after-t-bone` therefore
+  steers from 0.75 s and asserts the spin is gone and the steering changes the outcome at 1.0 s.
+- **Episodes are keyed (car, part, other body) and windowed from the first qualifying contact.** 6 ticks at 120 Hz,
+  closing after the sixth. The other body's causal owner is the car itself for a car, and for debris the car that last
+  put a qualifying impulse into it (`Sim::prop_owner`), read *before* the current episode updates it. Debris-to-debris
+  chains don't propagate an owner yet.
+- **Test timing.** Scenarios place cars 0.5 m from the target with the speed they're named for; `place_car` at
+  `y = 0.05` (the design pose is ~0), and wait 2 s in the open first or the cars are still under spawn protection.

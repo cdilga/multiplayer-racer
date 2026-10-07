@@ -678,6 +678,21 @@ pub struct PhysicsGeometry {
     pub wheels: [[f64; 3]; 4],
     pub wheel_radius: f64,
     pub com: [f64; 3],
+    /// Every part's own collider proxy (P1-S04a), in the contract's part order (`PARTS`): the sim builds one convex
+    /// collider per part on the chassis body, so a contact's collider names the part.
+    pub parts: Vec<PartGeometry>,
+}
+
+/// One part for the sim: its pivot, hinge, mass share and collider proxy points (vehicle space, metres).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PartGeometry {
+    pub name: String,
+    pub pivot: [f64; 3],
+    /// Unit axis and loose limits (degrees); `None` for `core`.
+    pub hinge: Option<([f64; 3], f64, f64)>,
+    pub mass_fraction: f64,
+    pub points: Vec<[f64; 3]>,
 }
 
 /// One part's collider proxy points from a LOD0 GLB, in vehicle space.
@@ -750,7 +765,28 @@ pub fn physics_geometry(sidecar: &Sidecar, lod0: &[u8]) -> Result<PhysicsGeometr
         .get("com")
         .map(|c| c.map(mm10))
         .ok_or("no com anchor")?;
+    let mut parts = Vec::new();
+    for name in PARTS {
+        let part = sidecar
+            .parts
+            .get(name)
+            .ok_or_else(|| format!("no part {name}"))?;
+        let mut points: Vec<[f64; 3]> = collider_points(&glb, name)?
+            .into_iter()
+            .map(|p| p.map(mm10))
+            .collect();
+        points.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        points.dedup();
+        parts.push(PartGeometry {
+            name: name.to_owned(),
+            pivot: part.pivot.map(mm10),
+            hinge: part.hinge.as_ref().map(|h| (h.axis, h.min, h.max)),
+            mass_fraction: part.mass_fraction,
+            points,
+        });
+    }
     Ok(PhysicsGeometry {
+        parts,
         hull,
         wheels,
         wheel_radius: mm10((hi - lo) / 2.0),

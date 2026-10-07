@@ -1,0 +1,43 @@
+{
+ "scenario": "wall-head-on-15",
+ "what": "Plan \u00a76.3 calibration row: a 15 m/s head-on into a wall detaches the front (P1-S04a). The car starts 0.5 m from a 3 m high wall's face at 15 m/s; only the front bumper takes the hit, so only it goes (health 0, detached) and every other part keeps full health.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 36.2,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    15,
+    0,
+    0
+   ]
+  }
+ ],
+ "ticks": 90,
+ "expect": {
+  "states": {
+   "0": {
+    "front": "detached"
+   }
+  },
+  "damagedOnly": [
+   {
+    "car": 0,
+    "part": "front"
+   }
+  ],
+  "episodes": [
+   {
+    "car": 0,
+    "part": "front",
+    "other": "scenery"
+   }
+  ],
+  "closingMps": [
+   14.0,
+   15.1
+  ]
+ }
+}

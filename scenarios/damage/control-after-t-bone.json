@@ -1,0 +1,114 @@
+{
+ "scenario": "control-after-t-bone",
+ "what": "\u00a77.3a control-after-hit, T-bone that doesn't wreck the car (P1-S04a): car 1 T-bones car 0, which is coasting at 10 m/s, between its doors at 12 m/s: car 0 loses its rear door and a shove spins it at ~65 deg/s for about a second (sliding sideways on saturated tyres) but it isn't wrecked (upright, all four wheels down throughout). From 0.75 s after the hit car 0 drives on and steers left for half a second: 1 s after the hit it has stopped spinning, and the steering turns it clearly more than not steering does.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 45.0,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    10,
+    0,
+    0
+   ]
+  },
+  {
+   "x": 47.6,
+   "z": -24.0,
+   "headingDeg": 180,
+   "linvel": [
+    0,
+    0,
+    -12
+   ]
+  }
+ ],
+ "ticks": 240,
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 120,
+   "toTick": 180,
+   "throttle": 0.4,
+   "steer": 1.0
+  }
+ ],
+ "expect": {
+  "states": {
+   "0": {
+    "door_RR": "detached"
+   },
+   "1": {
+    "front": "loose"
+   }
+  },
+  "damagedOnly": [
+   {
+    "car": 0,
+    "part": "front"
+   },
+   {
+    "car": 0,
+    "part": "door_FR"
+   },
+   {
+    "car": 0,
+    "part": "door_RR"
+   },
+   {
+    "car": 0,
+    "part": "wheel_FR"
+   },
+   {
+    "car": 1,
+    "part": "front"
+   }
+  ],
+  "hitTick": [
+   25,
+   35
+  ],
+  "control": [
+   {
+    "car": 0,
+    "metric": "upY",
+    "afterHit": [
+     120
+    ],
+    "min": 0.9,
+    "max": 1.01
+   },
+   {
+    "car": 0,
+    "metric": "wheelsInContact",
+    "afterHit": [
+     120
+    ],
+    "min": 4,
+    "max": 4
+   },
+   {
+    "car": 0,
+    "metric": "yawRateDegS",
+    "afterHit": [
+     120
+    ],
+    "min": 0,
+    "max": 30
+   },
+   {
+    "car": 0,
+    "metric": "headingChangeDeg",
+    "afterHit": [
+     90,
+     150
+    ],
+    "min": 0,
+    "max": 120,
+    "differsFromNoSteerBy": 5
+   }
+  ]
+ }
+}

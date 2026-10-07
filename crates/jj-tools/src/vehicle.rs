@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use jj_contracts::vehicle::{PhysicsGeometry, parse_sidecar, physics_geometry};
-use jj_sim::profile::{PROFILE, ProfileFile, Source, VehicleGeometry};
+use jj_sim::profile::{PROFILE, PartGeometry, ProfileFile, Source, VehicleGeometry};
 use sha2::{Digest, Sha256};
 
 fn sha256(bytes: &[u8]) -> String {
@@ -29,6 +29,17 @@ fn to_sim(g: &PhysicsGeometry) -> VehicleGeometry {
         wheels: g.wheels.map(f),
         wheel_radius: g.wheel_radius as f32,
         com: f(g.com),
+        parts: g
+            .parts
+            .iter()
+            .map(|p| PartGeometry {
+                name: p.name.clone(),
+                pivot: f(p.pivot),
+                hinge: p.hinge.map(|(a, lo, hi)| (f(a), lo as f32, hi as f32)),
+                mass_fraction: p.mass_fraction as f32,
+                points: p.points.iter().map(|&q| f(q)).collect(),
+            })
+            .collect(),
     }
 }
 

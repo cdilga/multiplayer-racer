@@ -44,6 +44,22 @@ pub struct VehicleGeometry {
     pub wheels: [[f32; 3]; 4],
     pub wheel_radius: f32,
     pub com: [f32; 3],
+    /// Every part's own collider proxy, in the contract's part order (`core`, `front`, `back`, the four doors, the
+    /// four wheels): P1-S04a builds one convex collider per part from these.
+    #[serde(default)]
+    pub parts: Vec<PartGeometry>,
+}
+
+/// One part from the sidecar: pivot, hinge, mass share and collider proxy points, in vehicle space.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PartGeometry {
+    pub name: String,
+    pub pivot: [f32; 3],
+    /// Unit axis and loose limits (degrees); `None` for `core`.
+    pub hinge: Option<([f32; 3], f32, f32)>,
+    pub mass_fraction: f32,
+    pub points: Vec<[f32; 3]>,
 }
 
 /// Grip multipliers per ground surface (plan §7.3 "Surfaces"), applied to the tyres' friction slip.
@@ -123,6 +139,54 @@ pub struct Tuning {
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
     pub surfaces: SurfaceGrip,
+    /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
+    #[serde(default)]
+    pub damage: DamageTuning,
+}
+
+/// The damage model's numbers (plan §6.3, DEFAULT/TUNE; calibrated by `scenarios/damage/`, never by formula).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DamageTuning {
+    /// Starting health per part kind.
+    pub health_front: f32,
+    pub health_back: f32,
+    pub health_door: f32,
+    pub health_wheel: f32,
+    /// Damage per N·s of qualifying normal impulse (`damage = k × Σ impulse`) per part kind.
+    pub k_front: f32,
+    pub k_back: f32,
+    pub k_door: f32,
+    pub k_wheel: f32,
+    /// A part is loose once its health is at or below this fraction of its starting health.
+    pub loose_fraction: f32,
+    /// Contacts aggregate over this much game time per (car, part, other body), ms.
+    pub window_ms: f32,
+    /// Only contacts closing at least this fast count, m/s (excludes resting contact).
+    pub min_closing_mps: f32,
+    /// A hit on the core (it has no health) belongs to the nearest part within this distance, m: the sidecar's core
+    /// proxy bulges past the door skins, so a side hit lands on it first.
+    pub attribution_margin_m: f32,
+}
+
+impl Default for DamageTuning {
+    fn default() -> Self {
+        Self {
+            health_front: 100.0,
+            health_back: 100.0,
+            health_door: 60.0,
+            health_wheel: 80.0,
+            // Calibrated by scenarios/damage (tests/damage.rs), not by formula: see docs/learnings/sim.md.
+            k_front: 0.007,
+            k_back: 0.007,
+            k_door: 0.014,
+            k_wheel: 0.0055,
+            loose_fraction: 0.5,
+            window_ms: 50.0,
+            min_closing_mps: 4.0,
+            attribution_margin_m: 0.3,
+        }
+    }
 }
 
 /// A profile file.

@@ -1,0 +1,30 @@
+{
+ "scenario": "rest-60",
+ "what": "Plan \u00a76.3 calibration row: parked against a wall for 60 s does no damage (P1-S04a). The car starts 2 cm off the wall's face and holds half throttle for the whole minute, so it presses on the wall all the while: a steady contact with no closing speed, which never counts.",
+ "map": "scenarios/damage/yard.json",
+ "seed": 1,
+ "cars": [
+  {
+   "x": 36.705,
+   "z": -30.0,
+   "headingDeg": 90,
+   "linvel": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "ticks": 7200,
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 0.5
+  }
+ ],
+ "expect": {
+  "damagedOnly": [],
+  "maxEpisodes": 0
+ }
+}

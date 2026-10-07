@@ -9,8 +9,9 @@ use serde::{Deserialize, Serialize};
 use crate::DecodeError;
 use crate::cmd::{CameraMode, ResultRow};
 
-/// Carried in `Init`; a worker built for another ABI refuses to start.
-pub const ABI_VERSION: u16 = 1;
+/// Carried in `Init`; a worker built for another ABI refuses to start. 2: damage events carry their cause and instigator,
+/// `PartLoose` and the contact-episode records join (P1-S04a).
+pub const ABI_VERSION: u16 = 2;
 
 /// Which data channel controller bytes came in on (or go out on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -87,6 +88,56 @@ pub enum MainToSim {
     },
 }
 
+/// What hurt a part or wrecked a car.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum DamageCause {
+    /// Another car.
+    Car,
+    /// A dynamic prop or debris body.
+    Debris,
+    /// Static scenery: barriers, buildings, the ground.
+    Scenery,
+    /// Left the bounds.
+    OutOfBounds,
+    /// Stuck upside down or on its side past the recovery timeout.
+    Flipped,
+    /// Stuck past the recovery timeout.
+    Stuck,
+}
+
+/// What a contact episode hit.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum HitBody {
+    /// Another car, and the seat driving it if it has one.
+    Car {
+        seat: Option<SeatId>,
+    },
+    /// A prop or debris body, by its index in the snapshot's debris records.
+    Debris {
+        index: u32,
+    },
+    Scenery,
+}
+
+/// A finished contact episode (P1-S04a): `seat`'s car's part `part` took `impulse_ns` N·s of qualifying normal impulse
+/// from `other` over a 50 ms window, the fastest contact closing at `closing_mm_s`. Damage is `k × impulse`, charged when
+/// the window closes at `tick`. `owner` is the other body's causal owner (the seat whose car last put a qualifying
+/// impulse into it, at `owner_tick`): itself for a car, the last car to hit it for debris.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub struct EpisodeRecord {
+    pub seat: SeatId,
+    pub part: u16,
+    pub other: HitBody,
+    pub owner: Option<SeatId>,
+    pub owner_tick: Option<Tick>,
+    pub impulse_ns: u32,
+    pub closing_mm_s: u32,
+    pub tick: Tick,
+}
+
 /// Ordered sim events (one batch per publish).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
@@ -98,13 +149,32 @@ pub enum SimEvent {
     SeatLeft {
         seat: SeatId,
     },
-    /// A part went intact → loose → detached (R86); `part` indexes the vehicle's damage parts.
+    /// A part's health fell to half or less, intact → loose (R86); `part` indexes the vehicle's parts in contract order
+    /// (`core`, `front`, `back`, the four doors, the four wheels). `cause` is what it hit, `instigator` the seat whose
+    /// car is that body's causal owner (the other car, or whoever last knocked the debris), if any.
+    PartLoose {
+        seat: SeatId,
+        part: u16,
+        cause: DamageCause,
+        instigator: Option<SeatId>,
+    },
+    /// A part's health ran out, loose → detached (R86); same indices as [`SimEvent::PartLoose`].
     PartDetached {
         seat: SeatId,
         part: u16,
+        cause: DamageCause,
+        instigator: Option<SeatId>,
     },
+    /// The seat's car was wrecked (it respawns after ~2 s).
     Wrecked {
         seat: SeatId,
+        cause: DamageCause,
+        instigator: Option<SeatId>,
+    },
+    /// One finished contact episode (a window of qualifying impacts on one part from one other body); the record S10 and
+    /// W02 attribute from.
+    Episode {
+        record: EpisodeRecord,
     },
     Lap {
         seat: SeatId,

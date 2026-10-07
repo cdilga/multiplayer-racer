@@ -390,6 +390,7 @@ pub struct Harness {
     seen_setup: usize,
     seen_inputs: usize,
     seen_race: usize,
+    seen_damage: usize,
     /// The jj-input source machine of each car driven by raw `stick` spans.
     sources: std::collections::BTreeMap<u32, jj_input::SourceState>,
 }
@@ -456,6 +457,7 @@ impl Harness {
             seen_setup: 0,
             seen_inputs: 0,
             seen_race: 0,
+            seen_damage: 0,
             sources: std::collections::BTreeMap::new(),
         })
     }
@@ -575,7 +577,8 @@ impl Harness {
     }
 
     /// What changed the sim since the previous row: the journal's setup commands and input changes, and the race's events
-    /// (gates, laps, assist, respawns, the race end; P1-S05), each with its tick. Contacts and detaches join later (S04).
+    /// (gates, laps, assist, respawns, the race end; P1-S05) and the damage episodes and part-state changes (P1-S04a), each
+    /// with its tick.
     fn events(&mut self, sim: &Sim) -> Vec<Value> {
         let j = sim.journal();
         let mut events: Vec<Value> = j.setup[self.seen_setup..]
@@ -595,6 +598,14 @@ impl Harness {
                 .map(|(at, e)| json!({ "at": at, "race": e })),
         );
         self.seen_race = race.len();
+        // Damage episodes and part-state changes (P1-S04a), each with its tick.
+        let damage = sim.damage_events();
+        events.extend(
+            damage[self.seen_damage..]
+                .iter()
+                .map(|(at, e)| json!({ "at": at, "damage": e })),
+        );
+        self.seen_damage = damage.len();
         events
     }
 
