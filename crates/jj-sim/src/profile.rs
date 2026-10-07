@@ -135,6 +135,12 @@ pub struct Tuning {
     pub wheelie_lift_impulse: f32,
     pub wheelie_drive_gain: f32,
     pub wheelie_drive_s: f32,
+    /// The launch repays the pull (P1-S09): a well-timed release gives the car a forward impulse of this many times what
+    /// the preload cost it. The cost is the speed the brakes shed during the first `wheelie_full_preload_ms` of the pull,
+    /// plus what the engine would have added in that time (`max_engine_force / mass` × the pull). 0: no repayment (the
+    /// +`wheelie_drive_gain` for `wheelie_drive_s` alone can't repay a 0.35 s pull: it is worth about 0.1 s).
+    #[serde(default)]
+    pub wheelie_launch_reward: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,

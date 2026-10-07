@@ -255,3 +255,16 @@ not feel targets.
 - **Knock-ons.** Two solid cars teleported on top of each other are no longer pushed apart by their wheel rays treating the
   other's roof as ground (`placement.rs` parked car 1 on car 0's slot; it now stands car 0 aside first). Two cars nose to nose
   with a fallen bumper between them can both be stuck: JN4's drive-away hands them to the autopilot, which presses Recover.
+
+## The wheelie launch has to repay the pull (P1-S09)
+
+- The preload is DRIVE pulled past full brake for at least 0.35 s: the car is braking (or reversing from rest) for that long.
+  From rest that is a 0.4 s head start lost; rolling it is about 4 m/s shed. The old payoff, +15 % drive for 0.8 s, is worth about
+  0.1 s, so a perfectly timed launch could never beat plain throttle, whatever the timing. Scaling that constant up (1.75, with
+  the lift impulse cut to keep `wheelie-ok`) passes the duels but only by hiding the arithmetic, and the drive force pitches the
+  car, so it fights the lift envelope.
+- The release now gives a forward impulse at the centre of mass of `wheelie_launch_reward` (1.5) times what the pull cost: the speed
+  shed over the first 0.4 s plus what the engine would have added. Needs a per-car forward-speed history (150 ticks, hashed).
+  A pull held longer costs more and isn't repaid more, so late and held releases lose; an early one gets nothing.
+- Trap: the "from rest" duel looks like it needs a big launch; the cost it has to beat is the pull's own duration, so the reward
+  is a multiple of that cost, not a magic number.

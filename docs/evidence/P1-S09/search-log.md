@@ -10,7 +10,8 @@ literals in `scenarios/duels/make_duels.py`. The sweep CSVs in `sweeps/` are the
 
 | Duel | Ordering | Margin held |
 |---|---|---|
-| `wheelie-launch-duel` / `-8` | plain beats early, late and held; **well beats plain is a known gap** (below) | n/a |
+| `wheelie-launch-duel` / `-8` | well 3.78 / 2.53 s < plain 4.08 / 2.90 s < early < late < held (from rest / from 8 m/s) | 0.30 s / 0.37 s |
+| `wheelie-hop-duel-door` | well 4.99 s < plain 5.28 s (on the launch; the door itself costs nothing, a stated `gap`) | 0.29 s |
 | `air-control-duel` (40 degree tilt) | well 5.36 s < plain (no input) 5.59 s < over-corrected 5.96 s | 0.23 s / 0.37 s |
 | `boost-placement-duel` | boost on the straight 8.43 s < same boost in the corner 9.88 s < no boost 12.03 s | 1.45 s |
 | `drift-boost-chain` | drift both bends + banked boost 8.68 s < best grip line 9.09 s < plain 11.75 s; handbrake held throughout never finishes | 0.41 s |
@@ -18,32 +19,37 @@ literals in `scenarios/duels/make_duels.py`. The sweep CSVs in `sweeps/` are the
 | `drift-corner-duel` | well 9.86 s < plain 12.03 s; early handbrake spins out (DNF) | 2.2 s |
 | mash | no mash script finishes ahead of the well line in any duel | (every duel has two seeded mash cars) |
 
-## Wheelie launch: known gap, root cause and proposed mechanic fix
+## Wheelie launch: root cause, and the launch that repays the pull
 
-On the shipped profile (`wheelie_drive_gain` 0.15) a well-timed pull-release launch loses to plain full throttle: from rest
-well 4.47 s against plain 4.08 s, from 8 m/s well 3.62 s against 2.90 s (`wheelie-launch-duel`, `-8`; the beat is marked
-`gap`). Early, late and held releases are slower than plain too, so the rest of the ordering holds.
+Before: a well-timed pull-release launch lost to plain full throttle (from rest well 4.47 s against plain 4.08 s, from 8 m/s
+3.62 s against 2.90 s). No bug: a speed trace of both cars shows the pull costs exactly what it should and the launch
+returns almost none of it.
 
-**Root cause.** The preload is the DRIVE stick pulled past full brake, and the sim has no idea it is a preload: in
-`crates/jj-sim/src/vehicle/mod.rs` `stick()` turns a pulled-down DRIVE into full brake, and `wheel_commands` applies it
-(`max_brake_force` 14 kN, about 11.7 m/s^2) for the whole pull, or reverses the car at rest. The 0.35 s the profile
-requires costs a rolling car about 4 m/s, or sends a standing one backwards, while the reward is +15 % drive for 0.8 s
-(about 0.7 m/s). The gesture can never repay itself, whatever the margins.
+**Root cause: the payoff was arithmetically smaller than the price.** The preload is DRIVE pulled past full brake for at least
+0.35 s (`wheelie_good_min_ms`). From rest that is 0.35 s with the car reversing a little and not accelerating (about 0.4 s
+behind plain from then on); rolling, the brakes shed about 4 m/s (14 kN on 1.2 t, `stick()` reads the pull as full brake).
+The only payoff was +15 % drive for 0.8 s: worth about 0.1 s. No tuning of the timing could win. Raising that constant
+(`wheelie_drive_gain` 0.15 to 1.75, with the lift impulse cut to keep `wheelie-ok`'s 6 to 14 degrees) made the duels pass but
+was rejected as an elevenfold compensation, and it couples the launch to the pitch the drive force causes.
 
-An earlier attempt raised `wheelie_drive_gain` to 1.75 (with the lift impulse cut to 850 to stay inside `wheelie-ok`).
-That made the duels pass, but it is an elevenfold compensation for a cost that shouldn't be there, so it was reverted
-(`sweeps/wheelie-tuning-x-hold.csv` keeps the numbers; that the lift envelope had to move with it is the sign it was
-fighting the mechanic).
+**The fix: the launch repays what the pull cost** (`Sim::wheelie`, new tuning `wheelie_launch_reward`, 1.5). A good release
+(preload at least 350 ms) gives the car a forward impulse at its centre (no pitch moment, authorised in the energy ledger) of
+`reward x (speed the brakes shed over the first 0.4 s of the pull + what the engine would have added in that time)`. The car
+keeps a 150-tick history of its forward speed to read the shed speed from. The reward is a multiple of a cost, not a
+constant: reward 1 hands back exactly what the pull took (the sweep shows well and plain roughly level), 1.5 pays half as much
+again for doing it right. A pull held past 0.4 s is repaid no more (spec: lift is greatest at 0.4 s) but costs more time, so late
+and held releases lose; an early release (under 350 ms) gets nothing and loses. `wheelie_drive_gain` (+15 %, 0.8 s) and the lift
+are unchanged; the whole S03 feel bank still passes (`wheelie-ok`, `wheelie-fail`, `brake-no-wheelie`).
 
-**Proposed fix (not applied; sim core untouched).** While a wheelie preload is pending, DRIVE pulled past full brake must
-not brake or reverse the car: the preload is a held gesture, not a brake command. jj-input already knows a preload is in
-progress (it measures `preload_ms` and fires `ActionKind::Wheelie` on release), so the host and the fixture harness should
-tell the sim "preload active" per car each tick (a flag beside `DriveInput`, journaled with the input), and
-`vehicle::stick()` should read the pulled-down stick as zero brake and zero reverse while it is set. A preload that never
-completes (cancelled, released early) just ends with the flag. Then the pull costs the car only the 0.35 s it must hold,
-the existing 0.15 gain pays for itself modestly, the two wheelie duels get re-measured and their `gap` removed or kept,
-and the gain becomes a normal TUNE question for the owner's feel verdict. This touches `DriveInput` (the journal format),
-the jj-input and host plumbing and `jj-protocol` if the flag crosses the wire, so it belongs with the S03c owner, not S09.
+| | from rest | from 8 m/s |
+|---|---|---|
+| plain | 4.08 s | 2.90 s |
+| well (pull 0.35 s) | 3.78 s | 2.53 s |
+| early (0.2 s) | 4.36 s | 3.33 s |
+| late (0.9 s) / held (1.15 s) | 4.47 / 4.83 s | 3.27 / 3.58 s |
+
+`sweeps/wheelie-launch-reward-x-hold.csv` has reward 0, 0.5, 1, 1.5 and 2 against holds from 0.2 to 1.15 s. The older
+`sweeps/wheelie-tuning-x-hold.csv` is the rejected gain/lift tuning, kept as the evidence for the rejection.
 
 Boost and drift tuning was **not** changed. Raising the drift's boost charge (0.25 to 0.45 per s) and the boost gain (0.6
 to 0.9) keeps the bank passing (gain 1.0 fails `boost-line`; drain 0.25 and rear grip 0.5 or more fail `boost-hold`,
@@ -73,14 +79,15 @@ isn't worth moving the S03 numbers for.
    1.3 s at 18 m/s with the autopilot's small steering noise, boost spent after, 7.05 s against 7.57 s for boost alone).
    The corner window in the frozen duels rules it out; the sim itself doesn't (`drift_charge_min_slip_deg` 10 degrees and
    5 m/s are the only conditions). Worth a decision.
-4. **`wheelie-hop-duel` is not shipped (gap, no fixture).** The map kit's lowest barrier is 40 cm, a wheel can't hop it, and
-   the kerb feature is a validation record with no collider. A dynamic bar (16 to 30 cm) lying across a lane gives
-   chaotic contacts: the same input in lanes 6 m apart finished or stuck in an order that changed with the lane
-   (a 24 cm bar, the plain car, six lanes: 6.0 s, DNF, DNF, 6.1 s, 5.9 s, 5.8 s), so no ordering is stable.
-   A flat detached door (8 cm) costs a plain car nothing (plain 5.32 s, hop 5.59 s). The acceptance asks for the hop duel
-   with both; neither could be made to hold. Needs either a fixed-height static obstacle in the kit (a kerb collider) or a
-   decision to drop the duel.
-5. **The wheelie launch duels are gaps** until the preload stops braking (section above).
+4. **`wheelie-hop-duel-door` ships; a kerb duel doesn't (gap).** A flat detached door is the part's own proxy (0.11 x 1.04 x
+   0.98 m) lying on its side. Each car has a lane of free ground (the map's 9 x 6 m building dressing was in the way of two
+   lanes; the duel yard drops it, after which identical cars in different lanes give identical times). The door is no obstacle:
+   plain 5.28 s with it and 5.28 s without, the hopper 4.99 s either way. So `well` beats `plain` by 0.29 s on the launch, not on the
+   hop, and the beat "the clear lane beats the doored lane" is a stated `gap`. A kerb needs a bar of 12 to 30 cm across the lane:
+   the map kit's lowest barrier is 40 cm, a dynamic bar gives chaotic contacts (the same input in lanes 6 m apart finished or
+   stuck in an order that changed with the lane: bar half-heights 8, 12 and 15 cm, plain 5.6 to 7.3 s and DNF), so no ordering is
+   stable. Needs a fixed-height static obstacle in the kit (a kerb collider) or a decision to drop the kerb half.
+5. **The wheelie launch duels hold** (section above); the margins are 0.30 s from rest and 0.37 s from 8 m/s.
 6. **`air-control-duel` needs a big tilt.** At the feel bank's 25 degrees a car landing tipped loses nothing to one that
    levelled (5.40 s against 5.41 s), so the duel launches tipped 40 degrees (no input 5.55 s, levelled 5.34 s, over-corrected
    5.96 s at 40; no input flips at 70).

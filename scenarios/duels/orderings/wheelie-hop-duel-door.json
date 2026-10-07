@@ -1,0 +1,34 @@
+{
+ "duel": "wheelie-hop-duel-door",
+ "fixture": "wheelie-hop-duel-door.json",
+ "gate": {
+  "metric": "travel",
+  "at": 100.0
+ },
+ "labels": [
+  "plain",
+  "plain-clear",
+  "well",
+  "well-clear",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "well",
+   "slower": "plain",
+   "byS": 0.1
+  },
+  {
+   "faster": "well",
+   "slower": "mash-*",
+   "byS": 0.0
+  },
+  {
+   "faster": "plain-clear",
+   "slower": "plain",
+   "byS": 0.05,
+   "gap": "a flat detached door (11 cm) costs a plain car nothing: its lane times are identical with and without it, so the hop has nothing to clear (S09 search log)"
+  }
+ ]
+}

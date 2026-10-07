@@ -146,10 +146,6 @@ make_yard()
 # ----------------------------------------------------------------------------------------------------------------
 
 
-WHEELIE_GAP = ("the preload pull brakes a rolling car (and reverses one at rest) for the 0.35 s it takes, and the launch drive "
-               "(+15 % for 0.8 s) never repays it; see docs/evidence/P1-S09/search-log.md")
-
-
 def pull_release(car, hold, then=1.0):
     """DRIVE pulled past full brake for `hold` s, then snapped forward and held (the wheelie gesture)."""
     return [span(car, 0, hold, stick=[0, -1.0]), span(car, hold, None, stick=[0, then])]
@@ -163,7 +159,7 @@ def wheelie_launch(name, v0, what, margin_well):
     ins += pull_release(3, 0.90)          # held far too long
     ins += pull_release(4, 1.15)          # held until jj-input cancels the gesture
     ins += mash(21, 7, 5, sticks=True) + mash(22, 7, 6, sticks=True)
-    beats = [beat("well", "plain", margin_well, gap=WHEELIE_GAP), beat("plain", "early", 0.0), beat("plain", "late", 0.1),
+    beats = [beat("well", "plain", margin_well), beat("plain", "early", 0.0), beat("plain", "late", 0.1),
              beat("plain", "held", 0.1), beat("well", "mash-*", 0.0)]
     write(name, what, 31, 7, same({"x": 10, "y": 0.1, "z": 0, "headingDeg": 90}, [v0, 0, 0], len(labels)), labels, ins,
           {"metric": "travel", "at": 40.0}, beats)
@@ -171,12 +167,43 @@ def wheelie_launch(name, v0, what, margin_well):
 
 wheelie_launch(
     "wheelie-launch-duel", 0,
-    "§7.3b wheelie-launch-duel, from rest (P1-S09). Seven identical Cruz Missiles on the greybox's main straight, time to a gate 40 m on. plain: DRIVE flat out. well: the pull-release gesture (DRIVE pulled past full brake for 0.35 s, then snapped forward): the front lifts and the launch drive is on. early: released after 0.2 s, under the 350 ms the profile asks, so no wheelie and the pull cost time. late and held: pulled for 0.9 s and 1.15 s. mash: two seeded random-stick scripts. Expect: well beats plain (known gap on the shipped profile); plain is no worse than early, and beats late and held; no mash beats well.",
-    0.3)
+    "§7.3b wheelie-launch-duel, from rest (P1-S09). Seven identical Cruz Missiles on the greybox's main straight, time to a gate 40 m on. plain: DRIVE flat out. well: the pull-release gesture (DRIVE pulled past full brake for 0.35 s, then snapped forward): the front lifts and the launch drive is on. early: released after 0.2 s, under the 350 ms the profile asks, so no wheelie and the pull cost time. late and held: pulled for 0.9 s and 1.15 s. mash: two seeded random-stick scripts. Expect: well beats plain; plain is no worse than early, and beats late and held; no mash beats well.",
+    0.2)
 wheelie_launch(
     "wheelie-launch-duel-8", 8,
-    "§7.3b wheelie-launch-duel, from 8 m/s (P1-S09). As wheelie-launch-duel, rolling at 8 m/s (the pull's brake costs more here, so the margin is thin).",
-    0.03)
+    "§7.3b wheelie-launch-duel, from 8 m/s (P1-S09). As wheelie-launch-duel, rolling at 8 m/s (the pull's brake costs speed here, which the launch gives back).",
+    0.2)
+
+# ----------------------------------------------------------------------------------------------------------------
+# Wheelie hop over a detached door (§7.3b): one lane of free ground per car, a flat door (the part's own 0.11 x 1.04 x 0.98 m
+# proxy, lying on its side) across the lane 50 m on in all but the `-clear` lanes. A kerb isn't shipped: the map kit's lowest
+# barrier is 40 cm and a dynamic bar gives chaotic contacts (docs/evidence/P1-S09/search-log.md).
+# ----------------------------------------------------------------------------------------------------------------
+
+
+def wheelie_hop_door():
+    labels = ["plain", "plain-clear", "well", "well-clear", "mash-a", "mash-b"]
+    door = {"half": [0.52, 0.055, 0.49], "y": 0.08}
+    cars, debris, ins = [], [], []
+    for i, label in enumerate(labels):
+        z = -14 - 6 * i
+        cars.append({"pose": {"x": 10, "y": 0.1, "z": z, "headingDeg": 90}, "linvel": [10, 0, 0]})
+        if not label.endswith("-clear"):
+            debris.append({"tick": 0, "pose": {"x": 60, "y": door["y"], "z": z, "headingDeg": 0}, "half": door["half"]})
+    ins.append(span(0, 0, None, stick=[0, 1.0]))
+    ins.append(span(1, 0, None, stick=[0, 1.0]))
+    for car in (2, 3):  # the pull is timed so the front is up as the car crosses the door
+        ins += [span(car, 0, 2.6, stick=[0, 1.0]), span(car, 2.6, 2.96, stick=[0, -1.0]), span(car, 2.96, None, stick=[0, 1.0])]
+    ins += mash(131, 8, 4, sticks=True) + mash(132, 8, 5, sticks=True)
+    beats = [beat("well", "plain", 0.1), beat("well", "mash-*", 0.0),
+             beat("plain-clear", "plain", 0.05,
+                  gap="a flat detached door (11 cm) costs a plain car nothing: its lane times are identical with and without it, so the hop has nothing to clear (S09 search log)")]
+    write("wheelie-hop-duel-door",
+          "§7.3b wheelie-hop-duel with a detached door (P1-S09). Six Cruz Missiles, each in a lane of its own on the free ground south of the route, rolling at 10 m/s, time to 100 m. A flat door lies across the lane 50 m on in every lane but plain-clear and well-clear. plain: flat out. well: pulls and releases so the front is up as the car crosses the door (and the launch repays the pull). mash: two seeded random-stick scripts. Known gap: plain-clear is no faster than plain, because the door is no obstacle: well beats plain on the launch, not on the hop.",
+          61, 8, cars, labels, ins, {"metric": "travel", "at": 100.0}, beats, extra={"debris": debris})
+
+
+wheelie_hop_door()
 
 # ----------------------------------------------------------------------------------------------------------------
 # Air control (§7.3 Air control): launched 3 m up tipped 40 degrees onto its side, 12 m/s forward and 6 m/s up, as the

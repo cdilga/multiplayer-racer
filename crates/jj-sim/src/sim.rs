@@ -105,6 +105,9 @@ impl Solidity {
     }
 }
 
+/// How much forward-speed history a car keeps: a wheelie preload is cancelled at 1.2 s, so a little more than that.
+const SPEED_HISTORY_TICKS: usize = 150;
+
 /// A car's id: its index in spawn order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CarId(pub u32);
@@ -133,6 +136,8 @@ struct Car {
     springs: [Spring; PARTS],
     /// Parts whose collider has left the chassis (detached into debris).
     removed: [bool; PARTS],
+    /// The last [`SPEED_HISTORY_TICKS`] forward speeds (m/s), newest last: the wheelie launch repays what its pull cost.
+    speed_history: std::collections::VecDeque<f32>,
     /// The chassis' linear velocity at the end of the last step, for its acceleration (the hinge springs' drive).
     last_linvel: Vector,
     /// How many times this car has been wrecked and rebuilt (P1-S04c): debris from an earlier incarnation belongs to the
@@ -844,6 +849,40 @@ impl Sim {
         b.apply_impulse_at_point(impulse, front, true);
         if f32::from(preload_ms) >= t.wheelie_good_min_ms {
             c.action.wheelie_ticks = libm::roundf(t.wheelie_drive_s * TICK_HZ as f32) as u32;
+            if t.wheelie_launch_reward > 0.0 {
+                // The launch repays the pull: the speed the brakes shed over the first `wheelie_full_preload_ms` of it, plus
+                // what the engine would have added meanwhile, times the reward. A pull held past the full-lift point costs
+                // more time and is repaid no more (spec: lift is greatest at 0.4 s), so late and held releases lose.
+                let tick_ms = 1000.0 / TICK_HZ as f32;
+                let pull_ticks = libm::roundf(f32::from(preload_ms) / tick_ms) as usize;
+                let paid_ticks =
+                    (libm::roundf(t.wheelie_full_preload_ms.min(f32::from(preload_ms)) / tick_ms)
+                        as usize)
+                        .min(pull_ticks);
+                let h = &c.speed_history;
+                let at = |back: usize| {
+                    h.len()
+                        .checked_sub(1 + back)
+                        .and_then(|i| h.get(i))
+                        .copied()
+                };
+                let started = at(pull_ticks).or_else(|| h.front().copied()).unwrap_or(0.0);
+                let paid = at(pull_ticks - paid_ticks)
+                    .or_else(|| h.front().copied())
+                    .unwrap_or(started);
+                let shed = (started - paid).max(0.0);
+                let engine = t.max_engine_force / t.mass * (paid_ticks as f32 / TICK_HZ as f32);
+                let dv = t.wheelie_launch_reward * (shed + engine);
+                let forward = iso.rotation * Vector::Z;
+                let flat = Vector::new(forward.x, 0.0, forward.z).normalize_or_zero();
+                let mass = b.mass();
+                let before = b.linvel();
+                b.apply_impulse(flat * (mass * dv), true);
+                // Authorised work: the launch is the game giving the pull's cost back.
+                self.ledger += f64::from(
+                    0.5 * mass * ((before + flat * dv).length_squared() - before.length_squared()),
+                );
+            }
         }
         true
     }
@@ -953,6 +992,7 @@ impl Sim {
             action: vehicle::ActionState::new(p),
             springs: [Spring::default(); PARTS],
             removed: [false; PARTS],
+            speed_history: std::collections::VecDeque::new(),
             last_linvel: Vector::ZERO,
             incarnation: 0,
             last_detach: None,
@@ -1023,6 +1063,10 @@ impl Sim {
                 let iso = *b.position();
                 let fwd = iso.rotation * Vector::Z;
                 let forward_speed = b.linvel().dot(fwd);
+                if car.speed_history.len() == SPEED_HISTORY_TICKS {
+                    car.speed_history.pop_front();
+                }
+                car.speed_history.push_back(forward_speed);
                 // The rear tyres' slip from last tick's contacts decides the drift's boost charge, so libm.
                 let side = (iso.rotation * Vector::Y).cross(fwd);
                 let rear_slip = car.vehicle.wheels()[2..]
@@ -1889,6 +1933,9 @@ impl Sim {
                 race.push(u8::from(r));
             }
             race.extend(c.incarnation.to_le_bytes());
+            for v in &c.speed_history {
+                race.extend(v.to_bits().to_le_bytes());
+            }
         }
         race.extend(self.ledger.to_bits().to_le_bytes());
         for &(i, until) in &self.fresh_debris {

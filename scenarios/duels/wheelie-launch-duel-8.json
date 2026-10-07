@@ -1,6 +1,6 @@
 {
  "scenario": "wheelie-launch-duel-8",
- "what": "\u00a77.3b wheelie-launch-duel, from 8 m/s (P1-S09). As wheelie-launch-duel, rolling at 8 m/s (the pull's brake costs more here, so the margin is thin).",
+ "what": "\u00a77.3b wheelie-launch-duel, from 8 m/s (P1-S09). As wheelie-launch-duel, rolling at 8 m/s (the pull's brake costs speed here, which the launch gives back).",
  "map": "scenarios/duels/yard/duel-yard.json",
  "seed": 31,
  "ticks": 840,

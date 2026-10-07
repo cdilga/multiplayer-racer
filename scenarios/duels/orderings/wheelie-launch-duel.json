@@ -18,8 +18,7 @@
   {
    "faster": "well",
    "slower": "plain",
-   "byS": 0.3,
-   "gap": "the preload pull brakes a rolling car (and reverses one at rest) for the 0.35 s it takes, and the launch drive (+15 % for 0.8 s) never repays it; see docs/evidence/P1-S09/search-log.md"
+   "byS": 0.2
   },
   {
    "faster": "plain",

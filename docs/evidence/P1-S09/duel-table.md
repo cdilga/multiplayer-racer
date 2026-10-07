@@ -11,8 +11,6 @@ Roles: `plain` is the technique-free line (or, for the autopilot duels, the auto
 seeded random scripts. In `drift-corner-duel` the extra cars are `straight-boost` (the starting boost spent on the
 straight) and `exit-boost` (boost spent on the exit with no drift).
 
-The wheelie-launch duels are known gaps on the shipped profile (`well` loses to `plain`, see search-log.md).
-
 | duel | car | time to gate (s) | speed at end (m/s) | wrecks |
 | air-control-duel | plain | 5.59 | 23.7 | 0 |
 | air-control-duel | well | 5.36 | 0.1 | 0 |
@@ -22,7 +20,7 @@ The wheelie-launch duels are known gaps on the shipped profile (`well` loses to 
 | boost-placement-duel | plain | 12.03 | 16.4 | 0 |
 | boost-placement-duel | straight | 8.43 | 10.3 | 0 |
 | boost-placement-duel | corner | 9.88 | 12.3 | 0 |
-| boost-placement-duel | mash-a | DNF | 0.1 | 0 |
+| boost-placement-duel | mash-a | DNF | 0.2 | 0 |
 | boost-placement-duel | mash-b | DNF | 1.3 | 0 |
 | drift-boost-chain | plain | 11.75 | 9.2 | 0 |
 | drift-boost-chain | grip | 9.09 | 9.2 | 0 |
@@ -34,25 +32,31 @@ The wheelie-launch duels are known gaps on the shipped profile (`well` loses to 
 | drift-corner-duel | straight-boost | 7.97 | 10.1 | 0 |
 | drift-corner-duel | exit-boost | 9.88 | 11.8 | 0 |
 | drift-corner-duel | well | 9.86 | 11.1 | 0 |
-| drift-corner-duel | botched | DNF | 12.4 | 0 |
+| drift-corner-duel | botched | DNF | 7.7 | 0 |
 | drift-corner-duel | mash-a | DNF | 0.1 | 0 |
 | drift-corner-duel | mash-b | DNF | 0.0 | 0 |
-| drift-straight-penalty | plain | 5.98 | 0.0 | 0 |
-| drift-straight-penalty | drift-short | DNF | 9.6 | 0 |
+| drift-straight-penalty | plain | 5.98 | 0.1 | 0 |
+| drift-straight-penalty | drift-short | DNF | 9.7 | 0 |
 | drift-straight-penalty | drift-long | 6.09 | 0.1 | 0 |
 | drift-straight-penalty | mash-a | DNF | 3.4 | 0 |
 | drift-straight-penalty | mash-b | DNF | 7.7 | 0 |
+| wheelie-hop-duel-door | plain | 5.28 | 30.2 | 0 |
+| wheelie-hop-duel-door | plain-clear | 5.28 | 30.2 | 0 |
+| wheelie-hop-duel-door | well | 4.99 | 32.6 | 0 |
+| wheelie-hop-duel-door | well-clear | 4.99 | 32.6 | 0 |
+| wheelie-hop-duel-door | mash-a | DNF | 4.3 | 0 |
+| wheelie-hop-duel-door | mash-b | DNF | 3.3 | 1 |
 | wheelie-launch-duel-8 | plain | 2.90 | 28.1 | 0 |
-| wheelie-launch-duel-8 | well | 3.62 | 26.2 | 0 |
-| wheelie-launch-duel-8 | early | 3.33 | 26.9 | 0 |
-| wheelie-launch-duel-8 | late | 5.17 | 21.3 | 0 |
-| wheelie-launch-duel-8 | held | 5.05 | 22.8 | 0 |
+| wheelie-launch-duel-8 | well | 2.53 | 29.6 | 0 |
+| wheelie-launch-duel-8 | early | 3.33 | 27.1 | 0 |
+| wheelie-launch-duel-8 | late | 3.27 | 27.9 | 0 |
+| wheelie-launch-duel-8 | held | 3.58 | 27.1 | 0 |
 | wheelie-launch-duel-8 | mash-a | 6.42 | 2.6 | 0 |
 | wheelie-launch-duel-8 | mash-b | DNF | 0.9 | 0 |
 | wheelie-launch-duel | plain | 4.08 | 25.3 | 0 |
-| wheelie-launch-duel | well | 4.47 | 24.5 | 0 |
+| wheelie-launch-duel | well | 3.78 | 26.1 | 0 |
 | wheelie-launch-duel | early | 4.36 | 24.7 | 0 |
-| wheelie-launch-duel | late | 5.31 | 22.7 | 0 |
-| wheelie-launch-duel | held | 5.70 | 21.8 | 0 |
+| wheelie-launch-duel | late | 4.47 | 24.7 | 0 |
+| wheelie-launch-duel | held | 4.83 | 24.0 | 0 |
 | wheelie-launch-duel | mash-a | DNF | 1.4 | 0 |
 | wheelie-launch-duel | mash-b | DNF | 0.9 | 0 |
