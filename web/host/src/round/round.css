@@ -230,6 +230,29 @@
 .mn-view .btn { flex: 1 1 auto; padding-inline: .7em; white-space: nowrap; min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
 .mn-hint { color: var(--c-ink-soft); }
 
+/* Round 5 (P1-R04.3): what no spare grid cell holds docks here, never in a strip taken from the tiles. The join QR is a
+   paper QR as tall as the band (a button: it opens the menu, which pauses a race); the positions are every racer in order,
+   a ticker when they don't all fit (never cut). The grid overlay sets html[data-grid-dock]. */
+.foot-qr, .foot-pos { display: none; }
+html[data-grid-dock~=qr] .foot-qr { display: inline-flex; }
+html[data-grid-dock~=positions] .foot-pos:not([data-count="0"]) { display: flex; }
+.foot-qr { flex: none; height: calc(var(--foot) * .86); aspect-ratio: 1; padding: 0; border: 0; background: var(--c-paper); cursor: zoom-in; }
+.foot-qr img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.foot-qr:focus-visible { outline: calc(var(--foot) * .1) solid var(--c-cobalt); outline-offset: 2px; }
+.foot-pos { flex: 1 1 0; min-width: 0; overflow: hidden; align-items: center; height: 100%; }
+.foot-pos:has(.tick) { -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+.foot-pos-track { display: flex; flex: none; }
+.foot-pos-track.tick { animation: fp-tick var(--fp-s, 20s) linear infinite; }
+@keyframes fp-tick { to { transform: translateX(calc(-1 * var(--fp-w))); } }
+:root[data-motion="reduced"] .foot-pos-track.tick { animation-timing-function: steps(4, jump-none); animation-duration: calc(var(--fp-s, 20s) * 2); }
+@media (prefers-reduced-motion: reduce) { .foot-pos-track.tick { animation-timing-function: steps(4, jump-none); animation-duration: calc(var(--fp-s, 20s) * 2); } }
+.fp-run { display: flex; flex: none; gap: calc(var(--foot) * .3); padding-right: calc(var(--foot) * .3); }
+.fp-item { display: inline-flex; align-items: center; gap: calc(var(--foot) * .1); white-space: nowrap; }
+.fp-item b { color: var(--c-saffron); font-family: var(--font-display); font-weight: 900; }
+.fp-item .badge { font-size: .8em; height: 1.5em; padding: 0 .25em .15em; }
+/* With the positions docked, they take the middle; the room count gives way. */
+html[data-grid-dock~=positions] .jj-foot:has(.foot-pos:not([data-count="0"])) .foot-count { display: none; }
+
 /* The footer already shows the room code and address, so the grid's join chip would only float over a tile (it stays where there is no footer). */
 body:has(.jj-foot) .jj-chip { display: none; }
 

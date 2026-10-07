@@ -7,7 +7,7 @@ import type { PathStats } from '../../../shared/transport/stats';
 import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
 import { esc, shortName } from './format';
-import { tokenData } from '../../../shared/ui';
+import { paperQrSvg, tokenData } from '../../../shared/ui';
 import { enterFullscreen, fullscreenSupport } from '../layout/fullscreen';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
 
@@ -17,6 +17,8 @@ type UiInput = Extract<SimInput, { type: 'ui' }>['ui'];
 export interface ChromeOptions {
   code: string;
   domain: string;
+  /** The join URL: the footer's docked QR carries it when no spare grid cell fits a scannable one (P1-R04.3). */
+  joinUrl?: string;
   input(input: SimInput): void;
   /** Selected path per endpoint (`HostHub.paths()`, N05): types, protocol, RTT, never IPs. */
   paths?: () => Promise<Record<string, PathStats | null>>;
@@ -56,8 +58,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   footer.className = 'jj-foot';
   footer.dataset.chrome = 'footer';
   footer.innerHTML = `<button class="foot-btn" type="button" data-act="menu" aria-haspopup="dialog">Host menu</button>
+    ${opts.joinUrl ? `<button class="foot-qr" type="button" data-act="qr" aria-label="Show the join code bigger (pauses the game)"><img alt="" decoding="sync" src="data:image/svg+xml,${encodeURIComponent(paperQrSvg(opts.joinUrl).svg)}"></button>` : ''}
     <span class="foot-code" data-foot-code><b>${esc(opts.code)}</b><span class="foot-domain"> · ${esc(opts.domain)}</span></span>
     <span class="foot-count" data-foot-count></span>
+    <span class="foot-pos" data-foot-pos aria-label="Positions"><span class="foot-pos-track"></span></span>
     <button class="foot-btn quiet" type="button" data-act="diagnostics" aria-pressed="false">Diagnostics</button>
     <span class="foot-readouts" data-readouts></span>
     <span class="foot-logo display">Joystick Jammers</span>`;
@@ -66,6 +70,34 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   root.append(layer, footer);
   const menuBtn = footer.querySelector<HTMLButtonElement>('[data-act=menu]')!;
   const diagBtn = footer.querySelector<HTMLButtonElement>('[data-act=diagnostics]')!;
+
+  // ---------- Docked positions (P1-R04.3, owner POC round 5) ----------
+  // With no spare grid cell for the standings, every racer's position docks here: all of them, scrolling as a ticker
+  // when they don't fit (never cut, no count limit). The grid overlay says what is docked (html[data-grid-dock]).
+  const posEl = footer.querySelector<HTMLElement>('[data-foot-pos]')!;
+  const posTrack = posEl.firstElementChild as HTMLElement;
+  let posKey = '';
+  const fitTicker = () => {
+    const run = posTrack.firstElementChild as HTMLElement | null;
+    const over = !!run && run.scrollWidth > posEl.clientWidth + 0.5;
+    if (over && posTrack.children.length === 1) posTrack.append(run!.cloneNode(true));
+    if (!over && posTrack.children.length > 1) posTrack.lastElementChild!.remove();
+    posTrack.classList.toggle('tick', over);
+    if (run) posTrack.style.setProperty('--fp-w', `${run.scrollWidth}px`);
+    if (run) posTrack.style.setProperty('--fp-s', `${Math.max(8, run.scrollWidth / 60)}s`);
+  };
+  new ResizeObserver(fitTicker).observe(posEl);
+  const renderPositions = () => {
+    const order = racing() && room ? room.seats.filter((s) => s.position !== null && s.presence !== 'Left').sort((a, b) => a.position! - b.position!) : [];
+    const key = order.map((s) => `${s.seat}:${s.position}`).join();
+    if (key === posKey) return;
+    posKey = key;
+    posEl.dataset.count = String(order.length);
+    posTrack.innerHTML = order.length
+      ? `<span class="fp-run">${order.map((s) => `<span class="fp-item"><b>${s.position}</b><span class="badge" style="${colour(s)}">#${s.number}</span><span class="nm">${esc(shortName(seatName(s)))}</span></span>`).join('')}</span>`
+      : '';
+    fitTicker();
+  };
 
   const send = (ui: string, on?: boolean) => opts.input({ type: 'ui', ui: ui as UiInput, ...(on === undefined ? {} : { on }) });
   const racing = () => !!room && RACING.has(room.phase);
@@ -245,6 +277,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   footer.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act === 'menu') state.menu ? closeMenu() : openMenu();
+    // The docked QR (no spare cell holds one): opening the menu pauses a race, so a phone can join.
+    if (act === 'qr' && !state.menu) openMenu();
     if (act === 'diagnostics') toggleDiagnostics();
   });
   window.addEventListener('keydown', (e) => {
@@ -270,6 +304,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const ready = r.seats.filter((s) => s.ready && s.presence !== 'Left').length;
       footer.querySelector('[data-foot-count]')!.textContent = racing() ? `${n} racing${r.round ? ` · round ${r.round}` : ''}` : r.phase === 'Intermission' ? `${n} in the room${r.round ? ` · round ${r.round}` : ''}` : `${n} in the room · ${ready} ready`;
       menuBtn.textContent = racing() ? 'Pause' : 'Host menu';
+      renderPositions();
       // Whatever changed under an open menu or overlay is redrawn (a player left; the phase moved).
       if (state.menu) {
         // A confirmed removal for a seat that has gone returns to the list.

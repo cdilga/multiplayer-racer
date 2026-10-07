@@ -90,7 +90,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
   applyK();
 
   const domain = join.joinUrl ? new URL(join.joinUrl).host : '';
-  const chrome = mountChrome(root, { code: join.code, domain, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband }, paintKit);
+  const chrome = mountChrome(root, { code: join.code, domain, joinUrl: join.joinUrl, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband }, paintKit);
   /** The join QR card sized to whole device pixels per module (never under `minPx` CSS px per module: the bead's 4 px at 1080p). */
   const qrCard = (maxPx: number) => {
     const modules = paperQrSvg(join.joinUrl).modules;

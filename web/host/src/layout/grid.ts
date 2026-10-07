@@ -1,7 +1,8 @@
 // The TV grid layout kernel (P1-R04): `layout(displayRect, safeArea, seats) → tiles`, pure, for any N and any aspect.
 // The rule is the owner's (R95, P1-U02.2's accepted pseudocode in art/ui/poc/tv/grid.js): every player tile has exactly
 // the same whole-pixel area at any N; rows and columns are chosen to give the tiles the most area inside the playable
-// aspect band; the block is centred; seats fill it in join order; the empty cells (each exactly a tile) sit at the end
+// aspect band, and then the tiles stretch to fill the display (owner POC round 5, P1-R04.3: no margin bands, only
+// whole-pixel rounding); seats fill the block in join order; the empty cells (each exactly a tile) sit at the end
 // of the last row and hold the join QR (or the room code when no cell fits a scannable QR), then the standings, then
 // the painted backdrop. Nothing is black, no tile is larger than another, and there is no maximum N.
 // `GridAnimator` reflows (300 ms) only when a seat joins or leaves; the race order never moves a tile.
@@ -33,6 +34,9 @@ export interface Layout {
   fillers: Filler[];
   /** The small join chip (the join address), inside the safe area, whenever no cell holds the join QR. */
   joinChip: Rect | null;
+  /** What no spare cell holds, so it docks in the host footer (owner POC round 5, P1-R04.3): the join QR (no cell fits a
+   *  scannable one) and the positions (no cell for the standings). Docking never takes a strip from the tiles. */
+  dock: { qr: boolean; positions: boolean };
 }
 
 export interface LayoutOptions {
@@ -47,6 +51,9 @@ export interface LayoutOptions {
   /** How far down the top row's tiles the chip sits (a fraction of a tile's height): below the first-person mirror
    *  strip (assets/profiles/camera.json mirror y + h), in the band of sky above the horizon. */
   chipBelow?: number;
+  /** The race grid fills the display once the band has picked the arrangement (owner POC round 5; default). `false`
+   *  keeps the band's tile and centres the block in margins (the pre-round-5 rule, kept for the band check). */
+  fill?: boolean;
 }
 
 export const BAND = { min: 1.2, max: 2.0 };
@@ -71,7 +78,7 @@ export function layout(display: Rect, safe: Rect, seats: readonly number[], opts
     h: chipSize.h,
   });
   if (n === 0) {
-    return { rows: 0, cols: 0, cell: null, tiles: [], fillers: [{ ...display, kind: 'qr' }], joinChip: null };
+    return { rows: 0, cols: 0, cell: null, tiles: [], fillers: [{ ...display, kind: 'qr' }], joinChip: null, dock: { qr: false, positions: false } };
   }
   let best: { rows: number; cols: number; w: number; h: number; area: number; empty: number } | null = null;
   for (let r = 1; r <= n; r++) {
@@ -85,7 +92,12 @@ export function layout(display: Rect, safe: Rect, seats: readonly number[], opts
     const empty = c * r - n;
     if (!best || area > best.area || (area === best.area && empty < best.empty)) best = { rows: r, cols: c, w, h, area, empty };
   }
-  const { rows, cols, w, h } = best!;
+  const { rows, cols } = best!;
+  // Owner round 5 (P1-R04.3): the band picks rows x cols, then the race grid FILLS the display: every tile stretches to
+  // the same whole-pixel cell, so the only margins left are the whole-pixel rounding (under one pixel per column/row).
+  const fill = opts.fill ?? true;
+  const w = fill ? Math.floor(RW / cols) : best!.w;
+  const h = fill ? Math.floor(RH / rows) : best!.h;
   const x0 = X + Math.floor((RW - cols * w) / 2);
   const y0 = Y + Math.floor((RH - rows * h) / 2);
   const x1 = x0 + cols * w;
@@ -119,7 +131,8 @@ export function layout(display: Rect, safe: Rect, seats: readonly number[], opts
   ];
   for (const m of margins) if (m.w > 0.01 && m.h > 0.01) fillers.push({ ...m, kind: 'margin' });
   const qrCell = fillers.some((f) => f.kind === 'qr');
-  return { rows, cols, cell: { w, h }, tiles, fillers, joinChip: qrCell ? null : chip(y0, h) };
+  const dock = { qr: !qrCell, positions: !standingsShown };
+  return { rows, cols, cell: { w, h }, tiles, fillers, joinChip: qrCell ? null : chip(y0, h), dock };
 }
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);

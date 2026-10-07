@@ -37,8 +37,11 @@ for (const [name, s] of Object.entries(SCREENS)) {
         assert.equal(t.h, L.tiles[0].h);
         assert.ok(Number.isInteger(t.w) && Number.isInteger(t.h));
       }
-      const a = L.cell.w / L.cell.h;
-      assert.ok(a >= BAND.min - 0.01 && a <= BAND.max + 0.01, `N=${n}: tile aspect ${a.toFixed(2)} in the band`);
+      // The band picks the arrangement (its tile inside the band); the race grid then fills the display (P1-R04.3).
+      const picked = layout(display, safeOf(s), seats, { fill: false });
+      assert.deepEqual([L.rows, L.cols], [picked.rows, picked.cols], `N=${n}: fill keeps the band's arrangement`);
+      const a = picked.cell.w / picked.cell.h;
+      assert.ok(a >= BAND.min - 0.01 && a <= BAND.max + 0.01, `N=${n}: the band's tile aspect ${a.toFixed(2)} in the band`);
       // No overlap between any two rects; tiles, cells and margins cover the screen exactly once (never black).
       const all = [...L.tiles, ...L.fillers];
       for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) assert.ok(!overlap(all[i], all[j]), `N=${n}: rects ${i} and ${j} overlap`);
@@ -60,6 +63,44 @@ for (const [name, s] of Object.entries(SCREENS)) {
     }
   });
 }
+
+// P1-R04.3 (owner POC round 5): the race grid fills the whole display: no margin bands, only whole-pixel rounding (under
+// one pixel per column or row), every tile the same size and every spare cell exactly a tile.
+const FILL_SCREENS = { ...SCREENS, '5:4': { w: 1280, h: 1024 }, laptop: { w: 1366, h: 768 }, 'phone landscape': { w: 915, h: 412 } };
+for (const [name, s] of Object.entries(FILL_SCREENS)) {
+  test(`${name}: the race grid fills the display at every N (no margin bands), spare cells exactly tile-sized`, () => {
+    const display = { x: 0, y: 0, ...s };
+    for (const n of [...NS, 40, 64, 99]) {
+      const L = layout(display, safeOf(s), seatsOf(n), { gutter: 6 });
+      for (const m of L.fillers.filter((f) => f.kind === 'margin')) {
+        assert.ok(m.w < L.cols || m.h < L.rows, `N=${n}: a ${m.w}x${m.h} band beside the tiles`);
+      }
+      const used = L.cols * L.cell.w * L.rows * L.cell.h;
+      assert.ok(s.w * s.h - used < L.cols * s.h + L.rows * s.w, `N=${n}: the grid covers ${used} of ${s.w * s.h} px`);
+      for (const t of L.tiles) assert.deepEqual([t.w, t.h], [L.tiles[0].w, L.tiles[0].h], `N=${n}: tiles equal`);
+      for (const c of L.fillers.filter((f) => f.kind !== 'margin')) assert.deepEqual([c.w, c.h], [L.tiles[0].w, L.tiles[0].h], `N=${n}: a spare cell is a tile`);
+    }
+  });
+}
+
+test('with no spare cell, the QR and positions dock in the footer and never take a strip from the tiles', () => {
+  for (const [s, n] of [[{ w: 1920, h: 1080 }, 4], [{ w: 1920, h: 1080 }, 1], [{ w: 3840, h: 2160 }, 9], [{ w: 412, h: 915 }, 3]]) {
+    const display = { x: 0, y: 0, ...s };
+    const L = layout(display, safeOf(s), seatsOf(n));
+    assert.equal(L.rows * L.cols, n, `${s.w}x${s.h} N=${n}: no spare cell`);
+    assert.deepEqual(L.dock, { qr: true, positions: true });
+    // The tiles alone fill the display: nothing was reserved for the chrome.
+    const area = L.tiles.reduce((a, t) => a + t.w * t.h, 0);
+    assert.ok(s.w * s.h - area < L.cols * s.h + L.rows * s.w, `${s.w}x${s.h} N=${n}: tiles cover ${area} of ${s.w * s.h}`);
+  }
+  // One spare cell big enough: the QR is there, the positions dock; two: both have cells, nothing docks.
+  const one = layout({ x: 0, y: 0, w: 1920, h: 1080 }, safeOf({ w: 1920, h: 1080 }), seatsOf(3));
+  assert.equal(one.fillers.filter((f) => f.kind !== 'margin').length, 1);
+  assert.deepEqual(one.dock, { qr: false, positions: true });
+  const two = layout({ x: 0, y: 0, w: 1920, h: 1080 }, safeOf({ w: 1920, h: 1080 }), seatsOf(7));
+  assert.ok(two.fillers.filter((f) => f.kind === 'qr').length === 1 && two.fillers.some((f) => f.kind === 'standings'));
+  assert.deepEqual(two.dock, { qr: false, positions: false });
+});
 
 test('one player fills the screen, with a corner QR', () => {
   const L = layout({ x: 0, y: 0, w: 1920, h: 1080 }, safeOf({ w: 1920, h: 1080 }), [5]);

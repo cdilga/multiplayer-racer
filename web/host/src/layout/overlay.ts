@@ -39,6 +39,9 @@ export function mountGridOverlay(root: HTMLElement, joinUrl: string) {
         const right = `right:calc(100% - ${(c.x + c.w) / scale}px);top:${c.y / scale}px;height:${c.h / scale}px`;
         parts.push(`<div class="jj-chip" data-kind="chip" style="${right}"><span>Join at</span> <b>${host}</b></div>`);
       }
+      // What no spare cell holds docks in the host footer (P1-R04.3): the footer shows its QR and positions from this.
+      const dock = [L?.dock.qr && 'qr', L?.dock.positions && 'positions'].filter(Boolean).join(' ');
+      if (document.documentElement.dataset.gridDock !== dock) document.documentElement.dataset.gridDock = dock;
       const html = parts.join('');
       if (html !== last) el.innerHTML = last = html;
     },
