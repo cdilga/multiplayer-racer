@@ -176,9 +176,12 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
   await shot(host, 'tv-intermission');
 
-  at('Intermission: shrink to 2');
+  at('Intermission and Lobby: shrink to 2');
   for (const p of phones.slice(2, 8)) await leave(p); // Bazza … Thommo; Jonesy and Sheila stay
   await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters
+  // The host takes the room back to the Lobby (before the next round's countdown), and both key clusters leave there.
+  await host.getByRole('button', { name: 'Return to lobby' }).click();
+  await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   // Both key clusters leave from the drawer (the sitting-out one too).
   // (The drawer rebuilds its rows when a source's state changes, so a click can land on a row just replaced: retry.)
   for (let k = 0; k < 2; k++) {
