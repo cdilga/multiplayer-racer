@@ -184,7 +184,7 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   }
   world.onLayout = (layout, scale) => overlay.render(layout, scale);
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
-  if (!freeDrive) mountRoundScreens(app, client, { code: bridge.hub.code, joinUrl });
+  if (!freeDrive) mountRoundScreens(client, { code: bridge.hub.code, joinUrl });
   (window as unknown as { __jjNet: unknown }).__jjNet = {
     code: () => bridge.hub.code,
     joinUrl: () => bridge.hub.joinUrl,
