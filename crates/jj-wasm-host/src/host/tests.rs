@@ -1035,3 +1035,111 @@ fn four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars() {
     assert_eq!(room["standings"].as_array().unwrap().len(), 4);
     assert_eq!(room["results"].as_array().unwrap().len(), 4);
 }
+
+/// P1-M08a (host side): with main preparing maps, the director's request becomes a `PrepareRequested` event with the
+/// session seed plus the preparation id; a `MapReady` for another preparation is dropped and counted; the right one is
+/// validated and the next Countdown builds the round on it.
+#[test]
+fn a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped() {
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::PrepareMaps { on: true })).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("p1".into()),
+        resume: Some("s".into()),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, hello)).unwrap();
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, claim)).unwrap();
+    let mut now = 0;
+    let mut request = None;
+    let pump = |h: &mut Host,
+                    ticks: u32,
+                    now: &mut u64,
+                    request: &mut Option<(jj_types::PreparationId, u64)>| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Events { batch } = m {
+                    for e in batch {
+                        if let SimEvent::PrepareRequested { preparation, seed } = e {
+                            *request = Some((preparation, seed));
+                        }
+                    }
+                }
+            }
+        }
+    };
+    pump(&mut h, 30, &mut now, &mut request);
+    h.handle(&ui(UiCommand::StartRound)).unwrap();
+    pump(&mut h, 30, &mut now, &mut request);
+    let (preparation, seed) = request.expect("the start asked main to prepare a map");
+    assert_eq!(
+        seed,
+        3 + u64::from(preparation.0),
+        "session seed + preparation id"
+    );
+    assert_eq!(h.phase(), jj_session::director::Phase::Preparing);
+
+    let generated = jj_procgen::prepare(seed, &[jj_map::Biome::OutbackDirt]);
+    let bytes = jj_map::canonical_bytes(&generated.map);
+    let stale = jj_types::PreparationId(preparation.0 + 7);
+    h.handle(
+        &MainToSim::MapReady {
+            preparation: stale,
+            map_bytes: bytes.clone(),
+        }
+        .encode(),
+    )
+    .unwrap();
+    pump(&mut h, 5, &mut now, &mut request);
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["preparation"]["staleDropped"], 1);
+    assert_eq!(
+        h.phase(),
+        jj_session::director::Phase::Preparing,
+        "a stale map never commits"
+    );
+
+    h.handle(
+        &MainToSim::MapReady {
+            preparation,
+            map_bytes: bytes,
+        }
+        .encode(),
+    )
+    .unwrap();
+    pump(&mut h, 60, &mut now, &mut request);
+    assert!(
+        matches!(
+            h.phase(),
+            jj_session::director::Phase::Countdown | jj_session::director::Phase::Running
+        ),
+        "{:?}",
+        h.phase()
+    );
+    assert_eq!(
+        h.map.hash,
+        jj_map::load_canonical(
+            &jj_map::canonical_bytes(&generated.map),
+            &jj_procgen::registry()
+        )
+        .unwrap()
+        .hash
+    );
+    assert_eq!(h.sim.cars().count(), 1);
+}

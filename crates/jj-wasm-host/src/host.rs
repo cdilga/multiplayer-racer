@@ -646,7 +646,12 @@ impl Host {
                 // controllers and the drawer's Remove is G07's.
                 other => self.round_ui(other),
             },
-            // Map preparation (G01/M08a) and buffers are main-thread plumbing; Init and Lifecycle act on arrival.
+            // A prepared round map (M08a): validated and kept for the next Countdown.
+            MainToSim::MapReady {
+                preparation,
+                map_bytes,
+            } => self.map_ready(preparation, &map_bytes),
+            // Buffers are main-thread plumbing; Init and Lifecycle act on arrival.
             _ => {}
         }
     }

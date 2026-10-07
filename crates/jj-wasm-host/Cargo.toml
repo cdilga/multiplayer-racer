@@ -17,6 +17,8 @@ jj-input.workspace = true
 jj-sim.workspace = true
 jj-protocol.workspace = true
 jj-map.workspace = true
+# Generated round maps validate against the procgen kit (wayfinding pieces), P1-M08a.
+jj-procgen.workspace = true
 jj-types.workspace = true
 sha2.workspace = true
 wasm-bindgen.workspace = true

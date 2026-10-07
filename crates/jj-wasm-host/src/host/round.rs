@@ -13,7 +13,7 @@ use jj_session::director::{
     Director, DirectorConfig, Driving, Input as DirIn, Output as DirOut, Phase,
 };
 use jj_session::results::{Entrant, FinishTime, RoundFacts, Ruleset, Standings};
-use jj_types::{LifeId, RoundId};
+use jj_types::{LifeId, PreparationId, RoundId};
 
 use super::*;
 
@@ -29,6 +29,15 @@ pub(super) struct RoundState {
     /// The last results, for Intermission and the controllers' end card.
     pub results: Option<Vec<ResultRow>>,
     pub seed: u64,
+    /// Main prepares each round's map (P1-M08a); otherwise the start map is every round's.
+    pub prepare_maps: bool,
+    /// The preparation main is working on, its seed, and the map it delivered for the next Countdown.
+    pub pending: Option<(PreparationId, u64)>,
+    pub prepared: Option<LoadedMap>,
+    /// `MapReady`s for a superseded preparation, dropped (R90 readout).
+    pub stale_dropped: u32,
+    /// The last map verdict ("ok" or the validator's rules).
+    pub verdict: String,
 }
 
 impl RoundState {
@@ -42,6 +51,11 @@ impl RoundState {
             cohort: Vec::new(),
             results: None,
             seed,
+            prepare_maps: false,
+            pending: None,
+            prepared: None,
+            stale_dropped: 0,
+            verdict: String::new(),
         }
     }
 }
@@ -77,11 +91,28 @@ impl Host {
 
     fn director_output(&mut self, o: DirOut) -> Vec<DirOut> {
         match o {
-            // The greybox is always ready (M08a prepares generated maps in the procgen worker).
+            // Main prepares generated maps (M08a): the seed is the session seed plus the preparation id, so a bug clip
+            // names the exact track. Without it the start map is always ready.
+            DirOut::PrepareRequested { id, .. } if self.round.prepare_maps => {
+                let seed = self.round.seed.wrapping_add(u64::from(id.0));
+                self.round.pending = Some((id, seed));
+                self.round.prepared = None;
+                self.events.push(SimEvent::PrepareRequested {
+                    preparation: id,
+                    seed,
+                });
+                vec![]
+            }
             DirOut::PrepareRequested { id, .. } => self
                 .round
                 .director
                 .apply(DirIn::PrepareFinished { id, ok: true }),
+            DirOut::PrepareCancelled { id } => {
+                if self.round.pending.is_some_and(|(p, _)| p == id) {
+                    self.round.pending = None;
+                }
+                vec![]
+            }
             DirOut::CountdownStarted { cohort, .. } => {
                 self.start_grid(&cohort);
                 self.room_state_all();
@@ -138,6 +169,9 @@ impl Host {
     /// A fresh world on the prepared map, the cohort on the start grid in seat order (held until the start), and no
     /// debris from before the round (R58 is per round).
     fn start_grid(&mut self, cohort: &[SeatId]) {
+        if let Some(map) = self.round.prepared.take() {
+            self.map = map;
+        }
         self.reset_world();
         let seats: Vec<SeatId> = cohort
             .iter()
@@ -175,7 +209,7 @@ impl Host {
     fn reset_world(&mut self) {
         self.sim = Sim::new(
             &self.map,
-            &Registry::generic(),
+            &jj_procgen::registry(),
             self.round.seed,
             VehicleProfile::cruz(),
         );
@@ -341,6 +375,7 @@ impl Host {
                     "car": car,
                     "laps": race.map(|r| r.laps),
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
+                    "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
                 })
             })
@@ -359,6 +394,13 @@ impl Host {
             "laps": self.round.laps,
             "freeDrive": self.round.free_drive,
             "armed": d.armed(),
+            "preparation": {
+                "external": self.round.prepare_maps,
+                "pending": self.round.pending.map(|(p, s)| serde_json::json!({ "id": p.0, "seed": s })),
+                "prepared": self.round.prepared.is_some(),
+                "staleDropped": self.round.stale_dropped,
+                "verdict": self.round.verdict,
+            },
             "seats": seats,
             "results": self.round.results,
             "standings": standings,
@@ -373,6 +415,7 @@ impl Host {
             UiCommand::EndRound => self.director_apply(DirIn::End),
             UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
             UiCommand::SetLaps { laps } => self.round.laps = laps.max(1),
+            UiCommand::PrepareMaps { on } => self.round.prepare_maps = on,
             UiCommand::FreeDrive { on } => {
                 self.round.free_drive = on;
                 let cfg = DirectorConfig {
@@ -403,6 +446,37 @@ impl Host {
     /// The round director's phase (tests and the host's screens).
     pub fn phase(&self) -> Phase {
         self.round.director.phase()
+    }
+
+    /// A prepared map from main (P1-M08a): validated here (the sim owns colliders), committed at the next Countdown; a
+    /// stale preparation is dropped and counted, a broken map fails the preparation (the director retries once with the
+    /// conservative recipe, then settles in the Lobby).
+    pub(super) fn map_ready(&mut self, preparation: PreparationId, map_bytes: &[u8]) {
+        if self.round.pending.map(|(p, _)| p) != Some(preparation) {
+            self.round.stale_dropped += 1;
+            return;
+        }
+        let ok = match load_canonical(map_bytes, &jj_procgen::registry()) {
+            Ok(map) => {
+                self.round.prepared = Some(map);
+                self.round.verdict = "ok".into();
+                true
+            }
+            Err(r) => {
+                self.round.verdict = r
+                    .violations
+                    .iter()
+                    .map(|v| v.rule.name())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                false
+            }
+        };
+        self.round.pending = None;
+        self.director_apply(DirIn::PrepareFinished {
+            id: preparation,
+            ok,
+        });
     }
 
     /// READY from a controller or a host pad/key cluster, under the director's current Ready revision.

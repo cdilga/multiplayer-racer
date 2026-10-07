@@ -49,6 +49,11 @@ pub enum UiCommand {
     SetLaps {
         laps: u32,
     },
+    /// Rounds are prepared by main (the procgen worker builds each round's map and main sends `MapReady`, P1-M08a);
+    /// off, the host races the map it was started on.
+    PrepareMaps {
+        on: bool,
+    },
 }
 
 /// Main → sim.

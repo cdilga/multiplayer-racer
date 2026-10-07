@@ -172,6 +172,7 @@ pub mod codec {
             "end" => UiCommand::EndRound,
             "disband" => UiCommand::DisbandRoom,
             "free-drive" => UiCommand::FreeDrive { on },
+            "prepare-maps" => UiCommand::PrepareMaps { on },
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

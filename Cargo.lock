@@ -1088,6 +1088,7 @@ dependencies = [
  "jj-fixture",
  "jj-input",
  "jj-map",
+ "jj-procgen",
  "jj-protocol",
  "jj-session",
  "jj-sim",
