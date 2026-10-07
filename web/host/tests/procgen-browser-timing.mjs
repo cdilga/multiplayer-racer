@@ -76,6 +76,41 @@ const result = {
   perSeed: runs.map((r) => ({ throttle: r.throttle, ms: r.rows.map((x) => x.ms) })),
 };
 mkdirSync(dirname(out), { recursive: true });
+// A picture of the receipt: per-seed time, unthrottled and at 6x, against the two budgets.
+await page.setViewportSize({ width: 1100, height: 520 });
+await page.evaluate(
+  ({ per, budgets }) => {
+    document.body.innerHTML = '<canvas id="c" width="1060" height="480" style="display:block;margin:10px"></canvas>';
+    const ctx = document.getElementById('c').getContext('2d');
+    const top = Math.max(...per.flatMap((r) => r.ms), ...budgets) * 1.1;
+    const y = (ms) => 440 - (ms / top) * 400;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 1060, 480);
+    ctx.font = '13px sans-serif';
+    for (const [b, label, colour] of [[budgets[0], 'laptop budget 1.5 s', '#2a8'], [budgets[1], 'phone-host stand-in 4 s (6x)', '#c52']]) {
+      ctx.strokeStyle = colour;
+      ctx.beginPath();
+      ctx.moveTo(40, y(b));
+      ctx.lineTo(1050, y(b));
+      ctx.stroke();
+      ctx.fillStyle = colour;
+      ctx.fillText(label, 50, y(b) - 4);
+    }
+    const n = per[0].ms.length;
+    const w = 1000 / n;
+    per.forEach((r, k) =>
+      r.ms.forEach((ms, i) => {
+        ctx.fillStyle = k === 0 ? '#36c' : '#e83';
+        ctx.fillRect(45 + i * w + k * (w / 2 - 1), y(ms), w / 2 - 2, 440 - y(ms));
+      }),
+    );
+    ctx.fillStyle = '#000';
+    ctx.fillText('generate + validate per seed (ms): blue unthrottled, orange 6x CPU throttle; Chromium, WASM on the main thread', 45, 20);
+    for (let i = 0; i < n; i += 2) ctx.fillText(String(i), 45 + i * w, 458);
+  },
+  { per: runs.map((r) => ({ ms: r.rows.map((x) => x.ms) })), budgets: [BUDGET_MS, THROTTLED_BUDGET_MS] },
+);
+await page.screenshot({ path: join(dirname(out), 'timing-per-seed.png') });
 writeFileSync(out, `${JSON.stringify(result, null, 1)}\n`);
 console.log(JSON.stringify(result.runs));
 await browser.close();
