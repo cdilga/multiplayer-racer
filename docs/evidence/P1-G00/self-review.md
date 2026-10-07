@@ -4,9 +4,9 @@ Captured on eris (headless Chromium, loopback WebRTC, pushed commit 392c390) wit
 and `j/<CODE>?hello`; three controllers joined. Images are in `captures/`; every one was opened and looked at.
 
 ## Looked at
-- `tv-1920x1080-empty.png`: room code, QR, join URL, empty field. Code and QR legible, URL wraps mid-code ("QJ / 7X").
-- `tv-1920x1080-three-markers.png` and `tv-fullscreen.png` (real `requestFullscreen()` succeeded): three markers at the stick positions, diagnostics list three peers on the `host` path. Fullscreen is identical to the 1080p view.
-- Resizes `tv-resize-1280x720.png`, `-800x600.png`, `-390x844.png`, `-3840x2160.png`: layout reflows, field fills the rest, markers keep their relative positions, no horizontal scroll (scrollWidth equals innerWidth).
+- `captures/tv-1920x1080-empty.png`: room code, QR, join URL, empty field. Code and QR legible, URL wraps mid-code ("QJ / 7X").
+- `captures/tv-1920x1080-three-markers.png` and `captures/tv-fullscreen.png` (real `requestFullscreen()` succeeded): three markers at the stick positions, diagnostics list three peers on the `host` path. Fullscreen is identical to the 1080p view.
+- Resizes `captures/tv-resize-1280x720.png`, `captures/tv-resize-800x600.png`, `captures/tv-resize-390x844.png`, `captures/tv-resize-3840x2160.png`: layout reflows, field fills the rest, markers keep their relative positions, no horizontal scroll (scrollWidth equals innerWidth).
 - Phones: `phone-a-390x844-*`, `phone-b-844x390-*` (landscape), `phone-c-320x568-*` (small): "Connected (host, 0 ms)", pad and knob fully inside the viewport, knob follows the stick; no overflow at any size (scrollWidth equals innerWidth, pad inside the viewport).
 
 ## Defects found and fixed
