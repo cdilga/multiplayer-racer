@@ -1066,8 +1066,12 @@ fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_race
         }
         .encode();
         h.handle(&net(p, Channel::Cmd, claim)).unwrap();
-        h.handle(&net(p, Channel::Cmd, ControllerCmd::Ready { on: true }.encode()))
-            .unwrap();
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
     }
     let mut now = 0u64;
     let mut step = |h: &mut Host, ticks: u64| {
@@ -1087,7 +1091,11 @@ fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_race
         h.sim.set_autopilot(CarId(c as u32), true);
     }
     step(&mut h, 600);
-    assert_eq!(h.phase(), jj_session::director::Phase::Running, "99 laps are far off");
+    assert_eq!(
+        h.phase(),
+        jj_session::director::Phase::Running,
+        "99 laps are far off"
+    );
     assert!(h.sim.race().over.is_none());
     assert!(h.sim.end_race_now(), "a running race ends on demand");
     assert!(!h.sim.end_race_now(), "and only once");
@@ -1107,7 +1115,11 @@ fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_race
         Some(jj_sim::race::RaceEnd::Window)
     );
     let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
-    assert_eq!(room["results"].as_array().unwrap().len(), 4, "every racer is placed");
+    assert_eq!(
+        room["results"].as_array().unwrap().len(),
+        4,
+        "every racer is placed"
+    );
     assert_eq!(room["standings"].as_array().unwrap().len(), 4);
 }
 
