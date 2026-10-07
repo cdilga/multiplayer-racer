@@ -202,13 +202,14 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     inputStats: () => client.inputStats(),
 
     /** A fake controller joins through the real controller path (Hello + Claim as cmd-channel bytes) and gets a seat. */
-    async join(name: string) {
+    async join(name: string, opts: { lobby?: boolean } = {}) {
       const endpoint = `fake-${fakes.size}`;
       test.input({ type: 'controller', endpoint, frame: { hello: true } });
       test.input({ type: 'controller', endpoint, frame: { claim: name } });
       await step(1);
       const seat = (await observe()).host.seats.find((s) => s.endpoint === endpoint);
-      if (!seat || seat.car === null) throw new Error(`${name} didn't get a seat and car`);
+      // In a real room (R110) the Lobby has no cars: `lobby` accepts a seat without one (round preparation's captures).
+      if (!seat || (seat.car === null && !opts.lobby)) throw new Error(`${name} didn't get a seat and car`);
       fakes.set(endpoint, { endpoint, source: seat.source, seq: 0, drive: null });
       return { endpoint, seat: seat.seat as number, source: seat.source, car: seat.car };
     },

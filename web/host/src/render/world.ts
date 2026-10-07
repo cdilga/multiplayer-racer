@@ -86,6 +86,12 @@ export interface WorldStats {
   lods: number[];
 }
 
+/** A map built but not yet shown (`World.stageMap`). */
+export interface StagedMap {
+  map: MapJson;
+  renderer: MapRenderer;
+}
+
 export class World {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(50, 16 / 9, 0.5, 2000);
@@ -201,8 +207,23 @@ export class World {
 
   /** Draws a `jj.map.v1` map (P1-R03) and its props from the snapshot; the ground beyond it is off-track. */
   loadMap(map: MapJson, opts: { repeat?: number } = {}): MapRenderer {
-    this.map?.group.removeFromParent();
-    this.map = new MapRenderer(map, opts).addTo(this.scene);
+    return this.commitMap(this.stageMap(map, opts));
+  }
+
+  /** Builds a map's meshes without showing them (P1-M08a): the round's presentation stays as it is until `commitMap`. */
+  stageMap(map: MapJson, opts: { repeat?: number } = {}): StagedMap {
+    return { map, renderer: new MapRenderer(map, opts) };
+  }
+
+  /** Swaps a staged map in: the old map and its props go, the camera rig and the plain follow the new ground. */
+  commitMap(staged: StagedMap): MapRenderer {
+    const { map } = staged;
+    if (this.map) {
+      this.map.group.removeFromParent();
+      this.map.dispose();
+    }
+    this.props?.dispose();
+    this.map = staged.renderer.addTo(this.scene);
     this.props = new PropRenderer(this.scene, map);
     this.rig.obstacles = this.map.obstacles();
     this.rig.groundAt = this.map.groundAt;
@@ -333,7 +354,8 @@ export class World {
     r.shadowMap.needsUpdate = true;
     r.info.autoReset = false;
     r.info.reset();
-    if (this.tiles) st.lods = this.drawTiles(s, this.tiles);
+    // An auto grid with nobody on the field (an empty room's TV) shows the whole map, not one tile chasing no car.
+    if (this.tiles && !(this.tiles.auto && s.cars === 0)) st.lods = this.drawTiles(s, this.tiles);
     else {
       const lod = lodForTileHeight(st.height);
       useLod(this.camera, lod);

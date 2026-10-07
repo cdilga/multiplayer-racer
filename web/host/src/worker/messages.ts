@@ -25,7 +25,9 @@ export type SimInput =
    *  performance.now()`) lets the worker measure host-applied input age. */
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | `laps:${number}`; on?: boolean };
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | 'prepare-maps' | 'reroll' | `laps:${number}`; on?: boolean }
+  /** A prepared round map (canonical bytes), sent once the renderer built it (P1-M08a); the sim validates it and drops a stale `preparation`. */
+  | { type: 'map-ready'; preparation: number; bytes: Uint8Array };
 
 export interface InitOptions {
   mapJson?: string;

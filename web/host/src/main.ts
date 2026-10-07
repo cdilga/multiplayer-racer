@@ -6,6 +6,7 @@
 // (P1-R01), `?tiles=<n>[&lods=0,2][&follow=2,2][&orbit=120,120]`, `?map` (the greybox under the synthetic source), `?kitx=<n>`, `?cams=fp,tp,…`, `?camdist=near|mid|far`, `?mapUrl=<url>` (a plain chase-camera tile view until the grid, P1-R04).
 import greyboxJson from '../../../maps/greybox-loop.json?raw';
 import { BUILD_LABEL } from '../../shared/src/build';
+import { mountAudio } from './audio';
 import { mountDrawer } from './input/drawer';
 import { mountGridOverlay } from './layout/overlay';
 import { LocalInput } from './input/local';
@@ -101,6 +102,13 @@ async function boot(): Promise<void> {
     farCars: () => world.farCars(),
   };
 
+  // Round-screen fixtures (P1-R07): `?roundfixture=lobby-32` draws a screen state from a fixture room view, no server.
+  const fixture = params.get('roundfixture');
+  if (fixture) {
+    (await import('./round/fixture-testing')).mountFixture(app, world, fixture);
+    return;
+  }
+
   if (params.has('synthetic')) {
     const freeze = params.get('freeze');
     const source = new SyntheticSource({
@@ -146,6 +154,8 @@ async function boot(): Promise<void> {
   if (laps > 0) client.input({ type: 'ui', ui: `laps:${laps}` });
   const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
   if (online) await openRoom(client, world, params, freeDrive);
+  // The real room prepares each round's map in the procgen worker (P1-M08a); free drive and plain test pages race the start map.
+  if (online && !freeDrive) await (await import('./procgen/start')).startPreparation(client, world, params);
   (window as unknown as { __jjRoom: unknown }).__jjRoom = {
     view: () => client.room,
     start: () => client.input({ type: 'ui', ui: 'start' }),
@@ -170,6 +180,8 @@ async function boot(): Promise<void> {
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
   });
   world.attach(client);
+  // Audio (P1-A03/A05/A07) taps the client's snapshot, event and room feeds last, so it wraps whatever the page set.
+  mountAudio(client);
   world.start();
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
@@ -193,9 +205,13 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
     card.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2;margin:0';
     app.append(card);
   }
-  world.onLayout = (layout, scale) => overlay.render(layout, scale);
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
-  if (!freeDrive) mountRoundScreens(client, { code: bridge.hub.code, joinUrl });
+  // The round screens (P1-R07) own the lobby and results; the per-tile HUD follows the tile rects the grid reports.
+  const screens = !freeDrive && bridge.hub.code ? mountRoundScreens(client, { code: bridge.hub.code, joinUrl }) : null;
+  world.onLayout = (layout, scale) => {
+    overlay.render(layout, scale);
+    screens?.place(world.tileRects(), scale);
+  };
   (window as unknown as { __jjNet: unknown }).__jjNet = {
     code: () => bridge.hub.code,
     joinUrl: () => bridge.hub.joinUrl,

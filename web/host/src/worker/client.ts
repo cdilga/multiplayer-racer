@@ -40,6 +40,12 @@ export class SimClient {
   }
   /** Sim events (seats joining, cameras, identify flashes...). */
   onEvents: (events: SimEventJson[]) => void = () => {};
+  private eventWatchers = new Set<(events: SimEventJson[]) => void>();
+  /** Another events listener beside `onEvents` (round preparation...), so neither replaces the other; returns the unsubscribe. */
+  watchEvents(f: (events: SimEventJson[]) => void): () => void {
+    this.eventWatchers.add(f);
+    return () => this.eventWatchers.delete(f);
+  }
   /** Bytes for one controller endpoint (the network bridge sends them on that peer's channel). */
   onOutbound: (endpoint: string, channel: 'state' | 'cmd', bytes: Uint8Array) => void = () => {};
   onPause: (reasons: PauseReason[], countdownMs: number) => void = () => {};
@@ -71,7 +77,11 @@ export class SimClient {
         this.onOutbound(m.endpoint, m.channel, m.bytes);
         return;
       case 'events':
-        this.onEvents(JSON.parse(m.json) as SimEventJson[]);
+        {
+          const events = JSON.parse(m.json) as SimEventJson[];
+          this.onEvents(events);
+          for (const f of this.eventWatchers) f(events);
+        }
         return;
       case 'room':
         this.room = JSON.parse(m.json) as RoomView;
@@ -159,6 +169,8 @@ export interface RoomView {
   round: number | null;
   laps: number;
   freeDrive: boolean;
+  /** Round preparation (P1-M08a, the R90 readout): main prepares maps, the pending job and its seed, whether a map is waiting for the next Countdown, stale `MapReady`s dropped, and the last validator verdict. */
+  preparation?: { external: boolean; pending: { id: number; seed: number } | null; prepared: boolean; staleDropped: number; verdict: string };
   armed: boolean;
   seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; presence: string; local: boolean; car: number | null; laps: number | null; position: number | null; finished: boolean }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
