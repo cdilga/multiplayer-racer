@@ -40,6 +40,13 @@ rc=0
 sync_out=$(ssh "${ssh_opts[@]}" "$host" bash -s -- "$mac_head" 2>&1 <<EOF
 mkdir -p ~/Work/runs && exec 9>>$lock
 at_head() { [ "\$(git -C $clone rev-parse HEAD)" = "\$1" ]; }
+# Untracked evidence a run wrote into the clone (an older eris.sh, or a test with a hard-coded path) moves to a run
+# dir of its own, so it never blocks the sync; any other local change still refuses below.
+if [ -n "\$(git -C $clone status --porcelain)" ] && [ -z "\$(git -C $clone status --porcelain | grep -v '^?? docs/evidence/')" ]; then
+  tidy=~/Work/runs/stray-\$(date +%Y%m%d-%H%M%S)
+  (cd $clone && git ls-files -z --others --exclude-standard -- docs/evidence | while IFS= read -r -d '' f; do mkdir -p "\$tidy/\$(dirname "\$f")" && mv "\$f" "\$tidy/\$f"; done)
+  echo "eris.sh: moved stray evidence out of the clone to \$tidy" >&2
+fi
 if flock -n -x 9; then ru sync --non-interactive --quiet || echo "RU_SYNC_EXIT=\$?"
 elif at_head "\$1"; then echo "RU_SYNC=skipped (runs in progress; clone already at \${1:0:12})"
 else echo "eris.sh: waiting for runs on eris to finish before syncing" >&2
