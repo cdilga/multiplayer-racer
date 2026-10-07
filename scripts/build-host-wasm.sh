@@ -3,6 +3,7 @@
 # Two builds, both generated and git-ignored:
 #   web/host/src/worker/pkg/   the shipped worker (P1-S02), no test code
 #   web/host/src/testing/pkg/  the test chunk's worker (P1-F05b), with the `testing` feature
+#   web/host/src/procgen/pkg/  the procgen worker's generator (P1-M08a)
 #
 # Usage: scripts/build-host-wasm.sh [--dev]   (--dev: debug builds, quicker, larger)
 set -euo pipefail
@@ -22,6 +23,10 @@ wasm-bindgen --target web --out-dir web/host/src/testing/pkg --out-name jj_wasm_
 # The controller's input facade (P1-N06/C02): encoding and the cmd protocol, no sim.
 cargo build --locked --target wasm32-unknown-unknown -p jj-wasm-input $([[ $profile == release ]] && echo --release)
 wasm-bindgen --target web --out-dir web/controller/src/pkg "$target/wasm32-unknown-unknown/$profile/jj_wasm_input.wasm"
+# The procgen worker's generator (P1-M08a): prepare(seed, recipe) -> canonical bytes + map JSON + the ladder's log.
+cargo build --locked --target wasm32-unknown-unknown -p jj-wasm-procgen $([[ $profile == release ]] && echo --release)
+wasm-bindgen --target web --out-dir web/host/src/procgen/pkg "$target/wasm32-unknown-unknown/$profile/jj_wasm_procgen.wasm"
+ls -l web/host/src/procgen/pkg/jj_wasm_procgen_bg.wasm | awk '{ print $NF ":", $5, "bytes" }'
 ls -l web/controller/src/pkg/jj_wasm_input_bg.wasm | awk '{ print $NF ":", $5, "bytes" }'
 ls -l web/host/src/worker/pkg/jj_wasm_host_bg.wasm web/host/src/testing/pkg/jj_wasm_host_testing_bg.wasm |
   awk '{ print $NF ":", $5, "bytes" }'

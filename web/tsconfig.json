@@ -36,6 +36,8 @@
     "host/src/worker/core.ts",
     "host/src/worker/pkg",
     "host/src/testing/testing.worker.ts",
-    "host/src/testing/pkg"
+    "host/src/testing/pkg",
+    "host/src/procgen/procgen.worker.ts",
+    "host/src/procgen/pkg"
   ]
 }

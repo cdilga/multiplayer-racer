@@ -94,3 +94,30 @@
 - **`ev:hardware` WASM timing:** worst 184 ms per seed (release, Node 26, M1 Pro), 24 seeds; see
   `docs/evidence/P1-M03g/wasm-timing.md`. The test prints the numbers only when `JJ_WASM_BUDGET_MS=0` makes it fail.
 - **Manifest:** `wasm-bindgen` is a wasm32-only dev-dependency of jj-procgen (for `Date.now`), so `Cargo.lock` changed.
+
+## 2026-10-07 · Procgen worker and round preparation (P1-M08a, main side)
+
+- **Flow.** Director -> `PrepareRequested{preparation, seed = session seed + id}` (a sim event) -> `RoundPreparer`
+  (`web/host/src/procgen/prepare.ts`) -> the procgen Web Worker (`jj-wasm-procgen`: `prepare(seed, recipe)` returns
+  canonical bytes, map JSON and the ladder's log) -> `World.stageMap` builds the meshes without showing them -> `MapReady`
+  to the sim worker (`encode_map_ready`) -> the sim validates and commits at the next Countdown -> only then
+  `World.commitMap` swaps the new map in (the room view says `Countdown` with verdict `ok` and nothing left prepared).
+  The old presentation stays until then; a map the sim refuses is never shown.
+- **Stale = dropped on main first.** A job the director has superseded (reroll, retry) is dropped after the worker returns
+  and before the renderer or the sim see it (`stats.superseded`); the sim still counts and drops a stale `MapReady` that
+  does get through (`room.preparation.staleDropped`). The procgen worker is synchronous, so a superseded job still
+  finishes (~150-200 ms); it just never lands.
+- **Failure = an empty `MapReady`.** The sim fails the preparation on unreadable bytes, the director retries once (main
+  asks for `greybox` alone that time) and then settles in the Lobby; nothing invalid loads and nothing rerolls forever.
+- **A reroll works from the Lobby too** (the director requests a preparation there), so "a prepared map replaced by a
+  reroll" is testable without finishing a round.
+- **The renderer needs a kit module for every id a map uses.** Generated maps carry `wayfinding/*` pieces, which only
+  exist as procgen stand-ins (`crates/jj-procgen/kit/`); `render/kit/registry.ts` reads those entries as well as
+  `assets/kit/` and `render/kit/wayfinding/` holds the stand-in geometry (it must fit the collider bounds: `map.test.mjs`
+  checks within 3 %). P1-R10 replaces both under the same ids.
+- **JSON seeds.** `PrepareRequested.seed` crosses as a JSON number: seeds above 2^53 would lose digits in `JSON.parse`
+  (the session seed is 1 today). Keep session seeds below 2^53 or move the seed to a string in the event.
+- **Not warmed up.** `stageMap` builds geometry, but the GPU upload happens at the first draw after `commitMap`; there is
+  no shader/upload warm-up before `MapReady` yet (master 11.2a asks for one).
+- **Dev map.** `?test&map=<name>` (with `&room`) validates `maps/<name>.json` through `validateMap` (the sim's registry)
+  and refuses a broken one with the validator's `rule at: detail` lines in a banner; the director then settles in the Lobby.

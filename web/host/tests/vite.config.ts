@@ -11,6 +11,8 @@ export default defineConfig({
   build: {
     outDir: resolve(import.meta.dirname, '../../dist-test'),
     emptyOutDir: true,
-    rollupOptions: { input: resolve(import.meta.dirname, 'harness.html') },
+    rollupOptions: {
+      input: [resolve(import.meta.dirname, 'harness.html'), resolve(import.meta.dirname, 'prepare-harness.html')],
+    },
   },
 });

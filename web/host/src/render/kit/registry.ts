@@ -6,6 +6,7 @@ import { bin } from './generic/bin';
 import { boxBuilding } from './generic/box-building';
 import { cone } from './generic/cone';
 import { post } from './generic/post';
+import { WAYFINDING_MODULES } from './wayfinding'; // P1-M03f/M08a stand-ins until P1-R10
 import { SIGN_MODULES } from '../signs'; // P1-M09: one module per assets/kit/signs/data/*.json
 import type { KitModule, Params } from './types';
 
@@ -19,7 +20,10 @@ export interface KitEntry {
 }
 
 const files = import.meta.glob<KitEntry>('../../../../../assets/kit/*/*.json', { eager: true, import: 'default' });
-export const ENTRIES: Record<string, KitEntry> = Object.fromEntries(Object.values(files).map((e) => [e.id, e]));
+// The wayfinding family's registry entries are procgen's stand-ins until P1-R10's `assets/kit/wayfinding/` lands (an
+// entry there with the same id wins).
+const standIns = import.meta.glob<KitEntry>('../../../../../crates/jj-procgen/kit/*/*.json', { eager: true, import: 'default' });
+export const ENTRIES: Record<string, KitEntry> = Object.fromEntries([...Object.values(standIns), ...Object.values(files)].map((e) => [e.id, e]));
 
 export const MODULES: Record<string, KitModule> = {
   'generic/barrier': barrier,
@@ -28,6 +32,7 @@ export const MODULES: Record<string, KitModule> = {
   'generic/cone': cone,
   'generic/bin': bin,
   ...SIGN_MODULES,
+  ...WAYFINDING_MODULES,
 };
 
 /** A placement's params with the entry's defaults filled in. */

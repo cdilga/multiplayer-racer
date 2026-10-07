@@ -1,0 +1,180 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless), darwin/arm64",
+  "runs": {
+    "commit": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "plan": "redrawn-1",
+          "ms": 125,
+          "attempts": 2
+        }
+      ],
+      "presented": {
+        "staged": 1,
+        "committed": 1,
+        "disposed": 0,
+        "commitMaps": [
+          "4"
+        ]
+      },
+      "preparation": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      }
+    },
+    "reroll": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "plan": "redrawn-1",
+          "ms": 123,
+          "attempts": 2
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "plan": "requested",
+          "ms": 123,
+          "attempts": 1
+        }
+      ],
+      "presented": {
+        "staged": 2,
+        "committed": 1,
+        "disposed": 1,
+        "commitMaps": [
+          "5"
+        ]
+      }
+    },
+    "stale": {
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 1,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-1",
+        "lastError": ""
+      },
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "plan": "redrawn-1",
+          "ms": 123,
+          "attempts": 2
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "plan": "requested",
+          "ms": 123,
+          "attempts": 1
+        }
+      ],
+      "room": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 1,
+        "verdict": "ok"
+      }
+    },
+    "rerollDuringPreparation": {
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 1,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-1",
+        "lastError": ""
+      },
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "plan": "redrawn-1",
+          "ms": 125,
+          "attempts": 2
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "plan": "requested",
+          "ms": 128,
+          "attempts": 1
+        }
+      ]
+    },
+    "conservativeRetry": {
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 4,
+          "plan": "redrawn-1",
+          "ms": 128,
+          "attempts": 2
+        },
+        {
+          "preparation": 2,
+          "seed": 5,
+          "plan": "requested",
+          "ms": 133,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 2,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 1,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": "no valid map for seed 4: "
+      }
+    },
+    "failure": {
+      "stats": {
+        "requested": 2,
+        "delivered": 0,
+        "superseded": 0,
+        "failed": 2,
+        "refused": 0,
+        "committed": 0,
+        "lastPlan": "requested",
+        "lastError": "no valid map for seed 5: "
+      },
+      "room": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "schema"
+      }
+    },
+    "brokenDevMap": {
+      "message": "gates route.gates: 0 gates; at least 3\ngates route.gates: 0 finish gates; exactly one",
+      "stats": {
+        "requested": 2,
+        "delivered": 0,
+        "superseded": 0,
+        "failed": 1,
+        "refused": 1,
+        "committed": 0,
+        "lastPlan": "",
+        "lastError": "gates route.gates: 0 gates; at least 3\ngates route.gates: 0 finish gates; exactly one"
+      }
+    }
+  }
+}

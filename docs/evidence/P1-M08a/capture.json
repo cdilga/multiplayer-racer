@@ -1,0 +1,169 @@
+{
+  "mode": "headed Google Chrome (system GPU)",
+  "platform": "darwin/arm64",
+  "runs": [
+    {
+      "name": "tv-1080p-1-player",
+      "players": 1,
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "redrawn-1",
+          "ms": 244,
+          "attempts": 2
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-1",
+        "lastError": ""
+      },
+      "room": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "phase": "Running",
+      "map": {
+        "terrainCells": 26264,
+        "routePoints": 366,
+        "features": 1,
+        "kitTypes": 5,
+        "kitInstances": 263,
+        "draws": 8,
+        "kit": {
+          "generic/box-building": 27,
+          "generic/post": 143,
+          "wayfinding/chevron-post": 37,
+          "wayfinding/finish-gantry": 2,
+          "wayfinding/guard-rail": 54
+        }
+      }
+    },
+    {
+      "name": "tv-1080p-4-tiles",
+      "players": 4,
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "redrawn-1",
+          "ms": 262,
+          "attempts": 2
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-1",
+        "lastError": ""
+      },
+      "room": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "phase": "Running",
+      "map": {
+        "terrainCells": 26264,
+        "routePoints": 366,
+        "features": 1,
+        "kitTypes": 5,
+        "kitInstances": 263,
+        "draws": 8,
+        "kit": {
+          "generic/box-building": 27,
+          "generic/post": 143,
+          "wayfinding/chevron-post": 37,
+          "wayfinding/finish-gantry": 2,
+          "wayfinding/guard-rail": 54
+        }
+      }
+    },
+    {
+      "name": "laptop-1366-4-tiles",
+      "players": 4,
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "redrawn-1",
+          "ms": 216,
+          "attempts": 2
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "redrawn-1",
+        "lastError": ""
+      },
+      "room": {
+        "external": true,
+        "pending": null,
+        "prepared": false,
+        "staleDropped": 0,
+        "verdict": "ok"
+      },
+      "phase": "Running",
+      "map": {
+        "terrainCells": 26264,
+        "routePoints": 366,
+        "features": 1,
+        "kitTypes": 5,
+        "kitInstances": 263,
+        "draws": 8,
+        "kit": {
+          "generic/box-building": 27,
+          "generic/post": 143,
+          "wayfinding/chevron-post": 37,
+          "wayfinding/finish-gantry": 2,
+          "wayfinding/guard-rail": 54
+        }
+      }
+    }
+  ]
+}

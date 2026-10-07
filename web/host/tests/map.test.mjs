@@ -56,7 +56,8 @@ function deltaE([r1, g1, b1], [r2, g2, b2]) {
 }
 
 test('the greybox renders with distinguishable surfaces', async () => {
-  const { page, errors } = await open('');
+  // Free drive keeps the greybox (a bare host page's Lobby prepares a procgen track since P1-M08a).
+  const { page, errors } = await open('?drive');
   const stats = await page.evaluate(() => window.__jjRender.map());
   assert.equal(stats.routePoints, greybox.route.points.length);
   // A spot of each surface: on the route centreline (tarmac, packed dirt) and a terrain sample far from the road.
@@ -125,8 +126,11 @@ test('draws scale with kit-piece types, not instances (1× and 10× the dressing
 test("each registry entry's collider proxy and its rendered bounds agree within tolerance", async () => {
   const { page, errors } = await open('');
   const bounds = await page.evaluate(() => window.__jjRender.kitBounds());
-  const entries = (await import('node:fs')).readdirSync(join(repo, 'assets/kit'), { recursive: true }).filter((f) => /^[^/]+\/[^/]+\.json$/.test(f)); // every family (generic, signs, ...)
-  assert.equal(bounds.length, entries.length, 'every registry entry has a module');
+  const await_fs = await import('node:fs');
+  const families = (dir) => (await_fs.readdirSync(dir, { recursive: true }).filter((f) => /^[^/]+\/[^/]+\.json$/.test(f))); // every family (generic, signs, ...)
+  // The wayfinding family's entries are procgen's stand-ins until P1-R10's assets/kit/wayfinding lands (same ids win).
+  const ids = new Set([...families(join(repo, 'assets/kit')), ...families(join(repo, 'crates/jj-procgen/kit'))].map((f) => f.replace(/\.json$/, '')));
+  assert.equal(bounds.length, ids.size, 'every registry entry has a module');
   for (const b of bounds) {
     assert.equal(b.rendered.length, 4, `${b.id} has a geometry module`);
     for (let k = 0; k < 3; k++) {

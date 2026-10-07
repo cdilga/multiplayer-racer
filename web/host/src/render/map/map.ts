@@ -119,6 +119,11 @@ export class MapRenderer {
     return this;
   }
 
+  /** Frees the map's own geometry (the kit's modules are shared and stay). */
+  dispose(): void {
+    for (const child of this.group.children) if (child instanceof Mesh && !(child instanceof InstancedMesh)) child.geometry.dispose();
+  }
+
   private terrain(): Mesh {
     const t = this.map.terrain;
     const s = new Soup();
@@ -350,6 +355,12 @@ export class PropRenderer {
     map: MapJson | null,
   ) {
     this.mapProps = (map?.props ?? []).filter((p) => ENTRIES[p.kitPiece]).map((p) => ({ id: p.kitPiece, params: p.params ?? {} }));
+  }
+
+  /** Takes this map's prop meshes out of the scene (the next map brings its own). */
+  dispose(): void {
+    for (const im of this.meshes.values()) this.scene.remove(im);
+    this.meshes.clear();
   }
 
   /** Debris i: a map prop while i is one of them (kind 0), a dropped cone (kind 1), else spawned debris. */
