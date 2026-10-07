@@ -4,6 +4,7 @@
 //   node --test web/shared/transport/tests/
 import assert from 'node:assert/strict';
 import { execSync, spawn } from 'node:child_process';
+import { createHmac } from 'node:crypto';
 import { createSocket } from 'node:dgram';
 import { after, before, describe, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -35,13 +36,13 @@ async function startHost(origin, query = '') {
   return { ctx, page, errors, code: await page.evaluate(() => window.__jjHello.code()) };
 }
 
-async function startController(origin, code, query = '') {
+async function startController(origin, code, query = '', ms = 15_000) {
   const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`${origin}${BASE}j/${code}?hello${query.replace(/^\?/, '&')}`);
-  await until(page, () => window.__jjHello?.link().state === 'connected');
+  await until(page, () => window.__jjHello?.link().state === 'connected', undefined, ms);
   return { ctx, page, errors, link: () => page.evaluate(() => window.__jjHello.link()) };
 }
 
@@ -193,6 +194,108 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
       assert.equal(cp.local, 'relay');
       console.log(`# stats dump (IPs redacted): host ${JSON.stringify(paths[ep])} controller ${JSON.stringify(cp)}`);
       for (const x of [host, c]) await x.ctx.close();
+    } finally {
+      await server.close();
+      coturn.kill();
+    }
+  });
+});
+
+// P1-N04b: Cloudflare TURN is asked for lazily (plan §5.3, R92). The server here has no broker, so the real route is a 503;
+// the browser-side rules are exercised against the real pages, with the fallback answer scripted where a credential is needed.
+const fallbackBody = (req) => JSON.parse(req.postData() ?? '{}');
+
+describe('Cloudflare fallback triggers (P1-N04b)', () => {
+  test('a healthy connection never asks for Cloudflare credentials', async () => {
+    const server = await serve(dist, BASE, { JJ_STUN_URLS: '' });
+    const asked = [];
+    try {
+      const host = await startHost(server.origin);
+      const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+      const page = await ctx.newPage();
+      page.on('request', (r) => r.url().endsWith('/api/v1/ice/fallback') && asked.push(r.url()));
+      host.page.on('request', (r) => r.url().endsWith('/api/v1/ice/fallback') && asked.push(r.url()));
+      await page.goto(`${server.origin}${BASE}j/${host.code}?hello`);
+      await until(page, () => window.__jjHello?.link().state === 'connected');
+      await page.waitForTimeout(10_000); // past the 8 s offer timeout
+      assert.deepEqual(asked, []);
+      assert.equal((await page.evaluate(() => window.__jjHello.link())).relayFallback.requests, 0);
+      await ctx.close();
+      await host.ctx.close();
+    } finally {
+      await server.close();
+    }
+  });
+
+  test('relay-only with coturn unreachable asks exactly once, later than 3 s; a 503 keeps the existing path (no broker)', async () => {
+    const dead = await freePort('udp');
+    const server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: 'fb-test', JJ_TURN_URLS: `turn:127.0.0.1:${dead}?transport=udp` });
+    try {
+      const host = await startHost(server.origin, '&ice=relay');
+      const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+      const page = await ctx.newPage();
+      const asked = [];
+      page.on('request', (r) => r.url().endsWith('/api/v1/ice/fallback') && asked.push({ at: Date.now(), body: fallbackBody(r) }));
+      const t0 = Date.now();
+      await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
+      await until(page, () => window.__jjHello?.link().relayFallback.requests >= 1, undefined, 20_000);
+      await until(page, () => window.__jjHello.link().relayFallback.state === 'unavailable', undefined, 10_000);
+      await page.waitForTimeout(3000);
+      assert.equal(asked.length, 1, 'exactly one request, not a loop');
+      assert.ok(['no-relay-candidate', 'offer-timeout'].includes(asked[0].body.reason), asked[0].body.reason);
+      assert.ok(asked[0].at - t0 >= 3000, `asked after ${asked[0].at - t0} ms`);
+      const l = await page.evaluate(() => window.__jjHello.link());
+      assert.notEqual(l.state, 'ended');
+      assert.notEqual(l.state, 'connected', 'nothing could connect; the 503 changed nothing else');
+      await ctx.close();
+      await host.ctx.close();
+    } finally {
+      await server.close();
+    }
+  });
+});
+
+describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCoturn && !process.env.JJ_COTURN_REQUIRED && 'coturn not installed' }, () => {
+  test('coturn unreachable in the initial list, a scripted fallback answer carries working TURN entries: setConfiguration + ICE restart connects', async () => {
+    const [turnPort, dead] = [await freePort('udp'), await freePort('udp')];
+    const secret = 'fb-merge';
+    const coturn = spawn('turnserver', [
+      '-n', '--listening-ip=127.0.0.1', '--relay-ip=127.0.0.1', `--listening-port=${turnPort}`, '--use-auth-secret',
+      `--static-auth-secret=${secret}`, '--realm=jj.test', '--no-tls', '--no-cli', '--allow-loopback-peers', '--fingerprint',
+      '--min-port=49152', '--max-port=65535',
+    ], { stdio: 'ignore' });
+    await new Promise((r) => setTimeout(r, 800));
+    const server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: secret, JJ_TURN_URLS: `turn:127.0.0.1:${dead}?transport=udp` });
+    const answer = () => {
+      const expiry = Math.floor(Date.now() / 1000) + 1800;
+      const username = `${expiry}:fallback`;
+      return {
+        iceServers: [{ urls: [`turn:127.0.0.1:${turnPort}?transport=udp`], username, credential: createHmac('sha1', secret).update(username).digest('base64') }],
+        expiresAt: expiry * 1000,
+      };
+    };
+    const asked = [];
+    const script = (page) =>
+      page.route('**/api/v1/ice/fallback', (route) => {
+        asked.push(fallbackBody(route.request()).reason);
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(answer()) });
+      });
+    try {
+      const host = await startHost(server.origin, '&ice=relay');
+      await script(host.page);
+      const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+      const page = await ctx.newPage();
+      await script(page);
+      await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
+      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 60_000);
+      const l = await page.evaluate(() => window.__jjHello.link());
+      assert.equal(l.relayFallback.state, 'merged');
+      assert.ok(l.restarts >= 1 || l.rebuilds >= 1, 'ICE restarted after the merge');
+      assert.ok(asked.length >= 1 && asked.every((r) => ['no-relay-candidate', 'offer-timeout', 'ice-failed'].includes(r)), asked.join());
+      const cp = await page.evaluate(() => window.__jjHello.path());
+      assert.equal(cp.local, 'relay');
+      await ctx.close();
+      await host.ctx.close();
     } finally {
       await server.close();
       coturn.kill();

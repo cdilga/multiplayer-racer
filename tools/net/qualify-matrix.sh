@@ -2,15 +2,17 @@
 # The P1-N08 rows, one receipt each under docs/evidence/P1-N08/. Run from the repo root on eris (WebRTC doesn't work on
 # the Mac), via `scripts/remote/eris.sh --run P1-N08 'tools/net/qualify-matrix.sh <row>'`.
 # The build under test is a running jj-server (a preview or a local one); its ICE list decides what the rows use.
-#   BASE      build base URL ending in /          (required)
+#   BASE      build base URL ending in /          (default: serve a local build per row)
 #   BUILD     what the receipt names as the build (required, e.g. the commit)
 #   HW        hardware text                        (default: eris, headless Chromium, loopback)
 #   MAC_CDP   http://<mac>:9222 for cross-machine rows (the Mac's Chrome started with --remote-debugging-port=9222)
 # Rows: direct | direct-wifi | coturn-lan | local-coturn | cloudflare-443 | netem | payload
 set -euo pipefail
-: "${BASE:?}" "${BUILD:?}"
+: "${BUILD:?}"
+# BASE empty: each row builds and serves its own local jj-server (--serve).
 HW=${HW:-"eris, headless Chromium, loopback"}
-q() { node tools/net/qualify.mjs --base "$BASE" --build "$BUILD" --hardware "$HW" "$@"; }
+if [ -n "${BASE:-}" ]; then target=(--base "$BASE"); else target=(--serve); fi
+q() { node tools/net/qualify.mjs "${target[@]}" --build "$BUILD" --hardware "$HW" "$@"; }
 case "${1:?row}" in
   direct)  q --row direct-loopback --topology "host and controller pages on one machine, no TURN" --expect any ;;
   direct-wifi)  # controller on eris, host page on the Mac over the home Wi-Fi

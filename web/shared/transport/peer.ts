@@ -3,8 +3,9 @@
 // candidate carries the negotiation generation `gen`; the host fences older generations. Recovery on the controller:
 // 3 s `disconnected` (or a page resume) → `restartIce()` with a new offer at gen + 1; still not connected 5 s later →
 // a new peer connection at gen + 1. The server never sees gameplay (R77); nothing here caps peers (R66).
-import { api, type IceServer, newId, newSecret, secretHash, type SignalMessage, withBackoff } from './api';
+import { api, ApiError, type IceServer, newId, newSecret, secretHash, type SignalMessage, withBackoff } from './api';
 import { underBase } from '../src/base';
+import { FallbackTrigger, type FallbackReason, mergeServers } from './fallback';
 import { SignalStream, type StreamState } from './sse';
 import { type PathStats, selectedPath } from './stats';
 
@@ -43,6 +44,17 @@ function openChannels(pc: RTCPeerConnection): Channels {
   return { state, cmd };
 }
 
+/** Relay-fallback state for diagnostics and the controller's "Finding a relay…" copy (P1-N04b). */
+export interface RelayFallback {
+  state: 'idle' | 'finding' | 'merged' | 'unavailable';
+  reason: FallbackReason | null;
+  /** Calls to `POST /ice/fallback` (a 429 retry counts). */
+  requests: number;
+}
+
+const FALLBACK_MARGIN_MS = 60_000;
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 function scheduleRefresh(expiresAt: number, refresh: () => void): ReturnType<typeof setTimeout> {
   const left = Math.max(5_000, (expiresAt - Date.now()) * REFRESH_AT);
   return setTimeout(refresh, Math.min(left, 2 ** 31 - 1));
@@ -80,6 +92,51 @@ export class ControllerLink {
   private ended = false;
   private signals: Promise<void> = Promise.resolve();
   private early: RTCIceCandidateInit[] = [];
+  /** Cloudflare TURN entries, only after a trigger fired (R92); merged into every later configuration. */
+  private fallbackServers: IceServer[] = [];
+  private fallbackExpiresAt = 0;
+  private trigger: FallbackTrigger | null = null;
+  relay: RelayFallback = { state: 'idle', reason: null, requests: 0 };
+
+  private fallbackValid(): boolean {
+    return this.fallbackServers.length > 0 && this.fallbackExpiresAt > Date.now() + FALLBACK_MARGIN_MS;
+  }
+
+  private servers(): IceServer[] {
+    return this.fallbackValid() ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers;
+  }
+
+  /** A §5.3 trigger fired for `pc`: get Cloudflare entries (retrying a 429 while still unconnected), merge them with
+   *  `setConfiguration()` and restart ICE at gen + 1. A 503 (no broker, no key) keeps the existing path untouched. */
+  private async requestFallback(pc: RTCPeerConnection, reason: FallbackReason): Promise<void> {
+    this.relay = { ...this.relay, state: 'finding', reason };
+    for (;;) {
+      if (this.pc !== pc || this.ended || this.healthy(pc)) {
+        if (this.relay.state === 'finding') this.relay.state = 'idle';
+        return;
+      }
+      this.relay.requests += 1;
+      try {
+        const list = await api.iceFallback(this.roomId, this.endpointId, reason, this.secret);
+        this.fallbackServers = list.iceServers;
+        this.fallbackExpiresAt = list.expiresAt;
+        this.relay.state = 'merged';
+        if (this.pc !== pc || this.ended) return;
+        pc.setConfiguration({ ...pc.getConfiguration(), iceServers: this.servers() });
+        clearTimeout(this.recoveryTimer);
+        this.recoveryTimer = undefined;
+        void this.recover();
+        return;
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 429) {
+          await sleep(Math.max(500, e.retryAfterMs));
+          continue;
+        }
+        this.relay.state = 'unavailable';
+        return;
+      }
+    }
+  }
 
   /** Signals apply one at a time, in order: a candidate must never race ahead of its description. */
   private enqueue(m: SignalMessage): void {
@@ -136,7 +193,7 @@ export class ControllerLink {
     this.iceExpiresAt = reg.iceExpiresAt;
     this.pc?.setConfiguration({
       ...this.pc.getConfiguration(),
-      iceServers: this.iceServers,
+      iceServers: this.servers(),
     });
     clearTimeout(this.refreshTimer);
     this.refreshTimer = scheduleRefresh(this.iceExpiresAt, () => void this.refreshIce());
@@ -150,7 +207,7 @@ export class ControllerLink {
       this.iceExpiresAt = list.expiresAt;
       this.pc?.setConfiguration({
         ...this.pc.getConfiguration(),
-        iceServers: this.iceServers,
+        iceServers: this.servers(),
       });
     } catch {
       // Keep the old list; try again shortly.
@@ -176,11 +233,14 @@ export class ControllerLink {
     this.pc?.close();
     this.gen += 1;
     this.early = [];
+    this.trigger?.dispose();
     const pc = new RTCPeerConnection({
-      iceServers: this.iceServers,
+      iceServers: this.servers(),
       iceTransportPolicy: this.opts.iceTransportPolicy ?? 'all',
     });
     this.pc = pc;
+    // Cloudflare entries are asked for only when a §5.3 trigger fires, and not again while a credential is in hand.
+    this.trigger = this.fallbackValid() ? null : new FallbackTrigger((reason) => void this.requestFallback(pc, reason));
     this.channels = openChannels(pc);
     for (const name of ['state', 'cmd'] as const) {
       const ch = this.channels[name];
@@ -195,12 +255,22 @@ export class ControllerLink {
     // The host closing its side (or the SCTP association dying) closes the channel: recover at once.
     channels.cmd.onclose = () => this.watch(pc);
     pc.onicecandidate = (e) => {
-      if (e.candidate && this.pc === pc) void this.send('candidate', JSON.stringify(e.candidate.toJSON()));
+      if (this.pc !== pc) return;
+      if (e.candidate) {
+        this.trigger?.candidate(e.candidate.type ?? undefined);
+        void this.send('candidate', JSON.stringify(e.candidate.toJSON()));
+      } else {
+        this.trigger?.gatheringDone();
+      }
+    };
+    pc.oniceconnectionstatechange = () => {
+      if (this.pc === pc && pc.iceConnectionState === 'failed') this.trigger?.failed();
     };
     pc.onconnectionstatechange = () => this.watch(pc);
     this.set('connecting');
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    this.trigger?.offerSent();
     await this.send('offer', pc.localDescription!.sdp);
   }
 
@@ -218,6 +288,7 @@ export class ControllerLink {
     if (pc !== this.pc || this.ended) return;
     const s = pc.connectionState;
     if (this.healthy(pc)) {
+      this.trigger?.isConnected();
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = undefined;
       this.set('connected');
@@ -294,6 +365,7 @@ export class ControllerLink {
 
   end(): void {
     this.ended = true;
+    this.trigger?.dispose();
     clearTimeout(this.refreshTimer);
     clearTimeout(this.recoveryTimer);
     this.stream?.stop();
@@ -323,6 +395,7 @@ export class ControllerLink {
       restarts: this.restarts,
       rebuilds: this.rebuilds,
       iceExpiresAt: this.iceExpiresAt,
+      relayFallback: { ...this.relay, credentialHeld: this.fallbackValid() },
       channels: this.channels
         ? {
             state: this.channels.state.readyState,
@@ -367,6 +440,48 @@ export class HostHub {
   readonly peers = new Map<string, HostPeer>();
   stream: SignalStream | null = null;
   reRegistrations = 0;
+  /** One Cloudflare credential for the whole host endpoint, shared by every peer (R92); asked for lazily. */
+  private fallbackServers: IceServer[] = [];
+  private fallbackExpiresAt = 0;
+  private fallbackInflight: Promise<boolean> | null = null;
+  private readonly triggers = new Map<string, FallbackTrigger>();
+  relay: RelayFallback = { state: 'idle', reason: null, requests: 0 };
+
+  private servers(): IceServer[] {
+    const held = this.fallbackServers.length > 0 && this.fallbackExpiresAt > Date.now() + FALLBACK_MARGIN_MS;
+    return held ? mergeServers(this.iceServers, this.fallbackServers) : this.iceServers;
+  }
+
+  /** A trigger fired for `peer`: merge the shared fallback credential into that peer's configuration. (The host
+   *  answers, so the ICE restart that uses it comes from the controller; the host only needs the entries in place.) */
+  private async hostFallback(peer: HostPeer, reason: FallbackReason): Promise<void> {
+    this.relay = { ...this.relay, state: 'finding', reason };
+    if (!this.fallbackInflight) {
+      this.fallbackInflight = (async () => {
+        for (;;) {
+          if (peer.pc.connectionState === 'connected' || peer.pc.connectionState === 'closed') return false;
+          this.relay.requests += 1;
+          try {
+            const list = await api.iceFallback(this.roomId, HOST, reason, this.secret);
+            this.fallbackServers = list.iceServers;
+            this.fallbackExpiresAt = list.expiresAt;
+            return true;
+          } catch (e) {
+            if (e instanceof ApiError && e.status === 429) {
+              await sleep(Math.max(500, e.retryAfterMs));
+              continue;
+            }
+            return false;
+          }
+        }
+      })().finally(() => {
+        this.fallbackInflight = null;
+      });
+    }
+    const got = await this.fallbackInflight;
+    this.relay.state = got ? 'merged' : this.relay.state === 'finding' ? 'unavailable' : this.relay.state;
+    if (got && peer.pc.connectionState !== 'closed') peer.pc.setConfiguration({ ...peer.pc.getConfiguration(), iceServers: this.servers() });
+  }
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
   private signals: Promise<void> = Promise.resolve();
 
@@ -446,7 +561,7 @@ export class HostHub {
       for (const p of this.peers.values())
         p.pc.setConfiguration({
           ...p.pc.getConfiguration(),
-          iceServers: this.iceServers,
+          iceServers: this.servers(),
         });
     } catch {
       // Retry soon.
@@ -461,8 +576,9 @@ export class HostHub {
 
   private newPeer(endpointId: string, gen: number): HostPeer {
     this.peers.get(endpointId)?.pc.close();
+    this.triggers.get(endpointId)?.dispose();
     const pc = new RTCPeerConnection({
-      iceServers: this.iceServers,
+      iceServers: this.servers(),
       iceTransportPolicy: this.opts.iceTransportPolicy ?? 'all',
     });
     const peer: HostPeer = {
@@ -477,10 +593,23 @@ export class HostHub {
       peer.channels[name].onmessage = (e) => this.events.onMessage?.(peer, name, e.data as ArrayBuffer);
     }
     peer.channels.cmd.onopen = () => this.events.onPeerOpen?.(peer);
+    const trigger = new FallbackTrigger((reason) => void this.hostFallback(peer, reason));
+    this.triggers.set(endpointId, trigger);
     pc.onicecandidate = (e) => {
-      if (e.candidate) void this.send(endpointId, 'candidate', peer.gen, JSON.stringify(e.candidate.toJSON()));
+      if (e.candidate) {
+        trigger.candidate(e.candidate.type ?? undefined);
+        void this.send(endpointId, 'candidate', peer.gen, JSON.stringify(e.candidate.toJSON()));
+      } else {
+        trigger.gatheringDone();
+      }
     };
-    pc.onconnectionstatechange = () => this.events.onPeerState?.(peer, pc.connectionState);
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === 'failed') trigger.failed();
+    };
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'connected') trigger.isConnected();
+      this.events.onPeerState?.(peer, pc.connectionState);
+    };
     this.peers.set(endpointId, peer);
     return peer;
   }
@@ -521,6 +650,7 @@ export class HostHub {
       await peer.pc.setRemoteDescription({ type: 'offer', sdp: m.payload });
       const answer = await peer.pc.createAnswer();
       await peer.pc.setLocalDescription(answer);
+      this.triggers.get(ep)?.offerSent();
       await this.send(ep, 'answer', m.gen, peer.pc.localDescription!.sdp);
       for (const [g, list] of held) {
         if (g === m.gen) for (const c of list) await peer.pc.addIceCandidate(c).catch(() => undefined);
@@ -580,6 +710,8 @@ export class HostHub {
     await Promise.all([...this.peers.keys()].map((ep) => this.send(ep, 'bye', this.peers.get(ep)!.gen, '')));
     await api.end(this.roomId, this.secret).catch(() => undefined);
     for (const p of this.peers.values()) p.pc.close();
+    for (const t of this.triggers.values()) t.dispose();
+    this.triggers.clear();
     this.peers.clear();
     this.stream?.stop();
     clearTimeout(this.refreshTimer);

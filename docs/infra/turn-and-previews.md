@@ -147,6 +147,35 @@ Cloudflare credential yet**: the broker isn't deployed and the one live run (bel
 - **Known limit:** the backend's call to the broker is a blocking socket call (4 s timeout, one retry) inside the
   request handler, acceptable for a rare event of a few hundred ms; revisit if the fallback gets common.
 
+### Deploying the broker (written down 2026-10-07; not deployed)
+
+What exists to deploy: the `jj-server` image already contains the broker role. Everything below is still to do.
+
+1. **A TrueNAS custom app `jammers-turn-broker`** (created by the owner or the deploy repo through `midclt app.create`,
+   like `jammers-net`). Compose service `broker`: the same `jj-server` image digest as the previews/production, `container_name:
+   jammers-turn-broker`, `restart: unless-stopped`, `read_only: true`, `cap_drop: [ALL]`,
+   `security_opt: [no-new-privileges:true]`, `mem_limit: 128m`, `pids_limit: 128`, joined **only** to the external network
+   `jammers-previews` (so previews reach it as `http://jammers-turn-broker:8080`). **No tunnel ingress, no edge route, no
+   published port**: nothing public can reach `/broker/issue`. It needs outbound HTTPS to `rtc.live.cloudflare.com`.
+2. **Its environment:** `JJ_ROLE=turn-broker`, `JJ_BIND=0.0.0.0:8080`, `JJ_BROKER_KEY` (new; 32+ random bytes, base64),
+   `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN` (from `~/.config/jammers/cf-turn-key.env`: `CF_TURN_KEY_ID`,
+   `CF_TURN_KEY_API_TOKEN`). `JJ_DIST` isn't read in this role. Health: `GET /healthz` (the image's `--healthcheck` checks
+   the same path on `JJ_BIND`'s port). The Cloudflare token lives in this one app's compose config and nowhere else: not in
+   the deploy repo's Actions secrets, not in any preview.
+3. **Deploy repo changes** (`jammers-deploy`, not made): add the Actions secret `JJ_BROKER_KEY` (same value as the broker's),
+   and in `scripts/publish.py` `compose()` add to each backend's environment
+   `JJ_BROKER_URL=http://jammers-turn-broker:8080` and
+   `JJ_BROKER_SECRET=hex(HMAC-SHA256(JJ_BROKER_KEY, previewId))` (the same derivation as `room_key`; `previewId` is the
+   `<id>` in `/p/<id>/`, `production` for the production backend). Backends must **not** receive `JJ_BROKER_KEY`,
+   `CF_TURN_KEY_ID` or `CF_TURN_KEY_API_TOKEN`: they refuse to start if they do. Add `JJ_BROKER_KEY` to `publish.py`'s secret
+   list and its `--plan` redaction. Production (P1-D08) gets the same two variables.
+4. **Order:** deploy the broker first with the Cloudflare variables **unset** (it then answers `relay-unavailable` and
+   never calls Cloudflare), check `/healthz` from a preview container, publish one preview with the two backend variables,
+   and confirm `POST /ice/fallback` returns 503 `relay-unavailable`. Only then set the Cloudflare variables for the one live run.
+5. **Rotation and kill switch:** rotating `JJ_BROKER_KEY` invalidates every backend's secret until they are republished
+   (fallback shows "relay unavailable", direct and coturn keep working). The spend guard deleting the `jammers-` key makes
+   the broker's Cloudflare call fail the same way. Removing the app is a full off switch for new issuance.
+
 Live run for the receipt (one controlled Cloudflare issuance): deploy the broker, point one preview at it, then
 `tools/net/qualify-matrix.sh cloudflare-443` from a machine outside the LAN. The issued tag
 `jj-<realm>-<roomId>-<endpointId>` must then appear in the guard's per-tag listing

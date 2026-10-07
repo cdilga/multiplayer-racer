@@ -10,7 +10,10 @@
 // 2,000 B/s payload verdict. IPs, SDP and credentials never reach a receipt (qualify-lib.mjs `receiptProblems`).
 //
 // Options
-//   --base <url>            the build's base URL, ending in `/` (required)
+//   --base <url>            the build's base URL, ending in `/` (required unless --serve)
+//   --serve                 build the web app and start a local jj-server for this row (as the journeys do; JJ_SERVER_BIN
+//                           picks the binary); `--server-env K=V` (repeatable) sets its environment, e.g. a local coturn's
+//                           TURN_STATIC_AUTH_SECRET and JJ_TURN_URLS
 //   --row <name>            receipt name; written to --out (default docs/evidence/P1-N08/<row>.json)
 //   --expect <kind>         selected path must be: host | srflx | coturn-relay | cloudflare-relay | relay | any (default any)
 //   --policy relay          force `iceTransportPolicy: "relay"` (the real TURN path)
@@ -32,8 +35,16 @@ const opt = (name, dflt = null) => {
   const i = argv.indexOf(`--${name}`);
   return i < 0 ? dflt : (argv[i + 1]?.startsWith('--') ? true : (argv[i + 1] ?? true));
 };
-const base = opt('base');
+let base = opt('base');
 const row = opt('row');
+const serveLocal = argv.includes('--serve');
+const serverEnv = Object.fromEntries(argv.flatMap((a, i) => (a === '--server-env' ? [argv[i + 1].split(/=(.*)/s).slice(0, 2)] : [])));
+let localServer = null;
+if (serveLocal) {
+  const site = await import('../../web/landing/tests/lib/site.mjs');
+  localServer = await site.serve(site.build('./', 'n08'), '/p/n08/', { JJ_STUN_URLS: '', ...serverEnv });
+  base = `${localServer.origin}/p/n08/`;
+}
 if (!base || !row || !/\/$/.test(base)) {
   console.error('usage: qualify.mjs --base <url ending in /> --row <name> [options] (see the header)');
   process.exit(2);
@@ -181,4 +192,5 @@ try {
   process.exitCode = 1;
 } finally {
   for (const b of browsers) await b.close().catch(() => {});
+  await localServer?.close();
 }
