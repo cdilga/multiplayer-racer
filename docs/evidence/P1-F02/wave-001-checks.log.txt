@@ -1,0 +1,137 @@
+schema: valid
+contrast ok   14.81:1 (min 4.5) text-on-paper: ink on paper
+contrast ok   12.62:1 (min 4.5) text-on-paper-shade: ink on paper-shade
+contrast ok    8.05:1 (min 4.5) muted-on-paper: ink-soft on paper
+contrast ok    6.86:1 (min 4.5) muted-on-paper-shade: ink-soft on paper-shade
+contrast ok   14.81:1 (min 4.5) text-on-ink: paper on ink
+contrast ok   12.45:1 (min 4.5) text-on-ink-raised: paper on ink-raised
+contrast ok    9.06:1 (min 3) primary-button: ink on saffron
+contrast ok    9.06:1 (min 4.5) primary-button-label: ink on saffron
+contrast ok    4.82:1 (min 3) cobalt-button: paper on cobalt
+contrast ok    4.82:1 (min 3) cobalt-number-on-paper: cobalt on paper
+contrast ok    7.39:1 (min 4.5) cobalt-text-on-paper: cobalt-deep on paper
+contrast ok    5.99:1 (min 4.5) destructive-button: paper on danger
+contrast ok    5.33:1 (min 4.5) destructive-text-on-tint: danger on danger-tint
+contrast ok    5.22:1 (min 4.5) success-text-on-tint: success on success-tint
+contrast ok    5.64:1 (min 4.5) success-text-on-paper: success on paper
+contrast ok   13.42:1 (min 4.5) text-on-warning-tint: ink on warning-tint
+contrast ok    6.18:1 (min 4.5) warning-text-on-ink: warning on ink
+contrast ok    9.06:1 (min 4.5) saffron-text-on-ink: saffron on ink
+contrast ok   14.81:1 (min 3) outline-on-paper: ink on paper
+contrast ok    4.82:1 (min 3) focus-ring-on-paper: cobalt on paper
+contrast ok    9.06:1 (min 3) focus-ring-on-ink: saffron on ink
+contrast ok   21.00:1 (min 3) qr-modules: black on white
+contrast ok    9.06:1 (min 4.5) caption-on-saffron: ink on saffron
+contrast ok   14.81:1 (min 4.5) caption-on-ink: paper on ink
+contrast ok    7.24:1 (min 4.5) caption-on-teal: ink on teal
+backing  ok    9.06:1 (min 4.5) ink-on-saffron: ink on saffron
+backing  ok   14.81:1 (min 4.5) paper-on-ink: paper on ink
+backing  ok    9.06:1 (min 4.5) saffron-accent-on-ink: saffron on ink
+backing  ok    4.82:1 (min 4.5) paper-on-cobalt: paper on cobalt
+backing  ok    5.64:1 (min 4.5) paper-on-success: paper on success
+backing  ok    6.18:1 (min 4.5) ink-on-warning: ink on warning
+backing  ok    7.24:1 (min 4.5) ink-on-teal: ink on teal
+backing  ok    4.03:1 (min 3) ink-on-red-earth-display: ink on red-earth
+badge    ok    3.99:1 paper on red
+badge    ok    4.74:1 paper on blue
+badge    ok    6.19:1 ink on orange
+badge    ok    6.39:1 ink on teal
+badge    ok   11.19:1 ink on yellow
+badge    ok    5.31:1 ink on pink
+badge    ok   12.63:1 paper on charcoal
+badge    ok    4.98:1 ink on green
+badge    ok   14.33:1 ink on white
+badge    ok    5.05:1 paper on purple
+badge    ok    8.09:1 paper on maroon
+badge    ok    8.60:1 ink on sky
+cvd      ok   worst ΔE00    46 red→blue {"normal":46,"protanopia":53.1,"deuteranopia":62.8,"tritanopia":66.2}
+cvd      ok   worst ΔE00  56.1 blue→orange {"normal":56.1,"protanopia":62.8,"deuteranopia":70.2,"tritanopia":63.3}
+cvd      ok   worst ΔE00  34.7 orange→teal {"normal":51.8,"protanopia":34.7,"deuteranopia":42.7,"tritanopia":63.3}
+cvd      ok   worst ΔE00  36.8 teal→yellow {"normal":43.7,"protanopia":36.8,"deuteranopia":45.9,"tritanopia":45.8}
+cvd      ok   worst ΔE00  26.4 yellow→pink {"normal":63.4,"protanopia":52.7,"deuteranopia":31.3,"tritanopia":26.4}
+cvd      ok   worst ΔE00  30.9 pink→charcoal {"normal":47.1,"protanopia":30.9,"deuteranopia":43.3,"tritanopia":41}
+cvd      ok   worst ΔE00  41.2 charcoal→green {"normal":47,"protanopia":47.5,"deuteranopia":42.3,"tritanopia":41.2}
+cvd      ok   worst ΔE00  31.1 green→white {"normal":36.5,"protanopia":31.1,"deuteranopia":31.6,"tritanopia":37.7}
+cvd      ok   worst ΔE00  41.5 white→purple {"normal":52.6,"protanopia":49.6,"deuteranopia":50.1,"tritanopia":41.5}
+cvd      ok   worst ΔE00  28.2 purple→maroon {"normal":29.6,"protanopia":28.7,"deuteranopia":42.2,"tritanopia":28.2}
+cvd      ok   worst ΔE00  50.9 maroon→sky {"normal":68.3,"protanopia":55.9,"deuteranopia":50.9,"tritanopia":74.8}
+cvd      ok   worst ΔE00  52.5 sky→red {"normal":60.2,"protanopia":53,"deuteranopia":52.5,"tritanopia":67.8}
+files: 46/46 present
+token check: ok
+checks: ok   0s  UI tokens (P1-U01)
+grid check: 252 layouts (6 screens x N = 1..40, 64, 99): every tile the same area, nothing black
+checks: ok   0s  TV grid rule, equal tiles at any N (P1-U02.2, R95)
+OK: 70 rows in tools/audio/cues-playtest1.tsv (17 moments covered; glossary 45 terms)
+variants: welcome=4, all-ready=3, countdown=3, final-lap=3, first-finisher=3, photo-finish=4, time-up=4, winner=4, next-round=5, door-off=5, wheel-off=5, bodywork-off=4, big-air=4, wreck=5, lead-change=5, off-course=4, late-joiner=5
+test_bad_delivery (__main__.Corrupted.test_bad_delivery) ... ok
+test_blank_slang_cell (__main__.Corrupted.test_blank_slang_cell) ... ok
+test_caption_must_track_speech (__main__.Corrupted.test_caption_must_track_speech) ... ok
+test_car_number_in_words (__main__.Corrupted.test_car_number_in_words) ... ok
+test_colour (__main__.Corrupted.test_colour) ... ok
+test_curated_name_list (__main__.Corrupted.test_curated_name_list) ... ok
+test_digit_in_speech (__main__.Corrupted.test_digit_in_speech) ... ok
+test_duplicate_text (__main__.Corrupted.test_duplicate_text) ... ok
+test_glossary_dont_say (__main__.Corrupted.test_glossary_dont_say) ... ok
+test_indigenous_derived_slang_allowed (__main__.Corrupted.test_indigenous_derived_slang_allowed) ... ok
+test_non_ascii (__main__.Corrupted.test_non_ascii) ... ok
+test_not_family_friendly_flag (__main__.Corrupted.test_not_family_friendly_flag) ... ok
+test_required_moment_missing (__main__.Corrupted.test_required_moment_missing) ... ok
+test_slang_listed_but_unused (__main__.Corrupted.test_slang_listed_but_unused) ... ok
+test_slang_used_but_undeclared (__main__.Corrupted.test_slang_used_but_undeclared) ... ok
+test_swearing (__main__.Corrupted.test_swearing) ... ok
+test_too_long_callout (__main__.Corrupted.test_too_long_callout) ... ok
+test_unknown_moment (__main__.Corrupted.test_unknown_moment) ... ok
+test_unknown_slang_term (__main__.Corrupted.test_unknown_slang_term) ... ok
+test_unmodified_copy_passes (__main__.Corrupted.test_unmodified_copy_passes) ... ok
+test_us_spelling (__main__.Corrupted.test_us_spelling) ... ok
+test_variant_floor_once (__main__.Corrupted.test_variant_floor_once) ... ok
+test_variant_floor_repeating (__main__.Corrupted.test_variant_floor_repeating) ... ok
+test_variant_gap (__main__.Corrupted.test_variant_gap) ... ok
+test_wrong_field_count (__main__.Corrupted.test_wrong_field_count) ... ok
+test_wrong_trigger_event (__main__.Corrupted.test_wrong_trigger_event) ... ok
+test_missing_caption_is_refused (__main__.Fixtures.test_missing_caption_is_refused) ... ok
+test_missing_file_exits_2 (__main__.Fixtures.test_missing_file_exits_2) ... ok
+test_ok_fixture_is_accepted (__main__.Fixtures.test_ok_fixture_is_accepted) ... ok
+test_player_name_is_refused (__main__.Fixtures.test_player_name_is_refused) ... ok
+test_unflagged_line_is_refused (__main__.Fixtures.test_unflagged_line_is_refused) ... ok
+test_every_declared_moment_meets_its_floor (__main__.RealSheet.test_every_declared_moment_meets_its_floor) ... ok
+test_glossary_used_in_matches_the_sheet (__main__.RealSheet.test_glossary_used_in_matches_the_sheet) ... ok
+test_json_export_records_the_repeat_rule (__main__.RealSheet.test_json_export_records_the_repeat_rule) ... ok
+test_real_sheet_passes (__main__.RealSheet.test_real_sheet_passes) ... ok
+test_required_moments_from_the_bead_are_declared (__main__.RealSheet.test_required_moments_from_the_bead_are_declared) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 0.772s
+
+OK
+checks: ok   1s  Announcer cue sheet (P1-A00)
+engine-synth.js, profile.schema.json, manifest and profiles are up to date
+checks: ok   0s  Engine synth bundle and profile copy are current (P1-A04)
+23 recipe blocks checked, 0 drifted
+checks: ok   0s  jammers-look recipes match the rendered code (P1-F11)
+wrote maps/test/surface-strips.json
+checks: ok   0s  The surface-strips test map is what its generator writes (P1-S03a)
+cruz-missile.lod0.glb: 1264 tris (budget 1300) {"core":176,"front":438,"back":286,"door_FL":18,"door_FR":18,"door_RL":12,"door_RR":12,"wheel_FL":76,"wheel_FR":76,"wheel_RL":76,"wheel_RR":76,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod1.glb: 890 tris (budget 900) {"core":156,"front":240,"back":206,"door_FL":12,"door_FR":12,"door_RL":12,"door_RR":12,"wheel_FL":60,"wheel_FR":60,"wheel_RL":60,"wheel_RR":60,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+cruz-missile.lod2.glb: 594 tris (budget 600) {"core":140,"front":176,"back":142,"door_FL":6,"door_FR":6,"door_RL":6,"door_RR":6,"wheel_FL":28,"wheel_FR":28,"wheel_RL":28,"wheel_RR":28,"interior_engine":24,"interior_cabin":36,"interior_boot":32}
+same    cruz-missile.atlas.png 1c538df7284e84403f2e76a1fc23936b2004cbe4e33970e8a417c63d80628881
+same    cruz-missile.emissive.png cae2a2d7e28bcfc18eada1535b9ceccaacab016bb314d5ceed93d5da3d8dde9d
+same    cruz-missile.lod0.glb 1063812662cb7fc8833a6e8edcb51dfed1836b29ca4e143c71a0ea63b5203f1c
+same    cruz-missile.lod1.glb 75fa9b471eeb091c35fa9b563993791342266bf28f75f1d69422c18d335b4453
+same    cruz-missile.lod2.glb 883c0ace268c50d39d1e3200296ae93df417b1de42c5b5cea717fd16b0cd6574
+same    cruz-missile.asset.json 5075b9ad49b6f7298fb144a3a18241ab7282e91849b36cde2f423d14f47efdeb
+bake --check: the committed files are exactly what the model script bakes
+✔ two bakes give identical bytes, and they are the committed files (712.197302ms)
+✔ LOD0 loads in three.js with the contract nodes and Spike J's bounds (20.08176ms)
+✔ LOD1 loads in three.js with the contract nodes and Spike J's bounds (3.920548ms)
+✔ LOD2 loads in three.js with the contract nodes and Spike J's bounds (3.663313ms)
+✔ the sidecar declares the pivots the GLBs carry, identical at every LOD (6.667744ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1587.666284
+checks: ok   2s  Vehicle bake is reproducible and committed; loads in three.js (P1-V02)

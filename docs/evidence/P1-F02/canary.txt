@@ -1,0 +1,72 @@
+$ scripts/beads/canary.sh   (2026-10-07T23:55:02Z, the Mac, br 0.7.4)
+canary: br 0.7.4 against /Users/cdilga/Documents/dev/multiplayer-racer/.beads/policy.yaml
+canary: workspace $TMPDIR//br-canary.VGqZaR
+
+## claiming
+ok   claim without acceptance criteria
+       refused: Policy violation for cn-j03: transition 'open -> in_progress' requires non-empty acceptance criteria for cn-j03
+ok   worker claims a bead with criteria
+ok   same worker claims a second bead (goals, R93)
+ok   another worker claims a claimed bead
+       refused: Validation failed: claim: issue cn-omh already assigned to W1
+## closing your own bead on green CI (Physical Soccer model)
+ok   close before a batch_verify gate pass
+       refused: Policy violation for cn-omh: 2 workflow requirement(s) failed:\n- transition 'in_progress -> closed' requires all acceptance criteria to be satisfied for cn-omh; 1 unchecked item(s) remain\n- transiti
+ok   worker records the CI gate pass
+ok   close reason without receipt: reference
+       refused: Policy violation for cn-omh: close_reason has no typed references; policy requires at least one of: receipt
+ok   close with unchecked acceptance criteria
+       refused: Policy violation for cn-omh: transition 'in_progress -> closed' requires all acceptance criteria to be satisfied for cn-omh; 1 unchecked item(s) remain
+ok   worker ticks the exercised criteria
+ok   worker closes its own green bead
+ok   reopen without a reason
+       refused: Policy violation for cn-omh: transition 'closed -> open' requires a new non-empty transition comment for cn-omh
+## shortcuts stay closed
+ok   close via update --status closed
+       refused: Validation failed: status: refusing to close via `br update --status closed`: terminal-state transitions must go through `br close` so close-policy (close-reason / AC / attribution) is enforced. Use `
+ok   close with --bypass-policy
+       refused: Validation failed: bypass-policy: .beads/policy.yaml has allow_bypass: false; --bypass-policy is disabled
+ok   create a bead already closed
+       refused: Validation failed: status: initial status 'closed' is not permitted by the project workflow policy (.beads/policy.yaml workflow.transitions, key 'initial'). Allowed initial statuses: open, deferred, b
+## hand-off, rework and stale verdicts
+ok   batch_pending without hand-off comment
+       refused: Policy violation for cn-3vg: transition 'in_progress -> batch_pending' requires a new non-empty transition comment for cn-3vg
+ok   batch_pending with hand-off comment
+ok   verifier records a pass
+ok   rework without failure note
+       refused: Policy violation for cn-3vg: transition 'batch_pending -> rework' requires a new non-empty transition comment for cn-3vg
+ok   rework with failure note
+ok   rework bead resurfaces in br ready
+ok   same worker re-claims rework
+ok   worker hands off the fix
+ok   verifier ticks the exercised criteria
+ok   stale PASS from before rework
+       refused: Policy violation for cn-3vg: transition 'batch_pending' -> 'closed' requires gate 'batch_verify' to pass for cn-3vg, but no provider has reported a pass. Record a result with `br gate report cn-3vg --
+ok   fresh pass for this revision
+ok   verifier closes the handed-off bead
+## epics
+ok   force-close epic without batch_verify
+       refused: Policy violation for cn-3r7: transition 'open' -> 'closed' requires gate 'batch_verify' to pass for cn-3r7, but no provider has reported a pass. Record a result with `br gate report cn-3r7 --gate batc
+ok   close epic with open children
+       refused: Nothing to do: all 1 issue(s) skipped — cn-3r7: epic has 1/1 open children (use --force to close anyway)
+## evidence records and the evidence commit-msg hook (P1-F02, docs/evidence/README.md)
+ok   a deploy-repo record with no game-repo commit is accepted
+       evidence: OK docs/evidence/P1-X99/ok.md closes cn-x99 (P1-X99; AC1 AC2; observer canary)
+ok   an uncommitted record is refused
+         - uncommitted: the record is not tracked by git (commit it first)
+ok   a malformed record (no header) is refused
+         - malformed: no `<!-- evidence … -->` header at the top
+ok   a record for another bead is refused
+         - wrong bead: the record is for cn-other, not cn-x99
+ok   a record missing an acceptance item is refused
+         - incomplete: covers lacks AC2 (2 acceptance items)
+ok   a deploy-repo record without its commit range is refused
+         - incomplete: an ev:deploy-repo record needs `external: <repo> <a>..<b>, run <n>`
+ok   commit-msg rejects an unnamed change to another bead's evidence
+ok   commit-msg accepts a message naming the bead
+ok   commit-msg accepts a deliberate Recapture:
+## known gaps (enforced outside br; informational)
+gap  an agent can br delete a claimed bead (tombstone skips gates)
+       mitigation: the hook blocks 'br delete' for worker and solo sessions
+
+canary: 37 passed, 0 failed

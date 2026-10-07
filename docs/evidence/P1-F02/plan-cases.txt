@@ -1,0 +1,23 @@
+# The planner on the four F02 cases (2026-10-07T23:55:08Z); CI's jobs and batch-verify.sh call this same function
+$ node scripts/ci/plan.mjs --changed crates/jj-protocol/src/lib.rs
+selected: lanes rust, scenarios, wasm-parity, web, e2e, image; rust(jj-fixture jj-input jj-procgen jj-protocol jj-server jj-session jj-sim jj-tools jj-wasm-host jj-wasm-input jj-wasm-procgen); browser (60 files); gpu: c06-identify-menu, r06-identify; image: true; soak: 20s [diff given-path..1d575a25fa: 1 paths]
+$ node scripts/ci/plan.mjs --changed crates/jj-sim/src/lib.rs
+selected: lanes rust, scenarios, wasm-parity, web, e2e, image; rust(jj-fixture jj-procgen jj-sim jj-tools jj-wasm-host jj-wasm-procgen); browser (60 files); gpu: c06-identify-menu, r06-identify; image: true; soak: 20s [diff given-path..1d575a25fa: 1 paths]
+$ node scripts/ci/plan.mjs --changed web/host/src/main.ts
+selected: lanes web, e2e, image; rust(none); browser (59 files); gpu: c06-identify-menu, r06-identify; image: true; soak: 20s [diff given-path..1d575a25fa: 1 paths]
+$ node scripts/ci/plan.mjs --changed tools/vehicles/bake.mjs
+selected: lanes tools; rust(none); browser (0 files); gpu: none; image: false; soak: 20s [diff given-path..1d575a25fa: 1 paths]
+
+# The same planner over real ranges, locally, through batch-verify.sh
+$ scripts/beads/batch-verify.sh plan --base 532486d~1 --head 532486d
+batch-verify: range f40ddd9..532486d, 18 changed paths
+batch-verify: lanes: rust,web,e2e,image
+$ scripts/beads/batch-verify.sh plan --base 98a3b77~1 --head 98a3b77
+batch-verify: range 1fd9599..98a3b77, 3 changed paths
+batch-verify: lanes: e2e
+$ scripts/beads/batch-verify.sh plan --base 5abeb4e~1 --head 5abeb4e
+batch-verify: range 6442eea..5abeb4e, 1 changed paths
+batch-verify: lanes: rust,wasm-parity,web,e2e,image
+$ scripts/beads/batch-verify.sh plan --base 1d575a2~1 --head 1d575a2
+batch-verify: range f0e4276..1d575a2, 1 changed paths
+batch-verify: lanes: checks only
