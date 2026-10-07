@@ -1,0 +1,4 @@
+commit 46003af883e559add9c533e9cf45b46c0145572c
+run: ERIS_MIN=46003af883e559add9c533e9cf45b46c0145572c scripts/remote/eris.sh --run f08 "JJ_EVIDENCE_DIR=$JJ_RUN_DIR/evidence node scripts/emulators/drive.mjs android --repeat 2 --on-eris 1"
+machine: eris (Linux, KVM), Android emulator jj-ctrl-api37-play, Chrome 145
+result: run 1 and run 2: C02 PASS, C03 PASS (back 74 ms, seat #1), G03 PASS (autopilot seen and released)
