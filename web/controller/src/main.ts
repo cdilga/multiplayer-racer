@@ -4,7 +4,7 @@ import { basePath } from '../../shared/src/base';
 import { applyProfile } from '../../shared/ui';
 import './app/controller.css';
 import { prefillName } from './app/names';
-import { Session } from './app/session';
+import { Session, loadInput } from './app/session';
 import { applyState, fragmentState } from './app/states';
 import { mountController, wakeHeld } from './app/view';
 
@@ -52,6 +52,8 @@ async function boot(root: HTMLElement): Promise<void> {
   // A state opener (#state=…): draw that §11 screen with no connection at all (R90's test surface).
   const opened = fragmentState();
   if (opened) {
+    await loadInput(); // the wasm the encoders and the stick scheduler need, as session.start() would have loaded it
+    session.code = code;
     applyState(session, opened);
     history.pushState({ guard: true }, '');
     addEventListener('popstate', () => history.pushState({ guard: true }, ''));

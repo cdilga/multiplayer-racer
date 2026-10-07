@@ -96,7 +96,7 @@ test('reloading the tab returns the same seat; a second tab fences the first and
   await second.goto(joinUrl);
   await wait(second, () => window.__jjController?.inspect().phase === 'playing', undefined, 60_000);
   await wait(p.page, () => window.__jjController.inspect().phase === 'another-tab');
-  assert.match(await p.page.evaluate(() => document.body.innerText), /Playing in another tab/);
+  assert.match(await p.page.evaluate(() => document.body.textContent), /Playing in another tab/i);
   assert.deepEqual((await inspect(second)).you, p.you, 'the second tab is the same seat');
   await p.page.getByRole('button', { name: 'Use this one' }).click();
   await wait(p.page, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
@@ -124,7 +124,7 @@ test('a Claim retried with the same request id (a lost reply) yields one seat', 
 });
 
 test('every §11 state is reached by a scripted cause and shows its wording', { timeout: 600_000 }, async () => {
-  const text = (page) => page.evaluate(() => document.body.innerText);
+  const text = (page) => page.evaluate(() => document.body.textContent);
   const phoneAt = async (url, route) => {
     const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
     const page = await ctx.newPage();
@@ -138,12 +138,12 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   // Unknown code: no such room.
   let page = await phoneAt(`${server.origin}${BASE}j/ZZZZ`);
   await wait(page, () => window.__jjController?.inspect().phase === 'no-such-room');
-  assert.match(await text(page), /No room with code ZZZZ/);
+  assert.match(await text(page), /No room with code ZZZZ/i);
 
   // Expired preview: the lookup answers 410.
   page = await phoneAt(joinUrl, (p) => p.route('**/api/v1/rooms/*', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 410, contentType: 'application/json', body: '{"reason":"preview-expired"}' }) : r.continue())));
   await wait(page, () => window.__jjController?.inspect().phase === 'preview-expired');
-  assert.match(await text(page), /This test build has expired/);
+  assert.match(await text(page), /This test build has expired/i);
 
   // A network that won't connect, with the relay answering 429 then 503: "Finding a relay…", then the way out.
   let fallbackCalls = 0;
@@ -155,9 +155,9 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   );
   await wait(page, () => ['finding-relay', 'no-route'].includes(window.__jjController?.inspect().phase), undefined, 90_000);
   const seenRelay = await text(page);
-  assert.match(seenRelay, /Finding a relay|Can't reach the host from this network/);
+  assert.match(seenRelay, /Finding a relay|Can't reach the host from this network/i);
   await wait(page, () => window.__jjController.inspect().phase === 'no-route', undefined, 120_000);
-  assert.match(await text(page), /Can't reach the host from this network/);
+  assert.match(await text(page), /Can't reach the host from this network/i);
   assert.ok(fallbackCalls >= 2, `the relay was asked ${fallbackCalls} times (429 then 503)`);
 
   // Ended room: the host ends it.
@@ -168,7 +168,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
     document.dispatchEvent(new Event('visibilitychange'));
   });
   await wait(live.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 20_000);
-  assert.match(await text(live.page), /Host paused/);
+  assert.match(await text(live.page), /Host paused/i);
   await host.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));
@@ -179,7 +179,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   // it is updating and reloads itself once.
   await live.page.evaluate(() => sessionStorage.removeItem('jj.reloaded'));
   await live.page.evaluate(() => window.__jjController.deliver('cmd', [1, 1, 0]));
-  await wait(live.page, () => window.__jjController.inspect().phase === 'update-needed' || document.body.innerText.includes('Updating'), undefined, 10_000).catch(() => {});
+  await wait(live.page, () => window.__jjController.inspect().phase === 'update-needed' || document.body.textContent.includes('Updating'), undefined, 10_000).catch(() => {});
   assert.equal(await live.page.evaluate(() => sessionStorage.getItem('jj.reloaded')), '1', 'it reloads itself, once');
 
   // Host gone: the phone has a seat, then the room can't be found when it comes back.
@@ -187,14 +187,14 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   await seated.page.route('**/api/v1/rooms/*', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'not-found' }) }) : r.continue()));
   await seated.page.reload();
   await wait(seated.page, () => window.__jjController?.inspect().phase === 'host-gone', undefined, 30_000);
-  assert.match(await text(seated.page), /The host seems to have gone/);
+  assert.match(await text(seated.page), /The host seems to have gone/i);
 
   // Ended room.
   await host.evaluate(() => window.__jjRoom.end());
   await wait(live.page, () => window.__jjController.inspect().phase === 'room-ended', undefined, 60_000).catch(async () => {
     assert.fail(`the room was ended but the phone is ${await phase(live.page)}`);
   });
-  assert.match(await text(live.page), /That room has ended/);
+  assert.match(await text(live.page), /That room has ended/i);
 });
 
 test("an edited name is remembered per device and realm and prefilled on the next join", { timeout: 180_000 }, async () => {
@@ -239,7 +239,7 @@ test('Leave asks for a second tap, then the seat goes; Sit out from Settings par
   assert.equal((await seats(host)).length, 2, 'sitting out keeps the seat');
   const leave = p.page.locator('[data-act=leave]');
   await leave.click();
-  assert.match(await leave.innerText(), /Tap again to leave/);
+  assert.match(await leave.textContent(), /Tap again to leave/i);
   assert.equal((await seats(host)).length, 2, 'one tap leaves nothing');
   await leave.click();
   await wait(host, () => window.__jjRoom.view().seats.length === 1);

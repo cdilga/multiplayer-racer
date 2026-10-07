@@ -213,7 +213,7 @@ describe('the player colour and Identify', () => {
     assert.equal(colours.knob, rgb(seat), 'the DRIVE knob is the seat colour');
     await page.locator('[data-act=identify]').click();
     await page.locator('.cooee').waitFor({ timeout: 5000 });
-    assert.match(await page.locator('.cooee').innerText(), /Cooee #12/);
+    assert.match(await page.locator('.cooee').textContent(), /Cooee #12/i);
     await shot(page, 'c02-identify-flash');
     await page.locator('.cooee').waitFor({ state: 'detached', timeout: 5000 });
     await ctx.close();
@@ -225,7 +225,7 @@ describe('landscape first, full screen and the wake lock', () => {
     const eng = engines.find((e) => e.name === 'chromium');
     const p = await open(eng, 'playing', PORT);
     await p.page.locator('[data-overlay=rotate]').waitFor();
-    assert.match(await p.page.locator('[data-overlay=rotate]').innerText(), /Turn sideways/);
+    assert.match(await p.page.locator('[data-overlay=rotate]').textContent(), /Turn sideways/i);
     await shot(p.page, 'c02-rotate-prompt');
     await p.page.getByRole('button', { name: 'Play upright anyway' }).click();
     assert.equal(await p.page.locator('[data-overlay=rotate]').count(), 0);

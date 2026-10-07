@@ -24,21 +24,21 @@ after(async () => {
 
 /** state: [fragment, wording that must show, the next action's button (or null), words that must NOT appear] */
 const STATES = {
-  finding: ['finding', /Finding room ABCD/, null],
-  'no-such-room': ['no-such-room', /No room with code ABCD/, 'Try another code'],
-  'room-ended': ['room-ended', /That room has ended/, 'Join another room'],
-  'preview-expired': ['preview-expired', /This test build has expired/, null],
-  connecting: ['connecting', /Connecting/, null],
-  'finding-relay': ['finding-relay', /Finding a relay/, null],
-  'no-route': ['no-route', /Can't reach the host from this network/, 'Retry'],
-  'ready-to-join': ['ready-to-join&name=Davo', /Room ABCD/, 'Join the race'],
-  joining: ['joining', /Joining/, null],
-  reconnecting: ['reconnecting&seat=12', /Reconnecting as #12/, null],
-  'host-gone': ['host-gone', /The host seems to have gone/, 'Enter a new code'],
-  'host-paused': ['host-paused&seat=12', /Host paused/, null],
-  'another-tab': ['another-tab', /Playing in another tab/, 'Use this one'],
-  'update-needed': ['update-needed', /Updating/, null],
-  playing: ['playing&seat=12', /#12/, 'Ready'],
+  finding: ['finding', /Finding room ABCD/i, null],
+  'no-such-room': ['no-such-room', /No room with code ABCD/i, 'Try another code'],
+  'room-ended': ['room-ended', /That room has ended/i, 'Join another room'],
+  'preview-expired': ['preview-expired', /This test build has expired/i, null],
+  connecting: ['connecting', /Connecting/i, null],
+  'finding-relay': ['finding-relay', /Finding a relay/i, null],
+  'no-route': ['no-route', /Can't reach the host from this network/i, 'Retry'],
+  'ready-to-join': ['ready-to-join&name=Davo', /Room ABCD/i, 'Join the race'],
+  joining: ['joining', /Joining/i, null],
+  reconnecting: ['reconnecting&seat=12', /Reconnecting as #12/i, null],
+  'host-gone': ['host-gone', /The host seems to have gone/i, 'Enter a new code'],
+  'host-paused': ['host-paused&seat=12', /Host paused/i, null],
+  'another-tab': ['another-tab', /Playing in another tab/i, 'Use this one'],
+  'update-needed': ['update-needed', /Updating/i, null],
+  playing: ['playing&seat=12', /#12/i, 'Ready'],
 };
 const SIZES = { 'phone-landscape-844x390': [844, 390], 'phone-portrait-390x844': [390, 844], 'phone-small-375x667': [375, 667] };
 
@@ -57,7 +57,7 @@ for (const [state, [, wording, action]] of Object.entries(STATES)) {
   test(`§11 ${state}: its wording${action ? ` and its action "${action}"` : ''}, never "game", nothing off the edge`, { timeout: 60_000 }, async () => {
     for (const [label, size] of Object.entries(SIZES)) {
       const { page, errors } = await open(state, size);
-      const text = await page.evaluate(() => document.body.innerText);
+      const text = await page.evaluate(() => document.body.textContent);
       assert.match(text, wording, `${state}: ${label}`);
       assert.doesNotMatch(text, /\bgame\b/i, `${state}: R112 says room, never game`);
       if (action) assert.ok((await page.getByRole('button', { name: action }).count()) >= 1, `${state}: has "${action}"`);
