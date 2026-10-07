@@ -63,7 +63,7 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text()) && errors.push(m.text().slice(0, 300)));
   // The free-drive room page (as JN1): a real room with its tile grid, the clock held so the journey steps it.
-  await page.goto(`${server.origin}${BASE}host?drive&test=live`);
+  await page.goto(`${server.origin}${BASE}host?drive&test=live&camdist=near`);
   await wait(page, () => window.__jjNet?.code() && window.__jjTest && window.__jjRender, undefined, 60_000);
   await page.evaluate(() => window.__jjTest.hold(true));
 
@@ -113,6 +113,16 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
       { stage, park: scenario.park, cars, endpoints, sticks },
     );
 
+  // The tile grid animates as seats join: capture only once its rects have stopped moving.
+  await page.evaluate(async () => {
+    let last = '';
+    for (let i = 0; i < 60; i++) {
+      const now = JSON.stringify(window.__jjRender.tileRects());
+      if (now === last) return;
+      last = now;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  });
   const stages = [];
   let debrisSeen = 0;
   for (const [n, stage] of scenario.stages.entries()) {

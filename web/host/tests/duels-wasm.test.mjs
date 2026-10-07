@@ -38,9 +38,14 @@ function world(wasm, fx, mapJson) {
 function gateTime(wasm, fx, mapJson, car, gate) {
   const { sim, cmd } = world(wasm, fx, mapJson);
   const r = cmd({ cmd: 'until', until: { car, metric: gate.metric, min: gate.at }, maxTicks: fx.ticks });
+  if (!r.held) {
+    sim.free();
+    return null;
+  }
+  // The road limit judges the whole run, as the native test does: play it out before reading the accumulators.
+  cmd({ cmd: 'step', ticks: Math.max(0, fx.ticks - r.tick) });
   const sig = cmd({ cmd: 'outcome' }).signature.find((s) => s.car === car) ?? {};
   sim.free();
-  if (!r.held) return null;
   if (gate.maxOffsetM !== undefined && (sig.maxRouteOffsetM ?? 0) > gate.maxOffsetM) return null;
   return r.tick / TICK_HZ;
 }
