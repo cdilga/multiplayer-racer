@@ -1,5 +1,5 @@
 {
   "schema": "jj.smoke.v1",
-  "note": "The public smoke steps this build supports (P1-D04 runs its own fixed script for each; this file names them, never commands). G00's hello room: room, join-webrtc, input, resume.",
-  "steps": ["room", "join-webrtc", "input", "resume"]
+  "note": "The public smoke steps this build supports (P1-D04 runs its own fixed script for each; this file names them, never commands). G00's hello room: room, join-webrtc, input, resume. P1-D07's party loop on the game pages (G04, G01): drive, hud, round. All seven are mandatory from P1-D07 on: a build that drops one is marked not playable.",
+  "steps": ["room", "join-webrtc", "input", "resume", "drive", "hud", "round"]
 }
