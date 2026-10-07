@@ -73,7 +73,7 @@ test('model unavailable: the known-names sheet answers; a tap is needed; Undo re
   await page.getByRole('button', { name: 'Make my name Australian' }).click();
   await page.locator('[data-note=aussie]').getByText('Davo').waitFor();
   assert.equal(await page.inputValue('#name'), 'Davo');
-  assert.match(await page.locator('[data-note=aussie]').innerText(), /Davo instead of David/);
+  assert.match(await page.locator('[data-note=aussie]').innerText(), /Davo\s+instead of David/);
   await shot(page, 'c03-aussie-converted-390x844');
   await page.getByRole('button', { name: 'Undo' }).click();
   assert.equal(await page.inputValue('#name'), 'David', 'one tap puts back what was typed');
