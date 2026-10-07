@@ -131,8 +131,8 @@ jobs:
           npx --prefix web vite build --config web/host/tests/vite.config.ts
           cargo build --locked -q -p jj-tools --bin jj
           cargo build --locked -q -p jj-server --bin jj-server
-      - name: Chromium headless shell (Playwright 1.62.1)
-        run: npx playwright install --with-deps --only-shell chromium
+      - name: Chromium headless shell and WebKit (Playwright 1.62.1; WebKit for the clip decode check, P1-A03)
+        run: npx playwright install --with-deps --only-shell chromium && npx playwright install --with-deps webkit
       # One file at a time: every host page renders on the CPU here (software GL), so parallel files starve each
       # other's timers and the timing tests (input age, snapshot starvation) measure the runner, not the host.
       - name: The host in Chromium (P1-S02 sim worker, P1-F05b test surface, P1-R01/R02 renderer)
