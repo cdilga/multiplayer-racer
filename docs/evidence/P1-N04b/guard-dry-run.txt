@@ -1,0 +1,4 @@
+# P1-N04b guard dry-run against a synthetic breach, 2026-10-07 (Mac, read-only API calls; DRY_RUN=1, FREE_GB=0 so the kill threshold is already reached; HA webhook unset so no push went to the owner's phone)
+# command: python3 (loads ~/.config/jammers/cf-turn-guard.env itself) runpy tools/turn-guard/guard.py --once
+NOTIFY Jammers TURN guard: Cloudflare TURN DISABLED: 31-day TURN egress 0.0 GB reached the kill threshold (0 GB). Deleted TURN keys: (dry-run) jammers-fallback. Self-hosted TURN still works. Re-enable only by creating a new key by hand.
+{"at": "2026-10-07T08:00:00Z", "keys": ["jammers-fallback"], "egress_31d_gb": 0.0, "notify_at_gb": 0.0, "kill_at_gb": 0.0, "top_1h": [], "dry_run": true}

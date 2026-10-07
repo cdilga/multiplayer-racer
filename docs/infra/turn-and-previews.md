@@ -122,6 +122,36 @@ them must be assumed leakable. A hard "never charged" guarantee therefore can't 
 3. **Accept a bounded, monitored risk**: Cloudflare credentials only on an authenticated relay-fallback
    request, per-room/IP issuance limits, the guard and alerts above. Not a guarantee.
 
+## Cloudflare TURN issuance: the credential broker (P1-N04b)
+
+Built 2026-10-07 (code: `crates/jj-server/src/ice/broker.rs`; tests: `ice/broker/tests.rs`). **Nothing has issued a
+Cloudflare credential yet**: the broker isn't deployed and the one live run (below) hasn't happened.
+
+- **One broker, same image.** `JJ_ROLE=turn-broker` runs `jj-server` as the broker. It alone holds
+  `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN` (from `~/.config/jammers/cf-turn-key.env`) plus `JJ_BROKER_KEY`
+  (its HMAC key). A normal backend **refuses to start** if any of those three is in its environment, so a preview
+  container can't hold the token.
+- **Backends call it** on the internal network (plain `http://`; `JJ_BROKER_URL`) with
+  `x-jj-backend: <previewId>` and `x-jj-backend-auth: hex(HMAC-SHA256(brokerKey, previewId))`
+  (`JJ_BROKER_SECRET`, injected by the publish workflow; `previewId` is `JJ_PREVIEW_ID` or derived from
+  `JJ_BASE_PATH`: `/p/<id>/` gives `<id>`, `/` gives `production`). Another backend's secret gets `401`.
+  The client IP is the tunnel's `CF-Connecting-IP`, forwarded in the request body.
+- **Limits are rates** (never caps): per endpoint burst 2 then 1 per 5 min; per room burst 32 then 1 per 2 s; per IP
+  burst 32 then 1 per 5 s. A limited call is `429 {retryAfterMs}`. A credential belongs to an endpoint and is reused
+  (no new issuance, no token spent) while 5+ minutes of its 30 min TTL remain; a retried `requestId` returns the same
+  credential for 10 min.
+- **Cloudflare call:** `POST https://rtc.live.cloudflare.com/v1/turn/keys/<keyId>/credentials/generate-ice-servers`
+  with `{"ttl":1800,"customIdentifier":"jj-<realm>-<roomId>-<endpointId>"}`. Port-53 URLs are dropped; the
+  `turns:...:443` entry is kept. Key unset or Cloudflare failing gives `503 relay-unavailable`; direct and coturn
+  paths are untouched.
+- **Known limit:** the backend's call to the broker is a blocking socket call (4 s timeout, one retry) inside the
+  request handler, acceptable for a rare event of a few hundred ms; revisit if the fallback gets common.
+
+Live run for the receipt (one controlled Cloudflare issuance): deploy the broker, point one preview at it, then
+`tools/net/qualify-matrix.sh cloudflare-443` from a machine outside the LAN. The issued tag
+`jj-<realm>-<roomId>-<endpointId>` must then appear in the guard's per-tag listing
+(`python3 tools/turn-guard/guard.py --once`, `top_1h`; it shows after Cloudflare's analytics lag).
+
 ## Verifying
 
 ```bash

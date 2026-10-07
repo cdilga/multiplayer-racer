@@ -1,5 +1,8 @@
 //! ICE provider (P1-N04, R88): STUN first, then the self-hosted coturn with short-lived TURN REST credentials minted
-//! locally (no network call). The Cloudflare TURN fallback slot (P1-N04b) answers `relay-unavailable` until it lands.
+//! locally (no network call). The Cloudflare TURN fallback (P1-N04b) is lazy: a backend never holds the Cloudflare
+//! token, it asks the one credential broker ([`broker`]); with no broker it answers `relay-unavailable`.
+
+pub mod broker;
 
 use jj_protocol::signal::IceServer;
 
@@ -16,13 +19,43 @@ pub enum FallbackError {
     RateLimited { retry_after_ms: u64 },
 }
 
+/// What a fallback request carries to the broker.
+#[derive(Clone, Debug)]
+pub struct FallbackCtx {
+    /// Fresh per client call; the transport's retry reuses it, so a lost response returns the same credential.
+    pub request_id: String,
+    pub realm: String,
+    pub room_id: String,
+    pub endpoint_id: String,
+    /// The tunnel's `CF-Connecting-IP` (else the socket peer).
+    pub client_ip: String,
+}
+
+impl FallbackCtx {
+    pub fn to_issue(&self) -> broker::IssueRequest {
+        broker::IssueRequest {
+            request_id: self.request_id.clone(),
+            realm: self.realm.clone(),
+            room_id: self.room_id.clone(),
+            endpoint_id: self.endpoint_id.clone(),
+            client_ip: self.client_ip.clone(),
+        }
+    }
+}
+
+/// How a backend reaches the credential broker.
+pub trait BrokerTransport: Send + Sync {
+    fn issue(&self, ctx: &FallbackCtx, now_ms: u64)
+    -> Result<(Vec<IceServer>, u64), FallbackError>;
+}
+
 pub trait IceProvider: Send + Sync {
     /// The initial list for an endpoint and its expiry (Unix ms).
     fn initial(&self, endpoint_id: &str, now_ms: u64) -> (Vec<IceServer>, u64);
-    /// Cloudflare TURN entries (P1-N04b fills this slot).
+    /// Cloudflare TURN entries, issued by the broker (P1-N04b).
     fn fallback(
         &self,
-        _endpoint_id: &str,
+        _ctx: &FallbackCtx,
         _now_ms: u64,
     ) -> Result<(Vec<IceServer>, u64), FallbackError> {
         Err(FallbackError::RelayUnavailable)
@@ -38,6 +71,8 @@ pub struct CoturnProvider {
     /// `TURN_STATIC_AUTH_SECRET`; without it the list is STUN only.
     pub secret: Option<Vec<u8>>,
     pub ttl_s: u64,
+    /// The credential broker; `None` means the relay fallback is unavailable.
+    pub broker: Option<Box<dyn BrokerTransport>>,
 }
 
 impl CoturnProvider {
@@ -47,6 +82,7 @@ impl CoturnProvider {
             turn_urls: vec!["turn:turn.dilger.dev:3479?transport=udp".into()],
             secret,
             ttl_s: TURN_TTL_S,
+            broker: None,
         }
     }
 }
@@ -82,6 +118,17 @@ impl IceProvider for CoturnProvider {
             });
         }
         (list, expiry_s * 1000)
+    }
+
+    fn fallback(
+        &self,
+        ctx: &FallbackCtx,
+        now_ms: u64,
+    ) -> Result<(Vec<IceServer>, u64), FallbackError> {
+        match &self.broker {
+            Some(b) => b.issue(ctx, now_ms),
+            None => Err(FallbackError::RelayUnavailable),
+        }
     }
 
     fn status(&self) -> &'static str {
@@ -121,9 +168,16 @@ mod tests {
     }
 
     #[test]
-    fn fallback_is_unavailable_until_n04b() {
+    fn fallback_is_unavailable_without_a_broker() {
         let p = CoturnProvider::new(None);
-        assert_eq!(p.fallback("c-1", 0), Err(FallbackError::RelayUnavailable));
+        let ctx = FallbackCtx {
+            request_id: "q".into(),
+            realm: "dev".into(),
+            room_id: "r".into(),
+            endpoint_id: "c-1".into(),
+            client_ip: "1.1.1.1".into(),
+        };
+        assert_eq!(p.fallback(&ctx, 0), Err(FallbackError::RelayUnavailable));
         assert_eq!(p.initial("c-1", 0).0.len(), 1);
     }
 }

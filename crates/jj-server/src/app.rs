@@ -17,7 +17,7 @@ use jj_types::{BuildId, EndpointId, RoomCode, RoomId};
 
 use crate::crypto::{Entropy, b64url, ct_eq, hmac_sha256, secret_hash};
 use crate::http::{Body, MAX_BODY_BYTES, Request, Response, SseOpen};
-use crate::ice::{FallbackError, IceProvider};
+use crate::ice::{FallbackCtx, FallbackError, IceProvider};
 use crate::rate::{ENDPOINT_REGISTER, Limiter, ROOM_CREATE, SIGNAL_POST};
 use crate::rooms::{
     Endpoint, Event, HOST_ENDPOINT, HOST_UNREACHABLE_MS, ROOM_DROP_MS, Room, TOMBSTONE_MS,
@@ -588,7 +588,18 @@ impl App {
         if let Err(r) = self.endpoint_bearer_ok(req, &body.room_id.0, &body.endpoint_id.0) {
             return r;
         }
-        match self.ice.fallback(&body.endpoint_id.0, now) {
+        let (request_id, realm) = {
+            let mut st = self.lock();
+            (random_id("fb", &mut *st.rng), self.cfg.realm.clone())
+        };
+        let ctx = FallbackCtx {
+            request_id,
+            realm,
+            room_id: body.room_id.0.clone(),
+            endpoint_id: body.endpoint_id.0.clone(),
+            client_ip: req.client_ip.clone(),
+        };
+        match self.ice.fallback(&ctx, now) {
             Ok((ice_servers, expires_at)) => Response::json(
                 200,
                 to_json(&IceList {
