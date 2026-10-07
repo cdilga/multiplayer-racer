@@ -1,0 +1,129 @@
+{
+  "label": "iOS Simulator",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "model": "MacBookPro18,3",
+    "macOS": "27.0.1",
+    "xcode": "Xcode 27.0 Build version 27A266a",
+    "stack": "jj-server + lane proxy on the Mac (no host: no browser on the Mac)"
+  },
+  "target": {
+    "simulator": "jj-f08-iphone",
+    "deviceType": "iPhone 17",
+    "runtime": "iOS 27.0 (24A434)",
+    "browser": "Mobile Safari 27.0",
+    "orientation": "portrait (upright)"
+  },
+  "run": 2,
+  "startedAt": "2026-10-07T08:46:04.863Z",
+  "twoFinger": {
+    "fixtureNotController": true,
+    "rects": {
+      "drive": {
+        "x": 24,
+        "y": 24,
+        "w": 153,
+        "h": 666
+      },
+      "action": {
+        "x": 225,
+        "y": 24,
+        "w": 153,
+        "h": 666
+      },
+      "viewport": "402x714"
+    },
+    "zoneDown": {
+      "drive": 1,
+      "action": 1
+    },
+    "downs": [
+      [
+        1359204827,
+        200,
+        88
+      ],
+      [
+        1359204828,
+        101,
+        357
+      ],
+      [
+        1359204829,
+        302,
+        357
+      ]
+    ],
+    "fingers": {
+      "A": {
+        "x": 100.5,
+        "y": 357
+      },
+      "B": {
+        "x": 301.5,
+        "y": 357
+      }
+    },
+    "bothZonesAtOnce": true,
+    "maxSimultaneousTouches": 2,
+    "maxSimultaneousPointers": 2,
+    "maxStick": {
+      "steer": 0.6666666666666665,
+      "throttle": 1,
+      "brake": 0
+    },
+    "visualViewportScale": {
+      "min": 1,
+      "max": 1
+    },
+    "scrollMax": 0,
+    "pass": true
+  },
+  "visibility": {
+    "events": [
+      "hidden",
+      "visible-after-hidden"
+    ],
+    "hiddenToVisibleMs": 1755,
+    "pass": true
+  },
+  "clips": {
+    "total": 78,
+    "failed": 0,
+    "canPlayType": {
+      "ogg_vorbis": "probably",
+      "ogg_opus": "probably",
+      "webm_opus": "probably",
+      "mp3": "maybe"
+    },
+    "failures": [],
+    "sample": [
+      {
+        "url": "/assets/all-ready-1-DGI9EG-L.ogg",
+        "bytes": 24009,
+        "ok": true,
+        "seconds": 3.84,
+        "channels": 1,
+        "sampleRate": 44100
+      },
+      {
+        "url": "/assets/all-ready-2-CJRxHdXq.ogg",
+        "bytes": 23296,
+        "ok": true,
+        "seconds": 3.71,
+        "channels": 1,
+        "sampleRate": 44100
+      },
+      {
+        "url": "/assets/all-ready-3-DXVidJG_.ogg",
+        "bytes": 11599,
+        "ok": true,
+        "seconds": 1.84,
+        "channels": 1,
+        "sampleRate": 44100
+      }
+    ],
+    "pass": true
+  },
+  "finishedAt": "2026-10-07T08:47:39.224Z"
+}

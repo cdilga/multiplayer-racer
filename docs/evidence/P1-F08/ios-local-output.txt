@@ -1,0 +1,14 @@
+[ios-local] booting jj-f08-iphone
+[ios-local] xcodebuild build-for-testing
+[ios-local] calibration offset (css px) {"dx":0,"dy":62}
+[iOS Simulator] run 1 simulator=jj-f08-iphone deviceType=iPhone 17 runtime=iOS 27.0 (24A434) browser=Mobile Safari 27.0 orientation=portrait (upright)
+[iOS Simulator] run 1: two-finger sticks (fixture): PASS {"fixtureNotController":true,"rects":{"drive":{"x":24,"y":24,"w":153,"h":666},"action":{"x":225,"y":24,"w":153,"h":666},"viewport":"402x714"},"zoneDown":{"drive":1,"action":1},"downs":[[-44277845,200,88],[-44277843,101,357],[-44277844,302,357]],"fingers":{"A":{"x":100.5,"y":357},"B":{"x":301.5,"y":357}},"bothZonesAtOnce":true,"maxSimultaneousTouches":2,"maxSimultaneousPointers":2,"maxStick":{"steer":0.6666666666666665,"throttle":1,"brake":0},"visualViewportScale":{"min":1,"max":1},"scrollMax":0,"pass":true}
+[iOS Simulator] run 1: background/foreground: PASS hidden -> visible-after-hidden
+[iOS Simulator] run 1: shipped clips decode: PASS 78/78 decoded; canPlayType={"ogg_vorbis":"probably","ogg_opus":"probably","webm_opus":"probably","mp3":"maybe"}
+[ios-local] booting jj-f08-iphone
+[ios-local] xcodebuild build-for-testing
+[ios-local] calibration offset (css px) {"dx":0,"dy":62}
+[iOS Simulator] run 2 simulator=jj-f08-iphone deviceType=iPhone 17 runtime=iOS 27.0 (24A434) browser=Mobile Safari 27.0 orientation=portrait (upright)
+[iOS Simulator] run 2: two-finger sticks (fixture): PASS {"fixtureNotController":true,"rects":{"drive":{"x":24,"y":24,"w":153,"h":666},"action":{"x":225,"y":24,"w":153,"h":666},"viewport":"402x714"},"zoneDown":{"drive":1,"action":1},"downs":[[1359204827,200,88],[1359204828,101,357],[1359204829,302,357]],"fingers":{"A":{"x":100.5,"y":357},"B":{"x":301.5,"y":357}},"bothZonesAtOnce":true,"maxSimultaneousTouches":2,"maxSimultaneousPointers":2,"maxStick":{"steer":0.6666666666666665,"throttle":1,"brake":0},"visualViewportScale":{"min":1,"max":1},"scrollMax":0,"pass":true}
+[iOS Simulator] run 2: background/foreground: PASS hidden -> visible-after-hidden
+[iOS Simulator] run 2: shipped clips decode: PASS 78/78 decoded; canPlayType={"ogg_vorbis":"probably","ogg_opus":"probably","webm_opus":"probably","mp3":"maybe"}

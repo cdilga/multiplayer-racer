@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- P1-F08: decodes every shipped clip in the browser under test (A03/A07) and reports one event per clip. -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>F08 clips</title></head>
+<body><pre id="out">decoding…</pre>
+<script>
+(async function () {
+  var list = await (await fetch('/__lane/clips.json')).json();
+  var a = new Audio();
+  var types = { ogg_vorbis: a.canPlayType('audio/ogg; codecs="vorbis"'), ogg_opus: a.canPlayType('audio/ogg; codecs="opus"'), webm_opus: a.canPlayType('audio/webm; codecs="opus"'), mp3: a.canPlayType('audio/mpeg') };
+  var results = [];
+  for (var i = 0; i < list.length; i++) {
+    var url = list[i], r = { url: url };
+    try {
+      var buf = await (await fetch(url)).arrayBuffer(); r.bytes = buf.byteLength;
+      var ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100);
+      var ab = await new Promise(function (res, rej) { var p = ctx.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
+      r.ok = ab.duration > 0 && ab.length > 0; r.seconds = Math.round(ab.duration * 1000) / 1000; r.channels = ab.numberOfChannels; r.sampleRate = ab.sampleRate;
+    } catch (e) { r.ok = false; r.error = String(e && e.message || e); }
+    results.push(r);
+  }
+  var bad = results.filter(function (r) { return !r.ok; });
+  document.getElementById('out').textContent = results.length + ' clips, ' + bad.length + ' failed';
+  await fetch('/__lane/r', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'clips', at: Date.now(), data: { canPlayType: types, total: results.length, failed: bad.length, results: results } }) });
+})();
+</script></body></html>

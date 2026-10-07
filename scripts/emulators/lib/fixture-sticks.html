@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- P1-F08 fixture, NOT the controller: the controller's own viewport meta, its page-level touch CSS and two zones
+     with the same Pointer Events handling as web/controller/src/app/sticks.ts (one pointer per zone, pointer
+     capture). Used where no host can be reached, to test what the engine does with two fingers. -->
+<html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>F08 sticks fixture</title><script src="/__lane/probe.js"></script>
+<style>
+html, body { margin: 0; height: 100%; background: #14213a; color: #fff4de; overflow: hidden; overscroll-behavior: none; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.sticks { display: flex; height: 100%; }
+.zone { position: relative; flex: 1; margin: 24px; border-radius: 22px; border: 2px dashed rgb(255 244 222 / .3); touch-action: none; }
+</style></head><body>
+<div class="sticks"><div class="zone drive" data-box="zone-drive"></div><div class="zone action" data-box="zone-action"></div></div>
+<script>
+window.__fixtureSticks = { drive: { x: 0, y: 0, touch: false }, action: { x: 0, y: 0, touch: false } };
+document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+['drive', 'action'].forEach(function (k) {
+  var z = document.querySelector('.zone.' + k), pid = null, o = null, v = window.__fixtureSticks[k];
+  z.addEventListener('pointerdown', function (e) { if (pid !== null) return; pid = e.pointerId; o = { x: e.clientX, y: e.clientY }; z.setPointerCapture(e.pointerId); v.touch = true; });
+  z.addEventListener('pointermove', function (e) { if (e.pointerId !== pid) return; v.x = Math.max(-1, Math.min(1, (e.clientX - o.x) / 60)); v.y = Math.max(-1, Math.min(1, (e.clientY - o.y) / 60)); });
+  var end = function (e) { if (e.pointerId !== pid) return; pid = null; v.x = v.y = 0; v.touch = false; };
+  z.addEventListener('pointerup', end); z.addEventListener('pointercancel', end);
+});
+// What the probe reads like the controller's session.inspect().drive.
+window.__jjController = { inspect: function () { var d = window.__fixtureSticks.drive, a = window.__fixtureSticks.action;
+  return { phase: 'playing', you: { number: 0 }, link: { endpointId: 'fixture', state: 'fixture' }, drive: { steer: d.x, throttle: -d.y, brake: 0 }, action: a, stats: {} }; } };
+</script></body></html>
