@@ -167,6 +167,7 @@ fn serves_pages_and_immutable_assets_under_a_preview_base_with_real_404s() {
             ("", "landing"),
             ("host", "host"),
             ("c", "controller"),
+            ("hub", "controller"),
             ("j/ABCD", "controller"),
             ("j/abcd", "controller"),
         ] {

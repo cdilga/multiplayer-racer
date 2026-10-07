@@ -4,6 +4,8 @@ Captures: `c08-hub.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`
 
 ## Looked at
 - Hub page: heading "Hub · room XXXX" with the one-line instructions, a row per source (seat number in its colour, keyboard or gamepad icon, label, state chip, direct/relay and RTT, bytes and batches). Idle key clusters read "Press to join" with a dash for the seat.
+- `c08-hub-four-sources-*` and `c08-hub-pad1-unplugged-1100x700.png`: six rows on one hub page (Keys A, Keys B, four pads) each with its number in its colour, Connected, "Direct · 3 ms" and its own bytes; with pad 1 unplugged only its row turns to the orange Unplugged chip with a dashed outline and the other five stay Connected. Resized to 390x844, 844x390 and 1920x1080 and back, all six rows stay readable.
+- `B/hub` entry (`c08-hub-entry-then-hub-1100x700.png`): a room-code field and "Open the hub"; a bad code shows the red line and stays.
 - Identify flash: only Pad 1's row turns its colour (red) with dark text, Pad 2 stays calm.
 - Phone with a paired pad: a slim tray low and centred between the sticks ("This phone" and "Pad 1", each with its number, icon and Connected chip); the strip shows the "Direct · 1 ms" badge. Landscape and portrait.
 
@@ -12,14 +14,15 @@ Captures: `c08-hub.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`
 - Row icons were solid squares (markup quoting); they are now added as elements.
 - The phone tray covered the sticks and the tutorial; now a slim touch-transparent list.
 - Seat badges rendered "#" as "//": badge shows the plain number.
-- A sixth simultaneous join stalled; sources now join one at a time and a stalled join retries after 12 s.
+- A sixth simultaneous join stalled (each source was its own connection); with one connection every source joins at once.
 
-## Remaining defects (protocol and server gaps, reported to the lead)
-- **Not one connection.** The protocol seats one endpoint with one seat (`jj-session` `Endpoint.seat`; Claim, Ready, Identify, Leave address the connection), so each hub source is its own endpoint with its own signalling stream and peer link. The AC "six seats over one connection" and the per-endpoint N08 receipt are unmet until the host supports a multi-source Claim.
-- **Browser connection limit.** Because of the above, a hub page holds one stream per source and HTTP/1.1 allows six per origin, so a single page carries five sources locally (the sixth's signalling queues). The six-seat journey therefore uses two hub pages (two browser contexts). Production is HTTP/2 and should not hit this; a shared connection removes it.
-- **No `/hub` server route**: the hub is `B/j/<CODE>?hub`; a real `/hub` needs a route in jj-server.
-- Input age is not reported per source (only bytes and batches).
-- Journey status at 03209e8 on eris (two copies at once, software WebGL): all three c08 journeys pass (six seats across two hubs with routing, unplug and host seat count; leave/Identify/rejoin; phone plus one paired pad). "Each drives only its own car" is asserted from the host's applied input: each driven source's car holds throttle > 0.5 with no autopilot, and each idle source's car holds zero throttle or is on autopilot (seats idle 15 s while racing get the IdleCue, then autopilot 3 s later). Car travel is only logged (`# driven {…}`): on a slow runner the autopilot cars pile up along the finite free-drive strip and can box the driven cars in, so the distance shows nothing about routing.
+## Remaining defects
+- **One connection (built, protocol 3).** A hub is one endpoint with a seat per source: `ControllerCmd::ForSource{source, cmd}` / `HostCmd::ForSource` wrap a source's commands and replies, `jj-session` keeps `endpoint.seats[source]`, the host wraps every message for a hub seat the same way, and the hub's sources share one `WasmEndpoint` (shared batches). The journey asserts one endpoint id, one link, six source handles, and the host's six seats on one endpoint. A phone with a paired pad rides its pads on the phone's own connection (the phone's sticks are the primary source 1). The old per-endpoint path is unchanged for phones.
+- Per-source bytes are the source's records in the shared batches (13 bytes each), its input age is the age of its latest sample (`inputAgeMs`), and the endpoint's batches and bytes are on the carrier; the log line `# per source` in the journey shows them. The host's own per-endpoint N08 receipt is the existing one (the connection is one endpoint).
+- The HUD (boost, host-paused) is not sent to hub sources (the state channel's HUD has no source field): a hub source shows Connected through a host pause rather than "Host paused".
+- A source leaving and pressing again gets its seat back (same number): the endpoint keeps the source's seat; before the change each rejoin was a new endpoint and a new number.
+- The phone-with-pad tray sits over the bottom of the tutorial card while the tutorial is open (seen in `c08-phone-with-pad-phone-landscape-844x390.png`); it is touch-transparent and the tutorial is dismissable, not fixed.
+- Journey status at f40ddd9 and after on eris: the four c08 journeys pass (six seats on one hub page with routing, unplug and host seat count; leave/Identify/rejoin; phone plus one paired pad; the `B/hub` entry). "Each drives only its own car" is asserted from the host's applied input (throttle > 0.5 with no autopilot for each driven source, zero or autopilot for each idle one); car travel is only logged.
 - A hub source whose room ends does not reset to "left".
 
 ## Not covered

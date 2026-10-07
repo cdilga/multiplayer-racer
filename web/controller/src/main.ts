@@ -26,6 +26,13 @@ function mountTray(): HTMLElement {
 async function boot(root: HTMLElement): Promise<void> {
   if (params.has('hello')) return (await import('./hello/hello')).mountHello(root);
   const code = codeFromPath();
+  // `B/hub`: the hub's own entry (C08), a room code then the hub page for it.
+  if (!code && /^hub\/?$/.test(location.pathname.slice(basePath().length))) {
+    applyProfile();
+    (await import('./hub/hub')).mountHubEntry(root);
+    document.documentElement.dataset.jjController = 'ready';
+    return;
+  }
   if (!code) {
     // No code in the URL: the landing page's join card asks for one.
     location.replace(basePath());

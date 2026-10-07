@@ -32,9 +32,10 @@ each host frame takes ~150 ms. The LAN measurement is a P1-Q02 checklist row.
 
 - On very small tiles (120 at 1080p) the Cooee label covers the tile's own badge row.
 - The mark over the car is a flat billboard drawn over everything; it doesn't outline the car's silhouette.
-- The phone's menu has no Identify entry (the phone's Identify is the button in its tools row).
 
 ## Not covered
+
+- The phone's menu Identify: the Help card (`c06-identify-menu.test.mjs`) and the settings sheet (same journey) each send the same Identify as the tools-row button; the host receives it for that seat. Not captured as an image.
 
 - Real phones, a real TV and a LAN: Chromium contexts on one Linux box.
 - A pad's View/Select and a key cluster's Identify key reach the same `SimEvent::Identify` path (P1-C05's input

@@ -8,6 +8,7 @@
 // a `Session` attached to it (`Session.attach`) that claims, identifies, readies, leaves and drops out under its own
 // source handle (`ForSource`), and all their input shares the carrier's batches. A phone with a paired pad carries its pads
 // on the phone's own connection (the phone's sticks are the primary source).
+import { basePath } from '../../../shared/src/base';
 import { icon, tokenData } from '../../../shared/ui';
 import { Session } from '../app/session';
 import { pathLabel } from './badge';
@@ -349,4 +350,27 @@ export function pairPads(session: Session, tray: HTMLElement): Hub {
   hub.start();
   (window as unknown as { __jjHub: unknown }).__jjHub = { inspect: () => hub.inspect(), hub };
   return hub;
+}
+
+/** `B/hub`: ask for the room's code, then open the hub for it (`B/j/<CODE>?hub`). */
+export function mountHubEntry(root: HTMLElement): void {
+  root.innerHTML = `<section class="hub hub-entry" data-hub-entry>
+    <header class="hub-head"><h1 class="display italic">Hub</h1><p>Pads and keys on this device, one seat each. Type the room code from the big screen.</p></header>
+    <form class="panel panel-ink hub-panel" data-hub-form><label for="hub-code">Room code</label>
+    <input class="field code" id="hub-code" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="4" placeholder="ABCD" />
+    <p class="hub-entry-error" data-hub-error role="alert" hidden>That is not a room code: four letters or numbers.</p>
+    <button type="submit" class="btn primary big">Open the hub</button></form></section>`;
+  const form = root.querySelector<HTMLFormElement>('[data-hub-form]')!;
+  const input = root.querySelector<HTMLInputElement>('#hub-code')!;
+  const error = root.querySelector<HTMLElement>('[data-hub-error]')!;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = input.value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) {
+      error.hidden = false;
+      return;
+    }
+    location.assign(`${basePath()}j/${code}?hub`);
+  });
+  input.focus();
 }

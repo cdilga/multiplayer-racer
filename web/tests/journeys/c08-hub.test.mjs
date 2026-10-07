@@ -234,3 +234,26 @@ test('a phone with one paired pad holds two seats and shows the connection badge
   await matrix(page, 'c08-phone-with-pad', { width: 844, height: 390 });
   assert.notEqual(src[0].seat ?? 'x', src[1].seat);
 });
+
+test('B/hub asks for the room code and opens the hub for it', { timeout: 240_000 }, async () => {
+  const { host, joinUrl } = await openHost('room');
+  const code = await host.evaluate(() => window.__jjNet.code());
+  const page = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+  await page.addInitScript(PADS);
+  await page.goto(`${new URL(joinUrl).origin}${BASE}hub`);
+  await page.locator('[data-hub-form]').waitFor();
+  // A bad code is told so and stays; the real one opens the hub page for that room.
+  await page.locator('#hub-code').fill('A!');
+  await page.getByRole('button', { name: 'Open the hub' }).click();
+  await page.locator('[data-hub-error]').waitFor({ state: 'visible' });
+  await page.locator('#hub-code').fill(code.toLowerCase());
+  await page.getByRole('button', { name: 'Open the hub' }).click();
+  await wait(page, () => window.__jjHub);
+  assert.match(page.url(), new RegExp(`/j/${code}\\?hub$`));
+  await shot(page, 'c08-hub-entry-then-hub-1100x700');
+  await page.evaluate(() => {
+    window.__padAdd(0);
+    window.__padSet(0, [0, 0, 1, 0]);
+  });
+  await wait(page, () => window.__jjHub.inspect().find((s) => s.kind === 'pad')?.seat != null, undefined, 90_000);
+});

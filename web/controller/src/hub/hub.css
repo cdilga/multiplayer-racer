@@ -51,3 +51,7 @@
 /* The phone's connection badge (the strip's [data-hud=conn]): the kit's brushed chip, small. */
 .conn.chip { min-height: 2em; margin-right: 10px; padding: 0 .9em .3em; font-size: var(--fs-caption); font-style: normal; text-transform: none; letter-spacing: 0; }
 .conn.chip .ic { width: 1.1em; height: 1.1em; }
+
+.hub-entry .hub-panel { display: grid; gap: 12px; padding: 16px; }
+.hub-entry .field.code { text-transform: uppercase; letter-spacing: .2em; text-align: center; font-size: 28px; }
+.hub-entry-error { color: var(--c-warn, #ffb4a8); margin: 0; }
