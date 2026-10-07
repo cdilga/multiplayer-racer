@@ -1,5 +1,5 @@
 // Journey JN5 (P1-G02): mixed controllers join and leave through every phase of a round on the real host page
-// (`B/host?room&test=live&laps=1`) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
+// (`B/host?room&test=live&laps=3`) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
 // the Countdown, five more drop in mid-race (each timed from its accepted claim to its car moving under its own
 // throttle, and each gets its Identify flash and a tile), the room grows to 12, then Leave and Sit out shrink it to 2
 // through Intermission. The room never lists a seat that left, nobody is refused and the standings keep their rows.
@@ -87,11 +87,11 @@ async function dropIn(host, url, name) {
   return { p, ms };
 }
 
-test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 600_000 }, async () => {
+test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
-  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=1`);
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=3`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
 
@@ -170,7 +170,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
-  await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
+  await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 600_000);
   const atResults = await view(host);
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
   await shot(host, 'tv-intermission');

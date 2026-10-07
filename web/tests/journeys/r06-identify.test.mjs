@@ -10,7 +10,7 @@ import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, gpu } from './lib/chromium.mjs';
 
 const BASE = '/p/r06/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-R06');
@@ -66,7 +66,7 @@ async function identify(host, n) {
   }, n);
 }
 
-test("R06: Identify pulses only its seat's tile and floats its number over its car, at 24 seats and at 120 (three digits)", { timeout: 600_000 }, async () => {
+test("R06: Identify pulses only its seat's tile and floats its number over its car, at 24 seats and at 120 (three digits)", { timeout: 600_000, skip: !gpu && '24-120 tiles need a GPU host (JJ_CHROMIUM_GPU=1); software WebGL stalls the page' }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
