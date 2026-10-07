@@ -70,7 +70,11 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
   // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
-  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000);
+  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
+    const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
+    const view = await host.evaluate(() => ({ phase: window.__jjRoom.view().phase, stats: window.__jjNet?.stats?.() }));
+    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}: ${e.message}`);
+  });
   await shot(a.page, 'phone-idle-cue');
   await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);
   await shot(a.page, 'phone-idle-autopilot');
