@@ -274,7 +274,9 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .coach p { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; }
 .goals { display: flex; gap: 10px; flex-wrap: wrap; }
 .goal { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 3px solid var(--c-ink); background: var(--c-paper-shade); font-weight: 700; font-size: 17px; }
-.goal.on { background: var(--c-success); color: var(--c-paper); }
+.goal.on { --bz-fill: var(--c-success); background: var(--c-success); color: var(--c-paper); }
+/* The tutorial's strip has no painted SVG behind it: a plain success fill keeps its paper text readable. */
+.coach .goodstrip { background: var(--c-success); }
 .goal img.i { filter: invert(1); width: 18px; height: 18px; }
 .dots i.done { background: var(--c-success); }
 .btn.quiet-ink { min-height: 48px; padding: 0 12px; background: transparent; border-color: var(--c-ink-soft); box-shadow: none; font-size: 15px; }
