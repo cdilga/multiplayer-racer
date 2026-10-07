@@ -22,6 +22,7 @@ const SIZES = { 'phone-portrait-390x844': [390, 844], 'phone-landscape-844x390':
 const matrix = async (page, name, back) => {
   if (!CAPTURE) return;
   for (const [label, [w, h]] of Object.entries(SIZES)) {
+    await page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
     await page.setViewportSize({ width: w, height: h });
     await page.waitForTimeout(400);
     await shot(page, `${name}-${label}`);
@@ -133,6 +134,7 @@ test('with storage denied the controller still plays and says the settings are a
   await pick(page, 'steering', 'direct');
   assert.equal((await prefs(page)).steering, 'direct', 'applied in memory');
   await page.locator('[data-note=save-failed]').waitFor();
+  await page.locator('[data-note=save-failed]').scrollIntoViewIfNeeded();
   await shot(page, 'c07-settings-storage-denied-844x390');
   assert.match(await page.locator('[data-note=save-failed]').innerText(), /Applied for now — this browser couldn't remember your settings/);
 });

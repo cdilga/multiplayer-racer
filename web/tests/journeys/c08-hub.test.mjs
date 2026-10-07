@@ -23,6 +23,7 @@ const SIZES = { 'phone-portrait-390x844': [390, 844], 'phone-landscape-844x390':
 const matrix = async (page, name, back) => {
   if (!CAPTURE) return;
   for (const [label, [w, h]] of Object.entries(SIZES)) {
+    await page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
     await page.setViewportSize({ width: w, height: h });
     await page.waitForTimeout(400);
     await shot(page, `${name}-${label}`);

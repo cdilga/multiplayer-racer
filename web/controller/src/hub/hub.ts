@@ -172,7 +172,8 @@ export class Hub {
       const pressed = isPress(smp);
       if (!s.session || s.state === 'left') {
         if (!pressed) s.released = true;
-        else if (s.released) this.join(s);
+        // One join at a time: six links negotiating at once leave one stuck; a pressed source waits its turn.
+        else if (s.released && !this.joining()) this.join(s);
         continue;
       }
       if (s.state === 'unplugged') {
@@ -201,6 +202,10 @@ export class Hub {
         if (now - s.holdSince >= LEAVE_HOLD_MS) this.leave(s);
       } else s.holdSince = null;
     }
+  }
+
+  private joining(): boolean {
+    return [...this.sources.values()].some((o) => o.session && !o.external && o.state === 'connecting');
   }
 
   /** The press that claims this source's seat: its own session, endpoint and seat. */

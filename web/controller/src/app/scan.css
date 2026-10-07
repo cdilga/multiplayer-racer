@@ -2,7 +2,7 @@
 .scan-panel { width: min(30em, 100%); }
 .scan-view { position: relative; aspect-ratio: 4 / 3; max-height: 52dvh; margin-inline: auto; width: 100%; background: var(--c-ink); border: var(--outline) solid var(--c-ink); border-radius: var(--r-panel); overflow: hidden; }
 .scan-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.scan-frame { position: absolute; inset: 14%; border: 4px solid var(--c-saffron); border-radius: 12px; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--c-ink) 38%, transparent); pointer-events: none; }
+.scan-frame { position: absolute; left: 50%; top: 50%; height: 78%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 4px solid var(--c-saffron); border-radius: 12px; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--c-ink) 38%, transparent); pointer-events: none; }
 .scan-note { margin: 0; font-weight: 700; color: var(--c-ink-soft); }
 .scan-note.warn { color: var(--c-danger); }
 .scan-panel .btnrow { justify-content: space-between; }

@@ -20,8 +20,5 @@
 .hub-tray { position: fixed; left: 8px; bottom: 8px; z-index: 8; width: min(420px, calc(100% - 16px)); max-height: 40dvh; overflow: auto; background: rgb(21 32 58 / .94); border-radius: 12px; }
 .hub-tray .hub-head h1 { font-size: 20px; }
 .hub-tray .hub-head p { display: none; }
-.conn { margin-right: 10px; padding: 2px 8px 4px; border-radius: 6px; font-size: 13px; font-weight: 800; background: var(--c-ink-soft); color: var(--c-paper); white-space: nowrap; }
-.conn[data-path=direct] { background: var(--c-success); }
-.conn[data-path=relay] { background: var(--c-warning); color: var(--c-ink); }
-.conn[data-path=reconnecting] { background: var(--c-danger); }
 @media (max-width: 520px) { .hub-row { grid-template-columns: 52px minmax(0, 1fr) auto; } .hub-path { grid-column: 2 / -1; } }
+

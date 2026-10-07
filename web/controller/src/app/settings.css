@@ -37,3 +37,16 @@
   .test-sticks { height: 40dvh; min-height: 120px; }
   .row { min-height: 48px; padding-block: 4px; }
 }
+
+/* The connection badge in the strip (C08) and the landscape strip's tightening for seven tools. */
+.conn { margin-right: 10px; padding: 2px 8px 4px; border-radius: 6px; font-size: 13px; font-weight: 800; background: var(--c-ink-soft); color: var(--c-paper); white-space: nowrap; }
+.conn[data-path=direct] { background: var(--c-success); }
+.conn[data-path=relay] { background: var(--c-warning); color: var(--c-ink); }
+.conn[data-path=reconnecting] { background: var(--c-danger); }
+/* Landscape phone strip: seven tools and the badge share one row with the name, so they tighten up and the name keeps room. */
+@media (orientation: landscape) and (max-height: 480px) {
+  .strip .tools { gap: 6px; padding: 4px; }
+  .strip .tools .btn { min-height: 44px; padding: 0 9px; font-size: 14px; }
+  .strip .who { flex: 1 1 96px; min-width: 96px; }
+  .strip .conn { margin-right: 6px; padding: 1px 6px 3px; font-size: 12px; }
+}
