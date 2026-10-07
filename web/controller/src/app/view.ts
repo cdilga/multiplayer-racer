@@ -61,7 +61,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const render = () => {
-    const key = session.phase === 'playing' || session.phase === 'host-paused' ? `play:${session.you?.number}` : session.phase;
+    const key = session.phase === 'playing' || session.phase === 'host-paused' ? `play:${session.you?.number}` : `${session.phase}:${session.code}`;
     if (key === shown) return void updateHud();
     shown = key;
     sticks?.drive.release();

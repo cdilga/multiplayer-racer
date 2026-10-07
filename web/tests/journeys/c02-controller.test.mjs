@@ -12,6 +12,7 @@
 // The wire half (sticks to DRIVE/ACTION semantics at the host) is `c02-wire.test.mjs`.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
+import { PNG } from 'pngjs';
 import { chromium, webkit } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
@@ -117,8 +118,18 @@ describe('chromium: real touch points', () => {
     s = await sticks(page);
     assert.deepEqual([s.drive.touch, s.action.touch], [false, false]);
     // A pinch and a long scroll over the sticks change nothing: no page zoom, no scroll.
-    await cdp.send('Input.synthesizePinchGesture', { x: 420, y: 195, scaleFactor: 2.5, relativeSpeed: 400 });
-    await cdp.send('Input.synthesizeScrollGesture', { x: 420, y: 300, yDistance: -300, speed: 800 });
+    // A pinch with two real touch points (spreading apart), in the middle of the screen and over the sticks. (CDP's
+    // synthesizePinchGesture injects a compositor gesture with no touch sequence, so touch-action never sees it.)
+    for (const cx of [420, p1.x]) {
+      await touch('touchStart', [{ x: cx - 15, y: 195, id: 11 }, { x: cx + 15, y: 195, id: 12 }]);
+      for (let k = 1; k <= 10; k++) await touch('touchMove', [{ x: cx - 15 - k * 12, y: 195, id: 11 }, { x: cx + 15 + k * 12, y: 195, id: 12 }]);
+      await touch('touchEnd', []);
+    }
+    // A swipe up through the middle of the screen (between the sticks) and the mouse wheel: neither scrolls the page.
+    await touch('touchStart', [{ x: 420, y: 330, id: 7 }]);
+    for (let y = 330; y > 100; y -= 20) await touch('touchMove', [{ x: 420, y, id: 7 }]);
+    await touch('touchEnd', []);
+    await page.mouse.wheel(0, 500);
     const v = await page.evaluate(() => ({ scale: visualViewport.scale, sy: scrollY, sx: scrollX, h: document.documentElement.scrollHeight - innerHeight }));
     assert.equal(v.scale, 1, 'no zoom');
     assert.deepEqual([v.sx, v.sy], [0, 0], 'no scroll');
@@ -207,10 +218,18 @@ describe('the player colour and Identify', () => {
     const { ctx, page } = await open(eng, 'playing&seat=12', LAND);
     const seat = await page.evaluate(() => getComputedStyle(document.querySelector('.screen.play')).getPropertyValue('--seat').trim());
     assert.match(seat, /^#[0-9a-f]{6}$/i);
-    const colours = await page.evaluate(() => ({ strip: getComputedStyle(document.querySelector('.strip')).borderBottomColor, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor, frame: getComputedStyle(document.querySelector('.idframe') ?? document.body).borderTopColor }));
+    const colours = await page.evaluate(() => ({ number: getComputedStyle(document.querySelector('.strip .seatno')).color, knob: getComputedStyle(document.querySelector('.zone.drive .knob')).backgroundColor }));
     const rgb = (h) => `rgb(${[1, 3, 5].map((i) => Number.parseInt(h.slice(i, i + 2), 16)).join(', ')})`;
-    assert.equal(colours.strip, rgb(seat), 'the strip underline is the seat colour');
+    assert.equal(colours.number, rgb(seat), 'the number in the strip is the seat colour');
     assert.equal(colours.knob, rgb(seat), 'the DRIVE knob is the seat colour');
+    // The frame round the whole screen (POC1-21): the pixels at the very edge are the seat colour.
+    const png = PNG.sync.read(await page.screenshot());
+    const px = (x, y) => [png.data[(y * png.width + x) * 4], png.data[(y * png.width + x) * 4 + 1], png.data[(y * png.width + x) * 4 + 2]];
+    const want = [1, 3, 5].map((i) => Number.parseInt(seat.slice(i, i + 2), 16));
+    for (const [x, y] of [[1, Math.floor(png.height / 2)], [png.width - 2, Math.floor(png.height / 2)], [Math.floor(png.width / 2), 1], [Math.floor(png.width / 2), png.height - 2]]) {
+      const got = px(x, y);
+      assert.ok(got.every((v, i) => Math.abs(v - want[i]) < 24), `the frame at (${x},${y}) is the seat colour ${seat}: ${got}`);
+    }
     await page.locator('[data-act=identify]').click();
     await page.locator('.cooee').waitFor({ timeout: 5000 });
     assert.match(await page.locator('.cooee').textContent(), /Cooee #12/i);
