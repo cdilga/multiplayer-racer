@@ -1,6 +1,6 @@
 # P1-C08 self-review (hub route)
 
-Captures: `c08-hub.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`, commit b972e04): hub page at 1100x700, phone with an emulated paired pad at 844x390 / 390x844 / 1920x1080. Emulated Gamepad API and key events, not hardware. PNGs in eris:~/Work/runs/cap4/shots/ (c08-*); not committed here.
+Captures: `c08-hub.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`, commit b972e04): hub page at 1100x700, phone with an emulated paired pad at 844x390 / 390x844 / 1920x1080. Emulated Gamepad API and key events, not hardware. The captures are committed in `docs/evidence/P1-C08/captures/` (file names below are relative to it).
 
 ## Looked at
 - Hub page: heading "Hub · room XXXX" with the one-line instructions, a row per source (seat number in its colour, keyboard or gamepad icon, label, state chip, direct/relay and RTT, bytes and batches). Idle key clusters read "Press to join" with a dash for the seat.

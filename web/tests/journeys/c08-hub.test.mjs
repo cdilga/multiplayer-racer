@@ -117,6 +117,12 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
 
   // Only hub A's pad 2 and keys B drive; the other four stay where they are.
   const obs = () => host.evaluate(() => window.__jjTest.observe());
+  // The claim presses boosted a few cars: let every one coast to a stop before measuring.
+  for (const t0 = Date.now(); ; await host.waitForTimeout(500)) {
+    const o = await obs();
+    if (o.cars.every((c) => Math.abs(c.forwardSpeed) < 0.3)) break;
+    assert.ok(Date.now() - t0 < 40_000, 'the cars never came to rest');
+  }
   const start = await obs();
   await hub.evaluate(() => window.__padSet(1, [0, -1, 0, 0]));
   await hub.keyboard.down('KeyI');

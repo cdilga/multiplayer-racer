@@ -1,6 +1,6 @@
 # P1-C07 self-review (personal controller settings)
 
-Captures: `c07-settings.test.mjs` and `c07-landscape-short.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`, commit b972e04), phone contexts at 844x390, 390x844, 1920x1080 and the short landscape set. Chromium on eris, not a device. PNGs in eris:~/Work/runs/cap4/shots/ (c07-*); not committed here.
+Captures: `c07-settings.test.mjs` and `c07-landscape-short.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, run `cap4`, commit b972e04), phone contexts at 844x390, 390x844, 1920x1080 and the short landscape set. Chromium on eris, not a device. The captures are committed in `docs/evidence/P1-C07/captures/` (file names below are relative to it).
 
 ## Looked at
 - Settings sheet at 844x390 (two columns: your controls left, Save / Test / Reset / Sit out / Leave / Back right), 390x844 (one column, scrolls) and 1920x1080 (centred 460 px column over the dimmed play screen): all rows legible, the blue autopilot banner on top, segmented choices and switches in the POC's look (ported from art/ui/poc/phone), reduced-motion and remember toggles show their state.

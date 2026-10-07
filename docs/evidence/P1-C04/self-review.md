@@ -1,7 +1,7 @@
 # P1-C04 self-review (in-page QR scanner)
 
 Captures: `web/tests/journeys/c04-scan.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, GPU, run `cap4`, commit b972e04); fake camera plays a recorded QR. Chromium on eris, not a phone: the Android emulator row is not done.
-The PNGs are in eris:~/Work/runs/cap4/shots/ (c04-*); not committed here.
+The captures are committed in `docs/evidence/P1-C04/captures/` (file names below are relative to it).
 
 ## Looked at
 - `c04-scanner-open-390x844`: portrait phone, sheet open over the landing page; camera view with the QR inside a square saffron frame, one status line, "Enter the code instead" and Cancel. Reads at first look as "point at the big screen".
