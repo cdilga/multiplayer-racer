@@ -10,11 +10,11 @@ on:
   push:
   workflow_dispatch:
 
-# A newer push to the same branch supersedes a queued or running one: its commit contains the older ones, and the
-# runners are shared across the owner's projects (close.sh waits on HEAD's run, so nothing needs the superseded ones).
+# One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
+# run still waiting, since its commit contains the older ones. The runners are shared across the owner's projects.
 concurrency:
   group: ci-${{ gitea.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   rust:
