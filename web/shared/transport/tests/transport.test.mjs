@@ -4,7 +4,7 @@
 //   node --test web/shared/transport/tests/
 import assert from 'node:assert/strict';
 import { execSync, spawn } from 'node:child_process';
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes } from 'node:crypto';
 import { createSocket } from 'node:dgram';
 import { after, before, describe, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -177,7 +177,7 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
       `--static-auth-secret=${secret}`, '--realm=jj.test', '--no-tls', '--no-cli', '--allow-loopback-peers', '--fingerprint',
       '--min-port=49152', '--max-port=65535',
     ], { stdio: 'ignore' });
-    await new Promise((r) => setTimeout(r, 800));
+    await waitForStun(turnPort);
     const server = await serve(dist, BASE, {
       JJ_STUN_URLS: '',
       TURN_STATIC_AUTH_SECRET: secret,
@@ -185,7 +185,7 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
     });
     try {
       const host = await startHost(server.origin, '&ice=relay');
-      const c = await startController(server.origin, host.code, '?ice=relay');
+      const c = await startController(server.origin, host.code, '?ice=relay', 30_000);
       const ep = await moveAndSee(host, c, -0.7, 0.3);
       const paths = await host.page.evaluate(() => window.__jjHello.paths());
       assert.equal(paths[ep]?.local, 'relay', JSON.stringify(paths[ep]));
@@ -264,7 +264,7 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
       `--static-auth-secret=${secret}`, '--realm=jj.test', '--no-tls', '--no-cli', '--allow-loopback-peers', '--fingerprint',
       '--min-port=49152', '--max-port=65535',
     ], { stdio: 'ignore' });
-    await new Promise((r) => setTimeout(r, 800));
+    await waitForStun(turnPort);
     const server = await serve(dist, BASE, { JJ_STUN_URLS: '', TURN_STATIC_AUTH_SECRET: secret, JJ_TURN_URLS: `turn:127.0.0.1:${dead}?transport=udp` });
     const answer = () => {
       const expiry = Math.floor(Date.now() / 1000) + 1800;
@@ -302,6 +302,25 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
     }
   });
 });
+
+/** Waits until coturn answers a STUN binding request on 127.0.0.1:port (a fixed sleep raced coturn's startup on a busy CI
+ *  runner: the first allocation went unanswered and the link only came up after a restart, past the test's 15 s). */
+async function waitForStun(port, ms = 15_000) {
+  const req = Buffer.concat([Buffer.from([0, 1, 0, 0, 0x21, 0x12, 0xa4, 0x42]), randomBytes(12)]);
+  for (const t0 = Date.now(); Date.now() - t0 < ms; ) {
+    const ok = await new Promise((resolve) => {
+      const s = createSocket('udp4');
+      const done = (v) => (clearTimeout(timer), s.close(), resolve(v));
+      const timer = setTimeout(() => done(false), 500);
+      s.once('message', () => done(true));
+      s.once('error', () => done(false));
+      s.send(req, port, '127.0.0.1');
+    });
+    if (ok) return;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  throw new Error(`coturn never answered on udp ${port}`);
+}
 
 function freePort(kind = 'tcp') {
   if (kind === 'udp') {

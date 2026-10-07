@@ -180,6 +180,18 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   let misplaced = await placed();
   for (const t0 = Date.now(); misplaced.length && Date.now() - t0 < 20_000; misplaced = await placed()) await host.waitForTimeout(250);
   const rectsNow = await host.evaluate(() => window.__jjRender.tileRects());
+  if (misplaced.length) {
+    // What the HUD layer and the room hold, for the diagnosis.
+    const dump = await host.evaluate(() => ({
+      layerHidden: document.querySelector('.hud-tile')?.parentElement?.hidden,
+      tiles: [...document.querySelectorAll('.hud-tile')].map((b) => ({ tile: b.dataset.tile, seat: b.dataset.seat ?? null, hidden: b.hidden, style: b.getAttribute('style') })),
+      seats: window.__jjRoom.view().seats.map((s) => ({ number: s.number, car: s.car, presence: s.presence })),
+      phase: window.__jjRoom.view().phase,
+      render: window.__jjRender.stats(),
+      cameras: window.__jjRender.cameras(),
+    }));
+    console.log(`# HUD dump ${JSON.stringify(dump)}`);
+  }
   assert.deepEqual(misplaced, [], `every HUD inside its tile: ${JSON.stringify({ misplaced, rectsNow })}`);
   await shot(host, 'tv-racing-after-churn');
 
