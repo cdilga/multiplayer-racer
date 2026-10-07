@@ -27,10 +27,18 @@ Run: JN4 on eris at 945743e (Chromium 151, headless, linux/x64, `JJ_CHROMIUM_GPU
   door or a missing bumper still isn't legible in the stills. It is the host's default distance setting, which the tile
   chase cameras don't seem to take in this page; a real fix is an orbit or side-on shot of the involved car
   (`?tiles=<n>&orbit=…` as P1-S04b's captures use) a moment after the hit.
-- That run failed an assertion (not the captures): "head-on: car 2's detached front is drawn 0.99 m from its core", the
+- (Earlier run) failed an assertion (not the captures): "head-on: car 2's detached front is drawn 0.99 m from its core", the
   renderer a frame short of drawing the part off the car. The journey now polls up to 10 s for the renderer to catch up
   before asserting (`jn4-crashes.test.mjs`); needs a commit and one more eris run. Stage 3 and drove-away captures are from the
   first (passing) run.
+
+## Third pass (commit 3ac0873)
+
+- The polling fix works: JN4 passes again on eris (all four captures retaken, clip hash equal browser/native at tick 1582).
+- The side-on shot is wired but not yet run: `JJ_JN4_ORBIT=90,90,90,90` adds `&tiles=4&follow=0,1,2,3&orbit=...` to the page and
+  names the captures `orbit-*.png`. Needs the journey file committed, then
+  `JJ_JN4_ORBIT=90,90,90,90 node --test web/tests/journeys/jn4-crashes.test.mjs` on eris. Untried: whether the orbit view still
+  gives `tileRects`/`tilesSee` the same tiles (if not, the run says so in the visibility assertion).
 
 ## Remaining defects
 

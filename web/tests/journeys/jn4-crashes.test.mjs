@@ -26,6 +26,10 @@ const repo = resolve(import.meta.dirname, '../../..');
 const evidence = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'P1-G05');
 const CAPTURE = process.env.JJ_CAPTURE_DIR ?? join(evidence, 'captures');
 const BASE = '/p/jn4/';
+// `JJ_JN4_ORBIT=90,90,90,90`: every tile's camera swings that many degrees round its car (a side-on view, as P1-S04b's captures
+// use) and the captures are named `orbit-*`, so the damage is legible in them.
+const ORBIT = process.env.JJ_JN4_ORBIT;
+const SHOT = ORBIT ? 'orbit-' : '';
 const scenario = JSON.parse(readFileSync(join(repo, 'scenarios/crashes/jn4-crashes.json'), 'utf8'));
 const run = {};
 let browser;
@@ -55,7 +59,7 @@ function replay(file, args) {
 }
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
-const shot = (page, name) => page.screenshot({ path: join(CAPTURE, `${name}.png`) });
+const shot = (page, name) => page.screenshot({ path: join(CAPTURE, `${SHOT}${name}.png`) });
 
 test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose then off, debris stays, nobody stays stuck, the clip replays', { timeout: 600_000 }, async () => {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
@@ -63,7 +67,7 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text()) && errors.push(m.text().slice(0, 300)));
   // The free-drive room page (as JN1): a real room with its tile grid, the clock held so the journey steps it.
-  await page.goto(`${server.origin}${BASE}host?drive&test=live&camdist=near`);
+  await page.goto(`${server.origin}${BASE}host?drive&test=live&camdist=near${ORBIT ? `&tiles=4&follow=0,1,2,3&orbit=${ORBIT}` : ''}`);
   await wait(page, () => window.__jjNet?.code() && window.__jjTest && window.__jjRender, undefined, 60_000);
   await page.evaluate(() => window.__jjTest.hold(true));
 
