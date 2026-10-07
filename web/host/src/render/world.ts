@@ -480,6 +480,28 @@ export class World {
     return this.tileGrid.tiles(performance.now()).map((t) => ({ seat: t.seat, x: Math.round(t.x), y: Math.round(t.y), w: Math.round(t.w), h: Math.round(t.h) }));
   }
 
+  /** Per tile: which of the world points `pts` (x, y, z m) its camera has in view (inside the frustum). The journeys use it
+   *  to ask whether a piece of debris is visible in the tile of the car it came off (P1-G05). */
+  tilesSee(pts: [number, number, number][]): { seat: number; sees: boolean[] }[] {
+    const rects = this.tileRects();
+    if (!rects) return [];
+    const v = new Vector3();
+    return rects
+      .filter((t) => t.w >= 1)
+      .map((t) => {
+        const cam = this.tileCams[t.seat - 1];
+        if (!cam) return { seat: t.seat, sees: pts.map(() => false) };
+        cam.updateMatrixWorld();
+        return {
+          seat: t.seat,
+          sees: pts.map(([x, y, z]) => {
+            v.set(x, y, z).project(cam);
+            return Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1 && v.z <= 1;
+          }),
+        };
+      });
+  }
+
   /** Per tile, how large the other cars are on its screen: the on-screen length (device px) of a 4.4 m span along each
    *  visible car, smallest first. The far car's size N of the P1-R acceptance, measured through the tile's own camera. */
   farCars(): { seat: number; tileW: number; tileH: number; visible: number; minPx: number; maxPx: number; farthestM: number }[] {

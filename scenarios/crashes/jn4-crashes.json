@@ -1,0 +1,142 @@
+{
+ "scenario": "jn4-crashes",
+ "what": "P1-G05's staged collisions (JN4, plan \u00a713.2, \u00a76.3), shared by the native calibration (crates/jj-sim/tests/crashes.rs) and the browser journey (web/tests/journeys/jn4-crashes.test.mjs). Four cars on the greybox's main straight; each stage teleports them (the F05b setup) and their controllers hold DRIVE forward at `throttle` while they collide. 1: a side swipe, car 0 and car 1 door to door at 8 m/s: door_FL (car 0) and door_RR (car 1) go loose. 2: a T-bone, car 2 into car 1's right-hand side at 12 m/s: car 1's loose door_RR detaches and car 2's front goes loose. 3: a head-on, car 2 and car 3 at 8 m/s each: car 2's loose front detaches (and car 3's front gives).",
+ "map": "maps/greybox-loop.json",
+ "seed": 4,
+ "park": [
+  [
+   100,
+   -20
+  ],
+  [
+   100,
+   -26
+  ],
+  [
+   100,
+   -32
+  ],
+  [
+   100,
+   -38
+  ]
+ ],
+ "stages": [
+  {
+   "name": "side-swipe",
+   "place": [
+    {
+     "car": 0,
+     "x": 40.0,
+     "z": 0.0,
+     "headingDeg": 90,
+     "linvel": [
+      10,
+      0,
+      0
+     ]
+    },
+    {
+     "car": 1,
+     "x": 40.9,
+     "z": -2.1,
+     "headingDeg": 90,
+     "linvel": [
+      10,
+      0,
+      8
+     ]
+    }
+   ],
+   "throttle": 0.4,
+   "ticks": 120,
+   "expect": {
+    "0": {
+     "door_FL": "loose"
+    },
+    "1": {
+     "door_RR": "loose"
+    }
+   }
+  },
+  {
+   "name": "t-bone",
+   "place": [
+    {
+     "car": 1,
+     "x": 80.0,
+     "z": 0.0,
+     "headingDeg": 0,
+     "linvel": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "car": 2,
+     "x": 76.25,
+     "z": 0.34,
+     "headingDeg": 90,
+     "linvel": [
+      12,
+      0,
+      0
+     ]
+    }
+   ],
+   "throttle": 0.4,
+   "ticks": 120,
+   "expect": {
+    "1": {
+     "door_RR": "detached"
+    },
+    "2": {
+     "front": "loose"
+    }
+   }
+  },
+  {
+   "name": "head-on",
+   "place": [
+    {
+     "car": 2,
+     "x": 55.0,
+     "z": 0.0,
+     "headingDeg": 90,
+     "linvel": [
+      8,
+      0,
+      0
+     ]
+    },
+    {
+     "car": 3,
+     "x": 60.0,
+     "z": 0.2,
+     "headingDeg": 270,
+     "linvel": [
+      -8,
+      0,
+      0
+     ]
+    }
+   ],
+   "throttle": 0.4,
+   "ticks": 120,
+   "expect": {
+    "2": {
+     "front": "detached"
+    },
+    "3": {
+     "front": "loose"
+    }
+   }
+  }
+ ],
+ "driveAway": {
+  "throttle": 1.0,
+  "ticks": 720,
+  "minTravelM": 8.0
+ }
+}

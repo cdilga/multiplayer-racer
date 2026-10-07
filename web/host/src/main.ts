@@ -111,6 +111,8 @@ async function boot(): Promise<void> {
     identifyMarksShown: () => world.identifyMarks.shown.slice(),
     /** Per tile: on-screen size of the other cars (the far car's N px). */
     farCars: () => world.farCars(),
+    /** Per tile: which of the world points (x, y, z) its camera has in view (P1-G05: is the debris visible there). */
+    tilesSee: (pts: [number, number, number][]) => world.tilesSee(pts),
   };
 
   // Round-screen fixtures (P1-R07): `?roundfixture=lobby-32` draws a screen state from a fixture room view, no server.

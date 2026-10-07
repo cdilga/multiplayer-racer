@@ -11,6 +11,7 @@
 //! | `load` `{fixture, mapJson?}` | a fresh host world set up from a `jj sim` fixture (its map, or `mapJson`) | `{tick, cars}` |
 //! | `spawn` `{cars: [CarSpec]}` | more cars, as a fixture's `cars` entries (journaled) | `{cars: [id]}` |
 //! | `inputs` `{spans: [InputSpan]}` | more scripted input spans (a seated car follows its seat, not the script) | `{spans}` |
+//! | `place` `{car, pose, linvel?}` | teleports a car with a velocity (journaled, so clips replay it) | `{tick, car}` |
 //! | `step` `{ticks}` | exactly that many ticks, held or not | `{tick}` |
 //! | `until` `{until, maxTicks}` | steps until a car's metric is in range (`Until`, as in fixtures) | `{tick, ticks, held}` |
 //! | `observe` | cars (as `jj sim` observations), debris, the fixture's session, the host's seats and pauses | state |
@@ -24,7 +25,7 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use jj_fixture::{CarSpec, Fixture, Harness, InputSpan, Until};
+use jj_fixture::{CarSpec, Fixture, Harness, InputSpan, PoseSpec, Until};
 use jj_map::{Registry, load_json};
 use jj_sim::observe::{RouteGeom, observe_cars};
 
@@ -66,6 +67,14 @@ enum Command {
         car: u32,
         part: String,
         health: f32,
+    },
+    /// Teleports a car with a velocity (the F05b setup, a journaled `place_car`): the staged collisions of P1-G05.
+    #[serde(rename_all = "camelCase")]
+    Place {
+        car: u32,
+        pose: PoseSpec,
+        #[serde(default)]
+        linvel: [f32; 3],
     },
     /// Hands every car (or one) to the autopilot, so a journey can race full rounds hands-off (P1-G01).
     Autopilot {
@@ -211,6 +220,15 @@ impl Host {
                 self.sim
                     .set_part_health(jj_sim::CarId(car), i as u8, health);
                 json!({ "tick": self.sim.tick(), "part": part, "health": health })
+            }
+            Command::Place { car, pose, linvel } => {
+                self.sim.place_car(
+                    jj_sim::CarId(car),
+                    pose.spawn(),
+                    pose.roll_deg.to_radians(),
+                    linvel,
+                );
+                json!({ "tick": self.sim.tick(), "car": car })
             }
             Command::Autopilot { car, on } => {
                 let cars: Vec<jj_sim::CarId> = match car {
