@@ -14,14 +14,16 @@ import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs, gpu } from './lib/chromium.mjs';
 
-const BASE = '/p/jn5/';
+// JJ_BUILD_SUFFIX lets two copies of this journey run side by side on one machine (contention, as on a CI runner).
+const ID = `jn5${process.env.JJ_BUILD_SUFFIX ?? ''}`;
+const BASE = `/p/${ID}/`;
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
 const EVIDENCE = process.env.JJ_EVIDENCE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G02');
 let browser;
 let server;
 
 before(async () => {
-  server = await serve(build('./', 'jn5'), BASE, { JJ_STUN_URLS: '' });
+  server = await serve(build('./', ID), BASE, { JJ_STUN_URLS: '' });
   browser = await chromium.launch({ args: chromiumArgs });
   if (CAPTURE) mkdirSync(CAPTURE, { recursive: true });
 });
@@ -35,12 +37,34 @@ const at = (name) => {
   step = name;
   console.log(`# ${name}`);
 };
+// The page that is the host, so a stalled phone's timeout can say what the room looked like at the time.
+let hostPage = null;
+const within = (p, ms = 5000) => Promise.race([p, new Promise((r) => setTimeout(() => r('(no answer)'), ms))]).catch((e) => `(${e.message})`);
+/** What a timed-out wait was looking at: a phone's controller state and link, or the room's seats; and the host's room. */
+async function stateOf(page) {
+  const own = await within(
+    page.evaluate(() => {
+      const c = window.__jjController?.inspect();
+      const room = window.__jjRoom?.view();
+      return {
+        url: location.pathname,
+        controller: c && { phase: c.phase, you: c.you, roomPhase: c.roomPhase, link: c.link },
+        room: room && { phase: room.phase, seats: room.seats.map((s) => `${s.name}:${s.presence}:car${s.car}`) },
+        paths: window.__jjNet?.inspect?.(),
+      };
+    }),
+  );
+  const hostSide =
+    hostPage && hostPage !== page
+      ? await within(hostPage.evaluate(() => ({ phase: window.__jjRoom.view().phase, seats: window.__jjRoom.view().seats.length, net: window.__jjNet?.inspect?.(), render: { frames: window.__jjRender.stats().frames, scale: window.__jjRender.stats().scale } })))
+      : null;
+  return JSON.stringify({ own, host: hostSide, contexts: browser.contexts().length });
+}
 const wait = async (page, fn, arg, ms = 30_000) => {
   try {
     return await page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
   } catch (e) {
-    const room = await page.evaluate(() => window.__jjRoom?.view()?.seats.map((s) => `${s.name}:${s.presence}`)).catch(() => null);
-    throw new Error(`${step}: ${e.message} ${room ? `seats ${JSON.stringify(room)}` : ''}`);
+    throw new Error(`${step}: ${e.message.split('\n')[0]} state ${await stateOf(page)}`);
   }
 };
 const shot = async (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png` });
@@ -52,10 +76,11 @@ async function phone(url, name) {
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
   await page.goto(url);
-  await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  // ready-to-join needs the host's answer to this phone's offer, and a software-rendered host answers between frames.
+  await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join', undefined, 120_000);
   await page.locator('#name').fill(name);
   await page.getByRole('button', { name: 'Join the race' }).click();
-  await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await wait(page, () => window.__jjController.inspect().phase === 'playing', undefined, 120_000);
   const endpoint = await page.evaluate(() => window.__jjController.inspect().link.endpointId);
   // Newcomers get the tutorial in the Lobby; these players skip it.
   await page.getByRole('button', { name: 'Skip tutorial' }).click({ timeout: 2000 }).catch(() => {});
@@ -67,6 +92,9 @@ async function leave(p) {
   const btn = p.page.getByRole('button', { name: /Leave/ });
   await btn.click();
   await btn.click();
+  // A phone that has left is finished with: close its context so a slow runner isn't left rendering pages nobody reads.
+  await p.page.waitForTimeout(500);
+  await p.ctx.close().catch(() => {});
 }
 
 // How long a drop-in may take before the journey gives up. The claim → driving time is bound by the host's frame time (the
@@ -95,6 +123,7 @@ async function dropIn(host, url, name) {
 
 test('JN5: mixed controllers join and leave through every phase, growing to 12 and shrinking to 2', { timeout: 1_000_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  hostPage = host;
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
   // JJ_HOST_CPU_THROTTLE=<n> slows the host page n times (a CDP CPU throttle), to reproduce a slow CI runner on a fast box.
