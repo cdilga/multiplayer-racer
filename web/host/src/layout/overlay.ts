@@ -65,7 +65,7 @@ export function mountGridOverlay(root: HTMLElement, joinUrl: string) {
       if (f.kind === 'qr') {
         const q = qrEdge(modules, w, h, dpr);
         const card = paperQrCard({ url: joinUrl, code: code || host, domain: host, size: q });
-        inner = `<div class="jj-join" style="--q:${q}px"><span class="capt one jj-join-now" data-brush="join-now"><span>Join now</span></span>${card.outerHTML}</div>`;
+        inner = `<div class="jj-qrcell" style="--q:${q}px"><span class="capt one jj-join-now" data-brush="join-now"><span>Join now</span></span>${card.outerHTML}</div>`;
       } else if (f.kind === 'code') {
         inner = `<div class="jj-join-text"><span class="capt one" data-brush="join-at"><span>Join at</span></span>${code ? `<b class="display jj-code">${esc(code)}</b>` : ''}<span class="jj-domain">${esc(host)}</span></div>`;
       } else if (f.kind === 'standings') {

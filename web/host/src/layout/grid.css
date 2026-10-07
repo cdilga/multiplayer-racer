@@ -12,11 +12,11 @@
 .jj-filler:not([data-kind='margin']) { box-shadow: inset 0 0 0 3px var(--c-paper-line); container-type: size; }
 
 /* The join card: strip, QR, code and address, centred in the cell. */
-.jj-join { display: flex; flex-direction: column; align-items: center; gap: calc(var(--q) * 0.04); }
-.jj-join .jj-join-now { --capt-size: max(14px, calc(var(--q) * 0.13)); position: relative; z-index: 1; margin-bottom: calc(var(--q) * -0.05); --capt-rot: -2deg; }
-.jj-join .qr-card { --sh-y: max(3px, calc(var(--q) * 0.025)); padding: calc(var(--q) * 0.05) calc(var(--q) * 0.05) calc(var(--q) * 0.04); border-width: max(2px, calc(var(--q) * 0.012)); }
-.jj-join .qr-card .qr-code { font-size: max(16px, calc(var(--qr-size) * 0.17)); }
-.jj-join .qr-card .qr-domain { font-size: max(11px, calc(var(--qr-size) * 0.07)); }
+.jj-qrcell { display: flex; flex-direction: column; align-items: center; gap: calc(var(--q) * 0.04); }
+.jj-qrcell .jj-join-now { --capt-size: max(14px, calc(var(--q) * 0.13)); position: relative; z-index: 1; margin-bottom: calc(var(--q) * -0.05); --capt-rot: -2deg; }
+.jj-qrcell .qr-card { --sh-y: max(3px, calc(var(--q) * 0.025)); padding: calc(var(--q) * 0.05) calc(var(--q) * 0.05) calc(var(--q) * 0.04); border-width: max(2px, calc(var(--q) * 0.012)); }
+.jj-qrcell .qr-card .qr-code { font-size: max(16px, calc(var(--qr-size) * 0.17)); }
+.jj-qrcell .qr-card .qr-domain { font-size: max(11px, calc(var(--qr-size) * 0.07)); }
 
 /* Too small for a scannable QR: the code and the address, big enough to type from the couch. */
 .jj-join-text { display: flex; flex-direction: column; align-items: center; gap: 0.2em; max-width: 92%; }

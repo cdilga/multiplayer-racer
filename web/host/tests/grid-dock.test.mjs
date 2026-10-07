@@ -51,8 +51,8 @@ async function grid(page, n) {
     return window.__jjRoundFixture.tileRects().map(({ x, y, w, h }) => ({ x: x / k, y: y / k, w: w / k, h: h / k }));
   });
   assert.equal(tiles.length, n);
-  const cells = [];
-  for (const c of await page.locator('.jj-filler:not([data-kind=margin])').all()) cells.push(await box(c));
+  // Read in one go: the overlay rebuilds its cells when the layout changes, so element handles can go stale between calls.
+  const cells = await page.evaluate(() => [...document.querySelectorAll('.jj-filler:not([data-kind=margin])')].map((c) => { const r = c.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }));
   return { tiles, cells, foot: await box(page.locator('.jj-foot')) };
 }
 
