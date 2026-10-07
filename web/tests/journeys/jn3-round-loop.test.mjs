@@ -70,6 +70,15 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
   await host.waitForTimeout(3000);
   await shot(host, 'tv-racing');
+  // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
+  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
+    const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
+    const view = await host.evaluate(() => ({ phase: window.__jjRoom.view().phase, stats: window.__jjNet?.stats?.() }));
+    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}: ${e.message}`);
+  });
+  await shot(a.page, 'phone-idle-cue');
+  await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);
+  await shot(a.page, 'phone-idle-autopilot');
   // P1-R06: Identify from the phone pulses that seat's tile on the TV; press-to-visible over loopback WebRTC.
   const seatA = (await host.evaluate(() => window.__jjRoom.view().seats)).find((s) => s.name === 'Davo').seat;
   const identify = [];
@@ -94,15 +103,6 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
   // press and the event wait behind one, so there the samples are recorded with a loose bound only.
   const limit = gpu ? 150 : 1000;
   assert.ok(Math.max(...identify) <= limit, `press-to-visible ${identify} ms (≤ ${limit} ms, ${renderer})`);
-  // P1-G03: nobody has touched a stick since the start, so at 15 s the phones get the takeover cue, then the autopilot.
-  await wait(a.page, () => /Still there\?/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 30_000).catch(async (e) => {
-    const banner = await a.page.evaluate(() => document.querySelector('[data-round-banner]')?.textContent);
-    const view = await host.evaluate(() => ({ phase: window.__jjRoom.view().phase, stats: window.__jjNet?.stats?.() }));
-    throw new Error(`no idle cue: banner ${JSON.stringify(banner)}, host ${JSON.stringify(view)}: ${e.message}`);
-  });
-  await shot(a.page, 'phone-idle-cue');
-  await wait(a.page, () => /autopilot is driving/.test(document.querySelector('[data-round-banner]')?.textContent ?? ''), undefined, 10_000);
-  await shot(a.page, 'phone-idle-autopilot');
   await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 300_000);
   const results = await host.evaluate(() => window.__jjRoom.view().results);
   assert.equal(results.length, 2, JSON.stringify(results));
