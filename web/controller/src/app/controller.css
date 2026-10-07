@@ -37,8 +37,8 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .tools { display: flex; gap: 8px; justify-content: center; padding: 8px 12px; flex-wrap: wrap; }
 .tools .btn { min-height: 48px; font-size: 15px; padding: 0 12px; }
 .tools .btn.identify { background: var(--seat); color: var(--seat-on); }
-.tools .btn[data-act=ready] { background: var(--c-saffron); color: var(--c-ink); border-color: var(--c-ink); }
-.tools .btn[data-act=ready][aria-pressed=true] { background: var(--c-success); color: var(--c-paper); }
+.tools .btn[data-act=ready] { --bz-fill: var(--c-saffron); color: var(--c-ink); }
+.tools .btn[data-act=ready][aria-pressed=true] { --bz-fill: var(--c-success); color: var(--c-paper); }
 .tools .btn.identify img.i { filter: none; }
 
 /* stick area */
