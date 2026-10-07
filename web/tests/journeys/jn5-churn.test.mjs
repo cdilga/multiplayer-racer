@@ -175,6 +175,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // Ten phones and two key clusters: 12.
   phones.push(await phone(joinUrl, 'Sheila'));
   await wait(host, () => window.__jjRoom.view().seats.length === 12);
+  // The seat comes first; its car and tile follow a few host frames later (2 s frames on a software-GL runner).
+  await wait(host, () => window.__jjRender.tileRects().filter(Boolean).length === 12, undefined, 60_000).catch(() => {});
   const rects = await host.evaluate(() => window.__jjRender.tileRects());
   assert.equal(rects.filter(Boolean).length, 12, 'one tile per car: the grid reflowed to 12');
   await shot(host, 'tv-racing-12');
