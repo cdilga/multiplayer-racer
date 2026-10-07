@@ -1,14 +1,17 @@
-# CI (docs/infra/ci.md). A push runs only what its changes can affect, spread across every runner slot:
-#   plan      picks the suites from the paths changed since the last commit CI passed on (scripts/ci/plan.mjs) and
-#             prints the selection; a shared contract (the Cargo workspace, a crate others depend on, web/shared,
-#             maps, assets, the build config, this file) widens it to everything that depends on it.
-#   rust-*    lint (fmt, check, clippy, deny, jj validate) and tests (nextest at opt-level 1, the selected crates and
-#             their dependents), on the `rust` runners' persistent /cargo-cache.
-#   build     the one web build (WASM, Vite pages, the S02 harness, jj and jj-server), keyed by its inputs and cached
-#             per host, handed to the browser slots as one artifact.
-#   browser   a static matrix of 6 slots on the `browser` runners (3 per host, no CPU quota: SwiftShader pages
-#             contend for cores); plan packs the selected test files into them, longest first. The SSE soak is 20 s on a push and 300 s in the full run.
-#   checks, image as before (image only when its inputs changed).
+# CI (docs/infra/ci.md). A push runs only what its changes can affect, and every job starts at once:
+#   - Each job's first step is scripts/ci/plan.mjs: the paths changed since the last green run of this workflow pick
+#     the suites (a shared contract, the Cargo workspace, a crate others depend on, web/shared, maps, assets, the build
+#     config or this file widen it to everything that depends on it), and the job's other steps run only if it's
+#     selected. The plan is deterministic, so every job agrees; the log of each prints the one-line selection.
+#   - rust-lint (fmt, check, clippy, deny, jj validate) and rust-test (nextest at opt-level 1, the selected crates and
+#     their dependents) on the `rust` runners' persistent /cargo-cache.
+#   - build: the one web build (WASM, Vite pages, the S02 harness, jj and jj-server), keyed by its inputs and kept in
+#     Gitea's package store (scripts/ci/web-store.sh). A stored key is never rebuilt.
+#   - browser: a static matrix of 7 slots on the `browser` runners. plan packs the selected targets into them, longest
+#     first: whole files, or single tests of a long file (scripts/ci/targets.mjs). A slot reads the build from its
+#     host's cache or the store, waiting for the build job only when the build is new. The SSE soak is 20 s on a
+#     push and 300 s in the full run.
+#   - checks always; image when its inputs changed.
 # The full matrix (every suite, the 300 s soak) runs nightly and on a manual dispatch: same coverage, different timing.
 # Jobs run in the jj-ci image (scripts/ci/ci-image.Dockerfile, built on each runner host by scripts/ci/ci-image.sh):
 # node, Playwright's Chromium and its libraries, coturn, git-lfs, wasm-bindgen and nextest are baked in.
@@ -22,7 +25,7 @@ on:
   workflow_dispatch:
 
 # One run per branch at a time: a running one finishes (so closes always get a verdict), and a newer push replaces any
-# run still waiting; the next run's plan diffs from the last green commit, so nothing a replaced run held is lost.
+# run still waiting; the next run diffs from the last green run, so nothing a replaced run held is lost.
 concurrency:
   group: ci-${{ gitea.ref }}
   cancel-in-progress: false
@@ -32,35 +35,10 @@ env:
   RUSTUP_HOME: /cargo-cache/rustup
   CARGO_INCREMENTAL: "0"
   npm_config_cache: /cargo-cache/npm
+  GITEA_TOKEN: ${{ github.token }}
+  JJ_FULL: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
-  plan:
-    runs-on: ubuntu-latest
-    container:
-      image: jj-ci:5890cf2da9ac
-    timeout-minutes: 5
-    outputs:
-      rust: ${{ steps.plan.outputs.rust }}
-      crates: ${{ steps.plan.outputs.crates }}
-      build: ${{ steps.plan.outputs.build }}
-      slots: ${{ steps.plan.outputs.slots }}
-      n: ${{ steps.plan.outputs.n }}
-      image: ${{ steps.plan.outputs.image }}
-      soak: ${{ steps.plan.outputs.soak }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 300
-          lfs: false
-      - name: Select the suites
-        id: plan
-        env:
-          GITEA_TOKEN: ${{ github.token }}
-        run: |
-          full=""
-          if [ "${{ github.event_name }}" = schedule ] || [ "${{ github.event_name }}" = workflow_dispatch ]; then full=--full; fi
-          node scripts/ci/plan.mjs $full --github-output "$GITHUB_OUTPUT"
-
   checks:
     runs-on: ubuntu-latest
     container:
@@ -87,8 +65,6 @@ jobs:
   # Format, check, clippy, the supply-chain and Tokio bans and the committed data validating: always the whole
   # workspace (cheap on the warm cache), whenever any Rust is selected.
   rust-lint:
-    needs: plan
-    if: needs.plan.outputs.rust == 'true'
     runs-on: rust
     container:
       image: jj-ci:5890cf2da9ac
@@ -97,36 +73,47 @@ jobs:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers
     steps:
       - uses: actions/checkout@v4
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
       - name: Toolchain (rust-toolchain.toml) on the persistent cache
+        if: steps.plan.outputs.rust == 'true'
         run: scripts/ci/toolchain.sh
       - name: Format
+        if: steps.plan.outputs.rust == 'true'
         run: cargo fmt --all -- --check
       - name: Check (native)
+        if: steps.plan.outputs.rust == 'true'
         run: cargo check --workspace --all-targets --locked
       - name: Check (wasm facades)
+        if: steps.plan.outputs.rust == 'true'
         run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-input -p jj-wasm-procgen
       - name: Clippy
+        if: steps.plan.outputs.rust == 'true'
         run: |
           cargo clippy --workspace --all-targets --locked -- -D warnings
           cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
       - name: The greybox validates (jj validate)
+        if: steps.plan.outputs.rust == 'true'
         run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
       - name: A generated map validates (jj procgen, P1-M03a)
+        if: steps.plan.outputs.rust == 'true'
         run: cargo run --locked -q -p jj-tools --bin jj -- procgen --seed 42 --json >/dev/null
       - name: The Cruz Missile's committed bake validates, and its profile still matches it (jj validate, P1-V02, P1-S03a)
+        if: steps.plan.outputs.rust == 'true'
         run: |
           git lfs pull --include="art/vehicles/cruz-missile/cruz-missile.*"
           cargo run --locked -q -p jj-tools --bin jj -- validate art/vehicles/cruz-missile/cruz-missile.asset.json assets/profiles/cruz-missile.json maps/test/surface-strips.json
       - name: No Tokio (R2)
+        if: steps.plan.outputs.rust == 'true'
         run: scripts/ci/no-tokio.sh
       - name: cargo deny
+        if: steps.plan.outputs.rust == 'true'
         run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
 
   # The tests of the selected crates and everything that depends on them, at opt-level 1 (debug assertions and overflow
   # checks stay on; the sim and procgen banks run ~8x faster than unoptimised), every test binary in parallel.
   rust-test:
-    needs: plan
-    if: needs.plan.outputs.rust == 'true'
     runs-on: rust
     container:
       image: jj-ci:5890cf2da9ac
@@ -138,65 +125,68 @@ jobs:
       JJ_COTURN_REQUIRED: "1"
     steps:
       - uses: actions/checkout@v4
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
       - name: Toolchain (rust-toolchain.toml) on the persistent cache
+        if: steps.plan.outputs.rust == 'true'
         run: scripts/ci/toolchain.sh
-      - name: Test (${{ needs.plan.outputs.crates }})
-        run: scripts/ci/rust-test.sh ${{ needs.plan.outputs.crates }}
+      - name: Test (the selected crates)
+        if: steps.plan.outputs.rust == 'true'
+        run: scripts/ci/rust-test.sh ${{ steps.plan.outputs.crates }}
 
   build:
-    needs: plan
-    if: needs.plan.outputs.build == 'true'
     runs-on: rust
     container:
       image: jj-ci:5890cf2da9ac
     timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
+      JJ_STORE_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      # A miss pulls the LFS objects the pages bundle (vehicles, brand, audio) and the toolchain itself; a hit needs
-      # neither.
-      - name: Build (or reuse this host's build of the same inputs)
-        run: scripts/ci/build-web.sh web-build.tar.zst
-      - uses: actions/upload-artifact@v3
-        with:
-          name: web-build
-          path: web-build.tar.zst
-          retention-days: 1
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
+      # A stored key returns at once; a miss pulls the LFS objects the pages bundle and the toolchain itself.
+      - name: Build and store (unless this key is already stored)
+        if: steps.plan.outputs.build == 'true'
+        run: scripts/ci/build-web.sh
 
   browser:
-    needs: [plan, build]
-    if: ${{ !cancelled() && !failure() && needs.plan.outputs.build == 'true' && fromJSON(needs.plan.outputs.n) >= matrix.slot }}
     runs-on: browser
     container:
       image: jj-ci:5890cf2da9ac
       options: --shm-size=2g
-    timeout-minutes: 30
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        slot: [1, 2, 3, 4, 5, 6]
+        slot: [1, 2, 3, 4, 5, 6, 7]
+    env:
+      JJ_STORE_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
+      - name: The web build (this host's cache, else the store; waits for the build job only when it's new)
+        if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
+        run: scripts/ci/fetch-web.sh
       - name: Vehicle, brand and audio LFS objects
+        if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
         run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
-      - uses: actions/download-artifact@v3
-        with:
-          name: web-build
-      - name: Unpack the build
-        run: tar -I zstd -xf web-build.tar.zst && rm web-build.tar.zst
       - name: Slot ${{ matrix.slot }}
+        if: steps.plan.outputs.build == 'true' && fromJSON(steps.plan.outputs.n) >= matrix.slot
         env:
-          JJ_SOAK_S: ${{ needs.plan.outputs.soak }}
-          SLOTS: ${{ needs.plan.outputs.slots }}
+          JJ_SOAK_S: ${{ steps.plan.outputs.soak }}
+          SLOTS: ${{ steps.plan.outputs.slots }}
         run: node scripts/ci/run-slot.mjs ${{ matrix.slot }} "$SLOTS"
 
   # The jj-server image (P1-D02), built natively for linux/amd64 on the Jammers runner (the only one whose jobs get the
   # host's Docker socket), smoked as two previews of the same digest, then pushed to the Gitea registry by commit and
   # recorded by digest. Pushing through 127.0.0.1 keeps the registry on the host (Docker allows loopback over HTTP).
   image:
-    needs: plan
-    if: needs.plan.outputs.image == 'true'
     runs-on: jammers-docker
     timeout-minutes: 45
     env:
@@ -204,22 +194,29 @@ jobs:
       IMAGE: 127.0.0.1:3001/cdilga/jj-server
     steps:
       - uses: actions/checkout@v4
+      - name: Select (scripts/ci/plan.mjs)
+        id: plan
+        run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
       - name: Art and assets from LFS (the web bundle bakes them in)
+        if: steps.plan.outputs.image == 'true'
         run: |
           command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
           git lfs install --local && git lfs pull --include "art/**,assets/**"
       - name: Build (BuildKit, cache mounts warm on the host)
+        if: steps.plan.outputs.image == 'true'
         run: |
           tag=$(git rev-parse --short=12 HEAD)
           echo "TAG=$tag" >> "$GITHUB_ENV"
           DOCKER_BUILDKIT=1 docker build -f docker/jj-server.Dockerfile --build-arg JJ_BUILD="$tag" -t "$IMAGE:$tag" .
       - name: Non-root, no secrets in any layer
+        if: steps.plan.outputs.image == 'true'
         run: |
           test "$(docker inspect -f '{{.Config.User}}' "$IMAGE:$TAG")" = 10001
           ! docker history --no-trunc --format '{{.CreatedBy}}' "$IMAGE:$TAG" | grep -Ei 'token=|secret=|password=|_KEY='
           ! docker inspect -f '{{json .Config.Env}}' "$IMAGE:$TAG" | grep -Ei 'token|secret|password|_key'
       # One long-lived curl container answers every probe (a `docker run` per probe cost ~8 s each on this host).
       - name: Two previews of one image under /p/a/ and /p/b/ (version, health, no root-relative leak)
+        if: steps.plan.outputs.image == 'true'
         run: |
           net="jj-smoke-$TAG-$GITHUB_RUN_ID"
           docker network create "$net"
@@ -240,7 +237,7 @@ jobs:
           test -n "$js" && curl_ -f -o /dev/null "http://a-$net:8080$js"
           docker exec "a-$net" /app/jj-server --healthcheck
       - name: Push, by commit, recorded by digest
-        if: github.ref == 'refs/heads/v0.2-revamp'
+        if: steps.plan.outputs.image == 'true' && github.ref == 'refs/heads/v0.2-revamp'
         env:
           REGISTRY_PUSH_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
         run: |

@@ -4,27 +4,26 @@
 # own checks (worker typechecks, test code kept out of the shipped bundles, current tokens, the landing path free of the
 # renderer, runtime origins) run here, so a tarball only exists for inputs that passed them.
 #
-# Keyed by the inputs (every tracked file except docs, tests, plans and tooling no build reads, plus this script): a key
-# already in the host's prebuilt cache is reused as is, so a push that only changes tests or docs never rebuilds.
+# Keyed by its inputs (scripts/ci/build-key.sh) and kept in the shared store (scripts/ci/web-store.sh), which the
+# browser slots read: a key already stored is never rebuilt, so a push that only changes tests or docs builds nothing.
 #
-# Usage: scripts/ci/build-web.sh <out.tar.zst>    (env: CARGO_TARGET_DIR; cache dir JJ_PREBUILT, default
-#        /cargo-cache/jj-prebuilt; prints `key=<key>` and `hit=true|false` for $GITHUB_OUTPUT)
+# Usage: scripts/ci/build-web.sh    (env: CARGO_TARGET_DIR, JJ_STORE_TOKEN; host cache JJ_PREBUILT, default
+#        /cargo-cache/jj-prebuilt)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-out=${1:?usage: build-web.sh <out.tar.zst>}
 cache=${JJ_PREBUILT:-/cargo-cache/jj-prebuilt}
-
-key=$(git ls-files -s | grep -vE $'\t''(docs/|spikes/|\.beads/|\.claude/|\.apr/|\.ntm/|\.gitea/|web/tests/(journeys|smoke)/|art/(audio|references|style)/|tools/(maps|vehicles|turn-guard)/|scripts/(beads|emulators|remote)/|scripts/ci/(plan\.mjs|run-slot\.mjs|durations\.mjs|durations\.json)$|[^/]*\.md$|.*\.md$|.*\.test\.mjs$)' |
-    sha256sum | cut -c1-24)
-echo "key=$key"
-mkdir -p "$cache"
-if [[ -f $cache/$key.tar.zst ]]; then
-    cp "$cache/$key.tar.zst" "$out"
-    touch "$cache/$key.tar.zst"
-    echo "hit=true"
+key=$(scripts/ci/build-key.sh)
+echo "build-web: key $key"
+if scripts/ci/web-store.sh has "$key"; then
+    echo "build-web: already in the store"
     exit 0
 fi
-echo "hit=false"
+mkdir -p "$cache"
+if [[ -f $cache/$key.tar.zst ]]; then
+    echo "build-web: in this host's cache; storing it"
+    scripts/ci/web-store.sh put "$key" "$cache/$key.tar.zst"
+    exit 0
+fi
 
 # A miss: the LFS objects the pages bundle (vehicles, brand, audio) and the pinned toolchain, then the build.
 git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
@@ -51,6 +50,6 @@ tmp=$cache/.$key.$$.tar.zst
 t tar -I 'zstd -T0 -3' -cf "$tmp" node_modules web/node_modules web/dist web/dist-test .ci-bin \
     web/host/src/worker/pkg web/host/src/testing/pkg web/controller/src/pkg web/host/src/procgen/pkg >&2
 mv "$tmp" "$cache/$key.tar.zst"
-cp "$cache/$key.tar.zst" "$out"
+t scripts/ci/web-store.sh put "$key" "$cache/$key.tar.zst" >&2
 # Keep the newest 12 builds on this host.
 ls -1t "$cache"/*.tar.zst 2>/dev/null | tail -n +13 | xargs -r rm -f

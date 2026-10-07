@@ -6,21 +6,22 @@ The Gitea Actions runners at `http://192.168.11.12:3001` are instance-wide and s
 | Runner | Host | Labels | Slots | Job container limits | Persistent `/cargo-cache` |
 |---|---|---|---|---|---|
 | triton-rust | triton (container `physical-soccer-rust-triton`) | rust, rust-triton | 1 | 12 CPU, 16 GB | docker volume `ps-rust-cache` (boot NVMe) |
-| **triton-ci** (2026-10-07) | triton (container `triton-ci-runner`) | browser, rust, rust-triton | 3 | 12 GB, shm 2 GB, no CPU quota | bind `/mnt/unit/ci-cache` (ZFS `tank`) |
+| **triton-ci** (2026-10-07) | triton (container `triton-ci-runner`) | browser | 4 | 12 GB, shm 2 GB, no CPU quota | bind `/mnt/unit/ci-cache` (ZFS `tank`) |
 | triton-general | triton | ubuntu-latest | 1 | | none |
 | triton-gpu | triton (GTX 1080, driver 470) | gpu-triton | 1 | 4 CPU, 6 GB | none |
 | truenas-rust | TrueNAS app `ps-rust-runner` | rust, rust-truenas | 1 | | `ix-ps-rust-runner_cargo_cache_zfs` |
-| **truenas-ci** (2026-10-07) | TrueNAS container `truenas-ci-runner` | browser, rust, rust-truenas | 3 | 8 GB, shm 2 GB, no CPU quota | docker volume `ci-cache` |
+| **truenas-ci** (2026-10-07) | TrueNAS container `truenas-ci-runner` | browser | 3 | 8 GB, shm 2 GB, no CPU quota | docker volume `ci-cache` |
 | truenas-shared, truenas-general-2 | TrueNAS | ubuntu-latest | 1 each | | none |
 | jammers-docker-truenas | TrueNAS | jammers-docker, jammers-deploy | 1 | host Docker socket | |
 | **eris-gpu** (2026-10-07) | eris, host executor, user systemd unit | gpu, gpu-eris | 2 | none (runs as `cdilga`) | eris's own `~/.cargo`, `~/.cache/jj-ci` |
 
-## Why `browser` is its own label, 3 slots a host, with no CPU quota
+## Why `browser` is its own label, a few slots a host, with no CPU quota
 
 Run 1461 put 16 SwiftShader browser slots on triton and TrueNAS at once, each capped at 4 CPUs: Chromium sizes its
 thread pools by the host's 20-24 cores, burns the 4-CPU CFS quota early in each period and is throttled for the rest,
 so every page ran 2-4x slower and the timing tests failed. The `browser` label exists only on triton-ci and
-truenas-ci (3 slots each, CPU shared fairly rather than capped), so at most three pages render on a host at a time
+truenas-ci (4 on triton's 20 cores, 3 on the slower, busier TrueNAS; CPU shared fairly rather than capped), and those
+runners carry no other label, so Rust jobs never take a browser slot. At most four pages render on a host at a time
 (run 1485: round-screens 164 s, as on the old serial job). More browser slots need more cores, not more runners.
 
 ## The CI job image (`jj-ci:<hash>`)
@@ -49,12 +50,11 @@ they were piped over ssh into files and never printed or committed.
 ```yaml
 runner:
   file: /data/.runner
-  capacity: 3
+  capacity: 4
+  shutdown_timeout: 2h   # a restart waits for running jobs
   timeout: 1h
   labels:
     - "browser:docker://catthehacker/ubuntu:act-22.04@sha256:3cdab379…"
-    - "rust:docker://catthehacker/ubuntu:act-22.04@sha256:3cdab37904fc1798c460f1fadd47fd2c4d24fa2f292d1b57fc12eff072b415ec"
-    - "rust-triton:docker://catthehacker/ubuntu:act-22.04@sha256:3cdab379…"
 cache: { enabled: false }
 container:
   options: "--volume=/mnt/unit/ci-cache:/cargo-cache --memory=12g --pids-limit=4096 --shm-size=2g"
@@ -74,7 +74,7 @@ docker run -d --name triton-ci-runner --restart unless-stopped \
 The cache lives on `tank` because triton's boot NVMe (where Docker's own volumes live) was 96 % full. `tank` finished
 its resilver on 2026-10-06 with one old data error; it only holds caches here, so losing it costs a cold build.
 
-**truenas-ci**: the same config with `rust-truenas`, `--volume=ci-cache:/cargo-cache --memory=8g` and
+**truenas-ci**: the same config with `capacity: 3`, `--volume=ci-cache:/cargo-cache --memory=8g` and
 `valid_volumes: ["ci-cache"]`, in the docker volume `truenas-ci-runner-data` (config at `/data/config.yaml`):
 
 ```bash

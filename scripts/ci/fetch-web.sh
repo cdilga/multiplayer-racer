@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# A browser slot's copy of the web build for this commit (docs/infra/ci.md), unpacked into the checkout: from this
+# host's cache, else the shared store (scripts/ci/web-store.sh). The slots start with the build job, not after it,
+# so when the build is new they poll the store until it lands, and give up at once if the build job failed.
+#
+# Usage: scripts/ci/fetch-web.sh      (env: JJ_STORE_TOKEN, GITEA_TOKEN, GITHUB_SERVER_URL, GITHUB_REPOSITORY)
+set -euo pipefail
+cd "$(dirname "$0")/../.."
+key=$(scripts/ci/build-key.sh)
+cache=${JJ_PREBUILT:-/cargo-cache/jj-prebuilt}
+mkdir -p "$cache"
+s=$SECONDS
+if [[ ! -f $cache/$key.tar.zst ]]; then
+    sha=$(git rev-parse HEAD)
+    api="${GITHUB_SERVER_URL:-http://192.168.11.12:3001}/api/v1/repos/${GITHUB_REPOSITORY:-cdilga/multiplayer-racer}"
+    for ((i = 0; ; i++)); do
+        scripts/ci/web-store.sh get "$key" "$cache/.$key.$$" && mv "$cache/.$key.$$" "$cache/$key.tar.zst" && break
+        state=$(curl -sf -H "Authorization: token ${GITEA_TOKEN:-}" "$api/commits/$sha/statuses?limit=100" |
+            python3 -c 'import json,sys; s=[x for x in json.load(sys.stdin) if x["context"].startswith("CI / build")]; print(s[0]["status"] if s else "")' || true)
+        [[ $state == failure || $state == error ]] && { echo "fetch-web: the build job failed; nothing to test" >&2; exit 1; }
+        ((i < 180)) || { echo "fetch-web: no build $key after 30 min" >&2; exit 1; }
+        sleep 10
+    done
+fi
+touch "$cache/$key.tar.zst"
+tar -I zstd -xf "$cache/$key.tar.zst"
+ls -1t "$cache"/*.tar.zst 2>/dev/null | tail -n +13 | xargs -r rm -f
+echo "fetch-web: build $key ready in $((SECONDS - s))s"

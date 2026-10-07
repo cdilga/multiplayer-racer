@@ -12,6 +12,7 @@
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileOf, splitTargets } from './targets.mjs';
 
 const args = process.argv.slice(2);
 const opt = (name) => {
@@ -151,13 +152,26 @@ const rules = [
 ];
 
 let base = opt('--base');
-const full = args.includes('--full');
+const given = opt('--changed'); // a dry run: comma-separated paths instead of a diff
+const full = args.includes('--full') || process.env.JJ_FULL === 'true'; // schedule and dispatch runs
 if (full) everything('full run (schedule or dispatch)');
 else {
-  if (!base) base = await lastGreen();
-  if (!base) everything('no green ancestor found');
+  if (!base && !given) base = await lastGreen();
+  if (!base && !given) everything('no green run of this workflow found');
   else {
-    const changed = git('diff', '--name-only', `${base}...${head}`).split('\n').filter(Boolean);
+    let changed;
+    if (given) {
+      changed = given.split(',').filter(Boolean);
+      base = 'given-paths';
+    } else {
+      // CI checks out one commit; fetch the base the same way (a tree diff needs no history between them).
+      try {
+        git('cat-file', '-e', `${base}^{commit}`);
+      } catch {
+        git('fetch', '-q', '--depth=1', 'origin', base);
+      }
+      changed = git('diff', '--name-only', base, head).split('\n').filter(Boolean);
+    }
     sel.reason.push(`diff ${base.slice(0, 10)}..${head.slice(0, 10)}: ${changed.length} paths`);
     for (const p of changed) {
       const rule = rules.find(([re]) => re.test(p));
@@ -187,18 +201,33 @@ const gpu = journeyFiles.filter((f) => GPU.includes(f));
 // Pack the targets into the workflow's static matrix of browser slots (Gitea can't build a matrix from job outputs):
 // longest first onto the least-loaded slot, so with enough slots every file gets its own runner. Durations are the
 // `slot-timing` lines of earlier runs (scripts/ci/durations.json); an unknown file counts as 60 s.
-// 6 slots = the `browser` runners' capacity (3 on triton, 3 on TrueNAS): more SwiftShader pages at once than the
+// 7 slots = the `browser` runners' capacity (4 on triton, 3 on the slower TrueNAS): more SwiftShader pages at once than the
 // hosts have cores made every page 2-4x slower and the timing tests fail (run 1461).
-const SLOTS = Number(opt('--slots') ?? 6);
+const SLOTS = Number(opt('--slots') ?? 7);
 let durations = {};
 try {
   durations = JSON.parse(readFileSync(join(repoRoot, 'scripts/ci/durations.json'), 'utf8'));
 } catch {}
-const est = (t) => (t === SSE ? Number(full ? 300 : 20) + 5 : (durations[t] ?? 60));
+const est = (t) => {
+  if (t === SSE) return Number(full ? 300 : 20) + 5;
+  if (durations[t] !== undefined) return durations[t];
+  const parts = Object.entries(durations).filter(([k]) => k.startsWith(`${t}::`));
+  return parts.length ? parts.reduce((a, [, v]) => a + v, 0) : 60;
+};
+// A file longer than SPLIT_OVER seconds runs as one target per top-level test (scripts/ci/targets.mjs), so no slot
+// waits on a whole long file. Each target pays the file's before() (build, server, browser launch) once; that's in
+// its measured duration, and an unmeasured one is estimated as its share of the file plus 10 s.
+const SPLIT_OVER = 75;
+const targets = browser.flatMap((f) => (est(f) > SPLIT_OVER ? splitTargets(repoRoot, durations, f) : [f]));
+const estT = (t) => {
+  if (durations[t] !== undefined) return durations[t];
+  const f = fileOf(t);
+  return f === t ? est(f) : est(f) / targets.filter((x) => fileOf(x) === f).length + 10;
+};
 const load = Array.from({ length: SLOTS }, () => ({ s: 0, t: [] }));
-for (const t of [...browser].sort((a, b) => est(b) - est(a))) {
+for (const t of [...targets].sort((a, b) => estT(b) - estT(a))) {
   const slot = load.reduce((m, x) => (x.s < m.s ? x : m));
-  slot.s += est(t);
+  slot.s += estT(t);
   slot.t.push(t);
 }
 const used = load.filter((x) => x.t.length).sort((a, b) => b.s - a.s);
@@ -217,38 +246,31 @@ const out = {
 };
 const short = (f) => (f === KIT ? 'ui-kit' : f === LANDING ? 'landing' : f.replace(/^.*\//, '').replace(/\.test\.mjs$/, ''));
 const summary =
-  `selected: rust(${crates || 'none'}); browser (${browser.length} in ${used.length} slots, longest ~${Math.round(used[0]?.s ?? 0)} s): ${browser.length ? browser.map(short).join(', ') : 'none'}; ` +
+  `selected: rust(${crates || 'none'}); browser (${browser.length} files as ${targets.length} targets in ${used.length} slots, longest ~${Math.round(used[0]?.s ?? 0)} s): ${browser.length ? browser.map(short).join(', ') : 'none'}; ` +
   `gpu: ${gpu.length ? gpu.map(short).join(', ') : 'none'}; image: ${out.image}; soak: ${out.soak}s ` +
-  `[${sel.reason.join('; ')}]`;
+  `[${((r) => (r.length > 12 ? [...r.slice(0, 12), `… ${r.length - 12} more`] : r))([...new Set(sel.reason)]).join('; ')}]`;
 console.log(summary);
 console.log(JSON.stringify(out, null, 2));
 const gh = opt('--github-output');
 if (gh) appendFileSync(gh, Object.entries({ ...out, summary }).map(([k, v]) => `${k}=${v}\n`).join(''));
 
-// The newest first-parent ancestor of HEAD whose `CI / …` statuses all passed (skipped counts as passed). Public repo:
-// reads need no token, but one is sent when the job has it.
+// The head of the newest successful run of this workflow on this branch (all jobs passed or were skipped), from one
+// Gitea API call. The diff from it covers everything pushed since, including runs replaced while waiting and red
+// runs, so a suite that failed keeps running until it passes. Reads need the job's token (anonymous reads get 403).
 async function lastGreen() {
   const api = process.env.GITEA_API ?? `${process.env.GITHUB_SERVER_URL ?? 'http://192.168.11.12:3001'}/api/v1`;
   const repo = process.env.GITHUB_REPOSITORY ?? 'cdilga/multiplayer-racer';
+  const branch = process.env.GITHUB_REF_NAME ?? git('rev-parse', '--abbrev-ref', 'HEAD');
   const headers = process.env.GITEA_TOKEN ? { Authorization: `token ${process.env.GITEA_TOKEN}` } : {};
-  let shas;
   try {
-    shas = git('rev-list', '--first-parent', '--max-count=200', `${head}~1`).split('\n').filter(Boolean);
+    const q = `${api}/repos/${repo}/actions/workflows/ci.yml/runs?branch=${encodeURIComponent(branch)}&status=success&limit=20`;
+    const r = await fetch(q, { headers });
+    if (!r.ok) return undefined;
+    const runs = (await r.json()).workflow_runs ?? [];
+    const green = runs.find((x) => x.conclusion === 'success' && /^ci\.yml@/.test(x.path ?? '') && x.head_sha !== head);
+    return green?.head_sha;
   } catch {
-    return undefined; // shallow history
+    return undefined;
   }
-  for (const sha of shas) {
-    let statuses;
-    try {
-      const r = await fetch(`${api}/repos/${repo}/commits/${sha}/statuses?limit=100`, { headers });
-      if (!r.ok) return undefined;
-      statuses = await r.json();
-    } catch {
-      return undefined;
-    }
-    const latest = new Map();
-    for (const s of statuses) if (s.context?.startsWith('CI /') && !latest.has(s.context)) latest.set(s.context, s.status ?? s.state);
-    if (latest.size && [...latest.values()].every((st) => st === 'success' || st === 'skipped')) return sha;
-  }
-  return undefined;
 }
+
