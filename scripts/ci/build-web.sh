@@ -14,12 +14,14 @@ cd "$(dirname "$0")/../.."
 cache=${JJ_PREBUILT:-/cargo-cache/jj-prebuilt}
 key=$(scripts/ci/build-key.sh)
 echo "build-web: key $key"
-if scripts/ci/web-store.sh has "$key"; then
+# The verifier's local runner (JJ_STORE=off) builds in place and never touches the store.
+store=${JJ_STORE:-on}
+if [[ $store == on ]] && scripts/ci/web-store.sh has "$key"; then
     echo "build-web: already in the store"
     exit 0
 fi
-mkdir -p "$cache"
-if [[ -f $cache/$key.tar.zst ]]; then
+[[ $store == on ]] && mkdir -p "$cache"
+if [[ $store == on && -f $cache/$key.tar.zst ]]; then
     echo "build-web: in this host's cache; storing it"
     scripts/ci/web-store.sh put "$key" "$cache/$key.tar.zst"
     exit 0
@@ -28,7 +30,7 @@ fi
 # A miss: the LFS objects the pages bundle (vehicles, brand, audio) and the pinned toolchain, then the build.
 git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
 scripts/ci/toolchain.sh >&2
-export PATH="$CARGO_HOME/bin:$PATH"
+[[ -n ${CARGO_HOME:-} && -d ${CARGO_HOME:-/nonexistent}/bin ]] && export PATH="$CARGO_HOME/bin:$PATH"
 
 t() { local s=$SECONDS; "$@"; echo "build-web: $((SECONDS - s))s  $*" >&2; }
 t scripts/build-host-wasm.sh >&2
@@ -46,6 +48,7 @@ t npx --prefix web vite build --config web/host/tests/vite.config.ts >&2
 t cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server >&2
 mkdir -p .ci-bin && cp "$CARGO_TARGET_DIR/debug/jj" "$CARGO_TARGET_DIR/debug/jj-server" .ci-bin/
 
+[[ $store == on ]] || { echo "build-web: built in place (JJ_STORE=off)"; exit 0; }
 tmp=$cache/.$key.$$.tar.zst
 t tar -I 'zstd -T0 -3' -cf "$tmp" node_modules web/node_modules web/dist web/dist-test .ci-bin \
     web/host/src/worker/pkg web/host/src/testing/pkg web/controller/src/pkg web/host/src/procgen/pkg >&2

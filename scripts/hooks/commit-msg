@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Evidence commit-msg hook (P1-F02, plan §13b.5; docs/evidence/README.md): a commit that changes a bead's evidence
+# directory, docs/evidence/<ID>/, must name <ID> in its message (or the ID's base: P1-C05 for P1-C05.2), or carry a
+# line starting `Recapture:` that says why someone else's evidence is being re-captured. Installed by
+# scripts/hooks/install.sh; runs any other commit-msg hooks in .git/hooks/hooks.d/commit-msg/ after it.
+#
+#   scripts/hooks/commit-msg <message-file> [--staged-from <file>]   (the canary passes a fixed path list)
+set -uo pipefail
+msgfile=${1:?usage: commit-msg <message-file>}
+msg=$(grep -v '^#' "$msgfile")
+if [[ ${2:-} == --staged-from ]]; then
+    paths=$(cat "${3:?}")
+else
+    paths=$(git diff --cached --name-only)
+fi
+
+refused=()
+while IFS= read -r id; do
+    [[ -n $id ]] || continue
+    base=${id%%.*}
+    if grep -qF -- "$id" <<<"$msg" || grep -qF -- "$base" <<<"$msg" || grep -q '^Recapture:' <<<"$msg"; then
+        continue
+    fi
+    refused+=("$id")
+done < <(sed -n 's#^docs/evidence/\([^/]*\)/.*#\1#p' <<<"$paths" | sort -u)
+
+if [[ ${#refused[@]} -gt 0 ]]; then
+    echo "commit-msg: this commit changes the evidence of ${refused[*]} but its message doesn't name it." >&2
+    echo "  Name the bead (its P1-ID) in the message, or add a line 'Recapture: <why>' if you are re-capturing" >&2
+    echo "  another bead's evidence on purpose (docs/evidence/README.md)." >&2
+    exit 1
+fi
+
+# Chain: anything else installed for commit-msg.
+hookdir=$(git rev-parse --git-path hooks 2>/dev/null)/hooks.d/commit-msg
+if [[ -d $hookdir ]]; then
+    for h in "$hookdir"/*; do
+        [[ -x $h ]] || continue
+        "$h" "$msgfile" || exit $?
+    done
+fi
+exit 0

@@ -24,7 +24,7 @@ done
 sha=$(git rev-parse --verify "$rev^{commit}")
 url=$(git remote get-url gitea)                       # http://192.168.11.12:3001/cdilga/multiplayer-racer.git
 repo=${url#*://*/}; repo=${repo%.git}                  # cdilga/multiplayer-racer
-export GITEA_BASE=${url%/"$repo"*}                       # http://192.168.11.12:3001
+export GITEA_BASE=${url%/"$repo"*} REPO=$repo                       # http://192.168.11.12:3001
 
 report() {
     tea api --login gitea-lan "/repos/$repo/commits/$sha/statuses?limit=50" | python3 -c '
@@ -52,6 +52,22 @@ for ctx, s in sorted(latest.items()):
     if run and run not in runs: runs.append(run)
     if state in ("failure", "error"): code = 1
     elif state in ("pending", "running", "waiting", "blocked") and code != 1: code = 2
+# The lanes the run selected (P1-F02): every job prints scripts/ci/plan.mjs`s `selected: lanes …` line; read it from
+# the run`s rust-lint job (it starts first and is short). Best effort: a missing log prints nothing.
+import re, subprocess
+for run in runs[:1]:
+    m = re.search(r"/runs/(\d+)$", run)
+    if not m: continue
+    try:
+        repo = os.environ["REPO"]
+        jobs = json.loads(subprocess.run(["tea", "api", "--login", "gitea-lan", f"/repos/{repo}/actions/runs/{m.group(1)}/jobs?limit=50"], capture_output=True, text=True, timeout=30).stdout)["jobs"]
+        job = next(j for j in jobs if j["name"] == "rust-lint")
+        jid = job["id"]
+        log = subprocess.run(["tea", "api", "--login", "gitea-lan", f"/repos/{repo}/actions/jobs/{jid}/logs"], capture_output=True, text=True, timeout=60).stdout
+        sel = re.search(r"selected: lanes ([^;]*);", log)
+        if sel: print(f"lanes    {sel.group(1)}")
+    except Exception:
+        pass
 for run in runs: print(run)
 sys.exit(code)'
 }

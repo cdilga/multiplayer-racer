@@ -107,6 +107,55 @@ C=$(new_id "canary: epic child" --parent "$E" --acceptance-criteria '- [ ] c')
 expect_refused "force-close epic without batch_verify"      "batch_verify"          -- close "$E" --actor W2 --force --reason "$RECEIPT"
 expect_refused "close epic with open children"              "open children"         -- close "$E" --actor V --reason "$RECEIPT"
 
+echo "## evidence records and the evidence commit-msg hook (P1-F02, docs/evidence/README.md)"
+# A throwaway git repo with records for a fake ev:deploy-repo bead with two acceptance items.
+EV=$WS/evidence-repo
+mkdir -p "$EV/docs/evidence/P1-X99" && git -C "$EV" init -q && git -C "$EV" config user.email c@x && git -C "$EV" config user.name canary
+printf '%s' '{"id":"cn-x99","external_ref":"P1-X99","labels":["ev:deploy-repo"],"acceptance_criteria":"- [ ] one\n- [ ] two"}' >"$EV/bead.json"
+good='<!-- evidence
+bead: cn-x99
+id: P1-X99
+covers: AC1 AC2
+observer: canary
+date: 2026-10-08
+external: jammers-deploy 0fd3976..364753f, run 1714
+-->
+# receipt'
+printf '%s\n' "$good" >"$EV/docs/evidence/P1-X99/ok.md"
+printf '%s\n' "$good" | sed 's/^bead: cn-x99/bead: cn-other/' >"$EV/docs/evidence/P1-X99/wrong-bead.md"
+printf '%s\n' "$good" | sed 's/^covers: AC1 AC2/covers: AC1/' >"$EV/docs/evidence/P1-X99/incomplete.md"
+printf '%s\n' "$good" | sed '/^external:/d; s/^date: .*/date: 2026-10-08\nbuild: v02-test/' >"$EV/docs/evidence/P1-X99/no-range.md"
+printf '# a receipt with no header\n' >"$EV/docs/evidence/P1-X99/malformed.md"
+git -C "$EV" add -A && git -C "$EV" commit -q -m "P1-X99 fixtures"
+printf '%s\n' "$good" >"$EV/docs/evidence/P1-X99/uncommitted.md"
+CHECK="$REPO/scripts/beads/evidence-check.py"
+expect_record() { # <ok|refused> <desc> <file> [<expected reason substring>]
+    local want=$1 desc=$2 file=$3 why=${4:-} out rc
+    out=$(cd "$EV" && python3 "$CHECK" cn-x99 "docs/evidence/P1-X99/$file" --bead-json bead.json 2>&1); rc=$?
+    if [[ $want == ok && $rc -eq 0 ]] || [[ $want == refused && $rc -ne 0 && $out == *"$why"* ]]; then
+        pass=$((pass + 1)); report ok "$desc" "$(tail -1 <<<"$out")"
+    else
+        fail=$((fail + 1)); report FAIL "$desc" "rc=$rc: ${out:0:300}"
+    fi
+}
+expect_record ok      "a deploy-repo record with no game-repo commit is accepted"  ok.md
+expect_record refused "an uncommitted record is refused"                           uncommitted.md "uncommitted"
+expect_record refused "a malformed record (no header) is refused"                  malformed.md   "malformed"
+expect_record refused "a record for another bead is refused"                       wrong-bead.md  "wrong bead"
+expect_record refused "a record missing an acceptance item is refused"             incomplete.md  "covers lacks AC2"
+expect_record refused "a deploy-repo record without its commit range is refused"   no-range.md    "ev:deploy-repo"
+HOOK="$REPO/scripts/hooks/commit-msg"
+printf 'docs/evidence/P1-X99/ok.md\n' >"$WS/staged.txt"
+expect_hook() { # <0|1> <desc> <message>
+    local want=$1 desc=$2 rc
+    printf '%s\n' "$3" >"$WS/msg.txt"
+    (cd "$EV" && "$HOOK" "$WS/msg.txt" --staged-from "$WS/staged.txt" >/dev/null 2>&1); rc=$?
+    if [[ $rc -eq $want ]]; then pass=$((pass + 1)); report ok "$desc"; else fail=$((fail + 1)); report FAIL "$desc" "rc=$rc"; fi
+}
+expect_hook 1 "commit-msg rejects an unnamed change to another bead's evidence" "P1-Y01: unrelated work"
+expect_hook 0 "commit-msg accepts a message naming the bead"                    "P1-X99 (cn-x99): the receipt"
+expect_hook 0 "commit-msg accepts a deliberate Recapture:"                      $'P1-Y01: new captures\n\nRecapture: the old frames predate the fix'
+
 echo "## known gaps (enforced outside br; informational)"
 L=$(new_id "canary: leaf" --acceptance-criteria '- [ ] l')
 br update "$L" --claim --actor W3 --json >/dev/null 2>&1

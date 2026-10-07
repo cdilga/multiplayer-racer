@@ -47,20 +47,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci --no-audit --no-fund --prefer-offline && npm --prefix web ci --no-audit --no-fund --prefer-offline
-      - name: UI tokens (P1-U01)
-        run: node art/ui/check.mjs
-      - name: TV grid rule, equal tiles at any N (P1-U02.2, R95)
-        run: node art/ui/poc/tv/grid-check.mjs
-      - name: Announcer cue sheet (P1-A00)
-        run: python3 tools/audio/check_cues.py tools/audio/cues-playtest1.tsv && python3 tools/audio/test_check_cues.py
-      - name: Engine synth bundle and profile copy are current (P1-A04)
-        run: node art/ui/poc/audio/engine/build.mjs --check
-      - name: jammers-look recipes match the rendered code (P1-F11)
-        run: node .claude/skills/jammers-look/example/check-recipes.mjs
-      - name: The surface-strips test map is what its generator writes (P1-S03a)
-        run: python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json
-      - name: Vehicle bake is reproducible and committed; loads in three.js (P1-V02)
-        run: node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/
+      # The checks lane, one script with the verifier's local runner (scripts/beads/batch-verify.sh).
+      - name: Checks (tokens, grid, cues, engine bundle, look recipes, surface strips, vehicle bake)
+        run: scripts/ci/checks.sh
 
   # Format, check, clippy, the supply-chain and Tokio bans and the committed data validating: always the whole
   # workspace (cheap on the warm cache), whenever any Rust is selected.
@@ -79,37 +68,10 @@ jobs:
       - name: Toolchain (rust-toolchain.toml) on the persistent cache
         if: steps.plan.outputs.rust == 'true'
         run: scripts/ci/toolchain.sh
-      - name: Format
+      # fmt, check (native and WASM), clippy, jj validate x3, no Tokio, cargo deny: one script with the local runner.
+      - name: Lint (scripts/ci/rust-lint.sh)
         if: steps.plan.outputs.rust == 'true'
-        run: cargo fmt --all -- --check
-      - name: Check (native)
-        if: steps.plan.outputs.rust == 'true'
-        run: cargo check --workspace --all-targets --locked
-      - name: Check (wasm facades)
-        if: steps.plan.outputs.rust == 'true'
-        run: cargo check --locked --target wasm32-unknown-unknown -p jj-wasm-host -p jj-wasm-input -p jj-wasm-procgen
-      - name: Clippy
-        if: steps.plan.outputs.rust == 'true'
-        run: |
-          cargo clippy --workspace --all-targets --locked -- -D warnings
-          cargo clippy -p jj-wasm-host --features testing --all-targets --locked -- -D warnings
-      - name: The greybox validates (jj validate)
-        if: steps.plan.outputs.rust == 'true'
-        run: cargo run --locked -q -p jj-tools --bin jj -- validate maps/greybox-loop.json
-      - name: A generated map validates (jj procgen, P1-M03a)
-        if: steps.plan.outputs.rust == 'true'
-        run: cargo run --locked -q -p jj-tools --bin jj -- procgen --seed 42 --json >/dev/null
-      - name: The Cruz Missile's committed bake validates, and its profile still matches it (jj validate, P1-V02, P1-S03a)
-        if: steps.plan.outputs.rust == 'true'
-        run: |
-          git lfs pull --include="art/vehicles/cruz-missile/cruz-missile.*"
-          cargo run --locked -q -p jj-tools --bin jj -- validate art/vehicles/cruz-missile/cruz-missile.asset.json assets/profiles/cruz-missile.json maps/test/surface-strips.json
-      - name: No Tokio (R2)
-        if: steps.plan.outputs.rust == 'true'
-        run: scripts/ci/no-tokio.sh
-      - name: cargo deny
-        if: steps.plan.outputs.rust == 'true'
-        run: command -v cargo-deny >/dev/null || cargo install --locked cargo-deny; scripts/ci/deny.sh
+        run: scripts/ci/rust-lint.sh
 
   # The tests of the selected crates and everything that depends on them, at opt-level 1 (debug assertions and overflow
   # checks stay on; the sim and procgen banks run ~8x faster than unoptimised), every test binary in parallel.

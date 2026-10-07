@@ -50,9 +50,14 @@ A Claude session you start when you want it, for the things CI doesn't do by its
 
 - close `batch_pending` beads whose commits went green on CI;
 - turn a red CI lane into `rework` for the bead that caused it, with the failing assertion and file:line;
-- run the CI lanes locally (`scripts/beads/batch-verify.sh run`, across RCH, eris and the Mac) when CI is
-  down or not built yet, and close on that receipt;
-- evidence closes, and `status` summaries.
+- run the CI lanes locally when CI is down or not built yet, and close on that receipt:
+  `scripts/beads/batch-verify.sh plan --base <ref>` shows the lanes CI's planner (`scripts/ci/plan.mjs`) picks for the
+  range; `run` runs them on eris with CI's own scripts (`scripts/ci/verify-lanes.sh` through `scripts/remote/eris.sh`;
+  `--local` for this machine, but keep the Mac light) and writes `.beads/receipts/wave-NNN.json`; `close <bead>
+  --receipt <wave.json>` closes a `batch_pending` bead whose commits it covered;
+- evidence closes: `scripts/beads/batch-verify.sh close <bead> --evidence docs/evidence/<ID>/<record>.md` checks the
+  record against `docs/evidence/README.md` and closes through `close.sh --receipt`;
+- `status` summaries.
 
 Start it with `JJ_ROLE=verifier AGENT_NAME=<name> claude --remote-control "jj-verifier" --model claude-sonnet-5-5 --effort medium`.
 It's **on demand only**: no timers, `/loop` or heartbeat. It acts when a worker messages it or you say
@@ -181,6 +186,8 @@ Then run the loop like everyone else: `bv --robot-next`, claim, build with tests
 | br policy | closing without a `batch_verify` gate pass, a `receipt:` reference and every acceptance item ticked; claims without criteria; `--bypass-policy`; stale gate passes after rework | `.beads/policy.yaml` |
 | Canary | policy edits or br upgrades that silently stop enforcing | `scripts/beads/canary.sh`; run after any policy edit or br upgrade |
 | Hook | workspace-wide local cargo on the Mac (disk) and `br delete` from agents | `.claude/hooks/worker-guard.sh` (`JJ_ROLE=worker` or `solo`) |
+| Git hook | a commit changing another bead's `docs/evidence/<ID>/` without naming it (or `Recapture:`) | `scripts/hooks/commit-msg`; install once per clone with `scripts/hooks/install.sh` |
+| Evidence check | evidence closes on uncommitted, malformed, wrong-bead or incomplete records | `scripts/beads/evidence-check.py` (canaried) |
 
 ## Honest credit
 
