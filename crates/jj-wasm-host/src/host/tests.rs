@@ -1214,8 +1214,26 @@ fn an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over() {
             }
         }
     };
-    run(&mut h, 4_000, [0, 0], &mut now, &mut seq, &mut cues);
+    // A menu open on the grid (the newcomer's tutorial) and closed before GO hands nothing over.
+    h.handle(&net(
+        "p1",
+        Channel::Cmd,
+        ControllerCmd::Menu { open: true }.encode(),
+    ))
+    .unwrap();
+    run(&mut h, 1_000, [0, 0], &mut now, &mut seq, &mut cues);
+    h.handle(&net(
+        "p1",
+        Channel::Cmd,
+        ControllerCmd::Menu { open: false }.encode(),
+    ))
+    .unwrap();
+    run(&mut h, 3_000, [0, 0], &mut now, &mut seq, &mut cues);
     assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    assert!(
+        !h.sim.has_autopilot(CarId(0)),
+        "a menu closed before GO hands nothing over"
+    );
     let car = CarId(0);
     run(&mut h, 2_000, [0, 32_767], &mut now, &mut seq, &mut cues);
     assert!(!h.sim.has_autopilot(car), "driving: the player has the car");

@@ -501,7 +501,8 @@ impl Host {
                 self.sim.set_autopilot(car, true);
                 input.dropped = true;
             }
-            if input.menu_open {
+            // Only a race hands over for a menu: on the grid nothing moves, and a menu closed before GO costs nothing.
+            if input.menu_open && racing {
                 if !input.dropped {
                     self.sim.set_autopilot(car, true);
                     input.dropped = true;
