@@ -6,7 +6,8 @@
 //! [`Output`]s back as `Welcome`, `ClaimRejected`, the fencing card and Identify flashes.
 //!
 //! - Opening a URL never claims a seat: only [`Input::Claim`] does. One endpoint (a controller's stored id + secret)
-//!   owns at most one seat, so retries, reconnects and duplicate tabs can't create a second car.
+//!   owns at most one seat per *source* (a phone is one source, [`PRIMARY_SOURCE`]; a hub's pads and key clusters are
+//!   one source each, over the one connection), so retries, reconnects and duplicate tabs can't create a second car.
 //! - Numbers count up from 1 and are never reused; colours cycle the identity palette (the number keeps cars apart).
 //!   Nothing here counts or caps seats (R36).
 //! - Leave keeps the seat (number, name, standings), withdraws the car at the next tick boundary and leaves its debris.
@@ -22,6 +23,9 @@ mod tests;
 
 /// The host transport's id for one live connection (one browser tab).
 pub type ConnId = u64;
+
+/// The source a command without a source addresses: a phone's own sticks.
+pub const PRIMARY_SOURCE: SourceHandle = SourceHandle(1);
 
 /// The identity palette, in seat order (`art/ui/tokens.json` `identity.colors`, ordered so neighbours differ under CVD).
 pub const IDENTITY_PALETTE: [[u8; 3]; 12] = [
@@ -101,7 +105,8 @@ pub struct Seat {
 #[derive(Clone, Debug)]
 struct Endpoint {
     secret_hash: [u8; 32],
-    seat: Option<SeatId>,
+    /// One seat per source (R36: no cap on the number of sources).
+    seats: BTreeMap<SourceHandle, SeatId>,
     conn: Option<ConnId>,
 }
 
@@ -121,18 +126,22 @@ pub enum Input {
     },
     Claim {
         conn: ConnId,
+        source: SourceHandle,
         request: RequestId,
         name: String,
     },
     SetName {
         conn: ConnId,
+        source: SourceHandle,
         name: String,
     },
     Identify {
         conn: ConnId,
+        source: SourceHandle,
     },
     Leave {
         conn: ConnId,
+        source: SourceHandle,
     },
     /// The host removed this seat (P1-G07): it leaves at the next tick boundary like a Leave, and its endpoint forgets
     /// it, so the same phone joining again is a new claim with a new number. Only the host's UI sends this; no
@@ -142,6 +151,7 @@ pub enum Input {
     },
     SitOut {
         conn: ConnId,
+        source: SourceHandle,
         on: bool,
     },
     Disconnect {
@@ -238,22 +248,26 @@ impl Seats {
         self.seats.values()
     }
 
-    /// The seat a connection drives, if it's the endpoint's live, unfenced connection.
+    /// The primary source's seat on a connection (a phone), if it's the endpoint's live, unfenced connection.
     pub fn seat_of(&self, conn: ConnId) -> Option<SeatId> {
+        self.seat_at(conn, PRIMARY_SOURCE)
+    }
+
+    /// The seat one source of a connection drives, if it's the endpoint's live, unfenced connection.
+    pub fn seat_at(&self, conn: ConnId, source: SourceHandle) -> Option<SeatId> {
         let c = self.conns.get(&conn).filter(|c| !c.fenced)?;
         let e = self.endpoints.get(&c.endpoint)?;
         if e.conn != Some(conn) {
             return None;
         }
-        e.seat
+        e.seats.get(&source).copied()
     }
 
     /// Routes a state record: the seat whose car it drives, or `None` (the input is stale and neutralised): unknown or
     /// fenced connection, a source handle that isn't the seat's, or a seat without a car.
     pub fn input_seat(&self, conn: ConnId, source: SourceHandle) -> Option<SeatId> {
-        let id = self.seat_of(conn)?;
-        let seat = &self.seats[&id];
-        (seat.source == source && seat.has_car).then_some(id)
+        let id = self.seat_at(conn, source)?;
+        self.seats[&id].has_car.then_some(id)
     }
 
     /// The name shown for a seat: the cleaned name or the default, plus ` #<number>` when an earlier seat (lower number)
@@ -317,8 +331,8 @@ impl Seats {
                             c.fenced = true;
                             out.push(Output::Fenced { conn: old });
                         }
-                        if let Some(id) = e.seat {
-                            let seat = self.seats.get_mut(&id).expect("an endpoint's seat exists");
+                        for id in e.seats.values() {
+                            let seat = self.seats.get_mut(id).expect("an endpoint's seat exists");
                             seat.conn = Some(conn);
                             out.push(Self::welcome(conn, seat));
                         }
@@ -328,7 +342,7 @@ impl Seats {
                             endpoint.clone(),
                             Endpoint {
                                 secret_hash,
-                                seat: None,
+                                seats: BTreeMap::new(),
                                 conn: Some(conn),
                             },
                         );
@@ -344,6 +358,7 @@ impl Seats {
             }
             Input::Claim {
                 conn,
+                source,
                 request: _,
                 name,
             } => {
@@ -354,8 +369,8 @@ impl Seats {
                 if self.endpoints[&ep].conn != Some(conn) {
                     return out;
                 }
-                // Idempotent: whatever the request id, an endpoint that has a seat gets that seat back.
-                if let Some(id) = self.endpoints[&ep].seat {
+                // Idempotent: whatever the request id, a source that has a seat gets that seat back.
+                if let Some(&id) = self.endpoints[&ep].seats.get(&source) {
                     let seat = self.seats.get_mut(&id).expect("an endpoint's seat exists");
                     if seat.presence == Presence::Left && seat.pending.is_none() {
                         seat.pending = Some(Pending::Return);
@@ -389,7 +404,7 @@ impl Seats {
                     name,
                     endpoint: ep.clone(),
                     conn: Some(conn),
-                    source: SourceHandle(1),
+                    source,
                     presence: Presence::Active,
                     has_car: false,
                     identify_last: Some(self.now),
@@ -401,10 +416,11 @@ impl Seats {
                 self.endpoints
                     .get_mut(&ep)
                     .expect("hello registered it")
-                    .seat = Some(id);
+                    .seats
+                    .insert(source, id);
             }
-            Input::SetName { conn, name } => {
-                let Some(id) = self.seat_of(conn) else {
+            Input::SetName { conn, source, name } => {
+                let Some(id) = self.seat_at(conn, source) else {
                     return out;
                 };
                 match names::clean_name(&name) {
@@ -418,8 +434,8 @@ impl Seats {
                     }),
                 }
             }
-            Input::Identify { conn } => {
-                let Some(id) = self.seat_of(conn) else {
+            Input::Identify { conn, source } => {
+                let Some(id) = self.seat_at(conn, source) else {
                     return out;
                 };
                 let every = self.identify_ticks();
@@ -442,8 +458,8 @@ impl Seats {
                     out.push(Output::Identify { seat });
                 }
             }
-            Input::Leave { conn } => {
-                if let Some(id) = self.seat_of(conn) {
+            Input::Leave { conn, source } => {
+                if let Some(id) = self.seat_at(conn, source) {
                     let seat = self.seats.get_mut(&id).expect("seat");
                     if seat.presence != Presence::Left {
                         seat.pending = Some(Pending::Leave);
@@ -456,14 +472,14 @@ impl Seats {
                 {
                     s.pending = Some(Pending::Leave);
                     if let Some(e) = self.endpoints.get_mut(&s.endpoint)
-                        && e.seat == Some(seat)
+                        && e.seats.get(&s.source) == Some(&seat)
                     {
-                        e.seat = None;
+                        e.seats.remove(&s.source);
                     }
                 }
             }
-            Input::SitOut { conn, on } => {
-                if let Some(id) = self.seat_of(conn) {
+            Input::SitOut { conn, source, on } => {
+                if let Some(id) = self.seat_at(conn, source) {
                     let seat = self.seats.get_mut(&id).expect("seat");
                     match (on, seat.presence) {
                         (true, Presence::Active) => seat.pending = Some(Pending::SitOut),
@@ -478,9 +494,9 @@ impl Seats {
                     && e.conn == Some(conn)
                 {
                     e.conn = None;
-                    if let Some(id) = e.seat {
-                        // The seat and its car stay (autopilot takes over after 2 s, S07); a reconnect resumes it.
-                        self.seats.get_mut(&id).expect("seat").conn = None;
+                    for id in e.seats.values() {
+                        // The seats and their cars stay (autopilot takes over after 2 s, S07); a reconnect resumes them.
+                        self.seats.get_mut(id).expect("seat").conn = None;
                     }
                 }
             }

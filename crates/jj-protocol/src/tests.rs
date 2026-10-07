@@ -169,6 +169,13 @@ fn controller_samples() -> Vec<ControllerCmd> {
             vehicle: "cruz-missile".into(),
             open: false,
         },
+        ControllerCmd::ForSource {
+            source: SourceHandle(4),
+            cmd: Box::new(ControllerCmd::Claim {
+                request: RequestId(1),
+                name: "Pad 1".into(),
+            }),
+        },
     ]
 }
 
@@ -188,9 +195,10 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::Menu { .. } => "menu",
         ControllerCmd::Ping { .. } => "ping",
         ControllerCmd::Pick { .. } => "pick",
+        ControllerCmd::ForSource { .. } => "for-source",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 13] = [
+const CONTROLLER_VARIANTS: [&str; 14] = [
     "hello",
     "claim",
     "action",
@@ -204,6 +212,7 @@ const CONTROLLER_VARIANTS: [&str; 13] = [
     "menu",
     "ping",
     "pick",
+    "for-source",
 ];
 
 fn host_samples() -> Vec<HostCmd> {
@@ -236,6 +245,15 @@ fn host_samples() -> Vec<HostCmd> {
             autopilot_in_ms: 3_000,
         },
         HostCmd::Removed,
+        HostCmd::ForSource {
+            source: SourceHandle(4),
+            cmd: Box::new(HostCmd::Welcome {
+                seat: SeatId(9),
+                number: SeatNumber(3),
+                colour: colour(2),
+                source: SourceHandle(4),
+            }),
+        },
     ]
 }
 
@@ -249,9 +267,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::Ended => "ended",
         HostCmd::IdleCue { .. } => "idle-cue",
         HostCmd::Removed => "removed",
+        HostCmd::ForSource { .. } => "for-source",
     }
 }
-const HOST_VARIANTS: [&str; 8] = [
+const HOST_VARIANTS: [&str; 9] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -260,6 +279,7 @@ const HOST_VARIANTS: [&str; 8] = [
     "ended",
     "idle-cue",
     "removed",
+    "for-source",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.

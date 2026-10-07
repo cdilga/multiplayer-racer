@@ -1,8 +1,8 @@
 // P1-C08 hub: a second laptop (`B/j/<CODE>?hub`) with emulated pads and key clusters, and a phone with a paired pad, each
 // source joining and leaving on its own. The Gamepad API is emulated (navigator.getGamepads) and keys are real key events.
 // WebRTC: run on eris.   node --test web/tests/journeys/c08-hub.test.mjs   (JJ_CHROMIUM_GPU=1)
-// NOTE: today each source is its own endpoint (the protocol seats one endpoint with one seat), so "one connection" and the
-// N08 per-endpoint receipt are not asserted; per-source bytes are logged ('# bytes ...').
+// Protocol 3: ONE connection per hub. Six sources (four pads, two key clusters) claim six seats on one endpoint, over one
+// WebRTC link, each under its own source handle; their input shares the endpoint's batches.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
@@ -86,35 +86,36 @@ async function hubPage(joinUrl) {
 const hubState = (page) => page.evaluate(() => window.__jjHub.inspect());
 const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats);
 
-// Every source is its own signalling stream today (see hub.ts), and a browser holds at most six HTTP/1.1 connections per
-// origin, so one hub page can carry five sources here (the sixth's signalling queues behind the other streams). Production
-// is HTTP/2 behind the tunnel; a single multi-source connection is the real fix. The six seats of the acceptance are four
-// pads and two key clusters on TWO hub pages (two browser contexts, so two connection pools): hub A has pads 1-2 and both
-// key clusters, hub B has pads 3-4.
-test('four pads and two key clusters hold six seats across two hubs; each drives only its own car; one unplugged pad goes alone', { timeout: 900_000 }, async () => {
+test('four pads and two key clusters hold six seats over ONE connection on ONE hub page; each drives only its own car; one unplugged pad goes alone', { timeout: 900_000 }, async () => {
   const { host, joinUrl } = await openHost('drive');
   const hub = await hubPage(joinUrl);
-  const hubB = await hubPage(joinUrl);
-  for (const [h, n] of [[hub, 2], [hubB, 2]]) for (let i = 0; i < n; i++) await h.evaluate((i) => window.__padAdd(i), i);
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padAdd(i), i);
   // Each source claims on its own press.
-  for (const h of [hub, hubB]) for (let i = 0; i < 2; i++) await h.evaluate((i) => window.__padSet(i, [0, 0, 1, 0]), i);
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padSet(i, [0, 0, 1, 0]), i);
   await hub.keyboard.down('KeyW');
   await hub.keyboard.down('KeyI');
-  const joined = (h) => h.evaluate(() => window.__jjHub.inspect().filter((s) => s.seat !== null).length);
-  for (const [h, n] of [[hub, 4], [hubB, 2]]) await wait(h, (n) => window.__jjHub.inspect().filter((s) => s.seat !== null).length === n, n, 90_000);
-  for (const h of [hub, hubB]) for (let i = 0; i < 2; i++) await h.evaluate((i) => window.__padSet(i, [0, 0, 0, 0]), i);
+  await wait(hub, () => window.__jjHub.inspect().filter((s) => s.seat !== null).length === 6, undefined, 90_000);
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padSet(i, [0, 0, 0, 0]), i);
   await hub.keyboard.up('KeyW');
   await hub.keyboard.up('KeyI');
-  const srcA = (await hubState(hub)).filter((s) => s.seat !== null);
-  const srcB = (await hubState(hubB)).filter((s) => s.seat !== null);
-  const src = [...srcA, ...srcB.map((s) => ({ ...s, id: `B-${s.id}` }))];
+  const src = (await hubState(hub)).filter((s) => s.seat !== null);
   assert.equal(new Set(src.map((s) => s.seat)).size, 6, 'six distinct seats');
   assert.deepEqual(src.map((s) => s.kind).sort(), ['keys', 'keys', 'pad', 'pad', 'pad', 'pad']);
-  assert.equal((await joined(hub)) + (await joined(hubB)), 6);
+  // ONE connection: every source rides the same endpoint and the same link, each under its own source handle.
+  assert.equal(new Set(src.map((s) => s.endpoint)).size, 1, `one endpoint: ${JSON.stringify(src.map((s) => s.endpoint))}`);
+  assert.equal(new Set(src.map((s) => s.source)).size, 6, 'six source handles');
+  assert.equal(await hub.evaluate(() => window.__jjHub.hub.connections()), 1, 'one WebRTC link for the page');
   const hostSeats = () => host.evaluate(async () => (await window.__jjTest.observe()).host.seats.length);
   for (const t0 = Date.now(); (await hostSeats()) !== 6; await host.waitForTimeout(200)) assert.ok(Date.now() - t0 < 30_000, 'the host never saw six seats');
   await matrix(hub, 'c08-hub-four-sources', { width: 1100, height: 700 });
-  console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
+  // The host's seats: six on the one endpoint, one source handle each.
+  const hostSeatRows = (await host.evaluate(() => window.__jjTest.observe())).host.seats;
+  assert.equal(new Set(hostSeatRows.map((s) => s.endpoint)).size, 1, 'the host sees one endpoint');
+  assert.equal(new Set(hostSeatRows.map((s) => s.source)).size, 6, 'the host sees six sources on it');
+  // Bytes and input age per source, N08-style (per source records and bytes of the shared batches; the age of its latest sample).
+  const perSource = (await hubState(hub)).map((s) => ({ id: s.id, bytes: s.stats?.stateBytes, records: s.stats?.records, inputAgeMs: s.inputAgeMs }));
+  console.log(`# per source ${JSON.stringify(perSource)}`);
+  for (const p of perSource) assert.ok(p.bytes > 0 && p.records > 0 && Number.isFinite(p.inputAgeMs), `${p.id} reports bytes and input age: ${JSON.stringify(p)}`);
 
   // Two hub-A sources drive (the ones in front on the grid); the other four stay where they are.
   const obs = () => host.evaluate(() => window.__jjTest.observe());
@@ -125,24 +126,23 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
     assert.ok(Date.now() - t0 < 40_000, 'the cars never came to rest');
   }
   const start = await obs();
-  const ep = Object.fromEntries(src.map((s) => [s.id, s.endpoint]));
-  const carOf = (state, e) => state.cars.find((c) => c.car === state.host.seats.find((s) => s.endpoint === e)?.car);
+  const ep = Object.fromEntries(src.map((s) => [s.id, s.seat]));
+  const carOf = (state, n) => state.cars.find((c) => c.car === state.host.seats.find((s) => s.number === n)?.car);
   const movedSince = (state, e) => Math.hypot(...carOf(state, e).position.map((v, i) => v - carOf(start, e).position[i]));
   // Grid slots depend on join order and the cars start in a column along +x: a car behind another is blocked by it, so
   // drive the two hub-A sources whose cars are in front.
   const pad = (i) => (on) => hub.evaluate(([i, d]) => window.__padSet(i, [0, d, 0, 0]), [i, on ? -1 : 0]);
   const keys = (key) => (on) => (on ? hub.keyboard.down(key) : hub.keyboard.up(key));
-  const sources = { pad0: pad(0), pad1: pad(1), keys1: keys('KeyW'), keys2: keys('KeyI') };
+  const sources = { pad0: pad(0), pad1: pad(1), pad2: pad(2), pad3: pad(3), keys1: keys('KeyW'), keys2: keys('KeyI') };
   const front = Object.keys(sources).sort((a, b) => carOf(start, ep[b]).position[0] - carOf(start, ep[a]).position[0]);
   const driven = front.slice(0, 2);
-  const idle = [...front.slice(2), 'B-pad0', 'B-pad1'];
+  const idle = front.slice(2);
   for (const id of driven) await sources[id](true);
   // What each source's endpoint holds at once: only the two driven sources have a throttle.
   await hub.waitForTimeout(700);
   const held = Object.fromEntries((await hubState(hub)).map((s) => [s.id, s.drive?.throttle ?? 0]));
   for (const id of driven) assert.ok(held[id] > 0.5, `${id} drives: ${JSON.stringify(held)}`);
   for (const id of front.slice(2)) assert.ok(held[id] === 0, `${id} holds nothing: ${JSON.stringify(held)}`);
-  assert.equal((await hubState(hubB)).filter((s) => (s.drive?.throttle ?? 0) !== 0).length, 0, "hub B's sources hold nothing");
   // Routing, read from the host's own cars: a driven source's car holds the throttle that source sent (the sim's applied
   // input). Idle cars aren't asserted on motion: after 15 s without deliberate input the host hands them to the autopilot
   // (G03's idle rule, correct behaviour), and on a slow runner the join phase is long enough for that to happen.
@@ -161,14 +161,13 @@ test('four pads and two key clusters hold six seats across two hubs; each drives
   console.log(`# driven ${JSON.stringify(Object.fromEntries(driven.map((id) => [id, +movedSince(now, ep[id]).toFixed(1)])))}`);
   for (const id of driven) await sources[id](false);
 
-  // Unplug hub A's pad 1: only its row and seat change.
+  // Unplug pad 1: only its row and seat change.
   await hub.evaluate(() => window.__padUnplug(0));
   await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad0').state === 'unplugged');
   const after2 = await hubState(hub);
   for (const s of after2) assert.equal(s.state === 'unplugged', s.id === 'pad0', `${s.id} is ${s.state}`);
   await hub.locator('[data-source=pad0]', { hasText: /Unplugged/ }).waitFor({ timeout: 5000 }); // the list repaints every 250 ms
   assert.match(await hub.locator('[data-source=pad1]').innerText(), /Connected|Ready/);
-  assert.equal((await hubState(hubB)).filter((s) => s.state === 'unplugged').length, 0, "hub B's pads are untouched");
   await shot(hub, 'c08-hub-pad1-unplugged-1100x700');
   await host.waitForTimeout(3500);
   assert.equal(await hostSeats(), 6, 'no seat was lost');

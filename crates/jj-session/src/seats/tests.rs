@@ -28,6 +28,7 @@ fn hello(seats: &mut Seats, conn: ConnId, k: u32) -> Vec<Output> {
 fn claim(seats: &mut Seats, conn: ConnId, req: u32, name: &str) -> Vec<Output> {
     seats.apply(Input::Claim {
         conn,
+        source: PRIMARY_SOURCE,
         request: RequestId(req),
         name: name.into(),
     })
@@ -111,7 +112,10 @@ fn stale_input_is_neutralised() {
         "the fenced tab's input is dropped"
     );
     assert_eq!(s.input_seat(2, SourceHandle(1)), Some(id));
-    s.apply(Input::Leave { conn: 2 });
+    s.apply(Input::Leave {
+        conn: 2,
+        source: PRIMARY_SOURCE,
+    });
     s.apply(Input::Tick(Tick(5)));
     assert_eq!(
         s.input_seat(2, SourceHandle(1)),
@@ -159,7 +163,10 @@ fn identify_rate_limit_table() {
         (360, true),
     ] {
         s.apply(Input::Tick(Tick(tick)));
-        let out = s.apply(Input::Identify { conn: 1 });
+        let out = s.apply(Input::Identify {
+            conn: 1,
+            source: PRIMARY_SOURCE,
+        });
         assert_eq!(
             out.contains(&Output::Identify { seat: id }),
             fires,
@@ -174,7 +181,10 @@ fn identify_rate_limit_table() {
     );
     assert!(
         matches!(
-            s.apply(Input::Identify { conn: 1 })[0],
+            s.apply(Input::Identify {
+                conn: 1,
+                source: PRIMARY_SOURCE
+            })[0],
             Output::IdentifyLimited {
                 retry_in_ticks: 180,
                 ..
@@ -190,7 +200,11 @@ fn leave_and_sit_out_take_effect_at_the_next_tick_boundary_and_keep_the_seat() {
     let id = joined(&mut s, 1, 1, "Dusty");
     let number = s.seat(id).unwrap().number;
     // (input, car before the boundary, outputs at the boundary, presence after)
-    s.apply(Input::SitOut { conn: 1, on: true });
+    s.apply(Input::SitOut {
+        conn: 1,
+        source: PRIMARY_SOURCE,
+        on: true,
+    });
     assert!(
         s.seat(id).unwrap().has_car,
         "sit out waits for the boundary"
@@ -203,12 +217,19 @@ fn leave_and_sit_out_take_effect_at_the_next_tick_boundary_and_keep_the_seat() {
         }]
     );
     assert_eq!(s.seat(id).unwrap().presence, Presence::SittingOut);
-    s.apply(Input::SitOut { conn: 1, on: false });
+    s.apply(Input::SitOut {
+        conn: 1,
+        source: PRIMARY_SOURCE,
+        on: false,
+    });
     assert_eq!(
         s.apply(Input::Tick(Tick(11))),
         vec![Output::CarAdded { seat: id }]
     );
-    s.apply(Input::Leave { conn: 1 });
+    s.apply(Input::Leave {
+        conn: 1,
+        source: PRIMARY_SOURCE,
+    });
     assert!(s.seat(id).unwrap().has_car, "leave waits for the boundary");
     assert_eq!(
         s.apply(Input::Tick(Tick(12))),
@@ -259,6 +280,7 @@ fn names_follow_the_rules_and_duplicates_gain_the_number() {
     assert_eq!(
         s.apply(Input::SetName {
             conn: 3,
+            source: PRIMARY_SOURCE,
             name: "Kev".into()
         }),
         vec![Output::NameChanged { seat: c }]
@@ -366,15 +388,15 @@ proptest! {
                     if !out.contains(&Output::Refused { conn }) { endpoint_of_conn.entry(conn).or_insert(k); }
                 }
                 Op::Claim { conn, req, blank } => {
-                    let out = s.apply(Input::Claim { conn, request: RequestId(req), name: if blank { String::new() } else { "Dusty".into() } });
+                    let out = s.apply(Input::Claim { conn, source: PRIMARY_SOURCE, request: RequestId(req), name: if blank { String::new() } else { "Dusty".into() } });
                     if welcomed(&out).is_some() {
                         claimed_endpoints.insert(s.seat(welcomed(&out).unwrap()).unwrap().endpoint.clone());
                     }
                 }
-                Op::Leave { conn } => { s.apply(Input::Leave { conn }); }
-                Op::SitOut { conn, on } => { s.apply(Input::SitOut { conn, on }); }
+                Op::Leave { conn } => { s.apply(Input::Leave { conn, source: PRIMARY_SOURCE }); }
+                Op::SitOut { conn, on } => { s.apply(Input::SitOut { conn, source: PRIMARY_SOURCE, on }); }
                 Op::Disconnect { conn } => { s.apply(Input::Disconnect { conn }); }
-                Op::Identify { conn } => { s.apply(Input::Identify { conn }); }
+                Op::Identify { conn } => { s.apply(Input::Identify { conn, source: PRIMARY_SOURCE }); }
                 Op::Tick => { tick += 1; s.apply(Input::Tick(Tick(tick))); }
             }
             // No phantom seats: exactly one seat per endpoint that was welcomed after a claim, and never two.
@@ -399,4 +421,82 @@ proptest! {
             }
         }
     }
+}
+
+fn claim_src(seats: &mut Seats, conn: ConnId, source: u16, name: &str) -> Vec<Output> {
+    seats.apply(Input::Claim {
+        conn,
+        source: SourceHandle(source),
+        request: RequestId(1),
+        name: name.into(),
+    })
+}
+
+#[test]
+fn one_endpoint_holds_a_seat_per_source_and_each_acts_alone() {
+    let mut s = Seats::default();
+    hello(&mut s, 1, 1);
+    // Any number of sources over the one connection (no cap): twenty here.
+    let ids: Vec<SeatId> = (2..22)
+        .map(|src| welcomed(&claim_src(&mut s, 1, src, "Pad")).unwrap())
+        .collect();
+    assert_eq!(ids.iter().collect::<BTreeSet<_>>().len(), 20, "a seat each");
+    // A repeated claim of the same source is the same seat; the phone's primary source is a seat of its own.
+    assert_eq!(welcomed(&claim_src(&mut s, 1, 5, "Pad")), Some(ids[3]));
+    let phone = welcomed(&claim_src(&mut s, 1, 1, "Phone")).unwrap();
+    assert!(!ids.contains(&phone));
+    s.apply(Input::Tick(Tick(1_000)));
+    assert_eq!(s.input_seat(1, SourceHandle(7)), Some(ids[5]));
+    assert_eq!(
+        s.input_seat(1, SourceHandle(99)),
+        None,
+        "a source without a seat is stale"
+    );
+    // Identify, Leave and SitOut address one source's seat only.
+    let out = s.apply(Input::Identify {
+        conn: 1,
+        source: SourceHandle(3),
+    });
+    assert_eq!(out, vec![Output::Identify { seat: ids[1] }]);
+    s.apply(Input::Leave {
+        conn: 1,
+        source: SourceHandle(3),
+    });
+    s.apply(Input::SitOut {
+        conn: 1,
+        source: SourceHandle(4),
+        on: true,
+    });
+    let out = s.apply(Input::Tick(Tick(1_001)));
+    assert!(out.contains(&Output::CarWithdrawn {
+        seat: ids[1],
+        why: Withdraw::Left
+    }));
+    assert!(out.contains(&Output::CarWithdrawn {
+        seat: ids[2],
+        why: Withdraw::SatOut
+    }));
+    assert_eq!(out.len(), 2, "no other seat moved");
+    assert_eq!(s.seat(ids[0]).unwrap().presence, Presence::Active);
+}
+
+#[test]
+fn a_reconnect_welcomes_every_source_back_and_a_dropout_keeps_them_all() {
+    let mut s = Seats::default();
+    hello(&mut s, 1, 1);
+    let a = welcomed(&claim_src(&mut s, 1, 2, "A")).unwrap();
+    let b = welcomed(&claim_src(&mut s, 1, 3, "B")).unwrap();
+    s.apply(Input::Disconnect { conn: 1 });
+    assert_eq!(s.seat(a).unwrap().conn, None);
+    assert_eq!(s.seat(b).unwrap().conn, None);
+    let out = hello(&mut s, 2, 1);
+    let back: Vec<(SeatId, SourceHandle)> = out
+        .iter()
+        .filter_map(|o| match o {
+            Output::Welcome { seat, source, .. } => Some((*seat, *source)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(back, vec![(a, SourceHandle(2)), (b, SourceHandle(3))]);
+    assert_eq!(s.seat_at(2, SourceHandle(3)), Some(b));
 }

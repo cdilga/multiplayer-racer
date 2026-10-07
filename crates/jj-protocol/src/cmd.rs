@@ -86,6 +86,16 @@ pub enum ControllerCmd {
         vehicle: String,
         open: bool,
     },
+    /// `cmd` is for one source of this endpoint (a hub: pads, key clusters and the phone's own sticks over ONE connection).
+    /// A `Claim` inside it claims that source's seat (keyed by `source` within the endpoint; the source's own `Welcome`
+    /// comes back wrapped the same way), and `Identify`, `Ready`, `Leave`, `SitOut`, `SetName`, `Menu`, `Pick`,
+    /// `SetCamera` and `Recover` act on that source's seat. A command without the wrapper is the endpoint's primary
+    /// source (`SourceHandle(1)`, a phone's own sticks). Wrappers don't nest (the inner one is ignored) and there is no
+    /// source cap.
+    ForSource {
+        source: SourceHandle,
+        cmd: Box<ControllerCmd>,
+    },
 }
 
 /// Why a claim was refused. There is no "room full": seats aren't capped (R36).
@@ -197,6 +207,12 @@ pub enum HostCmd {
     },
     /// The host removed this player (P1-G07): the phone shows so, with Join again.
     Removed,
+    /// `cmd` answers one source of the endpoint (the reply to a `ForSource` claim, and every later message for that
+    /// source's seat: `RoomState`, `IdleCue`, `Removed`). Endpoint-wide messages (`Ended`, `Pong`) are never wrapped.
+    ForSource {
+        source: SourceHandle,
+        cmd: Box<HostCmd>,
+    },
 }
 
 macro_rules! codec {

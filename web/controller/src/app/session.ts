@@ -75,6 +75,13 @@ function storage(): Storage | null {
   }
 }
 
+/** Phases that end a hub's connection for every source on it. */
+const FATAL: ReadonlySet<Phase> = new Set<Phase>(['no-such-room', 'room-ended', 'preview-expired', 'no-route', 'host-gone', 'another-tab', 'update-needed']);
+
+/** A state batch is a 7-byte header then 13-byte records, each starting with its source's u16 (jj-protocol `state`). */
+const BATCH_HEADER = 7;
+const RECORD_LEN = 13;
+
 export interface Stick {
   x: number;
   y: number;
@@ -103,9 +110,22 @@ export class Session {
   /** The hub's per-source identity (C08): a source is its own endpoint, so it has its own stored seat and tab fence. */
   slot = '';
   name = '';
-  link: ControllerLink | null = null;
+  private rawLink: ControllerLink | null = null;
+  /** The WebRTC link: a hub source rides its carrier's (one connection, many seats: C08). */
+  get link(): ControllerLink | null {
+    return this.parent ? this.parent.link : this.rawLink;
+  }
+  /** A hub source: the session whose connection carries this source's commands (wrapped `ForSource`) and input. */
+  private parent: Session | null = null;
+  private via = 0;
+  /** Sources riding this session's connection, by source handle (any number). */
+  private readonly kids = new Map<number, Session>();
+  /** One endpoint for all the sources riding this connection, so their records share batches (fair batching, R80). */
+  private shared: wasm.WasmEndpoint | null = null;
+  /** The connection said Hello (sources attach and claim after it). */
+  helloed = false;
   /** Counters for tests and the debug readout. */
-  stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0 };
+  stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0, records: 0 };
   onChange: () => void = () => {};
   onIdentify: () => void = () => {};
   /** Every stick sample (the tutorial listens). */
@@ -132,6 +152,7 @@ export class Session {
     if (this.phase === p) return;
     this.phase = p;
     this.onChange();
+    if (FATAL.has(p)) for (const k of [...this.kids.values()]) k.set(p);
   }
 
   private key(): string {
@@ -190,7 +211,7 @@ export class Session {
       this.opts,
       this.stored ? { endpointId: this.stored.endpointId, secret: this.stored.secret } : undefined,
     );
-    this.link = link;
+    this.rawLink = link;
     this.stored ??= { endpointId: link.endpointId, secret: link.secret, requestId: 1 + Math.floor(Math.random() * 1e9), seated: false };
     this.save();
     try {
@@ -230,23 +251,35 @@ export class Session {
   }
 
   private onLink(s: LinkState): void {
+    for (const k of [...this.kids.values()]) k.onLink(s);
     if (s === 'connecting' && !this.you) this.set('connecting');
     else if (s === 'restarting' || s === 'rebuilding') {
       this.lostAt ||= Date.now();
       if (this.you) this.set('reconnecting');
       if (this.endpoint && this.srcIdx >= 0) this.endpoint.neutralise(this.srcIdx, WHY_DISCONNECTED);
+      if (!this.parent && s === 'restarting') this.helloed = false;
     } else if (s === 'ended') this.ended();
     if (s === 'connected') this.lostAt = 0;
     if (this.lostAt && Date.now() - this.lostAt > HOST_GONE_MS) this.set('host-gone');
   }
 
   private ended(): void {
+    const kids = [...this.kids.values()];
     this.forget();
     this.stop();
     this.set('room-ended');
+    for (const k of kids) k.ended();
   }
 
   private send(ch: 'state' | 'cmd', bytes: Uint8Array): void {
+    if (this.parent) {
+      // A hub source's commands travel wrapped with its source; its input rides the carrier's shared batches.
+      if (ch === 'state') return;
+      const wrapped = wasm.encodeForSource(this.via, bytes);
+      if (wrapped.length) this.parent.send('cmd', wrapped);
+      this.stats.cmds += 1;
+      return;
+    }
     const c = this.link?.channels?.[ch];
     if (!c || c.readyState !== 'open') return;
     c.send(bytes as Uint8Array<ArrayBuffer>);
@@ -257,10 +290,57 @@ export class Session {
   private hello(): void {
     if (!this.stored) return;
     this.send('cmd', wasm.encodeHello(this.build, this.stored.endpointId, this.stored.secret));
+    this.helloed = true;
     if (this.stored.seated) {
       // Hello{resume} brings the seat back; Welcome confirms it.
       this.set(this.you ? 'reconnecting' : 'joining');
     } else this.set('ready-to-join');
+    for (const k of [...this.kids.values()]) k.afterHello();
+  }
+
+  /** A hub source's own phase once its carrier's connection has said Hello. */
+  private afterHello(): void {
+    if (this.stored?.seated) this.set(this.you ? 'reconnecting' : 'joining');
+    else this.set('ready-to-join');
+  }
+
+  /**
+   * Makes this session one source of `parent`'s connection (the hub, C08): the parent's endpoint identity and link carry
+   * it, its commands go wrapped `ForSource{source}`, and its seat is its own (claim, identify, ready, leave, dropout).
+   * The parent must have started (`start`) so its identity is known; the source keeps its own `seated` memory per room.
+   */
+  attach(parent: Session, source: number): void {
+    this.parent = parent;
+    this.via = source;
+    this.slot = `src${source}`;
+    this.code = parent.code;
+    this.realm = parent.realm;
+    this.build = parent.build;
+    this.persisted = this.store !== null;
+    let mine: Partial<Stored> = {};
+    try {
+      const raw = this.store?.getItem(this.key());
+      if (raw) mine = JSON.parse(raw) as Partial<Stored>;
+    } catch {
+      mine = {};
+    }
+    this.stored = {
+      endpointId: parent.stored?.endpointId ?? '',
+      secret: parent.stored?.secret ?? '',
+      requestId: mine.requestId ?? 1 + Math.floor(Math.random() * 1e9),
+      seated: mine.seated ?? false,
+    };
+    this.save();
+    this.carChoice = parent.carChoice;
+    parent.kids.set(source, this);
+    if (parent.helloed) this.afterHello();
+    else this.set('connecting');
+  }
+
+  /** The endpoint every attached source samples into (created on the first use). */
+  private sharedEndpoint(): wasm.WasmEndpoint {
+    this.shared ??= new wasm.WasmEndpoint();
+    return this.shared;
   }
 
   /** Join the race: Claim with a stable request id (a lost reply retried gives one seat). */
@@ -288,6 +368,16 @@ export class Session {
     const j = wasm.decodeHostCmd(bytes);
     if (!j) return;
     const cmd = JSON.parse(j) as Record<string, unknown> | string;
+    // A reply for one source of this connection goes to that source's session; the rest are this session's own.
+    if (typeof cmd === 'object' && 'ForSource' in cmd) {
+      const f = cmd.ForSource as { source: number; cmd: Record<string, unknown> | string };
+      this.kids.get(f.source)?.handleCmd(f.cmd);
+      return;
+    }
+    this.handleCmd(cmd);
+  }
+
+  private handleCmd(cmd: Record<string, unknown> | string): void {
     if (cmd === 'Ended') return this.ended();
     if (cmd === 'Removed') {
       // P1-G07: the host removed this player. The seat is gone; joining again is a new claim.
@@ -305,9 +395,15 @@ export class Session {
       this.you = { seat: w.seat, number: w.number, rgb: w.colour.rgb, source: w.source };
       this.stored!.seated = true;
       this.save();
-      this.endpoint?.free();
-      this.endpoint = new wasm.WasmEndpoint();
-      this.srcIdx = this.endpoint.addSource(w.source);
+      if (this.parent) {
+        // A hub source samples into its carrier's shared endpoint, added once (a re-welcome keeps its place).
+        this.endpoint = this.parent.sharedEndpoint();
+        if (this.srcIdx < 0) this.srcIdx = this.endpoint.addSource(w.source);
+      } else {
+        this.endpoint?.free();
+        this.endpoint = new wasm.WasmEndpoint();
+        this.srcIdx = this.endpoint.addSource(w.source);
+      }
       this.set('playing');
       if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
       this.onChange();
@@ -382,15 +478,29 @@ export class Session {
   private poll(): void {
     // The link can retry for ever without changing state (a host that vanished): the liveness check runs here too.
     if (this.lostAt && this.phase === 'reconnecting' && Date.now() - this.lostAt > HOST_GONE_MS) this.set('host-gone');
-    if (!this.endpoint) return;
-    this.sample();
-    const flush = this.endpoint.poll(performance.now());
+    if (this.endpoint && this.srcIdx >= 0) this.sample();
+    this.flush(this.endpoint, false);
+    this.flush(this.shared, true);
+  }
+
+  /** Sends what the scheduler says is due; a hub's batches are counted to the sources whose records are in them. */
+  private flush(endpoint: wasm.WasmEndpoint | null, hub: boolean): void {
+    const flush = endpoint?.poll(performance.now());
     if (!flush) return;
     for (let i = 0; i < flush.batchCount; i++) {
       const b = flush.batch(i);
       this.send('state', b);
       this.stats.batches += 1;
       this.stats.stateBytes += b.byteLength;
+      if (!hub) continue;
+      for (let at = BATCH_HEADER; at + RECORD_LEN <= b.byteLength; at += RECORD_LEN) {
+        const k = this.kids.get(b[at]! | (b[at + 1]! << 8));
+        if (k) {
+          k.stats.stateBytes += RECORD_LEN;
+          k.stats.records += 1;
+        }
+      }
+      for (const k of this.kids.values()) k.stats.batches += 1;
     }
     flush.free();
   }
@@ -449,6 +559,7 @@ export class Session {
   }
 
   private onVisibility = (): void => {
+    for (const k of [...this.kids.values()]) k.onVisibility();
     if (!this.endpoint || this.srcIdx < 0) return;
     if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
     else {
@@ -480,11 +591,17 @@ export class Session {
   }
 
   stop(): void {
+    if (this.parent) {
+      // A hub source leaves its carrier; the connection stays up for the others.
+      if (this.parent.kids.get(this.via) === this) this.parent.kids.delete(this.via);
+      this.parent = null;
+      return;
+    }
     clearInterval(this.pollTimer);
     clearInterval(this.relayTimer);
     document.removeEventListener('visibilitychange', this.onVisibility);
-    this.link?.end();
-    this.link = null;
+    this.rawLink?.end();
+    this.rawLink = null;
   }
 
   private loadName(): string {
@@ -519,6 +636,9 @@ export class Session {
       sticks: { drive: { ...this.drive }, action: { ...this.action } },
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,
+      source: this.parent ? this.via : null,
+      kids: [...this.kids.keys()],
+      inputAgeMs: this.endpoint && this.srcIdx >= 0 ? this.endpoint.sampleAgeMs(this.srcIdx, performance.now()) : null,
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,
     };
   }

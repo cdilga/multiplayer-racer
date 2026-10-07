@@ -46,6 +46,7 @@ impl Session {
             });
             let out = s.seats.apply(seats::Input::Claim {
                 conn,
+                source: seats::PRIMARY_SOURCE,
                 request: RequestId(1),
                 name: spec.name.clone(),
             });

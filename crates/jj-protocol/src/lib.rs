@@ -23,7 +23,7 @@ pub mod state;
 mod tests;
 
 /// The controller protocol version a `Hello` carries; a host on another version answers `ClaimRejected{Build}`.
-pub const PROTOCOL_VERSION: u16 = 2;
+pub const PROTOCOL_VERSION: u16 = 3;
 
 /// Why bytes didn't decode. Decoders never panic: any byte string gets a value or one of these.
 #[derive(Clone, Debug, PartialEq, Eq)]

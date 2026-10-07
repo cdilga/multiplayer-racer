@@ -1829,3 +1829,140 @@ fn a_pick_reaches_the_room_view_and_a_bad_id_does_not() {
         ("cruz-missile".into(), false.into())
     );
 }
+
+/// P1-C08: a hub is ONE endpoint with a seat per source. Thirty sources claim over the one connection (no cap), each is
+/// welcomed under its own source wrapper, and Identify, Ready and Leave act on that source's seat only.
+#[test]
+fn a_hub_endpoint_claims_and_holds_a_seat_per_source_over_one_connection() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let hub = |c: ControllerCmd| net("hub", Channel::Cmd, c.encode());
+    let for_source = |source: u16, c: ControllerCmd| {
+        hub(ControllerCmd::ForSource {
+            source: SourceHandle(source),
+            cmd: Box::new(c),
+        })
+    };
+    h.handle(&hub(ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("hub".into()),
+        resume: None,
+    }))
+    .unwrap();
+    for src in 2..=31u16 {
+        h.handle(&for_source(
+            src,
+            ControllerCmd::Claim {
+                request: RequestId(1),
+                name: format!("Pad {src}"),
+            },
+        ))
+        .unwrap();
+    }
+    let mut now = 0;
+    let mut welcomes: Vec<(u16, SeatId)> = Vec::new();
+    let mut identified = Vec::new();
+    let mut pump = |h: &mut Host,
+                    n: usize,
+                    welcomes: &mut Vec<(u16, SeatId)>,
+                    identified: &mut Vec<SeatId>| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+            while let Some(m) = h.next_message() {
+                match m {
+                    SimToMain::Outbound {
+                        channel: Channel::Cmd,
+                        bytes,
+                        ..
+                    } => {
+                        if let Ok(HostCmd::ForSource { source, cmd }) = HostCmd::decode(&bytes)
+                            && let HostCmd::Welcome {
+                                seat, source: s, ..
+                            } = *cmd
+                        {
+                            assert_eq!(
+                                source, s,
+                                "a source's welcome comes back under that source"
+                            );
+                            welcomes.push((source.0, seat));
+                        }
+                    }
+                    SimToMain::Events { batch } => {
+                        identified.extend(batch.into_iter().filter_map(|e| match e {
+                            SimEvent::Identify { seat } => Some(seat),
+                            _ => None,
+                        }))
+                    }
+                    _ => {}
+                }
+            }
+        }
+    };
+    pump(&mut h, 60, &mut welcomes, &mut identified);
+    let seats: BTreeSet<SeatId> = welcomes.iter().map(|w| w.1).collect();
+    assert_eq!(
+        (welcomes.len(), seats.len()),
+        (30, 30),
+        "a seat per source, each welcomed once"
+    );
+    let view = |h: &Host| -> serde_json::Value { serde_json::from_str(&h.room_json()).unwrap() };
+    assert_eq!(view(&h)["seats"].as_array().unwrap().len(), 30);
+    let seat_of = |src: u16| welcomes.iter().find(|w| w.0 == src).unwrap().1;
+    // Ready from one source readies that seat only.
+    h.handle(&for_source(7, ControllerCmd::Ready { on: true }))
+        .unwrap();
+    pump(&mut h, 5, &mut Vec::new(), &mut identified);
+    let ready: Vec<u64> = view(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|s| s["ready"] == true)
+        .map(|s| s["seat"].as_u64().unwrap())
+        .collect();
+    assert_eq!(ready, vec![u64::from(seat_of(7).0)]);
+    // Identify (past the join flash's 3 s limit) flashes that source's seat only.
+    pump(&mut h, 240, &mut Vec::new(), &mut Vec::new());
+    h.handle(&for_source(12, ControllerCmd::Identify)).unwrap();
+    let mut flashed = Vec::new();
+    pump(&mut h, 5, &mut Vec::new(), &mut flashed);
+    assert_eq!(
+        flashed,
+        vec![seat_of(12)],
+        "Identify for that source's seat only"
+    );
+    // Leave from one source withdraws that seat; the other twenty-nine play on.
+    h.handle(&for_source(20, ControllerCmd::Leave)).unwrap();
+    pump(&mut h, 5, &mut Vec::new(), &mut Vec::new());
+    let ids: Vec<u64> = view(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["seat"].as_u64().unwrap())
+        .collect();
+    assert_eq!(ids.len(), 29);
+    assert!(!ids.contains(&u64::from(seat_of(20).0)));
+    // The phone's own source (the unwrapped primary) is one more seat on the same endpoint.
+    h.handle(&hub(ControllerCmd::Claim {
+        request: RequestId(2),
+        name: "Phone".into(),
+    }))
+    .unwrap();
+    pump(&mut h, 5, &mut Vec::new(), &mut Vec::new());
+    assert_eq!(view(&h)["seats"].as_array().unwrap().len(), 30);
+    // A wrapper inside a wrapper is ignored.
+    h.handle(&for_source(
+        99,
+        ControllerCmd::ForSource {
+            source: SourceHandle(98),
+            cmd: Box::new(ControllerCmd::Claim {
+                request: RequestId(3),
+                name: "Nested".into(),
+            }),
+        },
+    ))
+    .unwrap();
+    pump(&mut h, 5, &mut Vec::new(), &mut Vec::new());
+    assert_eq!(view(&h)["seats"].as_array().unwrap().len(), 30);
+}

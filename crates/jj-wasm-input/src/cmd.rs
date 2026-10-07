@@ -5,7 +5,7 @@
 use jj_protocol::PROTOCOL_VERSION;
 use jj_protocol::cmd::{CameraMode, ControllerCmd, HostCmd};
 use jj_protocol::state::HudUpdate;
-use jj_types::{BuildId, EndpointId, RequestId};
+use jj_types::{BuildId, EndpointId, RequestId, SourceHandle};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 /// `Hello`: first message on every connection; `resume` is the endpoint secret when coming back to a seat.
@@ -28,6 +28,20 @@ pub fn encode_claim(request: u32, name: &str) -> Vec<u8> {
         name: name.to_owned(),
     }
     .encode()
+}
+
+/// `ForSource`: `inner` (an already encoded `ControllerCmd`) is for one source of this endpoint (a hub). Empty if `inner`
+/// doesn't decode, or is itself a `Hello` or a `ForSource` (those never nest).
+#[wasm_bindgen(js_name = encodeForSource)]
+pub fn encode_for_source(source: u16, inner: &[u8]) -> Vec<u8> {
+    match ControllerCmd::decode(inner) {
+        Ok(ControllerCmd::Hello { .. } | ControllerCmd::ForSource { .. }) | Err(_) => Vec::new(),
+        Ok(cmd) => ControllerCmd::ForSource {
+            source: SourceHandle(source),
+            cmd: Box::new(cmd),
+        }
+        .encode(),
+    }
 }
 
 #[wasm_bindgen(js_name = encodeIdentify)]
@@ -188,6 +202,25 @@ mod tests {
         };
         assert!(decode_host_cmd(&state.encode()).contains("RoomState"));
         assert_eq!(decode_host_cmd(&[0xff]), "");
+        let wrapped = HostCmd::ForSource {
+            source: SourceHandle(4),
+            cmd: Box::new(state),
+        };
+        let json = decode_host_cmd(&wrapped.encode());
+        assert!(json.starts_with("{\"ForSource\":{\"source\":4"), "{json}");
+        let claim = encode_for_source(4, &encode_claim(1, "Pad"));
+        assert!(matches!(
+            ControllerCmd::decode(&claim),
+            Ok(ControllerCmd::ForSource {
+                source: SourceHandle(4),
+                ..
+            })
+        ));
+        assert!(
+            encode_for_source(4, &claim).is_empty(),
+            "wrappers don't nest"
+        );
+        assert!(encode_for_source(4, &encode_hello("b", "e", None)).is_empty());
         assert_eq!(decode_hud(&[0x00]), "");
     }
 }

@@ -34,7 +34,7 @@ use jj_sim::damage::{DamageEvent, OtherBody as DamageOther};
 use jj_sim::race::Event;
 use jj_sim::{CarId, DriveInput, Sim, TICK_HZ, UtilityEvent, UtilityKind, VehicleProfile};
 
-use jj_types::{ActionId, EndpointId, LocalSourceId, SeatId, Tick};
+use jj_types::{ActionId, EndpointId, LocalSourceId, SeatId, SourceHandle, Tick};
 use sha2::{Digest, Sha256};
 
 /// Microseconds the accumulator may fall behind before the host enters `performance-stall`.
@@ -152,6 +152,11 @@ pub struct Host {
     /// The car each seat picked in the lobby and whether its picker is still open (the TV shows "Choosing car…"). An id from
     /// the controller's roster; the host keeps it as given (any roster size) and only checks it is a plain slug.
     picks: BTreeMap<SeatId, (String, bool)>,
+    /// Seats claimed through a `ForSource` wrapper (a hub's sources): everything the host says to them is wrapped the same
+    /// way, so the hub routes it to the right source over its one connection.
+    wrapped: BTreeSet<SeatId>,
+    /// While a wrapped command's replies are produced: the source it came for (so a rejection is wrapped too).
+    reply_source: Option<SourceHandle>,
     locals: BTreeMap<LocalSourceId, ConnId>,
     local_buttons: BTreeMap<LocalSourceId, LocalButtons>,
     next_conn: ConnId,
@@ -245,6 +250,8 @@ impl Host {
             conns: BTreeMap::new(),
             helloed: BTreeSet::new(),
             picks: BTreeMap::new(),
+            wrapped: BTreeSet::new(),
+            reply_source: None,
             locals: BTreeMap::new(),
             local_buttons: BTreeMap::new(),
             next_conn: 1,
@@ -440,6 +447,10 @@ impl Host {
         };
         let mut out = Vec::new();
         for seat in self.seats.seats() {
+            // A hub's sources share one connection and the HUD carries no source: they get the state from RoomState.
+            if self.wrapped.contains(&seat.id) {
+                continue;
+            }
             let Some(endpoint) = seat.conn.and_then(|c| self.endpoint_of(c)) else {
                 continue;
             };
@@ -559,10 +570,12 @@ impl Host {
                 .and_then(|c| self.endpoint_of(c))
                 .filter(|e| !e.0.starts_with("local:"));
             if let Some(endpoint) = endpoint {
-                let bytes = HostCmd::IdleCue {
-                    autopilot_in_ms: IDLE_CUE_MS as u32,
-                }
-                .encode();
+                let bytes = self.seat_cmd(
+                    seat,
+                    HostCmd::IdleCue {
+                        autopilot_in_ms: IDLE_CUE_MS as u32,
+                    },
+                );
                 self.out.push(SimToMain::Outbound {
                     endpoint,
                     channel: Channel::Cmd,
@@ -668,20 +681,27 @@ impl Host {
                 }
                 let mut outs = Vec::new();
                 if leave {
-                    outs.extend(self.seats.apply(seats::Input::Leave { conn }));
+                    outs.extend(self.seats.apply(seats::Input::Leave {
+                        conn,
+                        source: seats::PRIMARY_SOURCE,
+                    }));
                 }
                 if sit_out && let Some(id) = seat {
                     let sitting = self
                         .seats
                         .seats()
                         .any(|s| s.id == id && s.presence == seats::Presence::SittingOut);
-                    outs.extend(
-                        self.seats
-                            .apply(seats::Input::SitOut { conn, on: !sitting }),
-                    );
+                    outs.extend(self.seats.apply(seats::Input::SitOut {
+                        conn,
+                        source: seats::PRIMARY_SOURCE,
+                        on: !sitting,
+                    }));
                 }
                 if identify {
-                    outs.extend(self.seats.apply(seats::Input::Identify { conn }));
+                    outs.extend(self.seats.apply(seats::Input::Identify {
+                        conn,
+                        source: seats::PRIMARY_SOURCE,
+                    }));
                 }
                 for o in outs {
                     self.seat_output(o);
@@ -750,7 +770,30 @@ impl Host {
         c
     }
 
+    /// A host→controller command for one seat: wrapped with its source when the seat was claimed through a `ForSource`.
+    pub(super) fn seat_cmd(&self, seat: SeatId, cmd: HostCmd) -> Vec<u8> {
+        match self.seats.seat(seat) {
+            Some(s) if self.wrapped.contains(&seat) => HostCmd::ForSource {
+                source: s.source,
+                cmd: Box::new(cmd),
+            }
+            .encode(),
+            _ => cmd.encode(),
+        }
+    }
+
     fn controller_cmd(&mut self, endpoint: EndpointId, cmd: ControllerCmd) {
+        // One level of `ForSource`: the command is for that source of the endpoint (a hub's pad or key cluster); the
+        // wrapper never nests and never wraps a Hello (that is the connection's).
+        let (via, cmd) = match cmd {
+            ControllerCmd::ForSource { source, cmd } => match *cmd {
+                ControllerCmd::ForSource { .. } | ControllerCmd::Hello { .. } => return,
+                inner => (Some(source), inner),
+            },
+            plain => (None, plain),
+        };
+        let src = via.unwrap_or(seats::PRIMARY_SOURCE);
+        self.reply_source = via;
         let mut conn = self.conn_for(&endpoint);
         // Hello is the first message on a connection (plan §5.4): a Hello on an endpoint that already said one is a new
         // connection (a reloaded page, a rebuilt link), so it gets a fresh ConnId; the seat reducer then fences the old
@@ -783,20 +826,37 @@ impl Host {
                     secret_hash: sha(secret.as_bytes()),
                 })
             }
-            ControllerCmd::Claim { request, name } => self.seats.apply(seats::Input::Claim {
+            ControllerCmd::Claim { request, name } => {
+                let outs = self.seats.apply(seats::Input::Claim {
+                    conn,
+                    source: src,
+                    request,
+                    name,
+                });
+                if via.is_some() {
+                    for o in &outs {
+                        if let seats::Output::Welcome { seat, .. } = o {
+                            self.wrapped.insert(*seat);
+                        }
+                    }
+                }
+                outs
+            }
+            ControllerCmd::Leave => self.seats.apply(seats::Input::Leave { conn, source: src }),
+            ControllerCmd::SitOut => self.seats.apply(seats::Input::SitOut {
                 conn,
-                request,
-                name,
+                source: src,
+                on: true,
             }),
-            ControllerCmd::Leave => self.seats.apply(seats::Input::Leave { conn }),
-            ControllerCmd::SitOut => self.seats.apply(seats::Input::SitOut { conn, on: true }),
-            ControllerCmd::Identify => self.seats.apply(seats::Input::Identify { conn }),
+            ControllerCmd::Identify => self
+                .seats
+                .apply(seats::Input::Identify { conn, source: src }),
             ControllerCmd::Menu { open } => {
                 // G03: an open menu (Settings, Help) hands the car to the autopilot; the next deliberate input after it
                 // closes takes it back (the dropout handback).
                 if let Some(input) = self
                     .seats
-                    .seat_of(conn)
+                    .seat_at(conn, src)
                     .and_then(|s| self.inputs.get_mut(&s))
                 {
                     input.menu_open = open;
@@ -809,19 +869,19 @@ impl Host {
                     && vehicle
                         .bytes()
                         .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
-                if slug && let Some(seat) = self.seats.seat_of(conn) {
+                if slug && let Some(seat) = self.seats.seat_at(conn, src) {
                     self.picks.insert(seat, (vehicle, open));
                 }
                 vec![]
             }
             ControllerCmd::Ready { on } => {
-                if let Some(seat) = self.seats.seat_of(conn) {
+                if let Some(seat) = self.seats.seat_at(conn, src) {
                     self.set_ready(seat, on);
                 }
                 vec![]
             }
             ControllerCmd::SetCamera { camera } => {
-                if let Some(seat) = self.seats.seat_of(conn)
+                if let Some(seat) = self.seats.seat_at(conn, src)
                     && let Some(car) = self.inputs.get(&seat).and_then(|i| i.car)
                 {
                     self.events.push(SimEvent::CameraSet {
@@ -835,7 +895,7 @@ impl Host {
             ControllerCmd::Recover => {
                 if let Some(car) = self
                     .seats
-                    .seat_of(conn)
+                    .seat_at(conn, src)
                     .and_then(|s| self.inputs.get(&s))
                     .and_then(|i| i.car)
                 {
@@ -905,6 +965,7 @@ impl Host {
                 });
                 outs.extend(self.seats.apply(seats::Input::Claim {
                     conn: c,
+                    source: seats::PRIMARY_SOURCE,
                     request: jj_types::RequestId(1),
                     name: String::new(),
                 }));
@@ -943,13 +1004,15 @@ impl Host {
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)
                 {
-                    let bytes = HostCmd::Welcome {
+                    let bytes = self.seat_cmd(
                         seat,
-                        number,
-                        colour,
-                        source,
-                    }
-                    .encode();
+                        HostCmd::Welcome {
+                            seat,
+                            number,
+                            colour,
+                            source,
+                        },
+                    );
                     self.out.push(SimToMain::Outbound {
                         endpoint,
                         channel: Channel::Cmd,
@@ -1002,7 +1065,15 @@ impl Host {
             }
             seats::Output::ClaimRejected { conn, reason } => {
                 if let Some(endpoint) = self.endpoint_of(conn) {
-                    let bytes = HostCmd::ClaimRejected { reason }.encode();
+                    let rejected = HostCmd::ClaimRejected { reason };
+                    let bytes = match self.reply_source {
+                        Some(source) => HostCmd::ForSource {
+                            source,
+                            cmd: Box::new(rejected),
+                        }
+                        .encode(),
+                        None => rejected.encode(),
+                    };
                     self.out.push(SimToMain::Outbound {
                         endpoint,
                         channel: Channel::Cmd,

@@ -4,9 +4,10 @@
 // the TV); Start or the cluster's READY key is READY; holding both leaves. An unplugged pad is reported on its own while
 // the others play on. Sources are a sample, never a limit (R66): the list grows with whatever is plugged in.
 //
-// TRANSPORT NOTE: the protocol seats one endpoint with one seat (jj-session `Endpoint.seat`), so until the host grows a
-// multi-source `Claim` each source here is its own endpoint with its own link (`Session.slot`). Nothing above `Source`
-// knows that: the day one connection carries several sources only `Source.join` changes.
+// TRANSPORT: ONE connection per hub (protocol 3). A carrier session owns the endpoint and the WebRTC link; each source is
+// a `Session` attached to it (`Session.attach`) that claims, identifies, readies, leaves and drops out under its own
+// source handle (`ForSource`), and all their input shares the carrier's batches. A phone with a paired pad carries its pads
+// on the phone's own connection (the phone's sticks are the primary source).
 import { icon, tokenData } from '../../../shared/ui';
 import { Session } from '../app/session';
 import { pathLabel } from './badge';
@@ -21,6 +22,9 @@ const RENDER_MS = 250;
 const PATH_MS = 2000;
 const FLASH_MS = 1500;
 const STALL_MS = 12_000;
+/** Source handles on the hub's connection: the phone's own sticks are 1; key clusters, then pads by device index. */
+const KEYS_HANDLE = 2;
+const PAD_HANDLE = 16;
 
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -46,6 +50,8 @@ export class Source {
   connectingSince = 0;
   /** A phone's own session (touch): the hub shows it but doesn't drive it. */
   external = false;
+  /** This source's handle on the hub's one connection (the phone's own sticks are 1). */
+  handle = 0;
 
   constructor(
     readonly id: string,
@@ -64,6 +70,9 @@ export interface HubOptions {
 
 export class Hub {
   readonly sources = new Map<string, Source>();
+  /** The session whose connection every source rides: the hub's own, or the phone's. */
+  private carrier: Session | null = null;
+  private ownsCarrier = false;
   private timers: Array<ReturnType<typeof setInterval>> = [];
   private list: HTMLElement | null = null;
 
@@ -73,12 +82,21 @@ export class Hub {
   ) {
     for (const c of CLUSTERS) {
       const s = new Source(`keys${c.id}`, 'keys', c.label);
+      s.handle = KEYS_HANDLE + this.sources.size;
       s.keys = new KeyCluster(c);
       this.sources.set(s.id, s);
     }
   }
 
   start(): void {
+    if (!this.carrier) {
+      // The hub page: one connection of its own, held for the page's life; sources claim on it when pressed.
+      const carrier = new Session({ iceTransportPolicy: this.o.ice ?? 'all' });
+      carrier.slot = 'hub';
+      this.carrier = carrier;
+      this.ownsCarrier = true;
+      void carrier.start(this.o.code);
+    }
     if (this.root) this.mount(this.root);
     addEventListener('keydown', this.onKey);
     addEventListener('keyup', this.onKey);
@@ -93,6 +111,7 @@ export class Hub {
     removeEventListener('keyup', this.onKey);
     removeEventListener('blur', this.onBlur);
     for (const s of this.sources.values()) if (!s.external) s.session?.stop();
+    if (this.ownsCarrier) this.carrier?.stop();
   }
 
   /** The phone's own touch session as a source (the phone with a paired pad: two seats). */
@@ -100,6 +119,8 @@ export class Hub {
     const s = new Source('touch', 'touch', 'This phone');
     s.session = session;
     s.external = true;
+    s.handle = 1;
+    this.carrier = session;
     s.state = 'connected';
     this.sources.set(s.id, s);
   }
@@ -130,6 +151,7 @@ export class Hub {
       if (!s) {
         s = new Source(id, 'pad', `Pad ${p.index + 1}`);
         s.padIndex = p.index;
+        s.handle = PAD_HANDLE + p.index;
         this.sources.set(id, s);
       }
       if (!s.plugged) {
@@ -172,8 +194,7 @@ export class Hub {
       const pressed = isPress(smp);
       if (!s.session || s.state === 'left') {
         if (!pressed) s.released = true;
-        // One join at a time: six links negotiating at once leave one stuck; a pressed source waits its turn.
-        else if (s.released && !this.joining()) this.join(s);
+        else if (s.released) this.join(s);
         continue;
       }
       if (s.state === 'unplugged') {
@@ -186,9 +207,8 @@ export class Hub {
       }
       if (s.session.phase !== 'playing' && s.session.phase !== 'host-paused') {
         s.state = 'connecting';
-        // A join that stalls (a lost signalling race among many sources arriving at once) starts over; the stored
-        // identity makes the retry the same endpoint.
-        if (now - s.connectingSince > STALL_MS) this.join(s);
+        // A join that stalls (a Claim lost before the connection was up) starts over under the same source handle.
+        if (now - s.connectingSince > STALL_MS && this.carrier?.helloed) this.join(s);
         continue;
       }
       s.state = s.session.idleCueAt !== null && s.session.idleCueMs - (now - s.session.idleCueAt) <= 0 ? 'autopilot' : 'connected';
@@ -204,18 +224,16 @@ export class Hub {
     }
   }
 
-  private joining(): boolean {
-    return [...this.sources.values()].some((o) => o.session && !o.external && o.state === 'connecting');
-  }
-
-  /** The press that claims this source's seat: its own session, endpoint and seat. */
+  /** The press that claims this source's seat: a session of its own on the hub's connection, under its source handle. */
   private join(s: Source): void {
+    // A press before the connection is up waits (it is still down: the next tick tries again).
+    const carrier = this.carrier;
+    if (!carrier?.helloed) return;
     s.released = false;
     s.state = 'connecting';
     s.connectingSince = performance.now();
     s.session?.stop();
     const session = new Session({ iceTransportPolicy: this.o.ice ?? 'all' });
-    session.slot = s.id;
     session.onChange = () => {
       if (session.phase === 'ready-to-join') session.claim(s.label);
     };
@@ -223,7 +241,7 @@ export class Hub {
       s.flashUntil = performance.now() + FLASH_MS;
     };
     s.session = session;
-    void session.start(this.o.code);
+    session.attach(carrier, s.handle);
   }
 
   private leave(s: Source): void {
@@ -289,6 +307,11 @@ export class Hub {
     }
   }
 
+  /** How many distinct WebRTC links this hub's sources ride (one, by design: R80 / C08). */
+  connections(): number {
+    return new Set([...this.sources.values()].map((s) => s.session?.link).filter(Boolean)).size;
+  }
+
   /** Readout for tests and the debug overlay (R90): per source seat, kind, state, path and wire counters. */
   inspect(): Array<Record<string, unknown>> {
     return [...this.sources.values()].map((s) => ({
@@ -305,6 +328,7 @@ export class Hub {
       path: s.path,
       stats: s.session ? { ...s.session.stats } : null,
       drive: s.session?.inspect().drive ?? null,
+      inputAgeMs: s.session?.inspect().inputAgeMs ?? null,
     }));
   }
 }

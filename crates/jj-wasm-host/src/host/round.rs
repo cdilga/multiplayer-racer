@@ -329,7 +329,7 @@ impl Host {
             self.out.push(SimToMain::Outbound {
                 endpoint,
                 channel: Channel::Cmd,
-                bytes: jj_protocol::cmd::HostCmd::Removed.encode(),
+                bytes: self.seat_cmd(seat, jj_protocol::cmd::HostCmd::Removed),
             });
         }
         for o in self.seats.apply(seats::Input::HostRemove { seat }) {
@@ -363,15 +363,15 @@ impl Host {
         let countdown_ms = matches!(phase, Phase::Countdown | Phase::Intermission)
             .then(|| d.remaining_ms().map(|m| m as u32))
             .flatten();
-        let bytes = HostCmd::RoomState {
+        let room = HostCmd::RoomState {
             phase: room_phase(phase),
             you: Some(you),
             countdown_ms,
             results: (phase == Phase::Intermission)
                 .then(|| self.round.results.clone())
                 .flatten(),
-        }
-        .encode();
+        };
+        let bytes = self.seat_cmd(seat, room);
         self.out.push(SimToMain::Outbound {
             endpoint,
             channel: Channel::Cmd,
