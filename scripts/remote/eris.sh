@@ -12,7 +12,8 @@
 # uncommitted Rust work goes through RCH instead. This script never edits anything in the clone.
 #
 # Exit: the command's own status, or 2 usage, 3 refused (not in sync), 4 eris unreachable.
-# Env: ERIS_HOST (default eris; eris-remote works off the LAN).
+# Env: ERIS_HOST (default eris; eris-remote works off the LAN); ERIS_MIN=<commit> runs at any synced commit containing
+#      it instead of exactly the Mac's HEAD.
 set -euo pipefail
 
 host=${ERIS_HOST:-eris}
@@ -32,12 +33,15 @@ if [[ $# -eq 1 ]]; then cmd=$1; else cmd=$(printf '%q ' "$@"); fi
 
 repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")/../.." rev-parse --show-toplevel)
 mac_head=$(git -C "$repo" rev-parse HEAD)
+# ERIS_MIN=<commit>: run at any synced commit that contains it (lanes pushing often move the Mac's HEAD under you).
+min=""
+[[ -n ${ERIS_MIN:-} ]] && min=$(git -C "$repo" rev-parse "$ERIS_MIN")
 mac_branch=$(git -C "$repo" symbolic-ref --short -q HEAD || echo "(detached)")
 ssh_opts=(-o BatchMode=yes -o ConnectTimeout=8)
 
 # 1. Sync. If runs hold the clone and it is already at the Mac's HEAD, there is nothing to sync.
 rc=0
-sync_out=$(ssh "${ssh_opts[@]}" "$host" bash -s -- "$mac_head" 2>&1 <<EOF
+sync_out=$(ssh "${ssh_opts[@]}" "$host" bash -s -- "$mac_head" "${min:-$mac_head}" 2>&1 <<EOF
 mkdir -p ~/Work/runs && exec 9>>$lock
 at_head() { [ "\$(git -C $clone rev-parse HEAD)" = "\$1" ]; }
 # Untracked evidence a run wrote into the clone (an older eris.sh, or a test with a hard-coded path) moves to a run
@@ -55,6 +59,7 @@ else echo "eris.sh: waiting for runs on eris to finish before syncing" >&2
      flock -w 3600 -x 9 && { rusync || echo "RU_SYNC_EXIT=\$?"; }
 fi
 echo "ERIS_HEAD=\$(git -C $clone rev-parse HEAD)"
+echo "ERIS_HAS_MIN=\$(git -C $clone merge-base --is-ancestor "\$2" HEAD 2>/dev/null && echo yes || echo no)"
 echo "ERIS_BRANCH=\$(git -C $clone symbolic-ref --short -q HEAD)"
 echo "ERIS_DIRTY=\$(git -C $clone status --porcelain | head -3 | tr '\n' ' ')"
 EOF
@@ -64,7 +69,7 @@ if [[ $rc -eq 255 ]]; then
         "otherwise run per-crate on the Mac (docs/process/dev-topology.md)."
 fi
 field() { sed -n "s/^$1=//p" <<<"$sync_out" | tail -1; }
-eris_head=$(field ERIS_HEAD) eris_branch=$(field ERIS_BRANCH) eris_dirty=$(field ERIS_DIRTY)
+eris_head=$(field ERIS_HEAD) eris_branch=$(field ERIS_BRANCH) eris_dirty=$(field ERIS_DIRTY) eris_has_min=$(field ERIS_HAS_MIN)
 [[ -n $eris_head ]] || die "sync step failed on $host:"$'\n'"$sync_out"
 grep -E '^(RU_SYNC|eris.sh)' <<<"$sync_out" >&2 || true
 
@@ -72,7 +77,9 @@ grep -E '^(RU_SYNC|eris.sh)' <<<"$sync_out" >&2 || true
 if [[ -n ${eris_dirty// /} ]]; then
     die "eris's clone has local changes ($eris_dirty). Nobody edits on eris: tell the owner, don't run."
 fi
-if [[ $eris_head != "$mac_head" ]]; then
+if [[ -n $min ]]; then
+    [[ $eris_has_min == yes ]] || die "refusing: eris is at ${eris_head:0:12}, which lacks ERIS_MIN ${min:0:12} (push it, then rerun)."
+elif [[ $eris_head != "$mac_head" ]]; then
     tip=$(git -C "$repo" ls-remote origin "refs/heads/$mac_branch" | cut -f1)
     if [[ $mac_branch != "$eris_branch" ]]; then
         why="eris tracks $eris_branch but the Mac is on $mac_branch"
@@ -96,7 +103,11 @@ fi
 # 3. Run under a shared lock, so no sync moves the clone mid-run. The command doesn't inherit the
 #    lock fd, so anything it leaves running in the background can't block later syncs.
 setup="cd $clone && exec 9>>$lock && flock -s 9"
-setup+=" && { [ \"\$(git rev-parse HEAD)\" = $mac_head ] || { echo 'eris.sh: eris moved during the sync wait; rerun' >&2; exit 3; }; }"
+if [[ -n $min ]]; then
+    setup+=" && { git merge-base --is-ancestor $min HEAD || { echo 'eris.sh: eris moved during the sync wait; rerun' >&2; exit 3; }; }"
+else
+    setup+=" && { [ \"\$(git rev-parse HEAD)\" = $mac_head ] || { echo 'eris.sh: eris moved during the sync wait; rerun' >&2; exit 3; }; }"
+fi
 setup+=' && export PATH="$HOME/.cargo/bin:$PATH"'
 after=""
 if [[ -n $run_id ]]; then
