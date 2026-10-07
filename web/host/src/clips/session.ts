@@ -203,7 +203,7 @@ export class SessionRecorder {
       if (fresh.length) {
         await store.putChunks(this.id, w.index, sent.chunks, fresh);
         this.cost_.writes++;
-        sent.chunks = chunks.length;
+        sent.chunks += fresh.length;
       }
       sent.header = true;
       this.bytes += size;

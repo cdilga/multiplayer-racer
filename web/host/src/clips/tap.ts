@@ -3,10 +3,10 @@
 // itself so the receipt can say what it costs per frame. It never faults the sim: a failed poll is dropped.
 import type { JournalMessage } from './types';
 
-/** The part of the sim the tap needs: the testing build's JSON command surface (`journalChunk`). */
+/** The part of the sim the tap needs: `HostSim.journal_poll` (both builds have it). */
 export interface TapSim {
   tick(): number;
-  test(command: string): string;
+  journal_poll(hash: boolean): string;
 }
 
 export interface TapStats {
@@ -38,7 +38,7 @@ export class JournalTap {
     const t0 = performance.now();
     let m: JournalMessage;
     try {
-      m = JSON.parse(sim.test(JSON.stringify({ cmd: 'journalChunk', hash }))) as JournalMessage;
+      m = JSON.parse(sim.journal_poll(hash)) as JournalMessage;
     } catch {
       this.stats.failures++;
       return null;

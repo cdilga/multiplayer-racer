@@ -266,6 +266,11 @@ impl Host {
         self.sim.tick()
     }
 
+    /// The map the current world runs on (bug clips keep its canonical bytes).
+    pub fn map(&self) -> &LoadedMap {
+        &self.map
+    }
+
     pub fn sim(&self) -> &Sim {
         &self.sim
     }

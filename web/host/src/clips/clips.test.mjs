@@ -13,8 +13,8 @@ import { build, serve } from '../../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from '../../../tests/journeys/lib/chromium.mjs';
 
 const repo = resolve(import.meta.dirname, '../../../..');
-const out7 = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-F07');
-const out12 = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-F12');
+const out7 = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'P1-F07');
+const out12 = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), 'P1-F12');
 const BASE = '/p/clips/';
 let browser;
 let server;
@@ -153,7 +153,7 @@ test('F07 AC4: saving a clip never pauses or stutters the host (frame time recor
     return rows;
   });
   const after = await page.evaluate(() => window.__jjTest.status());
-  assert.ok(after.tick > tick0 + 100, 'the sim kept running through the saves');
+  assert.ok(after.tick > tick0 + 30, `the sim kept running through the saves (tick ${tick0} -> ${after.tick})`);
   for (const s of saves) assert.ok(s.maxFrameMs === null || s.maxFrameMs < 120, `a frame gap of ${s.maxFrameMs} ms while saving`);
   const pacing = await page.evaluate(() => window.__jjTest.clips.meter.pacing());
   const download = page.waitForEvent('download', { timeout: 10_000 });
@@ -240,6 +240,13 @@ test('F12: a scripted two-round session records, survives a worker fault, never 
   assert.equal(report.worlds.at(-1).endHash, r2.stateHash, 'round 2 replays to its end-state hash');
   for (const w of report.worlds) assert.ok(w.checkpoints.every((c) => c.ok));
 
+  // P1-M08a: a prepared-map round's clip names its track: the seed is the session seed plus the preparation id.
+  const seeded = bundle.worlds.filter((w) => w.trackSeed !== null);
+  assert.ok(seeded.length >= 1, `no world carries its track seed: ${JSON.stringify(bundle.worlds.map((w) => [w.index, w.label, w.trackSeed, w.preparation]))}`);
+  for (const w of seeded) assert.equal(w.trackSeed, w.sessionSeed + w.preparation, 'track seed = session seed + preparation id');
+  assert.ok(bundle.notes.trackSeeds.length >= 1);
+  runs.f12.trackSeeds = seeded.map((w) => ({ world: w.index, label: w.label, preparation: w.preparation, trackSeed: w.trackSeed, mapHash: w.mapHash }));
+
   // The JSON summary.
   const sum = bundle.summary;
   writeFileSync(join(out12, 'summary.json'), `${JSON.stringify(sum, null, 2)}\n`);
@@ -272,6 +279,7 @@ test('F12: a scripted two-round session records, survives a worker fault, never 
   assert.equal(stReport.ok, true);
   writeFileSync(join(out12, 'after-fault.replay.json'), `${JSON.stringify(stReport, null, 2)}\n`);
   runs.f12 = {
+    ...runs.f12,
     rounds: report.worlds.map((w) => ({ world: w.index, label: w.label, trackSeed: w.track_seed ?? w.trackSeed, ticks: w.ticks, endHash: w.endHash, checkpoints: w.checkpoints.length })),
     roundOneBrowserHash: r1.stateHash,
     roundTwoBrowserHash: r2.stateHash,

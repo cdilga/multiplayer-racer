@@ -6,6 +6,7 @@
 //   and events (sent separately) are never dropped.
 // - A panic or unrecoverable WASM error is the `fault` pause reason: the loop stops and main is told.
 // Worker-scope code, typechecked by ./tsconfig.json once scripts/build-host-wasm.sh has built the pkg.
+import { JournalTap, type TapSim } from '../clips/tap';
 import { PAUSE_BITS, type FromWorker, type InitOptions, type InputStat, type SimInput, type ToWorker } from './messages';
 
 /** How many recent input ages a local source keeps. */
@@ -25,6 +26,8 @@ export interface Sim {
   countdown_ms(): number;
   state_hash(): string;
   room_json(): string;
+  /** What the journal gained since the last call (bug clips, P1-F07): JSON. */
+  journal_poll(hash: boolean): string;
 }
 
 /** The module a jj-wasm-host build's wasm-bindgen output exports. */
@@ -67,6 +70,8 @@ export class SimWorker<S extends Sim> {
   skipped = 0;
   lastTick = 0;
   private started = false;
+  /** The journal stream for bug clips (P1-F07): main keeps every piece, so a clip survives a fault. */
+  tap = new JournalTap();
   private pool: ArrayBuffer[] = [];
   private uiCommand = 1;
   private lastPause = '';
@@ -135,6 +140,13 @@ export class SimWorker<S extends Sim> {
     this.lastRoom = room;
     this.lastRoomAt = now;
     this.post({ kind: 'room', json: room });
+  }
+
+  /** Streams what the journal gained to main when the sim has moved enough (a few bytes most of the time). Never throws. */
+  pump(opts: { force?: boolean; hash?: boolean } = {}): void {
+    if (!this.sim || this.faulted) return;
+    const m = this.tap.poll(this.sim as unknown as TapSim, opts);
+    if (m) this.post(m as unknown as { kind: string } & Record<string, unknown>);
   }
 
   private drain(s: S): void {
@@ -220,6 +232,7 @@ export class SimWorker<S extends Sim> {
         this.publish(s);
       }
     });
+    this.pump();
   }
 
   private loop(): void {
@@ -233,6 +246,7 @@ export class SimWorker<S extends Sim> {
         this.publish(s);
       }
     });
+    this.pump();
     if (!this.faulted) setTimeout(() => this.loop(), LOOP_MS);
   }
 
@@ -244,6 +258,7 @@ export class SimWorker<S extends Sim> {
         try {
           const map = init.mapBytes ?? this.wasm.canonical_map(init.mapJson ?? '');
           this.sim = new this.wasm.HostSim(this.wasm.encode_init(map, init.seed));
+          this.tap = new JournalTap((init as { clipEveryTicks?: number }).clipEveryTicks ?? 12, (init as { clipHashEvery?: number }).clipHashEvery ?? 600);
           this.ext.init?.(this, init);
         } catch (err) {
           this.fault(err);
@@ -281,6 +296,16 @@ export class SimWorker<S extends Sim> {
         this.guard((s) => s.handle(this.wasm.encode_lifecycle(visible, renderOk)));
         return;
       }
+      case 'journalPoll': {
+        // A clip is being saved: the journal up to now, with a state hash, then the ack (main waits for it).
+        const { id, hash } = msg as unknown as { id: number; hash: boolean };
+        this.pump({ force: true, hash });
+        this.post({ kind: 'journalAck', id });
+        return;
+      }
+      case 'tapStats':
+        this.post({ kind: 'tapStats', id: (msg as unknown as { id: number }).id, stats: this.tap.stats });
+        return;
       case 'return':
         this.pool.push((msg as { buf: ArrayBuffer }).buf);
         return;

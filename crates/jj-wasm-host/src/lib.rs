@@ -13,7 +13,12 @@ use wasm_bindgen::prelude::*;
 
 /// The worker's handle on the sim. Every method takes or returns plain bytes or numbers.
 #[wasm_bindgen]
-pub struct HostSim(host::Host);
+pub struct HostSim(
+    host::Host,
+    jj_fixture::clip::ClipTap,
+    String,
+    serde_json::Value,
+);
 
 fn err(e: host::HostError) -> JsError {
     JsError::new(&e.to_string())
@@ -24,7 +29,16 @@ impl HostSim {
     /// Starts from an encoded `MainToSim::Init`.
     #[wasm_bindgen(constructor)]
     pub fn new(init: &[u8]) -> Result<HostSim, JsError> {
-        host::Host::new(init).map(HostSim).map_err(err)
+        host::Host::new(init)
+            .map(|h| {
+                HostSim(
+                    h,
+                    jj_fixture::clip::ClipTap::default(),
+                    String::new(),
+                    serde_json::Value::Null,
+                )
+            })
+            .map_err(err)
     }
 
     /// An encoded `MainToSim` message (applied at the next tick boundary; pauses act at once).
@@ -80,6 +94,32 @@ impl HostSim {
     /// The applied-tick journal so far (postcard), for bug clips (F07).
     pub fn journal(&self) -> Vec<u8> {
         self.0.sim().journal().to_bytes()
+    }
+
+    /// What the sim's journal gained since the last call, as JSON (bug clips, P1-F07): `{world, tick, start?, chunk?,
+    /// hash?, setup, phase, round, freeDrive, pending}`. `world` counts the sims the host has rebuilt (every Countdown and
+    /// Lobby); `start` (seed, map hash, canonical map bytes) comes with a world's first poll; `chunk` is base64 postcard;
+    /// `hash` is the full-state hash when asked for. Cheap: most polls carry a few bytes.
+    pub fn journal_poll(&mut self, hash: bool) -> String {
+        let p = self.1.poll(self.0.sim(), self.0.map(), hash);
+        let mut v = p.to_json();
+        // The room facts change with the phase, so they're read (room_json is the costly part) only when it does, or
+        // when a world begins or a hash is taken.
+        let phase = format!("{:?}", self.0.phase());
+        if p.start.is_some() || hash || phase != self.2 {
+            self.2 = phase.clone();
+            let room: serde_json::Value =
+                serde_json::from_str(&self.0.room_json()).unwrap_or_default();
+            self.3 = serde_json::json!({
+                "round": room["round"], "freeDrive": room["freeDrive"],
+                "pending": room["preparation"]["pending"],
+            });
+        }
+        v["phase"] = serde_json::json!(phase);
+        for k in ["round", "freeDrive", "pending"] {
+            v[k] = self.3[k].clone();
+        }
+        v.to_string()
     }
 
     /// The worker caught a panic or an unrecoverable error: the `fault` pause reason.

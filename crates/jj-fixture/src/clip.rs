@@ -78,6 +78,21 @@ pub struct Poll {
     pub setup_len: usize,
 }
 
+impl Poll {
+    /// The poll as the worker sends it to main (JSON; the chunk and map bytes in base64).
+    pub fn to_json(&self) -> Value {
+        json!({
+            "world": self.world,
+            "tick": self.tick,
+            "start": self.start.as_ref().map(|s| json!({
+                "seed": s.seed, "mapHash": hex(&s.map_hash), "map": b64(&s.map) })),
+            "chunk": (!self.chunk.is_empty()).then(|| b64(&self.chunk.to_bytes())),
+            "hash": self.hash.map(|h| hex(&h)),
+            "setup": self.setup_len,
+        })
+    }
+}
+
 /// The cursors over a sim's journal.
 #[derive(Default)]
 pub struct ClipTap {

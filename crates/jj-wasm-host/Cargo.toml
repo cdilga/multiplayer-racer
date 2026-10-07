@@ -22,15 +22,16 @@ jj-procgen.workspace = true
 jj-types.workspace = true
 sha2.workspace = true
 wasm-bindgen.workspace = true
-# The test surface (P1-F05b), only in the `testing` build.
-jj-fixture = { workspace = true, optional = true }
+# Bug clips (P1-F07) stream the journal from the shipped worker (`jj_fixture::clip`); the test surface (P1-F05b) is the
+# `testing` build's.
+jj-fixture.workspace = true
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true }
 
 [features]
 # The test chunk's worker (web/host/src/testing/): the `jj sim` fixture commands, exact-tick scheduling, a deliberate
 # panic and the test-side controller encoders. The shipped worker is built without it (scripts/build-host-wasm.sh).
-testing = ["dep:jj-fixture", "dep:serde"]
+testing = ["dep:serde"]
 
 [lints]
 workspace = true

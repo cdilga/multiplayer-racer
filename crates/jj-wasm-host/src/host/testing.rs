@@ -241,19 +241,16 @@ impl Host {
             }
             Command::JournalChunk { hash } => {
                 let p = self.test.tap.poll(&self.sim, &self.map, hash);
-                json!({
-                    "world": p.world,
-                    "tick": p.tick,
-                    "start": p.start.as_ref().map(|s| json!({
-                        "seed": s.seed, "mapHash": jj_map::hex(&s.map_hash), "map": jj_fixture::clip::b64(&s.map) })),
-                    "chunk": (!p.chunk.is_empty()).then(|| jj_fixture::clip::b64(&p.chunk.to_bytes())),
-                    "hash": p.hash.map(|h| jj_map::hex(&h)),
-                    "setup": p.setup_len,
-                    "phase": format!("{:?}", self.round.director.phase()),
-                    "round": self.round.director.round().map(|r| r.0),
-                    "freeDrive": self.round.free_drive,
-                    "pending": self.round.pending.map(|(id, seed)| json!({ "id": id.0, "seed": seed })),
-                })
+                let mut v = p.to_json();
+                v["phase"] = json!(format!("{:?}", self.round.director.phase()));
+                v["round"] = json!(self.round.director.round().map(|r| r.0));
+                v["freeDrive"] = json!(self.round.free_drive);
+                v["pending"] = json!(
+                    self.round
+                        .pending
+                        .map(|(id, seed)| json!({ "id": id.0, "seed": seed }))
+                );
+                v
             }
             Command::Observe => self.observe(),
             Command::Meta => json!({

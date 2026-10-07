@@ -17,6 +17,9 @@ import { paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
 import { HostHub } from '../../shared/transport';
+import { ClipRecorder, installHotkey } from './clips/recorder';
+import { SessionRecorder } from './clips/session';
+import { IdbStore } from './clips/store';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
@@ -143,6 +146,14 @@ async function boot(): Promise<void> {
   const client = new SimClient(testing?.createWorker());
   await client.start({ mapJson: greybox, seed }, testing ? { live: params.get('test') === 'live', describe: true } : {});
   client.followVisibility();
+  // Bug clips and the dev session recorder (P1-F07, P1-F12): Ctrl/Cmd+Shift+B saves a clip; the test surface attaches
+  // its own recorders.
+  if (!testing) {
+    const clips = new ClipRecorder().attach(client);
+    installHotkey(clips);
+    new SessionRecorder(clips, { store: new IdbStore() }).start(client);
+    (window as unknown as { __jjClips: ClipRecorder }).__jjClips = clips;
+  }
   canvas.addEventListener('webglcontextlost', () => client.lifecycle(document.visibilityState === 'visible', false));
   canvas.addEventListener('webglcontextrestored', () => client.lifecycle(document.visibilityState === 'visible', true));
   // Host pads and key clusters (P1-C05): players from their first press, listed in the input drawer.
