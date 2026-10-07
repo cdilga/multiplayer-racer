@@ -1285,3 +1285,106 @@ fn an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over() {
         "the first deliberate input after closing does"
     );
 }
+
+/// P1-G02: churn at 32 synthetic controllers (a sample, not a limit). They join in the Lobby and race; mid-race 8 leave,
+/// 4 sit out and 6 more drop in, each with a car on its next tick; the room never lists a seat that left (no phantoms)
+/// and nobody is refused.
+#[test]
+fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
+    let mut h = Host::new(&init()).unwrap();
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let names = |h: &Host| -> Vec<String> {
+        room(h)["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["name"].as_str().unwrap().to_string())
+            .collect()
+    };
+    let join = |h: &mut Host, p: &str| {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(p.into()),
+            resume: Some(format!("s-{p}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: p.to_uppercase(),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    };
+    let cmd = |h: &mut Host, p: &str, c: ControllerCmd| {
+        h.handle(&net(p, Channel::Cmd, c.encode())).unwrap()
+    };
+    let mut now = 0u64;
+    let step = |h: &mut Host, ticks: u64, now: &mut u64| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    let first: Vec<String> = (0..32).map(|k| format!("p{k}")).collect();
+    for p in &first {
+        join(&mut h, p);
+    }
+    step(&mut h, 12, &mut now);
+    assert_eq!(names(&h).len(), 32, "32 in the Lobby, nobody refused");
+    for p in &first {
+        cmd(&mut h, p, ControllerCmd::Ready { on: true });
+    }
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now);
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    assert_eq!(h.sim.cars().count(), 32, "the grid holds all 32");
+    step(&mut h, 240, &mut now);
+
+    // Mid-race churn: 8 leave, 4 sit out, 6 drop in.
+    for p in &first[..8] {
+        cmd(&mut h, p, ControllerCmd::Leave);
+    }
+    for p in &first[8..12] {
+        cmd(&mut h, p, ControllerCmd::SitOut);
+    }
+    let late: Vec<String> = (0..6).map(|k| format!("q{k}")).collect();
+    for p in &late {
+        join(&mut h, p);
+    }
+    step(&mut h, 2, &mut now);
+    let r = room(&h);
+    let seats = r["seats"].as_array().unwrap();
+    assert_eq!(
+        seats.len(),
+        32 - 8 + 6,
+        "leavers are gone, newcomers are in: {}",
+        seats.len()
+    );
+    for s in seats {
+        let name = s["name"].as_str().unwrap();
+        assert!(
+            !first[..8].iter().any(|p| p.to_uppercase() == name),
+            "{name} left: no phantom seat"
+        );
+        let sat_out = first[8..12].iter().any(|p| p.to_uppercase() == name);
+        assert_eq!(
+            s["presence"],
+            if sat_out { "SittingOut" } else { "Active" },
+            "{name}"
+        );
+        assert_eq!(
+            s["car"].is_null(),
+            sat_out,
+            "{name}: a car unless sitting out (drop-in on the next tick)"
+        );
+    }
+    step(&mut h, 120, &mut now);
+    // Intermission churn and kept standings are JN5's (12 controllers race to results through the real host page).
+}

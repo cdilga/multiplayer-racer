@@ -356,9 +356,12 @@ impl Host {
     pub fn room_json(&self) -> String {
         let d = &self.round.director;
         let order: Vec<u32> = self.sim.race().standings().iter().map(|r| r.car).collect();
+        // A seat that left is gone from the room (no phantom seats, G02); its standings row stays. The seat itself is
+        // kept only so the same endpoint could return to it.
         let seats: Vec<serde_json::Value> = self
             .seats
             .seats()
+            .filter(|s| s.presence != seats::Presence::Left)
             .map(|s| {
                 let car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
                 let race =
