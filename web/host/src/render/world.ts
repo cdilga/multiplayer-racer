@@ -386,9 +386,14 @@ export class World {
     if (view.auto) view.count = Math.max(1, view.follow?.length ?? s.cars);
     const r = this.backend.renderer;
     const { width: w, height: h } = this.stats;
-    const display = { x: 0, y: 0, w, h };
-    const safe = { x: w * 0.05, y: h * 0.05, w: w * 0.9, h: h * 0.9 };
-    const gutter = Math.max(2, Math.round(Math.min(w, h) * 0.004));
+    // The host footer (round screens, R07) has the bottom strip: the grid fills the rest of the display.
+    const foot = document.querySelector<HTMLElement>('.jj-foot');
+    const toDevice = this.backend.renderer.domElement.width / Math.max(1, this.backend.renderer.domElement.clientWidth);
+    const footPx = foot && !foot.hidden ? Math.ceil(foot.getBoundingClientRect().height * toDevice) : 0;
+    const gridH = h - footPx;
+    const display = { x: 0, y: 0, w, h: gridH };
+    const safe = { x: w * 0.05, y: gridH * 0.05, w: w * 0.9, h: gridH * 0.9 };
+    const gutter = gutterOf(w, h);
     this.tileGrid ??= new GridAnimator(display, safe, { gutter });
     const seats = Array.from({ length: view.count }, (_, k) => k + 1);
     const now = performance.now();
@@ -554,4 +559,9 @@ export class World {
       if (fits) break;
     }
   }
+}
+
+/** The grid's gutter between tiles, in device px. */
+function gutterOf(w: number, h: number): number {
+  return Math.max(2, Math.round(Math.min(w, h) * 0.004));
 }
