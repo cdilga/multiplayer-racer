@@ -107,9 +107,9 @@ const rules = [
   [/\.md$/, () => {}],
   [/^\.claude\//, () => {}], // the jammers-look recipe check is in the always-on checks job
   [/^art\/(audio|references|style)\//, () => {}],
-  [/^art\/ui\/poc\//, () => {}], // the POC (checks job + its own deploy workflow)
-  [/^(tools\/(audio|maps|vehicles|turn-guard)|scripts\/(beads|emulators|remote))\//, () => {}], // checks job
+  [/^(tools\/(maps|vehicles|turn-guard)|scripts\/(beads|emulators|remote))\//, () => {}], // checks job
   [/^scripts\/(beads-live|ci-status|doctor|plan-ref|poc-publish|prune-caches|push|reclaim-target|reconcile_[a-z_]+)\.(sh|py|txt)$/, () => {}],
+  [/^scripts\/ci\/durations\.(json|mjs)$/, () => {}], // the slot packer's estimates: they move timing, not coverage
   // CI's own files: the next run of this workflow is their test; run everything so it's proven end to end.
   [/^(\.gitea\/|scripts\/ci\/)/, (p) => everything(`CI change (${p})`)],
   // The workspace and shared inputs.
@@ -144,8 +144,8 @@ const rules = [
   // which builds its own bundle from web/shared/ui.
   [/^web\/(host|controller)\//, () => ((sel.hostAll = true), servedAll())],
   [/^art\/ui\/brand\//, () => ((sel.landing = true), (sel.kit = true), (sel.image = true))],
-  [/^art\/ui\//, () => browserAll()], // tokens and sheets the kit and pages build from
-  [/^tools\/audio\//, () => (sel.hostAll = true)],
+  [/^art\/ui\//, () => browserAll()], // tokens, sheets and POC modules the kit and pages import
+  [/^tools\/audio\//, () => ((sel.hostAll = true), (sel.image = true))], // the cue sheet the host and the image bundle
   [/^web\//, () => browserAll()], // host, controller, shared, kit, build config: every page goes through one Vite build
 ];
 

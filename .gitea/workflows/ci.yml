@@ -154,11 +154,8 @@ jobs:
       CARGO_TARGET_DIR: /cargo-cache/target-jammers-wasm
     steps:
       - uses: actions/checkout@v4
-      # The host bundles the baked vehicles (P1-R02), the brand (P1-C01) and the audio; all LFS objects.
-      - name: Vehicle, brand and audio LFS objects
-        run: git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
-      - name: Toolchain (rust-toolchain.toml) on the persistent cache
-        run: scripts/ci/toolchain.sh
+      # A miss pulls the LFS objects the pages bundle (vehicles, brand, audio) and the toolchain itself; a hit needs
+      # neither.
       - name: Build (or reuse this host's build of the same inputs)
         run: scripts/ci/build-web.sh web-build.tar.zst
       - uses: actions/upload-artifact@v3

@@ -14,7 +14,7 @@ cd "$(dirname "$0")/../.."
 out=${1:?usage: build-web.sh <out.tar.zst>}
 cache=${JJ_PREBUILT:-/cargo-cache/jj-prebuilt}
 
-key=$(git ls-files -s | grep -vE $'\t''(docs/|spikes/|\.beads/|\.claude/|\.apr/|\.ntm/|\.gitea/|web/tests/journeys/|art/(audio|references|style|ui/poc)/|tools/(audio|maps|vehicles|turn-guard)/|scripts/(beads|emulators|remote)/|scripts/ci/(plan|run-slot)\.mjs$|[^/]*\.md$|.*\.md$|.*\.test\.mjs$)' |
+key=$(git ls-files -s | grep -vE $'\t''(docs/|spikes/|\.beads/|\.claude/|\.apr/|\.ntm/|\.gitea/|web/tests/journeys/|art/(audio|references|style)/|tools/(maps|vehicles|turn-guard)/|scripts/(beads|emulators|remote)/|scripts/ci/(plan\.mjs|run-slot\.mjs|durations\.mjs|durations\.json)$|[^/]*\.md$|.*\.md$|.*\.test\.mjs$)' |
     sha256sum | cut -c1-24)
 echo "key=$key"
 mkdir -p "$cache"
@@ -25,6 +25,11 @@ if [[ -f $cache/$key.tar.zst ]]; then
     exit 0
 fi
 echo "hit=false"
+
+# A miss: the LFS objects the pages bundle (vehicles, brand, audio) and the pinned toolchain, then the build.
+git lfs pull --include "art/vehicles/**,art/ui/brand/**,assets/audio/**"
+scripts/ci/toolchain.sh >&2
+export PATH="$CARGO_HOME/bin:$PATH"
 
 t() { local s=$SECONDS; "$@"; echo "build-web: $((SECONDS - s))s  $*" >&2; }
 t scripts/build-host-wasm.sh >&2
