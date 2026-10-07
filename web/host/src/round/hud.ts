@@ -74,13 +74,17 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const lap = s?.laps === null || s?.laps === undefined ? null : Math.min(s.laps + 1, Math.max(1, total));
       const pos = s?.position ?? null;
       const state = s ? (s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
+      // Placing rewrote the inline style, so the seat colour (border, Identify pulse) goes back on every paint.
+      if (s) {
+        box.style.setProperty('--seat', `var(--id-${s.colourIndex % 12})`);
+        box.style.setProperty('--seat-on', `var(--id-${s.colourIndex % 12}-on)`);
+      }
       const key = JSON.stringify([s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs]);
       if (cache.get(box) === key) continue;
       cache.set(box, key);
       box.hidden = !s;
       if (!s) continue;
       box.dataset.seat = String(s.number);
-      box.style.setProperty('--seat', `var(--id-${s.colourIndex % 12})`);
       const badge = box.querySelector<HTMLElement>('.hud-badge')!;
       badge.textContent = `#${s.number}`;
       badge.style.setProperty('--b', `var(--id-${s.colourIndex % 12})`);

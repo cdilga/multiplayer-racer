@@ -152,7 +152,7 @@
 .jj-hud .hud-tile.identify { box-shadow: inset 0 0 0 calc(var(--hud) * 0.35) var(--seat); animation: hud-identify 0.4s steps(2) 4; }
 .jj-hud .hud-cooee {
   position: absolute; left: 50%; top: 50%; translate: -50% -50%; padding: 0.15em 0.5em;
-  background: var(--seat); color: var(--c-paper); border: 3px solid var(--c-ink); border-radius: 10px;
-  font-size: calc(var(--hud) * 2); white-space: nowrap; text-shadow: 0 2px 0 var(--c-ink);
+  background: var(--seat); color: var(--seat-on, var(--c-paper)); border: 3px solid var(--c-ink); border-radius: 10px;
+  font-size: calc(var(--hud) * 2); white-space: nowrap;
 }
 @keyframes hud-identify { 50% { box-shadow: inset 0 0 0 calc(var(--hud) * 0.6) var(--seat); } }
