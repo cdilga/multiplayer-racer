@@ -181,7 +181,7 @@ function roundBanner(app: HTMLElement, session: Session): void {
     b = document.createElement('div');
     b.dataset.roundBanner = '';
     b.className = 'banner';
-    b.style.cssText = 'position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;padding:10px 18px;border-radius:12px;background:var(--c-saffron);color:var(--c-ink);font-size:26px;font-weight:800';
+    b.style.cssText = 'position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;padding:10px 18px;border-radius:12px;background:var(--c-saffron);--bz-fill:var(--c-saffron);color:var(--c-ink);font-size:26px;font-weight:800';
     screen.append(b);
   }
   let text = '';
