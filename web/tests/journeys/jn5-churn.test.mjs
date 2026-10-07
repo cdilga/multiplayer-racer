@@ -155,7 +155,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await host.waitForTimeout(1500); // the reflow animates
   // Each tile's HUD sits inside its tile once the grid settles (the DOM layer follows the final rects).
   const misplaced = await host.evaluate(() => {
-    const dpr = devicePixelRatio;
+    // Rects are backing-store px: device px times the Render resolution (a slow host lowers it), so use the canvas's ratio.
+    const canvas = document.querySelector('canvas');
+    const dpr = canvas.width / canvas.getBoundingClientRect().width;
     return window.__jjRender.tileRects().flatMap((t) => {
       const box = document.querySelector(`.hud-tile[data-tile="${t.seat}"]`)?.getBoundingClientRect();
       const inside = box && box.left >= t.x / dpr - 2 && box.top >= t.y / dpr - 2 && box.right <= (t.x + t.w) / dpr + 2 && box.bottom <= (t.y + t.h) / dpr + 2;
