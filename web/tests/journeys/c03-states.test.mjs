@@ -24,14 +24,14 @@ after(async () => {
 
 /** state: [fragment, wording that must show, the next action's button (or null), words that must NOT appear] */
 const STATES = {
-  finding: ['finding', /Finding room ABCD/i, null],
-  'no-such-room': ['no-such-room', /No room with code ABCD/i, 'Try another code'],
+  finding: ['finding', /Finding room ABCD/i, 'Cancel'],
+  'no-such-room': ['no-such-room', /No room with code ABCD/i, 'Edit the code'],
   'room-ended': ['room-ended', /That room has ended/i, 'Join another room'],
-  'preview-expired': ['preview-expired', /This test build has expired/i, null],
+  'preview-expired': ['preview-expired', /This test build has expired/i, 'Open the preview index'],
   connecting: ['connecting', /Connecting/i, null],
   'finding-relay': ['finding-relay', /Finding a relay/i, null],
-  'no-route': ['no-route', /Can't reach the host from this network/i, 'Retry'],
-  'ready-to-join': ['ready-to-join&name=Davo', /Room ABCD/i, 'Join the race'],
+  'no-route': ['no-route', /Can[’']t reach the host from this network/i, 'Retry'],
+  'ready-to-join': ['ready-to-join&name=Davo', /You[’']re in ABCD/i, 'Join the race'],
   joining: ['joining', /Joining/i, null],
   reconnecting: ['reconnecting&seat=12', /Reconnecting as #12/i, null],
   'host-gone': ['host-gone', /The host seems to have gone/i, 'Enter a new code'],
@@ -76,10 +76,17 @@ for (const [state, [, wording, action]] of Object.entries(STATES)) {
 
 test('the next actions do what they say', { timeout: 60_000 }, async () => {
   // Try another code / Enter a new code / Join another room go back to the landing page (the join card there).
-  for (const [state, button] of [['no-such-room', 'Try another code'], ['host-gone', 'Enter a new code'], ['room-ended', 'Join another room']]) {
+  for (const [state, button] of [['no-such-room', 'Edit the code'], ['host-gone', 'Enter a new code'], ['room-ended', 'Join another room']]) {
     const { page } = await open(state, SIZES['phone-landscape-844x390']);
     await page.getByRole('button', { name: button }).click();
     await page.waitForURL(`${server.origin}${BASE}`);
+    await page.context().close();
+  }
+  // Scan again goes back to the landing page already scanning (its scanner opens by itself).
+  {
+    const { page } = await open('no-such-room', SIZES['phone-landscape-844x390']);
+    await page.getByRole('button', { name: 'Scan again' }).click();
+    await page.waitForURL(`${server.origin}${BASE}?scan=1`);
     await page.context().close();
   }
   // Use this one takes the seat back in this tab (it starts connecting).
@@ -89,12 +96,8 @@ test('the next actions do what they say', { timeout: 60_000 }, async () => {
   await page.context().close();
 });
 
-test('host paused keeps the sticks on screen, dimmed, with the wording over them and no touch taken', { timeout: 60_000 }, async () => {
+test('host paused is a card with the wording, and no sticks to touch while the host is away', { timeout: 60_000 }, async () => {
   const { page } = await open('host-paused', SIZES['phone-landscape-844x390']);
-  const r = await page.evaluate(() => {
-    const card = document.querySelector('[data-overlay=paused]');
-    return { has: !!card, pe: card && getComputedStyle(card).pointerEvents, sticks: getComputedStyle(document.querySelector('.sticks')).opacity };
-  });
-  assert.deepEqual([r.has, r.pe], [true, 'none']);
-  assert.ok(Number(r.sticks) < 0.6, 'the sticks are dimmed');
+  const r = await page.evaluate(() => ({ title: document.querySelector('h1')?.textContent, sticks: document.querySelectorAll('.zone').length, state: document.querySelector('.card-screen')?.dataset.state }));
+  assert.deepEqual([r.title, r.sticks, r.state], ['Host paused', 0, 'host-paused']);
 });

@@ -10,7 +10,9 @@ export type PathLabel = { kind: 'direct' | 'relay' | 'reconnecting' | 'connectin
 /** The badge's reading for a session now. */
 export async function pathLabel(session: Session): Promise<PathLabel> {
   const link = session.link;
-  if (!link || session.phase === 'reconnecting' || session.phase === 'host-gone') return { kind: 'reconnecting', text: 'Reconnecting…', rttMs: null };
+  // No link at all (the state opener, a page that never connected) has nothing to report.
+  if (!link) return { kind: 'connecting', text: '', rttMs: null };
+  if (session.phase === 'reconnecting' || session.phase === 'host-gone') return { kind: 'reconnecting', text: 'Reconnecting…', rttMs: null };
   const p = await link.path().catch(() => null);
   if (!p) return { kind: 'connecting', text: 'Connecting…', rttMs: null };
   const relay = p.kind === 'coturn-relay' || p.kind === 'cloudflare-relay' || p.kind === 'relay';
@@ -25,6 +27,7 @@ export function watchBadge(session: Session, el: HTMLElement, everyMs = 2000): (
     const l = await pathLabel(session);
     if (stopped) return;
     el.textContent = l.text;
+    el.hidden = l.text === '';
     el.dataset.path = l.kind;
     el.classList.add('chip');
     el.classList.toggle('chip-ready', l.kind === 'direct');

@@ -63,7 +63,16 @@
 .join-card { grid-template-columns: minmax(0, 1fr); }
 .name-field input { flex: 1 1 auto; width: auto; min-width: 0; }
 
-/* §11 host paused: the card sits over the dimmed sticks and takes no touch. */
-.paused-card { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 6; text-align: center; pointer-events: none; padding: 12px 22px; }
-.paused-card b { display: block; font-size: 26px; }
-.paused-card p { margin: 4px 0 0; font-weight: 500; }
+/* The restyle to the accepted phone mock (2026-10-07): icon buttons in the strip, the §11 cards with their icons. */
+.btn .ic { width: 22px; height: 22px; flex: none; }
+.btn.identify .ic { width: 20px; height: 20px; }
+.zone.action .knob .ic { width: 28px; height: 28px; color: var(--c-ink); }
+.state-icon .ic { width: 34px; height: 34px; color: var(--c-paper); }
+.state-icon.warn .ic, .state-icon.ok .ic { color: var(--c-ink); }
+.state-card.card { text-align: center; display: grid; gap: 10px; justify-items: center; }
+.state-card.card h1 { margin: 6px 0 0; }
+.state-card.card .acts, .join-card .field, .join-card .btn.big { width: 100%; }
+.state-card.card .acts { display: grid; gap: 10px; }
+.join-card { text-align: center; }
+.join-card .name-field { text-align: left; }
+.join-card .aussie-note { justify-content: center; }

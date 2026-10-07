@@ -70,4 +70,6 @@ scan.addEventListener('click', async () => {
     input.focus();
   } else input.focus();
 });
+// "Scan again" on the controller's no-such-room card comes back here already scanning.
+if (new URLSearchParams(location.search).has('scan')) scan.click();
 (window as unknown as { __jjScan: unknown }).__jjScan = { inspect: () => import('../../controller/src/app/scan').then((m) => m.scanInspect()) };

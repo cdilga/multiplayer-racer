@@ -49,7 +49,7 @@ const SIZES = { 'landscape-844x390': [844, 390], 'portrait-390x844': [390, 844],
 const PAIRS = [
   ['race', 'race', 'playing&round=racing&boost=140', null],
   ['lobby-play', 'tutorial', 'playing&round=lobby', ['landscape-844x390']],
-  ['join', 'join', 'ready-to-join&name=Dusty', null],
+  ['ready-to-join', 'ready-to-join', 'ready-to-join&name=Dusty', null],
   ['finding', 'finding', 'finding', null],
   ['no-such-room', 'no-such-game', 'no-such-room', null],
   ['room-ended', 'game-ended', 'room-ended', null],

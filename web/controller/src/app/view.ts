@@ -2,6 +2,7 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
+import { icon, paintKit } from '../../../shared/ui';
 import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
@@ -13,23 +14,45 @@ import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shape } from './settings';
 
-const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string; action?: [string, string] }>> = {
-  finding: (s) => ({ title: `Finding room ${s.code}…`, body: '' }),
-  'no-such-room': (s) => ({ title: `No room with code ${s.code}`, body: 'Check the code on the big screen, or scan the QR again.', action: ['edit', 'Try another code'] }),
-  'room-ended': () => ({ title: 'That room has ended', body: 'Thanks for playing.', action: ['edit', 'Join another room'] }),
-  'preview-expired': () => ({ title: 'This test build has expired', body: 'Ask the host for a fresh link.' }),
-  connecting: () => ({ title: 'Connecting…', body: '' }),
-  'finding-relay': () => ({ title: 'Finding a relay…', body: 'This network is fussy; trying another way in.' }),
-  'no-route': () => ({ title: "Can't reach the host from this network", body: "Try the host's Wi-Fi.", action: ['retry', 'Retry'] }),
-  joining: () => ({ title: 'Joining…', body: '' }),
-  reconnecting: (s) => ({ title: `Reconnecting as #${s.you?.number ?? ''}…`, body: 'Your car is on autopilot.' }),
-  'host-gone': () => ({ title: 'The host seems to have gone', body: 'Ask them for a new code.', action: ['edit', 'Enter a new code'] }),
-  'host-paused': () => ({ title: 'Host paused', body: 'Back in a moment.' }),
-  'another-tab': () => ({ title: 'Playing in another tab', body: '', action: ['takeover', 'Use this one'] }),
-  'update-needed': () => ({ title: 'Updating…', body: 'Loading the new version.' }),
+/** One §11 card (art/ui/poc/phone/phone.js `CARDS`, accepted 2026-10-07): an icon (or the spinner), the title, the line under it, and
+ *  the next useful actions, the first of them the primary one. Copy says "room", never "game" (R112). */
+interface Card {
+  spin?: boolean;
+  icon?: string;
+  tone?: 'warn' | 'ok';
+  title: string;
+  body: string;
+  actions?: Array<[act: string, label: string]>;
+}
+const place = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th')}`;
+const CARDS: Partial<Record<Phase, (s: Session) => Card>> = {
+  finding: (s) => ({ spin: true, title: `Finding room ${s.code}…`, body: 'Hang on, looking for the TV.', actions: [['cancel', 'Cancel']] }),
+  'no-such-room': (s) => ({ icon: 'triangle-alert', title: `No room with code ${s.code}`, body: 'Check the code on the TV, or scan the QR again.', actions: [['edit', 'Edit the code'], ['scan', 'Scan again']] }),
+  'room-ended': (s) => {
+    const mine = s.you ? s.results?.find((r) => r.number === s.you?.number) : undefined;
+    return { icon: 'flag', title: 'That room has ended', body: mine?.place ? `Cheers for playing! You finished ${place(mine.place)}.` : 'Cheers for playing!', actions: [['edit', 'Join another room']] };
+  },
+  'preview-expired': () => ({ icon: 'timer', title: 'This test build has expired', body: 'Preview builds last a day. The preview index has the newest one.', actions: [['index', 'Open the preview index']] }),
+  connecting: () => ({ spin: true, title: 'Connecting…', body: 'Linking your controller to the TV.' }),
+  'finding-relay': () => ({ spin: true, title: 'Finding a relay…', body: 'Your network is fussy. Still trying on its own.' }),
+  'no-route': () => ({ icon: 'wifi-off', title: 'Can’t reach the host from this network', body: 'Try the host’s Wi-Fi, then tap Retry.', actions: [['retry', 'Retry']] }),
+  joining: () => ({ spin: true, title: 'Joining…', body: 'Saving you a number.' }),
+  reconnecting: (s) => ({ spin: true, title: `Reconnecting as #${s.you?.number ?? ''}…`, body: 'Your car is on autopilot until you’re back.' }),
+  'host-gone': () => ({ icon: 'triangle-alert', tone: 'warn', title: 'The host seems to have gone', body: 'Ask them for a new code. We’ll keep trying quietly.', actions: [['edit', 'Enter a new code']] }),
+  'host-paused': () => ({ icon: 'pause', title: 'Host paused', body: 'Back in a moment.' }),
+  'another-tab': () => ({ icon: 'smartphone', title: 'Playing in another tab', body: 'You can only drive from one tab at a time.', actions: [['takeover', 'Use this one']] }),
+  'update-needed': () => ({ spin: true, title: 'Updating…', body: 'A newer build is out. Reloading once.' }),
 };
 
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="help" aria-label="Help: the controls tutorial">Help</button><button class="btn quiet" data-act="settings" aria-label="Settings: your controls">Settings</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
+/** The icon placeholders in a string of markup become the kit's icon elements (they carry their own mask URL). */
+function dress(root: ParentNode): void {
+  for (const el of root.querySelectorAll<HTMLElement>('[data-ico]')) {
+    el.replaceWith(icon(el.dataset.ico!));
+  }
+}
+
+/** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
@@ -61,7 +84,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const render = () => {
-    const key = session.phase === 'playing' || session.phase === 'host-paused' ? `play:${session.you?.number}` : `${session.phase}:${session.code}`;
+    const key = session.phase === 'playing' ? `play:${session.you?.number}` : `${session.phase}:${session.code}`;
     if (key === shown) return void updateHud();
     shown = key;
     sticks?.drive.release();
@@ -70,14 +93,28 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (session.phase === 'ready-to-join') return joinCard();
     if (key.startsWith('play:')) return playScreen();
     const c = CARDS[session.phase]?.(session) ?? { title: session.phase, body: '' };
-    app.innerHTML = `<section class="screen card-screen" data-state="${session.phase}"><div class="panel state-card"><h1 class="display italic">${esc(c.title)}</h1>${c.body ? `<p>${esc(c.body)}</p>` : ''}${c.action ? `<button class="btn primary big" data-act="${c.action[0]}">${esc(c.action[1])}</button>` : ''}</div></section>`;
-    app.querySelector('[data-act=edit]')?.addEventListener('click', () => location.assign(new URL('../', location.href).href));
+    const head = c.spin ? '<div class="spin" aria-hidden="true"></div>' : c.icon ? `<div class="state-icon ${c.tone ?? ''}"><i data-ico="${c.icon}"></i></div>` : '';
+    const acts = (c.actions ?? []).map(([act, label], i) => `<button class="btn brush${i === 0 ? ' primary big' : ''}" data-act="${act}">${esc(label)}</button>`).join('');
+    app.innerHTML = `<section class="screen card-screen" data-state="${session.phase}"><div class="panel state-card card">${head}<h1 class="display italic">${esc(c.title)}</h1>${c.body ? `<p>${esc(c.body)}</p>` : ''}${acts ? `<div class="acts">${acts}</div>` : ''}</div></section>`;
+    dress(app);
+    paintKit(app);
+    const landing = (q = '') => location.assign(new URL(`../${q}`, location.href).href);
+    app.querySelector('[data-act=edit]')?.addEventListener('click', () => landing());
+    app.querySelector('[data-act=cancel]')?.addEventListener('click', () => landing());
+    app.querySelector('[data-act=scan]')?.addEventListener('click', () => landing('?scan=1'));
+    app.querySelector('[data-act=index]')?.addEventListener('click', () => location.assign(new URL('/', location.href).href));
     app.querySelector('[data-act=retry]')?.addEventListener('click', () => location.reload());
     app.querySelector('[data-act=takeover]')?.addEventListener('click', () => void session.takeOver());
   };
 
   const joinCard = () => {
-    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card"><h1 class="display italic">Room ${esc(session.code)}</h1>${session.removed ? '<p class="note" data-note="removed">The host removed you. Join again whenever you like.</p>' : ''}<label for="name">Your name</label><div class="field name-field"><input id="name" name="name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card card"><div class="state-icon ok"><i data-ico="users"></i></div><h1 class="display italic">You’re in ${esc(session.code)}</h1><p>Pick a name, then join the race.</p>${session.removed ? '<p class="note" data-note="removed">The host removed you. Join again whenever you like.</p>' : ''}<div class="field name-field"><input id="name" name="name" aria-label="Your name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button type="button" class="btn icon" data-act="dice" aria-label="New random name"><i data-ico="dices"></i></button><button type="button" class="btn" data-act="aussie" aria-label="Make my name Australian">Aussie</button></div><p class="aussie-note" data-note="aussie" role="status" hidden></p><button class="btn brush primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    dress(app);
+    paintKit(app);
+    app.querySelector('[data-act=dice]')!.addEventListener('click', () => {
+      app.querySelector<HTMLInputElement>('#name')!.value = prefillName();
+      app.querySelector<HTMLElement>('[data-note=aussie]')!.hidden = true;
+    });
     // The Australian name button: only on a tap, and one tap of Undo puts back what was typed.
     const nameEl = app.querySelector<HTMLInputElement>('#name')!;
     const aussieBtn = app.querySelector<HTMLButtonElement>('[data-act=aussie]')!;
@@ -121,12 +158,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const land = matchMedia('(orientation: landscape)').matches;
     const toolsHolder = document.createElement('div');
     toolsHolder.innerHTML = TOOLS;
+    dress(toolsHolder);
     if (land) screenEl.querySelector('.strip')!.append(toolsHolder.firstElementChild!);
     else screenEl.append(toolsHolder.firstElementChild!);
     const area = document.createElement('div');
     area.className = `sticks${land ? ' with-pod' : ''}`;
     const dz = stickZone('drive');
     const az = stickZone('action');
+    az.querySelector('.knob')?.append(icon('zap'));
     const pod = document.createElement('div');
     pod.innerHTML = POD;
     if (land) area.append(dz, pod.firstElementChild!, az);
@@ -238,16 +277,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       const e = app.querySelector<HTMLElement>(`[data-hud=${k}]`);
       if (e) e.textContent = t;
     };
-    set('pos', h?.position ? `P${h.position}` : '');
+    const posEl = app.querySelector<HTMLElement>('[data-hud=pos]');
+    if (posEl) posEl.innerHTML = h?.position ? `${h.position}<sup>${place(h.position).slice(String(h.position).length)}</sup>` : '';
     set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
     app.querySelector<HTMLElement>('[data-hud=boost]')?.style.setProperty('--v', `${Math.round(((h?.boost ?? 0) / 255) * 100)}%`);
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
-    // §11 host hidden: the wording over the dimmed sticks (the car stays yours; nothing here asks for input).
-    const playEl = app.querySelector<HTMLElement>('.screen.play');
-    const paused = session.phase === 'host-paused';
-    const card = playEl?.querySelector('[data-overlay=paused]');
-    if (paused && playEl && !card) playEl.insertAdjacentHTML('beforeend', '<div class="panel paused-card" data-overlay="paused" role="status"><b class="display italic">Host paused</b><p>Back in a moment.</p></div>');
-    else if (!paused) card?.remove();
   };
 
   session.onChange = render;
@@ -320,8 +354,14 @@ function confirmLeave(): boolean {
   leaveArmed = now;
   const b = document.querySelector<HTMLElement>('[data-act=leave]');
   if (b) {
+    // The icon button turns into words for three seconds, then goes back to its icon.
+    const was = b.innerHTML;
+    b.classList.remove('icon');
     b.textContent = 'Tap again to leave';
-    setTimeout(() => (b.textContent = 'Leave'), 3000);
+    setTimeout(() => {
+      b.innerHTML = was;
+      b.classList.add('icon');
+    }, 3000);
   }
   return false;
 }

@@ -150,9 +150,9 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   );
   await wait(page, () => ['finding-relay', 'no-route'].includes(window.__jjController?.inspect().phase), undefined, 90_000);
   const seenRelay = await text(page);
-  assert.match(seenRelay, /Finding a relay|Can't reach the host from this network/i);
+  assert.match(seenRelay, /Finding a relay|Can[’']t reach the host from this network/i);
   await wait(page, () => window.__jjController.inspect().phase === 'no-route', undefined, 120_000);
-  assert.match(await text(page), /Can't reach the host from this network/i);
+  assert.match(await text(page), /Can[’']t reach the host from this network/i);
   assert.ok(fallbackCalls >= 2, `the relay was asked ${fallbackCalls} times (429 then 503)`);
 
   const live = await joined(joinUrl, 'Marlene');
@@ -190,7 +190,8 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
 
   console.log('# §11 step: ended');
   // Ended room.
-  await host.evaluate(() => window.__jjRoom.end());
+  // The host page goes away (a reload or close ends its room, R84): the keepalive end reaches the phones.
+  await host.goto('about:blank');
   await wait(live.page, () => window.__jjController.inspect().phase === 'room-ended', undefined, 60_000).catch(async () => {
     assert.fail(`the room was ended but the phone is ${await phase(live.page)}`);
   });
