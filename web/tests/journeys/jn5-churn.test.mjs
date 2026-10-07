@@ -96,15 +96,17 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Lobby: three phones and both key clusters');
   const phones = [];
   for (const n of ['Davo', 'Shazza', 'Bazza']) phones.push(await phone(joinUrl, n));
-  await host.keyboard.press('KeyW');
-  await host.keyboard.press('KeyI');
-  await wait(host, () => window.__jjRoom.view().seats.length === 5);
+  // A key cluster joins on a held key (sampled per frame), as in JN1.
+  for (const [k, n] of [['KeyW', 4], ['KeyI', 5]]) {
+    await host.keyboard.down(k);
+    await wait(host, (n) => window.__jjRoom.view().seats.length === n, n);
+    await host.keyboard.up(k);
+  }
   await shot(host, 'tv-lobby-5');
 
   at('Ready: the round starts');
   for (const p of phones) await p.page.getByRole('button', { name: /^Ready/ }).click();
-  await host.keyboard.press('KeyE');
-  await host.keyboard.press('KeyO');
+  for (const k of ['KeyE', 'KeyO']) await host.keyboard.press(k, { delay: 250 });
   await wait(host, () => window.__jjRoom.view().phase === 'Countdown');
 
   at('Countdown: a phone joins and is on the grid');
