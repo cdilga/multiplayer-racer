@@ -107,6 +107,8 @@ test('four pads and two key clusters hold six seats over ONE connection on ONE h
   assert.equal(await hub.evaluate(() => window.__jjHub.hub.connections()), 1, 'one WebRTC link for the page');
   const hostSeats = () => host.evaluate(async () => (await window.__jjTest.observe()).host.seats.length);
   for (const t0 = Date.now(); (await hostSeats()) !== 6; await host.waitForTimeout(200)) assert.ok(Date.now() - t0 < 30_000, 'the host never saw six seats');
+  // The path badge waits on ICE stats: capture once every row has it.
+  await wait(hub, () => [...document.querySelectorAll('[data-source] [data-path]')].every((e) => /Direct|Relay/.test(e.textContent ?? '')), undefined, 90_000);
   await matrix(hub, 'c08-hub-four-sources', { width: 1100, height: 700 });
   // The host's seats: six on the one endpoint, one source handle each.
   const hostSeatRows = (await host.evaluate(() => window.__jjTest.observe())).host.seats;
@@ -242,10 +244,12 @@ test('B/hub asks for the room code and opens the hub for it', { timeout: 240_000
   await page.addInitScript(PADS);
   await page.goto(`${new URL(joinUrl).origin}${BASE}hub`);
   await page.locator('[data-hub-form]').waitFor();
+  await shot(page, 'c08-hub-entry-1100x700');
   // A bad code is told so and stays; the real one opens the hub page for that room.
   await page.locator('#hub-code').fill('A!');
   await page.getByRole('button', { name: 'Open the hub' }).click();
   await page.locator('[data-hub-error]').waitFor({ state: 'visible' });
+  await shot(page, 'c08-hub-entry-bad-code-1100x700');
   await page.locator('#hub-code').fill(code.toLowerCase());
   await page.getByRole('button', { name: 'Open the hub' }).click();
   await wait(page, () => window.__jjHub);
