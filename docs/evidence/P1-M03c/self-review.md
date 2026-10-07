@@ -3,7 +3,7 @@
 ## Looked at
 - `road-edge-10m-vs-2.5m.png` (diagonal straight, 40 m crop, seed chosen by `writes_the_evidence_images`): left, the
   old 10 m grid's painted road; right, the new 2.5 m grid's; the true road edge is the red line. Checked the staircase.
-- `overview-{greybox,town,outbackbitumen,outbackdirt,rocks}-seed1.png` (one pixel per cell, hill-shaded): the road is a
+- `overview-greybox-seed1.png`, `overview-town-seed1.png`, `overview-outbackbitumen-seed1.png`, `overview-outbackdirt-seed1.png`, `overview-rocks-seed1.png` (one pixel per cell, hill-shaded): the road is a
   clean closed loop, the ground is gently modelled, rocks is visibly more relief than town and bitumen, no cliffs or
   holes at the road, no pale halo around the road.
 
