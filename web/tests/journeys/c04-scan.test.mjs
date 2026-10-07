@@ -42,6 +42,29 @@ after(async () => {
   await server?.close();
 });
 
+
+// `JJ_CAPTURE_DIR=<dir>`: save the visual self-review matrix there (eris.sh points it into the run dir).
+const CAPTURE = process.env.JJ_CAPTURE_DIR;
+const shot = async (page, name) => {
+  if (!CAPTURE) return;
+  const { mkdirSync } = await import('node:fs');
+  mkdirSync(CAPTURE, { recursive: true });
+  await page.screenshot({ path: `${CAPTURE}/${name}.png` });
+};
+const SIZES = { 'phone-portrait-390x844': [390, 844], 'phone-landscape-844x390': [844, 390], 'tv-1920x1080': [1920, 1080] };
+/** Capture at each device size, then back to where it was (a resize with the state kept). */
+const matrix = async (page, name, back) => {
+  if (!CAPTURE) return;
+  for (const [label, [w, h]] of Object.entries(SIZES)) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(400);
+    await shot(page, `${name}-${label}`);
+  }
+  await page.setViewportSize(back);
+  await page.waitForTimeout(300);
+  await shot(page, `${name}-resized-back`);
+};
+
 let n = 0;
 async function launch(text) {
   const file = join(dir, `qr${n++}.y4m`);
@@ -129,6 +152,7 @@ describe('what is rejected', () => {
       await page.getByRole('button', { name: 'Scan QR code' }).click();
       await page.getByText("That QR code isn't for this room").waitFor({ timeout: 30_000 });
       assert.equal(new URL(page.url()).pathname, BASE, 'did not navigate');
+      if (name === 'another site') await matrix(page, 'c04-scanner-unrelated-qr', { width: 390, height: 844 });
       assert.ok((await live(page)) >= 1, 'still scanning');
       await page.getByRole('button', { name: 'Cancel', exact: true }).click();
       assert.equal(await live(page), 0, 'every track stopped on cancel');
@@ -145,6 +169,7 @@ describe('the camera and code entry', () => {
     await page.getByText('Camera access is blocked').waitFor();
     assert.equal(await page.inputValue('#code'), 'AB');
     assert.equal(await page.locator('[data-overlay=scan]').count(), 0);
+    await shot(page, 'c04-camera-denied-390x844');
     await page.fill('#code', 'K7QX');
     await page.getByRole('button', { name: 'Join a room' }).click();
     await page.waitForURL(joinUrl('K7QX'));
@@ -157,6 +182,7 @@ describe('the camera and code entry', () => {
     for (const how of ['instead', 'cancel', 'hidden']) {
       await page.getByRole('button', { name: 'Scan QR code' }).click();
       await page.waitForSelector('[data-overlay=scan] video');
+      if (how === 'instead') await shot(page, 'c04-scanner-open-390x844');
       await page.waitForFunction(() => window.__streams.at(-1)?.getTracks().some((t) => t.readyState === 'live'));
       if (how === 'instead') await page.getByRole('button', { name: 'Enter the code instead' }).click();
       else if (how === 'cancel') await page.getByRole('button', { name: 'Cancel', exact: true }).click();

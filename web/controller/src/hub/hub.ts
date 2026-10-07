@@ -20,6 +20,7 @@ const TICK_MS = 16;
 const RENDER_MS = 250;
 const PATH_MS = 2000;
 const FLASH_MS = 1500;
+const STALL_MS = 12_000;
 
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -41,6 +42,8 @@ export class Source {
   sample: Sample = NEUTRAL;
   /** Pad: the device is currently present. */
   plugged = true;
+  /** When this source last started connecting (ms): a join that stalls is retried. */
+  connectingSince = 0;
   /** A phone's own session (touch): the hub shows it but doesn't drive it. */
   external = false;
 
@@ -182,6 +185,9 @@ export class Hub {
       }
       if (s.session.phase !== 'playing' && s.session.phase !== 'host-paused') {
         s.state = 'connecting';
+        // A join that stalls (a lost signalling race among many sources arriving at once) starts over; the stored
+        // identity makes the retry the same endpoint.
+        if (now - s.connectingSince > STALL_MS) this.join(s);
         continue;
       }
       s.state = s.session.idleCueAt !== null && s.session.idleCueMs - (now - s.session.idleCueAt) <= 0 ? 'autopilot' : 'connected';
@@ -201,6 +207,8 @@ export class Hub {
   private join(s: Source): void {
     s.released = false;
     s.state = 'connecting';
+    s.connectingSince = performance.now();
+    s.session?.stop();
     const session = new Session({ iceTransportPolicy: this.o.ice ?? 'all' });
     session.slot = s.id;
     session.onChange = () => {
@@ -266,6 +274,7 @@ export class Hub {
       kind: s.kind,
       label: s.label,
       state: s.state,
+      phase: s.session?.phase ?? null,
       plugged: s.plugged,
       seat: s.session?.you?.number ?? null,
       source: s.session?.you?.source ?? null,

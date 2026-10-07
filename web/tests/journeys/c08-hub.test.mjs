@@ -9,6 +9,29 @@ import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 
+
+// `JJ_CAPTURE_DIR=<dir>`: save the visual self-review matrix there (eris.sh points it into the run dir).
+const CAPTURE = process.env.JJ_CAPTURE_DIR;
+const shot = async (page, name) => {
+  if (!CAPTURE) return;
+  const { mkdirSync } = await import('node:fs');
+  mkdirSync(CAPTURE, { recursive: true });
+  await page.screenshot({ path: `${CAPTURE}/${name}.png` });
+};
+const SIZES = { 'phone-portrait-390x844': [390, 844], 'phone-landscape-844x390': [844, 390], 'tv-1920x1080': [1920, 1080] };
+/** Capture at each device size, then back to where it was (a resize with the state kept). */
+const matrix = async (page, name, back) => {
+  if (!CAPTURE) return;
+  for (const [label, [w, h]] of Object.entries(SIZES)) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(400);
+    await shot(page, `${name}-${label}`);
+  }
+  await page.setViewportSize(back);
+  await page.waitForTimeout(300);
+  await shot(page, `${name}-resized-back`);
+};
+
 const BASE = '/p/c08/';
 let browser;
 let server;
@@ -76,6 +99,7 @@ test('a hub with four pads and two key clusters holds six seats; each drives onl
   assert.equal(new Set(src.map((s) => s.seat)).size, 6, 'six distinct seats');
   assert.deepEqual(src.map((s) => s.kind).sort(), ['keys', 'keys', 'pad', 'pad', 'pad', 'pad']);
   await wait(host, () => window.__jjTest.observe().host.seats.length === 6);
+  await matrix(hub, 'c08-hub-six-sources', { width: 1100, height: 700 });
   console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
 
   // Only pad 1 and keys B drive; the other four stay where they are.
@@ -100,6 +124,7 @@ test('a hub with four pads and two key clusters holds six seats; each drives onl
   const after2 = await hubState(hub);
   for (const s of after2) assert.equal(s.state === 'unplugged', s.id === 'pad2', `${s.id} is ${s.state}`);
   assert.match(await hub.locator('[data-source=pad2]').innerText(), /Unplugged/);
+  await shot(hub, 'c08-hub-pad2-unplugged-1100x700');
   assert.match(await hub.locator('[data-source=pad0]').innerText(), /Connected|Ready/);
   await host.waitForTimeout(3500);
   const hostSeats = await seats(host).catch(() => null);
@@ -130,6 +155,7 @@ test('each source leaves on its own; the hub shows seat, kind, state and path; I
   const seat0 = (await hubState(hub)).find((s) => s.id === 'pad0').seat;
   await hub.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: true }));
   await hub.locator('[data-source=pad0].flash').waitFor({ timeout: 5000 });
+  await shot(hub, 'c08-hub-identify-flash-1100x700');
   assert.equal(await hub.locator('[data-source=pad1].flash').count(), 0, 'only that row flashes');
   await wait(host, (n) => window.__jjRoom.events().some((e) => e.event?.Identify), seat0, 10_000);
   await hub.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: false }));
@@ -162,5 +188,6 @@ test('a phone with one paired pad holds two seats and shows the connection badge
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
   const src = await page.evaluate(() => window.__jjHub.inspect());
   assert.deepEqual(src.map((s) => s.kind).sort(), ['pad', 'touch']);
+  await matrix(page, 'c08-phone-with-pad', { width: 844, height: 390 });
   assert.notEqual(src[0].seat ?? 'x', src[1].seat);
 });

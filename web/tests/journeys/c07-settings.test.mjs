@@ -8,6 +8,29 @@ import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
 import { chromiumArgs } from './lib/chromium.mjs';
 
+
+// `JJ_CAPTURE_DIR=<dir>`: save the visual self-review matrix there (eris.sh points it into the run dir).
+const CAPTURE = process.env.JJ_CAPTURE_DIR;
+const shot = async (page, name) => {
+  if (!CAPTURE) return;
+  const { mkdirSync } = await import('node:fs');
+  mkdirSync(CAPTURE, { recursive: true });
+  await page.screenshot({ path: `${CAPTURE}/${name}.png` });
+};
+const SIZES = { 'phone-portrait-390x844': [390, 844], 'phone-landscape-844x390': [844, 390], 'tv-1920x1080': [1920, 1080] };
+/** Capture at each device size, then back to where it was (a resize with the state kept). */
+const matrix = async (page, name, back) => {
+  if (!CAPTURE) return;
+  for (const [label, [w, h]] of Object.entries(SIZES)) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(400);
+    await shot(page, `${name}-${label}`);
+  }
+  await page.setViewportSize(back);
+  await page.waitForTimeout(300);
+  await shot(page, `${name}-resized-back`);
+};
+
 const BASE = '/p/c07/';
 let browser;
 let server;
@@ -47,6 +70,7 @@ async function seated(init) {
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
+  await shot(page, 'c07-play-screen-with-settings-button-844x390');
   return { host, page, ctx, joinUrl };
 }
 
@@ -65,6 +89,7 @@ test('settings persist across reloads, camera distance included; remember off fo
   await pick(page, 'steering', 'direct');
   await pick(page, 'cameraDistance', 'far');
   await page.locator('[data-toggle=reducedMotion]').click();
+  await matrix(page, 'c07-settings', { width: 844, height: 390 });
   await page.getByRole('button', { name: 'Save and back to driving' }).click();
   assert.equal(await page.evaluate(() => document.documentElement.dataset.motion), 'reduced', 'reduced motion uses the kit tokens');
   await page.goto(joinUrl);
@@ -108,6 +133,7 @@ test('with storage denied the controller still plays and says the settings are a
   await pick(page, 'steering', 'direct');
   assert.equal((await prefs(page)).steering, 'direct', 'applied in memory');
   await page.locator('[data-note=save-failed]').waitFor();
+  await shot(page, 'c07-settings-storage-denied-844x390');
   assert.match(await page.locator('[data-note=save-failed]').innerText(), /Applied for now — this browser couldn't remember your settings/);
 });
 
@@ -148,6 +174,7 @@ test("'Test these controls' shows live stick values and fires no action", { time
   const before = await page.evaluate(() => window.__jjController.inspect().stats.actions);
   await page.getByRole('button', { name: 'Test these controls' }).click();
   await page.waitForSelector('[data-col=drive] .zone');
+  await shot(page, 'c07-test-controls-844x390');
   // Drag the test DRIVE stick hard right, then pull it hard back (the gesture that would fire a wheelie in the race).
   const drag = (to) =>
     page.evaluate((to) => {
@@ -162,6 +189,7 @@ test("'Test these controls' shows live stick values and fires no action", { time
   await drag({ x: 200, y: 0 });
   const right = await page.evaluate(() => window.__jjSettings.inspect().test);
   assert.ok(right.drive.x > 0.5, `live value shown (${right.drive.x})`);
+  await shot(page, 'c07-test-controls-live-844x390');
   assert.match(await page.locator('[data-read]').innerText(), /Drive x 0\.[5-9]|Drive x 1\.00/);
   await page.evaluate(() => document.querySelector('[data-col=drive] .zone').dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true })));
   await drag({ x: 0, y: 200 });
