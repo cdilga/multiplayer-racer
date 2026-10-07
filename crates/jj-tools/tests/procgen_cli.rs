@@ -59,6 +59,35 @@ fn jj_procgen_generates_validates_and_dumps() {
     );
     assert!(b["cornerMix"]["sweeper"].as_u64().unwrap() >= 1);
 
+    // The four-biome recipe: every seed valid through the fallback ladder, with the plans counted.
+    let four = Command::new(env!("CARGO_BIN_EXE_jj"))
+        .args([
+            "procgen",
+            "--seeds",
+            "0..12",
+            "--recipe",
+            "town,rocks,outback-dirt,outback-bitumen",
+            "--json",
+        ])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+    assert!(
+        four.status.success(),
+        "{}",
+        String::from_utf8_lossy(&four.stdout)
+    );
+    let f: serde_json::Value = serde_json::from_slice(&four.stdout).unwrap();
+    assert_eq!(f["valid"].as_u64(), Some(12));
+    let counted: u64 = f["plans"]
+        .as_object()
+        .unwrap()
+        .values()
+        .map(|n| n.as_u64().unwrap())
+        .sum();
+    assert_eq!(counted, 12, "every seed's plan is counted: {}", f["plans"]);
+    assert!(f["rows"][0]["plan"].is_string());
+
     let usage = Command::new(env!("CARGO_BIN_EXE_jj"))
         .arg("procgen")
         .output()

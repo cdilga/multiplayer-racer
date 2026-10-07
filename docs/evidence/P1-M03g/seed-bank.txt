@@ -1,0 +1,65 @@
+100 seeds, recipe town-rocks-outback-dirt-outback-bitumen (the lap ends back in town):
+plans {"conservative": 1, "redrawn-1": 24, "redrawn-2": 16, "requested": 55, "shorter-2": 1, "shorter-3": 3}
+mean attempts 1.74
+
+seed plan            attempts  rejected-on-the-way
+   0 requested              1  
+   1 requested              1  
+   2 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+   3 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 1]
+   4 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 1]
+   5 requested              1  
+   6 requested              1  
+   7 requested              1  
+   8 requested              1  
+   9 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 2]
+  10 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  11 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 2]
+  12 requested              1  
+  13 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  14 requested              1  
+  15 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  16 shorter-3              4  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 0] [4 biomes, draw 2: no straight for boundary 1]
+  17 requested              1  
+  18 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  19 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  20 requested              1  
+  21 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 3]
+  22 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 1]
+  23 requested              1  
+  24 requested              1  
+  25 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 3]
+  26 requested              1  
+  27 requested              1  
+  28 requested              1  
+  29 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  30 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  32 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 1] [4 biomes, draw 1: no straight for boundary 2]
+  36 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 1]
+  38 shorter-2              5  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 2] [4 biomes, draw 2: no straight for boundary 2] [3 biomes, draw 0: no straight for boundary 2]
+  41 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  43 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 0]
+  47 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  49 shorter-3              4  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 3] [4 biomes, draw 2: no straight for boundary 1]
+  52 conservative           6  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 2] [4 biomes, draw 2: no straight for boundary 3] [3 biomes, draw 0: no straight for boundary 0] [2 biomes, draw 0: no straight for boundary 1]
+  53 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 2]
+  55 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 1] [4 biomes, draw 1: no straight for boundary 3]
+  57 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  59 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  60 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 0]
+  62 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 1]
+  65 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 0]
+  67 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 0] [4 biomes, draw 1: no straight for boundary 1]
+  68 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  71 shorter-3              4  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 1] [4 biomes, draw 2: no straight for boundary 2]
+  76 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 2]
+  80 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  81 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 1]
+  83 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 0]
+  86 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 2]
+  87 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 2]
+  89 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 2] [4 biomes, draw 1: no straight for boundary 1]
+  92 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 0]
+  93 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]
+  95 redrawn-2              3  [4 biomes, draw 0: no straight for boundary 3] [4 biomes, draw 1: no straight for boundary 2]
+  99 redrawn-1              2  [4 biomes, draw 0: no straight for boundary 3]

@@ -7,6 +7,7 @@
 //! - [`features`] (P1-M03d): jumps, crests, whoops and creek dips composed into the route and baked into the heights.
 //! - [`biome`] (P1-M03f): the biome interface (pure data), the selector, transition rules and the wayfinding family.
 //! - [`scatter`] (P1-M03e): clumped or even dressing around the route from the dressing stream, clear of the road.
+//! - [`validate`] (P1-M03g): every check on a generated map, and [`prepare`], which always returns a validated track.
 //! - [`terrain`] (P1-M03c): undulation along the route with per-biome grade, curvature and bank limits.
 //!
 //! Props still come from a placeholder (cones by the road) and the scatter's pieces are the generic kit until the biome beads (M04–M07)
@@ -22,6 +23,9 @@ pub mod scatter;
 pub mod seed;
 pub mod signs;
 pub mod terrain;
+pub mod validate;
+
+pub use validate::{Plan, Prepared, prepare};
 
 use std::collections::BTreeMap;
 

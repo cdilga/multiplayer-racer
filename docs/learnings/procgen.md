@@ -77,3 +77,20 @@
 - **Terrain across biomes.** `undulate_along` takes parameters per route point: the profile's grade/curvature/relief are the
   strictest on the route; bank limit, ground relief, wavelength and blend follow the point and are blended into the cells
   by the heights' own inverse-distance weights, so there's no step at a boundary.
+
+## 2026-10-07 · Validator integration, fallback ladder, bot bank (P1-M03g)
+
+- **`prepare(seed, recipe)` always returns a validated track** and logs every rung: the recipe on the seed's own course,
+  then on two derived course draws, then the recipe cut shorter one biome at a time on the seed's own course, then the
+  first biome alone (the conservative recipe). Four-biome bank (100 seeds): 55 requested, 40 redrawn (24 + 16), 4 shorter,
+  1 conservative; mean 1.74 generations per seed. A redrawn seed is a different (still reproducible) route from the
+  seed's own course: callers must key on the returned map, not assume draw 0.
+- **`check` is the one acceptance test**: jj-map's validator plus transitions, feature envelopes and wayfinding; anything
+  that rejects a map must be added there so the ladder sees it.
+- **The sim's scenario runner takes one fixed map**, so the generated-seed bot bank lives in `tests/bank.rs` (jj-sim as a
+  native dev-dependency) rather than `scenarios/procgen/`. Autopilot on 100 generated four-biome seeds (the first 3 for
+  3 laps): no softlock, no recovery, no wreck, no out-of-bounds tick; its lap runs 0.94-1.30 x `refLapMs` (mean 1.14),
+  so the 15 m/s reference is a touch fast for the low-skill autopilot, not for a player.
+- **`ev:hardware` WASM timing:** worst 184 ms per seed (release, Node 26, M1 Pro), 24 seeds; see
+  `docs/evidence/P1-M03g/wasm-timing.md`. The test prints the numbers only when `JJ_WASM_BUDGET_MS=0` makes it fail.
+- **Manifest:** `wasm-bindgen` is a wasm32-only dev-dependency of jj-procgen (for `Date.now`), so `Cargo.lock` changed.

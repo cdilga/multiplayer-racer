@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: jj procgen --seed <u64> [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--json]";
+const USAGE: &str = "usage: jj procgen --seed <u64> [--recipe <biome,biome,..>] [--json] [--out <dir>]\n       jj procgen --seeds <from>..<to> [--recipe <biome,..>] [--json]\n  a recipe lists biomes in lap order (greybox, town, rocks, outback-dirt, outback-bitumen); the lap ends back in the first";
 
 fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
     serde_json::json!({
@@ -23,14 +23,40 @@ fn course_json(r: &jj_procgen::Report) -> serde_json::Value {
 }
 
 /// The seed bank: every seed in `from..to`, a summary row each and the corner-mix histogram.
-fn bank(from: u64, to: u64, json: bool, registry: &jj_map::Registry) -> ExitCode {
+/// The fallback ladder's outcome for the report: `requested`, `redrawn-N`, `shorter-N` or `conservative`.
+fn plan_name(p: &jj_procgen::Plan) -> String {
+    match p {
+        jj_procgen::Plan::Requested => "requested".into(),
+        jj_procgen::Plan::Redrawn(d) => format!("redrawn-{d}"),
+        jj_procgen::Plan::Shorter(k) => format!("shorter-{k}"),
+        jj_procgen::Plan::Conservative => "conservative".into(),
+    }
+}
+
+fn parse_recipe(list: &str) -> Option<Vec<jj_map::Biome>> {
+    list.split(',')
+        .map(|n| serde_json::from_value(serde_json::Value::String(n.trim().into())).ok())
+        .collect()
+}
+
+fn bank(
+    from: u64,
+    to: u64,
+    json: bool,
+    registry: &jj_map::Registry,
+    recipe: &[jj_map::Biome],
+) -> ExitCode {
     let mut rows = Vec::new();
     let mut histogram: std::collections::BTreeMap<&str, u32> = std::collections::BTreeMap::new();
     let (mut ok, mut fallbacks, mut attempts) = (0u64, 0u32, 0u64);
+    let mut plans: std::collections::BTreeMap<String, u32> = std::collections::BTreeMap::new();
     for seed in from..to {
-        let (map, r) = jj_procgen::generate_report(seed);
+        let prepared = jj_procgen::prepare(seed, recipe);
+        let (map, r) = (prepared.map, prepared.course);
         let v = jj_map::validate(&map, registry);
-        ok += u64::from(v.ok);
+        let good = v.ok && prepared.valid;
+        *plans.entry(plan_name(&prepared.plan)).or_default() += 1;
+        ok += u64::from(good);
         fallbacks += u32::from(r.fallback);
         attempts += u64::from(r.attempts);
         for (k, n) in &r.corners {
@@ -38,7 +64,9 @@ fn bank(from: u64, to: u64, json: bool, registry: &jj_map::Registry) -> ExitCode
         }
         rows.push(serde_json::json!({
             "seed": seed,
-            "ok": v.ok,
+            "ok": good,
+            "plan": plan_name(&prepared.plan),
+            "attempts": prepared.attempts.len(),
             "gameplayHash": jj_map::hex(&jj_map::gameplay_hash(&map)),
             "course": course_json(&r),
             "violations": v.violations,
@@ -49,6 +77,7 @@ fn bank(from: u64, to: u64, json: bool, registry: &jj_map::Registry) -> ExitCode
         "seeds": [from, to],
         "valid": ok,
         "fallbacks": fallbacks,
+        "plans": plans,
         "meanAttempts": if n > 0 { attempts as f64 / n as f64 } else { 0.0 },
         "cornerMix": histogram,
         "rows": rows,
@@ -87,6 +116,7 @@ pub fn command(args: &[String]) -> ExitCode {
     let mut seed: Option<u64> = None;
     let mut seeds: Option<(u64, u64)> = None;
     let mut out: Option<PathBuf> = None;
+    let mut recipe = vec![jj_map::Biome::Greybox];
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -99,6 +129,13 @@ pub fn command(args: &[String]) -> ExitCode {
                     .and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?)))
             }
             "--out" => out = it.next().map(PathBuf::from),
+            "--recipe" => match it.next().and_then(|l| parse_recipe(l)) {
+                Some(r) => recipe = r,
+                None => {
+                    eprintln!("jj procgen: --recipe needs known biome names\n{USAGE}");
+                    return ExitCode::from(2);
+                }
+            },
             _ => {
                 eprintln!("jj procgen: unexpected {a:?}\n{USAGE}");
                 return ExitCode::from(2);
@@ -119,22 +156,28 @@ pub fn command(args: &[String]) -> ExitCode {
         None => jj_procgen::registry(),
     };
     if let Some((from, to)) = seeds {
-        return bank(from, to, json, &registry);
+        return bank(from, to, json, &registry, &recipe);
     }
     let Some(seed) = seed else {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     };
 
-    let (map, course) = jj_procgen::generate_report(seed);
+    let prepared = jj_procgen::prepare(seed, &recipe);
+    let (map, course) = (prepared.map, prepared.course);
     let report = jj_map::validate(&map, &registry);
+    let ok = report.ok && prepared.valid;
     let canonical = jj_map::canonical_bytes(&map);
     let hash = jj_map::hex(&jj_map::gameplay_hash(&map));
     let out = out.unwrap_or_else(|| PathBuf::from(format!("target/jj-runs/procgen-{seed}")));
     let summary = serde_json::json!({
         "seed": seed,
         "generator": map.header.generator,
-        "ok": report.ok,
+        "ok": ok,
+        "plan": plan_name(&prepared.plan),
+        "attempts": prepared.attempts.iter().map(|a| serde_json::json!({
+            "biomes": a.recipe.len(), "draw": a.draw, "rejected": a.rejected,
+        })).collect::<Vec<_>>(),
         "gameplayHash": hash,
         "routePoints": map.route.points.len(),
         "gates": map.route.gates.len(),
@@ -168,7 +211,7 @@ pub fn command(args: &[String]) -> ExitCode {
             "{}",
             serde_json::to_string_pretty(&summary).unwrap_or_default()
         );
-    } else if report.ok {
+    } else if ok {
         println!(
             "seed {seed}: ok ({} route points, {} gates, gameplay hash {hash}) → {}",
             map.route.points.len(),
@@ -181,7 +224,7 @@ pub fn command(args: &[String]) -> ExitCode {
             println!("  {:<18} {:<24} {}", v.rule.name(), v.at, v.detail);
         }
     }
-    if report.ok {
+    if ok {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(1)
