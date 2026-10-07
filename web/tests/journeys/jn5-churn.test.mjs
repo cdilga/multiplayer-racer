@@ -1,5 +1,5 @@
 // Journey JN5 (P1-G02): mixed controllers join and leave through every phase of a round on the real host page
-// (`B/host?room&test=live&laps=3`) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
+// (`B/host?room&test=live&laps=99`, the host ends the round) over WebRTC. Phones and the host's two key clusters fill the Lobby, a phone joins in
 // the Countdown, five more drop in mid-race (each timed from its accepted claim to its car moving under its own
 // throttle, and each gets its Identify flash and a tile), the room grows to 12, then Leave and Sit out shrink it to 2
 // through Intermission. The room never lists a seat that left, nobody is refused and the standings keep their rows.
@@ -135,7 +135,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   host.on('pageerror', (e) => errors.push(e.message));
   // JJ_HOST_CPU_THROTTLE=<n> slows the host page n times (a CDP CPU throttle), to reproduce a slow CI runner on a fast box.
   if (process.env.JJ_HOST_CPU_THROTTLE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
-  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=3`);
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
 
@@ -217,7 +217,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
       return inside ? [] : [{ tile: t.seat, box: box && [box.left, box.top, box.right, box.bottom].map(Math.round) }];
     });
   });
-  // The HUD shows only while racing: on a host this slow (2 s frames on CI's software WebGL) the 3-lap round can end
+  // The HUD shows only while racing: on a host this slow (2 s frames on CI's software WebGL) the round can still end
   // before the grid settles, and the Intermission screens hide the HUD layer (every box then measures zero). That is not
   // a misplaced HUD; the check is then not reached, and says so.
   const racing = () => host.evaluate(() => window.__jjRoom.view().phase === 'Running');
@@ -245,7 +245,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
-  await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 600_000);
+  // The round runs 99 laps so a slow host (2 s frames) never finishes it mid-churn (run 1659); the host ends it here.
+  await host.evaluate(() => window.__jjTest.input({ type: 'ui', ui: 'end' }));
+  await wait(host, () => window.__jjRoom.view().phase === 'Intermission', undefined, 120_000);
   const atResults = await view(host);
   assert.ok(atResults.standings.length >= 9, `standings for everyone who raced: ${atResults.standings.length}`);
   await shot(host, 'tv-intermission');
