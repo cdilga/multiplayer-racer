@@ -2,7 +2,7 @@
 // from the tile rects the renderer reports (device px / scale = CSS px). Top-left the number badge and name, top-right
 // the position and lap on one line, bottom-left the boost meter, status chips (autopilot, reconnecting) beside it, the
 // wreck countdown mid-tile. Text is 7.5 % of the tile height, 16 to 32 px at 1080p (x the screen scale); a tile too small
-// for the name drops it, keeping number, place and lap. Tile k follows car k, so a tile's seat is the one whose car is k.
+// for the name drops it, keeping number, place and lap. Tiles are the seated cars in seat-number order.
 import { ordinal, shortName } from './format';
 import type { RoomView } from '../worker/client';
 
@@ -40,7 +40,9 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
   let room: RoomView | null = null;
   const cache = new WeakMap<HTMLElement, string>();
 
-  const seatOf = (tile: number): SeatView | undefined => room?.seats.find((s) => s.car !== null && s.car + 1 === tile) as SeatView | undefined;
+  // The grid follows the seated cars in seat-number order (main.ts sets the tiles' `follow` the same way).
+  const seatOf = (tile: number): SeatView | undefined =>
+    room?.seats.filter((s) => s.car !== null).sort((a, b) => a.number - b.number)[tile - 1] as SeatView | undefined;
 
   const build = (tile: number): HTMLElement => {
     const b = document.createElement('div');

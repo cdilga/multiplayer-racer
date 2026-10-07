@@ -164,6 +164,16 @@ async function boot(): Promise<void> {
     events: () => recentEvents.slice(),
   };
   const recentEvents: Array<{ at: number; event: Record<string, unknown> }> = [];
+  // Each player's camera choice belongs to their car; tiles reflow as seats come and go, so it's reapplied per tile.
+  const camOfCar = new Map<number, 'fp' | 'tp'>();
+  const applyCams = () => {
+    const follow = world.tiles?.follow;
+    for (const [car, mode] of camOfCar) {
+      const tile = (follow ? follow.indexOf(car) : car) + 1;
+      if (tile > 0) world.rig.setMode(tile, mode);
+    }
+    if (follow) follow.forEach((car, k) => camOfCar.has(car) || world.rig.setMode(k + 1, 'tp'));
+  };
   // A phone's camera toggle (SetCamera, P1-R05) switches its own tile: tiles follow cars, tile k is car k.
   client.onEvents = (events) => {
     const at = performance.now();
@@ -171,13 +181,24 @@ async function boot(): Promise<void> {
       recentEvents.push({ at, event: e as Record<string, unknown> });
       if (recentEvents.length > 500) recentEvents.shift();
       const cam = e.CameraSet;
-      if (cam) world.rig.setMode(Number(cam.car) + 1, cam.camera === 'FirstPerson' ? 'fp' : 'tp');
+      if (!cam) continue;
+      camOfCar.set(Number(cam.car), cam.camera === 'FirstPerson' ? 'fp' : 'tp');
+      applyCams();
     }
   };
   // Identity (P1-R06): each car is painted in its seat's colour, the same colour as that player's phone.
   let seatPaint = new Map<number, string>();
   let painted = false;
   client.watchRoom((room) => {
+    // In a room the grid's tiles are the seated cars in seat-number order: a car withdrawn by Leave or Sit out stays in
+    // the world as scenery but loses its tile, so the grid reflows (G02).
+    if (world.tiles?.auto) {
+      const follow = room.seats.filter((st) => st.car !== null).sort((a, b) => a.number - b.number).map((st) => st.car!);
+      if (follow.join() !== world.tiles.follow?.join()) {
+        world.tiles.follow = follow;
+        applyCams();
+      }
+    }
     seatPaint = new Map(room.seats.filter((st) => st.car !== null).map((st) => [st.car!, `#${st.rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`]));
     const v = world.vehicles;
     if (!v || painted) return;

@@ -355,7 +355,7 @@ export class World {
     r.info.autoReset = false;
     r.info.reset();
     // An auto grid with nobody on the field (an empty room's TV) shows the whole map, not one tile chasing no car.
-    if (this.tiles && !(this.tiles.auto && s.cars === 0)) st.lods = this.drawTiles(s, this.tiles);
+    if (this.tiles && !(this.tiles.auto && (this.tiles.follow?.length ?? s.cars) === 0)) st.lods = this.drawTiles(s, this.tiles);
     else {
       const lod = lodForTileHeight(st.height);
       useLod(this.camera, lod);
@@ -376,7 +376,8 @@ export class World {
   /** The grid (P1-R04): each seat's tile chases its car with its own camera at its LOD class; spare cells and gutters
    *  are the paper backdrop. The shadow map was drawn once already. */
   private drawTiles(s: Sampled, view: TileView): number[] {
-    if (view.auto) view.count = Math.max(1, s.cars);
+    // Auto: one tile per followed car (a room's seated cars), else per car in the snapshot.
+    if (view.auto) view.count = Math.max(1, view.follow?.length ?? s.cars);
     const r = this.backend.renderer;
     const { width: w, height: h } = this.stats;
     const display = { x: 0, y: 0, w, h };

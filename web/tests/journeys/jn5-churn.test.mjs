@@ -149,6 +149,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await host.getByRole('button', { name: 'Sit out' }).first().dispatchEvent('click');
   await wait(host, () => window.__jjRoom.view().seats.length === 10 && window.__jjRoom.view().seats.some((s) => s.presence === 'SittingOut'));
   assert.ok(!(await names(host)).includes('Davo') && !(await names(host)).includes('Shazza'), 'no phantom seats');
+  // The grid reflows to the seated cars: the leavers' and the sitter's withdrawn cars keep no tile.
+  await wait(host, () => window.__jjRender.tileRects().filter(Boolean).length === window.__jjRoom.view().seats.filter((s) => s.car !== null).length);
+  assert.equal((await host.evaluate(() => window.__jjRender.tileRects())).filter(Boolean).length, 9, '12 − 2 left − 1 sitting out');
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
