@@ -2,8 +2,10 @@
 // Join the race), and the driving screen (strip with your number in your colour, tools, two sticks, HUD). Class names
 // follow the POC phone mock (art/ui/poc/phone/) so its accepted styling ports on top (C02.style / C03.style).
 // Copy says "room", never "game" (R112).
+import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
+import { Tutorial } from './tutorial';
 
 const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string; action?: [string, string] }>> = {
   finding: (s) => ({ title: `Finding room ${s.code}…`, body: '' }),
@@ -21,7 +23,7 @@ const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string
   'update-needed': () => ({ title: 'Updating…', body: 'Loading the new version.' }),
 };
 
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="help" aria-label="Help: the controls tutorial">Help</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
@@ -30,7 +32,10 @@ const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16)
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 export function mountController(app: HTMLElement, session: Session, prefillName: () => string): void {
+  const sound = mountSound();
   let sticks: { drive: StickHandle; action: StickHandle } | null = null;
+  let tutorial: Tutorial | null = null;
+  let tutorialOffered = false;
   let firstPerson = false;
   let shown: string | null = null;
 
@@ -98,8 +103,21 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
         (e.target as HTMLElement).closest('.rotate-card')?.remove();
       });
     }
-    const push = () => sticks && session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
+    // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
+    tutorial = new Tutorial(area);
+    if (session.roomPhase === 'Lobby') {
+      tutorialOffered = true;
+      if (Tutorial.wanted()) tutorial.show();
+    }
+    session.onAction = (kind) => tutorial?.action(kind);
+    const push = () => {
+      if (!sticks) return;
+      session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
+      tutorial?.stick('drive', sticks.drive.value);
+      tutorial?.stick('action', sticks.action.value);
+    };
     sticks = { drive: attachStick(dz, push), action: attachStick(az, push) };
+    app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
     app.querySelector('[data-act=ready]')!.addEventListener('click', () => session.ready(!session.isReady));
     app.querySelector('[data-act=camera]')!.addEventListener('click', () => session.setCamera((firstPerson = !firstPerson)));
@@ -120,6 +138,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       readyBtn.setAttribute('aria-pressed', String(session.isReady));
     }
     roundBanner(app, session);
+    // The Lobby state can arrive just after the play screen: offer the tutorial once then.
+    if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby') {
+      tutorialOffered = true;
+      if (Tutorial.wanted() && !tutorial.open) tutorial.show();
+    }
     const h = session.hud;
     const set = (k: string, t: string) => {
       const e = app.querySelector<HTMLElement>(`[data-hud=${k}]`);
@@ -132,11 +155,15 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   session.onChange = render;
+  (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {
     shown = null;
     render();
   });
-  session.onIdentify = () => flash(app, session);
+  session.onIdentify = () => {
+    flash(app, session);
+    sound.ping();
+  };
   render();
 }
 

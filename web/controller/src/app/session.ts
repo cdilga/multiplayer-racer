@@ -99,6 +99,8 @@ export class Session {
   stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0 };
   onChange: () => void = () => {};
   onIdentify: () => void = () => {};
+  /** A discrete action fired (wheelie, OI!, cone): the tutorial listens. */
+  onAction: (kind: number) => void = () => {};
 
   private endpoint: wasm.WasmEndpoint | null = null;
   private srcIdx = -1;
@@ -312,6 +314,7 @@ export class Session {
       const r = this.you;
       this.send('cmd', wasm.encodeAction(a.id, r?.source ?? 0, a.kindTag, a.preloadMs, 0, 0, a.atSourceSeq));
       this.stats.actions += 1;
+      this.onAction(a.kindTag);
       a.free();
     }
   }
