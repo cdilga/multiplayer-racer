@@ -47,7 +47,9 @@ const crateDirs = readdirSync(join(repoRoot, 'crates')).filter((d) => existsSync
 const deps = new Map(
   crateDirs.map((d) => {
     const toml = readFileSync(join(repoRoot, 'crates', d, 'Cargo.toml'), 'utf8');
-    const found = new Set([...toml.matchAll(/^(jj-[a-z0-9-]+)\s*=/gm)].map((m) => m[1]).filter((n) => n !== d));
+    // `jj-x = { path = … }` or `jj-x.workspace = true` (the workspace's form). Missing the second form made every crate
+    // look dependency-free, so a crate change selected only itself (fixed 2026-10-08; P1-F02's dry runs caught it).
+    const found = new Set([...toml.matchAll(/^(jj-[a-z0-9-]+)\s*(?:=|\.workspace\b)/gm)].map((m) => m[1]).filter((n) => n !== d));
     return [d, found];
   }),
 );
@@ -87,11 +89,12 @@ const sel = {
   landing: false,
   sse: false,
   image: false,
+  tools: false,
 };
 const everything = (why) => {
   sel.reason.push(why);
   sel.rustAll = sel.hostAll = sel.journeysAll = sel.transportAll = true;
-  sel.kit = sel.landing = sel.sse = sel.image = true;
+  sel.kit = sel.landing = sel.sse = sel.image = sel.tools = true;
 };
 const browserAll = () => {
   sel.hostAll = sel.journeysAll = sel.transportAll = sel.kit = sel.landing = sel.sse = sel.image = true;
@@ -109,7 +112,8 @@ const rules = [
   [/\.md$/, () => {}],
   [/^\.claude\//, () => {}], // the jammers-look recipe check is in the always-on checks job
   [/^art\/(audio|references|style)\//, () => {}],
-  [/^(tools\/(maps|vehicles|turn-guard)|scripts\/(beads|emulators|remote))\//, () => {}], // checks job
+  [/^tools\/(maps|vehicles|turn-guard)\//, () => (sel.tools = true)], // the checks job's bake and validators (lane `tools`)
+  [/^scripts\/(beads|emulators|remote)\//, () => {}],
   [/^scripts\/(beads-live|ci-status|doctor|plan-ref|poc-publish|prune-caches|push|reclaim-target|reconcile_[a-z_]+)\.(sh|py|txt)$/, () => {}],
   [/^scripts\/ci\/durations\.(json|mjs)$/, () => {}], // the slot packer's estimates: they move timing, not coverage
   // CI's own files: the next run of this workflow is their test; run everything so it's proven end to end.
@@ -232,7 +236,27 @@ for (const t of [...targets].sort((a, b) => estT(b) - estT(a))) {
 }
 const used = load.filter((x) => x.t.length).sort((a, b) => b.s - a.s);
 const slots = Object.fromEntries(used.map((x, i) => [String(i + 1), x.t]));
+// The lanes (P1-F02): names for what a selection runs, the vocabulary of the bead contract, ci-status.sh and
+// batch-verify.sh. Every job runs its plan step; a lane is the set of steps the plan turns on:
+//   rust        rust-lint (fmt, check, clippy, deny, no-Tokio, jj validate) and rust-test for the selected crates
+//   scenarios   the scenario banks: rust-test including jj-sim, jj-map or jj-procgen
+//   wasm-parity rust-test's WASM parity in Node (jj-map, jj-procgen) or a jj-wasm-* crate
+//   web         the web build and its checks (WASM, typecheck, bundle, tokens, origins) and the host page tests
+//   e2e         journeys, transport, landing, UI kit, smoke flow and SSE soak in the browser slots
+//   tools       tools/ and art/vehicles changes (the checks job's bake and validators; checks itself always runs)
+//   image       the jj-server image
+const inCrates = (list) => sel.rustAll || list.some((c) => sel.crates.has(c));
+const lanes = [
+  crates !== '' && 'rust',
+  inCrates(['jj-sim', 'jj-map', 'jj-procgen']) && 'scenarios',
+  inCrates(['jj-map', 'jj-procgen', 'jj-wasm-host', 'jj-wasm-input', 'jj-wasm-procgen']) && 'wasm-parity',
+  (hostFiles.length > 0 || sel.kit || sel.landing) && 'web',
+  (journeyFiles.length > 0 || transportFiles.length > 0 || sel.landing || sel.kit || sel.sse) && 'e2e',
+  sel.tools && 'tools',
+  sel.image && 'image',
+].filter(Boolean);
 const out = {
+  lanes: lanes.join(','),
   rust: crates !== '' ? 'true' : 'false',
   crates,
   build: browser.length + gpu.length > 0 ? 'true' : 'false',
@@ -246,7 +270,7 @@ const out = {
 };
 const short = (f) => (f === KIT ? 'ui-kit' : f === LANDING ? 'landing' : f.replace(/^.*\//, '').replace(/\.test\.mjs$/, ''));
 const summary =
-  `selected: rust(${crates || 'none'}); browser (${browser.length} files as ${targets.length} targets in ${used.length} slots, longest ~${Math.round(used[0]?.s ?? 0)} s): ${browser.length ? browser.map(short).join(', ') : 'none'}; ` +
+  `selected: lanes ${lanes.join(', ') || 'checks only'}; rust(${crates || 'none'}); browser (${browser.length} files as ${targets.length} targets in ${used.length} slots, longest ~${Math.round(used[0]?.s ?? 0)} s): ${browser.length ? browser.map(short).join(', ') : 'none'}; ` +
   `gpu: ${gpu.length ? gpu.map(short).join(', ') : 'none'}; image: ${out.image}; soak: ${out.soak}s ` +
   `[${((r) => (r.length > 12 ? [...r.slice(0, 12), `… ${r.length - 12} more`] : r))([...new Set(sel.reason)]).join('; ')}]`;
 console.log(summary);
