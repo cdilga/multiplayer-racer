@@ -426,6 +426,8 @@ export class Session {
 
   /** The player's camera-distance preference (C07). There is no wire message for it yet: the value is kept for the host. */
   cameraDistance: 'near' | 'host' | 'far' = 'host';
+  /** The car the player picked in the lobby (an id from roster.json); a per-device preference, not on the wire yet. */
+  carChoice = '';
 
   ready(on: boolean): void {
     this.send('cmd', wasm.encodeReady(on));
@@ -506,6 +508,7 @@ export class Session {
       results: this.results,
       persisted: this.persisted,
       cameraDistance: this.cameraDistance,
+      carChoice: this.carChoice,
       sticks: { drive: { ...this.drive }, action: { ...this.action } },
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,

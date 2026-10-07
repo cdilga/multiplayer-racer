@@ -1,0 +1,14 @@
+{
+  "schema": "jj.roster.v1",
+  "note": "The cars a player can pick in the lobby (P1-C03, R101/R110). Data, any number of rows, no cap. Playtest 1 ships the Cruz Missile only (R81's canonical model); a row without `art` is drawn as a silhouette in the player's colour (`shape`). Stats are 0-10 bars; the real ones are measured by the sim, not typed (master 7.6). The pick is a per-device preference today: there is no wire message for it yet, so the host does not see it.",
+  "cars": [
+    { "id": "cruz-missile", "name": "Cruz Missile", "cls": "Aussie classic", "blurb": "Honest all-rounder. Loves a kerb.", "art": "cruz-missile-hero.png", "stats": [6, 6, 7, 5] }
+  ],
+  "shapes": {
+    "sedan": "M14 62 L22 44 L58 40 L84 22 L134 20 L160 40 L188 46 L192 62 Z",
+    "hatch": "M16 62 L22 42 L66 38 L92 20 L140 18 L168 42 L184 48 L186 62 Z",
+    "ute": "M10 62 L12 38 L92 38 L94 20 L132 18 L158 40 L190 46 L192 62 Z",
+    "wagon": "M12 64 L14 24 L132 18 L160 38 L190 44 L192 64 Z",
+    "kart": "M24 64 L30 52 L84 48 L96 34 L112 34 L120 48 L176 52 L182 64 Z"
+  }
+}
