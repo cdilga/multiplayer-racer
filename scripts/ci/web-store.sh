@@ -6,12 +6,21 @@
 # Usage: scripts/ci/web-store.sh has <key>          exit 0 if stored
 #        scripts/ci/web-store.sh get <key> <file>   download (exit 1 if absent)
 #        scripts/ci/web-store.sh put <key> <file>   upload, then keep only the newest 30 versions
-# Env: JJ_STORE_TOKEN (a token with package read/write for the owner), GITHUB_SERVER_URL.
+# Env: JJ_STORE_TOKEN (package read/write for the owner; falls back to GITEA_TOKEN), GITHUB_SERVER_URL.
 set -euo pipefail
 server=${GITHUB_SERVER_URL:-http://192.168.11.12:3001}
 owner=cdilga
 pkg=jj-web-build
-auth=(-u "$owner:${JJ_STORE_TOKEN:?JJ_STORE_TOKEN is not set}")
+# The first token that can read the owner's packages: the store secret, else the job's own token.
+auth=()
+for tok in "${JJ_STORE_TOKEN:-}" "${GITEA_TOKEN:-}"; do
+    [[ -n $tok ]] || continue
+    if curl -sf -o /dev/null -u "$owner:$tok" "$server/api/v1/packages/$owner?type=generic&limit=1"; then
+        auth=(-u "$owner:$tok")
+        break
+    fi
+done
+[[ ${#auth[@]} -gt 0 ]] || { echo "web-store: no token can read $owner's packages (JJ_STORE_TOKEN, GITEA_TOKEN)" >&2; exit 3; }
 url() { echo "$server/api/packages/$owner/generic/$pkg/$1/web.tar.zst"; }
 cmd=${1:?usage: web-store.sh has|get|put <key> [file]}
 key=${2:?key}
