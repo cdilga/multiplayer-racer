@@ -7,7 +7,10 @@
 import { installBrushSkins, paintKit, paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
+import { onProfileChange, screenScale } from '../layout/profile';
 import { esc, raceTime, secs, shortName } from './format';
+import type { PathStats } from '../../../shared/transport/stats';
+import { type Chrome, mountChrome } from './chrome';
 import { fitGrid, type Fit, type Tier } from './fit';
 import { mountHud, type Hud } from './hud';
 import './round.css';
@@ -20,6 +23,8 @@ export interface RoundClient {
 
 export interface RoundScreens {
   hud: Hud;
+  /** The footer, host menu and diagnostics (R96/R97). */
+  chrome: Chrome;
   /** Feed the renderer's layout callback: tile rects in device px and device px per CSS px. */
   place(rects: { seat: number; x: number; y: number; w: number; h: number }[] | null, scale: number): void;
   /** Test/dev: render a room view directly. */
@@ -42,18 +47,24 @@ const PLACINGS: Tier[] = [
   { id: 'tiny', minW: 0, minH: 0, maxW: 1400, maxH: 64, em: 4.2 },
 ];
 
-/** One screen scale for every px in the design (TV px at 1080p): output height / 1080; a portrait phone host scales by width, never under the handheld minimum. */
-export function screenK(w = window.innerWidth, h = window.innerHeight): number {
-  const handheldMin = 13 / 24;
-  return h > w ? Math.max(handheldMin, w / 1080) : h / 1080;
-}
+/** One screen scale for every px in the design (TV px at 1080p): the display's profile decides (layout/profile.ts, P1-R08). */
+export const screenK = (w = window.innerWidth, h = window.innerHeight): number => screenScale(w, h);
 
 const colourVars = (i: number) => `--b:var(--id-${i % tokenData.seatColors.length});--on:var(--id-${i % tokenData.seatColors.length}-on)`;
 const nameOf = (s: RoomView['seats'][number]) => s.name || (s.local ? 'Host keys' : 'Player');
 const stateOf = (s: RoomView['seats'][number]): 'ready' | 'choosing' | 'away' => (s.presence === 'Left' ? 'away' : s.ready ? 'ready' : 'choosing');
 const LABEL = { ready: 'Ready', choosing: 'Choosing car…', away: 'Away' } as const;
 
-export function mountRoundScreens(client: RoundClient, join: { code: string; joinUrl: string }): RoundScreens {
+export interface JoinInfo {
+  code: string;
+  joinUrl: string;
+  /** Selected path per endpoint for the diagnostics overlay (`HostHub.paths()`). */
+  paths?: () => Promise<Record<string, PathStats | null>>;
+  /** Ends the room on the network side (`HostHub.end()`) when the host disbands it. */
+  onDisband?: () => void;
+}
+
+export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScreens {
   const root = document.createElement('div');
   root.className = 'jj-round';
   // On the body, not in #app: #app is fixed (its own stacking context), and the round screens sit above the host's
@@ -65,6 +76,7 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
   root.append(screen);
 
   let shown = '';
+  let lastRoom: RoomView | null = null;
   let relayout: (() => void) | null = null;
   let lastPhase: RoomView['phase'] | null = null;
   let goTimer = 0;
@@ -78,6 +90,7 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
   applyK();
 
   const domain = join.joinUrl ? new URL(join.joinUrl).host : '';
+  const chrome = mountChrome(root, { code: join.code, domain, input: (i) => client.input(i), paths: join.paths, onDisband: join.onDisband }, paintKit);
   /** The join QR card sized to whole device pixels per module (never under `minPx` CSS px per module: the bead's 4 px at 1080p). */
   const qrCard = (maxPx: number) => {
     const modules = paperQrSvg(join.joinUrl).modules;
@@ -117,7 +130,7 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
       const nm = `<span class="nm">${esc(shortName(nameOf(s)))}</span>`;
       const body =
         tier === 'full' ? `${badge}${nm}<span class="chip lb-state ${st}">${LABEL[st]}</span>` : tier === 'name' ? `${badge}${nm}${tick}` : tier === 'seat' ? `${badge}${tick}` : badge;
-      return `<div class="lcard ${st}" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${LABEL[st]}">${body}</div>`;
+      return `<div class="lcard ${st}" role="button" tabindex="0" data-seat="${s.seat}" data-number="${s.number}" data-state="${st}" data-ready="${st === 'ready'}" style="--seat:var(--id-${s.colourIndex % tokenData.seatColors.length})" title="#${s.number} ${esc(nameOf(s))} · ${LABEL[st]} (select to remove)">${body}</div>`;
     };
     relayout = () => {
       const k = screenK();
@@ -132,6 +145,13 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
     relayout();
     paintKit(screen);
     screen.querySelector('[data-act=start]')?.addEventListener('click', () => client.input({ type: 'ui', ui: 'start' }));
+    // Select a card to remove that player (P1-G07): works at every tier, and asks first.
+    const pick = (e: Event) => {
+      const c = (e.target as HTMLElement).closest<HTMLElement>('.lcard');
+      if (c) chrome.askRemove(Number(c.dataset.seat));
+    };
+    box.addEventListener('click', pick);
+    box.addEventListener('keydown', (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pick(e)));
   };
 
   // ---------- Countdown ----------
@@ -206,7 +226,9 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
   };
 
   const render = (room: RoomView) => {
+    lastRoom = room;
     hud.update(room);
+    chrome.update(room);
     const phase = room.phase;
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
@@ -240,14 +262,21 @@ export function mountRoundScreens(client: RoundClient, join: { code: string; joi
     }
   };
 
+  const reflow = () => {
+    applyK();
+    relayout?.();
+    hud.update(client.room ?? lastRoom!);
+  };
   window.addEventListener('resize', () => {
     applyK();
     relayout?.();
   });
+  onProfileChange(() => lastRoom && reflow());
   client.onRoom = render;
   if (client.room) render(client.room);
   return {
     hud,
+    chrome,
     place: (r, s) => hud.place(r, s),
     show: render,
   };

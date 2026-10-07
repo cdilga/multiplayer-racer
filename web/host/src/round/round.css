@@ -3,6 +3,8 @@
 .jj-round {
   position: fixed; inset: 0; z-index: 4; pointer-events: none; color: var(--c-ink); font-family: var(--font-body);
   --k: var(--rk, 1);
+  /* The footer lives in the bottom safe margin the grid leaves (5 % of the height; a floor on short screens). */
+  --foot: max(5vh, 30px);
   /* The kit's TV-profile tokens at this screen's scale, whichever profile the page has. */
   --fs-caption: calc(24px * var(--k)); --fs-label: calc(28px * var(--k)); --fs-body: calc(32px * var(--k)); --fs-title: calc(44px * var(--k));
   --fs-heading: calc(64px * var(--k)); --fs-display: calc(96px * var(--k));
@@ -156,3 +158,73 @@
   font-size: min(calc(var(--hud) * 2), 15cqw); white-space: nowrap; max-width: 94%; box-sizing: border-box;
 }
 @keyframes hud-identify { 50% { box-shadow: inset 0 0 0 calc(var(--hud) * 0.6) var(--seat); } }
+
+/* The screens stop above the footer; the countdown covers everything. */
+.jj-screen > .lobby, .jj-screen > .results { bottom: var(--foot); inset-block-end: var(--foot); }
+.results .rs-side { container-type: inline-size; }
+.rs-foot { min-width: 0; }
+.rs-join { min-width: 0; max-width: 100%; }
+.rs-join .qr-card { max-width: 100%; }
+.rs-acts .tag { max-width: 100%; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Too narrow for the QR beside the buttons: stack, so the caption and buttons never run over the QR card's address line. */
+@container (max-width: 560px) { .rs-foot { grid-template-columns: minmax(0, 1fr); align-items: start; } .rs-acts { flex-direction: row; flex-wrap: wrap; } .rs-acts .btn { flex: 1 1 40%; } }
+.lcard[role=button] { cursor: pointer; }
+.lcard[role=button]:focus-visible { outline: calc(4px * var(--k)) solid var(--c-cobalt); outline-offset: calc(2px * var(--k)); }
+
+/* ---------- Footer chrome (R96) ---------- */
+.jj-foot {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot); box-sizing: border-box; z-index: 3; pointer-events: auto;
+  display: flex; align-items: center; gap: calc(var(--foot) * .35); padding: 0 max(8px, 1.4vw); overflow: hidden;
+  background: var(--c-ink); color: var(--c-paper); font: 700 min(calc(var(--foot) * .46), 3.6vw)/1 var(--font-body); white-space: nowrap;
+}
+.foot-btn {
+  flex: none; height: 76%; padding: 0 .9em .1em; font: inherit; color: var(--c-ink); background: var(--c-saffron); border: calc(var(--foot) * .06) solid var(--c-paper); border-radius: calc(var(--foot) * .14); cursor: pointer;
+}
+.foot-btn.quiet { background: transparent; color: var(--c-paper); }
+.foot-btn[aria-pressed=true] { background: var(--c-paper); color: var(--c-ink); }
+.foot-btn:focus-visible { outline: calc(var(--foot) * .1) solid var(--c-cobalt); outline-offset: 2px; }
+.foot-code b { font: 900 italic 1.1em/1 var(--font-display); letter-spacing: .06em; color: var(--c-saffron); }
+.foot-domain { opacity: .8; font-weight: 600; }
+.foot-count { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.foot-readouts { margin-left: auto; display: inline-flex; align-items: center; min-width: 0; }
+.foot-logo { flex: none; font-size: 1em; opacity: .9; color: var(--c-paper); }
+.jj-foot .jj-render-chip { position: static !important; font-size: .55em; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+@media (max-aspect-ratio: 11/10) { .foot-domain, .foot-logo, .foot-count { display: none; } .jj-foot { gap: calc(var(--foot) * .25); } .foot-readouts { min-width: 0; } }
+
+/* ---------- Host menu, confirmations, diagnostics ---------- */
+.jj-overlays { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.jj-menu { position: absolute; inset: 0; bottom: var(--foot); display: grid; place-items: center; padding: 3vmin; box-sizing: border-box; background: rgb(21 32 58 / .72); pointer-events: auto; overflow: auto; }
+.jj-menu[hidden], .jj-diag[hidden] { display: none; }
+.mn-panel {
+  box-sizing: border-box; width: min(calc(900px * var(--k)), 100%); max-height: 100%; overflow: auto; padding: calc(28px * var(--k)) calc(34px * var(--k)); display: flex; flex-direction: column; gap: calc(16px * var(--k));
+  background: var(--c-paper); border: calc(5px * var(--k)) solid var(--c-ink); border-radius: calc(8px * var(--k)); box-shadow: 0 calc(10px * var(--k)) 0 rgb(0 0 0 / .45);
+}
+.mn-panel h2 { margin: 0; font-size: calc(64px * var(--k)); line-height: 1; }
+.mn-panel h3 { margin: 0; font-size: calc(34px * var(--k)); line-height: 1; }
+.mn-panel .acc { color: var(--c-cobalt-deep); }
+.mn-panel p { margin: 0; font: 600 calc(28px * var(--k))/1.3 var(--font-body); }
+.mn-acts { display: flex; flex-wrap: wrap; gap: calc(14px * var(--k)); }
+.mn-acts .btn { flex: 1 1 calc(220px * var(--k)); min-height: calc(76px * var(--k)); font-size: calc(32px * var(--k)); }
+.mn-panel.confirm.disband { border-color: var(--c-danger); }
+.mn-players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(8px * var(--k)); min-height: 0; overflow: auto; max-height: 46vh; }
+.mn-players li { display: flex; align-items: center; gap: calc(14px * var(--k)); padding: calc(6px * var(--k)) calc(12px * var(--k)); border: calc(3px * var(--k)) solid var(--c-ink); border-radius: calc(8px * var(--k)); font: 700 calc(28px * var(--k))/1 var(--font-body); }
+.mn-players .badge { flex: none; font-size: 1em; height: 1.6em; min-width: 2.2em; padding: 0 .3em .22em; }
+.mn-players .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-players .st { flex: none; color: var(--c-ink-soft); font-weight: 600; }
+.mn-players .btn { flex: none; min-height: calc(52px * var(--k)); font-size: calc(24px * var(--k)); }
+.mn-players .none { color: var(--c-ink-soft); }
+.jj-diag {
+  position: absolute; right: max(8px, 1.4vw); bottom: calc(var(--foot) + 8px); max-width: min(calc(760px * var(--k)), 94vw); max-height: 70vh; overflow: auto; box-sizing: border-box; pointer-events: auto;
+  padding: calc(16px * var(--k)) calc(22px * var(--k)); background: var(--c-paper); border: calc(4px * var(--k)) solid var(--c-ink); border-radius: calc(8px * var(--k)); box-shadow: 0 calc(8px * var(--k)) 0 rgb(0 0 0 / .4); font: 600 calc(24px * var(--k))/1.25 var(--font-body);
+}
+.jj-diag h3 { margin: 0 0 calc(6px * var(--k)); font-size: calc(32px * var(--k)); }
+.jj-diag p { margin: 0 0 calc(8px * var(--k)); }
+.jj-diag table { border-collapse: collapse; width: 100%; }
+.jj-diag th { text-align: left; color: var(--c-ink-soft); font-weight: 700; }
+.jj-diag td, .jj-diag th { padding: calc(3px * var(--k)) calc(10px * var(--k)) calc(3px * var(--k)) 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.jj-diag td.nm { max-width: calc(260px * var(--k)); overflow: hidden; text-overflow: ellipsis; }
+.jj-diag .badge { font-size: .85em; }
+.jj-diag .dg-note { margin: calc(8px * var(--k)) 0 0; color: var(--c-ink-soft); font-size: .85em; }
+.mn-view { display: flex; flex-wrap: wrap; gap: calc(12px * var(--k)); }
+.mn-view .btn { flex: 1 1 calc(150px * var(--k)); min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
+.mn-hint { color: var(--c-ink-soft); }

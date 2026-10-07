@@ -8,6 +8,7 @@ import { SyntheticSource } from '../render/synthetic';
 import type { World } from '../render/world';
 import type { RoomView } from '../worker/client';
 import { tokenData } from '../../../shared/ui';
+import type { PathStats } from '../../../shared/transport/stats';
 import { mountRoundScreens, type RoundClient } from './screens';
 
 const NAMES = ['Dusty', 'Pip', 'Ash', 'Kai', 'Big Kev', 'Mia', 'Snag', 'Shaz', 'Roo Boy', 'Tiggy', 'Mack', 'Maximilian Alexander Fitzgerald!', 'Jojo', 'Nina', 'Bazza', 'Wren', 'さくら', 'Zara', 'Tama', 'Lulu', 'Ned', 'Hamish', 'Priya', 'Wei', 'Sione', 'Ana', 'Jack', 'Ruby', 'Archie', 'Isla', 'Leo', 'Matilda', 'Kiri', 'Ollie', 'Ngữ Phương', 'Dmitri', 'Captain Snag', 'Dusty Ute', 'Bec', 'Tash'];
@@ -34,6 +35,9 @@ export function makeRoom(kind: FixtureKind, n: number, arg?: number): RoomView {
     laps: kind === 'race' ? i % 3 : null,
     position: kind === 'race' ? placeOf.get(i)! : null,
     finished: false,
+    endpoint: `ep-${i + 1}`,
+    // The room view's boost is a byte (Host::room_json); the wreck countdown is not sent yet, the fixture exercises the banner.
+    ...(kind === 'race' ? { boost: (i * 37) % 256, wreckMs: n > 3 && (i + 1) % 5 === 0 ? 2400 : null } : {}),
   }));
   const results: RoomView['results'] =
     kind === 'results'
@@ -73,7 +77,9 @@ export function mountFixture(app: HTMLElement, world: World, spec: string): void
     input: (i) => void inputs.push(i),
   };
   const joinUrl = `${location.origin}/j/ROO7`;
-  const screens = mountRoundScreens(client, { code: 'ROO7', joinUrl });
+  let paths: Record<string, PathStats | null> = {};
+  let disbands = 0;
+  const screens = mountRoundScreens(client, { code: 'ROO7', joinUrl, paths: async () => paths, onDisband: () => void disbands++ });
   const overlay = mountGridOverlay(app, joinUrl);
   // Only a race draws a tile per player; the lobby and results screens cover the world, so it stays cheap there.
   const tiles = kind === 'race' || kind === 'countdown' || kind === 'preparing' ? Math.max(1, n) : 1;
@@ -91,6 +97,8 @@ export function mountFixture(app: HTMLElement, world: World, spec: string): void
     set: (r: RoomView) => screens.show(r),
     make: (k: FixtureKind, count: number, a?: number) => makeRoom(k, count, a),
     inputs: () => inputs,
+    setPaths: (p: Record<string, PathStats | null>) => void (paths = p),
+    disbands: () => disbands,
   };
   world.start();
   document.documentElement.dataset.jjHost = 'fixture';

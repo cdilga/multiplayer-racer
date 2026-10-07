@@ -20,7 +20,7 @@ let browser;
 let server;
 before(async () => {
   browser = await chromium.launch();
-  server = await serve(join(repo, 'web/dist'));
+  server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
 });
 after(async () => {
   await browser?.close();

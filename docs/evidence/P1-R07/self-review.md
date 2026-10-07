@@ -22,10 +22,10 @@ Chromium (Playwright headless, software GL) on the Mac; fixture room views (`hos
 ## Remaining defects
 - The reel slot in Round complete is an ink striped placeholder with the winner card; R09 mounts the video in `[data-reel]`. Large empty ink at small N is expected until then.
 - Lobby has no crane view of the track (POC br-dim.6 has one): the lobby is paper with a dotted backdrop. Needs a world camera mode (render bead). Small N leaves empty paper.
-- HUD boost bar and wreck countdown render only when `seat.boost` / `seat.wreckMs` exist; RoomView has neither yet (worker bead). Position, lap, autopilot (SittingOut) and reconnecting (Left) are live.
+- HUD wreck countdown renders only when `seat.wreckMs` exists; `room_json` doesn't send it yet (report). Boost is sent (byte) and now drawn.
 - HUD pills are plain ink-outlined slabs, not the brush-mask skin the POC uses (the kit's `.chip` mask has a minimum height too big for HUD pills).
 - R04's grid overlay (not this bead): the spare-cell QR says only "Scan to join" with no room code or address (POC round 4 rule: always labelled), and its join chip overlaps tile 2 on a portrait phone (`race-8@phone.jpg`, `race-32@phone.jpg`) and wraps its address in the last cell.
-- Diagnostics overlay (acceptance item 3), pause, End/Disband confirmations, host footer toolbar are not built here (not in the delegated scope).
+- Built since the captures above, NOT YET CAPTURED OR LOOKED AT (no browsers on the Mac; run `web/host/tests/chrome.test.mjs` on eris and look at `menu-*`, `confirm-*`, `diagnostics-*`, `*-footer@*`, `results-8-caption@*`): footer toolbar, pause flow, End/Disband/Remove confirmations, diagnostics overlay, HUD boost bar and wreck banner (boost is the room view's byte; `wreckMs` is not sent by the worker yet), pre-race HUD hides place/lap, results foot stacks in a narrow column so the caption cannot overlap the QR card's address line. The old captures in this folder pre-date all of it and must be regenerated before this bead closes.
 - `capability.ts` still says "can't host a game" (not this bead; R112 breach).
 
 ## Not covered

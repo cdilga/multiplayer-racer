@@ -7,8 +7,9 @@ import { ordinal, shortName } from './format';
 import type { RoomView } from '../worker/client';
 
 type SeatView = RoomView['seats'][number] & {
-  /** Hooks for data RoomView doesn't carry yet (the worker side adds them): boost 0..1, wreck countdown in ms. */
+  /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
   boost?: number | null;
+  /** Wreck/respawn countdown in ms; the worker doesn't send it yet (report in docs/evidence/P1-R07), so the banner waits for it. */
   wreckMs?: number | null;
 };
 
@@ -79,7 +80,9 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
         box.style.setProperty('--seat', `var(--id-${s.colourIndex % 12})`);
         box.style.setProperty('--seat-on', `var(--id-${s.colourIndex % 12}-on)`);
       }
-      const key = JSON.stringify([s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs]);
+      // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
+      const started = room?.phase === 'Running' || room?.phase === 'Finalising';
+      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs]);
       if (cache.get(box) === key) continue;
       cache.set(box, key);
       box.hidden = !s;
@@ -101,10 +104,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       lapEl.textContent = s.finished ? 'Finished' : lap === null ? '' : `Lap ${lap}/${total}`;
       lapEl.dataset.lap = lap === null ? '' : String(lap);
       // Before the race there is no place or lap yet: no empty pill.
-      box.querySelector<HTMLElement>('.hud-tr')!.hidden = pos === null && lap === null && !s.finished;
+      box.querySelector<HTMLElement>('.hud-tr')!.hidden = !started || (pos === null && lap === null && !s.finished);
       const boost = box.querySelector<HTMLElement>('.hud-boost')!;
       boost.hidden = s.boost === undefined || s.boost === null;
-      if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost!)) * 100)}%`);
+      boost.dataset.boost = boost.hidden ? '' : String(s.boost);
+      if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
