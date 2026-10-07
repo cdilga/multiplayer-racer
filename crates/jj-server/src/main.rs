@@ -13,6 +13,9 @@
 //! | `TURN_STATIC_AUTH_SECRET` | none (STUN only) | coturn `use-auth-secret` |
 //! | `JJ_STUN_URLS`, `JJ_TURN_URLS` | Cloudflare STUN, `turn.dilger.dev:3479` UDP | comma-separated (tests: a local coturn) |
 //! | `JJ_TURN_TTL_S` | 7200 | TURN credential lifetime |
+//! | `JJ_BROKER_URL` | none | the TURN broker (P1-N04b); unset, the relay fallback is reported unavailable |
+//!
+//! `jj-server --healthcheck` checks a running server on `JJ_BIND`'s port (the image's HEALTHCHECK).
 
 use std::future::poll_fn;
 use std::num::NonZeroUsize;
@@ -223,7 +226,32 @@ async fn serve(app: Arc<App>, req: StreamingServerRequest) -> Http1ProducedRespo
     }
 }
 
+/// `jj-server --healthcheck`: the image's HEALTHCHECK (no curl in the runtime image). GETs `B/healthz` on the local
+/// port and exits 0 on `200`, 1 otherwise.
+fn healthcheck() -> ! {
+    use std::io::{Read, Write};
+    let bind = env("JJ_BIND").unwrap_or_else(|| "0.0.0.0:8080".into());
+    let port = bind.rsplit(':').next().unwrap_or("8080").to_owned();
+    let base = jj_server::app::normalise_base(&env("JJ_BASE_PATH").unwrap_or_else(|| "/".into()));
+    let ok = std::net::TcpStream::connect(("127.0.0.1", port.parse::<u16>().unwrap_or(8080)))
+        .and_then(|mut s| {
+            s.set_read_timeout(Some(Duration::from_secs(3)))?;
+            write!(
+                s,
+                "GET {base}healthz HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+            )?;
+            let mut head = [0u8; 12];
+            s.read_exact(&mut head)?;
+            Ok(head.starts_with(b"HTTP/1.1 200"))
+        })
+        .unwrap_or(false);
+    std::process::exit(if ok { 0 } else { 1 });
+}
+
 fn main() {
+    if std::env::args().any(|a| a == "--healthcheck") {
+        healthcheck();
+    }
     let bind = env("JJ_BIND").unwrap_or_else(|| "0.0.0.0:8080".into());
     let dist = PathBuf::from(env("JJ_DIST").unwrap_or_else(|| "web/dist".into()));
     let dev = Config::dev();
@@ -235,6 +263,7 @@ fn main() {
             .map(String::into_bytes)
             .unwrap_or(dev.room_key),
         public_origin: env("JJ_PUBLIC_ORIGIN"),
+        broker: env("JJ_BROKER_URL").is_some(),
     };
     let base = jj_server::app::normalise_base(&cfg.base);
     let bundle = match Bundle::load(&dist, &base) {

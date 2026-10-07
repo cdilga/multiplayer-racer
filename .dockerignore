@@ -1,0 +1,12 @@
+# Only what docker/jj-server.Dockerfile copies: crates, web, art, assets, maps, scenarios and the manifests.
+target
+**/node_modules
+web/dist
+web/dist-*
+web/**/pkg
+spikes
+docs
+private
+.beads
+.git
+**/*.log

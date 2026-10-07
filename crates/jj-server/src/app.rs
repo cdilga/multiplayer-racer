@@ -35,6 +35,8 @@ pub struct Config {
     pub room_key: Vec<u8>,
     /// The public origin for join URLs (`https://jammers.dilger.dev`); `None` derives it from the request.
     pub public_origin: Option<String>,
+    /// A TURN broker is configured (P1-N04b's relay fallback); without one `/ice/fallback` is `relay-unavailable`.
+    pub broker: bool,
 }
 
 impl Config {
@@ -45,6 +47,7 @@ impl Config {
             realm: "dev".into(),
             room_key: b"jj-dev-room-key".to_vec(),
             public_origin: None,
+            broker: false,
         }
     }
 }
@@ -207,6 +210,8 @@ impl App {
             "rooms": st.rooms.len(),
             "assets": self.bundle.file_count(),
             "ice": self.ice.status(),
+            // The Cloudflare TURN fallback (P1-N04b) through the broker; reported, never fatal.
+            "relayFallback": if self.cfg.broker { "configured" } else { "unavailable" },
         });
         Response::json(200, body.to_string().into_bytes())
     }

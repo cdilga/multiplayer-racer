@@ -177,3 +177,57 @@ jobs:
         run: python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json
       - name: Vehicle bake is reproducible and committed; loads in three.js (P1-V02)
         run: node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/
+
+  # The jj-server image (P1-D02), built natively for linux/amd64 on the Jammers runner (the only one whose jobs get the
+  # host's Docker socket), smoked as two previews of the same digest, then pushed to the Gitea registry by commit and
+  # recorded by digest. Pushing through 127.0.0.1 keeps the registry on the host (Docker allows loopback over HTTP).
+  image:
+    runs-on: jammers-docker
+    timeout-minutes: 45
+    env:
+      REGISTRY: 127.0.0.1:3001
+      IMAGE: 127.0.0.1:3001/cdilga/jj-server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Art and assets from LFS (the web bundle bakes them in)
+        run: |
+          command -v git-lfs >/dev/null || (apt-get update -qq && apt-get install -y -qq git-lfs)
+          git lfs install --local && git lfs pull --include "art/**,assets/**"
+      - name: Build (BuildKit, cache mounts warm on the host)
+        run: |
+          tag=$(git rev-parse --short=12 HEAD)
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          DOCKER_BUILDKIT=1 docker build -f docker/jj-server.Dockerfile --build-arg JJ_BUILD="$tag" -t "$IMAGE:$tag" .
+      - name: Non-root, no secrets in any layer
+        run: |
+          test "$(docker inspect -f '{{.Config.User}}' "$IMAGE:$TAG")" = 10001
+          ! docker history --no-trunc --format '{{.CreatedBy}}' "$IMAGE:$TAG" | grep -Ei 'token=|secret=|password=|_KEY='
+          ! docker inspect -f '{{json .Config.Env}}' "$IMAGE:$TAG" | grep -Ei 'token|secret|password|_key'
+      - name: Two previews of one image under /p/a/ and /p/b/ (version, health, no root-relative leak)
+        run: |
+          net="jj-smoke-$TAG-$GITHUB_RUN_ID"
+          docker network create "$net"
+          trap 'docker rm -f "a-$net" "b-$net" >/dev/null 2>&1; docker network rm "$net" >/dev/null 2>&1' EXIT
+          docker run -d --name "a-$net" --network "$net" -e JJ_BASE_PATH=/p/a/ -e JJ_BUILD=a "$IMAGE:$TAG"
+          docker run -d --name "b-$net" --network "$net" -e JJ_BASE_PATH=/p/b/ -e JJ_BUILD=b "$IMAGE:$TAG"
+          curl_() { docker run --rm --network "$net" curlimages/curl:8.16.0 -s "$@"; }
+          for i in $(seq 30); do curl_ -f "http://a-$net:8080/p/a/healthz" >/dev/null && curl_ -f "http://b-$net:8080/p/b/healthz" >/dev/null && break; sleep 1; done
+          curl_ -f "http://a-$net:8080/p/a/version" | tee /dev/stderr | grep -q '"build":"a"'
+          curl_ -f "http://b-$net:8080/p/b/version" | grep -q '"build":"b"'
+          curl_ "http://a-$net:8080/p/a/healthz" | grep -q '"relayFallback":"unavailable"'
+          for p in /version /assets/ /host /p/b/version; do
+            code=$(curl_ -o /dev/null -w '%{http_code}' "http://a-$net:8080$p")
+            test "$code" = 404 || { echo "a answered $code for $p"; exit 1; }
+          done
+          js=$(curl_ -f "http://a-$net:8080/p/a/host" | grep -o '/p/a/assets/host-[^"]*' | head -1)
+          test -n "$js" && curl_ -f -o /dev/null "http://a-$net:8080$js"
+          docker exec "a-$net" /app/jj-server --healthcheck
+      - name: Push, by commit, recorded by digest
+        if: github.ref == 'refs/heads/v0.2-revamp'
+        env:
+          REGISTRY_PUSH_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
+        run: |
+          echo "$REGISTRY_PUSH_TOKEN" | docker login "$REGISTRY" -u cdilga --password-stdin
+          docker push "$IMAGE:$TAG"
+          docker inspect -f '{{index .RepoDigests 0}}' "$IMAGE:$TAG" | tee image-digest.txt
+          docker logout "$REGISTRY"
