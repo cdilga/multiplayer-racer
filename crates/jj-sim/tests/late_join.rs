@@ -8,12 +8,16 @@
 //! runs below end there (x 186 on the greybox); the assertions judge the first 4 s.
 //! `JJ_LATE_PRINT=1` prints where it landed and how it went.
 
-use jj_map::{Registry, load_json};
-use jj_sim::placement::overlaps;
+use jj_map::{LoadedMap, Registry, load_json};
+use jj_sim::placement::{Rect, overlaps};
 use jj_sim::{CarId, DriveInput, Sim, SpawnPose, TICK_HZ, VehicleProfile};
 
 const GREYBOX: &str = include_str!("../../../maps/greybox-loop.json");
 const S: u64 = TICK_HZ as u64;
+
+fn greybox() -> LoadedMap {
+    load_json(GREYBOX.as_bytes(), &Registry::generic()).unwrap()
+}
 
 fn throttle(v: f32) -> DriveInput {
     DriveInput {
@@ -28,29 +32,36 @@ fn pos(sim: &Sim, car: u32) -> [f32; 3] {
 
 /// One scenario: `husk` leaves a wreck's husk at the target, `debris` scatters cuboids round it, `parked` leaves cars
 /// standing beside it. Returns how far (m) the newcomer drove along +x in 4 s, and where it was placed.
-fn run(husk: bool, debris: bool, parked: usize) -> (f32, [f32; 3], bool) {
-    let map = load_json(GREYBOX.as_bytes(), &Registry::generic()).unwrap();
-    let mut sim = Sim::new(&map, &Registry::generic(), 7, VehicleProfile::cruz());
+fn run(
+    map: &LoadedMap,
+    barriers: &[Rect],
+    lo: f32,
+    husk: bool,
+    debris: bool,
+    parked: usize,
+) -> (f32, [f32; 3], bool) {
+    let mut sim = Sim::new(map, &Registry::generic(), 7, VehicleProfile::cruz());
     let ids = sim.spawn_grid(11);
     sim.start_race(3);
     for &c in &ids {
         sim.set_autopilot(c, true);
     }
-    // Run until the newcomer's target lies on the main straight (x 20..140, heading +x), then build the scene there.
-    let mut target = None;
-    for _ in 0..90 {
-        for _ in 0..S {
-            sim.step();
-        }
-        if let Some(p) = sim.race().drop_in_progress(sim.tick()) {
-            let x = sim.race().finish_s() + p;
-            if (20.0..140.0).contains(&x) {
-                target = Some(x);
-                break;
-            }
-        }
+    // The pack runs for 6 s, then car 5 wrecks (its first husk) and stands at its anchor with its controller idle: it is the
+    // last racer, and standing still it pins the newcomer's target, so the scene built there stays where the placement looks.
+    for _ in 0..6 * S {
+        sim.step();
     }
-    let tx = target.expect("a moment when the drop-in lands on the straight");
+    sim.set_autopilot(ids[5], false);
+    sim.wreck(ids[5]);
+    for _ in 0..3 * S {
+        sim.step();
+    }
+    let p = sim
+        .race()
+        .drop_in_progress(sim.tick())
+        .expect("history to place a drop-in by");
+    let target = Some(sim.race().finish_s() + p).filter(|x| (lo..140.0).contains(x));
+    let tx = target.expect("the drop-in lands on the straight");
     if husk {
         // A wreck exactly where the newcomer would be placed: its husk stays as a dynamic body.
         sim.set_autopilot(ids[5], false);
@@ -156,11 +167,60 @@ fn a_late_joiner_into_a_crowd_with_a_husk_and_debris_drives_away() {
         (true, true, 2),
         (true, true, 4),
     ] {
-        let (driven, end, protected) = run(husk, debris, parked);
+        let (driven, end, protected) = run(&greybox(), &[], 20.0, husk, debris, parked);
         assert!(
             driven > 20.0,
             "husk {husk} debris {debris} parked {parked}: the newcomer drove only {driven:.1} m in 4 s (ends at {end:?}, protected {protected})"
         );
         assert!(!protected, "protection ended once clear");
     }
+}
+
+/// An 8 m wide road (the narrowest the map validator allows) with a barrier along each side at its edge, from just past the
+/// start corridor: a car placed 3.5 m to either side of the line stands 0.5 m into a barrier. With a husk on the line at the
+/// target, the old search (cars and debris only) picked exactly that pose.
+fn narrow_road() -> (LoadedMap, Vec<Rect>) {
+    let mut json: serde_json::Value = serde_json::from_str(GREYBOX).unwrap();
+    for p in json["route"]["points"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .take(69)
+    {
+        p["width"] = 8000.into();
+    }
+    json["route"]["start"]["width"] = 7000.into();
+    let mut barriers = Vec::new();
+    for (x, len) in [(121.0f32, 40.0f32), (155.0, 28.0)] {
+        for z in [-4.2f32, 4.2] {
+            json["dressing"].as_array_mut().unwrap().push(serde_json::json!({
+                "kitPiece": "generic/barrier",
+                "pose": {"x": (x * 1000.0) as i64, "y": 0, "z": (z * 1000.0) as i64, "yaw": 0},
+                "params": {"lengthMm": (len * 1000.0) as i64, "heightCm": 90, "thicknessMm": 400},
+                "collides": true
+            }));
+            barriers.push(Rect {
+                x,
+                z,
+                heading: 0.0,
+                half_w: len / 2.0,
+                half_l: 0.2,
+            });
+        }
+    }
+    let map = load_json(json.to_string().as_bytes(), &Registry::generic())
+        .unwrap_or_else(|r| panic!("{:?}", &r.violations[..r.violations.len().min(4)]));
+    (map, barriers)
+}
+
+#[test]
+fn on_a_narrow_road_the_newcomer_is_placed_clear_of_the_barriers_too() {
+    let (map, barriers) = narrow_road();
+    // The husk takes the line (lateral 0), so the search goes sideways or back; sideways is inside a barrier here.
+    let (driven, end, protected) = run(&map, &barriers, 110.0, true, false, 0);
+    assert!(
+        driven > 20.0,
+        "the newcomer drove only {driven:.1} m in 4 s (ends at {end:?})"
+    );
+    assert!(!protected);
 }

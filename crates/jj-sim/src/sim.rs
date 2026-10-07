@@ -200,6 +200,9 @@ pub struct Sim {
     terrain: Terrain,
     cars: Vec<Car>,
     props: Vec<RigidBodyHandle>,
+    /// The ground footprints of the map's solid dressing (barriers, posts, buildings): a placed car must clear them too,
+    /// since protection ghosts a car against cars and debris only and terrain and barriers stay solid.
+    statics: Vec<Rect>,
     /// What each prop is, for renderers (P1-S08: map props and debris, or dropped cones).
     prop_kinds: Vec<PropKind>,
     /// Which car's part each `Part` debris body is, by prop index (P1-S04b).
@@ -289,6 +292,7 @@ impl Sim {
         );
 
         // Static dressing with `collides`: the registry's collider proxies, standing on the ground at their pose.
+        let mut statics = Vec::new();
         for d in m.dressing.iter().filter(|d| d.collides) {
             let Some(fp) = registry
                 .get(&d.kit_piece)
@@ -296,6 +300,23 @@ impl Sim {
             else {
                 continue;
             };
+            let theta = -(d.pose.yaw as f32 / 100.0).to_radians();
+            statics.push(match fp {
+                Footprint::Rect { x, z, .. } => Rect {
+                    x: d.pose.x as f32 / 1000.0,
+                    z: d.pose.z as f32 / 1000.0,
+                    heading: theta,
+                    half_w: x as f32 / 2000.0,
+                    half_l: z as f32 / 2000.0,
+                },
+                Footprint::Circle { radius, .. } => Rect {
+                    x: d.pose.x as f32 / 1000.0,
+                    z: d.pose.z as f32 / 1000.0,
+                    heading: 0.0,
+                    half_w: radius as f32 / 1000.0,
+                    half_l: radius as f32 / 1000.0,
+                },
+            });
             let (builder, hy) = proxy_collider(fp);
             let c = builder
                 .translation(Vector::new(
@@ -353,6 +374,7 @@ impl Sim {
             ledger: 0.0,
             utility_events: Vec::new(),
             props,
+            statics,
             episodes: Episodes::default(),
             damage_events: Vec::new(),
             pre_step: PreStep::default(),
@@ -641,13 +663,14 @@ impl Sim {
     }
 
     /// The first clear pose near `target` (itself, then steps back along its heading and to either side), checked
-    /// against every other car and debris; `target` itself if none is clear (the car then waits out protection).
+    /// against every other car, debris and solid dressing; `target` itself if none is clear (the car then waits out protection).
     fn clear_pose_near(&self, exclude: Option<CarId>, target: SpawnPose) -> SpawnPose {
         let others: Vec<Rect> = self
             .cars()
             .filter(|&c| Some(c) != exclude)
             .filter_map(|c| self.footprint(c))
             .chain(self.debris_footprints())
+            .chain(self.statics.iter().copied())
             .collect();
         for step in 0..SEARCH_STEPS {
             for side in SEARCH_LATERAL_M {
