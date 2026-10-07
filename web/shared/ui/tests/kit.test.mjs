@@ -78,6 +78,9 @@ describe('AC1: every component in every state, matching the POC sheet', () => {
     const sheet = await sheetCtx.newPage();
     await sheet.goto(`${art.base}/sheets/components.html`);
     await sheet.waitForFunction(() => window.sheetReady === true, null, { timeout: 30000 });
+    // The sheet's dashed row separators are page chrome, not the button: with Linux font metrics a separator falls
+    // inside a focus-ring crop's margin (6 % of 'Icon button / focus-gp' was the dashes), so they're hidden here.
+    await sheet.addStyleTag({ content: '.sec, .lrow, .states > *, .fgrid > *, .ftable > * { border-color: transparent !important; }' });
     const { page, problems } = await openKit('profile=desk&still=1', { width: 1500, height: 1000 });
     const sheetCells = sheet.locator('#s1 .cell');
     const kitCells = page.locator('[data-kit="buttons"] .cell');
