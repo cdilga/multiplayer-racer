@@ -13,7 +13,7 @@ import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/g07/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G07');
@@ -30,6 +30,7 @@ after(async () => {
   await browser?.close();
   await server?.close();
 });
+closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);

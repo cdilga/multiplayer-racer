@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/c06/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
@@ -23,6 +23,7 @@ after(async () => {
   await browser?.close();
   await server?.close();
 });
+closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 const shot = (page, name) => CAPTURE && page.screenshot({ path: `${CAPTURE}/${name}.png` });

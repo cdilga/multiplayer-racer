@@ -13,7 +13,7 @@ import { mkdirSync } from 'node:fs';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/jn3e/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR;
@@ -29,6 +29,7 @@ after(async () => {
   await browser?.close();
   await server?.close();
 });
+closeContextsAfterEach(() => browser);
 
 // A slow (software-rendered, shared) CI runner takes far longer than eris to open a room, join phones and start a round, so
 // the defaults are generous and a timeout names the step that was waiting.

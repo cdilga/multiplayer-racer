@@ -9,7 +9,7 @@ import { createServer } from 'node:net';
 import { after, before, test } from 'node:test';
 import { chromium } from 'playwright';
 import { build, serve } from '../../landing/tests/lib/site.mjs';
-import { chromiumArgs } from './lib/chromium.mjs';
+import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/jn6/';
 let browser;
@@ -20,6 +20,7 @@ before(async () => {
   browser = await chromium.launch({ args: chromiumArgs });
 });
 after(() => browser?.close());
+closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const freePort = () =>
