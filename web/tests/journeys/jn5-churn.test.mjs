@@ -107,12 +107,19 @@ const DROP_IN_GIVE_UP_MS = gpu ? 15_000 : 60_000;
 async function dropIn(host, url, name) {
   const p = await phone(url, name);
   const t0 = Date.now();
+  let recovered = false;
   await p.page.evaluate(() => window.__jjController.setSticks({ x: 0, y: -1, touch: true }, { x: 0, y: 0, touch: false }));
   for (;;) {
     const o = await observe(host);
     const seat = o.host.seats.find((s) => s.endpoint === p.endpoint);
     const car = seat && o.cars.find((c) => c.car === seat.car);
     if (car && car.forwardSpeed > 1) break;
+    // A straight-stick newcomer can meet the barrier at the hairpin (crates/jj-sim/tests/late_join.rs: placement is clear,
+    // the stick isn't steering); after 10 s it presses Recover once, as a player would.
+    if (!recovered && Date.now() - t0 > 10_000) {
+      recovered = true;
+      await p.page.locator('[data-act="recover"]').first().dispatchEvent('click');
+    }
     assert.ok(Date.now() - t0 < DROP_IN_GIVE_UP_MS, `${name} never drove: ${JSON.stringify(seat)} ${JSON.stringify(car)}`);
     await host.waitForTimeout(25);
   }
