@@ -16,12 +16,16 @@ const LIFT = 2.6;
 
 export class IdentifyMarks {
   private readonly marks = new Map<number, Mark>();
+  /** Every mark put up (car, label), oldest first: introspection for tests on hosts too slow to catch it live. */
+  readonly shown: Array<{ car: number; label: string }> = [];
 
   constructor(private readonly scene: Scene) {}
 
   /** Floats `label` over car `car` for `ms`, filled `fill` with `ink` text (a repeat restarts it). */
   flash(car: number, label: string, fill: string, ink: string, ms = 1600): void {
     this.drop(car);
+    this.shown.push({ car, label });
+    if (this.shown.length > 500) this.shown.shift();
     const c = document.createElement('canvas');
     c.width = 256;
     c.height = 112;

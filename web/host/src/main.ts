@@ -107,6 +107,8 @@ async function boot(): Promise<void> {
     tileRects: () => world.tileRects(),
     /** Cars showing Identify's number over them now (P1-R06). */
     identifyMarks: () => world.identifyMarks.active(),
+    /** Every Identify mark put up over a car (car, label), oldest first. */
+    identifyMarksShown: () => world.identifyMarks.shown.slice(),
     /** Per tile: on-screen size of the other cars (the far car's N px). */
     farCars: () => world.farCars(),
   };
