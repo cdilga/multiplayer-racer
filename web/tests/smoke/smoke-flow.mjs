@@ -102,7 +102,7 @@ export async function runSmoke({ base, steps = KNOWN, mandatory = KNOWN, relay =
     current = want.has('drive') ? 'drive' : gameSteps[0];
     const res = await host.goto(`${base}host?room&test=live&laps=1${relay ? '&ice=relay' : ''}`);
     if (!res || !res.ok()) bad(`game host page answered ${res ? res.status() : 'nothing'}`);
-    await until(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
+    await until(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
     const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
     const phones = [];
     for (const name of ['Davo', 'Shazza']) {

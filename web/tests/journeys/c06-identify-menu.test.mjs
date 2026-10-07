@@ -25,10 +25,10 @@ closeContextsAfterEach(() => browser);
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 const identifies = (host) => host.evaluate(() => window.__jjRoom.events().filter((e) => e.event?.Identify).map((e) => e.event.Identify.seat));
 
-test("the phone's menu (Help card) has an Identify that the host receives for that seat", { timeout: 300_000 }, async () => {
+test("the phone's menu (Help card) has an Identify that the host receives for that seat", { timeout: 120_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const page = await (await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } })).newPage();
   await page.goto(joinUrl);
@@ -55,10 +55,10 @@ test("the phone's menu (Help card) has an Identify that the host receives for th
   await wait(host, (n) => window.__jjRoom.events().filter((e) => e.event?.Identify).length > n, again, 10_000);
 });
 
-test("keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile", { timeout: 360_000 }, async () => {
+test("keys A's Identify key (Q) in a race sends an Identify event and pulses that seat's tile", { timeout: 180_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?room&test=live`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
+  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
   await host.bringToFront();
   await host.keyboard.down('KeyW');
   await wait(host, () => window.__jjRoom.view().seats.length === 1);
