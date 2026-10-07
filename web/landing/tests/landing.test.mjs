@@ -140,10 +140,17 @@ describe('code entry', () => {
     await page.close();
   });
 
-  test('the Scan QR code stub answers with a toast and does not navigate', async () => {
+  test('the Scan QR code button with no usable camera says so, keeps the typed code and does not navigate (the scanner itself is P1-C04)', async () => {
     const { page } = await open(base);
+    await page.evaluate(() => {
+      navigator.mediaDevices.getUserMedia = async () => {
+        throw new DOMException('no camera', 'NotFoundError');
+      };
+    });
+    await page.locator('#code').fill('AB');
     await page.getByRole('button', { name: 'Scan QR code' }).click();
-    assert.match(await page.locator('.toast').innerText(), /Scanning isn't ready/);
+    assert.match(await page.locator('#code-error').innerText(), /no camera/i);
+    assert.equal(await page.locator('#code').inputValue(), 'AB');
     assert.equal(new URL(page.url()).pathname, '/');
     await page.close();
   });

@@ -21,7 +21,7 @@ export interface StickHandle {
   release(): void;
 }
 
-export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed = false): StickHandle {
+export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed = false, vibrate: () => boolean = () => true): StickHandle {
   const base = z.querySelector<HTMLElement>('.base')!;
   const knob = z.querySelector<HTMLElement>('.knob')!;
   const value: Stick = { x: 0, y: 0, touch: false };
@@ -76,7 +76,7 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
       : { x: Math.min(Math.max(e.clientX - r.left, rad + 8), r.width - rad - 8), y: Math.min(Math.max(e.clientY - r.top, rad + 8), r.height - rad - 8) };
     place(origin.x, origin.y);
     z.classList.add('active');
-    navigator.vibrate?.(8);
+    if (vibrate()) navigator.vibrate?.(8);
     move(e.clientX - r.left - origin.x, e.clientY - r.top - origin.y);
   });
   z.addEventListener('pointermove', (e) => {

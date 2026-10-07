@@ -128,7 +128,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const p = prefsNow();
     const steering = () => prefsNow().value.steering;
     const push = () => sticks && session.setSticks(shape(sticks.drive.value, steering()), shape(sticks.action.value, steering()));
-    sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed'), action: attachStick(az, push, p.value.layout === 'fixed') };
+    const buzz = () => prefsNow().value.vibration;
+    sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed', buzz), action: attachStick(az, push, p.value.layout === 'fixed', buzz) };
     sheet = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;

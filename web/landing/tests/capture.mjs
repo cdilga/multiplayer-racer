@@ -56,9 +56,14 @@ for (const [engine, name] of [[chromium, 'chromium'], [webkit, 'webkit']]) {
   await page.waitForTimeout(100);
   await shot(page, 'state-keyboard-focus-390x844');
   await page.locator('#code').fill('');
+  await page.evaluate(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      throw new DOMException('no camera', 'NotFoundError');
+    };
+  });
   await page.getByRole('button', { name: 'Scan QR code' }).click();
   await page.waitForTimeout(500);
-  await shot(page, 'state-scan-toast-390x844');
+  await shot(page, 'state-scan-no-camera-390x844');
   await page.close();
   // Resize: phone portrait -> landscape -> TV, and TV -> phone, without reloading.
   page = await open(390, 844);
