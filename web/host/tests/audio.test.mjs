@@ -100,8 +100,8 @@ test('A03: a scripted round plays each moment from its event, with the sheet cap
   await page.evaluate(() => window.__jjAudio.unlock());
   await page.waitForFunction(() => window.__jjAudio.state().mix === 'running', null, { timeout: 10_000 });
   await scriptedRound(page);
-  await page.waitForTimeout(800);
-  await page.waitForTimeout(4500); // the last cue's duck ends in real time
+  // The last cue's duck ends in real time; a slow runner takes longer, so wait for the recovery rather than a fixed time.
+  await page.waitForFunction(() => window.__jjAudio.log().some((l) => l.kind === 'duck' && !l.down), null, { timeout: 30_000 });
   const log = await page.evaluate(() => window.__jjAudio.log());
   const played = cues(log);
   const byMoment = (m) => played.filter((c) => c.moment === m);
