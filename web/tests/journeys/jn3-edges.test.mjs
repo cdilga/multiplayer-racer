@@ -143,7 +143,7 @@ async function reloadScenario({ blockEnd }) {
   await a.page.getByRole('button', { name: /^Ready/ }).click();
   await b.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 60_000);
-  if (blockEnd) await host.route('**/api/v1/rooms/*/end', (r) => r.abort());
+  if (blockEnd) await host.context().route('**/api/v1/rooms/*/end', (r) => r.abort()); // the whole context: the unload's keepalive request too
   const oldCode = await host.evaluate(() => window.__jjNet.code());
   host.on('dialog', (d) => d.accept()); // the page may ask before unload
   await host.reload();
@@ -161,7 +161,7 @@ test('host page reload: the old room\'s phones show "That room has ended"', { ti
     });
   }
   await shot(a.page, 'phone-reload-room-ended');
-  assert.match(await a.page.evaluate(() => document.body.innerText), /That room has ended/);
+  assert.match(await a.page.evaluate(() => document.body.innerText), /That room has ended/i);
   await shot(host, 'tv-reload-new-room');
   await a.ctx.close();
   await b.ctx.close();
@@ -170,7 +170,9 @@ test('host page reload: the old room\'s phones show "That room has ended"', { ti
 test('host page reload with the best-effort end blocked: the phones show "Host gone" once the liveness timer passes', { timeout: 300_000 }, async () => {
   const { a, b } = await reloadScenario({ blockEnd: true });
   const started = Date.now();
-  await wait(a.page, () => ['reconnecting', 'host-gone'].includes(window.__jjController.inspect().phase), undefined, 60_000);
+  await wait(a.page, () => ['reconnecting', 'host-gone'].includes(window.__jjController.inspect().phase), undefined, 60_000).catch(async (e) => {
+    throw new Error(`the phone is in ${await phase(a.page)}, link ${JSON.stringify(await a.page.evaluate(() => window.__jjController.inspect().link))}: ${e.message}`);
+  });
   await shot(a.page, 'phone-reload-reconnecting');
   assert.notEqual(await phase(a.page), 'room-ended', 'with end blocked the room is not ended: the phone keeps reconnecting');
   for (const p of [a, b]) {
