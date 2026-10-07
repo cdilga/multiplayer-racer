@@ -101,6 +101,8 @@ async function boot(): Promise<void> {
     },
     /** Per tile: its device-pixel rect on the canvas backing store (null without the grid). */
     tileRects: () => world.tileRects(),
+    /** Cars showing Identify's number over them now (P1-R06). */
+    identifyMarks: () => world.identifyMarks.active(),
     /** Per tile: on-screen size of the other cars (the far car's N px). */
     farCars: () => world.farCars(),
   };
@@ -189,7 +191,15 @@ async function boot(): Promise<void> {
       if (recentEvents.length > 500) recentEvents.shift();
       // Identify (P1-R06): the seat's tile pulses; when it showed is recorded for the press-to-visible samples.
       const id = (e as { Identify?: { seat: number } }).Identify;
-      if (id && roundScreens?.hud.identify(id.seat)) identified.push({ seat: id.seat, at, shownAt: performance.now(), wall: Date.now() });
+      if (id) {
+        // Over the car in every view, and the pulse on its own tile (the HUD shows only in a race).
+        const st = client.room?.seats.find((x) => x.seat === id.seat);
+        if (st && st.car !== null) {
+          const ink = getComputedStyle(document.documentElement).getPropertyValue(`--id-${st.colourIndex % 12}-on`).trim() || '#15203A';
+          world.identifyMarks.flash(st.car, `#${st.number}`, `rgb(${st.rgb.join(' ')})`, ink);
+        }
+        if (roundScreens?.hud.identify(id.seat)) identified.push({ seat: id.seat, at, shownAt: performance.now(), wall: Date.now() });
+      }
       const cam = e.CameraSet;
       if (!cam) continue;
       camOfCar.set(Number(cam.car), cam.camera === 'FirstPerson' ? 'fp' : 'tp');

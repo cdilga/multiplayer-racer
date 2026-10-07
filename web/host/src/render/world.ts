@@ -27,6 +27,7 @@ import { lodForTileHeight, useLod, VehicleRenderer } from './vehicles/vehicles';
 import { GridAnimator, type Layout } from '../layout/grid';
 import { CameraRig, PROFILE as CAMERA, type CameraMode } from '../camera/rig';
 import { FrameBudget, stepBelow, type AutoEvent, type Source } from './resolution';
+import { IdentifyMarks } from './identify';
 
 /** Spare cells and gutters: the painted paper backdrop, never black (tokens.json palette.paper). */
 const PAPER = new Color('#FFF4DE');
@@ -94,6 +95,8 @@ export interface StagedMap {
 
 export class World {
   readonly scene = new Scene();
+  /** Identify's number over the car, in every view (P1-R06). */
+  readonly identifyMarks = new IdentifyMarks(this.scene);
   readonly camera = new PerspectiveCamera(50, 16 / 9, 0.5, 2000);
   readonly interp = new Interpolator();
   vehicles: VehicleRenderer | null = null;
@@ -351,6 +354,7 @@ export class World {
     const s = (this.sample = this.interp.sample(t, this.sample));
     this.place(s);
     this.vehicles?.update(s);
+    this.identifyMarks.update(s);
     const r = this.backend.renderer;
     const st = this.stats;
     r.shadowMap.needsUpdate = true;

@@ -92,6 +92,8 @@ test('JN3: two players race a 1-lap round, see results, and the next round start
     await wait(host, (n) => window.__jjRoom.identified().length > n, before, 5000);
     const shown = (await host.evaluate(() => window.__jjRoom.identified())).at(-1);
     assert.equal(shown.seat, seatA, "the pulse is on Davo's tile");
+    const carA = (await host.evaluate(() => window.__jjRoom.view().seats)).find((s) => s.name === 'Davo').car;
+    assert.deepEqual(await host.evaluate(() => window.__jjRender.identifyMarks()), [carA], "Davo's number floats over his car in every view");
     identify.push(shown.wall - pressed);
     if (k === 0) await shot(host, 'tv-identify');
     await host.waitForTimeout(3300); // Identify is one per 3 s per seat (master §5.2)
