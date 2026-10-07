@@ -51,6 +51,7 @@ test('the Car button is a Lobby thing; with one car the picker shows it with its
   assert.equal(await page.locator('[data-act=car]').isVisible(), true);
   await page.getByRole('button', { name: /^Car/ }).click();
   await page.locator('[data-overlay=cars]').waitFor();
+  await page.waitForFunction(() => document.querySelector('.carimg.big')?.complete, undefined, { timeout: 10_000 });
   const r = await page.evaluate(() => ({
     name: document.querySelector('[data-car-name]').textContent,
     tag: document.querySelector('.carpanel .tag').textContent,
@@ -94,7 +95,7 @@ test('any number of cars: arrows, thumbnails and a swipe walk the whole roster, 
   await shot(page, 'c03-car-many-844x390');
   await page.getByRole('button', { name: 'Done' }).click();
   // Kept: the next visit to the picker starts on it, and the session carries it.
-  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-8');
+  assert.equal((await page.evaluate(() => window.__jjController.inspect())).carChoice, 'test-7');
   await page.getByRole('button', { name: /^Car/ }).click();
   assert.equal(await page.locator('.thumb[aria-selected=true]').getAttribute('data-i'), '8');
   await ctx.close();

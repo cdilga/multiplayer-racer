@@ -29,9 +29,10 @@ export const ROSTER: RosterCar[] = data.cars as RosterCar[];
 /** The roster for the state opener's `&roster=N` (a test surface for "any number of cars"): the real cars, then silhouettes. */
 export function rosterOf(extra = 0): RosterCar[] {
   const out = [...ROSTER];
-  for (let k = 0; k < extra - out.length; k++) {
+  const stand = extra - out.length;
+  for (let k = 0; k < stand; k++) {
     const shape = SHAPE_NAMES[k % SHAPE_NAMES.length]!;
-    out.push({ id: `test-${k}`, name: `Test car ${k + 1}`, cls: 'Silhouette', blurb: 'A stand-in so the picker can be seen with a long roster.', shape, stats: [3 + (k % 6), 4 + ((k * 2) % 6), 5 + ((k * 3) % 5), 2 + ((k * 5) % 7)] });
+    out.push({ id: `test-${k}`, name: `Test car ${out.length + 1}`, cls: 'Silhouette', blurb: 'A stand-in so the picker can be seen with a long roster.', shape, stats: [3 + (k % 6), 4 + ((k * 2) % 6), 5 + ((k * 3) % 5), 2 + ((k * 5) % 7)] });
   }
   return out;
 }
