@@ -1,0 +1,269 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000001 /* F08HostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000010 /* F08HostApp.swift */; };
+		A00000000000000000000002 /* F08UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000011 /* F08UITests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A00000000000000000000030 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A00000000000000000000050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A00000000000000000000040;
+			remoteInfo = F08Host;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A00000000000000000000010 /* F08HostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F08HostApp.swift; sourceTree = "<group>"; };
+		A00000000000000000000011 /* F08UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F08UITests.swift; sourceTree = "<group>"; };
+		A00000000000000000000012 /* F08Host.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = F08Host.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000013 /* F08UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = F08UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		A00000000000000000000020 = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000021 /* F08Host */,
+				A00000000000000000000022 /* F08UITests */,
+				A00000000000000000000023 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A00000000000000000000021 /* F08Host */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000010 /* F08HostApp.swift */,
+			);
+			path = F08Host;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000022 /* F08UITests */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000011 /* F08UITests.swift */,
+			);
+			path = F08UITests;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000023 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000012 /* F08Host.app */,
+				A00000000000000000000013 /* F08UITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000040 /* F08Host */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000070 /* Build configuration list for PBXNativeTarget "F08Host" */;
+			buildPhases = (
+				A00000000000000000000041 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = F08Host;
+			productName = F08Host;
+			productReference = A00000000000000000000012 /* F08Host.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A00000000000000000000042 /* F08UITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000071 /* Build configuration list for PBXNativeTarget "F08UITests" */;
+			buildPhases = (
+				A00000000000000000000043 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A00000000000000000000044 /* PBXTargetDependency */,
+			);
+			name = F08UITests;
+			productName = F08UITests;
+			productReference = A00000000000000000000013 /* F08UITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000050 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					A00000000000000000000040 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					A00000000000000000000042 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = A00000000000000000000040;
+					};
+				};
+			};
+			buildConfigurationList = A00000000000000000000072 /* Build configuration list for PBXProject "F08Host" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A00000000000000000000020;
+			productRefGroup = A00000000000000000000023 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A00000000000000000000040 /* F08Host */,
+				A00000000000000000000042 /* F08UITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A00000000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000001 /* F08HostApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A00000000000000000000043 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000002 /* F08UITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A00000000000000000000044 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A00000000000000000000040 /* F08Host */;
+			targetProxy = A00000000000000000000030 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000060 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A00000000000000000000061 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A00000000000000000000062 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dilger.jj.f08host;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A00000000000000000000063 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dilger.jj.f08host;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A00000000000000000000064 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dilger.jj.f08uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = F08Host;
+			};
+			name = Debug;
+		};
+		A00000000000000000000065 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.dilger.jj.f08uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = F08Host;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000000000000000000070 /* Build configuration list for PBXNativeTarget "F08Host" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000062 /* Debug */,
+				A00000000000000000000063 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A00000000000000000000071 /* Build configuration list for PBXNativeTarget "F08UITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000064 /* Debug */,
+				A00000000000000000000065 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A00000000000000000000072 /* Build configuration list for PBXProject "F08Host" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000060 /* Debug */,
+				A00000000000000000000061 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A00000000000000000000050 /* Project object */;
+}

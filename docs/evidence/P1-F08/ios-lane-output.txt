@@ -1,0 +1,22 @@
+[lane] booting jj-f08-iphone BE0CD211-429F-4D65-AE8D-181C18457D07
+[lane] xcodebuild build-for-testing
+[lane] xcodebuild test-without-building (XCUITest drives Mobile Safari)
+[iOS Simulator] run 1/2 machine: host=Chriss-MacBook-Pro.local model=MacBookPro18,3 macOS=27.0.1 xcode=Xcode 27.0 Build version 27A266a
+[iOS Simulator] run 1/2 target: simulator=jj-f08-iphone udid=BE0CD211-429F-4D65-AE8D-181C18457D07 deviceType=iPhone 17 runtime=iOS 27.0 runtimeBuild=24A434 browser=Mobile Safari 27.0
+[iOS Simulator] run 1/2 driver: XCUITest (xcodebuild) driving com.apple.mobilesafari; page readout via injected probe (driverOk=true)
+[iOS Simulator] run 1: AC1 secure-context+typed-code: PASS (isSecureContext=true, origin=http://localhost:62413, crypto.subtle=true, typed="ABCD")
+[iOS Simulator] run 1: AC2 two-finger-touch: PASS (identifiers=[-1797840464,-1797840463], distinctTouchIds=3, maxSimultaneousTouches=2, distinctPointerIds=3)
+[iOS Simulator] run 1: AC3 visibilitychange: PASS (hidden -> visible-after-hidden)
+[iOS Simulator] run 1/2 RESULT: PASS
+[lane] booting jj-f08-iphone BE0CD211-429F-4D65-AE8D-181C18457D07
+[lane] xcodebuild build-for-testing
+[lane] xcodebuild test-without-building (XCUITest drives Mobile Safari)
+[iOS Simulator] run 2/2 machine: host=Chriss-MacBook-Pro.local model=MacBookPro18,3 macOS=27.0.1 xcode=Xcode 27.0 Build version 27A266a
+[iOS Simulator] run 2/2 target: simulator=jj-f08-iphone udid=BE0CD211-429F-4D65-AE8D-181C18457D07 deviceType=iPhone 17 runtime=iOS 27.0 runtimeBuild=24A434 browser=Mobile Safari 27.0
+[iOS Simulator] run 2/2 driver: XCUITest (xcodebuild) driving com.apple.mobilesafari; page readout via injected probe (driverOk=true)
+[iOS Simulator] run 2: AC1 secure-context+typed-code: PASS (isSecureContext=true, origin=http://localhost:63994, crypto.subtle=true, typed="ABCD")
+[iOS Simulator] run 2: AC2 two-finger-touch: PASS (identifiers=[-1552312044,-1552312043], distinctTouchIds=3, maxSimultaneousTouches=2, distinctPointerIds=3)
+[iOS Simulator] run 2: AC3 visibilitychange: PASS (hidden -> visible-after-hidden)
+[iOS Simulator] run 2/2 RESULT: PASS
+[iOS Simulator] 2 consecutive runs: IDENTICAL results
+exit 0

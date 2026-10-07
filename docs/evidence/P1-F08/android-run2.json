@@ -1,0 +1,141 @@
+{
+  "label": "Android emulator",
+  "machine": {
+    "host": "eris",
+    "kernel": "Linux 7.2.5-3-omarchy",
+    "cpus": "12",
+    "memGiB": "31",
+    "emulator": "37.2.12.0 (build_id 16428233) (CL:N/A)"
+  },
+  "target": {
+    "avd": "jj-ctrl-api37-play",
+    "model": "sdk_gphone64_x86_64",
+    "android": "17 (API 37)",
+    "browser": "Chrome 145.0.7632.218"
+  },
+  "driver": "adb input + CDP Input.dispatchTouchEvent in Chrome (tunnelled from eris); page readout via injected probe",
+  "driverOk": true,
+  "summary": {
+    "secureContext": true,
+    "origin": "http://localhost:60531",
+    "cryptoSubtle": true,
+    "joinPageCodeField": true,
+    "typedCode": "ABCD",
+    "typedCodeMatches": true,
+    "twoTouchStreams": true,
+    "touchIdentifiers": [
+      1,
+      2
+    ],
+    "distinctTouchIdentifiers": 2,
+    "maxSimultaneousTouches": 2,
+    "distinctPointerIds": 3,
+    "maxSimultaneousPointers": 2,
+    "visibilityEvents": [
+      "hidden",
+      "visible-after-hidden"
+    ],
+    "visibilityCycle": true,
+    "pageUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+    "viewport": "411x758@2.625"
+  },
+  "events": [
+    {
+      "seq": 1,
+      "kind": "load",
+      "at": 1791334353567,
+      "vis": "visible",
+      "data": {
+        "isSecureContext": true,
+        "origin": "http://localhost:60531",
+        "path": "/",
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+        "innerWidth": 411,
+        "innerHeight": 758,
+        "devicePixelRatio": 2.625,
+        "maxTouchPoints": 5,
+        "cryptoSubtle": true,
+        "codeField": true
+      },
+      "recvAt": 1791334354747
+    },
+    {
+      "seq": 13,
+      "kind": "typed",
+      "at": 1791334365026,
+      "vis": "visible",
+      "data": {
+        "value": "A"
+      },
+      "recvAt": 1791334366421
+    },
+    {
+      "seq": 14,
+      "kind": "typed",
+      "at": 1791334365052,
+      "vis": "visible",
+      "data": {
+        "value": "AB"
+      },
+      "recvAt": 1791334366465
+    },
+    {
+      "seq": 15,
+      "kind": "typed",
+      "at": 1791334365158,
+      "vis": "visible",
+      "data": {
+        "value": "ABC"
+      },
+      "recvAt": 1791334366491
+    },
+    {
+      "seq": 16,
+      "kind": "typed",
+      "at": 1791334365207,
+      "vis": "visible",
+      "data": {
+        "value": "ABCD"
+      },
+      "recvAt": 1791334366501
+    },
+    {
+      "seq": 19,
+      "kind": "touch2",
+      "at": 1791334366765,
+      "vis": "visible",
+      "data": {
+        "touchIdentifiers": [
+          1,
+          2
+        ],
+        "stream": "touch",
+        "maxSimultaneous": 2
+      },
+      "recvAt": 1791334367827
+    },
+    {
+      "seq": 22,
+      "kind": "hidden",
+      "at": 1791334369324,
+      "vis": "hidden",
+      "data": {
+        "state": "hidden"
+      },
+      "recvAt": 1791334370391
+    },
+    {
+      "seq": 25,
+      "kind": "visible-after-hidden",
+      "at": 1791334371096,
+      "vis": "visible",
+      "data": {
+        "state": "visible"
+      },
+      "recvAt": 1791334372233
+    }
+  ],
+  "run": 2,
+  "startedAt": "2026-10-07T00:52:17.762Z",
+  "finishedAt": "2026-10-07T00:52:55.817Z"
+}

@@ -1,0 +1,177 @@
+{
+  "label": "iOS Simulator",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "model": "MacBookPro18,3",
+    "macOS": "27.0.1",
+    "xcode": "Xcode 27.0 Build version 27A266a"
+  },
+  "target": {
+    "simulator": "jj-f08-iphone",
+    "udid": "BE0CD211-429F-4D65-AE8D-181C18457D07",
+    "deviceType": "iPhone 17",
+    "runtime": "iOS 27.0",
+    "runtimeBuild": "24A434",
+    "browser": "Mobile Safari 27.0"
+  },
+  "driver": "XCUITest (xcodebuild) driving com.apple.mobilesafari; page readout via injected probe",
+  "driverOk": true,
+  "driverTail": [
+    "Test Case '-[F08UITests.F08UITests testLane]' started.",
+    "Test Case '-[F08UITests.F08UITests testLane]' passed (29.879 seconds).",
+    "Test Suite 'F08UITests' passed at 2026-10-07 11:01:12.982.",
+    "Test Suite 'F08UITests.xctest' passed at 2026-10-07 11:01:12.985.",
+    "Test Suite 'All tests' passed at 2026-10-07 11:01:12.986.",
+    "** TEST EXECUTE SUCCEEDED **"
+  ],
+  "summary": {
+    "secureContext": true,
+    "origin": "http://localhost:62413",
+    "cryptoSubtle": true,
+    "joinPageCodeField": true,
+    "typedCode": "ABCD",
+    "typedCodeMatches": true,
+    "twoTouchStreams": true,
+    "touchIdentifiers": [
+      -1797840464,
+      -1797840463
+    ],
+    "distinctTouchIdentifiers": 3,
+    "maxSimultaneousTouches": 2,
+    "distinctPointerIds": 3,
+    "maxSimultaneousPointers": 2,
+    "visibilityEvents": [
+      "hidden",
+      "visible-after-hidden"
+    ],
+    "visibilityCycle": true,
+    "pageUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+    "viewport": "402x714@3"
+  },
+  "events": [
+    {
+      "seq": 1,
+      "kind": "load",
+      "at": 1791334686115,
+      "vis": "visible",
+      "data": {
+        "isSecureContext": true,
+        "origin": "http://localhost:62413",
+        "path": "/",
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+        "innerWidth": 402,
+        "innerHeight": 714,
+        "devicePixelRatio": 3,
+        "maxTouchPoints": 5,
+        "cryptoSubtle": true,
+        "codeField": true
+      },
+      "recvAt": 1791334686171
+    },
+    {
+      "seq": 47,
+      "kind": "pagehide",
+      "at": 1791334733305,
+      "vis": "visible",
+      "data": {},
+      "recvAt": 1791334733348
+    },
+    {
+      "seq": 1,
+      "kind": "load",
+      "at": 1791334735204,
+      "vis": "visible",
+      "data": {
+        "isSecureContext": true,
+        "origin": "http://localhost:62413",
+        "path": "/",
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+        "innerWidth": 402,
+        "innerHeight": 714,
+        "devicePixelRatio": 3,
+        "maxTouchPoints": 5,
+        "cryptoSubtle": true,
+        "codeField": true
+      },
+      "recvAt": 1791334735406
+    },
+    {
+      "seq": 104,
+      "kind": "typed",
+      "at": 1791334857740,
+      "vis": "visible",
+      "data": {
+        "value": "A"
+      },
+      "recvAt": 1791334857824
+    },
+    {
+      "seq": 105,
+      "kind": "typed",
+      "at": 1791334857866,
+      "vis": "visible",
+      "data": {
+        "value": "AB"
+      },
+      "recvAt": 1791334857876
+    },
+    {
+      "seq": 106,
+      "kind": "typed",
+      "at": 1791334857877,
+      "vis": "visible",
+      "data": {
+        "value": "ABC"
+      },
+      "recvAt": 1791334857884
+    },
+    {
+      "seq": 107,
+      "kind": "typed",
+      "at": 1791334857883,
+      "vis": "visible",
+      "data": {
+        "value": "ABCD"
+      },
+      "recvAt": 1791334857890
+    },
+    {
+      "seq": 110,
+      "kind": "touch2",
+      "at": 1791334859867,
+      "vis": "visible",
+      "data": {
+        "touchIdentifiers": [
+          -1797840464,
+          -1797840463
+        ],
+        "stream": "touch",
+        "maxSimultaneous": 2
+      },
+      "recvAt": 1791334859885
+    },
+    {
+      "seq": 121,
+      "kind": "hidden",
+      "at": 1791334870368,
+      "vis": "hidden",
+      "data": {
+        "state": "hidden"
+      },
+      "recvAt": 1791334870382
+    },
+    {
+      "seq": 124,
+      "kind": "visible-after-hidden",
+      "at": 1791334871768,
+      "vis": "visible",
+      "data": {
+        "state": "visible"
+      },
+      "recvAt": 1791334871826
+    }
+  ],
+  "run": 1,
+  "startedAt": "2026-10-07T00:56:23.007Z",
+  "finishedAt": "2026-10-07T01:01:20.544Z"
+}

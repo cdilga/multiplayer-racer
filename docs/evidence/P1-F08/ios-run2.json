@@ -1,0 +1,150 @@
+{
+  "label": "iOS Simulator",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "model": "MacBookPro18,3",
+    "macOS": "27.0.1",
+    "xcode": "Xcode 27.0 Build version 27A266a"
+  },
+  "target": {
+    "simulator": "jj-f08-iphone",
+    "udid": "BE0CD211-429F-4D65-AE8D-181C18457D07",
+    "deviceType": "iPhone 17",
+    "runtime": "iOS 27.0",
+    "runtimeBuild": "24A434",
+    "browser": "Mobile Safari 27.0"
+  },
+  "driver": "XCUITest (xcodebuild) driving com.apple.mobilesafari; page readout via injected probe",
+  "driverOk": true,
+  "driverTail": [
+    "Test Case '-[F08UITests.F08UITests testLane]' started.",
+    "Test Case '-[F08UITests.F08UITests testLane]' passed (16.404 seconds).",
+    "Test Suite 'F08UITests' passed at 2026-10-07 11:04:30.605.",
+    "Test Suite 'F08UITests.xctest' passed at 2026-10-07 11:04:30.605.",
+    "Test Suite 'All tests' passed at 2026-10-07 11:04:30.606.",
+    "** TEST EXECUTE SUCCEEDED **"
+  ],
+  "summary": {
+    "secureContext": true,
+    "origin": "http://localhost:63994",
+    "cryptoSubtle": true,
+    "joinPageCodeField": true,
+    "typedCode": "ABCD",
+    "typedCodeMatches": true,
+    "twoTouchStreams": true,
+    "touchIdentifiers": [
+      -1552312044,
+      -1552312043
+    ],
+    "distinctTouchIdentifiers": 3,
+    "maxSimultaneousTouches": 2,
+    "distinctPointerIds": 3,
+    "maxSimultaneousPointers": 2,
+    "visibilityEvents": [
+      "hidden",
+      "visible-after-hidden"
+    ],
+    "visibilityCycle": true,
+    "pageUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+    "viewport": "402x714@3"
+  },
+  "events": [
+    {
+      "seq": 2,
+      "kind": "load",
+      "at": 1791335013920,
+      "vis": "visible",
+      "data": {
+        "isSecureContext": true,
+        "origin": "http://localhost:63994",
+        "path": "/",
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+        "innerWidth": 402,
+        "innerHeight": 714,
+        "devicePixelRatio": 3,
+        "maxTouchPoints": 5,
+        "cryptoSubtle": true,
+        "codeField": true
+      },
+      "recvAt": 1791335013934
+    },
+    {
+      "seq": 49,
+      "kind": "typed",
+      "at": 1791335061461,
+      "vis": "visible",
+      "data": {
+        "value": "A"
+      },
+      "recvAt": 1791335061477
+    },
+    {
+      "seq": 50,
+      "kind": "typed",
+      "at": 1791335061534,
+      "vis": "visible",
+      "data": {
+        "value": "AB"
+      },
+      "recvAt": 1791335061537
+    },
+    {
+      "seq": 51,
+      "kind": "typed",
+      "at": 1791335061539,
+      "vis": "visible",
+      "data": {
+        "value": "ABC"
+      },
+      "recvAt": 1791335061543
+    },
+    {
+      "seq": 52,
+      "kind": "typed",
+      "at": 1791335061545,
+      "vis": "visible",
+      "data": {
+        "value": "ABCD"
+      },
+      "recvAt": 1791335061548
+    },
+    {
+      "seq": 54,
+      "kind": "touch2",
+      "at": 1791335062479,
+      "vis": "visible",
+      "data": {
+        "touchIdentifiers": [
+          -1552312044,
+          -1552312043
+        ],
+        "stream": "touch",
+        "maxSimultaneous": 2
+      },
+      "recvAt": 1791335062482
+    },
+    {
+      "seq": 59,
+      "kind": "hidden",
+      "at": 1791335067204,
+      "vis": "hidden",
+      "data": {
+        "state": "hidden"
+      },
+      "recvAt": 1791335067208
+    },
+    {
+      "seq": 62,
+      "kind": "visible-after-hidden",
+      "at": 1791335068498,
+      "vis": "visible",
+      "data": {
+        "state": "visible"
+      },
+      "recvAt": 1791335068594
+    }
+  ],
+  "run": 2,
+  "startedAt": "2026-10-07T01:01:20.549Z",
+  "finishedAt": "2026-10-07T01:04:38.442Z"
+}
