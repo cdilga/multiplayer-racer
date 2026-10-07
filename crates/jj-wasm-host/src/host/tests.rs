@@ -1067,9 +1067,9 @@ fn a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped() {
     let mut now = 0;
     let mut request = None;
     let pump = |h: &mut Host,
-                    ticks: u32,
-                    now: &mut u64,
-                    request: &mut Option<(jj_types::PreparationId, u64)>| {
+                ticks: u32,
+                now: &mut u64,
+                request: &mut Option<(jj_types::PreparationId, u64)>| {
         for _ in 0..ticks {
             h.advance(*now);
             *now += 8_334;
