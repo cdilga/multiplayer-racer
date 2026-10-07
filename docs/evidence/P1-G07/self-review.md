@@ -8,7 +8,7 @@ Chromium on eris (GPU), host fixtures (`chrome.test.mjs`) and a real room with s
 - Confirmation copy in a race says the car leaves at the next tick and the debris stays; points stay in the standings; they can join again as a new player.
 
 ## Defects found and fixed
-- My journey asserted the wrong seat count after the rejoin (waited for 5, there are 4): fixed in the test.
+- My journey asserted the wrong seat count after the rejoin (waited for 5, there are 4): fixed in the test; both journey tests pass on eris at 486ab11 with `JJ_G07_RUST=1`.
 - The pause menu's list cut a row mid-height at 8 players on a 1080p screen (it scrolls inside the panel; no cap).
 
 ## Remaining defects
