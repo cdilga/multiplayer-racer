@@ -97,6 +97,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
+  // JJ_HOST_CPU_THROTTLE=<n> slows the host page n times (a CDP CPU throttle), to reproduce a slow CI runner on a fast box.
+  if (process.env.JJ_HOST_CPU_THROTTLE) await (await host.context().newCDPSession(host)).send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.JJ_HOST_CPU_THROTTLE) });
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=3`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 180_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
@@ -188,6 +190,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
       seats: window.__jjRoom.view().seats.map((s) => ({ number: s.number, car: s.car, presence: s.presence })),
       phase: window.__jjRoom.view().phase,
       render: window.__jjRender.stats(),
+      follow: window.__jjRender.follow(),
       cameras: window.__jjRender.cameras(),
     }));
     console.log(`# HUD dump ${JSON.stringify(dump)}`);

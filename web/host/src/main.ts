@@ -105,6 +105,8 @@ async function boot(): Promise<void> {
     },
     /** Per tile: its device-pixel rect on the canvas backing store (null without the grid). */
     tileRects: () => world.tileRects(),
+    /** The cars the grid's tiles follow, tile 1 first (a room's seated cars in seat-number order). */
+    follow: () => world.tiles?.follow?.slice() ?? null,
     /** Cars showing Identify's number over them now (P1-R06). */
     identifyMarks: () => world.identifyMarks.active(),
     /** Every Identify mark put up over a car (car, label), oldest first. */
