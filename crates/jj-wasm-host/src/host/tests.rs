@@ -1143,3 +1143,109 @@ fn a_prepared_map_is_validated_and_raced_and_a_stale_one_is_dropped() {
     );
     assert_eq!(h.sim.cars().count(), 1);
 }
+
+/// P1-G03: idle and menu handoffs, on top of the dropout rule. A racing controller that keeps sending neutral input
+/// gets the takeover cue at 15 s and the autopilot at 18 s; its next deliberate input takes the car back. Opening the
+/// menu hands the car over at once; the first deliberate input after closing it takes it back.
+#[test]
+fn an_idle_racer_gets_the_cue_then_the_autopilot_and_a_menu_hands_over() {
+    let mut h = Host::new(&init()).unwrap();
+    let hello = ControllerCmd::Hello {
+        protocol: PROTOCOL_VERSION,
+        build: BuildId("t".into()),
+        endpoint: EndpointId("p1".into()),
+        resume: Some("s".into()),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, hello)).unwrap();
+    let claim = ControllerCmd::Claim {
+        request: RequestId(1),
+        name: "Ava".into(),
+    }
+    .encode();
+    h.handle(&net("p1", Channel::Cmd, claim)).unwrap();
+    h.handle(&net(
+        "p1",
+        Channel::Cmd,
+        ControllerCmd::Ready { on: true }.encode(),
+    ))
+    .unwrap();
+    let src = SourceHandle(1);
+    let mut now = 0u64;
+    let mut seq = 0u16;
+    let mut cues = 0;
+    // Steps `ms` of host time sending `drive` every 50 ms (fresh, so never a dropout).
+    let run =
+        |h: &mut Host, ms: u64, drive: [i16; 2], now: &mut u64, seq: &mut u16, cues: &mut u32| {
+            let end = *now + ms * 1000;
+            while *now < end {
+                if (*now / 8_334).is_multiple_of(6) {
+                    *seq = seq.wrapping_add(1);
+                    h.handle(&net("p1", Channel::State, record(src, *seq, drive)))
+                        .unwrap();
+                }
+                h.advance(*now);
+                *now += 8_334;
+                while let Some(m) = h.next_message() {
+                    if let SimToMain::Events { batch } = m {
+                        *cues += batch
+                            .iter()
+                            .filter(|e| matches!(e, SimEvent::IdleCue { .. }))
+                            .count() as u32;
+                    }
+                }
+            }
+        };
+    run(&mut h, 4_000, [0, 0], &mut now, &mut seq, &mut cues);
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    let car = CarId(0);
+    run(&mut h, 2_000, [0, 32_767], &mut now, &mut seq, &mut cues);
+    assert!(!h.sim.has_autopilot(car), "driving: the player has the car");
+    run(&mut h, 14_000, [0, 0], &mut now, &mut seq, &mut cues);
+    assert_eq!(
+        (cues, h.sim.has_autopilot(car)),
+        (0, false),
+        "under 15 s idle: nothing yet"
+    );
+    run(&mut h, 2_000, [0, 0], &mut now, &mut seq, &mut cues);
+    assert_eq!(
+        (cues, h.sim.has_autopilot(car)),
+        (1, false),
+        "15 s idle: the cue, not yet the autopilot"
+    );
+    run(&mut h, 3_000, [0, 0], &mut now, &mut seq, &mut cues);
+    assert!(h.sim.has_autopilot(car), "18 s idle: the autopilot drives");
+    run(&mut h, 500, [0, 32_767], &mut now, &mut seq, &mut cues);
+    assert!(
+        !h.sim.has_autopilot(car),
+        "a deliberate input takes it back"
+    );
+
+    h.handle(&net(
+        "p1",
+        Channel::Cmd,
+        ControllerCmd::Menu { open: true }.encode(),
+    ))
+    .unwrap();
+    run(&mut h, 200, [0, 32_767], &mut now, &mut seq, &mut cues);
+    assert!(
+        h.sim.has_autopilot(car),
+        "an open menu hands the car to the autopilot"
+    );
+    h.handle(&net(
+        "p1",
+        Channel::Cmd,
+        ControllerCmd::Menu { open: false }.encode(),
+    ))
+    .unwrap();
+    run(&mut h, 200, [0, 0], &mut now, &mut seq, &mut cues);
+    assert!(
+        h.sim.has_autopilot(car),
+        "closing the menu alone doesn't take it back"
+    );
+    run(&mut h, 300, [0, 32_767], &mut now, &mut seq, &mut cues);
+    assert!(
+        !h.sim.has_autopilot(car),
+        "the first deliberate input after closing does"
+    );
+}

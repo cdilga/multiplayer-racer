@@ -550,6 +550,19 @@ impl Sim {
         self.cars.get(car.0 as usize)?.autopilot.as_ref()?.state()
     }
 
+    /// The ground class under car `car` (for the engine audio's surface layer): 0 tarmac, 1 dirt (packed dirt, off track),
+    /// 2 gravel (gravel, rock).
+    pub fn car_surface(&self, car: CarId) -> Option<u8> {
+        use jj_map::model::Surface;
+        let b = self.world.bodies.get(self.cars.get(car.0 as usize)?.body)?;
+        let t = b.position().translation;
+        Some(match vehicle::surface_at(&self.terrain, t.x, t.z) {
+            Surface::Tarmac => 0,
+            Surface::PackedDirt | Surface::OffTrack => 1,
+            Surface::Gravel | Surface::Rock => 2,
+        })
+    }
+
     /// The car's life: bumps on every teleport or respawn, so interpolation never spans one.
     pub fn car_life(&self, car: CarId) -> Option<u32> {
         self.cars.get(car.0 as usize).map(|c| c.life)

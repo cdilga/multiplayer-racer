@@ -47,6 +47,10 @@ pub const RESUME_COUNTDOWN_US: u64 = 3_000_000;
 pub const STALE_MS: u64 = 250;
 /// A source silent (or gone) this long hands its car to the autopilot; fresh deliberate input takes it back (R45, §9).
 pub const DROPOUT_MS: u64 = 2_000;
+/// A connected seat that gives no deliberate input this long while racing gets the takeover cue (G03, §9)...
+pub const IDLE_MS: u64 = 15_000;
+/// ...and the autopilot this long after the cue, unless it steers first.
+pub const IDLE_CUE_MS: u64 = 3_000;
 /// `LocalSource.buttons` bits (P1-C05): a pad's View/Select or a key cluster's Identify key, its Start or READY key,
 /// the two held together for 2 s (Leave; the main thread times the hold), and the source being gone (an unplugged
 /// pad: neutral now, the autopilot after [`DROPOUT_MS`]).
@@ -104,8 +108,14 @@ struct SeatInput {
     car: Option<CarId>,
     /// The controller's recent discrete action ids: a resent `Action` applies once (§5.4).
     seen_actions: Vec<ActionId>,
-    /// The autopilot took the car because the source went quiet (dropout), so fresh input takes it back.
+    /// The autopilot took the car because the source went quiet (dropout), idle, or its menu opened; fresh deliberate
+    /// input takes it back.
     dropped: bool,
+    /// The last time (ms) this seat gave deliberate input, and whether the idle cue has gone out since (G03).
+    active_ms: u64,
+    idle_cued: bool,
+    /// The controller's menu (Settings, Help) is open: the autopilot drives until it closes and the player steers.
+    menu_open: bool,
 }
 
 /// A host pad or key cluster's button edges and its way back after leaving.
@@ -466,10 +476,38 @@ impl Host {
         let now_ms = tick_ms(tick);
         // Dropout (R45, §9): a source silent or gone for DROPOUT_MS hands its car to the autopilot, and the room never
         // pauses; fresh deliberate input takes it back through the autopilot's handback blend. Source-blind: phones,
-        // pads and keys alike (G03 adds idle and menus).
-        for input in self.inputs.values_mut() {
+        // pads and keys alike. G03: a connected seat with no deliberate input for IDLE_MS gets a cue, then the autopilot
+        // IDLE_CUE_MS later (racing only: nobody's idle on the grid); an open menu hands over at once.
+        let racing = self.driving() == jj_session::director::Driving::Racing;
+        let mut cues = Vec::new();
+        for (&seat, input) in self.inputs.iter_mut() {
             let Some(car) = input.car else { continue };
             let age = input.state.age_ms(now_ms);
+            let deliberate = age.is_some_and(|a| a <= STALE_MS)
+                && jj_sim::autopilot::is_deliberate(
+                    DriveInput::default(),
+                    controls(input.state.semantics()),
+                );
+            if deliberate || !racing || input.active_ms == 0 {
+                input.active_ms = now_ms.max(1);
+                input.idle_cued = false;
+            }
+            let idle_for = now_ms.saturating_sub(input.active_ms);
+            if racing && !input.dropped && !input.idle_cued && idle_for >= IDLE_MS {
+                input.idle_cued = true;
+                cues.push(seat);
+            }
+            if racing && !input.dropped && idle_for >= IDLE_MS + IDLE_CUE_MS {
+                self.sim.set_autopilot(car, true);
+                input.dropped = true;
+            }
+            if input.menu_open {
+                if !input.dropped {
+                    self.sim.set_autopilot(car, true);
+                    input.dropped = true;
+                }
+                continue;
+            }
             if age.is_some_and(|a| a > DROPOUT_MS) {
                 if !input.dropped && !self.sim.has_autopilot(car) {
                     self.sim.set_autopilot(car, true);
@@ -484,7 +522,12 @@ impl Host {
             {
                 self.sim.set_autopilot(car, false);
                 input.dropped = false;
+                input.idle_cued = false;
+                input.active_ms = now_ms.max(1);
             }
+        }
+        for seat in cues {
+            self.events.push(SimEvent::IdleCue { seat });
         }
         let held = self.driving() == jj_session::director::Driving::Held;
         for input in self.inputs.values() {
@@ -699,6 +742,18 @@ impl Host {
             ControllerCmd::Leave => self.seats.apply(seats::Input::Leave { conn }),
             ControllerCmd::SitOut => self.seats.apply(seats::Input::SitOut { conn, on: true }),
             ControllerCmd::Identify => self.seats.apply(seats::Input::Identify { conn }),
+            ControllerCmd::Menu { open } => {
+                // G03: an open menu (Settings, Help) hands the car to the autopilot; the next deliberate input after it
+                // closes takes it back (the dropout handback).
+                if let Some(input) = self
+                    .seats
+                    .seat_of(conn)
+                    .and_then(|s| self.inputs.get_mut(&s))
+                {
+                    input.menu_open = open;
+                }
+                vec![]
+            }
             ControllerCmd::Ready { on } => {
                 if let Some(seat) = self.seats.seat_of(conn) {
                     self.set_ready(seat, on);
@@ -821,6 +876,9 @@ impl Host {
                     car: None,
                     seen_actions: Vec::new(),
                     dropped: false,
+                    active_ms: 0,
+                    idle_cued: false,
+                    menu_open: false,
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)
@@ -1090,8 +1148,8 @@ impl Host {
     /// one 40 B record per part that isn't intact, P1-S04b: car u32, part u16 (the sidecar's `parts` order), state u16
     /// (1 loose, 2 detached), hinge angle f32 (radians, loose), world position 3×f32 and rotation 4×f32 (the debris
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
-    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
-    /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
+    /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting, bits 6-7 the ground under it: 0
+    /// tarmac, 1 dirt, 2 gravel), boost meter f32 (0..1), the applied throttle f32 (0..1; the engine audio's input, P1-A05). Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
     /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
     /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
     /// wrecked and rebuilt (state 3; part 255 for a husk; the pose is the part's pivot frame, the vehicle frame for a husk).
@@ -1128,7 +1186,11 @@ impl Host {
                 | (u32::from(self.sim.has_autopilot(car)) << 2)
                 | (u32::from(race.is_held(car.0, self.sim.tick())) << 3)
                 | (u32::from(action.boosting) << 4)
-                | (u32::from(action.drift > 0.0) << 5);
+                | (u32::from(action.drift > 0.0) << 5)
+                | (u32::from(self.sim.car_surface(car).unwrap_or(0)) << 6);
+            let throttle = self.sim.applied_input(car).map_or(0.0, |i| {
+                jj_types::axis::dequantise_axis(i.throttle).clamp(0.0, 1.0)
+            });
             w.u32(car.0);
             w.u32(self.sim.car_life(car).unwrap_or(0));
             s.position
@@ -1139,7 +1201,7 @@ impl Host {
             w.f32(steer);
             w.u32(flags);
             w.f32(action.boost);
-            w.u32(0);
+            w.f32(throttle);
         }
         for ((p, r), k) in debris.iter().zip(self.sim.prop_kinds()) {
             // Kind 2 (a detached part or a husk) is drawn from its part record, not as a box; it keeps its slot so debris

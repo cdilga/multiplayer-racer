@@ -220,6 +220,11 @@ pub enum SimEvent {
         seat: SeatId,
         debris: u32,
     },
+    /// The seat has been idle while racing (G03): the takeover cue shows; the autopilot drives in a few seconds unless
+    /// the player steers.
+    IdleCue {
+        seat: SeatId,
+    },
     /// The seat's player chose a camera for its tile (P1-R05; `SetCamera` from the controller). `car` is the seat's car
     /// index in the snapshot, which is what the host's tiles follow.
     CameraSet {
