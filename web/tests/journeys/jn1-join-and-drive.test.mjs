@@ -144,7 +144,9 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   console.log(`# A ${JSON.stringify(resA)} B ${JSON.stringify(resB)}`);
   assert.ok(carOf(now, epA).car !== carOf(now, epB).car, 'two cars');
   assert.ok(resA.speed > 4 && resA.turn < 10, `A drives straight: ${JSON.stringify(resA)}`);
-  assert.ok(resB.speed > 2 && resB.turn > 15, `B turns: ${JSON.stringify(resB)}`);
+  // B steers hard right, so it may meet a barrier: it must have turned and covered ground, whatever its speed now.
+  const moved = (e) => Math.hypot(...carOf(now, e).position.map((v, i) => v - carOf(start, e).position[i]));
+  assert.ok(moved(epB) > 5 && resB.turn > 15, `B turns: ${JSON.stringify(resB)}, moved ${moved(epB).toFixed(1)} m`);
   // Each phone gets its HUD (boost meter, pause) on its state channel.
   await wait(a.page, () => window.__jjController.inspect().hud !== null);
   const keys = carOf(now, 'local:1');
