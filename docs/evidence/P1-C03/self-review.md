@@ -1,6 +1,6 @@
 # P1-C03 self-review (join, claim and resume flow)
 
-Captures: `web/tests/journeys/c03-states.test.mjs`, `c03-car.test.mjs` and `c03-ausname-join.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, software GL, commit ba8106e), phone contexts at 844x390, 390x844 and 375x667, from the URL-fragment state opener (`B/j/ABCD#state=<phase>`, no network: R90's test surface) and, for the live causes, `c03-resume.test.mjs` on real hosts and phones. Chromium on eris, not devices. Accepted-mock comparisons are in `docs/evidence/P1-C03.style/`.
+Captures: `web/tests/journeys/c03-states.test.mjs`, `c03-car.test.mjs` and `c03-ausname-join.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, software GL, commit ba8106e), phone contexts at 844x390, 390x844 and 375x667, from the URL-fragment state opener (`B/j/ABCD#state=<phase>`, no network: R90's test surface) and, for the live causes, `c03-resume.test.mjs` on real hosts and phones. Chromium on eris, not devices. Accepted-mock comparisons are in `docs/evidence/br-p1-c03-gtv.1/`.
 
 ## Looked at
 - Every §11 state at all three sizes (`c03-state-<state>-phone-<size>.jpg`): finding, no-such-room, room-ended, preview-expired, connecting, finding-relay, no-route, ready-to-join, joining, reconnecting, host-gone, host-paused, another-tab, update-needed and playing. Each shows its icon or spinner, its wording ("room", never "game": R112) and its next action; none scrolls or runs off an edge.

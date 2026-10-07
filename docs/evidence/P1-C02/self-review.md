@@ -1,12 +1,12 @@
 # P1-C02 self-review (controller app: sticks, buttons, HUD)
 
-Captures: `web/tests/journeys/c02-controller.test.mjs` and `c02-style-compare.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, software GL, commit e6f5abe or later), phone contexts at 844x390, 390x844 and 375x667, drawn from the URL-fragment state opener (`B/j/ABCD#state=playing...`, no network). Chromium on eris, not a device. The images named below are in this folder, except the side-by-side pairs with the accepted mock, which are in `docs/evidence/P1-C02.style/`.
+Captures: `web/tests/journeys/c02-controller.test.mjs` and `c02-style-compare.test.mjs` with `JJ_CAPTURE_DIR` on eris (Chromium, software GL, commit e6f5abe or later), phone contexts at 844x390, 390x844 and 375x667, drawn from the URL-fragment state opener (`B/j/ABCD#state=playing...`, no network). Chromium on eris, not a device. The images named below are in this folder, except the side-by-side pairs with the accepted mock, which are in `docs/evidence/br-p1-c02-wps.1/`.
 
 ## Looked at
 - `c02-pod-landscape.jpg`, `c02-pod-portrait.jpg`: the boost pod is a flat meter with its "Boost →" label, top-centre between the sticks in landscape and a row above the sticks in portrait; nothing in it looks tappable.
 - `c02-rotate-prompt.jpg`: portrait shows "Turn sideways" with "Play upright anyway"; the sticks stay behind it.
 - `c02-identify-flash.jpg`: Identify from the strip washes the screen in the seat colour with the "Cooee #12" chip and "That's you on the TV"; the strip stays above it.
-- The race screen against the accepted mock at three sizes (`../P1-C02.style/pair-race-*.jpg`): strip with the number in the seat colour, the place over the lap, the tools, the boost pod, DRIVE and ACTION zones with the knobs (bolt on the ACTION knob) and the seat-colour frame round the screen.
+- The race screen against the accepted mock at three sizes (`../br-p1-c02-wps.1/pair-race-*.jpg`): strip with the number in the seat colour, the place over the lap, the tools, the boost pod, DRIVE and ACTION zones with the knobs (bolt on the ACTION knob) and the seat-colour frame round the screen.
 
 ## Defects found and fixed
 - Pinching with real touch points zoomed nothing (asserted), but CDP's synthetic pinch zoomed to 2.5x: that gesture bypasses touch-action, so the test now pinches with two real touch points instead.
