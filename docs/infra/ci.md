@@ -47,7 +47,7 @@ image           jj-server image, two-preview smoke, push                        
   `web/dist-test`, the four wasm-bindgen packages, `jj` and `jj-server`. The store token is the `REGISTRY_PUSH_TOKEN`
   secret (package read/write for cdilga).
 - **browser** is a static 7-slot matrix (Gitea 1.27 can't expand a matrix from job outputs) on the `browser` runners
-  (4 on triton, 3 on TrueNAS). plan packs targets longest first onto the least-loaded slot using
+  (4 on triton, 3 on TrueNAS, whose pages run ~1.5x slower: in run 1616 its slots took 560-621 s, triton's 258-432 s). plan packs targets longest first onto the least-loaded slot using
   `scripts/ci/durations.json`; an unused slot finishes after its plan step. Inside a slot targets run one at a time
   (`scripts/ci/run-slot.mjs`), each printing `slot-timing: <s>s <pass|FAIL> <target>`. Refresh the estimates and the
   learned test names after a full run: `node scripts/ci/durations.mjs <run id>` (commit the JSON; it selects nothing).
