@@ -68,19 +68,26 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   await shot(page, 'phone-tutorial-step1');
   await sticks(page, { x: 1, y: 0 }, z);
   await sticks(page, { x: -1, y: 0 }, z);
+  await shot(page, 'phone-tutorial-step1-won');
   await waitStep(page, 1);
+  await shot(page, 'phone-tutorial-step2');
   await sticks(page, { x: 0, y: -1 }, z);
   await sticks(page, { x: 0, y: 1 }, z);
   await waitStep(page, 2);
+  await shot(page, 'phone-tutorial-step3-boost');
   await sticks(page, z, { x: 1, y: 0 });
   await waitStep(page, 3);
+  await shot(page, 'phone-tutorial-step4-drift');
   await sticks(page, z, { x: -1, y: 0 });
   await waitStep(page, 4);
   await shot(page, 'phone-tutorial-oi');
   await sticks(page, z, { x: 0, y: -1 }, 80);
+  await shot(page, 'phone-tutorial-oi-ticked');
   await waitStep(page, 5);
+  await shot(page, 'phone-tutorial-step6-cone');
   await sticks(page, z, { x: 0, y: 1 }, 80);
   await waitStep(page, 6);
+  await shot(page, 'phone-tutorial-step7-wheelie');
   // The wheelie: pull the left stick all the way back, hold for the preload, let go.
   await sticks(page, { x: 0, y: 1 }, z, 600);
   await waitStep(page, 7);
@@ -92,6 +99,7 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
   // Help shows it again from the start.
   await page.getByRole('button', { name: /Help/ }).click();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true && window.__jjTutorial.inspect().step === 0);
+  await shot(page, 'phone-tutorial-help-again');
   await ctx.close();
 });
 
@@ -101,9 +109,12 @@ test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', 
   await sticks(page, { x: 1, y: 0 }, z);
   await sticks(page, { x: -1, y: 0 }, z);
   await waitStep(page, 1);
+  await shot(page, 'phone-tutorial-before-skip');
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
   assert.equal((await page.evaluate(() => window.__jjTutorial.inspect())).open, false);
+  await shot(page, 'phone-tutorial-skipped');
   await page.getByRole('button', { name: /^Ready/ }).click();
+  await shot(page, 'phone-ready-pressed');
   await wait(host, () => window.__jjRoom.view().seats[0]?.ready === true);
   await page.reload();
   await wait(page, () => window.__jjController?.inspect().phase === 'playing', undefined, 30_000);
