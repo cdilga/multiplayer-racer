@@ -87,6 +87,11 @@ export class Session {
   you: You | null = null;
   hud: Hud | null = null;
   roomPhase: string | null = null;
+  /** The round loop as the host reports it (P1-G01): this seat's Ready, the countdown or intermission timer, results. */
+  isReady = false;
+  countdownMs: number | null = null;
+  countdownAt = 0;
+  results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null = null;
   persisted = true;
   name = '';
   link: ControllerLink | null = null;
@@ -267,8 +272,17 @@ export class Session {
       } else if (r === 'Ended') this.ended();
       else this.set('ready-to-join');
     } else if ('RoomState' in cmd) {
-      const rs = cmd.RoomState as { phase: string };
+      const rs = cmd.RoomState as {
+        phase: string;
+        you: { ready: boolean } | null;
+        countdown_ms: number | null;
+        results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
+      };
       this.roomPhase = rs.phase;
+      this.isReady = rs.you?.ready ?? false;
+      this.countdownMs = rs.countdown_ms;
+      this.countdownAt = performance.now();
+      this.results = rs.results;
       this.onChange();
     }
   }
@@ -402,6 +416,9 @@ export class Session {
       you: this.you,
       hud: this.hud,
       roomPhase: this.roomPhase,
+      ready: this.isReady,
+      countdownMs: this.countdownMs,
+      results: this.results,
       persisted: this.persisted,
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,

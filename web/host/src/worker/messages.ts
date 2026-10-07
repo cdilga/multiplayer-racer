@@ -25,7 +25,7 @@ export type SimInput =
    *  performance.now()`) lets the worker measure host-applied input age. */
   | { type: 'local'; source: number; axes: [number, number, number, number]; buttons?: number; seq?: number; sampledAt?: number }
   | { type: 'net'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
-  | { type: 'ui'; ui: 'start' | 'end' | 'pause'; on?: boolean };
+  | { type: 'ui'; ui: 'start' | 'end' | 'pause' | 'disband' | 'free-drive' | `laps:${number}`; on?: boolean };
 
 export interface InitOptions {
   mapJson?: string;
@@ -71,6 +71,8 @@ export type FromWorker =
   | { kind: 'outbound'; endpoint: string; channel: 'state' | 'cmd'; bytes: Uint8Array }
   /** A batch of sim events as JSON (`jj_protocol::abi::SimEvent`, externally tagged). */
   | { kind: 'events'; json: string }
+  /** The room view (P1-G01): phase, timer, seats with Ready, results; JSON from `room_json`. */
+  | { kind: 'room'; json: string }
   /** The pause mask or the resume countdown's whole second changed (sent while no snapshots flow). */
   | { kind: 'pause'; mask: number; countdownMs: number }
   | { kind: 'fault'; message: string }

@@ -63,6 +63,11 @@ impl HostSim {
         (self.0.countdown_us() / 1000) as u32
     }
 
+    /// The room for the host's screens (P1-G01/R07): phase, timer, round, laps, seats with Ready, results, standings.
+    pub fn room_json(&self) -> String {
+        self.0.room_json()
+    }
+
     /// The full-state hash as hex.
     pub fn state_hash(&self) -> String {
         self.0
@@ -161,9 +166,15 @@ pub mod codec {
 
     #[wasm_bindgen]
     pub fn encode_ui(command: u32, ui: &str, on: bool) -> Vec<u8> {
+        // `laps:<n>` sets laps per round (G01); `free-drive` is G04's dev mode.
         let ui = match ui {
             "start" => UiCommand::StartRound,
             "end" => UiCommand::EndRound,
+            "disband" => UiCommand::DisbandRoom,
+            "free-drive" => UiCommand::FreeDrive { on },
+            l if l.starts_with("laps:") => UiCommand::SetLaps {
+                laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
+            },
             _ => UiCommand::Pause { on },
         };
         MainToSim::Ui {

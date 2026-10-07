@@ -13,6 +13,14 @@ use super::*;
 const GREYBOX: &str = include_str!("../../../../maps/greybox-loop.json");
 const MS: u64 = 1000;
 
+/// A host in G04's free drive, where a claimed seat drives at once: the driving-mechanics tests run there. The round
+/// loop's own tests (G01) start from `Host::new` with the real Lobby, which holds every car.
+fn driving_host() -> Host {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    h
+}
+
 fn init() -> Vec<u8> {
     let map = load_json(GREYBOX.as_bytes(), &Registry::generic()).unwrap();
     MainToSim::Init {
@@ -64,7 +72,7 @@ fn record(source: SourceHandle, seq: u16, drive: [i16; 2]) -> Vec<u8> {
 /// Runs a host with the worker calling `advance` every `period_us` until `stop` ticks, with `script` (tick, message)
 /// scheduled; returns the final tick and hash.
 fn run(period_us: u64, stop: u64, script: &[(u64, Vec<u8>)]) -> (u64, [u8; 32]) {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     for (t, m) in script {
         h.schedule(*t, m).unwrap();
     }
@@ -157,7 +165,7 @@ fn controller_bytes_and_local_source_drive_identically() {
         ));
     }
     let (local_tick, local_hash) = run(16_667, 720, &pad);
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     for (t, m) in &wire {
         h.schedule(*t, m).unwrap();
     }
@@ -198,7 +206,7 @@ fn controller_bytes_and_local_source_drive_identically() {
 
 #[test]
 fn hiding_pauses_with_no_catch_up_and_resume_counts_down_with_neutral_input() {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     // A pad holding full throttle.
     for t in (0..2000).step_by(6) {
         h.schedule(t, &local(1, [0, 32_767])).unwrap();
@@ -259,7 +267,7 @@ fn hiding_pauses_with_no_catch_up_and_resume_counts_down_with_neutral_input() {
 
 #[test]
 fn input_is_rearmed_at_neutral_after_a_pause() {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     // A pad refreshing full throttle every 6 ticks (a held stick), up to tick 60.
     for t in (0..60).step_by(6) {
         h.schedule(t, &local(1, [0, 32_767])).unwrap();
@@ -312,7 +320,7 @@ fn input_is_rearmed_at_neutral_after_a_pause() {
 
 #[test]
 fn a_long_stall_pauses_at_the_last_tick_instead_of_catching_up() {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let mut now = 0;
     for _ in 0..60 {
         h.advance(now);
@@ -339,7 +347,7 @@ fn a_long_stall_pauses_at_the_last_tick_instead_of_catching_up() {
 
 #[test]
 fn a_fault_stops_the_sim() {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     h.fault();
     assert_eq!(h.pause_mask(), Pause::Fault as u32);
     assert_eq!(h.advance(1_000_000), 0);
@@ -348,7 +356,7 @@ fn a_fault_stops_the_sim() {
 
 #[test]
 fn snapshots_carry_cars_and_skip_when_the_buffer_is_short() {
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     h.handle(&local(1, [0, 20_000])).unwrap();
     h.handle(&local(2, [0, 20_000])).unwrap();
     let mut now = 0;
@@ -382,7 +390,7 @@ fn loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_even
     // hinge angle, the debris body's pose) and PartLoose / PartDetached events with their cause; the detached bumper keeps
     // its debris slot (kind 2) so debris indices stay stable.
     use jj_protocol::abi::{DamageCause, SimEvent};
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     h.handle(&local(1, [0, 20_000])).unwrap();
     let mut now = 0;
     for _ in 0..30 {
@@ -447,7 +455,7 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     // the snapshot has the husk (part 255) and the ten parts as pieces (state 3: they belong to a car that has since been
     // rebuilt), the debris list keeps their slots (kind 2), and the respawned car's parts are all intact.
     use jj_protocol::abi::SimEvent;
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     h.handle(&local(1, [0, 20_000])).unwrap();
     let mut now = 0;
     for _ in 0..30 {
@@ -500,7 +508,7 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
 fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
     // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let hello = ControllerCmd::Hello {
         protocol: PROTOCOL_VERSION,
         build: BuildId("t".into()),
@@ -556,7 +564,7 @@ fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
 fn a_controllers_wheelie_applies_once_and_a_host_pads_gesture_is_detected_by_the_host() {
     // P1-S03c: a controller sends its validated release as `Action` (resent on the reliable channel, applied once);
     // a host pad's pull-release is detected by the host's own source machine.
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let hello = ControllerCmd::Hello {
         protocol: PROTOCOL_VERSION,
         build: BuildId("t".into()),
@@ -633,7 +641,7 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
     // P1-C05: two host pads claim two seats on their first press (a neutral pad claims nothing), unplugging one makes
     // it neutral at once and hands only its car to the autopilot after DROPOUT_MS, and fresh deliberate input takes
     // it back.
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
     // Pad 3 is plugged in but untouched until 1 s: it sends nothing, so it claims nothing.
     for t in (0..ms(6_000)).step_by(6) {
@@ -685,7 +693,7 @@ fn a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat() {
     // P1-C05: Identify fires for that seat only (an event for the renderer's Cooee flash); the drawer's Sit out
     // toggles at a tick boundary; the hold chord leaves (the seat stays, Left, with its standings), and after letting
     // go the pad's next press is a new player with a new seat.
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
     h.schedule(0, &pad(4, [0, 20_000], 0)).unwrap();
     h.schedule(0, &pad(9, [0, 20_000], 0)).unwrap();
@@ -774,7 +782,7 @@ fn a_controllers_utilities_apply_once_and_reach_main_as_events_and_a_cone_in_the
     // P1-S08 through the real host path: a phone sends its ACTION up/down entries as `Action` (resent on the reliable
     // channel, applied once per id); a host pad's flick up is detected by the host's own source machine. Accepted
     // utilities reach main as `Oi` / `ConeDropped`, and the cone is a debris record of kind 1 in the snapshot.
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     let hello = ControllerCmd::Hello {
         protocol: PROTOCOL_VERSION,
         build: BuildId("t".into()),
@@ -899,7 +907,7 @@ fn a_reloaded_controller_says_hello_again_and_gets_its_seat_back() {
         }
         .encode(),
     );
-    let mut h = Host::new(&init()).unwrap();
+    let mut h = driving_host();
     h.schedule(0, &hello()).unwrap();
     h.schedule(0, &claim).unwrap();
     h.schedule(60, &hello()).unwrap();
@@ -927,4 +935,103 @@ fn a_reloaded_controller_says_hello_again_and_gets_its_seat_back() {
         "a Welcome for the claim and one for the reload: {welcomes:?}"
     );
     assert_eq!(welcomes[0], welcomes[1], "the same seat and number");
+}
+
+/// P1-G01: the party loop runs itself. Four controllers claim in the real Lobby (no cars, R110), all Ready, the
+/// Countdown puts them on the grid, a 1-lap race runs (the autopilot drives every car), results commit, Intermission
+/// runs out and the next round starts with no host input.
+#[test]
+fn four_controllers_play_two_rounds_hands_off_and_the_lobby_has_no_cars() {
+    let mut h = Host::new(&init()).unwrap();
+    let ui = |ui: UiCommand| {
+        MainToSim::Ui {
+            command: CommandId(1),
+            ui,
+        }
+        .encode()
+    };
+    h.handle(&ui(UiCommand::SetLaps { laps: 1 })).unwrap();
+    let phones = ["p1", "p2", "p3", "p4"];
+    for (k, p) in phones.iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    }
+    let mut now = 0u64;
+    let step = |h: &mut Host, ticks: u64, now: &mut u64| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            while h.next_message().is_some() {}
+        }
+    };
+    step(&mut h, 120, &mut now);
+    assert_eq!(h.phase(), jj_session::director::Phase::Lobby);
+    assert_eq!(
+        h.sim.cars().count(),
+        0,
+        "the Lobby has no driving cars (R110)"
+    );
+    assert!(h.room_json().contains("\"seats\""));
+    for p in phones {
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    let mut rounds_started = 0;
+    let mut results = 0;
+    let mut last_phase = h.phase();
+    let mut autopiloted = false;
+    for _ in 0..(120 * 600) {
+        step(&mut h, 1, &mut now);
+        let phase = h.phase();
+        if phase != last_phase {
+            if phase == jj_session::director::Phase::Running {
+                rounds_started += 1;
+                autopiloted = false;
+            }
+            if phase == jj_session::director::Phase::Intermission {
+                results += 1;
+            }
+            if phase == jj_session::director::Phase::Countdown {
+                assert_eq!(
+                    h.sim.cars().count(),
+                    4,
+                    "the Countdown puts the cohort on the grid"
+                );
+            }
+            last_phase = phase;
+        }
+        if phase == jj_session::director::Phase::Running && !autopiloted {
+            for c in 0..h.sim.cars().count() {
+                h.sim.set_autopilot(CarId(c as u32), true);
+            }
+            autopiloted = true;
+        }
+        if rounds_started == 2 {
+            break;
+        }
+    }
+    assert_eq!(results, 1, "round 1 finished and committed its results");
+    assert_eq!(
+        rounds_started, 2,
+        "round 2 started on its own after Intermission"
+    );
+    let room: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_eq!(room["standings"].as_array().unwrap().len(), 4);
+    assert_eq!(room["results"].as_array().unwrap().len(), 4);
 }

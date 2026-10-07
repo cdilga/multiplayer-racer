@@ -29,6 +29,9 @@ export class SimClient {
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
   /** Encoded `SimToMain` events and outbound controller bytes, in order (`lines`: as text, from a describing worker). */
   onMessages: (list: Uint8Array[], lines?: string[]) => void = () => {};
+  /** The latest room view (P1-G01) and its listener. */
+  room: RoomView | null = null;
+  onRoom: (room: RoomView) => void = () => {};
   /** Sim events (seats joining, cameras, identify flashes...). */
   onEvents: (events: SimEventJson[]) => void = () => {};
   /** Bytes for one controller endpoint (the network bridge sends them on that peer's channel). */
@@ -63,6 +66,10 @@ export class SimClient {
         return;
       case 'events':
         this.onEvents(JSON.parse(m.json) as SimEventJson[]);
+        return;
+      case 'room':
+        this.room = JSON.parse(m.json) as RoomView;
+        this.onRoom(this.room);
         return;
       case 'pause':
         this.mask = m.mask;
@@ -137,3 +144,16 @@ export class SimClient {
 
 /** One `SimEvent` as serde JSON: `{"CameraSet":{"seat":3,"car":2,"camera":"FirstPerson"}}`. */
 export type SimEventJson = Record<string, Record<string, unknown>>;
+
+/** The worker's room view (`Host::room_json`, P1-G01). */
+export interface RoomView {
+  phase: 'Lobby' | 'Preparing' | 'Countdown' | 'Running' | 'Finalising' | 'Intermission' | 'Disbanded';
+  remainingMs: number | null;
+  round: number | null;
+  laps: number;
+  freeDrive: boolean;
+  armed: boolean;
+  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; presence: string; local: boolean; car: number | null; laps: number | null; position: number | null; finished: boolean }>;
+  results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
+  standings: Array<{ seat: number; place: number; points: number; wins: number }>;
+}

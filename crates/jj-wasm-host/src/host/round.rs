@@ -1,0 +1,419 @@
+//! The party loop in the worker (P1-G01): the round director (N07b) and results (N07c) wrapped round the sim.
+//!
+//! Lobby → (Ready or Start now) → Preparing → Countdown → Running → Finalising → Intermission → next round. The Lobby
+//! has no driving cars (R110): seats wait for the Countdown, which builds a fresh sim on the prepared map and puts
+//! the round's cohort on the start grid, held until the start. A seat that claims mid-round drops in (S06). The greybox
+//! is the prepared map until M08a/M08b prepare generated tracks, so a preparation completes at once. Laps are a round
+//! rule (`UiCommand::SetLaps`); free drive (`UiCommand::FreeDrive`) is G04's dev mode, where Lobby cars drive.
+
+use std::collections::VecDeque;
+
+use jj_protocol::cmd::{CameraMode, ResultRow, RoomPhase, You};
+use jj_session::director::{
+    Director, DirectorConfig, Driving, Input as DirIn, Output as DirOut, Phase,
+};
+use jj_session::results::{Entrant, FinishTime, RoundFacts, Ruleset, Standings};
+use jj_types::{LifeId, RoundId};
+
+use super::*;
+
+/// The round loop's state on the host.
+pub(super) struct RoundState {
+    pub director: Director,
+    pub standings: Standings,
+    pub laps: u32,
+    pub free_drive: bool,
+    /// The round on now (Countdown to Intermission), and its seats.
+    pub round: Option<RoundId>,
+    pub cohort: Vec<SeatId>,
+    /// The last results, for Intermission and the controllers' end card.
+    pub results: Option<Vec<ResultRow>>,
+    pub seed: u64,
+}
+
+impl RoundState {
+    pub fn new(seed: u64) -> Self {
+        Self {
+            director: Director::new(DirectorConfig::default()),
+            standings: Standings::default(),
+            laps: jj_sim::race::DEFAULT_LAPS,
+            free_drive: false,
+            round: None,
+            cohort: Vec::new(),
+            results: None,
+            seed,
+        }
+    }
+}
+
+fn room_phase(p: Phase) -> RoomPhase {
+    match p {
+        Phase::Lobby | Phase::Disbanded => RoomPhase::Lobby,
+        Phase::Preparing | Phase::Countdown => RoomPhase::Countdown,
+        Phase::Running | Phase::Finalising => RoomPhase::Racing,
+        Phase::Intermission => RoomPhase::Results,
+    }
+}
+
+impl Host {
+    /// What cars may do now.
+    pub(super) fn driving(&self) -> Driving {
+        self.round.director.driving()
+    }
+
+    /// Host time for the director, once per tick.
+    pub(super) fn round_tick(&mut self, tick: u64) {
+        let ms = (tick_ms(tick + 1) - tick_ms(tick)) as u32;
+        self.director_apply(DirIn::Elapsed { ms });
+    }
+
+    /// Feeds the director and acts on everything it says (outputs can feed it again, e.g. a preparation finishing).
+    pub(super) fn director_apply(&mut self, input: DirIn) {
+        let mut queue: VecDeque<DirOut> = self.round.director.apply(input).into();
+        while let Some(o) = queue.pop_front() {
+            queue.extend(self.director_output(o));
+        }
+    }
+
+    fn director_output(&mut self, o: DirOut) -> Vec<DirOut> {
+        match o {
+            // The greybox is always ready (M08a prepares generated maps in the procgen worker).
+            DirOut::PrepareRequested { id, .. } => self
+                .round
+                .director
+                .apply(DirIn::PrepareFinished { id, ok: true }),
+            DirOut::CountdownStarted { cohort, .. } => {
+                self.start_grid(&cohort);
+                self.room_state_all();
+                vec![]
+            }
+            DirOut::RoundStarted { round, seats, .. } => {
+                self.round.round = Some(round);
+                self.round.cohort = seats;
+                self.sim.start_race(self.round.laps);
+                self.room_state_all();
+                vec![]
+            }
+            DirOut::RoundFinalising { round } => {
+                let saved = self.commit_results(round);
+                self.round.director.apply(DirIn::ResultsCommitted { saved })
+            }
+            DirOut::Ended | DirOut::Settled | DirOut::RoundVoided { .. } => {
+                if self.round.director.phase() == Phase::Lobby {
+                    self.enter_lobby();
+                }
+                self.room_state_all();
+                vec![]
+            }
+            DirOut::Disbanded => {
+                let ended = HostCmd::Ended.encode();
+                for endpoint in self.net_endpoints() {
+                    self.out.push(SimToMain::Outbound {
+                        endpoint,
+                        channel: Channel::Cmd,
+                        bytes: ended.clone(),
+                    });
+                }
+                vec![]
+            }
+            DirOut::PhaseChanged { phase } => {
+                if phase == Phase::Lobby {
+                    self.enter_lobby();
+                }
+                self.session_rev += 1;
+                self.room_state_all();
+                vec![]
+            }
+            DirOut::ReadyCleared { .. }
+            | DirOut::IntermissionStarted { .. }
+            | DirOut::StartCancelled { .. } => {
+                self.session_rev += 1;
+                self.room_state_all();
+                vec![]
+            }
+            _ => vec![],
+        }
+    }
+
+    /// A fresh world on the prepared map, the cohort on the start grid in seat order (held until the start), and no
+    /// debris from before the round (R58 is per round).
+    fn start_grid(&mut self, cohort: &[SeatId]) {
+        self.reset_world();
+        let seats: Vec<SeatId> = cohort
+            .iter()
+            .copied()
+            .filter(|s| self.inputs.contains_key(s))
+            .collect();
+        let cars = self.sim.spawn_grid(seats.len());
+        for (seat, car) in seats.iter().zip(cars) {
+            if let Some(input) = self.inputs.get_mut(seat) {
+                input.car = Some(car);
+                input.dropped = false;
+            }
+        }
+        self.session_rev += 1;
+    }
+
+    /// Back to the Lobby: no cars on the road (R110), unless free drive (G04's dev mode) puts every seat in a car.
+    fn enter_lobby(&mut self) {
+        self.round.round = None;
+        self.round.cohort.clear();
+        self.reset_world();
+        if self.round.free_drive {
+            let seats: Vec<SeatId> = self.inputs.keys().copied().collect();
+            for seat in seats {
+                let car = self.sim.spawn_grid(1)[0];
+                if let Some(input) = self.inputs.get_mut(&seat) {
+                    input.car = Some(car);
+                }
+            }
+        }
+        self.session_rev += 1;
+    }
+
+    /// A new sim on the same map and seed: every car, prop and piece of debris from before is gone with it.
+    fn reset_world(&mut self) {
+        self.sim = Sim::new(
+            &self.map,
+            &Registry::generic(),
+            self.round.seed,
+            VehicleProfile::cruz(),
+        );
+        for input in self.inputs.values_mut() {
+            input.car = None;
+            input.dropped = false;
+        }
+        self.seen_race_events = 0;
+        self.seen_utility_events = 0;
+        self.seen_damage_events = 0;
+    }
+
+    /// A seat got a car from the seat reducer (claimed, or back from sitting out): it drives now in free drive or a
+    /// running round (drop-in); otherwise it waits for the next Countdown's grid.
+    pub(super) fn car_wanted(&mut self) -> Option<CarId> {
+        match self.driving() {
+            Driving::FreeDrive => Some(self.sim.spawn_grid(1)[0]),
+            Driving::Racing => Some(self.sim.drop_in()),
+            Driving::Held => None,
+        }
+    }
+
+    /// Classifies the round from the race and commits it to the session standings; returns whether it saved.
+    fn commit_results(&mut self, round: RoundId) -> bool {
+        let race = self.sim.race();
+        let start = race.started_at.unwrap_or(0);
+        let entrants: Vec<Entrant> = self
+            .round
+            .cohort
+            .iter()
+            .map(|&seat| {
+                let car = self.inputs.get(&seat).and_then(|i| i.car);
+                let standing =
+                    car.and_then(|c| race.standings().into_iter().find(|s| s.car == c.0));
+                Entrant {
+                    seat,
+                    entered: car.is_some(),
+                    finish: standing.and_then(|s| s.finished_at).map(|t| FinishTime {
+                        tick: t,
+                        fraction: 0,
+                    }),
+                    progress_mm: standing.map_or(0, |s| (s.progress_m.max(0.0) * 1000.0) as u64),
+                    progress_tick: self.sim.tick(),
+                    withdrawn: car.is_none(),
+                    late: false,
+                }
+            })
+            .collect();
+        let facts = RoundFacts {
+            round,
+            ruleset: Ruleset::default(),
+            entrants,
+        };
+        let Ok(committed) = self.round.standings.commit(&facts) else {
+            return false;
+        };
+        let result = match committed {
+            jj_session::results::Committed::New(r) | jj_session::results::Committed::Again(r) => r,
+        };
+        let rows: Vec<ResultRow> = result
+            .rows
+            .iter()
+            .filter_map(|c| {
+                let seat = self.seats.seat(c.seat)?;
+                let time_ms = facts
+                    .entrants
+                    .iter()
+                    .find(|e| e.seat == c.seat)
+                    .and_then(|e| e.finish)
+                    .map(|f| tick_ms(f.tick.saturating_sub(start)) as u32);
+                Some(ResultRow {
+                    number: seat.number,
+                    name: self.seats.display_name(c.seat).unwrap_or_default(),
+                    place: c.place.unwrap_or(0),
+                    time_ms,
+                    points: c.points,
+                })
+            })
+            .collect();
+        self.events.push(SimEvent::Results { rows: rows.clone() });
+        self.round.results = Some(rows);
+        true
+    }
+
+    fn net_endpoints(&self) -> Vec<EndpointId> {
+        self.seats
+            .seats()
+            .filter_map(|s| s.conn.and_then(|c| self.endpoint_of(c)))
+            .filter(|e| !e.0.starts_with("local:"))
+            .collect()
+    }
+
+    /// Every seated controller's view of the room (phase, its seat, the countdown, results).
+    pub(super) fn room_state_all(&mut self) {
+        let seats: Vec<SeatId> = self.seats.seats().map(|s| s.id).collect();
+        for seat in seats {
+            self.room_state(seat);
+        }
+    }
+
+    pub(super) fn room_state(&mut self, seat: SeatId) {
+        let Some(s) = self.seats.seat(seat) else {
+            return;
+        };
+        let Some(endpoint) = s.conn.and_then(|c| self.endpoint_of(c)) else {
+            return;
+        };
+        if endpoint.0.starts_with("local:") {
+            return;
+        }
+        let d = &self.round.director;
+        let phase = d.phase();
+        let you = You {
+            seat,
+            number: s.number,
+            colour: s.colour,
+            name: self.seats.display_name(seat).unwrap_or_default(),
+            round: d.round().unwrap_or(RoundId(0)),
+            life: LifeId(0),
+            ready: d.is_ready(seat),
+            camera: CameraMode::ThirdPerson,
+            sitting_out: s.presence == seats::Presence::SittingOut,
+        };
+        let countdown_ms = matches!(phase, Phase::Countdown | Phase::Intermission)
+            .then(|| d.remaining_ms().map(|m| m as u32))
+            .flatten();
+        let bytes = HostCmd::RoomState {
+            phase: room_phase(phase),
+            you: Some(you),
+            countdown_ms,
+            results: (phase == Phase::Intermission)
+                .then(|| self.round.results.clone())
+                .flatten(),
+        }
+        .encode();
+        self.out.push(SimToMain::Outbound {
+            endpoint,
+            channel: Channel::Cmd,
+            bytes,
+        });
+    }
+
+    /// The room as JSON for the host's screens (R07): phase, timer, round, laps, every seat and the standings.
+    pub fn room_json(&self) -> String {
+        let d = &self.round.director;
+        let order: Vec<u32> = self.sim.race().standings().iter().map(|r| r.car).collect();
+        let seats: Vec<serde_json::Value> = self
+            .seats
+            .seats()
+            .map(|s| {
+                let car = self.inputs.get(&s.id).and_then(|i| i.car).map(|c| c.0);
+                let race =
+                    car.and_then(|c| self.sim.race().standings().into_iter().find(|r| r.car == c));
+                serde_json::json!({
+                    "seat": s.id.0,
+                    "number": s.number.0,
+                    "name": self.seats.display_name(s.id).unwrap_or_default(),
+                    "rgb": s.colour.rgb,
+                    "colourIndex": s.colour.index,
+                    "ready": d.is_ready(s.id),
+                    "presence": format!("{:?}", s.presence),
+                    "local": s.endpoint.0.starts_with("local:"),
+                    "car": car,
+                    "laps": race.map(|r| r.laps),
+                    "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
+                    "finished": race.and_then(|r| r.finished_at).is_some(),
+                })
+            })
+            .collect();
+        let standings: Vec<serde_json::Value> = self
+            .round
+            .standings
+            .table()
+            .iter()
+            .map(|r| serde_json::json!({ "seat": r.seat.0, "place": r.place, "points": r.total.points, "wins": r.total.wins }))
+            .collect();
+        serde_json::json!({
+            "phase": format!("{:?}", d.phase()),
+            "remainingMs": d.remaining_ms(),
+            "round": d.round().map(|r| r.0),
+            "laps": self.round.laps,
+            "freeDrive": self.round.free_drive,
+            "armed": d.armed(),
+            "seats": seats,
+            "results": self.round.results,
+            "standings": standings,
+        })
+        .to_string()
+    }
+
+    /// A host UI command for the round loop.
+    pub(super) fn round_ui(&mut self, ui: UiCommand) {
+        match ui {
+            UiCommand::StartRound => self.director_apply(DirIn::StartNow),
+            UiCommand::EndRound => self.director_apply(DirIn::End),
+            UiCommand::DisbandRoom => self.director_apply(DirIn::Disband),
+            UiCommand::SetLaps { laps } => self.round.laps = laps.max(1),
+            UiCommand::FreeDrive { on } => {
+                self.round.free_drive = on;
+                let cfg = DirectorConfig {
+                    lobby_free_drive: on,
+                    ..DirectorConfig::default()
+                };
+                if self.round.director.phase() == Phase::Lobby {
+                    self.round.director = Director::new(cfg);
+                    let seats: Vec<SeatId> = self.inputs.keys().copied().collect();
+                    for seat in seats {
+                        self.round.director.apply(DirIn::SetEligible {
+                            seat,
+                            eligible: true,
+                        });
+                    }
+                    self.enter_lobby();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// G04's dev free drive (the host page's `?drive`, and tests of driving mechanics): Lobby cars drive.
+    pub fn set_free_drive(&mut self, on: bool) {
+        self.round_ui(UiCommand::FreeDrive { on });
+    }
+
+    /// The round director's phase (tests and the host's screens).
+    pub fn phase(&self) -> Phase {
+        self.round.director.phase()
+    }
+
+    /// READY from a controller or a host pad/key cluster, under the director's current Ready revision.
+    pub(super) fn set_ready(&mut self, seat: SeatId, ready: bool) {
+        let revision = self.round.director.ready_revision();
+        self.director_apply(DirIn::SetReady {
+            seat,
+            ready,
+            revision,
+        });
+        self.session_rev += 1;
+        self.room_state(seat);
+    }
+}

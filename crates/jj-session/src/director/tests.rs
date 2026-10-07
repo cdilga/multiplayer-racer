@@ -545,9 +545,15 @@ fn finalising_never_spins_forever() {
 }
 
 #[test]
-fn lobby_is_free_drive_and_disband_is_terminal() {
+fn lobby_holds_every_car_unless_free_drive_and_disband_is_terminal() {
+    // R110: no car drives in the Lobby; free drive is G04's dev/test mode only.
+    assert_eq!(director().driving(), Driving::Held);
+    let free = Director::new(DirectorConfig {
+        lobby_free_drive: true,
+        ..DirectorConfig::default()
+    });
+    assert_eq!(free.driving(), Driving::FreeDrive);
     let mut d = director();
-    assert_eq!(d.driving(), Driving::FreeDrive);
     join(&mut d, &[A]);
     let out = d.apply(Input::Disband);
     assert!(out.contains(&Output::Disbanded));

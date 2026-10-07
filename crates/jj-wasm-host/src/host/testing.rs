@@ -6,6 +6,7 @@
 //!
 //! | `cmd` | does | answers |
 //! |---|---|---|
+//! | `autopilot` `{car?, on}` | every car (or one) to or from the autopilot | `{cars, on}` |
 //! | `hold` `{on}` | holds the clock (test mode starts held): only `step` moves the sim | `{tick, held}` |
 //! | `load` `{fixture, mapJson?}` | a fresh host world set up from a `jj sim` fixture (its map, or `mapJson`) | `{tick, cars}` |
 //! | `spawn` `{cars: [CarSpec]}` | more cars, as a fixture's `cars` entries (journaled) | `{cars: [id]}` |
@@ -62,6 +63,12 @@ enum Command {
         car: u32,
         part: String,
         health: f32,
+    },
+    /// Hands every car (or one) to the autopilot, so a journey can race full rounds hands-off (P1-G01).
+    Autopilot {
+        #[serde(default)]
+        car: Option<u32>,
+        on: bool,
     },
     Step {
         ticks: u64,
@@ -196,6 +203,16 @@ impl Host {
                 self.sim
                     .set_part_health(jj_sim::CarId(car), i as u8, health);
                 json!({ "tick": self.sim.tick(), "part": part, "health": health })
+            }
+            Command::Autopilot { car, on } => {
+                let cars: Vec<jj_sim::CarId> = match car {
+                    Some(c) => vec![jj_sim::CarId(c)],
+                    None => self.sim.cars().collect(),
+                };
+                for &c in &cars {
+                    self.sim.set_autopilot(c, on);
+                }
+                json!({ "cars": cars.len(), "on": on })
             }
             Command::Step { ticks } => {
                 for _ in 0..ticks {

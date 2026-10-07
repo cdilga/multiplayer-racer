@@ -24,6 +24,7 @@ export interface Sim {
   pause_mask(): number;
   countdown_ms(): number;
   state_hash(): string;
+  room_json(): string;
 }
 
 /** The module a jj-wasm-host build's wasm-bindgen output exports. */
@@ -120,7 +121,21 @@ export class SimWorker<S extends Sim> {
     }
   }
 
+  private lastRoom = '';
+  private lastRoomAt = 0;
+  /** The room view for main (lobby, countdown, results), sent when it changes, at most ~7 times a second (P1-G01). */
+  private postRoom(s: S): void {
+    const now = performance.now();
+    if (now - this.lastRoomAt < 150) return;
+    const room = s.room_json();
+    if (room === this.lastRoom) return;
+    this.lastRoom = room;
+    this.lastRoomAt = now;
+    this.post({ kind: 'room', json: room });
+  }
+
   private drain(s: S): void {
+    this.postRoom(s);
     const list: Uint8Array[] = [];
     for (let m = s.next_message(); m !== undefined; m = s.next_message()) {
       // Controller-bound bytes go straight to main's transport; everything else in order as messages.

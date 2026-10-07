@@ -41,6 +41,14 @@ pub enum UiCommand {
     RemoveEndpoint {
         endpoint: EndpointId,
     },
+    /// G04's dev/test free drive: Lobby cars drive (the real Lobby has none, R110).
+    FreeDrive {
+        on: bool,
+    },
+    /// Laps per round from the next round (a round rule; journeys use 1).
+    SetLaps {
+        laps: u32,
+    },
 }
 
 /// Main → sim.

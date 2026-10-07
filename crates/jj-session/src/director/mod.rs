@@ -46,6 +46,9 @@ pub struct DirectorConfig {
     pub finalise_timeout_ms: u32,
     /// Initial room setup arms the ready-based start (§10.6).
     pub ready_start_armed: bool,
+    /// Free drive in the Lobby (G04's dev/test mode only). Off, the Lobby holds every car: there are none until the
+    /// Countdown places them on the start grid (R110).
+    pub lobby_free_drive: bool,
 }
 
 impl Default for DirectorConfig {
@@ -56,6 +59,7 @@ impl Default for DirectorConfig {
             intermission_ms: 60_000,
             finalise_timeout_ms: 5_000,
             ready_start_armed: true,
+            lobby_free_drive: false,
         }
     }
 }
@@ -103,7 +107,8 @@ impl Pause {
 /// What cars may do in the current phase.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Driving {
-    /// Lobby warm-up (§9): free driving on the greybox with collisions and damage on; no progress, laps or score.
+    /// The dev/test free drive (G04, `DirectorConfig::lobby_free_drive`): free driving on the greybox with collisions and
+    /// damage on; no progress, laps or score. The real Lobby has no driving cars (R110).
     FreeDrive,
     /// Held on the grid or parked (Preparing, Countdown, Finalising, Intermission).
     Held,
@@ -355,7 +360,7 @@ impl Director {
 
     pub fn driving(&self) -> Driving {
         match self.phase {
-            Phase::Lobby => Driving::FreeDrive,
+            Phase::Lobby if self.cfg.lobby_free_drive => Driving::FreeDrive,
             Phase::Running => Driving::Racing,
             _ => Driving::Held,
         }

@@ -14,6 +14,7 @@ import { checkCapability, showUnsupported } from './render/capability';
 import { MapRenderer } from './render/map/map';
 import { paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
+import { mountRoundScreens } from './round/screens';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
@@ -135,9 +136,21 @@ async function boot(): Promise<void> {
   input.start();
   mountDrawer(document.body, input);
   testing?.attach(client, { mapJson: greybox, seed, input });
-  // Free drive (P1-G04, a dev/test flag; the lobby never shows driving cars, R110): a room on the server, phones join
-  // over WebRTC and drive Cruz Missiles on the greybox beside the host's pads and keys, one tile per car.
-  if (params.has('drive')) await openFreeDrive(client, world, params);
+  // The round loop (P1-G01) runs in the worker. A host page opens a room: the Lobby has no driving cars (R110) and a
+  // round puts the players on the grid. Free drive (P1-G04, `?drive`) is the dev/test mode where claimed seats drive at
+  // once; test-surface pages (`?test`) drive the same way unless they ask for the real room (`?room`). `?tiles` and
+  // plain test pages stay offline (no server).
+  const freeDrive = params.has('drive') || (testing !== null && !params.has('room'));
+  if (freeDrive) client.input({ type: 'ui', ui: 'free-drive', on: true });
+  const laps = Number(params.get('laps'));
+  if (laps > 0) client.input({ type: 'ui', ui: `laps:${laps}` });
+  const online = params.has('drive') || params.has('room') || (testing === null && !params.has('tiles'));
+  if (online) await openRoom(client, world, params, freeDrive);
+  (window as unknown as { __jjRoom: unknown }).__jjRoom = {
+    view: () => client.room,
+    start: () => client.input({ type: 'ui', ui: 'start' }),
+    end: () => client.input({ type: 'ui', ui: 'end' }),
+  };
   // A phone's camera toggle (SetCamera, P1-R05) switches its own tile: tiles follow cars, tile k is car k.
   client.onEvents = (events) => {
     for (const e of events) {
@@ -150,7 +163,7 @@ async function boot(): Promise<void> {
   document.documentElement.dataset.jjHost = testing ? 'test' : 'ready';
 }
 
-async function openFreeDrive(client: SimClient, world: World, params: URLSearchParams): Promise<void> {
+async function openRoom(client: SimClient, world: World, params: URLSearchParams, freeDrive: boolean): Promise<void> {
   const bridge = new NetBridge(client, () => {}, { iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   world.tiles = { count: 1, auto: true };
   try {
@@ -161,8 +174,9 @@ async function openFreeDrive(client: SimClient, world: World, params: URLSearchP
   }
   const joinUrl = bridge.hub.joinUrl || new URL('../c', location.href).href;
   const overlay = mountGridOverlay(app, joinUrl);
-  // Free drive always shows the paper QR with the code (the lobby's join panel is R07's), so phones can join any time.
-  if (bridge.hub.code) {
+  // Free drive always shows the paper QR with the code, so phones can join any time; a real room's join panel is the
+  // round screens' (R07).
+  if (freeDrive && bridge.hub.code) {
     const card = paperQrCard({ url: joinUrl, code: bridge.hub.code, domain: new URL(joinUrl).host, size: 112 });
     card.classList.add('jj-drive-qr');
     card.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2;margin:0';
@@ -170,6 +184,7 @@ async function openFreeDrive(client: SimClient, world: World, params: URLSearchP
   }
   world.onLayout = (layout, scale) => overlay.render(layout, scale);
   world.onArrows = (arrows, scale) => overlay.arrows(arrows, scale);
+  if (!freeDrive) mountRoundScreens(app, client, { code: bridge.hub.code, joinUrl });
   (window as unknown as { __jjNet: unknown }).__jjNet = {
     code: () => bridge.hub.code,
     joinUrl: () => bridge.hub.joinUrl,

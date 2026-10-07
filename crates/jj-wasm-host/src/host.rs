@@ -129,10 +129,6 @@ const SEEN_ACTIONS: usize = 32;
 pub struct Host {
     sim: Sim,
     /// The map the sim runs on (the test surface's `load` and route-relative observations read it).
-    #[cfg_attr(
-        not(feature = "testing"),
-        expect(dead_code, reason = "only the testing build reads it so far")
-    )]
     map: LoadedMap,
     seats: Seats,
     inputs: BTreeMap<SeatId, SeatInput>,
@@ -161,6 +157,8 @@ pub struct Host {
     /// How many of the sim's damage events have become seat events (P1-S04a).
     seen_damage_events: usize,
     session_rev: u32,
+    /// The party loop (G01): director, standings, laps, free drive.
+    round: round::RoundState,
     /// The test surface's state (P1-F05b): only in the `testing` build, never in the shipped worker.
     #[cfg(feature = "testing")]
     test: testing::TestState,
@@ -245,6 +243,7 @@ impl Host {
             seen_utility_events: 0,
             seen_damage_events: 0,
             session_rev: 0,
+            round: round::RoundState::new(seed),
             #[cfg(feature = "testing")]
             test: testing::TestState {
                 seed,
@@ -443,6 +442,9 @@ impl Host {
     }
 
     pub fn step_one(&mut self) {
+        // The round director's clock first: a Countdown starting here builds the round's world before this tick.
+        let tick = self.sim.tick();
+        self.round_tick(tick);
         let tick = self.sim.tick();
         if tick.is_multiple_of(HUD_EVERY_TICKS) {
             self.send_huds(tick);
@@ -484,12 +486,14 @@ impl Host {
                 input.dropped = false;
             }
         }
+        let held = self.driving() == jj_session::director::Driving::Held;
         for input in self.inputs.values() {
             let Some(car) = input.car else { continue };
-            let fresh = input
-                .state
-                .age_ms(now_ms)
-                .is_some_and(|age| age <= STALE_MS);
+            let fresh = !held
+                && input
+                    .state
+                    .age_ms(now_ms)
+                    .is_some_and(|age| age <= STALE_MS);
             let controls = if fresh {
                 controls(input.state.semantics())
             } else {
@@ -568,10 +572,11 @@ impl Host {
                 let conn = self.locals[&source];
                 let lb = self.local_buttons.entry(source).or_default();
                 let pressed = |bit: u32| buttons & bit != 0 && lb.last & bit == 0;
-                let (leave, identify, sit_out) = (
+                let (leave, identify, sit_out, ready_pressed) = (
                     pressed(LOCAL_LEAVE),
                     pressed(LOCAL_IDENTIFY),
                     pressed(LOCAL_SIT_OUT),
+                    pressed(LOCAL_READY),
                 );
                 lb.last = buttons;
                 if leave {
@@ -597,7 +602,11 @@ impl Host {
                 for o in outs {
                     self.seat_output(o);
                 }
-                // READY (`LOCAL_READY`) is the round director's (G01).
+                // READY (`LOCAL_READY`) toggles this seat's Ready for the round director (G01).
+                if ready_pressed && let Some(id) = seat {
+                    let ready = !self.round.director.is_ready(id);
+                    self.set_ready(id, ready);
+                }
                 // Like the wire (`Seats::input_seat`), a sample only counts once the seat has a car.
                 if let Some(input) = seat
                     .and_then(|s| self.inputs.get_mut(&s))
@@ -632,10 +641,10 @@ impl Host {
                 }
             }
             MainToSim::Ui { ui, .. } => match ui {
-                UiCommand::StartRound => self.sim.start_race(jj_sim::race::DEFAULT_LAPS),
                 UiCommand::Pause { on } => self.set_pause(Pause::Manual, on),
-                // The round loop (G01), cameras (R05) and the drawer's Remove (G07) land later.
-                _ => {}
+                // Start/End/Disband, laps and free drive are the round loop's (G01); cameras (R05) come from the
+                // controllers and the drawer's Remove is G07's.
+                other => self.round_ui(other),
             },
             // Map preparation (G01/M08a) and buffers are main-thread plumbing; Init and Lifecycle act on arrival.
             _ => {}
@@ -685,6 +694,12 @@ impl Host {
             ControllerCmd::Leave => self.seats.apply(seats::Input::Leave { conn }),
             ControllerCmd::SitOut => self.seats.apply(seats::Input::SitOut { conn, on: true }),
             ControllerCmd::Identify => self.seats.apply(seats::Input::Identify { conn }),
+            ControllerCmd::Ready { on } => {
+                if let Some(seat) = self.seats.seat_of(conn) {
+                    self.set_ready(seat, on);
+                }
+                vec![]
+            }
             ControllerCmd::SetCamera { camera } => {
                 if let Some(seat) = self.seats.seat_of(conn)
                     && let Some(car) = self.inputs.get(&seat).and_then(|i| i.car)
@@ -820,16 +835,20 @@ impl Host {
                 }
                 self.events.push(SimEvent::SeatJoined { seat, number });
                 self.session_rev += 1;
+                self.director_apply(jj_session::director::Input::SetEligible {
+                    seat,
+                    eligible: true,
+                });
+                self.room_state(seat);
             }
             seats::Output::CarAdded { seat } => {
-                // Through the placement service: the next grid slot before the race, a drop-in once it's running.
-                let car = if self.sim.race().started_at.is_some() {
-                    self.sim.drop_in()
-                } else {
-                    self.sim.spawn_grid(1)[0]
-                };
-                if let Some(input) = self.inputs.get_mut(&seat) {
-                    input.car = Some(car);
+                // Through the placement service: a drop-in once a round is running, a grid slot in free drive; in the
+                // Lobby (R110) and the held phases the seat waits for the next Countdown's grid.
+                let car = self.car_wanted();
+                if let Some(input) = self.inputs.get_mut(&seat)
+                    && input.car.is_none()
+                {
+                    input.car = car;
                 }
                 self.session_rev += 1;
             }
@@ -842,6 +861,10 @@ impl Host {
                 }
                 self.events.push(SimEvent::SeatLeft { seat });
                 self.session_rev += 1;
+                self.director_apply(jj_session::director::Input::SetEligible {
+                    seat,
+                    eligible: false,
+                });
             }
             seats::Output::Identify { seat } => {
                 self.events.push(SimEvent::Identify { seat });
@@ -991,6 +1014,7 @@ impl Host {
 
     fn collect_race_events(&mut self) {
         let race = self.sim.race().events().to_vec();
+        let mut over = false;
         for (_, e) in &race[self.seen_race_events..] {
             match *e {
                 Event::LapCompleted { car, laps } => {
@@ -1019,10 +1043,17 @@ impl Host {
                         });
                     }
                 }
+                Event::RaceOver { .. } => {
+                    over = true;
+                }
                 _ => {}
             }
         }
         self.seen_race_events = race.len();
+        // The race rules froze the result (everyone home, or the finish window closed): the director finalises.
+        if over && self.driving() == jj_session::director::Driving::Racing {
+            self.director_apply(jj_session::director::Input::RoundOver);
+        }
     }
 
     /// The next message for main, in order: queued events first (one ordered batch), then outbound controller bytes.
@@ -1217,6 +1248,8 @@ impl Writer<'_> {
         self.put(&v.to_le_bytes());
     }
 }
+
+mod round;
 
 #[cfg(feature = "testing")]
 pub mod testing;
