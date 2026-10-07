@@ -1,4 +1,4 @@
 # Audition audio is generated on eris and the Mac (R89), kept under private/p1a01b/ and never committed.
 # make_manifest.py copies the AAC players here for a local check; they reach the preview only by an explicit publish step.
 clips/
-final.json
+# final.json (the current lines' metadata) is committed: CI's /poc/ publish deletes anything the checkout doesn't have.
