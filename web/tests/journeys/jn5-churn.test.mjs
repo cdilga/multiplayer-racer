@@ -158,7 +158,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await shot(host, 'tv-intermission');
 
   at('Intermission: shrink to 2');
-  for (const p of phones.slice(2, 9)) await leave(p);
+  for (const p of phones.slice(2, 8)) await leave(p); // Bazza … Thommo; Jonesy and Sheila stay
   // Both key clusters leave from the drawer (the sitting-out one too).
   for (let k = 0; k < 2; k++) {
     const before = (await view(host)).seats.length;
