@@ -36,6 +36,10 @@ export interface Frame {
   flags: Uint32Array;
   /** Per car: position xyz, rotation xyzw, steer. */
   pos: Float32Array;
+  /** Per car: linear velocity xyz (m/s), the boost meter (0..1) and the applied throttle (0..1); the effects' inputs (P1-R12). */
+  vel: Float32Array;
+  boost: Float32Array;
+  throttle: Float32Array;
   rot: Float32Array;
   steer: Float32Array;
   debris: number;
@@ -74,6 +78,9 @@ export function decodeSnapshot(view: DataView): Frame {
     life: new Uint32Array(cars),
     flags: new Uint32Array(cars),
     pos: new Float32Array(cars * 3),
+    vel: new Float32Array(cars * 3),
+    boost: new Float32Array(cars),
+    throttle: new Float32Array(cars),
     rot: new Float32Array(cars * 4),
     steer: new Float32Array(cars),
     debris,
@@ -99,7 +106,10 @@ export function decodeSnapshot(view: DataView): Frame {
     f.life[i] = view.getUint32(at + 4, true);
     for (let k = 0; k < 3; k++) f.pos[i * 3 + k] = view.getFloat32(at + 8 + k * 4, true);
     for (let k = 0; k < 4; k++) f.rot[i * 4 + k] = view.getFloat32(at + 20 + k * 4, true);
+    for (let k = 0; k < 3; k++) f.vel[i * 3 + k] = view.getFloat32(at + 36 + k * 4, true);
     f.steer[i] = view.getFloat32(at + 48, true);
+    f.boost[i] = view.getFloat32(at + 56, true);
+    f.throttle[i] = view.getFloat32(at + 60, true);
     f.flags[i] = view.getUint32(at + 52, true);
   }
   let kept = 0;
@@ -134,6 +144,10 @@ export function decodeSnapshot(view: DataView): Frame {
 }
 
 export interface CarPose {
+  /** Linear velocity (m/s), the boost meter and the throttle: written for the effects; 0 by default. */
+  vel?: [number, number, number];
+  boost?: number;
+  throttle?: number;
   id: number;
   life: number;
   pos: [number, number, number];
@@ -176,11 +190,11 @@ export function encodeSnapshot(buf: ArrayBuffer, tick: number, cars: CarPose[], 
     v.setUint32(at + 4, c.life, true);
     c.pos.forEach((x, k) => v.setFloat32(at + 8 + k * 4, x, true));
     c.rot.forEach((x, k) => v.setFloat32(at + 20 + k * 4, x, true));
-    for (let k = 0; k < 3; k++) v.setFloat32(at + 36 + k * 4, 0, true);
+    for (let k = 0; k < 3; k++) v.setFloat32(at + 36 + k * 4, c.vel?.[k] ?? 0, true);
     v.setFloat32(at + 48, c.steer ?? 0, true);
     v.setUint32(at + 52, c.flags ?? 0, true);
-    v.setFloat32(at + 56, 0, true);
-    v.setUint32(at + 60, 0, true);
+    v.setFloat32(at + 56, c.boost ?? 0, true);
+    v.setFloat32(at + 60, c.throttle ?? 0, true);
     at += SNAPSHOT_CAR;
   }
   for (const p of parts) {

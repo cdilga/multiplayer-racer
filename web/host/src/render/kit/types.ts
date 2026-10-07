@@ -10,4 +10,10 @@ export interface KitModule {
   geometry(): BufferGeometry;
   /** Per-instance scale (x, y, z) for these params (defaults filled in), so one geometry serves every size. */
   scale(params: Params): [number, number, number];
+  /** Outline this piece with the look's ink hull (P1-R10: the wayfinding kit and the generic roadside pieces). */
+  ink?: boolean;
+  /** Visual-only extras drawn at the piece's placement (a chevron's board): not part of the collider proxy, so the
+   *  registry's bounds check measures `geometry()` alone. One more instanced draw per type in use. Geometry in metres,
+   *  origin at the extra's own centre; `lift` raises it above the piece's origin. */
+  decor?: { geometry(): BufferGeometry; scale(params: Params): [number, number, number]; lift(params: Params): number };
 }

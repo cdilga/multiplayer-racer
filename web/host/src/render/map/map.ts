@@ -24,6 +24,8 @@ import {
 import { colliderSize, ENTRIES, MODULES, withDefaults } from '../kit/registry';
 import type { Params } from '../kit/types';
 import type { Frame } from '../snapshot';
+import { InkHull, toon } from '../look';
+import { finishBanner } from './banner';
 
 export interface Pose {
   x: number;
@@ -96,8 +98,12 @@ export interface MapStats {
 export class MapRenderer {
   readonly group = new Group();
   readonly kit = new Map<string, InstancedMesh>();
+  /** Visual extras of kit pieces (a chevron's board), one instanced mesh per type in use. */
+  readonly decor = new Map<string, InstancedMesh>();
+  /** Ink hulls of the outlined kit types (one draw per type). */
+  readonly hulls: InkHull[] = [];
   readonly stats: MapStats;
-  private material = new MeshLambertMaterial({ vertexColors: true });
+  private material = toon(new MeshLambertMaterial({ vertexColors: true }), { halftone: true, grit: true });
 
   /** `repeat`: draw the dressing this many times over (offset copies), to show draws don't grow with placements. */
   constructor(
@@ -107,13 +113,15 @@ export class MapRenderer {
     this.group.name = 'map';
     this.group.add(this.terrain(), this.route(), this.features());
     const kitInstances = this.dressing(opts.repeat ?? 1);
+    const banner = finishBanner(map);
+    if (banner) this.group.add(...banner);
     this.stats = {
       terrainCells: (map.terrain.cols - 1) * (map.terrain.rows - 1),
       routePoints: map.route.points.length,
       features: map.features.length,
       kitTypes: this.kit.size,
       kitInstances,
-      draws: 3 + this.kit.size,
+      draws: 3 + this.kit.size + this.decor.size + this.hulls.length + (banner?.length ?? 0),
     };
   }
 
@@ -125,6 +133,8 @@ export class MapRenderer {
   /** Frees the map's own geometry (the kit's modules are shared and stay). */
   dispose(): void {
     for (const child of this.group.children) if (child instanceof Mesh && !(child instanceof InstancedMesh)) child.geometry.dispose();
+    for (const h of this.hulls) h.mesh.geometry.dispose();
+    for (const d of this.decor.values()) d.geometry.dispose();
   }
 
   private terrain(): Mesh {
@@ -325,6 +335,23 @@ export class MapRenderer {
       });
       this.kit.set(id, im);
       this.group.add(im);
+      if (mod.ink || id.startsWith('generic/')) {
+        const hull = new InkHull(im);
+        this.hulls.push(hull);
+        this.group.add(hull.mesh);
+      }
+      if (mod.decor) {
+        const d = new InstancedMesh(mod.decor.geometry(), this.material, list.length);
+        d.name = `${id}.decor`;
+        d.castShadow = true;
+        d.frustumCulled = false;
+        list.forEach(({ pose, params }, i) => {
+          const p = withDefaults(entry, params);
+          d.setMatrixAt(i, m.compose(v.set(mm(pose.x), mm(pose.y) + mod.decor!.lift(p), mm(pose.z)), yawQuat(pose.yaw, q), sc.fromArray(mod.decor!.scale(p))));
+        });
+        this.decor.set(id, d);
+        this.group.add(d);
+      }
       total += list.length;
     }
     return total;
@@ -379,7 +406,7 @@ export class MapRenderer {
 /** Draws the snapshot's dynamic props (map props, dropped cones, spawned debris) with the kit modules. */
 export class PropRenderer {
   private meshes = new Map<string, InstancedMesh>();
-  private material = new MeshLambertMaterial({ vertexColors: true });
+  private material = toon(new MeshLambertMaterial({ vertexColors: true }), { halftone: true });
   private m = new Matrix4();
   private local = new Matrix4();
   private q = new Quaternion();

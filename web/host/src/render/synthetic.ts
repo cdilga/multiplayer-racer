@@ -5,7 +5,7 @@
 // on its own 10 s cycle with its `life` bumped), so a frozen tick renders the same frame every time.
 import sidecar from '../../../../art/vehicles/cruz-missile/cruz-missile.asset.json';
 import type { Snapshot } from '../worker/client';
-import { encodeSnapshot, PART_DETACHED, PART_LOOSE, snapshotBytes, type CarPose, type PartPose } from './snapshot';
+import { encodeSnapshot, PART_DETACHED, PART_LOOSE, PART_PIECE, PIECE_HUSK, snapshotBytes, type CarPose, type PartPose } from './snapshot';
 
 export const TICK_HZ = 120;
 
@@ -24,6 +24,9 @@ export interface SyntheticOptions {
   damage?: boolean;
   /** The damage strip (P1-V03): cars parked side by side, side-on to the overview camera, each in one state. */
   strip?: boolean;
+  /** The effects demo (P1-R12; `?fxdemo`): cars cycle through the families' triggers (dirt and gravel driving, a drift, a
+   *  boost, impacts, landings, a part coming off) and a husk burns beside the oval. Presentation fixtures only. */
+  fxDemo?: boolean;
 }
 
 const SPEED = 18; // m/s
@@ -132,18 +135,61 @@ function stripParts(i: number): PartPose[] {
   });
 }
 
+const HUSK_AT: [number, number, number] = [-14, 0, 6];
+
+/** The effects demo's state for car `i` at `tick`: the flags, velocity, boost and throttle that trigger its family. */
+export function fxDemoState(i: number, n: number, tick: number): Pick<CarPose, 'flags' | 'vel' | 'boost' | 'throttle'> {
+  const a = syntheticPose(i, n, tick);
+  const b = syntheticPose(i, n, tick + 1);
+  const same = a.life === b.life;
+  const vel: [number, number, number] = same ? [(b.pos[0] - a.pos[0]) * TICK_HZ, 0, (b.pos[2] - a.pos[2]) * TICK_HZ] : [0, 0, 0];
+  const kind = i % 6;
+  let flags = 0;
+  let boost = 0.2;
+  let throttle = 1;
+  const cycle = tick % (4 * TICK_HZ);
+  if (kind === 0) flags = 1 << 6; // dirt
+  else if (kind === 1) flags = 32; // drifting on tarmac
+  else if (kind === 2) [flags, boost] = [16 | 0, i % 12 === 2 ? 1 : 0.5]; // boosting (blue at full)
+  else if (kind === 3) flags = 2 << 6; // gravel
+  else if (kind === 4) {
+    // An impact every 4 s: one tick at a fifth of the speed, then back (a hard hit: dv about 14 m/s).
+    if (cycle < 2) [vel[0], vel[2]] = [vel[0] * 0.2, vel[2] * 0.2];
+    throttle = cycle < 40 ? 0 : 1;
+  } else {
+    // A landing every 4 s: falling for a third of a second, then level.
+    if (cycle < 40) vel[1] = -7;
+    flags = 1 << 6;
+  }
+  if (kind !== 4 && tick % (6 * TICK_HZ) < 120) throttle = 0; // braking lamps for a second in six
+  return { flags, vel, boost, throttle };
+}
+
+/** The demo's extra part records: a husk (a burned-out car at HUSK_AT) and, on every sixth car, a door that comes off. */
+export function fxDemoParts(n: number, tick: number): PartPose[] {
+  const out: PartPose[] = [{ car: 900, part: PIECE_HUSK, state: PART_PIECE, pos: HUSK_AT }];
+  for (let i = 5; i < n; i += 6) {
+    if (tick < 480) continue; // intact for the first four seconds, then the door goes
+    const at = syntheticPose(i, n, tick).pos;
+    out.push({ car: i + 1, part: PART.door_FL!, state: PART_DETACHED, pos: [at[0] + 2, 0.3, at[2] + 2], rot: [0, 0, Math.SQRT1_2, Math.SQRT1_2] }, { car: i + 1, part: PART.front!, state: PART_LOOSE, angle: 0.4 });
+  }
+  return out;
+}
+
 export class SyntheticSource implements SnapshotSource {
   onSnapshot: (s: Snapshot) => void = (s) => this.release(s);
   tick = 0;
   published = 0;
   skipped = 0;
   private free: ArrayBuffer[] = [];
+  private fxDemo = false;
   private timer: ReturnType<typeof setInterval> | undefined;
   private t0 = 0;
 
   constructor(readonly opts: SyntheticOptions) {
     // Room for every car's part records: three at most per damaged car.
-    const bytes = snapshotBytes(opts.cars, 0, opts.strip ? opts.cars * 6 : opts.damage ? opts.cars * 3 : 0);
+    this.fxDemo = opts.fxDemo ?? (typeof location !== 'undefined' && new URLSearchParams(location.search).has('fxdemo'));
+    const bytes = snapshotBytes(opts.cars, 0, opts.strip ? opts.cars * 6 : opts.damage || this.fxDemo ? opts.cars * 3 + 1 : 0);
     for (let i = 0; i < (opts.poolSize ?? 4); i++) this.free.push(new ArrayBuffer(bytes));
   }
 
@@ -179,7 +225,10 @@ export class SyntheticSource implements SnapshotSource {
     const n = this.opts.cars;
     const strip = this.opts.strip;
     const cars = Array.from({ length: n }, (_, i) => (strip ? stripPose(i) : syntheticPose(i, n, tick)));
-    const parts = strip
+    if (this.fxDemo && !strip) cars.forEach((c, i) => Object.assign(c, fxDemoState(i, n, tick)));
+    const parts = this.fxDemo && !strip
+      ? [...(this.opts.damage ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat() : []), ...fxDemoParts(n, tick)]
+      : strip
       ? Array.from({ length: n }, (_, i) => stripParts(i)).flat()
       : this.opts.damage
         ? Array.from({ length: n }, (_, i) => syntheticParts(i, n, tick)).flat()

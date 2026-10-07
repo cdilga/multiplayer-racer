@@ -3,7 +3,8 @@
 //   webgl2  WebGPURenderer forced onto its WebGL2 backend (the forced fallback path);
 //   webgl   the classic WebGLRenderer.
 // `?renderer=` picks one; otherwise DEFAULT_BACKEND, the measured decision in docs/evidence/P1-R01/bench.md.
-import { SRGBColorSpace as SRGB, WebGLRenderer, type Camera, type Scene } from 'three';
+import { SRGBColorSpace as SRGB, Vector4, WebGLRenderer, type Camera, type Scene } from 'three';
+import { look, prepareScene } from './look';
 
 export type BackendKind = 'webgpu' | 'webgl2' | 'webgl';
 export const BACKENDS: BackendKind[] = ['webgpu', 'webgl2', 'webgl'];
@@ -49,9 +50,21 @@ export function backendFromQuery(q: URLSearchParams): BackendKind {
 }
 
 const px = new Uint8Array(4);
+const vp = new Vector4();
+
+/** The look's per-viewport switch (P1-R10): the rig on first sight of a scene, then the cost tier of this viewport. */
+function lookFor(r: { getViewport?: (v: Vector4) => Vector4 }, scene: Scene): void {
+  prepareScene(scene);
+  if (r.getViewport) {
+    r.getViewport(vp);
+    look.tile(vp.z, vp.w);
+  }
+}
 
 export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<Backend> {
   const antialias = opts.antialias ?? true;
+  // The look's materials and hulls are GLSL (the WebGLRenderer route); the WebGPU paths draw the plain materials until a TSL port.
+  look.enabled = kind === 'webgl' && (typeof location === 'undefined' || new URLSearchParams(location.search).get('look') !== 'plain');
   if (kind === 'webgl') {
     const r = new WebGLRenderer({ canvas, antialias, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     r.outputColorSpace = SRGB;
@@ -63,7 +76,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       maxSize: Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)),
       finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
       drawCalls: () => r.info.render.calls,
-      render: (s, c) => r.render(s, c),
+      render: (s, c) => (lookFor(r, s), r.render(s, c)),
     };
   }
   const { WebGPURenderer, SRGBColorSpace } = await import('three/webgpu');
@@ -84,7 +97,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       maxSize: device.limits.maxTextureDimension2D,
       finish: () => device.queue.onSubmittedWorkDone(),
       drawCalls: () => r.info.render.drawCalls,
-      render: (s, c) => r.render(s, c),
+      render: (s, c) => (lookFor(r, s), r.render(s, c)),
     };
   }
   const gl = be.gl!;
@@ -95,6 +108,6 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
     maxSize: Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)),
     finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
     drawCalls: () => r.info.render.drawCalls,
-    render: (s, c) => r.render(s, c),
+    render: (s, c) => (lookFor(r, s), r.render(s, c)),
   };
 }

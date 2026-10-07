@@ -33,7 +33,9 @@ import sidecar from '../../../../../art/vehicles/cruz-missile/cruz-missile.asset
 import lod0 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod0.glb?url';
 import lod1 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod1.glb?url';
 import lod2 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod2.glb?url';
+import { Fx } from '../fx';
 import type { Sampled } from '../interp';
+import { followSun, InkHull, toon } from '../look';
 import { PART_DETACHED, PART_LOOSE, PIECE_HUSK, type Frame } from '../snapshot';
 
 export const LOD_CLASSES = 3;
@@ -93,8 +95,8 @@ function paintKey(src: MeshStandardMaterial): MeshStandardMaterial {
     emissive: 0xffffff,
     emissiveIntensity: src.emissiveMap ? 1.2 : 0,
     flatShading: true,
-    roughness: 0.55,
-    metalness: 0.05,
+    roughness: 0.9,
+    metalness: 0,
   });
   m.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace(
@@ -106,7 +108,8 @@ function paintKey(src: MeshStandardMaterial): MeshStandardMaterial {
     );
   };
   m.customProgramCacheKey = () => 'jj-paint-key';
-  return m;
+  // The toon ramp on the sun (P1-R10); no halftone or grit on a car, so the identity paint stays true (POC2-13, R108).
+  return toon(m);
 }
 
 async function loadLods(): Promise<Map<string, BufferGeometry>[]> {
@@ -131,6 +134,10 @@ async function loadLods(): Promise<Map<string, BufferGeometry>[]> {
 export class VehicleRenderer {
   readonly types: PartType[] = [];
   readonly interiors: InteriorType[] = [];
+  /** Ink outlines (P1-R10): one hull per part mesh, so cars cost draws per part type, never per car. */
+  readonly hulls: InkHull[] = [];
+  /** Driving, contact and damage effects and the lamps' glow (P1-R12), fed from the same samples. */
+  readonly fx: Fx;
   readonly material: MeshStandardMaterial;
   /** Cars the buffers hold room for (grows by doubling). */
   capacity = 0;
@@ -159,6 +166,7 @@ export class VehicleRenderer {
     capacity: number,
   ) {
     this.material = paintKey(lods[0]!.material as MeshStandardMaterial);
+    this.fx = new Fx(scene);
     const byType = new Map<string, Slot[]>();
     PART_IDS.forEach((id, part) => {
       const spec = (sidecar.parts as Record<string, { pivot: number[]; hinge: { axis: number[] } | null }>)[id]!;
@@ -187,6 +195,9 @@ export class VehicleRenderer {
         im.receiveShadow = true;
         im.layers.set(lodLayer(lod));
         scene.add(im);
+        const hull = new InkHull(im);
+        this.hulls.push(hull);
+        scene.add(hull.mesh);
         return im;
       });
       const t: PartType = { id, slots, meshes, matrix: meshes[0]!.instanceMatrix, color: new InstancedBufferAttribute(new Float32Array(3), 3) };
@@ -248,6 +259,7 @@ export class VehicleRenderer {
     const pieces = f?.pieces ?? 0;
     this.grow(s.cars + pieces);
     this.cars = s.cars;
+    this.centre(s);
     const byCar = partStates(f);
     const exposed = this.interiors.map(() => 0);
     for (let i = 0; i < s.cars; i++) {
@@ -331,6 +343,19 @@ export class VehicleRenderer {
       t.color.needsUpdate = true;
       for (const im of t.meshes) im.count = (s.cars + pieces) * t.slots.length;
     }
+    for (const h of this.hulls) h.sync();
+    this.fx.update(s);
+  }
+
+  /** The sun's shadow box follows the cars' centre. */
+  private centre(s: Sampled): void {
+    if (!s.cars) return;
+    let [x, z] = [0, 0];
+    for (let i = 0; i < s.cars; i++) {
+      x += s.pos[i * 3]!;
+      z += s.pos[i * 3 + 2]!;
+    }
+    followSun(x / s.cars, z / s.cars);
   }
 
   /** Wheel roll from how far the car moved along its own forward axis since the last update. */
@@ -379,11 +404,13 @@ export class VehicleRenderer {
             }),
           );
     const interiors = Object.fromEntries(this.interiors.map((t) => [t.id, t.meshes[0]!.count]));
-    return { capacity: this.capacity, cars: this.cars, drawsPerTile: this.drawsPerTile, types, parts, interiors };
+    return { capacity: this.capacity, cars: this.cars, drawsPerTile: this.drawsPerTile, hulls: this.hulls.length, fx: this.fx.inspect(), types, parts, interiors };
   }
 
   dispose(): void {
     for (const t of [...this.types, ...this.interiors]) for (const im of t.meshes) this.scene.remove(im);
+    for (const h of this.hulls) this.scene.remove(h.mesh);
+    this.fx.dispose();
   }
 }
 
