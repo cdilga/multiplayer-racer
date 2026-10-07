@@ -7,6 +7,8 @@
 #
 #   scripts/beads/batch-verify.sh plan  [--base <ref>]        # what would run, no execution
 #   scripts/beads/batch-verify.sh run   [--base <ref>] [--allow-dirty] [--e2e smoke|all]
+#   scripts/beads/batch-verify.sh run --matrix milestone|every-wave   # the platform matrix (P1-F10, plan §13.1): the F10 demo journey
+#                                  in every lane this machine has, each recorded with its label and machine in docs/evidence/P1-F10/
 #   scripts/beads/batch-verify.sh close  <bead> --receipt <file>     # gate + close (green only)
 #   scripts/beads/batch-verify.sh rework <bead> "<failing assertion + file:line>"
 #
@@ -23,6 +25,7 @@ ACTOR=${AGENT_NAME:-}
 BASE=""
 ALLOW_DIRTY=0
 E2E=all
+MATRIX=
 
 die() { echo "batch-verify: $*" >&2; exit 2; }
 note() { echo "batch-verify: $*"; }
@@ -216,6 +219,13 @@ cmd_rework() {
     br update "$bead" --status rework --actor "$ACTOR" --transition-comment "$why"
 }
 
+# The platform matrix (P1-F10): the demo journey per lane, labelled by lane and machine. Lanes this machine doesn't have are
+# reported unavailable with the reason; the emulator lanes close by receipt (docs/evidence/P1-F10/), Chromium and WebKit by CI.
+cmd_matrix() {
+    note "platform matrix ($MATRIX) on $(hostname -s)"
+    node web/tests/journeys/harness/matrix.mjs --tier "$MATRIX"
+}
+
 sub=${1:-}; shift || true
 args=()
 while [[ $# -gt 0 ]]; do
@@ -223,13 +233,18 @@ while [[ $# -gt 0 ]]; do
         --base) BASE=$2; shift 2 ;;
         --allow-dirty) ALLOW_DIRTY=1; shift ;;
         --e2e) E2E=$2; shift 2 ;;
+        --matrix) MATRIX=$2; shift 2 ;;
         --actor) ACTOR=$2; shift 2 ;;
         *) args+=("$1"); shift ;;
     esac
 done
 case $sub in
     plan) cmd_plan ;;
-    run) cmd_run ;;
+    run)
+        if [[ -n $MATRIX ]]; then
+            [[ $MATRIX == milestone || $MATRIX == every-wave ]] || die "--matrix takes milestone or every-wave"
+            cmd_matrix
+        else cmd_run; fi ;;
     close) cmd_close "${args[@]}" ;;
     rework) cmd_rework "${args[@]}" ;;
     *) sed -n '2,17p' "$0"; exit 2 ;;

@@ -46,6 +46,17 @@ export async function mountHello(app: HTMLElement): Promise<void> {
     return m;
   };
 
+  // A marker belongs to a live peer: it goes when the peer's connection closes or fails, or stays 'disconnected' for
+  // GONE_MS (a briefly dropped path can recover, a gone phone doesn't). No phantom markers (P1-F10).
+  const GONE_MS = 10_000;
+  const goneTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  const dropMarker = (ep: string) => {
+    clearTimeout(goneTimers.get(ep));
+    goneTimers.delete(ep);
+    markers.get(ep)?.el.remove();
+    markers.delete(ep);
+  };
+
   const hub = new HostHub(
     {
       onRoom: ({ code, joinUrl }) => {
@@ -55,6 +66,15 @@ export async function mountHello(app: HTMLElement): Promise<void> {
       },
       onPeerOpen: (peer: HostPeer) => {
         marker(peer.endpointId);
+      },
+      onPeerState: (peer, state) => {
+        if (state === 'closed' || state === 'failed') dropMarker(peer.endpointId);
+        else if (state === 'disconnected') {
+          if (!goneTimers.has(peer.endpointId)) goneTimers.set(peer.endpointId, setTimeout(() => dropMarker(peer.endpointId), GONE_MS));
+        } else if (state === 'connected') {
+          clearTimeout(goneTimers.get(peer.endpointId));
+          goneTimers.delete(peer.endpointId);
+        }
       },
       onMessage: (peer, channel, data) => {
         if (channel !== 'state') return;

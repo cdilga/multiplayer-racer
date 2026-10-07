@@ -621,6 +621,8 @@ export class HostHub {
     if (m.kind === 'bye') {
       peer?.pc.close();
       this.peers.delete(ep);
+      // Closing locally raises no connectionstatechange: tell the host page the peer is gone (no phantom markers, P1-F10).
+      if (peer) this.events.onPeerState?.(peer, 'closed');
       return;
     }
     if (peer && m.gen < peer.gen) {
