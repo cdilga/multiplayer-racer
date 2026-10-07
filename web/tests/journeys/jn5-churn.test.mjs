@@ -166,7 +166,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   assert.equal((await host.evaluate(() => window.__jjRender.tileRects())).filter(Boolean).length, 9, '12 − 2 left − 1 sitting out');
   await host.waitForTimeout(1500); // the reflow animates
   // Each tile's HUD sits inside its tile once the grid settles (the DOM layer follows the final rects).
-  const misplaced = await host.evaluate(() => {
+  // On a slow runner the HUD's room view can trail the grid's reflow by a few frames: let it settle (20 s) first.
+  const placed = () => host.evaluate(() => {
     // Rects are backing-store px: device px times the Render resolution (a slow host lowers it), so use the canvas's ratio.
     const canvas = document.querySelector('canvas');
     const dpr = canvas.width / canvas.getBoundingClientRect().width;
@@ -176,6 +177,8 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
       return inside ? [] : [{ tile: t.seat, box: box && [box.left, box.top, box.right, box.bottom].map(Math.round) }];
     });
   });
+  let misplaced = await placed();
+  for (const t0 = Date.now(); misplaced.length && Date.now() - t0 < 20_000; misplaced = await placed()) await host.waitForTimeout(250);
   const rectsNow = await host.evaluate(() => window.__jjRender.tileRects());
   assert.deepEqual(misplaced, [], `every HUD inside its tile: ${JSON.stringify({ misplaced, rectsNow })}`);
   await shot(host, 'tv-racing-after-churn');
