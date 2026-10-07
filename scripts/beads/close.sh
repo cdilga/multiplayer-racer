@@ -85,6 +85,7 @@ for d in map(json.loads, open(".beads/issues.jsonl")):
         [[ -f $f ]] || die "$review names $i but it isn't in docs/evidence/$pid/"
     done
     echo "close: visual self-review present ($review)"
+    visual=1
 fi
 
 if [[ $pending == 1 ]]; then
@@ -122,3 +123,6 @@ br gate report "$id" --gate batch_verify --provider "$provider" --status pass --
 br close "$id" --reason "receipt:$evidence $tests" \
     --transition-comment "${comment:-closed on $provider, commit $short}" --actor "$AGENT_NAME" >/dev/null
 echo "close: $id closed (receipt:$evidence, commit $short). Commit .beads/issues.jsonl with your next change."
+if [[ ${visual:-0} == 1 ]]; then
+    echo "close: $id changed what people see: publish a preview from this commit if none is newer than it (docs/process/preview-publishing.md)"
+fi
