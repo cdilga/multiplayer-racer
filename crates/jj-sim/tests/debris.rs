@@ -382,7 +382,12 @@ fn energy_rows(factor: usize) -> Vec<(String, f64)> {
             }
         }),
     ));
-    assert_eq!(sim.prop_kinds().len(), 20, "twenty parts in the pile");
+    // Twenty parts, and with every wheel gone each car is wrecked (P1-S04c): its husk joins the pile.
+    assert_eq!(
+        sim.prop_kinds().len(),
+        22,
+        "twenty parts and two husks in the pile"
+    );
     rows
 }
 

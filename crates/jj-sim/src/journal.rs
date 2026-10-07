@@ -105,6 +105,11 @@ pub enum Setup {
         part: u8,
         health: f32,
     },
+    /// Wrecks a car now, as the stuck-flip rule would (scenario setup, R90 "settable", P1-S04c): its husk stays, its parts
+    /// pop off, and it respawns at its anchor after the hold. Refused during a hold or for a finished car.
+    Wreck {
+        car: u32,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

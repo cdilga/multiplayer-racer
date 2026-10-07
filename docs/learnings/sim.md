@@ -218,5 +218,21 @@ not feel targets.
   `Metric::EnergyJ` is E − ledger, `Metric::EnergyGainJ` the most it ever rose above its first reading. Measured
   gains: coast −291 J, loose slalom −391 J, detach kicks −291 J, 20-part pile +5 J (+7 J at doubled solver iterations);
   tolerance 250 J.
+- **Wrecks (P1-S04c).** Three triggers, one path (`wreck_car`): two wheels detached (checked after each step through
+  `Race::wreck`), the race's stuck-flip and out-of-bounds rules (their `Effect::Respawn`), and `Sim::wreck` (a journaled
+  command for scenarios: a failed assist can't be staged otherwise, the assist always rights a car). Every part still on
+  the car is detached (debris with the usual mass, velocity and kick), the chassis' core hull becomes a *new* dynamic body
+  at the same pose and velocity, the husk, and the car body itself is rebuilt as a fresh intact car (all part colliders
+  back, full mass properties, full health, `incarnation + 1`) and teleported to the anchor with the usual hold and spawn
+  protection. Same body, controller and CarId, so identity and progress are untouched. The husk's energy and the
+  rebuilt mass' are authorised in the ledger; a wreck at 14 m/s reads no energy gain.
+- **The respawn is immediate, the hold is 2 s.** The existing S05 behaviour stays: the fresh car stands at its anchor,
+  held and protected, from the wreck tick (not 2 s later). The renderer shows the husk where it crashed and the new car
+  at the anchor.
+- **Debris keeps its owner's car id.** Parts that came off an *earlier incarnation* are "orphans": a part record keyed by
+  (car, part) would mark the fresh car's part missing. They and the husks ship as state-3 part records (part 255 for a
+  husk) and are drawn on their own; the debris list keeps their slots (kind 2) so indices stay stable.
+- **Catch plane.** A fixed cuboid 10 m under the kill plane (5 km half extent) catches whatever leaves the map: an OOB
+  husk, a prop off the edge. It lands, sleeps and costs nothing; nothing is despawned.
 - **Settable state.** `Sim::set_part_health` is a journaled command (`Setup::PartHealth`, fixtures' `damage` list); a
   state change by command raises the same loose/detached event as a hit, cause scenery.

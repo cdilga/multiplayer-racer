@@ -34,7 +34,7 @@ import lod0 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod0.glb
 import lod1 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod1.glb?url';
 import lod2 from '../../../../../art/vehicles/cruz-missile/cruz-missile.lod2.glb?url';
 import type { Sampled } from '../interp';
-import { PART_DETACHED, PART_LOOSE, type Frame } from '../snapshot';
+import { PART_DETACHED, PART_LOOSE, PIECE_HUSK, type Frame } from '../snapshot';
 
 export const LOD_CLASSES = 3;
 /** Camera layer of LOD class k (layer 0 is the rest of the world). */
@@ -53,6 +53,8 @@ export function useLod(camera: Camera, lod: number): void {
 
 /** The vehicle's parts in sidecar order: a snapshot part record's `part` is an index into this. */
 export const PART_IDS: string[] = Object.keys(sidecar.parts);
+/** The core's index in the sidecar's part order: a husk is the core hull. */
+const CORE_PART = PART_IDS.indexOf('core');
 const MAX_STEER = (25 * Math.PI) / 180;
 const WHEEL_RADIUS = 0.4;
 
@@ -242,9 +244,10 @@ export class VehicleRenderer {
 
   /** Places every car and part from an interpolated sample (its frame carries the part records). */
   update(s: Sampled): void {
-    this.grow(s.cars);
-    this.cars = s.cars;
     const f = s.frame;
+    const pieces = f?.pieces ?? 0;
+    this.grow(s.cars + pieces);
+    this.cars = s.cars;
     const byCar = partStates(f);
     const exposed = this.interiors.map(() => 0);
     for (let i = 0; i < s.cars; i++) {
@@ -285,6 +288,36 @@ export class VehicleRenderer {
         });
       }
     }
+    // Husks and orphaned parts (P1-S04c) draw as extra "cars" after the real ones: a husk is the core hull and, with every
+    // part gone, the dark bays of all the interior blocks; a part is its own slot at its pivot frame's pose. Every other
+    // slot of such an instance is scaled to nothing. They stay for the round, in their owner's paint.
+    for (let k = 0; k < pieces; k++) {
+      const i = s.cars + k;
+      const part = f!.piecePart[k]!;
+      this.car.compose(this.v.fromArray(f!.piecePos, k * 3), this.q.fromArray(f!.pieceRot, k * 4), this.one);
+      this.c.set(this.paintOf(f!.pieceCar[k]!));
+      for (const t of this.types) {
+        t.slots.forEach((slot, j) => {
+          const at = i * t.slots.length + j;
+          const shown = part === PIECE_HUSK ? slot.part === CORE_PART : slot.part === part;
+          if (shown) {
+            this.m.copy(this.car);
+            if (slot.mirror) this.m.multiply(this.flip);
+          } else {
+            this.m.makeScale(0, 0, 0);
+          }
+          this.m.toArray(t.matrix.array, at * 16);
+          this.c.toArray(t.color.array, at * 3);
+        });
+      }
+      if (part === PIECE_HUSK) {
+        this.interiors.forEach((t, j) => {
+          this.car.toArray(t.matrix.array, exposed[j]! * 16);
+          this.c.toArray(t.color.array, exposed[j]! * 3);
+          exposed[j]!++;
+        });
+      }
+    }
     this.interiors.forEach((t, k) => {
       t.matrix.needsUpdate = true;
       t.color.needsUpdate = true;
@@ -296,7 +329,7 @@ export class VehicleRenderer {
     for (const t of this.types) {
       t.matrix.needsUpdate = true;
       t.color.needsUpdate = true;
-      for (const im of t.meshes) im.count = s.cars * t.slots.length;
+      for (const im of t.meshes) im.count = (s.cars + pieces) * t.slots.length;
     }
   }
 

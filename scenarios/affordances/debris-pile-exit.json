@@ -1,0 +1,152 @@
+{
+ "scenario": "debris-pile-exit",
+ "what": "\u00a77.3a 'get back onto the route from ... a debris pile' (P1-S04c): a car at rest on the main straight with seven 0.8 m blocks of debris (77 kg each, dynamic, as wrecked parts are) heaped around it: two rows of two in front, two beside it and one behind. A deliberate full-throttle drive shoves its way out of the pile and away along the road (14 m or more in 10 s; the same drive with an empty road covers about 60) upright and unwrecked; no input stays in the pile.",
+ "map": "maps/greybox-loop.json",
+ "seed": 44,
+ "ticks": 840,
+ "cars": [
+  {
+   "routePoint": 20,
+   "lateral": 0
+  }
+ ],
+ "debris": [
+  {
+   "tick": 0,
+   "pose": {
+    "x": 52.95,
+    "y": 0.4,
+    "z": -0.45,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 52.95,
+    "y": 0.4,
+    "z": 0.45,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 53.85,
+    "y": 0.4,
+    "z": -0.45,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 53.85,
+    "y": 0.4,
+    "z": 0.45,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 50,
+    "y": 0.4,
+    "z": 1.8,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 50,
+    "y": 0.4,
+    "z": -1.8,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "tick": 0,
+   "pose": {
+    "x": 47.1,
+    "y": 0.4,
+    "z": 0.0,
+    "headingDeg": 0
+   },
+   "half": [
+    0.4,
+    0.4,
+    0.4
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 240,
+   "throttle": 1.0
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "travel",
+   "min": 14,
+   "max": 80
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.85,
+   "max": 1.001
+  },
+  {
+   "car": 0,
+   "metric": "wrecks",
+   "min": 0,
+   "max": 0
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input"
+  ],
+  "differ": [
+   {
+    "car": 0,
+    "metric": "travel",
+    "by": 10
+   }
+  ]
+ }
+}

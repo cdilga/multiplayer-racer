@@ -945,6 +945,28 @@ impl Host {
                         instigator: instigator.and_then(|c| self.seat_of_car(c)),
                     }
                 }
+                DamageEvent::Wrecked {
+                    car,
+                    why,
+                    cause,
+                    instigator,
+                } => {
+                    let Some(seat) = self.seat_of_car(car) else {
+                        continue;
+                    };
+                    let cause = match why {
+                        jj_sim::damage::WreckWhy::OutOfBounds => DamageCause::OutOfBounds,
+                        jj_sim::damage::WreckWhy::Flipped => DamageCause::Flipped,
+                        jj_sim::damage::WreckWhy::WheelLoss => {
+                            cause.map_or(DamageCause::Scenery, |c| body(c).1)
+                        }
+                    };
+                    SimEvent::Wrecked {
+                        seat,
+                        cause,
+                        instigator: instigator.and_then(|c| self.seat_of_car(c)),
+                    }
+                }
                 DamageEvent::PartDetached {
                     car,
                     part,
@@ -997,24 +1019,6 @@ impl Host {
                         });
                     }
                 }
-                Event::Respawned {
-                    car,
-                    why:
-                        why
-                        @ (jj_sim::race::Respawned::OutOfBounds | jj_sim::race::Respawned::FlipWreck),
-                } => {
-                    if let Some(seat) = self.seat_of_car(car) {
-                        let cause = match why {
-                            jj_sim::race::Respawned::OutOfBounds => DamageCause::OutOfBounds,
-                            _ => DamageCause::Flipped,
-                        };
-                        self.events.push(SimEvent::Wrecked {
-                            seat,
-                            cause,
-                            instigator: None,
-                        });
-                    }
-                }
                 _ => {}
             }
         }
@@ -1040,7 +1044,7 @@ impl Host {
         SNAPSHOT_HEADER
             + SNAPSHOT_CAR * self.sim.cars().count()
             + SNAPSHOT_DEBRIS * self.sim.debris_poses().len()
-            + SNAPSHOT_PART * self.sim.part_records().len()
+            + SNAPSHOT_PART * (self.sim.part_records().len() + self.sim.piece_records().len())
     }
 
     /// Writes the snapshot into `buf` (a pooled buffer). Returns the bytes written, or 0 if it doesn't fit.
@@ -1052,7 +1056,9 @@ impl Host {
     /// body's pose, detached; identity and zero otherwise)). Car (64 B): car u32, life u32, position 3×f32, rotation 4×f32, linvel 3×f32, steer f32,
     /// flags u32 (1 protected, 2 finished, 4 autopilot, 8 held, 16 boosting, 32 drifting), boost meter f32 (0..1),
     /// reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32 (0 debris, 1 a dropped cone; P1-S08; 2 a detached
-    /// car part, P1-S04b: it is drawn from its part record, not as a box, and keeps its slot so debris indices stay stable).
+    /// car part or a husk, P1-S04b/c: drawn from its part record, not as a box, and it keeps its slot so debris indices
+    /// stay stable). After the part records of living cars come those of husks and of parts that came off a car since
+    /// wrecked and rebuilt (state 3; part 255 for a husk; the pose is the part's pivot frame, the vehicle frame for a husk).
     pub fn write_snapshot(&self, buf: &mut [u8]) -> usize {
         let need = self.snapshot_size();
         if buf.len() < need {
@@ -1071,7 +1077,8 @@ impl Host {
         w.u32(cars.len() as u32);
         w.u32(debris.len() as u32);
         let parts = self.sim.part_records();
-        w.u32(parts.len() as u32);
+        let pieces = self.sim.piece_records();
+        w.u32((parts.len() + pieces.len()) as u32);
         let race = self.sim.race();
         for car in cars {
             let s = self.sim.car_state(car).expect("listed car");
@@ -1099,8 +1106,14 @@ impl Host {
             w.u32(0);
         }
         for ((p, r), k) in debris.iter().zip(self.sim.prop_kinds()) {
+            // Kind 2 (a detached part or a husk) is drawn from its part record, not as a box; it keeps its slot so debris
+            // indices stay stable.
+            let kind = match k {
+                jj_sim::PropKind::Part | jj_sim::PropKind::Husk => 2,
+                other => other.code(),
+            };
             p.iter().chain(r).for_each(|&v| w.f32(v));
-            w.u32(k.code());
+            w.u32(kind);
         }
         for (car, part, state, angle, body) in parts {
             w.u32(car);
@@ -1110,13 +1123,75 @@ impl Host {
                 _ => 1,
             });
             w.f32(angle);
-            let (p, r) = body
-                .and_then(|i| debris.get(i as usize).copied())
-                .unwrap_or(([0.0; 3], [0.0, 0.0, 0.0, 1.0]));
+            // The part mesh is in its own pivot's frame, so the record's pose is the pivot's: the debris body's pose
+            // (the chassis frame at detach) times the part's pivot.
+            let (p, r) = body.and_then(|i| debris.get(i as usize).copied()).map_or(
+                ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
+                |(p, r)| {
+                    let pivot = self
+                        .sim
+                        .profile()
+                        .geometry
+                        .parts
+                        .get(usize::from(part))
+                        .map_or([0.0; 3], |g| g.pivot);
+                    (add_rotated(p, r, pivot), r)
+                },
+            );
+            p.iter().chain(&r).for_each(|&v| w.f32(v));
+        }
+        // Husks and the parts of cars since wrecked and rebuilt (P1-S04c): state 3, drawn on their own.
+        for (car, part, body) in pieces {
+            let (p, r) = debris.get(body as usize).copied().map_or(
+                ([0.0; 3], [0.0, 0.0, 0.0, 1.0]),
+                |(p, r)| {
+                    let pivot = self
+                        .sim
+                        .profile()
+                        .geometry
+                        .parts
+                        .get(usize::from(part))
+                        .map_or([0.0; 3], |g| g.pivot);
+                    // A husk (part 255) is the vehicle frame itself.
+                    (
+                        if part == 255 {
+                            p
+                        } else {
+                            add_rotated(p, r, pivot)
+                        },
+                        r,
+                    )
+                },
+            );
+            w.u32(car);
+            w.u16(u16::from(part));
+            w.u16(3);
+            w.f32(0.0);
             p.iter().chain(&r).for_each(|&v| w.f32(v));
         }
         w.at
     }
+}
+
+/// `p + q · v` for the unit quaternion `q` = (x, y, z, w).
+fn add_rotated(p: [f32; 3], q: [f32; 4], v: [f32; 3]) -> [f32; 3] {
+    let [qx, qy, qz, qw] = q;
+    // v' = v + 2w(u × v) + 2u × (u × v), u = (qx, qy, qz)
+    let cross = |a: [f32; 3], b: [f32; 3]| {
+        [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ]
+    };
+    let u = [qx, qy, qz];
+    let t = cross(u, v).map(|x| 2.0 * x);
+    let tt = cross(u, t);
+    [
+        p[0] + v[0] + qw * t[0] + tt[0],
+        p[1] + v[1] + qw * t[1] + tt[1],
+        p[2] + v[2] + qw * t[2] + tt[2],
+    ]
 }
 
 struct Writer<'a> {

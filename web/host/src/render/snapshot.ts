@@ -6,7 +6,8 @@
 // linvel 3×f32, steer f32, flags u32, boost f32, reserved u32. Debris (32 B): position 3×f32, rotation 4×f32, kind u32.
 // Part (40 B, P1-R02), one per part that isn't intact: car u32, part u16 (its index in the vehicle sidecar's `parts`
 // order), state u16 (PART_LOOSE, PART_DETACHED), hinge angle f32 (radians, loose), position 3×f32 and rotation 4×f32
-// (world pose, detached). The header's last u32 was reserved and written 0, so a worker that sends no part records
+// (the part's pivot frame in the world, detached). A debris record of kind 2 is a detached part's body: the decoder drops
+// it (the part record draws it; the debris list holds only what is drawn as debris). The header's last u32 was reserved and written 0, so a worker that sends no part records
 // still reads as "every part intact".
 
 export const SNAPSHOT_MAGIC = 0x4a4a5331;
@@ -16,6 +17,13 @@ export const SNAPSHOT_DEBRIS = 32;
 export const SNAPSHOT_PART = 40;
 export const PART_LOOSE = 1;
 export const PART_DETACHED = 2;
+/** A debris record of this kind is a detached car part (P1-S04b): drawn from its part record, so the frame leaves it out. */
+export const DEBRIS_PART = 2;
+/** A part record in this state is a piece drawn on its own (P1-S04c): a wrecked car's husk (part PIECE_HUSK, the vehicle
+ *  frame) or a part that came off a car since wrecked and rebuilt (its pivot frame). The decoder moves these out of the
+ *  part records into the pieces, so the fresh car of the same id isn't drawn as missing the part. */
+export const PART_PIECE = 3;
+export const PIECE_HUSK = 255;
 
 export interface Frame {
   tick: number;
@@ -42,6 +50,13 @@ export interface Frame {
   partAngle: Float32Array;
   partPos: Float32Array;
   partRot: Float32Array;
+  /** Husks and orphaned parts (P1-S04c): owner car id, part index (PIECE_HUSK for a husk), world pose of the part's pivot
+   *  frame (the vehicle frame for a husk). They stay for the round. */
+  pieces: number;
+  pieceCar: Uint32Array;
+  piecePart: Uint8Array;
+  piecePos: Float32Array;
+  pieceRot: Float32Array;
 }
 
 /** Copies a snapshot out of its pooled buffer (so the buffer can go straight back to the worker). */
@@ -72,6 +87,11 @@ export function decodeSnapshot(view: DataView): Frame {
     partAngle: new Float32Array(parts),
     partPos: new Float32Array(parts * 3),
     partRot: new Float32Array(parts * 4),
+    pieces: 0,
+    pieceCar: new Uint32Array(parts),
+    piecePart: new Uint8Array(parts),
+    piecePos: new Float32Array(parts * 3),
+    pieceRot: new Float32Array(parts * 4),
   };
   let at = SNAPSHOT_HEADER;
   for (let i = 0; i < cars; i++, at += SNAPSHOT_CAR) {
@@ -82,19 +102,34 @@ export function decodeSnapshot(view: DataView): Frame {
     f.steer[i] = view.getFloat32(at + 48, true);
     f.flags[i] = view.getUint32(at + 52, true);
   }
+  let kept = 0;
   for (let i = 0; i < debris; i++, at += SNAPSHOT_DEBRIS) {
-    for (let k = 0; k < 3; k++) f.debrisPos[i * 3 + k] = view.getFloat32(at + k * 4, true);
-    for (let k = 0; k < 4; k++) f.debrisRot[i * 4 + k] = view.getFloat32(at + 12 + k * 4, true);
-    f.debrisKind[i] = view.getUint32(at + 28, true);
+    const kind = view.getUint32(at + 28, true);
+    if (kind === DEBRIS_PART) continue;
+    for (let k = 0; k < 3; k++) f.debrisPos[kept * 3 + k] = view.getFloat32(at + k * 4, true);
+    for (let k = 0; k < 4; k++) f.debrisRot[kept * 4 + k] = view.getFloat32(at + 12 + k * 4, true);
+    f.debrisKind[kept++] = kind;
   }
+  f.debris = kept;
+  let living = 0;
   for (let i = 0; i < parts; i++, at += SNAPSHOT_PART) {
-    f.partCar[i] = view.getUint32(at, true);
-    f.partIndex[i] = view.getUint16(at + 4, true);
-    f.partState[i] = view.getUint16(at + 6, true);
-    f.partAngle[i] = view.getFloat32(at + 8, true);
-    for (let k = 0; k < 3; k++) f.partPos[i * 3 + k] = view.getFloat32(at + 12 + k * 4, true);
-    for (let k = 0; k < 4; k++) f.partRot[i * 4 + k] = view.getFloat32(at + 24 + k * 4, true);
+    if (view.getUint16(at + 6, true) === PART_PIECE) {
+      const k = f.pieces++;
+      f.pieceCar[k] = view.getUint32(at, true);
+      f.piecePart[k] = view.getUint16(at + 4, true);
+      for (let j = 0; j < 3; j++) f.piecePos[k * 3 + j] = view.getFloat32(at + 12 + j * 4, true);
+      for (let j = 0; j < 4; j++) f.pieceRot[k * 4 + j] = view.getFloat32(at + 24 + j * 4, true);
+      continue;
+    }
+    const n = living++;
+    f.partCar[n] = view.getUint32(at, true);
+    f.partIndex[n] = view.getUint16(at + 4, true);
+    f.partState[n] = view.getUint16(at + 6, true);
+    f.partAngle[n] = view.getFloat32(at + 8, true);
+    for (let k = 0; k < 3; k++) f.partPos[n * 3 + k] = view.getFloat32(at + 12 + k * 4, true);
+    for (let k = 0; k < 4; k++) f.partRot[n * 4 + k] = view.getFloat32(at + 24 + k * 4, true);
   }
+  f.parts = living;
   return f;
 }
 

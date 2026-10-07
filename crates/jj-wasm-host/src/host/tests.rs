@@ -442,6 +442,61 @@ fn loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_even
 }
 
 #[test]
+fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event() {
+    // P1-S04c through the real host path: two detached wheels wreck the car. Main gets Wrecked (with the wheel's cause);
+    // the snapshot has the husk (part 255) and the ten parts as pieces (state 3: they belong to a car that has since been
+    // rebuilt), the debris list keeps their slots (kind 2), and the respawned car's parts are all intact.
+    use jj_protocol::abi::SimEvent;
+    let mut h = Host::new(&init()).unwrap();
+    h.handle(&local(1, [0, 20_000])).unwrap();
+    let mut now = 0;
+    for _ in 0..30 {
+        h.advance(now);
+        now += 8_334;
+    }
+    h.sim.set_part_health(CarId(0), 7, 0.0);
+    h.sim.set_part_health(CarId(0), 10, 0.0);
+    for _ in 0..30 {
+        h.advance(now);
+        now += 8_334;
+    }
+    let mut events = Vec::new();
+    while let Some(m) = h.next_message() {
+        if let SimToMain::Events { batch } = m {
+            events.extend(batch);
+        }
+    }
+    assert!(
+        events.iter().any(|e| matches!(e, SimEvent::Wrecked { .. })),
+        "{events:?}"
+    );
+    let mut buf = vec![0; h.snapshot_size()];
+    assert_eq!(h.write_snapshot(&mut buf), buf.len());
+    let u32_at = |o: usize| u32::from_le_bytes(buf[o..o + 4].try_into().unwrap());
+    let u16_at = |o: usize| u16::from_le_bytes(buf[o..o + 2].try_into().unwrap());
+    let (debris, parts) = (u32_at(32) as usize, u32_at(36) as usize);
+    assert_eq!((debris >= 11, parts), (true, 11), "the husk and ten parts");
+    let at = SNAPSHOT_HEADER + SNAPSHOT_CAR + SNAPSHOT_DEBRIS * debris;
+    let recs: Vec<(u16, u16)> = (0..parts)
+        .map(|i| {
+            (
+                u16_at(at + i * SNAPSHOT_PART + 4),
+                u16_at(at + i * SNAPSHOT_PART + 6),
+            )
+        })
+        .collect();
+    assert!(
+        recs.iter().all(|r| r.1 == 3),
+        "every record is a piece: {recs:?}"
+    );
+    assert!(recs.iter().any(|r| r.0 == 255), "one is the husk");
+    let kinds2 = (0..debris)
+        .filter(|&i| u32_at(SNAPSHOT_HEADER + SNAPSHOT_CAR + i * SNAPSHOT_DEBRIS + 28) == 2)
+        .count();
+    assert_eq!(kinds2, 11, "the pieces keep their debris slots, kind 2");
+}
+
+#[test]
 fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
     // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.

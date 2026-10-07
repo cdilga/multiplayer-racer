@@ -1,0 +1,84 @@
+{
+ "scenario": "two-wheels-off",
+ "what": "\u00a77.3a 'lose the car with two detached' (P1-S04c; the loose-wheel-drive row is the other half): a car at 12 m/s on the main straight loses its front left and rear right wheels on the same tick. Two detached wheels wreck it: every remaining part pops off as debris, its chassis stays on the track as a husk (a dynamic body), and the player is back at their anchor, upright on a fresh intact car with the same identity, after the 2 s hold. Baselines: no input and mashing wreck it just the same, so what differs is the deliberate run driving the fresh car off its anchor again once the hold is over.",
+ "map": "maps/greybox-loop.json",
+ "seed": 43,
+ "ticks": 600,
+ "cars": [
+  {
+   "routePoint": 20,
+   "lateral": 0,
+   "linvel": [
+    12,
+    0,
+    0
+   ]
+  }
+ ],
+ "damage": [
+  {
+   "tick": 60,
+   "car": 0,
+   "part": "wheel_FL",
+   "health": 0
+  },
+  {
+   "tick": 60,
+   "car": 0,
+   "part": "wheel_RR",
+   "health": 0
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "throttle": 0.3
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "wrecks",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "car": 0,
+   "metric": "husks",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "car": 0,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 0,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 0,
+   "metric": "travel",
+   "min": 0,
+   "max": 12
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash"
+  ],
+  "differ": [
+   {
+    "car": 0,
+    "metric": "travel",
+    "by": 1.0
+   }
+  ]
+ }
+}

@@ -32,7 +32,7 @@ use crate::placement::{
     SPAWN_LIFT_M, corridor_slots, grid_pose, offset, overlaps,
 };
 use crate::profile::VehicleProfile;
-use crate::race::{Course, Effect, Race};
+use crate::race::{Course, Effect, Race, Respawned};
 use crate::rng::Rng;
 use crate::utility::{self, PropKind, UtilityEvent, UtilityKind, rules};
 use crate::vehicle;
@@ -135,7 +135,16 @@ struct Car {
     removed: [bool; PARTS],
     /// The chassis' linear velocity at the end of the last step, for its acceleration (the hinge springs' drive).
     last_linvel: Vector,
+    /// How many times this car has been wrecked and rebuilt (P1-S04c): debris from an earlier incarnation belongs to the
+    /// husk's wreck, not to the car that respawned.
+    incarnation: u32,
+    /// What took this incarnation's last part off, and whose car it was (the cause of a wheel-loss wreck).
+    last_detach: Option<(damage::OtherBody, Option<u32>)>,
 }
+
+/// The catch plane's top, below the kill plane, and its half extent, m.
+const CATCH_PLANE_BELOW_KILL_M: f32 = 10.0;
+const CATCH_PLANE_HALF_M: f32 = 5000.0;
 
 /// Angular damping on detached parts, 1/s (rolling resistance, so debris comes to rest and can sleep).
 const DEBRIS_ANGULAR_DAMPING: f32 = 2.0;
@@ -194,7 +203,9 @@ pub struct Sim {
     /// What each prop is, for renderers (P1-S08: map props and debris, or dropped cones).
     prop_kinds: Vec<PropKind>,
     /// Which car's part each `Part` debris body is, by prop index (P1-S04b).
-    part_debris: std::collections::BTreeMap<u32, (u32, u8)>,
+    part_debris: std::collections::BTreeMap<u32, (u32, u8, u32)>,
+    /// Each husk body's prop index → the car it was (P1-S04c).
+    husks: std::collections::BTreeMap<u32, u32>,
     /// Fresh part debris and the tick it starts colliding with cars again.
     fresh_debris: Vec<(u32, u64)>,
     /// Per-part mass, centre of mass and hinge, from the profile.
@@ -260,6 +271,23 @@ impl Sim {
             .collision_groups(TERRAIN_GROUPS);
         world.insert_collider(ground, None);
 
+        // A solid catch plane well under the kill plane (P1-S04c): whatever falls out of the map (a wreck's husk and parts, a
+        // prop knocked off the edge) comes to rest on it instead of falling for ever, so a husk is never despawned and
+        // never costs more than a sleeping body.
+        let bounds = &m.header.bounds;
+        let (cx, cz) = (
+            (bounds.min_x + bounds.max_x) as f32 / 2000.0,
+            (bounds.min_z + bounds.max_z) as f32 / 2000.0,
+        );
+        let plane_top = bounds.kill_y as f32 / 1000.0 - CATCH_PLANE_BELOW_KILL_M;
+        world.insert_collider(
+            ColliderBuilder::cuboid(CATCH_PLANE_HALF_M, 1.0, CATCH_PLANE_HALF_M)
+                .translation(Vector::new(cx, plane_top - 1.0, cz))
+                .friction(0.9)
+                .collision_groups(WORLD_GROUPS),
+            None,
+        );
+
         // Static dressing with `collides`: the registry's collider proxies, standing on the ground at their pose.
         for d in m.dressing.iter().filter(|d| d.collides) {
             let Some(fp) = registry
@@ -319,6 +347,7 @@ impl Sim {
             cars: Vec::new(),
             prop_kinds: vec![PropKind::Debris; props.len()],
             part_debris: std::collections::BTreeMap::new(),
+            husks: std::collections::BTreeMap::new(),
             fresh_debris: Vec::new(),
             part_phys: phys,
             ledger: 0.0,
@@ -797,7 +826,13 @@ impl Sim {
 
     fn apply(&mut self, effect: Effect) {
         match effect {
-            Effect::Respawn { car, pose, .. } => {
+            Effect::Respawn { car, pose, why } => {
+                if matches!(
+                    why,
+                    Respawned::OutOfBounds | Respawned::FlipWreck | Respawned::WheelLoss
+                ) {
+                    self.wreck_car(car as usize, why);
+                }
                 // Through the placement service: a clear pose near the anchor, then spawn protection.
                 let pose = self.clear_pose_near(Some(CarId(car)), pose);
                 self.teleport(CarId(car), pose, 0.0, [0.0; 3]);
@@ -837,65 +872,10 @@ impl Sim {
             .can_sleep(false)
             .ccd_enabled(true)
             .user_data(TAG_CAR | self.cars.len() as u128);
-        let (lo, hi) = p.hull_bounds();
-        let [w, h, l] = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
-        // The hull's box inertia at the car's mass (scaled by the profile), about the sidecar's centre of mass.
-        let k = t.mass / 12.0 * t.inertia_scale;
-        let inertia = Vector::new(
-            k * (h * h + l * l),
-            k * (w * w + l * l),
-            k * (w * w + h * h),
-        );
-        let [cx, cy, cz] = p.geometry.com;
-        // One convex collider per part (P1-S04a): a contact's collider names the part. The core carries the whole car's
-        // mass properties (S04b recomputes them when parts detach); the other parts are massless, so the chassis feels
-        // as it did when it was one hull.
-        let hull_box = || ColliderBuilder::cuboid(w / 2.0, h / 2.0, l / 2.0);
-        let part_collider = |i: usize| {
-            let points: Vec<Vector> = p
-                .geometry
-                .parts
-                .get(i)
-                .map(|g| {
-                    g.points
-                        .iter()
-                        .map(|&[x, y, z]| Vector::new(x, y, z))
-                        .collect()
-                })
-                .unwrap_or_default();
-            let builder = ColliderBuilder::convex_hull(&points).unwrap_or_else(|| {
-                if i == damage::CORE {
-                    let hull: Vec<Vector> = p
-                        .geometry
-                        .hull
-                        .iter()
-                        .map(|&[x, y, z]| Vector::new(x, y, z))
-                        .collect();
-                    ColliderBuilder::convex_hull(&hull).unwrap_or_else(hull_box)
-                } else {
-                    // A profile without this part's proxy has no collider for it: a tiny inert ball at its pivot.
-                    let [x, y, z] = p.geometry.parts.get(i).map_or([0.0; 3], |g| g.pivot);
-                    ColliderBuilder::ball(0.01).translation(Vector::new(x, y, z))
-                }
-            });
-            let builder = if i == damage::CORE {
-                builder.mass_properties(MassProperties::new(
-                    Vector::new(cx, cy, cz),
-                    t.mass,
-                    inertia,
-                ))
-            } else {
-                builder.density(0.0)
-            };
-            builder
-                .friction(0.6)
-                .user_data(i as u128)
-                .collision_groups(Solidity::Racing.groups(damage::is_wheel(i)))
-        };
-        let (handle, collider) = self.world.insert(body, part_collider(damage::CORE));
+        let (handle, collider) = self.world.insert(body, part_builder(p, damage::CORE));
         let mut parts = vec![collider];
         for i in 1..PARTS {
-            parts.push(self.world.insert_collider(part_collider(i), Some(handle)));
+            parts.push(self.world.insert_collider(part_builder(p, i), Some(handle)));
         }
 
         let mut vehicle = DynamicRayCastVehicleController::new(handle);
@@ -938,6 +918,8 @@ impl Sim {
             springs: [Spring::default(); PARTS],
             removed: [false; PARTS],
             last_linvel: Vector::ZERO,
+            incarnation: 0,
+            last_detach: None,
         });
     }
 
@@ -1031,6 +1013,7 @@ impl Sim {
                 let commands =
                     vehicle::wheel_commands(&p, input, car.action, forward_speed, grip, DT);
                 let dt_ = &p.tuning.damage;
+                let t_ = &p.tuning;
                 for (i, (w, c)) in car
                     .vehicle
                     .wheels_mut()
@@ -1043,9 +1026,12 @@ impl Sim {
                     w.brake = c.brake_impulse;
                     w.friction_slip = c.friction_slip;
                     match car.damage.state(damage::WHEEL_FL + i, dt_) {
-                        PartState::Intact => {}
+                        PartState::Intact => w.max_suspension_force = t_.max_suspension_force,
                         // A loose wheel grips less.
-                        PartState::Loose => w.friction_slip *= 1.0 - dt_.loose_wheel_grip_loss,
+                        PartState::Loose => {
+                            w.friction_slip *= 1.0 - dt_.loose_wheel_grip_loss;
+                            w.max_suspension_force = t_.max_suspension_force;
+                        }
                         // A detached wheel is out of the vehicle controller: no suspension force, no grip, no drive
                         // (Rapier 0.36 has no remove-wheel API; tests/rapier_api.rs pins this), so its corner drops.
                         PartState::Detached => {
@@ -1156,6 +1142,7 @@ impl Sim {
         for effect in self.race.update(self.tick, &views) {
             self.apply(effect);
         }
+        self.check_wheel_wrecks();
         self.settle_protection();
     }
 
@@ -1177,6 +1164,18 @@ impl Sim {
         let events = self.episodes.close(self.tick, t, &mut health);
         for (c, h) in self.cars.iter_mut().zip(health) {
             c.damage = h;
+        }
+        for e in &events {
+            if let DamageEvent::PartDetached {
+                car,
+                cause,
+                instigator,
+                ..
+            } = *e
+                && let Some(c) = self.cars.get_mut(car as usize)
+            {
+                c.last_detach = Some((cause, instigator));
+            }
         }
         self.damage_events
             .extend(events.into_iter().map(|e| (self.tick, e)));
@@ -1304,10 +1303,156 @@ impl Sim {
         self.ledger += f64::from(0.5 * phys.mass * (v1.length_squared() - v0.length_squared()));
         self.props.push(h);
         self.prop_kinds.push(PropKind::Part);
-        self.part_debris.insert(idx, (ci as u32, part as u8));
+        self.part_debris
+            .insert(idx, (ci as u32, part as u8, self.cars[ci].incarnation));
         let until =
             self.tick + (libm::roundf(t.detach_clear_ms * 0.001 * TICK_HZ as f32) as u64).max(1);
         self.fresh_debris.push((idx, until));
+    }
+
+    /// A car with two or more wheels detached is wrecked (P1-S04c).
+    fn check_wheel_wrecks(&mut self) {
+        let t = self.profile.tuning.damage.clone();
+        for ci in 0..self.cars.len() {
+            let gone = (damage::WHEEL_FL..PARTS)
+                .filter(|&i| self.cars[ci].damage.state(i, &t) == PartState::Detached)
+                .count();
+            if gone >= 2
+                && let Some(e) = self.race.wreck(self.tick, ci as u32, Respawned::WheelLoss)
+            {
+                self.apply(e);
+            }
+        }
+    }
+
+    /// The car that last hit car `ci` hard enough to count, within the last ten seconds.
+    fn recent_instigator(&self, ci: usize) -> Option<u32> {
+        let from = self.tick.saturating_sub(10 * u64::from(TICK_HZ));
+        self.damage_events
+            .iter()
+            .rev()
+            .take_while(|(t, _)| *t >= from)
+            .find_map(|(_, e)| match e {
+                DamageEvent::Episode(r) if r.car == ci as u32 => {
+                    r.other_owner.map(|o| o.car).filter(|&c| c != ci as u32)
+                }
+                _ => None,
+            })
+    }
+
+    /// Wrecks car `ci` (P1-S04c): every part still on it pops off as debris, its chassis stays where it is as a husk (a
+    /// dynamic body for the round, never despawned), and the car itself is rebuilt fresh and intact for the respawn the
+    /// caller places at its anchor (same identity, same progress). Wreck event, with its cause and instigator, follows.
+    fn wreck_car(&mut self, ci: usize, why: Respawned) {
+        let t = self.profile.tuning.damage.clone();
+        for part in 1..PARTS {
+            if !self.cars[ci].removed[part] {
+                self.cars[ci].damage.health[part] = 0.0;
+                self.cars[ci].removed[part] = true;
+                self.detach_part(ci, part, &t);
+            }
+        }
+        self.spawn_husk(ci);
+        self.rebuild_car(ci);
+        let (wreck, cause, instigator) = match why {
+            Respawned::OutOfBounds => (
+                damage::WreckWhy::OutOfBounds,
+                None,
+                self.recent_instigator(ci),
+            ),
+            Respawned::FlipWreck => (damage::WreckWhy::Flipped, None, self.recent_instigator(ci)),
+            _ => {
+                let (cause, by) = self.cars[ci].last_detach.unzip();
+                (damage::WreckWhy::WheelLoss, cause, by.flatten())
+            }
+        };
+        self.cars[ci].last_detach = None;
+        self.damage_events.push((
+            self.tick,
+            DamageEvent::Wrecked {
+                car: ci as u32,
+                why: wreck,
+                cause,
+                instigator,
+            },
+        ));
+    }
+
+    /// The wrecked chassis' core hull, as a dynamic body at its pose with its velocity.
+    fn spawn_husk(&mut self, ci: usize) {
+        let body = self.cars[ci].body;
+        let Some(b) = self.world.bodies.get(body) else {
+            return;
+        };
+        let (iso, v, w, com, mass) = (
+            *b.position(),
+            b.linvel(),
+            b.angvel(),
+            b.center_of_mass(),
+            b.mass(),
+        );
+        let phys = self.part_phys[damage::CORE];
+        let points: Vec<Vector> = self.profile.geometry.parts[damage::CORE]
+            .points
+            .iter()
+            .map(|&[x, y, z]| Vector::new(x, y, z))
+            .collect();
+        let builder = ColliderBuilder::convex_hull(&points)
+            .unwrap_or_else(|| ColliderBuilder::ball(0.3))
+            .mass(mass)
+            .friction(0.6)
+            .collision_groups(PROP_GROUPS);
+        let idx = self.props.len() as u32;
+        let radial = iso * phys.com - com;
+        let hb = RigidBodyBuilder::dynamic()
+            .pose(iso)
+            .linvel(v + w.cross(radial))
+            .angvel(w)
+            .angular_damping(DEBRIS_ANGULAR_DAMPING)
+            .user_data(TAG_PROP | u128::from(idx));
+        let (h, _) = self.world.insert(hb, builder);
+        // The husk is the old chassis: what it carries was the chassis' and moves on authorised.
+        let g = self.world.gravity;
+        if let Some(hb) = self.world.bodies.get(h) {
+            self.ledger +=
+                f64::from(hb.kinetic_energy() + hb.gravitational_potential_energy(DT, g));
+        }
+        self.props.push(h);
+        self.prop_kinds.push(PropKind::Husk);
+        self.husks.insert(idx, ci as u32);
+    }
+
+    /// Makes car `ci` a fresh intact car again: every part collider back on the chassis, the full mass properties,
+    /// full health, closed springs. The car body, its vehicle controller and its identity are the same.
+    fn rebuild_car(&mut self, ci: usize) {
+        let body = self.cars[ci].body;
+        let g = self.world.gravity;
+        let energy = |sim: &Self| {
+            sim.world.bodies.get(body).map_or(0.0, |b| {
+                f64::from(b.kinetic_energy() + b.gravitational_potential_energy(DT, g))
+            })
+        };
+        let before = energy(self);
+        for i in 1..PARTS {
+            let builder = part_builder(&self.profile, i)
+                .collision_groups(Solidity::Protected.groups(damage::is_wheel(i)));
+            self.cars[ci].parts[i] = self.world.insert_collider(builder, Some(body));
+        }
+        let core = self.cars[ci].collider;
+        let mp = chassis_mass_props(&self.profile);
+        if let Some(col) = self.world.colliders.get_mut(core) {
+            col.set_mass_properties(mp);
+        }
+        if let Some(b) = self.world.bodies.get_mut(body) {
+            b.recompute_mass_properties_from_colliders(&self.world.colliders);
+        }
+        // The mass coming back is the respawn's, not the sim's doing.
+        self.ledger += energy(self) - before;
+        let c = &mut self.cars[ci];
+        c.damage = CarDamage::new(&self.profile.tuning.damage);
+        c.springs = [Spring::default(); PARTS];
+        c.removed = [false; PARTS];
+        c.incarnation += 1;
     }
 
     /// Fresh debris that has had its clearing time collides with everything like any other prop.
@@ -1371,6 +1516,21 @@ impl Sim {
         }
     }
 
+    /// Wrecks `car` now, as the stuck-flip rule would (a journaled command, R90 "settable"): returns whether it was
+    /// accepted (not during a hold, not for a finished car).
+    pub fn wreck(&mut self, car: CarId) -> bool {
+        self.journal
+            .setup
+            .push((self.tick, Setup::Wreck { car: car.0 }));
+        match self.race.wreck(self.tick, car.0, Respawned::FlipWreck) {
+            Some(effect) => {
+                self.apply(effect);
+                true
+            }
+            None => false,
+        }
+    }
+
     /// Every loose part's hinge angle, radians, in part order (0 when not loose).
     pub fn part_angles(&self, car: CarId) -> Option<[f32; PARTS]> {
         self.cars
@@ -1392,12 +1552,39 @@ impl Sim {
                 let debris = self
                     .part_debris
                     .iter()
-                    .find(|(_, v)| v.0 == ci as u32 && usize::from(v.1) == part)
+                    .find(|(_, v)| {
+                        v.0 == ci as u32 && usize::from(v.1) == part && v.2 == c.incarnation
+                    })
                     .map(|(&i, _)| i);
                 out.push((ci as u32, part as u8, state, c.springs[part].angle, debris));
             }
         }
         out
+    }
+
+    /// The husks and the orphaned parts (those that came off a car since wrecked and rebuilt) for the snapshot (P1-S04c):
+    /// `(car, part, debris body index)` in body order, `part` 255 for a husk. They are drawn on their own and stay for the
+    /// round; a part of a living car is a part record instead.
+    pub fn piece_records(&self) -> Vec<(u32, u8, u32)> {
+        let mut out = Vec::new();
+        for i in 0..self.props.len() as u32 {
+            if let Some(&car) = self.husks.get(&i) {
+                out.push((car, 255, i));
+            } else if let Some(&(car, part, inc)) = self.part_debris.get(&i)
+                && self
+                    .cars
+                    .get(car as usize)
+                    .is_some_and(|c| c.incarnation != inc)
+            {
+                out.push((car, part, i));
+            }
+        }
+        out
+    }
+
+    /// How many husks the round has made.
+    pub fn husk_count(&self) -> usize {
+        self.husks.len()
     }
 
     /// Whether debris body `index` is asleep (dynamic bodies may sleep and wake; nothing freezes them).
@@ -1440,7 +1627,7 @@ impl Sim {
     pub fn debris_part(&self, index: usize) -> Option<(CarId, &'static str)> {
         self.part_debris
             .get(&(index as u32))
-            .map(|&(c, p)| (CarId(c), damage::PART_NAMES[usize::from(p)]))
+            .map(|&(c, p, _)| (CarId(c), damage::PART_NAMES[usize::from(p)]))
     }
 
     /// Kinetic plus potential energy over every dynamic body, J, and the authorised-work ledger (engine force, air
@@ -1620,6 +1807,7 @@ impl Sim {
                 race.extend(s.rate.to_bits().to_le_bytes());
                 race.push(u8::from(r));
             }
+            race.extend(c.incarnation.to_le_bytes());
         }
         race.extend(self.ledger.to_bits().to_le_bytes());
         for &(i, until) in &self.fresh_debris {
@@ -1705,6 +1893,9 @@ impl Sim {
                     Setup::PartHealth { car, part, health } => {
                         sim.set_part_health(CarId(*car), *part, *health);
                     }
+                    Setup::Wreck { car } => {
+                        sim.wreck(CarId(*car));
+                    }
                 }
             }
             while let Some(e) = entries.next_if(|e| e.tick == sim.tick) {
@@ -1765,4 +1956,67 @@ fn part_phys(p: &VehicleProfile) -> Vec<PartPhys> {
             }
         })
         .collect()
+}
+
+/// The whole car's mass properties (P1-S03a): the profile's mass about the sidecar's centre of mass, with the hull's box
+/// inertia scaled by the profile. The core collider carries them.
+fn chassis_mass_props(p: &VehicleProfile) -> MassProperties {
+    let (lo, hi) = p.hull_bounds();
+    let [w, h, l] = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+    let k = p.tuning.mass / 12.0 * p.tuning.inertia_scale;
+    let inertia = Vector::new(
+        k * (h * h + l * l),
+        k * (w * w + l * l),
+        k * (w * w + h * h),
+    );
+    let [cx, cy, cz] = p.geometry.com;
+    MassProperties::new(Vector::new(cx, cy, cz), p.tuning.mass, inertia)
+}
+
+/// Part `i`'s collider on the chassis (P1-S04a): a convex hull of its sidecar proxy, in vehicle space. The core carries the
+/// whole car's mass properties (S04b recomputes them when parts detach); the other parts are massless, so the chassis
+/// feels as it did when it was one hull.
+fn part_builder(p: &VehicleProfile, i: usize) -> ColliderBuilder {
+    let points: Vec<Vector> = p
+        .geometry
+        .parts
+        .get(i)
+        .map(|g| {
+            g.points
+                .iter()
+                .map(|&[x, y, z]| Vector::new(x, y, z))
+                .collect()
+        })
+        .unwrap_or_default();
+    let builder = ColliderBuilder::convex_hull(&points).unwrap_or_else(|| {
+        if i == damage::CORE {
+            let hull: Vec<Vector> = p
+                .geometry
+                .hull
+                .iter()
+                .map(|&[x, y, z]| Vector::new(x, y, z))
+                .collect();
+            let (lo, hi) = p.hull_bounds();
+            ColliderBuilder::convex_hull(&hull).unwrap_or_else(|| {
+                ColliderBuilder::cuboid(
+                    (hi[0] - lo[0]) / 2.0,
+                    (hi[1] - lo[1]) / 2.0,
+                    (hi[2] - lo[2]) / 2.0,
+                )
+            })
+        } else {
+            // A profile without this part's proxy has no collider for it: a tiny inert ball at its pivot.
+            let [x, y, z] = p.geometry.parts.get(i).map_or([0.0; 3], |g| g.pivot);
+            ColliderBuilder::ball(0.01).translation(Vector::new(x, y, z))
+        }
+    });
+    let builder = if i == damage::CORE {
+        builder.mass_properties(chassis_mass_props(p))
+    } else {
+        builder.density(0.0)
+    };
+    builder
+        .friction(0.6)
+        .user_data(i as u128)
+        .collision_groups(Solidity::Racing.groups(damage::is_wheel(i)))
 }

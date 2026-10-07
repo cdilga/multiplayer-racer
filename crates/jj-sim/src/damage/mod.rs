@@ -127,6 +127,25 @@ pub enum DamageEvent {
         cause: OtherBody,
         instigator: Option<u32>,
     },
+    /// The car was wrecked: its husk stays, its parts popped off, and it respawns at its anchor after the hold.
+    /// `cause` is what took the last wheel for a wheel-loss wreck; `instigator` the car whose hit it was (or that last
+    /// hit this car, for the others).
+    Wrecked {
+        car: u32,
+        why: WreckWhy,
+        cause: Option<OtherBody>,
+        instigator: Option<u32>,
+    },
+}
+
+/// Why a car was wrecked (P1-S04c).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WreckWhy {
+    OutOfBounds,
+    Flipped,
+    /// Two or more wheels detached.
+    WheelLoss,
 }
 
 /// A car's part health.

@@ -1,0 +1,59 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "loose": {
+    "swingDeg": 12.1,
+    "looseDoors": [
+      [
+        115.883,
+        0.614,
+        -2.86
+      ],
+      [
+        114.907,
+        0.629,
+        -2.768
+      ]
+    ]
+  },
+  "detached": {
+    "bumperDistanceM": 17.9,
+    "paint": "#ffffff",
+    "interiors": {
+      "engine": 1,
+      "cabin": 0,
+      "boot": 0
+    },
+    "simDebris": 6
+  },
+  "bay": {
+    "interiors": {
+      "engine": 0,
+      "cabin": 1,
+      "boot": 0
+    }
+  },
+  "strip": {
+    "before": [
+      99.10726928710938,
+      0.007734894752502441,
+      -3.5
+    ],
+    "husk": {
+      "halfL": 1.140736699104309,
+      "halfW": 1.287445068359375,
+      "kind": "Husk",
+      "x": 100.33165740966797,
+      "z": -3.535306453704834
+    },
+    "respawnedAt": [
+      98.50757598876953,
+      0.007727622985839844,
+      0.0031307523604482412
+    ],
+    "interiors": {
+      "engine": 1,
+      "cabin": 1,
+      "boot": 1
+    }
+  }
+}

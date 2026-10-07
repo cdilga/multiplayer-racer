@@ -1,43 +1,251 @@
 {
  "scenario": "flip-recover",
- "what": "§7.3a: the player can always recover from a flip. Five cars land inverted (roof or side) at separate points of the greybox. No input (the assist alone), held throttle, mashing, and the Recover button all end upright on four wheels; Recover does it through the 2 s respawn.",
+ "what": "\u00a77.3a: the player can always recover from a flip. Five cars land inverted (roof or side) at separate points of the greybox. No input (the assist alone), held throttle, mashing, and the Recover button all end upright on four wheels; Recover does it through the 2 s respawn. Car 5 is the backstop (P1-S04c): the assist is forced to fail at 7 s (a wreck command, as the stuck-flip rule would issue at 3 s), so it is wrecked, leaves a husk (the only one: the other four never wreck) and respawns upright at its anchor.",
  "map": "maps/greybox-loop.json",
  "seed": 11,
  "ticks": 900,
  "cars": [
-  { "pose": { "x": 50, "y": 1.4, "z": 0, "headingDeg": 90, "rollDeg": 180 } },
-  { "pose": { "x": 150, "y": 1.4, "z": 0, "headingDeg": 90, "rollDeg": 90 } },
-  { "pose": { "x": 140, "y": 1.4, "z": 30, "headingDeg": -90, "rollDeg": 180 } },
-  { "pose": { "x": 40, "y": 1.4, "z": 55, "headingDeg": -90, "rollDeg": -90 } },
-  { "pose": { "x": -40, "y": 1.4, "z": 55, "headingDeg": -90, "rollDeg": 170 } }
+  {
+   "pose": {
+    "x": 50,
+    "y": 1.4,
+    "z": 0,
+    "headingDeg": 90,
+    "rollDeg": 180
+   }
+  },
+  {
+   "pose": {
+    "x": 150,
+    "y": 1.4,
+    "z": 0,
+    "headingDeg": 90,
+    "rollDeg": 90
+   }
+  },
+  {
+   "pose": {
+    "x": 140,
+    "y": 1.4,
+    "z": 30,
+    "headingDeg": -90,
+    "rollDeg": 180
+   }
+  },
+  {
+   "pose": {
+    "x": 40,
+    "y": 1.4,
+    "z": 55,
+    "headingDeg": -90,
+    "rollDeg": -90
+   }
+  },
+  {
+   "pose": {
+    "x": -40,
+    "y": 1.4,
+    "z": 55,
+    "headingDeg": -90,
+    "rollDeg": 170
+   }
+  },
+  {
+   "pose": {
+    "x": 100,
+    "y": 1.4,
+    "z": 55,
+    "headingDeg": -90,
+    "rollDeg": 180
+   }
+  }
  ],
- "recover": [{ "tick": 240, "car": 3 }],
+ "recover": [
+  {
+   "tick": 240,
+   "car": 3
+  }
+ ],
  "inputs": [
-  { "car": 1, "fromTick": 0, "throttle": 1.0 },
-  { "car": 2, "fromTick": 0, "toTick": 60, "throttle": 1.0, "steer": 1.0 },
-  { "car": 2, "fromTick": 60, "toTick": 120, "throttle": -1.0, "steer": -1.0 },
-  { "car": 2, "fromTick": 120, "toTick": 180, "throttle": 1.0, "steer": 1.0 },
-  { "car": 2, "fromTick": 180, "toTick": 240, "throttle": -1.0, "steer": -1.0 },
-  { "car": 2, "fromTick": 240, "toTick": 300, "throttle": 1.0, "steer": 1.0 },
-  { "car": 2, "fromTick": 300, "toTick": 360, "throttle": -1.0, "steer": -1.0 },
-  { "car": 2, "fromTick": 360, "throttle": 0.0 }
+  {
+   "car": 1,
+   "fromTick": 0,
+   "throttle": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "toTick": 60,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 60,
+   "toTick": 120,
+   "throttle": -1.0,
+   "steer": -1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 120,
+   "toTick": 180,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 180,
+   "toTick": 240,
+   "throttle": -1.0,
+   "steer": -1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 240,
+   "toTick": 300,
+   "throttle": 1.0,
+   "steer": 1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 300,
+   "toTick": 360,
+   "throttle": -1.0,
+   "steer": -1.0
+  },
+  {
+   "car": 2,
+   "fromTick": 360,
+   "throttle": 0.0
+  }
  ],
  "expect": [
-  { "car": 0, "metric": "upY", "min": 0.95, "max": 1.001 },
-  { "car": 0, "metric": "wheelsInContact", "min": 4, "max": 4 },
-  { "car": 1, "metric": "upY", "min": 0.95, "max": 1.001 },
-  { "car": 1, "metric": "wheelsInContact", "min": 4, "max": 4 },
-  { "car": 2, "metric": "upY", "min": 0.95, "max": 1.001 },
-  { "car": 2, "metric": "wheelsInContact", "min": 4, "max": 4 },
-  { "car": 3, "metric": "upY", "min": 0.95, "max": 1.001 },
-  { "car": 3, "metric": "wheelsInContact", "min": 4, "max": 4 },
-  { "car": 3, "metric": "recoveries", "min": 1, "max": 1 },
-  { "car": 4, "metric": "upY", "min": 0.95, "max": 1.001 },
-  { "car": 4, "metric": "wheelsInContact", "min": 4, "max": 4 },
-  { "car": 0, "metric": "minUpY", "min": -1.001, "max": 0.2 },
-  { "car": 1, "metric": "minUpY", "min": -1.001, "max": 0.2 },
-  { "car": 2, "metric": "minUpY", "min": -1.001, "max": 0.2 },
-  { "car": 3, "metric": "minUpY", "min": -1.001, "max": 0.2 },
-  { "car": 4, "metric": "minUpY", "min": -1.001, "max": 0.2 }
+  {
+   "car": 0,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 0,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 1,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 2,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 2,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 3,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 3,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 3,
+   "metric": "recoveries",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "car": 4,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 4,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": -1.001,
+   "max": 0.2
+  },
+  {
+   "car": 1,
+   "metric": "minUpY",
+   "min": -1.001,
+   "max": 0.2
+  },
+  {
+   "car": 2,
+   "metric": "minUpY",
+   "min": -1.001,
+   "max": 0.2
+  },
+  {
+   "car": 3,
+   "metric": "minUpY",
+   "min": -1.001,
+   "max": 0.2
+  },
+  {
+   "car": 4,
+   "metric": "minUpY",
+   "min": -1.001,
+   "max": 0.2
+  },
+  {
+   "car": 5,
+   "metric": "wrecks",
+   "min": 1,
+   "max": 1
+  },
+  {
+   "car": 5,
+   "metric": "upY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 5,
+   "metric": "wheelsInContact",
+   "min": 4,
+   "max": 4
+  },
+  {
+   "car": 0,
+   "metric": "husks",
+   "min": 1,
+   "max": 1
+  }
+ ],
+ "wreck": [
+  {
+   "tick": 420,
+   "car": 5
+  }
  ]
 }

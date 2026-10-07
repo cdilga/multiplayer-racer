@@ -46,7 +46,7 @@ pub const FLIP_REST_TICKS: u64 = SECOND;
 pub const FLIP_ASSIST_TICKS: u64 = 3 * SECOND;
 pub const RECOVER_SPEED: f32 = 3.0;
 pub const RECOVER_SLOW_TICKS: u64 = SECOND;
-/// Recover's 2 s penalty, and the wreck respawn until S04c.
+/// Recover's 2 s penalty, and the hold after a wreck: the player respawns at their anchor about 2 s later (R20).
 pub const RESPAWN_HOLD_TICKS: u64 = 2 * SECOND;
 pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
@@ -211,6 +211,8 @@ pub enum Respawned {
     Recover,
     OutOfBounds,
     FlipWreck,
+    /// Two or more wheels detached (P1-S04c).
+    WheelLoss,
 }
 
 /// What the sim must do after a race update or command.
@@ -470,7 +472,7 @@ impl Race {
         c.last = None;
         match why {
             Respawned::Recover => c.recoveries += 1,
-            Respawned::OutOfBounds | Respawned::FlipWreck => c.wrecks += 1,
+            Respawned::OutOfBounds | Respawned::FlipWreck | Respawned::WheelLoss => c.wrecks += 1,
         }
         self.events.push((tick, Event::Respawned { car, why }));
         Effect::Respawn {
@@ -478,6 +480,16 @@ impl Race {
             pose: c.anchor,
             why,
         }
+    }
+
+    /// A wreck the race didn't detect itself (P1-S04c: two wheels gone): the car respawns at its anchor after the same
+    /// 2 s hold. Refused during a hold or for a finished car.
+    pub fn wreck(&mut self, tick: u64, car: u32, why: Respawned) -> Option<Effect> {
+        let c = self.cars.get(car as usize)?;
+        if tick < c.hold_until || c.finished_at.is_some() {
+            return None;
+        }
+        Some(self.respawn(tick, car, why))
     }
 
     /// The Recover button: allowed after 1 s under 3 m/s, or when inverted, and not during a hold.

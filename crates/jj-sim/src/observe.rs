@@ -173,6 +173,8 @@ pub struct CarObs {
     /// for every car (it's the whole world's).
     pub energy_j: f64,
     pub authorised_j: f64,
+    /// Husks the round has made so far (every wrecked car leaves one, P1-S04c): the same for every car.
+    pub husks: u32,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -260,6 +262,7 @@ pub fn observe_car(sim: &Sim, route: &RouteGeom, car: CarId) -> Option<CarObs> {
             .unwrap_or_default(),
         energy_j: sim.energy_j().0,
         authorised_j: sim.energy_j().1,
+        husks: sim.husk_count() as u32,
         action: sim
             .action_state(car)
             .map_or_else(ActionObs::default, |a| ActionObs {
@@ -353,10 +356,12 @@ pub enum Metric {
     /// candidate once it's past the solver's tolerance).
     EnergyJ,
     EnergyGainJ,
+    /// Husks in the world (P1-S04c): a wreck leaves its chassis on the track as a dynamic body for the round.
+    Husks,
 }
 
 impl Metric {
-    pub const ALL: [Metric; 41] = [
+    pub const ALL: [Metric; 42] = [
         Metric::Speed,
         Metric::ForwardSpeed,
         Metric::UpY,
@@ -398,6 +403,7 @@ impl Metric {
         Metric::ConesDropped,
         Metric::EnergyJ,
         Metric::EnergyGainJ,
+        Metric::Husks,
     ];
 
     /// The camelCase name used in fixtures and JSON.
@@ -444,6 +450,7 @@ impl Metric {
             Metric::ConesDropped => "conesDropped",
             Metric::EnergyJ => "energyJ",
             Metric::EnergyGainJ => "energyGainJ",
+            Metric::Husks => "husks",
         }
     }
 }
@@ -688,6 +695,7 @@ impl SignatureTracker {
             Metric::ConesDropped => f64::from(o.action.cones),
             Metric::EnergyJ => o.energy_j - o.authorised_j,
             Metric::EnergyGainJ => self.energy_gain,
+            Metric::Husks => f64::from(o.husks),
             Metric::SlipDeg => o
                 .wheels
                 .iter()

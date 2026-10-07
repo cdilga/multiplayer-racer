@@ -62,6 +62,9 @@ pub struct Fixture {
     /// Part health set at a tick (R90 "settable", P1-S04b): the damage state without a crash.
     #[serde(default)]
     pub damage: Vec<PartHealthSpec>,
+    /// Cars wrecked at a tick, as the stuck-flip rule would (P1-S04c).
+    #[serde(default)]
+    pub wreck: Vec<RecoverSpec>,
     /// The autopilot takes a car (`on`) or hands it back (P1-S07).
     #[serde(default)]
     pub autopilot: Vec<AutopilotSpec>,
@@ -510,6 +513,9 @@ impl Harness {
             if let Some(part) = jj_sim::damage::part_index(&d.part) {
                 sim.set_part_health(CarId(d.car), part as u8, d.health);
             }
+        }
+        for r in fx.wreck.iter().filter(|r| r.tick == t) {
+            sim.wreck(CarId(r.car));
         }
         for r in fx.recover.iter().filter(|r| r.tick == t) {
             sim.recover(CarId(r.car));

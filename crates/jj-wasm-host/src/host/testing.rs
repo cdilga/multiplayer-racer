@@ -56,6 +56,13 @@ enum Command {
     Inputs {
         spans: Vec<InputSpan>,
     },
+    /// Sets a part's health (R90 "settable", P1-S04b): `part` is a contract part name (`front`, `door_FL`…). 0 detaches
+    /// it, at or under half makes it loose.
+    Damage {
+        car: u32,
+        part: String,
+        health: f32,
+    },
     Step {
         ticks: u64,
     },
@@ -181,6 +188,14 @@ impl Host {
                 let n = spans.len();
                 self.harness()?.add_inputs(spans);
                 json!({ "spans": n })
+            }
+            Command::Damage { car, part, health } => {
+                let i = jj_sim::damage::part_index(&part)
+                    .filter(|&i| i > 0)
+                    .ok_or_else(|| format!("no damageable part {part:?}"))?;
+                self.sim
+                    .set_part_health(jj_sim::CarId(car), i as u8, health);
+                json!({ "tick": self.sim.tick(), "part": part, "health": health })
             }
             Command::Step { ticks } => {
                 for _ in 0..ticks {

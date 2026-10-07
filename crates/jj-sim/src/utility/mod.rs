@@ -79,6 +79,8 @@ pub enum PropKind {
     /// A detached car part (P1-S04b): a dynamic debris body shaped like its sidecar proxy, listed in the debris records
     /// (so indices stay stable) and described by the snapshot's part records.
     Part,
+    /// A wrecked car's chassis (P1-S04c): its core hull as a dynamic body that stays on the track for the round.
+    Husk,
 }
 
 impl PropKind {
@@ -88,6 +90,7 @@ impl PropKind {
             Self::Debris => 0,
             Self::Cone => 1,
             Self::Part => 2,
+            Self::Husk => 3,
         }
     }
 }
