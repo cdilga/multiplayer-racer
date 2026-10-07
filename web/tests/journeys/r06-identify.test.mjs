@@ -41,8 +41,17 @@ async function join(host, from, to) {
 /** Presses Identify for seat number `n`; returns what the TV shows for it. */
 async function identify(host, n) {
   const before = await host.evaluate(() => window.__jjRoom.identified().length);
-  await frame(host, `syn${n}`, { identify: true });
-  await wait(host, (b) => window.__jjRoom.identified().length > b, before, 10_000);
+  // A claim flashes Identify itself and starts the seat's 3 s (sim-time) limit; a loaded host runs fewer ticks than real
+  // time, so a press soon after joining can be refused as limited. Press again until it lands, as a player would.
+  for (let tries = 0; ; tries++) {
+    await frame(host, `syn${n}`, { identify: true });
+    try {
+      await wait(host, (b) => window.__jjRoom.identified().length > b, before, 1500);
+      break;
+    } catch (e) {
+      if (tries >= 12) throw e;
+    }
+  }
   return host.evaluate((n) => {
     const room = window.__jjRoom.view();
     const seat = room.seats.find((s) => s.number === n);
