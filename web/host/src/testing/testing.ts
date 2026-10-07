@@ -185,6 +185,8 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
     marker: TEST_SURFACE_MARKER,
     /** Raw test-surface command. */
     command: (command: Json) => test.command(command),
+    /** Feeds one input as it would arrive (a synthetic controller's frames: hello, claim, ready, identify, state). */
+    input: (input: TestInput) => test.input(input),
     hold: (on: boolean) => test.command({ cmd: 'hold', on }),
     load: (fixture: Json, mapJson?: string) => test.command({ cmd: 'load', fixture, mapJson }),
     spawn: (cars: Json[]) => test.command<{ cars: number[] }>({ cmd: 'spawn', cars }),

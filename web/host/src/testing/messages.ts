@@ -3,7 +3,12 @@
 import type { SimInput } from '../worker/messages';
 
 /** Test-side controller frames, encoded in the testing worker (a real controller encodes them in `jj-wasm-input`). */
-export type ControllerFrame = { hello: true } | { claim: string } | { state: { source: number; seq: number; drive: [number, number] } };
+export type ControllerFrame =
+  | { hello: true }
+  | { claim: string }
+  | { ready: boolean }
+  | { identify: true }
+  | { state: { source: number; seq: number; drive: [number, number] } };
 export type TestInput = SimInput | { type: 'controller'; endpoint: string; frame: ControllerFrame };
 
 /** Extra `init` options the testing worker reads. */

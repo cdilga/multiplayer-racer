@@ -336,6 +336,16 @@ pub mod test_codec {
     }
 
     #[wasm_bindgen]
+    pub fn controller_ready(on: bool) -> Vec<u8> {
+        ControllerCmd::Ready { on }.encode()
+    }
+
+    #[wasm_bindgen]
+    pub fn controller_identify() -> Vec<u8> {
+        ControllerCmd::Identify.encode()
+    }
+
+    #[wasm_bindgen]
     pub fn controller_state(source: u16, seq: u16, dx: i16, dy: i16) -> Result<Vec<u8>, JsError> {
         StateBatch {
             minor: STATE_MINOR,
