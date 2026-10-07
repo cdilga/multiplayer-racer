@@ -10,62 +10,16 @@
 import { apply_curve } from '../pkg/jj_wasm_input.js';
 import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
+import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
+import type { Tilt } from './tilt';
 
-export type Layout = 'floating' | 'fixed';
-export type Steering = 'gentle' | 'direct';
-export type CameraDistance = 'near' | 'host' | 'far';
-
-export interface ControllerPreferences {
-  v: 1;
-  layout: Layout;
-  steering: Steering;
-  cameraDistance: CameraDistance;
-  vibration: boolean;
-  reducedMotion: boolean;
-  /** Full screen and a screen wake lock where the phone allows it (R101). */
-  keepAwake: boolean;
-  remember: boolean;
-}
-
-export const DEFAULTS: ControllerPreferences = {
-  v: 1,
-  layout: 'floating',
-  steering: 'gentle',
-  cameraDistance: 'host',
-  vibration: true,
-  reducedMotion: false,
-  keepAwake: true,
-  remember: true,
-};
-
-/** The approved response presets: dead zone and exponent for `apply_curve`. Both are monotonic and reach 1 at full deflection. */
-export const PRESETS: Record<Steering, { deadzone: number; gamma: number }> = {
-  gentle: { deadzone: 0.06, gamma: 1.5 },
-  direct: { deadzone: 0.03, gamma: 1 },
-};
+export { DEFAULTS, PRESETS, sanitise };
+export type { CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadzone, TiltSensitivity };
 
 /** Applies the personal curve to one stick sample (per axis, y keeps its sign). */
 export function shape(v: Stick, steering: Steering): Stick {
   const { deadzone, gamma } = PRESETS[steering];
   return { x: apply_curve(v.x, deadzone, gamma), y: apply_curve(v.y, deadzone, gamma), touch: v.touch };
-}
-
-const oneOf = <T extends string>(v: unknown, ok: readonly T[], d: T): T => (ok.includes(v as T) ? (v as T) : d);
-const bool = (v: unknown, d: boolean): boolean => (typeof v === 'boolean' ? v : d);
-
-/** A stored (or any) value read back into a valid record: each unknown or invalid field takes its default. */
-export function sanitise(raw: unknown): ControllerPreferences {
-  const r = raw && typeof raw === 'object' && (raw as { v?: unknown }).v === 1 ? (raw as Record<string, unknown>) : {};
-  return {
-    v: 1,
-    layout: oneOf(r.layout, ['floating', 'fixed'], DEFAULTS.layout),
-    steering: oneOf(r.steering, ['gentle', 'direct'], DEFAULTS.steering),
-    cameraDistance: oneOf(r.cameraDistance, ['near', 'host', 'far'], DEFAULTS.cameraDistance),
-    vibration: bool(r.vibration, DEFAULTS.vibration),
-    reducedMotion: bool(r.reducedMotion, DEFAULTS.reducedMotion),
-    keepAwake: bool(r.keepAwake, DEFAULTS.keepAwake),
-    remember: bool(r.remember, DEFAULTS.remember),
-  };
 }
 
 export const SAVE_FAILED_NOTE = "Applied for now — this browser couldn't remember your settings";
@@ -159,6 +113,8 @@ export interface SettingsDeps {
   you: { number: number; colour: string; name: string };
   /** Whether a reset needs a confirmation the page supplies (default: a second tap). */
   confirm?: (title: string) => Promise<boolean>;
+  /** The play screen's tilt sensor (C07.2); its readings steer the DRIVE axis while the setting is on. */
+  tilt?: Tilt;
 }
 
 const seg = (name: string, label: string, opts: Array<[string, string]>, cur: string) =>
@@ -176,6 +132,8 @@ export class SettingsSheet {
   private testValues: { drive: Stick; action: Stick } = { drive: { x: 0, y: 0, touch: false }, action: { x: 0, y: 0, touch: false } };
   private resetArmed = 0;
   private closed = false;
+  private tiltNote = '';
+  private restoreTilt: () => void = () => {};
   private unsub: () => void = () => {};
 
   constructor(
@@ -212,6 +170,7 @@ export class SettingsSheet {
         ${toggle('reducedMotion', 'Reduced motion', p.reducedMotion, 'Fewer flashes, no shake')}
         ${toggle('keepAwake', 'Full screen, screen on', p.keepAwake, 'Where this phone allows it')}
         ${toggle('remember', 'Remember on this device', p.remember, 'Until you clear browser data')}
+        ${this.tiltRows()}
         ${note}
       </div>
       <div class="actions" data-box="actions">
@@ -224,16 +183,52 @@ export class SettingsSheet {
     this.wire();
   }
 
+  /** The tilt steering rows (C07.2): off by default; once on, sensitivity, dead zone and Set neutral. */
+  private tiltRows(): string {
+    const t = this.d.tilt;
+    const p = this.d.prefs.value;
+    if (!t) return '';
+    const live = p.tilt && (t.state === 'live' || t.state === 'waiting');
+    const sub = t.state === 'denied' ? 'Motion access was refused' : t.state === 'no-sensor' ? 'This device has no motion sensor' : 'Turn the phone like a wheel; boost stays on the stick';
+    const rows = live
+      ? `<div class="row">Sensitivity${seg('tiltSensitivity', 'Tilt sensitivity', [['gentle', 'Gentle'], ['normal', 'Normal'], ['sharp', 'Sharp']], p.tiltSensitivity)}</div>
+        <div class="row">Dead zone${seg('tiltDeadzone', 'Tilt dead zone', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']], p.tiltDeadzone)}</div>
+        <div class="row"><span>Straight ahead<small>Hold the phone how you'll drive, then tap</small></span><button type="button" class="btn" data-act="tilt-neutral">Set neutral</button></div>`
+      : '';
+    const note = this.tiltNote ? `<p class="note" data-note="tilt" role="status">${this.tiltNote}</p>` : '';
+    return `${toggle('tilt', 'Tilt steering', live, sub, t.state === 'no-sensor')}${rows}${note}`;
+  }
+
+  private async tiltToggle(): Promise<void> {
+    const t = this.d.tilt;
+    if (!t) return;
+    if (this.d.prefs.value.tilt && (t.state === 'live' || t.state === 'waiting')) {
+      t.disable();
+      this.tiltNote = '';
+      return this.d.prefs.update({ tilt: false });
+    }
+    const st = await t.enable(); // inside the tap: iOS only asks for motion access in a user gesture
+    this.tiltNote = st === 'denied' ? 'Motion access was refused, so tilt stays off.' : st === 'no-sensor' ? 'This device has no motion sensor, so tilt stays off.' : 'Tilt is on. Set neutral when you are holding the phone how you will drive.';
+    this.d.prefs.update({ tilt: st === 'waiting' || st === 'live' });
+  }
+
   private wire(): void {
     const q = (s: string) => this.el.querySelectorAll<HTMLElement>(s);
     q('[data-set]').forEach((b) => b.addEventListener('click', () => this.d.prefs.update({ [b.dataset.set!]: b.dataset.v } as Partial<ControllerPreferences>)));
     q('[data-toggle]').forEach((b) =>
       b.addEventListener('click', () => {
-        const k = b.dataset.toggle as 'vibration' | 'reducedMotion' | 'keepAwake' | 'remember';
+        const k = b.dataset.toggle as 'vibration' | 'reducedMotion' | 'keepAwake' | 'remember' | 'tilt';
+        if (k === 'tilt') return void this.tiltToggle();
         this.d.prefs.update({ [k]: !this.d.prefs.value[k] });
       }),
     );
     const on = (a: string, f: () => void) => this.el.querySelector(`[data-act=${a}]`)?.addEventListener('click', f);
+    on('tilt-neutral', () => {
+      const n = this.d.tilt?.calibrate();
+      this.tiltNote = n === null || n === undefined ? 'No motion reading yet: move the phone a little and try again.' : 'Straight ahead set.';
+      if (n !== null && n !== undefined) this.d.prefs.update({ tiltNeutral: Math.round(n * 10) / 10 });
+      else this.render();
+    });
     on('save', () => this.close());
     on('back', () => this.close());
     on('test', () => this.startTest());
@@ -286,11 +281,24 @@ export class SettingsSheet {
       }, fixed);
     };
     this.test = { drive: mk(cols[0]!, 'drive'), action: mk(cols[1]!, 'action') };
+    const tilt = this.d.tilt;
+    if (tilt) {
+      const prev = tilt.onChange;
+      tilt.onChange = () => {
+        prev();
+        this.readout();
+      };
+      this.restoreTilt = () => {
+        tilt.onChange = prev;
+        this.restoreTilt = () => {};
+      };
+    }
     this.readout();
     body.querySelector('[data-act=test-done]')!.addEventListener('click', () => {
       this.test?.drive.release();
       this.test?.action.release();
       this.test = null;
+      this.restoreTilt();
       this.render();
     });
   }
@@ -298,7 +306,10 @@ export class SettingsSheet {
   private readout(): void {
     const f = (s: Stick) => `x ${s.x.toFixed(2)}  y ${s.y.toFixed(2)}`;
     const r = this.el.querySelector('[data-read]');
-    if (r) r.textContent = `Drive ${f(this.testValues.drive)}   Action ${f(this.testValues.action)}`;
+    const tilt = this.d.tilt?.steer;
+    // With tilt on, the steer axis shown is the phone's; the stick's own x is what it would be without it.
+    const drive = tilt === null || tilt === undefined ? this.testValues.drive : { ...this.testValues.drive, x: tilt };
+    if (r) r.textContent = `Drive ${f(drive)}   Action ${f(this.testValues.action)}${tilt === null || tilt === undefined ? '' : '   (tilt steers)'}`;
   }
 
   /** The play screen was rebuilt (the phone turned): carry the open sheet onto the new one. */
@@ -315,6 +326,7 @@ export class SettingsSheet {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    this.restoreTilt();
     this.test?.drive.release();
     this.test?.action.release();
     this.test = null;

@@ -10,6 +10,7 @@ import './settings.css';
 import './layout-short.css';
 import { watchBadge } from '../hub/badge';
 import { ausName } from './ausname';
+import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shape } from './settings';
 
 const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string; action?: [string, string] }>> = {
@@ -45,6 +46,13 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let shown: string | null = null;
   let prefs: Preferences | null = null;
   let sheet: SettingsSheet | null = null;
+  const tilt = new Tilt({ deadzoneDeg: DEADZONES.medium, fullLockDeg: SENSITIVITIES.normal });
+  /** Applies the saved tilt settings to the sensor. */
+  const syncTilt = () => {
+    const v = prefsNow().value;
+    tilt.settings = { deadzoneDeg: DEADZONES[v.tiltDeadzone], fullLockDeg: SENSITIVITIES[v.tiltSensitivity] };
+    tilt.neutral = v.tiltNeutral;
+  };
   let stopBadge: (() => void) | null = null;
   const prefsNow = () => {
     prefs ??= new Preferences(session.realm);
@@ -151,12 +159,22 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     };
     const p = prefsNow();
     const steering = () => prefsNow().value.steering;
-    const push = () => sticks && session.setSticks(shape(sticks.drive.value, steering()), shape(sticks.action.value, steering()));
+    // Tilt (C07.2, opt-in) replaces only the DRIVE steer axis; everything else is the sticks'.
+    const push = () => {
+      if (!sticks) return;
+      const [d, a] = applyTilt(shape(sticks.drive.value, steering()), shape(sticks.action.value, steering()), sheet?.open ? null : tilt.steer);
+      session.setSticks(d, a);
+    };
+    tilt.onChange = push;
+    syncTilt();
+    // An Android phone (or a returning visit) turns the sensor on again without a tap; iOS needs the tap in Settings.
+    if (p.value.tilt && tilt.state === 'off') void tilt.enable();
     const buzz = () => prefsNow().value.vibration;
     sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed', buzz), action: attachStick(az, push, p.value.layout === 'fixed', buzz) };
     sheet = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;
+      syncTilt();
     });
     app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
     app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
@@ -191,6 +209,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
         session.menu(false);
         sheet = null;
       },
+      tilt,
       onSitOut: () => session.sitOut(),
       onLeave: () => session.leave(),
     });
