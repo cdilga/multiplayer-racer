@@ -78,7 +78,7 @@ for d in map(json.loads, open(".beads/issues.jsonl")):
     for h in "## Looked at" "## Defects found and fixed" "## Remaining defects" "## Not covered"; do
         grep -q -- "$h" "$review" || die "$review is missing the section '$h'"
     done
-    imgs=$(grep -oE '[A-Za-z0-9_./-]+\.(png|jpe?g|webp)' "$review" | sort -u || true)  # no match must reach the die below, not pipefail
+    imgs=$(grep -oE '[A-Za-z0-9_./@=,+-]+\.(png|jpe?g|webp)' "$review" | sort -u || true)  # no match must reach the die below, not pipefail
     [[ -n $imgs ]] || die "$review names no screenshots: list the images you looked at"
     for i in $imgs; do
         f="docs/evidence/$pid/$i"; [[ -f $f ]] || f=$i
