@@ -93,7 +93,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
         return;
       }
       nameEl.value = r.name;
-      aussieNote.innerHTML = `<b>${esc(r.name)}</b> instead of ${esc(typed.trim())}. <button type="button" class="btn quiet" data-act="aussie-undo">Undo</button>`;
+      aussieNote.innerHTML = `<span><b>${esc(r.name)}</b> instead of ${esc(typed.trim())}.</span> <button type="button" class="btn quiet" data-act="aussie-undo">Undo</button>`;
       aussieNote.querySelector('[data-act=aussie-undo]')!.addEventListener('click', () => {
         nameEl.value = typed;
         aussieNote.hidden = true;

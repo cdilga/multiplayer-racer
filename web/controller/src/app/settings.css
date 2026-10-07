@@ -59,3 +59,6 @@
 .aussie-note { margin: 6px 0 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .aussie-note[hidden] { display: none; }
 .aussie-note .btn { min-height: 40px; padding: 0 12px; font-size: 14px; }
+/* The card keeps to the screen: the name field shrinks to make room for the button, never the other way round. */
+.join-card { grid-template-columns: minmax(0, 1fr); }
+.name-field input { flex: 1 1 auto; width: auto; min-width: 0; }

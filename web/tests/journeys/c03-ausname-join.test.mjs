@@ -109,12 +109,16 @@ test('a name with no Australian version is left alone and says so; the field sta
   await shot(page, 'c03-aussie-nothing-to-change-390x844');
   await page.locator('#name').fill('Marlene');
   assert.equal(await page.inputValue('#name'), 'Marlene');
-  if (CAPTURE) {
-    for (const [w, h] of [[844, 390], [1920, 1080], [412, 915], [375, 667]]) {
-      await page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
-      await page.setViewportSize({ width: w, height: h });
-      await page.waitForTimeout(400);
-      await shot(page, `c03-aussie-join-card-${w}x${h}`);
-    }
+  // The card stays on the screen at every size, with the Aussie button and Join both inside it.
+  for (const [w, h] of [[844, 390], [1920, 1080], [412, 915], [375, 667], [390, 844]]) {
+    await page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
+    await page.setViewportSize({ width: w, height: h });
+    await page.waitForTimeout(400);
+    const fit = await page.evaluate(() => {
+      const r = (s) => document.querySelector(s).getBoundingClientRect();
+      return { card: r('.join-card').right, btn: r('[data-act=aussie]').right, join: r('form button[type=submit]').right, field: r('#name').left, w: innerWidth };
+    });
+    assert.ok(fit.card <= fit.w + 1 && fit.btn <= fit.card + 1 && fit.join <= fit.card + 1 && fit.field >= 0, `${w}x${h}: ${JSON.stringify(fit)}`);
+    await shot(page, `c03-aussie-join-card-${w}x${h}`);
   }
 });
