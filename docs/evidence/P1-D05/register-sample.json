@@ -1,0 +1,90 @@
+{
+ "labels": {
+  "Latest": "v02-dddddddd",
+  "Playtest 1": "v02-bbbbbbbb"
+ },
+ "pins": [],
+ "previews": [
+  {
+   "id": "v02-dddddddd",
+   "branch": "v0.2-revamp",
+   "sha": "dddddddddddddddddddddddddddddddddddddddd",
+   "publishedAt": "2026-10-07T07:09:02+00:00",
+   "status": "playable",
+   "title": "P1-G02: JN5's phones leave in Intermission",
+   "smoke": [
+    "room",
+    "join-webrtc",
+    "input",
+    "resume"
+   ],
+   "reason": "",
+   "ciRun": "https://gitea.example/cdilga/multiplayer-racer/actions/runs/1",
+   "smokedAt": "2026-10-07T07:09:02+00:00",
+   "changed": [
+    "P1-S02: AC4 skipped-publish count",
+    "P1-G02: JN5 names the drawer's rows"
+   ]
+  },
+  {
+   "id": "v02-cccccccc",
+   "branch": "v0.2-revamp",
+   "sha": "cccccccccccccccccccccccccccccccccccccccc",
+   "publishedAt": "2026-10-07T04:39:02+00:00",
+   "status": "not playable",
+   "title": "P1-G02: JN5's phones leave in Intermission",
+   "smoke": [],
+   "reason": "after room 4F2K: Timeout 60000ms exceeded waiting for the phone to connect",
+   "ciRun": "https://gitea.example/cdilga/multiplayer-racer/actions/runs/1",
+   "smokedAt": "2026-10-07T04:39:02+00:00",
+   "changed": [
+    "P1-S02: AC4 skipped-publish count",
+    "P1-G02: JN5 names the drawer's rows"
+   ]
+  },
+  {
+   "id": "v02-bbbbbbbb",
+   "branch": "v0.2-revamp",
+   "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "publishedAt": "2026-10-06T01:39:02+00:00",
+   "status": "playable",
+   "title": "P1-G02: JN5's phones leave in Intermission",
+   "smoke": [
+    "room",
+    "join-webrtc",
+    "input",
+    "resume"
+   ],
+   "reason": "",
+   "ciRun": "https://gitea.example/cdilga/multiplayer-racer/actions/runs/1",
+   "smokedAt": "2026-10-06T01:39:02+00:00",
+   "changed": [
+    "P1-S02: AC4 skipped-publish count",
+    "P1-G02: JN5 names the drawer's rows"
+   ]
+  },
+  {
+   "id": "v02-aaaaaaaa",
+   "branch": "v0.2-revamp",
+   "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "publishedAt": "2026-10-05T05:39:02+00:00",
+   "status": "playable",
+   "title": "P1-G02: JN5's phones leave in Intermission",
+   "smoke": [
+    "room",
+    "join-webrtc",
+    "input",
+    "resume"
+   ],
+   "reason": "",
+   "ciRun": "https://gitea.example/cdilga/multiplayer-racer/actions/runs/1",
+   "smokedAt": "2026-10-05T05:39:02+00:00",
+   "changed": [
+    "P1-S02: AC4 skipped-publish count",
+    "P1-G02: JN5 names the drawer's rows"
+   ],
+   "retired": "2026-10-07T05:39:02+00:00",
+   "retiredReason": "Expired: older than 24 hours, and not pinned or the latest build."
+  }
+ ]
+}
