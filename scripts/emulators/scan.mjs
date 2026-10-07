@@ -69,7 +69,8 @@ async function main() {
   const posters = readFileSync(POSTERS, 'utf8');
   const restore = () => { writeFileSync(AVD_CONFIG, cfg); writeFileSync(POSTERS, posters); };
   writeFileSync(AVD_CONFIG, cfg.replace(/^hw\.camera\.back=.*$/m, 'hw.camera.back=virtualscene'));
-  writeFileSync(POSTERS, posters.replace(/(poster wall[\s\S]*?default )\S+/, `$1${png}`));
+  // Both posters (the wall's and the table's) show the QR, so whichever the virtual camera faces reads.
+  writeFileSync(POSTERS, posters.replace(/(poster (?:wall|table)[\s\S]*?default )\S+/g, `$1${png}`));
 
   const api = { events: async () => stack.events };
   let plat;
@@ -88,8 +89,9 @@ async function main() {
     await plat.shot('scan-landing');
     await plat.tap(rect);
     // The camera prompt (Chrome's site permission) is a native dialog: allow it as a player would.
+    let allowed = false;
     const joined = until('the page navigating to the room in the QR', async () => {
-      await plat.allowCamera?.();
+      if (!allowed) allowed = await plat.allowCamera();
       return stack.events.some((e) => e.kind === 'load' && e.data.path === '/j/QRSC');
     }, 120000, 1500);
     await sleep(6000);
