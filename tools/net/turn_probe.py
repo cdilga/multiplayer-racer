@@ -66,12 +66,16 @@ def xor_addr(v, txid):
 
 
 def rpc(sock, addr, packet, timeout):
+    # Only this request's reply counts: a late reply to an earlier retransmitted request (a slow server) is skipped.
+    txid = packet[8:20]
     sock.settimeout(timeout)
     for _ in range(3):
         sock.sendto(packet, addr)
         try:
-            data, _ = sock.recvfrom(2048)
-            return parse(data)
+            while True:
+                r = parse(sock.recvfrom(2048)[0])
+                if r[1] == txid:
+                    return r
         except socket.timeout:
             continue
     return None
