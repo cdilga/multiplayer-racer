@@ -275,7 +275,10 @@ mod tests {
             vehicle_sidecars: vec![],
             seed: 1,
         };
-        Host::new(&init.encode()).unwrap()
+        // The test surface drives cars as they're claimed: G04's free drive (the host page's `?test` does the same).
+        let mut h = Host::new(&init.encode()).unwrap();
+        h.set_free_drive(true);
+        h
     }
 
     fn cmd(h: &mut Host, v: Value) -> Value {
