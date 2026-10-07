@@ -58,6 +58,8 @@ const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" d
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
 
+/** Text colour on a seat colour (the kit's table, by luminance). */
+const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
 const hex = (rgb: [number, number, number]) => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -412,9 +414,15 @@ function flash(app: HTMLElement, session: Session): void {
   const you = session.you;
   if (!you) return;
   const f = document.createElement('div');
-  f.className = 'cooee';
+  f.className = 'cooee-phone';
+  f.dataset.overlay = 'flash';
   f.style.setProperty('--seat', hex(you.rgb));
-  f.innerHTML = `<div class="flash"></div><span class="display italic">Cooee #${you.number}</span>`;
+  f.style.setProperty('--seat-on', seatOn(you.rgb));
+  // The accepted mock's flash (phone.js `cooee`): the seat colour washes the screen, "Cooee #N" on a chip, and the line under it.
+  f.innerHTML = `<i class="flash"></i><div class="lab"><b class="display">Cooee #${you.number}</b><span>That’s you on the TV</span></div>`;
+  // It never covers your number or the tools: the strip stays on top.
+  const bottoms = [...app.querySelectorAll('.strip, .tools')].map((e) => e.getBoundingClientRect().bottom);
+  f.style.top = `${Math.max(0, ...bottoms)}px`;
   app.append(f);
   setTimeout(() => f.remove(), 1500);
 }

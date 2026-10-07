@@ -231,10 +231,10 @@ describe('the player colour and Identify', () => {
       assert.ok(got.every((v, i) => Math.abs(v - want[i]) < 24), `the frame at (${x},${y}) is the seat colour ${seat}: ${got}`);
     }
     await page.locator('[data-act=identify]').click();
-    await page.locator('.cooee').waitFor({ timeout: 5000 });
-    assert.match(await page.locator('.cooee').textContent(), /Cooee #12/i);
+    await page.locator('.cooee-phone').waitFor({ timeout: 5000 });
+    assert.match(await page.locator('.cooee-phone').textContent(), /Cooee #12/i);
     await shot(page, 'c02-identify-flash');
-    await page.locator('.cooee').waitFor({ state: 'detached', timeout: 5000 });
+    await page.locator('.cooee-phone').waitFor({ state: 'detached', timeout: 5000 });
     await ctx.close();
   });
 });
