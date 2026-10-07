@@ -99,6 +99,8 @@ export class Session {
   stats = { batches: 0, stateBytes: 0, actions: 0, cmds: 0 };
   onChange: () => void = () => {};
   onIdentify: () => void = () => {};
+  /** Every stick sample (the tutorial listens). */
+  onSticks: (drive: Stick, action: Stick) => void = () => {};
   /** A discrete action fired (wheelie, OI!, cone): the tutorial listens. */
   onAction: (kind: number) => void = () => {};
 
@@ -293,6 +295,7 @@ export class Session {
   setSticks(drive: Stick, action: Stick): void {
     this.drive = drive;
     this.action = action;
+    this.onSticks(drive, action);
     this.sample();
   }
 

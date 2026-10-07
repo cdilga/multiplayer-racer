@@ -110,12 +110,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       if (Tutorial.wanted()) tutorial.show();
     }
     session.onAction = (kind) => tutorial?.action(kind);
-    const push = () => {
-      if (!sticks) return;
-      session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
-      tutorial?.stick('drive', sticks.drive.value);
-      tutorial?.stick('action', sticks.action.value);
+    session.onSticks = (d, a) => {
+      tutorial?.stick('drive', d);
+      tutorial?.stick('action', a);
     };
+    const push = () => sticks && session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
     sticks = { drive: attachStick(dz, push), action: attachStick(az, push) };
     app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
