@@ -41,6 +41,8 @@ export interface Backend {
   finish(): Promise<void>;
   /** Draw calls since the last reset. */
   drawCalls(): number;
+  /** Triangles drawn since the last reset. */
+  triangles(): number;
   render(scene: Scene, camera: Camera): void;
 }
 
@@ -79,6 +81,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       maxSize: Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)),
       finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
       drawCalls: () => r.info.render.calls,
+      triangles: () => r.info.render.triangles,
       render: (s, c) => (lookFor(r, s), r.render(s, c)),
     };
   }
@@ -100,6 +103,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       maxSize: device.limits.maxTextureDimension2D,
       finish: () => device.queue.onSubmittedWorkDone(),
       drawCalls: () => r.info.render.drawCalls,
+      triangles: () => r.info.render.triangles,
       render: (s, c) => (lookFor(r, s), r.render(s, c)),
     };
   }
@@ -111,6 +115,7 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
     maxSize: Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)),
     finish: async () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px),
     drawCalls: () => r.info.render.drawCalls,
+    triangles: () => r.info.render.triangles,
     render: (s, c) => (lookFor(r, s), r.render(s, c)),
   };
 }

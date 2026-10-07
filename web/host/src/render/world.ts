@@ -83,6 +83,7 @@ export interface WorldStats {
   debris: number;
   snapped: number;
   drawCalls: number;
+  triangles: number;
   /** The LOD class each tile drew (one entry for the overview camera). */
   lods: number[];
 }
@@ -176,6 +177,7 @@ export class World {
       debris: 0,
       snapped: 0,
       drawCalls: 0,
+      triangles: 0,
       lods: [],
     };
     const r = backend.renderer;
@@ -376,6 +378,7 @@ export class World {
     st.debris = s.frame?.debris ?? 0;
     st.snapped = s.snapped;
     st.drawCalls = this.backend.drawCalls();
+    st.triangles = this.backend.triangles();
     this.onFrame(st);
   }
 

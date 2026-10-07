@@ -1,0 +1,187 @@
+{
+  "label": "P1-Q01 sim timing (native vs WASM, snapshot cost, debris growth)",
+  "evidenceKind": "ev:hardware (the machine below; headless is irrelevant to sim timing)",
+  "machine": {
+    "host": "eris",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12400",
+    "cpus": 12,
+    "platform": "linux/x64",
+    "node": "v26.8.2"
+  },
+  "build": "2e07e49+q01",
+  "nativeBinary": "/home/cdilga/Work/runs/q01/target/release/jj (release)",
+  "wasm": "jj-wasm-host testing build, run in Node (V8 WASM), not a browser worker; worker overhead and a browser JIT are not in these numbers",
+  "cohort": "fixture perf-debris-N: N cars on the greybox grid, all parts stripped at tick 30; measured ticks 150..750",
+  "nativeMethod": "wall time of `jj sim` at T+K ticks minus at T ticks (min of 3), so process start and map load cancel",
+  "takenAt": "2026-10-07T13:58:55.311Z",
+  "rows": [
+    {
+      "cars": 1,
+      "wasmMsPerTick": {
+        "mean": 0.0442,
+        "p95": 0.1082,
+        "max": 0.1234
+      },
+      "debris": 16,
+      "snapshotBytes": 1056,
+      "snapshotWriteMs": {
+        "median": 0.0026,
+        "max": 0.3263
+      },
+      "hash": "5eb9fad524f05ec6fe3ff9779816c4b00ca778a5c4d009774b75795d84b85d96",
+      "nativeMsPerTick": 0.025,
+      "wasmOverNative": 1.77,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "5eb9fad524f05ec6fe3ff9779816c4b00ca778a5c4d009774b75795d84b85d96",
+      "nativeHash": "5eb9fad524f05ec6fe3ff9779816c4b00ca778a5c4d009774b75795d84b85d96",
+      "parity": true
+    },
+    {
+      "cars": 2,
+      "wasmMsPerTick": {
+        "mean": 0.0642,
+        "p95": 0.1325,
+        "max": 0.1487
+      },
+      "debris": 27,
+      "snapshotBytes": 1912,
+      "snapshotWriteMs": {
+        "median": 0.0037,
+        "max": 0.0146
+      },
+      "hash": "df3d386fe93d1dec418196c8517113bc9bf4d9fb141247f051cb0c834dd606c9",
+      "nativeMsPerTick": 0.0479,
+      "wasmOverNative": 1.34,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "df3d386fe93d1dec418196c8517113bc9bf4d9fb141247f051cb0c834dd606c9",
+      "nativeHash": "df3d386fe93d1dec418196c8517113bc9bf4d9fb141247f051cb0c834dd606c9",
+      "parity": true
+    },
+    {
+      "cars": 4,
+      "wasmMsPerTick": {
+        "mean": 0.1179,
+        "p95": 0.2527,
+        "max": 0.2748
+      },
+      "debris": 49,
+      "snapshotBytes": 3624,
+      "snapshotWriteMs": {
+        "median": 0.0059,
+        "max": 0.0315
+      },
+      "hash": "77f8727c3d779b2d17feb05d2ce5cc0209a10a3edcf1e521ed36435f76aa444e",
+      "nativeMsPerTick": 0.1003,
+      "wasmOverNative": 1.18,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "77f8727c3d779b2d17feb05d2ce5cc0209a10a3edcf1e521ed36435f76aa444e",
+      "nativeHash": "77f8727c3d779b2d17feb05d2ce5cc0209a10a3edcf1e521ed36435f76aa444e",
+      "parity": true
+    },
+    {
+      "cars": 8,
+      "wasmMsPerTick": {
+        "mean": 0.2607,
+        "p95": 0.5514,
+        "max": 0.6025
+      },
+      "debris": 93,
+      "snapshotBytes": 7048,
+      "snapshotWriteMs": {
+        "median": 0.0071,
+        "max": 0.0188
+      },
+      "hash": "17408fd92beeb6cc20cb5e1cbda6efa4c38817c4b2c72e6b19b78395014430b9",
+      "nativeMsPerTick": 0.2247,
+      "wasmOverNative": 1.16,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "17408fd92beeb6cc20cb5e1cbda6efa4c38817c4b2c72e6b19b78395014430b9",
+      "nativeHash": "17408fd92beeb6cc20cb5e1cbda6efa4c38817c4b2c72e6b19b78395014430b9",
+      "parity": true
+    },
+    {
+      "cars": 16,
+      "wasmMsPerTick": {
+        "mean": 0.7765,
+        "p95": 1.4562,
+        "max": 1.5768
+      },
+      "debris": 181,
+      "snapshotBytes": 13896,
+      "snapshotWriteMs": {
+        "median": 0.0125,
+        "max": 0.0436
+      },
+      "hash": "a7f9e7dd5eac667c0c1144cd4e543f2c27b019cd9471cb55610941579f022f6f",
+      "nativeMsPerTick": 0.7039,
+      "wasmOverNative": 1.1,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "a7f9e7dd5eac667c0c1144cd4e543f2c27b019cd9471cb55610941579f022f6f",
+      "nativeHash": "a7f9e7dd5eac667c0c1144cd4e543f2c27b019cd9471cb55610941579f022f6f",
+      "parity": true
+    },
+    {
+      "cars": 24,
+      "wasmMsPerTick": {
+        "mean": 1.2903,
+        "p95": 2.102,
+        "max": 2.2742
+      },
+      "debris": 269,
+      "snapshotBytes": 20744,
+      "snapshotWriteMs": {
+        "median": 0.0161,
+        "max": 0.0328
+      },
+      "hash": "5d719dd24149e0109a0952922f7c2bd631bb6cd3e7eaba5b9391497e429ac8ab",
+      "nativeMsPerTick": 1.2062,
+      "wasmOverNative": 1.07,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "5d719dd24149e0109a0952922f7c2bd631bb6cd3e7eaba5b9391497e429ac8ab",
+      "nativeHash": "5d719dd24149e0109a0952922f7c2bd631bb6cd3e7eaba5b9391497e429ac8ab",
+      "parity": true
+    },
+    {
+      "cars": 48,
+      "wasmMsPerTick": {
+        "mean": 4.5182,
+        "p95": 5.6814,
+        "max": 5.7571
+      },
+      "debris": 533,
+      "snapshotBytes": 41288,
+      "snapshotWriteMs": {
+        "median": 0.0319,
+        "max": 0.0614
+      },
+      "hash": "eadb3386ceca289bf96284271cd98568565f3f3e0544f3883a376d1a9e56d309",
+      "nativeMsPerTick": 4.355,
+      "wasmOverNative": 1.04,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "eadb3386ceca289bf96284271cd98568565f3f3e0544f3883a376d1a9e56d309",
+      "nativeHash": "eadb3386ceca289bf96284271cd98568565f3f3e0544f3883a376d1a9e56d309",
+      "parity": true
+    },
+    {
+      "cars": 96,
+      "wasmMsPerTick": {
+        "mean": 10.6458,
+        "p95": 13.0792,
+        "max": 13.6711
+      },
+      "debris": 1061,
+      "snapshotBytes": 82376,
+      "snapshotWriteMs": {
+        "median": 0.0706,
+        "max": 0.1645
+      },
+      "hash": "e5b1ea8016ce10387462a992bc3fdb6a4d1016463ebaa6baa62db42aee679de5",
+      "nativeMsPerTick": 12.0595,
+      "wasmOverNative": 0.88,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "e5b1ea8016ce10387462a992bc3fdb6a4d1016463ebaa6baa62db42aee679de5",
+      "nativeHash": "e5b1ea8016ce10387462a992bc3fdb6a4d1016463ebaa6baa62db42aee679de5",
+      "parity": true
+    }
+  ]
+}
