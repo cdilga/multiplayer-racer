@@ -7,7 +7,7 @@
 // TRANSPORT NOTE: the protocol seats one endpoint with one seat (jj-session `Endpoint.seat`), so until the host grows a
 // multi-source `Claim` each source here is its own endpoint with its own link (`Session.slot`). Nothing above `Source`
 // knows that: the day one connection carries several sources only `Source.join` changes.
-import { icon } from '../../../shared/ui';
+import { icon, tokenData } from '../../../shared/ui';
 import { Session } from '../app/session';
 import { pathLabel } from './badge';
 import { CLUSTERS, KeyCluster, LEAVE_HOLD_MS, NEUTRAL, isPress, padSample, type Sample } from './input';
@@ -247,22 +247,35 @@ export class Hub {
 
   private mount(root: HTMLElement): void {
     root.innerHTML = `<section class="hub${this.o.tray ? ' tray' : ''}" data-hub>
-      <header class="hub-head"><h1 class="display italic">${this.o.tray ? 'Pads on this phone' : `Hub · room ${esc(this.o.code)}`}</h1>
+      <header class="hub-head"><h1 class="display italic">${this.o.tray ? 'Pads on this phone' : `Hub <span class="hub-room">room ${esc(this.o.code)}</span>`}</h1>
       <p>${this.o.tray ? 'Press a button on a paired pad to join.' : 'Press a button on a pad, or a key on a cluster, to join. View/Select flashes your row and number; Start is Ready; hold both to leave.'}</p></header>
-      <ul class="hub-list" data-hub-list aria-label="Sources"></ul></section>`;
+      <div class="panel panel-ink hub-panel"><ul class="hub-list" data-hub-list aria-label="Sources"></ul></div></section>`;
     this.list = root.querySelector('[data-hub-list]');
     this.render();
   }
 
+  /** The seat's colour as the kit's token when it is a palette colour (it is, for every seat), else the raw colour with a readable text colour. */
+  private seatTokens(rgb: [number, number, number]): { fill: string; on: string } {
+    const h = hex(rgb).toLowerCase();
+    const i = tokenData.seatColors.findIndex((c) => c.hex.toLowerCase() === h);
+    if (i >= 0) return { fill: `var(--id-${i})`, on: `var(--id-${i}-on)` };
+    const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+    return { fill: h, on: lum > 0.6 ? 'var(--c-ink)' : 'var(--c-paper)' };
+  }
+
   private row(s: Source): string {
     const you = s.session?.you;
-    const seat = you ? `<b class="hub-badge" style="background:${hex(you.rgb)}">${you.number}</b>` : '<b class="hub-badge none">–</b>';
+    const t = you ? this.seatTokens(you.rgb) : null;
+    const seat = you ? `<b class="badge hub-badge" style="--b:${t!.fill};--on:${t!.on}">#${you.number}</b>` : '<b class="hub-badge none" aria-label="No seat yet">–</b>';
     const flash = performance.now() < s.flashUntil;
     const what = s.kind === 'keys' ? 'keyboard' : s.kind === 'pad' ? 'gamepad-2' : 'smartphone';
-    const state = { idle: 'Press to join', connecting: 'Joining…', connected: s.session?.isReady ? 'Ready' : 'Connected', unplugged: 'Unplugged', autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
+    const ready = s.state === 'connected' && s.session?.isReady;
+    const state = { idle: 'Press to join', connecting: 'Joining…', connected: ready ? 'Ready' : 'Connected', unplugged: 'Unplugged', autopilot: 'Autopilot', left: 'Left: press to rejoin' }[s.state];
+    const tone = s.state === 'unplugged' ? 'chip-warn' : s.state === 'autopilot' ? 'chip-auto' : ready ? 'chip-ready' : s.state === 'connected' ? 'chip-info' : s.state === 'connecting' ? 'chip-choosing' : '';
+    const chipIcon = s.state === 'unplugged' ? 'wifi-off' : s.state === 'autopilot' ? 'car' : ready ? 'check' : s.state === 'connected' ? 'zap' : '';
     const st = s.session?.stats;
-    return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${you ? hex(you.rgb) : 'transparent'};" data-icon="${what}">
-      ${seat}<span class="hub-kind">${esc(s.label)}</span><span class="hub-state" data-chip="${s.state}">${state}</span>
+    return `<li class="hub-row${flash ? ' hub-flash' : ''}" data-source="${s.id}" data-kind="${s.kind}" data-state="${s.state}" style="--seat:${t ? t.fill : 'transparent'};--seat-on:${t ? t.on : 'var(--c-paper)'};" data-icon="${what}" data-chip-icon="${chipIcon}">
+      ${seat}<span class="hub-kind" title="${esc(s.label)}"><span class="hub-label">${esc(s.label)}</span></span><span class="hub-state chip ${tone}" data-chip="${s.state}"><span class="hub-state-text">${state}</span></span>
       <span class="hub-path" data-path>${esc(s.session ? s.path || 'Connecting…' : '')}</span><span class="hub-bytes tnum">${st ? `${st.stateBytes} B · ${st.batches} batches` : ''}</span></li>`;
   }
 
@@ -270,7 +283,10 @@ export class Hub {
     if (!this.list) return;
     this.list.innerHTML = [...this.sources.values()].map((s) => this.row(s)).join('');
     // The kit's icon element carries its own mask URL, so it is added as an element, not written into the markup.
-    for (const li of this.list.querySelectorAll<HTMLElement>('[data-icon]')) li.querySelector('.hub-kind')?.prepend(icon(li.dataset.icon!));
+    for (const li of this.list.querySelectorAll<HTMLElement>('[data-icon]')) {
+      li.querySelector('.hub-kind')?.prepend(icon(li.dataset.icon!));
+      if (li.dataset.chipIcon) li.querySelector('.hub-state')?.prepend(icon(li.dataset.chipIcon));
+    }
   }
 
   /** Readout for tests and the debug overlay (R90): per source seat, kind, state, path and wire counters. */

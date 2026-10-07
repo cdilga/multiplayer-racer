@@ -1,6 +1,9 @@
 // The connection badge (P1-C08): "Direct · 12 ms", "Relay · 48 ms" or "Reconnecting…", from the link's selected ICE path.
-// The hub shows one per source row; the phone controller shows one in its strip. Text and a data attribute only.
+// The hub shows one per source row; the phone controller shows one in its strip. Text, a data attribute and the kit's
+// chip classes (a brushed chip with an icon: colour is never the only cue).
+import { icon } from '../../../shared/ui';
 import type { Session } from '../app/session';
+import './hub.css';
 
 export type PathLabel = { kind: 'direct' | 'relay' | 'reconnecting' | 'connecting'; text: string; rttMs: number | null };
 
@@ -23,6 +26,13 @@ export function watchBadge(session: Session, el: HTMLElement, everyMs = 2000): (
     if (stopped) return;
     el.textContent = l.text;
     el.dataset.path = l.kind;
+    el.classList.add('chip');
+    el.classList.toggle('chip-ready', l.kind === 'direct');
+    // A relay path plays fine (R79), so it is information, not a warning; only reconnecting warns.
+    el.classList.toggle('chip-info', l.kind === 'relay');
+    el.classList.toggle('chip-warn', l.kind === 'reconnecting');
+    el.classList.toggle('chip-choosing', l.kind === 'connecting');
+    el.prepend(icon(l.kind === 'direct' ? 'wifi' : l.kind === 'relay' ? 'zap' : 'wifi-off'));
   };
   void tick();
   const t = setInterval(() => void tick(), everyMs);
