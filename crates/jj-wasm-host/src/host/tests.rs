@@ -1667,5 +1667,8 @@ fn a_hidden_host_still_tells_the_phones_why_the_room_is_paused() {
         }
     }
     assert_eq!(h.tick(), frozen, "no ticks while hidden");
-    assert!((8..=12).contains(&heard), "the pause reached the phone {heard} times in a second");
+    assert!(
+        (8..=12).contains(&heard),
+        "the pause reached the phone {heard} times in a second"
+    );
 }
