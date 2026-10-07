@@ -140,9 +140,16 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const s = tile === undefined ? undefined : seatOf(tile);
       if (!box || !s) return false;
       box.querySelector('.hud-cooee')?.remove();
+      // The accepted Cooee (R99, P1-R06.style; poc/tv .cooee): a high-exposure wash in the seat colour with a hot centre,
+      // and "Cooee #N" on a tilted seat-colour slab; fast attack, 1.4 s decay; Reduced holds the label, no flash.
       const c = document.createElement('div');
-      c.className = 'hud-cooee display';
-      c.textContent = `Cooee #${s.number}`;
+      c.className = 'hud-cooee';
+      const flash = document.createElement('i');
+      flash.className = 'flash';
+      const label = document.createElement('b');
+      label.className = 'display';
+      label.textContent = `Cooee #${s.number}`;
+      c.append(flash, label);
       box.append(c);
       box.classList.remove('identify');
       void box.offsetWidth; // restart the pulse when it fires again

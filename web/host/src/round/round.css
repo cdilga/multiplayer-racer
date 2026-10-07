@@ -150,14 +150,35 @@
 @media (prefers-reduced-motion: reduce) { .cd-num { animation: none; } }
 .hud-tr[hidden] { display: none; }
 
-/* Identify (P1-R06): the seat's tile pulses in its colour with "Cooee #N" (the phone flashes the same). */
-.jj-hud .hud-tile.identify { box-shadow: inset 0 0 0 calc(var(--hud) * 0.35) var(--seat); animation: hud-identify 0.4s steps(2) 4; }
-.jj-hud .hud-cooee {
-  position: absolute; left: 50%; top: 30%; translate: -50% -50%; padding: 0.15em 0.5em;
-  background: var(--seat); color: var(--seat-on, var(--c-paper)); border: 3px solid var(--c-ink); border-radius: 10px;
-  font-size: min(calc(var(--hud) * 2), 15cqw); white-space: nowrap; max-width: 94%; box-sizing: border-box;
+/* Identify (P1-R06, look P1-R06.style from the accepted poc/tv .cooee, R99): the seat's tile flashes a transparent,
+   high-exposure wash in its colour with a hot centre (backdrop brightness over the 3D), its frame pulses, and "Cooee #N"
+   pops on a tilted seat-colour slab; fast attack, 1.4 s decay. Reduced motion: no flash, the label held, then gone. */
+.jj-hud .hud-tile.identify { box-shadow: inset 0 0 0 calc(var(--hud) * 0.1) var(--c-paper), inset 0 0 0 calc(var(--hud) * 0.5) var(--seat), inset 0 0 0 calc(var(--hud) * 0.62) var(--c-paper); animation: hud-identify 0.5s ease-in-out 3; }
+@keyframes hud-identify { 50% { box-shadow: inset 0 0 0 calc(var(--hud) * 0.1) var(--c-paper), inset 0 0 0 calc(var(--hud) * 0.8) var(--seat), inset 0 0 0 calc(var(--hud) * 0.92) var(--c-paper); } }
+.jj-hud .hud-cooee { position: absolute; inset: 0; pointer-events: none; display: grid; place-items: center; overflow: hidden; container-type: size; }
+.jj-hud .hud-cooee .flash {
+  position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(closest-side, color-mix(in srgb, #fff 60%, var(--seat)) 0%, color-mix(in srgb, var(--seat) 70%, transparent) 65%, color-mix(in srgb, var(--seat) 40%, transparent) 100%);
+  backdrop-filter: brightness(2.2) saturate(1.6); animation: cooee-flash 1.5s cubic-bezier(.2, .7, .3, 1) forwards;
 }
-@keyframes hud-identify { 50% { box-shadow: inset 0 0 0 calc(var(--hud) * 0.6) var(--seat); } }
+.jj-hud .hud-cooee b {
+  position: relative; padding: 0.1em 0.5em; max-width: 90%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis;
+  background: var(--seat); color: var(--seat-on, var(--c-paper)); border: max(2px, calc(var(--hud) * 0.2)) solid var(--c-ink);
+  border-radius: calc(var(--hud) * 0.5); box-shadow: 0 max(2px, calc(var(--hud) * 0.3)) 0 var(--c-ink);
+  font-size: min(calc(var(--hud) * 2), 13cqw); font-style: italic; text-transform: none; white-space: nowrap;
+  opacity: 0; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: 1; } 30% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes cooee-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 85% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(1); } }
+@keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }
+:root[data-motion="reduced"] .jj-hud .hud-tile.identify { animation: none; }
+:root[data-motion="reduced"] .jj-hud .hud-cooee .flash { animation: none; opacity: 0; }
+:root[data-motion="reduced"] .jj-hud .hud-cooee b { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .jj-hud .hud-tile.identify { animation: none; }
+  .jj-hud .hud-cooee .flash { animation: none; opacity: 0; }
+  .jj-hud .hud-cooee b { transform: rotate(-4deg); animation: cooee-held-label 1.5s steps(1, end) forwards; }
+}
 
 /* The screens stop above the footer; the countdown covers everything. */
 .jj-screen > .lobby, .jj-screen > .results { bottom: var(--foot); inset-block-end: var(--foot); }
