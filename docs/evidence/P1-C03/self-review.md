@@ -16,9 +16,10 @@ Captures: `web/tests/journeys/c03-states.test.mjs`, `c03-car.test.mjs` and `c03-
 - The car picker's portrait view had the "Turn sideways" prompt over Done and the name plate half hidden behind the panel; the prompt now stays off the picker and the plate sits on top.
 
 ## Remaining defects
-- **The TV's "choosing" state and the host seeing the pick are unmet**: there is no wire message for a vehicle choice (and no host lobby support), so the picker is a per-device preference today. The picker itself is data-driven (any number of cars, tested at 40).
-- **The protocol-mismatch cause is scripted from the controller side**: the host never checks `Hello.protocol` (`host.rs` ignores it), so no live room answers `ClaimRejected{Build}`; the journey delivers that reply through `__jjController.deliver` and checks the card and the one reload.
+- **The lobby pick is on the wire** (the earlier gap, now built): `Pick{vehicle, open}` is a new `ControllerCmd` (protocol 2, goldens added), the host keeps each seat's pick, and the TV's lobby card says "Choosing car…" while the picker is open and the car's name once it is picked (`c03-pick.test.mjs`: a 200-car roster, a reload, Ready never behind it). The stand-in cars of the `#roster=N` test surface are named from their ids on the TV ("Test 149"); the real roster (one car, the Cruz Missile) is named from `web/shared/src/roster.json`.
+- **The protocol-mismatch cause is real now**: the host answers a Hello for another protocol with `ClaimRejected{Build}` and no seat (native test, and the journey patches a phone's first Hello on the way out: the page reloads itself once and then joins).
 - **The F08 emulator row "background to foreground returns the same seat within 3 s"** is P1-F08's recorded C03 receipt (74 ms, labelled emulator), not re-run here.
+- A card taller than a short screen (browser bars showing) scrolls; the journey checks every card's action is reachable at 640x300.
 - At 375x667 portrait in the Lobby the tutorial card and the "Turn sideways" prompt stack and the prompt is clipped (`c03-state-playing-phone-small-375x667.jpg`); an existing C06/R101 interplay, left alone.
 - One run of the states journey failed on the finding card once and passed on three reruns; not diagnosed.
 
