@@ -152,6 +152,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // The grid reflows to the seated cars: the leavers' and the sitter's withdrawn cars keep no tile.
   await wait(host, () => window.__jjRender.tileRects().filter(Boolean).length === window.__jjRoom.view().seats.filter((s) => s.car !== null).length);
   assert.equal((await host.evaluate(() => window.__jjRender.tileRects())).filter(Boolean).length, 9, '12 − 2 left − 1 sitting out');
+  await host.waitForTimeout(1500); // the reflow animates
   await shot(host, 'tv-racing-after-churn');
 
   at('Intermission: results and standings');
