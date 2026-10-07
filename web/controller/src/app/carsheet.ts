@@ -83,7 +83,7 @@ export class CarSheet {
       </div>
       <div class="side">
         ${many ? `<div class="thumbs" role="listbox" aria-label="Cars">${roster.map((r, k) => `<button type="button" class="thumb" role="option" data-i="${k}" aria-label="${esc(r.name)}" aria-selected="${k === this.i}">${art(r, colour, false)}</button>`).join('')}</div>` : ''}
-        <p class="waiting" data-note="car-local">Your pick stays on this phone for now: the host doesn't see it yet.</p>
+        <p class="waiting" data-note="car-sent">The big screen shows your pick as you choose.</p>
         <button type="button" class="btn primary big" data-act="car-done">Done</button>
       </div></div>`;
     for (const el of this.el.querySelectorAll<HTMLElement>('[data-ico]')) el.replaceWith(icon(el.dataset.ico!));
