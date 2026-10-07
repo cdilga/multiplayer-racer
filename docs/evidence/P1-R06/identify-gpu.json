@@ -1,0 +1,11 @@
+{
+ "transport": "loopback WebRTC (Playwright Chromium)",
+ "renderer": "host on a GPU (ANGLE Vulkan)",
+ "samplesMs": [
+  6,
+  4,
+  9,
+  2,
+  5
+ ]
+}

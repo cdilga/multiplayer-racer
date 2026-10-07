@@ -1,0 +1,11 @@
+{
+ "transport": "loopback WebRTC (Playwright Chromium)",
+ "renderer": "host on SwiftShader (software WebGL)",
+ "samplesMs": [
+  233,
+  225,
+  214,
+  209,
+  209
+ ]
+}
