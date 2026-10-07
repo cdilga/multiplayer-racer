@@ -23,7 +23,8 @@ interface Card {
   tone?: 'warn' | 'ok';
   title: string;
   body: string;
-  actions?: Array<[act: string, label: string]>;
+  /** [action, label, 'quiet' for the plain button; the first of the rest is the primary one] */
+  actions?: Array<[act: string, label: string, kind?: 'quiet']>;
 }
 const place = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th')}`;
 const CARDS: Partial<Record<Phase, (s: Session) => Card>> = {
@@ -39,7 +40,7 @@ const CARDS: Partial<Record<Phase, (s: Session) => Card>> = {
   'no-route': () => ({ icon: 'wifi-off', title: 'Can’t reach the host from this network', body: 'Try the host’s Wi-Fi, then tap Retry.', actions: [['retry', 'Retry']] }),
   joining: () => ({ spin: true, title: 'Joining…', body: 'Saving you a number.' }),
   reconnecting: (s) => ({ spin: true, title: `Reconnecting as #${s.you?.number ?? ''}…`, body: 'Your car is on autopilot until you’re back.' }),
-  'host-gone': () => ({ icon: 'triangle-alert', tone: 'warn', title: 'The host seems to have gone', body: 'Ask them for a new code. We’ll keep trying quietly.', actions: [['edit', 'Enter a new code']] }),
+  'host-gone': () => ({ icon: 'triangle-alert', tone: 'warn', title: 'The host seems to have gone', body: 'Ask them for a new code. We’ll keep trying quietly.', actions: [['edit', 'Enter a new code', 'quiet']] }),
   'host-paused': () => ({ icon: 'pause', title: 'Host paused', body: 'Back in a moment.' }),
   'another-tab': () => ({ icon: 'smartphone', title: 'Playing in another tab', body: 'You can only drive from one tab at a time.', actions: [['takeover', 'Use this one']] }),
   'update-needed': () => ({ spin: true, title: 'Updating…', body: 'A newer build is out. Reloading once.' }),
@@ -98,7 +99,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     if (key.startsWith('play:')) return playScreen();
     const c = CARDS[session.phase]?.(session) ?? { title: session.phase, body: '' };
     const head = c.spin ? '<div class="spin" aria-hidden="true"></div>' : c.icon ? `<div class="state-icon ${c.tone ?? ''}"><i data-ico="${c.icon}"></i></div>` : '';
-    const acts = (c.actions ?? []).map(([act, label], i) => `<button class="btn brush${i === 0 && act !== 'cancel' ? ' primary big' : ''}" data-act="${act}">${esc(label)}</button>`).join('');
+    const acts = (c.actions ?? []).map(([act, label, kind], i) => `<button class="btn brush${i === 0 && act !== 'cancel' && kind !== 'quiet' ? ' primary big' : ''}" data-act="${act}">${esc(label)}</button>`).join('');
     app.innerHTML = `<section class="screen card-screen" data-state="${session.phase}"><div class="panel state-card card">${head}<h1 class="display italic">${esc(c.title)}</h1>${c.body ? `<p>${esc(c.body)}</p>` : ''}${acts ? `<div class="acts">${acts}</div>` : ''}</div></section>`;
     dress(app);
     paintKit(app);

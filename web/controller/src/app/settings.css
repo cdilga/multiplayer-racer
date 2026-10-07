@@ -81,3 +81,7 @@
 /* Place over lap, as the mock has it. */
 .strip .race { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .car-sheet { background: var(--c-ink); }
+/* The car picker owns the screen: the portrait "Turn sideways" prompt stays under it, and the name plate sits over the panel. */
+.screen:has(.car-sheet) .rotate-card { display: none; }
+.stage .carname { position: absolute; left: 10px; top: 0; z-index: 3; padding: 2px 12px 4px; background: var(--c-ink); color: var(--c-paper); }
+.stage .carname .acc { color: var(--c-saffron); }

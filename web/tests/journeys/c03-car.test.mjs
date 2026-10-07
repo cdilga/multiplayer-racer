@@ -121,6 +121,8 @@ test('the picker fits phones in landscape, portrait and the small phone, with Do
       return { right: d.right, left: d.left, top: d.top, bottom: d.bottom, w: innerWidth, h: innerHeight, over: document.documentElement.scrollWidth - innerWidth };
     });
     assert.ok(fit.left >= 0 && fit.right <= fit.w && fit.top >= 0 && fit.bottom <= fit.h && fit.over <= 1, `${label}: ${JSON.stringify(fit)}`);
+    // Nothing sits over it: the point at the middle of Done lands on Done.
+    assert.equal(await page.evaluate(() => { const d = document.querySelector('[data-act=car-done]').getBoundingClientRect(); return document.elementFromPoint(d.left + d.width / 2, d.top + d.height / 2)?.closest('[data-act=car-done]') !== null; }), true, `${label}: something covers Done`);
     await shot(page, `c03-car-${label}`);
     await ctx.close();
   }
