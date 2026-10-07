@@ -1,50 +1,40 @@
-# Audio (eris voice and music) learnings (append-only)
+# Audio learnings (append-only)
 
-## 2026-10-03 · Voice render traps found building render_voice.py (P1-A01)
+## 2026-10-07 · The host's runtime audio (P1-A03, A05, A07)
 
-- **float32 does not fit.** Qwen3-TTS 1.7B Base ships in bfloat16; loading it as float32 on the 8 GB RTX 2080 SUPER
-  runs out of memory (it asks for 1.16 GiB with 0.6 GiB free). bfloat16 *is* the checkpoint's full precision, so it is the
-  "highest precision that fits". Generation peaks near 6.7 GiB, so nothing else may share the GPU.
-- **Whisper after TTS in one process can OOM** (ctranslate2 does not see torch's cache). The worker runs `render`, `asr`
-  and `finish` as separate processes so each frees the card on exit.
-- **The slang screen needs a normaliser, not a looser threshold.** At WER 0, 7 of 61 rows failed only because Whisper
-  spells slang or homophones its own way ("Struth" for "strewth", "Doors off" for "Door's off", "Already" for "All ready").
-  `voice_screens.py` folds exactly those and records them in the manifest; WER is recomputed from the stored transcript, so a
-  new fold needs no new ASR pass.
-- **Qwen3-TTS garbles a line-initial "G'day"** (heard as "gay day", "day", "J-J-J"; some takes run on to the 10 s cap).
-  Telling it "Gidday" fixes it (3 of 8 takes pass; Whisper writes "G'day"). "Gday" is heard as "G-Day" (8 of 8 takes, so a letter-name G) and
-  "Guh-day" as "God day": a TTS respelling is a render input, the sheet stays canonical.
-- **Warm takes come out about 9 dB quieter** than hype takes (raw about -30 LUFS against about -21), so they need +11 to
-  +17 dB at export (hype +2 to +10). Loudness is normalised at export; judge by the exported files, not the raw takes.
-- **An hour-long ssh dies with the laptop.** `render_voice.py` starts the worker detached on eris (`logs/p1a01.log`,
-  `logs/p1a01.exit`) and follows the log; re-running resumes from the take cache.
-- **dcg/zsh:** an `echo =====` in zsh is a command substitution error; the Mac guard blocks `rm -rf` outside /tmp and
-  `python -c`. Use script files and `rm -f` on single files.
+Code: `web/host/src/audio/` (`mix`, `announcer`, `music`, `director`, `engine`, `sfx/`), one `mountAudio(client)` line in
+`web/host/src/main.ts` after `world.attach`, and `web/controller/src/app/sound.ts`. Tests: `web/host/tests/audio.test.mjs`.
 
-## 2026-10-04 · Engine synth start/stop traps (P1-A04c)
-
-- **Engine synth: a sequence the voice plays by itself must not lean on derived state** (P1-A04c). The stop holds the
-  oscillators on the rpm at the cut and moves pitch on `detune`; with no `speed` passed, the road layers derived speed
-  from that frozen rpm, so a car handed back in gear hummed at -62 dB after "silence" until the next `set()`. Road speed
-  is only derived while the engine runs; transitions that happen with no `set()` (off after a stop) must leave the same
-  targets as the phase before. Reproduce real-time-only leftovers with a loop of page runs, then mute one layer at a time:
-  if *any* mute clears it, the cause is a stale target (the mute re-applies), not that layer.
-- **Engine synth: hash only single-layer renders.** Chromium sums a node's inputs in no fixed order, so a render with
-  several live layers (including layers muted at t=0 that are still gliding out) differs in the last float32 bit run to
-  run. Compare multi-layer renders by max difference (< 1e-6, -120 dBFS), as R1/R3/SL3 do.
-
-## 2026-10-06 · A clipped clone reference leaks its missing words into every take (P1-A01b)
-
-- **The reference audio must end where its transcript ends, on a word boundary.** The owner's Aussie hype reference was
-  cut at exactly 23.0 s, mid-word ("and the wheelie..."), but its transcript ran on to "...bin is airborne". Qwen3-TTS
-  in-context cloning continues from the prompt, so every one of the 52 hype takes opened with "is airborne" (WER 0.2-0.6,
-  52/52 failing). Fix: trim in a pause (Whisper word timestamps), 30 ms fade, 0.35 s silence, cut the transcript to
-  match. The uncut file stays beside it on eris as `hype-uncut-23s.wav`.
-- **Read the `heard` field before blaming the accent.** A shared leading phrase across every failing take is a reference
-  problem; scattered spelling misses ("Cooey", "Good day") are Whisper folds.
-- **Longer references raise the peak:** with the 23-25 s Aussie references, the 1.7B bf16 render runs out of memory on
-  some takes even with only desktop apps (~1.5 GiB) on the card. The worker skips those seeds and tries more.
-- **Transcribe a slang-heavy reference twice.** Unprimed Whisper turned the warm reference's "hard yakka", "sparrow's
-  fart" and "number 8 wire" into "hard jackets", "Barrett's fight" and "number 8 wine". A second pass primed with the
-  expected slang fixes those; where the two passes disagree, keep the unprimed reading, because priming pulls toward the
-  prompt. The raw transcript stays on eris as `warm-whisper-raw.txt`.
+- **Audio taps the three feeds by wrapping, last.** `mountAudio` wraps `client.onSnapshot`, `onEvents` and `onRoom` after the
+  page has set its own (the page's runs first, audio second, an audio error never reaches it). Mount it after `world.attach`
+  (which sets `onSnapshot`); anything assigned to those three handlers *after* `mountAudio` replaces the tap.
+- **The log is the surface.** Every cue, music change, effect and engine on/off is logged at its trigger (`window.__jjAudio.log()`)
+  with `played` (could it be heard) and the mix state; a blocked or muted context logs the same triggers and plays nothing.
+  Cues log synchronously: decode and playback follow, so log order is event order.
+- **A welcome cue fires at mount.** The worker's first room view arrives with the page, and `welcome` (room.opened) plays; the
+  announcer is then busy for its clip's length. Scripted tests either clear the log and feed a virtual `at` far ahead, or wait.
+- **Virtual time for scripted rounds.** `say`, `feedEvents` and `feedRoom` take an `at` (ms) that stands in for the clock in the
+  cooldown and busy checks; the clip-length timers still run in real time. Give each moment's script its own base.
+- **No immediate repeat** is per moment (the last variant of that moment is excluded; a seeded PRNG picks the rest), so a
+  scripted round repeats exactly. A moment with one variant repeats it.
+- **Ogg/Opus decodes in Chromium and in WebKit 26.5 (macOS, Playwright)**: all 78 shipped clips (70 voice, 8 music). Chromium once
+  failed `race-4.ogg` in a single run and passed on every rerun (and ffmpeg decodes it clean), so the decode check retries once and
+  records `retried`. No AAC twin ships (`m4a_twin: false`); `srcFor` would pick one by `canPlayType('audio/ogg; codecs=opus')`. The
+  iOS Simulator lane (F08) was not run for clips.
+- **Headless Chromium ignores the autoplay policy flag for blocking** (contexts run either way), so "blocked" is a test hook:
+  `?audio=blocked` makes the mix refuse a context (`state: blocked`), the same path as a real denial (a suspended context).
+- **Engine input from the snapshot.** The car record's reserved word is now the applied throttle (f32) and `flags` bits 6–7 are the
+  ground class (0 tarmac, 1 dirt, 2 gravel). rpm and gear come from the package's drivetrain (speed + throttle). A car with no input
+  for 250 ms has throttle 0 (the sim's stale rule), so scripted tests keep re-sending the stick (`untilFact` steps, or a timer).
+- **Engines on/off.** On in Countdown, Running and Finalising (and always in free drive and with no room view), off in the lobby
+  and intermission; a wreck (the `Wrecked` event, then the car's `held` flag) stops the engine and the end of the hold starts it
+  again with the A04c cranking. Held test pages (`?test`, no stepping) have a Lobby room view, so engines are off there.
+- **Budget.** Voices are ranked by speed, local players' own cars always voiced; the budget grows and shrinks around a steady
+  update cost (EMA, voice builds excluded, they cost ~1.5 ms each once). Measured (headless Chromium, software, Mac): 8 engines render
+  23× real time offline, 16 at 12×; steady update 0.1 ms per snapshot. A presentation budget, never a gameplay limit.
+- **Effects are all procedural** (R89): `sfx/synth.ts` recipes over a seeded noise bank, rendered offline for the receipts (peak,
+  RMS, tail). Impact intensity is `log10(impulse / 400) / log10(30)`; a nudge past the threshold (~1 kN·s) is ~0.2, a head-on
+  at 15 m/s (~17 kN·s) ~0.9. At most 14 effects sound at once; past that the quietest is dropped.
+- **Gaps by design:** scrapes (needs a contact-scrape event; episodes need closing speed ≥ 4 m/s), the `big-air` moment
+  (`car.air_time` has no sim event; landings are detected from the snapshot's vertical speed), per-vehicle engine profiles
+  (every car is the Cruz Missile; `engines.profileOf` is the seam), spatial panning.

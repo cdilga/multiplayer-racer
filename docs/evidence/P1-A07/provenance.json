@@ -1,0 +1,6 @@
+{
+  "source": "procedural Web Audio recipes (web/host/src/audio/sfx/synth.ts); nothing generated or recorded, so no files, models or recordings enter the repo (R89)",
+  "seeded": "noise bank mulberry32(0x5f3): a trigger sounds the same at the same intensity",
+  "announcerAndMusic": "assets/audio/voice and music (A01/A02), unchanged",
+  "controller": "web/controller/src/app/sound.ts: oscillator blips"
+}

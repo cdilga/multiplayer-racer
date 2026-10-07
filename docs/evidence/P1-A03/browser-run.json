@@ -1,0 +1,190 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "scripted": {
+    "cues": [
+      {
+        "moment": "welcome",
+        "clip": "welcome-2",
+        "trigger": "room.opened",
+        "caption": "Welcome, mate! Scan the code, pick your car and give it a burl."
+      },
+      {
+        "moment": "all-ready",
+        "clip": "all-ready-3",
+        "trigger": "lobby.all_ready",
+        "caption": "Everyone's locked in. Let's give it a burl!"
+      },
+      {
+        "moment": "countdown",
+        "clip": "countdown-2",
+        "trigger": "phase.countdown",
+        "caption": "3... 2... 1... Off you go!"
+      },
+      {
+        "moment": "final-lap",
+        "clip": "final-lap-2",
+        "trigger": "race.final_lap",
+        "caption": "Last lap, legends! Hold on to your doors!"
+      },
+      {
+        "moment": "door-off",
+        "clip": "door-off-5",
+        "trigger": "part.detached.door",
+        "caption": "Dead set, who needs doors anyway?"
+      },
+      {
+        "moment": "wheel-off",
+        "clip": "wheel-off-3",
+        "trigger": "part.detached.wheel",
+        "caption": "Down a wheel! Reckon you can keep her going?"
+      },
+      {
+        "moment": "bodywork-off",
+        "clip": "bodywork-off-1",
+        "trigger": "part.detached.bodywork",
+        "caption": "Bodywork everywhere! Fair dinkum, what a mess!"
+      },
+      {
+        "moment": "wreck",
+        "clip": "wreck-1",
+        "trigger": "car.wrecked",
+        "caption": "That one's carked it!"
+      },
+      {
+        "moment": "off-course",
+        "clip": "off-course-2",
+        "trigger": "car.out_of_bounds",
+        "caption": "That car's gone walkabout! Back onto the track, mate."
+      },
+      {
+        "moment": "late-joiner",
+        "clip": "late-joiner-4",
+        "trigger": "seat.late_join",
+        "caption": "G'day, new driver! Catch up if you can!"
+      },
+      {
+        "moment": "first-finisher",
+        "clip": "first-finisher-2",
+        "trigger": "race.first_finish",
+        "caption": "We've got a finisher! Who's next across the line?"
+      },
+      {
+        "moment": "photo-finish",
+        "clip": "photo-finish-4",
+        "trigger": "race.photo_finish",
+        "caption": "A fair dinkum finish! Nobody gave an inch."
+      },
+      {
+        "moment": "time-up",
+        "clip": "time-up-1",
+        "trigger": "race.time_up",
+        "caption": "And that's time! Well driven, legends."
+      },
+      {
+        "moment": "winner",
+        "clip": "winner-1",
+        "trigger": "round.results",
+        "caption": "And that's the race! Give the winner a big cheer. You beauty!"
+      },
+      {
+        "moment": "next-round",
+        "clip": "next-round-1",
+        "trigger": "intermission.next_ready",
+        "caption": "Next track's loading. Same again? Too right!"
+      }
+    ],
+    "music": [
+      "lobby",
+      "none",
+      "race",
+      "results"
+    ]
+  },
+  "variants-off-course": [
+    3,
+    2,
+    3,
+    4,
+    2,
+    1,
+    2,
+    1
+  ],
+  "variants-wreck": [
+    4,
+    2,
+    5,
+    1,
+    2,
+    1,
+    4,
+    1
+  ],
+  "variants-lead-change": [
+    1,
+    4,
+    2,
+    5,
+    4,
+    2,
+    1,
+    4
+  ],
+  "neutrality": {
+    "live": {
+      "stateHash": "cf4fb352260df99d3525d5ac47e777cd83065c9be52fb1adea43aefd7c866e1b",
+      "cues": [
+        [
+          "off-course",
+          true
+        ]
+      ],
+      "mix": "running",
+      "muted": false
+    },
+    "muted": {
+      "stateHash": "cf4fb352260df99d3525d5ac47e777cd83065c9be52fb1adea43aefd7c866e1b",
+      "cues": [
+        [
+          "off-course",
+          false
+        ]
+      ],
+      "mix": "running",
+      "muted": true
+    },
+    "blocked": {
+      "stateHash": "cf4fb352260df99d3525d5ac47e777cd83065c9be52fb1adea43aefd7c866e1b",
+      "cues": [
+        [
+          "off-course",
+          false
+        ]
+      ],
+      "mix": "blocked",
+      "muted": false
+    }
+  },
+  "decode": [
+    {
+      "engine": "Chromium",
+      "version": "151.0.7922.34",
+      "files": 78,
+      "ok": 78,
+      "failed": [],
+      "retried": [],
+      "canOggOpus": "probably",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+    },
+    {
+      "engine": "WebKit",
+      "version": "26.5",
+      "files": 78,
+      "ok": 78,
+      "failed": [],
+      "retried": [],
+      "canOggOpus": "probably",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15"
+    }
+  ]
+}

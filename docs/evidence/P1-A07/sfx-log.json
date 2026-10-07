@@ -1,0 +1,400 @@
+{
+ "log": [
+  {
+   "at": 1318,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.32,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 2,
+   "seat": 1,
+   "part": 1,
+   "impulse": 1200,
+   "closingMps": 6
+  },
+  {
+   "at": 1478,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.8,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 3,
+   "seat": 1,
+   "part": 3,
+   "impulse": 6000,
+   "closingMps": 6
+  },
+  {
+   "at": 1640,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 1,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 4,
+   "seat": 1,
+   "part": 1,
+   "impulse": 18000,
+   "closingMps": 6
+  },
+  {
+   "at": 1798,
+   "kind": "sfx",
+   "sfx": "debris-rattle",
+   "intensity": 0.24,
+   "reason": "episode.debris",
+   "played": true,
+   "voices": 5,
+   "seat": 2,
+   "impulse": 900
+  },
+  {
+   "at": 1798,
+   "kind": "sfx",
+   "sfx": "part-rattle",
+   "intensity": 0.5,
+   "reason": "part.loose",
+   "played": true,
+   "voices": 6,
+   "seat": 1,
+   "part": 3
+  },
+  {
+   "at": 1798,
+   "kind": "sfx",
+   "sfx": "part-clunk",
+   "intensity": 0.8,
+   "reason": "part.detached",
+   "played": true,
+   "voices": 7,
+   "seat": 1,
+   "part": 3,
+   "cause": "Car"
+  },
+  {
+   "at": 1798,
+   "kind": "sfx",
+   "sfx": "wreck-crunch",
+   "intensity": 1,
+   "reason": "car.wrecked",
+   "played": true,
+   "voices": 8,
+   "seat": 1,
+   "cause": "Car"
+  },
+  {
+   "at": 1798,
+   "kind": "sfx",
+   "sfx": "oi-honk",
+   "intensity": 0.8,
+   "reason": "utility.oi",
+   "played": true,
+   "voices": 9,
+   "seat": 1
+  },
+  {
+   "at": 1799,
+   "kind": "sfx",
+   "sfx": "cone-thunk",
+   "intensity": 0.7,
+   "reason": "utility.cone",
+   "played": true,
+   "voices": 10,
+   "seat": 1
+  },
+  {
+   "at": 1799,
+   "kind": "sfx",
+   "sfx": "join-chime",
+   "intensity": 0.7,
+   "reason": "seat.joined",
+   "played": true,
+   "voices": 11,
+   "seat": 4
+  },
+  {
+   "at": 1799,
+   "kind": "sfx",
+   "sfx": "identify-ping",
+   "intensity": 0.8,
+   "reason": "seat.identify",
+   "played": true,
+   "voices": 12,
+   "seat": 4
+  },
+  {
+   "at": 1821,
+   "kind": "sfx",
+   "sfx": "boost-whoosh",
+   "intensity": 0.7,
+   "reason": "car.boost",
+   "played": true,
+   "voices": 13,
+   "car": 0
+  },
+  {
+   "at": 1821,
+   "kind": "sfx",
+   "sfx": "landing-thud",
+   "intensity": 0.67,
+   "reason": "car.landing",
+   "played": true,
+   "voices": 14,
+   "car": 0,
+   "fallMps": 8
+  },
+  {
+   "at": 1821,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.59,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 0,
+   "impulse": 3000,
+   "closingMps": 6
+  },
+  {
+   "at": 1821,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.6,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 1,
+   "impulse": 3100,
+   "closingMps": 6
+  },
+  {
+   "at": 1821,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.61,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 2,
+   "impulse": 3200,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.62,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 3,
+   "impulse": 3300,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.63,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 4,
+   "impulse": 3400,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.64,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 5,
+   "impulse": 3500,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.65,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 6,
+   "impulse": 3600,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.65,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 7,
+   "impulse": 3700,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.66,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 8,
+   "impulse": 3800,
+   "closingMps": 6
+  },
+  {
+   "at": 1822,
+   "kind": "sfx",
+   "sfx": "impact",
+   "intensity": 0.67,
+   "reason": "episode.contact",
+   "played": true,
+   "voices": 14,
+   "seat": 1,
+   "part": 9,
+   "impulse": 3900,
+   "closingMps": 6
+  }
+ ],
+ "renders": [
+  {
+   "kind": "impact",
+   "intensity": 0.8,
+   "peak": 0.945,
+   "rms": 0.0644,
+   "tailMs": 218
+  },
+  {
+   "kind": "debris-rattle",
+   "intensity": 0.8,
+   "peak": 0.114,
+   "rms": 0.0056,
+   "tailMs": 334
+  },
+  {
+   "kind": "part-rattle",
+   "intensity": 0.8,
+   "peak": 0.091,
+   "rms": 0.0031,
+   "tailMs": 122
+  },
+  {
+   "kind": "part-clunk",
+   "intensity": 0.8,
+   "peak": 0.668,
+   "rms": 0.0369,
+   "tailMs": 152
+  },
+  {
+   "kind": "wreck-crunch",
+   "intensity": 0.8,
+   "peak": 1.02,
+   "rms": 0.1043,
+   "tailMs": 541
+  },
+  {
+   "kind": "landing-thud",
+   "intensity": 0.8,
+   "peak": 0.859,
+   "rms": 0.062,
+   "tailMs": 164
+  },
+  {
+   "kind": "boost-whoosh",
+   "intensity": 0.8,
+   "peak": 0.154,
+   "rms": 0.0126,
+   "tailMs": 428
+  },
+  {
+   "kind": "oi-honk",
+   "intensity": 0.8,
+   "peak": 0.348,
+   "rms": 0.0227,
+   "tailMs": 277
+  },
+  {
+   "kind": "cone-thunk",
+   "intensity": 0.8,
+   "peak": 0.519,
+   "rms": 0.0253,
+   "tailMs": 66
+  },
+  {
+   "kind": "join-chime",
+   "intensity": 0.8,
+   "peak": 0.244,
+   "rms": 0.0299,
+   "tailMs": 343
+  },
+  {
+   "kind": "identify-ping",
+   "intensity": 0.8,
+   "peak": 0.298,
+   "rms": 0.0353,
+   "tailMs": 354
+  },
+  {
+   "kind": "countdown-beep",
+   "intensity": 0.8,
+   "peak": 0.19,
+   "rms": 0.0145,
+   "tailMs": 81
+  },
+  {
+   "kind": "countdown-go",
+   "intensity": 0.8,
+   "peak": 0.283,
+   "rms": 0.0251,
+   "tailMs": 239
+  },
+  {
+   "kind": "ready-tick",
+   "intensity": 0.8,
+   "peak": 0.155,
+   "rms": 0.0054,
+   "tailMs": 34
+  },
+  {
+   "kind": "results-sting",
+   "intensity": 0.8,
+   "peak": 0.271,
+   "rms": 0.0427,
+   "tailMs": 625
+  },
+  {
+   "kind": "impact",
+   "intensity": 0.1,
+   "peak": 0.416,
+   "rms": 0.0238,
+   "tailMs": 90
+  },
+  {
+   "kind": "impact",
+   "intensity": 1,
+   "peak": 1.096,
+   "rms": 0.0782,
+   "tailMs": 256
+  }
+ ]
+}

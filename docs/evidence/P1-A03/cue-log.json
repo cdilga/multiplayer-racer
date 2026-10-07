@@ -1,0 +1,676 @@
+[
+ {
+  "at": 245,
+  "kind": "state",
+  "state": "running"
+ },
+ {
+  "at": 981,
+  "kind": "cue",
+  "moment": "welcome",
+  "variant": 2,
+  "clip": "welcome-2",
+  "trigger": "room.opened",
+  "reason": "room.opened",
+  "caption": "Welcome, mate! Scan the code, pick your car and give it a burl.",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 981,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 982,
+  "kind": "music",
+  "cue": "lobby",
+  "clip": "lobby",
+  "reason": "phase -→Lobby",
+  "played": true,
+  "mix": {
+   "state": "running",
+   "muted": false
+  }
+ },
+ {
+  "at": 1479,
+  "kind": "cue",
+  "moment": "all-ready",
+  "variant": 3,
+  "clip": "all-ready-3",
+  "trigger": "lobby.all_ready",
+  "reason": "lobby.all_ready",
+  "caption": "Everyone's locked in. Let's give it a burl!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1479,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1479,
+  "kind": "music",
+  "cue": "none",
+  "clip": "",
+  "reason": "phase Lobby→Countdown",
+  "played": true,
+  "mix": {
+   "state": "running",
+   "muted": false
+  }
+ },
+ {
+  "at": 1479,
+  "kind": "cue",
+  "moment": "countdown",
+  "variant": 2,
+  "clip": "countdown-2",
+  "trigger": "phase.countdown",
+  "reason": "phase.countdown",
+  "caption": "3... 2... 1... Off you go!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1479,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1481,
+  "kind": "sfx",
+  "sfx": "countdown-beep",
+  "intensity": 0.6,
+  "reason": "phase.countdown",
+  "played": true,
+  "voices": 1,
+  "count": 3
+ },
+ {
+  "at": 1481,
+  "kind": "music",
+  "cue": "race",
+  "clip": "race-1",
+  "reason": "phase Countdown→Running",
+  "played": true,
+  "mix": {
+   "state": "running",
+   "muted": false
+  }
+ },
+ {
+  "at": 1481,
+  "kind": "sfx",
+  "sfx": "countdown-go",
+  "intensity": 1,
+  "reason": "phase.running",
+  "played": true,
+  "voices": 2
+ },
+ {
+  "at": 1481,
+  "kind": "cue",
+  "moment": "final-lap",
+  "variant": 2,
+  "clip": "final-lap-2",
+  "trigger": "race.final_lap",
+  "reason": "race.final_lap",
+  "caption": "Last lap, legends! Hold on to your doors!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1481,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "sfx",
+  "sfx": "part-clunk",
+  "intensity": 0.8,
+  "reason": "part.detached",
+  "played": true,
+  "voices": 3,
+  "seat": 2,
+  "part": 4,
+  "cause": "Car"
+ },
+ {
+  "at": 1484,
+  "kind": "cue",
+  "moment": "door-off",
+  "variant": 5,
+  "clip": "door-off-5",
+  "trigger": "part.detached.door",
+  "reason": "part.detached.door",
+  "caption": "Dead set, who needs doors anyway?",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "sfx",
+  "sfx": "part-clunk",
+  "intensity": 0.8,
+  "reason": "part.detached",
+  "played": true,
+  "voices": 4,
+  "seat": 2,
+  "part": 8,
+  "cause": "Scenery"
+ },
+ {
+  "at": 1484,
+  "kind": "cue",
+  "moment": "wheel-off",
+  "variant": 3,
+  "clip": "wheel-off-3",
+  "trigger": "part.detached.wheel",
+  "reason": "part.detached.wheel",
+  "caption": "Down a wheel! Reckon you can keep her going?",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "sfx",
+  "sfx": "part-clunk",
+  "intensity": 0.8,
+  "reason": "part.detached",
+  "played": true,
+  "voices": 5,
+  "seat": 2,
+  "part": 1,
+  "cause": "Scenery"
+ },
+ {
+  "at": 1484,
+  "kind": "cue",
+  "moment": "bodywork-off",
+  "variant": 1,
+  "clip": "bodywork-off-1",
+  "trigger": "part.detached.bodywork",
+  "reason": "part.detached.bodywork",
+  "caption": "Bodywork everywhere! Fair dinkum, what a mess!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1484,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "sfx",
+  "sfx": "wreck-crunch",
+  "intensity": 1,
+  "reason": "car.wrecked",
+  "played": true,
+  "voices": 6,
+  "seat": 2,
+  "cause": "Car"
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "wreck",
+  "variant": 1,
+  "clip": "wreck-1",
+  "trigger": "car.wrecked",
+  "reason": "car.wrecked",
+  "caption": "That one's carked it!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "sfx",
+  "sfx": "wreck-crunch",
+  "intensity": 1,
+  "reason": "car.wrecked",
+  "played": true,
+  "voices": 7,
+  "seat": 1,
+  "cause": "OutOfBounds"
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "off-course",
+  "variant": 2,
+  "clip": "off-course-2",
+  "trigger": "car.out_of_bounds",
+  "reason": "car.out_of_bounds",
+  "caption": "That car's gone walkabout! Back onto the track, mate.",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "sfx",
+  "sfx": "join-chime",
+  "intensity": 0.7,
+  "reason": "seat.joined",
+  "played": true,
+  "voices": 8,
+  "seat": 3
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "late-joiner",
+  "variant": 4,
+  "clip": "late-joiner-4",
+  "trigger": "seat.late_join",
+  "reason": "seat.late_join",
+  "caption": "G'day, new driver! Catch up if you can!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "first-finisher",
+  "variant": 2,
+  "clip": "first-finisher-2",
+  "trigger": "race.first_finish",
+  "reason": "race.first_finish",
+  "caption": "We've got a finisher! Who's next across the line?",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "photo-finish",
+  "variant": 4,
+  "clip": "photo-finish-4",
+  "trigger": "race.photo_finish",
+  "reason": "race.photo_finish",
+  "caption": "A fair dinkum finish! Nobody gave an inch.",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "cue",
+  "moment": "time-up",
+  "variant": 1,
+  "clip": "time-up-1",
+  "trigger": "race.time_up",
+  "reason": "race.time_up",
+  "caption": "And that's time! Well driven, legends.",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1485,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1486,
+  "kind": "music",
+  "cue": "results",
+  "clip": "results-1",
+  "reason": "phase Finalising→Intermission",
+  "played": true,
+  "mix": {
+   "state": "running",
+   "muted": false
+  }
+ },
+ {
+  "at": 1486,
+  "kind": "cue",
+  "moment": "winner",
+  "variant": 1,
+  "clip": "winner-1",
+  "trigger": "round.results",
+  "reason": "round.results",
+  "caption": "And that's the race! Give the winner a big cheer. You beauty!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1486,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 1486,
+  "kind": "sfx",
+  "sfx": "results-sting",
+  "intensity": 0.8,
+  "reason": "phase.intermission",
+  "played": true,
+  "voices": 9
+ },
+ {
+  "at": 1486,
+  "kind": "cue",
+  "moment": "next-round",
+  "variant": 1,
+  "clip": "next-round-1",
+  "trigger": "intermission.next_ready",
+  "reason": "intermission.next_ready",
+  "caption": "Next track's loading. Same again? Too right!",
+  "played": true,
+  "seconds": 3,
+  "mix": {
+   "state": "running",
+   "muted": false,
+   "ducked": true
+  }
+ },
+ {
+  "at": 1486,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 3236,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 3892,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4078,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4079,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4188,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4285,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4324,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4366,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4488,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4488,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4662,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4860,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 4904,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 5038,
+  "kind": "duck",
+  "down": true,
+  "bus": {
+   "music": 0.3,
+   "engine": 0.55
+  }
+ },
+ {
+  "at": 6150,
+  "kind": "duck",
+  "down": false,
+  "bus": {
+   "music": 1,
+   "engine": 1
+  }
+ }
+]

@@ -1,0 +1,190 @@
+{
+  "browser": "Chromium 151.0.7922.34 (Playwright headless, software GL), darwin/arm64",
+  "decode": [
+    {
+      "engine": "Chromium",
+      "version": "151.0.7922.34",
+      "files": 78,
+      "ok": 78,
+      "failed": [],
+      "retried": [],
+      "canOggOpus": "probably",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+    },
+    {
+      "engine": "WebKit",
+      "version": "26.5",
+      "files": 78,
+      "ok": 78,
+      "failed": [],
+      "retried": [],
+      "canOggOpus": "probably",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15"
+    }
+  ],
+  "crash": {
+    "triggered": [
+      "impact",
+      "debris-rattle",
+      "part-rattle",
+      "part-clunk",
+      "wreck-crunch",
+      "oi-honk",
+      "cone-thunk",
+      "join-chime",
+      "identify-ping",
+      "boost-whoosh",
+      "landing-thud"
+    ],
+    "impactIntensities": [
+      0.32,
+      0.8,
+      1
+    ],
+    "peakVoices": 14,
+    "dropped": 0,
+    "renders": [
+      {
+        "kind": "impact",
+        "intensity": 0.8,
+        "peak": 0.945,
+        "rms": 0.0644,
+        "tailMs": 218
+      },
+      {
+        "kind": "debris-rattle",
+        "intensity": 0.8,
+        "peak": 0.114,
+        "rms": 0.0056,
+        "tailMs": 334
+      },
+      {
+        "kind": "part-rattle",
+        "intensity": 0.8,
+        "peak": 0.091,
+        "rms": 0.0031,
+        "tailMs": 122
+      },
+      {
+        "kind": "part-clunk",
+        "intensity": 0.8,
+        "peak": 0.668,
+        "rms": 0.0369,
+        "tailMs": 152
+      },
+      {
+        "kind": "wreck-crunch",
+        "intensity": 0.8,
+        "peak": 1.02,
+        "rms": 0.1043,
+        "tailMs": 541
+      },
+      {
+        "kind": "landing-thud",
+        "intensity": 0.8,
+        "peak": 0.859,
+        "rms": 0.062,
+        "tailMs": 164
+      },
+      {
+        "kind": "boost-whoosh",
+        "intensity": 0.8,
+        "peak": 0.154,
+        "rms": 0.0126,
+        "tailMs": 428
+      },
+      {
+        "kind": "oi-honk",
+        "intensity": 0.8,
+        "peak": 0.348,
+        "rms": 0.0227,
+        "tailMs": 277
+      },
+      {
+        "kind": "cone-thunk",
+        "intensity": 0.8,
+        "peak": 0.519,
+        "rms": 0.0253,
+        "tailMs": 66
+      },
+      {
+        "kind": "join-chime",
+        "intensity": 0.8,
+        "peak": 0.244,
+        "rms": 0.0299,
+        "tailMs": 343
+      },
+      {
+        "kind": "identify-ping",
+        "intensity": 0.8,
+        "peak": 0.298,
+        "rms": 0.0353,
+        "tailMs": 354
+      },
+      {
+        "kind": "countdown-beep",
+        "intensity": 0.8,
+        "peak": 0.19,
+        "rms": 0.0145,
+        "tailMs": 81
+      },
+      {
+        "kind": "countdown-go",
+        "intensity": 0.8,
+        "peak": 0.283,
+        "rms": 0.0251,
+        "tailMs": 239
+      },
+      {
+        "kind": "ready-tick",
+        "intensity": 0.8,
+        "peak": 0.155,
+        "rms": 0.0054,
+        "tailMs": 34
+      },
+      {
+        "kind": "results-sting",
+        "intensity": 0.8,
+        "peak": 0.271,
+        "rms": 0.0427,
+        "tailMs": 625
+      },
+      {
+        "kind": "impact",
+        "intensity": 0.1,
+        "peak": 0.416,
+        "rms": 0.0238,
+        "tailMs": 90
+      },
+      {
+        "kind": "impact",
+        "intensity": 1,
+        "peak": 1.096,
+        "rms": 0.0782,
+        "tailMs": 256
+      }
+    ]
+  },
+  "controller": [
+    {
+      "at": 33,
+      "sound": "tap",
+      "played": true
+    },
+    {
+      "at": 238,
+      "sound": "identify-ping",
+      "played": true
+    },
+    {
+      "at": 240,
+      "sound": "tap",
+      "played": false
+    },
+    {
+      "at": 241,
+      "sound": "identify-ping",
+      "played": false
+    }
+  ]
+}
