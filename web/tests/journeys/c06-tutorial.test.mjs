@@ -52,7 +52,14 @@ const sticks = (page, d, a, ms = 120) =>
   );
 const z = { x: 0, y: 0 };
 const step = (page) => page.evaluate(() => window.__jjTutorial.inspect().step);
-const waitStep = (page, n) => wait(page, (n) => window.__jjTutorial.inspect()?.step === n, n, 10_000);
+const waitStep = async (page, n) => {
+  try {
+    await wait(page, (n) => window.__jjTutorial.inspect()?.step === n, n, 10_000);
+  } catch (e) {
+    const t = await page.evaluate(() => ({ tut: window.__jjTutorial.inspect(), stats: window.__jjController.inspect().stats }));
+    throw new Error(`step ${n} never came: ${JSON.stringify(t)}`);
+  }
+};
 
 test('C06: a newcomer is coached through every control by doing it; nothing pauses', { timeout: 180_000 }, async () => {
   const { host, page, ctx } = await hostAndPhone();
