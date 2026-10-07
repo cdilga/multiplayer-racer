@@ -51,19 +51,25 @@ async function phone(joinUrl, name) {
   return { ctx, page };
 }
 const seatOf = (host, name) => host.evaluate((n) => window.__jjRoom.view().seats.find((s) => s.name === n), name);
-const card = (host, name) =>
-  host.evaluate((n) => {
-    const seat = window.__jjRoom.view().seats.find((s) => s.name === n);
-    const el = document.querySelector(`.lcard[data-seat="${seat.seat}"]`);
-    return el && { state: el.dataset.state, label: el.querySelector('.lb-state')?.textContent ?? null };
-  }, name);
+const card = async (host, name, want) => {
+  // The lobby cards redraw a frame after the room view changes.
+  for (const t0 = Date.now(); Date.now() - t0 < 10_000; await host.waitForTimeout(100)) {
+    const c = await host.evaluate((n) => {
+      const seat = window.__jjRoom.view().seats.find((s) => s.name === n);
+      const el = seat && document.querySelector(`.lcard[data-seat="${seat.seat}"]`);
+      return el ? { state: el.dataset.state, label: el.querySelector('.lb-state')?.textContent ?? null } : null;
+    }, name);
+    if (c && (!want || c.state === want)) return c;
+  }
+  throw new Error(`no ${want ?? ''} lobby card for ${name}`);
+};
 
 test('the picker opening is "Choosing car…" on the TV; Done shows the car by name; a long roster and a reload keep working', { timeout: 240_000 }, async () => {
   const { host, joinUrl } = await room();
   const p = await phone(`${joinUrl}#roster=200`, 'Marlene');
   // Not picked yet: the TV says what it has always said.
   await wait(host, () => window.__jjRoom.view().seats.some((s) => s.name === 'Marlene'));
-  assert.equal((await card(host, 'Marlene')).state, 'choosing');
+  assert.equal((await card(host, 'Marlene', 'choosing')).state, 'choosing');
   assert.equal((await seatOf(host, 'Marlene')).vehicle ?? null, null);
 
   // Open the picker: the seat is choosing, with the car being looked at.
@@ -71,20 +77,19 @@ test('the picker opening is "Choosing car…" on the TV; Done shows the car by n
   await p.page.locator('[data-overlay=cars]').waitFor();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === true);
   assert.equal((await seatOf(host, 'Marlene')).vehicle, 'cruz-missile');
-  assert.deepEqual([(await card(host, 'Marlene')).state, (await card(host, 'Marlene')).label], ['choosing', 'Choosing car…']);
+  assert.equal((await card(host, 'Marlene', 'choosing')).label, 'Choosing car…');
   await shot(host, 'c03-pick-tv-choosing-1280x720');
   // Walk to a car far down a 200-car roster: each look reaches the host.
   assert.equal(await p.page.locator('.thumb').count(), 200, 'two hundred cars, no cap');
   await p.page.locator('.thumb[data-i="150"]').dispatchEvent('click');
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.vehicle === 'test-149');
-  assert.equal((await card(host, 'Marlene')).state, 'choosing', 'still choosing while the picker is open');
+  assert.equal((await card(host, 'Marlene', 'choosing')).state, 'choosing', 'still choosing while the picker is open');
   await shot(p.page, 'c03-pick-phone-open-844x390');
 
   // Done: the pick stands, and the TV names the car.
   await p.page.getByRole('button', { name: 'Done' }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Marlene')?.choosing === false);
-  await wait(host, () => document.querySelector('.lcard .lb-state.picked')?.textContent === 'Test 149');
-  assert.deepEqual([(await card(host, 'Marlene')).state, (await card(host, 'Marlene')).label], ['picked', 'Test 149']);
+  assert.equal((await card(host, 'Marlene', 'picked')).label, 'Test 149');
   await shot(host, 'c03-pick-tv-picked-1280x720');
 
   // A reload: the saved pick is told to the host again when the seat comes back (a host that had forgotten would learn it).
@@ -98,7 +103,7 @@ test('Ready is never behind the pick: a seat can be ready without choosing, and 
   const p = await phone(joinUrl, 'Shazza');
   await p.page.getByRole('button', { name: /^Ready/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.ready === true);
-  assert.equal((await card(host, 'Shazza')).state, 'ready', 'ready with no car picked');
+  assert.equal((await card(host, 'Shazza', 'ready')).state, 'ready', 'ready with no car picked');
   await p.page.getByRole('button', { name: /^Car/ }).click();
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.choosing === true);
   assert.equal((await seatOf(host, 'Shazza')).ready, true, 'opening the picker un-readies nobody');
@@ -106,5 +111,5 @@ test('Ready is never behind the pick: a seat can be ready without choosing, and 
   await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Shazza')?.choosing === false);
   const s = await seatOf(host, 'Shazza');
   assert.deepEqual([s.ready, s.vehicle], [true, 'cruz-missile']);
-  assert.equal((await card(host, 'Shazza')).state, 'ready', 'ready still wins the card');
+  assert.equal((await card(host, 'Shazza', 'ready')).state, 'ready', 'ready still wins the card');
 });

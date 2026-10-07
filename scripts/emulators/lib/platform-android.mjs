@@ -84,7 +84,7 @@ export async function androidPlatform({ api, port, log, opt }) {
     async allowCamera() {
       adbShell('uiautomator dump /sdcard/jj-f08.xml');
       const xml = adbShell('cat /sdcard/jj-f08.xml').out;
-      for (const t of ['While using the app', 'Allow', 'Allow only this time']) {
+      for (const t of ['Allow while visiting the site', 'Allow this time', 'While using the app', 'Allow', 'Allow only this time']) {
         const m = xml.match(new RegExp(`text="${t}"[^>]*?bounds="\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]"`));
         if (m) { adbShell(`input tap ${(+m[1] + +m[3]) >> 1} ${(+m[2] + +m[4]) >> 1}`); log('allowed camera via', t); return true; }
       }

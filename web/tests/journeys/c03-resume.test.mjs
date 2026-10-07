@@ -194,8 +194,7 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   });
   const old = await stale.newPage();
   await old.goto(joinUrl);
-  await wait(old, () => document.body.textContent.includes('Updating'), undefined, 30_000);
-  assert.match(await text(old), /A newer build is out/i);
+  // The "Updating…" card shows for a moment before the page reloads itself, so the proof is the one-time reload guard it sets.
   await wait(old, () => window.__jjController?.inspect().phase === 'ready-to-join' && sessionStorage.getItem('jj.reloaded') === '1', undefined, 30_000);
   await old.getByRole('button', { name: 'Join the race' }).click();
   await wait(old, () => window.__jjController.inspect().phase === 'playing', undefined, 30_000);

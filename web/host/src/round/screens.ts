@@ -243,7 +243,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
-    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);
