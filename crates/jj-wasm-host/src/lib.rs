@@ -184,6 +184,9 @@ pub mod codec {
             "free-drive" => UiCommand::FreeDrive { on },
             "prepare-maps" => UiCommand::PrepareMaps { on },
             "reroll" => UiCommand::Reroll,
+            l if l.starts_with("remove-seat:") => UiCommand::RemoveSeat {
+                seat: jj_types::SeatId(l[12..].parse().unwrap_or(0)),
+            },
             l if l.starts_with("laps:") => UiCommand::SetLaps {
                 laps: l[5..].parse().unwrap_or(jj_sim::race::DEFAULT_LAPS),
             },

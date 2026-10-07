@@ -1409,3 +1409,116 @@ fn thirty_two_controllers_churn_through_every_phase_with_no_phantom_seats() {
     );
     // Intermission churn and kept standings are JN5's (12 controllers race to results through the real host page).
 }
+
+/// P1-G07: the host removes a player mid-race. That phone is told (HostCmd::Removed), the seat leaves at the next tick
+/// boundary (gone from the room view, its standings row kept), the other seat races on, and the same phone joining
+/// again is a new claim with a new number.
+#[test]
+fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
+    let mut h = Host::new(&init()).unwrap();
+    let join = |h: &mut Host, p: &str, k: u32| {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId(p.into()),
+            resume: Some(format!("s-{p}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(k),
+            name: p.to_uppercase(),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    };
+    let mut now = 0u64;
+    let mut removed_to = Vec::new();
+    let mut step = |h: &mut Host, ticks: u64, now: &mut u64, removed_to: &mut Vec<String>| {
+        for _ in 0..ticks {
+            h.advance(*now);
+            *now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Outbound {
+                    endpoint,
+                    channel: Channel::Cmd,
+                    bytes,
+                } = m
+                    && let Ok(HostCmd::Removed) = HostCmd::decode(&bytes)
+                {
+                    removed_to.push(endpoint.0);
+                }
+            }
+        }
+    };
+    join(&mut h, "pa", 1);
+    join(&mut h, "pb", 2);
+    for p in ["pa", "pb"] {
+        h.handle(&net(
+            p,
+            Channel::Cmd,
+            ControllerCmd::Ready { on: true }.encode(),
+        ))
+        .unwrap();
+    }
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now, &mut removed_to);
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let seat_b = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "PB")
+        .unwrap()["seat"]
+        .as_u64()
+        .unwrap() as u32;
+    h.handle(
+        &MainToSim::Ui {
+            command: CommandId(9),
+            ui: UiCommand::RemoveSeat {
+                seat: jj_types::SeatId(seat_b),
+            },
+        }
+        .encode(),
+    )
+    .unwrap();
+    step(&mut h, 3, &mut now, &mut removed_to);
+    assert_eq!(
+        removed_to,
+        vec!["pb".to_string()],
+        "only the removed phone is told"
+    );
+    let names: Vec<String> = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["name"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(names, vec!["PA".to_string()], "PB is gone, PA races on");
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    // The same phone claims again: a new seat with a new number.
+    let claim = ControllerCmd::Claim {
+        request: RequestId(3),
+        name: "PB".into(),
+    }
+    .encode();
+    h.handle(&net("pb", Channel::Cmd, claim)).unwrap();
+    step(&mut h, 3, &mut now, &mut removed_to);
+    let back = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"].as_str().unwrap().starts_with("PB"))
+        .cloned()
+        .expect("PB is back (its name may carry a duplicate suffix)");
+    assert_ne!(
+        back["seat"].as_u64().unwrap() as u32,
+        seat_b,
+        "a new seat, not the removed one"
+    );
+}

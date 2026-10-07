@@ -316,6 +316,27 @@ impl Host {
         }
     }
 
+    /// The host removed a seat (P1-G07): its phone is told (it shows "The host removed you" with Join again), and the
+    /// seat leaves at the next tick boundary, like a Leave; joining again from that phone is a new claim.
+    fn remove_seat(&mut self, seat: SeatId) {
+        let endpoint = self
+            .seats
+            .seat(seat)
+            .and_then(|s| s.conn)
+            .and_then(|c| self.endpoint_of(c))
+            .filter(|e| !e.0.starts_with("local:"));
+        if let Some(endpoint) = endpoint {
+            self.out.push(SimToMain::Outbound {
+                endpoint,
+                channel: Channel::Cmd,
+                bytes: jj_protocol::cmd::HostCmd::Removed.encode(),
+            });
+        }
+        for o in self.seats.apply(seats::Input::HostRemove { seat }) {
+            self.seat_output(o);
+        }
+    }
+
     pub(super) fn room_state(&mut self, seat: SeatId) {
         let Some(s) = self.seats.seat(seat) else {
             return;
@@ -427,6 +448,7 @@ impl Host {
             UiCommand::PrepareMaps { on } => self.round.prepare_maps = on,
             // Draw the next track seed: the director supersedes the preparation (cancelling the old id).
             UiCommand::Reroll => self.director_apply(DirIn::Reroll),
+            UiCommand::RemoveSeat { seat } => self.remove_seat(seat),
             UiCommand::FreeDrive { on } => {
                 self.round.free_drive = on;
                 let cfg = DirectorConfig {

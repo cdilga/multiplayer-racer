@@ -134,6 +134,12 @@ pub enum Input {
     Leave {
         conn: ConnId,
     },
+    /// The host removed this seat (P1-G07): it leaves at the next tick boundary like a Leave, and its endpoint forgets
+    /// it, so the same phone joining again is a new claim with a new number. Only the host's UI sends this; no
+    /// controller frame decodes to it.
+    HostRemove {
+        seat: SeatId,
+    },
     SitOut {
         conn: ConnId,
         on: bool,
@@ -441,6 +447,18 @@ impl Seats {
                     let seat = self.seats.get_mut(&id).expect("seat");
                     if seat.presence != Presence::Left {
                         seat.pending = Some(Pending::Leave);
+                    }
+                }
+            }
+            Input::HostRemove { seat } => {
+                if let Some(s) = self.seats.get_mut(&seat)
+                    && s.presence != Presence::Left
+                {
+                    s.pending = Some(Pending::Leave);
+                    if let Some(e) = self.endpoints.get_mut(&s.endpoint)
+                        && e.seat == Some(seat)
+                    {
+                        e.seat = None;
                     }
                 }
             }

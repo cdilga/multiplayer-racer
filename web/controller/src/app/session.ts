@@ -91,6 +91,8 @@ export class Session {
   isReady = false;
   countdownMs: number | null = null;
   countdownAt = 0;
+  /** The host removed this player (P1-G07): the join card says so until they join again. */
+  removed = false;
   /** G03's idle cue: when it arrived (null once the player steers) and the autopilot's delay after it. */
   idleCueAt: number | null = null;
   idleCueMs = 0;
@@ -237,6 +239,7 @@ export class Session {
   /** Join the race: Claim with a stable request id (a lost reply retried gives one seat). */
   claim(name: string): void {
     if (!this.stored) return;
+    this.removed = false;
     this.name = name;
     this.saveName(name);
     this.set('joining');
@@ -259,6 +262,16 @@ export class Session {
     if (!j) return;
     const cmd = JSON.parse(j) as Record<string, unknown> | string;
     if (cmd === 'Ended') return this.ended();
+    if (cmd === 'Removed') {
+      // P1-G07: the host removed this player. The seat is gone; joining again is a new claim.
+      this.removed = true;
+      this.you = null;
+      if (this.stored) this.stored.seated = false;
+      this.save();
+      this.set('ready-to-join');
+      this.onChange();
+      return;
+    }
     if (typeof cmd !== 'object') return;
     if ('Welcome' in cmd) {
       const w = cmd.Welcome as { seat: number; number: number; colour: { rgb: [number, number, number] }; source: number };

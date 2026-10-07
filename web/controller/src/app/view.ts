@@ -67,7 +67,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   const joinCard = () => {
-    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card"><h1 class="display italic">Room ${esc(session.code)}</h1><label for="name">Your name</label><input id="name" name="name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button class="btn primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
+    app.innerHTML = `<section class="screen card-screen" data-state="ready-to-join"><form class="panel state-card join-card"><h1 class="display italic">Room ${esc(session.code)}</h1>${session.removed ? '<p class="note" data-note="removed">The host removed you. Join again whenever you like.</p>' : ''}<label for="name">Your name</label><input id="name" name="name" maxlength="64" autocomplete="nickname" autocapitalize="words" spellcheck="false" value="${esc(session.name || prefillName())}"><button class="btn primary big" type="submit">Join the race</button>${session.persisted ? '' : '<p class="note">This browser won\'t remember you, so a reload may lose your seat.</p>'}</form></section>`;
     app.querySelector('form')!.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = app.querySelector<HTMLInputElement>('#name')!.value.trim().normalize('NFC') || prefillName();

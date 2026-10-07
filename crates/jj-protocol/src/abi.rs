@@ -54,6 +54,10 @@ pub enum UiCommand {
     PrepareMaps {
         on: bool,
     },
+    /// The host removes a seat (P1-G07): it leaves at the next tick boundary and the phone is told.
+    RemoveSeat {
+        seat: SeatId,
+    },
 }
 
 /// Main → sim.

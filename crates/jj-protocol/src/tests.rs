@@ -229,6 +229,7 @@ fn host_samples() -> Vec<HostCmd> {
         HostCmd::IdleCue {
             autopilot_in_ms: 3_000,
         },
+        HostCmd::Removed,
     ]
 }
 
@@ -241,9 +242,10 @@ fn host_variant(c: &HostCmd) -> &'static str {
         HostCmd::Pong { .. } => "pong",
         HostCmd::Ended => "ended",
         HostCmd::IdleCue { .. } => "idle-cue",
+        HostCmd::Removed => "removed",
     }
 }
-const HOST_VARIANTS: [&str; 7] = [
+const HOST_VARIANTS: [&str; 8] = [
     "welcome",
     "claim-rejected",
     "action-result",
@@ -251,6 +253,7 @@ const HOST_VARIANTS: [&str; 7] = [
     "pong",
     "ended",
     "idle-cue",
+    "removed",
 ];
 
 /// Extra goldens for the outcome and rejection enums inside `ActionResult` and `ClaimRejected`.

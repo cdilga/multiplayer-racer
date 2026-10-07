@@ -189,6 +189,8 @@ pub enum HostCmd {
     IdleCue {
         autopilot_in_ms: u32,
     },
+    /// The host removed this player (P1-G07): the phone shows so, with Join again.
+    Removed,
 }
 
 macro_rules! codec {
