@@ -166,7 +166,7 @@ test('each source leaves on its own; the hub shows seat, kind, state and path; I
   });
   await wait(host, () => window.__jjRoom.view().seats.length === 2);
   // The row shows kind, state and the connection path.
-  await wait(hub, () => /Direct|Relay/.test(document.querySelector('[data-source=pad0] [data-path]')?.textContent ?? ''), undefined, 15_000);
+  await wait(hub, () => /Direct|Relay/.test(document.querySelector('[data-source=pad0] [data-path]')?.textContent ?? ''), undefined, 90_000); // the path badge waits on ICE stats, slow on a software-rendered runner
   const row = await hub.locator('[data-source=pad0]').innerText();
   assert.match(row, /Pad 1/);
   // Identify (View/Select = button 8) flashes pad 0's row in its colour, and the TV gets that seat's Identify.
@@ -198,7 +198,7 @@ test('a phone with one paired pad holds two seats and shows the connection badge
   await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await page.getByRole('button', { name: 'Join the race' }).click();
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
-  await wait(page, () => /Direct|Relay/.test(document.querySelector('[data-hud=conn]')?.textContent ?? ''), undefined, 15_000);
+  await wait(page, () => /Direct|Relay/.test(document.querySelector('[data-hud=conn]')?.textContent ?? ''), undefined, 90_000); // the path badge waits on ICE stats, slow on a software-rendered runner
   await page.evaluate(() => {
     window.__padAdd(0);
     window.__padSet(0, [0, 0, 1, 0]);

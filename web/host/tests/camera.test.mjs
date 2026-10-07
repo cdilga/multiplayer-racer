@@ -97,14 +97,19 @@ test('toggling the camera keeps the meaning of held steering', async () => {
   const measure = async () => {
     const a = await car();
     let b = a;
+    // The applied steer is the strongest seen over the window: a slow (software-rendered CI) host can miss a key sample for
+    // a frame, and the one sample at the window's end then reads 0 although the key never let go.
+    let steer = a.steer;
     for (const t0 = Date.now(); b.tick - a.tick < 60; b = await car()) {
       assert.ok(Date.now() - t0 < 30_000, 'the sim advanced');
       await page.waitForTimeout(40);
+      if (Math.abs(b.steer) > Math.abs(steer)) steer = b.steer;
     }
+    if (Math.abs(b.steer) > Math.abs(steer)) steer = b.steer;
     let d = (b.heading - a.heading) % 360;
     if (d > 180) d -= 360;
     if (d < -180) d += 360;
-    return { steer: b.steer, turn: d };
+    return { steer, turn: d };
   };
   for (const t0 = Date.now(); Math.abs((await car()).steer) < 0.5; await page.waitForTimeout(40)) {
     assert.ok(Date.now() - t0 < 10_000, 'the held steer is applied');

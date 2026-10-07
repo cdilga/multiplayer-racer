@@ -149,6 +149,9 @@ describe('code entry', () => {
     });
     await page.locator('#code').fill('AB');
     await page.getByRole('button', { name: 'Scan QR code' }).click();
+    // The scanner loads on this tap (a dynamic import), so the message arrives after the chunk does: wait for it. A cold
+    // CI runner takes longer than the click handler's first microtask, which is all a bare innerText() read allows.
+    await page.waitForFunction(() => /no camera/i.test(document.querySelector('#code-error')?.textContent ?? ''), undefined, { timeout: 20_000 });
     assert.match(await page.locator('#code-error').innerText(), /no camera/i);
     assert.equal(await page.locator('#code').inputValue(), 'AB');
     assert.equal(new URL(page.url()).pathname, '/');
