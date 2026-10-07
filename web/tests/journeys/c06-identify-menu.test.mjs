@@ -69,8 +69,11 @@ test("keys A's Identify key (Q) in a race sends an Identify event and pulses tha
   await host.waitForTimeout(3300);
   const events = (await identifies(host)).length;
   const pulses = await host.evaluate(() => window.__jjRoom.identified().length);
+  // Keys are sampled once per host frame, and a software-rendered host (CI, SwiftShader) takes up to ~1 s per frame: a
+  // 150 ms tap falls between two samples and is never seen. Hold Q across several frames; Identify fires on the press
+  // edge (and is one per 3 s per seat), so the held key still sends one event.
   await host.keyboard.down('KeyQ');
-  await host.waitForTimeout(150);
+  await host.waitForTimeout(2000);
   await host.keyboard.up('KeyQ');
   await wait(host, (n) => window.__jjRoom.identified().length > n, pulses, 10_000);
   assert.equal((await identifies(host)).length, events + 1, 'one Identify event');

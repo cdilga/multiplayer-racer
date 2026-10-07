@@ -69,6 +69,12 @@ async function leave(p) {
   await btn.click();
 }
 
+// How long a drop-in may take before the journey gives up. The claim → driving time is bound by the host's frame time (the
+// input reaches the sim through the host page's main thread), not by the drop-in path: measured on eris it is 1.3-2.5 s with
+// the host on a GPU, 3.7-5.9 s on SwiftShader (software WebGL), and CI's shared software-rendered runners are slower again
+// (they hit the old 15 s limit). So a GPU host keeps 15 s and a software host gets 60 s; the p95 target below is a GPU number.
+const DROP_IN_GIVE_UP_MS = gpu ? 15_000 : 60_000;
+
 /** A drop-in: claim accepted (Welcome) → the car moves under the phone's own throttle. Returns ms. */
 async function dropIn(host, url, name) {
   const p = await phone(url, name);
@@ -79,7 +85,7 @@ async function dropIn(host, url, name) {
     const seat = o.host.seats.find((s) => s.endpoint === p.endpoint);
     const car = seat && o.cars.find((c) => c.car === seat.car);
     if (car && car.forwardSpeed > 1) break;
-    assert.ok(Date.now() - t0 < 15_000, `${name} never drove: ${JSON.stringify(seat)} ${JSON.stringify(car)}`);
+    assert.ok(Date.now() - t0 < DROP_IN_GIVE_UP_MS, `${name} never drove: ${JSON.stringify(seat)} ${JSON.stringify(car)}`);
     await host.waitForTimeout(25);
   }
   const ms = Date.now() - t0;
@@ -143,7 +149,7 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // The 3 s target is a host drawing on a GPU; on software WebGL (CI's runner) eleven tiles hold the host's main thread,
   // which delays the claim and the first inputs, so there the samples get a loose bound only.
   const renderer = gpu ? 'host on a GPU' : 'host on SwiftShader (software WebGL)';
-  const limit = gpu ? 3000 : 8000;
+  const limit = gpu ? 3000 : 45_000; // software WebGL: a loose bound, see DROP_IN_GIVE_UP_MS
   writeFileSync(join(EVIDENCE, 'dropin.json'), `${JSON.stringify({ transport: 'loopback WebRTC (Playwright Chromium)', renderer, samples, p95Ms: p95, targetP95Ms: 3000 }, null, 1)}\n`);
   assert.ok(p95 <= limit, `drop-in p95 ${p95} ms > ${limit} ms (${renderer})`);
 
@@ -188,18 +194,19 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   // Both key clusters leave from the drawer (the sitting-out one too).
   // (The drawer rebuilds its rows when a source's state changes, so a click can land on a row just replaced: retry.)
-  for (let k = 0; k < 2; k++) {
-    const before = (await view(host)).seats.length;
-    for (let tries = 0; (await view(host)).seats.length === before; tries++) {
-      assert.ok(tries < 10, `a key cluster never left: ${JSON.stringify(await names(host))}`);
-      const leaveBtn = host.locator('[data-jj-input-drawer] button[data-act="leave"]');
-      if ((await leaveBtn.count()) === 0) {
-        const rows = await host.evaluate(() => [...document.querySelectorAll('[data-jj-input-drawer] li[data-source]')].map((li) => `${li.dataset.source}:${li.dataset.state}`));
-        assert.fail(`no Leave in the drawer: rows ${JSON.stringify(rows)}, seats ${JSON.stringify((await view(host)).seats.map((s) => `${s.name}:${s.presence}`))}`);
-      }
-      await leaveBtn.first().dispatchEvent('click');
-      await host.waitForTimeout(500);
+  // Until only Jonesy and Sheila are left (a removal can land after the click that caused it, so the count isn't taken
+  // per click).
+  for (let tries = 0; (await view(host)).seats.length > 2; tries++) {
+    assert.ok(tries < 20, `a key cluster never left: ${JSON.stringify(await names(host))}`);
+    const leaveBtn = host.locator('[data-jj-input-drawer] button[data-act="leave"]');
+    if ((await leaveBtn.count()) === 0) {
+      await host.waitForTimeout(500); // the second removal may still be on its way
+      if ((await view(host)).seats.length <= 2) break;
+      const rows = await host.evaluate(() => [...document.querySelectorAll('[data-jj-input-drawer] li[data-source]')].map((li) => `${li.dataset.source}:${li.dataset.state}`));
+      assert.fail(`no Leave in the drawer: rows ${JSON.stringify(rows)}, seats ${JSON.stringify((await view(host)).seats.map((s) => `${s.name}:${s.presence}`))}`);
     }
+    await leaveBtn.first().dispatchEvent('click');
+    await host.waitForTimeout(500);
   }
   await wait(host, () => window.__jjRoom.view().seats.length === 2, undefined, 30_000);
   const end = await view(host);
