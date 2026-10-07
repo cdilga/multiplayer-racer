@@ -160,10 +160,14 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   at('Intermission: shrink to 2');
   for (const p of phones.slice(2, 8)) await leave(p); // Bazza … Thommo; Jonesy and Sheila stay
   // Both key clusters leave from the drawer (the sitting-out one too).
+  // (The drawer rebuilds its rows when a source's state changes, so a click can land on a row just replaced: retry.)
   for (let k = 0; k < 2; k++) {
     const before = (await view(host)).seats.length;
-    await host.getByRole('button', { name: 'Leave' }).first().dispatchEvent('click');
-    await wait(host, (n) => window.__jjRoom.view().seats.length === n - 1, before);
+    for (let tries = 0; (await view(host)).seats.length === before; tries++) {
+      assert.ok(tries < 10, `a key cluster never left: ${JSON.stringify(await names(host))}`);
+      await host.getByRole('button', { name: 'Leave' }).first().dispatchEvent('click');
+      await host.waitForTimeout(500);
+    }
   }
   await wait(host, () => window.__jjRoom.view().seats.length === 2, undefined, 30_000);
   const end = await view(host);
