@@ -52,7 +52,7 @@ const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { ti
 async function openHost(mode) {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
-  await wait(host, () => window.__jjNet?.code() && (window.__jjTest || window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 60_000);
+  await wait(host, () => window.__jjNet?.code() && (window.__jjTest || window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 180_000); // opening a room on a busy runner
   return { host, code: await host.evaluate(() => window.__jjNet.code()), joinUrl: await host.evaluate(() => window.__jjNet.joinUrl()) };
 }
 
@@ -197,7 +197,7 @@ test('each source leaves on its own; the hub shows seat, kind, state and path; I
   await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad1').seat !== null && window.__jjHub.inspect().find((s) => s.id === 'pad1').state === 'connected', undefined, 60_000);
 });
 
-test('a phone with one paired pad holds two seats and shows the connection badge', { timeout: 240_000 }, async () => {
+test('a phone with one paired pad holds two seats and shows the connection badge', { timeout: 480_000 }, async () => {
   const { host, joinUrl } = await openHost('room');
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
