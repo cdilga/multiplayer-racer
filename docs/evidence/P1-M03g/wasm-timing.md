@@ -21,14 +21,14 @@ wasm32-unknown-unknown -p jj-procgen --test wasm_parity`.
 
 `web/host/tests/procgen-browser-timing.mjs` runs the same `prepare(seed, default recipe)` for seeds 0..23 on the page's main
 thread in headless Chromium (software GL) on eris (Intel i5-12400, 12 cores, linux/x64; Chromium 151.0.7922.34; procgen
-build `jj-wasm-procgen 0.2.0`, script from commit bd37214, run on eris at 1ef04e8). The throttle is
+build `jj-wasm-procgen 0.2.0`, script from commit c909059, run on eris at 30f11c2). The throttle is
 `Emulation.setCPUThrottlingRate` through CDP; it slows the page's main thread, which is why the generator runs there (it
-doesn't reach workers). Raw numbers: `browser-timing.json`.
+doesn't reach workers). Raw numbers: `browser-timing.json`; the per-seed chart is `timing-per-seed.png`.
 
 | Throttle | Worst seed | Mean | Budget | Plans (24 seeds) |
 |---|---|---|---|---|
-| none | 292 ms (seed 23) | 190 ms | <= 1.5 s (laptop) | 15 requested, 6 redrawn-1, 3 redrawn-2 |
-| 6x | 1825 ms (seed 23) | 1194 ms | <= 4 s (phone-host stand-in) | same |
+| none | 305 ms (seed 23) | 200 ms | <= 1.5 s (laptop) | 15 requested, 6 redrawn-1, 3 redrawn-2 |
+| 6x | 1885 ms (seed 23) | 1235 ms | <= 4 s (phone-host stand-in) | same |
 
 Every seed is valid in both runs. The 6x figure is a measurement in a real browser, not the node figure times six (which
 predicted ~1.1 s; the browser is about 1.7x worse than that estimate, still well inside the 4 s stand-in). The real phone

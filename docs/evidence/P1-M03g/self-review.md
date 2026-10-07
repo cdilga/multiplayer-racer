@@ -8,6 +8,9 @@
   recoveries, wrecks, out-of-bounds ticks and lap time over `refLapMs`; softlocks flagged: none. Read down the whole
   table for odd rows (none: all stuck/recovery/wreck/OOB columns are zero; lap/ref 0.94-1.30).
 - `wasm-timing.md`: the receipt (hardware, runtime, build, numbers, what is not measured).
+- `timing-per-seed.png`: the browser receipt's per-seed chart (24 seeds, unthrottled and 6x CPU throttle, against the 1.5 s laptop and
+  4 s phone-host stand-in lines). Looked at it: every orange (6x) bar sits under the 4 s line (worst about 1.9 s, seed 23), every blue
+  (unthrottled) bar under 0.31 s, the chart's axes and legend are readable, no seed is missing.
 
 ## Defects found and fixed
 - A first draft counted "softlock" only as not finishing; it now also flags any second-long stuck window and any recovery.
@@ -15,7 +18,7 @@
   message when `JJ_WASM_BUDGET_MS=0`.
 
 ## Remaining defects
-- Chromium at 6x CPU throttle (4 s stand-in) was not run; the Node figure scaled by 6 (~1.1 s worst) is an estimate.
+- (Closed) Chromium at 6x CPU throttle is now measured: worst 1885 ms against the 4 s stand-in (`browser-timing.json`).
 - `scenarios/procgen/` is not a runner scenario (the runner takes one fixed map); the bank is a Rust test.
 
 ## Not covered
