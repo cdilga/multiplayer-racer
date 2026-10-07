@@ -97,10 +97,19 @@ test('tilt steering: off by default, opt-in, steers the host car through the nor
   assert.ok(Math.abs((await seen()).steer ?? 0) < 0.05, 'neutral while Settings is open');
   await page.getByRole('button', { name: 'Save and back to driving' }).click();
 
+  // Which sign the host gives a stick pushed right: a clockwise turn of the phone must match it.
+  await page.evaluate(() => window.__jjController.setSticks({ x: 1, y: 0, touch: true }, { x: 0, y: 0, touch: false }));
+  let rightSign = 0;
+  for (const t0 = Date.now(); Math.abs((await seen()).steer ?? 0) < 0.8; await page.waitForTimeout(150)) assert.ok(Date.now() - t0 < 15_000, 'the host never saw the stick');
+  rightSign = Math.sign((await seen()).steer);
+  await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 0, y: 0, touch: false }));
+  for (const t0 = Date.now(); Math.abs((await seen()).steer ?? 0) > 0.1; await page.waitForTimeout(150)) assert.ok(Date.now() - t0 < 15_000, 'the stick never let go');
+
   // Driving: turn right, left and back; the host's applied steer follows, with its input age.
   const before = await page.evaluate(() => window.__jjController.inspect().stats.actions);
   const ages = [];
-  for (const [deg, sign] of [[40, 1], [-40, -1], [0, 0]]) {
+  for (const [deg, turn] of [[40, rightSign], [-40, -rightSign], [0, 0]]) {
+    const sign = turn;
     await tilt(page, deg);
     let s;
     for (const t0 = Date.now(); ; ) {

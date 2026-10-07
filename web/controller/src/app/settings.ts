@@ -210,6 +210,17 @@ export class SettingsSheet {
     const st = await t.enable(); // inside the tap: iOS only asks for motion access in a user gesture
     this.tiltNote = st === 'denied' ? 'Motion access was refused, so tilt stays off.' : st === 'no-sensor' ? 'This device has no motion sensor, so tilt stays off.' : 'Tilt is on. Set neutral when you are holding the phone how you will drive.';
     this.d.prefs.update({ tilt: st === 'waiting' || st === 'live' });
+    if (st === 'waiting') {
+      // A device with the API but no sensor never sends a reading: when the sensor gives up, the setting goes back off.
+      const giveUp = setInterval(() => {
+        if (this.closed || t.state === 'live') return clearInterval(giveUp);
+        if (t.state === 'no-sensor') {
+          clearInterval(giveUp);
+          this.tiltNote = 'This device has no motion sensor, so tilt stays off.';
+          this.d.prefs.update({ tilt: false });
+        }
+      }, 250);
+    }
   }
 
   private wire(): void {
