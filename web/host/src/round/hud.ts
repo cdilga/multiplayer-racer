@@ -83,9 +83,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
       const started = room?.phase === 'Running' || room?.phase === 'Finalising';
       const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs]);
+      // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
+      // its tile has a seat now, whatever the cache last saw.
+      box.hidden = !s;
       if (cache.get(box) === key) continue;
       cache.set(box, key);
-      box.hidden = !s;
       if (!s) continue;
       box.dataset.seat = String(s.number);
       const badge = box.querySelector<HTMLElement>('.hud-badge')!;
