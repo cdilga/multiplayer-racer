@@ -156,20 +156,24 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
         (cs) => cs.map((c) => Object.fromEntries(window.__jjRender.vehicles(c).parts.map((p) => [p.part, p.position]))),
         cars,
       );
-    const matches = (drawn) =>
-      detached.every(({ k, part }) => drawn[k][part] && parts.some((d) => Math.hypot(d.x - drawn[k][part][0], d.z - drawn[k][part][2]) < 0.35));
+    // The mesh origin and the body's footprint centre aren't the same point (the debris body is the part's proxy box): the
+    // first run measured 0.34 m on a door, so the tolerance is 0.75 m, well under the distance between two parts' bodies.
+    const TOL = 0.75;
+    const nearest = (drawn, k, part) => (drawn[k][part] ? Math.min(...parts.map((d) => Math.hypot(d.x - drawn[k][part][0], d.z - drawn[k][part][2]))) : Infinity);
+    const matches = (drawn) => detached.every(({ k, part }) => nearest(drawn, k, part) < TOL);
     // The renderer lags the sim a little: give it up to 10 s to draw each part where its body is.
     let drawn = await drawnAt();
     for (let tries = 0; tries < 40 && !matches(drawn); tries++) {
       await page.waitForTimeout(250);
       drawn = await drawnAt();
     }
-    for (const { k, part } of detached) {
-      assert.ok(matches(drawn), `${stage.name}: car ${k}'s detached ${part} is drawn at ${JSON.stringify(drawn[k][part])}, at none of the Part bodies ${JSON.stringify(parts.map((d) => [d.x, d.z]))}`);
+    const fit = detached.map(({ k, part }) => ({ car: k, part, drawnAt: drawn[k][part], nearestBodyM: +nearest(drawn, k, part).toFixed(3) }));
+    for (const f of fit) {
+      assert.ok(f.nearestBodyM < TOL, `${stage.name}: car ${f.car}'s detached ${f.part} is drawn at ${JSON.stringify(f.drawnAt)}, ${f.nearestBodyM} m from the nearest Part body ${JSON.stringify(parts.map((d) => [d.x, d.z]))}`);
     }
     const offCar = drawn;
     assert.equal(stats.debris, obs.debris.filter((d) => d.kind !== 'Part').length, `${stage.name}: parts are drawn as parts, the rest as debris`);
-    stages.push({ stage: stage.name, tick: obs.tick, damaged: Object.fromEntries(cars.map((c, k) => [k, damaged(obs, c)])), debris: obs.debris.length, parts: parts.length, drawnStats: stats.debris, tilesSee: see, drawn });
+    stages.push({ stage: stage.name, tick: obs.tick, damaged: Object.fromEntries(cars.map((c, k) => [k, damaged(obs, c)])), debris: obs.debris.length, parts: parts.length, drawnStats: stats.debris, tilesSee: see, drawn, partFit: fit });
     for (const k of involved) {
       const tile = see.find((t) => t.seat === k + 1);
       assert.ok(tile?.sees.some(Boolean), `${stage.name}: car ${k}'s tile sees at least one piece of debris (${JSON.stringify(see)})`);
