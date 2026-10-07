@@ -49,6 +49,8 @@ pub const STALE_MS: u64 = 250;
 pub const DROPOUT_MS: u64 = 2_000;
 /// A connected seat that gives no deliberate input this long while racing gets the takeover cue (G03, §9)...
 pub const IDLE_MS: u64 = 15_000;
+/// While the sim is paused the controllers' HUD (with the pause reason) still goes out this often (µs).
+const PAUSED_HUD_US: u64 = 100_000;
 /// ...and the autopilot this long after the cue, unless it steers first.
 pub const IDLE_CUE_MS: u64 = 3_000;
 /// `LocalSource.buttons` bits (P1-C05): a pad's View/Select or a key cluster's Identify key, its Start or READY key,
@@ -151,6 +153,8 @@ pub struct Host {
     /// Accumulated time × 120 (µs units), and the last time the worker passed in.
     acc: u128,
     last_us: Option<u64>,
+    /// When a controller last heard the pause reason while the sim was paused (no tick runs then, so no tick sends it).
+    paused_hud_us: u64,
     pauses: BTreeSet<Pause>,
     stall_since_us: Option<u64>,
     /// When the resume countdown ends (worker µs), if one is running.
@@ -240,6 +244,7 @@ impl Host {
             next_conn: 1,
             acc: 0,
             last_us: None,
+            paused_hud_us: 0,
             pauses: BTreeSet::new(),
             stall_since_us: None,
             resume_at_us: None,
@@ -358,6 +363,12 @@ impl Host {
             self.set_pause(Pause::PerformanceStall, false);
         }
         if !self.pauses.is_empty() {
+            // Paused (the host page hidden, a manual pause): no tick runs, and the HUD that says why rides the ticks, so
+            // the phones would never hear it. A quiet ten times a second keeps "Host paused" on their screens (§11).
+            if now_us >= self.paused_hud_us + PAUSED_HUD_US {
+                self.paused_hud_us = now_us;
+                self.send_huds(self.sim.tick());
+            }
             return 0;
         }
         if let Some(at) = self.resume_at_us {

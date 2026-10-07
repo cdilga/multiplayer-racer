@@ -1609,3 +1609,63 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
         "a new seat, not the removed one"
     );
 }
+
+#[test]
+fn a_hidden_host_still_tells_the_phones_why_the_room_is_paused() {
+    use jj_protocol::state::{HudUpdate, PauseReason};
+    let mut h = driving_host();
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    h.schedule(
+        0,
+        &phone(ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        }),
+    )
+    .unwrap();
+    h.schedule(
+        0,
+        &phone(ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        }),
+    )
+    .unwrap();
+    let mut now = 0;
+    for _ in 0..240 {
+        h.advance(now);
+        now += 8_334;
+    }
+    while h.next_message().is_some() {}
+    h.handle(
+        &MainToSim::Lifecycle {
+            visible: false,
+            render_ok: true,
+        }
+        .encode(),
+    )
+    .unwrap();
+    let frozen = h.tick();
+    // One hidden second: no ticks, yet the phone hears HostHidden on its state channel, about ten times.
+    let mut heard = 0;
+    for _ in 0..100 {
+        h.advance(now);
+        now += 10 * MS;
+        while let Some(m) = h.next_message() {
+            if let SimToMain::Outbound {
+                channel: Channel::State,
+                bytes,
+                ..
+            } = m
+                && let Ok(u) = HudUpdate::decode(&bytes)
+                && u.hud.pause == Some(PauseReason::HostHidden)
+            {
+                heard += 1;
+            }
+        }
+    }
+    assert_eq!(h.tick(), frozen, "no ticks while hidden");
+    assert!((8..=12).contains(&heard), "the pause reached the phone {heard} times in a second");
+}

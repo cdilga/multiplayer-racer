@@ -155,23 +155,24 @@ test('every §11 state is reached by a scripted cause and shows its wording', { 
   assert.match(await text(page), /Can't reach the host from this network/i);
   assert.ok(fallbackCalls >= 2, `the relay was asked ${fallbackCalls} times (429 then 503)`);
 
-  console.log('# §11 step: host hidden');
-  // Ended room: the host ends it.
   const live = await joined(joinUrl, 'Marlene');
-  // Host hidden: the host page loses focus (its pause), the phone says so; back again clears it.
-  await host.evaluate(() => {
+  // Host hidden: the host page loses focus (its pause reaches the phones with the HUD, so a room with a car: free drive),
+  // the phone says so; back again clears it.
+  console.log('# §11 step: host hidden');
+  const free = await openHost('drive');
+  const watcher = await joined(free.joinUrl, 'Davo');
+  await free.host.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await wait(live.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 20_000);
-  assert.match(await text(live.page), /Host paused/i);
-  await host.evaluate(() => {
+  await wait(watcher.page, () => window.__jjController.inspect().phase === 'host-paused', undefined, 20_000);
+  assert.match(await text(watcher.page), /Host paused/i);
+  await free.host.evaluate(() => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));
   });
-  await wait(live.page, () => window.__jjController.inspect().phase === 'playing', undefined, 20_000);
+  await wait(watcher.page, () => window.__jjController.inspect().phase === 'playing', undefined, 20_000);
 
-  console.log('# §11 step: protocol mismatch');
   // Protocol mismatch: the host answers with ClaimRejected{Build} (bytes: cmd version 1, variant 1, reason 0); the page says
   // it is updating and reloads itself once.
   await live.page.evaluate(() => sessionStorage.removeItem('jj.reloaded'));
