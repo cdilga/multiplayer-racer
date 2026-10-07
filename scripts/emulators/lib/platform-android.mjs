@@ -96,7 +96,7 @@ export async function androidPlatform({ api, port, log, opt }) {
     async foreground() { adbShell('monkey -p com.android.chrome -c android.intent.category.LAUNCHER 1'); rotate(); },
     async shot(name) {
       const r = spawnSync(ADB, ['exec-out', 'screencap', '-p'], { maxBuffer: 1 << 26 });
-      if (r.stdout?.length) writeFileSync(path.join(opt('out', os.tmpdir()), `drive-android-${name}.png`), r.stdout);
+      if (r.stdout?.length) writeFileSync(path.join(process.env.JJ_EVIDENCE_DIR || opt('out', os.tmpdir()), `drive-android-${name}.png`), r.stdout);
     },
     async close() {
       try { cdp?.close(); } catch {}

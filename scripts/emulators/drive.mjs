@@ -26,11 +26,11 @@ const log = (...a) => console.error('[drive]', ...a);
 
 // ---------------------------------------------------------------- the stack (on eris) and its HTTP API
 async function startStackProcess(port) {
-  const erisDir = opt('eris-dir', '~/Work/runs/f08-dev');
-  const cmd = `cd ${erisDir} && JJ_REPO=~/Work/dev/multiplayer-racer exec node scripts/emulators/stack-run.mjs --port ${port} --dist ${erisDir}/dist --gpu ${opt('gpu', 'vulkan')}`;
-  const onEris = os.hostname().toLowerCase().includes('eris') || mode === 'android' && opt('on-eris') === '1';
-  const p = onEris ? spawn('bash', ['-lc', cmd.replace('~', os.homedir())], { stdio: ['pipe', 'pipe', 'inherit'] })
-    : spawn('ssh', ['-o', 'BatchMode=yes', 'eris', cmd], { stdio: ['pipe', 'pipe', 'inherit'] });
+  // The stack runs from the clone's own tree: on eris directly (Android), or over ssh in eris's clone (iOS from the Mac).
+  const args = `scripts/emulators/stack-run.mjs --port ${port} --gpu ${opt('gpu', 'vulkan')}`;
+  const onEris = os.hostname().toLowerCase().includes('eris');
+  const p = onEris ? spawn('node', args.split(' '), { cwd: path.resolve(here, '../..'), stdio: ['pipe', 'pipe', 'inherit'] })
+    : spawn('ssh', ['-o', 'BatchMode=yes', 'eris', `cd ~/Work/dev/multiplayer-racer && exec node ${args}`], { stdio: ['pipe', 'pipe', 'inherit'] });
   const ready = await new Promise((res, rej) => {
     let buf = '';
     p.stdout.on('data', (d) => { buf += d; const m = /READY (\{.*\})/.exec(buf); if (m) res(JSON.parse(m[1])); });
@@ -163,7 +163,7 @@ async function cycle(plat, api, hiddenMs) {
 async function main() {
   if (mode !== 'ios' && mode !== 'android') { console.error('usage: drive.mjs ios|android [--repeat N]'); process.exit(2); }
   const repeat = +opt('repeat', '1');
-  const outDir = path.resolve(opt('out', path.join(here, '../../docs/evidence/P1-F08')));
+  const outDir = path.resolve(process.env.JJ_EVIDENCE_DIR || opt('out', path.join(here, '../../docs/evidence/P1-F08')));
   mkdirSync(outDir, { recursive: true });
   const results = [];
   for (let n = 1; n <= repeat; n++) {

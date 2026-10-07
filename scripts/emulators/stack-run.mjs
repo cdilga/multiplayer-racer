@@ -3,12 +3,19 @@
 // proxy with the probe, and a real host page in Chromium. Prints `READY {"port":N,"code":"ABCD"}` and serves the
 // lane's HTTP API (events, host observe/command, XCUITest command queue) until stdin closes or it is killed.
 //   node scripts/emulators/stack-run.mjs --port 7461 [--dist web/dist-test/f08] [--gpu vulkan|native|swiftshader]
+import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { startHost, startStack, repo } from './lib/stack.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf('--' + n); return i >= 0 ? argv[i + 1] : d; };
-const dist = path.resolve(repo, opt('dist', 'web/dist-test/f08'));
+// The web build lives with the run's outputs when there is a run dir, else in the tree's git-ignored dist-test.
+const dist = path.resolve(repo, opt('dist', process.env.JJ_RUN_DIR ? path.join(process.env.JJ_RUN_DIR, 'dist') : 'web/dist-test/f08'));
+if (!existsSync(path.join(dist, 'landing/index.html'))) {
+  const r = spawnSync(process.execPath, [path.join(repo, 'web/node_modules/vite/bin/vite.js'), 'build', '--outDir', dist, '--emptyOutDir', '--logLevel', 'error'], { cwd: path.join(repo, 'web'), stdio: ['ignore', 'ignore', 'inherit'] });
+  if (r.status !== 0) { console.error('web build failed'); process.exit(1); }
+}
 const stack = await startStack({ dist, port: +opt('port', '0') });
 const host = await startHost(stack.port, { gpu: opt('gpu', 'swiftshader') });
 stack.hostApi.observe = host.observe;
