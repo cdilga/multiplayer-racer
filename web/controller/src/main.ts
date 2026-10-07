@@ -20,6 +20,13 @@ function prefillName(): string {
   return ok[Math.floor(Math.random() * ok.length)]?.name ?? 'Mate';
 }
 
+function mountTray(): HTMLElement {
+  const t = document.createElement('div');
+  t.className = 'hub-tray';
+  document.body.append(t);
+  return t;
+}
+
 async function boot(root: HTMLElement): Promise<void> {
   if (params.has('hello')) return (await import('./hello/hello')).mountHello(root);
   const code = codeFromPath();
@@ -29,6 +36,12 @@ async function boot(root: HTMLElement): Promise<void> {
     return;
   }
   applyProfile();
+  // The hub (C08): `B/j/<CODE>?hub` is the page for a second laptop with pads and keys; every source joins on its own.
+  if (params.has('hub')) {
+    (await import('./hub/hub')).mountHub(root, code, params.get('ice') === 'relay' ? 'relay' : 'all');
+    document.documentElement.dataset.jjController = 'ready';
+    return;
+  }
   const session = new Session({ iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   mountController(root, session, prefillName);
   (window as unknown as { __jjController: unknown }).__jjController = {
@@ -43,6 +56,8 @@ async function boot(root: HTMLElement): Promise<void> {
   addEventListener('popstate', () => history.pushState({ guard: true }, ''));
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('dblclick', (e) => e.preventDefault());
+  // A pad paired to this phone (R65) joins as a second seat in its own tray; only loaded once a pad shows up.
+  addEventListener('gamepadconnected', () => void import('./hub/hub').then((h) => h.pairPads(session, mountTray())), { once: true });
   await session.start(code);
   document.documentElement.dataset.jjController = 'ready';
 }

@@ -1,7 +1,8 @@
 // The front door (P1-C01): Host a room, or Join a room with the code from the big screen. No renderer, sim or
 // transport is imported here; the host app and the controller app are separate pages under the deployment base.
-import { applyProfile, icon, paintKit, toast } from '../../shared/ui';
+import { applyProfile, icon, paintKit } from '../../shared/ui';
 import './landing.css';
+import '../../controller/src/app/scan.css';
 import { basePath } from '../../shared/src/base';
 import { checkCode, normaliseCode } from './code';
 
@@ -55,5 +56,18 @@ form.addEventListener('submit', (e) => {
   location.assign(routes.join(c.code));
 });
 
-// Stub: the scanner is P1-C04's. The button is in place so the layout and the join path are final.
-scan.addEventListener('click', () => toast("Scanning isn't ready yet. Type the code from the big screen instead.", 'info'));
+// The in-page scanner (P1-C04), loaded only when asked for: the camera opens on this tap and is always released. A
+// scanned room URL or code for this realm joins; a denied or missing camera leaves code entry exactly as it was.
+scan.addEventListener('click', async () => {
+  const { scanRoomCode, noCameraMessage } = await import('../../controller/src/app/scan');
+  const r = await scanRoomCode();
+  if (r.kind === 'code') {
+    input.value = r.code;
+    showError(null);
+    location.assign(routes.join(r.code));
+  } else if (r.kind === 'no-camera') {
+    showError(noCameraMessage(r.reason));
+    input.focus();
+  } else input.focus();
+});
+(window as unknown as { __jjScan: unknown }).__jjScan = { inspect: () => import('../../controller/src/app/scan').then((m) => m.scanInspect()) };

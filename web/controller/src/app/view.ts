@@ -6,6 +6,9 @@ import { mountSound } from './sound';
 import { attachStick, stickZone, type StickHandle } from './sticks';
 import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
+import './settings.css';
+import { watchBadge } from '../hub/badge';
+import { Preferences, SettingsSheet, shape } from './settings';
 
 const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string; action?: [string, string] }>> = {
   finding: (s) => ({ title: `Finding room ${s.code}…`, body: '' }),
@@ -23,7 +26,7 @@ const CARDS: Partial<Record<Phase, (s: Session) => { title: string; body: string
   'update-needed': () => ({ title: 'Updating…', body: 'Loading the new version.' }),
 };
 
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="help" aria-label="Help: the controls tutorial">Help</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV">Identify</button><button class="btn quiet" data-act="camera" aria-label="Camera: chase or in the car">Camera</button><button class="btn quiet" data-act="recover" aria-label="Recover: put my car back on the road">Recover</button><button class="btn quiet" data-act="help" aria-label="Help: the controls tutorial">Help</button><button class="btn quiet" data-act="settings" aria-label="Settings: your controls">Settings</button><button class="btn quiet" data-act="leave" aria-label="Leave the room">Leave</button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
@@ -38,6 +41,14 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let tutorialOffered = false;
   let firstPerson = false;
   let shown: string | null = null;
+  let prefs: Preferences | null = null;
+  let sheet: SettingsSheet | null = null;
+  let stopBadge: (() => void) | null = null;
+  const prefsNow = () => {
+    prefs ??= new Preferences(session.realm);
+    session.cameraDistance = prefs.value.cameraDistance;
+    return prefs;
+  };
 
   const render = () => {
     const key = session.phase === 'playing' || session.phase === 'host-paused' ? `play:${session.you?.number}` : session.phase;
@@ -60,7 +71,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     app.querySelector('form')!.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = app.querySelector<HTMLInputElement>('#name')!.value.trim().normalize('NFC') || prefillName();
-      void requestPlayMode();
+      void requestPlayMode(prefsNow().value.keepAwake);
       session.claim(name);
     });
   };
@@ -69,7 +80,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const you = session.you!;
     const colour = hex(you.rgb);
     app.innerHTML = `<section class="screen play" data-state="playing" style="--seat:${colour}">
-      <div class="strip" data-box="strip"><div class="who"><span class="seatno">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
+      <div class="strip" data-box="strip"><div class="who"><span class="seatno">#${you.number}</span><span class="nm">${esc(session.name)}</span></div><div class="race"><span class="conn" data-hud="conn" role="status"></span><span class="pos display" data-hud="pos"></span><span class="lap tnum" data-hud="lap"></span></div>
 </div>
     </section>`;
     // The pod (boost, utilities) sits between the sticks in landscape and in a row above them in portrait (POC1-18);
@@ -114,9 +125,16 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       tutorial?.stick('drive', d);
       tutorial?.stick('action', a);
     };
-    const push = () => sticks && session.setSticks({ ...sticks.drive.value }, { ...sticks.action.value });
-    sticks = { drive: attachStick(dz, push), action: attachStick(az, push) };
+    const p = prefsNow();
+    const steering = () => prefsNow().value.steering;
+    const push = () => sticks && session.setSticks(shape(sticks.drive.value, steering()), shape(sticks.action.value, steering()));
+    sticks = { drive: attachStick(dz, push, p.value.layout === 'fixed'), action: attachStick(az, push, p.value.layout === 'fixed') };
+    sheet = null;
+    p.subscribe((v) => {
+      session.cameraDistance = v.cameraDistance;
+    });
     app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
+    app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
     app.querySelector('[data-act=identify]')!.addEventListener('click', () => session.identify());
     app.querySelector('[data-act=ready]')!.addEventListener('click', () => session.ready(!session.isReady));
     app.querySelector('[data-act=camera]')!.addEventListener('click', () => session.setCamera((firstPerson = !firstPerson)));
@@ -125,7 +143,32 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       // Personal confirmation while driving (master §10.6a).
       if (confirmLeave()) session.leave();
     });
+    stopBadge?.();
+    stopBadge = watchBadge(session, app.querySelector<HTMLElement>('[data-hud=conn]')!);
     updateHud();
+  };
+
+  /** Settings (C07): neutral first, then `Menu{open:true}` (the host's autopilot drives); closing is neutral, then `Menu{open:false}`. */
+  const openSettings = (host: HTMLElement) => {
+    if (sheet?.open || tutorial?.open || !session.you) return;
+    const you = session.you;
+    sheet = new SettingsSheet(host, {
+      prefs: prefsNow(),
+      you: { number: you.number, colour: hex(you.rgb), name: session.name },
+      onOpen: () => {
+        sticks?.drive.release();
+        sticks?.action.release();
+        session.menu(true);
+      },
+      onClose: () => {
+        sticks?.drive.release();
+        sticks?.action.release();
+        session.menu(false);
+        sheet = null;
+      },
+      onSitOut: () => session.sitOut(),
+      onLeave: () => session.leave(),
+    });
   };
 
   const updateHud = () => {
@@ -140,6 +183,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
     // the autopilot. Help shows it again.
     if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false);
+    if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
     // The Lobby state can arrive just after the play screen: offer the tutorial once then.
     if (tutorial && !tutorialOffered && session.roomPhase === 'Lobby') {
       tutorialOffered = true;
@@ -157,6 +201,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   };
 
   session.onChange = render;
+  (window as unknown as { __jjSettings: unknown }).__jjSettings = {
+    inspect: () => ({ open: sheet?.open ?? false, prefs: prefs?.value ?? null, saveFailed: prefs?.saveFailed ?? false, test: sheet?.inspectTest() ?? null }),
+  };
   (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {
     shown = null;
@@ -237,7 +284,8 @@ function flash(app: HTMLElement, session: Session): void {
 
 /** R101: the first tap asks for full screen, landscape and a wake lock; each is a nicety where the phone allows it. */
 let wake: WakeLockSentinel | null = null;
-async function requestPlayMode(): Promise<void> {
+async function requestPlayMode(keepAwake = true): Promise<void> {
+  if (!keepAwake) return;
   try {
     await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
   } catch {

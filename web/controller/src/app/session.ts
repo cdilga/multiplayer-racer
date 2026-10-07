@@ -96,6 +96,8 @@ export class Session {
   idleCueMs = 0;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null = null;
   persisted = true;
+  /** The hub's per-source identity (C08): a source is its own endpoint, so it has its own stored seat and tab fence. */
+  slot = '';
   name = '';
   link: ControllerLink | null = null;
   /** Counters for tests and the debug readout. */
@@ -127,7 +129,7 @@ export class Session {
   }
 
   private key(): string {
-    return `jj.ctl.${this.realm}.${this.code}`;
+    return `jj.ctl.${this.realm}.${this.code}${this.slot ? `.${this.slot}` : ''}`;
   }
 
   private save(): void {
@@ -368,6 +370,21 @@ export class Session {
     this.send('cmd', wasm.encodeMenu(open));
   }
 
+  /** A source that went away (an unplugged pad, C08): neutral at once, and the host's autopilot takes the seat; `false` brings it back. */
+  unavailable(on: boolean): void {
+    if (!this.endpoint || this.srcIdx < 0) return;
+    if (on) this.endpoint.neutralise(this.srcIdx, WHY_DISCONNECTED);
+    else this.endpoint.resume(this.srcIdx);
+  }
+
+  /** Sit out (the settings sheet, C07): the seat steps out of the next round and the car is parked. */
+  sitOut(): void {
+    this.send('cmd', wasm.encodeSitOut());
+  }
+
+  /** The player's camera-distance preference (C07). There is no wire message for it yet: the value is kept for the host. */
+  cameraDistance: 'near' | 'host' | 'far' = 'host';
+
   ready(on: boolean): void {
     this.send('cmd', wasm.encodeReady(on));
   }
@@ -393,7 +410,7 @@ export class Session {
   private claimTab(): void {
     try {
       this.tabs?.close();
-      this.tabs = new BroadcastChannel(`jj.tab.${this.realm}.${this.code}`);
+      this.tabs = new BroadcastChannel(`jj.tab.${this.realm}.${this.code}${this.slot ? `.${this.slot}` : ''}`);
       this.tabs.onmessage = (e: MessageEvent<{ tab: string }>) => {
         if (e.data.tab === this.tabId || this.phase === 'another-tab') return;
         this.stop();
@@ -445,6 +462,7 @@ export class Session {
       countdownMs: this.countdownMs,
       results: this.results,
       persisted: this.persisted,
+      cameraDistance: this.cameraDistance,
       stats: { ...this.stats },
       link: this.link?.inspect() ?? null,
       drive: this.endpoint && this.srcIdx >= 0 ? { steer: this.endpoint.driveSteer(this.srcIdx), throttle: this.endpoint.driveThrottle(this.srcIdx), brake: this.endpoint.driveBrake(this.srcIdx) } : null,

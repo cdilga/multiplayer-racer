@@ -1,0 +1,39 @@
+/* The settings sheet (P1-C07): ported from the POC phone mock (art/ui/poc/phone/phone.css `.scroll.settings`, `.row`, `.seg`, `.toggle`). */
+.settings-sheet { display: block; }
+.settings-body { display: grid; gap: 12px; width: min(460px, 100%); margin: 0 auto; align-content: start; }
+.settings-body .panel h1 { margin: 0 0 12px; font-size: 30px; }
+.settings-auto { position: static; transform: none; max-width: none; white-space: normal; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 10px; background: var(--c-cobalt); color: var(--c-paper); border: 3px solid var(--c-ink); font-weight: 800; }
+.settings-auto small { display: block; font-weight: 500; font-size: 14px; }
+.settings-body .panel { display: grid; gap: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 14px; background: var(--c-paper-shade); border: 2px solid var(--c-paper-line); border-radius: 10px; color: var(--c-ink); font-weight: 700; }
+.row small { display: block; font-weight: 500; font-size: 14px; color: var(--c-ink-soft); }
+.row.off { opacity: .7; }
+.seg { display: flex; border: 3px solid var(--c-ink); border-radius: 10px; overflow: hidden; }
+.seg button { flex: 1; min-height: 48px; padding: 0 12px; display: grid; place-items: center; font-weight: 700; color: var(--c-ink); background: var(--c-paper); border: 0; cursor: pointer; }
+.seg button.on { background: var(--c-cobalt); color: var(--c-paper); }
+.seg.mini { width: auto; }
+.seg.mini button { min-height: 40px; padding: 0 10px; font-size: 14px; }
+.row .seg { width: auto; flex: none; }
+.toggle { flex: none; width: 60px; height: 34px; border-radius: 17px; border: 3px solid var(--c-ink); background: var(--c-paper-shade); position: relative; padding: 0; cursor: pointer; }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--c-paper); border: 2px solid var(--c-ink); }
+.toggle.on { background: var(--c-cobalt); }
+.toggle.on::after { left: 29px; }
+.toggle:disabled { cursor: not-allowed; }
+.settings-body .note { margin: 4px 0 0; font-weight: 700; }
+.settings-body .note.warn { color: var(--c-danger); }
+.settings-body .actions { display: flex; flex-direction: column; gap: 12px; }
+.settings-body .actions .pair { display: flex; gap: 10px; }
+.settings-body .actions .pair .btn { flex: 1; }
+.test-panel p { margin: 0; font-weight: 500; }
+.test-sticks { display: flex; gap: 8px; height: 38dvh; min-height: 200px; }
+.test-col { position: relative; flex: 1; min-width: 0; }
+.test-col .zone { position: absolute; inset: 0; margin: 0; background: var(--c-ink); }
+.test-read { font-weight: 700; white-space: pre; font-size: 14px; overflow: hidden; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .settings-body { width: 100%; grid-template-columns: 1.3fr 1fr; gap: 10px 16px; }
+  .settings-body .settings-auto { grid-column: 1 / -1; }
+  .settings-body .panel h1 { font-size: 24px; margin-bottom: 4px; }
+  .test-panel { grid-column: 1 / -1; }
+  .test-sticks { height: 40dvh; min-height: 120px; }
+  .row { min-height: 48px; padding-block: 4px; }
+}

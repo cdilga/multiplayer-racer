@@ -1,0 +1,166 @@
+// P1-C08 hub: a second laptop (`B/j/<CODE>?hub`) with emulated pads and key clusters, and a phone with a paired pad, each
+// source joining and leaving on its own. The Gamepad API is emulated (navigator.getGamepads) and keys are real key events.
+// WebRTC: run on eris.   node --test web/tests/journeys/c08-hub.test.mjs   (JJ_CHROMIUM_GPU=1)
+// NOTE: today each source is its own endpoint (the protocol seats one endpoint with one seat), so "one connection" and the
+// N08 per-endpoint receipt are not asserted; per-source bytes are logged ('# bytes ...').
+import assert from 'node:assert/strict';
+import { after, before, test } from 'node:test';
+import { chromium } from 'playwright';
+import { build, serve } from '../../landing/tests/lib/site.mjs';
+import { chromiumArgs } from './lib/chromium.mjs';
+
+const BASE = '/p/c08/';
+let browser;
+let server;
+
+before(async () => {
+  server = await serve(build('./', 'c08'), BASE, { JJ_STUN_URLS: '' });
+  browser = await chromium.launch({ args: chromiumArgs });
+});
+after(async () => {
+  await browser?.close();
+  await server?.close();
+});
+
+const wait = (page, fn, arg, ms = 40_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
+
+async function openHost(mode) {
+  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
+  await wait(host, () => window.__jjNet?.code() && (window.__jjTest || window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 60_000);
+  return { host, code: await host.evaluate(() => window.__jjNet.code()), joinUrl: await host.evaluate(() => window.__jjNet.joinUrl()) };
+}
+
+/** Emulated gamepads: `window.__pads[i]` is what navigator.getGamepads() returns (null = unplugged). */
+const PADS = () => {
+  window.__pads = [];
+  navigator.getGamepads = () => window.__pads;
+  window.__padAdd = (i) => {
+    window.__pads[i] = { index: i, id: `Test pad ${i}`, connected: true, mapping: 'standard', axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+    window.dispatchEvent(new Event('gamepadconnected'));
+  };
+  window.__padSet = (i, axes, buttons = {}) => {
+    const p = window.__pads[i];
+    if (!p) return;
+    p.axes = axes;
+    for (const [b, v] of Object.entries(buttons)) p.buttons[b] = { pressed: v, value: v ? 1 : 0 };
+  };
+  window.__padUnplug = (i) => {
+    window.__pads[i] = null;
+  };
+};
+
+async function hubPage(joinUrl) {
+  const page = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+  await page.addInitScript(PADS);
+  await page.goto(`${joinUrl}?hub`);
+  await wait(page, () => window.__jjHub);
+  return page;
+}
+const hubState = (page) => page.evaluate(() => window.__jjHub.inspect());
+const seats = (host) => host.evaluate(() => window.__jjRoom.view().seats);
+
+test('a hub with four pads and two key clusters holds six seats; each drives only its own car; one unplugged pad goes alone', { timeout: 300_000 }, async () => {
+  const { host, joinUrl } = await openHost('drive');
+  const hub = await hubPage(joinUrl);
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padAdd(i), i);
+  // Each source claims on its own press.
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padSet(i, [0, 0, 1, 0]), i);
+  await hub.keyboard.down('KeyW');
+  await hub.keyboard.down('KeyI');
+  await wait(hub, () => window.__jjHub.inspect().filter((s) => s.seat !== null).length === 6, undefined, 90_000);
+  for (let i = 0; i < 4; i++) await hub.evaluate((i) => window.__padSet(i, [0, 0, 0, 0]), i);
+  await hub.keyboard.up('KeyW');
+  await hub.keyboard.up('KeyI');
+  const src = await hubState(hub);
+  assert.equal(new Set(src.map((s) => s.seat)).size, 6, 'six distinct seats');
+  assert.deepEqual(src.map((s) => s.kind).sort(), ['keys', 'keys', 'pad', 'pad', 'pad', 'pad']);
+  await wait(host, () => window.__jjTest.observe().host.seats.length === 6);
+  console.log(`# bytes ${JSON.stringify(src.map((s) => [s.id, s.stats?.stateBytes, s.stats?.batches]))}`);
+
+  // Only pad 1 and keys B drive; the other four stay where they are.
+  const obs = () => host.evaluate(() => window.__jjTest.observe());
+  const start = await obs();
+  await hub.evaluate(() => window.__padSet(1, [0, -1, 0, 0]));
+  await hub.keyboard.down('KeyI');
+  await host.waitForTimeout(6000);
+  const now = await obs();
+  const ep = Object.fromEntries(src.map((s) => [s.id, s.endpoint]));
+  const carOf = (state, e) => state.cars.find((c) => c.car === state.host.seats.find((s) => s.endpoint === e)?.car);
+  const moved = (e) => Math.hypot(...carOf(now, e).position.map((v, i) => v - carOf(start, e).position[i]));
+  assert.ok(moved(ep.pad1) > 5, 'pad 1 drove its car');
+  assert.ok(moved(ep.keys2) > 5, 'keys B drove its car');
+  for (const id of ['pad0', 'pad2', 'pad3', 'keys1']) assert.ok(moved(ep[id]) < 1.5, `${id} stayed put (${moved(ep[id]).toFixed(2)} m)`);
+  await hub.keyboard.up('KeyI');
+  await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0]));
+
+  // Unplug pad 2: only its row and seat change.
+  await hub.evaluate(() => window.__padUnplug(2));
+  await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad2').state === 'unplugged');
+  const after2 = await hubState(hub);
+  for (const s of after2) assert.equal(s.state === 'unplugged', s.id === 'pad2', `${s.id} is ${s.state}`);
+  assert.match(await hub.locator('[data-source=pad2]').innerText(), /Unplugged/);
+  assert.match(await hub.locator('[data-source=pad0]').innerText(), /Connected|Ready/);
+  await host.waitForTimeout(3500);
+  const hostSeats = await seats(host).catch(() => null);
+  if (hostSeats) assert.ok(hostSeats.length === 6, 'no seat was lost');
+});
+
+test('each source leaves on its own; the hub shows seat, kind, state and path; Identify flashes that row', { timeout: 240_000 }, async () => {
+  const { host, joinUrl } = await openHost('room');
+  const hub = await hubPage(joinUrl);
+  await hub.evaluate(() => {
+    window.__padAdd(0);
+    window.__padAdd(1);
+    window.__padSet(0, [0, 0, 1, 0]);
+    window.__padSet(1, [0, 0, 1, 0]);
+  });
+  await wait(hub, () => window.__jjHub.inspect().filter((s) => s.kind === 'pad' && s.seat !== null).length === 2, undefined, 90_000);
+  await hub.evaluate(() => {
+    window.__padSet(0, [0, 0, 0, 0]);
+    window.__padSet(1, [0, 0, 0, 0]);
+  });
+  await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  // The row shows kind, state and the connection path.
+  await wait(hub, () => /Direct|Relay/.test(document.querySelector('[data-source=pad0] [data-path]')?.textContent ?? ''), undefined, 15_000);
+  const row = await hub.locator('[data-source=pad0]').innerText();
+  assert.match(row, /Pad 1/);
+  // Identify (View/Select = button 8) flashes pad 0's row in its colour, and the TV gets that seat's Identify.
+  await hub.waitForTimeout(3300); // past the seat reducer's join-flash window
+  const seat0 = (await hubState(hub)).find((s) => s.id === 'pad0').seat;
+  await hub.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: true }));
+  await hub.locator('[data-source=pad0].flash').waitFor({ timeout: 5000 });
+  assert.equal(await hub.locator('[data-source=pad1].flash').count(), 0, 'only that row flashes');
+  await wait(host, (n) => window.__jjRoom.events().some((e) => e.event?.Identify), seat0, 10_000);
+  await hub.evaluate(() => window.__padSet(0, [0, 0, 0, 0], { 8: false }));
+  // Leave: hold View/Select + Start on pad 1; pad 0 keeps its seat.
+  await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0], { 8: true, 9: true }));
+  await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad1').state === 'left', undefined, 8000);
+  await hub.evaluate(() => window.__padSet(1, [0, 0, 0, 0], { 8: false, 9: false }));
+  assert.equal((await hubState(hub)).find((s) => s.id === 'pad0').state, 'connected');
+  // And it can rejoin by itself with a press.
+  await hub.evaluate(() => window.__padSet(1, [0, 0, 1, 0]));
+  await wait(hub, () => window.__jjHub.inspect().find((s) => s.id === 'pad1').seat !== null && window.__jjHub.inspect().find((s) => s.id === 'pad1').state === 'connected', undefined, 60_000);
+});
+
+test('a phone with one paired pad holds two seats and shows the connection badge', { timeout: 240_000 }, async () => {
+  const { host, joinUrl } = await openHost('room');
+  const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const page = await ctx.newPage();
+  await page.addInitScript(PADS);
+  await page.goto(joinUrl);
+  await wait(page, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  await page.getByRole('button', { name: 'Join the race' }).click();
+  await wait(page, () => window.__jjController.inspect().phase === 'playing');
+  await wait(page, () => /Direct|Relay/.test(document.querySelector('[data-hud=conn]')?.textContent ?? ''), undefined, 15_000);
+  await page.evaluate(() => {
+    window.__padAdd(0);
+    window.__padSet(0, [0, 0, 1, 0]);
+  });
+  await wait(page, () => window.__jjHub?.inspect().find((s) => s.kind === 'pad')?.seat != null, undefined, 90_000);
+  await page.evaluate(() => window.__padSet(0, [0, 0, 0, 0]));
+  await wait(host, () => window.__jjRoom.view().seats.length === 2);
+  const src = await page.evaluate(() => window.__jjHub.inspect());
+  assert.deepEqual(src.map((s) => s.kind).sort(), ['pad', 'touch']);
+  assert.notEqual(src[0].seat ?? 'x', src[1].seat);
+});
