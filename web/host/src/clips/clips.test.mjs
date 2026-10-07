@@ -141,8 +141,8 @@ test('F07 AC4: saving a clip never pauses or stutters the host (frame time recor
     await s.hold(false);
   });
   await page.waitForTimeout(500);
-  const before = await page.evaluate(() => ({ tick: 0, pacing: window.__jjTest.clips.meter.pacing(), status: window.__jjTest.status() }));
-  const tick0 = (await before.status).tick;
+  const before = await page.evaluate(async () => ({ pacing: window.__jjTest.clips.meter.pacing(), tick: (await window.__jjTest.status()).tick }));
+  const tick0 = before.tick;
   const saves = await page.evaluate(async () => {
     const rows = [];
     for (let i = 0; i < 5; i++) {
