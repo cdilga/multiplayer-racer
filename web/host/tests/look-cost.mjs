@@ -1,6 +1,6 @@
 // P1-R10 / P1-R12 frame-cost delta at 24 tiles, HEADED on this machine's GPU (never SwiftShader numbers). The renderer bench
 // (host/?bench: 24 Cruz Missiles x 24 chase tiles, each frame waited to GPU completion) with the look and effects on, against
-// the same page with them off (`?look=plain&fx=off`: plain materials, no ink hulls, no particles). Interleaved, repeated, so
+// the same page with them off (the default: plain materials, no ink hulls, no particles). Interleaved, repeated, so
 // drift between runs shows. The bar (P1-R10): the 24-tile scene pass within U05's measurement + 20 %
 // (art/ui/accepted/2026-10-07/poc/world/README.md: 12.4 ms GPU at 1080p, 24 tiles, WebGPU M1 Pro, timestamp queries).
 //   npm --prefix web run build && node web/host/tests/look-cost.mjs [--channel chrome] [--repeats 3] [--out docs/evidence/P1-R10/cost.json]
@@ -35,7 +35,7 @@ async function measure(query, w, h) {
 const rows = [];
 for (const [w, h] of [[1920, 1080], [3840, 2160]]) {
   for (let k = 0; k < repeats; k++) {
-    for (const [label, query] of [['plain', '&look=plain&fx=off'], ['look+fx', '']]) {
+    for (const [label, query] of [['plain', ''], ['look+fx', '&look=on']]) {
       const r = await measure(query, w, h);
       rows.push({ label, run: k + 1, ...r });
       console.log(label, w, h, JSON.stringify({ ms_median: r.ms_median, ms_p90: r.ms_p90, ms_throughput: r.ms_throughput, draws: r.draws_per_frame }));

@@ -12,6 +12,8 @@ import { PNG } from 'pngjs';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
+// Evidence goes to $JJ_EVIDENCE_DIR (eris.sh --run sets it to the run dir: nobody writes into eris's clone), else docs/evidence.
+const evidenceRoot = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence');
 const args = process.argv.slice(2);
 const only = args.filter((a) => !a.startsWith('--'));
 const want = (k) => !only.length || only.includes(k);
@@ -48,7 +50,7 @@ const LOOK = [
 
 async function raceShot(spec, out, report) {
   const [name, players, w, h, where] = spec;
-  const { page, errors } = await openPage('?test=live&room&res=1&autores=off&laps=1', w, h);
+  const { page, errors } = await openPage('?test=live&room&look=on&res=1&autores=off&laps=1', w, h);
   await page.waitForFunction(() => window.__jjPrepare !== undefined, null, { timeout: 60_000 });
   for (let k = 0; k < players; k++) await page.evaluate((n) => window.__jjTest.join(n, { lobby: true }), `Driver ${k + 1}`);
   await page.evaluate(() => window.__jjRoom.start());
@@ -102,7 +104,7 @@ async function raceShot(spec, out, report) {
 
 // ---- identity: the engine's lit paint against the flat badge colours ----------------------------------------------------
 async function identity(out, report) {
-  const { page, errors } = await openPage('?synthetic=8&damage=strip&map&res=1&autores=off', 1920, 1080);
+  const { page, errors } = await openPage('?synthetic=8&damage=strip&map&look=on&res=1&autores=off', 1920, 1080);
   await page.waitForFunction(() => window.__jjRender?.stats().frames > 5);
   await sleep(1200);
   await page.addStyleTag({ content: HIDE });
@@ -158,7 +160,7 @@ const FX = [
 ];
 
 async function fxShot([name, tiles, follow, families], out, report, reduced = false) {
-  const q = `?synthetic=${tiles === 0 ? 12 : Math.max(24, tiles)}&map&fxdemo&res=1&autores=off${tiles ? `&tiles=${tiles}` : ''}${follow?.length ? `&follow=${follow.join(',')}` : ''}`;
+  const q = `?synthetic=${tiles === 0 ? 12 : Math.max(24, tiles)}&map&look=on&fxdemo&res=1&autores=off${tiles ? `&tiles=${tiles}` : ''}${follow?.length ? `&follow=${follow.join(',')}` : ''}`;
   const { page, errors } = await openPage(q, 1920, 1080);
   if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addStyleTag({ content: HIDE });
@@ -179,7 +181,7 @@ async function fxShot([name, tiles, follow, families], out, report, reduced = fa
 
 const done = [];
 if (want('look')) {
-  const out = join(repo, 'docs/evidence/P1-R10/captures');
+  const out = join(evidenceRoot, 'P1-R10/captures');
   await mkdir(out, { recursive: true });
   const report = { mode, shots: [] };
   for (const s of LOOK.filter((x) => !process.env.JJ_SHOT || process.env.JJ_SHOT.split(',').includes(x[0]))) await raceShot(s, out, report);
@@ -187,7 +189,7 @@ if (want('look')) {
   done.push('look');
 }
 if (want('identity')) {
-  const out = join(repo, 'docs/evidence/P1-R10/captures');
+  const out = join(evidenceRoot, 'P1-R10/captures');
   await mkdir(out, { recursive: true });
   const report = { mode };
   await identity(out, report);
@@ -195,7 +197,7 @@ if (want('identity')) {
   done.push('identity');
 }
 if (want('fx')) {
-  const out = join(repo, 'docs/evidence/P1-R12/captures');
+  const out = join(evidenceRoot, 'P1-R12/captures');
   await mkdir(out, { recursive: true });
   const report = { mode, shots: [] };
   for (const s of FX.filter((x) => !process.env.JJ_SHOT || process.env.JJ_SHOT.split(',').includes(x[0]))) await fxShot(s, out, report);

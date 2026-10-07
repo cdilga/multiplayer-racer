@@ -65,7 +65,7 @@ test('driving: dust by surface (light on tarmac, red on dirt, gravel spray), tyr
   assert.ok(tarmac.pool.spawned.dust > 0, 'tarmac at speed kicks a little dust');
   assert.ok(dirt.pool.spawned.dust > tarmac.pool.spawned.dust * 3, 'dirt kicks far more than tarmac');
   const dustColour = (e) => colourOf(e, 'dust');
-  assert.ok(dustColour(dirt)[0] > dustColour(dirt)[2] * 3, 'dirt dust is red-earth');
+  assert.ok(dustColour(dirt)[0] > dustColour(dirt)[2] * 2, 'dirt dust is warm earth, lighter than the ground it lies on');
   assert.ok(Math.abs(dustColour(tarmac)[0] - dustColour(tarmac)[2]) < 0.1, 'tarmac dust is grey');
   // Gravel adds pebbles: ballistic dots with gravity.
   assert.ok([...gravel.pool.grav.slice(0, gravel.pool.n)].some((g) => g > 5), 'gravel throws pebbles');

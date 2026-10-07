@@ -58,9 +58,9 @@ test('a car with loose and detached parts renders in adjacent tiles at different
   assert.equal(v.drawsPerTile, 8, 'core, front, back, four doors and one wheel type');
   // Two tiles: each draws its LOD class's 8 part types, the visible interior blocks (engine and cabin, P1-V03) and the
   // ground and grid (no other LOD's meshes); the shadow map is drawn once for the frame (8 part types), not per tile.
-  // P1-R10/R12 add, per tile: one ink hull per part type (8) and the effects' layers that have something alive.
-  assert.equal(v.hulls, 3 * 8, 'a hull per part mesh');
-  assert.equal(s.drawCalls, 2 * (8 + 8 + 2 + 2 + v.fx.drawsPerTile) + 8, `draws ${s.drawCalls}`);
+  assert.equal(v.hulls, 3 * 8, 'a hull per part mesh (hidden unless ?look=on)');
+  // The look is opt-in (?look=on); this page is the default: no hulls, no effects.
+  assert.equal(s.drawCalls, 2 * (8 + 2 + 2) + 8, `draws ${s.drawCalls}`);
   const byPart = Object.fromEntries(v.parts.map((p) => [p.part, p]));
   const paint = byPart.core.colour;
   // Detached parts keep the owner's paint and lie away from the car; intact ones sit on it.

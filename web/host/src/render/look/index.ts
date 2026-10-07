@@ -72,8 +72,10 @@ export const look = {
   uniforms,
   /** The tier the last `tile` call chose. */
   tier: tierFor(1080) as Tier,
-  /** Off for captures that want the plain materials (`?look=plain`). */
-  enabled: true,
+  /** On with `?look=on` on the WebGLRenderer route (opt-in until verified). */
+  enabled: false,
+  /** The effects' switch: the look's, or `?fx=on` alone. */
+  fxEnabled: false,
   /** Switches the shared uniforms for a viewport `w` x `h` device pixels. */
   tile(w: number, h: number): Tier {
     const t = (this.tier = tierFor(h));
@@ -103,7 +105,7 @@ const GRIT = /* glsl */ `
   float lum = dot( diffuseColor.rgb, ${W} );
   vec3 sandy = mix( vec3( lum ), vec3( 0.88, 0.74, 0.55 ) * ( lum + 0.25 ), 0.55 );
   float blotch = smoothstep( 0.42, 0.58, jjNoise( vJjWorld * 0.35 ) );
-  diffuseColor.rgb = mix( diffuseColor.rgb, sandy, 0.16 * uGrit * ( blotch * 0.6 + 0.4 ) );
+  diffuseColor.rgb = mix( diffuseColor.rgb, sandy, 0.08 * uGrit * ( blotch * 0.6 + 0.4 ) );
   vec3 id = floor( vJjWorld * 5.0 ); float fleck = jjHash( id );
   float fade = 1.0 - smoothstep( 0.25, 0.6, length( fwidth( vJjWorld * 5.0 ) ) );
   diffuseColor.rgb *= 1.0 - step( 0.9, fleck ) * 0.08 * uGrit * fade;
@@ -130,7 +132,8 @@ export interface ToonOptions {
  *  `onBeforeCompile` (the vehicles' paint key). Idempotent. */
 export function toon<M extends Material>(material: M, opts: ToonOptions = {}): M {
   const m = material as M & { jjToon?: boolean };
-  if (m.jjToon) return material;
+  // Opt-in (`?look=on`, set in backend.ts before any material exists): otherwise the material is left exactly as it was.
+  if (m.jjToon || !look.enabled) return material;
   m.jjToon = true;
   const prev = material.onBeforeCompile;
   const prevKey = material.customProgramCacheKey?.() ?? '';
@@ -341,7 +344,7 @@ let skyTexture: CanvasTexture | null = null;
  *  cumulus 6-18 degrees up (accepted world look). A background texture stays out of fog and lighting. */
 export function sky(): CanvasTexture {
   if (skyTexture) return skyTexture;
-  const [w, h] = [2048, 1024];
+  const [w, h] = [4096, 2048];
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -354,43 +357,49 @@ export function sky(): CanvasTexture {
   grad.addColorStop(1, '#c9895a');
   g.fillStyle = grad;
   g.fillRect(0, 0, w, h);
-  // Equirect: row = (90 - elevation) / 180 of the height.
+  // Equirect: 4096 px is 360 degrees, so 11.4 px a degree; row = (90 - elevation) / 180 of the height.
   const rowOf = (elevDeg: number) => ((90 - elevDeg) / 180) * h;
   let seed = 7;
   const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
-  g.lineWidth = 5;
-  g.strokeStyle = INK;
   g.lineJoin = 'round';
-  for (let k = 0; k < 26; k++) {
-    const x = (k / 26) * w + rnd() * 40;
-    const y = rowOf(7 + rnd() * 12);
-    const s = 34 + rnd() * 46;
+  const clouds = 34;
+  for (let k = 0; k < clouds; k++) {
+    const x = (k / clouds) * w + rnd() * 50;
+    const y = rowOf(8 + rnd() * 14);
+    const s = 14 + rnd() * 16; // a puff radius: 1.2 to 2.7 degrees
     const puffs: [number, number, number][] = [
       [-1.1, 0.1, 0.7],
       [-0.4, -0.35, 0.95],
       [0.5, -0.2, 0.85],
       [1.2, 0.12, 0.65],
     ];
-    g.beginPath();
-    for (const [dx, dy, r] of puffs) {
-      g.moveTo(x + dx * s + r * s, y + dy * s);
-      g.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
-    }
-    g.fillStyle = '#f4ecd8';
-    g.fill();
-    g.stroke();
-    // The flat underside: a paper-shade band so it reads as a toon cloud.
-    g.save();
-    g.beginPath();
-    g.rect(x - 2.4 * s, y + 0.32 * s, 4.8 * s, 1.4 * s);
-    g.clip();
-    g.fillStyle = '#d9cdb2';
-    for (const [dx, dy, r] of puffs) {
+    for (const ox of [0, -w, w]) {
+      // The ink first (every puff stroked fat), then the fill over it: only the cloud's outer outline survives.
+      g.fillStyle = INK;
+      for (const [dx, dy, r] of puffs) {
+        g.beginPath();
+        g.arc(x + ox + dx * s, y + dy * s, r * s + 3.5, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.fillStyle = '#f4ecd8';
+      for (const [dx, dy, r] of puffs) {
+        g.beginPath();
+        g.arc(x + ox + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
+        g.fill();
+      }
+      // The flat underside: a paper-shade band so it reads as a toon cloud.
+      g.save();
       g.beginPath();
-      g.arc(x + dx * s, y + dy * s, r * s - 2, 0, Math.PI * 2);
-      g.fill();
+      g.rect(x + ox - 2.6 * s, y + 0.3 * s, 5.2 * s, 1.4 * s);
+      g.clip();
+      g.fillStyle = '#d9cdb2';
+      for (const [dx, dy, r] of puffs) {
+        g.beginPath();
+        g.arc(x + ox + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.restore();
     }
-    g.restore();
   }
   skyTexture = new CanvasTexture(c);
   skyTexture.mapping = EquirectangularReflectionMapping;

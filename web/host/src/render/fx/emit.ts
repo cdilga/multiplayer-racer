@@ -26,8 +26,8 @@ export interface FxInput {
 /** Linear-light colours of the palette (art/ui/tokens.json world colours, then brightened for dust). */
 const C = {
   tarmacDust: [0.62, 0.6, 0.57] as [number, number, number],
-  dirtDust: [0.7, 0.28, 0.1] as [number, number, number],
-  dirtDustEnd: [0.85, 0.52, 0.3] as [number, number, number],
+  dirtDust: [0.82, 0.52, 0.3] as [number, number, number],
+  dirtDustEnd: [0.86, 0.68, 0.5] as [number, number, number],
   gravel: [0.42, 0.32, 0.22] as [number, number, number],
   smoke: [0.92, 0.9, 0.86] as [number, number, number],
   smokeEnd: [0.62, 0.6, 0.58] as [number, number, number],
@@ -174,8 +174,8 @@ export class Emitter {
             this.spawn({
               family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],
               vx: -vel[0] * 0.2 + back[0] * 1.2 + this.jitter(0.9), vy: 0.5 + this.rand() * 0.7, vz: -vel[2] * 0.2 + back[2] * 1.2 + this.jitter(0.9),
-              life: 0.9 + this.rand() * 0.6, size0: 0.35, size1: surface === 1 ? 1.7 : 1.1, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd,
-              alpha: surface === 1 ? 0.5 : 0.32, drag: 0.35, gravity: -0.15, rim: 0.6,
+              life: 0.9 + this.rand() * 0.6, size0: 0.55, size1: surface === 1 ? 2.6 : 1.7, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd,
+              alpha: surface === 1 ? 0.8 : 0.5, drag: 0.35, gravity: -0.15, rim: 0.6,
             });
           });
           if (surface === 2)
@@ -197,7 +197,7 @@ export class Emitter {
             this.spawn({
               family: 'tyre-smoke', blend: 'alpha', x: w[0], y: w[1], z: w[2],
               vx: -vel[0] * 0.1 + this.jitter(0.7), vy: 0.7 + this.rand() * 0.8, vz: -vel[2] * 0.1 + this.jitter(0.7),
-              life: 1.1 + this.rand() * 0.6, size0: 0.4, size1: 1.9, c0: C.smoke, c1: C.smokeEnd, alpha: 0.5, drag: 0.4, gravity: -0.2, rim: 0.7,
+              life: 1.1 + this.rand() * 0.6, size0: 0.6, size1: 2.8, c0: C.smoke, c1: C.smokeEnd, alpha: 0.8, drag: 0.4, gravity: -0.2, rim: 0.7,
             });
           });
       }
@@ -210,8 +210,8 @@ export class Emitter {
             const back = rotate(0, 0, -1);
             this.spawn({
               family: 'boost', blend: 'add', x: e[0], y: e[1], z: e[2],
-              vx: back[0] * 7 + vel[0] * 0.6 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 7 + vel[2] * 0.6 + this.jitter(0.4),
-              life: 0.22 + this.rand() * 0.08, size0: 0.42, size1: 0.1, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15,
+              vx: back[0] * 7 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 7 + vel[2] * 0.92 + this.jitter(0.4),
+              life: 0.3 + this.rand() * 0.1, size0: 0.6, size1: 0.14, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15,
             });
           });
       }
@@ -239,7 +239,7 @@ export class Emitter {
           this.spawn({
             family: 'damage-smoke', blend: 'alpha', x: e[0], y: e[1], z: e[2],
             vx: vel[0] * 0.5 + this.jitter(0.25), vy: 1.3 + this.rand() * 0.6, vz: vel[2] * 0.5 + this.jitter(0.25),
-            life: 1.5 + this.rand(), size0: 0.3, size1: 1.2, c0: C.dark, c1: C.darkEnd, alpha: 0.5 + 0.2 * k, drag: 0.5, gravity: -0.4, rim: 0.8,
+            life: 1.5 + this.rand(), size0: 0.5, size1: 1.8, c0: C.dark, c1: C.darkEnd, alpha: 0.65 + 0.2 * k, drag: 0.5, gravity: -0.4, rim: 0.8,
           });
         });
       }
@@ -266,19 +266,19 @@ export class Emitter {
       this.rate(st, 'fire', 38, dt, () => {
         this.spawn({
           family: 'wreck-fire', blend: 'add', x: hx + this.jitter(0.7), y: hy + 0.7 + this.rand() * 0.2, z: hz + this.jitter(1.1),
-          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 0.55, size1: 0.12,
-          c0: C.flame, c1: C.flameEnd, alpha: 0.85, drag: 0.6,
+          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.2, size1: 0.3,
+          c0: C.flame, c1: C.flameEnd, alpha: 0.9, drag: 0.6,
         });
       });
       this.rate(st, 'wsmoke', 9, dt, () => {
         this.spawn({
           family: 'wreck-fire', blend: 'alpha', x: hx + this.jitter(0.6), y: hy + 1.0, z: hz + this.jitter(0.9),
-          vx: this.jitter(0.3), vy: 1.6 + this.rand() * 0.7, vz: this.jitter(0.3), life: 2.4, size0: 0.5, size1: 2.0, c0: C.dark, c1: C.darkEnd, alpha: 0.55,
+          vx: this.jitter(0.3), vy: 1.6 + this.rand() * 0.7, vz: this.jitter(0.3), life: 2.4, size0: 1.0, size1: 3.6, c0: C.dark, c1: C.darkEnd, alpha: 0.55,
           drag: 0.6, gravity: -0.3, rim: 0.8,
         });
       });
       // The smoulder: a slow pulsing glow over the husk, one sprite per frame.
-      if (dt > 0) this.glow([hx, hy + 0.55, hz], 1.5 + 0.2 * Math.sin(f.tick / 14), 0.28, C.flameEnd, dt, 'wreck-fire');
+      if (dt > 0) this.glow([hx, hy + 0.55, hz], 2.6 + 0.4 * Math.sin(f.tick / 14), 0.35, C.flameEnd, dt, 'wreck-fire');
     }
   }
 
@@ -310,7 +310,7 @@ export class Emitter {
     this.spawn({
       family: 'sparks', blend: 'add', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.35 + this.rand() * 0.35, size0: 0.085, size1: 0.03, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12,
+      life: 0.35 + this.rand() * 0.35, size0: 0.16, size1: 0.05, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12,
     });
   }
 
@@ -327,7 +327,7 @@ export class Emitter {
       this.spawn({
         family: 'landing', blend: 'alpha', x: x + Math.cos(a) * 0.6, y: gy, z: z + Math.sin(a) * 0.6,
         vx: Math.cos(a) * (2 + 2.5 * k), vy: 0.4 + this.rand() * 0.6, vz: Math.sin(a) * (2 + 2.5 * k),
-        life: 0.8 + 0.3 * k, size0: 0.3, size1: 1.0 + 0.9 * k, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd, alpha: 0.5, drag: 0.2, gravity: -0.1, rim: 0.6,
+        life: 0.8 + 0.3 * k, size0: 0.5, size1: 1.6 + 1.2 * k, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd, alpha: 0.75, drag: 0.2, gravity: -0.1, rim: 0.6,
       });
     }
   }

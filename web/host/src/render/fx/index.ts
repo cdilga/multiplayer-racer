@@ -57,7 +57,7 @@ void main() {
   if ( uAdd > 0.5 ) {
     // Emissive: a hot core and a soft edge (additive, so it only ever adds light).
     float core = 1.0 - smoothstep( 0.0, 1.0, r );
-    gl_FragColor = vec4( c * ( 0.55 + 0.9 * core * core ), a * core );
+    gl_FragColor = vec4( c * ( 0.5 + 0.5 * core * core ), a * core );
   } else {
     // A comic puff: flat body, a lighter lit cap toward the sun, an ink rim.
     float rim = vMisc.x;
@@ -124,12 +124,11 @@ export class Fx {
   private last = 0;
   /** Ground height for bounces; the map renderer's when one is loaded. */
   groundAt: (x: number, z: number) => number = () => 0;
-  /** Off for captures of the plain look (`?fx=off`). */
-  enabled = true;
+  /** On with `?look=on` or `?fx=on` (backend.ts). */
+  enabled = look.fxEnabled;
 
   constructor(private scene: Scene) {
     scene.add(this.alpha.mesh, this.add.mesh);
-    if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('fx') === 'off') this.enabled = false;
     if (typeof matchMedia === 'function') {
       const q = matchMedia('(prefers-reduced-motion: reduce)');
       this.emitter.reducedMotion = q.matches;

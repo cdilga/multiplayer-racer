@@ -63,8 +63,11 @@ function lookFor(r: { getViewport?: (v: Vector4) => Vector4 }, scene: Scene): vo
 
 export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<Backend> {
   const antialias = opts.antialias ?? true;
-  // The look's materials and hulls are GLSL (the WebGLRenderer route); the WebGPU paths draw the plain materials until a TSL port.
-  look.enabled = kind === 'webgl' && (typeof location === 'undefined' || new URLSearchParams(location.search).get('look') !== 'plain');
+  // The look and the effects are GLSL (the WebGLRenderer route) and opt-in (`?look=on`, `?fx=on` for the effects alone) until
+  // their captures are verified (P1-R10/R12); the WebGPU paths draw the plain materials until a TSL port.
+  const q = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
+  look.enabled = kind === 'webgl' && q.get('look') === 'on';
+  look.fxEnabled = kind === 'webgl' && q.get('fx') !== 'off' && (look.enabled || q.get('fx') === 'on');
   if (kind === 'webgl') {
     const r = new WebGLRenderer({ canvas, antialias, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     r.outputColorSpace = SRGB;
