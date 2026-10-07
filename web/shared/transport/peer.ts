@@ -4,6 +4,7 @@
 // 3 s `disconnected` (or a page resume) → `restartIce()` with a new offer at gen + 1; still not connected 5 s later →
 // a new peer connection at gen + 1. The server never sees gameplay (R77); nothing here caps peers (R66).
 import { api, type IceServer, newId, newSecret, secretHash, type SignalMessage, withBackoff } from './api';
+import { underBase } from '../src/base';
 import { SignalStream, type StreamState } from './sse';
 import { type PathStats, selectedPath } from './stats';
 
@@ -407,7 +408,9 @@ export class HostHub {
 
   private remember(): void {
     try {
-      sessionStorage.setItem(HOST_KEY, JSON.stringify({ roomId: this.roomId, code: this.code }));
+      // The secret too: a reload of this tab ends the room it leaves behind (endPrevious), even if the unload's
+      // keepalive end never got out.
+      sessionStorage.setItem(HOST_KEY, JSON.stringify({ roomId: this.roomId, code: this.code, secret: this.secret }));
     } catch {
       // Private mode: nothing to keep.
     }
@@ -544,6 +547,29 @@ export class HostHub {
   /** Test hook: closes one controller's connection from the host side, as a network loss would. */
   dropPeer(endpointId: string): void {
     this.peers.get(endpointId)?.pc.close();
+  }
+
+  /** The page is going away (reload, close, navigate; R84: a dead host ends the room): a best-effort `POST end` that
+   *  survives unload (keepalive), so the phones show "That room has ended" instead of waiting out the liveness timer. */
+  endOnUnload(): void {
+    if (!this.roomId) return;
+    try {
+      void fetch(underBase(`api/v1/rooms/${this.roomId}/end`), { method: 'POST', keepalive: true, headers: { authorization: `Bearer ${this.secret}` } }).catch(() => undefined);
+    } catch {
+      // Unload: nothing more to do.
+    }
+  }
+
+  /** On a fresh page: if this tab hosted a room before (a reload), end it before opening the next one. */
+  static async endPrevious(): Promise<void> {
+    let prev: { roomId?: string; secret?: string } = {};
+    try {
+      prev = JSON.parse(sessionStorage.getItem(HOST_KEY) ?? '{}');
+      sessionStorage.removeItem(HOST_KEY);
+    } catch {
+      return;
+    }
+    if (prev.roomId && prev.secret) await api.end(prev.roomId, prev.secret).catch(() => undefined);
   }
 
   /** Ends the room for everyone (Disband): a `bye` to each controller, then `POST end`. */

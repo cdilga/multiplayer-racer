@@ -16,6 +16,7 @@ import { MapRenderer } from './render/map/map';
 import { paperQrCard } from '../../shared/ui';
 import { NetBridge } from './net/bridge';
 import { mountRoundScreens, type RoundScreens } from './round/screens';
+import { HostHub } from '../../shared/transport';
 import { mountOverlay } from './render/overlay';
 import { loadChoice, saveChoice } from './render/resolution';
 import { mountResolutionSetting } from './render/settings';
@@ -239,7 +240,10 @@ async function openRoom(client: SimClient, world: World, params: URLSearchParams
   const bridge = new NetBridge(client, () => {}, { iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   world.tiles = { count: 1, auto: true };
   try {
+    // A reload ends the room this tab left behind, then opens a new one; leaving the page ends this one (R84).
+    await HostHub.endPrevious();
     await bridge.open();
+    addEventListener('pagehide', () => bridge.hub.endOnUnload());
   } catch (e) {
     // No server (a bare dev server): drive locally with pads and keys only.
     console.warn('jj: no room server; free drive is local only', e);
