@@ -16,7 +16,7 @@ const repo = resolve(import.meta.dirname, '../../..');
 const only = process.argv.slice(2);
 // [name, players, width, height, biome segment, fraction along it]
 const jobs = [
-  { id: 'town', dir: 'P1-M04', recipe: 'town', shots: [['street-tv-1080p', 1, 1920, 1080, 'town', 'frontage'], ['street-tiles-1080p', 4, 1920, 1080, 'town', 'frontage'], ['street-laptop-1366', 4, 1366, 768, 'town', 'frontage'], ['street-phone-915x412', 1, 915, 412, 'town', 'frontage'], ['street-phone-412x915', 2, 412, 915, 'town', 'frontage']] },
+  { id: 'town', dir: 'P1-M04', recipe: 'town', shots: [['street-tv-1080p', 1, 1920, 1080, 'town', 'frontage'], ['street-tiles-1080p', 4, 1920, 1080, 'town', 'frontage'], ['street-laptop-1366', 4, 1366, 768, 'town', 'frontage'], ['street-phone-915x412', 1, 915, 412, 'town', 'frontage'], ['street-phone-412x915', 2, 412, 915, 'town', 'frontage'], ['junction-sign-tv-1080p', 1, 1920, 1080, 'town', 'junction']] },
   { id: 'rocks', dir: 'P1-M05', recipe: 'rocks', shots: [['domes-tv-1080p', 1, 1920, 1080, 'rocks', 0.5], ['domes-tiles-1080p', 4, 1920, 1080, 'rocks', 0.5], ['domes-laptop-1366', 4, 1366, 768, 'rocks', 0.5], ['jump-tv-1080p', 1, 1920, 1080, 'rocks', 'jump']] },
   { id: 'dirt', dir: 'P1-M06', recipe: 'outback-dirt', shots: [['track-tv-1080p', 1, 1920, 1080, 'outback-dirt', 0.5], ['track-tiles-1080p', 4, 1920, 1080, 'outback-dirt', 0.5], ['track-laptop-1366', 4, 1366, 768, 'outback-dirt', 0.5]] },
   { id: 'bitumen', dir: 'P1-M07', recipe: 'outback-bitumen', shots: [['highway-tv-1080p', 1, 1920, 1080, 'outback-bitumen', 0.5], ['highway-tiles-1080p', 4, 1920, 1080, 'outback-bitumen', 0.5], ['highway-laptop-1366', 4, 1366, 768, 'outback-bitumen', 0.5]] },
@@ -134,6 +134,14 @@ async function shot(job, spec, out, report, rerolls = 0) {
           }
           const score = Math.min(sides[0], sides[1]) * 3 + sides[0] + sides[1] + (signs ? 4 : 0) + Math.min(poles, 3);
           if (score > bestScore) [bestScore, target] = [score, i];
+        }
+      } else if (f === 'junction') {
+        // The rule-placed direction sign at a junction, about 25 m ahead of the car.
+        const s = info.pieces.filter((p) => /junction/.test(p.id)).map((p) => nearest([p.x, 0, p.z])).find((i) => i > seg.from + 12 && i < seg.to);
+        if (s !== undefined) {
+          let back = s;
+          while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 25) back--;
+          target = back;
         }
       } else if (f === 'jump') {
         const j = info.features.filter((q) => q.kind === 'jump').map((q) => nearest([q.x, 0, q.z]))[0];

@@ -116,14 +116,6 @@ const STREET: &[Lineside] = &[
             (16.0, 26.0),
         )
     },
-    // The Olgas on the horizon (the reference's distant domes): M05's dome piece, consumed through the registry, far out.
-    Lineside {
-        collides: true,
-        avoid_corners: false,
-        yaw: Yaw::Random,
-        params: &[("radiusMm", 18_000, 36_000), ("heightCm", 4_000, 8_000)],
-        ..rule("rocks/dome", (160.0, 280.0), Side::Either, (180.0, 320.0))
-    },
 ];
 
 const SIGNS: &[SignRule] = &[
