@@ -31,12 +31,19 @@ independent review is `fresh-eyes.md`; the headed Mac cost receipt is `cost.json
 - Loop 2: the boost was two round blobs; now a stream of small fast sprites, a streak behind each exhaust.
 
 ## Remaining defects
-- **Independent review (`fresh-eyes.md`): FAIL.** Open from it: wreck fire and glow too weak (one small blob from the overview); damage smoke, detach burst, impact flash and sparks too weak to read; the 4- and 24-tile shots don't show most families; puffs read as flat translucent discs without the comic ink line; dirt dust reads tan, not red; the reduced-motion frame isn't visibly calmer. These keep AC1 and AC2 open.
-- Sparks at chase distance are small: they read on the car they come from but not strongly from a car behind (the demo's hit is on
-  another car).
+- **Open, blocking AC1/AC2 (2026-10-08, round 6 on eris run bc-r10-11, commit 1f250489):** the effects demo's scripted hits
+  (cars 5, 11, 17, 23) spawn flashes and sparks that the pool reports alive (320 sparks, 36 impact sprites at the held frame)
+  but that don't render where the hit is: `captures/impact-sparks-1tile.jpg`, `-reduced.jpg` and `hits-4tiles.jpg` show no
+  flash at the followed car. `Fx.inspect().lastImpact`/`impactCars` and the capture's frame hold (`__jjRender.hold()`) are in
+  place to find it; the cause is not found yet. A real in-race crash does render sparks, a flash and dust
+  (`captures/real-race-crash-4tiles.jpg`, the town tiles, top right).
+- Fixed this round from the round-1 review, pending a fresh review: red dirt dust, an ink ring on every puff, stronger fire,
+  damage smoke and detach bursts, every family covered by shots at 1, 4 and 24 tiles (`driving-4tiles`, `hits-4tiles`,
+  `wreck-fire-4tiles`, `all-24tiles`), the husk in view for wreck-fire shots, normal and reduced-motion hit shots from the same
+  moment.
 - The overview wreck fire reads as a glow, not flames, at that distance.
 
 ## Not covered
-- Effects in a real race (the demo field drives the families on purpose; the race path is the same emitter fed by snapshots).
+- Effects in a real race beyond the one crash above (the demo field drives the families on purpose).
 - Real TV, phones as host, WebKit: Chromium headless on eris's GPU only. Full-screen and resize: effects have no layout.
 - The WebGPU paths (no TSL compute particles yet; the WebGLRenderer route ships).

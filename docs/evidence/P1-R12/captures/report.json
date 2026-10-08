@@ -12,27 +12,29 @@
         "dust": 16,
         "tyre-smoke": 16,
         "landing": 0,
-        "boost": 32,
+        "boost": 24,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 2,
+        "wreck-fire": 3,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 43,
+      "lastImpact": null,
       "spawned": {
-        "dust": 92,
-        "tyre-smoke": 56,
+        "dust": 76,
+        "tyre-smoke": 48,
         "landing": 0,
         "boost": 88,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 13,
+        "wreck-fire": 16,
         "lamp": 768
       },
       "reducedMotion": false
@@ -45,10 +47,10 @@
         "tyre-smoke"
       ],
       "aliveWhenShot": {
-        "dust": 16,
+        "dust": 0,
         "tyre-smoke": 8,
         "landing": 0,
-        "boost": 24,
+        "boost": 8,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
@@ -57,19 +59,21 @@
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 42,
+      "lastImpact": null,
       "spawned": {
         "dust": 68,
-        "tyre-smoke": 48,
+        "tyre-smoke": 40,
         "landing": 0,
-        "boost": 80,
-        "sparks": 36,
-        "impact": 5,
+        "boost": 72,
+        "sparks": 0,
+        "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
         "wreck-fire": 13,
-        "lamp": 768
+        "lamp": 576
       },
       "reducedMotion": false
     },
@@ -84,17 +88,19 @@
         "dust": 0,
         "tyre-smoke": 8,
         "landing": 0,
-        "boost": 16,
+        "boost": 8,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 1,
+        "wreck-fire": 2,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 42,
+      "lastImpact": null,
       "spawned": {
         "dust": 68,
         "tyre-smoke": 40,
@@ -104,8 +110,8 @@
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 11,
-        "lamp": 672
+        "wreck-fire": 13,
+        "lamp": 576
       },
       "reducedMotion": false
     },
@@ -125,23 +131,25 @@
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 2,
+        "wreck-fire": 3,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 42,
+      "lastImpact": null,
       "spawned": {
-        "dust": 96,
-        "tyre-smoke": 56,
+        "dust": 68,
+        "tyre-smoke": 48,
         "landing": 0,
-        "boost": 96,
+        "boost": 80,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 15,
-        "lamp": 864
+        "wreck-fire": 16,
+        "lamp": 768
       },
       "reducedMotion": false
     },
@@ -154,31 +162,44 @@
         "sparks"
       ],
       "aliveWhenShot": {
-        "dust": 90,
-        "tyre-smoke": 56,
+        "dust": 969,
+        "tyre-smoke": 613,
         "landing": 0,
-        "boost": 96,
-        "sparks": 36,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 7,
+        "boost": 209,
+        "sparks": 320,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 4,
+        "wreck-fire": 92,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
-      "drawCalls": 43,
+      "drawCalls": 42,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.221434515761896,
+          1.1,
+          60.27251568306538
+        ],
+        "screen": [
+          1026.0295406389923,
+          289.0277363479575
+        ]
+      },
       "spawned": {
-        "dust": 162,
-        "tyre-smoke": 96,
-        "landing": 0,
-        "boost": 152,
-        "sparks": 36,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 23,
-        "lamp": 1344
+        "dust": 3434,
+        "tyre-smoke": 1760,
+        "landing": 64,
+        "boost": 2880,
+        "sparks": 352,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 4,
+        "wreck-fire": 537,
+        "lamp": 23136
       },
       "reducedMotion": false
     },
@@ -193,27 +214,29 @@
         "dust": 248,
         "tyre-smoke": 136,
         "landing": 64,
-        "boost": 205,
-        "sparks": 37,
-        "impact": 5,
+        "boost": 209,
+        "sparks": 1,
+        "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 15,
+        "wreck-fire": 24,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 43,
+      "lastImpact": null,
       "spawned": {
         "dust": 322,
         "tyre-smoke": 176,
         "landing": 64,
         "boost": 288,
-        "sparks": 43,
-        "impact": 5,
+        "sparks": 7,
+        "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 43,
+        "wreck-fire": 54,
         "lamp": 2400
       },
       "reducedMotion": false
@@ -227,31 +250,93 @@
         "damage-smoke"
       ],
       "aliveWhenShot": {
-        "dust": 978,
-        "tyre-smoke": 611,
+        "dust": 971,
+        "tyre-smoke": 610,
         "landing": 0,
-        "boost": 212,
-        "sparks": 195,
+        "boost": 206,
+        "sparks": 318,
         "impact": 36,
-        "detach": 20,
+        "detach": 36,
         "damage-smoke": 4,
-        "wreck-fire": 49,
+        "wreck-fire": 88,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 42,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.307752794386182,
+          1.1,
+          60.242528630322305
+        ],
+        "screen": [
+          1027.6788619668257,
+          287.9292620945643
+        ]
+      },
       "spawned": {
-        "dust": 3540,
-        "tyre-smoke": 1808,
+        "dust": 3514,
+        "tyre-smoke": 1800,
         "landing": 64,
-        "boost": 2968,
-        "sparks": 380,
-        "impact": 56,
-        "detach": 20,
+        "boost": 2944,
+        "sparks": 353,
+        "impact": 36,
+        "detach": 36,
         "damage-smoke": 8,
-        "wreck-fire": 441,
-        "lamp": 23808
+        "wreck-fire": 548,
+        "lamp": 23616
+      },
+      "reducedMotion": false
+    },
+    {
+      "name": "wreck-fire-1tile",
+      "tiles": 1,
+      "reduced": false,
+      "families": [
+        "wreck-fire"
+      ],
+      "aliveWhenShot": {
+        "dust": 953,
+        "tyre-smoke": 606,
+        "landing": 0,
+        "boost": 210,
+        "sparks": 2,
+        "impact": 0,
+        "detach": 0,
+        "damage-smoke": 136,
+        "wreck-fire": 91,
+        "lamp": 96
+      },
+      "allFamiliesShown": true,
+      "huskInView": true,
+      "errors": [],
+      "drawCalls": 42,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.346973604322706,
+          1.1,
+          60.232640935009805
+        ],
+        "screen": [
+          1036.500058011576,
+          287.4746409599211
+        ]
+      },
+      "spawned": {
+        "dust": 4830,
+        "tyre-smoke": 2472,
+        "landing": 128,
+        "boost": 4048,
+        "sparks": 358,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 144,
+        "wreck-fire": 753,
+        "lamp": 32448
       },
       "reducedMotion": false
     },
@@ -264,87 +349,50 @@
       ],
       "aliveWhenShot": {
         "dust": 0,
-        "tyre-smoke": 4,
+        "tyre-smoke": 0,
         "landing": 0,
-        "boost": 8,
+        "boost": 4,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 2,
+        "wreck-fire": 1,
         "lamp": 48
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
       "drawCalls": 43,
+      "lastImpact": null,
       "spawned": {
         "dust": 34,
-        "tyre-smoke": 24,
+        "tyre-smoke": 20,
         "landing": 0,
-        "boost": 36,
+        "boost": 32,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
-        "wreck-fire": 11,
-        "lamp": 336
+        "wreck-fire": 12,
+        "lamp": 288
       },
       "reducedMotion": false
     },
     {
-      "name": "mixed-4tiles",
+      "name": "driving-4tiles",
       "tiles": 4,
       "reduced": false,
       "families": [
         "dust",
         "tyre-smoke",
         "boost",
-        "impact"
+        "lamp"
       ],
       "aliveWhenShot": {
-        "dust": 995,
-        "tyre-smoke": 600,
+        "dust": 16,
+        "tyre-smoke": 16,
         "landing": 0,
-        "boost": 209,
-        "sparks": 42,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 41,
-        "lamp": 96
-      },
-      "allFamiliesShown": true,
-      "errors": [],
-      "drawCalls": 138,
-      "spawned": {
-        "dust": 1496,
-        "tyre-smoke": 758,
-        "landing": 64,
-        "boost": 1248,
-        "sparks": 57,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 186,
-        "lamp": 10080
-      },
-      "reducedMotion": false
-    },
-    {
-      "name": "mixed-24tiles",
-      "tiles": 24,
-      "reduced": false,
-      "families": [
-        "dust",
-        "tyre-smoke",
-        "boost",
-        "wreck-fire"
-      ],
-      "aliveWhenShot": {
-        "dust": 20,
-        "tyre-smoke": 24,
-        "landing": 0,
-        "boost": 40,
+        "boost": 24,
         "sparks": 0,
         "impact": 0,
         "detach": 0,
@@ -353,19 +401,181 @@
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
-      "drawCalls": 769,
+      "drawCalls": 136,
+      "lastImpact": null,
       "spawned": {
-        "dust": 96,
-        "tyre-smoke": 64,
+        "dust": 76,
+        "tyre-smoke": 48,
         "landing": 0,
-        "boost": 112,
-        "sparks": 36,
-        "impact": 5,
+        "boost": 88,
+        "sparks": 0,
+        "impact": 0,
         "detach": 0,
         "damage-smoke": 0,
         "wreck-fire": 16,
-        "lamp": 960
+        "lamp": 768
+      },
+      "reducedMotion": false
+    },
+    {
+      "name": "hits-4tiles",
+      "tiles": 4,
+      "reduced": false,
+      "families": [
+        "impact",
+        "sparks",
+        "landing",
+        "detach",
+        "damage-smoke"
+      ],
+      "aliveWhenShot": {
+        "dust": 974,
+        "tyre-smoke": 605,
+        "landing": 64,
+        "boost": 207,
+        "sparks": 312,
+        "impact": 32,
+        "detach": 32,
+        "damage-smoke": 28,
+        "wreck-fire": 93,
+        "lamp": 96
+      },
+      "allFamiliesShown": true,
+      "huskInView": true,
+      "errors": [],
+      "drawCalls": 135,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.276592177199884,
+          1.1,
+          60.25862637032124
+        ],
+        "screen": [
+          1031.8576719277157,
+          280.28804165099604
+        ]
+      },
+      "spawned": {
+        "dust": 3766,
+        "tyre-smoke": 1928,
+        "landing": 128,
+        "boost": 3160,
+        "sparks": 352,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 36,
+        "wreck-fire": 588,
+        "lamp": 25344
+      },
+      "reducedMotion": false
+    },
+    {
+      "name": "wreck-fire-4tiles",
+      "tiles": 4,
+      "reduced": false,
+      "families": [
+        "wreck-fire"
+      ],
+      "aliveWhenShot": {
+        "dust": 959,
+        "tyre-smoke": 619,
+        "landing": 0,
+        "boost": 211,
+        "sparks": 2,
+        "impact": 0,
+        "detach": 0,
+        "damage-smoke": 136,
+        "wreck-fire": 92,
+        "lamp": 96
+      },
+      "allFamiliesShown": true,
+      "huskInView": true,
+      "errors": [],
+      "drawCalls": 137,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.219595831679865,
+          1.1,
+          60.272981076131785
+        ],
+        "screen": [
+          1035.7007540405566,
+          287.40408026458266
+        ]
+      },
+      "spawned": {
+        "dust": 4814,
+        "tyre-smoke": 2464,
+        "landing": 128,
+        "boost": 4040,
+        "sparks": 355,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 144,
+        "wreck-fire": 752,
+        "lamp": 32352
+      },
+      "reducedMotion": false
+    },
+    {
+      "name": "all-24tiles",
+      "tiles": 24,
+      "reduced": false,
+      "families": [
+        "dust",
+        "tyre-smoke",
+        "boost",
+        "sparks",
+        "impact",
+        "landing",
+        "detach",
+        "damage-smoke",
+        "wreck-fire",
+        "lamp"
+      ],
+      "aliveWhenShot": {
+        "dust": 963,
+        "tyre-smoke": 615,
+        "landing": 64,
+        "boost": 218,
+        "sparks": 312,
+        "impact": 32,
+        "detach": 32,
+        "damage-smoke": 28,
+        "wreck-fire": 91,
+        "lamp": 96
+      },
+      "allFamiliesShown": true,
+      "huskInView": true,
+      "errors": [],
+      "drawCalls": 769,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.309591001631055,
+          1.1,
+          60.242067051953164
+        ],
+        "screen": [
+          1032.151881630799,
+          280.3017467938856
+        ]
+      },
+      "spawned": {
+        "dust": 3764,
+        "tyre-smoke": 1928,
+        "landing": 128,
+        "boost": 3152,
+        "sparks": 353,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 36,
+        "wreck-fire": 588,
+        "lamp": 25344
       },
       "reducedMotion": false
     },
@@ -378,31 +588,44 @@
         "sparks"
       ],
       "aliveWhenShot": {
-        "dust": 987,
-        "tyre-smoke": 612,
+        "dust": 959,
+        "tyre-smoke": 604,
         "landing": 0,
-        "boost": 209,
-        "sparks": 15,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 41,
+        "boost": 213,
+        "sparks": 68,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 4,
+        "wreck-fire": 90,
         "lamp": 96
       },
       "allFamiliesShown": true,
+      "huskInView": true,
       "errors": [],
-      "drawCalls": 43,
+      "drawCalls": 42,
+      "lastImpact": {
+        "car": 23,
+        "at": [
+          -9.197533053206964,
+          1.1,
+          60.278535275350535
+        ],
+        "screen": [
+          1025.8423329871482,
+          289.0159600402281
+        ]
+      },
       "spawned": {
-        "dust": 1506,
-        "tyre-smoke": 768,
+        "dust": 3434,
+        "tyre-smoke": 1760,
         "landing": 64,
-        "boost": 1264,
-        "sparks": 21,
-        "impact": 5,
-        "detach": 0,
-        "damage-smoke": 0,
-        "wreck-fire": 187,
-        "lamp": 10176
+        "boost": 2880,
+        "sparks": 77,
+        "impact": 36,
+        "detach": 36,
+        "damage-smoke": 4,
+        "wreck-fire": 537,
+        "lamp": 23136
       },
       "reducedMotion": true
     }
