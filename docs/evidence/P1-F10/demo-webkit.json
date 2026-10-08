@@ -1,0 +1,324 @@
+{
+  "journey": "F10 demo on the G00 hello room",
+  "lane": "webkit",
+  "laneLabel": "WebKit (Playwright; not Safari)",
+  "machine": {
+    "host": "eris",
+    "platform": "linux/x64",
+    "kernel": "Linux 7.2.5-3-omarchy",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12400",
+    "cpus": 12,
+    "memGiB": 31
+  },
+  "hostEngine": "Chromium (Playwright)",
+  "controllerEngine": "WebKit (Playwright; not Safari)",
+  "emulators": "none requested (the emulator lanes are separate receipts)",
+  "peak": 12,
+  "finalSize": 2,
+  "steps": [
+    {
+      "label": "4 phones",
+      "ok": true,
+      "live": 4,
+      "markers": 4,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "phone",
+        "phone",
+        "phone",
+        "phone"
+      ]
+    },
+    {
+      "label": "pad + churn (5 in the room)",
+      "ok": true,
+      "live": 5,
+      "markers": 5,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "phone",
+        "phone",
+        "pad",
+        "phone",
+        "phone"
+      ]
+    },
+    {
+      "label": "12 controllers",
+      "ok": true,
+      "live": 12,
+      "markers": 12,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "phone",
+        "phone",
+        "pad",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone"
+      ]
+    },
+    {
+      "label": "4 phones left",
+      "ok": true,
+      "live": 8,
+      "markers": 8,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "pad",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone"
+      ]
+    },
+    {
+      "label": "emulators and pad left",
+      "ok": true,
+      "live": 8,
+      "markers": 8,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone",
+        "phone"
+      ]
+    },
+    {
+      "label": "down to 2",
+      "ok": true,
+      "live": 2,
+      "markers": 2,
+      "phantoms": [],
+      "missing": [],
+      "missingAre": [],
+      "kinds": [
+        "phone",
+        "phone"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "op": "add",
+      "id": 1,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 1
+    },
+    {
+      "op": "add",
+      "id": 2,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 2
+    },
+    {
+      "op": "add",
+      "id": 3,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 3
+    },
+    {
+      "op": "add",
+      "id": 4,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 4
+    },
+    {
+      "op": "add",
+      "id": 5,
+      "kind": "pad",
+      "engine": "webkit",
+      "size": 5
+    },
+    {
+      "op": "add",
+      "id": 6,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 6
+    },
+    {
+      "op": "remove",
+      "id": 1,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 5
+    },
+    {
+      "op": "add",
+      "id": 7,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 6
+    },
+    {
+      "op": "remove",
+      "id": 2,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 5
+    },
+    {
+      "op": "add",
+      "id": 8,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 6
+    },
+    {
+      "op": "add",
+      "id": 9,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 7
+    },
+    {
+      "op": "add",
+      "id": 10,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 8
+    },
+    {
+      "op": "add",
+      "id": 11,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 9
+    },
+    {
+      "op": "add",
+      "id": 12,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 10
+    },
+    {
+      "op": "add",
+      "id": 13,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 11
+    },
+    {
+      "op": "add",
+      "id": 14,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 12
+    },
+    {
+      "op": "remove",
+      "id": 3,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 11
+    },
+    {
+      "op": "remove",
+      "id": 4,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 10
+    },
+    {
+      "op": "remove",
+      "id": 6,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 9
+    },
+    {
+      "op": "remove",
+      "id": 7,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 8
+    },
+    {
+      "op": "add",
+      "id": 15,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 9
+    },
+    {
+      "op": "remove",
+      "id": 5,
+      "kind": "pad",
+      "engine": "webkit",
+      "size": 8
+    },
+    {
+      "op": "remove",
+      "id": 8,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 7
+    },
+    {
+      "op": "remove",
+      "id": 9,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 6
+    },
+    {
+      "op": "remove",
+      "id": 10,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 5
+    },
+    {
+      "op": "remove",
+      "id": 11,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 4
+    },
+    {
+      "op": "remove",
+      "id": 12,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 3
+    },
+    {
+      "op": "remove",
+      "id": 13,
+      "kind": "phone",
+      "engine": "webkit",
+      "size": 2
+    }
+  ],
+  "takenAt": "2026-10-08T01:19:02.201Z"
+}

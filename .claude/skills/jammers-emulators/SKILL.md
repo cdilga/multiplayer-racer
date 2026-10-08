@@ -29,11 +29,13 @@ added the lane preflight and the matrix.
 scripts/remote/eris.sh --run emu-demo 'node web/tests/journeys/harness/lanes.mjs; JJ_EVIDENCE_DIR=$JJ_RUN_DIR node web/tests/journeys/harness/matrix.mjs --tier milestone; echo "exit $?"'
 ```
 
-Stated result (eris, game commit be78fe1; the lane list prints twice, once from `lanes.mjs` and once from the matrix):
-the preflight lists `available chromium`, `available android-emulator`, and
-`unavailable` for WebKit and Firefox (not installed for Playwright there), the iOS Simulator (macOS only), macOS Chrome
-headed, macOS Safari, Windows and real devices, each with its reason; then `loopback WebRTC: connects`, `passed
-chromium`, `passed android-emulator`, a `receipt: …/matrix-eris-milestone.json` line and `exit 0`.
+Stated result (eris, game commit 9909380; the lane list prints twice, once from `lanes.mjs` and once from the matrix):
+the preflight lists `available chromium`, `available webkit` (Playwright's WebKit build 2336, installed on eris
+2026-10-08), `available android-emulator`, and `unavailable` for Firefox (not installed for Playwright there), the iOS
+Simulator (macOS only), macOS Chrome headed, macOS Safari, Windows and real devices, each with its reason; then
+`loopback WebRTC: connects`, `passed chromium`, `passed webkit`, `passed android-emulator`, a `receipt:
+…/matrix-eris-milestone.json` line and `exit 0`. (Before WebKit was installed, the fresh-agent run in
+`docs/evidence/P1-F09/` showed WebKit unavailable and the rest the same.)
 
 A cold emulator can miss the page wait on the first run of the day (`failed android-emulator: Error: timed out waiting
 for the emulator page`, seen 2026-10-08 on the run just before the passing one): run it again before treating it as a
