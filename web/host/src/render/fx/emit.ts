@@ -337,7 +337,8 @@ export class Emitter {
     this.spawn({
       family: 'sparks', blend: 'alpha', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.6 + this.rand() * 0.4, size0: 0.22, size1: 0.08, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 8, rim: HOT,
+      // Spat and falling (a long-lived, light spark hung in the air as an orange orb).
+      life: 0.35 + this.rand() * 0.3, size0: 0.22, size1: 0.06, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 16, rim: HOT,
     });
   }
 
