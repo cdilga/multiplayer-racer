@@ -73,7 +73,11 @@ test('R116: the left stick drives, drifts and launches, the right stick steers: 
   await set({ x: 0, y: 1 }, still);
   const down = await until('brake', (s) => s.brake > 0.5 || s.throttle < -0.5);
   assert.ok(!(down.throttle > 0.1), `down is not throttle: ${JSON.stringify(down)}`);
-  await host.waitForTimeout(600); // held back long enough to arm the launch
+  // A fresh, timed pull: held 500 ms (past the 350 ms the lift wants, well short of the 900 ms after which it reads as reverse, which the
+  // checks above could not promise on a slow runner), then the snap.
+  await set(still, still);
+  await set({ x: 0, y: 1 }, still);
+  await host.waitForTimeout(500);
   // The launch is the boost (R116): the brake held a moment, then the stick snapped to full forward: the front lifts (a wheelie).
   // Full throttle and full lock together come with it, on different sticks.
   await set({ x: 0, y: -1 }, { x: 1, y: 0 });
