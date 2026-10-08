@@ -11,7 +11,7 @@ case "${1:?up|down}" in
     docker run -d --name "$name" --network host coturn/coturn:4.7.0 \
       -n --log-file=stdout --use-auth-secret --static-auth-secret="$secret" --realm=jj.local \
       --listening-port=3479 --min-port=49400 --max-port=49499 --no-tls --no-dtls --no-cli --fingerprint \
-      --allowed-peer-ip=127.0.0.1 --no-multicast-peers >/dev/null
+      --listening-ip=127.0.0.1 --relay-ip=127.0.0.1 --allow-loopback-peers --no-multicast-peers >/dev/null
     echo "local coturn on udp 3479; TURN_STATIC_AUTH_SECRET=$secret"
     ;;
   down) docker rm -f "$name" >/dev/null 2>&1 || true; echo "local coturn removed" ;;
