@@ -1,0 +1,21 @@
+2026-10-08T06:33:18Z
+$ rch status (before) | Daemon/Workers
+  Daemon : Running (PID 78601)
+  Uptime : 122h 29m
+  Workers : 2/2 healthy, 4/6 slots available
+  ● [warning] 89 local fallback build(s) on this host in the last 24h (45× no admissible workers: critical_pressure=1,active_project_exclusion=1; 43× remote execution failed; remote retries exhausted; 1× no admissible workers: critical_pressure=1)
+$ launchctl kickstart -k gui/$(id -u)/com.rch.daemon   (restart the RCH daemon service; no other step)
+$ rch status (after)
+  Daemon : Running (PID 28652)
+  Uptime : 7s
+  Workers : 2/2 healthy, 4/6 slots available
+$ rch exec -- cargo check --locked -q -p jj-types
+$ rch workers list (after)
+  ● devbox ubuntu@devbox
+    Slots : 0  Priority : 100
+  ● eris cdilga@eris
+    Slots : 6  Priority : 200
+$ rch exec -- cargo check --locked -q -p jj-map (after; logs no worker line)
+$ rch status | fallback
+  ● [warning] 92 local fallback build(s) on this host in the last 24h (48× no admissible workers: critical_pressure=1,active_project_exclusion=1; 43× remote execution failed; remote retries exhausted; 1× no admissible workers: critical_pressure=1)
+Note: the two builds right after the restart fell back to the Mac (active_project_exclusion: eris was already building this project for another agent, and devbox is disk-critical); 2 of eris's 6 slots were busy when the daemon restarted.
