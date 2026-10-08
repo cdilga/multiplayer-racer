@@ -49,3 +49,17 @@ preview register into `preview/`/`retired/` tags on six older commits (created t
 started 12 full CI and GPU runs (2095–2108, cancelled through the web UI). Tags the publisher creates with the
 workflow's own token start nothing (Gitea doesn't trigger runs from its actions token). A hand-pushed `pin/<id>` on a
 commit older than 1f250489 still starts runs there: cancel them, or pin with the deploy workflow's token.
+
+## `$$` isn't unique across job containers (2026-10-08)
+
+Run 2189's browser (1) on triton died unpacking a corrupt cached web build ("Decoding error (36): Corrupted block
+detected"). Jobs are containers sharing `/cargo-cache/jj-prebuilt`, and a shell's `$$` in one container is usually the
+same small PID as in the next, so two slots fetching the same key wrote one `.<key>.<pid>` temp file together. Temp
+names now come from `mktemp`, and every archive is checked on read (zstd's frame checksum, plus the sha256 Gitea records
+for the store copy): a corrupt cached copy is refetched, a corrupt stored one is dropped and the slot builds in place.
+
+## Judging a bead by "its" run (2026-10-08)
+
+With several lanes pushing, ci.yml's waiting run is replaced on every push (`cancel-in-progress: false` keeps the
+running one), so most commits never get a run of their own. `scripts/ci/green-for.py` judges a commit by any completed,
+successful run on a commit that contains it; close.sh and the verifier use it.
