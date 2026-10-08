@@ -367,12 +367,20 @@ impl HttpBroker {
 
     fn once(&self, body: &[u8]) -> std::io::Result<(u16, Vec<u8>)> {
         use std::net::ToSocketAddrs;
-        let addr = self
-            .host_port
-            .to_socket_addrs()?
-            .next()
-            .ok_or_else(|| std::io::Error::other("no address"))?;
-        let mut s = std::net::TcpStream::connect_timeout(&addr, self.timeout)?;
+        // Every resolved address in turn: on a dual-stack Docker network the name resolves to an IPv6 address first,
+        // and the broker listens on 0.0.0.0 only, so taking the first one was "Connection refused" (2026-10-08).
+        let mut last = std::io::Error::other("no address");
+        let mut stream = None;
+        for addr in self.host_port.to_socket_addrs()? {
+            match std::net::TcpStream::connect_timeout(&addr, self.timeout) {
+                Ok(s) => {
+                    stream = Some(s);
+                    break;
+                }
+                Err(e) => last = e,
+            }
+        }
+        let mut s = stream.ok_or(last)?;
         s.set_read_timeout(Some(self.timeout))?;
         s.set_write_timeout(Some(self.timeout))?;
         let path = if self.path_prefix.is_empty() {
