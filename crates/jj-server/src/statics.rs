@@ -63,12 +63,12 @@ pub fn content_type(path: &str) -> &'static str {
     }
 }
 
-/// Rewrites a page's relative asset references (`./assets/`, `../assets/`, and the same for `test/`) to `{base}assets/`
+/// Rewrites a page's relative asset references (`./assets/`, `../assets/`, `../../assets/` for the credits page, and the same for `test/`) to `{base}assets/`
 /// and adds the base meta tag. `base` starts and ends with `/`.
 pub fn rewrite_page(html: &str, base: &str) -> String {
     let mut out = html.to_owned();
     for dir in ["assets/", "test/"] {
-        for rel in ["../", "./"] {
+        for rel in ["../../", "../", "./"] {
             for q in ['"', '\''] {
                 out = out.replace(&format!("{q}{rel}{dir}"), &format!("{q}{base}{dir}"));
             }
@@ -195,6 +195,12 @@ mod tests {
         assert!(out.contains("href='/p/x/assets/a.css'"), "{out}");
         assert!(out.contains("<meta name=\"jj-base\" content=\"/p/x/\" />"));
         assert!(!out.contains("../assets"));
+        // The credits page sits two folders down (`landing/credits/`).
+        let deep = rewrite_page(
+            "<script src=\"../../assets/credits-1.js\"></script>",
+            "/p/x/",
+        );
+        assert!(deep.contains("src=\"/p/x/assets/credits-1.js\""), "{deep}");
     }
 
     #[test]
