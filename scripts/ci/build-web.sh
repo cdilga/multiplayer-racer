@@ -49,7 +49,8 @@ t cargo build --locked -q -p jj-tools --bin jj -p jj-server --bin jj-server >&2
 mkdir -p .ci-bin && cp "$CARGO_TARGET_DIR/debug/jj" "$CARGO_TARGET_DIR/debug/jj-server" .ci-bin/
 
 [[ $store == on ]] || { echo "build-web: built in place (JJ_STORE=off)"; exit 0; }
-tmp=$cache/.$key.$$.tar.zst
+# mktemp, not $$: jobs are containers sharing this cache dir, and their shell PIDs collide.
+tmp=$(mktemp "$cache/.$key.XXXXXX")
 t tar -I 'zstd -T0 -3' -cf "$tmp" node_modules web/node_modules web/dist web/dist-test .ci-bin \
     web/host/src/worker/pkg web/host/src/testing/pkg web/controller/src/pkg web/host/src/procgen/pkg >&2
 mv "$tmp" "$cache/$key.tar.zst"
