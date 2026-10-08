@@ -19,6 +19,7 @@ import {
 import type { Sampled } from '../interp';
 import { look, uniforms as lookUniforms } from '../look';
 import { Emitter, type FxInput } from './emit';
+import { growBuffers } from './buffers';
 import { envelope, FAMILIES, type Family } from './particles';
 
 const VERT = /* glsl */ `
@@ -67,6 +68,16 @@ void main() {
     // Emissive: a hot core and a soft edge (additive, so it only ever adds light).
     float core = 1.0 - smoothstep( 0.0, 1.0, r );
     gl_FragColor = vec4( c * ( 0.5 + 0.5 * core * core ), a * core );
+  } else if ( vHot > 1.5 ) {
+    // A comic impact burst: a nine-point star, white-hot in the middle, outlined in ink, so a hit reads on sand, tarmac or
+    // paint alike (a plain pale disc vanished against the dirt track).
+    float ang = atan( vUv.y, vUv.x );
+    float rs = r / ( 0.74 + 0.26 * cos( ang * 9.0 ) );
+    if ( rs > 1.0 ) discard;
+    float core = 1.0 - smoothstep( 0.0, 0.7, rs );
+    c = mix( c, vec3( 1.0, 0.98, 0.9 ), core * 0.85 );
+    c = mix( c, uInk, smoothstep( 0.8, 0.9, rs ) );
+    gl_FragColor = vec4( c, a );
   } else if ( vHot > 0.5 ) {
     // A hot sprite in daylight (flame, spark, flash): drawn, not added (added light washed out over sunlit ground), a
     // white-hot core over its colour, a soft edge.
@@ -124,12 +135,7 @@ function layer(add: boolean): Layer {
 
 function resize(l: Layer, cap: number): void {
   l.cap = cap;
-  l.pos = new InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(35048);
-  l.col = new InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(35048);
-  l.misc = new InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(35048);
-  l.geo.setAttribute('aPos', l.pos);
-  l.geo.setAttribute('aCol', l.col);
-  l.geo.setAttribute('aMisc', l.misc);
+  ({ pos: l.pos, col: l.col, misc: l.misc } = growBuffers(l.geo, cap));
 }
 
 export class Fx {
@@ -193,12 +199,14 @@ export class Fx {
       pa[k * 4 + 2] = p.z[i]!;
       pa[k * 4 + 3] = p.s0[i]! + (p.s1[i]! - p.s0[i]!) * t;
       for (let c = 0; c < 3; c++) ca[k * 4 + c] = p.c0[i * 3 + c]! + (p.c1[i * 3 + c]! - p.c0[i * 3 + c]!) * t;
-      ca[k * 4 + 3] = p.alpha[i]! * (isAdd && p.life[i]! < 0.06 ? 1 : envelope(t));
+      const hot = p.rim[i]! < 0;
+      // Hot sprites hold full strength for most of their life, then fade: a flash that fades from its first frame was
+      // already a faint pale disc by the frame a viewer (or a capture) saw it.
+      ca[k * 4 + 3] = p.alpha[i]! * (isAdd && p.life[i]! < 0.06 ? 1 : hot ? Math.min(1, t * 20) * (t < 0.6 ? 1 : (1 - t) / 0.4) : envelope(t));
       ma[k * 4] = p.rim[i]!;
       ma[k * 4 + 1] = t;
-      const hot = p.rim[i]! < 0;
       ma[k * 4 + 2] = isAdd || hot ? 1 : 0;
-      ma[k * 4 + 3] = hot ? 1 : 0;
+      ma[k * 4 + 3] = p.rim[i]! < -1.5 ? 2 : hot ? 1 : 0; // 2: an inked burst (impact, detach)
     }
     for (const [l, n] of [[this.alpha, ia], [this.add, id]] as const) {
       l.geo.instanceCount = n;
@@ -213,9 +221,31 @@ export class Fx {
   }
 
   /** Introspection (R90): what fired since the start, what is alive now, and the draw count. */
-  inspect(): { spawned: Record<Family, number>; alive: Record<Family, number>; particles: number; capacity: number; drawsPerTile: number; reducedMotion: boolean; lastImpact: { car: number; at: [number, number, number] } | null; impactCars: number[] } {
+  /** What the alpha layer's buffers hold for inked bursts: the instance count drawn, and the first bursts' aPos, aCol, aMisc. */
+  private drawnBursts(): { count: number; visible: boolean; first: number[][] } {
+    const l = this.alpha;
+    const pa = l.pos.array as Float32Array;
+    const ca = l.col.array as Float32Array;
+    const ma = l.misc.array as Float32Array;
+    const first: number[][] = [];
+    for (let k = 0; k < l.geo.instanceCount && first.length < 3; k++)
+      if (ma[k * 4 + 3]! > 1.5) first.push([...pa.slice(k * 4, k * 4 + 4), ...ca.slice(k * 4, k * 4 + 4), ...ma.slice(k * 4, k * 4 + 4)].map((v) => +v.toFixed(2)));
+    return { count: l.geo.instanceCount, visible: l.mesh.visible, first };
+  }
+
+  /** Up to `k` live particles of a family: [x, y, z, size, age fraction, emissive layer] (R90: where an effect really is). */
+  sample(family: Family, k: number): number[][] {
     const p = this.emitter.pool;
-    return { spawned: { ...p.spawned }, alive: p.alive(), particles: p.n, capacity: this.alpha.cap + this.add.cap, drawsPerTile: this.drawsPerTile, reducedMotion: this.emitter.reducedMotion, lastImpact: this.emitter.lastImpact, impactCars: [...this.emitter.impactCars] };
+    const f = FAMILIES.indexOf(family);
+    const out: number[][] = [];
+    for (let i = 0; i < p.n && out.length < k; i++)
+      if (p.fam[i] === f) out.push([p.x[i]!, p.y[i]!, p.z[i]!, p.s0[i]!, p.age[i]! / p.life[i]!, p.add[i]!].map((v) => +v.toFixed(2)));
+    return out;
+  }
+
+  inspect(): { spawned: Record<Family, number>; alive: Record<Family, number>; particles: number; capacity: number; drawsPerTile: number; reducedMotion: boolean; lastImpact: { car: number; at: [number, number, number] } | null; impactCars: number[]; impactsByCar: Record<number, [number, number, number]>; impactSample: number[][]; drawnBursts: { count: number; visible: boolean; first: number[][] } } {
+    const p = this.emitter.pool;
+    return { spawned: { ...p.spawned }, alive: p.alive(), particles: p.n, capacity: this.alpha.cap + this.add.cap, drawsPerTile: this.drawsPerTile, reducedMotion: this.emitter.reducedMotion, lastImpact: this.emitter.lastImpact, impactCars: [...this.emitter.impactCars], impactsByCar: Object.fromEntries(this.emitter.impactsByCar), impactSample: this.sample('impact', 12), drawnBursts: this.drawnBursts() };
   }
 
   dispose(): void {

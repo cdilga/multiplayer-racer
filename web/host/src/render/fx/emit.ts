@@ -26,6 +26,8 @@ export interface FxInput {
 /** Linear-light colours of the palette (art/ui/tokens.json world colours, then brightened for dust). */
 /** `rim: HOT` marks a hot sprite (flame, spark, flash): drawn with a white-hot core instead of a puff's ink rim (fx/index.ts). */
 const HOT = -1;
+/** `rim: BURST`: a hot sprite drawn as an inked comic star (an impact or detach flash): reads on any ground, sand included. */
+const BURST = -2;
 
 const C = {
   tarmacDust: [0.62, 0.6, 0.57] as [number, number, number],
@@ -73,6 +75,8 @@ export class Emitter {
   lastImpact: { car: number; at: [number, number, number] } | null = null;
   /** Every car hit in the latest frame that had a hit (hits land together: the last alone would hide the others). */
   impactCars: number[] = [];
+  /** The latest hit per car id: where its flash stands (R90). */
+  impactsByCar = new Map<number, [number, number, number]>();
   private hitsNow: number[] = [];
   private cars = new Map<number, CarState>();
   private husks = new Set<number>();
@@ -162,6 +166,7 @@ export class Emitter {
         if (dv > 3.2 && st.speed > 4) {
           this.lastImpact = { car: id, at: [px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6] };
           this.hitsNow.push(id);
+          this.impactsByCar.set(id, this.lastImpact.at);
         }
         if (dv > 3.2 && st.speed > 4) this.impact([px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6], dv, calm, vel);
         // Landing: falling, then not.
@@ -317,7 +322,7 @@ export class Emitter {
   private impact(p: [number, number, number], dv: number, calm: number, vel: [number, number, number]): void {
     const k = Math.min(1, dv / 14);
     // The flash stands above the bonnet (a chase camera sees it over the roof) and lives long enough to be seen at 60 Hz.
-    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: HOT });
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: BURST });
     this.puff(p, 0.7 + 1.3 * k, C.smoke);
     const n = Math.round((12 + 44 * k) * calm);
     for (let j = 0; j < n; j++) this.spark(p, 5 + 8 * k, vel);
@@ -353,7 +358,7 @@ export class Emitter {
 
   /** A part coming off: a flash, a puff and a burst of sparks at its pose. */
   private detach(p: [number, number, number], calm: number): void {
-    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.4, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: 2.0 * calm, size1: 0.8 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * Math.sqrt(calm), rim: HOT });
+    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.4, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: 2.0 * calm, size1: 0.8 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * Math.sqrt(calm), rim: BURST });
     for (let k = 0; k < 8; k++)
       this.spawn({
         family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.3, z: p[2], vx: this.jitter(2.4), vy: 1 + this.rand() * 1.2, vz: this.jitter(2.4),

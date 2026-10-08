@@ -230,3 +230,15 @@ test("the wayfinding kit: each piece's rendered bounds are its collider's, stand
   assert.ok(board.boundingBox.max.x - board.boundingBox.min.x > 0.5, 'the chevron board is a real board, wider than its post');
   void snapshotBytes;
 });
+
+test('a layer that grows past its first slots draws every particle (three.js caches the instance limit on first draw)', async () => {
+  const { InstancedBufferGeometry } = await import('three');
+  const { growBuffers } = await import('../src/render/fx/buffers.ts');
+  const geo = new InstancedBufferGeometry();
+  growBuffers(geo, 256);
+  // What WebGLBindingStates does on the first draw: the limit is the first buffers' size.
+  geo._maxInstanceCount = 256;
+  growBuffers(geo, 4096);
+  assert.equal(geo._maxInstanceCount, undefined, 'the cached limit is cleared, so the next draw takes the new size');
+  for (const name of ['aPos', 'aCol', 'aMisc']) assert.equal(geo.attributes[name].count, 4096);
+});
