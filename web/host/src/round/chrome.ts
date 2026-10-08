@@ -191,9 +191,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     } else {
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
       const fs = fullscreenSupport();
-      menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
-        <div class="mn-join" data-join><div class="mn-join-words"><h3 class="display">Join <span class="acc">in</span></h3>${joinText()}</div>
-          <a class="btn brush mn-credits" data-credits href="${basePath()}credits" target="_blank" rel="noopener">Credits</a></div>
+      // Two columns on a wide screen (round.css): the menu, and the join card with Credits beside it.
+      menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><div class="mn-main"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
         <div class="mn-acts main"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
@@ -210,7 +209,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
                 )
                 .join('')
             : '<li class="none">Nobody has joined yet.</li>'
-        }</ul></section>`;
+        }</ul></div>
+        <div class="mn-join" data-join><div class="mn-join-words"><h3 class="display">Join <span class="acc">in</span></h3>${joinText()}</div>
+          <a class="btn brush mn-credits" data-credits href="${basePath()}credits" target="_blank" rel="noopener">Credits</a></div></section>`;
     }
     if (!state.confirm) placeJoinCard(menuEl.querySelector<HTMLElement>('[data-join]'), state.join);
     paint(menuEl);

@@ -313,12 +313,17 @@ body:has(.jj-foot) .jj-chip { display: none; }
   .mn-join.big .mn-acts { margin-top: 0; align-self: stretch; }
   .mn-join:not(.big) { flex-direction: column; align-items: flex-start; }
 }
-/* The pause menu on a wide screen: the join card stands in its own column beside the title, actions and display choices,
-   so the player list stays in the first screen at 1080p (P1-R07c). */
+/* The pause menu: the menu itself (.mn-main) and the join card with Credits (.mn-join). Side by side on a wide screen so
+   the player list stays in the first screen at 1080p (P1-R07c); stacked, join card first, on a tall one. */
+.mn-main { display: flex; flex-direction: column; gap: calc(16px * var(--k)); min-width: 0; min-height: 0; }
+.mn-panel[data-menu] > .mn-join { order: -1; }
 @media (min-aspect-ratio: 11/10) {
-  .mn-panel[data-menu] { width: min(calc(1180px * var(--k)), 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: calc(28px * var(--k)); row-gap: calc(16px * var(--k)); align-content: start; }
-  .mn-panel[data-menu] > * { grid-column: 1; min-width: 0; }
-  .mn-panel[data-menu] > .mn-join { grid-column: 2; grid-row: 1 / span 5; flex-direction: column; align-items: center; align-self: start; text-align: center; max-width: calc(300px * var(--k)); }
+  .mn-panel[data-menu] { width: min(calc(1180px * var(--k)), 100%); flex-direction: row; align-items: flex-start; gap: calc(28px * var(--k)); }
+  .mn-panel[data-menu] > .mn-main { flex: 1 1 0; }
+  .mn-panel[data-menu] > .mn-join { order: 0; flex: none; flex-direction: column; align-items: center; text-align: center; max-width: calc(300px * var(--k)); }
   .mn-panel[data-menu] .mn-join .mn-url { font-size: calc(24px * var(--k)); }
 }
 .mn-join .mn-credits { align-self: stretch; text-align: center; min-height: calc(60px * var(--k)); font-size: calc(26px * var(--k)); }
+/* A notch tighter in the pause menu so a full room's rows stay in the first screen beside the join card. */
+.mn-main .mn-players li { padding-block: calc(4px * var(--k)); font-size: calc(26px * var(--k)); }
+.mn-main .mn-players .btn { min-height: calc(44px * var(--k)); }
