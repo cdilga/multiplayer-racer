@@ -33,11 +33,8 @@ and the footer docks it.
 
 ## Remaining defects
 
-- A phone that joins while the race is paused holds at "Joining…" until the host presses Resume. The sim applies claims
-  at a tick boundary, and no tick runs while paused (`jj-wasm-host` `frame`). It gets its seat and car the moment the
-  race resumes, as the journey asserts. Seating it during the pause is a sim change (filed as a follow-up bug).
-- At 1080p the pause menu with the join card is taller than the screen, so the player list starts below the fold. The
-  panel scrolls, as it did before with long player lists.
+- (Since fixed by P1-R07c, docs/evidence/P1-R07c/self-review.md:) a phone that joined while paused held at "Joining…"
+  until Resume, and at 1080p the pause menu's player list started below the fold.
 
 ## Not covered
 
