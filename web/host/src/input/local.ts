@@ -76,7 +76,13 @@ function deadzone(x: number, y: number, dz: number): [number, number] {
   const m = Math.hypot(x, y);
   if (m <= dz) return [0, 0];
   const k = Math.min(1, (m - dz) / (1 - dz)) / m;
-  return [x * k, y * k];
+  // A pad stick's travel is a circle; map the disc onto the square so the 45° rim reads (1, 1) (full throttle and full
+  // lock), not (0.71, 0.71). Straight up stays (0, 1).
+  const nx = x * k;
+  const ny = y * k;
+  const big = Math.max(Math.abs(nx), Math.abs(ny));
+  const s = big > 0 ? Math.hypot(nx, ny) / big : 0;
+  return [Math.max(-1, Math.min(1, nx * s)), Math.max(-1, Math.min(1, ny * s))];
 }
 
 export class LocalInput {

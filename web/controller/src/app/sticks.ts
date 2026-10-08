@@ -45,8 +45,14 @@ export function attachStick(z: HTMLElement, onChange: (v: Stick) => void, fixed 
     const d = Math.hypot(dx, dy);
     const k = d > r ? r / d : 1;
     knob.style.transform = `translate(${dx * k}px, ${dy * k}px) scale(1.08)`;
-    value.x = (dx * k) / r;
-    value.y = (dy * k) / r;
+    // The knob travels in a circle, but the value maps the disc onto the square: the rim reads 1 on the larger axis, so a
+    // stick at the 45° rim gives (1, 1) (full throttle and full lock), not (0.71, 0.71). Straight up stays (0, 1).
+    const nx = (dx * k) / r;
+    const ny = (dy * k) / r;
+    const m = Math.max(Math.abs(nx), Math.abs(ny));
+    const s = m > 0 ? Math.hypot(nx, ny) / m : 0;
+    value.x = Math.max(-1, Math.min(1, nx * s));
+    value.y = Math.max(-1, Math.min(1, ny * s));
     value.touch = true;
     onChange(value);
   };
