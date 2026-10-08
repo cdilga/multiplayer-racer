@@ -46,8 +46,8 @@ Run: JN4 on eris at 945743e (Chromium 151, headless, linux/x64, `JJ_CHROMIUM_GPU
 - **The orbit did not take effect.** The tiles still follow their cars from behind; the seat tile grid ignores the `orbit`
   view (only the plain `?tiles` view reads it), so these shots are the same framing as the plain ones, with Identify's "#1"
   tag showing in two tiles in stage 1. No side-on view of the hit car.
-- One damage detail is legible: in `orbit-stage-3-head-on.png` (top left tile) car 1's right side shows the dark empty door
-  bay where `door_RR` detached in the T-bone, and in `orbit-stage-2-t-bone.png` the orange car sits square on the blue
+- One damage detail is legible: in `captures/orbit-stage-3-head-on.png` (top left tile) car 1's right side shows the dark empty door
+  bay where `door_RR` detached in the T-bone, and in `captures/orbit-stage-2-t-bone.png` the orange car sits square on the blue
   car's side. Loose doors and car 2/3's fronts aren't legible.
 - To get a real side-on shot the seat grid has to read the orbit (a world change, `web/host/src/render/world.ts`), or the
   journey needs a plain `?tiles=1&orbit=90&follow=<car>` page on the same clip: replay the clip's end state in a second
