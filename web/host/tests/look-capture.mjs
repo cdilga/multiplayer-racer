@@ -9,6 +9,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
+import { chromiumArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
@@ -18,11 +19,21 @@ const args = process.argv.slice(2);
 const only = args.filter((a) => !a.startsWith('--'));
 const want = (k) => !only.length || only.includes(k);
 const server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
+// JJ_CHROMIUM_GPU=1: headless Chromium through ANGLE on Vulkan (eris's RTX 2080 Super; the journeys' own launch arguments).
+// Never a silent fallback: a launch that fails fails the run, and every report names the WebGL renderer that drew it.
 const gpu = process.env.JJ_CHROMIUM_GPU === '1';
 const browser = await chromium.launch(
-  gpu ? { headless: !!args.includes('--headless'), args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-unsafe-webgpu'] } : args.includes('--headless') || process.env.JJ_HEADLESS ? {} : { headless: false, channel: 'chrome' },
-).catch(() => chromium.launch());
-const mode = `${gpu ? 'GPU Chromium' : 'Chrome'} ${browser.version()}, ${process.platform}/${process.arch}`;
+  gpu ? { headless: true, args: chromiumArgs } : args.includes('--headless') || process.env.JJ_HEADLESS ? {} : { headless: false, channel: 'chrome' },
+);
+const probe = await browser.newPage();
+const renderer = await probe.evaluate(() => {
+  const gl = document.createElement('canvas').getContext('webgl2');
+  const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+  return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : 'unknown';
+});
+await probe.close();
+const mode = `${gpu ? 'Chromium (ANGLE/Vulkan, headless)' : 'Chrome'} ${browser.version()}, ${process.platform}/${process.arch}; WebGL renderer: ${renderer}`;
+console.log('mode', mode);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const HIDE = '.jj-chip,.jj-render-chip,aside,.jj-arrows,button,[class*=banner],[class*=toast],.jj-hud{display:none!important}';
 
@@ -48,8 +59,9 @@ const LOOK = [
   ['straight-4tiles-laptop-1366', 4, 1366, 768, 'straight'],
 ];
 
-// A real room of 24 joined controllers crashed headless GPU Chromium on eris (the page closed during the joins), so the 24-tile
-// shots draw the synthetic oval on the greybox map (generic kit only: the wayfinding kit is judged at 1 and 4 tiles).
+// A real room of 24 joined controllers once crashed headless GPU Chromium on eris (the page closed during the joins). The 24-tile
+// shots try the real room first (headed under Xvfb on eris) and fall back to the synthetic oval on the greybox map (generic kit
+// only) if the page dies; the report says which (`where`).
 async function syntheticShot(spec, out, report) {
   const [name, players, w, h, where] = spec;
   const { page, errors } = await openPage(`?synthetic=${players}&map&look=on&tiles=${players}&res=1&autores=off`, w, h);
@@ -65,7 +77,14 @@ async function syntheticShot(spec, out, report) {
 
 async function raceShot(spec, out, report) {
   const [name, players, w, h, where] = spec;
-  if (players >= 12) return syntheticShot(spec, out, report);
+  if (players >= 12 && !spec.real) {
+    try {
+      return await raceShot(Object.assign([...spec], { real: true }), out, report);
+    } catch (e) {
+      console.log('look', name, `real room failed (${String(e.message).slice(0, 120)}); synthetic oval instead`);
+      return syntheticShot(spec, out, report);
+    }
+  }
   const { page, errors } = await openPage('?test=live&room&look=on&res=1&autores=off&laps=1', w, h);
   await page.waitForFunction(() => window.__jjPrepare !== undefined, null, { timeout: 60_000 });
   for (let k = 0; k < players; k++) await page.evaluate((n) => window.__jjTest.join(n, { lobby: true }), `Driver ${k + 1}`);

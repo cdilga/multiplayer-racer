@@ -24,7 +24,7 @@ import { envelope, FAMILIES, type Family } from './particles';
 const VERT = /* glsl */ `
 attribute vec4 aPos;   // xyz, size
 attribute vec4 aCol;   // rgb (linear), alpha
-attribute vec4 aMisc;  // rim, age fraction, additive, unused
+attribute vec4 aMisc;  // rim, age fraction, emissive (flames, flashes, lamps: thinned only right at the lens), unused
 varying vec4 vCol;
 varying vec2 vUv;
 varying vec2 vMisc;
@@ -32,12 +32,16 @@ uniform float uDetail;
 void main() {
   vec4 mv = viewMatrix * vec4( aPos.xyz, 1.0 );
   float depth = -mv.z;
+  // Big effects (smoke, fire, dust clouds) keep a minimum on-screen size, so a wreck's fire still reads from the overview
+  // camera; small ones (sparks, lamp glints) stay true to size.
+  float size = aPos.w > 0.5 ? max( aPos.w, depth * 0.012 ) : aPos.w;
   // Pulled toward the camera by most of its radius, so a sprite never sinks half into the ground or the car it sits on.
-  mv.z += aPos.w * 0.6;
-  mv.xy += position.xy * aPos.w;
+  mv.z += size * 0.6;
+  mv.xy += position.xy * size;
   gl_Position = projectionMatrix * mv;
-  // Near the camera a sprite thins out: a follower's own dust never fills its screen, and a lamp never covers the car.
-  float near = smoothstep( 1.6, 5.0, depth );
+  // Near the camera a sprite thins out: a follower's own dust never fills its screen. Emissive sprites (the boost flame
+  // behind the followed car's bumper) only very near the lens.
+  float near = aMisc.z > 0.5 ? smoothstep( 0.6, 2.2, depth ) : smoothstep( 1.6, 5.0, depth );
   // Small effects drop out in small tiles (effect detail scales with tile size).
   float small = uDetail < 0.5 ? smoothstep( 0.1, 0.3, aPos.w ) : 1.0;
   vCol = vec4( aCol.rgb, aCol.a * near * small );
@@ -61,17 +65,20 @@ void main() {
     float core = 1.0 - smoothstep( 0.0, 1.0, r );
     gl_FragColor = vec4( c * ( 0.5 + 0.5 * core * core ), a * core );
   } else {
-    // A comic puff: flat body, a lighter lit cap toward the sun, an ink rim.
+    // A comic puff: a flat body lit from above (a two-tone step, no specular dot: a hard highlight read as a soap
+    // bubble on the eris captures), a thin ink rim on its shaded underside, and a soft outer edge.
     float rim = vMisc.x;
-    vec2 q = vUv - vec2( -0.28, 0.32 );
-    float cap = step( length( q ), 0.62 );
-    c = mix( c, mix( c, vec3( 1.0 ), 0.35 ), cap );
-    float edge = smoothstep( 0.8, 0.88, r ) * rim;
-    c = mix( c, uInk, edge * 0.85 );
-    gl_FragColor = vec4( c, a );
+    float lit = step( -0.1, vUv.y + 0.35 * vUv.x );
+    c *= mix( 0.8, 1.06, lit );
+    float edge = smoothstep( 0.82, 0.9, r ) * rim * ( 1.0 - 0.7 * lit );
+    c = mix( c, uInk, edge * 0.8 );
+    gl_FragColor = vec4( c, a * ( 1.0 - smoothstep( 0.9, 1.0, r ) ) );
   }
   #include <colorspace_fragment>
 }`;
+
+/** Alpha-blended families drawn as light (flames): they only thin out right at the lens, like the additive layer. */
+const EMISSIVE = new Set(['boost', 'wreck-fire'].map((f) => FAMILIES.indexOf(f as Family)));
 
 interface Layer {
   mesh: Mesh;
@@ -183,6 +190,7 @@ export class Fx {
       ca[k * 4 + 3] = p.alpha[i]! * (isAdd && p.life[i]! < 0.06 ? 1 : envelope(t));
       ma[k * 4] = p.rim[i]!;
       ma[k * 4 + 1] = t;
+      ma[k * 4 + 2] = isAdd || EMISSIVE.has(p.fam[i]!) ? 1 : 0;
     }
     for (const [l, n] of [[this.alpha, ia], [this.add, id]] as const) {
       l.geo.instanceCount = n;

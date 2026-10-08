@@ -220,7 +220,9 @@ test("the wayfinding kit: each piece's rendered bounds are its collider's, stand
     assert.ok(g.attributes.color, `${id} has vertex colours`);
     assert.equal(g.attributes.position.count % 3, 0);
     for (const v of g.attributes.position.array) assert.ok(Number.isFinite(v));
-    assert.ok(mod.ink, `${id} is outlined`);
+    // The guard rail is a two-sided sheet: an inverted-hull outline covers its whole face (it read navy), so it has none.
+    if (id === 'wayfinding/guard-rail') assert.ok(!mod.ink, `${id} has no ink hull`);
+    else assert.ok(mod.ink, `${id} is outlined`);
   }
   const chevron = WAYFINDING_MODULES['wayfinding/chevron-post'].decor;
   const board = chevron.geometry();

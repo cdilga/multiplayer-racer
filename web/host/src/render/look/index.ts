@@ -293,9 +293,11 @@ export const RIG = {
   sky: '#a9d0e2',
   ground: '#b9784c',
   hemi: 1.56, // measured on eris: 2.0 and 1.2 gave a lit roof 0.89 of its badge colour (sRGB), so both are raised by 1.3
-  haze: '#f0cf9f',
-  hazeNear: 170,
-  hazeFar: 1100,
+  // The accepted Fury road look's dust haze (art/ui/accepted/2026-10-07/poc/world/shaders/looks.json, light.fog): 170-1100 m
+  // left the horizon crisp in the engine captures, with no distance taken by the dust.
+  haze: '#e9b98a',
+  hazeNear: 160,
+  hazeFar: 620,
 };
 
 const prepared = new WeakSet<Scene>();

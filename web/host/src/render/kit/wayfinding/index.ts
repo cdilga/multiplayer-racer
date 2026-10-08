@@ -100,7 +100,8 @@ export const guardRail: KitModule = {
     return merge([sheet, ...post(-0.48), ...post(0), ...post(0.48)].map((g) => (g.index ? g.toNonIndexed() : g)));
   },
   scale: (p) => [p.lengthMm! / 1000, p.heightCm! / 100, p.thicknessMm! / 1000],
-  ink: true,
+  // No ink hull: the beam is a two-sided sheet, so an inverted hull covers its whole face and the galvanised rail read
+  // navy at chase distance (eris captures, 2026-10-08). R108 keeps ink mainly on the car's outline anyway.
 };
 
 /** wayfinding/finish-gantry: one leg of the race-banner gantry (R106): a light truss tower, four chords with rings and

@@ -209,9 +209,10 @@ export class Emitter {
             const e = at(side, 0.5, -2.25);
             const back = rotate(0, 0, -1);
             this.spawn({
-              family: 'boost', blend: 'add', x: e[0], y: e[1], z: e[2],
-              vx: back[0] * 7 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 7 + vel[2] * 0.92 + this.jitter(0.4),
-              life: 0.3 + this.rand() * 0.1, size0: 0.6, size1: 0.14, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15,
+              // Alpha-blended, not additive: an added flame over sunlit ground washed out to nothing (eris, 2026-10-08).
+              family: 'boost', blend: 'alpha', x: e[0], y: e[1], z: e[2],
+              vx: back[0] * 5 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 5 + vel[2] * 0.92 + this.jitter(0.4),
+              life: 0.3 + this.rand() * 0.1, size0: 0.75, size1: 0.18, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15, rim: 0.35,
             });
           });
       }
@@ -265,9 +266,9 @@ export class Emitter {
       const [hx, hy, hz] = [f.piecePos[k * 3]!, f.piecePos[k * 3 + 1]!, f.piecePos[k * 3 + 2]!];
       this.rate(st, 'fire', 38, dt, () => {
         this.spawn({
-          family: 'wreck-fire', blend: 'add', x: hx + this.jitter(0.7), y: hy + 1.0 + this.rand() * 0.3, z: hz + this.jitter(1.1),
-          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.2, size1: 0.3,
-          c0: C.flame, c1: C.flameEnd, alpha: 0.9, drag: 0.6,
+          family: 'wreck-fire', blend: 'alpha', x: hx + this.jitter(0.7), y: hy + 1.0 + this.rand() * 0.3, z: hz + this.jitter(1.1),
+          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.5, size1: 0.4,
+          c0: C.flame, c1: C.flameEnd, alpha: 0.95, drag: 0.6, rim: 0.4,
         });
       });
       this.rate(st, 'wsmoke', 9, dt, () => {
