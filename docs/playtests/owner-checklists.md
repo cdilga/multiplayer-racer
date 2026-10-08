@@ -51,7 +51,8 @@ Real-device rows (from P1-Q02):
 - [ ] **Join:** host from the index on the TV laptop; an iPhone and an Android join by camera QR; the TV QR scans from 3 m; the in-page scanner works on both.
 - [ ] **Network:** phones on home Wi-Fi go direct; a phone on cellular joins and its path is recorded; `tools/net/turn_probe.py` allocates on `turn.dilger.dev` from a hotspot; a client-isolated Wi-Fi if handy (then decide Q-N1).
 - [ ] **Controls:** two thumbs, no zoom/scroll/select; a hard left-stick swipe on an iPhone never navigates away; wake lock holds a whole race; real pads on the TV host.
-- [ ] **Plug in and play (P1-C13):** join a second laptop and a phone the normal way, then keep plugging in pads and pressing key clusters: each device joins with a press, unplugging or holding its leave chord removes only it, and each shows its connection.
+- [ ] **Plug in and play (P1-C13):** join a second laptop and a phone the normal way, then keep plugging in pads and pressing key clusters: each device joins with a press; unplugging one puts only its car on autopilot and re-plugging brings that player back; leaving (its chord, Leave, Remove) is a choice; each shows its connection.
+- [ ] **Controls you can find (P1-C14):** a newcomer with a pad or the host's keyboard works out how to drive without asking (the card on their tile, holding Identify, Help → Controls); the host adds and removes keyboard players from the drawer; the screens still feel uncluttered.
 - [ ] **Lots of controllers (P1-C12):** more than four pads across the host and at least one joined laptop, plus two keyboards on one computer as two players (one per key cluster), all racing in one room; a fifth pad on a Chrome host tells you to plug it into a joined laptop or phone.
 - [ ] **Recovery:** lock a phone 30 s mid-race → same car within 3 s; its car goes to autopilot and comes back.
 - [ ] **Identity:** Identify shows on the TV within ~150 ms on the LAN.
