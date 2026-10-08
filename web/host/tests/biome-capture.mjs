@@ -145,7 +145,7 @@ async function shot(job, spec, out, report, rerolls = 0) {
         const s = js.find((i) => i > 60 && i < info.route.length - 30) ?? js[0];
         if (s !== undefined) {
           let back = s;
-          while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 12) back--;
+          while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 20) back--;
           target = back;
         }
       } else if (f === 'jump') {
