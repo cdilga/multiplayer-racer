@@ -658,6 +658,10 @@ impl Host {
                             menu_open: r.flags.has(StateFlags::MENU_OPEN),
                         };
                         input.state.sample(r.drive, r.action, flags, now_ms);
+                        // Seen the moment it arrives: a short deflection between two ticks still counts for the prompts.
+                        if input.prompt.on {
+                            input.prompt.sample(&input.state.semantics());
+                        }
                     }
                 }
             }

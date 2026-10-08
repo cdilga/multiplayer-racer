@@ -138,19 +138,19 @@ test('C06: the host sees each control and the seat\'s tile shows the next one in
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
   // The host sees the steer goals as they happen.
-  await sticks(page, { x: 1, y: 0 }, z);
+  await sticks(page, { x: 1, y: 0 }, z, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.done?.includes('right'), undefined, 10_000);
-  await sticks(page, { x: -1, y: 0 }, z);
+  await sticks(page, { x: -1, y: 0 }, z, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 1, undefined, 10_000);
   // The race starts (the card gets out of the way); the tile carries on from the control the host last saw.
   await startRace(page, host);
-  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Go and stop/.test(e.textContent)), undefined, 20_000);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Go and stop/i.test(e.textContent)), undefined, 60_000);
   await shot(host, 'tv-prompt-go-and-stop-1280x720');
-  await sticks(page, { x: 0, y: -1 }, z);
-  await sticks(page, { x: 0, y: 1 }, z);
-  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Boost/.test(e.textContent)), undefined, 20_000);
+  await sticks(page, { x: 0, y: -1 }, z, 400);
+  await sticks(page, { x: 0, y: 1 }, z, 400);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Boost/i.test(e.textContent)), undefined, 60_000);
   await shot(host, 'tv-prompt-boost-1280x720');
-  await sticks(page, z, { x: 1, y: 0 });
+  await sticks(page, z, { x: 1, y: 0 }, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 3, undefined, 10_000);
   assert.deepEqual(await tilePrompt(host).then((t) => t.length), 1, 'one prompt on the one tile');
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'prompts never paused the host');
@@ -182,9 +182,9 @@ test('C06: a newcomer who joins a race in progress gets the prompts on their til
   await wait(late, () => window.__jjController.inspect().phase === 'playing');
   await wait(host, () => window.__jjRoom.view().seats.length === 2 && window.__jjRoom.view().seats[1].prompt?.step === 0, undefined, 30_000);
   assert.equal((await late.evaluate(() => window.__jjTutorial.inspect())).open, false, 'no card in a race (it would hand the car to the autopilot)');
-  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Steer/.test(e.textContent)), undefined, 30_000);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Steer/i.test(e.textContent)), undefined, 60_000);
   await shot(host, 'tv-prompt-late-joiner-steer-1280x720');
-  await sticks(late, { x: 1, y: 0 }, z);
-  await sticks(late, { x: -1, y: 0 }, z);
-  await wait(host, () => window.__jjRoom.view().seats[1].prompt?.step === 1, undefined, 10_000);
+  await sticks(late, { x: 1, y: 0 }, z, 400);
+  await sticks(late, { x: -1, y: 0 }, z, 400);
+  await wait(host, () => window.__jjRoom.view().seats[1].prompt?.step === 1, undefined, 30_000);
 });

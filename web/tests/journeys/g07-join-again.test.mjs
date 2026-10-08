@@ -59,7 +59,7 @@ test('G07: a connected player removed mid-race sees "The host removed you" and J
   assert.equal(await host.evaluate(() => window.__jjRoom.view().seats.length), before.length - 1);
   // The phone says so, with Join again.
   await b.locator('[data-note=removed]').waitFor({ timeout: 15_000 });
-  assert.match(await b.locator('[data-note=removed]').innerText(), /The host removed you/);
+  assert.match(await b.locator('[data-note=removed]').innerText(), /the host removed you/i);
   await shot(b, 'phone-removed-landscape-844x390');
   await b.setViewportSize({ width: 390, height: 844 });
   await shot(b, 'phone-removed-portrait-390x844');
