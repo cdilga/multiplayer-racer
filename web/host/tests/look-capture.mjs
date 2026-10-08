@@ -230,9 +230,12 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
         (h0) =>
           new Promise((done) => {
             let after = -1;
+            let prev = h0;
             const look = () => {
+              // A hit throws its whole burst in one frame; scrapes add a few sparks a frame, so a total would mislead.
               const s = window.__jjRender.vehicles()?.fx.spawned.sparks ?? 0;
-              if (after < 0 && s >= h0 + 10) after = 0;
+              if (after < 0 && s - prev >= 10) after = 0;
+              prev = s;
               if (after >= 0 && ++after > 2) {
                 window.__jjRender.hold();
                 return done();
