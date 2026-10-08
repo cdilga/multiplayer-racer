@@ -70,16 +70,28 @@ fn a_minted_credential_allocates_on_a_local_coturn() {
         .find(|s| s.urls[0].starts_with("turn:"))
         .expect("a TURN entry");
     let probe = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/net/turn_probe.py");
-    let out = Command::new("python3")
-        .arg(&probe)
-        .args(["--host", "127.0.0.1", "--port", &port.to_string()])
-        .args(["--username", turn.username.as_deref().expect("username")])
-        .args([
-            "--credential",
-            turn.credential.as_deref().expect("credential"),
-        ])
-        .output()
-        .expect("the probe runs");
+    let run_probe = || {
+        Command::new("python3")
+            .arg(&probe)
+            .args(["--host", "127.0.0.1", "--port", &port.to_string()])
+            .args(["--username", turn.username.as_deref().expect("username")])
+            .args([
+                "--credential",
+                turn.credential.as_deref().expect("credential"),
+            ])
+            .output()
+            .expect("the probe runs")
+    };
+    // A loaded runner can take longer than the 800 ms above to bring coturn's listener up (run 1938: no STUN answer), so
+    // retry while the listener hasn't answered at all; any answer is judged as it stands.
+    let mut out = run_probe();
+    for _ in 0..20 {
+        if !String::from_utf8_lossy(&out.stdout).contains("STUN binding: NO RESPONSE") {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(500));
+        out = run_probe();
+    }
     let _ = coturn.kill();
     let _ = coturn.wait();
     let text = String::from_utf8_lossy(&out.stdout);
