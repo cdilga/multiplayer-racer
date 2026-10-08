@@ -22,3 +22,9 @@ Also pending:
 example `lxc config device add devbox rchdata disk source=/mnt/unit/devbox-build path=/data`) and point rch-wkr's work
 dirs and `~/.cache` there, then `rch workers capabilities --refresh`. Check `zpool status tank` first: it finished
 resilvering but still shows DEGRADED with an old data error.
+
+**2026-10-08 18:2x UTC (BrownCreek): storage move not done.** The owner cleared moving devbox's storage onto `tank` only
+if the pool is ONLINE. `zpool status tank` on triton: `state: DEGRADED`, raidz1-0 DEGRADED, `sdc FAULTED (6 read, 4 write
+errors, "too many errors")` under `spare-2`, checksum errors on `sdf` (20) and `sdb` (28), "One or more devices has
+experienced an error resulting in data corruption". Nothing on triton or devbox was changed. AC1 (two concurrent builds
+on different workers), AC2 and AC8 (devbox fallback) stay open until the pool is repaired or devbox gets other storage.
