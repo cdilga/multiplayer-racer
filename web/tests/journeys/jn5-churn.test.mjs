@@ -90,11 +90,27 @@ async function phone(url, name) {
 async function leave(host, p) {
   // Leave asks for a second tap within 3 s (no browser dialogs).
   const btn = p.page.getByRole('button', { name: /Leave/ });
+  const t0 = Date.now();
   await btn.click();
+  const t1 = Date.now();
   await btn.click();
+  const t2 = Date.now();
   // The host has the Leave before the phone goes: closing the page sooner (run 1706: 500 ms on a slow runner) lost the
   // command, and a vanished phone is a dropout whose seat is held for its return, not a leave.
-  await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
+  try {
+    await wait(host, (n) => !window.__jjRoom.view().seats.some((s) => s.name === n), p.name, 60_000);
+  } catch (e) {
+    // Which side lost it (runs 2058, 2271): the phone's own view of the two taps and whether it sent the Leave.
+    const phoneSide = await p.page
+      .evaluate(() => ({
+        phase: window.__jjController?.inspect().phase,
+        leave: document.querySelector('[data-act=leave]')?.textContent ?? null,
+        fullscreen: window.__jjFullscreen?.inspect() ?? null,
+        overlays: [...document.querySelectorAll('[data-overlay]')].map((o) => o.dataset.overlay),
+      }))
+      .catch((x) => String(x));
+    throw new Error(`${e.message}\nphone ${p.name}: taps took ${t1 - t0} ms and ${t2 - t1} ms; ${JSON.stringify(phoneSide)}`);
+  }
   // A phone that has left is finished with: close its context so a slow runner isn't left rendering pages nobody reads.
   await p.ctx.close().catch(() => {});
 }
