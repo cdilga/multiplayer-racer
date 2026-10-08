@@ -223,7 +223,29 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
     alive = st.alive;
     if (opts.see) seen = tiles === 0 || st.sees;
     // A new hit (normal and reduced motion are shot at the same moment after it), or every family alive at once.
-    if (opts.hit ? st.spawned.sparks >= hits0 + 10 : families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
+    if (opts.hit) {
+      // In the page, frame by frame: two drawn frames after the hit's spark burst, hold the frame loop, so the screenshot
+      // shows that moment (a screenshot at 1080p takes longer than the 0.3 s flash lives).
+      await page.evaluate(
+        (h0) =>
+          new Promise((done) => {
+            let after = -1;
+            const look = () => {
+              const s = window.__jjRender.vehicles()?.fx.spawned.sparks ?? 0;
+              if (after < 0 && s >= h0 + 10) after = 0;
+              if (after >= 0 && ++after > 2) {
+                window.__jjRender.hold();
+                return done();
+              }
+              requestAnimationFrame(look);
+            };
+            requestAnimationFrame(look);
+          }),
+        hits0,
+      );
+      break;
+    }
+    if (families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
     await sleep(15);
   }
   alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});

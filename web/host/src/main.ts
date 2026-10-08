@@ -86,6 +86,9 @@ async function boot(): Promise<void> {
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
     frame: () => world.frame(),
+    /** Capture hook (P1-R12): stops the frame loop, so the canvas keeps the frame just drawn (a short-lived flash included)
+     *  for a screenshot that takes longer than the effect lives. */
+    hold: () => world.stop(),
     vehicles: (car?: number) => world.vehicles?.inspect(car),
     map: () => (world.map ? { ...world.map.stats, kit: Object.fromEntries([...world.map.kit].map(([id, im]) => [id, im.count])) } : null),
     kitBounds: () => MapRenderer.kitBounds(),
