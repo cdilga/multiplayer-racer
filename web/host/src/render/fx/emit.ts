@@ -188,7 +188,7 @@ export class Emitter {
       // ---- Driving: dust and spray behind the wheels (light on tarmac, red on dirt, gravel spray) ------------------
       if (!airborne && speed > 4.5) {
         const k = kicked((speed - 4.5) / 20);
-        const dust = surface === 1 ? 46 : surface === 2 ? 26 : speed > 13 ? 7 : 0;
+        const dust = surface === 1 ? 46 : surface === 2 ? 40 : speed > 13 ? 7 : 0;
         for (const side of [0.85, -0.85]) {
           this.rate(st, `dust${side}`, dust * k, dt, () => {
             const w = at(side, 0.12, -1.55);
@@ -202,7 +202,7 @@ export class Emitter {
             });
           });
           if (surface === 2)
-            this.rate(st, `pebble${side}`, 36 * k, dt, () => {
+            this.rate(st, `pebble${side}`, 70 * k, dt, () => {
               const w = at(side, 0.15, -1.5);
               this.spawn({
                 family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],

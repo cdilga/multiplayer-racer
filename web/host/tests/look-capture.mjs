@@ -192,10 +192,11 @@ async function identity(out, report) {
 const ALL = ['dust', 'tyre-smoke', 'boost', 'sparks', 'impact', 'landing', 'detach', 'damage-smoke', 'wreck-fire', 'lamp'];
 const FX = [
   // [name, tiles, follow, families that must be alive, { see: a tile must have the husk in view, hit: shoot the moment a new impact lands }]
-  ['dust-dirt-1tile', 1, [0], ['dust']],
+  ['dust-dirt-1tile', 1, [0], ['dust'], { min: { dust: 60 } }],
   ['tyre-smoke-1tile', 1, [1], ['tyre-smoke']],
   ['boost-blue-1tile', 1, [2], ['boost']],
-  ['gravel-spray-1tile', 1, [3], ['dust']],
+  // Shot once the spray has built up behind the car (the first puff alone was the whole frame before).
+  ['gravel-spray-1tile', 1, [3], ['dust'], { min: { dust: 60 } }],
   ['impact-sparks-1tile', 1, [4], ['impact', 'sparks'], { hit: true }],
   ['landing-1tile', 1, [11], ['landing']],
   ['detach-damage-1tile', 1, [5], ['detach', 'damage-smoke']],
