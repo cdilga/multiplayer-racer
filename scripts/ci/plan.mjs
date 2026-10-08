@@ -269,6 +269,9 @@ const out = {
   image: sel.image ? 'true' : 'false',
   soak: full ? '300' : '20',
   full: full ? 'true' : 'false',
+  // The last green commit this selection diffs from (empty for a full run): the image job re-tags its image for HEAD
+  // when nothing the image is built from changed since it.
+  base: base && /^[0-9a-f]{7,40}$/.test(base) ? base : '',
 };
 const short = (f) => (f === KIT ? 'ui-kit' : f === LANDING ? 'landing' : f.replace(/^.*\//, '').replace(/\.test\.mjs$/, ''));
 const summary =

@@ -159,6 +159,32 @@ jobs:
       - name: Select (scripts/ci/plan.mjs)
         id: plan
         run: node scripts/ci/plan.mjs --github-output "$GITHUB_OUTPUT"
+      # Nothing the image is built from changed since the last green commit: give HEAD that commit's image under HEAD's
+      # tag, so every green commit has an image the publisher can deploy (a test- or docs-only push used to leave the
+      # newest green commits imageless, and previews stopped following them).
+      - name: Re-tag the last green commit's image for this commit (no image inputs changed)
+        if: steps.plan.outputs.image != 'true' && steps.plan.outputs.base != '' && github.ref == 'refs/heads/v0.2-revamp'
+        env:
+          REGISTRY_PUSH_TOKEN: ${{ secrets.REGISTRY_PUSH_TOKEN }}
+          BASE_SHA: ${{ steps.plan.outputs.base }}
+        run: |
+          to="$IMAGE:$(git rev-parse --short=12 HEAD)"
+          echo "$REGISTRY_PUSH_TOKEN" | docker login "$REGISTRY" -u cdilga --password-stdin
+          # The base may itself be a commit that never got an image (before this step existed): walk back from it to the
+          # newest commit that has one. Nothing the image reads changed along the way, or that commit's run would have
+          # rebuilt it.
+          git fetch -q --depth=100 origin "$BASE_SHA"
+          from=""
+          for c in $(git rev-list --max-count=100 "$BASE_SHA"); do
+            t="$IMAGE:${c:0:12}"
+            if docker image inspect "$t" >/dev/null 2>&1 || docker pull -q "$t" >/dev/null 2>&1; then from=$t; break; fi
+          done
+          [ -n "$from" ] || { echo "no image for $BASE_SHA or its 100 ancestors"; exit 1; }
+          echo "re-tagging $from as $to"
+          docker tag "$from" "$to"
+          docker push -q "$to"
+          docker inspect -f '{{index .RepoDigests 0}}' "$to" | tee image-digest.txt
+          docker logout "$REGISTRY"
       - name: Art and assets from LFS (the web bundle bakes them in)
         if: steps.plan.outputs.image == 'true'
         run: |
