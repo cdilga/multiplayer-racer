@@ -52,6 +52,7 @@ Real-device rows (from P1-Q02):
 - [ ] **Network:** phones on home Wi-Fi go direct; a phone on cellular joins and its path is recorded; `tools/net/turn_probe.py` allocates on `turn.dilger.dev` from a hotspot; a client-isolated Wi-Fi if handy (then decide Q-N1).
 - [ ] **Controls:** two thumbs, no zoom/scroll/select; a hard left-stick swipe on an iPhone never navigates away; wake lock holds a whole race; real pads on the TV host.
 - [ ] **Hub:** a second laptop with pads and a phone with a paired pad each join several players and show their connection.
+- [ ] **Lots of controllers (P1-C12):** more than four pads across the host and at least one hub, plus two keyboards on one computer as two players (one per key cluster), all racing in one room; a fifth pad on a Chrome host tells you to put it on a hub.
 - [ ] **Recovery:** lock a phone 30 s mid-race → same car within 3 s; its car goes to autopilot and comes back.
 - [ ] **Identity:** Identify shows on the TV within ~150 ms on the LAN.
 - [ ] **Hosts:** a phone hosts a 4-player race at ≥ 30 fps with sound; a weaker laptop hosts; pacing on the TCL at 4K; a quick host check from Safari on the Mac and from a Windows PC when handy.
