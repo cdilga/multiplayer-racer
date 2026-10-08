@@ -2409,3 +2409,28 @@ fn the_input_and_vehicle_profiles_agree_on_the_launch() {
     );
     assert!(input.launch.snap_window_ms <= 500, "a snap, not a roll-on");
 }
+
+/// P1-C11 (R116): a host pad's right stick steers (its x), its left stick drives (its y).
+#[test]
+fn a_host_pads_right_stick_steers_and_its_left_stick_drives() {
+    let mut h = driving_host();
+    for t in (0..600u64).step_by(6) {
+        h.schedule(
+            t,
+            &MainToSim::LocalSource {
+                source: LocalSourceId(7),
+                axes: [0, 21_000, 26_000, 0],
+                buttons: 0,
+                seq: 0,
+            }
+            .encode(),
+        )
+        .unwrap();
+    }
+    while h.tick() < 300 {
+        h.step_one();
+    }
+    let i = h.sim().applied_input(CarId(0)).expect("the pad has a car");
+    assert!(i.throttle > 15_000, "the left stick drives: {i:?}");
+    assert!(i.steer.abs() > 15_000, "the right stick steers: {i:?}");
+}
