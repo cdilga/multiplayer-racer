@@ -112,7 +112,7 @@ def changed_html(p: dict) -> str:
     items = p.get("changed") or []
     if not items:
         return '<details><summary>What changed</summary><p class="muted">No change list recorded (first preview, or the compare failed).</p></details>'
-    lis = "".join(f"<li>{html.escape(c)}</li>" for c in items)
+    lis = "".join(f"<li>{html.escape(title_text(c))}</li>" for c in items)
     return f'<details><summary>What changed ({len(items)} commit{"s" if len(items) != 1 else ""})</summary><ul class="changed">{lis}</ul></details>'
 
 

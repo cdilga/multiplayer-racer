@@ -241,7 +241,7 @@ def changes(token: str, prev: str | None, sha: str) -> list[str]:
         return []
     try:
         _, _, body = gitea(f"/api/v1/repos/{GAME}/compare/{prev}...{sha}", token)
-        return [c["commit"]["message"].splitlines()[0][:200] for c in json.loads(body).get("commits", [])][::-1]
+        return [short_title(c["commit"]["message"]) for c in json.loads(body).get("commits", [])][::-1]
     except Exception as e:  # the index just shows no list
         print(f"publish: no change list ({type(e).__name__})")
         return []
