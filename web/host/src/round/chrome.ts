@@ -133,7 +133,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const fit = innerWidth > h * 1.1 ? Math.min(h * 0.7, innerWidth * 0.46) : Math.min(h * 0.4, innerWidth * 0.78);
       px = Math.max(2, Math.floor(fit / joinModules)) * joinModules;
     } else {
-      const fit = Math.min((innerHeight - footer.getBoundingClientRect().height) * 0.26, innerWidth * 0.3);
+      const fit = Math.min((innerHeight - footer.getBoundingClientRect().height) * 0.24, innerWidth * 0.16);
       px = Math.max(2, Math.floor(fit / joinModules)) * joinModules;
     }
     const card = paperQrCard({ url: joinUrl, code: opts.code, domain: opts.domain, size: px });

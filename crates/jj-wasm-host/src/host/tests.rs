@@ -1680,6 +1680,132 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
 }
 
 #[test]
+/// P1-R07c: pausing is how a host lets someone join mid-race. A phone's Hello and Claim made while the race is paused are
+/// welcomed and seated on the host's clock with the sim frozen (no tick, no car, the race still Running and still
+/// paused); its car arrives through the late-join placement on the first tick after Resume, with a standings row. A
+/// Ready sent in the pause waits for the resumed tick (it moves the round director).
+#[test]
+fn a_claim_while_paused_is_welcomed_and_seated_and_places_at_resume() {
+    let mut h = Host::new(&init()).unwrap();
+    let send = |h: &mut Host, p: &str, cmd: ControllerCmd| {
+        h.handle(&net(p, Channel::Cmd, cmd.encode())).unwrap()
+    };
+    let join = |h: &mut Host, p: &str, k: u32| {
+        send(
+            h,
+            p,
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId(p.into()),
+                resume: Some(format!("s-{p}")),
+            },
+        );
+        send(
+            h,
+            p,
+            ControllerCmd::Claim {
+                request: RequestId(k),
+                name: p.to_uppercase(),
+            },
+        );
+    };
+    let mut now = 0u64;
+    let mut welcomed = Vec::new();
+    let step = |h: &mut Host, frames: u64, now: &mut u64, welcomed: &mut Vec<String>| {
+        for _ in 0..frames {
+            h.advance(*now);
+            *now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Outbound {
+                    endpoint,
+                    channel: Channel::Cmd,
+                    bytes,
+                } = m
+                    && let Ok(HostCmd::Welcome { .. }) = HostCmd::decode(&bytes)
+                {
+                    welcomed.push(endpoint.0);
+                }
+            }
+        }
+    };
+    let pause = |h: &mut Host, on: bool| {
+        h.handle(
+            &MainToSim::Ui {
+                command: CommandId(7),
+                ui: UiCommand::Pause { on },
+            }
+            .encode(),
+        )
+        .unwrap();
+    };
+    join(&mut h, "pa", 1);
+    join(&mut h, "pb", 2);
+    for p in ["pa", "pb"] {
+        send(&mut h, p, ControllerCmd::Ready { on: true });
+    }
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now, &mut welcomed);
+        if h.phase() == jj_session::director::Phase::Running {
+            break;
+        }
+    }
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+    step(&mut h, 60, &mut now, &mut welcomed);
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let seat_of = |h: &Host, name: &str| {
+        room(h)["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["name"] == name)
+            .cloned()
+    };
+
+    // The host pauses; a third phone scans the QR and claims.
+    pause(&mut h, true);
+    step(&mut h, 2, &mut now, &mut welcomed);
+    let frozen = h.tick();
+    let hash = h.state_hash();
+    join(&mut h, "pc", 3);
+    send(&mut h, "pc", ControllerCmd::Ready { on: true });
+    step(&mut h, 60, &mut now, &mut welcomed);
+    assert!(
+        welcomed.contains(&"pc".to_string()),
+        "the joiner is welcomed during the pause: {welcomed:?}"
+    );
+    let pc = seat_of(&h, "PC").expect("the joiner has a seat during the pause");
+    assert!(pc["car"].is_null(), "no car while the race is frozen: {pc}");
+    assert_eq!(h.tick(), frozen, "no tick ran");
+    assert_eq!(h.state_hash(), hash, "the race state is untouched");
+    assert_eq!(h.pause_mask(), Pause::Manual as u32, "still paused");
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+
+    // Resume: after the countdown the first tick places the joiner as a late entrant.
+    pause(&mut h, false);
+    for _ in 0..(120 * 10) {
+        step(&mut h, 1, &mut now, &mut welcomed);
+        if h.tick() > frozen + 2 {
+            break;
+        }
+    }
+    assert!(h.tick() > frozen, "the race resumed");
+    let pc = seat_of(&h, "PC").unwrap();
+    assert!(
+        !pc["car"].is_null(),
+        "the joiner has a car after Resume: {pc}"
+    );
+    assert!(
+        h.round
+            .late
+            .iter()
+            .any(|s| s.0 == pc["seat"].as_u64().unwrap() as u32),
+        "placed by the late-join rules (a late entrant)"
+    );
+    assert_eq!(h.phase(), jj_session::director::Phase::Running);
+}
+
+#[test]
 fn a_hidden_host_still_tells_the_phones_why_the_room_is_paused() {
     use jj_protocol::state::{HudUpdate, PauseReason};
     let mut h = driving_host();

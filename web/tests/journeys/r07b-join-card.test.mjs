@@ -125,25 +125,24 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await phone.locator('#name').fill('Davo');
   await phone.getByRole('button', { name: 'Join the race' }).click();
-  // The sim takes claims at a tick boundary, and no tick runs while paused: the phone holds at Joining until Resume.
-  await phone.waitForTimeout(1500);
-  console.log(`# phone while paused: ${await phone.evaluate(() => window.__jjController.inspect().phase)}`);
+  // P1-R07c: the room seats a joiner while the race is paused. The phone is welcomed and shows its joined state, and the
+  // card counts it, all before Resume; the race stays paused and frozen.
+  const frozen = await host.evaluate(async () => (await window.__jjTest.observe()).tick);
+  await wait(phone, () => !!window.__jjController.inspect().you && ['playing', 'host-paused'].includes(window.__jjController.inspect().phase), undefined, 20_000);
+  await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 10_000);
+  await wait(host, (n) => document.querySelector('[data-join-n]')?.textContent === `${n} in the room`, synth + 1, 10_000);
+  assert.ok((await host.evaluate(() => window.__jjTest.pauseReasons().length)) > 0, 'still paused');
+  assert.equal(await host.evaluate(async () => (await window.__jjTest.observe()).tick), frozen, 'no tick ran while the joiner was seated');
   await shot(phone, 'phone-915x412-joined-while-paused');
+  await shot(host, 'tv-1920x1080-join-big-after-phone');
 
-  // Resume closes it, the race goes on, and the phone gets its seat and car.
+  // Resume closes it, the race goes on, and the joiner's car is placed (late join).
   await host.getByRole('button', { name: 'Resume' }).click();
   await wait(host, () => window.__jjTest.pauseReasons().length === 0, undefined, 10_000);
   assert.equal(await host.locator('[data-join-big]').isVisible(), false, 'the card closes');
   await wait(phone, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
-  await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 20_000);
+  await wait(host, () => window.__jjRoom.view().seats.find((s) => s.name === 'Davo')?.car != null, undefined, 20_000);
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');
-  // Opened again, the card counts the phone. One more racer can free a grid cell for the QR (then the footer has none to
-  // press), so this opens it the way the footer does, through the chrome's own surface.
-  await host.evaluate(() => window.__jjChrome.openJoin());
-  await wait(host, (n) => document.querySelector('[data-join-n]')?.textContent === `${n} in the room`, synth + 1, 10_000);
-  await shot(host, 'tv-1920x1080-join-big-after-phone');
-  await host.locator('[data-join-big] [data-act=resume]').click();
-  await wait(host, () => window.__jjTest.pauseReasons().length === 0 && !window.__jjChrome.state.menu, undefined, 10_000);
 
   // The pause menu carries the join card too.
   await host.locator('[data-act=menu]').click();
@@ -152,6 +151,13 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   assert.equal(await host.locator('[data-menu] [data-join-url]').textContent(), joinUrl);
   assert.equal(await decode(host, '[data-join-card=menu] .qr'), joinUrl, 'the menu QR carries the join URL');
   await shot(host, 'tv-1920x1080-pause-menu');
+  // The join card doesn't push the players below the fold: every row of the list is in the panel's first screen.
+  const fold = await host.evaluate(() => {
+    const panel = document.querySelector('[data-menu]').getBoundingClientRect();
+    const rows = [...document.querySelectorAll('[data-players] li')].map((li) => li.getBoundingClientRect());
+    return { scroll: document.querySelector('[data-menu]').scrollTop, below: rows.filter((r) => r.bottom > panel.bottom + 0.5).length, rows: rows.length };
+  });
+  assert.equal(fold.below, 0, `players below the fold at 1080p: ${JSON.stringify(fold)}`);
   // Esc closes the menu and the race resumes.
   await host.keyboard.press('Escape');
   await wait(host, () => window.__jjTest.pauseReasons().length === 0, undefined, 10_000);

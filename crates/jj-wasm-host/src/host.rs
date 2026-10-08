@@ -205,6 +205,26 @@ fn sha(bytes: &[u8]) -> [u8; 32] {
 
 /// A seat's controls from its source's semantics. `jj-input` steers −1 left to +1 right; the sim's positive steer
 /// turns left, so steering flips here. The ACTION stick's held sectors pass through (drift left, boost right).
+/// A controller command that only joins or dresses a seat (never a car, the sim or the round's state), so it may apply
+/// while the race is held (P1-R07c). Leave, Sit out and Ready move the round director (eligibility, the all-ready
+/// start) and Recover and Action move a car: those wait for the resumed tick. `ForSource` is judged by what it wraps.
+fn session_only(cmd: &ControllerCmd) -> bool {
+    match cmd {
+        ControllerCmd::ForSource { cmd, .. } => session_only(cmd),
+        ControllerCmd::Hello { .. }
+        | ControllerCmd::Claim { .. }
+        | ControllerCmd::Identify
+        | ControllerCmd::SetName { .. }
+        | ControllerCmd::Ping { .. }
+        | ControllerCmd::Pick { .. }
+        | ControllerCmd::Menu { .. }
+        | ControllerCmd::SetCamera { .. }
+        | ControllerCmd::SetCameraDistance { .. }
+        | ControllerCmd::Tutorial { .. } => true,
+        _ => false,
+    }
+}
+
 fn controls(s: SourceSemantics) -> DriveInput {
     DriveInput::from_semantics(
         s.drive.throttle,
@@ -382,6 +402,10 @@ impl Host {
             self.stall_since_us = None;
             self.set_pause(Pause::PerformanceStall, false);
         }
+        if !self.pauses.is_empty() || self.resume_at_us.is_some_and(|at| now_us < at) {
+            // The room stays open while the race is held (P1-R07c): pausing is how a host lets someone join mid-race.
+            self.session_while_paused();
+        }
         if !self.pauses.is_empty() {
             // Paused (the host page hidden, a manual pause): no tick runs, and the HUD that says why rides the ticks, so
             // the phones would never hear it. A quiet ten times a second keeps "Host paused" on their screens (§11).
@@ -435,6 +459,33 @@ impl Host {
             stepped += 1;
         }
         stepped
+    }
+
+    /// While the sim is held (a pause, or the resume countdown) the session and seat layer keeps running on the host's
+    /// own clock (P1-R07c): a Hello and Claim are welcomed and seated, and Leave, Ready, Pick, Identify, menus, cameras
+    /// and tutorials apply as they arrive. Nothing here steps the sim or touches a car: the new seat's car comes from
+    /// the seat reducer's next tick boundary (`CarAdded`, the late-join placement) once the race resumes, and commands
+    /// that act on a car (Recover, Action) wait in the queue for the resumed tick like every sample. A fault holds
+    /// everything: that room can't continue (R84).
+    fn session_while_paused(&mut self) {
+        if self.pauses.contains(&Pause::Fault) || self.queued.is_empty() {
+            return;
+        }
+        let tick = self.sim.tick();
+        let (now, later): (Vec<_>, Vec<_>) = std::mem::take(&mut self.queued)
+            .into_iter()
+            .partition(|m| match m {
+                MainToSim::NetBytes {
+                    channel: Channel::Cmd,
+                    bytes,
+                    ..
+                } => ControllerCmd::decode(bytes).is_ok_and(|c| session_only(&c)),
+                _ => false,
+            });
+        self.queued = later;
+        for msg in now {
+            self.apply(msg, tick);
+        }
     }
 
     /// One tick, in the contract's order.
