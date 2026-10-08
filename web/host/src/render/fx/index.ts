@@ -230,9 +230,11 @@ export class Fx {
     const ca = l.col.array as Float32Array;
     const ma = l.misc.array as Float32Array;
     const first: number[][] = [];
-    for (let k = 0; k < l.geo.instanceCount && first.length < 3; k++)
+    // `instanceCount` is Infinity until the first draw sets it: bound the scan by the buffer itself.
+    const drawn = Math.min(l.geo.instanceCount, pa.length / 4);
+    for (let k = 0; k < drawn && first.length < 3; k++)
       if (ma[k * 4 + 3]! > 1.5) first.push([...pa.slice(k * 4, k * 4 + 4), ...ca.slice(k * 4, k * 4 + 4), ...ma.slice(k * 4, k * 4 + 4)].map((v) => +v.toFixed(2)));
-    return { count: l.geo.instanceCount, visible: l.mesh.visible, first };
+    return { count: Number.isFinite(l.geo.instanceCount) ? l.geo.instanceCount : 0, visible: l.mesh.visible, first };
   }
 
   /** Up to `k` live particles of a family: [x, y, z, size, age fraction, emissive layer] (R90: where an effect really is). */
