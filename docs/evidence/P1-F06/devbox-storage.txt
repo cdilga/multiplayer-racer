@@ -14,3 +14,24 @@ action: Restore the file in question if possible.  Otherwise restore the
 errors: List of errors unavailable: permission denied
 /dev/nvme0n1p2  458G  423G   12G  98% /
 tank            7.1T  3.9T  3.2T  56% /mnt/unit
+
+2026-10-08T07:20Z  devbox cleanup (owner-cleared: regenerable build output and caches only), BrownCreek
+Removed (each with its own tool: `cargo clean`, `pip cache purge`, `npm cache clean --force`; all idle since September):
+  10.5 GiB  /Users/cdilga/Documents/dev/physical-soccer/.rch-target-devbox-pool-b51b0dc6…  (RCH target dir, last used 2026-09-25)
+  0.27 GiB  /Users/cdilga/Documents/dev/physical-soccer/.rch-target-devbox-pool-784e4a1b…  (RCH target dir, 2026-09-28)
+  1.4 GiB   /Users/cdilga/Documents/dev/physical-soccer/target                             (cargo target, 2026-09-25)
+  5.8 GiB   /data/projects/roger-reviewer/target                                           (cargo target, 2026-04-19)
+  3.7 GiB   /home/ubuntu/dev/roger-reviewer/target                                         (cargo target)
+  0.6 GiB   ~/.cache/pip (565 files);  1.1 GiB ~/.npm/_cacache
+Left (they need a recursive rm, which this session's guard gates): physical-soccer/.rch-tmp 428M,
+  ~/physical-soccer-c35d-target 221M, ~/physical-soccer-c41l-target 320M, ~/.cache/uv 639M, /tmp/rch-v2.1.11{,.tar.gz} 39M.
+$ df -h /            before: /dev/nvme0n1p2 458G 425G 9.8G 98%     after: /dev/nvme0n1p2 458G 402G 33G 93%
+$ rch workers probe devbox
+  devbox ubuntu@devbox... ✓ OK (112ms)  Disk: 33.4 GiB free (7.3% free, probe); pressure: WARNING (cached daemon)
+$ rch workers list            devbox  Slots : 0  (config total_slots = 8; the daemon gives 0 under WARNING pressure)
+With eris drained (`rch workers drain eris --yes`, re-enabled right after):
+$ rch diagnose -- cargo check -p jj-types
+  Worker Selection (simulated)  Result: No worker selected  Reason: no admissible workers: insufficient_total_slots=1
+So devbox is past `min_free_gb = 30` but still at WARNING (7.3 % free): the space this container can free on triton's
+boot NVMe is not enough; the rest of the 402 GB is triton's own and other containers'. The storage move (status.md)
+remains the fix.
