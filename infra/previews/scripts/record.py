@@ -16,6 +16,7 @@ the writers below change git only. ci.yml doesn't run on tags (its push trigger 
 
 import json
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -74,12 +75,25 @@ def statuses(sha: str) -> dict[str, dict]:
     return latest
 
 
+STEPS = ("room", "join-webrtc", "input", "resume", "drive", "hud", "round")
+
+
+def steps_of(desc: str) -> list[str]:
+    """The step names in a PASS line ("smoke: PASS room ZG5H, isolated from 3 other preview(s), join-webrtc (host, 1 ms),
+    input, ..."), so a card reads the same whether it was rendered at publish time or from the record."""
+    if not desc.startswith("smoke: PASS"):
+        return []
+    body = re.sub(r"\([^)]*\)", "", desc.removeprefix("smoke: PASS"))
+    words = [part.strip().split(" ")[0] for part in body.split(",")]
+    return [w for w in words if w in STEPS]
+
+
 def apply_status(row: dict, st: dict | None):
     state = (st or {}).get("status") or (st or {}).get("state")
     desc = (st or {}).get("description") or ""
     if state == "success":
         row["status"], row["reason"], row["smokeResult"] = "playable", "", desc
-        row["smoke"] = [desc.removeprefix("smoke: PASS").strip()] if desc.startswith("smoke: PASS") else []  # shown as "Ran: …"
+        row["smoke"] = steps_of(desc)
         row["smokedAt"] = st.get("updated_at") or st.get("created_at")
     elif state == "pending":
         row["status"], row["reason"] = "not playable", "the smoke is still running (or its run died)"

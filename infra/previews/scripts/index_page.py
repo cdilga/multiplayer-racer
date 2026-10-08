@@ -128,6 +128,13 @@ def open_html(p: dict) -> str:
     return "".join(links) or '<span class="muted">No links</span>'
 
 
+def title_text(t: str) -> str:
+    """Titles recorded before the publisher cut at a word (exactly 200 characters, cut mid-word) end at a word here."""
+    if len(t) >= 200 and not t.endswith("…"):
+        return t[:200].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+    return t
+
+
 def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], now: datetime) -> str:
     tags = "".join(f'<span class="tag">{html.escape(label)}</span> ' for label in pinned_by + (["Latest"] if is_latest else []))
     cls = "card" + (" pinned" if pinned_by else "") + (" retired" if p.get("retired") else "")
@@ -136,7 +143,7 @@ def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], now: da
     return (f'<article class="{cls}" id="{html.escape(p["id"])}">'
             f'<div class="wide">{tags}<span class="id">{html.escape(p["id"])}</span></div>'
             f'<div><h3>Build</h3>{branch + " " if branch else ""}<code>{sha}</code><br>{time_tag(p.get("publishedAt"))}</div>'
-            f'<div><h3>What it is</h3>{html.escape(p.get("title", "")) or "<span class=muted>No title</span>"}{changed_html(p)}</div>'
+            f'<div><h3>What it is</h3>{html.escape(title_text(p.get("title", ""))) or "<span class=muted>No title</span>"}{changed_html(p)}</div>'
             f'<div><h3>Status</h3>{status_html(p)}</div>'
             f'<div><h3>Keep</h3>{keep_html(p, pinned_by, is_latest, keep, now)}</div>'
             f'<div class="wide"><h3 style="margin:0">Open</h3>{open_html(p)}</div></article>')

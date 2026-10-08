@@ -256,6 +256,12 @@ def set_latest(reg: dict):
         reg["labels"].pop("Latest", None)
 
 
+def short_title(t: str, n: int = 200) -> str:
+    """A commit title for the index: whole, or cut at a word with an ellipsis (never mid-word)."""
+    t = t.splitlines()[0] if t else ""
+    return t if len(t) <= n else t[:n].rsplit(" ", 1)[0].rstrip(",;:") + "…"
+
+
 def preview_id_for(reg: dict, sha: str) -> str:
     base = f"v02-{sha[:8]}"
     taken = {p["id"] for p in reg["previews"]}
@@ -272,7 +278,7 @@ async def publish_one(nas: TrueNAS, reg: dict, run: dict, digest: str, secrets: 
     app = f"jjp-{preview_id}"
     print(f"publish: {app} <- {sha[:12]} {digest}")
     row = {"id": preview_id, "branch": BRANCH, "sha": sha, "digest": digest, "ciRun": run.get("html_url"),
-           "title": (run.get("display_title") or "")[:200],
+           "title": short_title(run.get("display_title") or ""),
            "publishedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"), "status": "not playable", "reason": ""}
     prev = reg["previews"][0]["sha"] if reg["previews"] else None
     row["changed"] = changes(secrets["SOURCE_READ_TOKEN"], prev, sha)

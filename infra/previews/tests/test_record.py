@@ -53,7 +53,7 @@ class Record(unittest.TestCase):
         ids = [p["id"] for p in reg["previews"]]
         self.assertEqual(ids, ["v02-bbbbbbbb", "v02-aaaaaaaa", "v02-aaaaaaaa-2"], "newest first; other tags ignored")
         a, b, old = reg["previews"][1], reg["previews"][0], reg["previews"][2]
-        self.assertEqual((a["status"], a["smoke"], a["digest"]), ("playable", ["room, join-webrtc"], "sha256:1"))
+        self.assertEqual((a["status"], a["smoke"], a["digest"]), ("playable", ["room", "join-webrtc"], "sha256:1"))
         self.assertEqual((b["status"], b["reason"]), ("not playable", "FAIL step round: timeout"))
         self.assertEqual(old["retired"], "2026-10-08T00:00:00+00:00", "a retired tag wins over a leftover preview tag")
         self.assertEqual(reg["labels"], {"Playtest 1": "v02-aaaaaaaa"})
@@ -71,6 +71,10 @@ class Record(unittest.TestCase):
     def test_an_existing_tag_is_not_an_error(self):
         with mock.patch.object(record, "api", self.fake()):
             self.assertFalse(record.record_preview({"id": "v02-aaaaaaaa", "sha": A}))
+
+    def test_steps_from_a_real_pass_line(self):
+        line = "smoke: PASS room ZG5H, isolated from 3 other preview(s), join-webrtc (host, 1 ms), input, resume, drive, hud, round"
+        self.assertEqual(record.steps_of(line), ["room", "join-webrtc", "input", "resume", "drive", "hud", "round"])
 
     def test_status_description_is_bounded(self):
         g = self.fake()

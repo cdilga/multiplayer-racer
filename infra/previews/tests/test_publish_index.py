@@ -103,6 +103,12 @@ class Publish(unittest.TestCase):
         self.assertNotEqual(ea["JJ_ROOM_KEY"], eb["JJ_ROOM_KEY"])
         self.assertFalse([k for k in ea if "CLOUDFLARE" in k.upper() or k.upper().startswith("CF_")])
 
+    def test_long_titles_are_cut_at_a_word(self):
+        t = publish.short_title("word " * 60)
+        self.assertTrue(t.endswith("word…"))
+        self.assertLessEqual(len(t), 201)
+        self.assertEqual(publish.short_title("short title\nbody"), "short title")
+
     def test_broker_secret_is_per_preview_and_the_key_stays_out(self):
         s = {"JJ_ROOM_KEY_MASTER": "m", "TURN_STATIC_AUTH_SECRET": "s", "JJ_BROKER_KEY": "k"}
         ea = publish.compose("v02-aaaaaaaa", "sha256:1", s)["services"]["server"]["environment"]
