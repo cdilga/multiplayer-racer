@@ -93,7 +93,9 @@ async function leave(host, p) {
   const t0 = Date.now();
   await btn.click();
   const t1 = Date.now();
-  await btn.click();
+  // The second tap goes straight to the button: after the first, it changes its label and animates, and Playwright's
+  // wait for a stable target ran past the 3 s confirm window on a slow runner (run 2292: 3273 ms), which no thumb does.
+  await p.page.locator('[data-act=leave]').first().dispatchEvent('click');
   const t2 = Date.now();
   // The host has the Leave before the phone goes: closing the page sooner (run 1706: 500 ms on a slow runner) lost the
   // command, and a vanished phone is a dropout whose seat is held for its return, not a leave.
