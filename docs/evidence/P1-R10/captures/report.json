@@ -12,29 +12,29 @@
         "kind": "corner",
         "target": 46,
         "reached": true,
-        "tick": 1707,
+        "tick": 1665,
         "point": 44
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 85,
+      "drawCalls": 87,
       "tiles": 1,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -44,7 +44,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -58,29 +58,29 @@
         "kind": "corner",
         "target": 46,
         "reached": true,
-        "tick": 1748,
+        "tick": 1734,
         "point": 44
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 235,
+      "drawCalls": 240,
       "tiles": 4,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -90,7 +90,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -104,29 +104,29 @@
         "kind": "corner",
         "target": 46,
         "reached": true,
-        "tick": 1765,
+        "tick": 1723,
         "point": 45
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 1271,
+      "drawCalls": 1272,
       "tiles": 24,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -136,7 +136,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -147,32 +147,32 @@
         1080
       ],
       "where": {
-        "kind": "start",
-        "target": 0,
+        "kind": "approach",
+        "target": 346,
         "reached": true,
-        "tick": 0,
-        "point": 0
+        "tick": 7904,
+        "point": 344
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 87,
+      "drawCalls": 90,
       "tiles": 1,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -182,7 +182,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -202,23 +202,23 @@
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 243,
+      "drawCalls": 248,
       "tiles": 4,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -228,7 +228,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -248,23 +248,23 @@
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 1283,
+      "drawCalls": 1308,
       "tiles": 24,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -274,7 +274,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -288,29 +288,29 @@
         "kind": "corner",
         "target": 46,
         "reached": true,
-        "tick": 1716,
-        "point": 44
+        "tick": 1687,
+        "point": 45
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 85,
+      "drawCalls": 87,
       "tiles": 1,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -320,7 +320,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -334,29 +334,29 @@
         "kind": "straight",
         "target": 34,
         "reached": true,
-        "tick": 1490,
+        "tick": 1486,
         "point": 32
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 235,
+      "drawCalls": 240,
       "tiles": 4,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -366,7 +366,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -380,29 +380,29 @@
         "kind": "corner",
         "target": 46,
         "reached": true,
-        "tick": 1715,
+        "tick": 1683,
         "point": 44
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 85,
+      "drawCalls": 87,
       "tiles": 1,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -412,7 +412,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     },
     {
@@ -426,29 +426,29 @@
         "kind": "straight",
         "target": 34,
         "reached": true,
-        "tick": 1499,
+        "tick": 1461,
         "point": 32
       },
       "errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ],
-      "drawCalls": 135,
+      "drawCalls": 138,
       "tiles": 2,
       "mapDraws": 32,
       "kit": {
-        "outback_bitumen/centre-line": 13,
-        "outback_dirt/desert-oak": 19,
-        "outback_dirt/spinifex": 278,
-        "rocks/dome": 12,
-        "rocks/shrub": 23,
-        "rocks/spinifex": 67,
+        "outback_bitumen/centre-line": 14,
+        "outback_dirt/desert-oak": 28,
+        "outback_dirt/spinifex": 288,
+        "rocks/dome": 16,
+        "rocks/shrub": 24,
+        "rocks/spinifex": 87,
         "signs/big-red-rock": 1,
         "signs/junction": 2,
         "signs/kangaroo": 2,
         "signs/steep-descent": 1,
         "signs/stuart-hwy": 1,
         "signs/unsealed-road": 1,
-        "town/gum-tree": 63,
+        "town/gum-tree": 70,
         "town/house": 17,
         "town/mailbox": 4,
         "town/power-line": 4,
@@ -458,7 +458,7 @@
         "town/water-tower": 4,
         "wayfinding/chevron-post": 37,
         "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 60
+        "wayfinding/guard-rail": 62
       }
     }
   ]

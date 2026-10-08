@@ -5,7 +5,7 @@
       {
         "car": 1,
         "badge": "#22c3e6",
-        "litPixelShare": 0.196,
+        "litPixelShare": 0.174,
         "box": [
           246,
           492,
@@ -16,7 +16,7 @@
       {
         "car": 2,
         "badge": "#ff4fa3",
-        "litPixelShare": 0.221,
+        "litPixelShare": 0.247,
         "box": [
           432,
           492,
@@ -27,7 +27,7 @@
       {
         "car": 3,
         "badge": "#ffd23f",
-        "litPixelShare": 0.251,
+        "litPixelShare": 0.278,
         "box": [
           618,
           492,
@@ -38,7 +38,7 @@
       {
         "car": 4,
         "badge": "#7bd389",
-        "litPixelShare": 0.204,
+        "litPixelShare": 0.224,
         "box": [
           804,
           492,
@@ -49,7 +49,7 @@
       {
         "car": 5,
         "badge": "#ff7a2e",
-        "litPixelShare": 0.297,
+        "litPixelShare": 0.323,
         "box": [
           988,
           492,
@@ -60,7 +60,7 @@
       {
         "car": 6,
         "badge": "#9b7bff",
-        "litPixelShare": 0.282,
+        "litPixelShare": 0.256,
         "box": [
           1165,
           492,
@@ -71,7 +71,7 @@
       {
         "car": 7,
         "badge": "#ff3b3b",
-        "litPixelShare": 0.17,
+        "litPixelShare": 0.183,
         "box": [
           1341,
           492,
@@ -82,7 +82,7 @@
       {
         "car": 8,
         "badge": "#3bd6c6",
-        "litPixelShare": 0.25,
+        "litPixelShare": 0.251,
         "box": [
           1517,
           492,

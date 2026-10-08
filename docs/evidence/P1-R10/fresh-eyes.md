@@ -1,70 +1,70 @@
 ## Reviewer (date 2026-10-08)
 
-Independent fresh-eyes review, judged from the images only (references plus the 11 captures plus identity.json for the measured shares).
+Independent fresh-eyes visual review, judged from the images only. I read no code, self-review or other review files.
 
 ## Looked at
 
-- docs/evidence/P1-U05.5/looks/fury-road__tv.jpg: reference; warm orange sky and haze, mesas, red/white kerbs, tyre tracks, W-beam rail with chevron posts, windmill, inked clouds, halftone shadows, outlined cars.
-- docs/evidence/P1-U05.5/looks/fury-road__grid_n24.jpg: reference at 24 tiles; same palette in every tile, strong chevrons/rails/kerbs, bunting, cars readable.
-- art/ui/accepted/2026-10-07/frames/tv-race-grid.webp: illustrated style frame; blue-teal sky, hot orange earth, dust kicked up, bright saturated cars.
-- corner-1tile-tv-1080p.jpg: red car on a dark corner, chevron posts and rail on the outside, domed trees, flat orange plain, pale blue sky.
-- corner-4tiles-tv-1080p.jpg: four tiles, cars of several colours, chevrons and rail in 3 of 4 tiles, a clubhouse and water tower in the top-right tile.
-- corner-24tiles-tv-1080p.jpg: 24 tiles, many near-identical, tiny rails/chevrons, one tile with a mesa.
-- gantry-1tile-tv-1080p.jpg: red car at the start line in a township; no gantry in frame.
-- gantry-4tiles-tv-1080p.jpg: the START · FINISH banner is visible in the lower two tiles only; the upper two show houses and wires.
-- gantry-24tiles-tv-1080p.jpg: gantry visible in about 12 of 24 tiles, at varying size.
-- corner-1tile-laptop-1366.jpg: the 1-tile corner at 1366x768, same content as the TV frame.
-- straight-4tiles-laptop-1366.jpg: four tiles on a straight in the township; no chevrons, rails or gantry.
-- corner-1tile-phone-915x412.jpg: 1-tile corner, landscape phone; chevrons and rail visible but small.
-- straight-2tiles-phone-412x915.jpg: two tiles portrait; no wayfinding piece visible.
-- identity-strip-1080p.jpg: top-down row of 8 cars on asphalt, roofs in badge colours, two detached parts lying below cars 7 and 8.
-- identity.json: all 8 cars listed, litPixelShare 0.170 to 0.297, passes true.
+- docs/evidence/P1-U05.5/looks/fury-road__tv.jpg: reference. Orange earth, dusty-haze sky, inked clouds, mesas, red/white kerbs, rail and chevron posts, halftone shadows, outlined cars.
+- docs/evidence/P1-U05.5/looks/fury-road__grid_n24.jpg: reference. 24-tile grid, cars outlined, bunting, rail, kerbs.
+- art/ui/accepted/2026-10-07/frames/tv-race-grid.webp: accepted mood frame. Illustrated, so tone and palette only.
+- corner-1tile-tv-1080p.jpg: red car on a corner. Chevron posts, W-beam rail, a water tower at right, inked clouds, halftone shadow.
+- corner-4tiles-tv-1080p.jpg: four tiles. Chevrons and rail small but visible. Spark and smoke puffs over cars.
+- corner-24tiles-tv-1080p.jpg: 24 tiles at 320x270. Chevron boards and rail visible in the corner-approach tiles.
+- gantry-1tile-tv-1080p.jpg: run-in down a straight to a distant START · FINISH gantry. Shopfronts, power poles, red rock domes.
+- gantry-4tiles-tv-1080p.jpg: gantry fills the bottom tiles. The top two tiles show no gantry.
+- gantry-24tiles-tv-1080p.jpg: gantry recognisable in about 14 of 24 tiles, some cropped by camera proximity.
+- corner-1tile-laptop-1366.jpg: same corner at 1366x768. Chevrons and rail clearer.
+- straight-4tiles-laptop-1366.jpg: houses, water tower, power pole, bins, a diamond warning sign.
+- corner-1tile-phone-915x412.jpg: wide phone. Look holds.
+- straight-2tiles-phone-412x915.jpg: tall phone, two stacked tiles. Look holds.
+- identity-strip-1080p.jpg and identity.json: 8 parked cars from above. All lit shares 0.17 to 0.32, all >= 0.03, passes true.
 
 ## Look elements vs reference
 
-| Element | Verdict | Where |
+| Element | Status | Where |
 |---|---|---|
-| Warm low sun | Absent | No sun, no long warm light or rim light on any frame. Only a peach strip at the horizon. The reference has a clearly warm-lit scene. |
-| Teal-blue sky | Ambiguous | The sky is pale cool blue (sky-blue, not teal) fading to a thin peach band. It reads as generic daytime, not "fury road". The accepted frame has a deeper blue-teal sky. |
-| Hot orange earth | Present | Rust-orange plain in every frame, flat and a little darker and redder than the reference. |
-| Dust haze taking the distance | Absent | The horizon is crisp. Trees and rails 200 m out stay sharp; there is a short gradient band only. The reference fades mesas into orange haze. |
-| Faceted low-poly | Ambiguous | Cars are faceted. Trees are smooth domes, and the ground and road are flat with a pixel-block noise texture. Reference trees are visibly faceted icosahedra. |
-| 2-3 tone toon ramp | Present | Cars show 2-3 bands; clouds have a two-tone base. Ground and road are flat-lit. |
-| Ink outline mainly on the car | Present | Navy outline around cars and clouds; terrain and props mostly un-inked, as ruled. |
-| Halftone shadow under the car | Present | Dot-pattern shadow under the car at 1 tile (visible on corner-1tile and gantry-1tile). Barely resolvable at 24 tiles. |
-| Inked comic clouds | Present | Cream clouds with navy outline in every frame. They look repeated (same four shapes at the same positions in every tile). |
-| Mesas / horizon landmarks | Absent mostly | Only one 24-tile tile (3rd, corner) shows a mesa. The reference has mesas in every tile. |
-| Kerbs, tyre tracks, dust kick-up | Absent | The road is plain dark asphalt with cream edge lines. Reference has red/white kerbs and tracks. Some grey smoke puffs appear at 24 tiles. |
-| Overall tone match | Absent | These look like a bright generic low-poly game, noticeably flatter and colder than the accepted look. |
+| Warm low sun, long shadows | Present | Shadows are long and fall to the right in all frames. The sky and earth are warm. |
+| Blue sky warming to dusty haze at the horizon | Present | Blue at the top fading to peach at the horizon in every frame. The ground/sky seam is a hard line with no distant haze layer or mesas. |
+| Hot orange earth | Present | Saturated orange-red earth. A little flatter and redder than the reference. |
+| Faceted low-poly | Present | Trees, cars, rock domes and gantry truss are faceted. The earth is a flat tinted plane. |
+| 2-3 tone toon ramp | Present, weak on cars | Cars show roughly 2-3 flat tones. Rear faces and the red body's lower half go dark maroon. |
+| Ink outline mainly around the car exterior | Present | Navy outline on the car silhouettes. Clouds and the water tower are also inked. Terrain and buildings are not. |
+| Halftone shadow under the car | Present | Dithered shadow beside and under the car in 1-tile and 4-tile frames. At 24 tiles it is not visible at tile size. |
+| Inked comic clouds | Present | Cream clouds with navy outline in every frame. |
+| Vivid true paint | Present | Reds, oranges, teals, blues and purples are saturated. See the identity check. |
+| Comic effects not covering identity or the road | Mostly present | The puff clusters in corner-4tiles tile 1 and tile 3 partly cover the rear of an orange car. |
+| Sparse reference extras (mesas, bunting, kerbs, windmill) | Absent here | Belong to biome and map beads, not this pass. Not counted against it. |
 
 ## Wayfinding pieces at 1, 4, 24 tiles
 
 | Piece | 1 tile | 4 tiles | 24 tiles |
 |---|---|---|---|
-| Corner chevron post (yellow board, black chevron) | Visible on corner-1tile-tv (left, 3 boards). The board reads olive/mustard rather than yellow; the chevron is legible at 1080p only at about 40 px. | Visible in 3 of 4 tiles (small, about 20 px). Top-right tile shows two on the right edge. | Present only as 5 to 10 px specks on the left of the tiles. Not legible. Ambiguous. |
-| W-beam guard rail (galvanised grey, delineators) | Visible, grey beams with dark delineator posts. Reads as a rail, though thin and low. | Visible, small. | Specks at the horizon; not identifiable as W-beam. Ambiguous. |
-| START · FINISH gantry | Absent in gantry-1tile-tv-1080p (camera at the line, banner out of frame; only a billboard edge at the right). Absent in all other 1-tile frames. | Visible in the two lower tiles only; the top two tiles do not show it. Banner text is crisp and legible. | Visible in about 12 of 24 tiles. Banner readable in the larger ones; tiles 3 and 4 crop "JOYSTICK JAMMERS". The rest are small but recognisable. |
-| "Checkpoint" graphics | None seen. | None seen. | None seen. |
+| Corner chevron posts (yellow board, black chevron) | Present. Clear black chevron on yellow in corner-1tile, and 3 or more posts down the bend. | Present. Yellow boards with chevron visible in all four corner tiles. | Present. Yellow boards visible in the corner-approach tiles (rows 1 and 3 of the corner grid). The chevron glyph is a dark mark and recognisable as a sign. |
+| W-beam guard rail (galvanised grey, delineators) | Present as a W-beam rail on posts. Colour is a bluish-grey rather than shiny galvanised. Delineators are ambiguous. | Present as thin grey runs. Delineators not discernible. | Present as grey dashes beside the posts in the corner tiles. Reads as a rail. Delineators not discernible. |
+| Finish gantry "START · FINISH" | Present in gantry-1tile. About 220 px wide at the far end of the straight. Banner, checker end and truss legs recognisable, text just legible. | Present in the bottom two tiles at full size with a legible banner. Absent in the top two tiles (not in view). | Present in about 14 of 24 tiles. Recognisable as a banner gantry with checker end even in small tiles. Some tiles crop it. |
+| No "Checkpoint" graphics | Pass | Pass | Pass |
 
 ## Identity check
 
-In the strip, roof colours read true against the badge list: cyan, pink, yellow, mint green, orange, violet, red, teal, in order. They are vivid and distinguishable, with the exception that car 1 (#22c3e6 cyan) and car 8 (#3bd6c6 teal) are close and car 4 (#7bd389) is a paler green. The livery decals (pink/green zigzag, white scribble) add noise but do not hide the base colour. The measured lit shares are 0.17 to 0.30 (car 7 red is lowest at 0.170, car 5 orange highest at 0.297). I can only judge those as a share of the roof and body seen from above. In race views the cars are less true than the strip: the red car's rear goes dark maroon, the orange cars go brown at the rear, and the teal goes dull, because the cars are lit only from the front. A red car under heavy shade would not match #ff3b3b. Blue (not a badge) is a very saturated royal blue. The strip is a top-down parked row on flat light, so it is the best case and it flatters the cars. Identity is not covered by comic effects. The identity gate in the json passes and I agree it is satisfied on the strip, not proven in race lighting.
+The strip shows 8 cars from above. Paint is distinct and true to each badge: cyan, pink, yellow, green, orange, purple, red and teal. The roof and body panels carry the badge colour.
+
+identity.json lists lit-pixel share per car: 0.174, 0.247, 0.278, 0.224, 0.323, 0.256, 0.183, 0.251. The minimum is 0.174 against a 0.03 threshold, and the file records passes true.
+
+Red (#ff3b3b) and cyan (#22c3e6) are the lowest shares. Both are still clearly readable by eye. Orange, cyan and teal are close in hue at 24-tile size but remain separable.
+
+In-race, the red car's lower rear goes to a dark maroon in the 1-tile and 1366 frames. It is still recognisably red.
 
 ## Defects
 
-1. docs/evidence/P1-R10/captures/gantry-1tile-tv-1080p.jpg (and gantry-1tile equivalents on laptop/phone): the gantry is not visible at 1 tile, so the "visible at 1 tile" criterion is unmet. The camera starts at the start line and the banner is behind or above the view. Either re-frame a 1-tile capture a few metres before the line or accept it as unmet.
-2. corner-1tile-tv-1080p.jpg and every frame: the sky is pale blue, not teal, and there is no warm low sun, so the "Fury road" tone does not match fury-road__tv.jpg.
-3. All frames: there is no dust haze. The horizon is crisp at distance (trees, rails, houses), unlike the reference. This is the largest tonal gap.
-4. corner-24tiles-tv-1080p.jpg: many tiles are near-identical (tiles 1 and 2, 13 and 14 and others are almost duplicates, same cloud placement). The corner pieces at 24 tiles are 5 to 10 px specks. Wayfinding is not demonstrably visible here.
-5. corner-1tile-tv-1080p.jpg: chevron boards read olive/mustard instead of yellow with a black chevron; they look dark and small, unlike the reference's bright yellow.
-6. corner-4tiles / corner-24tiles / gantry-4tiles: cars interpenetrate or overlap (red and blue at the gantry-4tiles upper tiles; teal and orange). This damages identity readability in those tiles.
-7. All frames: the ground and asphalt carry a visible square-pixel noise texture (blocky tiles) which is neither faceted nor halftone; it reads as low-resolution.
-8. All frames: no mesas or horizon landmarks except one tile; no red/white kerbs and no tyre tracks, which the reference has. The world looks empty compared with it.
-9. Race-lit cars: rear faces of red/orange/teal cars go dark and desaturated (corner-1tile-tv red rear is near maroon), which weakens "paint stays vivid" outside the flat-lit strip.
-10. straight-2tiles-phone-412x915.jpg and straight-4tiles-laptop-1366.jpg: no corner chevrons, rail or gantry in these frames, so they prove nothing about wayfinding.
-11. Native device pixels: the phone captures are 915x412 and 412x915 CSS-size images. If the devices have DPR 2 to 3 these are not native device pixels. I cannot confirm from the images; the 1080p and 1366 captures do look native.
-12. gantry-24tiles-tv-1080p.jpg tiles 3 and 4 (and 13, 14): the banner is cropped at the left, hiding the "JOYSTICK JAMMERS" side, and covers the upper third of the tile (the road itself is not covered).
+1. Minor. corner-4tiles-tv-1080p.jpg, tiles top-left and bottom-left: the spark and smoke puff cluster covers most of an orange car's rear and part of a teal car's rear. It does not hide the road ahead, but it does briefly obscure identity.
+2. Minor. corner-1tile-tv-1080p.jpg and corner-1tile-laptop-1366.jpg, right edge: the water tower's flat grey leg and tank take roughly a tenth of the right edge. It reads as unlit grey with no toon banding and no outline, unlike the other props.
+3. Minor. All frames: the horizon is a hard seam between earth and sky with no dusty haze band over distant ground. It is less hazy than fury-road__tv.jpg. This does not break the palette.
+4. Minor. corner and gantry captures: the guard-rail delineators are not discernible at any tile count. They may be too small or absent. The rail is also a muted blue-grey, not galvanised silver.
+5. Minor. gantry-4tiles-tv-1080p.jpg top tiles and the matching gantry-24 tiles: no gantry in view, so the piece appears in only half the 4-tile capture. The bottom two tiles satisfy it.
+6. Minor. gantry-4tiles and gantry-24 frames: start-grid cars interpenetrate (red/blue and orange/teal overlap). This is a grid or physics matter, not the look pass.
+7. Minor. All captures: a 1 to 2 px pale border on the frame edges. Cosmetic only. It could be a capture artefact.
+8. Minor. corner and gantry frames: the road is very dark flat grey with a bright cream edge line. Against the warm reference it is the least harmonised element. Road surface belongs to the map beads, so I note it without scoring it.
 
-## Verdict: FAIL
+## Verdict: PASS
 
-The wayfinding kit exists and is well made. The chevrons, W-beam rails with delineators and the START · FINISH gantry all read correctly when large enough, the inked clouds, car outlines and halftone shadows are there, and the paint colours are true in the identity strip. But the captures do not match the accepted world look. The sky is generic pale blue with no warm low sun, there is no dust haze, no mesas or landmarks, no kerbs or tracks, and the flat, pixel-noise ground reads as a bright generic low-poly game rather than the hot, hazy Fury Road reference. The gantry is not visible in the 1-tile gantry capture at all, and at 24 tiles the chevrons and rails are unreadable specks, so the "each piece visible at 1, 4 and 24 tiles" criterion is not met for the gantry at 1 tile and is ambiguous for the corner pieces at 24. Race-lit cars also lose some vividness at the rear. A fix needs a warmer grade with haze and a sun, a re-framed 1-tile gantry capture, and 24-tile captures that actually show the pieces.
+The captures at 1, 4 and 24 tiles match the accepted Fury Road look in the elements the acceptance lists: a warm low sun with long halftone-dithered shadows, a blue-to-peach haze sky, hot orange earth, faceted low-poly props, 2-3 tone cars with a navy outline, and inked comic clouds. Paint is vivid and true, and the identity strip passes at a minimum share of 0.174 against 0.03. The chevron posts, the W-beam rail and the START · FINISH gantry are each visible at 1, 4 and 24 tiles at a recognisable level, and no "Checkpoint" graphic appears. Captures are at native sizes (1920x1080, 1366x768, 915x412, 412x915). The defects are minor: puffs over one car's rear, a flat unshaded water tower, a hard horizon seam, indiscernible rail delineators, and a gantry that is out of view in half the 4-tile capture. None breaks the acceptance, so I give PASS.
