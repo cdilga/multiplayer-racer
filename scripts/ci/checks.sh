@@ -16,4 +16,6 @@ t "Engine synth bundle and profile copy are current (P1-A04)" node art/ui/poc/au
 t "jammers-look recipes match the rendered code (P1-F11)" node .claude/skills/jammers-look/example/check-recipes.mjs
 t "The surface-strips test map is what its generator writes (P1-S03a)" bash -c 'python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json'
 t "Vehicle bake is reproducible and committed; loads in three.js (P1-V02)" bash -c 'node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/'
+t "The N08 qualification harness logic (tools/net)" node --test tools/net/qualify.test.mjs
+t "The committed emulator receipts show what the beads cite (P1-F08)" node --test web/tests/emulators/
 exit $rc

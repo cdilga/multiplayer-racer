@@ -31,7 +31,8 @@ const list = (dir, re = /\.test\.mjs$/) =>
         .sort()
         .map((f) => `${dir}/${f}`)
     : [];
-const HOST = list('web/host/tests');
+// Host page tests, plus the bug-clip and session-recorder tests (P1-F07, P1-F12) that live beside their code.
+const HOST = [...list('web/host/tests'), ...list('web/host/src/clips')];
 const TRANSPORT = list('web/shared/transport/tests');
 // The journeys and the public smoke flow (P1-D07): WebRTC tests through a local jj-server, one suite here.
 const JOURNEYS = [...list('web/tests/journeys'), ...list('web/tests/smoke')];
@@ -111,6 +112,7 @@ const rules = [
   [/^[^/]+\.md$|^(LICENSE|COPYING|COPYRIGHT_HEADER\.txt|\.python-version|\.gitignore)$/, () => {}],
   [/\.md$/, () => {}],
   [/^\.claude\//, () => {}], // the jammers-look recipe check is in the always-on checks job
+  [/^\.agents\//, () => {}], // .agents/skills is a link to .claude/skills (P1-F09)
   [/^art\/(audio|references|style)\//, () => {}],
   [/^tools\/(maps|vehicles|turn-guard)\//, () => (sel.tools = true)], // the checks job's bake and validators (lane `tools`)
   [/^scripts\/(beads|emulators|remote)\//, () => {}],
@@ -136,7 +138,7 @@ const rules = [
     },
   ],
   // Web: a test file alone selects itself; anything a test file imports widens to its suite.
-  [/^web\/host\/tests\/[^/]+\.test\.mjs$/, (p) => sel.host.add(p)],
+  [/^web\/host\/(tests|src\/clips)\/[^/]+\.test\.mjs$/, (p) => sel.host.add(p)],
   [/^web\/host\/tests\//, () => (sel.hostAll = true)],
   [/^web\/tests\/(journeys|smoke)\/[^/]+\.test\.mjs$/, (p) => sel.journeys.add(p)],
   [/^web\/tests\/(journeys|smoke)\//, () => (sel.journeysAll = true)],
