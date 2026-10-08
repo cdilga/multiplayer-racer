@@ -1633,6 +1633,24 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
         .unwrap()["seat"]
         .as_u64()
         .unwrap() as u32;
+    // PB's car loses its bumper before the removal: the part is debris, a dynamic body of the world.
+    let car_b = room(&h)["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "PB")
+        .unwrap()["car"]
+        .as_u64()
+        .unwrap() as u32;
+    h.sim.set_part_health(CarId(car_b), 1, 0.0);
+    step(&mut h, 10, &mut now, &mut removed_to);
+    let b_debris = |h: &Host| -> Vec<usize> {
+        (0..h.sim.prop_kinds().len())
+            .filter(|&i| h.sim.debris_part(i).is_some_and(|(c, _)| c.0 == car_b))
+            .collect()
+    };
+    let before = b_debris(&h);
+    assert!(!before.is_empty(), "PB's bumper is debris before the removal");
     h.handle(
         &MainToSim::Ui {
             command: CommandId(9),
@@ -1656,6 +1674,13 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
         .map(|s| s["name"].as_str().unwrap().to_string())
         .collect();
     assert_eq!(names, vec!["PA".to_string()], "PB is gone, PA races on");
+    // Debris stays: the removed car's parts are still there, still dynamic bodies, nothing deleted, merged or frozen.
+    let after = b_debris(&h);
+    assert_eq!(after, before, "the removed car's debris stays in the world");
+    assert!(
+        after.iter().all(|&i| h.sim.debris_dynamic(i) == Some(true)),
+        "and stays dynamic"
+    );
     assert_eq!(h.phase(), jj_session::director::Phase::Running);
     // The same phone claims again: a new seat with a new number.
     let claim = ControllerCmd::Claim {

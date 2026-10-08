@@ -95,6 +95,11 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await wait(host, () => window.__jjRoom.view().phase === 'Running');
     await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
     await wait(host, () => document.querySelectorAll('.hud-tile[data-seat]').length === 4);
+    // Racer 2's bumper comes off before the removal: debris, a dynamic body of the world.
+    const car2 = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.number === 2).car);
+    await host.evaluate((car) => window.__jjTest.command({ cmd: 'damage', car, part: 'front', health: 0 }), car2);
+    await wait(host, async () => (await window.__jjTest.observe()).debris.some((d) => d.kind === 'Part'), null, 20_000);
+    const debrisBefore = (await host.evaluate(() => window.__jjTest.observe())).debris.filter((d) => d.kind === 'Part').length;
     await host.locator('[data-act=menu]').click();
     await host.locator('[data-players] li[data-number="2"] [data-act=ask-remove]').click();
     assert.match(await host.locator('[data-confirm=remove]').innerText(), /debris stays/i);
@@ -106,7 +111,62 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     assert.deepEqual((await seats(host)).sort(), [1, 3, 4]);
     assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race goes on');
     await host.waitForTimeout(500);
+    // Debris stays: the removed car's bumper is still in the world after the removal (the sim's own test asserts it is a dynamic body).
+    const after = await host.evaluate(() => window.__jjTest.observe());
+    assert.equal(after.cars.some((c) => c.car === car2), false, 'the car is withdrawn');
+    assert.equal(after.debris.filter((d) => d.kind === 'Part').length, debrisBefore, "the removed car's debris stays");
     await host.screenshot({ path: `${CAPTURE}/race-after-remove@1080p.png` });
+    assert.deepEqual(host.errors, []);
+  } finally {
+    await host.context().close();
+  }
+});
+
+test('G07: a disconnected (autopilot) seat removed in the Lobby after a round: its card goes and its standings stay', { timeout: 420_000 }, async () => {
+  const host = await openHost(1920, 1080);
+  try {
+    await join(host, 1, 3);
+    for (let k = 1; k <= 3; k++) await frame(host, `syn${k}`, { ready: true });
+    await wait(host, () => window.__jjRoom.view().phase === 'Running', null, 120_000);
+    // Nobody sends a stick: every seat is a silent one and the autopilot drives. Racer 3 is the one the host removes.
+    await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+    await host.waitForTimeout(1500);
+    await host.evaluate(() => window.__jjTest.command({ cmd: 'finishRace' }));
+    await wait(host, () => window.__jjRoom.view().phase === 'Intermission', null, 120_000);
+    const seat3 = await host.evaluate(() => window.__jjRoom.view().seats.find((s) => s.number === 3).seat);
+    const rows = await host.evaluate(() => window.__jjRoom.view().standings.map((r) => r.seat).sort());
+    assert.equal(rows.length, 3, 'the round gave every seat a standings row');
+    assert.ok(rows.includes(seat3));
+    await host.getByRole('button', { name: 'Return to lobby' }).click();
+    await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
+    assert.equal(await host.locator('.lcard').count(), 3);
+    await host.locator('[data-act=menu]').click();
+    await host.locator('[data-players] li[data-number="3"] [data-act=ask-remove]').click();
+    await host.getByRole('button', { name: 'Remove player' }).click();
+    await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 3), null, 10_000);
+    await host.keyboard.press('Escape');
+    assert.equal(await host.locator('.lcard').count(), 2, 'the card goes');
+    assert.equal(await host.locator('.lcard[data-number="3"]').count(), 0);
+    const kept = await host.evaluate(() => window.__jjRoom.view().standings.map((r) => r.seat).sort());
+    assert.deepEqual(kept, rows, "the removed seat's standings row is kept (and nobody else's changed)");
+    assert.equal((await host.evaluate(() => window.__jjTest.observe())).cars.length, 0, 'no tile or car in the Lobby');
+    assert.deepEqual(host.errors, []);
+  } finally {
+    await host.context().close();
+  }
+});
+
+test('G07: the pause menu at eight players on a phone-sized host lists everyone with Remove', { timeout: 300_000 }, async () => {
+  const host = await openHost(412, 915);
+  try {
+    await join(host, 1, 8);
+    for (let k = 1; k <= 8; k++) await frame(host, `syn${k}`, { ready: true });
+    await wait(host, () => window.__jjRoom.view().phase === 'Running', null, 120_000);
+    await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
+    await host.locator('[data-act=menu]').click();
+    await wait(host, () => document.querySelectorAll('[data-players] li').length === 8);
+    assert.equal(await host.locator('[data-players] [data-act=ask-remove]').count(), 8);
+    await host.screenshot({ path: `${CAPTURE}/menu-race-8@phone.jpg`, type: 'jpeg', quality: 80 });
     assert.deepEqual(host.errors, []);
   } finally {
     await host.context().close();
