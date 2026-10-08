@@ -113,7 +113,9 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await host.waitForTimeout(500);
     // Debris stays: the removed car's bumper is still in the world after the removal (the sim's own test asserts it is a dynamic body).
     const after = await host.evaluate(() => window.__jjTest.observe());
-    assert.equal(after.cars.some((c) => c.car === car2), false, 'the car is withdrawn');
+    // Withdrawn: no seat owns the car any more and it stops driving (the body stays in the world until S04c's withdrawal rules).
+    assert.equal(after.host.seats.some((x) => x.car === car2), false, 'no seat owns the withdrawn car');
+    assert.equal(after.cars.find((c) => c.car === car2)?.input?.throttle ?? 0, 0, 'and it no longer drives');
     assert.equal(after.debris.filter((d) => d.kind === 'Part').length, debrisBefore, "the removed car's debris stays");
     await host.screenshot({ path: `${CAPTURE}/race-after-remove@1080p.png` });
     assert.deepEqual(host.errors, []);
