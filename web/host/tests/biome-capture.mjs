@@ -4,9 +4,12 @@
 // biome's stretch, so every capture shows what it says (never a car that left the road). Writes JPGs and capture.json
 // (seeds, plans, where each shot was taken) into each bead's evidence directory.
 //   npm --prefix web run build && node web/host/tests/biome-capture.mjs [town rocks dirt bitumen playtest]
+// Env: JJ_CHROMIUM_GPU=1 (headless Chromium on ANGLE/Vulkan, eris's GPU), JJ_EVIDENCE_DIR (eris.sh's run dir, never the clone),
+// JJ_QUERY (extra host query, e.g. `&look=on`), JJ_SHOT (only these shots).
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { chromiumArgs } from '../../tests/journeys/lib/chromium.mjs';
 import { openHost, serve } from './lib/surface.mjs';
 
 const repo = resolve(import.meta.dirname, '../../..');
@@ -34,7 +37,10 @@ const jobs = [
 const server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
 let browser;
 let mode = 'headless Chromium (SwiftShader/software GL)';
-if (!process.env.JJ_HEADLESS) {
+if (process.env.JJ_CHROMIUM_GPU === '1') {
+  browser = await chromium.launch({ headless: true, args: chromiumArgs });
+  mode = 'headless Chromium, ANGLE on Vulkan (GPU)';
+} else if (!process.env.JJ_HEADLESS) {
   try {
     browser = await chromium.launch({ headless: false, channel: 'chrome' });
     mode = 'headed Google Chrome (system GPU)';
@@ -43,6 +49,17 @@ if (!process.env.JJ_HEADLESS) {
   }
 }
 browser ??= await chromium.launch();
+{
+  const probe = await browser.newPage();
+  const gl = await probe.evaluate(() => {
+    const c = document.createElement('canvas').getContext('webgl2');
+    const e = c?.getExtension('WEBGL_debug_renderer_info');
+    return e ? c.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'unknown';
+  });
+  await probe.close();
+  mode = `${mode} ${browser.version()}; WebGL renderer: ${gl}${process.env.JJ_QUERY ? `; host query ${process.env.JJ_QUERY}` : ''}`;
+  console.log('mode', mode);
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function shot(job, spec, out, report, rerolls = 0) {
@@ -53,7 +70,7 @@ async function shot(job, spec, out, report, rerolls = 0) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('response', (r) => r.status() === 404 && missing.push(new URL(r.url()).pathname));
-  const q = `?test=live&room&res=1&autores=off&laps=1${job.recipe ? `&recipe=${job.recipe}` : ''}`;
+  const q = `?test=live&room&res=1&autores=off&laps=1${job.recipe ? `&recipe=${job.recipe}` : ''}${process.env.JJ_QUERY ?? ''}`;
   await openHost(page, `${server.url}/host/${q}`);
   await page.waitForFunction(() => window.__jjPrepare !== undefined, null, { timeout: 60_000 });
   for (let k = 0; k < players; k++) await page.evaluate((n) => window.__jjTest.join(n, { lobby: true }), `Driver ${k + 1}`);
@@ -88,16 +105,34 @@ async function shot(job, spec, out, report, rerolls = 0) {
         return best;
       };
       if (f === 'frontage') {
-        // the route point with the most houses/shopfronts within 45 m and a junction sign close by
+        // A straight street with frontage on both sides ahead of the car (the reference's view): score each route point by
+        // the houses and shopfronts in the 60 m ahead, on each side, plus a junction sign and poles; bends score nothing.
         let bestScore = -1;
         target = Math.round(seg.from + (seg.to - seg.from) * 0.7); // short stretches: the last third
-        for (let i = seg.from + 20; i < seg.to - 12; i += 2) {
-          const [x, z] = info.route[Math.min(i + 8, seg.to - 1)]; // the view ahead of the car
-          const near = (p, r) => (p.x - x) ** 2 + (p.z - z) ** 2 < r * r;
-          const homes = info.pieces.filter((p) => /house|shopfront/.test(p.id) && near(p, 45)).length;
-          const signs = info.pieces.filter((p) => /junction/.test(p.id) && near(p, 40)).length;
-          const poles = info.pieces.filter((p) => /pole/.test(p.id) && near(p, 40)).length;
-          const score = homes + (signs ? 6 : 0) + Math.min(poles, 4);
+        const n = info.route.length;
+        const at = (i) => info.route[((i % n) + n) % n];
+        const heading = (i) => Math.atan2(at(i + 2)[1] - at(i)[1], at(i + 2)[0] - at(i)[0]);
+        for (let i = seg.from + 6; i < seg.to - 12; i += 2) {
+          let ahead = 0;
+          while (ahead < 200 && Math.hypot(at(i + ahead)[0] - at(i)[0], at(i + ahead)[1] - at(i)[1]) < 60) ahead++;
+          const turn = Math.abs(Math.atan2(Math.sin(heading(i + ahead) - heading(i)), Math.cos(heading(i + ahead) - heading(i))));
+          if (turn > 0.2) continue;
+          const [x0, z0] = at(i);
+          const [x1, z1] = at(i + ahead);
+          const len = Math.hypot(x1 - x0, z1 - z0) || 1;
+          const [fx, fz] = [(x1 - x0) / len, (z1 - z0) / len];
+          const sides = [0, 0];
+          let signs = 0;
+          let poles = 0;
+          for (const p of info.pieces) {
+            const along = (p.x - x0) * fx + (p.z - z0) * fz;
+            const across = (p.x - x0) * fz - (p.z - z0) * fx;
+            if (along < 8 || along > 70 || Math.abs(across) > 30) continue;
+            if (/house|shopfront/.test(p.id)) sides[across > 0 ? 0 : 1]++;
+            if (/junction/.test(p.id)) signs++;
+            if (/pole/.test(p.id)) poles++;
+          }
+          const score = Math.min(sides[0], sides[1]) * 3 + sides[0] + sides[1] + (signs ? 4 : 0) + Math.min(poles, 3);
           if (score > bestScore) [bestScore, target] = [score, i];
         }
       } else if (f === 'jump') {
@@ -122,7 +157,7 @@ async function shot(job, spec, out, report, rerolls = 0) {
 }
 
 for (const job of jobs.filter((j) => !only.length || only.includes(j.id))) {
-  const out = join(repo, 'docs/evidence', job.dir);
+  const out = join(process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence'), job.dir);
   await mkdir(out, { recursive: true });
   const report = { mode, recipe: job.recipe || 'town,rocks,outback-dirt,outback-bitumen', shots: [] };
   for (const s of job.shots.filter((x) => !process.env.JJ_SHOT || process.env.JJ_SHOT.split(',').includes(x[0]))) await shot(job, s, out, report);

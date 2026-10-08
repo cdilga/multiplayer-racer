@@ -1,7 +1,7 @@
 {
   "id": "town/side-street",
-  "version": 1,
-  "what": "A side street's tarmac stub, a low pad joining the main road at a simple junction (300 mm tall so it clears the ground it lies across). Length along x (away from the road).",
+  "version": 2,
+  "what": "A side street's tarmac stub, a low pad joining the main road at a simple junction, with a give-way line across its mouth (120 mm tall: level with the road ribbon at the mouth, and on gentle town ground it reads as road, not a raised slab). Length along x (away from the road).",
   "params": {
     "lengthMm": {
       "min": 16000,
@@ -19,7 +19,7 @@
       "x": {
         "param": "lengthMm"
       },
-      "y": 300,
+      "y": 120,
       "z": {
         "param": "widthMm"
       }

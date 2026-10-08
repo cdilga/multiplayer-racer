@@ -13,7 +13,7 @@ use crate::terrain::TerrainParams;
 
 pub struct Town;
 
-/// Gum trees everywhere (never colliding: the collider is the canopy) and, rarely, the water tower.
+/// Gum trees everywhere (never colliding: the collider is the canopy) and, rarely, another water tower.
 const SCATTER: &[PieceSpec] = &[
     piece(
         "town/gum-tree",
@@ -63,24 +63,26 @@ const STREET: &[Lineside] = &[
     },
     Lineside {
         collides: true,
-        skip: 0.35,
+        skip: 0.25,
         params: &[
             ("widthMm", 9_000, 13_000),
             ("depthMm", 7_000, 9_000),
             ("heightCm", 420, 520),
         ],
-        ..rule("town/shopfront", (40.0, 70.0), Side::Both, (5.0, 7.0))
+        // Shopfronts stand at the footpath: the verandah is the front 26 % of the footprint, over the footpath.
+        ..rule("town/shopfront", (26.0, 44.0), Side::Both, (3.0, 4.0))
     },
     Lineside {
         collides: true,
-        skip: 0.2,
+        skip: 0.1,
         params: &[
             ("widthMm", 6_000, 11_000),
             ("depthMm", 5_000, 8_000),
             ("heightCm", 300, 420),
             ("roofPitchDeg", 18, 32),
         ],
-        ..rule("town/house", (13.0, 21.0), Side::Both, (6.0, 9.0))
+        // A front yard between the kerb and the verandah, room for the mailbox and the bin.
+        ..rule("town/house", (12.0, 18.0), Side::Both, (4.6, 6.2))
     },
     Lineside {
         collides: true,
@@ -88,7 +90,7 @@ const STREET: &[Lineside] = &[
         params: &[("heightCm", 750, 850), ("radiusMm", 140, 170)],
         // Poles in a line with a power line strung between each pair (a crossarm and three sagging wires).
         link: Some("town/power-line"),
-        ..rule("town/power-pole", (38.0, 46.0), Side::Right, (3.8, 4.4))
+        ..rule("town/power-pole", (38.0, 46.0), Side::Right, (2.6, 3.0))
     },
     Lineside {
         skip: 0.4,
@@ -100,7 +102,22 @@ const STREET: &[Lineside] = &[
         prop: true,
         link: None,
         yaw: Yaw::Random,
-        ..rule("generic/bin", (22.0, 40.0), Side::Both, (3.2, 5.0))
+        ..rule("generic/bin", (16.0, 30.0), Side::Both, (2.6, 3.6))
+    },
+    // The water tower stands over the town, behind the frontage, once every few hundred metres of street.
+    Lineside {
+        collides: true,
+        avoid_corners: false,
+        params: &[("heightCm", 800, 1100), ("radiusMm", 1800, 2600)],
+        ..rule("town/water-tower", (220.0, 360.0), Side::Either, (16.0, 26.0))
+    },
+    // The Olgas on the horizon (the reference's distant domes): M05's dome piece, consumed through the registry, far out.
+    Lineside {
+        collides: true,
+        avoid_corners: false,
+        yaw: Yaw::Random,
+        params: &[("radiusMm", 18_000, 36_000), ("heightCm", 4_000, 8_000)],
+        ..rule("rocks/dome", (160.0, 280.0), Side::Either, (180.0, 320.0))
     },
 ];
 
