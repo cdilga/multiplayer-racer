@@ -119,7 +119,8 @@ test('damage: a part newly detached bursts, a badly damaged car smokes, a husk b
   const parts = (tick) => (tick < 120 ? [] : [{ car: 1, part: 1, state: PART_DETACHED, pos: [2, 0.3, 2] }, { car: 1, part: 2, state: PART_LOOSE, angle: 0.4 }, { car: 1, part: 3, state: PART_LOOSE, angle: 0.4 }]);
   const e = run((tick) => ({ cars: [{ id: 1, pos: [0, 0, 0], vel: [0, 0, 0] }], parts: parts(tick) }), 3);
   assert.ok(e.pool.spawned.detach >= 5 && e.pool.spawned.sparks >= 14, 'the detach burst: a flash, a puff and sparks');
-  assert.ok(e.pool.spawned['damage-smoke'] > 30, 'three broken parts smoke');
+  // Two seconds of a car with three broken parts at 8 + 12k puffs a second (k = 0.6): about 30.
+  assert.ok(e.pool.spawned['damage-smoke'] > 24, 'three broken parts smoke');
   // Already broken on first sight (a joiner's view of a wrecked car) isn't a fresh burst.
   const born = run((tick) => ({ cars: [{ id: 1, pos: [0, 0, 0] }], parts: parts(999) }), 0.1);
   assert.equal(born.pool.spawned.detach, 0);
@@ -132,7 +133,8 @@ test('damage: a part newly detached bursts, a badly damaged car smokes, a husk b
 test('there is no particle cap: a field of 200 drifting cars emits for every one, and the pool grows by doubling', () => {
   const cars = (tick) => ({ cars: Array.from({ length: 200 }, (_, i) => ({ id: i + 1, pos: [i * 5, 0, tick * (20 / HZ)], vel: [0, 0, 20], flags: FLAG_DRIFTING })) });
   const e = run(cars, 1);
-  assert.ok(e.pool.spawned['tyre-smoke'] > 200 * 100, `spawned ${e.pool.spawned['tyre-smoke']}`);
+  // Every one of the 200 cars: two wheels at 32 puffs a second for a second each.
+  assert.ok(e.pool.spawned['tyre-smoke'] >= 200 * 60, `spawned ${e.pool.spawned['tyre-smoke']}`);
   assert.ok(e.pool.cap >= e.pool.n && e.pool.cap > 256, 'the pool grew past its first size');
   assert.ok(e.pool.n > 5000);
 });

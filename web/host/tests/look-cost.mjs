@@ -19,8 +19,18 @@ const arg = (k, d) => {
 const channel = arg('--channel', 'chrome');
 const out = resolve(repo, arg('--out', 'docs/evidence/P1-R10/cost.json'));
 const repeats = Number(arg('--repeats', 3));
-const server = await serve(join(repo, 'web/dist'));
-const browser = await chromium.launch({ headless: false, channel: channel === 'chromium' ? undefined : channel });
+const server = await serve(process.env.JJ_DIST ?? join(repo, 'web/dist'));
+// JJ_CHROMIUM_GPU=1: headless Chromium over ANGLE/Vulkan (eris's RTX 2080 Super), labelled as such; never a Mac receipt.
+const erisGpu = process.env.JJ_CHROMIUM_GPU === '1';
+const browser = erisGpu
+  ? await chromium.launch({ headless: true, args: (await import('../../tests/journeys/lib/chromium.mjs')).chromiumArgs })
+  : await chromium.launch({ headless: false, channel: channel === 'chromium' ? undefined : channel });
+const gpuName = () =>
+  erisGpu
+    ? execSync("nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || echo GPU", { encoding: 'utf8' }).trim()
+    : execSync("system_profiler SPDisplaysDataType | grep 'Chipset Model' | head -1", { encoding: 'utf8' }).split(':')[1]?.trim();
+const browserLabel = () =>
+  erisGpu ? `Chromium ${browser.version()} (Playwright, headless, ANGLE/Vulkan), WebGLRenderer` : `${channel === 'chrome' ? 'Google Chrome' : 'Chromium'} ${browser.version()} (Playwright, headed), WebGLRenderer`;
 
 async function measure(query, w, h) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -72,11 +82,11 @@ if (process.argv.includes('--fx')) {
     return v[v.length >> 1];
   };
   const summary = Object.fromEntries([1920, 3840].map((w) => [`${w}x${w === 1920 ? 1080 : 2160}`, { look: m('look', w), lookFx: m('look+fx', w), delta: +(m('look+fx', w) - m('look', w)).toFixed(2) }]));
-  const gpu = execSync("system_profiler SPDisplaysDataType | grep 'Chipset Model' | head -1", { encoding: 'utf8' }).split(':')[1]?.trim();
+  const gpu = gpuName();
   await mkdir(dirname(fxOut), { recursive: true });
   await writeFile(
     fxOut,
-    `${JSON.stringify({ machine: `${cpus()[0]?.model} (${gpu}), ${process.platform}/${process.arch}`, browser: `${channel === 'chrome' ? 'Google Chrome' : 'Chromium'} ${browser.version()} (Playwright, headed), WebGLRenderer`, build: execSync('git rev-parse --short=12 HEAD', { cwd: repo, encoding: 'utf8' }).trim(), cohort: '24 synthetic cars on 24 chase tiles over the greybox, effects demo (every family firing), the look on; effects on vs fx=off; 10 warm-up + 120 synchronous frames each, waited to GPU completion; median of the repeats', summary, rows: fxRows }, null, 2)}\n`,
+    `${JSON.stringify({ machine: `${cpus()[0]?.model} (${gpu}), ${process.platform}/${process.arch}`, browser: browserLabel(), build: execSync('git rev-parse --short=12 HEAD', { cwd: repo, encoding: 'utf8' }).trim(), cohort: '24 synthetic cars on 24 chase tiles over the greybox, effects demo (every family firing), the look on; effects on vs fx=off; 10 warm-up + 120 synchronous frames each, waited to GPU completion; median of the repeats', summary, rows: fxRows }, null, 2)}\n`,
   );
   await browser.close();
   server.close();
@@ -103,14 +113,14 @@ const summary = Object.fromEntries(
     Object.fromEntries(['ms_median', 'ms_throughput'].map((k) => [k, { plain: med('plain', w, k), lookFx: med('look+fx', w, k), delta: +(med('look+fx', w, k) - med('plain', w, k)).toFixed(2), deltaPct: +((100 * (med('look+fx', w, k) - med('plain', w, k))) / med('plain', w, k)).toFixed(1) }])),
   ]),
 );
-const gpu = execSync("system_profiler SPDisplaysDataType | grep 'Chipset Model' | head -1", { encoding: 'utf8' }).split(':')[1]?.trim();
+const gpu = gpuName();
 await mkdir(dirname(out), { recursive: true });
 await writeFile(
   out,
   `${JSON.stringify(
     {
       machine: `${cpus()[0]?.model} (${gpu}), ${process.platform}/${process.arch}`,
-      browser: `${channel === 'chrome' ? 'Google Chrome' : 'Chromium'} ${browser.version()} (Playwright, headed), WebGLRenderer`,
+      browser: browserLabel(),
       build: execSync('git rev-parse --short=12 HEAD', { cwd: repo, encoding: 'utf8' }).trim(),
       cohort: '24 cars x 24 chase tiles, Cruz Missile LOD1, sun shadows on; look (toon ramp + ink hulls) and effects (lamp glows) vs plain; 10 warm-up + 120 timed frames each, waited to GPU completion; median of the repeats',
       summary,

@@ -212,12 +212,13 @@ export class Emitter {
       // ---- Tyre smoke: drift and handbrake --------------------------------------------------------------------------
       if (flags & FLAG_DRIFTING && !airborne && speed > 3) {
         for (const side of [0.85, -0.85])
-          this.rate(st, `smoke${side}`, 55, dt, () => {
+          // Tuned with every particle drawn (until 06b05614 only the first 256 of a layer were): less, smaller, fainter.
+          this.rate(st, `smoke${side}`, 32, dt, () => {
             const w = at(side, 0.2, -1.34);
             this.spawn({
               family: 'tyre-smoke', blend: 'alpha', x: w[0], y: w[1], z: w[2],
               vx: -vel[0] * 0.1 + this.jitter(0.7), vy: 0.7 + this.rand() * 0.8, vz: -vel[2] * 0.1 + this.jitter(0.7),
-              life: 1.1 + this.rand() * 0.6, size0: 0.6, size1: 2.8, c0: C.smoke, c1: C.smokeEnd, alpha: 0.8, drag: 0.4, gravity: -0.2, rim: 0.7,
+              life: 1.0 + this.rand() * 0.5, size0: 0.5, size1: 2.0, c0: C.smoke, c1: C.smokeEnd, alpha: 0.6, drag: 0.4, gravity: -0.2, rim: 0.7,
             });
           });
       }
@@ -256,12 +257,14 @@ export class Emitter {
       } else if (st.parts.size) st.parts.clear();
       if (nonIntact >= 2) {
         const k = Math.min(1, nonIntact / 5);
-        this.rate(st, 'dsmoke', 14 + 20 * k, dt, () => {
-          const e = at(this.jitter(0.3), 1.05, 1.0);
+        this.rate(st, 'dsmoke', 8 + 12 * k, dt, () => {
+          // From the engine bay but lifted and drifting up and back: a chase camera sees it over the car's roofline, not
+          // across its paint (fresh-eyes: identity covered when it billowed at the bonnet).
+          const e = at(this.jitter(0.3), 1.5, 0.6);
           this.spawn({
             family: 'damage-smoke', blend: 'alpha', x: e[0], y: e[1], z: e[2],
             vx: vel[0] * 0.5 + this.jitter(0.25), vy: 1.3 + this.rand() * 0.6, vz: vel[2] * 0.5 + this.jitter(0.25),
-            life: 1.8 + this.rand(), size0: 0.7, size1: 2.6, c0: C.dark, c1: C.darkEnd, alpha: 0.8 + 0.15 * k, drag: 0.5, gravity: -0.4, rim: 0.8,
+            life: 1.6 + this.rand(), size0: 0.45, size1: 1.9, c0: C.dark, c1: C.darkEnd, alpha: 0.6 + 0.15 * k, drag: 0.5, gravity: -0.9, rim: 0.8,
           });
         });
       }
@@ -322,9 +325,9 @@ export class Emitter {
   private impact(p: [number, number, number], dv: number, calm: number, vel: [number, number, number]): void {
     const k = Math.min(1, dv / 14);
     // The flash stands above the bonnet (a chase camera sees it over the roof) and lives long enough to be seen at 60 Hz.
-    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: BURST });
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: (1.0 + 2.0 * k) * calm, size1: (0.5 + 1.2 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: BURST });
     this.puff(p, 0.7 + 1.3 * k, C.smoke);
-    const n = Math.round((12 + 44 * k) * calm);
+    const n = Math.round((8 + 26 * k) * calm);
     for (let j = 0; j < n; j++) this.spark(p, 5 + 8 * k, vel);
   }
 
@@ -334,7 +337,7 @@ export class Emitter {
     this.spawn({
       family: 'sparks', blend: 'alpha', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.6 + this.rand() * 0.4, size0: 0.32, size1: 0.1, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 8, rim: HOT,
+      life: 0.6 + this.rand() * 0.4, size0: 0.22, size1: 0.08, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 8, rim: HOT,
     });
   }
 
