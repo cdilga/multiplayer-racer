@@ -10,8 +10,8 @@ Captured by `JJ_CHROMIUM_GPU=1 JJ_CAPTURE_DIR=<dir> node --test web/tests/journe
   the Right/Left goal chips and seven progress dots; Ready (saffron) in the tools row.
 - `phone-tutorial-step1-won.png`: both goals ticked: green chips "✓ Right", "✓ Left" and the green "Nice! On to the
   next one" strip.
-- `phone-tutorial-step2.png`, `-step3-boost.png`, `-step4-drift.png`, `-oi.png`, `-step6-cone.png`,
-  `-step7-wheelie.png`: each step's title, plain instruction, goal chip and progress dots (done steps green).
+- `phone-tutorial-step2.png`, `phone-tutorial-step3-boost.png`, `phone-tutorial-step4-drift.png`, `phone-tutorial-oi.png`, `phone-tutorial-step6-cone.png`,
+  `phone-tutorial-step7-wheelie.png`: each step's title, plain instruction, goal chip and progress dots (done steps green).
 - `phone-tutorial-oi-ticked.png`: "✓ OI!" green with the strip.
 - `phone-tutorial-done.png`: "You're ready" with "Let's race".
 - `phone-tutorial-help-again.png`: Help reopens the tutorial at step 1.
