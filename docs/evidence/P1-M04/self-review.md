@@ -7,7 +7,7 @@ controllers through the real join path, autopilot cars stepped to the chosen pla
 buildings on both sides and a water tower ahead; the junction shot stops 20 m before the rule-placed direction sign.
 `four-biome-lap-town-tv-1080p.jpg` and `four-biome-run-in-domes-tv-1080p.jpg` are the town in the real four-biome track
 (the second is P1-R10's run-in capture). Validator and plot: `JJ_EVIDENCE_DIR=... cargo test -p jj-procgen --test biomes` on eris.
-Reference: `art/references/australia/generated/biome-town.png`. Independent reviews: `fresh-eyes-round2.md` (FAIL, round 2;
+Reference: the generated town biome reference (`art/references/australia/generated/`). Independent reviews: `fresh-eyes-round2.md` (FAIL, round 2;
 round 1's FAIL is in git history) and `fresh-eyes.md` (round 3, PASS).
 
 ## Looked at

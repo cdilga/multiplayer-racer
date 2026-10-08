@@ -3,8 +3,8 @@
 Captured with `JJ_CHROMIUM_GPU=1 node web/host/tests/look-capture.mjs` on eris: headless Chromium 151 over ANGLE/Vulkan on the
 RTX 2080 Super (each report's `mode` line names the WebGL renderer), game commit e10663d (run `bc-r10-7`), the real host page
 (`?test=live&room`), fake controllers through the real join path, autopilot cars, `?look=on&res=1&autores=off` (native pixels,
-R111). The 24-tile shots are a real 24-controller room. References: the accepted Fury road look
-(`docs/evidence/P1-U05.5/looks/fury-road__tv.jpg`, `fury-road__grid_n24.jpg`) and `art/ui/accepted/2026-10-07/frames/tv-race-grid.webp`.
+R111). The 24-tile shots are a real 24-controller room. References: the accepted Fury road look (P1-U05.5's
+looks, TV and 24-tile grid) and the accepted race-grid style frame (`art/ui/accepted/2026-10-07/frames/`).
 Independent reviews: `fresh-eyes-round1.md` (FAIL), `fresh-eyes-round2.md` (FAIL on two evidence gaps), `fresh-eyes.md` (PASS).
 The headed Mac cost receipt is `cost.json`.
 
