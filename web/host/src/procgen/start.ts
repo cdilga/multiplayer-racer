@@ -65,7 +65,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
         features: { kind: string; pose: { x: number; z: number } }[];
         dressing: { kitPiece: string; pose: { x: number; z: number } }[];
       } | null;
-      const aimed = new Set(['town/house', 'town/shopfront', 'town/side-street', 'town/power-pole', 'signs/junction']);
+      const aimed = new Set(['town/house', 'town/shopfront', 'town/side-street', 'town/power-pole', 'town/water-tower', 'signs/junction']);
       return m
         ? {
             segments: (m.route.segments ?? []).map((s) => ({ name: s.name, from: s.span.from, to: s.span.to })),

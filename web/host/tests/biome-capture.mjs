@@ -124,20 +124,25 @@ async function shot(job, spec, out, report, rerolls = 0) {
           const sides = [0, 0];
           let signs = 0;
           let poles = 0;
+          let towers = 0;
           for (const p of info.pieces) {
             const along = (p.x - x0) * fx + (p.z - z0) * fz;
             const across = (p.x - x0) * fz - (p.z - z0) * fx;
+            // A water tower stands back from the street: anywhere ahead within 90 m and 45 m to the side is in view.
+            if (/water-tower/.test(p.id) && along > 20 && along < 90 && Math.abs(across) < 45) towers++;
             if (along < 8 || along > 70 || Math.abs(across) > 30) continue;
             if (/house|shopfront/.test(p.id)) sides[across > 0 ? 0 : 1]++;
             if (/junction/.test(p.id)) signs++;
             if (/pole/.test(p.id)) poles++;
           }
-          const score = Math.min(sides[0], sides[1]) * 3 + sides[0] + sides[1] + (signs ? 4 : 0) + Math.min(poles, 3);
+          const score = Math.min(sides[0], sides[1]) * 3 + sides[0] + sides[1] + (signs ? 4 : 0) + Math.min(poles, 3) + (towers ? 8 : 0);
           if (score > bestScore) [bestScore, target] = [score, i];
         }
       } else if (f === 'junction') {
         // The rule-placed direction sign at a junction, about 25 m ahead of the car.
-        const s = info.pieces.filter((p) => /junction/.test(p.id)).map((p) => nearest([p.x, 0, p.z])).find((i) => i > seg.from + 12 && i < seg.to);
+        // A junction away from the start line, so the finish gantry's truss isn't overhead.
+        const js = info.pieces.filter((p) => /junction/.test(p.id)).map((p) => nearest([p.x, 0, p.z])).filter((i) => i > seg.from + 12 && i < seg.to);
+        const s = js.find((i) => i > 60 && i < info.route.length - 30) ?? js[0];
         if (s !== undefined) {
           let back = s;
           while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 25) back--;
