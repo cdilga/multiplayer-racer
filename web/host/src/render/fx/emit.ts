@@ -306,7 +306,7 @@ export class Emitter {
   private impact(p: [number, number, number], dv: number, calm: number, vel: [number, number, number]): void {
     const k = Math.min(1, dv / 14);
     // The flash stands above the bonnet (a chase camera sees it over the roof) and lives long enough to be seen at 60 Hz.
-    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.2, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: HOT });
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: HOT });
     this.puff(p, 0.7 + 1.3 * k, C.smoke);
     const n = Math.round((12 + 44 * k) * calm);
     for (let j = 0; j < n; j++) this.spark(p, 5 + 8 * k, vel);
@@ -318,7 +318,7 @@ export class Emitter {
     this.spawn({
       family: 'sparks', blend: 'alpha', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.4 + this.rand() * 0.4, size0: 0.32, size1: 0.1, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12, rim: HOT,
+      life: 0.6 + this.rand() * 0.4, size0: 0.32, size1: 0.1, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 8, rim: HOT,
     });
   }
 
@@ -342,7 +342,7 @@ export class Emitter {
 
   /** A part coming off: a flash, a puff and a burst of sparks at its pose. */
   private detach(p: [number, number, number], calm: number): void {
-    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.4, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.22, size0: 2.0 * calm, size1: 0.8 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * Math.sqrt(calm), rim: HOT });
+    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.4, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.32, size0: 2.0 * calm, size1: 0.8 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * Math.sqrt(calm), rim: HOT });
     for (let k = 0; k < 8; k++)
       this.spawn({
         family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.3, z: p[2], vx: this.jitter(2.4), vy: 1 + this.rand() * 1.2, vz: this.jitter(2.4),

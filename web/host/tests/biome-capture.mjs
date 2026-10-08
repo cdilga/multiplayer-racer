@@ -139,13 +139,13 @@ async function shot(job, spec, out, report, rerolls = 0) {
           if (score > bestScore) [bestScore, target] = [score, i];
         }
       } else if (f === 'junction') {
-        // The rule-placed direction sign at a junction, about 25 m ahead of the car.
+        // The rule-placed direction sign at a junction, about 12 m ahead of the car.
         // A junction away from the start line, so the finish gantry's truss isn't overhead.
         const js = info.pieces.filter((p) => /junction/.test(p.id)).map((p) => nearest([p.x, 0, p.z])).filter((i) => i > seg.from + 12 && i < seg.to);
         const s = js.find((i) => i > 60 && i < info.route.length - 30) ?? js[0];
         if (s !== undefined) {
           let back = s;
-          while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 25) back--;
+          while (back > seg.from && Math.hypot(info.route[back][0] - info.route[s][0], info.route[back][1] - info.route[s][1]) < 12) back--;
           target = back;
         }
       } else if (f === 'jump') {

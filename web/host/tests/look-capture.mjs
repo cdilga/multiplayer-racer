@@ -185,7 +185,7 @@ async function identity(out, report) {
 // The synthetic oval with ?fxdemo: car i cycles through the family its index names (see synthetic.ts fxDemoState).
 const ALL = ['dust', 'tyre-smoke', 'boost', 'sparks', 'impact', 'landing', 'detach', 'damage-smoke', 'wreck-fire', 'lamp'];
 const FX = [
-  // [name, tiles, follow, families that must be alive, { see: a tile must have the husk in view, hit: shoot 50 ms after a new impact }]
+  // [name, tiles, follow, families that must be alive, { see: a tile must have the husk in view, hit: shoot the moment a new impact lands }]
   ['dust-dirt-1tile', 1, [0], ['dust']],
   ['tyre-smoke-1tile', 1, [1], ['tyre-smoke']],
   ['boost-blue-1tile', 1, [2], ['boost']],
@@ -219,7 +219,6 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
     if (opts.hit ? st.spawned.impact > hits0 : families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
     await sleep(15);
   }
-  if (opts.hit) await sleep(50);
   alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});
   const have = families.filter((f) => alive[f] > 0);
   await page.screenshot({ path: join(out, `${name}${reduced ? '-reduced' : ''}.jpg`), type: 'jpeg', quality: 86 });
