@@ -119,7 +119,8 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     // Withdrawn: no seat owns the car any more and it stops driving (the body stays in the world until S04c's withdrawal rules).
     assert.equal(after.host.seats.some((x) => x.car === car2), false, 'no seat owns the withdrawn car');
     assert.equal(after.cars.find((c) => c.car === car2)?.input?.throttle ?? 0, 0, 'and it no longer drives');
-    assert.equal(after.debris.filter((d) => d.kind === 'Part').length, debrisBefore, "the removed car's debris stays");
+    // Nothing is deleted or merged by the removal (the others, racing on, may shed parts of their own meanwhile: never fewer).
+    assert.ok(after.debris.filter((d) => d.kind === 'Part').length >= debrisBefore, "the removed car's debris stays");
     await host.screenshot({ path: `${CAPTURE}/race-after-remove@1080p.png` });
     assert.deepEqual(host.errors, []);
   } finally {
