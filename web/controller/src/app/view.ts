@@ -191,7 +191,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify());
+    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on));
     if (session.roomPhase === 'Lobby') {
       tutorialOffered = true;
       if (Tutorial.wanted()) tutorial.show();
@@ -305,7 +305,13 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     roundBanner(app, session);
     // The race is starting: the tutorial (the controller's menu, G03) gets out of the way, or the car would start on
     // the autopilot. Help shows it again.
-    if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false);
+    if (tutorial?.open && session.roomPhase === 'Countdown') tutorial.close(false, true);
+    // A newcomer who joined a race in progress has no card (it would hand the car to the autopilot): the host's prompts on
+    // their tile teach the controls while they drive.
+    if (tutorial && !tutorialOffered && (session.roomPhase === 'Racing' || session.roomPhase === 'Countdown')) {
+      tutorialOffered = true;
+      if (Tutorial.wanted()) session.tutorial(true);
+    }
     if (sheet?.open && session.roomPhase === 'Countdown') sheet.close();
     if (cars?.open && session.roomPhase === 'Countdown') cars.close();
     const carBtn = app.querySelector<HTMLButtonElement>('[data-act=car]');

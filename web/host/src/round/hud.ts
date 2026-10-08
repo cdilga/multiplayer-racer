@@ -5,6 +5,7 @@
 // for the name drops it, keeping number, place and lap. Tiles are the seated cars in seat-number order.
 import { ordinal, shortName } from './format';
 import type { RoomView } from '../worker/client';
+import { promptHtml } from '../ui/prompts/steps';
 
 type SeatView = RoomView['seats'][number] & {
   /** From `room_json`: the boost meter as a byte (0..255, `Host::room_json`). */
@@ -54,6 +55,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
     b.innerHTML = `<div class="hud-top"><div class="hud-tl"><span class="badge hud-badge"></span><span class="hud-name"></span></div>
       <div class="hud-tr"><span class="display hud-pos"></span><span class="hud-lap"></span></div></div>
       <div class="hud-bottom"><div class="hud-boost" hidden><i></i></div><div class="hud-status"></div></div>
+      <div class="hud-prompt" data-prompt hidden></div>
       <div class="hud-centre" hidden><div class="display wreck-word">Wrecked!</div><div class="wreck-back">Back in <b class="cd"></b> s</div></div>`;
     layer.append(b);
     return b;
@@ -82,7 +84,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       }
       // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
       const started = room?.phase === 'Running' || room?.phase === 'Finalising';
-      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs]);
+      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs, started ? s?.prompt : null]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -113,6 +115,11 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
         state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
+      // The first-drive prompt (C06): the next control, only in a race, never covering the car (bottom of the tile).
+      const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
+      const prompt = started ? s.prompt : null;
+      pr.hidden = !prompt;
+      pr.innerHTML = prompt ? promptHtml(prompt) : '';
       const centre = box.querySelector<HTMLElement>('.hud-centre')!;
       centre.hidden = !(s.wreckMs !== undefined && s.wreckMs !== null && s.wreckMs > 0);
       if (!centre.hidden) box.querySelector('.cd')!.textContent = String(Math.ceil(s.wreckMs! / 1000));

@@ -100,6 +100,12 @@ pub enum ControllerCmd {
     SetCameraDistance {
         distance: CameraDistance,
     },
+    /// The player's first-drive prompts (C06) are wanted (`on: true`, when the phone's tutorial opens or repeats from Help)
+    /// or over (`on: false`: skipped, finished, or skipped before on this device). The host tracks the seven controls
+    /// itself and shows the next one on the seat's tile while it is on; it never pauses or blocks anything.
+    Tutorial {
+        on: bool,
+    },
     /// `cmd` is for one source of this endpoint (a hub: pads, key clusters and the phone's own sticks over ONE connection).
     /// A `Claim` inside it claims that source's seat (keyed by `source` within the endpoint; the source's own `Welcome`
     /// comes back wrapped the same way), and `Identify`, `Ready`, `Leave`, `SitOut`, `SetName`, `Menu`, `Pick`,

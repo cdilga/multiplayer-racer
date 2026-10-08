@@ -2042,3 +2042,80 @@ fn a_camera_distance_choice_is_an_event_for_that_seat() {
         }
     )));
 }
+
+/// P1-C06: the host tracks the seat's first-drive prompts from what it sees; skip hides them and never pauses anything.
+#[test]
+fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    let phone = |c: ControllerCmd| net("phone", Channel::Cmd, c.encode());
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.handle(&phone(c)).unwrap();
+    }
+    let mut now = 0;
+    let mut seq = 0u16;
+    let mut drive = |h: &mut Host, x: i16, n: usize| {
+        for _ in 0..n {
+            seq += 1;
+            let b = StateBatch {
+                minor: STATE_MINOR,
+                batch_seq: seq,
+                sent_at_ms: 0,
+                records: vec![StateRecord {
+                    source: SourceHandle(1),
+                    seq,
+                    drive: [x, 0],
+                    action: [0, 0],
+                    flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+                }],
+            };
+            h.handle(&net("phone", Channel::State, b.encode().unwrap()))
+                .unwrap();
+            h.advance(now);
+            now += 16_667;
+        }
+    };
+    let prompt = |h: &Host| -> serde_json::Value {
+        let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+        v["seats"][0]["prompt"].clone()
+    };
+    drive(&mut h, 0, 20);
+    assert_eq!(
+        prompt(&h),
+        serde_json::Value::Null,
+        "nothing until the phone asks"
+    );
+    h.handle(&phone(ControllerCmd::Tutorial { on: true }))
+        .unwrap();
+    drive(&mut h, 32_767, 10);
+    let p = prompt(&h);
+    assert_eq!(
+        (p["step"].clone(), p["of"].clone(), p["done"].clone()),
+        (0.into(), 7.into(), serde_json::json!(["right"]))
+    );
+    drive(&mut h, -32_767, 10);
+    assert_eq!(prompt(&h)["step"], 1, "both sides seen: the next control");
+    // Skip hides it, and the room runs on.
+    h.handle(&phone(ControllerCmd::Tutorial { on: false }))
+        .unwrap();
+    drive(&mut h, 0, 5);
+    assert_eq!(prompt(&h), serde_json::Value::Null);
+    let v: serde_json::Value = serde_json::from_str(&h.room_json()).unwrap();
+    assert_ne!(v["paused"], true, "prompts never pause the room");
+    // Repeat from Help starts again at step 0.
+    h.handle(&phone(ControllerCmd::Tutorial { on: true }))
+        .unwrap();
+    drive(&mut h, 0, 2);
+    assert_eq!(prompt(&h)["step"], 0);
+}

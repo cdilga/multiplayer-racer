@@ -79,6 +79,12 @@ pub fn encode_set_camera_distance(tag: u8) -> Vec<u8> {
     ControllerCmd::SetCameraDistance { distance }.encode()
 }
 
+/// `Tutorial`: the first-drive prompts are wanted (true) or over (false).
+#[wasm_bindgen(js_name = encodeTutorial)]
+pub fn encode_tutorial(on: bool) -> Vec<u8> {
+    ControllerCmd::Tutorial { on }.encode()
+}
+
 #[wasm_bindgen(js_name = encodeReady)]
 pub fn encode_ready(on: bool) -> Vec<u8> {
     ControllerCmd::Ready { on }.encode()

@@ -172,7 +172,7 @@ export interface RoomView {
   /** Round preparation (P1-M08a, the R90 readout): main prepares maps, the pending job and its seed, whether a map is waiting for the next Countdown, stale `MapReady`s dropped, and the last validator verdict. */
   preparation?: { external: boolean; pending: { id: number; seed: number } | null; prepared: boolean; staleDropped: number; verdict: string };
   armed: boolean;
-  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; car: number | null; laps: number | null; position: number | null; finished: boolean }>;
+  seats: Array<{ seat: number; number: number; name: string; rgb: [number, number, number]; colourIndex: number; ready: boolean; /** The car picked in the controller's lobby (a roster id) and whether its picker is still open. */ vehicle?: string | null; choosing?: boolean; presence: string; local: boolean; car: number | null; laps: number | null; position: number | null; finished: boolean; /** The seat's first-drive prompt (C06), while one is showing. */ prompt?: { step: number; of: number; done: string[] } | null }>;
   results: Array<{ number: number; name: string; place: number; time_ms: number | null; points: number }> | null;
   standings: Array<{ seat: number; place: number; points: number; wins: number }>;
 }

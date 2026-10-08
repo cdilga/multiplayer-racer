@@ -80,6 +80,8 @@ export class Tutorial {
     private readonly onOpen: (open: boolean) => void = () => {},
     /** The menu's Identify entry (R99): the same flash as the tools row's button. */
     private readonly onIdentify: () => void = () => {},
+    /** Prompts are wanted (`true`: the card opened or repeats) or over (`false`: skipped or finished): the host's tile follows. */
+    private readonly onWanted: (on: boolean) => void = () => {},
   ) {}
 
   show(from = 0): void {
@@ -94,14 +96,20 @@ export class Tutorial {
     this.area.append(this.card);
     this.render();
     if (!was) this.onOpen(true);
+    this.onWanted(true);
   }
 
-  close(finished: boolean): void {
+  /** Closes the card. `interrupted`: the race is starting, so it got out of the way; that is neither a skip nor a finish,
+   *  so it is not remembered and the host's prompts carry on over the car. */
+  close(finished: boolean, interrupted = false): void {
     const was = this.open;
     this.card?.remove();
     this.card = null;
     this.area.classList.remove('coaching');
-    remember();
+    if (!interrupted) {
+      remember();
+      this.onWanted(false);
+    }
     if (was) this.onOpen(false);
     void finished;
   }

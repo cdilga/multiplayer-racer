@@ -280,3 +280,13 @@ body:has(.jj-foot) .jj-chip { display: none; }
 
 /* The announcer's caption (audio/announcer.ts sets bottom:28px inline) stays above the footer, never over its buttons. */
 #jj-caption { bottom: calc(max(5vh, 30px) + 12px) !important; }
+
+/* First-drive prompt on a tile (P1-C06): a paper caption low in the tile, above the boost meter; it ticks as the host sees the control. */
+.hud-prompt { position: absolute; left: 50%; bottom: calc(var(--hud) * 2.4); transform: translateX(-50%); display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: calc(var(--hud) * .45); max-width: 92%; padding: calc(var(--hud) * .3) calc(var(--hud) * .7); background: var(--c-paper); color: var(--c-ink); border: calc(var(--hud) * .12) solid var(--c-ink); box-shadow: 0 calc(var(--hud) * .2) 0 var(--c-ink); font-size: var(--hud); line-height: 1.15; pointer-events: none; }
+.hud-prompt[hidden] { display: none; }
+.hud-prompt .pn { font-weight: 700; opacity: .65; }
+.hud-prompt .pt { font-size: 1.25em; text-transform: uppercase; font-style: italic; }
+.hud-prompt .pgs { display: inline-flex; gap: calc(var(--hud) * .3); }
+.hud-prompt .pg { padding: 0 .6em .1em; background: #e6dcc3; border: calc(var(--hud) * .08) solid var(--c-ink); font-weight: 700; }
+.hud-prompt .pg.on { background: #2e9e5b; color: #fff; }
+.hud-tile.compact .hud-prompt .px { display: none; }

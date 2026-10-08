@@ -537,6 +537,11 @@ export class Session {
     this.send('cmd', wasm.encodePick(vehicle, open));
   }
 
+  /** The first-drive prompts are wanted (the card opened, or a newcomer joined a race) or over (skipped, finished). */
+  tutorial(on: boolean): void {
+    this.send('cmd', wasm.encodeTutorial(on));
+  }
+
   /** Sit out (the settings sheet, C07): the seat steps out of the next round and the car is parked. */
   sitOut(): void {
     this.send('cmd', wasm.encodeSitOut());

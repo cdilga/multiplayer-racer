@@ -123,3 +123,68 @@ test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', 
   assert.notEqual((await page.evaluate(() => window.__jjTutorial.inspect()))?.open, true, 'a skipped tutorial stays skipped');
   void step;
 });
+
+// The TV side (P1-C06 "shown on the seat's tile and on the controller"): the host detects each control for the seat and
+// shows the next one on that seat's tile in the race, clearing it as it sees the control.
+const promptOf = (host, n = 0) => host.evaluate((n) => window.__jjRoom.view().seats[n]?.prompt ?? null, n);
+const tilePrompt = (host) => host.evaluate(() => [...document.querySelectorAll('.hud-tile [data-prompt]')].filter((e) => !e.hidden).map((e) => e.textContent));
+const startRace = async (page, host) => {
+  await page.locator('[data-act=ready]').click();
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
+};
+
+test('C06: the host sees each control and the seat\'s tile shows the next one in the race; it never pauses', { timeout: 240_000 }, async () => {
+  const { host, page, ctx } = await hostAndPhone();
+  await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
+  // The host sees the steer goals as they happen.
+  await sticks(page, { x: 1, y: 0 }, z);
+  await wait(host, () => window.__jjRoom.view().seats[0].prompt?.done?.includes('right'), undefined, 10_000);
+  await sticks(page, { x: -1, y: 0 }, z);
+  await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 1, undefined, 10_000);
+  // The race starts (the card gets out of the way); the tile carries on from the control the host last saw.
+  await startRace(page, host);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Go and stop/.test(e.textContent)), undefined, 20_000);
+  await shot(host, 'tv-prompt-go-and-stop-1280x720');
+  await sticks(page, { x: 0, y: -1 }, z);
+  await sticks(page, { x: 0, y: 1 }, z);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Boost/.test(e.textContent)), undefined, 20_000);
+  await shot(host, 'tv-prompt-boost-1280x720');
+  await sticks(page, z, { x: 1, y: 0 });
+  await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 3, undefined, 10_000);
+  assert.deepEqual(await tilePrompt(host).then((t) => t.length), 1, 'one prompt on the one tile');
+  assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'prompts never paused the host');
+  assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race runs on');
+  await ctx.close();
+});
+
+test('C06: skip hides the TV prompt too, and nothing is shown afterwards', { timeout: 180_000 }, async () => {
+  const { host, page } = await hostAndPhone();
+  await wait(page, () => window.__jjTutorial.inspect()?.open === true);
+  await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
+  await page.getByRole('button', { name: 'Skip tutorial' }).click();
+  await wait(host, () => window.__jjRoom.view().seats[0].prompt === null, undefined, 10_000);
+  await startRace(page, host);
+  await host.waitForTimeout(2500);
+  assert.equal((await tilePrompt(host)).length, 0, 'no prompt on the tile after a skip');
+  await shot(host, 'tv-no-prompt-after-skip-1280x720');
+});
+
+test('C06: a newcomer who joins a race in progress gets the prompts on their tile', { timeout: 240_000 }, async () => {
+  const { host, page } = await hostAndPhone();
+  await page.getByRole('button', { name: 'Skip tutorial' }).click();
+  await startRace(page, host);
+  const ctx2 = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
+  const late = await ctx2.newPage();
+  await late.goto(await host.evaluate(() => window.__jjNet.joinUrl()));
+  await wait(late, () => window.__jjController?.inspect().phase === 'ready-to-join');
+  await late.getByRole('button', { name: 'Join the race' }).click();
+  await wait(late, () => window.__jjController.inspect().phase === 'playing');
+  await wait(host, () => window.__jjRoom.view().seats.length === 2 && window.__jjRoom.view().seats[1].prompt?.step === 0, undefined, 30_000);
+  assert.equal((await late.evaluate(() => window.__jjTutorial.inspect())).open, false, 'no card in a race (it would hand the car to the autopilot)');
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Steer/.test(e.textContent)), undefined, 30_000);
+  await shot(host, 'tv-prompt-late-joiner-steer-1280x720');
+  await sticks(late, { x: 1, y: 0 }, z);
+  await sticks(late, { x: -1, y: 0 }, z);
+  await wait(host, () => window.__jjRoom.view().seats[1].prompt?.step === 1, undefined, 10_000);
+});

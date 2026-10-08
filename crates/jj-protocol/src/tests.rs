@@ -172,6 +172,7 @@ fn controller_samples() -> Vec<ControllerCmd> {
         ControllerCmd::SetCameraDistance {
             distance: CameraDistance::Far,
         },
+        ControllerCmd::Tutorial { on: true },
         ControllerCmd::ForSource {
             source: SourceHandle(4),
             cmd: Box::new(ControllerCmd::Claim {
@@ -199,10 +200,11 @@ fn controller_variant(c: &ControllerCmd) -> &'static str {
         ControllerCmd::Ping { .. } => "ping",
         ControllerCmd::Pick { .. } => "pick",
         ControllerCmd::SetCameraDistance { .. } => "set-camera-distance",
+        ControllerCmd::Tutorial { .. } => "tutorial",
         ControllerCmd::ForSource { .. } => "for-source",
     }
 }
-const CONTROLLER_VARIANTS: [&str; 15] = [
+const CONTROLLER_VARIANTS: [&str; 16] = [
     "hello",
     "claim",
     "action",
@@ -217,6 +219,7 @@ const CONTROLLER_VARIANTS: [&str; 15] = [
     "ping",
     "pick",
     "set-camera-distance",
+    "tutorial",
     "for-source",
 ];
 

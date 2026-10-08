@@ -120,6 +120,8 @@ struct SeatInput {
     idle_cued: bool,
     /// The controller's menu (Settings, Help) is open: the autopilot drives until it closes and the player steers.
     menu_open: bool,
+    /// The first-drive prompts (C06): which of the seven controls the host has seen this seat do.
+    prompt: prompts::PromptTrack,
 }
 
 /// A host pad or key cluster's button edges and its way back after leaving.
@@ -512,6 +514,12 @@ impl Host {
         // pads and keys alike. G03: a connected seat with no deliberate input for IDLE_MS gets a cue, then the autopilot
         // IDLE_CUE_MS later (racing only: nobody's idle on the grid); an open menu hands over at once.
         let racing = self.driving() == jj_session::director::Driving::Racing;
+        // First-drive prompts (C06): what the host sees each seat do, in the lobby too (the phone's samples arrive there).
+        for input in self.inputs.values_mut() {
+            if input.prompt.on && input.state.age_ms(now_ms).is_some_and(|a| a <= STALE_MS) {
+                input.prompt.sample(&input.state.semantics());
+            }
+        }
         let mut cues = Vec::new();
         for (&seat, input) in self.inputs.iter_mut() {
             let Some(car) = input.car else { continue };
@@ -899,6 +907,17 @@ impl Host {
                 }
                 vec![]
             }
+            ControllerCmd::Tutorial { on } => {
+                if let Some(input) = self
+                    .seats
+                    .seat_at(conn, src)
+                    .and_then(|s| self.inputs.get_mut(&s))
+                {
+                    input.prompt.set(on);
+                }
+                self.session_rev += 1;
+                vec![]
+            }
             ControllerCmd::Recover => {
                 if let Some(car) = self
                     .seats
@@ -928,6 +947,7 @@ impl Host {
                         input.seen_actions.remove(0);
                     }
                     input.seen_actions.push(action);
+                    input.prompt.action(kind);
                     if let Some(car) = input.car {
                         match kind {
                             ActionKind::Wheelie { preload_ms } => {
@@ -1007,6 +1027,7 @@ impl Host {
                     active_ms: 0,
                     idle_cued: false,
                     menu_open: false,
+                    prompt: prompts::PromptTrack::default(),
                 });
                 if let Origin::Net(_) = origin
                     && let Some(endpoint) = self.endpoint_of(conn)
@@ -1462,6 +1483,7 @@ impl Writer<'_> {
     }
 }
 
+mod prompts;
 mod round;
 
 #[cfg(feature = "testing")]
