@@ -106,11 +106,14 @@ test('G07: the host removes a connected player mid-race from the pause menu; the
     await host.screenshot({ path: `${CAPTURE}/race-confirm-remove@1080p.png` });
     await host.getByRole('button', { name: 'Remove player' }).click();
     await host.getByRole('button', { name: 'Resume' }).click();
+    const removedAt = (await host.evaluate(() => window.__jjTest.observe())).tick;
     await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 2), null, 10_000);
     await wait(host, () => document.querySelectorAll('.hud-tile[data-seat]').length === 3);
     assert.deepEqual((await seats(host)).sort(), [1, 3, 4]);
     assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running', 'the race goes on');
-    await host.waitForTimeout(500);
+    // The withdrawal hands the car's controls back to neutral over the autopilot's quarter-second (30 ticks) blend: wait on sim
+    // ticks, not wall time (a slow host runs fewer in the same second).
+    await wait(host, async (t) => (await window.__jjTest.observe()).tick >= t + 45, removedAt, 60_000);
     // Debris stays: the removed car's bumper is still in the world after the removal (the sim's own test asserts it is a dynamic body).
     const after = await host.evaluate(() => window.__jjTest.observe());
     // Withdrawn: no seat owns the car any more and it stops driving (the body stays in the world until S04c's withdrawal rules).

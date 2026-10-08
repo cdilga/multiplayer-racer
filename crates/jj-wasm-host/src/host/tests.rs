@@ -1642,6 +1642,13 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
         .unwrap()["car"]
         .as_u64()
         .unwrap() as u32;
+    // PB's seat is a silent one: the autopilot drives its car.
+    h.sim.set_autopilot(CarId(car_b), true);
+    step(&mut h, 60, &mut now, &mut removed_to);
+    assert!(
+        h.sim.applied_input(CarId(car_b)).unwrap().throttle > 0,
+        "the autopilot is driving PB's car"
+    );
     h.sim.set_part_health(CarId(car_b), 1, 0.0);
     step(&mut h, 10, &mut now, &mut removed_to);
     let b_debris = |h: &Host| -> Vec<usize> {
@@ -1677,6 +1684,14 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
         .map(|s| s["name"].as_str().unwrap().to_string())
         .collect();
     assert_eq!(names, vec!["PA".to_string()], "PB is gone, PA races on");
+    // The withdrawn car stops: the autopilot doesn't keep it racing; its controls hand back to neutral over the autopilot's
+    // quarter-second blend (no jolt), so a second later nothing drives it.
+    step(&mut h, 40, &mut now, &mut removed_to);
+    assert_eq!(
+        h.sim.applied_input(CarId(car_b)).unwrap().throttle,
+        0,
+        "a removed car stops driving"
+    );
     // Debris stays: the removed car's parts are still there, still dynamic bodies, nothing deleted, merged or frozen.
     let after = b_debris(&h);
     assert_eq!(after, before, "the removed car's debris stays in the world");

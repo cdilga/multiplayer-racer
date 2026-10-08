@@ -1143,6 +1143,9 @@ impl Host {
                 if let Some(input) = self.inputs.get_mut(&seat)
                     && let Some(car) = input.car.take()
                 {
+                    // A withdrawn car stops at once: no player input and no autopilot (a silent seat's car was on it) keeps it
+                    // racing. The body stays where it is (S04c's rules decide the rest).
+                    self.sim.set_autopilot(car, false);
                     self.sim.set_input(car, DriveInput::default());
                 }
                 self.events.push(SimEvent::SeatLeft { seat });
