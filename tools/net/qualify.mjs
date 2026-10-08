@@ -189,6 +189,16 @@ try {
   process.exitCode = ok ? 0 : 1;
 } catch (e) {
   console.log(`qualify ${row}: FAIL ${String(e.message ?? e).split('\n')[0]}`);
+  // Where each page's link got to (states and the relay-fallback record only: no addresses or credentials).
+  for (const b of browsers)
+    for (const c of b.contexts())
+      for (const p of c.pages()) {
+        const l = await p.evaluate(() => {
+          const k = window.__jjHello?.link?.();
+          return k ? { state: k.state, pc: k.pc, ice: k.ice, restarts: k.restarts, relayFallback: k.relayFallback } : null;
+        }).catch(() => null);
+        console.log(`  ${new URL(p.url()).pathname.split('/').slice(-2).join('/')}: ${JSON.stringify(l)}`);
+      }
   process.exitCode = 1;
 } finally {
   for (const b of browsers) await b.close().catch(() => {});
