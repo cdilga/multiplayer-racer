@@ -2,7 +2,7 @@
 # Close a bead in one command: the whole of docs/process/bead-workflow.md steps 4-6 (push, CI, tick, gate, close).
 #
 #   scripts/beads/close.sh <bead|P1-ID> --tests "AC1: <test> AC2: <test> …" [--comment "<one line>"]
-#       green CI on a pushed commit naming the bead: waits on scripts/ci-status.sh --wait, then closes
+#       green CI containing the newest commit naming the bead (scripts/ci/green-for.py --wait), then closes
 #   scripts/beads/close.sh <bead|P1-ID> --tests "…" --receipt docs/evidence/<P1-ID>/<file>
 #       an evidence close (ev:owner/deploy-repo/hardware), or any close before CI exists (P1-D01, P1-F02)
 #   scripts/beads/close.sh <bead|P1-ID> --tests "…" --pending
@@ -10,7 +10,7 @@
 #
 # It finds the newest commit naming the bead, pushes it (and its LFS objects) if needed, ticks every acceptance
 # box, records the batch_verify gate and closes. Needs AGENT_NAME (the commit guard and the br actor).
-# Contract for scripts/ci-status.sh (P1-F02): `--wait` blocks until CI finishes for HEAD, prints the run URL as its
+# Contract for scripts/ci/green-for.py: `--wait` blocks until a completed ci.yml run containing the commit decides, prints the run URL as its
 # last stdout line, and exits 0 green, 1 red, 2 still pending.
 # Exit: 0 closed or handed off, 1 a step failed or CI is red, 2 usage, 3 CI still pending.
 set -euo pipefail
@@ -100,12 +100,13 @@ if [[ -n $receipt ]]; then
     git diff --quiet HEAD -- "$receipt" || die "receipt $receipt has uncommitted changes"
     provider=local evidence=$receipt
 else
-    [[ -x scripts/ci-status.sh ]] || die "no CI yet (scripts/ci-status.sh lands with P1-F02): close with --receipt docs/evidence/<P1-ID>/<file>"
-    echo "close: waiting for CI on $short"
-    set +e; out=$(scripts/ci-status.sh --wait); rc=$?; set -e
+    # Green = any completed, successful ci.yml run on a commit that contains $sha (scripts/ci/green-for.py): waiting
+    # runs are replaced by newer pushes, so the bead's own commit often never gets a run of its own.
+    echo "close: waiting for a green CI run containing $short"
+    set +e; out=$(scripts/ci/green-for.py "$sha" --wait --branch "$branch"); rc=$?; set -e
     case $rc in
         0) ;;
-        2) echo "close: CI still pending for $short; rerun later or use --pending" >&2; exit 3 ;;
+        2) echo "close: no completed CI run contains $short yet; rerun later or use --pending" >&2; exit 3 ;;
         *) die "CI is red for $short: $(tail -1 <<<"$out") (a red lane on your change is yours to fix)" ;;
     esac
     provider=gitea-ci evidence=$(tail -1 <<<"$out")

@@ -27,7 +27,8 @@
    For TV/design beads the self-look run is `node art/ui/lib/live-check.mjs --local --tv --fullscreen` (every TV state on phone, tablet and TV, rechecked after a resize; it fails on text or controls cut off by the screen edge).
 5. **Close on green, in one command:** `scripts/beads/close.sh <id> --tests "AC1: <test> AC2: <test> …"`
    (run it in the background and keep working). It pushes the commit and `git lfs push --all`, waits on
-   `scripts/ci-status.sh --wait`, ticks the acceptance boxes, records the gate
+   `scripts/ci/green-for.py <commit> --wait` (green = any completed, successful ci.yml run on a commit that contains
+   yours: waiting runs are replaced by newer pushes, so your own commit may never get a run), ticks the acceptance boxes, records the gate
    (`br gate report <id> --gate batch_verify --provider gitea-ci --status pass --to closed`) and closes
    with the CI run as the receipt. Exit 1 means CI is red: a red lane on your change is yours to fix.
    To move on without waiting, add `--pending`: the bead goes to `batch_pending` with the commit and
@@ -48,7 +49,8 @@ The bootstrap beads F01, D01 and F02 close that way.
 
 A Claude session you start when you want it, for the things CI doesn't do by itself:
 
-- close `batch_pending` beads whose commits went green on CI;
+- close `batch_pending` beads whose commits went green on CI (`scripts/ci/green-for.py <commit>`: a green run on a
+  commit containing theirs counts; a cancelled run on their own commit decides nothing);
 - turn a red CI lane into `rework` for the bead that caused it, with the failing assertion and file:line;
 - run the CI lanes locally when CI is down or not built yet, and close on that receipt:
   `scripts/beads/batch-verify.sh plan --base <ref>` shows the lanes CI's planner (`scripts/ci/plan.mjs`) picks for the
