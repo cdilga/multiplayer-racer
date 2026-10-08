@@ -52,7 +52,7 @@ const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { tim
 async function seated(init, mode = 'room') {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
-  await wait(host, () => window.__jjNet?.code() && (mode === 'drive' ? window.__jjTest : window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 60_000);
+  await wait(host, (m) => window.__jjNet?.code() && (m === 'drive' ? window.__jjTest : window.__jjRoom?.view()?.phase === 'Lobby'), mode, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
