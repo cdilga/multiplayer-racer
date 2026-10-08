@@ -207,8 +207,10 @@ export class Emitter {
               this.spawn({
                 family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],
                 // Stones big enough to see from the chase camera, inked like the puffs: a comic spray of pebbles.
-                vx: -vel[0] * 0.15 + this.jitter(2), vy: 3 + this.rand() * 3, vz: -vel[2] * 0.3 + this.jitter(2),
-                life: 0.8, size0: 0.17, size1: 0.14, c0: C.stone, c1: C.gravelDust, alpha: 1, drag: 0.9, gravity: 14, rim: 0.9,
+                // Thrown up and back off the tyre but still carrying most of the car's speed (a roost trails just behind the
+                // car): moving backward over the ground, every pebble passed the chase camera within 0.3 s and was never seen.
+                vx: vel[0] * 0.72 + this.jitter(2), vy: 3 + this.rand() * 3, vz: vel[2] * 0.72 + this.jitter(2),
+                life: 0.8, size0: 0.17, size1: 0.14, c0: C.stone, c1: C.gravelDust, alpha: 1, drag: 0.3, gravity: 14, rim: 0.9,
               });
             });
         }
