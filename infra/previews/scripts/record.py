@@ -79,7 +79,7 @@ def apply_status(row: dict, st: dict | None):
     desc = (st or {}).get("description") or ""
     if state == "success":
         row["status"], row["reason"], row["smokeResult"] = "playable", "", desc
-        row["smoke"] = [s.strip() for s in desc.removeprefix("smoke: PASS").split(",") if s.strip()] if desc.startswith("smoke: PASS") else []
+        row["smoke"] = [desc.removeprefix("smoke: PASS").strip()] if desc.startswith("smoke: PASS") else []  # shown as "Ran: …"
         row["smokedAt"] = st.get("updated_at") or st.get("created_at")
     elif state == "pending":
         row["status"], row["reason"] = "not playable", "the smoke is still running (or its run died)"

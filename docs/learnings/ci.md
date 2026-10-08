@@ -40,3 +40,12 @@
   text in any Bash command). Redirects to computed paths and `git push -f` are blocked by dcg: push experiment
   branches under a new name (`ci-lab-N`) built with `git commit-tree` and a temporary `GIT_INDEX_FILE`, so the shared
   working tree never changes branch.
+
+## A tag push runs the workflows of the tagged commit (2026-10-08)
+
+Gitea evaluates `on:` from the workflow files **in the commit a pushed tag points at**, not the default branch's. Adding
+`branches: ["**"]` to ci.yml/gpu.yml stops tag runs only for commits that already carry that filter: migrating the old
+preview register into `preview/`/`retired/` tags on six older commits (created through the API with a user token)
+started 12 full CI and GPU runs (2095–2108, cancelled through the web UI). Tags the publisher creates with the
+workflow's own token start nothing (Gitea doesn't trigger runs from its actions token). A hand-pushed `pin/<id>` on a
+commit older than 1f250489 still starts runs there: cancel them, or pin with the deploy workflow's token.

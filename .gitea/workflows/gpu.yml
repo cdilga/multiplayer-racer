@@ -7,6 +7,7 @@ name: CI GPU
 
 on:
   push:
+    branches: ["**"] # branches only: the preview record's tags never start a run (R117)
   schedule:
     - cron: "47 15 * * *"
   workflow_dispatch:

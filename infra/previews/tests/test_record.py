@@ -53,7 +53,7 @@ class Record(unittest.TestCase):
         ids = [p["id"] for p in reg["previews"]]
         self.assertEqual(ids, ["v02-bbbbbbbb", "v02-aaaaaaaa", "v02-aaaaaaaa-2"], "newest first; other tags ignored")
         a, b, old = reg["previews"][1], reg["previews"][0], reg["previews"][2]
-        self.assertEqual((a["status"], a["smoke"], a["digest"]), ("playable", ["room", "join-webrtc"], "sha256:1"))
+        self.assertEqual((a["status"], a["smoke"], a["digest"]), ("playable", ["room, join-webrtc"], "sha256:1"))
         self.assertEqual((b["status"], b["reason"]), ("not playable", "FAIL step round: timeout"))
         self.assertEqual(old["retired"], "2026-10-08T00:00:00+00:00", "a retired tag wins over a leftover preview tag")
         self.assertEqual(reg["labels"], {"Playtest 1": "v02-aaaaaaaa"})
