@@ -100,7 +100,9 @@ test('the renderer interpolates from the synthetic snapshot source (§4.4 ABI), 
 });
 
 async function capture(renderer) {
-  const { page, errors } = await open(`?synthetic=24&freeze=600&renderer=${renderer}`);
+  // Plain on both: the WebGPU paths draw the plain materials until a TSL port of the look (P1-R10), so the comparison is of the
+  // renderers, not of the look.
+  const { page, errors } = await open(`?synthetic=24&freeze=600&renderer=${renderer}&look=plain`);
   const s = await untilFrames(page, 30);
   const png = await page.screenshot(); // the canvas fills the viewport (an element screenshot dropped grid lines here)
   await page.close();

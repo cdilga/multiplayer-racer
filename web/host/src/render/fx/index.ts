@@ -133,7 +133,7 @@ export class Fx {
   private last = 0;
   /** Ground height for bounces; the map renderer's when one is loaded. */
   groundAt: (x: number, z: number) => number = () => 0;
-  /** On with `?look=on` or `?fx=on` (backend.ts). */
+  /** On with the look (default) or `?fx=on` over the plain look; off with `?fx=off` (backend.ts). */
   enabled = look.fxEnabled;
 
   constructor(private scene: Scene) {

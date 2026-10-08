@@ -72,7 +72,7 @@ export const look = {
   uniforms,
   /** The tier the last `tile` call chose. */
   tier: tierFor(1080) as Tier,
-  /** On with `?look=on` on the WebGLRenderer route (opt-in until verified). */
+  /** On by default on the WebGLRenderer route; off with `?look=plain` (backend.ts). */
   enabled: false,
   /** The effects' switch: the look's, or `?fx=on` alone. */
   fxEnabled: false,
@@ -132,7 +132,7 @@ export interface ToonOptions {
  *  `onBeforeCompile` (the vehicles' paint key). Idempotent. */
 export function toon<M extends Material>(material: M, opts: ToonOptions = {}): M {
   const m = material as M & { jjToon?: boolean };
-  // Opt-in (`?look=on`, set in backend.ts before any material exists): otherwise the material is left exactly as it was.
+  // Set in backend.ts before any material exists (on unless `?look=plain`): when off, the material is left exactly as it was.
   if (m.jjToon || !look.enabled) return material;
   m.jjToon = true;
   const prev = material.onBeforeCompile;

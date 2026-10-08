@@ -37,7 +37,9 @@ async function open(path) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text()) && errors.push(m.text().slice(0, 300)));
-  await openHost(page, `${server.url}/host/${path}`);
+  // The plain look: these tests pin exact draw-call arithmetic, and the look's ink hulls and effect layers add their own
+  // draws (one per inked part type, two for the effects while particles live; P1-R10/R12 measure those).
+  await openHost(page, `${server.url}/host/${path}${path.includes('?') ? '&' : '?'}look=plain`);
   await page.waitForFunction(() => (window.__jjRender?.stats().frames ?? 0) >= 20, null, { timeout: 30_000 });
   return { page, errors };
 }

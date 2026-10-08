@@ -65,10 +65,12 @@ function lookFor(r: { getViewport?: (v: Vector4) => Vector4 }, scene: Scene): vo
 
 export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<Backend> {
   const antialias = opts.antialias ?? true;
-  // The look and the effects are GLSL (the WebGLRenderer route) and opt-in (`?look=on`, `?fx=on` for the effects alone) until
-  // their captures are verified (P1-R10/R12); the WebGPU paths draw the plain materials until a TSL port.
+  // The look and the effects are GLSL on the WebGLRenderer route (the shipping one, P1-R01) and on by default since their GPU
+  // captures were judged against the accepted look (P1-R10/R12, docs/evidence/P1-R10/). `?look=plain` draws the plain
+  // materials (tests that pin exact draw-call arithmetic use it), `?fx=off` drops the effects alone, `?fx=on` keeps them
+  // over the plain look. The WebGPU paths draw the plain materials until a TSL port.
   const q = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
-  look.enabled = kind === 'webgl' && q.get('look') === 'on';
+  look.enabled = kind === 'webgl' && q.get('look') !== 'plain';
   look.fxEnabled = kind === 'webgl' && q.get('fx') !== 'off' && (look.enabled || q.get('fx') === 'on');
   if (kind === 'webgl') {
     const r = new WebGLRenderer({ canvas, antialias, powerPreference: 'high-performance', preserveDrawingBuffer: true });
