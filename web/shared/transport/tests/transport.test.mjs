@@ -185,7 +185,9 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
     });
     try {
       const host = await startHost(server.origin, '&ice=relay');
-      const c = await startController(server.origin, host.code, '?ice=relay', 30_000);
+      // 60 s like the fallback case below: a relay-only link needs two allocations and a permission round trip through
+      // coturn, and on a loaded runner one of nine runs took past 30 s after coturn had already answered STUN (run 2010).
+      const c = await startController(server.origin, host.code, '?ice=relay', 60_000);
       const ep = await moveAndSee(host, c, -0.7, 0.3);
       const paths = await host.page.evaluate(() => window.__jjHello.paths());
       assert.equal(paths[ep]?.local, 'relay', JSON.stringify(paths[ep]));
