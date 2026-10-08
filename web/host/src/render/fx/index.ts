@@ -24,17 +24,18 @@ import { envelope, FAMILIES, type Family } from './particles';
 const VERT = /* glsl */ `
 attribute vec4 aPos;   // xyz, size
 attribute vec4 aCol;   // rgb (linear), alpha
-attribute vec4 aMisc;  // rim, age fraction, emissive (flames, flashes, lamps: thinned only right at the lens), unused
+attribute vec4 aMisc;  // rim (< 0: a hot sprite), age fraction, emissive (thinned only right at the lens), hot
 varying vec4 vCol;
 varying vec2 vUv;
 varying vec2 vMisc;
+varying float vHot;
 uniform float uDetail;
 void main() {
   vec4 mv = viewMatrix * vec4( aPos.xyz, 1.0 );
   float depth = -mv.z;
   // Big effects (smoke, fire, dust clouds) keep a minimum on-screen size, so a wreck's fire still reads from the overview
-  // camera; small ones (sparks, lamp glints) stay true to size.
-  float size = aPos.w > 0.5 ? max( aPos.w, depth * 0.012 ) : aPos.w;
+  // camera (hot ones larger still); small ones (sparks, lamp glints) stay true to size.
+  float size = aPos.w > 0.5 ? max( aPos.w, depth * ( aMisc.w > 0.5 ? 0.024 : 0.012 ) ) : aPos.w;
   // Pulled toward the camera by most of its radius, so a sprite never sinks half into the ground or the car it sits on.
   mv.z += size * 0.6;
   mv.xy += position.xy * size;
@@ -47,12 +48,14 @@ void main() {
   vCol = vec4( aCol.rgb, aCol.a * near * small );
   vUv = position.xy * 2.0;
   vMisc = aMisc.xy;
+  vHot = aMisc.w;
 }`;
 
 const FRAG = /* glsl */ `
 varying vec4 vCol;
 varying vec2 vUv;
 varying vec2 vMisc;
+varying float vHot;
 uniform vec3 uInk;
 uniform float uAdd;
 void main() {
@@ -64,6 +67,12 @@ void main() {
     // Emissive: a hot core and a soft edge (additive, so it only ever adds light).
     float core = 1.0 - smoothstep( 0.0, 1.0, r );
     gl_FragColor = vec4( c * ( 0.5 + 0.5 * core * core ), a * core );
+  } else if ( vHot > 0.5 ) {
+    // A hot sprite in daylight (flame, spark, flash): drawn, not added (added light washed out over sunlit ground), a
+    // white-hot core over its colour, a soft edge.
+    float core = 1.0 - smoothstep( 0.0, 0.75, r );
+    c = mix( c, vec3( 1.0, 0.97, 0.88 ), core * core * 0.75 );
+    gl_FragColor = vec4( c, a * ( 1.0 - smoothstep( 0.7, 1.0, r ) ) );
   } else {
     // A comic puff: a flat body lit from above (a two-tone step, no specular dot: a hard highlight read as a soap
     // bubble on the eris captures), a thin ink rim on its shaded underside, and a soft outer edge.
@@ -76,9 +85,6 @@ void main() {
   }
   #include <colorspace_fragment>
 }`;
-
-/** Alpha-blended families drawn as light (flames): they only thin out right at the lens, like the additive layer. */
-const EMISSIVE = new Set(['boost', 'wreck-fire'].map((f) => FAMILIES.indexOf(f as Family)));
 
 interface Layer {
   mesh: Mesh;
@@ -190,7 +196,9 @@ export class Fx {
       ca[k * 4 + 3] = p.alpha[i]! * (isAdd && p.life[i]! < 0.06 ? 1 : envelope(t));
       ma[k * 4] = p.rim[i]!;
       ma[k * 4 + 1] = t;
-      ma[k * 4 + 2] = isAdd || EMISSIVE.has(p.fam[i]!) ? 1 : 0;
+      const hot = p.rim[i]! < 0;
+      ma[k * 4 + 2] = isAdd || hot ? 1 : 0;
+      ma[k * 4 + 3] = hot ? 1 : 0;
     }
     for (const [l, n] of [[this.alpha, ia], [this.add, id]] as const) {
       l.geo.instanceCount = n;

@@ -23,6 +23,8 @@ const GANTRY = 'wayfinding/finish-gantry';
 const INK = '#15203a';
 const SAFFRON = '#f2a20c';
 const PAPER = '#fff4de';
+/** Nearer the camera than this (m), the banner isn't drawn. */
+const NEAR_M = 4;
 
 /** The banner's artwork, `w` x `h` px. */
 export function bannerCanvas(w = 2048, h = 256): HTMLCanvasElement {
@@ -81,7 +83,18 @@ export function finishBanner(map: MapJson): Object3D[] | null {
   tex.colorSpace = SRGBColorSpace;
   tex.anisotropy = 8;
   const face = (side: 1 | -1) => {
-    const m = new Mesh(new PlaneGeometry(span - 0.3, height), new MeshBasicMaterial({ map: tex, fog: true }));
+    const mat = new MeshBasicMaterial({ map: tex, fog: true });
+    // A chase camera passes under (or, on a low gantry, through) the banner at the start: within NEAR_M of the camera the
+    // banner is not drawn, so it never fills a tile (eris capture, 2026-10-08: the pole car's tile was all "START").
+    mat.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying float vBannerDepth;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\nvBannerDepth = -mvPosition.z;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vBannerDepth;')
+        .replace('void main() {', `void main() {\n  if ( vBannerDepth < ${NEAR_M.toFixed(1)} ) discard;`);
+    };
+    const m = new Mesh(new PlaneGeometry(span - 0.3, height), mat);
     m.rotation.y = yaw + (side === 1 ? 0 : Math.PI);
     m.position.copy(mid);
     m.position.y -= 0.35 + height / 2;

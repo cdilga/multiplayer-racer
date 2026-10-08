@@ -24,6 +24,9 @@ export interface FxInput {
 }
 
 /** Linear-light colours of the palette (art/ui/tokens.json world colours, then brightened for dust). */
+/** `rim: HOT` marks a hot sprite (flame, spark, flash): drawn with a white-hot core instead of a puff's ink rim (fx/index.ts). */
+const HOT = -1;
+
 const C = {
   tarmacDust: [0.62, 0.6, 0.57] as [number, number, number],
   dirtDust: [0.82, 0.52, 0.3] as [number, number, number],
@@ -209,10 +212,11 @@ export class Emitter {
             const e = at(side, 0.5, -2.25);
             const back = rotate(0, 0, -1);
             this.spawn({
-              // Alpha-blended, not additive: an added flame over sunlit ground washed out to nothing (eris, 2026-10-08).
+              // A hot sprite (HOT), not additive: an added flame over sunlit ground washed out to nothing (eris, 2026-10-08).
+              // Small and fast, so the stream reads as a flame's streak behind the exhaust, not a ball.
               family: 'boost', blend: 'alpha', x: e[0], y: e[1], z: e[2],
-              vx: back[0] * 5 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 5 + vel[2] * 0.92 + this.jitter(0.4),
-              life: 0.3 + this.rand() * 0.1, size0: 0.75, size1: 0.18, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15, rim: 0.35,
+              vx: back[0] * 9 + vel[0] * 0.92 + this.jitter(0.4), vy: this.jitter(0.3), vz: back[2] * 9 + vel[2] * 0.92 + this.jitter(0.4),
+              life: 0.26 + this.rand() * 0.08, size0: 0.42, size1: 0.1, c0: full ? C.blue : C.flame, c1: full ? C.blueEnd : C.flameEnd, alpha: 0.95, drag: 0.15, rim: HOT,
             });
           });
       }
@@ -268,7 +272,7 @@ export class Emitter {
         this.spawn({
           family: 'wreck-fire', blend: 'alpha', x: hx + this.jitter(0.7), y: hy + 1.0 + this.rand() * 0.3, z: hz + this.jitter(1.1),
           vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.5, size1: 0.4,
-          c0: C.flame, c1: C.flameEnd, alpha: 0.95, drag: 0.6, rim: 0.4,
+          c0: C.flame, c1: C.flameEnd, alpha: 0.95, drag: 0.6, rim: HOT,
         });
       });
       this.rate(st, 'wsmoke', 9, dt, () => {
@@ -299,7 +303,7 @@ export class Emitter {
   /** The impact flash and puff of a damage episode, scaled by the impulse (the velocity change, m/s). */
   private impact(p: [number, number, number], dv: number, calm: number, vel: [number, number, number]): void {
     const k = Math.min(1, dv / 14);
-    this.spawn({ family: 'impact', blend: 'add', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.14, size0: (0.7 + 1.9 * k) * calm, size1: (0.3 + 1.2 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * calm });
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.14, size0: (0.7 + 1.9 * k) * calm, size1: (0.3 + 1.2 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * calm, rim: HOT });
     this.puff(p, 0.5 + 0.9 * k, C.smoke);
     const n = Math.round((6 + 30 * k) * calm);
     for (let j = 0; j < n; j++) this.spark(p, 4 + 7 * k, vel);
@@ -309,9 +313,9 @@ export class Emitter {
     const a = this.rand() * Math.PI * 2;
     const up = this.rand() * 0.9 + 0.1;
     this.spawn({
-      family: 'sparks', blend: 'add', x: p[0], y: p[1], z: p[2],
+      family: 'sparks', blend: 'alpha', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.35 + this.rand() * 0.35, size0: 0.16, size1: 0.05, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12,
+      life: 0.35 + this.rand() * 0.35, size0: 0.22, size1: 0.07, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12, rim: HOT,
     });
   }
 
@@ -335,7 +339,7 @@ export class Emitter {
 
   /** A part coming off: a flash, a puff and a burst of sparks at its pose. */
   private detach(p: [number, number, number], calm: number): void {
-    this.spawn({ family: 'detach', blend: 'add', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.16, size0: 1.3 * calm, size1: 0.5 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * calm });
+    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.16, size0: 1.3 * calm, size1: 0.5 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * calm, rim: HOT });
     for (let k = 0; k < 4; k++)
       this.spawn({
         family: 'detach', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: this.jitter(2), vy: 0.8 + this.rand(), vz: this.jitter(2),
