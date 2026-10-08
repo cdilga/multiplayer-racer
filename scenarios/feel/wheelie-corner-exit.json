@@ -1,0 +1,348 @@
+{
+ "scenario": "wheelie-corner-exit",
+ "what": "R116 corner-exit launch (P1-C11). Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 40 % steer. launch: the left stick pulled fully back for 0.45 s (the brakes hold and arm the launch) then snapped to full forward on the way out: a short front-light wheelie (about 7 degrees for 0.4 s, steering stops while the nose is up) and the launch burst, no wreck and no wall strike (it stays on the road). plain: brakes at 80 % (short of the preload zone), then full forward at the same moment: no wheelie, no burst. roll-on: the same pull, then eased to full forward over 0.8 s, which is not a snap: no launch. Expect: only launch lifts or bursts, and it ends the fastest and furthest.",
+ "map": "scenarios/duels/yard/duel-yard.json",
+ "seed": 7,
+ "ticks": 720,
+ "cars": [
+  {
+   "pose": {
+    "x": 150,
+    "y": 0.1,
+    "z": 0,
+    "headingDeg": 90
+   },
+   "linvel": [
+    14.0,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 150,
+    "y": 0.1,
+    "z": -3,
+    "headingDeg": 90
+   },
+   "linvel": [
+    14.0,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "x": 150,
+    "y": 0.1,
+    "z": -6,
+    "headingDeg": 90
+   },
+   "linvel": [
+    14.0,
+    0,
+    0
+   ]
+  }
+ ],
+ "inputs": [
+  {
+   "car": 0,
+   "fromTick": 0,
+   "toTick": 54,
+   "stick": [
+    0,
+    -1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 0,
+   "fromTick": 54,
+   "stick": [
+    0,
+    1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 1,
+   "fromTick": 0,
+   "toTick": 54,
+   "stick": [
+    0,
+    -0.8
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 1,
+   "fromTick": 54,
+   "stick": [
+    0,
+    1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 0,
+   "toTick": 54,
+   "stick": [
+    0,
+    -1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 54,
+   "toTick": 66,
+   "stick": [
+    0,
+    -0.75
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 66,
+   "toTick": 78,
+   "stick": [
+    0,
+    -0.5
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 78,
+   "toTick": 90,
+   "stick": [
+    0,
+    -0.25
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 90,
+   "toTick": 102,
+   "stick": [
+    0,
+    0.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 102,
+   "toTick": 114,
+   "stick": [
+    0,
+    0.25
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 114,
+   "toTick": 126,
+   "stick": [
+    0,
+    0.5
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 126,
+   "toTick": 138,
+   "stick": [
+    0,
+    0.75
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 138,
+   "toTick": 150,
+   "stick": [
+    0,
+    1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  },
+  {
+   "car": 2,
+   "fromTick": 150,
+   "stick": [
+    0,
+    1.0
+   ],
+   "action": [
+    0.4,
+    0
+   ]
+  }
+ ],
+ "expect": [
+  {
+   "car": 0,
+   "metric": "maxNoseUpDeg",
+   "min": 4,
+   "max": 12
+  },
+  {
+   "car": 0,
+   "metric": "frontAirTimeS",
+   "min": 0.2,
+   "max": 0.7
+  },
+  {
+   "car": 0,
+   "metric": "wheelieDriveS",
+   "min": 0.7,
+   "max": 0.85
+  },
+  {
+   "car": 0,
+   "metric": "maxSpeed",
+   "min": 20,
+   "max": 25
+  },
+  {
+   "car": 0,
+   "metric": "progressM",
+   "min": 45,
+   "max": 56
+  },
+  {
+   "car": 0,
+   "metric": "maxRouteOffsetM",
+   "min": 0,
+   "max": 8
+  },
+  {
+   "car": 0,
+   "metric": "wrecks",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 0,
+   "metric": "minUpY",
+   "min": 0.95,
+   "max": 1.001
+  },
+  {
+   "car": 1,
+   "metric": "maxNoseUpDeg",
+   "min": 0,
+   "max": 3
+  },
+  {
+   "car": 1,
+   "metric": "frontAirTimeS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "wheelieDriveS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 1,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 17.5
+  },
+  {
+   "car": 2,
+   "metric": "maxNoseUpDeg",
+   "min": 0,
+   "max": 3
+  },
+  {
+   "car": 2,
+   "metric": "frontAirTimeS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 2,
+   "metric": "wheelieDriveS",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 2,
+   "metric": "maxSpeed",
+   "min": 0,
+   "max": 16
+  }
+ ],
+ "baselines": {
+  "kinds": [
+   "no-input",
+   "mash",
+   "hold"
+  ],
+  "differ": [
+   {
+    "car": 0,
+    "metric": "frontAirTimeS",
+    "by": 0.2,
+    "more": true
+   },
+   {
+    "car": 0,
+    "metric": "maxSpeed",
+    "by": 3.0,
+    "more": true
+   }
+  ]
+ }
+}

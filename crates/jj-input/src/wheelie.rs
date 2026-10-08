@@ -59,6 +59,21 @@ impl WheelieDetector {
     /// Feeds one DRIVE-stick sample at monotonic time `now_ms`; returns the event if this sample
     /// completes a release.
     pub fn sample(&mut self, drive_y: i16, now_ms: u64) -> Option<WheelieEvent> {
+        self.sample_with(drive_y, now_ms, -RELEASE_Q, RELEASE_WINDOW_MS, CANCEL_MS)
+    }
+
+    /// As [`sample`](Self::sample) with another release rule: the stick must pass `y > release_q` (quantised; the old release line is `-RELEASE_Q`)
+    /// within `window_ms` of leaving the zone. The R116 wheelie launch is a snap to full forward (`release_q` near the top,
+    /// a short window), so an ordinary throttle roll-on after braking never fires it.
+    pub fn sample_with(
+        &mut self,
+        drive_y: i16,
+        now_ms: u64,
+        release_q: i16,
+        window_ms: u64,
+        cancel_ms: u64,
+    ) -> Option<WheelieEvent> {
+        let released = |y: i16| sanitise_axis(y) > release_q;
         let in_zone = in_preload_zone(drive_y);
         let dt = now_ms.saturating_sub(self.last_ms);
         self.last_ms = now_ms;
@@ -72,7 +87,7 @@ impl WheelieDetector {
             Phase::Preloading => {
                 if in_zone {
                     self.preload_ms = self.preload_ms.saturating_add(dt);
-                    if self.preload_ms > CANCEL_MS {
+                    if self.preload_ms > cancel_ms {
                         self.phase = Phase::Cancelled;
                     }
                 } else if released(drive_y) {
@@ -80,7 +95,7 @@ impl WheelieDetector {
                     // release; the final partial hold counts — unless it pushed the hold past
                     // the cancel point, in which case the player simply held too long.
                     self.preload_ms = self.preload_ms.saturating_add(dt);
-                    if self.preload_ms > CANCEL_MS {
+                    if self.preload_ms > cancel_ms {
                         self.phase = Phase::Cancelled;
                     } else {
                         let ev = self.fire();
@@ -90,11 +105,11 @@ impl WheelieDetector {
                     // Left the zone into the braking band: the interval ending here was still a
                     // hold, so it counts; then the release window opens.
                     self.preload_ms = self.preload_ms.saturating_add(dt);
-                    if self.preload_ms > CANCEL_MS {
+                    if self.preload_ms > cancel_ms {
                         self.phase = Phase::Cancelled;
                     } else {
                         self.phase = Phase::Releasing {
-                            deadline_ms: now_ms.saturating_add(RELEASE_WINDOW_MS),
+                            deadline_ms: now_ms.saturating_add(window_ms),
                         };
                     }
                 }
@@ -140,6 +155,15 @@ impl WheelieDetector {
         };
     }
 
+    /// How long the stick has been held in the preload zone right now (0 outside it): what the R116 reverse delay reads.
+    pub fn zone_ms(&self) -> u64 {
+        if self.phase == Phase::Preloading {
+            self.preload_ms
+        } else {
+            0
+        }
+    }
+
     /// True while a preload is pending (the controller sets the `WHEELIE_PRELOAD` flag from this).
     pub fn is_preloading(&self) -> bool {
         matches!(self.phase, Phase::Preloading | Phase::Releasing { .. })
@@ -150,11 +174,6 @@ impl WheelieDetector {
         self.phase = Phase::Idle;
         self.preload_ms = 0;
     }
-}
-
-/// The release threshold is met (`y > −0.3`, in quantised space; see [`RELEASE_Q`]).
-fn released(drive_y: i16) -> bool {
-    sanitise_axis(drive_y) > -RELEASE_Q
 }
 
 /// Full brake is at `−0.85` and the release line at `−0.3`; the two never cross (a release can't

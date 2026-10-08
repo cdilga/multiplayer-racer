@@ -223,6 +223,7 @@ impl Autopilot {
             // The ACTION stick's held sectors are the player's own from the first handback tick.
             drift: player.drift,
             boost: player.boost,
+            no_reverse: false,
         })
     }
 

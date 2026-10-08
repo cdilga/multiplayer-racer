@@ -141,6 +141,14 @@ pub struct Tuning {
     /// +`wheelie_drive_gain` for `wheelie_drive_s` alone can't repay a 0.35 s pull: it is worth about 0.1 s).
     #[serde(default)]
     pub wheelie_launch_reward: f32,
+    /// The wheelie launch (the R116 boost, P1-C11) is refused for this long after one (s); 0: no cooldown. The phone's ring
+    /// shows the same wait from `assets/profiles/input.json` (`launch.cooldownMs`, a test keeps the two equal).
+    #[serde(default)]
+    pub wheelie_cooldown_s: f32,
+    /// A launch is refused while the car is going backwards faster than this (m/s): pull-and-hold reversed, and a snap
+    /// forward then is just throttle. A pull at rest (or going forward) arms it, countdown included.
+    #[serde(default = "no_reverse_limit")]
+    pub wheelie_max_reverse_mps: f32,
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
@@ -313,4 +321,8 @@ impl VehicleProfile {
             Surface::OffTrack => s.off_track,
         }
     }
+}
+
+fn no_reverse_limit() -> f32 {
+    f32::MAX
 }

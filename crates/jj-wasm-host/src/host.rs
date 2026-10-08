@@ -212,6 +212,7 @@ fn controls(s: SourceSemantics) -> DriveInput {
         s.drive.brake,
         s.drift,
         s.boost,
+        s.launch_armed,
     )
 }
 
@@ -656,6 +657,7 @@ impl Host {
                             drive_touch: r.flags.has(StateFlags::DRIVE_TOUCH),
                             action_touch: r.flags.has(StateFlags::ACTION_TOUCH),
                             menu_open: r.flags.has(StateFlags::MENU_OPEN),
+                            classic: r.flags.has(StateFlags::CLASSIC),
                         };
                         input.state.sample(r.drive, r.action, flags, now_ms);
                         // Seen the moment it arrives: a short deflection between two ticks still counts for the prompts.
@@ -739,6 +741,7 @@ impl Host {
                         drive_touch: axes[0] != 0 || axes[1] != 0,
                         action_touch: axes[2] != 0 || axes[3] != 0,
                         menu_open: false,
+                        classic: false,
                     };
                     let fired =
                         input

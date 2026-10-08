@@ -1,0 +1,38 @@
+{
+ "duel": "start-line-launch-duel",
+ "fixture": "start-line-launch-duel.json",
+ "gate": {
+  "metric": "travel",
+  "at": 40.0
+ },
+ "labels": [
+  "plain",
+  "launch",
+  "roll-on",
+  "reverse-held",
+  "mash-a",
+  "mash-b"
+ ],
+ "beats": [
+  {
+   "faster": "launch",
+   "slower": "plain",
+   "byS": 0.15
+  },
+  {
+   "faster": "plain",
+   "slower": "roll-on",
+   "byS": 0.0
+  },
+  {
+   "faster": "plain",
+   "slower": "reverse-held",
+   "byS": 0.1
+  },
+  {
+   "faster": "launch",
+   "slower": "mash-*",
+   "byS": 0.0
+  }
+ ]
+}

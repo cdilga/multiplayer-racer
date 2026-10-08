@@ -118,6 +118,8 @@ impl WasmFlush {
 #[wasm_bindgen]
 pub struct WasmEndpoint {
     sources: Vec<SourceState>,
+    /// Per source: the player chose the old one-stick layout (it rides every record's flags; default R116 dual-stick).
+    classic: Vec<bool>,
     scheduler: SendScheduler,
 }
 
@@ -127,6 +129,7 @@ impl WasmEndpoint {
     pub fn new() -> Self {
         Self {
             sources: Vec::new(),
+            classic: Vec::new(),
             scheduler: SendScheduler::new(),
         }
     }
@@ -135,7 +138,16 @@ impl WasmEndpoint {
     #[wasm_bindgen(js_name = addSource)]
     pub fn add_source(&mut self, handle: u16) -> usize {
         self.sources.push(SourceState::new(SourceHandle(handle)));
+        self.classic.push(false);
         self.sources.len() - 1
+    }
+
+    /// Chooses the layout for one source: `true` is the old one-stick layout (a personal setting), `false` the R116 default.
+    #[wasm_bindgen(js_name = setClassic)]
+    pub fn set_classic(&mut self, idx: usize, on: bool) {
+        if let Some(c) = self.classic.get_mut(idx) {
+            *c = on;
+        }
     }
 
     /// Feeds one quantised sample (post personal curve) at `now_ms` (monotonic). Returns the
@@ -154,6 +166,7 @@ impl WasmEndpoint {
         action_touch: bool,
         now_ms: f64,
     ) -> Vec<WasmAction> {
+        let classic = self.classic.get(idx).copied().unwrap_or(false);
         let Some(src) = self.sources.get_mut(idx) else {
             return Vec::new();
         };
@@ -162,6 +175,7 @@ impl WasmEndpoint {
             drive_touch,
             action_touch,
             menu_open: false,
+            classic,
         };
         let clamp16 = |v: i32| v.clamp(i16::MIN as i32, i16::MAX as i32) as i16;
         src.sample(

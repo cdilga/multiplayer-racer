@@ -975,6 +975,8 @@ dependencies = [
  "jj-protocol",
  "jj-types",
  "proptest",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

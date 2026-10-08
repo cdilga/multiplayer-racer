@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "what": "The R116 stick layout's thresholds (P1-C11): the left stick drives, drifts and launches (the boost: a full pull back, then a snap to full forward), the right stick steers and flicks. The wheelie's lift, air time, burst, minimum speed and cooldown are the sim profile's (assets/profiles/cruz-missile.json). Every number is tuned at the playtest and changed here, never in code; crates/jj-input validates the file at load.",
+  "steer": {
+    "radialDeadzone": 0.08,
+    "gamma": 1.4
+  },
+  "drift": {
+    "enterAngleDeg": 35,
+    "enterDeflection": 0.6,
+    "exitAngleDeg": 25,
+    "exitDeflection": 0.45,
+    "maxPullBack": 0.35
+  },
+  "launch": {
+    "snapTo": 0.9,
+    "snapWindowMs": 250,
+    "cooldownMs": 4000,
+    "reverseDelayMs": 900
+  },
+  "flick": {
+    "rim": 0.9,
+    "armBelow": 0.35,
+    "maxTravelMs": 180,
+    "maxAngleDeg": 30,
+    "cooldownMs": 350
+  }
+}

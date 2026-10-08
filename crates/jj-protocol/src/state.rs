@@ -37,6 +37,8 @@ impl StateFlags {
     pub const ACTION_TOUCH: u8 = 1 << 2;
     pub const WHEELIE_PRELOAD: u8 = 1 << 3;
     pub const MENU_OPEN: u8 = 1 << 4;
+    /// The player chose the old one-stick layout (P1-C11); clear is the R116 dual-stick layout. The host reads the sticks by it.
+    pub const CLASSIC: u8 = 1 << 5;
 
     pub fn has(self, bit: u8) -> bool {
         self.0 & bit != 0

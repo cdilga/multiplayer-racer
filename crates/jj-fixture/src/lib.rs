@@ -71,6 +71,11 @@ pub struct Fixture {
     pub autopilot: Vec<AutopilotSpec>,
     #[serde(default)]
     pub inputs: Vec<InputSpan>,
+    /// How the raw `stick` / `action` spans are read: `"dual"` (R116, the default: the right stick steers on x and
+    /// flicks on y, the left stick drifts on x and boosts at the rim) or `"classic"` (the old one-stick layout, a
+    /// personal setting: the left stick steers, the right stick's sectors boost, drift, fire).
+    #[serde(default)]
+    pub layout: Option<String>,
     #[serde(default)]
     pub until: Option<Until>,
     /// Ticks at which to record the full state (the end of the run is always recorded).
@@ -550,6 +555,7 @@ impl Harness {
                     drive_touch: drive != [0, 0],
                     action_touch: action != [0, 0],
                     menu_open: false,
+                    classic: self.fx.layout.as_deref() == Some("classic"),
                 };
                 let source = self.sources.entry(car).or_insert_with(|| {
                     jj_input::SourceState::new(jj_types::SourceHandle(car as u16 + 1))
@@ -565,6 +571,7 @@ impl Harness {
                         s.drive.brake,
                         s.drift,
                         s.boost,
+                        s.launch_armed,
                     ),
                 );
                 for a in fired {
@@ -589,6 +596,7 @@ impl Harness {
                 brake: quantise_axis(i.brake.max(0.0)),
                 drift: i.drift,
                 boost: i.boost,
+                no_reverse: false,
             });
             sim.set_input(CarId(car), input);
         }

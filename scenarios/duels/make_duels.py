@@ -273,6 +273,26 @@ def boost_placement():
 boost_placement()
 
 
+def start_line_launch():
+    """The R116 launch off the start line (P1-C11): the brakes held by a full pull through the countdown (here the last 0.6 s of
+    it: the car is at rest either way), then a snap to full forward at GO."""
+    labels = ["plain", "launch", "roll-on", "reverse-held", "mash-a", "mash-b"]
+    go = 0.6
+    ins = [span(0, 0, go, stick=[0, 0.0]), span(0, go, None, stick=[0, 1.0])]          # plain: waits for GO, then throttle
+    ins += pull_release(1, go)                                                       # launch: pull to GO, snap at GO
+    ins += [span(2, 0, go, stick=[0, -1.0])] + [span(2, go + k * 0.1, go + (k + 1) * 0.1, stick=[0, -1.0 + 2.0 * (k + 1) / 8]) for k in range(8)] + [span(2, go + 0.8, None, stick=[0, 1.0])]  # a roll-on, not a snap
+    ins += pull_release(3, 1.6)                                                      # held into reverse, then a snap: just throttle
+    ins += mash(41, 7, 4, sticks=True) + mash(42, 7, 5, sticks=True)
+    beats = [beat("launch", "plain", 0.15), beat("plain", "roll-on", 0.0), beat("plain", "reverse-held", 0.1), beat("launch", "mash-*", 0.0)]
+    write("start-line-launch-duel",
+          "R116 start-line-launch-duel (P1-C11): identical Cruz Missiles at rest on the greybox's main straight, time to a gate 40 m on. plain: waits for GO (0.6 s) and flat out. launch: the left stick pulled fully back to GO, then snapped to full forward: the brakes held, the front lifts a little and the launch burst gives the pull's cost back. roll-on: pulled to GO, then eased to full forward over 0.8 s, which is not a snap, so no launch. reverse-held: pulled for 1.6 s, long enough to engage reverse, then snapped: just throttle, from behind. mash: two seeded random-stick scripts. Expect: launch beats plain; plain beats roll-on and reverse-held; no mash beats launch.",
+          51, 7, same({"x": 10, "y": 0.1, "z": 0, "headingDeg": 90}, [0, 0, 0], len(labels)), labels, ins,
+          {"metric": "travel", "at": 40.0}, beats)
+
+
+start_line_launch()
+
+
 def drift_corner():
     labels = ["plain", "straight-boost", "exit-boost", "well", "botched", "mash-a", "mash-b"]
     ins = acts(1, boost=(1.0, 2.5)) + acts(2, boost=(6.86, 8.62)) + acts(3, drift=(4.491, 7.343), boost=(7.362, 9.744))

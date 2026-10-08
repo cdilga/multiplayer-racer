@@ -11,6 +11,8 @@ repository.workspace = true
 [dependencies]
 jj-types.workspace = true
 jj-protocol.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

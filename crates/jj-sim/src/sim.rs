@@ -844,6 +844,16 @@ impl Sim {
         if grounded < 3 || held || preload_ms == 0 {
             return false;
         }
+        // The launch is on a cooldown, and a car that pull-and-held into reverse is reversing, not launching.
+        if self.tick < c.action.wheelie_ready
+            || c.speed_history
+                .back()
+                .is_some_and(|&v| v < -t.wheelie_max_reverse_mps)
+        {
+            return false;
+        }
+        c.action.wheelie_ready =
+            self.tick + libm::roundf(t.wheelie_cooldown_s * TICK_HZ as f32) as u64;
         let Some(b) = self.world.bodies.get_mut(c.body) else {
             return false;
         };
@@ -1964,6 +1974,7 @@ impl Sim {
             }
             h.update([u8::from(c.action.boosting), u8::from(c.action.armed)]);
             h.update(c.action.wheelie_ticks.to_le_bytes());
+            h.update(c.action.wheelie_ready.to_le_bytes());
             for (r, n) in c.action.utility_ready.iter().zip(c.action.utility_fired) {
                 h.update(r.to_le_bytes());
                 h.update(n.to_le_bytes());

@@ -504,8 +504,7 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     assert_eq!(kinds2, 11, "the pieces keep their debris slots, kind 2");
 }
 
-#[test]
-fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
+fn boost_then_drift(classic: bool) {
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
     // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.
     let mut h = driving_host();
@@ -524,7 +523,14 @@ fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
     h.schedule(0, &net("phone", Channel::Cmd, claim.encode()))
         .unwrap();
     for (k, t) in (0..240u64).step_by(6).enumerate() {
-        let action = if t < 120 { [32_767, 0] } else { [-32_767, 0] };
+        // The old layout: the right stick held right boosts, held left drifts. R116: the left stick at the rim boosts, pushed
+        // sideways drifts.
+        let (drive, action) = match (classic, t < 120) {
+            (true, true) => ([0, 32_767], [32_767, 0]),
+            (true, false) => ([0, 32_767], [-32_767, 0]),
+            (false, true) => ([0, 32_767], [0, 0]),
+            (false, false) => ([32_767, 0], [0, 0]),
+        };
         let batch = StateBatch {
             minor: STATE_MINOR,
             batch_seq: k as u16 + 1,
@@ -532,10 +538,13 @@ fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
             records: vec![StateRecord {
                 source: SourceHandle(1),
                 seq: k as u16 + 1,
-                drive: [0, 32_767],
+                drive,
                 action,
                 flags: StateFlags(
-                    StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH | StateFlags::ACTION_TOUCH,
+                    StateFlags::AVAILABLE
+                        | StateFlags::DRIVE_TOUCH
+                        | StateFlags::ACTION_TOUCH
+                        | if classic { StateFlags::CLASSIC } else { 0 },
                 ),
             }],
         };
@@ -547,17 +556,29 @@ fn the_action_stick_reaches_the_sim_as_boost_then_drift() {
         h.step_one();
         boosted |= h.sim().action_state(CarId(0)).is_some_and(|a| a.boosting);
     }
-    assert!(boosted, "ACTION right boosted");
+    assert!(boosted, "boosted");
     while h.tick() < 200 {
         h.step_one();
     }
     let a = h.sim().action_state(CarId(0)).unwrap();
-    assert!(a.drift > 0.9 && !a.boosting, "ACTION left drifts: {a:?}");
+    assert!(a.drift > 0.9 && !a.boosting, "drifts: {a:?}");
     assert!(
         h.sim()
             .applied_input(CarId(0))
             .is_some_and(|i| i.drift && !i.boost)
     );
+}
+
+#[test]
+fn the_left_stick_boosts_at_the_rim_then_drifts_sideways() {
+    // P1-C11 (R116): the default layout.
+    boost_then_drift(false);
+}
+
+#[test]
+fn the_old_layouts_action_stick_still_boosts_then_drifts() {
+    // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.
+    boost_then_drift(true);
 }
 
 #[test]
@@ -2075,9 +2096,9 @@ fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
                 records: vec![StateRecord {
                     source: SourceHandle(1),
                     seq,
-                    drive: [x, 0],
-                    action: [0, 0],
-                    flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+                    drive: [0, 0],
+                    action: [x, 0], // R116: the right stick steers
+                    flags: StateFlags(StateFlags::AVAILABLE | StateFlags::ACTION_TOUCH),
                 }],
             };
             h.handle(&net("phone", Channel::State, b.encode().unwrap()))
@@ -2195,4 +2216,23 @@ fn a_controller_cannot_remove_a_seat() {
         2,
         "both refused frames are counted"
     );
+}
+
+/// P1-C11: the phone's cooldown ring (input profile) and the sim's refusal (vehicle profile) are the same wait, and the
+/// reverse delay is longer than the full-lift preload (pull-then-snap launches, pull-and-hold reverses).
+#[test]
+fn the_input_and_vehicle_profiles_agree_on_the_launch() {
+    let input = jj_input::InputProfile::standard();
+    let vehicle = jj_sim::VehicleProfile::cruz();
+    let t = &vehicle.tuning;
+    assert_eq!(
+        f64::from(input.launch.cooldown_ms),
+        f64::from(t.wheelie_cooldown_s) * 1000.0,
+        "one cooldown, two files"
+    );
+    assert!(
+        input.launch.reverse_delay_ms as f32 > t.wheelie_full_preload_ms,
+        "the reverse delay must outlast the preload"
+    );
+    assert!(input.launch.snap_window_ms <= 500, "a snap, not a roll-on");
 }

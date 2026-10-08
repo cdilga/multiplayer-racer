@@ -162,6 +162,7 @@ mod tests {
             drive_touch: false,
             action_touch: false,
             menu_open: false,
+            classic: true,
         }
     }
 

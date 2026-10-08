@@ -9,7 +9,9 @@
 //! same method (plan T5: touch, pads and keys mean the same thing).
 
 use crate::action::{HeldActions, SectorMachine, Utility};
+use crate::dual::{DriveStickMachine, Flick, FlickMachine};
 use crate::intent::DriveIntent;
+use crate::profile::Resolved;
 use crate::wheelie::WheelieDetector;
 use jj_protocol::cmd::ActionKind;
 use jj_protocol::state::{StateFlags, StateRecord};
@@ -51,6 +53,8 @@ pub struct SourceSemantics {
     pub drift: bool,
     /// A wheelie preload is pending (the HUD can hint it).
     pub wheelie_preload: bool,
+    /// The R116 launch pull is armed and has not yet become reverse: the brakes hold, the car does not back up.
+    pub launch_armed: bool,
 }
 
 /// Touch/menu facts of one sample; the flags the wire carries (the UI knows these, the machines
@@ -65,6 +69,9 @@ pub struct SampleFlags {
     pub action_touch: bool,
     /// The pause menu is open for this source.
     pub menu_open: bool,
+    /// The player chose the old one-stick layout (steer on the left stick, the right stick's sectors: boost, drift, forward,
+    /// back). The default is the R116 dual-stick layout.
+    pub classic: bool,
 }
 
 /// One interpreted input source.
@@ -78,6 +85,13 @@ pub struct SourceState {
     flags: SampleFlags,
     sectors: SectorMachine,
     wheelie: WheelieDetector,
+    /// The R116 layout's machines and thresholds.
+    left: DriveStickMachine,
+    flick: FlickMachine,
+    profile: Resolved,
+    /// The wheelie launch (the boost) is refused until this time; the phone's ring reads it.
+    launch_ready_at_ms: u64,
+    launch_total_ms: u64,
     /// Monotonic ms of the last sample (freshness; the host neutralises after 250 ms of silence).
     last_sample_ms: u64,
     has_sample: bool,
@@ -87,6 +101,13 @@ pub struct SourceState {
 }
 
 impl SourceState {
+    /// A source reading the sticks with another profile's thresholds (tests, tuning).
+    pub fn with_profile(handle: SourceHandle, profile: Resolved) -> Self {
+        let mut s = Self::new(handle);
+        s.profile = profile;
+        s
+    }
+
     /// A source the host assigned `handle` to on claim.
     pub fn new(handle: SourceHandle) -> Self {
         Self {
@@ -97,6 +118,11 @@ impl SourceState {
             flags: SampleFlags::default(),
             sectors: SectorMachine::default(),
             wheelie: WheelieDetector::default(),
+            left: DriveStickMachine::default(),
+            flick: FlickMachine::default(),
+            profile: Resolved::default(),
+            launch_ready_at_ms: 0,
+            launch_total_ms: 0,
             last_sample_ms: 0,
             has_sample: false,
             next_action_id: 1,
@@ -119,6 +145,13 @@ impl SourceState {
         } else {
             (drive, action)
         };
+        // Changing layout mid-stream starts the machines afresh (nothing fires across the switch).
+        if self.has_sample && self.flags.classic != flags.classic {
+            self.sectors.reset();
+            self.wheelie.reset();
+            self.left.reset();
+            self.flick.reset();
+        }
         self.drive = effective.0;
         self.action = effective.1;
         self.flags = flags;
@@ -130,19 +163,51 @@ impl SourceState {
         if flags.menu_open || !flags.available {
             self.sectors.reset();
             self.wheelie.reset();
+            self.left.reset();
+            self.flick.reset();
             return out;
         }
-        if let Some(utility) = self.sectors.sample(self.action) {
+        let utility = if flags.classic {
+            self.sectors.sample(self.action).map(|u| match u {
+                Utility::Forward => ActionKind::UtilityForward,
+                Utility::Rear => ActionKind::UtilityRear,
+            })
+        } else {
+            self.left.sample(self.drive, &self.profile);
+            self.flick
+                .sample(self.action, now_ms, &self.profile)
+                .map(|f| match f {
+                    Flick::Forward => ActionKind::UtilityForward,
+                    Flick::Back => ActionKind::UtilityRear,
+                })
+        };
+        if let Some(kind) = utility {
             out.push(DetectedAction {
                 action: self.take_action_id(),
-                kind: match utility {
-                    Utility::Forward => ActionKind::UtilityForward,
-                    Utility::Rear => ActionKind::UtilityRear,
-                },
+                kind,
                 at_source_seq: self.seq,
             });
         }
-        if let Some(event) = self.wheelie.sample(self.drive[1], now_ms) {
+        let wheelie = if flags.classic {
+            self.wheelie.sample(self.drive[1], now_ms)
+        } else {
+            // The launch: a snap to full forward inside the profile's window. The pull still tracks while cooling down (the
+            // HUD shows it), but a snap then fires nothing.
+            let snap = self.wheelie.sample_with(
+                self.drive[1],
+                now_ms,
+                self.profile.launch_snap,
+                self.profile.launch_window_ms,
+                // Held through a countdown the pull stays armed (nothing cancels it); the reverse delay decides reverse.
+                u64::MAX,
+            );
+            snap.filter(|_| now_ms >= self.launch_ready_at_ms)
+        };
+        if let Some(event) = wheelie {
+            if !flags.classic {
+                self.launch_ready_at_ms = now_ms.saturating_add(self.profile.launch_cooldown_ms);
+                self.launch_total_ms = self.profile.launch_cooldown_ms;
+            }
             out.push(DetectedAction {
                 action: self.take_action_id(),
                 kind: ActionKind::Wheelie {
@@ -167,6 +232,8 @@ impl SourceState {
         self.action = [0, 0];
         self.sectors.reset();
         self.wheelie.reset();
+        self.left.reset();
+        self.flick.reset();
         self.flags.drive_touch = false;
         self.flags.action_touch = false;
         match why {
@@ -197,18 +264,49 @@ impl SourceState {
 
     /// What the sticks mean right now (neutral before the first sample).
     pub fn semantics(&self) -> SourceSemantics {
+        if !self.flags.classic {
+            let mut s = crate::dual::semantics(
+                self.drive,
+                self.action,
+                &self.left,
+                self.wheelie.is_preloading(),
+                &self.profile,
+            );
+            // A full pull arms the launch first (the brakes hold); reverse engages only past the reverse delay.
+            let delayed = self.wheelie.zone_ms() >= self.profile.launch_reverse_delay_ms;
+            s.launch_armed = s.drive.reverse && !delayed;
+            s.drive.reverse = s.drive.reverse && delayed;
+            return s;
+        }
         let held: HeldActions = self.sectors.held();
         SourceSemantics {
             drive: crate::intent::drive_intent(self.drive),
             boost: held.boost,
             drift: held.drift,
             wheelie_preload: self.wheelie.is_preloading(),
+            launch_armed: false,
         }
     }
 
     /// The DRIVE intent alone (what S03 consumes per tick).
     pub fn drive_intent(&self) -> DriveIntent {
-        crate::intent::drive_intent(self.drive)
+        self.semantics().drive
+    }
+
+    /// The wheelie launch's cooldown at `now_ms` as (remaining, total) ms: (0, 0) when it is ready. The phone draws it as a ring
+    /// on the left stick knob.
+    pub fn launch_cooldown(&self, now_ms: u64) -> (u64, u64) {
+        let left = self.launch_ready_at_ms.saturating_sub(now_ms);
+        if left == 0 {
+            (0, 0)
+        } else {
+            (left, self.launch_total_ms)
+        }
+    }
+
+    /// Whether this source reads the sticks the old one-stick way.
+    pub fn classic(&self) -> bool {
+        self.flags.classic
     }
 
     /// Monotonic ms of the last sample, and `None` before the first.
@@ -233,7 +331,8 @@ impl SourceState {
                     | u8::from(self.flags.drive_touch) << 1
                     | u8::from(self.flags.action_touch) << 2
                     | u8::from(self.wheelie.is_preloading()) << 3
-                    | u8::from(self.flags.menu_open) << 4,
+                    | u8::from(self.flags.menu_open) << 4
+                    | u8::from(self.flags.classic) << 5,
             ),
         }
     }
@@ -251,6 +350,7 @@ mod tests {
         drive_touch: true,
         action_touch: true,
         menu_open: false,
+        classic: true,
     };
 
     #[test]
@@ -276,6 +376,7 @@ mod tests {
                 drive_touch: true,
                 action_touch: false,
                 menu_open: false,
+                classic: true,
             },
             0,
         );

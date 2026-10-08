@@ -52,6 +52,8 @@ pub struct ActionState {
     /// (game time), and how many have fired over the round.
     pub utility_ready: [u64; 2],
     pub utility_fired: [u32; 2],
+    /// The tick the wheelie launch can next fire (the cooldown, P1-C11).
+    pub wheelie_ready: u64,
 }
 
 impl ActionState {
@@ -64,6 +66,7 @@ impl ActionState {
             wheelie_ticks: 0,
             utility_ready: [0; 2],
             utility_fired: [0; 2],
+            wheelie_ready: 0,
         }
     }
 
@@ -150,7 +153,7 @@ pub fn wheel_commands(
             0.0,
         )
     } else if brake > 0.0 {
-        if forward_speed > t.reverse_below_mps {
+        if forward_speed > t.reverse_below_mps || input.no_reverse {
             (0.0, brake)
         } else {
             (-brake * t.max_reverse_force, 0.0)
