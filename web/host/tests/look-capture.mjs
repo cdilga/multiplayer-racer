@@ -52,7 +52,7 @@ const LOOK = [
   ['corner-1tile-tv-1080p', 1, 1920, 1080, 'corner'],
   ['corner-4tiles-tv-1080p', 4, 1920, 1080, 'corner'],
   ['corner-24tiles-tv-1080p', 24, 1920, 1080, 'corner'],
-  ['gantry-1tile-tv-1080p', 1, 1920, 1080, 'start'],
+  ['gantry-1tile-tv-1080p', 1, 1920, 1080, 'approach'], // one tile at the start sits under the banner: shot on the run-in
   ['gantry-4tiles-tv-1080p', 4, 1920, 1080, 'start'],
   ['gantry-24tiles-tv-1080p', 24, 1920, 1080, 'start'],
   ['corner-1tile-laptop-1366', 1, 1366, 768, 'corner'],
@@ -112,7 +112,13 @@ async function raceShot(spec, out, report) {
       let target = 0;
       if (kind === 'corner') for (let i = 0, best = -1; i < n; i++) if (turn(i) > best) [best, target] = [turn(i), i];
       if (kind === 'straight') for (let i = 30, best = 9; i < n - 30; i++) if (turn(i) < best) [best, target] = [turn(i), i + 20];
-      const behind = kind === 'start' ? 0 : 16; // the view ahead of the car
+      // The run-in to the finish line: about 45 m before the route's end (the start/finish is point 0).
+      if (kind === 'approach') {
+        let d = 0;
+        target = n - 1;
+        while (target > 1 && d < 45) [d, target] = [d + Math.hypot(pts[target][0] - pts[target - 1][0], pts[target][1] - pts[target - 1][1]), target - 1];
+      }
+      const behind = kind === 'start' || kind === 'approach' ? 0 : 16; // the view ahead of the car
       const at = Math.max(0, target - behind);
       const nearest = (p) => {
         let best = 0;
@@ -209,14 +215,15 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
   await page.addStyleTag({ content: HIDE });
   let alive = {};
   let seen = !opts.see;
-  const hits0 = opts.hit ? await page.evaluate(() => window.__jjRender.vehicles()?.fx.spawned.impact ?? 0) : 0;
+  // A hit is a burst of sparks (a part coming loose also puffs an 'impact', but throws no sparks).
+  const hits0 = opts.hit ? await page.evaluate(() => window.__jjRender.vehicles()?.fx.spawned.sparks ?? 0) : 0;
   const t0 = Date.now();
   while (Date.now() - t0 < 45_000) {
     const st = await page.evaluate((h) => ({ alive: window.__jjRender.vehicles()?.fx.alive ?? {}, spawned: window.__jjRender.vehicles()?.fx.spawned ?? {}, sees: window.__jjRender.tilesSee([h]).some((t) => t.sees[0]) }), HUSK);
     alive = st.alive;
     if (opts.see) seen = tiles === 0 || st.sees;
     // A new hit (normal and reduced motion are shot at the same moment after it), or every family alive at once.
-    if (opts.hit ? st.spawned.impact > hits0 : families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
+    if (opts.hit ? st.spawned.sparks >= hits0 + 10 : families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
     await sleep(15);
   }
   alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});

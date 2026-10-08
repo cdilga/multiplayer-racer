@@ -153,8 +153,9 @@ export function fxDemoState(i: number, n: number, tick: number): Pick<CarPose, '
   else if (kind === 2) [flags, boost] = [16 | 0, i % 12 === 2 ? 1 : 0.5]; // boosting (blue at full)
   else if (kind === 3) flags = 2 << 6; // gravel
   else if (kind === 4) {
-    // An impact every 4 s: one tick at a fifth of the speed, then back (a hard hit: dv about 14 m/s).
-    if (cycle < 2) [vel[0], vel[2]] = [vel[0] * 0.2, vel[2] * 0.2];
+    // An impact every 4 s: six ticks at a fifth of the speed, then back (a hard hit: dv about 14 m/s). Six, not one or
+    // two: a drawn frame samples every few sim ticks, and a one-tick dip was often never seen.
+    if (cycle < 6) [vel[0], vel[2]] = [vel[0] * 0.2, vel[2] * 0.2];
     throttle = cycle < 40 ? 0 : 1;
   } else {
     // A landing every 4 s: falling for a third of a second, then level.
