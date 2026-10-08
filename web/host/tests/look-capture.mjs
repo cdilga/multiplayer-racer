@@ -191,13 +191,15 @@ async function identity(out, report) {
 // The synthetic oval with ?fxdemo: car i cycles through the family its index names (see synthetic.ts fxDemoState).
 const ALL = ['dust', 'tyre-smoke', 'boost', 'sparks', 'impact', 'landing', 'detach', 'damage-smoke', 'wreck-fire', 'lamp'];
 const FX = [
-  // [name, tiles, follow, families that must be alive, { see: a tile must have the husk in view, hit: shoot the moment a new impact lands }]
+  // [name, tiles, follow, families that must be alive, opts]. opts: see (a tile must have the husk in view), min (a family's
+  // live count to wait for), burst (hold the frame two drawn frames after `family` spawns `n` at once, optionally for one car's
+  // hit: the moment a short-lived burst is on screen).
   ['dust-dirt-1tile', 1, [0], ['dust'], { min: { dust: 60 } }],
   ['tyre-smoke-1tile', 1, [1], ['tyre-smoke']],
   ['boost-blue-1tile', 1, [2], ['boost']],
   // Shot once the spray has built up behind the car (the first puff alone was the whole frame before).
   ['gravel-spray-1tile', 1, [3], ['dust'], { min: { dust: 60 } }],
-  ['impact-sparks-1tile', 1, [4], ['impact', 'sparks'], { hit: true }],
+  ['impact-sparks-1tile', 1, [4], ['impact', 'sparks'], { burst: { family: 'sparks', n: 10, car: 5 } }],
   ['landing-1tile', 1, [11], ['landing']],
   ['detach-damage-1tile', 1, [5], ['detach', 'damage-smoke']],
   // A badly damaged car trailing smoke: the followed car lost a door and loosened its front at 4 s.
@@ -205,9 +207,14 @@ const FX = [
   ['wreck-fire-1tile', 1, [0], ['wreck-fire'], { see: true }],
   ['wreck-fire-overview', 0, [], ['wreck-fire']],
   ['driving-4tiles', 4, [0, 1, 2, 3], ['dust', 'tyre-smoke', 'boost', 'lamp']],
-  ['hits-4tiles', 4, [4, 5, 10, 11], ['impact', 'sparks', 'landing', 'detach', 'damage-smoke']],
+  ['hits-4tiles', 4, [4, 10, 16, 22], ['impact', 'sparks'], { burst: { family: 'sparks', n: 10, car: 5 } }],
+  ['landing-4tiles', 4, [5, 11, 17, 23], ['landing'], { burst: { family: 'landing', n: 8 } }],
+  ['detach-4tiles', 4, [5, 11, 17, 23], ['detach', 'damage-smoke'], { burst: { family: 'detach', n: 4 } }],
   ['wreck-fire-4tiles', 4, [0, 6, 12, 18], ['wreck-fire'], { see: true }],
   ['all-24tiles', 24, null, ALL, { see: true }],
+  ['hits-24tiles', 24, null, ['impact', 'sparks'], { burst: { family: 'sparks', n: 10, car: 5 } }],
+  ['landing-24tiles', 24, null, ['landing'], { burst: { family: 'landing', n: 8 } }],
+  ['detach-24tiles', 24, null, ['detach'], { burst: { family: 'detach', n: 4 } }],
 ];
 const HUSK = [-14, 0.8, 6]; // synthetic.ts HUSK_AT, lifted to the fire
 
@@ -219,26 +226,26 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
   let alive = {};
   let seen = !opts.see;
   // A hit is a burst of sparks (a part coming loose also puffs an 'impact', but throws no sparks).
-  const hits0 = opts.hit ? await page.evaluate(() => window.__jjRender.vehicles()?.fx.spawned.sparks ?? 0) : 0;
+  const hits0 = opts.burst ? await page.evaluate((f) => window.__jjRender.vehicles()?.fx.spawned[f] ?? 0, opts.burst.family) : 0;
   const t0 = Date.now();
   while (Date.now() - t0 < 45_000) {
     const st = await page.evaluate((h) => ({ alive: window.__jjRender.vehicles()?.fx.alive ?? {}, spawned: window.__jjRender.vehicles()?.fx.spawned ?? {}, sees: window.__jjRender.tilesSee([h]).some((t) => t.sees[0]) }), HUSK);
     alive = st.alive;
     if (opts.see) seen = tiles === 0 || st.sees;
     // A new hit (normal and reduced motion are shot at the same moment after it), or every family alive at once.
-    if (opts.hit) {
+    if (opts.burst) {
       // In the page, frame by frame: two drawn frames after the hit's spark burst, hold the frame loop, so the screenshot
       // shows that moment (a screenshot at 1080p takes longer than the 0.3 s flash lives).
       await page.evaluate(
-        ([h0, car]) =>
+        ([h0, { family, n, car }]) =>
           new Promise((done) => {
             let after = -1;
             let prev = h0;
             const look = () => {
               // The followed car's own hit: its burst lands in one frame (scrapes add a few sparks a frame).
               const fx = window.__jjRender.vehicles()?.fx;
-              const s = fx?.spawned.sparks ?? 0;
-              if (after < 0 && s - prev >= 10 && fx?.impactCars?.includes(car)) after = 0;
+              const s = fx?.spawned[family] ?? 0;
+              if (after < 0 && s - prev >= n && (car === undefined || fx?.impactCars?.includes(car))) after = 0;
               prev = s;
               if (after >= 0 && ++after > 2) {
                 window.__jjRender.hold();
@@ -250,7 +257,7 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
             // Never hang: after 45 s, shoot what there is (the report then shows no hit alive).
             setTimeout(() => (window.__jjRender.hold(), done()), 45_000);
           }),
-        [hits0, (follow?.[0] ?? 0) + 1],
+        [hits0, opts.burst],
       );
       break;
     }
@@ -292,7 +299,7 @@ if (want('fx')) {
   await mkdir(out, { recursive: true });
   const report = { mode, shots: [] };
   for (const s of FX.filter((x) => !process.env.JJ_SHOT || process.env.JJ_SHOT.split(',').includes(x[0]))) await fxShot(s, out, report);
-  await fxShot(FX[4], out, report, true); // the same moment after a hit, reduced motion on
+  await fxShot(FX.find((s) => s[0] === 'impact-sparks-1tile'), out, report, true); // the same moment after a hit, reduced motion on
   await writeFile(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   done.push('fx');
 }
