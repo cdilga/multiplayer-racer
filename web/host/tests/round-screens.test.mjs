@@ -37,9 +37,11 @@ async function open(spec, [width, height] = VP['1080p']) {
   return page;
 }
 
-/** Waits until the HUD has a box per tile (the grid has laid out and reported its rects). */
+/** Waits until the HUD has a box per tile (the grid has laid out and reported its rects). The tiles report after a drawn
+ *  frame, and on a software rasteriser (CI's SwiftShader) a 99-tile frame takes seconds, more on a loaded runner: the wait
+ *  scales with the tile count (these tests judge layout, not speed; frame cost is P1-Q01's). */
 async function untilHud(page, n) {
-  await page.waitForFunction((k) => document.querySelectorAll('.hud-tile[data-seat]').length === k, n, { timeout: 30_000 });
+  await page.waitForFunction((k) => document.querySelectorAll('.hud-tile[data-seat]').length === k, n, { timeout: Math.max(30_000, n * 900) });
 }
 
 /** Rects (CSS px) of every element matching `selector`, plus the viewport. */
