@@ -21,7 +21,7 @@ first segment of a name, so "town" shots are on the first one. `capture.json` re
   (100 seeds, no softlock flagged), `browser-run.json`, `timing.md`: unchanged by this round's data edits except the
   goldens (re-blessed, wasm parity green). I did not re-run the timing receipt this round.
 
-## Fixed this round
+## Defects found and fixed
 - The 1080p frames are true 1080p (`res=1&autores=off`), with no HUD or banners.
 - Roads in M04 to M07 changed as listed in their reviews (power-line spans, window z-fight, double edge line, marker pads, domes).
 
