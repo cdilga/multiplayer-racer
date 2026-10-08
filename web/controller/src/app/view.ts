@@ -351,7 +351,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       // Opened from the Home Screen it is already full screen and there is nothing to toggle.
       btn.hidden = fs.mode === 'standalone';
       btn.setAttribute('aria-pressed', String(fs.active));
-      btn.setAttribute('aria-label', fs.mode === 'api' ? (fs.active ? 'Leave full screen' : 'Full screen') : 'Full screen: how to on this phone');
+      btn.setAttribute('aria-label', fs.mode === 'api' ? (fs.active ? 'Exit full screen' : 'Full screen') : 'Full screen: how to on this phone');
       btn.classList.toggle('on', fs.active);
     }
     let note = screenEl?.querySelector<HTMLElement>('[data-overlay=fs-note]') ?? null;

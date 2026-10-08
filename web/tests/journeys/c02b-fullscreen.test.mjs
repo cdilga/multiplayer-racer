@@ -73,14 +73,15 @@ test('C02b: the full-screen toggle (tools and settings) enters and leaves and fo
   const page = await joinPhone(joinUrl, { width: 915, height: 412 });
   const btn = page.locator('.tools [data-act=fullscreen]');
   assert.equal((await fsState(page)).mode, 'api');
-  assert.equal(await btn.getAttribute('aria-pressed'), 'false');
+  // fullscreenchange fires a frame after fullscreenElement clears: wait for the button to hear it.
+  await wait(page, () => document.querySelector('.tools [data-act=fullscreen]').getAttribute('aria-pressed') === 'false', undefined, 5_000);
   await shot(page, 'phone-915x412-lobby-windowed');
 
   // Tools row: in, then out. The player's own exit never prompts.
   await btn.click();
   await wait(page, () => !!document.fullscreenElement);
   await wait(page, () => document.querySelector('.tools [data-act=fullscreen]').getAttribute('aria-pressed') === 'true');
-  assert.equal(await btn.getAttribute('aria-label'), 'Leave full screen');
+  assert.equal(await btn.getAttribute('aria-label'), 'Exit full screen');
   await shot(page, 'phone-915x412-lobby-fullscreen');
   await btn.click();
   await wait(page, () => !document.fullscreenElement);
@@ -134,7 +135,7 @@ test('C02b: the full-screen toggle (tools and settings) enters and leaves and fo
   await page.getByRole('button', { name: 'Back to full screen' }).click();
   await wait(page, () => !!document.fullscreenElement);
   await wait(page, () => window.__jjFullscreen.inspect().prompt === false);
-  assert.equal(await btn.getAttribute('aria-pressed'), 'true');
+  await wait(page, () => document.querySelector('.tools [data-act=fullscreen]').getAttribute('aria-pressed') === 'true', undefined, 5_000);
   // Lost again, "Not now" dismisses it without going back in.
   await page.evaluate(() => document.exitFullscreen());
   await wait(page, () => window.__jjFullscreen.inspect().prompt === true);

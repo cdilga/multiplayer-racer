@@ -130,8 +130,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const foot = footer.getBoundingClientRect().height;
       const h = innerHeight - foot;
       // Wide screens put the words beside the card, tall ones under it (round.css .mn-join.big).
-      const fit = innerWidth > h * 1.1 ? Math.min(h * 0.58, innerWidth * 0.46) : Math.min(h * 0.42, innerWidth * 0.78);
-      px = Math.max(tokenData.qr.minModulePx[activeProfile()], Math.floor(fit / joinModules)) * joinModules;
+      const fit = innerWidth > h * 1.1 ? Math.min(h * 0.7, innerWidth * 0.46) : Math.min(h * 0.4, innerWidth * 0.78);
+      px = Math.max(2, Math.floor(fit / joinModules)) * joinModules;
     } else {
       const fit = Math.min((innerHeight - footer.getBoundingClientRect().height) * 0.26, innerWidth * 0.3);
       px = Math.max(2, Math.floor(fit / joinModules)) * joinModules;
@@ -146,7 +146,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     const panel = menuEl.querySelector<HTMLElement>('[data-join-big]');
     const card = panel?.querySelector<HTMLElement>('[data-join-card=big]');
     if (!panel || !card || !joinModules) return;
-    const min = tokenData.qr.minModulePx[activeProfile()];
+    // Below the profile's distance minimum only when the screen itself is that small: the card never scrolls or overlaps.
+    const min = 2;
     let per = Math.round(card.querySelector('.qr')!.getBoundingClientRect().width / joinModules);
     while (per > min && (panel.scrollHeight > panel.clientHeight + 1 || panel.scrollWidth > panel.clientWidth + 1)) {
       per--;
@@ -180,10 +181,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         <div class="mn-acts"><button class="btn brush danger" type="button" data-act="do-disband">Disband room</button>
         <button class="btn brush" type="button" data-act="back" data-autofocus>Keep the room</button></div></section>`;
     } else if (state.join) {
-      menuEl.innerHTML = `<section class="mn-panel join-big" data-join-big aria-labelledby="mn-t"><h2 id="mn-t" class="display">${racing() ? 'Paused: <span class="acc">join in</span>' : 'Join the <span class="acc">room</span>'}</h2>
-        <div class="mn-join big" data-join><div class="mn-join-words">${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p></div></div>
+      // The title, the words and the buttons share a column beside the card (under it on a tall screen), so the QR gets
+      // nearly the whole height.
+      menuEl.innerHTML = `<section class="mn-panel join-big" data-join-big aria-labelledby="mn-t"><div class="mn-join big" data-join><div class="mn-join-words">
+        <h2 id="mn-t" class="display">${racing() ? 'Paused: <span class="acc">join in</span>' : 'Join the <span class="acc">room</span>'}</h2>
+        ${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p>
         <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
-        <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></section>`;
+        <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></div></div></section>`;
     } else {
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
       const fs = fullscreenSupport();

@@ -9,3 +9,8 @@
 .fs-note { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; box-sizing: border-box; width: min(420px, calc(100% - 32px)); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .fs-note p { margin: 0; font-size: 16px; line-height: 1.35; }
 @media (orientation: portrait) { .fs-prompt { bottom: 20px; } }
+/* The narrow short strip (640x300 with a toolbar, layout-short.css) holds one more tool: icon squares a notch smaller. */
+@media (orientation: landscape) and (max-height: 440px) and (max-width: 800px) {
+  .strip .tools { gap: 2px; }
+  .strip .tools .btn.icon { width: 34px; min-width: 34px; }
+}
