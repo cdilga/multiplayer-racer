@@ -88,8 +88,10 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
     return o.host.seats.length === 33 && o.host.seats.every((s) => s.car !== undefined && s.car !== null);
   }, undefined, 60_000);
   const o = await host.evaluate(() => window.__jjTest.observe());
-  const seatCars = new Set(o.host.seats.map((s) => s.car));
-  assert.equal(seatCars.size, 33, 'every seat has its own car');
+  const mine = [...inRoom.keys()].map((ep) => o.host.seats.find((x) => x.endpoint === ep));
+  assert.ok(mine.every(Boolean), 'every controller in the room has a seat');
+  const seatCars = new Set(mine.map((x) => x.car));
+  assert.equal(seatCars.size, 33, `every seat has its own car (${o.host.seats.length} seats known to the host)`);
   assert.ok([...seatCars].every((c) => o.cars.some((x) => x.car === c)), 'every seat’s car exists in the world');
 
   // Shrink to two.
