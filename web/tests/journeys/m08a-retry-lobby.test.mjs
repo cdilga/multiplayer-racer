@@ -1,5 +1,5 @@
-// P1-M08a: the Retry / Lobby screen on the REAL host page. A recipe the generator can't make (`recipe=nosuch`) fails the
-// preparation and the conservative retry too; the host shows "No track this time" over the Lobby with Retry and Lobby, the
+// P1-M08a: the Retry / Lobby screen on the REAL host page. A dev map the validator refuses (`maps/test/broken-no-gates.json`, no gates)
+// fails the preparation and the conservative retry too; the host shows "No track this time" over the Lobby with Retry and Lobby, the
 // players' seats are kept, Retry prepares again, Lobby closes the screen. `JJ_CAPTURE_DIR=<dir>` saves the captures for the
 // visual self-review (docs/evidence/P1-M08a/).
 //   node --test web/tests/journeys/m08a-retry-lobby.test.mjs
@@ -37,7 +37,7 @@ for (const [name, viewport] of [
     const host = await (await browser.newContext({ viewport })).newPage();
     const errors = [];
     host.on('pageerror', (e) => errors.push(e.message));
-    await host.goto(`${server.origin}${BASE}host?room&test=live&recipe=nosuch`);
+    await host.goto(`${server.origin}${BASE}host?room&test=live&map=broken-no-gates`);
     await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
     for (const k of [1, 2]) {
       await frame(host, `syn${k}`, { hello: true });

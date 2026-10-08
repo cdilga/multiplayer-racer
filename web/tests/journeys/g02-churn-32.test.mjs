@@ -75,7 +75,7 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   // The race: all 32 Ready, all 32 on the grid.
   for (const ep of inRoom.keys()) await frame(host, ep, { ready: true });
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 180_000);
-  await wait(host, () => window.__jjTest.observe().cars.length === 32, undefined, 180_000);
+  await wait(host, async () => (await window.__jjTest.observe()).cars.length === 32, undefined, 180_000);
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 180_000);
 
   // Mid-race churn: ten leave, ten drop in and each gets a car; a 33rd as well.
@@ -83,7 +83,10 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   await join(11);
   await settle('race churn');
   assert.equal((await seatsOf(host)).length, 33, 'no cap at 32: a 33rd seat');
-  await wait(host, () => window.__jjTest.observe().host.seats.length === 33 && window.__jjTest.observe().host.seats.every((s) => s.car !== undefined && s.car !== null), undefined, 60_000);
+  await wait(host, async () => {
+    const o = await window.__jjTest.observe();
+    return o.host.seats.length === 33 && o.host.seats.every((s) => s.car !== undefined && s.car !== null);
+  }, undefined, 60_000);
   const o = await host.evaluate(() => window.__jjTest.observe());
   const seatCars = new Set(o.host.seats.map((s) => s.car));
   assert.equal(seatCars.size, 33, 'every seat has its own car');
