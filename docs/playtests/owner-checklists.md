@@ -38,7 +38,7 @@ Open the gallery at `https://jammers-preview.dilger.dev/poc/` on the TV laptop a
 - [ ] **D3 Crash:** doors and wheels go loose then fly off and stay; wrecks respawn in about 2 s; husks stay; OI! and cones.
 - [ ] **D4 Outback:** generated tracks through town, rocks, outback dirt and bitumen.
 - [ ] **D5 Party-ready:** QR scanner, tutorial, phone as host, voice and music, engine sound, effects (dust, smoke, sparks, fire, glows),
-      the hub (a second laptop with pads, a keyboard-only laptop, a phone with a pad, each showing how it's connected), removing someone
+      extra players on any joined controller (a second laptop with pads, a keyboard-only laptop, a phone with a pad, each showing how it's connected; R119, no separate hub page), removing someone
       who left, downloading a session bundle, crash and UI sounds, and the Credits page.
 - [ ] **Native resolution (report whenever you play, br-dim.3 hardware):** on the TCL at 4K, 1/12/24/32 tiles at Native: the
       overlay shows 3840x2160 and no auto-lowering (or names it), frame cost noted, and the cars look crisp. On your Android:
@@ -51,8 +51,8 @@ Real-device rows (from P1-Q02):
 - [ ] **Join:** host from the index on the TV laptop; an iPhone and an Android join by camera QR; the TV QR scans from 3 m; the in-page scanner works on both.
 - [ ] **Network:** phones on home Wi-Fi go direct; a phone on cellular joins and its path is recorded; `tools/net/turn_probe.py` allocates on `turn.dilger.dev` from a hotspot; a client-isolated Wi-Fi if handy (then decide Q-N1).
 - [ ] **Controls:** two thumbs, no zoom/scroll/select; a hard left-stick swipe on an iPhone never navigates away; wake lock holds a whole race; real pads on the TV host.
-- [ ] **Hub:** a second laptop with pads and a phone with a paired pad each join several players and show their connection.
-- [ ] **Lots of controllers (P1-C12):** more than four pads across the host and at least one hub, plus two keyboards on one computer as two players (one per key cluster), all racing in one room; a fifth pad on a Chrome host tells you to put it on a hub.
+- [ ] **Plug in and play (P1-C13):** join a second laptop and a phone the normal way, then keep plugging in pads and pressing key clusters: each device joins with a press, unplugging or holding its leave chord removes only it, and each shows its connection.
+- [ ] **Lots of controllers (P1-C12):** more than four pads across the host and at least one joined laptop, plus two keyboards on one computer as two players (one per key cluster), all racing in one room; a fifth pad on a Chrome host tells you to plug it into a joined laptop or phone.
 - [ ] **Recovery:** lock a phone 30 s mid-race → same car within 3 s; its car goes to autopilot and comes back.
 - [ ] **Identity:** Identify shows on the TV within ~150 ms on the LAN.
 - [ ] **Hosts:** a phone hosts a 4-player race at ≥ 30 fps with sound; a weaker laptop hosts; pacing on the TCL at 4K; a quick host check from Safari on the Mac and from a Windows PC when handy.
