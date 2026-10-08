@@ -274,7 +274,9 @@ mod tests {
         #[test]
         fn dominant_is_the_larger_axis(x in any::<i16>(), y in any::<i16>()) {
             let d = dominant([x, y]);
-            let (ax, ay) = (x.abs(), y.abs());
+            // i16::MIN is not a valid axis value: `dominant` reads it as -32767, so the oracle does too (and cannot overflow).
+            let (ax, ay) = (sanitise_axis(x).abs(), sanitise_axis(y).abs());
+            let (x, y) = (sanitise_axis(x), sanitise_axis(y));
             if ax == ay || ax < ENTER_Q && ay < ENTER_Q {
                 prop_assert_eq!(d, None);
             } else if ay > ax {
