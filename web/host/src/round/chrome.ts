@@ -8,7 +8,7 @@ import type { RoomView } from '../worker/client';
 import type { SimInput } from '../worker/messages';
 import { esc, shortName } from './format';
 import { basePath } from '../../../shared/src/base';
-import { paperQrSvg, tokenData } from '../../../shared/ui';
+import { paperQrCard, paperQrSvg, tokenData } from '../../../shared/ui';
 import { enterFullscreen, fullscreenSupport } from '../layout/fullscreen';
 import { setPositions } from '../layout/positions';
 import { PROFILES, activeProfile, profileChoice, setProfileChoice, type ProfileChoice } from '../layout/profile';
@@ -34,11 +34,13 @@ export interface Chrome {
   readouts: HTMLElement;
   update(room: RoomView): void;
   openMenu(): void;
+  /** The big join card (P1-R07b): the footer's docked QR opens it; a race pauses under it so a phone can join. */
+  openJoin(): void;
   closeMenu(): void;
   /** Open the Remove confirmation for a seat (a lobby card click, or the menu's player list). */
   askRemove(seat: number): void;
   toggleDiagnostics(on?: boolean): void;
-  readonly state: { menu: boolean; confirm: string | null; diagnostics: boolean };
+  readonly state: { menu: boolean; join: boolean; confirm: string | null; diagnostics: boolean };
 }
 
 const RACING = new Set(['Countdown', 'Running', 'Finalising']);
@@ -52,7 +54,7 @@ const colour = (s: Seat) => `--b:var(--id-${s.colourIndex % tokenData.seatColors
 
 export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: ParentNode) => void): Chrome {
   let room: RoomView | null = null;
-  const state = { menu: false, confirm: null as string | null, diagnostics: false };
+  const state = { menu: false, join: false, confirm: null as string | null, diagnostics: false };
   let paused = false;
   let target: number | null = null;
 
@@ -114,6 +116,35 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   menuEl.setAttribute('aria-modal', 'true');
   layer.append(menuEl);
 
+  // ---------- The join card (P1-R07b) ----------
+  // The accepted kit's paper QR card (code and domain under it) plus the join URL in words. In the menu it sits beside the
+  // title; opened from the footer's docked QR it is drawn as big as the screen allows, a whole number of px per module so
+  // it stays crisp, scannable from the couch.
+  const joinUrl = opts.joinUrl;
+  const joinModules = joinUrl ? paperQrSvg(joinUrl).modules : 0;
+  const placeJoinCard = (slot: HTMLElement | null, big: boolean) => {
+    if (!slot || !joinUrl) return;
+    let px: number;
+    if (big) {
+      // Room for the title, the code under the QR, the URL and the buttons: the QR gets what's left.
+      const foot = footer.getBoundingClientRect().height;
+      const h = innerHeight - foot;
+      // Wide screens put the words beside the card, tall ones under it (round.css .mn-join.big).
+      const fit = innerWidth > h * 1.1 ? Math.min(h * 0.58, innerWidth * 0.46) : Math.min(h * 0.42, innerWidth * 0.78);
+      px = Math.max(tokenData.qr.minModulePx[activeProfile()], Math.floor(fit / joinModules)) * joinModules;
+    } else {
+      const fit = Math.min((innerHeight - footer.getBoundingClientRect().height) * 0.26, innerWidth * 0.3);
+      px = Math.max(2, Math.floor(fit / joinModules)) * joinModules;
+    }
+    const card = paperQrCard({ url: joinUrl, code: opts.code, domain: opts.domain, size: px });
+    card.dataset.joinCard = big ? 'big' : 'menu';
+    slot.prepend(card);
+  };
+  const joinText = () =>
+    joinUrl
+      ? `<p class="mn-join-how">Scan with a phone camera, or open</p><p class="mn-url" data-join-url>${esc(joinUrl)}</p>`
+      : `<p class="mn-join-how">Room code <b>${esc(opts.code)}</b> at ${esc(opts.domain)}</p>`;
+
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
   const renderMenu = () => {
     if (!room) return;
@@ -135,10 +166,16 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         <p>Everyone is sent home and the code <b>${esc(opts.code)}</b> stops working. This cannot be undone.</p>
         <div class="mn-acts"><button class="btn brush danger" type="button" data-act="do-disband">Disband room</button>
         <button class="btn brush" type="button" data-act="back" data-autofocus>Keep the room</button></div></section>`;
+    } else if (state.join) {
+      menuEl.innerHTML = `<section class="mn-panel join-big" data-join-big aria-labelledby="mn-t"><h2 id="mn-t" class="display">${racing() ? 'Paused: <span class="acc">join in</span>' : 'Join the <span class="acc">room</span>'}</h2>
+        <div class="mn-join big" data-join><div class="mn-join-words">${joinText()}<p class="mn-join-n" data-join-n>${room.seats.length} in the room</p></div></div>
+        <div class="mn-acts"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
+        <button class="btn brush" type="button" data-act="host-menu">Host menu</button></div></section>`;
     } else {
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
       const fs = fullscreenSupport();
       menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
+        <div class="mn-join" data-join><div class="mn-join-words"><h3 class="display">Join <span class="acc">in</span></h3>${joinText()}</div></div>
         <div class="mn-acts main"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
         <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button>
@@ -158,6 +195,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
             : '<li class="none">Nobody has joined yet.</li>'
         }</ul></section>`;
     }
+    if (!state.confirm) placeJoinCard(menuEl.querySelector<HTMLElement>('[data-join]'), state.join);
     paint(menuEl);
     menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus();
   };
@@ -167,8 +205,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     paused = on;
     send('pause', on);
   };
-  const openMenu = () => {
+  const openMenu = (join = false) => {
     state.menu = true;
+    state.join = join;
     state.confirm = null;
     target = null;
     menuEl.hidden = false;
@@ -178,6 +217,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   };
   const closeMenu = () => {
     state.menu = false;
+    state.join = false;
     state.confirm = null;
     menuEl.hidden = true;
     menuBtn.setAttribute('aria-expanded', 'false');
@@ -203,6 +243,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     switch (b.dataset.act) {
       case 'resume':
         return closeMenu();
+      case 'host-menu':
+        state.join = false;
+        return renderMenu();
       case 'back':
         // Back from a confirmation returns to the menu, or closes it if it was opened straight to the confirmation.
         state.confirm = null;
@@ -282,9 +325,16 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   footer.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act === 'menu') state.menu ? closeMenu() : openMenu();
-    // The docked QR (no spare cell holds one): opening the menu pauses a race, so a phone can join.
-    if (act === 'qr' && !state.menu) openMenu();
+    // The docked QR (no spare cell holds one): the big join card, pausing a race so a phone can join (P1-R07b).
+    if (act === 'qr') {
+      if (state.menu && state.join) closeMenu();
+      else openMenu(true);
+    }
     if (act === 'diagnostics') toggleDiagnostics();
+  });
+  // The big card is sized to the screen: a resize (full screen, a display-mode change) redraws it.
+  window.addEventListener('resize', () => {
+    if (state.menu && !state.confirm) renderMenu();
   });
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
@@ -295,11 +345,15 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     else if (state.diagnostics) toggleDiagnostics(false);
   });
 
+  // Test and probe surface (R90): the menu's state and the same opens the footer and the menu button use.
+  (window as unknown as { __jjChrome: unknown }).__jjChrome = { state, openJoin: () => openMenu(true), openMenu: () => openMenu(false), closeMenu };
+
   return {
     footer,
     readouts: footer.querySelector<HTMLElement>('[data-readouts]')!,
     state,
-    openMenu,
+    openMenu: () => openMenu(false),
+    openJoin: () => openMenu(true),
     closeMenu,
     askRemove: (seat) => confirm('remove', seat),
     toggleDiagnostics,
@@ -318,7 +372,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
         if (paused && !racing()) {
           paused = false;
         }
-        const key = `${state.confirm}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
+        const key = `${state.confirm}:${state.join}:${r.phase}:${r.seats.map((s) => `${s.seat}${s.name}${s.presence}${s.ready}`).join()}`;
         if (menuEl.dataset.key !== key) {
           menuEl.dataset.key = key;
           renderMenu();

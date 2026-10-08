@@ -290,3 +290,23 @@ body:has(.jj-foot) .jj-chip { display: none; }
 .hud-prompt .pg { padding: 0 .6em .1em; background: #e6dcc3; border: calc(var(--hud) * .08) solid var(--c-ink); font-weight: 700; }
 .hud-prompt .pg.on { background: #2e9e5b; color: #fff; }
 .hud-tile.compact .hud-prompt .px { display: none; }
+
+/* ---------- The join card (P1-R07b) ----------
+   The pause menu carries the paper QR card with the join URL beside it; the footer's docked QR opens it big and centred
+   (chrome.ts sizes the QR to a whole number of px per module). Words go beside the card on wide screens, under it on tall. */
+.mn-join { display: flex; align-items: center; gap: calc(24px * var(--k)); min-width: 0; }
+.mn-join .qr-card { flex: none; margin: 0; }
+.mn-join-words { display: flex; flex-direction: column; gap: calc(8px * var(--k)); min-width: 0; }
+.mn-panel .mn-join-how { color: var(--c-ink-soft); }
+.mn-panel .mn-url { font: 800 calc(30px * var(--k))/1.2 var(--font-body); overflow-wrap: anywhere; user-select: all; }
+.mn-panel.join-big { width: auto; max-width: 100%; align-items: center; text-align: center; }
+.mn-panel.join-big .mn-acts { align-self: stretch; }
+.mn-join.big { flex-direction: row; text-align: left; }
+.mn-join.big .qr-card .qr-code { font-size: min(calc(var(--qr-size) * .2), calc(110px * var(--k))); }
+.mn-join.big .mn-join-words { max-width: calc(560px * var(--k)); }
+.mn-panel .mn-join.big .mn-url { font-size: calc(40px * var(--k)); }
+.mn-panel .mn-join-n { font-weight: 800; }
+@media (max-aspect-ratio: 11/10) {
+  .mn-join.big { flex-direction: column; text-align: center; }
+  .mn-join:not(.big) { flex-direction: column; align-items: flex-start; }
+}
