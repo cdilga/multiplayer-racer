@@ -388,6 +388,17 @@ pub mod test_codec {
         ControllerCmd::Identify.encode()
     }
 
+    /// The controller's Leave (the seat goes) and Sit out (the seat stays, the car doesn't race).
+    #[wasm_bindgen]
+    pub fn controller_leave() -> Vec<u8> {
+        ControllerCmd::Leave.encode()
+    }
+
+    #[wasm_bindgen]
+    pub fn controller_sit_out() -> Vec<u8> {
+        ControllerCmd::SitOut.encode()
+    }
+
     #[wasm_bindgen]
     pub fn controller_state(source: u16, seq: u16, dx: i16, dy: i16) -> Result<Vec<u8>, JsError> {
         StateBatch {

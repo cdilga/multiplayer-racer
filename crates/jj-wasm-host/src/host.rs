@@ -157,6 +157,9 @@ pub struct Host {
     /// Seats claimed through a `ForSource` wrapper (a hub's sources): everything the host says to them is wrapped the same
     /// way, so the hub routes it to the right source over its one connection.
     wrapped: BTreeSet<SeatId>,
+    /// Controller frames the host refused to decode (a controller can't send host commands such as `RemoveSeat`: it
+    /// has no message for it, and anything else is dropped here and counted, R90).
+    rejected_frames: u32,
     /// While a wrapped command's replies are produced: the source it came for (so a rejection is wrapped too).
     reply_source: Option<SourceHandle>,
     locals: BTreeMap<LocalSourceId, ConnId>,
@@ -253,6 +256,7 @@ impl Host {
             helloed: BTreeSet::new(),
             picks: BTreeMap::new(),
             wrapped: BTreeSet::new(),
+            rejected_frames: 0,
             reply_source: None,
             locals: BTreeMap::new(),
             local_buttons: BTreeMap::new(),
@@ -625,6 +629,7 @@ impl Host {
                 bytes,
             } => {
                 let Ok(cmd) = ControllerCmd::decode(&bytes) else {
+                    self.rejected_frames += 1;
                     return;
                 };
                 self.controller_cmd(endpoint, cmd);
@@ -638,6 +643,7 @@ impl Host {
                     return;
                 };
                 let Ok(StateMessage::Batch(batch)) = StateMessage::decode(&bytes) else {
+                    self.rejected_frames += 1;
                     return;
                 };
                 for r in batch.records {

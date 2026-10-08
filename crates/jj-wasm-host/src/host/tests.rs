@@ -2119,3 +2119,80 @@ fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
     drive(&mut h, 0, 2);
     assert_eq!(prompt(&h)["step"], 0);
 }
+
+/// P1-G07: a controller can't remove anyone. The controller protocol has no `RemoveSeat`; the host's own command
+/// (`UiCommand::RemoveSeat`) sent as controller bytes, on either channel, is refused and counted, and every message a
+/// controller does have only ever touches its own seat.
+#[test]
+fn a_controller_cannot_remove_a_seat() {
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    for who in ["a", "b"] {
+        for c in [
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId(who.into()),
+                resume: None,
+            },
+            ControllerCmd::Claim {
+                request: RequestId(1),
+                name: who.into(),
+            },
+        ] {
+            h.handle(&net(who, Channel::Cmd, c.encode())).unwrap();
+        }
+    }
+    let mut now = 0;
+    let mut step = |h: &mut Host, n: usize| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+            while h.next_message().is_some() {}
+        }
+    };
+    step(&mut h, 30);
+    let room = |h: &Host| serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap();
+    let seats = |h: &Host| room(h)["seats"].as_array().unwrap().len();
+    let seat_a = h.seats.seats().find(|s| s.endpoint.0 == "a").unwrap().id;
+    assert_eq!(seats(&h), 2);
+    assert_eq!(room(&h)["rejectedFrames"], 0);
+    // Controller "b" sends the host's RemoveSeat for seat "a", as bytes, on both channels.
+    let remove = MainToSim::Ui {
+        command: CommandId(1),
+        ui: UiCommand::RemoveSeat { seat: seat_a },
+    }
+    .encode();
+    h.handle(&net("b", Channel::Cmd, remove.clone())).unwrap();
+    h.handle(&net("b", Channel::State, remove)).unwrap();
+    // And every controller message there is, from b, including a source wrapper aimed at a source b doesn't have.
+    for sample in [
+        ControllerCmd::Identify,
+        ControllerCmd::Ready { on: true },
+        ControllerCmd::Recover,
+        ControllerCmd::Menu { open: true },
+        ControllerCmd::ForSource {
+            source: SourceHandle(1),
+            cmd: Box::new(ControllerCmd::Ready { on: false }),
+        },
+        ControllerCmd::ForSource {
+            source: SourceHandle(2),
+            cmd: Box::new(ControllerCmd::Leave),
+        },
+    ] {
+        h.handle(&net("b", Channel::Cmd, sample.encode())).unwrap();
+    }
+    step(&mut h, 10);
+    assert_eq!(seats(&h), 2, "nobody was removed");
+    assert!(
+        h.seats
+            .seat(seat_a)
+            .is_some_and(|s| s.presence == seats::Presence::Active),
+        "seat a is untouched"
+    );
+    assert_eq!(
+        room(&h)["rejectedFrames"],
+        2,
+        "both refused frames are counted"
+    );
+}

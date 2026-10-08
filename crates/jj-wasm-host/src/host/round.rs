@@ -413,6 +413,7 @@ impl Host {
                 })
             })
             .collect();
+        let rejected_frames = self.rejected_frames;
         let standings: Vec<serde_json::Value> = self
             .round
             .standings
@@ -437,6 +438,7 @@ impl Host {
             "seats": seats,
             "results": self.round.results,
             "standings": standings,
+            "rejectedFrames": rejected_frames,
         })
         .to_string()
     }

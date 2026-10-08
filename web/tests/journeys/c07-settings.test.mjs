@@ -143,7 +143,7 @@ test('with storage denied the controller still plays and says the settings are a
 test('opening Settings sends neutral and Menu{open:true}; closing sends Menu{open:false}; no action fires', { timeout: 120_000 }, async () => {
   const { host, page } = await seated();
   // The reference bytes: the Help card's open and close (Menu is a 3-byte message: version, tag, bool; a Ping is longer).
-  const menus = (from) => page.evaluate((n) => window.__cmds.slice(n).filter((c) => c.length === 6), from);
+  const menus = (from) => page.evaluate((n) => window.__cmds.slice(n).filter((c) => c.length === 6 && c.startsWith('010a')), from); // Menu is variant 10 (Ready and Tutorial are as short)
   const m0 = await page.evaluate(() => window.__cmds.length);
   await page.getByRole('button', { name: /^Help/ }).click();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);

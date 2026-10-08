@@ -1,12 +1,11 @@
 // P1-G07: the host removes a player, through the real host page and synthetic controllers (no WebRTC; the host page's test
 // surface feeds their hello, claim and ready frames). In the Lobby the host opens the menu's player list, removes a
 // player after the confirmation and the seat's card goes; then in a race the host removes a connected player from the
-// pause menu: the seat leaves the room view at a tick boundary and its tile reflows. Needs the Rust side of RemoveSeat
-// (`remove-seat:<seat>` host UI command, the P1-G07 lane report); until it lands the removal assertions
-// are skipped (JJ_G07_RUST=1 enables them). Captures go to $JJ_CAPTURE_DIR (default docs/evidence/P1-G07).
-// A controller cannot send RemoveSeat: the controller protocol has no such message (jj-protocol), so there is nothing to
-// feed from this surface; the Rust test for it is in the P1-G07 lane report.
-//   JJ_G07_RUST=1 node --test web/tests/journeys/g07-remove-player.test.mjs   (run on eris)
+// pause menu: the seat leaves the room view at a tick boundary and its tile reflows. Captures go to $JJ_CAPTURE_DIR
+// (default docs/evidence/P1-G07). A controller cannot send RemoveSeat: the controller protocol has no such message, and
+// the host's command sent as controller bytes is refused and counted (`a_controller_cannot_remove_a_seat`, native, in CI).
+// A real phone's "The host removed you" screen and Join again are in g07-join-again.test.mjs.
+//   node --test web/tests/journeys/g07-remove-player.test.mjs
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -17,7 +16,6 @@ import { chromiumArgs, closeContextsAfterEach } from './lib/chromium.mjs';
 
 const BASE = '/p/g07/';
 const CAPTURE = process.env.JJ_CAPTURE_DIR ?? resolve(import.meta.dirname, '../../../docs/evidence/P1-G07');
-const RUST = process.env.JJ_G07_RUST === '1';
 let browser;
 let server;
 
@@ -70,7 +68,6 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
     await host.locator('[data-act=menu]').click();
     await host.locator('[data-players] li[data-number="3"] [data-act=ask-remove]').click();
     await host.getByRole('button', { name: 'Remove player' }).click();
-    if (!RUST) return; // the command is sent; the seat can only leave once the Rust side handles it
     await wait(host, () => window.__jjRoom.view().seats.every((s) => s.number !== 3), null, 10_000);
     assert.deepEqual(await seats(host), [1, 2, 4], 'the card goes; the others keep their numbers');
     await host.keyboard.press('Escape');
@@ -90,7 +87,7 @@ test('G07: the host removes a player in the lobby, after a confirmation naming t
   }
 });
 
-test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000, skip: !RUST && 'needs the Rust RemoveSeat (JJ_G07_RUST=1)' }, async () => {
+test('G07: the host removes a connected player mid-race from the pause menu; the tile goes, the others race on', { timeout: 300_000 }, async () => {
   const host = await openHost(1920, 1080);
   try {
     await join(host, 1, 4);
