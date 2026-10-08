@@ -1,6 +1,6 @@
 // The play screen in a short landscape viewport (a phone with its browser chrome showing: about 844x340, 640x300 with a
 // toolbar): nothing overlaps. The round banner clears the tools, the tools stay on one line with the name readable, each
-// stick base sits inside its dashed zone, the boost meter keeps its track, and the page doesn't scroll.
+// stick base sits inside its dashed zone, the launch meter keeps its track, and the page doesn't scroll.
 // (From the Android lane's drive-android-g03-returned.png: banner over Leave, bases outside their zones, a solid meter.)
 //   node --test web/tests/journeys/c07-landscape-short.test.mjs   (WebRTC: run on eris)
 import assert from 'node:assert/strict';
@@ -88,7 +88,7 @@ test('at short landscape heights nothing overlaps on the play screen', { timeout
     assert.ok(m.toolsScroll <= 1, `${at}: the tools row scrolls sideways (${m.toolsScroll}px hidden)`);
     assert.equal(m.nameCut, false, `${at}: the name is cut off`);
     assert.ok(m.basesInside, `${at}: a stick base overflows its zone`);
-    assert.ok(m.meterTrack, `${at}: the boost meter has no track`);
+    assert.ok(m.meterTrack, `${at}: the launch meter has no track`);
     assert.ok(m.pageScroll <= 1, `${at}: the page scrolls by ${m.pageScroll}px`);
   }
 });

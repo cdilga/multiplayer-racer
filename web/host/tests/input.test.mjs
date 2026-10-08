@@ -214,7 +214,7 @@ test('Identify flashes that seat only; a pad leaves with the hold chord and join
 
   // The drawer's legend shows each cluster's keys, Identify and READY included.
   const legend = await page.evaluate(() => document.querySelector('[data-jj-input-drawer]').textContent);
-  for (const part of ['Keys A: drive WASD, action TFGH, Identify Q, READY E', 'Keys B: drive IJKL, action UpLeftDownRight, Identify U, READY O'])
+  for (const part of ['Keys A: throttle, brake and steer WASD, drift and flicks TFGH, Identify Q, READY E', 'Keys B: throttle, brake and steer IJKL, drift and flicks UpLeftDownRight, Identify U, READY O'])
     assert.ok(legend.includes(part), `legend has "${part}": ${legend}`);
 
   // Joining flashes each seat once; past the seat reducer's 3 s limit, Identify flashes that seat only.

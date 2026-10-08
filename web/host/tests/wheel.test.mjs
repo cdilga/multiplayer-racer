@@ -252,7 +252,7 @@ function traceFixture(trace) {
   const peak = trace.reduce((m, s, i) => (s.brake > 0.5 && m < 0 ? i : m), -1);
   return {
     scenario: 'wheel-trace',
-    what: 'P1-C05.2 (R90): a wheel run recorded live in the host (an emulated wheel calibrated in the drawer) and replayed as fixture sticks through jj-input and the sim (R116: the wheel steers on the right stick's x, the pedals are the left stick's y): the car accelerates, turns with the wheel, then slows on the brake.',
+    what: 'P1-C05.2 (R90): a wheel run recorded live in the host (an emulated wheel calibrated in the drawer) and replayed as fixture sticks through jj-input and the sim (R116: the wheel steers on the right stick x, the pedals are the left stick y): the car accelerates, turns with the wheel, then slows on the brake.',
     map: 'maps/greybox-loop.json',
     seed: 83,
     ticks,

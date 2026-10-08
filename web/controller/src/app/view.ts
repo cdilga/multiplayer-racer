@@ -58,7 +58,7 @@ function dress(root: ParentNode): void {
 const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
-const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div></div>`;
+const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:0%"></i></div></div></div>`;
 
 /** Text colour on a seat colour (the kit's table, by luminance). */
 const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
@@ -95,7 +95,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       ring.classList.toggle('cool', left > 0);
     }
     const bar = app.querySelector<HTMLElement>('[data-hud=launch]');
-    bar?.style.setProperty('--v', `${Math.round((1 - left) * 100)}%`);
+    bar?.style.setProperty('--v', `${Math.round(left * 100)}%`); // the wait that is left, draining as the launch comes back
     bar?.closest('.pod-boost')?.toggleAttribute('data-cooling', left > 0);
   };
   const prefsNow = () => {

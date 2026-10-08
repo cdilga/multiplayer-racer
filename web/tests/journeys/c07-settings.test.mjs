@@ -49,10 +49,10 @@ closeContextsAfterEach(() => browser);
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
 /** A host plus one phone that has joined and has the tutorial skipped. `init` runs on the phone before its page. */
-async function seated(init) {
+async function seated(init, mode = 'room') {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
-  await host.goto(`${server.origin}${BASE}host?room&test=live`);
-  await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby', undefined, 60_000);
+  await host.goto(`${server.origin}${BASE}host?${mode}&test=live`);
+  await wait(host, () => window.__jjNet?.code() && (mode === 'drive' ? window.__jjTest : window.__jjRoom?.view()?.phase === 'Lobby'), undefined, 60_000);
   const joinUrl = await host.evaluate(() => window.__jjNet.joinUrl());
   const ctx = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 844, height: 390 } });
   const page = await ctx.newPage();
@@ -224,7 +224,7 @@ test("the camera distance goes to the host: Far shows on that seat's tile in the
 });
 
 test('the old one-stick layout is a personal setting: the left stick steers again, and the host reads it that way (R116)', { timeout: 240_000 }, async () => {
-  const { host, page } = await seated();
+  const { host, page } = await seated(undefined, 'drive'); // free drive: the cars exist, so the host's applied steer can be read
   const endpoint = (await page.evaluate(() => window.__jjController.inspect())).link.endpointId;
   const seen = () =>
     host.evaluate(async (ep) => {
@@ -236,7 +236,6 @@ test('the old one-stick layout is a personal setting: the left stick steers agai
   assert.equal((await prefs(page)).controls, 'dual', 'two sticks by default');
   // Two sticks: the left stick pushed sideways is a drift, never a steer.
   await left(0.9, -0.1);
-  await wait(host, () => true);
   await page.waitForTimeout(1500);
   assert.ok(Math.abs((await seen()).steer ?? 0) < 0.1, 'the left stick does not steer in the two-stick layout');
   await left(0, 0);
