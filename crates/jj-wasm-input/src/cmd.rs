@@ -3,7 +3,7 @@
 //! externally tagged form, e.g. `{"Welcome":{"seat":3,…}}`) so the page needs no hand-written postcard reader.
 
 use jj_protocol::PROTOCOL_VERSION;
-use jj_protocol::cmd::{CameraMode, ControllerCmd, HostCmd};
+use jj_protocol::cmd::{CameraDistance, CameraMode, ControllerCmd, HostCmd};
 use jj_protocol::state::HudUpdate;
 use jj_types::{BuildId, EndpointId, RequestId, SourceHandle};
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -66,6 +66,17 @@ pub fn encode_set_camera(first_person: bool) -> Vec<u8> {
         CameraMode::ThirdPerson
     };
     ControllerCmd::SetCamera { camera }.encode()
+}
+
+/// `SetCameraDistance`: 0 the host's own, 1 near, 2 far (anything else is the host's).
+#[wasm_bindgen(js_name = encodeSetCameraDistance)]
+pub fn encode_set_camera_distance(tag: u8) -> Vec<u8> {
+    let distance = match tag {
+        1 => CameraDistance::Near,
+        2 => CameraDistance::Far,
+        _ => CameraDistance::Host,
+    };
+    ControllerCmd::SetCameraDistance { distance }.encode()
 }
 
 #[wasm_bindgen(js_name = encodeReady)]

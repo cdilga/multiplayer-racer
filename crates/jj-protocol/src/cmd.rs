@@ -23,6 +23,16 @@ pub enum CameraMode {
     FirstPerson,
 }
 
+/// How far back a player wants their own tile's chase camera (R98): the host's own choice, or Near / Far.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
+pub enum CameraDistance {
+    /// Whatever the host picks for the number of players on screen.
+    Host,
+    Near,
+    Far,
+}
+
 /// A discrete action, detected on the controller.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(any(test, feature = "arbitrary"), derive(arbitrary::Arbitrary))]
@@ -85,6 +95,10 @@ pub enum ControllerCmd {
     Pick {
         vehicle: String,
         open: bool,
+    },
+    /// The player's own camera distance for their tile (Settings, C07); `Host` goes back to the host's default.
+    SetCameraDistance {
+        distance: CameraDistance,
     },
     /// `cmd` is for one source of this endpoint (a hub: pads, key clusters and the phone's own sticks over ONE connection).
     /// A `Claim` inside it claims that source's seat (keyed by `source` within the endpoint; the source's own `Welcome`

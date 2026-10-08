@@ -406,6 +406,7 @@ export class Session {
       }
       this.set('playing');
       if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
+      if (this.camDistance !== 'host') this.sendCameraDistance();
       this.onChange();
     } else if ('ClaimRejected' in cmd) {
       const r = (cmd.ClaimRejected as { reason: string }).reason;
@@ -542,7 +543,19 @@ export class Session {
   }
 
   /** The player's camera-distance preference (C07). There is no wire message for it yet: the value is kept for the host. */
-  cameraDistance: 'near' | 'host' | 'far' = 'host';
+  private camDistance: 'near' | 'host' | 'far' = 'host';
+  get cameraDistance(): 'near' | 'host' | 'far' {
+    return this.camDistance;
+  }
+  /** Changing it tells the host at once (`SetCameraDistance`); a (re)welcome sends it again. */
+  set cameraDistance(d: 'near' | 'host' | 'far') {
+    if (d === this.camDistance) return;
+    this.camDistance = d;
+    if (this.you) this.sendCameraDistance();
+  }
+  private sendCameraDistance(): void {
+    this.send('cmd', wasm.encodeSetCameraDistance(this.camDistance === 'near' ? 1 : this.camDistance === 'far' ? 2 : 0));
+  }
   /** The car the player picked in the lobby (an id from roster.json); a per-device preference, not on the wire yet. */
   carChoice = '';
 

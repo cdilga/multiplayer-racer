@@ -1966,3 +1966,79 @@ fn a_hub_endpoint_claims_and_holds_a_seat_per_source_over_one_connection() {
     pump(&mut h, 5, &mut Vec::new(), &mut Vec::new());
     assert_eq!(view(&h)["seats"].as_array().unwrap().len(), 30);
 }
+
+/// P1-C07: a player's own camera distance reaches the host as an event for that seat (and only that seat).
+#[test]
+fn a_camera_distance_choice_is_an_event_for_that_seat() {
+    use jj_protocol::cmd::CameraDistance;
+    let mut h = Host::new(&init()).unwrap();
+    h.set_free_drive(true);
+    for who in ["a", "b"] {
+        for c in [
+            ControllerCmd::Hello {
+                protocol: PROTOCOL_VERSION,
+                build: BuildId("t".into()),
+                endpoint: EndpointId(who.into()),
+                resume: None,
+            },
+            ControllerCmd::Claim {
+                request: RequestId(1),
+                name: who.into(),
+            },
+        ] {
+            h.handle(&net(who, Channel::Cmd, c.encode())).unwrap();
+        }
+    }
+    let mut now = 0;
+    let mut events = Vec::new();
+    let mut pump = |h: &mut Host, n: usize, events: &mut Vec<SimEvent>| {
+        for _ in 0..n {
+            h.advance(now);
+            now += 16_667;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Events { batch } = m {
+                    events.extend(batch);
+                }
+            }
+        }
+    };
+    pump(&mut h, 30, &mut Vec::new());
+    h.handle(&net(
+        "b",
+        Channel::Cmd,
+        ControllerCmd::SetCameraDistance {
+            distance: CameraDistance::Near,
+        }
+        .encode(),
+    ))
+    .unwrap();
+    pump(&mut h, 3, &mut events);
+    let seat_b = h.seats.seats().find(|s| s.endpoint.0 == "b").unwrap().id;
+    let got: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            SimEvent::CameraDistanceSet { seat, distance } => Some((*seat, *distance)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(got, vec![(seat_b, CameraDistance::Near)]);
+    // Back to the host's own.
+    h.handle(&net(
+        "b",
+        Channel::Cmd,
+        ControllerCmd::SetCameraDistance {
+            distance: CameraDistance::Host,
+        }
+        .encode(),
+    ))
+    .unwrap();
+    events.clear();
+    pump(&mut h, 3, &mut events);
+    assert!(events.iter().any(|e| matches!(
+        e,
+        SimEvent::CameraDistanceSet {
+            distance: CameraDistance::Host,
+            ..
+        }
+    )));
+}

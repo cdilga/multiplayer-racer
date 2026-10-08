@@ -892,6 +892,13 @@ impl Host {
                 }
                 vec![]
             }
+            ControllerCmd::SetCameraDistance { distance } => {
+                if let Some(seat) = self.seats.seat_at(conn, src) {
+                    self.events
+                        .push(SimEvent::CameraDistanceSet { seat, distance });
+                }
+                vec![]
+            }
             ControllerCmd::Recover => {
                 if let Some(car) = self
                     .seats

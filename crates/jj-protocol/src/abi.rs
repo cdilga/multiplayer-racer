@@ -236,6 +236,12 @@ pub enum SimEvent {
         car: u32,
         camera: CameraMode,
     },
+    /// The seat's player chose their own camera distance (`SetCameraDistance`, C07); `Host` clears it. Keyed by seat:
+    /// the host's tiles look up the seat's car themselves, so it holds before a car exists and across tile reflows.
+    CameraDistanceSet {
+        seat: SeatId,
+        distance: crate::cmd::CameraDistance,
+    },
 }
 
 /// Sim → main.

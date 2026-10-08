@@ -202,3 +202,23 @@ test("'Test these controls' shows live stick values and fires no action", { time
   assert.equal(c.stats.actions - before, 0, 'no action fired');
   assert.deepEqual([c.drive.steer, c.drive.throttle, c.drive.brake], [0, 0, 0], 'the room saw neutral');
 });
+
+test("the camera distance goes to the host: Far shows on that seat's tile in the race, Host's puts it back", { timeout: 240_000 }, async () => {
+  const { host, page } = await seated();
+  const distanceEvents = () => host.evaluate(() => window.__jjRoom.events().filter((e) => e.event?.CameraDistanceSet).map((e) => e.event.CameraDistanceSet));
+  const seat = await host.evaluate(() => window.__jjRoom.view().seats[0].seat);
+  await openSettings(page);
+  await pick(page, 'cameraDistance', 'far');
+  await wait(host, () => window.__jjRoom.events().some((e) => e.event?.CameraDistanceSet?.distance === 'Far'), undefined, 10_000);
+  assert.deepEqual((await distanceEvents()).at(-1), { seat, distance: 'Far' }, 'the host got Far for this seat');
+  await page.getByRole('button', { name: 'Save and back to driving' }).click();
+  // A race: the seat's tile uses its own distance.
+  await page.locator('[data-act=ready]').click();
+  await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 90_000);
+  await wait(host, () => window.__jjRender?.cameras()?.[1]?.distance === 'far', undefined, 20_000);
+  // Back to the host's own.
+  await openSettings(page);
+  await pick(page, 'cameraDistance', 'host');
+  await wait(host, () => window.__jjRender.cameras()[1].distance !== 'far', undefined, 20_000);
+  assert.equal((await distanceEvents()).at(-1).distance, 'Host');
+});

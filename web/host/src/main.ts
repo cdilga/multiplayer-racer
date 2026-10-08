@@ -193,7 +193,18 @@ async function boot(): Promise<void> {
   const identified: Array<{ seat: number; at: number; shownAt: number; wall: number }> = [];
   // Each player's camera choice belongs to their car; tiles reflow as seats come and go, so it's reapplied per tile.
   const camOfCar = new Map<number, 'fp' | 'tp'>();
+  // A player's own camera distance (C07): by seat, so it holds before the seat has a car and across tile reflows.
+  const distOfSeat = new Map<number, 'near' | 'far'>();
+  const applyDistances = () => {
+    const follow = world.tiles?.follow;
+    if (!follow) return;
+    follow.forEach((car, k) => {
+      const seat = client.room?.seats.find((st) => st.car === car)?.seat;
+      world.rig.setDistance(k + 1, (seat !== undefined ? distOfSeat.get(seat) : undefined) ?? null);
+    });
+  };
   const applyCams = () => {
+    applyDistances();
     const follow = world.tiles?.follow;
     for (const [car, mode] of camOfCar) {
       const tile = (follow ? follow.indexOf(car) : car) + 1;
@@ -217,6 +228,14 @@ async function boot(): Promise<void> {
           world.identifyMarks.flash(st.car, `#${st.number}`, `rgb(${st.rgb.join(' ')})`, ink);
         }
         if (roundScreens?.hud.identify(id.seat)) identified.push({ seat: id.seat, at, shownAt: performance.now(), wall: Date.now() });
+      }
+      const dist = e.CameraDistanceSet;
+      if (dist) {
+        if (dist.distance === 'Near') distOfSeat.set(Number(dist.seat), 'near');
+        else if (dist.distance === 'Far') distOfSeat.set(Number(dist.seat), 'far');
+        else distOfSeat.delete(Number(dist.seat));
+        applyDistances();
+        continue;
       }
       const cam = e.CameraSet;
       if (!cam) continue;
