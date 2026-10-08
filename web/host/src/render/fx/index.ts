@@ -43,7 +43,9 @@ void main() {
   gl_Position = projectionMatrix * mv;
   // Near the camera a sprite thins out: a follower's own dust never fills its screen. Emissive sprites (the boost flame
   // behind the followed car's bumper) only very near the lens.
-  float near = aMisc.z > 0.5 ? smoothstep( 0.6, 2.2, depth ) : smoothstep( 1.6, 5.0, depth );
+  // Small sprites (pebbles, sparks) can't fill a screen, so they fade only right at the lens too: the follower's own
+  // gravel spray had vanished in the wide fade.
+  float near = aMisc.z > 0.5 || aPos.w < 0.3 ? smoothstep( 0.6, 2.2, depth ) : smoothstep( 1.6, 5.0, depth );
   // Small effects drop out in small tiles (effect detail scales with tile size).
   float small = uDetail < 0.5 ? smoothstep( 0.1, 0.3, aPos.w ) : 1.0;
   vCol = vec4( aCol.rgb, aCol.a * near * small );
