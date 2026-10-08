@@ -1,137 +1,1360 @@
 {
+  "method": "score-only",
   "generator": {
-    "model": "YuE2-3B BF16 GGUF + YuE2-Vae F32 (Serveurperso/YuE2-GGUF @ 64b030e3)",
+    "composition": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3), plan stage only (yue-plan), cot full, empty lyrics",
     "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
-    "gpu": "RTX 2080 SUPER (eris)"
+    "gpu": "RTX 2080 SUPER (eris)",
+    "renderer": "FluidSynth runtime version 2.6.1",
+    "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+    "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0"
   },
-  "licence": "YuE2 weights: CC BY-NC 4.0 with an additional permission for individual creators to monetise outputs. Check before any company/commercial release.",
+  "licence": "Scores: YuE2 weights are CC BY-NC 4.0 with an additional permission for individual creators to monetise outputs; check before any company/commercial release. SoundFont FluidR3_GM: MIT (Frank Wen).",
   "processing": {
     "loudness_lufs": -18.0,
     "true_peak_dbtp": -1.5,
     "loop_crossfade_s": 3.0,
     "codec": "Opus 128 kb/s stereo in Ogg"
   },
-  "approval": "owner 2026-10-02 (lobby-fresh-s23 explicitly; others delegated)",
+  "no_voice_proof": {
+    "primary": "Pipeline: YuE2 ran only its plan stage, which writes an ABC score and no audio; render_score.py turns the score into General MIDI (every staff, including the one YuE2 labels Vocal, on an instrument patch from an allow-list without GM voice/choir programs) and FluidSynth renders that MIDI with FluidR3_GM.sf2. Those two files are the renderer's only inputs.",
+    "supplementary": {
+      "method": "Demucs htdemucs vocals stem -> MIT/ast-finetuned-audioset-10-10-0.4593 AudioSet voice classes, per window",
+      "threshold": 0.25,
+      "stem_db": -10.0,
+      "stem_windows": 2,
+      "window_s": 5.0,
+      "hop_s": 2.5,
+      "rule": "flag if any window's voice score >= threshold, or the vocals stem is within stem_db of the mix in >= stem_windows windows",
+      "positive_control": {
+        "file": "docs/evidence/P1-A02v/positive-control-lobby-4a0f761.ogg",
+        "origin": "assets/audio/music/lobby.ogg @ 4a0f761 (YuE2 acoustic render; the owner hears vocals in it)",
+        "sha256": "5e15c7280b82021e492b5e5575ea0952690c96048716a45588fec9cb7c00ff36",
+        "max_voice": 0.4472,
+        "max_class": "Lullaby",
+        "max_at_s": 7.5,
+        "max_stem_rel_db": -4.3,
+        "windows_over": 3,
+        "stem_windows_over": 15,
+        "windows": 33,
+        "flagged": true
+      },
+      "shipped_4a0f761": {
+        "lobby.ogg": {
+          "sha256": "5e15c7280b82021e492b5e5575ea0952690c96048716a45588fec9cb7c00ff36",
+          "max_voice": 0.4472,
+          "max_class": "Lullaby",
+          "max_at_s": 7.5,
+          "max_stem_rel_db": -4.3,
+          "windows_over": 3,
+          "stem_windows_over": 15,
+          "windows": 33,
+          "flagged": true
+        },
+        "race-1.ogg": {
+          "sha256": "2cad289d1750740c8cf3da9c03d837961e2efef3abdee925ee2ab80f2537620e",
+          "max_voice": 0.2386,
+          "max_class": "Mantra",
+          "max_at_s": 72.5,
+          "max_stem_rel_db": -4.2,
+          "windows_over": 0,
+          "stem_windows_over": 14,
+          "windows": 33,
+          "flagged": true
+        },
+        "race-2.ogg": {
+          "sha256": "901bb10ac2f020c83463b34d895b5c55a4f592181a9c0a7743133be6fee8ec26",
+          "max_voice": 0.3468,
+          "max_class": "Speech",
+          "max_at_s": 77.5,
+          "max_stem_rel_db": -7.2,
+          "windows_over": 1,
+          "stem_windows_over": 4,
+          "windows": 33,
+          "flagged": true
+        },
+        "race-3.ogg": {
+          "sha256": "15169e690ab62f970321339c7453a06e8d1fdb651e37cbb6cd5025813850ccd9",
+          "max_voice": 0.0,
+          "max_class": "gated",
+          "max_at_s": 0.0,
+          "max_stem_rel_db": -52.3,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 33,
+          "flagged": false
+        },
+        "race-4.ogg": {
+          "sha256": "bff27dc90e91a7e92b40c9a2a2e5c40d0d65f06349684791f05fcc852d488b96",
+          "max_voice": 0.0433,
+          "max_class": "Speech",
+          "max_at_s": 45.0,
+          "max_stem_rel_db": -25.1,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 33,
+          "flagged": false
+        },
+        "results-1.ogg": {
+          "sha256": "9caa1288148b3b4c0360700590f8e832cb67ba32ae5072fe9105de91eb65896e",
+          "max_voice": 0.3188,
+          "max_class": "Mantra",
+          "max_at_s": 12.5,
+          "max_stem_rel_db": -3.8,
+          "windows_over": 1,
+          "stem_windows_over": 17,
+          "windows": 21,
+          "flagged": true
+        },
+        "results-2.ogg": {
+          "sha256": "55ec13a21e74db1a96608a66d47c02a11cb68af89bd43789df56e708ac03750b",
+          "max_voice": 0.047,
+          "max_class": "Speech",
+          "max_at_s": 27.5,
+          "max_stem_rel_db": -21.6,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 21,
+          "flagged": false
+        },
+        "results-3.ogg": {
+          "sha256": "b6771a06b9be88c3d1c3b3654b6106e28321e0a5056235dc55c43fd3f70638b9",
+          "max_voice": 0.0,
+          "max_class": "gated",
+          "max_at_s": 0.0,
+          "max_stem_rel_db": -38.1,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 21,
+          "flagged": false
+        }
+      }
+    }
+  },
+  "approval": "Agent-verified (owner 2026-10-08: no owner listening gate; a track ships when the pipeline proof and the calibrated no-voice check both hold).",
   "tracks": [
     {
       "file": "lobby.ogg",
+      "sha256": "096833cf396d978579ecc3370af0de5af2a1af86db830c30f4c5a6fe77ac07f4",
       "cue": "lobby",
-      "source_take": "lobby/fresh.s23",
-      "kind": "fresh",
-      "style": "instrumental, lo-fi electronic, 95 BPM, chill, warm rhodes, pulsing bass, laid-back twangy guitar, sunny, inviting, arcade",
-      "lm_seed": 23,
-      "seed": 23,
-      "steps": 32,
-      "score_source": "composed by YuE2 (cot full)",
-      "words_screen": "clean",
-      "source_seconds": 90.0,
-      "loop_seconds": 87.0,
-      "measured_input_lufs": -12.12
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 23,
+        "request": {
+          "style": "instrumental, lo-fi electronic, 95 BPM, chill, warm rhodes, pulsing bass, laid-back twangy guitar, sunny, inviting, arcade",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 90,
+          "lm_seed": 23
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/lobby/s23/request.json --out drafts/music/scoreonly/lobby/s23/score.abc --lm-seed 23 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/lobby.abc",
+        "sha256": "abf676911ba53a73fba22071f1e7a4ff42574fc7b7e561006ff436cce9376956",
+        "key": "C",
+        "score_bpm": 94.0,
+        "bars": 82.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            13.0,
+            "verse"
+          ],
+          [
+            21.0,
+            "chorus"
+          ],
+          [
+            29.0,
+            "interlude"
+          ],
+          [
+            45.0,
+            "verse"
+          ],
+          [
+            53.0,
+            "chorus"
+          ],
+          [
+            61.0,
+            "interlude"
+          ],
+          [
+            77.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/lobby.mid",
+        "midi_sha256": "2de30e710db61511f0625882e404aaf2c776fb0a4a9667bb5485787fe925f49c",
+        "bpm": 95.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 27,
+            "name": "Clean Electric Guitar"
+          },
+          "counter": {
+            "program": 4,
+            "name": "Electric Piano 1 (Rhodes)"
+          },
+          "comp": {
+            "program": 4,
+            "name": "Electric Piano 1 (Rhodes)"
+          },
+          "pad": {
+            "program": 89,
+            "name": "Warm Pad"
+          },
+          "bass": {
+            "program": 33,
+            "name": "Fingered Bass"
+          },
+          "drums": {
+            "program": 0,
+            "name": "Standard drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 23,
+        "command": "render_score.py --cue lobby --score score.abc --bpm 95.0 --seed 23 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 207.158,
+        "composition_seconds": 207.158,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.3732,
+        "seam_tail_head_envelope_correlation": 0.9919,
+        "wrap_jump": 0.00424,
+        "rms": 0.0936
+      },
+      "level": {
+        "integrated_lufs": -17.97,
+        "true_peak_dbtp": -2.16,
+        "mono_fold_lufs": -21.33,
+        "lr_correlation": 0.9038,
+        "source_lufs": -27.9,
+        "source_true_peak_dbtp": -10.21,
+        "source_lra": 7.4,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "096833cf396d978579ecc3370af0de5af2a1af86db830c30f4c5a6fe77ac07f4",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -58.4,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 81,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "3d805555bee5956e33dd3cfc5fd7a72c9579932150cf69a2d653d2f02b49e31d",
+          "max_voice": 0.0577,
+          "max_class": "Speech",
+          "max_at_s": 72.5,
+          "max_stem_rel_db": -15.1,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 83,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "race-1.ogg",
+      "sha256": "df4b4fa4a2c9d52b8aa436a5c0dbbd777785a9f53f99d4004f6ad3217cd331c0",
       "cue": "race",
-      "source_take": "race/fresh.s11",
-      "kind": "fresh",
-      "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
-      "lm_seed": 11,
-      "seed": 11,
-      "steps": 32,
-      "score_source": "composed by YuE2 (cot full)",
-      "words_screen": "clean",
-      "source_seconds": 90.0,
-      "loop_seconds": 87.0,
-      "measured_input_lufs": -11.74
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 53,
+        "request": {
+          "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 90,
+          "lm_seed": 53
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/race/s53/request.json --out drafts/music/scoreonly/race/s53/score.abc --lm-seed 53 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/race-1.abc",
+        "sha256": "0cb1f9acb1833b2c079cf74b3dde20ea6f071a234bc31cf0e3429af35ad991d4",
+        "key": "E",
+        "score_bpm": 140.0,
+        "bars": 132.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            21.0,
+            "verse"
+          ],
+          [
+            37.0,
+            "pre-chorus"
+          ],
+          [
+            45.0,
+            "chorus"
+          ],
+          [
+            61.0,
+            "interlude"
+          ],
+          [
+            69.0,
+            "verse"
+          ],
+          [
+            85.0,
+            "pre-chorus"
+          ],
+          [
+            93.0,
+            "chorus"
+          ],
+          [
+            109.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/race-1.mid",
+        "midi_sha256": "47a3cd92f6ac1c1a193c7fbf1270468079757c5a3a6fc05366e70ed0b3cd629e",
+        "bpm": 140.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 81,
+            "name": "Saw Lead"
+          },
+          "counter": {
+            "program": 29,
+            "name": "Overdriven Guitar"
+          },
+          "comp": {
+            "program": 90,
+            "name": "Polysynth Pad"
+          },
+          "pad": {
+            "program": 89,
+            "name": "Warm Pad"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 24,
+            "name": "Electronic drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 53,
+        "command": "render_score.py --cue race --score score.abc --bpm 140.0 --seed 53 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 226.286,
+        "composition_seconds": 226.286,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.6278,
+        "seam_tail_head_envelope_correlation": 0.9945,
+        "wrap_jump": 0.00455,
+        "rms": 0.0936
+      },
+      "level": {
+        "integrated_lufs": -17.96,
+        "true_peak_dbtp": -1.96,
+        "mono_fold_lufs": -23.01,
+        "lr_correlation": 0.4744,
+        "source_lufs": -21.26,
+        "source_true_peak_dbtp": -4.33,
+        "source_lra": 10.2,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "df4b4fa4a2c9d52b8aa436a5c0dbbd777785a9f53f99d4004f6ad3217cd331c0",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -55.9,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 89,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "99fd650a16db08cb88b891e30a1887157e1eeb299d6dc253107d45f5a10d7db4",
+          "max_voice": 0.0649,
+          "max_class": "Speech",
+          "max_at_s": 115.0,
+          "max_stem_rel_db": -26.1,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 90,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "race-2.ogg",
+      "sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
       "cue": "race",
-      "source_take": "race/fresh.s23",
-      "kind": "fresh",
-      "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
-      "lm_seed": 23,
-      "seed": 23,
-      "steps": 32,
-      "score_source": "composed by YuE2 (cot full)",
-      "words_screen": "clean",
-      "source_seconds": 90.0,
-      "loop_seconds": 87.0,
-      "measured_input_lufs": -11.87
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 67,
+        "request": {
+          "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 90,
+          "lm_seed": 67
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/race/s67/request.json --out drafts/music/scoreonly/race/s67/score.abc --lm-seed 67 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/race-2.abc",
+        "sha256": "0bb6b88ff56cb1202456c57b2dbf4de97cb8467b4466ec63a28f32ed37ca3adb",
+        "key": "Fm",
+        "score_bpm": 140.0,
+        "bars": 136.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            21.0,
+            "verse"
+          ],
+          [
+            37.0,
+            "pre-chorus"
+          ],
+          [
+            46.0,
+            "chorus"
+          ],
+          [
+            62.0,
+            "interlude"
+          ],
+          [
+            78.0,
+            "verse"
+          ],
+          [
+            94.0,
+            "pre-chorus"
+          ],
+          [
+            103.0,
+            "chorus"
+          ],
+          [
+            119.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/race-2.mid",
+        "midi_sha256": "111e6c371439079b9747576a887c2ed7406d9a4e9cbd47258b76c9f4d99853b9",
+        "bpm": 140.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 81,
+            "name": "Saw Lead"
+          },
+          "counter": {
+            "program": 29,
+            "name": "Overdriven Guitar"
+          },
+          "comp": {
+            "program": 90,
+            "name": "Polysynth Pad"
+          },
+          "pad": {
+            "program": 89,
+            "name": "Warm Pad"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 24,
+            "name": "Electronic drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 67,
+        "command": "render_score.py --cue race --score score.abc --bpm 140.0 --seed 67 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 233.143,
+        "composition_seconds": 233.143,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.6331,
+        "seam_tail_head_envelope_correlation": 0.9841,
+        "wrap_jump": 0.00386,
+        "rms": 0.0911
+      },
+      "level": {
+        "integrated_lufs": -17.97,
+        "true_peak_dbtp": -2.21,
+        "mono_fold_lufs": -23.33,
+        "lr_correlation": 0.4169,
+        "source_lufs": -20.45,
+        "source_true_peak_dbtp": -3.24,
+        "source_lra": 10.4,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -57.1,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 92,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "75966c4e6e5f1fc9ba76be7dd7a9c8dd50e663e0a86cd8d07e601d5eb92b0464",
+          "max_voice": 0.0588,
+          "max_class": "Speech",
+          "max_at_s": 32.5,
+          "max_stem_rel_db": -26.4,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 93,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "race-3.ogg",
+      "sha256": "322f57bf40cfb845514678fdfac53861e3de053312cd1d3dfaf79f2724fda43e",
       "cue": "race",
-      "source_take": "race/cover.s11",
-      "kind": "cover",
-      "style": "instrumental, synthwave, upbeat racing music, 140 BPM, energetic, driving electronic beats, soaring synth leads, pulsing bass, arcade energy",
-      "lm_seed": 11,
-      "seed": 11,
-      "steps": 32,
-      "score_source": "0.1 track transcribed by SheetSage2 F32",
-      "words_screen": "clean",
-      "source_seconds": 90.0,
-      "loop_seconds": 87.0,
-      "measured_input_lufs": -11.06
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 37,
+        "request": {
+          "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 90,
+          "lm_seed": 37
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/race/s37/request.json --out drafts/music/scoreonly/race/s37/score.abc --lm-seed 37 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/race-3.abc",
+        "sha256": "41535304e08bac47bba240ad2f12a140f72b5b89ae7dc27dd5b4cc5dea589050",
+        "key": "Em",
+        "score_bpm": 140.0,
+        "bars": 148.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            25.0,
+            "verse"
+          ],
+          [
+            37.0,
+            "chorus"
+          ],
+          [
+            53.0,
+            "interlude"
+          ],
+          [
+            69.0,
+            "verse"
+          ],
+          [
+            81.0,
+            "chorus"
+          ],
+          [
+            97.0,
+            "interlude"
+          ],
+          [
+            105.0,
+            "chorus"
+          ],
+          [
+            121.0,
+            "interlude"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/race-3.mid",
+        "midi_sha256": "43087c545139542d6a21c01fd4fe90fd3c395f9db7aa0a8db0c835cd615fa281",
+        "bpm": 140.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 81,
+            "name": "Saw Lead"
+          },
+          "counter": {
+            "program": 29,
+            "name": "Overdriven Guitar"
+          },
+          "comp": {
+            "program": 90,
+            "name": "Polysynth Pad"
+          },
+          "pad": {
+            "program": 89,
+            "name": "Warm Pad"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 24,
+            "name": "Electronic drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 37,
+        "command": "render_score.py --cue race --score score.abc --bpm 140.0 --seed 37 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 253.714,
+        "composition_seconds": 253.714,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.6466,
+        "seam_tail_head_envelope_correlation": 0.9931,
+        "wrap_jump": 0.0035,
+        "rms": 0.0899
+      },
+      "level": {
+        "integrated_lufs": -17.97,
+        "true_peak_dbtp": -2.1,
+        "mono_fold_lufs": -23.16,
+        "lr_correlation": 0.4405,
+        "source_lufs": -20.85,
+        "source_true_peak_dbtp": -4.72,
+        "source_lra": 10.4,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "322f57bf40cfb845514678fdfac53861e3de053312cd1d3dfaf79f2724fda43e",
+        "max_voice": 0.0112,
+        "max_class": "Speech",
+        "max_at_s": 227.5,
+        "max_stem_rel_db": -20.5,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 100,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "076c966141b85b1d122c906854057fdaf47d80c6fcb778d15272f9afb3270299",
+          "max_voice": 0.065,
+          "max_class": "Speech",
+          "max_at_s": 40.0,
+          "max_stem_rel_db": -19.0,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 101,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "race-4.ogg",
+      "sha256": "1f751a2f63a5c3e4d958ce3d14778d0f39948f3697e88ec61dbf34a07d951cfc",
       "cue": "race",
-      "source_take": "race/cover.s23",
-      "kind": "cover",
-      "style": "instrumental, synthwave, upbeat racing music, 140 BPM, energetic, driving electronic beats, soaring synth leads, pulsing bass, arcade energy",
-      "lm_seed": 23,
-      "seed": 23,
-      "steps": 32,
-      "score_source": "0.1 track transcribed by SheetSage2 F32",
-      "words_screen": "clean",
-      "source_seconds": 90.0,
-      "loop_seconds": 87.0,
-      "measured_input_lufs": -11.1
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 41,
+        "request": {
+          "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 90,
+          "lm_seed": 41
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/race/s41/request.json --out drafts/music/scoreonly/race/s41/score.abc --lm-seed 41 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/race-4.abc",
+        "sha256": "03517ce9717fa85c86f71172aed13580ce6cc07e42b91eace68c981df8c94bfe",
+        "key": "Em",
+        "score_bpm": 142.0,
+        "bars": 170.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            25.0,
+            "verse"
+          ],
+          [
+            57.0,
+            "chorus"
+          ],
+          [
+            73.0,
+            "interlude"
+          ],
+          [
+            81.0,
+            "verse"
+          ],
+          [
+            113.0,
+            "chorus"
+          ],
+          [
+            129.0,
+            "interlude"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/race-4.mid",
+        "midi_sha256": "68d3783796bc38bb244e16eabb56b1655f32de7afe83a405160823e14e685713",
+        "bpm": 140.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 81,
+            "name": "Saw Lead"
+          },
+          "counter": {
+            "program": 29,
+            "name": "Overdriven Guitar"
+          },
+          "comp": {
+            "program": 90,
+            "name": "Polysynth Pad"
+          },
+          "pad": {
+            "program": 89,
+            "name": "Warm Pad"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 24,
+            "name": "Electronic drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 41,
+        "command": "render_score.py --cue race --score score.abc --bpm 140.0 --seed 41 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 291.429,
+        "composition_seconds": 291.429,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.7028,
+        "seam_tail_head_envelope_correlation": 0.9954,
+        "wrap_jump": 0.00063,
+        "rms": 0.0906
+      },
+      "level": {
+        "integrated_lufs": -17.98,
+        "true_peak_dbtp": -2.18,
+        "mono_fold_lufs": -23.33,
+        "lr_correlation": 0.4006,
+        "source_lufs": -21.19,
+        "source_true_peak_dbtp": -4.03,
+        "source_lra": 10.8,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "1f751a2f63a5c3e4d958ce3d14778d0f39948f3697e88ec61dbf34a07d951cfc",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -56.5,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 115,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "2cc9f3ae207ca1abc6a613777962b784ae326ee301d37a8de60d06dbd5635383",
+          "max_voice": 0.0544,
+          "max_class": "Speech",
+          "max_at_s": 135.0,
+          "max_stem_rel_db": -25.4,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 116,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "results-1.ogg",
+      "sha256": "ecbcba9c2c663a5ed91b39ba359c9317a60cca9c0fa6752e6a713f00ecf9595e",
       "cue": "results",
-      "source_take": "results/fresh.s11",
-      "kind": "fresh",
-      "style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival",
-      "lm_seed": 11,
-      "seed": 11,
-      "steps": 32,
-      "score_source": "composed by YuE2 (cot full)",
-      "words_screen": "clean",
-      "source_seconds": 60.0,
-      "loop_seconds": 57.0,
-      "measured_input_lufs": -12.37
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 37,
+        "request": {
+          "style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 60,
+          "lm_seed": 37
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/results/s37/request.json --out drafts/music/scoreonly/results/s37/score.abc --lm-seed 37 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/results-1.abc",
+        "sha256": "bf30520ca7e55debd9a769411f38d5be3ca09bc7cc11c39d4cf09d4083ae85a9",
+        "key": "C",
+        "score_bpm": 128.0,
+        "bars": 76.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            10.0,
+            "verse"
+          ],
+          [
+            18.0,
+            "chorus"
+          ],
+          [
+            26.0,
+            "verse"
+          ],
+          [
+            34.0,
+            "chorus"
+          ],
+          [
+            42.0,
+            "interlude"
+          ],
+          [
+            50.0,
+            "verse"
+          ],
+          [
+            58.0,
+            "chorus"
+          ],
+          [
+            66.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/results-1.mid",
+        "midi_sha256": "fc501d4476e0005bab0f533f5e37c860dcd387729b3e6a142458f71d0ad8e178",
+        "bpm": 125.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 61,
+            "name": "Brass Section"
+          },
+          "counter": {
+            "program": 80,
+            "name": "Square Lead"
+          },
+          "comp": {
+            "program": 62,
+            "name": "Synth Brass 1"
+          },
+          "pad": {
+            "program": 50,
+            "name": "Synth Strings 1"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 16,
+            "name": "Power drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 37,
+        "command": "render_score.py --cue results --score score.abc --bpm 125.0 --seed 37 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 145.92,
+        "composition_seconds": 145.92,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.9937,
+        "seam_tail_head_envelope_correlation": 0.9969,
+        "wrap_jump": 0.00141,
+        "rms": 0.096
+      },
+      "level": {
+        "integrated_lufs": -17.99,
+        "true_peak_dbtp": -2.22,
+        "mono_fold_lufs": -21.72,
+        "lr_correlation": 0.7085,
+        "source_lufs": -22.4,
+        "source_true_peak_dbtp": -4.93,
+        "source_lra": 9.0,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "ecbcba9c2c663a5ed91b39ba359c9317a60cca9c0fa6752e6a713f00ecf9595e",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -60.3,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 57,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "3d17f1a0a50f86f651a0b8097aa0ade3db47dc235615fcc4744e1e7eec6311e9",
+          "max_voice": 0.1113,
+          "max_class": "Speech",
+          "max_at_s": 50.0,
+          "max_stem_rel_db": -20.1,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 58,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "results-2.ogg",
+      "sha256": "b65817b31130016ef726f03c1375aecf8eb6eb7429427e0f7c5899c324f051fd",
       "cue": "results",
-      "source_take": "results/cover.s11",
-      "kind": "cover",
-      "style": "instrumental, triumphant electronic, arcade victory fanfare, 125 BPM, euphoric, bright synths, major key, celebratory drums",
-      "lm_seed": 11,
-      "seed": 11,
-      "steps": 32,
-      "score_source": "0.1 track transcribed by SheetSage2 F32",
-      "words_screen": "clean",
-      "source_seconds": 60.0,
-      "loop_seconds": 57.0,
-      "measured_input_lufs": -10.86
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 41,
+        "request": {
+          "style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 60,
+          "lm_seed": 41
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/results/s41/request.json --out drafts/music/scoreonly/results/s41/score.abc --lm-seed 41 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/results-2.abc",
+        "sha256": "da5cf0ad531d7ed06c58aae40294a61e6fcd8c2aaddbec8413f70f1894ce857c",
+        "key": "F",
+        "score_bpm": 128.0,
+        "bars": 103.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            9.0,
+            "verse"
+          ],
+          [
+            17.0,
+            "pre-chorus"
+          ],
+          [
+            27.0,
+            "chorus"
+          ],
+          [
+            39.0,
+            "verse"
+          ],
+          [
+            47.0,
+            "pre-chorus"
+          ],
+          [
+            59.0,
+            "chorus"
+          ],
+          [
+            67.0,
+            "interlude"
+          ],
+          [
+            75.0,
+            "bridge"
+          ],
+          [
+            86.0,
+            "chorus"
+          ],
+          [
+            94.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/results-2.mid",
+        "midi_sha256": "6ab7cdeb6262fe003a24d23ab82c808a4bb071b4d0c1ff6067013b9fb7834691",
+        "bpm": 125.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 61,
+            "name": "Brass Section"
+          },
+          "counter": {
+            "program": 80,
+            "name": "Square Lead"
+          },
+          "comp": {
+            "program": 62,
+            "name": "Synth Brass 1"
+          },
+          "pad": {
+            "program": 50,
+            "name": "Synth Strings 1"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 16,
+            "name": "Power drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 41,
+        "command": "render_score.py --cue results --score score.abc --bpm 125.0 --seed 41 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 197.76,
+        "composition_seconds": 197.76,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.9972,
+        "seam_tail_head_envelope_correlation": 0.9994,
+        "wrap_jump": 0.00855,
+        "rms": 0.0952
+      },
+      "level": {
+        "integrated_lufs": -17.99,
+        "true_peak_dbtp": -2.33,
+        "mono_fold_lufs": -21.73,
+        "lr_correlation": 0.7076,
+        "source_lufs": -21.88,
+        "source_true_peak_dbtp": -4.78,
+        "source_lra": 8.6,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "b65817b31130016ef726f03c1375aecf8eb6eb7429427e0f7c5899c324f051fd",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -58.7,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 78,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "5064ec297f3f69f94cbde1f489b82baaff2d4cab8581af3125bbcbe671094c63",
+          "max_voice": 0.0597,
+          "max_class": "Speech",
+          "max_at_s": 195.0,
+          "max_stem_rel_db": -19.0,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 79,
+          "flagged": false
+        }
+      }
     },
     {
       "file": "results-3.ogg",
+      "sha256": "5158eb2266fb04726764b4674b61427beec7af4fce229e0efe2689024f37c320",
       "cue": "results",
-      "source_take": "results/cover.s23",
-      "kind": "cover",
-      "style": "instrumental, triumphant electronic, arcade victory fanfare, 125 BPM, euphoric, bright synths, major key, celebratory drums",
-      "lm_seed": 23,
-      "seed": 23,
-      "steps": 32,
-      "score_source": "0.1 track transcribed by SheetSage2 F32",
-      "words_screen": "clean",
-      "source_seconds": 60.0,
-      "loop_seconds": 57.0,
-      "measured_input_lufs": -10.61
+      "method": "score-only",
+      "source": {
+        "tool": "yue-plan",
+        "stage": "plan",
+        "output": "ABC score (symbolic); YuE2 generated no audio",
+        "model": "YuE2-3B BF16 GGUF (Serveurperso/YuE2-GGUF @ 64b030e3deb6e8150d2b7c0db641ef5a17eca8a3)",
+        "runtime": "yue2.cpp @ ea07706f4958a9594f4ef1dd185e5ce1b5ab1175",
+        "plan_seed": 23,
+        "request": {
+          "style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival",
+          "lyrics": "",
+          "abc": "",
+          "cot": "full",
+          "duration": 60,
+          "lm_seed": 23
+        },
+        "plan_command": "/home/cdilga/Work/dev/jammers-audio/yue2.cpp/build-cuda/yue-plan --model /home/cdilga/Work/dev/jammers-audio/yue2.cpp/models/YuE2-3B-BF16.gguf --request drafts/music/scoreonly/results/s23/request.json --out drafts/music/scoreonly/results/s23/score.abc --lm-seed 23 --max-seq 6144"
+      },
+      "score": {
+        "file": "scores/results-3.abc",
+        "sha256": "3a50360db59e365fd069ed6503c96e786b7caba552e1ce5ccd4dd40562c835e7",
+        "key": "D",
+        "score_bpm": 125.0,
+        "bars": 132.0,
+        "sections": [
+          [
+            0.0,
+            "intro"
+          ],
+          [
+            11.0,
+            "verse"
+          ],
+          [
+            27.0,
+            "pre-chorus"
+          ],
+          [
+            35.0,
+            "chorus"
+          ],
+          [
+            51.0,
+            "verse"
+          ],
+          [
+            67.0,
+            "pre-chorus"
+          ],
+          [
+            75.0,
+            "chorus"
+          ],
+          [
+            123.0,
+            "outro"
+          ]
+        ]
+      },
+      "render": {
+        "renderer": "FluidSynth runtime version 2.6.1",
+        "midi": "scores/results-3.mid",
+        "midi_sha256": "4e919a23f7ab9786c2e98bb8063279b7268e6b83d4b444f192645d53a97e19ec",
+        "bpm": 125.0,
+        "inputs": [
+          "score (ABC) -> arrangement MIDI",
+          "SoundFont FluidR3_GM.sf2"
+        ],
+        "soundfont": "FluidR3_GM.sf2 (Frank Wen, MIT; Debian fluid-soundfont-gm 3.1-5.3)",
+        "soundfont_sha256": "74594e8f4250680adf590507a306655a299935343583256f3b722c48a1bc1cb0",
+        "patches": {
+          "lead": {
+            "program": 61,
+            "name": "Brass Section"
+          },
+          "counter": {
+            "program": 80,
+            "name": "Square Lead"
+          },
+          "comp": {
+            "program": 62,
+            "name": "Synth Brass 1"
+          },
+          "pad": {
+            "program": 50,
+            "name": "Synth Strings 1"
+          },
+          "bass": {
+            "program": 38,
+            "name": "Synth Bass 1"
+          },
+          "drums": {
+            "program": 16,
+            "name": "Power drum kit"
+          }
+        },
+        "staves": {
+          "Vocal": "lead (YuE2's melody staff, played by an instrument)",
+          "Ins": "counter"
+        },
+        "humanise_seed": 23,
+        "command": "render_score.py --cue results --score score.abc --bpm 125.0 --seed 23 ; fluidsynth -n -i -q -r 48000 -g 0.5 -R 1 -C 1 -O s24 -T wav -F render-3pass.wav FluidR3_GM.sf2 arrangement.mid",
+        "export_command": "export_music.py (two-pass loudnorm (dynamic mode, see level.normalisation), 3 s acrossfade tri, libopus 128k)"
+      },
+      "loop": {
+        "seconds": 253.44,
+        "composition_seconds": 253.44,
+        "crossfade_s": 3.0,
+        "seam_tail_head_correlation": 0.9988,
+        "seam_tail_head_envelope_correlation": 0.9999,
+        "wrap_jump": 0.0042,
+        "rms": 0.0963
+      },
+      "level": {
+        "integrated_lufs": -17.98,
+        "true_peak_dbtp": -2.22,
+        "mono_fold_lufs": -21.77,
+        "lr_correlation": 0.6911,
+        "source_lufs": -21.56,
+        "source_true_peak_dbtp": -5.26,
+        "source_lra": 8.3,
+        "normalisation": "ffmpeg loudnorm two-pass; the gain to -18 LUFS exceeds the peak headroom, so loudnorm runs its dynamic mode (true-peak limiting; target LRA 20 is above the source LRA, so no range compression)"
+      },
+      "voice_check": {
+        "sha256": "5158eb2266fb04726764b4674b61427beec7af4fce229e0efe2689024f37c320",
+        "max_voice": 0.0,
+        "max_class": "gated",
+        "max_at_s": 0.0,
+        "max_stem_rel_db": -59.4,
+        "windows_over": 0,
+        "stem_windows_over": 0,
+        "windows": 100,
+        "flagged": false,
+        "premaster_wav": {
+          "sha256": "2d42b1d81b76f247be1aeb232a8ea5a7ba246ad8dfa0303c1cc3012a072d3e03",
+          "max_voice": 0.0967,
+          "max_class": "Speech",
+          "max_at_s": 97.5,
+          "max_stem_rel_db": -18.2,
+          "windows_over": 0,
+          "stem_windows_over": 0,
+          "windows": 101,
+          "flagged": false
+        }
+      }
     }
   ]
 }

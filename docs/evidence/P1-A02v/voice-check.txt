@@ -1,0 +1,16 @@
+FLAG 0.447 Lullaby                @  7.5s stem max   -4.3 dB (15 loud)  3/33  calib/shipped-4a0f761/lobby.ogg
+FLAG 0.239 Mantra                 @ 72.5s stem max   -4.2 dB (14 loud)  0/33  calib/shipped-4a0f761/race-1.ogg
+FLAG 0.347 Speech                 @ 77.5s stem max   -7.2 dB (4 loud)  1/33  calib/shipped-4a0f761/race-2.ogg
+pass 0.000 gated                  @  0.0s stem max  -52.3 dB (0 loud)  0/33  calib/shipped-4a0f761/race-3.ogg
+pass 0.043 Speech                 @ 45.0s stem max  -25.1 dB (0 loud)  0/33  calib/shipped-4a0f761/race-4.ogg
+FLAG 0.319 Mantra                 @ 12.5s stem max   -3.8 dB (17 loud)  1/21  calib/shipped-4a0f761/results-1.ogg
+pass 0.047 Speech                 @ 27.5s stem max  -21.6 dB (0 loud)  0/21  calib/shipped-4a0f761/results-2.ogg
+pass 0.000 gated                  @  0.0s stem max  -38.1 dB (0 loud)  0/21  calib/shipped-4a0f761/results-3.ogg
+pass 0.000 gated                  @  0.0s stem max  -58.4 dB (0 loud)  0/81  exports/music-scoreonly/lobby.ogg
+pass 0.000 gated                  @  0.0s stem max  -55.9 dB (0 loud)  0/89  exports/music-scoreonly/race-1.ogg
+pass 0.000 gated                  @  0.0s stem max  -57.1 dB (0 loud)  0/92  exports/music-scoreonly/race-2.ogg
+pass 0.011 Speech                 @227.5s stem max  -20.5 dB (0 loud)  0/100  exports/music-scoreonly/race-3.ogg
+pass 0.000 gated                  @  0.0s stem max  -56.5 dB (0 loud)  0/115  exports/music-scoreonly/race-4.ogg
+pass 0.000 gated                  @  0.0s stem max  -60.3 dB (0 loud)  0/57  exports/music-scoreonly/results-1.ogg
+pass 0.000 gated                  @  0.0s stem max  -58.7 dB (0 loud)  0/78  exports/music-scoreonly/results-2.ogg
+pass 0.000 gated                  @  0.0s stem max  -59.4 dB (0 loud)  0/100  exports/music-scoreonly/results-3.ogg

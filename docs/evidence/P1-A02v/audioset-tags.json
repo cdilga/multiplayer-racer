@@ -1,0 +1,210 @@
+{
+ "lobby.ogg": [
+  [
+   "Keyboard (musical)",
+   0.404
+  ],
+  [
+   "Piano",
+   0.382
+  ],
+  [
+   "Electric piano",
+   0.37
+  ],
+  [
+   "Musical instrument",
+   0.319
+  ],
+  [
+   "Synthesizer",
+   0.086
+  ],
+  [
+   "Guitar",
+   0.053
+  ]
+ ],
+ "race-1.ogg": [
+  [
+   "Video game music",
+   0.381
+  ],
+  [
+   "Soundtrack music",
+   0.15
+  ],
+  [
+   "Background music",
+   0.078
+  ],
+  [
+   "Theme music",
+   0.059
+  ],
+  [
+   "Musical instrument",
+   0.049
+  ],
+  [
+   "Funny music",
+   0.04
+  ]
+ ],
+ "race-2.ogg": [
+  [
+   "Video game music",
+   0.4
+  ],
+  [
+   "Soundtrack music",
+   0.152
+  ],
+  [
+   "Background music",
+   0.079
+  ],
+  [
+   "Theme music",
+   0.064
+  ],
+  [
+   "Funny music",
+   0.057
+  ],
+  [
+   "Musical instrument",
+   0.048
+  ]
+ ],
+ "race-3.ogg": [
+  [
+   "Video game music",
+   0.356
+  ],
+  [
+   "Soundtrack music",
+   0.135
+  ],
+  [
+   "Background music",
+   0.08
+  ],
+  [
+   "Theme music",
+   0.063
+  ],
+  [
+   "Musical instrument",
+   0.056
+  ],
+  [
+   "Funny music",
+   0.045
+  ]
+ ],
+ "race-4.ogg": [
+  [
+   "Video game music",
+   0.374
+  ],
+  [
+   "Soundtrack music",
+   0.138
+  ],
+  [
+   "Background music",
+   0.081
+  ],
+  [
+   "Theme music",
+   0.067
+  ],
+  [
+   "Musical instrument",
+   0.047
+  ],
+  [
+   "Exciting music",
+   0.043
+  ]
+ ],
+ "results-1.ogg": [
+  [
+   "Video game music",
+   0.371
+  ],
+  [
+   "Theme music",
+   0.151
+  ],
+  [
+   "Soundtrack music",
+   0.144
+  ],
+  [
+   "Background music",
+   0.127
+  ],
+  [
+   "Musical instrument",
+   0.066
+  ],
+  [
+   "Funny music",
+   0.042
+  ]
+ ],
+ "results-2.ogg": [
+  [
+   "Video game music",
+   0.402
+  ],
+  [
+   "Soundtrack music",
+   0.139
+  ],
+  [
+   "Theme music",
+   0.128
+  ],
+  [
+   "Background music",
+   0.112
+  ],
+  [
+   "Musical instrument",
+   0.064
+  ],
+  [
+   "Funny music",
+   0.035
+  ]
+ ],
+ "results-3.ogg": [
+  [
+   "Video game music",
+   0.415
+  ],
+  [
+   "Soundtrack music",
+   0.148
+  ],
+  [
+   "Background music",
+   0.121
+  ],
+  [
+   "Theme music",
+   0.12
+  ],
+  [
+   "Musical instrument",
+   0.065
+  ],
+  [
+   "Speech",
+   0.039
+  ]
+ ]
+}

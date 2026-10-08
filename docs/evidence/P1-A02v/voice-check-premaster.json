@@ -1,0 +1,4488 @@
+{
+  "method": "Demucs htdemucs vocals stem -> MIT/ast-finetuned-audioset-10-10-0.4593 AudioSet voice classes, per window",
+  "voice_classes": [
+    "Speech",
+    "Male speech, man speaking",
+    "Female speech, woman speaking",
+    "Child speech, kid speaking",
+    "Conversation",
+    "Narration, monologue",
+    "Babbling",
+    "Speech synthesizer",
+    "Shout",
+    "Yell",
+    "Children shouting",
+    "Screaming",
+    "Whispering",
+    "Singing",
+    "Choir",
+    "Yodeling",
+    "Chant",
+    "Mantra",
+    "Male singing",
+    "Female singing",
+    "Child singing",
+    "Synthetic singing",
+    "Rapping",
+    "Humming",
+    "Hubbub, speech noise, speech babble",
+    "Beatboxing",
+    "Vocal music",
+    "A capella",
+    "Lullaby"
+  ],
+  "window_s": 5.0,
+  "hop_s": 2.5,
+  "stem_gate_db": -30.0,
+  "threshold": 0.25,
+  "stem_db": -10.0,
+  "stem_windows": 2,
+  "results": [
+    {
+      "file": "drafts/music/scoreonly/lobby/s23/render/loop-source.wav",
+      "sha256": "3d805555bee5956e33dd3cfc5fd7a72c9579932150cf69a2d653d2f02b49e31d",
+      "max_voice": 0.0577,
+      "max_class": "Speech",
+      "max_at_s": 72.5,
+      "stem_rel_db_at_max": -21.6,
+      "max_stem_rel_db": -15.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 83,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -16.8,
+          "voice": 0.0453,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -19.0,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -20.1,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -20.2,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -18.9,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -19.2,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -20.1,
+          "voice": 0.0233,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -19.9,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -19.5,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -19.8,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -20.4,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -20.2,
+          "voice": 0.0234,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -21.5,
+          "voice": 0.0194,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -22.4,
+          "voice": 0.012,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0065,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -23.2,
+          "voice": 0.0086,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -21.9,
+          "voice": 0.0093,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -22.1,
+          "voice": 0.0071,
+          "class": "Speech"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0083,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -22.9,
+          "voice": 0.0068,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0136,
+          "class": "Speech"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -23.8,
+          "voice": 0.017,
+          "class": "Speech"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -25.0,
+          "voice": 0.0074,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0085,
+          "class": "Speech"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -24.0,
+          "voice": 0.0064,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -24.0,
+          "voice": 0.0071,
+          "class": "Speech"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.0102,
+          "class": "Speech"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -25.2,
+          "voice": 0.0073,
+          "class": "Speech"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0122,
+          "class": "Speech"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -21.6,
+          "voice": 0.0577,
+          "class": "Speech"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -22.1,
+          "voice": 0.0235,
+          "class": "Speech"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -22.3,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -21.3,
+          "voice": 0.0236,
+          "class": "Speech"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -21.1,
+          "voice": 0.0241,
+          "class": "Speech"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -21.9,
+          "voice": 0.0236,
+          "class": "Speech"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -22.1,
+          "voice": 0.0246,
+          "class": "Speech"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -21.0,
+          "voice": 0.0273,
+          "class": "Speech"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -20.6,
+          "voice": 0.0244,
+          "class": "Speech"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -21.6,
+          "voice": 0.0242,
+          "class": "Speech"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -22.2,
+          "voice": 0.0243,
+          "class": "Speech"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -21.2,
+          "voice": 0.0252,
+          "class": "Speech"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -20.4,
+          "voice": 0.0288,
+          "class": "Speech"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -21.6,
+          "voice": 0.0249,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -21.9,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -20.8,
+          "voice": 0.0484,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -21.8,
+          "voice": 0.0168,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -22.5,
+          "voice": 0.0071,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -22.9,
+          "voice": 0.0077,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -22.3,
+          "voice": 0.0074,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -21.5,
+          "voice": 0.0083,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -22.2,
+          "voice": 0.007,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -22.2,
+          "voice": 0.008,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -23.0,
+          "voice": 0.0132,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -23.6,
+          "voice": 0.0168,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -24.5,
+          "voice": 0.0059,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0068,
+          "class": "Speech"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -24.3,
+          "voice": 0.0056,
+          "class": "Speech"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -23.6,
+          "voice": 0.0067,
+          "class": "Speech"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -24.1,
+          "voice": 0.0054,
+          "class": "Speech"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0063,
+          "class": "Speech"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -24.0,
+          "voice": 0.0187,
+          "class": "Speech"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -22.0,
+          "voice": 0.0561,
+          "class": "Speech"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -21.9,
+          "voice": 0.0238,
+          "class": "Speech"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -22.8,
+          "voice": 0.0338,
+          "class": "Speech"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -22.3,
+          "voice": 0.0435,
+          "class": "Speech"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -21.0,
+          "voice": 0.0247,
+          "class": "Speech"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -21.3,
+          "voice": 0.025,
+          "class": "Speech"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -22.4,
+          "voice": 0.0264,
+          "class": "Speech"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -21.9,
+          "voice": 0.0253,
+          "class": "Speech"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -20.7,
+          "voice": 0.0241,
+          "class": "Speech"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -21.7,
+          "voice": 0.0271,
+          "class": "Speech"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -22.2,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -21.0,
+          "voice": 0.0235,
+          "class": "Speech"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -20.2,
+          "voice": 0.0249,
+          "class": "Speech"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -21.5,
+          "voice": 0.0255,
+          "class": "Speech"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -21.8,
+          "voice": 0.0268,
+          "class": "Speech"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -20.7,
+          "voice": 0.0298,
+          "class": "Speech"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -19.7,
+          "voice": 0.0334,
+          "class": "Speech"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -19.8,
+          "voice": 0.0229,
+          "class": "Speech"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -20.7,
+          "voice": 0.0232,
+          "class": "Speech"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -20.5,
+          "voice": 0.0233,
+          "class": "Speech"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -18.2,
+          "voice": 0.0296,
+          "class": "Speech"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -15.1,
+          "voice": 0.042,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/race/s53/render/loop-source.wav",
+      "sha256": "99fd650a16db08cb88b891e30a1887157e1eeb299d6dc253107d45f5a10d7db4",
+      "max_voice": 0.0649,
+      "max_class": "Speech",
+      "max_at_s": 115.0,
+      "stem_rel_db_at_max": -29.9,
+      "max_stem_rel_db": -26.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 90,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -26.1,
+          "voice": 0.0401,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -26.7,
+          "voice": 0.0214,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -26.6,
+          "voice": 0.0189,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -26.2,
+          "voice": 0.0184,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -26.2,
+          "voice": 0.0199,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -26.4,
+          "voice": 0.0161,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -26.7,
+          "voice": 0.0171,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.022,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -26.6,
+          "voice": 0.0196,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -26.3,
+          "voice": 0.0177,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -26.3,
+          "voice": 0.0206,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -26.4,
+          "voice": 0.0136,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0119,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -28.8,
+          "voice": 0.0432,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -31.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -31.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -32.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -32.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -32.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -32.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -32.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -34.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -34.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -33.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -34.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -34.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -33.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -33.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -29.0,
+          "voice": 0.0402,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -29.0,
+          "voice": 0.0317,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -29.0,
+          "voice": 0.0418,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -29.2,
+          "voice": 0.0293,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -29.9,
+          "voice": 0.0649,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -31.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -31.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -32.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -32.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -32.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -32.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -34.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -34.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -34.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -33.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -33.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -33.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -27.1,
+          "voice": 0.0168,
+          "class": "Speech"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0115,
+          "class": "Speech"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.0087,
+          "class": "Speech"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.008,
+          "class": "Speech"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -27.4,
+          "voice": 0.0083,
+          "class": "Speech"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -26.9,
+          "voice": 0.0113,
+          "class": "Speech"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -26.9,
+          "voice": 0.0112,
+          "class": "Speech"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -26.8,
+          "voice": 0.0096,
+          "class": "Speech"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -26.9,
+          "voice": 0.0066,
+          "class": "Speech"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0097,
+          "class": "Speech"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -27.1,
+          "voice": 0.0122,
+          "class": "Speech"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -26.5,
+          "voice": 0.0193,
+          "class": "Speech"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -26.6,
+          "voice": 0.0245,
+          "class": "Speech"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -26.8,
+          "voice": 0.023,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0425,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/race/s67/render/loop-source.wav",
+      "sha256": "75966c4e6e5f1fc9ba76be7dd7a9c8dd50e663e0a86cd8d07e601d5eb92b0464",
+      "max_voice": 0.0588,
+      "max_class": "Speech",
+      "max_at_s": 32.5,
+      "stem_rel_db_at_max": -29.0,
+      "max_stem_rel_db": -26.4,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 93,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -26.4,
+          "voice": 0.0302,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.023,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0235,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.0226,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0148,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.0204,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.021,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -27.2,
+          "voice": 0.0141,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -27.1,
+          "voice": 0.016,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -26.9,
+          "voice": 0.0163,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -26.8,
+          "voice": 0.0172,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -26.7,
+          "voice": 0.0163,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -27.1,
+          "voice": 0.0145,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -29.0,
+          "voice": 0.0588,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -31.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -31.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -31.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -32.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -33.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -33.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -34.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -33.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -34.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -34.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -34.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -34.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -33.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -31.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -29.5,
+          "voice": 0.0357,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -29.7,
+          "voice": 0.0328,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -29.8,
+          "voice": 0.0236,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -29.6,
+          "voice": 0.0202,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -29.5,
+          "voice": 0.0254,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -29.5,
+          "voice": 0.0339,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -29.5,
+          "voice": 0.0358,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -29.7,
+          "voice": 0.0365,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -29.8,
+          "voice": 0.0161,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -31.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -32.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -33.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -33.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -33.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -33.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -33.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -33.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -33.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -34.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -33.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -33.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -34.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -34.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0107,
+          "class": "Speech"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -27.2,
+          "voice": 0.0076,
+          "class": "Speech"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0083,
+          "class": "Speech"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0135,
+          "class": "Speech"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -27.3,
+          "voice": 0.0246,
+          "class": "Speech"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -27.2,
+          "voice": 0.0236,
+          "class": "Speech"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -26.8,
+          "voice": 0.0175,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -27.6,
+          "voice": 0.0159,
+          "class": "Speech"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -28.1,
+          "voice": 0.0162,
+          "class": "Speech"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -27.6,
+          "voice": 0.0232,
+          "class": "Speech"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -26.6,
+          "voice": 0.036,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/race/s37/render/loop-source.wav",
+      "sha256": "076c966141b85b1d122c906854057fdaf47d80c6fcb778d15272f9afb3270299",
+      "max_voice": 0.065,
+      "max_class": "Speech",
+      "max_at_s": 40.0,
+      "stem_rel_db_at_max": -27.5,
+      "max_stem_rel_db": -19.0,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 101,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -24.5,
+          "voice": 0.0411,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -24.8,
+          "voice": 0.0247,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -24.9,
+          "voice": 0.022,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0183,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -24.7,
+          "voice": 0.0149,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -24.7,
+          "voice": 0.0232,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -24.7,
+          "voice": 0.0397,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -24.6,
+          "voice": 0.037,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -24.6,
+          "voice": 0.036,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.0312,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -24.5,
+          "voice": 0.0298,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -24.7,
+          "voice": 0.0169,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -24.6,
+          "voice": 0.0146,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -24.6,
+          "voice": 0.0195,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -24.5,
+          "voice": 0.0164,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -24.7,
+          "voice": 0.0142,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -27.5,
+          "voice": 0.065,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -29.2,
+          "voice": 0.0558,
+          "class": "Speech"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -29.4,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -29.4,
+          "voice": 0.0217,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -29.4,
+          "voice": 0.0244,
+          "class": "Speech"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -29.4,
+          "voice": 0.0257,
+          "class": "Speech"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -28.7,
+          "voice": 0.0244,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0184,
+          "class": "Speech"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -29.8,
+          "voice": 0.0434,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -31.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -32.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -31.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -29.9,
+          "voice": 0.0319,
+          "class": "Speech"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0118,
+          "class": "Speech"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -24.0,
+          "voice": 0.0088,
+          "class": "Speech"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -23.4,
+          "voice": 0.0069,
+          "class": "Speech"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.0109,
+          "class": "Speech"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -23.7,
+          "voice": 0.0098,
+          "class": "Speech"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -24.5,
+          "voice": 0.0101,
+          "class": "Speech"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0283,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0288,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -27.5,
+          "voice": 0.0296,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.023,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0393,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -29.1,
+          "voice": 0.0533,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -29.5,
+          "voice": 0.0296,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -29.6,
+          "voice": 0.0257,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -29.1,
+          "voice": 0.027,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -29.2,
+          "voice": 0.0314,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -29.0,
+          "voice": 0.0217,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -28.7,
+          "voice": 0.0294,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -29.5,
+          "voice": 0.058,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -31.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -32.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -28.8,
+          "voice": 0.0585,
+          "class": "Speech"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -27.6,
+          "voice": 0.0284,
+          "class": "Speech"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -27.7,
+          "voice": 0.0298,
+          "class": "Speech"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -27.6,
+          "voice": 0.0403,
+          "class": "Speech"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -27.6,
+          "voice": 0.0197,
+          "class": "Speech"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -30.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -31.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -31.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -31.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -29.6,
+          "voice": 0.0477,
+          "class": "Speech"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0282,
+          "class": "Speech"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -27.6,
+          "voice": 0.0478,
+          "class": "Speech"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0471,
+          "class": "Speech"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -27.5,
+          "voice": 0.0263,
+          "class": "Speech"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -27.7,
+          "voice": 0.0228,
+          "class": "Speech"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -24.8,
+          "voice": 0.0123,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -23.5,
+          "voice": 0.0089,
+          "class": "Speech"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -21.4,
+          "voice": 0.0061,
+          "class": "Speech"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -19.4,
+          "voice": 0.0055,
+          "class": "Speech"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -19.9,
+          "voice": 0.007,
+          "class": "Speech"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -22.8,
+          "voice": 0.0063,
+          "class": "Speech"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -27.1,
+          "voice": 0.0102,
+          "class": "Speech"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -21.9,
+          "voice": 0.0078,
+          "class": "Speech"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -19.0,
+          "voice": 0.0075,
+          "class": "Speech"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -19.7,
+          "voice": 0.012,
+          "class": "Speech"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -23.4,
+          "voice": 0.01,
+          "class": "Speech"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -27.1,
+          "voice": 0.0402,
+          "class": "Speech"
+        },
+        {
+          "t": 250.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.026,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/race/s41/render/loop-source.wav",
+      "sha256": "2cc9f3ae207ca1abc6a613777962b784ae326ee301d37a8de60d06dbd5635383",
+      "max_voice": 0.0544,
+      "max_class": "Speech",
+      "max_at_s": 135.0,
+      "stem_rel_db_at_max": -29.1,
+      "max_stem_rel_db": -25.4,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 116,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0376,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0293,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.0216,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -25.9,
+          "voice": 0.0246,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.025,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0266,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0204,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.0229,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -25.7,
+          "voice": 0.023,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -25.4,
+          "voice": 0.0216,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -25.6,
+          "voice": 0.0294,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.043,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -25.7,
+          "voice": 0.0255,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0251,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -28.5,
+          "voice": 0.0378,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -30.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -30.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -30.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -30.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -29.9,
+          "voice": 0.0266,
+          "class": "Speech"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -30.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -30.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -32.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -33.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -32.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -32.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -33.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -32.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -32.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -32.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -32.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -33.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -33.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -31.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -29.0,
+          "voice": 0.0462,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0293,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -28.1,
+          "voice": 0.0311,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -28.3,
+          "voice": 0.0266,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -29.1,
+          "voice": 0.0544,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -30.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -30.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -30.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -30.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -30.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -30.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -30.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -30.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -30.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -30.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -30.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -31.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -32.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -32.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -32.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -32.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -33.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -32.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -32.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -32.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -33.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -33.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -32.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -29.6,
+          "voice": 0.0406,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -28.2,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0254,
+          "class": "Speech"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -28.4,
+          "voice": 0.033,
+          "class": "Speech"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -28.5,
+          "voice": 0.0258,
+          "class": "Speech"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -28.4,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -28.3,
+          "voice": 0.0276,
+          "class": "Speech"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -28.4,
+          "voice": 0.0285,
+          "class": "Speech"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -28.8,
+          "voice": 0.0243,
+          "class": "Speech"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -28.6,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -28.3,
+          "voice": 0.0257,
+          "class": "Speech"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0305,
+          "class": "Speech"
+        },
+        {
+          "t": 250.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 252.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0205,
+          "class": "Speech"
+        },
+        {
+          "t": 255.0,
+          "stem_rel_db": -28.7,
+          "voice": 0.025,
+          "class": "Speech"
+        },
+        {
+          "t": 257.5,
+          "stem_rel_db": -28.6,
+          "voice": 0.0339,
+          "class": "Speech"
+        },
+        {
+          "t": 260.0,
+          "stem_rel_db": -28.3,
+          "voice": 0.0396,
+          "class": "Speech"
+        },
+        {
+          "t": 262.5,
+          "stem_rel_db": -28.4,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 265.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.03,
+          "class": "Speech"
+        },
+        {
+          "t": 267.5,
+          "stem_rel_db": -28.3,
+          "voice": 0.0259,
+          "class": "Speech"
+        },
+        {
+          "t": 270.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0341,
+          "class": "Speech"
+        },
+        {
+          "t": 272.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0327,
+          "class": "Speech"
+        },
+        {
+          "t": 275.0,
+          "stem_rel_db": -28.3,
+          "voice": 0.0274,
+          "class": "Speech"
+        },
+        {
+          "t": 277.5,
+          "stem_rel_db": -28.2,
+          "voice": 0.0265,
+          "class": "Speech"
+        },
+        {
+          "t": 280.0,
+          "stem_rel_db": -28.5,
+          "voice": 0.0249,
+          "class": "Speech"
+        },
+        {
+          "t": 282.5,
+          "stem_rel_db": -28.7,
+          "voice": 0.0229,
+          "class": "Speech"
+        },
+        {
+          "t": 285.0,
+          "stem_rel_db": -28.7,
+          "voice": 0.0213,
+          "class": "Speech"
+        },
+        {
+          "t": 287.5,
+          "stem_rel_db": -27.8,
+          "voice": 0.0394,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/results/s37/render/loop-source.wav",
+      "sha256": "3d17f1a0a50f86f651a0b8097aa0ade3db47dc235615fcc4744e1e7eec6311e9",
+      "max_voice": 0.1113,
+      "max_class": "Speech",
+      "max_at_s": 50.0,
+      "stem_rel_db_at_max": -25.4,
+      "max_stem_rel_db": -20.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 58,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -20.3,
+          "voice": 0.0451,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -20.6,
+          "voice": 0.0484,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -20.7,
+          "voice": 0.0266,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -20.6,
+          "voice": 0.0287,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -20.8,
+          "voice": 0.028,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -21.2,
+          "voice": 0.0519,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -22.8,
+          "voice": 0.0465,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.0697,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -25.5,
+          "voice": 0.04,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0263,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0284,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -25.5,
+          "voice": 0.0269,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -26.4,
+          "voice": 0.03,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -28.1,
+          "voice": 0.0628,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -28.7,
+          "voice": 0.0324,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -28.7,
+          "voice": 0.0258,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -28.6,
+          "voice": 0.0296,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -28.5,
+          "voice": 0.0293,
+          "class": "Speech"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -28.5,
+          "voice": 0.0287,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -27.0,
+          "voice": 0.0333,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -25.4,
+          "voice": 0.1113,
+          "class": "Speech"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -25.4,
+          "voice": 0.0485,
+          "class": "Speech"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -25.4,
+          "voice": 0.0321,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -25.6,
+          "voice": 0.0251,
+          "class": "Speech"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0251,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -27.2,
+          "voice": 0.0406,
+          "class": "Speech"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0375,
+          "class": "Speech"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -28.2,
+          "voice": 0.0307,
+          "class": "Speech"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -28.1,
+          "voice": 0.0263,
+          "class": "Speech"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -28.2,
+          "voice": 0.0257,
+          "class": "Speech"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -28.3,
+          "voice": 0.0231,
+          "class": "Speech"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -26.6,
+          "voice": 0.0307,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -22.8,
+          "voice": 0.0725,
+          "class": "Speech"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -22.5,
+          "voice": 0.0401,
+          "class": "Speech"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -22.3,
+          "voice": 0.0347,
+          "class": "Speech"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -22.8,
+          "voice": 0.0404,
+          "class": "Speech"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -22.6,
+          "voice": 0.0535,
+          "class": "Speech"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -23.6,
+          "voice": 0.0446,
+          "class": "Speech"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.042,
+          "class": "Speech"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.039,
+          "class": "Speech"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.032,
+          "class": "Speech"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0321,
+          "class": "Speech"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0312,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -27.1,
+          "voice": 0.0461,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -27.8,
+          "voice": 0.0423,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -28.3,
+          "voice": 0.0193,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -28.4,
+          "voice": 0.0199,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -28.1,
+          "voice": 0.0217,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -28.5,
+          "voice": 0.027,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -27.7,
+          "voice": 0.039,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -24.1,
+          "voice": 0.0641,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -21.1,
+          "voice": 0.0416,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -21.3,
+          "voice": 0.0336,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -20.8,
+          "voice": 0.0359,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -20.9,
+          "voice": 0.039,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -21.1,
+          "voice": 0.0269,
+          "class": "Speech"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -20.7,
+          "voice": 0.0345,
+          "class": "Speech"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -20.1,
+          "voice": 0.0787,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/results/s41/render/loop-source.wav",
+      "sha256": "5064ec297f3f69f94cbde1f489b82baaff2d4cab8581af3125bbcbe671094c63",
+      "max_voice": 0.0597,
+      "max_class": "Speech",
+      "max_at_s": 195.0,
+      "stem_rel_db_at_max": -19.0,
+      "max_stem_rel_db": -19.0,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 79,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -19.3,
+          "voice": 0.045,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -19.7,
+          "voice": 0.0277,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -19.7,
+          "voice": 0.0277,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -19.5,
+          "voice": 0.0259,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -19.6,
+          "voice": 0.0264,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -20.3,
+          "voice": 0.0379,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -23.4,
+          "voice": 0.0519,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -24.8,
+          "voice": 0.0374,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -24.8,
+          "voice": 0.0254,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -24.8,
+          "voice": 0.0269,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -24.7,
+          "voice": 0.0246,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -25.0,
+          "voice": 0.0236,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0423,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -25.9,
+          "voice": 0.0391,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0302,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -26.2,
+          "voice": 0.0247,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0275,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0252,
+          "class": "Speech"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0243,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0376,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -26.9,
+          "voice": 0.0422,
+          "class": "Speech"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -27.1,
+          "voice": 0.0306,
+          "class": "Speech"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -27.0,
+          "voice": 0.0239,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0295,
+          "class": "Speech"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0263,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -27.6,
+          "voice": 0.0212,
+          "class": "Speech"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -27.2,
+          "voice": 0.0204,
+          "class": "Speech"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0408,
+          "class": "Speech"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -25.7,
+          "voice": 0.0428,
+          "class": "Speech"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -25.6,
+          "voice": 0.0367,
+          "class": "Speech"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -25.2,
+          "voice": 0.0347,
+          "class": "Speech"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0213,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0241,
+          "class": "Speech"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0203,
+          "class": "Speech"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0332,
+          "class": "Speech"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0443,
+          "class": "Speech"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -25.9,
+          "voice": 0.0306,
+          "class": "Speech"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -26.4,
+          "voice": 0.0186,
+          "class": "Speech"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0312,
+          "class": "Speech"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0248,
+          "class": "Speech"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -26.4,
+          "voice": 0.0189,
+          "class": "Speech"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -26.1,
+          "voice": 0.0267,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0407,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.0231,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -27.4,
+          "voice": 0.015,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -27.4,
+          "voice": 0.0212,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0167,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -27.6,
+          "voice": 0.0194,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -27.7,
+          "voice": 0.0279,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -27.2,
+          "voice": 0.0206,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0379,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -21.5,
+          "voice": 0.0339,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -21.4,
+          "voice": 0.0314,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -21.5,
+          "voice": 0.0327,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -21.6,
+          "voice": 0.0406,
+          "class": "Speech"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -22.1,
+          "voice": 0.0508,
+          "class": "Speech"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.0519,
+          "class": "Speech"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -25.2,
+          "voice": 0.0293,
+          "class": "Speech"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.031,
+          "class": "Speech"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -25.0,
+          "voice": 0.0291,
+          "class": "Speech"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -25.4,
+          "voice": 0.0262,
+          "class": "Speech"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -25.4,
+          "voice": 0.0242,
+          "class": "Speech"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0241,
+          "class": "Speech"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -24.3,
+          "voice": 0.0258,
+          "class": "Speech"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -26.2,
+          "voice": 0.0323,
+          "class": "Speech"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -27.6,
+          "voice": 0.0298,
+          "class": "Speech"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -27.4,
+          "voice": 0.0314,
+          "class": "Speech"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -27.3,
+          "voice": 0.0291,
+          "class": "Speech"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -27.3,
+          "voice": 0.0376,
+          "class": "Speech"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -27.5,
+          "voice": 0.027,
+          "class": "Speech"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -26.2,
+          "voice": 0.0317,
+          "class": "Speech"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -22.3,
+          "voice": 0.0459,
+          "class": "Speech"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -20.3,
+          "voice": 0.0324,
+          "class": "Speech"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -19.6,
+          "voice": 0.026,
+          "class": "Speech"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -20.5,
+          "voice": 0.0284,
+          "class": "Speech"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -20.7,
+          "voice": 0.0262,
+          "class": "Speech"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -19.8,
+          "voice": 0.0278,
+          "class": "Speech"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -19.0,
+          "voice": 0.0597,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "drafts/music/scoreonly/results/s23/render/loop-source.wav",
+      "sha256": "2d42b1d81b76f247be1aeb232a8ea5a7ba246ad8dfa0303c1cc3012a072d3e03",
+      "max_voice": 0.0967,
+      "max_class": "Speech",
+      "max_at_s": 97.5,
+      "stem_rel_db_at_max": -23.2,
+      "max_stem_rel_db": -18.2,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 101,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -18.2,
+          "voice": 0.0386,
+          "class": "Speech"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -18.9,
+          "voice": 0.0254,
+          "class": "Speech"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -19.0,
+          "voice": 0.0264,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -18.5,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -18.4,
+          "voice": 0.0289,
+          "class": "Speech"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -19.2,
+          "voice": 0.0337,
+          "class": "Speech"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -19.0,
+          "voice": 0.0445,
+          "class": "Speech"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -20.4,
+          "voice": 0.083,
+          "class": "Speech"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -22.6,
+          "voice": 0.0736,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -23.3,
+          "voice": 0.0287,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -22.5,
+          "voice": 0.0225,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -22.6,
+          "voice": 0.0226,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -23.7,
+          "voice": 0.0235,
+          "class": "Speech"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -23.5,
+          "voice": 0.0286,
+          "class": "Speech"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0307,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -23.0,
+          "voice": 0.03,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -22.5,
+          "voice": 0.0319,
+          "class": "Speech"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -23.0,
+          "voice": 0.0288,
+          "class": "Speech"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -23.8,
+          "voice": 0.0213,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -24.4,
+          "voice": 0.0246,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0448,
+          "class": "Speech"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -25.1,
+          "voice": 0.026,
+          "class": "Speech"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -24.8,
+          "voice": 0.028,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0355,
+          "class": "Speech"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -25.5,
+          "voice": 0.023,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -25.4,
+          "voice": 0.0305,
+          "class": "Speech"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.067,
+          "class": "Speech"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -25.7,
+          "voice": 0.0449,
+          "class": "Speech"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.0244,
+          "class": "Speech"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.0304,
+          "class": "Speech"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -26.2,
+          "voice": 0.027,
+          "class": "Speech"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0359,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.0309,
+          "class": "Speech"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -25.6,
+          "voice": 0.0331,
+          "class": "Speech"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0332,
+          "class": "Speech"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -25.5,
+          "voice": 0.0255,
+          "class": "Speech"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -25.7,
+          "voice": 0.0263,
+          "class": "Speech"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -25.9,
+          "voice": 0.0333,
+          "class": "Speech"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0746,
+          "class": "Speech"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -23.2,
+          "voice": 0.0967,
+          "class": "Speech"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -22.7,
+          "voice": 0.0237,
+          "class": "Speech"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -22.9,
+          "voice": 0.0227,
+          "class": "Speech"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -23.3,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -23.8,
+          "voice": 0.0265,
+          "class": "Speech"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -23.6,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -23.0,
+          "voice": 0.0393,
+          "class": "Speech"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0202,
+          "class": "Speech"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -22.9,
+          "voice": 0.0194,
+          "class": "Speech"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -23.4,
+          "voice": 0.0307,
+          "class": "Speech"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -24.0,
+          "voice": 0.0323,
+          "class": "Speech"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -24.4,
+          "voice": 0.0392,
+          "class": "Speech"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0453,
+          "class": "Speech"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0303,
+          "class": "Speech"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -25.1,
+          "voice": 0.0359,
+          "class": "Speech"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.0406,
+          "class": "Speech"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -25.4,
+          "voice": 0.0268,
+          "class": "Speech"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -25.0,
+          "voice": 0.0412,
+          "class": "Speech"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -25.5,
+          "voice": 0.0673,
+          "class": "Speech"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -25.7,
+          "voice": 0.0332,
+          "class": "Speech"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -25.1,
+          "voice": 0.0279,
+          "class": "Speech"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0281,
+          "class": "Speech"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -26.2,
+          "voice": 0.0211,
+          "class": "Speech"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0282,
+          "class": "Speech"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0313,
+          "class": "Speech"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0284,
+          "class": "Speech"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -24.9,
+          "voice": 0.0327,
+          "class": "Speech"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0279,
+          "class": "Speech"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0232,
+          "class": "Speech"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -26.1,
+          "voice": 0.026,
+          "class": "Speech"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0356,
+          "class": "Speech"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0308,
+          "class": "Speech"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0278,
+          "class": "Speech"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -25.9,
+          "voice": 0.0276,
+          "class": "Speech"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0244,
+          "class": "Speech"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -26.0,
+          "voice": 0.0273,
+          "class": "Speech"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0312,
+          "class": "Speech"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -25.7,
+          "voice": 0.0313,
+          "class": "Speech"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -25.3,
+          "voice": 0.0242,
+          "class": "Speech"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0254,
+          "class": "Speech"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.03,
+          "class": "Speech"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -25.8,
+          "voice": 0.0245,
+          "class": "Speech"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -26.1,
+          "voice": 0.0323,
+          "class": "Speech"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0355,
+          "class": "Speech"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -25.4,
+          "voice": 0.0228,
+          "class": "Speech"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -25.6,
+          "voice": 0.0241,
+          "class": "Speech"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0309,
+          "class": "Speech"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -26.4,
+          "voice": 0.029,
+          "class": "Speech"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -26.0,
+          "voice": 0.0311,
+          "class": "Speech"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -25.4,
+          "voice": 0.0287,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -25.2,
+          "voice": 0.0256,
+          "class": "Speech"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -25.3,
+          "voice": 0.0253,
+          "class": "Speech"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -25.7,
+          "voice": 0.0368,
+          "class": "Speech"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -26.2,
+          "voice": 0.0351,
+          "class": "Speech"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -25.2,
+          "voice": 0.0444,
+          "class": "Speech"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -21.7,
+          "voice": 0.0962,
+          "class": "Speech"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -19.2,
+          "voice": 0.0297,
+          "class": "Speech"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -19.3,
+          "voice": 0.0277,
+          "class": "Speech"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -19.1,
+          "voice": 0.0479,
+          "class": "Speech"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -19.4,
+          "voice": 0.0448,
+          "class": "Speech"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -19.4,
+          "voice": 0.0243,
+          "class": "Speech"
+        },
+        {
+          "t": 250.0,
+          "stem_rel_db": -18.4,
+          "voice": 0.0636,
+          "class": "Speech"
+        }
+      ]
+    }
+  ]
+}

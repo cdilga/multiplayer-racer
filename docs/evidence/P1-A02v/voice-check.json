@@ -1,0 +1,5922 @@
+{
+  "method": "Demucs htdemucs vocals stem -> MIT/ast-finetuned-audioset-10-10-0.4593 AudioSet voice classes, per window",
+  "voice_classes": [
+    "Speech",
+    "Male speech, man speaking",
+    "Female speech, woman speaking",
+    "Child speech, kid speaking",
+    "Conversation",
+    "Narration, monologue",
+    "Babbling",
+    "Speech synthesizer",
+    "Shout",
+    "Yell",
+    "Children shouting",
+    "Screaming",
+    "Whispering",
+    "Singing",
+    "Choir",
+    "Yodeling",
+    "Chant",
+    "Mantra",
+    "Male singing",
+    "Female singing",
+    "Child singing",
+    "Synthetic singing",
+    "Rapping",
+    "Humming",
+    "Hubbub, speech noise, speech babble",
+    "Beatboxing",
+    "Vocal music",
+    "A capella",
+    "Lullaby"
+  ],
+  "window_s": 5.0,
+  "hop_s": 2.5,
+  "stem_gate_db": -30.0,
+  "threshold": 0.25,
+  "stem_db": -10.0,
+  "stem_windows": 2,
+  "results": [
+    {
+      "file": "calib/shipped-4a0f761/lobby.ogg",
+      "sha256": "5e15c7280b82021e492b5e5575ea0952690c96048716a45588fec9cb7c00ff36",
+      "max_voice": 0.4472,
+      "max_class": "Lullaby",
+      "max_at_s": 7.5,
+      "stem_rel_db_at_max": -13.5,
+      "max_stem_rel_db": -4.3,
+      "windows_over": 3,
+      "stem_windows_over": 15,
+      "windows": 33,
+      "flagged": true,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -14.8,
+          "voice": 0.0151,
+          "class": "Lullaby"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -19.7,
+          "voice": 0.1185,
+          "class": "Lullaby"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -13.3,
+          "voice": 0.3237,
+          "class": "Lullaby"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -13.5,
+          "voice": 0.4472,
+          "class": "Lullaby"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -18.9,
+          "voice": 0.3475,
+          "class": "Lullaby"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -45.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -49.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -35.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -18.9,
+          "voice": 0.0855,
+          "class": "Speech"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -18.6,
+          "voice": 0.042,
+          "class": "Speech"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -11.8,
+          "voice": 0.1016,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -4.6,
+          "voice": 0.1694,
+          "class": "Lullaby"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -4.4,
+          "voice": 0.2305,
+          "class": "Mantra"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -4.3,
+          "voice": 0.1829,
+          "class": "Lullaby"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -6.7,
+          "voice": 0.1611,
+          "class": "Lullaby"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -9.3,
+          "voice": 0.1473,
+          "class": "Lullaby"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -7.9,
+          "voice": 0.1505,
+          "class": "Lullaby"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -4.6,
+          "voice": 0.1003,
+          "class": "Lullaby"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -5.3,
+          "voice": 0.0499,
+          "class": "Lullaby"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -7.3,
+          "voice": 0.1026,
+          "class": "Lullaby"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -8.1,
+          "voice": 0.1296,
+          "class": "Lullaby"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -8.2,
+          "voice": 0.1549,
+          "class": "Lullaby"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -8.8,
+          "voice": 0.1256,
+          "class": "Lullaby"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -8.9,
+          "voice": 0.1324,
+          "class": "Lullaby"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -8.3,
+          "voice": 0.198,
+          "class": "Lullaby"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -9.2,
+          "voice": 0.1422,
+          "class": "Lullaby"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -12.8,
+          "voice": 0.0768,
+          "class": "Lullaby"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -40.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -55.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -55.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -57.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -48.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -43.0,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/race-1.ogg",
+      "sha256": "2cad289d1750740c8cf3da9c03d837961e2efef3abdee925ee2ab80f2537620e",
+      "max_voice": 0.2386,
+      "max_class": "Mantra",
+      "max_at_s": 72.5,
+      "stem_rel_db_at_max": -5.1,
+      "max_stem_rel_db": -4.2,
+      "windows_over": 0,
+      "stem_windows_over": 14,
+      "windows": 33,
+      "flagged": true,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -57.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -56.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -50.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -51.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -23.1,
+          "voice": 0.0256,
+          "class": "Humming"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -23.8,
+          "voice": 0.021,
+          "class": "Humming"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -34.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -57.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -57.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -49.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -11.4,
+          "voice": 0.0561,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -10.8,
+          "voice": 0.0135,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -18.8,
+          "voice": 0.0249,
+          "class": "Singing"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -11.3,
+          "voice": 0.0251,
+          "class": "Singing"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -9.7,
+          "voice": 0.0122,
+          "class": "Singing"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -9.5,
+          "voice": 0.0566,
+          "class": "Singing"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -7.1,
+          "voice": 0.0759,
+          "class": "Singing"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -5.5,
+          "voice": 0.1354,
+          "class": "Female singing"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -4.6,
+          "voice": 0.0555,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -5.0,
+          "voice": 0.1042,
+          "class": "Mantra"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -6.4,
+          "voice": 0.1276,
+          "class": "Mantra"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -6.6,
+          "voice": 0.0485,
+          "class": "Male singing"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -5.5,
+          "voice": 0.0296,
+          "class": "Female singing"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -4.3,
+          "voice": 0.0666,
+          "class": "Mantra"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -4.2,
+          "voice": 0.086,
+          "class": "Mantra"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -5.1,
+          "voice": 0.2386,
+          "class": "Mantra"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -6.2,
+          "voice": 0.0859,
+          "class": "Mantra"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -8.6,
+          "voice": 0.0893,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -19.0,
+          "voice": 0.0937,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/race-2.ogg",
+      "sha256": "901bb10ac2f020c83463b34d895b5c55a4f592181a9c0a7743133be6fee8ec26",
+      "max_voice": 0.3468,
+      "max_class": "Speech",
+      "max_at_s": 77.5,
+      "stem_rel_db_at_max": -8.9,
+      "max_stem_rel_db": -7.2,
+      "windows_over": 1,
+      "stem_windows_over": 4,
+      "windows": 33,
+      "flagged": true,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -58.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -37.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -29.1,
+          "voice": 0.0163,
+          "class": "Speech"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -28.3,
+          "voice": 0.0063,
+          "class": "Speech"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -32.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -44.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -48.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -51.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -49.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -47.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -45.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -46.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -52.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -32.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -26.5,
+          "voice": 0.0108,
+          "class": "Speech"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -25.9,
+          "voice": 0.0055,
+          "class": "Speech"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -31.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -45.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -42.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -43.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -42.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -44.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -18.5,
+          "voice": 0.0093,
+          "class": "Speech"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -8.8,
+          "voice": 0.0246,
+          "class": "Singing"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -7.2,
+          "voice": 0.0392,
+          "class": "Speech"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -10.5,
+          "voice": 0.0158,
+          "class": "Speech"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -22.5,
+          "voice": 0.0087,
+          "class": "Speech"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -45.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -56.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -41.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -9.8,
+          "voice": 0.0962,
+          "class": "Speech"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -8.9,
+          "voice": 0.3468,
+          "class": "Speech"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -10.8,
+          "voice": 0.1623,
+          "class": "Speech"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/race-3.ogg",
+      "sha256": "15169e690ab62f970321339c7453a06e8d1fdb651e37cbb6cd5025813850ccd9",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -55.9,
+      "max_stem_rel_db": -52.3,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 33,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -55.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -53.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -52.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -56.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -62.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -64.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -64.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -65.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -66.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -65.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -63.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -64.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -64.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -63.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -64.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -62.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -63.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -64.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -62.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -62.3,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/race-4.ogg",
+      "sha256": "bff27dc90e91a7e92b40c9a2a2e5c40d0d65f06349684791f05fcc852d488b96",
+      "max_voice": 0.0433,
+      "max_class": "Speech",
+      "max_at_s": 45.0,
+      "stem_rel_db_at_max": -25.1,
+      "max_stem_rel_db": -25.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 33,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -64.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -64.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -64.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -63.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -57.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -25.1,
+          "voice": 0.0433,
+          "class": "Speech"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -25.8,
+          "voice": 0.017,
+          "class": "Speech"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -31.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -64.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -56.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -52.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -52.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -57.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -65.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -55.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -31.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -34.3,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/results-1.ogg",
+      "sha256": "9caa1288148b3b4c0360700590f8e832cb67ba32ae5072fe9105de91eb65896e",
+      "max_voice": 0.3188,
+      "max_class": "Mantra",
+      "max_at_s": 12.5,
+      "stem_rel_db_at_max": -3.8,
+      "max_stem_rel_db": -3.8,
+      "windows_over": 1,
+      "stem_windows_over": 17,
+      "windows": 21,
+      "flagged": true,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -45.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -45.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -50.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -13.1,
+          "voice": 0.1789,
+          "class": "Male singing"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -4.3,
+          "voice": 0.1135,
+          "class": "Male singing"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -3.8,
+          "voice": 0.3188,
+          "class": "Mantra"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -5.1,
+          "voice": 0.159,
+          "class": "Mantra"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -5.7,
+          "voice": 0.1826,
+          "class": "Mantra"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -5.9,
+          "voice": 0.1554,
+          "class": "Mantra"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -7.8,
+          "voice": 0.2272,
+          "class": "Male singing"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -8.6,
+          "voice": 0.1861,
+          "class": "Mantra"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -8.2,
+          "voice": 0.1481,
+          "class": "Mantra"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -9.4,
+          "voice": 0.0966,
+          "class": "Male singing"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -8.6,
+          "voice": 0.2171,
+          "class": "Mantra"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -7.5,
+          "voice": 0.1985,
+          "class": "Male singing"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -6.5,
+          "voice": 0.1986,
+          "class": "Male singing"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -5.2,
+          "voice": 0.1735,
+          "class": "Yodeling"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -4.8,
+          "voice": 0.1599,
+          "class": "Female singing"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -6.2,
+          "voice": 0.1202,
+          "class": "Female singing"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -6.6,
+          "voice": 0.0974,
+          "class": "Female singing"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -6.3,
+          "voice": 0.1537,
+          "class": "Female singing"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/results-2.ogg",
+      "sha256": "55ec13a21e74db1a96608a66d47c02a11cb68af89bd43789df56e708ac03750b",
+      "max_voice": 0.047,
+      "max_class": "Speech",
+      "max_at_s": 27.5,
+      "stem_rel_db_at_max": -22.7,
+      "max_stem_rel_db": -21.6,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 21,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -62.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -62.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -63.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -63.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -64.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -65.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -21.6,
+          "voice": 0.0375,
+          "class": "Speech"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -22.7,
+          "voice": 0.047,
+          "class": "Speech"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -51.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -45.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -45.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -56.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -46.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -45.9,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "calib/shipped-4a0f761/results-3.ogg",
+      "sha256": "b6771a06b9be88c3d1c3b3654b6106e28321e0a5056235dc55c43fd3f70638b9",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -50.8,
+      "max_stem_rel_db": -38.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 21,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -50.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -54.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -64.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -63.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -64.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -66.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -38.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -38.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -51.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -64.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -64.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -63.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -62.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -62.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -62.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -64.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -63.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -64.2,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/lobby.ogg",
+      "sha256": "096833cf396d978579ecc3370af0de5af2a1af86db830c30f4c5a6fe77ac07f4",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -60.8,
+      "max_stem_rel_db": -58.4,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 81,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -62.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -63.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -62.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -63.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -63.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -63.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -63.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -63.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -62.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -63.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -64.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -63.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -63.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -65.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -63.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -62.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -65.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -64.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -63.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -64.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -64.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -64.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -62.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -64.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -62.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -62.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -63.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -62.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -63.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -63.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -62.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -62.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -63.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -64.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -65.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -64.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -63.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -63.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -63.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -62.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -62.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -63.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -62.6,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/race-1.ogg",
+      "sha256": "df4b4fa4a2c9d52b8aa436a5c0dbbd777785a9f53f99d4004f6ad3217cd331c0",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -58.8,
+      "max_stem_rel_db": -55.9,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 89,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -55.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -56.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -58.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -56.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -58.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -58.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/race-2.ogg",
+      "sha256": "cdde9123e4746a2a250851d462ee8deadc44c6212b2ed724c8bd78a2279168b8",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -57.7,
+      "max_stem_rel_db": -57.1,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 92,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -57.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -58.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -57.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -57.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -61.9,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/race-3.ogg",
+      "sha256": "322f57bf40cfb845514678fdfac53861e3de053312cd1d3dfaf79f2724fda43e",
+      "max_voice": 0.0112,
+      "max_class": "Speech",
+      "max_at_s": 227.5,
+      "stem_rel_db_at_max": -26.7,
+      "max_stem_rel_db": -20.5,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 100,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -58.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -58.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -58.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -57.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -58.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -58.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -56.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -56.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -57.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -57.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -56.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -54.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -55.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -53.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -51.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -45.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -39.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -33.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -24.2,
+          "voice": 0.0076,
+          "class": "Speech"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -20.5,
+          "voice": 0.0072,
+          "class": "Speech"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -21.1,
+          "voice": 0.0076,
+          "class": "Speech"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -26.7,
+          "voice": 0.0112,
+          "class": "Speech"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -58.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -55.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -54.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -57.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -57.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -57.9,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/race-4.ogg",
+      "sha256": "1f751a2f63a5c3e4d958ce3d14778d0f39948f3697e88ec61dbf34a07d951cfc",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -58.4,
+      "max_stem_rel_db": -56.5,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 115,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -58.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -58.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -57.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -57.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -58.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 250.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 252.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 255.0,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 257.5,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 260.0,
+          "stem_rel_db": -58.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 262.5,
+          "stem_rel_db": -58.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 265.0,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 267.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 270.0,
+          "stem_rel_db": -57.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 272.5,
+          "stem_rel_db": -56.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 275.0,
+          "stem_rel_db": -58.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 277.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 280.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 282.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 285.0,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/results-1.ogg",
+      "sha256": "ecbcba9c2c663a5ed91b39ba359c9317a60cca9c0fa6752e6a713f00ecf9595e",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -60.8,
+      "max_stem_rel_db": -60.3,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 57,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -61.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/results-2.ogg",
+      "sha256": "b65817b31130016ef726f03c1375aecf8eb6eb7429427e0f7c5899c324f051fd",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -61.5,
+      "max_stem_rel_db": -58.7,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 78,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -59.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -58.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -59.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -59.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -59.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -59.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -58.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -59.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    },
+    {
+      "file": "exports/music-scoreonly/results-3.ogg",
+      "sha256": "5158eb2266fb04726764b4674b61427beec7af4fce229e0efe2689024f37c320",
+      "max_voice": 0.0,
+      "max_class": "gated",
+      "max_at_s": 0.0,
+      "stem_rel_db_at_max": -62.1,
+      "max_stem_rel_db": -59.4,
+      "windows_over": 0,
+      "stem_windows_over": 0,
+      "windows": 100,
+      "flagged": false,
+      "per_window": [
+        {
+          "t": 0.0,
+          "stem_rel_db": -62.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 2.5,
+          "stem_rel_db": -62.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 5.0,
+          "stem_rel_db": -62.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 7.5,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 10.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 12.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 15.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 17.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 20.0,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 22.5,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 25.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 27.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 30.0,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 32.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 35.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 37.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 40.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 42.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 45.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 47.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 50.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 52.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 55.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 57.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 60.0,
+          "stem_rel_db": -59.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 62.5,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 65.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 67.5,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 70.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 72.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 75.0,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 77.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 80.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 82.5,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 85.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 87.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 90.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 92.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 95.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 97.5,
+          "stem_rel_db": -61.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 100.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 102.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 105.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 107.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 110.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 112.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 115.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 117.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 120.0,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 122.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 125.0,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 127.5,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 130.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 132.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 135.0,
+          "stem_rel_db": -60.5,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 137.5,
+          "stem_rel_db": -59.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 140.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 142.5,
+          "stem_rel_db": -60.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 145.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 147.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 150.0,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 152.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 155.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 157.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 160.0,
+          "stem_rel_db": -61.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 162.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 165.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 167.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 170.0,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 172.5,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 175.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 177.5,
+          "stem_rel_db": -60.9,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 180.0,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 182.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 185.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 187.5,
+          "stem_rel_db": -61.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 190.0,
+          "stem_rel_db": -61.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 192.5,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 195.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 197.5,
+          "stem_rel_db": -61.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 200.0,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 202.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 205.0,
+          "stem_rel_db": -60.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 207.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 210.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 212.5,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 215.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 217.5,
+          "stem_rel_db": -59.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 220.0,
+          "stem_rel_db": -60.0,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 222.5,
+          "stem_rel_db": -60.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 225.0,
+          "stem_rel_db": -60.2,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 227.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 230.0,
+          "stem_rel_db": -60.3,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 232.5,
+          "stem_rel_db": -59.6,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 235.0,
+          "stem_rel_db": -62.4,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 237.5,
+          "stem_rel_db": -61.8,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 240.0,
+          "stem_rel_db": -61.7,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 242.5,
+          "stem_rel_db": -61.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 245.0,
+          "stem_rel_db": -60.1,
+          "voice": 0.0,
+          "class": "gated"
+        },
+        {
+          "t": 247.5,
+          "stem_rel_db": -60.7,
+          "voice": 0.0,
+          "class": "gated"
+        }
+      ]
+    }
+  ]
+}

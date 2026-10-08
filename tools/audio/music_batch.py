@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Generate Playtest-1 music candidates with YuE2 (BF16) on eris and screen them for vocals.
+"""DIAGNOSTICS ONLY (P1-A02v): YuE2's full acoustic pipeline sings even with empty lyrics, so these takes are never
+music candidates. Music comes from music_score_plan.py + render_score.py (score-only).
+
+Generate Playtest-1 music candidates with YuE2 (BF16) on eris and screen them for vocals.
 
 Two candidate kinds per cue, all instrumental (empty lyrics):
   * cover: the 0.1 track's score, transcribed by SheetSage2 (F32), re-performed with its style tags

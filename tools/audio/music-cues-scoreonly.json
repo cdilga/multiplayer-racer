@@ -1,0 +1,23 @@
+[
+  {
+    "id": "lobby",
+    "duration": 90,
+    "bpm": 95,
+    "style": "instrumental, lo-fi electronic, 95 BPM, chill, warm rhodes, pulsing bass, laid-back twangy guitar, sunny, inviting, arcade",
+    "seeds": [11, 23, 37, 41]
+  },
+  {
+    "id": "race",
+    "duration": 90,
+    "bpm": 140,
+    "style": "instrumental, synthwave, racing, 140 BPM, energetic, driving drums, soaring synth leads, overdriven surf guitar, arcade energy, desert highway",
+    "seeds": [11, 23, 37, 41, 53, 67, 79, 97]
+  },
+  {
+    "id": "results",
+    "duration": 60,
+    "bpm": 125,
+    "style": "instrumental, triumphant, arcade victory fanfare, 125 BPM, euphoric, bright synths, brass stabs, major key, celebratory drums, festival",
+    "seeds": [11, 23, 37, 41, 53, 67]
+  }
+]

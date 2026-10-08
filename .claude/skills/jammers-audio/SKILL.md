@@ -27,7 +27,7 @@ non-picked take.
 - **One GPU job at a time** (RTX 2080 SUPER 8 GB). All voice and music jobs take `~/Work/dev/jammers-audio/.gpu.lock`
   (`render_voice.py` and `eris-audio-queue.sh` do it for you). Never run a second Whisper/TTS/music job by hand next to
   one that is running; check `nvidia-smi` first.
-- **Music is instrumental.** Screen every candidate with Whisper for words and reject any with voice.
+- **Music has no voices at all.** Score-only path only (below); the calibrated no-voice check must pass on every file.
 - Machine rule (R93): the tree, `br` and Agent Mail live on the Mac; GPU audio work is pinned to eris by hardware.
 
 ## Regenerate the announcer voice (one command)
@@ -94,20 +94,24 @@ Moments are declared once, in `check_cues.py` `MOMENTS` (A06 adds derby and item
 rows to the sheet, run `tools/audio/check_cues.py`, then `render_voice.py --only <moment>`. The loader's variant floors are
 4 for a moment that can fire repeatedly in a round and 2 for a once-a-round moment.
 
-## Regenerate music (YuE2, instrumental)
+## Regenerate music (score-only: YuE2 plan stage + SoundFont render)
 
-Setup once: `tools/audio/eris-setup-music.sh` (CUDA toolkit, `yue2.cpp` built for sm_75 at the qualified revision, YuE2-3B
-BF16 + F32 VAE + SheetSage2 F32). Cues: `tools/audio/music-cues-playtest1.json`. Batch on eris (from `~/Work/dev/jammers-audio`):
+**No voices at all** in music, wordless vocalisations included (owner, 2026-10-08). YuE2's acoustic stage sings even with
+empty lyrics, so music comes only from the **plan stage** (`yue-plan`: an ABC score, no audio) rendered by
+`tools/audio/render_score.py` as General MIDI through FluidSynth + FluidR3_GM.sf2 (MIT). Every staff, including the one YuE2
+labels "Vocal" (its melody notation), plays an allow-listed instrument patch; GM voice/choir programs are refused. Raw
+acoustic takes (`music_batch.py`), Demucs stems and "Vocal notes to rests" are diagnostics, never candidates.
 
-```
-flock .gpu.lock .venv/bin/python bin/music_batch.py --cues bin/music-cues-playtest1.json --refs refs --out drafts/music/batch1
-```
-
-`music_batch.py` renders fresh compositions and covers of the 0.1 tracks, then screens every take with Whisper for words
-and marks vocals rejected. Export the approved picks with `export_music.py` (two-pass loudness to -18 LUFS / -1.5 dBTP, a
-3 s loop crossfade, Opus 128 kb/s stereo, provenance manifest) into `assets/audio/music/`; the selection list in that
-script is the owner-approved one (P1-A02). The YuE2 weights are CC BY-NC 4.0 with a creator exception: flag it before any
-company release. Loop quality is still an ear check.
+Steps (details and commands: `tools/audio/README.md`, "Regenerating the music"): `eris-setup-score-instruments.sh` once;
+`eris-music-plan.sh` (stops the voxtype daemon for VRAM, restarts it; 15-45 s a plan); `render_score.py` per take; pick in
+`export_music.py` `SELECTION` by listening proxies (a chorus and an ending, a repeated motif, few empty bars); export
+(-18 LUFS / -1.5 dBTP, 3 s loop crossfade over matching material, Opus 128 kb/s); run `music_voice_check.py` (Demucs vocals
+stem -> AudioSet AST, threshold 0.25, stem within -10 dB of the mix in >= 2 windows) on the 4a0f761 tracks and the new
+files; `export_music.py --finalise` writes the manifest and refuses a flagged track or a detector that misses the
+positive control (`docs/evidence/P1-A02v/positive-control-lobby-4a0f761.ogg`). CI's `check_music_manifest.py` refuses
+any track whose provenance names an acoustic render. No owner listening gate: a track ships when the pipeline proof and
+the calibrated no-voice check both hold. The YuE2 weights are CC BY-NC 4.0 with a creator exception: flag it before any
+company release.
 
 ## Where the evidence goes
 

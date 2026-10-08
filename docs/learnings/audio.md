@@ -38,3 +38,27 @@ Code: `web/host/src/audio/` (`mix`, `announcer`, `music`, `director`, `engine`, 
 - **Gaps by design:** scrapes (needs a contact-scrape event; episodes need closing speed ≥ 4 m/s), the `big-air` moment
   (`car.air_time` has no sim event; landings are detected from the snapshot's vertical speed), per-vehicle engine profiles
   (every car is the Cruz Missile; `engines.profileOf` is the seam), spatial panning.
+
+## 2026-10-08 · Score-only music, no voices (P1-A02v)
+
+- **YuE2's acoustic stage sings even with empty lyrics and "instrumental" in the style.** A words screen (Whisper) passes
+  wordless singing. Music now comes only from `yue-plan` (the plan stage: an ABC score, no audio) rendered through
+  FluidSynth + FluidR3_GM (`render_score.py`); `music_batch.py`'s acoustic takes are diagnostics, never candidates, and
+  `check_music_manifest.py` refuses any track whose provenance names them.
+- **`yue-plan` ignores `duration`.** It writes the whole song (2-5 min at our tempos, intro to outro). Plans take 15-45 s
+  on the 2080 SUPER. The BF16 model plus a 6144-token KV cache doesn't fit next to voxtype's 1.5 GB of VRAM, so
+  `eris-music-plan.sh` stops that user service for the batch and always restarts it.
+- **Same seed, same score.** `lobby` plan seed 23 is byte-identical to the score inside the 4a0f761 acoustic take
+  `lobby/fresh.s23` (the owner's favourite composition), so a liked acoustic take's composition can be kept and re-rendered.
+- **YuE2's ABC subset:** `L:1/16` or `1/32`, `M:4/4`, `K:` major and minor (incl. `D#m`), `V: Vocal` / `V: Ins`
+  interleaved per phrase, `"chord"` symbols on the Vocal staff, `Z<n>` multi-bar rests, `-` ties, `^`/`=` accidentals,
+  `% section` comments. A staff can be empty for the whole song (race s23 has no Vocal notes).
+- **A seamless loop from a MIDI render:** put the composition in the MIDI three times and cut pass 2 plus 3 s of pass 3; the
+  3 s crossfade then blends matching material and the seam carries the real reverb tail (envelope correlation >= 0.98).
+- **FluidR3 renders have a ~16 dB crest factor,** so linear gain to -18 LUFS overshoots -1.5 dBTP and `loudnorm` runs its
+  dynamic mode (true-peak limiting). Opus adds up to ~0.6 dB of true peak, so the PCM is normalised to -2.5 dBTP.
+- **The no-voice detector:** AudioSet AST on the full mix barely reacts to YuE2's buried singing (4a0f761 lobby: 0.09).
+  Demucs's vocals stem, then AST on that stem, separates them: that lobby scores 0.43-0.47 (Lullaby/Singing classes) with
+  15 windows of stem within -10 dB of the mix; the score renders stay <= 0.16 and <= -14.6 dB. "Singing bowl" is excluded
+  (an instrument). Demucs's random shift moves scores by a few hundredths between runs. Demucs leaves the vocals stem near
+  -55 dB on the Opus renders but -15..-26 dB on their WAV premasters; both pass, and the manifest records both.

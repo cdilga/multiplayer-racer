@@ -12,6 +12,7 @@ t() { # <name> <command…>: run, time, keep going, remember a failure
 t "UI tokens (P1-U01)" node art/ui/check.mjs
 t "TV grid rule, equal tiles at any N (P1-U02.2, R95)" node art/ui/poc/tv/grid-check.mjs
 t "Announcer cue sheet (P1-A00)" bash -c 'python3 tools/audio/check_cues.py tools/audio/cues-playtest1.tsv && python3 tools/audio/test_check_cues.py'
+t "Music is score-only with no voice: manifest provenance and the calibrated no-voice check (P1-A02v)" bash -c 'python3 tools/audio/check_music_manifest.py && python3 tools/audio/test_check_music_manifest.py'
 t "Engine synth bundle and profile copy are current (P1-A04)" node art/ui/poc/audio/engine/build.mjs --check
 t "jammers-look recipes match the rendered code (P1-F11)" node .claude/skills/jammers-look/example/check-recipes.mjs
 t "The surface-strips test map is what its generator writes (P1-S03a)" bash -c 'python3 tools/maps/surface_strips.py && git diff --exit-code maps/test/surface-strips.json'

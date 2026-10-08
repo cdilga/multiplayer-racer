@@ -19,8 +19,13 @@ Only scripts, cue sheets and **approved, exported** clips live in the repo.
 | `cues-playtest1-audition.tsv` | Draft audition lines for judging the voice. Final copy waits for the Australianisms pass (R53) and owner approval (R55) |
 | `eris-setup-voice-energy.sh` | Adds Qwen3-TTS VoiceDesign to the voice env and Seed-VC (voice conversion) in its own venv, pinned to torch 2.8 |
 | `voice_energy.py` | Gives a calm reference an excited delivery: VoiceDesign performs the line, Seed-VC converts it to the owner's timbre (`--vc-mode f0` keeps the pitch contour, `--lift` semitones above the owner), and the converted clip becomes the clone reference. Scores similarity, pitch and Whisper WER |
-| `music-cues-playtest1.json`, `music_batch.py` | Music cue sheet and the YuE2 batch renderer (fresh compositions + covers of the 0.1 tracks), with a words screen |
-| `export_music.py` | Exports approved takes to `assets/audio/music/` (loudness, loop crossfade, Opus) with a provenance manifest |
+| `music-cues-scoreonly.json`, `music_score_plan.py`, `eris-music-plan.sh` | **Music (P1-A02v):** the cue jobs and seeds, and YuE2's **plan stage only** (`yue-plan`): an ABC score per seed, no audio |
+| `eris-setup-score-instruments.sh` | FluidSynth 2.6.1 (conda-forge, no sudo), FluidR3_GM.sf2 (MIT) pinned by hash, the no-voice detector's deps |
+| `render_score.py` | Parses the ABC, arranges it as General MIDI (every staff, incl. YuE2's "Vocal" melody staff, on an allow-listed instrument patch; chord comp, pad, bass and drums from the chords and sections) and renders MIDI + SoundFont with FluidSynth. Those are its only inputs |
+| `export_music.py` | Loudness (-18 LUFS / -1.5 dBTP), the 3 s loop crossfade, Opus, re-measurement (level, mono fold, seam) and `music-manifest.json` with full provenance and the no-voice results |
+| `music_voice_check.py` | The supplementary no-voice check: Demucs vocals stem -> AudioSet AST voice classes per window, calibrated on the 4a0f761 tracks (positive control: their lobby.ogg) |
+| `check_music_manifest.py`, `test_check_music_manifest.py` | CI (checks lane): refuses a track that isn't score-only or whose provenance names an acoustic render, a flagged or stale no-voice result, and a detector that no longer flags the positive control |
+| `music-cues-playtest1.json`, `music_batch.py` | **Diagnostics only:** YuE2's full acoustic pipeline. It sings even with empty lyrics; its takes are never music candidates |
 | `eris-audio-queue.sh` | Runs voice and music jobs one at a time on the GPU (takes `~/Work/dev/jammers-audio/.gpu.lock`, the same lock `render_voice.py` takes) |
 
 A Qwen clone copies the reference's **delivery** as well as its timbre: a calm recording gives a calm
@@ -34,7 +39,27 @@ tail for end-of-clip hallucinations and cut the reference to the cleanest stretc
 
 Quality policy: highest precision that fits the GPU (fp32 TTS when it fits, BF16 music weights, no
 quantised fallbacks), several seeded takes per line, automatic screening, then the owner's ears.
-Music must be instrumental: screen every candidate for words and reject any with voice.
+Music has **no voices at all**, wordless vocalisations included (owner, 2026-10-08): it comes only from the score-only
+path below, and the no-voice check must pass on every file.
+
+## Regenerating the music (P1-A02v, score-only)
+
+On eris, from `~/Work/dev/jammers-audio` (copy the scripts above into `bin/` first):
+
+1. Once: `bash bin/eris-setup-score-instruments.sh`.
+2. Plans: `nohup setsid bin/eris-music-plan.sh [--only race --seeds 11 23]`, log to `logs/scoreonly-plan.log`. Each seed
+   writes `drafts/music/scoreonly/<cue>/s<seed>/score.abc`.
+3. Render each take: `.venv/bin/python bin/render_score.py --cue race --score drafts/music/scoreonly/race/s53/score.abc
+   --out drafts/music/scoreonly/race/s53/render --bpm 140 --seed 53`.
+4. Pick in `export_music.py` `SELECTION`, then `export_music.py --drafts drafts/music/scoreonly --out exports/music-scoreonly`.
+5. No-voice check (GPU lock): `music_voice_check.py --device cuda --threshold 0.25 --out exports/music-scoreonly/voice-check.json
+   calib/shipped-4a0f761/*.ogg exports/music-scoreonly/*.ogg`, and again with `--out .../voice-check-premaster.json` over
+   the picks' `render/loop-source.wav`.
+6. `export_music.py ... --finalise <voice-check.json> <voice-check-premaster.json>` writes `music-manifest.json`; it refuses a
+   flagged track, a report for a different file, or a detector that misses the positive control.
+
+Copy the Oggs, `music-manifest.json` and `scores/` into `assets/audio/music/` and run
+`python3 tools/audio/check_music_manifest.py`. The receipt with every command and output is `docs/evidence/P1-A02v/receipt.md`.
 
 ## Regenerating the announcer voice (P1-A01)
 
