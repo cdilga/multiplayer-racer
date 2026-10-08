@@ -1650,7 +1650,10 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
             .collect()
     };
     let before = b_debris(&h);
-    assert!(!before.is_empty(), "PB's bumper is debris before the removal");
+    assert!(
+        !before.is_empty(),
+        "PB's bumper is debris before the removal"
+    );
     h.handle(
         &MainToSim::Ui {
             command: CommandId(9),
