@@ -1,0 +1,11 @@
+/* Full screen on the phone (P1-C02b): the tools-row toggle, the "Back to full screen" prompt when it's lost mid-race (small,
+   at the bottom middle between the sticks: driving goes on around it) and the Add to Home Screen note where there's no API. */
+.tools .btn[data-act=fullscreen].on { --bz-fill: var(--c-paper); background: var(--c-paper); }
+.tools .btn[data-act=fullscreen].on img.i { filter: none; }
+.fs-prompt { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 4px; pointer-events: none; }
+.fs-prompt .btn { pointer-events: auto; min-height: 44px; font-size: 15px; padding: 0 12px; gap: 6px; white-space: nowrap; box-shadow: 0 4px 0 rgb(0 0 0 / .5); }
+.fs-prompt .btn.icon { padding: 0 8px; }
+.fs-prompt .btn.primary img.i { filter: none; }
+.fs-note { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; box-sizing: border-box; width: min(420px, calc(100% - 32px)); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.fs-note p { margin: 0; font-size: 16px; line-height: 1.35; }
+@media (orientation: portrait) { .fs-prompt { bottom: 20px; } }

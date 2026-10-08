@@ -14,6 +14,7 @@ import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shape } from './settings';
 import { CarSheet, rosterOf } from './carsheet';
+import { A2HS_TEXT, FullscreenControl } from './fullscreen';
 
 /** One §11 card (art/ui/poc/phone/phone.js `CARDS`, accepted 2026-10-07): an icon (or the spinner), the title, the line under it, and
  *  the next useful actions, the first of them the primary one. Copy says "room", never "game" (R112). */
@@ -54,7 +55,7 @@ function dress(root: ParentNode): void {
 }
 
 /** The strip's tools (accepted mock: Identify with its label, the rest icon-only; every one keeps its spoken name). */
-const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
+const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
 const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
@@ -74,6 +75,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
   let prefs: Preferences | null = null;
   let sheet: SettingsSheet | null = null;
   let cars: CarSheet | null = null;
+  const fs = new FullscreenControl();
+  let fsNote = false;
   const tilt = new Tilt({ deadzoneDeg: DEADZONES.medium, fullLockDeg: SENSITIVITIES.normal });
   /** Applies the saved tilt settings to the sensor. */
   const syncTilt = () => {
@@ -221,6 +224,11 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       session.cameraDistance = v.cameraDistance;
       syncTilt();
     });
+    app.querySelector('[data-act=fullscreen]')!.addEventListener('click', () => {
+      if (fs.mode === 'api') return void fs.toggle();
+      fsNote = !fsNote;
+      updateFullscreen();
+    });
     app.querySelector('[data-act=help]')!.addEventListener('click', () => tutorial?.show());
     app.querySelector('[data-act=settings]')!.addEventListener('click', () => openSettings(screenEl));
     app.querySelector('[data-act=car]')!.addEventListener('click', () => openCars(screenEl));
@@ -259,6 +267,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       onSitOut: () => session.sitOut(),
       onLeave: () => session.leave(),
       onIdentify: () => session.identify(),
+      fullscreen: fs,
     });
   };
 
@@ -331,11 +340,62 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
     app.querySelector<HTMLElement>('[data-hud=boost]')?.style.setProperty('--v', `${Math.round(((h?.boost ?? 0) / 255) * 100)}%`);
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
+    updateFullscreen();
   };
+
+  /** The full-screen tool's state, its Add to Home Screen note, and the "Back to full screen" prompt (P1-C02b). */
+  const updateFullscreen = () => {
+    const screenEl = app.querySelector<HTMLElement>('.screen.play');
+    const btn = app.querySelector<HTMLButtonElement>('[data-act=fullscreen]');
+    if (btn) {
+      // Opened from the Home Screen it is already full screen and there is nothing to toggle.
+      btn.hidden = fs.mode === 'standalone';
+      btn.setAttribute('aria-pressed', String(fs.active));
+      btn.setAttribute('aria-label', fs.mode === 'api' ? (fs.active ? 'Leave full screen' : 'Full screen') : 'Full screen: how to on this phone');
+      btn.classList.toggle('on', fs.active);
+    }
+    let note = screenEl?.querySelector<HTMLElement>('[data-overlay=fs-note]') ?? null;
+    if (screenEl && fsNote && fs.mode === 'home-screen') {
+      if (!note) {
+        note = document.createElement('div');
+        note.className = 'fs-note panel';
+        note.dataset.overlay = 'fs-note';
+        note.setAttribute('role', 'status');
+        note.innerHTML = `<p>${esc(A2HS_TEXT)}</p><button class="btn" type="button" data-act="fs-note-ok">Got it</button>`;
+        note.querySelector('[data-act=fs-note-ok]')!.addEventListener('click', () => {
+          fsNote = false;
+          updateFullscreen();
+        });
+        screenEl.append(note);
+      }
+    } else note?.remove();
+    // Lost mid-race without asking: a small prompt, off the sticks; driving goes on under it.
+    const racing = session.roomPhase === 'Racing' || session.roomPhase === 'Countdown';
+    if (!racing && fs.lostUnasked && session.phase === 'playing' && session.roomPhase) fs.dismiss();
+    let prompt = screenEl?.querySelector<HTMLElement>('[data-overlay=fs-prompt]') ?? null;
+    if (screenEl && fs.mode === 'api' && fs.lostUnasked && racing) {
+      if (!prompt) {
+        prompt = document.createElement('div');
+        prompt.className = 'fs-prompt';
+        prompt.dataset.overlay = 'fs-prompt';
+        prompt.setAttribute('role', 'status');
+        prompt.innerHTML = '<button class="btn primary" type="button" data-act="fs-back"><i data-ico="maximize"></i>Back to full screen</button><button class="btn quiet icon" type="button" data-act="fs-dismiss" aria-label="Not now"><i data-ico="x"></i></button>';
+        dress(prompt);
+        paintKit(prompt);
+        prompt.querySelector('[data-act=fs-back]')!.addEventListener('click', () => void fs.enter());
+        prompt.querySelector('[data-act=fs-dismiss]')!.addEventListener('click', () => fs.dismiss());
+        screenEl.append(prompt);
+      }
+    } else prompt?.remove();
+  };
+  fs.subscribe(updateFullscreen);
 
   session.onChange = render;
   (window as unknown as { __jjSettings: unknown }).__jjSettings = {
     inspect: () => ({ open: sheet?.open ?? false, prefs: prefs?.value ?? null, saveFailed: prefs?.saveFailed ?? false, test: sheet?.inspectTest() ?? null, cars: cars?.open ? { index: cars.index } : null }),
+  };
+  (window as unknown as { __jjFullscreen: unknown }).__jjFullscreen = {
+    inspect: () => ({ mode: fs.mode, active: fs.active, lost: fs.lostUnasked, prompt: !!app.querySelector('[data-overlay=fs-prompt]'), note: !!app.querySelector('[data-overlay=fs-note]') }),
   };
   (window as unknown as { __jjTutorial: unknown }).__jjTutorial = { inspect: () => tutorial?.inspect() ?? null, show: () => tutorial?.show() };
   matchMedia('(orientation: landscape)').addEventListener('change', () => {

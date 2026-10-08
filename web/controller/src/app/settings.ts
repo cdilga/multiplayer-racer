@@ -12,6 +12,7 @@ import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
 import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
 import type { Tilt } from './tilt';
+import { A2HS_TEXT, type FullscreenControl } from './fullscreen';
 
 export { DEFAULTS, PRESETS, sanitise };
 export type { CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadzone, TiltSensitivity };
@@ -117,6 +118,8 @@ export interface SettingsDeps {
   confirm?: (title: string) => Promise<boolean>;
   /** The play screen's tilt sensor (C07.2); its readings steer the DRIVE axis while the setting is on. */
   tilt?: Tilt;
+  /** Full screen now (P1-C02b): a switch that follows fullscreenchange, or the Add to Home Screen note where there's no API. */
+  fullscreen?: FullscreenControl;
 }
 
 const seg = (name: string, label: string, opts: Array<[string, string]>, cur: string) =>
@@ -149,7 +152,13 @@ export class SettingsSheet {
     this.el.setAttribute('aria-label', 'Your controls');
     this.el.style.setProperty('--seat', d.you.colour);
     host.append(this.el);
-    this.unsub = d.prefs.subscribe(() => this.render());
+    const unPrefs = d.prefs.subscribe(() => this.render());
+    // The switch follows full screen however it changes (the browser's own control, a system gesture).
+    const unFs = d.fullscreen?.subscribe(() => this.redrawFullscreen());
+    this.unsub = () => {
+      unPrefs();
+      unFs?.();
+    };
     this.render();
     d.onOpen();
   }
@@ -170,6 +179,7 @@ export class SettingsSheet {
         <div class="row">Camera distance${seg('cameraDistance', 'Camera distance', [['near', 'Near'], ['host', "Host's"], ['far', 'Far']], p.cameraDistance)}</div>
         ${toggle('vibration', 'Vibration', haptics && p.vibration, haptics ? '' : "This phone can't vibrate from a web page", !haptics)}
         ${toggle('reducedMotion', 'Reduced motion', p.reducedMotion, 'Fewer flashes, no shake')}
+        ${this.fullscreenRow()}
         ${toggle('keepAwake', 'Full screen, screen on', p.keepAwake, 'Where this phone allows it')}
         ${toggle('remember', 'Remember on this device', p.remember, 'Until you clear browser data')}
         ${this.tiltRows()}
@@ -184,6 +194,26 @@ export class SettingsSheet {
         <button type="button" class="btn quiet" data-act="back">Back</button>
       </div></div>`;
     this.wire();
+  }
+
+  /** Full screen now (P1-C02b): the live state, not a preference; the keep-awake toggle says whether joining asks for it. */
+  private fullscreenRow(): string {
+    const f = this.d.fullscreen;
+    if (!f) return '';
+    if (f.mode === 'standalone') return '<div class="row" data-row="fullscreen"><span>Full screen<small>On: opened from the Home Screen</small></span></div>';
+    if (f.mode === 'home-screen') return `<div class="row off" data-row="fullscreen"><span>Full screen<small data-note="a2hs">${A2HS_TEXT}</small></span></div>`;
+    return toggle('fullscreen', 'Full screen', f.active, f.active ? 'Tap to leave full screen' : 'Tap to go full screen').replace('<div class="row"', '<div class="row" data-row="fullscreen"');
+  }
+
+  /** Redraws only the full-screen row (an open Test panel or a half-made choice elsewhere stays as it is). */
+  private redrawFullscreen(): void {
+    const row = this.el.querySelector<HTMLElement>('[data-row=fullscreen]');
+    if (this.closed || !row) return;
+    const t = document.createElement('template');
+    t.innerHTML = this.fullscreenRow();
+    const next = t.content.firstElementChild as HTMLElement;
+    row.replaceWith(next);
+    next.querySelector('[data-toggle=fullscreen]')?.addEventListener('click', () => void this.d.fullscreen?.toggle());
   }
 
   /** The tilt steering rows (C07.2): off by default; once on, sensitivity, dead zone and Set neutral. */
@@ -231,8 +261,9 @@ export class SettingsSheet {
     q('[data-set]').forEach((b) => b.addEventListener('click', () => this.d.prefs.update({ [b.dataset.set!]: b.dataset.v } as Partial<ControllerPreferences>)));
     q('[data-toggle]').forEach((b) =>
       b.addEventListener('click', () => {
-        const k = b.dataset.toggle as 'vibration' | 'reducedMotion' | 'keepAwake' | 'remember' | 'tilt';
+        const k = b.dataset.toggle as 'vibration' | 'reducedMotion' | 'keepAwake' | 'remember' | 'tilt' | 'fullscreen';
         if (k === 'tilt') return void this.tiltToggle();
+        if (k === 'fullscreen') return void this.d.fullscreen?.toggle();
         this.d.prefs.update({ [k]: !this.d.prefs.value[k] });
       }),
     );
