@@ -2,7 +2,7 @@
 // by the params, so one geometry serves every size and its bounds are the registry collider's. One parametric house and one
 // parametric shopfront (their only variation is size), power pole, mailbox, water tower, gum tree and a side street's stub.
 // Boxes: x = width/length, y = height, z = depth, front +z. Cylinders: unit radius and height.
-import { BoxGeometry, ExtrudeGeometry, Shape, SphereGeometry, type BufferGeometry } from 'three';
+import { BoxGeometry, CylinderGeometry, ExtrudeGeometry, Shape, SphereGeometry, type BufferGeometry } from 'three';
 import { drum, merge, paint, slab } from '../shapes';
 import type { KitModule } from '../types';
 
@@ -26,6 +26,20 @@ function skillion(zBack: number, yBack: number, zFront: number, yFront: number, 
   return paint(g.translate(0, (yBack + yFront) / 2, (zBack + zFront) / 2), colour);
 }
 
+/** Corrugated iron: darker ridges running down a roof plane from (zTop, yTop) to (zLow, yLow), every `pitch` across the
+ *  width (x), standing a hair proud of the sheet. Reads as corrugation at chase distance, flat at the overview. */
+function corrugate(zTop: number, yTop: number, zLow: number, yLow: number, colour: string, pitch = 0.05, lift = 0.007): BufferGeometry[] {
+  const len = Math.hypot(zLow - zTop, yLow - yTop);
+  const angle = Math.atan2(yTop - yLow, zLow - zTop);
+  const out: BufferGeometry[] = [];
+  for (let x = -0.5 + pitch / 2; x < 0.5; x += pitch) {
+    const g = new BoxGeometry(0.012, 0.004, len).rotateX(angle).translate(x, (yTop + yLow) / 2 + lift, (zTop + zLow) / 2);
+    out.push(paint(g, colour));
+  }
+  return out;
+}
+
+const RIDGE = '#7c868c'; // the shadowed valley of each corrugation
 const WALL = '#e4dcc3'; // cream weatherboard
 const BOARD = '#c9bf9f'; // the shadow line under each board
 const ROOF = '#9aa3a8'; // galvanised corrugated iron
@@ -61,10 +75,13 @@ export const house: KitModule = {
       slab(0.9, 0.06, 0.62, 0.72, WALL).translate(0, 0, -0.12),
       ...boards(0.9, 0.06, 0.62, front + 0.001),
       gable(0.6, 1, ROOF, -0.5, front + 0.04),
+      ...corrugate((front + 0.04 - 0.5) / 2, 0.985, -0.5, 0.6, RIDGE),
+      ...corrugate((front + 0.04 - 0.5) / 2, 0.985, front + 0.04, 0.6, RIDGE),
       slab(1, 0.985, 1, 0.03, ROOF_LIGHT).translate(0, 0, (front + 0.04 - 0.5) / 2),
       slab(1, 0.595, 0.615, 0.02, TRIM).translate(0, 0, front + 0.035),
       slab(0.07, 0.72, 0.97, 0.07, '#9b5a42').translate(0.28, 0, -0.22),
       skillion(front, 0.56, 0.5, 0.47, ROOF_LIGHT),
+      ...corrugate(front, 0.56, 0.5, 0.47, RIDGE, 0.05, 0.008),
       slab(0.9, 0, 0.07, 0.25, '#8a6b4a').translate(0, 0, 0.37),
       ...posts([-0.45, -0.15, 0.15, 0.45], 0.475, 0.48),
       ...window_(-0.27, 0.2, 0.22, 0.48, front),
@@ -99,6 +116,7 @@ export const shopfront: KitModule = {
       ...boards(0.96, 0.22, 0.66, front + 0.001),
       slab(0.962, 0, 0.22, 0.742, GREEN).translate(0, 0, -0.13),
       gable(0.66, 0.86, ROOF, -0.5, front),
+      ...corrugate((front - 0.5) / 2, 0.86, -0.5, 0.66, RIDGE),
       // The false front: a parapet the full width up to the top, the signboard on it.
       slab(1, 0.6, 1, 0.04, WALL).translate(0, 0, front),
       slab(1, 0.975, 1, 0.044, GREEN).translate(0, 0, front),
@@ -106,6 +124,7 @@ export const shopfront: KitModule = {
       slab(0.76, 0.715, 0.935, 0.006, '#f3ead0').translate(0, 0, front + 0.027),
       ...lettering([[0.855, [0.26, 0.25]], [0.76, [0.12, 0.1, 0.16]]], front + 0.031),
       skillion(front, 0.58, 0.5, 0.5, ROOF_LIGHT),
+      ...corrugate(front, 0.58, 0.5, 0.5, RIDGE, 0.05, 0.008),
       slab(1, 0, 0.03, 0.26, '#b8ab95').translate(0, 0, 0.37),
       ...posts([-0.47, -0.16, 0.16, 0.47], 0.505, 0.485),
       ...window_(-0.29, 0.3, 0.12, 0.5, front),
@@ -160,20 +179,57 @@ export const waterTower: KitModule = {
   scale: (p) => [p.radiusMm! / 1000, p.heightCm! / 100, p.radiusMm! / 1000],
 };
 
-/** A gum: pale trunk and two grey-green lobes; a flat disc at the rim keeps the bounds the canopy's radius. */
+/** A lumpy canopy mass: a low-poly sphere squashed and nudged per vertex (seeded), so a clump reads as foliage. */
+function clump(r: number, x: number, y: number, z: number, colour: string, seed: number): BufferGeometry {
+  const g = new SphereGeometry(r, 8, 6).scale(1, 0.62, 1); // an even height count puts a ring on the equator
+  const pos = g.attributes.position!;
+  let s = seed;
+  const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+  // Nudge only the inner vertices: the equator's axis points stay put, so the clump's extent (the bounds) is exact.
+  for (let i = 0; i < pos.count; i++) {
+    const [px, py, pz] = [pos.getX(i), pos.getY(i), pos.getZ(i)];
+    const onAxis = Math.abs(py) < 1e-4 && (Math.abs(px) < 1e-4 || Math.abs(pz) < 1e-4);
+    if (onAxis) continue;
+    const k = 0.84 + 0.16 * rnd();
+    pos.setXYZ(i, px * k, py * (0.9 + 0.2 * rnd()), pz * k);
+  }
+  return paint(g.translate(x, y, z), colour);
+}
+
+/** A gum (P1-M04 fresh-eyes: not a lollipop): a pale trunk that forks into two leaning limbs, and an open crown of
+ *  separate grey-green clumps at different heights, with sky between them. Unit radius and height: the outer clumps
+ *  reach x and z = +-1 and the top clump y = 1, so the bounds are the collider's. */
 export const gumTree: KitModule = {
-  geometry: () =>
-    merge([
-      drum(0.05, 0, 0.62, '#d8d0c0'),
-      drum(1, 0.5, 0.52, '#6f8a68', 16),
-      paint(new SphereGeometry(1, 16, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.48, 1).translate(0, 0.52, 0), '#7f9b7a'),
-      paint(new SphereGeometry(0.55, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.7, 1).translate(0.35, 0.55, 0.25), '#8aa684'),
-    ]),
+  geometry: () => {
+    const bark = '#ddd5c4';
+    const limb = (len: number, lean: number, yaw: number) =>
+      paint(new CylinderGeometry(0.022, 0.034, len, 6).translate(0, len / 2, 0).rotateZ(lean).rotateY(yaw).translate(0, 0.34, 0), bark);
+    return merge([
+      paint(new CylinderGeometry(0.035, 0.05, 0.36, 6).translate(0, 0.18, 0), bark),
+      limb(0.36, 0.55, 0.3),
+      limb(0.34, -0.5, -0.4),
+      limb(0.3, 0.35, 2.0),
+      clump(0.36, 0.64, 0.62, 0.05, '#6f8a68', 1),
+      clump(0.34, -0.66, 0.66, -0.1, '#7f9b7a', 2),
+      clump(0.32, 0.05, 0.6, 0.68, '#748f6d', 3),
+      clump(0.3, -0.1, 0.64, -0.7, '#6a8463', 4),
+      clump(0.3, 0.12, 0.81, 0.02, '#87a381', 5),
+    ]);
+  },
   scale: (p) => [p.radiusMm! / 1000, p.heightCm! / 100, p.radiusMm! / 1000],
 };
 
-// A side street's mouth: the main road's tarmac (map.ts SURFACE_COLOURS.tarmac), flush with it, and a give-way line across
-// its mouth (the end at -x meets the road).
+/** The red-lid general-waste wheelie bin (the yellow-lid recycling bin is generic/bin): green body, red lid, wheels. */
+export const binRed: KitModule = {
+  geometry: () =>
+    merge([
+      slab(0.56, 0.06, 0.96, 0.66, '#2f6b3a'),
+      slab(0.6, 0.96, 1.05, 0.7, '#c8322b'),
+      drum(0.1, -0.28, 0.28, '#1f1e22', 8).rotateZ(Math.PI / 2).translate(0, 0.1, -0.24),
+    ]),
+  scale: () => [1, 1, 1],
+};
+
 export const sideStreet: KitModule = {
   geometry: () => merge([slab(1, 0, 1, 1, '#3f3f46'), slab(0.012, 0.99, 1.0, 0.9, '#e8e2cf').translate(-0.47, 0, 0)]),
   scale: (p) => [p.lengthMm! / 1000, 0.12, p.widthMm! / 1000],
@@ -188,4 +244,5 @@ export const TOWN_MODULES: Record<string, KitModule> = {
   'town/water-tower': waterTower,
   'town/gum-tree': gumTree,
   'town/side-street': sideStreet,
+  'town/bin-red': binRed,
 };

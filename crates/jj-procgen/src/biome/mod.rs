@@ -110,7 +110,7 @@ pub const WAYFINDING_PIECES: [(&str, &str); 3] = [
 ];
 
 /// The biome families' registry entries (`assets/kit/<biome>/`, P1-M04-M07), compiled in with the generic kit and the sign kit.
-pub const BIOME_PIECES: [(&str, &str); 16] = [
+pub const BIOME_PIECES: [(&str, &str); 17] = [
     (
         "town/house",
         include_str!("../../../../assets/kit/town/house.json"),
@@ -142,6 +142,10 @@ pub const BIOME_PIECES: [(&str, &str); 16] = [
     (
         "town/side-street",
         include_str!("../../../../assets/kit/town/side-street.json"),
+    ),
+    (
+        "town/bin-red",
+        include_str!("../../../../assets/kit/town/bin-red.json"),
     ),
     (
         "rocks/dome",

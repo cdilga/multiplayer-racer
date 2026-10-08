@@ -1,0 +1,17 @@
+{
+  "id": "town/bin-red",
+  "version": 1,
+  "what": "A wheelie bin with a red lid (general waste; the town's yellow-lid recycling bin is generic/bin): a dynamic prop, put out on the kerb.",
+  "params": {},
+  "collider": {
+    "box": {
+      "x": 600,
+      "y": 1050,
+      "z": 700
+    }
+  },
+  "lod": {
+    "simplifyBeyondMm": 30000,
+    "cullBeyondMm": 150000
+  }
+}

@@ -34,6 +34,8 @@ export const SIZES = {
 const POST_R = 0.0425;
 const POST = '#9ba1a8';
 const BACK = '#7b8087';
+const RAIL = '#585d64'; // the galvanised mounting rails and clamps on a sign's back
+const LIP = '#a3a8ae'; // the folded edge of the aluminium blank, catching the light round the back
 // Layers, front to back of the panel (a couple of mm apart: flat shapes, so no z-fighting at game distances).
 const Z0 = POST_R;
 const Z_PANEL = Z0 + 0.012;
@@ -313,6 +315,16 @@ interface Built {
 }
 const cache = new Map<string, Built>();
 
+/** A sign's back (P1-M04 fresh-eyes: the backs read as blank billboards): horizontal mounting rails across the blank,
+ *  and a clamp where each rail meets a post. Behind the panel, inside the posts' depth, so the bounds are unchanged. */
+function signBack(parts: Parts, railW: number, railH: number, ys: number[], postXs: number[]): void {
+  for (const y of ys) {
+    parts.box(railW, railH, 0.026, 0, y, Z0 - 0.013, RAIL);
+    // The clamp wraps the post's sides (wider than the post, no deeper), so it shows from behind and the side.
+    for (const x of postXs) parts.box(POST_R * 2 + 0.05, railH + 0.05, POST_R * 2 - 0.002, x, y, 0, RAIL);
+  }
+}
+
 function geometry(def: SignDef): Built {
   const hit = cache.get(def.id);
   if (hit) return hit;
@@ -330,6 +342,10 @@ function geometry(def: SignDef): Built {
     top = cy + R;
     posts.push([0, cy]);
     parts.box(side, side, Z_PANEL - Z0, 0, cy, (Z0 + Z_PANEL) / 2, BACK, Math.PI / 4);
+    signBack(parts, side * 1.12, 0.08, [cy - R * 0.32, cy + R * 0.32], [0]);
+    // The folded lip round the diamond's back edge.
+    for (const [dx, dy, rot] of [[1, 1, -Math.PI / 4], [-1, 1, Math.PI / 4], [-1, -1, -Math.PI / 4], [1, -1, Math.PI / 4]] as const)
+      parts.box(side * 0.98, 0.035, 0.008, (dx * R) / 2, cy + (dy * R) / 2, Z0 - 0.004, LIP, rot);
     const dia = (r: number): Pt[] => [[r, 0], [0, r], [-r, 0], [0, -r]].map(([x, y]): Pt => [x!, cy + y!]);
     const Ro = R - 0.045;
     const Ri = Ro - 0.075;
@@ -356,6 +372,9 @@ function geometry(def: SignDef): Built {
     top = bottom + H;
     posts.push([-w * 0.3, top - 0.12], [w * 0.3, top - 0.12]);
     parts.box(w, H, Z_PANEL - Z0, 0, cy, (Z0 + Z_PANEL) / 2, BACK);
+    signBack(parts, w - 0.12, 0.08, [cy - H * 0.3, cy + H * 0.3], [-w * 0.3, w * 0.3]);
+    for (const y of [cy - H / 2 + 0.02, cy + H / 2 - 0.02]) parts.box(w - 0.02, 0.04, 0.008, 0, y, Z0 - 0.004, LIP);
+    for (const x of [-w / 2 + 0.02, w / 2 - 0.02]) parts.box(0.04, H - 0.02, 0.008, x, cy, Z0 - 0.004, LIP);
     const rect = (hw: number, hh: number): Pt[] => [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(([x, y]): Pt => [x!, cy + y!]);
     const [bo, bw] = [0.035, 0.035];
     parts.poly(rect(w / 2, H / 2), Z_FACE, bg);

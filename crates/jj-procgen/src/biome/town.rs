@@ -104,16 +104,24 @@ const STREET: &[Lineside] = &[
         yaw: Yaw::Random,
         ..rule("generic/bin", (16.0, 30.0), Side::Both, (2.6, 3.6))
     },
-    // The water tower stands over the town, behind the frontage, once every few hundred metres of street.
+    // The red-lid general-waste bin beside it (the reference's green, yellow and red bins at the kerb).
+    Lineside {
+        skip: 0.5,
+        prop: true,
+        link: None,
+        yaw: Yaw::Random,
+        ..rule("town/bin-red", (16.0, 30.0), Side::Both, (2.6, 3.6))
+    },
+    // The water tower stands over the town behind the frontage, every 110-180 m of street, so a street view has one.
     Lineside {
         collides: true,
         avoid_corners: false,
         params: &[("heightCm", 800, 1100), ("radiusMm", 1800, 2600)],
         ..rule(
             "town/water-tower",
-            (220.0, 360.0),
+            (110.0, 180.0),
             Side::Either,
-            (16.0, 26.0),
+            (14.0, 22.0),
         )
     },
 ];
