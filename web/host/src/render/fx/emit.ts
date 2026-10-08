@@ -174,7 +174,7 @@ export class Emitter {
             this.spawn({
               family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],
               vx: -vel[0] * 0.2 + back[0] * 1.2 + this.jitter(0.9), vy: 0.5 + this.rand() * 0.7, vz: -vel[2] * 0.2 + back[2] * 1.2 + this.jitter(0.9),
-              life: 0.9 + this.rand() * 0.6, size0: 0.55, size1: surface === 1 ? 2.6 : 1.7, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd,
+              life: 0.9 + this.rand() * 0.6, size0: 0.55, size1: surface === 1 ? 2.0 : 1.5, c0, c1: surface === 1 ? C.dirtDustEnd : C.smokeEnd,
               alpha: surface === 1 ? 0.8 : 0.5, drag: 0.35, gravity: -0.15, rim: 0.6,
             });
           });
@@ -265,7 +265,7 @@ export class Emitter {
       const [hx, hy, hz] = [f.piecePos[k * 3]!, f.piecePos[k * 3 + 1]!, f.piecePos[k * 3 + 2]!];
       this.rate(st, 'fire', 38, dt, () => {
         this.spawn({
-          family: 'wreck-fire', blend: 'add', x: hx + this.jitter(0.7), y: hy + 0.7 + this.rand() * 0.2, z: hz + this.jitter(1.1),
+          family: 'wreck-fire', blend: 'add', x: hx + this.jitter(0.7), y: hy + 1.0 + this.rand() * 0.3, z: hz + this.jitter(1.1),
           vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.2, size1: 0.3,
           c0: C.flame, c1: C.flameEnd, alpha: 0.9, drag: 0.6,
         });

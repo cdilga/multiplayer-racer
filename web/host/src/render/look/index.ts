@@ -289,10 +289,10 @@ export class InkHull {
 /** The rig: warm sun, teal-blue sky fill over a warm earth bounce (the orange/teal split of jammers-look `rig`). */
 export const RIG = {
   // Sun and sky together light an up-facing lit face to 1.0 x albedo (2.0/pi + 1.2/pi = 1.02), so the identity paint stays true.
-  sun: { colour: '#ffe9c8', intensity: 2.0 },
+  sun: { colour: '#ffe9c8', intensity: 2.6 },
   sky: '#a9d0e2',
   ground: '#b9784c',
-  hemi: 1.2,
+  hemi: 1.56, // measured on eris: 2.0 and 1.2 gave a lit roof 0.89 of its badge colour (sRGB), so both are raised by 1.3
   haze: '#f0cf9f',
   hazeNear: 170,
   hazeFar: 1100,
@@ -334,7 +334,8 @@ export function prepareScene(scene: Scene): void {
 export function followSun(x: number, z: number): void {
   if (!sun || !look.enabled) return;
   sun.target.position.set(x, 0, z);
-  sun.position.set(60 + x, 120, 40 + z);
+  // High and a little toward -z: a chase camera behind a car heading +z sees its rear lit, not shaded.
+  sun.position.set(25 + x, 140, -35 + z);
   sun.target.updateMatrixWorld();
 }
 

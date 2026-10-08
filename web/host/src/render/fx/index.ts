@@ -32,6 +32,8 @@ uniform float uDetail;
 void main() {
   vec4 mv = viewMatrix * vec4( aPos.xyz, 1.0 );
   float depth = -mv.z;
+  // Pulled toward the camera by most of its radius, so a sprite never sinks half into the ground or the car it sits on.
+  mv.z += aPos.w * 0.6;
   mv.xy += position.xy * aPos.w;
   gl_Position = projectionMatrix * mv;
   // Near the camera a sprite thins out: a follower's own dust never fills its screen, and a lamp never covers the car.
