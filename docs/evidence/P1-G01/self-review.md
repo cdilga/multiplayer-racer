@@ -41,3 +41,6 @@ Cohort: two phones (Davo, Shazza), a 1-lap round raced by the test surface's aut
 - Real phones and a real TV; these are Playwright Chromium contexts on one Linux box.
 - Portrait phones and resize/full-screen during the round loop (JN1 covers resize).
 - More than two players through the loop: JN5 (P1-G02) covers 12 through every phase.
+
+## Update 2026-10-08
+This bead gained journeys only (no new screens): the new tests capture no extra images. See the journey files named in the commit; the Looked at list above still describes the screens.

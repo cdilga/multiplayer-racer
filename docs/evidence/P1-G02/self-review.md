@@ -44,3 +44,6 @@ The 32-controller run without a cap is the host test
 - Real phones and a real TV; Playwright Chromium contexts on one Linux box, not devices or a LAN.
 - Portrait phones, full-screen and resize during churn (JN1 covers resize; JN5 doesn't).
 - Pads: the mixed cohort is phones and key clusters; pads join through the same seat path (P1-C05's input test).
+
+## Update 2026-10-08
+This bead gained journeys only (no new screens): the new tests capture no extra images. See the journey files named in the commit; the Looked at list above still describes the screens.

@@ -38,3 +38,6 @@ Cohort: two phones (Davo, Shazza), nobody touching a stick after GO, the test su
 - Real phones (iOS Safari, Android Chrome): these are Playwright Chromium touch contexts, not devices.
 - A backgrounded emulator phone (JN6 covers network loss in Chromium only).
 - Portrait phones: the cue uses the same banner as the countdown and results, captured in landscape only.
+
+## Update 2026-10-08
+This bead gained journeys only (no new screens): the new tests capture no extra images. See the journey files named in the commit; the Looked at list above still describes the screens.
