@@ -1,0 +1,97 @@
+{
+  "mode": "Chromium (ANGLE/Vulkan, headless) 151.0.7922.34, linux/x64; WebGL renderer: ANGLE (NVIDIA, Vulkan 1.4.341 (NVIDIA NVIDIA GeForce RTX 2080 SUPER (0x00001E81)), NVIDIA)",
+  "identity": {
+    "rows": [
+      {
+        "car": 1,
+        "badge": "#22c3e6",
+        "litPixelShare": 0.196,
+        "box": [
+          246,
+          492,
+          403,
+          558
+        ]
+      },
+      {
+        "car": 2,
+        "badge": "#ff4fa3",
+        "litPixelShare": 0.221,
+        "box": [
+          432,
+          492,
+          579,
+          558
+        ]
+      },
+      {
+        "car": 3,
+        "badge": "#ffd23f",
+        "litPixelShare": 0.251,
+        "box": [
+          618,
+          492,
+          755,
+          558
+        ]
+      },
+      {
+        "car": 4,
+        "badge": "#7bd389",
+        "litPixelShare": 0.204,
+        "box": [
+          804,
+          492,
+          932,
+          558
+        ]
+      },
+      {
+        "car": 5,
+        "badge": "#ff7a2e",
+        "litPixelShare": 0.297,
+        "box": [
+          988,
+          492,
+          1116,
+          558
+        ]
+      },
+      {
+        "car": 6,
+        "badge": "#9b7bff",
+        "litPixelShare": 0.282,
+        "box": [
+          1165,
+          492,
+          1302,
+          558
+        ]
+      },
+      {
+        "car": 7,
+        "badge": "#ff3b3b",
+        "litPixelShare": 0.17,
+        "box": [
+          1341,
+          492,
+          1488,
+          558
+        ]
+      },
+      {
+        "car": 8,
+        "badge": "#3bd6c6",
+        "litPixelShare": 0.25,
+        "box": [
+          1517,
+          492,
+          1674,
+          558
+        ]
+      }
+    ],
+    "errors": [],
+    "passes": true
+  }
+}

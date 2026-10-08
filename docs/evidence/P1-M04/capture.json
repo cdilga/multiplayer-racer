@@ -1,5 +1,5 @@
 {
-  "mode": "headless Chromium (SwiftShader/software GL)",
+  "mode": "headless Chromium, ANGLE on Vulkan (GPU) 151.0.7922.34; WebGL renderer: ANGLE (NVIDIA, Vulkan 1.4.341 (NVIDIA NVIDIA GeForce RTX 2080 SUPER (0x00001E81)), NVIDIA)",
   "recipe": "town",
   "shots": [
     {
@@ -11,9 +11,329 @@
       ],
       "where": {
         "segment": "town",
-        "targetPoint": 22,
+        "targetPoint": 288,
         "reached": true,
-        "tick": 1357,
+        "tick": 7787,
+        "car0Point": 286,
+        "segments": [
+          {
+            "name": "town",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 110,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "signs/crest": 1,
+        "signs/junction": 1,
+        "signs/kangaroo": 1,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
+        "town/side-street": 1,
+        "town/water-tower": 4,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "street-tiles-1080p",
+      "players": 4,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "where": {
+        "segment": "town",
+        "targetPoint": 288,
+        "reached": true,
+        "tick": 8778,
+        "car0Point": 287,
+        "segments": [
+          {
+            "name": "town",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 142,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "signs/crest": 1,
+        "signs/junction": 1,
+        "signs/kangaroo": 1,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
+        "town/side-street": 1,
+        "town/water-tower": 4,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "street-laptop-1366",
+      "players": 4,
+      "viewport": [
+        1366,
+        768
+      ],
+      "where": {
+        "segment": "town",
+        "targetPoint": 288,
+        "reached": true,
+        "tick": 7944,
+        "car0Point": 287,
+        "segments": [
+          {
+            "name": "town",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 103,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "signs/crest": 1,
+        "signs/junction": 1,
+        "signs/kangaroo": 1,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
+        "town/side-street": 1,
+        "town/water-tower": 4,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "street-phone-915x412",
+      "players": 1,
+      "viewport": [
+        915,
+        412
+      ],
+      "where": {
+        "segment": "town",
+        "targetPoint": 288,
+        "reached": true,
+        "tick": 7789,
+        "car0Point": 286,
+        "segments": [
+          {
+            "name": "town",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 99,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "signs/crest": 1,
+        "signs/junction": 1,
+        "signs/kangaroo": 1,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
+        "town/side-street": 1,
+        "town/water-tower": 4,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "street-phone-412x915",
+      "players": 2,
+      "viewport": [
+        412,
+        915
+      ],
+      "where": {
+        "segment": "town",
+        "targetPoint": 288,
+        "reached": true,
+        "tick": 8114,
+        "car0Point": 286,
+        "segments": [
+          {
+            "name": "town",
+            "from": 0,
+            "to": 320
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "missing404": [
+        "/host/api/v1/rooms"
+      ],
+      "seeds": [
+        {
+          "preparation": 1,
+          "seed": 2,
+          "plan": "requested",
+          "ms": 104,
+          "attempts": 1
+        }
+      ],
+      "stats": {
+        "requested": 1,
+        "delivered": 1,
+        "superseded": 0,
+        "failed": 0,
+        "refused": 0,
+        "committed": 1,
+        "lastPlan": "requested",
+        "lastError": ""
+      },
+      "phase": "Running",
+      "kit": {
+        "signs/crest": 1,
+        "signs/junction": 1,
+        "signs/kangaroo": 1,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
+        "town/side-street": 1,
+        "town/water-tower": 4,
+        "wayfinding/chevron-post": 36,
+        "wayfinding/finish-gantry": 2,
+        "wayfinding/guard-rail": 55
+      }
+    },
+    {
+      "name": "junction-sign-tv-1080p",
+      "players": 1,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "where": {
+        "segment": "town",
+        "targetPoint": 25,
+        "reached": true,
+        "tick": 1182,
         "car0Point": 23,
         "segments": [
           {
@@ -34,7 +354,7 @@
           "preparation": 1,
           "seed": 2,
           "plan": "requested",
-          "ms": 121,
+          "ms": 107,
           "attempts": 1
         }
       ],
@@ -53,142 +373,14 @@
         "signs/crest": 1,
         "signs/junction": 1,
         "signs/kangaroo": 1,
-        "town/gum-tree": 96,
-        "town/house": 28,
-        "town/mailbox": 9,
-        "town/power-line": 5,
-        "town/power-pole": 9,
-        "town/shopfront": 9,
+        "town/gum-tree": 98,
+        "town/house": 22,
+        "town/mailbox": 11,
+        "town/power-line": 4,
+        "town/power-pole": 8,
+        "town/shopfront": 14,
         "town/side-street": 1,
-        "town/water-tower": 1,
-        "wayfinding/chevron-post": 36,
-        "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 55
-      }
-    },
-    {
-      "name": "street-tiles-1080p",
-      "players": 4,
-      "viewport": [
-        1920,
-        1080
-      ],
-      "where": {
-        "segment": "town",
-        "targetPoint": 22,
-        "reached": true,
-        "tick": 1348,
-        "car0Point": 24,
-        "segments": [
-          {
-            "name": "town",
-            "from": 0,
-            "to": 320
-          }
-        ]
-      },
-      "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ],
-      "missing404": [
-        "/host/api/v1/rooms"
-      ],
-      "seeds": [
-        {
-          "preparation": 1,
-          "seed": 2,
-          "plan": "requested",
-          "ms": 119,
-          "attempts": 1
-        }
-      ],
-      "stats": {
-        "requested": 1,
-        "delivered": 1,
-        "superseded": 0,
-        "failed": 0,
-        "refused": 0,
-        "committed": 1,
-        "lastPlan": "requested",
-        "lastError": ""
-      },
-      "phase": "Running",
-      "kit": {
-        "signs/crest": 1,
-        "signs/junction": 1,
-        "signs/kangaroo": 1,
-        "town/gum-tree": 96,
-        "town/house": 28,
-        "town/mailbox": 9,
-        "town/power-line": 5,
-        "town/power-pole": 9,
-        "town/shopfront": 9,
-        "town/side-street": 1,
-        "town/water-tower": 1,
-        "wayfinding/chevron-post": 36,
-        "wayfinding/finish-gantry": 2,
-        "wayfinding/guard-rail": 55
-      }
-    },
-    {
-      "name": "street-laptop-1366",
-      "players": 4,
-      "viewport": [
-        1366,
-        768
-      ],
-      "where": {
-        "segment": "town",
-        "targetPoint": 22,
-        "reached": true,
-        "tick": 1347,
-        "car0Point": 24,
-        "segments": [
-          {
-            "name": "town",
-            "from": 0,
-            "to": 320
-          }
-        ]
-      },
-      "errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ],
-      "missing404": [
-        "/host/api/v1/rooms"
-      ],
-      "seeds": [
-        {
-          "preparation": 1,
-          "seed": 2,
-          "plan": "requested",
-          "ms": 120,
-          "attempts": 1
-        }
-      ],
-      "stats": {
-        "requested": 1,
-        "delivered": 1,
-        "superseded": 0,
-        "failed": 0,
-        "refused": 0,
-        "committed": 1,
-        "lastPlan": "requested",
-        "lastError": ""
-      },
-      "phase": "Running",
-      "kit": {
-        "signs/crest": 1,
-        "signs/junction": 1,
-        "signs/kangaroo": 1,
-        "town/gum-tree": 96,
-        "town/house": 28,
-        "town/mailbox": 9,
-        "town/power-line": 5,
-        "town/power-pole": 9,
-        "town/shopfront": 9,
-        "town/side-street": 1,
-        "town/water-tower": 1,
+        "town/water-tower": 4,
         "wayfinding/chevron-post": 36,
         "wayfinding/finish-gantry": 2,
         "wayfinding/guard-rail": 55
