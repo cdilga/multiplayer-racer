@@ -51,7 +51,9 @@ def compose(digest: str, env: dict) -> dict:
 
 
 def broker_env(cloudflare: bool, secrets: dict) -> dict:
-    env = {"JJ_ROLE": "turn-broker", "JJ_BIND": "0.0.0.0:8080", "JJ_BROKER_KEY": secrets["JJ_BROKER_KEY"]}
+    # Both stacks: jammers-previews has IPv6 on, and glibc in a backend resolves the broker's name to its IPv6 address
+    # first (a 0.0.0.0 bind refused those connections, 2026-10-08).
+    env = {"JJ_ROLE": "turn-broker", "JJ_BIND": "[::]:8080", "JJ_BROKER_KEY": secrets["JJ_BROKER_KEY"]}
     if cloudflare:
         env["CF_TURN_KEY_ID"] = secrets["CF_TURN_KEY_ID"]
         env["CF_TURN_KEY_API_TOKEN"] = secrets["CF_TURN_KEY_API_TOKEN"]

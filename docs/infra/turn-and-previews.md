@@ -158,7 +158,7 @@ Everything deploys from this repo's Gitea Actions; nobody runs cf, wrangler or m
    external network `jammers-previews` (previews reach it as `http://jammers-turn-broker:8080`). **No tunnel ingress, no
    edge route, no published port**: nothing public can reach `/broker/issue`. It needs outbound HTTPS to
    `rtc.live.cloudflare.com`. The workflow's health step curls `/healthz` from a throwaway container on that network.
-2. **Its environment:** `JJ_ROLE=turn-broker`, `JJ_BIND=0.0.0.0:8080`, `JJ_BROKER_KEY`, and (with `cloudflare: on`)
+2. **Its environment:** `JJ_ROLE=turn-broker`, `JJ_BIND=[::]:8080` (both stacks: the network has IPv6), `JJ_BROKER_KEY`, and (with `cloudflare: on`)
    `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN`. `cloudflare: off` redeploys without them: the broker answers
    `relay-unavailable` and never calls Cloudflare (the kill switch short of deleting the app).
 3. **Previews:** `infra/previews/scripts/publish.py` gives each backend `JJ_BROKER_URL=http://jammers-turn-broker:8080` and
