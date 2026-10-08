@@ -289,9 +289,11 @@ export class InkHull {
 /** The rig: warm sun, teal-blue sky fill over a warm earth bounce (the orange/teal split of jammers-look `rig`). */
 export const RIG = {
   // Sun and sky together light an up-facing lit face to 1.0 x albedo (2.0/pi + 1.2/pi = 1.02), so the identity paint stays true.
-  sun: { colour: '#ffe9c8', intensity: 2.6 },
-  sky: '#a9d0e2',
-  ground: '#b9784c',
+  // Fury road (art/ui/accepted/2026-10-07/poc/world/shaders/looks.json): a warm low sun over a blue sky fill and a hot
+  // earth bounce. The intensities stay the ones measured for true paint (identity check, eris 2026-10-08).
+  sun: { colour: '#ffe2b8', intensity: 2.6 },
+  sky: '#bfd3e8',
+  ground: '#b0623a',
   hemi: 1.56, // measured on eris: 2.0 and 1.2 gave a lit roof 0.89 of its badge colour (sRGB), so both are raised by 1.3
   // The accepted Fury road look's dust haze (art/ui/accepted/2026-10-07/poc/world/shaders/looks.json, light.fog): 170-1100 m
   // left the horizon crisp in the engine captures, with no distance taken by the dust.
@@ -336,8 +338,9 @@ export function prepareScene(scene: Scene): void {
 export function followSun(x: number, z: number): void {
   if (!sun || !look.enabled) return;
   sun.target.position.set(x, 0, z);
-  // High and a little toward -z: a chase camera behind a car heading +z sees its rear lit, not shaded.
-  sun.position.set(25 + x, 140, -35 + z);
+  // Low (about 32 degrees, Fury road's long shadows) and from the -z side: a chase camera behind a car heading +z sees its
+  // rear lit. 32 rather than Fury road's 24 degrees keeps a car's roof and rear lit on most headings.
+  sun.position.set(54 + x, 75, -107 + z);
   sun.target.updateMatrixWorld();
 }
 
@@ -353,9 +356,12 @@ export function sky(): CanvasTexture {
   c.height = h;
   const g = c.getContext('2d')!;
   const grad = g.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, '#2f78c8');
-  grad.addColorStop(0.3, '#5fa3dc');
-  grad.addColorStop(0.46, '#b4d3e2');
+  // Fury road's sky: deep blue overhead, a warm dusty band low down, the haze at the horizon (rows: 0 = straight up,
+  // 0.5 = the horizon). A chase camera sees roughly 0.33 to 0.5, so the warm band starts low.
+  grad.addColorStop(0, '#2b6db4');
+  grad.addColorStop(0.24, '#3a7fc0');
+  grad.addColorStop(0.38, '#5c9ed8');
+  grad.addColorStop(0.455, '#d9bc98');
   grad.addColorStop(0.5, RIG.haze);
   grad.addColorStop(1, '#c9895a');
   g.fillStyle = grad;

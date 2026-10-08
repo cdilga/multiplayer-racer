@@ -15,6 +15,7 @@ import {
   InstancedMesh,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
   MeshLambertMaterial,
   Quaternion,
   Vector3,
@@ -104,6 +105,8 @@ export class MapRenderer {
   readonly hulls: InkHull[] = [];
   readonly stats: MapStats;
   private material = toon(new MeshLambertMaterial({ vertexColors: true }), { halftone: true, grit: true });
+  /** Printed sign faces (`decor.face`): unlit, in the haze like everything else. */
+  private faceMaterial = new MeshBasicMaterial({ vertexColors: true });
 
   /** `repeat`: draw the dressing this many times over (offset copies), to show draws don't grow with placements. */
   constructor(
@@ -341,7 +344,7 @@ export class MapRenderer {
         this.group.add(hull.mesh);
       }
       if (mod.decor) {
-        const d = new InstancedMesh(mod.decor.geometry(), this.material, list.length);
+        const d = new InstancedMesh(mod.decor.geometry(), mod.decor.face ? this.faceMaterial : this.material, list.length);
         d.name = `${id}.decor`;
         d.castShadow = true;
         d.frustumCulled = false;

@@ -15,5 +15,12 @@ export interface KitModule {
   /** Visual-only extras drawn at the piece's placement (a chevron's board): not part of the collider proxy, so the
    *  registry's bounds check measures `geometry()` alone. One more instanced draw per type in use. Geometry in metres,
    *  origin at the extra's own centre; `lift` raises it above the piece's origin. */
-  decor?: { geometry(): BufferGeometry; scale(params: Params): [number, number, number]; lift(params: Params): number };
+  decor?: {
+    geometry(): BufferGeometry;
+    scale(params: Params): [number, number, number];
+    lift(params: Params): number;
+    /** A printed sign face (retroreflective sheeting): drawn unlit, in its true colours whatever the sun does, so a
+     *  chevron board never reads olive in shade (P1-R10 fresh-eyes review). */
+    face?: boolean;
+  };
 }

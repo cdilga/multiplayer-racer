@@ -41,11 +41,12 @@ export const chevronPost: KitModule = {
     geometry: () => {
       const parts: BufferGeometry[] = [paint(new BoxGeometry(0.58, 0.7, 0.03), BLACK), paint(new BoxGeometry(0.52, 0.64, 0.034), YELLOW)];
       parts.push(plate(CHEVRON_V, 0.0185, BLACK), plate(CHEVRON_V.map(([x, y]) => [-x, y] as [number, number]), 0.0185, BLACK, true));
-      // A board 1.45x life size, like the accepted look's W-beam: it has to read at chase distance.
-      return merge(parts.map((g) => (g.index ? g.toNonIndexed() : g))).scale(1.45, 1.45, 1);
+      // A board 1.7x life size: it has to read at chase distance and in a 24-tile grid.
+      return merge(parts.map((g) => (g.index ? g.toNonIndexed() : g))).scale(1.7, 1.7, 1);
     },
     scale: () => [1, 1, 1],
-    lift: (p) => p.heightCm! / 100 - 0.5,
+    lift: (p) => p.heightCm! / 100 - 0.55,
+    face: true,
   },
 };
 
