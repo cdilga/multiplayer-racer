@@ -1,0 +1,26 @@
+# Continuous delivery of the design POC (plan §3a, R117): every push to v0.2-revamp that touches art/ui/ goes to
+# https://jammers-preview.dilger.dev/poc/ with no manual step. Code: infra/poc/publish.sh. It writes the edge's POC
+# folder through the TrueNAS runner's Docker socket, so it needs no secret.
+name: POC deploy
+on:
+  push:
+    branches: [v0.2-revamp]
+    paths: ["art/ui/**", ".gitea/workflows/deploy-poc.yml", "infra/poc/**"]
+  workflow_dispatch:
+concurrency:
+  group: deploy-poc
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: jammers-deploy
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # The frames, icons and other PNG/WebP are LFS objects; a plain checkout leaves 130-byte pointer files that
+      # would overwrite the real images on the site.
+      - name: LFS objects for the POC
+        run: |
+          git lfs install --local
+          git lfs pull --include="art/ui/**"
+      - name: Publish
+        run: infra/poc/publish.sh

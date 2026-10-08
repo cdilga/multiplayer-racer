@@ -20,6 +20,7 @@ name: CI
 
 on:
   push:
+    branches: ["**"] # branches only: the preview record's tags (preview/, retired/, pin/) never start a run
   schedule:
     - cron: "17 15 * * *" # 01:17 AEST, the full matrix
   workflow_dispatch:

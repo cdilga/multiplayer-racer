@@ -1,0 +1,9 @@
+{
+  "name": "jammers-deploy",
+  "private": true,
+  "type": "module",
+  "description": "Joystick Jammers 0.2 preview publishing: the fixed public smoke (scripts/smoke.mjs).",
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}

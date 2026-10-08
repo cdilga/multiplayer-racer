@@ -1,0 +1,44 @@
+# The preview edge (P1-D03) behind the Cloudflare Tunnel route jammers-preview.dilger.dev -> :30290.
+# /p/<id>/... goes to that preview's own jj-server (container jjp-<id> on the jammers-previews network), unbuffered for
+# SSE. /poc/ and the design mirror are static from the POC dataset; / is the preview index (register, P1-D05).
+:80 {
+	@bare path_regexp bare ^/p/([a-z0-9][a-z0-9-]*)$
+	redir @bare /p/{re.bare.1}/ 308
+
+	@preview path_regexp preview ^/p/([a-z0-9][a-z0-9-]*)/
+	handle @preview {
+		reverse_proxy jjp-{re.preview.1}:8080 {
+			flush_interval -1
+			# no-transform keeps Cloudflare from injecting its Web Analytics beacon (static.cloudflareinsights.com
+			# and /cdn-cgi/rum) into the pages: a runtime CDN request outside /p/<id>/ (R70, P1-D03 AC4).
+			header_down Cache-Control "^(.+)$" "$1, no-transform"
+			transport http {
+				dial_timeout 3s
+			}
+		}
+	}
+
+	@ui path /poc /poc/* /brand/* /frames/* /sheets/* /fonts/* /icons/* /lib/* /GUIDE.md /tokens.json
+	handle @ui {
+		header Cache-Control "no-store, no-transform"
+		root * /srv/ui
+		file_server
+	}
+
+	handle {
+		header Cache-Control "no-store, no-transform"
+		root * /srv/index
+		file_server
+	}
+
+	# A preview that isn't running (retired, or never existed): its API answers 410 preview-expired so a phone shows
+	# "This test build has expired" (P1-C03); pages get a short note with the way to the live ones.
+	handle_errors 502 503 {
+		@api path_regexp ^/p/[a-z0-9-]+/api/
+		handle @api {
+			header Content-Type application/json
+			respond `{"reason":"preview-expired"}` 410
+		}
+		respond "This test build has expired. The live previews are at https://jammers-preview.dilger.dev/" 410
+	}
+}

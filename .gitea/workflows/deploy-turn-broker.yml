@@ -1,0 +1,46 @@
+# Deploys the Cloudflare TURN credential broker (P1-N04b, R117) as the TrueNAS app jammers-turn-broker.
+# Code: infra/turn-broker/deploy.py; design: docs/infra/turn-and-previews.md. On demand only.
+name: Deploy TURN broker
+on:
+  workflow_dispatch:
+    inputs:
+      cloudflare:
+        description: "on: the broker issues Cloudflare credentials; off: it answers relay-unavailable (kill switch)"
+        required: false
+        default: "on"
+      digest:
+        description: "jj-server image digest (empty: the newest playable preview's)"
+        required: false
+        default: ""
+concurrency:
+  group: deploy-turn-broker
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: jammers-deploy
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: infra
+      - name: Deploy
+        env:
+          TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}
+          JJ_BROKER_KEY: ${{ secrets.JJ_BROKER_KEY }}
+          CF_TURN_KEY_ID: ${{ secrets.CF_TURN_KEY_ID }}
+          CF_TURN_KEY_API_TOKEN: ${{ secrets.CF_TURN_KEY_API_TOKEN }}
+          GITEA_TOKEN: ${{ github.token }}
+          CLOUDFLARE: ${{ github.event.inputs.cloudflare }}
+          DIGEST: ${{ github.event.inputs.digest }}
+        run: |
+          python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+          args=(--cloudflare "${CLOUDFLARE:-on}"); [ -n "$DIGEST" ] && args+=(--digest "$DIGEST")
+          python3 infra/turn-broker/deploy.py "${args[@]}"
+      # Health from inside the previews' network, the only place the broker is reachable.
+      - name: Health
+        run: |
+          for i in $(seq 1 20); do
+            docker run --rm --network jammers-previews curlimages/curl:8.16.0 -fsS http://jammers-turn-broker:8080/healthz && exit 0
+            sleep 3
+          done
+          echo "broker never answered /healthz"; exit 1

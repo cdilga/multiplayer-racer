@@ -4,10 +4,12 @@
 `v0.1-final` tag is there for reading old code). GitHub `cdilga/multiplayer-racer` is the passive mirror, and `main` and
 production 0.1 keep deploying from GitHub as before.
 
-| Repo | What | Secrets |
-|---|---|---|
-| `cdilga/multiplayer-racer` | game code, art, tools, docs, CI (`.gitea/workflows/`) | none: any pushed branch can edit a workflow, so nothing here may read a secret |
-| `cdilga/jammers-deploy` | deploy workflows, deploy secrets, smoke steps, the preview register, edge config, `turn-broker` (filled by D02–D05) | all of them |
+One repo since R117 (2026-10-08): the deploy code lives under `infra/` (`infra/previews/`, `infra/turn-broker/`,
+`infra/poc/`), its workflows are `.gitea/workflows/deploy-*.yml` on the `jammers-deploy` runner (TrueNAS), and the deploy
+secrets are this repo's Gitea Actions secrets (names in `docs/infra/turn-and-previews.md`). The light guard
+`scripts/ci/check-deploy-secrets.sh` (checks job) fails any other workflow that names a secret besides
+`REGISTRY_PUSH_TOKEN`. What is deployed is recorded in git as tags and commit statuses (`infra/previews/README.md`).
+`cdilga/jammers-deploy` is archived, with its history.
 
 ## Pushing
 

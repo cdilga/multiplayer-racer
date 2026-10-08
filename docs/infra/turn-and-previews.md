@@ -124,11 +124,11 @@ them must be assumed leakable. A hard "never charged" guarantee therefore can't 
 
 ## Cloudflare TURN issuance: the credential broker (P1-N04b)
 
-Built 2026-10-07 (code: `crates/jj-server/src/ice/broker.rs`; tests: `ice/broker/tests.rs`). **Nothing has issued a
-Cloudflare credential yet**: the broker isn't deployed and the one live run (below) hasn't happened.
+Built 2026-10-07 (code: `crates/jj-server/src/ice/broker.rs`; tests: `ice/broker/tests.rs`). Deployed by
+`.gitea/workflows/deploy-turn-broker.yml` (R117); the live-run receipt is in `docs/evidence/P1-N04b/`.
 
 - **One broker, same image.** `JJ_ROLE=turn-broker` runs `jj-server` as the broker. It alone holds
-  `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN` (from `~/.config/jammers/cf-turn-key.env`) plus `JJ_BROKER_KEY`
+  `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN` (Gitea Actions secrets, below) plus `JJ_BROKER_KEY`
   (its HMAC key). A normal backend **refuses to start** if any of those three is in its environment, so a preview
   container can't hold the token.
 - **Backends call it** on the internal network (plain `http://`; `JJ_BROKER_URL`) with
@@ -147,34 +147,44 @@ Cloudflare credential yet**: the broker isn't deployed and the one live run (bel
 - **Known limit:** the backend's call to the broker is a blocking socket call (4 s timeout, one retry) inside the
   request handler, acceptable for a rare event of a few hundred ms; revisit if the fallback gets common.
 
-### Deploying the broker (written down 2026-10-07; not deployed)
+### Deploying the broker (R117: `.gitea/workflows/deploy-turn-broker.yml`, code `infra/turn-broker/deploy.py`)
 
-What exists to deploy: the `jj-server` image already contains the broker role. Everything below is still to do.
+Everything deploys from this repo's Gitea Actions; nobody runs cf, wrangler or midclt by hand.
 
-1. **A TrueNAS custom app `jammers-turn-broker`** (created by the owner or the deploy repo through `midclt app.create`,
-   like `jammers-net`). Compose service `broker`: the same `jj-server` image digest as the previews/production, `container_name:
-   jammers-turn-broker`, `restart: unless-stopped`, `read_only: true`, `cap_drop: [ALL]`,
-   `security_opt: [no-new-privileges:true]`, `mem_limit: 128m`, `pids_limit: 128`, joined **only** to the external network
-   `jammers-previews` (so previews reach it as `http://jammers-turn-broker:8080`). **No tunnel ingress, no edge route, no
-   published port**: nothing public can reach `/broker/issue`. It needs outbound HTTPS to `rtc.live.cloudflare.com`.
-2. **Its environment:** `JJ_ROLE=turn-broker`, `JJ_BIND=0.0.0.0:8080`, `JJ_BROKER_KEY` (new; 32+ random bytes, base64),
-   `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN` (from `~/.config/jammers/cf-turn-key.env`: `CF_TURN_KEY_ID`,
-   `CF_TURN_KEY_API_TOKEN`). `JJ_DIST` isn't read in this role. Health: `GET /healthz` (the image's `--healthcheck` checks
-   the same path on `JJ_BIND`'s port). The Cloudflare token lives in this one app's compose config and nowhere else: not in
-   the deploy repo's Actions secrets, not in any preview.
-3. **Deploy repo changes** (`jammers-deploy`, not made): add the Actions secret `JJ_BROKER_KEY` (same value as the broker's),
-   and in `scripts/publish.py` `compose()` add to each backend's environment
-   `JJ_BROKER_URL=http://jammers-turn-broker:8080` and
-   `JJ_BROKER_SECRET=hex(HMAC-SHA256(JJ_BROKER_KEY, previewId))` (the same derivation as `room_key`; `previewId` is the
-   `<id>` in `/p/<id>/`, `production` for the production backend). Backends must **not** receive `JJ_BROKER_KEY`,
-   `CF_TURN_KEY_ID` or `CF_TURN_KEY_API_TOKEN`: they refuse to start if they do. Add `JJ_BROKER_KEY` to `publish.py`'s secret
-   list and its `--plan` redaction. Production (P1-D08) gets the same two variables.
-4. **Order:** deploy the broker first with the Cloudflare variables **unset** (it then answers `relay-unavailable` and
-   never calls Cloudflare), check `/healthz` from a preview container, publish one preview with the two backend variables,
-   and confirm `POST /ice/fallback` returns 503 `relay-unavailable`. Only then set the Cloudflare variables for the one live run.
-5. **Rotation and kill switch:** rotating `JJ_BROKER_KEY` invalidates every backend's secret until they are republished
+1. **The TrueNAS custom app `jammers-turn-broker`**, created or updated by the workflow (on demand; inputs `cloudflare`
+   on/off and an optional image `digest`, default the newest playable preview's). Compose service `broker`: the same
+   `jj-server` image by digest, `container_name: jammers-turn-broker`, `restart: unless-stopped`, `read_only: true`,
+   `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]`, `mem_limit: 128m`, `pids_limit: 128`, joined **only** to the
+   external network `jammers-previews` (previews reach it as `http://jammers-turn-broker:8080`). **No tunnel ingress, no
+   edge route, no published port**: nothing public can reach `/broker/issue`. It needs outbound HTTPS to
+   `rtc.live.cloudflare.com`. The workflow's health step curls `/healthz` from a throwaway container on that network.
+2. **Its environment:** `JJ_ROLE=turn-broker`, `JJ_BIND=0.0.0.0:8080`, `JJ_BROKER_KEY`, and (with `cloudflare: on`)
+   `CF_TURN_KEY_ID` and `CF_TURN_KEY_API_TOKEN`. `cloudflare: off` redeploys without them: the broker answers
+   `relay-unavailable` and never calls Cloudflare (the kill switch short of deleting the app).
+3. **Previews:** `infra/previews/scripts/publish.py` gives each backend `JJ_BROKER_URL=http://jammers-turn-broker:8080` and
+   `JJ_BROKER_SECRET=hex(HMAC-SHA256(JJ_BROKER_KEY, previewId))` when the `JJ_BROKER_KEY` secret is set. Backends never
+   receive `JJ_BROKER_KEY` or the Cloudflare variables (they refuse to start if they do; a unit test checks the compose).
+   Production (P1-D08) gets the same two variables.
+4. **Rotation and kill switch:** rotating `JJ_BROKER_KEY` invalidates every backend's secret until they are republished
    (fallback shows "relay unavailable", direct and coturn keep working). The spend guard deleting the `jammers-` key makes
    the broker's Cloudflare call fail the same way. Removing the app is a full off switch for new issuance.
+
+### Deploy secrets (this repo's Gitea Actions secrets; names only, values never printed or committed)
+
+| Secret | Used by | What |
+|---|---|---|
+| `REGISTRY_PUSH_TOKEN` | `ci.yml` (image job) | write:package, the `jj-server` image push; the only secret a non-deploy workflow may name |
+| `TRUENAS_APPS_WRITE_KEY` | deploy-previews, deploy-retention, deploy-turn-broker | API key of the TrueNAS `jammersdeploy` user (privilege APPS_WRITE only) |
+| `SOURCE_READ_TOKEN` | deploy-previews | CI run listing and registry pull for the image digest |
+| `JJ_ROOM_KEY_MASTER` | deploy-previews | each preview's room key is HMAC-SHA256(master, id) |
+| `TURN_STATIC_AUTH_SECRET` | deploy-previews | coturn's REST-credential secret |
+| `JJ_BROKER_KEY` | deploy-previews, deploy-turn-broker | the broker's HMAC key (32 random bytes, base64); backends get only their per-id HMAC |
+| `CF_TURN_KEY_ID`, `CF_TURN_KEY_API_TOKEN` | deploy-turn-broker | the Cloudflare Realtime TURN key `jammers-fallback` and its key-scoped token: it can only mint TURN credentials for that one key, the narrowest Cloudflare credential that does the job (no account API token is stored) |
+
+The record (tags and commit statuses) is written with the workflow's own token. The `/poc/` deploy (`deploy-poc.yml`)
+needs no secret: it writes the edge's POC folder through the TrueNAS runner's Docker socket. `POC_DEPLOY_KEY` was
+deleted (2026-10-08). `scripts/ci/check-deploy-secrets.sh` (checks job) fails any non-deploy workflow that names a
+secret other than `REGISTRY_PUSH_TOKEN`, and any deploy workflow that runs off the `jammers-deploy` runner.
 
 Live run for the receipt (one controlled Cloudflare issuance): deploy the broker, point one preview at it, then
 `tools/net/qualify-matrix.sh cloudflare-443` from a machine outside the LAN. The issued tag

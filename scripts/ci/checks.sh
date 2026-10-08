@@ -20,4 +20,6 @@ t "Vehicle bake is reproducible and committed; loads in three.js (P1-V02)" bash 
 t "The N08 qualification harness logic (tools/net)" node --test tools/net/qualify.test.mjs
 t "The committed emulator receipts show what the beads cite (P1-F08)" node --test web/tests/emulators/
 t "Every shipped dependency has an allowed licence and the credits list matches the lockfiles (P1-C09)" bash -c 'node tools/licences/check.mjs && node --test tools/licences/'
+t "Deploy secrets appear only in deploy workflows (R117)" scripts/ci/check-deploy-secrets.sh
+t "Preview publisher, record, retention and index (infra/previews, P1-D04..D06)" python3 -m unittest discover -s infra/previews/tests -p 'test_*.py' -q
 exit $rc

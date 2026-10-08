@@ -1,0 +1,27 @@
+# Preview retention (P1-D06, R117), hourly (publish also reconciles on every publish). Code: infra/previews/.
+# Pin a preview with a `pin/<id>` tag push, unpin by deleting it (infra/previews/scripts/record.py); then run this.
+# Its own concurrency group: in a shared group the 5-minute publish poll replaced every waiting retention run.
+name: Retention
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+concurrency:
+  group: deploy-retention
+  cancel-in-progress: false
+jobs:
+  retention:
+    runs-on: jammers-deploy
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: infra
+      - name: Reconcile
+        env:
+          TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}
+          GITEA_TOKEN: ${{ github.token }}
+        run: |
+          python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+          python3 -m unittest discover -s infra/previews/tests -p 'test_*.py'
+          python3 infra/previews/scripts/retention.py

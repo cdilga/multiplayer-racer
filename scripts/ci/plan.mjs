@@ -118,6 +118,9 @@ const rules = [
   [/^scripts\/(beads|emulators|remote)\//, () => {}],
   [/^scripts\/(beads-live|ci-status|doctor|plan-ref|poc-publish|prune-caches|push|reclaim-target|reconcile_[a-z_]+)\.(sh|py|txt)$/, () => {}],
   [/^scripts\/ci\/durations\.(json|mjs)$/, () => {}], // the slot packer's estimates: they move timing, not coverage
+  // Deploy code and its workflows (R117): not inputs to the game; their tests and the secret guard are in checks.
+  [/^infra\//, () => {}],
+  [/^\.gitea\/workflows\/deploy-[a-z0-9-]+\.yml$/, () => {}],
   // CI's own files: the next run of this workflow is their test; run everything so it's proven end to end.
   [/^(\.gitea\/|scripts\/ci\/)/, (p) => everything(`CI change (${p})`)],
   // The workspace and shared inputs.

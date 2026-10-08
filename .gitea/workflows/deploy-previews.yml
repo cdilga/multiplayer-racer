@@ -1,0 +1,61 @@
+# Publishes green 0.2 builds as rainbow previews (P1-D04, R117): every 5 minutes and on demand. Code: infra/previews/.
+# Deploy workflow: runs only on the `jammers-deploy` runner (TrueNAS); only deploy-*.yml may name the deploy secrets
+# (scripts/ci/check-deploy-secrets.sh). What is deployed is recorded in git as tags and commit statuses
+# (infra/previews/scripts/record.py), never as commits, so publishing never starts a CI run.
+name: Publish previews
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "empty: publish what is new; --republish: the newest green build again under a new id (two previews of one build, P1-D03)"
+        required: false
+        default: ""
+concurrency:
+  group: deploy-previews
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: jammers-deploy
+    timeout-minutes: 40
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /root/.cache/ms-playwright
+      GITEA_TOKEN: ${{ github.token }}  # tags and commit statuses on this repo (the record)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: infra
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26.10.0
+      # The tools take minutes; a poll with nothing to do skips them (and the publish).
+      - name: Anything to do?
+        id: work
+        env:
+          SOURCE_READ_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }}
+          MODE: ${{ github.event.inputs.mode }}
+        run: |
+          # Exit 10 means nothing to do; any other non-zero exit is an error and fails the run (an import error once
+          # read as "nothing to do" and silently stopped every publish after v02-eceaeeb8).
+          if [ -n "$MODE" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          set +e; python3 infra/previews/scripts/publish.py --needs-work; rc=$?; set -e
+          case $rc in 0) echo "go=true" >> "$GITHUB_OUTPUT" ;; 10) echo "go=false" >> "$GITHUB_OUTPUT" ;; *) exit "$rc" ;; esac
+      - name: Tools
+        if: steps.work.outputs.go == 'true'
+        working-directory: infra/previews
+        run: |
+          python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
+          npm install --no-audit --no-fund --silent
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Publish
+        if: steps.work.outputs.go == 'true'
+        env:
+          TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}
+          SOURCE_READ_TOKEN: ${{ secrets.SOURCE_READ_TOKEN }}
+          JJ_ROOM_KEY_MASTER: ${{ secrets.JJ_ROOM_KEY_MASTER }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+          JJ_BROKER_KEY: ${{ secrets.JJ_BROKER_KEY }}
+          MODE: ${{ github.event.inputs.mode }}
+        run: |
+          case "$MODE" in "") python3 infra/previews/scripts/publish.py ;; --republish) python3 infra/previews/scripts/publish.py --republish ;; *) echo "unknown mode $MODE"; exit 2 ;; esac
