@@ -310,8 +310,26 @@ async fn serve_broker(
                 .send(&cx)
                 .await
             {
-                Ok(r) if (200..300).contains(&r.status) => broker::parse_cf_response(&r.body),
-                _ => Err(()),
+                Ok(r) if (200..300).contains(&r.status) => {
+                    broker::parse_cf_response(&r.body).inspect_err(|()| {
+                        // Never log this body: on success it holds credentials.
+                        broker::note_once(
+                            "cloudflare reply unreadable",
+                            &format!("{} bytes", r.body.len()),
+                        );
+                    })
+                }
+                Ok(r) => {
+                    broker::note_once(
+                        "cloudflare answered",
+                        &format!("{} {}", r.status, broker::cf_error_summary(&r.body)),
+                    );
+                    Err(())
+                }
+                Err(e) => {
+                    broker::note_once("cloudflare call failed", &format!("{e}"));
+                    Err(())
+                }
             };
             app.broker
                 .lock()

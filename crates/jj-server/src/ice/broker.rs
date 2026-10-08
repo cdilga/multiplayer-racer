@@ -106,6 +106,46 @@ pub fn backend_env_violation(get: &dyn Fn(&str) -> Option<String>) -> Option<&'s
 
 // ---- Cloudflare API shapes (the effect the adapter performs) ----
 
+/// One stderr line per distinct relay-fallback failure cause (`kind` + `detail`) for the process's life, so a
+/// relay-unavailable answer says why without logging per request. Never pass a secret, credential or response body
+/// that could hold one.
+pub fn note_once(kind: &str, detail: &str) {
+    static SEEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+    let key = format!("{kind}: {detail}");
+    let mut seen = SEEN
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    if !seen.contains(&key) {
+        eprintln!("jj-server: relay fallback unavailable: {key}");
+        seen.push(key);
+    }
+}
+
+/// A Cloudflare error body, safe to log: only its `errors[].message`/`code` fields, never the raw body.
+pub fn cf_error_summary(body: &[u8]) -> String {
+    let v: serde_json::Value = serde_json::from_slice(body).unwrap_or_default();
+    let errs: Vec<String> = v
+        .get("errors")
+        .and_then(|e| e.as_array())
+        .map(|a| {
+            a.iter()
+                .map(|e| {
+                    format!(
+                        "{} {}",
+                        e.get("code").unwrap_or(&serde_json::Value::Null),
+                        e.get("message").and_then(|m| m.as_str()).unwrap_or("")
+                    )
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if errs.is_empty() {
+        format!("{} body bytes", body.len())
+    } else {
+        errs.join("; ").chars().take(200).collect()
+    }
+}
+
 pub fn cf_issue_url(key_id: &str) -> String {
     format!(
         "https://rtc.live.cloudflare.com/v1/turn/keys/{key_id}/credentials/generate-ice-servers"
@@ -376,12 +416,27 @@ impl BrokerTransport for HttpBroker {
         match res {
             Ok((200, b)) => serde_json::from_slice::<IceList>(&b)
                 .map(|l| (l.ice_servers, l.expires_at))
-                .map_err(|_| FallbackError::RelayUnavailable),
+                .map_err(|e| {
+                    note_once(
+                        "broker reply unreadable",
+                        &format!("{} bytes: {e}", b.len()),
+                    );
+                    FallbackError::RelayUnavailable
+                }),
             Ok((429, b)) => Err(FallbackError::RateLimited {
                 retry_after_ms: serde_json::from_slice::<RetryAfter>(&b)
                     .map_or(5_000, |r| r.retry_after_ms),
             }),
-            _ => Err(FallbackError::RelayUnavailable),
+            Ok((status, b)) => {
+                // The broker's own error bodies carry no secret (text or the relay-unavailable JSON).
+                let text: String = String::from_utf8_lossy(&b).chars().take(120).collect();
+                note_once("broker answered", &format!("{status} {text}"));
+                Err(FallbackError::RelayUnavailable)
+            }
+            Err(e) => {
+                note_once("broker unreachable", &format!("{}: {e}", self.host_port));
+                Err(FallbackError::RelayUnavailable)
+            }
         }
     }
 }

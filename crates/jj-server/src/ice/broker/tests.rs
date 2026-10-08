@@ -595,3 +595,12 @@ fn http_broker_speaks_to_a_broker_over_a_socket_and_retries_a_lost_response_with
     );
     assert!(HttpBroker::new("https://broker.internal", "a", "b").is_none());
 }
+
+#[test]
+fn a_cloudflare_error_is_summarised_without_its_body() {
+    let err = br#"{"success":false,"errors":[{"code":10000,"message":"Authentication error"}]}"#;
+    assert_eq!(cf_error_summary(err), "10000 Authentication error");
+    // A body that isn't an error list (e.g. one holding credentials) is never echoed, only its size.
+    let ok = br#"{"iceServers":[{"urls":["turns:x:443"],"username":"u","credential":"secret"}]}"#;
+    assert_eq!(cf_error_summary(ok), format!("{} body bytes", ok.len()));
+}
