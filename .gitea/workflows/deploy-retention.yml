@@ -1,11 +1,26 @@
 # Preview retention (P1-D06, R117), hourly (publish also reconciles on every publish). Code: infra/previews/.
-# Pin a preview with a `pin/<id>` tag push, unpin by deleting it (infra/previews/scripts/record.py); then run this.
+# Pin or unpin on demand: run this with `pin` (or `unpin`) set to a preview id; the pin is the tag `pin/<id>`
+# (infra/previews/scripts/record.py), made with this workflow's token so it starts no CI run. The next publish poll
+# (5 minutes) re-applies the index.
 # Its own concurrency group: in a shared group the 5-minute publish poll replaced every waiting retention run.
 name: Retention
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      pin:
+        description: "a preview id to pin (exempt from retention)"
+        required: false
+        default: ""
+      label:
+        description: "the pin's label on the index, e.g. Playtest 1 (default: Pinned)"
+        required: false
+        default: ""
+      unpin:
+        description: "a preview id to unpin"
+        required: false
+        default: ""
 concurrency:
   group: deploy-retention
   cancel-in-progress: false
@@ -21,7 +36,11 @@ jobs:
         env:
           TRUENAS_APPS_WRITE_KEY: ${{ secrets.TRUENAS_APPS_WRITE_KEY }}
           GITEA_TOKEN: ${{ github.token }}
+          PIN: ${{ github.event.inputs.pin }}
+          LABEL: ${{ github.event.inputs.label }}
+          UNPIN: ${{ github.event.inputs.unpin }}
         run: |
           python3 -m pip install --quiet --break-system-packages websockets==15.0.1 2>/dev/null || python3 -m pip install --quiet websockets==15.0.1
           python3 -m unittest discover -s infra/previews/tests -p 'test_*.py'
-          python3 infra/previews/scripts/retention.py
+          args=(); [ -n "$PIN" ] && args+=(--pin "$PIN" --label "$LABEL"); [ -n "$UNPIN" ] && args+=(--unpin "$UNPIN")
+          python3 infra/previews/scripts/retention.py "${args[@]}"

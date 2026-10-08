@@ -70,8 +70,27 @@ async def reconcile(nas, reg: dict, now: datetime, record=None) -> list[str]:
     return retired
 
 
+def pin_command(record, argv: list[str]):
+    """--pin <id> [--label <text>] / --unpin <id>: the pin is the tag `pin/<id>` (made with the workflow's token, so it
+    starts no CI run on the preview's commit; a hand-pushed tag on an older commit would)."""
+    reg = record.load()
+    if "--pin" in argv:
+        pid = argv[argv.index("--pin") + 1]
+        row = next((p for p in reg["previews"] if p["id"] == pid and not p.get("retired")), None)
+        if not row:
+            raise SystemExit(f"retention: no live preview {pid} to pin")
+        label = argv[argv.index("--label") + 1] if "--label" in argv and argv[argv.index("--label") + 1] else "Pinned"
+        print(f"pin/{pid} ({label}):", "created" if record.create_tag(f"pin/{pid}", row["sha"], label) else "already there")
+    else:
+        pid = argv[argv.index("--unpin") + 1]
+        record.delete_tag(f"pin/{pid}")
+        print(f"pin/{pid}: removed")
+
+
 if __name__ == "__main__":
     import record
+    if "--pin" in sys.argv or "--unpin" in sys.argv:
+        pin_command(record, sys.argv)
     reg = record.load()
     now = datetime.now(timezone.utc)
     if "--plan" in sys.argv:

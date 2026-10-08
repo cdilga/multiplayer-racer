@@ -28,10 +28,11 @@ in the checks job).
 | tag `pin/<id>` | pinned: exempt from retention. The annotation's first line is its label (`Playtest 1`, or `Pinned`) |
 | tag `retired/<id>` | replaces `preview/<id>` when retention retires it; adds the time and reason |
 
-Pin: `git tag -a pin/v02-552e7bda 552e7bda -m "Playtest 1" && git push gitea pin/v02-552e7bda`; unpin:
-`git push gitea :refs/tags/pin/v02-552e7bda`. The next publish poll (5 min) or a Retention run reconciles the edge.
-Tags never start CI (`ci.yml` triggers on branch pushes only). The old file register was migrated once into tags and
-statuses (`migrate_register.py`).
+Pin or unpin: run the Retention workflow with `pin` (and an optional `label`) or `unpin` set to a preview id; it makes
+or deletes `pin/<id>` with the workflow's own token, which starts no CI run. A hand-pushed tag works too, but Gitea runs
+the workflows **of the tagged commit** on a tag push, and commits older than the R117 move lack the branch-only trigger
+(`docs/learnings/ci.md`). The next publish poll (5 min) re-applies the index. The old file register was migrated once
+into tags and statuses (`scripts/migrate_register.py`).
 
 Infrastructure (TrueNAS apps): `jammers-net` owns the `jammers-previews` Docker network; `jammers-preview-edge` is the
 Caddy edge on :30290 behind the Cloudflare Tunnel route `jammers-preview.dilger.dev`; `jammers-runner` is the Gitea runner

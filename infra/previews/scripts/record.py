@@ -4,9 +4,9 @@
                  {id, sha, branch, digest, ciRun, title, publishedAt, changed}
   retired/<id>   replaces preview/<id> when retention retires it; the same JSON plus {retired, retiredReason}
   pin/<id>       a pinned preview (exempt from retention); the annotation's first line is its label, e.g.
-                 "Playtest 1" (shown on the index) or just "Pinned". Pin or unpin with a tag push or delete:
-                   git tag -a pin/v02-552e7bda 552e7bda -m "Playtest 1" && git push gitea pin/v02-552e7bda
-                   git push gitea :refs/tags/pin/v02-552e7bda
+                 "Playtest 1" (shown on the index) or just "Pinned". Pin or unpin with the Retention workflow:
+                   .gitea/workflows/deploy-retention.yml with input pin=<id> (label=<text>), or unpin=<id>
+
   status         commit status context `preview/smoke/<id>`: pending while it smokes, success = playable,
                  failure = not playable; the description is the smoke's PASS line or the reason.
 
