@@ -19,7 +19,7 @@ HUD, join pill and chips hidden for the shot only; seed 2; autopilot cars steppe
   shows the same kind of ramp ahead with the yellow descent sign and a brown "BIG RED ROCK" sign).
 - `plot-rocks.png`, `validator-rocks.txt`: regenerated, ten seeds validate (23 jumps, 17 crests across them).
 
-## Fixed this round
+## Defects found and fixed
 - Marker pads replaced by ground-following painted lines and stone ramp walls (renderer, `map.ts` `features()`); creek dips are
   a brown wash. Domes are rounder.
 

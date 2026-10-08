@@ -15,7 +15,7 @@ HUD hidden, seed 2, autopilot cars at point 159-162 of the bitumen). Reference:
 - `highway-laptop-1366.jpg`: same at laptop size (checked in the contact set, nothing clipped).
 - `plot-outback-bitumen.png`, `validator-bitumen.txt`: regenerated; the counts now cover centre dashes and posts only.
 
-## Fixed this round
+## Defects found and fixed
 - Double edge line removed (piece, rule, data, kit render module, and the registry entry).
 - Captures at true 1080p, HUD hidden.
 

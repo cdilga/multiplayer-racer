@@ -18,7 +18,7 @@ Reference: `art/references/australia/generated/biome-outback-dirt-and-bitumen.pn
   "1920x1080 native", confirming no auto-lowering.
 - `plot-outback-dirt.png`, `validator-and-autopilot-dirt.txt`: regenerated.
 
-## Fixed this round
+## Defects found and fixed
 - 1080p readability is measured at true 1080p.
 - Feature markers on dirt are now painted lines and ramp walls (see M05) instead of coloured pads.
 - HUD and banner hidden in the capture frames.
