@@ -231,6 +231,10 @@ for (const n of [1, 2, 8, 32, 99]) {
           scale,
           tiles,
           room,
+          // The page's text, read in this same round trip: at N = 99 on a software rasteriser (CI's SwiftShader) the main
+          // thread is backed up behind multi-second frames, and locator.innerText's own extra round trips ran past 30 s on a
+          // loaded runner (CI run 1954). Same text, one wait.
+          text: document.body.innerText,
           boxes: [...document.querySelectorAll('.hud-tile[data-seat]')].map((e) => {
             const r = e.getBoundingClientRect();
             const inner = (sel) => {
@@ -264,7 +268,7 @@ for (const n of [1, 2, 8, 32, 99]) {
       }
       // The HUD boxes never overlap each other.
       for (let i = 0; i < res.boxes.length; i++) for (let j = i + 1; j < res.boxes.length; j++) assert.ok(!overlap(res.boxes[i], res.boxes[j]), `HUD ${i}/${j} overlap`);
-      noGame(await page.locator('body').innerText(), `race N=${n}`);
+      noGame(res.text, `race N=${n}`);
       assert.deepEqual(page.errors, []);
     } finally {
       await page.close();
