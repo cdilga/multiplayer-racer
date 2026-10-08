@@ -80,7 +80,9 @@ def gitea(path: str, token: str, accept: str = "application/json"):
 
 
 def green_runs(token: str) -> list[dict]:
-    _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/runs?branch={BRANCH}&status=success&limit=20", token)
+    # ci.yml's own runs: in the repo-wide listing the deploy workflows' 5-minute successes (R117, same repo now) and
+    # gpu.yml's pushed every green ci.yml run out of the 20-run window.
+    _, _, body = gitea(f"/api/v1/repos/{GAME}/actions/workflows/ci.yml/runs?branch={BRANCH}&status=success&limit=20", token)
     # Only the game's main CI (ci.yml) counts: Gitea leaves `name` empty, and gpu.yml's green runs must not publish a commit.
     runs = [r for r in json.loads(body).get("workflow_runs", []) if r.get("path", "").split("@")[0].rsplit("/", 1)[-1] == "ci.yml"]
     seen, out = set(), []
