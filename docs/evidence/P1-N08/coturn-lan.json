@@ -1,0 +1,60 @@
+{
+  "row": "coturn-lan",
+  "capturedAt": "2026-10-08T06:44:54.669Z",
+  "hardware": "controller: eris (i5-12400, Linux, Playwright Chromium headless); host: the Mac (M1 Pro, Google Chrome 154 headless, CDP over an ssh tunnel); coturn on TrueNAS",
+  "browser": "chromium 151.0.7922.34",
+  "build": "preview v02-552e7bda (game 552e7bd, image sha256:2d1ad2a4)",
+  "topology": "forced relay via the real coturn at its LAN address (TrueNAS, UDP 3479), both ends relay-only",
+  "cohort": "1 host, 1 controller",
+  "clock": {
+    "mode": "cross-machine",
+    "measuredSkewMs": -2.5,
+    "uncertaintyMs": 2.5
+  },
+  "ice": {
+    "policy": "relay",
+    "rewriteTurn": "yes",
+    "restrictedToUrlsContaining": null,
+    "dropStun": true
+  },
+  "netem": "none",
+  "result": {
+    "selectedPath": {
+      "kind": "coturn-relay",
+      "localType": "relay",
+      "remoteType": "relay",
+      "protocol": "udp",
+      "relayProtocol": "udp",
+      "relayVia": "coturn",
+      "rttMs": 13
+    },
+    "expected": "coturn-relay",
+    "pathMatchesExpectation": true,
+    "inputAge": {
+      "sent": 600,
+      "seen": 549,
+      "lost": 51,
+      "p50Ms": 16.5,
+      "p95Ms": 33.5,
+      "p99Ms": 34.5,
+      "maxMs": 35.5,
+      "uncertaintyMs": 9
+    },
+    "input": {
+      "hz": 60,
+      "seconds": 10,
+      "endpoint": "redacted",
+      "unobservedNote": "values the host never showed (coalesced by the sender or dropped) count as lost"
+    },
+    "bytes": {
+      "payloadBytesPerSecond": 312,
+      "transportBytesPerSecond": 3615,
+      "layers": "payload = RTCDataChannel bytesSent (application messages); transport = RTCTransport bytesSent (adds SCTP/DTLS/UDP headers as the browser counts them). Neither is billed relay usage (R92)."
+    },
+    "payloadBudget": {
+      "limitBytesPerSecond": 2000,
+      "verdict": "pass"
+    }
+  },
+  "problems": []
+}

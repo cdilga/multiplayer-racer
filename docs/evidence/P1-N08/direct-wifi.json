@@ -1,0 +1,60 @@
+{
+  "row": "direct-wifi",
+  "capturedAt": "2026-10-08T06:34:41.064Z",
+  "hardware": "controller: eris (i5-12400, Linux, Playwright Chromium headless); host: the Mac (M1 Pro, Google Chrome 154 headless, CDP over an ssh tunnel)",
+  "browser": "chromium 151.0.7922.34",
+  "build": "preview v02-552e7bda (game 552e7bd, image sha256:2d1ad2a4)",
+  "topology": "controller on eris, host on the Mac, home Wi-Fi/LAN (a direct pair is not proof of LAN locality)",
+  "cohort": "1 host, 1 controller",
+  "clock": {
+    "mode": "cross-machine",
+    "measuredSkewMs": 0,
+    "uncertaintyMs": 2
+  },
+  "ice": {
+    "policy": "all",
+    "rewriteTurn": "no",
+    "restrictedToUrlsContaining": null,
+    "dropStun": false
+  },
+  "netem": "none",
+  "result": {
+    "selectedPath": {
+      "kind": "srflx",
+      "localType": "srflx",
+      "remoteType": "srflx",
+      "protocol": "udp",
+      "relayProtocol": null,
+      "relayVia": null,
+      "rttMs": 38
+    },
+    "expected": "any",
+    "pathMatchesExpectation": true,
+    "inputAge": {
+      "sent": 600,
+      "seen": 544,
+      "lost": 56,
+      "p50Ms": 38,
+      "p95Ms": 39,
+      "p99Ms": 71,
+      "maxMs": 75,
+      "uncertaintyMs": 21
+    },
+    "input": {
+      "hz": 60,
+      "seconds": 10,
+      "endpoint": "redacted",
+      "unobservedNote": "values the host never showed (coalesced by the sender or dropped) count as lost"
+    },
+    "bytes": {
+      "payloadBytesPerSecond": 312,
+      "transportBytesPerSecond": 3619,
+      "layers": "payload = RTCDataChannel bytesSent (application messages); transport = RTCTransport bytesSent (adds SCTP/DTLS/UDP headers as the browser counts them). Neither is billed relay usage (R92)."
+    },
+    "payloadBudget": {
+      "limitBytesPerSecond": 2000,
+      "verdict": "pass"
+    }
+  },
+  "problems": []
+}
