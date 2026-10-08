@@ -61,6 +61,7 @@ test('G07: a connected player removed mid-race sees "The host removed you" and J
   await b.locator('[data-note=removed]').waitFor({ timeout: 15_000 });
   assert.match(await b.locator('[data-note=removed]').innerText(), /the host removed you/i);
   await shot(b, 'phone-removed-landscape-844x390');
+  await b.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {}); // a resize needs the window out of full screen
   await b.setViewportSize({ width: 390, height: 844 });
   await shot(b, 'phone-removed-portrait-390x844');
   await b.setViewportSize({ width: 640, height: 300 });
