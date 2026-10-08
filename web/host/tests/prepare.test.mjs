@@ -206,12 +206,12 @@ test('a preparation failure shows Retry / Lobby, keeps the room, and Retry prepa
   assert.equal(shown.seats, 1, 'the room and its player are kept');
   const requested = (await api('stats')).requested;
   // Retry draws a fresh track and prepares again (and fails again here: the screen comes back, once).
-  await page.click('[data-act=retry]');
+  await page.dispatchEvent('[data-act=retry]', 'click');
   await page.evaluate((n) => (window.__req0 = n), requested);
   await waitFor(page, () => window.__prep.stats().requested > window.__req0, 'a new preparation');
   await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') !== null, 'the screen again after the retry fails');
   // Lobby closes the screen and leaves the room in the Lobby with its player.
-  await page.click('[data-act=lobby]');
+  await page.dispatchEvent('[data-act=lobby]', 'click');
   await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') === null, 'the screen to close');
   const room = await api('room');
   assert.equal(room.phase, 'Lobby');

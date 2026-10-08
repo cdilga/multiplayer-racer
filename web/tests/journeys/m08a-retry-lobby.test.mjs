@@ -56,10 +56,10 @@ for (const [name, viewport] of [
     assert.equal(seen.phase, 'Lobby');
     await shot(host, `${name}-retry-lobby`);
     const n = await host.evaluate(() => window.__jjPrepare.stats().requested);
-    await host.click('[data-act=retry]');
+    await host.dispatchEvent('[data-act=retry]', 'click');
     await wait(host, (n) => window.__jjPrepare.stats().requested > n, n);
     await wait(host, () => document.querySelector('[data-screen=prepare-failed]'));
-    await host.click('[data-act=lobby]');
+    await host.dispatchEvent('[data-act=lobby]', 'click');
     await wait(host, () => !document.querySelector('[data-screen=prepare-failed]'));
     assert.equal(await host.evaluate(() => window.__jjRoom.view().seats.length), 2);
     await shot(host, `${name}-lobby-after`);

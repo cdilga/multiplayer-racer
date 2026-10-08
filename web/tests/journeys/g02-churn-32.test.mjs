@@ -1,7 +1,7 @@
 // P1-G02 AC "one churn run at 32 synthetic controllers shows there is no cap": 32 controllers (the test surface's
 // synthetic frames: the same hello / claim / ready / leave a phone sends) fill the Lobby, churn there (eight leave, eight new
 // ones join), start a race with all 32 on the grid, churn mid-race (ten leave, ten drop in, each with a car), and shrink to
-// two. At every step the room's seats are exactly the controllers that are in it (no phantom seat, no refused claim), and a
+// two. (res=0.25 and a small viewport: this run judges seats and cars, not pixels, and a software-GL host draws 32 tiles slowly.) At every step the room's seats are exactly the controllers that are in it (no phantom seat, no refused claim), and a
 // car stands for every seat. Nothing in the run is sized to 24 or 32: a 33rd controller joins as well.
 //   node --test web/tests/journeys/g02-churn-32.test.mjs
 import assert from 'node:assert/strict';
@@ -24,36 +24,36 @@ after(async () => {
 });
 
 const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
-const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
+// Every frame of a step goes in one page round trip: on a software-GL host each separate `evaluate` waits behind a host frame.
+const frames = (host, list) => host.evaluate(async (list) => { for (const [endpoint, f] of list) await window.__jjTest.input({ type: 'controller', endpoint, frame: f }); }, list);
 const seatsOf = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s) => s.name).sort());
 const sorted = (xs) => [...xs].sort();
 
 test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 900_000 }, async () => {
-  const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
+  const host = await (await browser.newContext({ viewport: { width: 960, height: 540 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
-  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99`);
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99&res=0.25`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
 
   const inRoom = new Map(); // endpoint -> name
   let next = 1;
   const join = async (n) => {
     const added = [];
+    const batch = [];
     for (let i = 0; i < n; i++) {
       const ep = `syn${next}`;
       const name = `Racer ${next++}`;
-      await frame(host, ep, { hello: true });
-      await frame(host, ep, { claim: name });
+      batch.push([ep, { hello: true }], [ep, { claim: name }]);
       inRoom.set(ep, name);
       added.push(name);
     }
+    await frames(host, batch);
     return added;
   };
   const drop = async (eps) => {
-    for (const ep of eps) {
-      await frame(host, ep, { leave: true });
-      inRoom.delete(ep);
-    }
+    await frames(host, eps.map((ep) => [ep, { leave: true }]));
+    for (const ep of eps) inRoom.delete(ep);
   };
   const settle = async (what) => {
     const want = sorted(inRoom.values());
@@ -73,7 +73,7 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   assert.equal((await seatsOf(host)).length, 32);
 
   // The race: all 32 Ready, all 32 on the grid.
-  for (const ep of inRoom.keys()) await frame(host, ep, { ready: true });
+  await frames(host, [...inRoom.keys()].map((ep) => [ep, { ready: true }]));
   await wait(host, () => ['Countdown', 'Running'].includes(window.__jjRoom.view().phase), undefined, 180_000);
   await wait(host, async () => (await window.__jjTest.observe()).cars.length === 32, undefined, 180_000);
   await wait(host, () => window.__jjRoom.view().phase === 'Running', undefined, 180_000);

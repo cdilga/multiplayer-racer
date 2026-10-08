@@ -206,6 +206,12 @@ test('F12: a scripted two-round session records, survives a worker fault, never 
       await t.step(2);
     }
   });
+  // The lap itself isn't what this test judges (the recorder is), and a software-GL host takes minutes to drive one: run the
+  // autopilot for a few seconds of sim time, then end the race as the rules end it (`finishRace`, journaled like any command).
+  await page.evaluate(async () => {
+    await window.__jjTest.step(600);
+    await window.__jjTest.command({ cmd: 'finishRace' });
+  });
   await runUntil((p) => p.startsWith('Intermission'), 'Intermission');
   const r1 = await page.evaluate(async () => {
     await window.__jjTest.clips.checkpoint();
