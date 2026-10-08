@@ -69,13 +69,17 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
   // captures were judged against the accepted look (P1-R10/R12, docs/evidence/P1-R10/). `?look=plain` draws the plain
   // materials (tests that pin exact draw-call arithmetic use it), `?fx=off` drops the effects alone, `?fx=on` keeps them
   // over the plain look. The WebGPU paths draw the plain materials until a TSL port.
+  // A software rasteriser (SwiftShader, llvmpipe: no GPU, CI's runners) is a cost tier of its own: it draws the plain look,
+  // as the look's tiers drop detail for small tiles. `?look=on` forces the look there.
   const q = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
-  look.enabled = kind === 'webgl' && q.get('look') !== 'plain';
-  look.fxEnabled = kind === 'webgl' && q.get('fx') !== 'off' && (look.enabled || q.get('fx') === 'on');
   if (kind === 'webgl') {
     const r = new WebGLRenderer({ canvas, antialias, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     r.outputColorSpace = SRGB;
     const gl = r.getContext();
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const software = /swiftshader|llvmpipe|softpipe|software/i.test(info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '');
+    look.enabled = q.get('look') === 'on' || (q.get('look') !== 'plain' && !software);
+    look.fxEnabled = q.get('fx') !== 'off' && (look.enabled || q.get('fx') === 'on');
     return {
       kind,
       label: 'WebGL2 (WebGLRenderer)',
@@ -87,6 +91,8 @@ export async function createBackend(kind: BackendKind, canvas: HTMLCanvasElement
       render: (s, c) => (lookFor(r, s), r.render(s, c)),
     };
   }
+  look.enabled = false;
+  look.fxEnabled = false;
   const { WebGPURenderer, SRGBColorSpace } = await import('three/webgpu');
   const r = new WebGPURenderer({ canvas, antialias, forceWebGL: kind === 'webgl2', powerPreference: 'high-performance' });
   await r.init();
