@@ -316,9 +316,12 @@ async def ensure_network(nas: TrueNAS):
 
 
 def edge_key(reg: dict) -> str:
-    """What the edge's index shows: the rows' ids, statuses and retirement, the labels and pins."""
+    """What the edge's index shows: the rows' ids, statuses and retirement, the labels and pins, and the renderer and
+    edge files themselves (a change to the page's code or the Caddyfile re-applies the edge on the next poll)."""
     rows = [(p["id"], p.get("status"), bool(p.get("retired"))) for p in reg["previews"]]
-    return hashlib.sha256(json.dumps([rows, reg.get("labels", {}), reg.get("pins", [])], sort_keys=True).encode()).hexdigest()[:16]
+    code = [hashlib.sha256(f.read_bytes()).hexdigest() for f in (ROOT / "scripts" / "index_page.py", ROOT / "edge" / "tokens.json",
+                                                                   ROOT / "edge" / "Caddyfile")]
+    return hashlib.sha256(json.dumps([rows, reg.get("labels", {}), reg.get("pins", []), code], sort_keys=True).encode()).hexdigest()[:16]
 
 
 def index_html(reg: dict) -> str:
