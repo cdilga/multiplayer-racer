@@ -254,8 +254,12 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
   alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});
   const have = families.filter((f) => alive[f] > 0);
   await page.screenshot({ path: join(out, `${name}${reduced ? '-reduced' : ''}.jpg`), type: 'jpeg', quality: 86 });
-  const info = await page.evaluate(() => ({ fx: window.__jjRender.vehicles()?.fx, draws: window.__jjRender.stats().drawCalls }));
-  report.shots.push({ name, tiles, reduced, families, aliveWhenShot: alive, allFamiliesShown: have.length === families.length, huskInView: seen, errors, drawCalls: info.draws, spawned: info.fx?.spawned, reducedMotion: info.fx?.reducedMotion });
+  const info = await page.evaluate(() => {
+    const fx = window.__jjRender.vehicles()?.fx;
+    const hit = fx?.lastImpact;
+    return { fx, draws: window.__jjRender.stats().drawCalls, lastImpact: hit ? { ...hit, screen: window.__jjRender.project(...hit.at) } : null };
+  });
+  report.shots.push({ name, tiles, reduced, families, aliveWhenShot: alive, allFamiliesShown: have.length === families.length, huskInView: seen, errors, drawCalls: info.draws, lastImpact: info.lastImpact, spawned: info.fx?.spawned, reducedMotion: info.fx?.reducedMotion });
   console.log('fx', name, reduced ? 'reduced' : '', have.length === families.length && seen ? 'ok' : `MISSING ${families.filter((f) => !alive[f])}${seen ? '' : ' husk not in view'}`);
   await page.close();
 }

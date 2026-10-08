@@ -69,6 +69,8 @@ export class Emitter {
   readonly pool = new Pool();
   /** Reduced motion: flashes and sparks tone down (the host's OS setting). */
   reducedMotion = false;
+  /** The last impact: its car id and where its flash stands (R90: a capture or test can find the hit). */
+  lastImpact: { car: number; at: [number, number, number] } | null = null;
   private cars = new Map<number, CarState>();
   private husks = new Set<number>();
   private rand = rng(0x4a4a);
@@ -153,6 +155,7 @@ export class Emitter {
 
       if (wasSeen && !respawned && newTick) {
         // Contact: a sudden loss of velocity in one tick is an impact (an impulse of mass x dv); scaled by dv.
+        if (dv > 3.2 && st.speed > 4) this.lastImpact = { car: id, at: [px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6] };
         if (dv > 3.2 && st.speed > 4) this.impact([px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6], dv, calm, vel);
         // Landing: falling, then not.
         if (st.vy < -3.5 && vel[1] > -1.2) this.landing(px, pz, ground, py, Math.min(1, -st.vy / 9), surface);
