@@ -183,38 +183,49 @@ async function identity(out, report) {
 
 // ---- fx: every family at 1, 4 and 24 tiles ----------------------------------------------------------------------------------
 // The synthetic oval with ?fxdemo: car i cycles through the family its index names (see synthetic.ts fxDemoState).
+const ALL = ['dust', 'tyre-smoke', 'boost', 'sparks', 'impact', 'landing', 'detach', 'damage-smoke', 'wreck-fire', 'lamp'];
 const FX = [
-  // [name, tiles, follow, families that must be alive]
+  // [name, tiles, follow, families that must be alive, { see: a tile must have the husk in view, hit: shoot 50 ms after a new impact }]
   ['dust-dirt-1tile', 1, [0], ['dust']],
   ['tyre-smoke-1tile', 1, [1], ['tyre-smoke']],
   ['boost-blue-1tile', 1, [2], ['boost']],
   ['gravel-spray-1tile', 1, [3], ['dust']],
-  ['impact-sparks-1tile', 1, [4], ['impact', 'sparks']],
+  ['impact-sparks-1tile', 1, [4], ['impact', 'sparks'], { hit: true }],
   ['landing-1tile', 1, [11], ['landing']],
   ['detach-damage-1tile', 1, [5], ['detach', 'damage-smoke']],
+  ['wreck-fire-1tile', 1, [0], ['wreck-fire'], { see: true }],
   ['wreck-fire-overview', 0, [], ['wreck-fire']],
-  ['mixed-4tiles', 4, [0, 1, 2, 4], ['dust', 'tyre-smoke', 'boost', 'impact']],
-  ['mixed-24tiles', 24, null, ['dust', 'tyre-smoke', 'boost', 'wreck-fire']],
+  ['driving-4tiles', 4, [0, 1, 2, 3], ['dust', 'tyre-smoke', 'boost', 'lamp']],
+  ['hits-4tiles', 4, [4, 5, 10, 11], ['impact', 'sparks', 'landing', 'detach', 'damage-smoke']],
+  ['wreck-fire-4tiles', 4, [0, 6, 12, 18], ['wreck-fire'], { see: true }],
+  ['all-24tiles', 24, null, ALL, { see: true }],
 ];
+const HUSK = [-14, 0.8, 6]; // synthetic.ts HUSK_AT, lifted to the fire
 
-async function fxShot([name, tiles, follow, families], out, report, reduced = false) {
+async function fxShot([name, tiles, follow, families, opts = {}], out, report, reduced = false) {
   const q = `?synthetic=${tiles === 0 ? 12 : Math.max(24, tiles)}&map&look=on&fxdemo&res=1&autores=off${tiles ? `&tiles=${tiles}` : ''}${follow?.length ? `&follow=${follow.join(',')}` : ''}`;
   const { page, errors } = await openPage(q, 1920, 1080);
   if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addStyleTag({ content: HIDE });
   let alive = {};
+  let seen = !opts.see;
+  const hits0 = opts.hit ? await page.evaluate(() => window.__jjRender.vehicles()?.fx.spawned.impact ?? 0) : 0;
   const t0 = Date.now();
-  while (Date.now() - t0 < 25_000) {
-    alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});
-    // Short-lived families (the flash) are caught through what outlives them: a hit leaves its sparks for half a second.
-    if (families.every((f) => alive[f] > 0) && (!families.includes('sparks') || alive.sparks >= 12)) break;
-    await sleep(25);
+  while (Date.now() - t0 < 45_000) {
+    const st = await page.evaluate((h) => ({ alive: window.__jjRender.vehicles()?.fx.alive ?? {}, spawned: window.__jjRender.vehicles()?.fx.spawned ?? {}, sees: window.__jjRender.tilesSee([h]).some((t) => t.sees[0]) }), HUSK);
+    alive = st.alive;
+    if (opts.see) seen = tiles === 0 || st.sees;
+    // A new hit (normal and reduced motion are shot at the same moment after it), or every family alive at once.
+    if (opts.hit ? st.spawned.impact > hits0 : families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
+    await sleep(15);
   }
+  if (opts.hit) await sleep(50);
+  alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});
   const have = families.filter((f) => alive[f] > 0);
   await page.screenshot({ path: join(out, `${name}${reduced ? '-reduced' : ''}.jpg`), type: 'jpeg', quality: 86 });
-  const info = await page.evaluate(() => ({ fx: window.__jjRender.vehicles()?.fx, draws: window.__jjRender.stats().drawCalls, frameMs: window.__jjRender.stats().frameMs }));
-  report.shots.push({ name, tiles, reduced, families, aliveWhenShot: alive, allFamiliesShown: have.length === families.length, errors, drawCalls: info.draws, spawned: info.fx?.spawned, reducedMotion: info.fx?.reducedMotion });
-  console.log('fx', name, have.length === families.length ? 'ok' : `MISSING ${families.filter((f) => !alive[f])}`);
+  const info = await page.evaluate(() => ({ fx: window.__jjRender.vehicles()?.fx, draws: window.__jjRender.stats().drawCalls }));
+  report.shots.push({ name, tiles, reduced, families, aliveWhenShot: alive, allFamiliesShown: have.length === families.length, huskInView: seen, errors, drawCalls: info.draws, spawned: info.fx?.spawned, reducedMotion: info.fx?.reducedMotion });
+  console.log('fx', name, reduced ? 'reduced' : '', have.length === families.length && seen ? 'ok' : `MISSING ${families.filter((f) => !alive[f])}${seen ? '' : ' husk not in view'}`);
   await page.close();
 }
 
@@ -240,7 +251,7 @@ if (want('fx')) {
   await mkdir(out, { recursive: true });
   const report = { mode, shots: [] };
   for (const s of FX.filter((x) => !process.env.JJ_SHOT || process.env.JJ_SHOT.split(',').includes(x[0]))) await fxShot(s, out, report);
-  await fxShot(FX[4], out, report, true); // the same impact with reduced motion on
+  await fxShot(FX[4], out, report, true); // the same moment after a hit, reduced motion on
   await writeFile(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   done.push('fx');
 }

@@ -75,13 +75,13 @@ void main() {
     gl_FragColor = vec4( c, a * ( 1.0 - smoothstep( 0.7, 1.0, r ) ) );
   } else {
     // A comic puff: a flat body lit from above (a two-tone step, no specular dot: a hard highlight read as a soap
-    // bubble on the eris captures), a thin ink rim on its shaded underside, and a soft outer edge.
+    // bubble), a ring of ink all round (heavier on the shaded underside), opaque enough to read as a shape.
     float rim = vMisc.x;
     float lit = step( -0.1, vUv.y + 0.35 * vUv.x );
     c *= mix( 0.8, 1.06, lit );
-    float edge = smoothstep( 0.82, 0.9, r ) * rim * ( 1.0 - 0.7 * lit );
-    c = mix( c, uInk, edge * 0.8 );
-    gl_FragColor = vec4( c, a * ( 1.0 - smoothstep( 0.9, 1.0, r ) ) );
+    float edge = smoothstep( 0.8, 0.88, r ) * rim * ( 1.0 - 0.45 * lit );
+    c = mix( c, uInk, edge * 0.85 );
+    gl_FragColor = vec4( c, mix( a, min( 1.0, a * 1.6 ), edge ) );
   }
   #include <colorspace_fragment>
 }`;

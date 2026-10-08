@@ -29,8 +29,9 @@ const HOT = -1;
 
 const C = {
   tarmacDust: [0.62, 0.6, 0.57] as [number, number, number],
-  dirtDust: [0.82, 0.52, 0.3] as [number, number, number],
-  dirtDustEnd: [0.86, 0.68, 0.5] as [number, number, number],
+  // Red-centre dust: the earth's own red, a step lighter so it reads against the ground it rises from.
+  dirtDust: [0.84, 0.42, 0.24] as [number, number, number],
+  dirtDustEnd: [0.88, 0.56, 0.4] as [number, number, number],
   gravel: [0.42, 0.32, 0.22] as [number, number, number],
   smoke: [0.92, 0.9, 0.86] as [number, number, number],
   smokeEnd: [0.62, 0.6, 0.58] as [number, number, number],
@@ -104,7 +105,8 @@ export class Emitter {
   /** Reads one snapshot sample and emits for `dt` seconds of it. */
   update(inp: FxInput, dt: number): void {
     const f = inp.frame;
-    const calm = this.reducedMotion ? 0.35 : 1;
+    // Reduced motion: flashes a fifth the size and faint, a quarter of the sparks (a visibly calmer hit, still a hit).
+    const calm = this.reducedMotion ? 0.22 : 1;
     // Parts that aren't intact, per car id, from the frame's part records.
     const broken = new Map<number, Map<number, { state: number; pos: [number, number, number] }>>();
     for (let k = 0; f && k < f.parts; k++) {
@@ -151,7 +153,7 @@ export class Emitter {
 
       if (wasSeen && !respawned && newTick) {
         // Contact: a sudden loss of velocity in one tick is an impact (an impulse of mass x dv); scaled by dv.
-        if (dv > 3.2 && st.speed > 4) this.impact([px + (st.vel[0] / hv) * 2, py + 0.6, pz + (st.vel[2] / hv) * 2], dv, calm, vel);
+        if (dv > 3.2 && st.speed > 4) this.impact([px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6], dv, calm, vel);
         // Landing: falling, then not.
         if (st.vy < -3.5 && vel[1] > -1.2) this.landing(px, pz, ground, py, Math.min(1, -st.vy / 9), surface);
         // A scrape: grinding speed away without a hard hit.
@@ -239,12 +241,12 @@ export class Emitter {
       } else if (st.parts.size) st.parts.clear();
       if (nonIntact >= 2) {
         const k = Math.min(1, nonIntact / 5);
-        this.rate(st, 'dsmoke', 8 + 16 * k, dt, () => {
+        this.rate(st, 'dsmoke', 14 + 20 * k, dt, () => {
           const e = at(this.jitter(0.3), 1.05, 1.0);
           this.spawn({
             family: 'damage-smoke', blend: 'alpha', x: e[0], y: e[1], z: e[2],
             vx: vel[0] * 0.5 + this.jitter(0.25), vy: 1.3 + this.rand() * 0.6, vz: vel[2] * 0.5 + this.jitter(0.25),
-            life: 1.5 + this.rand(), size0: 0.5, size1: 1.8, c0: C.dark, c1: C.darkEnd, alpha: 0.65 + 0.2 * k, drag: 0.5, gravity: -0.4, rim: 0.8,
+            life: 1.8 + this.rand(), size0: 0.7, size1: 2.6, c0: C.dark, c1: C.darkEnd, alpha: 0.8 + 0.15 * k, drag: 0.5, gravity: -0.4, rim: 0.8,
           });
         });
       }
@@ -268,17 +270,17 @@ export class Emitter {
       this.husks.add(car);
       const st = this.state(car * 1000 + 7); // husks have their own carry (their car id may be live again after a rebuild)
       const [hx, hy, hz] = [f.piecePos[k * 3]!, f.piecePos[k * 3 + 1]!, f.piecePos[k * 3 + 2]!];
-      this.rate(st, 'fire', 38, dt, () => {
+      this.rate(st, 'fire', 60, dt, () => {
         this.spawn({
           family: 'wreck-fire', blend: 'alpha', x: hx + this.jitter(0.7), y: hy + 1.0 + this.rand() * 0.3, z: hz + this.jitter(1.1),
-          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 1.2, vz: this.jitter(0.3), life: 0.55 + this.rand() * 0.3, size0: 1.5, size1: 0.4,
+          vx: this.jitter(0.3), vy: 2.2 + this.rand() * 1.4, vz: this.jitter(0.3), life: 0.6 + this.rand() * 0.35, size0: 2.1, size1: 0.5,
           c0: C.flame, c1: C.flameEnd, alpha: 0.95, drag: 0.6, rim: HOT,
         });
       });
-      this.rate(st, 'wsmoke', 9, dt, () => {
+      this.rate(st, 'wsmoke', 14, dt, () => {
         this.spawn({
           family: 'wreck-fire', blend: 'alpha', x: hx + this.jitter(0.6), y: hy + 1.0, z: hz + this.jitter(0.9),
-          vx: this.jitter(0.3), vy: 1.6 + this.rand() * 0.7, vz: this.jitter(0.3), life: 2.4, size0: 1.0, size1: 3.6, c0: C.dark, c1: C.darkEnd, alpha: 0.55,
+          vx: this.jitter(0.3), vy: 1.8 + this.rand() * 0.8, vz: this.jitter(0.3), life: 3.2, size0: 1.2, size1: 5.0, c0: C.dark, c1: C.darkEnd, alpha: 0.75,
           drag: 0.6, gravity: -0.3, rim: 0.8,
         });
       });
@@ -303,10 +305,11 @@ export class Emitter {
   /** The impact flash and puff of a damage episode, scaled by the impulse (the velocity change, m/s). */
   private impact(p: [number, number, number], dv: number, calm: number, vel: [number, number, number]): void {
     const k = Math.min(1, dv / 14);
-    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.14, size0: (0.7 + 1.9 * k) * calm, size1: (0.3 + 1.2 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * calm, rim: HOT });
-    this.puff(p, 0.5 + 0.9 * k, C.smoke);
-    const n = Math.round((6 + 30 * k) * calm);
-    for (let j = 0; j < n; j++) this.spark(p, 4 + 7 * k, vel);
+    // The flash stands above the bonnet (a chase camera sees it over the roof) and lives long enough to be seen at 60 Hz.
+    this.spawn({ family: 'impact', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.2, size0: (1.2 + 2.8 * k) * calm, size1: (0.5 + 1.6 * k) * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.95 * Math.sqrt(calm), rim: HOT });
+    this.puff(p, 0.7 + 1.3 * k, C.smoke);
+    const n = Math.round((12 + 44 * k) * calm);
+    for (let j = 0; j < n; j++) this.spark(p, 5 + 8 * k, vel);
   }
 
   private spark(p: [number, number, number], speed: number, vel: [number, number, number]): void {
@@ -315,7 +318,7 @@ export class Emitter {
     this.spawn({
       family: 'sparks', blend: 'alpha', x: p[0], y: p[1], z: p[2],
       vx: vel[0] * 0.3 + Math.cos(a) * speed * (1 - up * 0.5), vy: speed * up, vz: vel[2] * 0.3 + Math.sin(a) * speed * (1 - up * 0.5),
-      life: 0.35 + this.rand() * 0.35, size0: 0.22, size1: 0.07, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12, rim: HOT,
+      life: 0.4 + this.rand() * 0.4, size0: 0.32, size1: 0.1, c0: C.spark, c1: C.sparkEnd, alpha: 1, drag: 0.5, gravity: 12, rim: HOT,
     });
   }
 
@@ -339,13 +342,13 @@ export class Emitter {
 
   /** A part coming off: a flash, a puff and a burst of sparks at its pose. */
   private detach(p: [number, number, number], calm: number): void {
-    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: 0, vy: 0, vz: 0, life: 0.16, size0: 1.3 * calm, size1: 0.5 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * calm, rim: HOT });
-    for (let k = 0; k < 4; k++)
+    this.spawn({ family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.4, z: p[2], vx: 0, vy: 0, vz: 0, life: 0.22, size0: 2.0 * calm, size1: 0.8 * calm, c0: C.flash, c1: C.flashEnd, alpha: 0.9 * Math.sqrt(calm), rim: HOT });
+    for (let k = 0; k < 8; k++)
       this.spawn({
-        family: 'detach', blend: 'alpha', x: p[0], y: p[1], z: p[2], vx: this.jitter(2), vy: 0.8 + this.rand(), vz: this.jitter(2),
-        life: 0.8, size0: 0.4, size1: 1.5, c0: C.smoke, c1: C.smokeEnd, alpha: 0.5, drag: 0.3, gravity: -0.1, rim: 0.7,
+        family: 'detach', blend: 'alpha', x: p[0], y: p[1] + 0.3, z: p[2], vx: this.jitter(2.4), vy: 1 + this.rand() * 1.2, vz: this.jitter(2.4),
+        life: 1.2, size0: 0.6, size1: 2.2, c0: C.smoke, c1: C.smokeEnd, alpha: 0.75, drag: 0.3, gravity: -0.1, rim: 0.7,
       });
-    const n = Math.round(14 * calm);
+    const n = Math.round(24 * calm);
     for (let k = 0; k < n; k++) this.spark(p, 6, [0, 0, 0]);
   }
 
