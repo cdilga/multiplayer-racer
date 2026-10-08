@@ -1,0 +1,59 @@
+{
+  "row": "local-coturn",
+  "capturedAt": "2026-10-08T07:10:47.812Z",
+  "hardware": "eris (i5-12400, Linux), host and controller in headless Playwright Chromium, coturn/coturn:4.7.0 container (host network, loopback relay)",
+  "browser": "chromium 151.0.7922.34",
+  "build": "local build of the clone at 31d8fc0 (jj-server + web bundle)",
+  "topology": "forced relay via a local coturn container",
+  "cohort": "1 host, 1 controller",
+  "clock": {
+    "mode": "same-clock (one machine)",
+    "uncertaintyMs": 0
+  },
+  "ice": {
+    "policy": "relay",
+    "rewriteTurn": "yes",
+    "restrictedToUrlsContaining": null,
+    "dropStun": true
+  },
+  "netem": "none",
+  "result": {
+    "selectedPath": {
+      "kind": "coturn-relay",
+      "localType": "relay",
+      "remoteType": "relay",
+      "protocol": "udp",
+      "relayProtocol": "udp",
+      "relayVia": "coturn",
+      "rttMs": 0
+    },
+    "expected": "coturn-relay",
+    "pathMatchesExpectation": true,
+    "inputAge": {
+      "sent": 600,
+      "seen": 575,
+      "lost": 25,
+      "p50Ms": 10,
+      "p95Ms": 26,
+      "p99Ms": 26,
+      "maxMs": 27,
+      "uncertaintyMs": 0
+    },
+    "input": {
+      "hz": 60,
+      "seconds": 10,
+      "endpoint": "redacted",
+      "unobservedNote": "values the host never showed (coalesced by the sender or dropped) count as lost"
+    },
+    "bytes": {
+      "payloadBytesPerSecond": 311,
+      "transportBytesPerSecond": 3613,
+      "layers": "payload = RTCDataChannel bytesSent (application messages); transport = RTCTransport bytesSent (adds SCTP/DTLS/UDP headers as the browser counts them). Neither is billed relay usage (R92)."
+    },
+    "payloadBudget": {
+      "limitBytesPerSecond": 2000,
+      "verdict": "pass"
+    }
+  },
+  "problems": []
+}
