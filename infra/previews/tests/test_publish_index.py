@@ -147,7 +147,9 @@ class Index(unittest.TestCase):
         self.assertNotIn("pin = <code>v02-aaaaaaaa</code>", h)  # a retired build can't be pinned
         self.assertIn('href="/p/v02-dddddddd/host"', h)
         self.assertIn('href="http://ci/9"', h)
-        self.assertNotIn('href="/p/v02-cccccccc/', h)  # a failed smoke is not advertised
+        self.assertNotIn('class="btn" href="/p/v02-cccccccc/', h)  # a failed smoke is not advertised as playable
+        self.assertIn('<a class="ev" href="/p/v02-cccccccc/host">Try Host anyway</a>', h)  # but can be opened
+        self.assertIn("probably not playable", h)
         self.assertNotIn('href="/p/v02-aaaaaaaa/', h)  # nor is a retired one
 
     def test_a_fourth_young_build_counts_down(self):

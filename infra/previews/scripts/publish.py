@@ -10,7 +10,7 @@ Polled by .gitea/workflows/publish.yml. For each new green CI run on cdilga/mult
    `assets/smoke.json` (data, never commands: an unknown step fails the publish);
 4. the record in git (R117, scripts/record.py): an annotated tag `preview/<id>` on the source commit before the app is
    created, and a commit status `preview/smoke/<id>`: success = playable, failure = not playable with the reason.
-   A failed health check or smoke never advertises the preview: it gets no Host/Join links and never becomes Latest.
+   A failed health check or smoke never advertises the preview: it never becomes Latest, and the index offers only small "Try … anyway" links under a "probably not playable" warning.
 
 Idempotent: a commit that already has a preview (or retired) tag is skipped; an app `jjp-<id>` left by a run that died
 is adopted, not created twice; nothing here deletes an app (retention does, by policy).

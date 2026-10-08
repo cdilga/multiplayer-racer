@@ -7,7 +7,8 @@ Newest first, pinned builds on top (`pin/<id>` tags; a pin's label such as "Play
   Keep         pinned / latest / one of the 3 newest / expires in Xh (counted down in the browser from the 24 h age limit),
                and a Pin or Unpin link to the Retention workflow's run form on Gitea (owner sign-in; scripts/preview-pin.sh
                does the same from a shell)
-  Open         Host and Join (only for playable previews, on the preview's own base path) and its CI run as evidence
+  Open         Host and Join (on the preview's own base path; a build that failed its smoke gets small "Try … anyway" links
+               under a "probably not playable" warning instead) and its CI run as evidence
 Retired previews sit below, greyed, with the reason they were retired. Styled from edge/tokens.json (a copy of the
 game's UI token file: swap it for the accepted set and re-render, no template change).
 """
@@ -131,6 +132,10 @@ def open_html(p: dict) -> str:
     links = []
     if p.get("status") == "playable" and not p.get("retired"):
         links.append(f'<a class="btn" href="{base}host">Host</a><a class="btn alt" href="{base}">Join</a>')
+    elif not p.get("retired"):
+        # Still deployed: open it anyway, but it failed its smoke, so the links say so and stay small.
+        links.append(f'<span class="bad">Failed its smoke, probably not playable:</span>'
+                     f'<a class="ev" href="{base}host">Try Host anyway</a><a class="ev" href="{base}">Try Join anyway</a>')
     if p.get("ciRun"):
         # Gitea reports run URLs on its LAN address; the page is public, so link the public host.
         ci = p["ciRun"].replace("http://192.168.11.12:3001/", "https://git.dilger.dev/")
