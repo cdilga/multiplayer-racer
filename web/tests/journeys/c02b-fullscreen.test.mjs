@@ -60,7 +60,8 @@ async function joinPhone(joinUrl, { width, height, noApi = false, name = 'Marlen
   await wait(page, () => window.__jjController.inspect().phase === 'playing');
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
-  // Joining asks for full screen once (keep awake on): start from the windowed state the owner reported.
+  // Joining asks for full screen once (keep awake on): let that land, then start from the windowed state the owner reported.
+  if (!noApi) await wait(page, () => !!document.fullscreenElement, undefined, 5_000);
   await page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
   await wait(page, () => !document.fullscreenElement);
   return page;

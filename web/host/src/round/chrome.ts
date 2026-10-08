@@ -140,6 +140,19 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     card.dataset.joinCard = big ? 'big' : 'menu';
     slot.prepend(card);
   };
+  // The estimate above leaves room for the words and buttons; the profile's type scale can still need more. Shrink the QR a
+  // module-pixel at a time until the panel fits without scrolling (never below the profile's scannable minimum).
+  const fitJoinCard = () => {
+    const panel = menuEl.querySelector<HTMLElement>('[data-join-big]');
+    const card = panel?.querySelector<HTMLElement>('[data-join-card=big]');
+    if (!panel || !card || !joinModules) return;
+    const min = tokenData.qr.minModulePx[activeProfile()];
+    let per = Math.round(card.querySelector('.qr')!.getBoundingClientRect().width / joinModules);
+    while (per > min && (panel.scrollHeight > panel.clientHeight + 1 || panel.scrollWidth > panel.clientWidth + 1)) {
+      per--;
+      card.style.setProperty('--qr-size', `${per * joinModules}px`);
+    }
+  };
   const joinText = () =>
     joinUrl
       ? `<p class="mn-join-how">Scan with a phone camera, or open</p><p class="mn-url" data-join-url>${esc(joinUrl)}</p>`
@@ -197,6 +210,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
     }
     if (!state.confirm) placeJoinCard(menuEl.querySelector<HTMLElement>('[data-join]'), state.join);
     paint(menuEl);
+    if (state.join && !state.confirm) fitJoinCard();
     menuEl.querySelector<HTMLElement>('[data-autofocus]')?.focus();
   };
 

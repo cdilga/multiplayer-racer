@@ -119,16 +119,24 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   await wait(phone, () => window.__jjController?.inspect().phase === 'ready-to-join');
   await phone.locator('#name').fill('Davo');
   await phone.getByRole('button', { name: 'Join the race' }).click();
-  await wait(phone, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
-  await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 20_000);
-  await wait(host, (n) => document.querySelector('[data-join-n]')?.textContent === `${n} in the room`, synth + 1, 10_000);
-  await shot(host, 'tv-1920x1080-join-big-after-phone');
+  // The sim takes claims at a tick boundary, and no tick runs while paused: the phone holds at Joining until Resume.
+  await phone.waitForTimeout(1500);
+  console.log(`# phone while paused: ${await phone.evaluate(() => window.__jjController.inspect().phase)}`);
+  await shot(phone, 'phone-915x412-joined-while-paused');
 
-  // Resume closes it and the race goes on.
+  // Resume closes it, the race goes on, and the phone gets its seat and car.
   await host.getByRole('button', { name: 'Resume' }).click();
   await wait(host, () => window.__jjTest.pauseReasons().length === 0, undefined, 10_000);
   assert.equal(await host.locator('[data-join-big]').count(), 0);
+  await wait(phone, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
+  await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 20_000);
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');
+  // Opened again, the card counts the phone.
+  await host.locator('.foot-qr').click();
+  await wait(host, (n) => document.querySelector('[data-join-n]')?.textContent === `${n} in the room`, synth + 1, 10_000);
+  await shot(host, 'tv-1920x1080-join-big-after-phone');
+  await host.locator('.foot-qr').click(); // the footer QR toggles it shut
+  await wait(host, () => window.__jjTest.pauseReasons().length === 0 && !window.__jjChrome.state.menu, undefined, 10_000);
 
   // The pause menu carries the join card too.
   await host.locator('[data-act=menu]').click();
