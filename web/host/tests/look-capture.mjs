@@ -235,7 +235,7 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
               // The followed car's own hit: its burst lands in one frame (scrapes add a few sparks a frame).
               const fx = window.__jjRender.vehicles()?.fx;
               const s = fx?.spawned.sparks ?? 0;
-              if (after < 0 && s - prev >= 10 && fx?.lastImpact?.car === car) after = 0;
+              if (after < 0 && s - prev >= 10 && fx?.impactCars?.includes(car)) after = 0;
               prev = s;
               if (after >= 0 && ++after > 2) {
                 window.__jjRender.hold();
@@ -244,6 +244,8 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
               requestAnimationFrame(look);
             };
             requestAnimationFrame(look);
+            // Never hang: after 45 s, shoot what there is (the report then shows no hit alive).
+            setTimeout(() => (window.__jjRender.hold(), done()), 45_000);
           }),
         [hits0, (follow?.[0] ?? 0) + 1],
       );

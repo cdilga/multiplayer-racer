@@ -213,9 +213,9 @@ export class Fx {
   }
 
   /** Introspection (R90): what fired since the start, what is alive now, and the draw count. */
-  inspect(): { spawned: Record<Family, number>; alive: Record<Family, number>; particles: number; capacity: number; drawsPerTile: number; reducedMotion: boolean; lastImpact: { car: number; at: [number, number, number] } | null } {
+  inspect(): { spawned: Record<Family, number>; alive: Record<Family, number>; particles: number; capacity: number; drawsPerTile: number; reducedMotion: boolean; lastImpact: { car: number; at: [number, number, number] } | null; impactCars: number[] } {
     const p = this.emitter.pool;
-    return { spawned: { ...p.spawned }, alive: p.alive(), particles: p.n, capacity: this.alpha.cap + this.add.cap, drawsPerTile: this.drawsPerTile, reducedMotion: this.emitter.reducedMotion, lastImpact: this.emitter.lastImpact };
+    return { spawned: { ...p.spawned }, alive: p.alive(), particles: p.n, capacity: this.alpha.cap + this.add.cap, drawsPerTile: this.drawsPerTile, reducedMotion: this.emitter.reducedMotion, lastImpact: this.emitter.lastImpact, impactCars: [...this.emitter.impactCars] };
   }
 
   dispose(): void {

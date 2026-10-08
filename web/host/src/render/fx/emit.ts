@@ -71,6 +71,9 @@ export class Emitter {
   reducedMotion = false;
   /** The last impact: its car id and where its flash stands (R90: a capture or test can find the hit). */
   lastImpact: { car: number; at: [number, number, number] } | null = null;
+  /** Every car hit in the latest frame that had a hit (hits land together: the last alone would hide the others). */
+  impactCars: number[] = [];
+  private hitsNow: number[] = [];
   private cars = new Map<number, CarState>();
   private husks = new Set<number>();
   private rand = rng(0x4a4a);
@@ -116,6 +119,7 @@ export class Emitter {
       const m = broken.get(car) ?? broken.set(car, new Map()).get(car)!;
       m.set(f.partIndex[k]!, { state: f.partState[k]!, pos: [f.partPos[k * 3]!, f.partPos[k * 3 + 1]!, f.partPos[k * 3 + 2]!] });
     }
+    this.hitsNow = [];
     for (let i = 0; i < inp.cars; i++) {
       const id = inp.id[i]!;
       const st = this.state(id);
@@ -155,7 +159,10 @@ export class Emitter {
 
       if (wasSeen && !respawned && newTick) {
         // Contact: a sudden loss of velocity in one tick is an impact (an impulse of mass x dv); scaled by dv.
-        if (dv > 3.2 && st.speed > 4) this.lastImpact = { car: id, at: [px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6] };
+        if (dv > 3.2 && st.speed > 4) {
+          this.lastImpact = { car: id, at: [px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6] };
+          this.hitsNow.push(id);
+        }
         if (dv > 3.2 && st.speed > 4) this.impact([px + (st.vel[0] / hv) * 1.6, py + 1.1, pz + (st.vel[2] / hv) * 1.6], dv, calm, vel);
         // Landing: falling, then not.
         if (st.vy < -3.5 && vel[1] > -1.2) this.landing(px, pz, ground, py, Math.min(1, -st.vy / 9), surface);
@@ -265,6 +272,7 @@ export class Emitter {
         }
       }
     }
+    if (this.hitsNow.length) this.impactCars = this.hitsNow;
     // ---- Wrecks: fire and a smouldering glow on every husk; the husk stays for the round ------------------------------
     this.husks.clear();
     for (let k = 0; f && k < f.pieces; k++) {
