@@ -15,32 +15,35 @@
   run 2122, smoke PASS) has `JJ_BROKER_URL=http://jammers-turn-broker:8080`, a broker secret that equals
   HMAC(broker key, `v02-552e7bda-2`) (checked on TrueNAS, boolean only), and no `CF_*`/`JJ_BROKER_KEY` variable.
 
-## The live run: not yet a pass
+## The live run: passed (2026-10-08 12:40 UTC)
 
-`tools/net/qualify.mjs --row cloudflare-443 --policy relay --drop-stun --only-url ":443" --expect cloudflare-relay`
-on eris against `https://jammers-preview.dilger.dev/p/v02-552e7bda-2/` (twice, 08:05 and 08:20 UTC). The qualify ICE
-rewrite now also covers `setConfiguration()`, so the fallback's servers stay restricted to the TLS-443 entry (9a920a5a).
-Second run, with the new failure dump:
+`live-cloudflare-443.json` (same file as `../P1-N08/cloudflare-443.json`, N08 re-uses it, R92):
 
-    qualify cloudflare-443: FAIL page.waitForFunction: Timeout 60000ms exceeded.
-      j/VSDR: {"state":"connecting","pc":"new","ice":"new","restarts":0,
-               "relayFallback":{"state":"unavailable","reason":"no-relay-candidate","requests":1,"credentialHeld":false}}
+    qualify cloudflare-443: OK path=cloudflare-relay age p50/p95/p99=19/36/37 ms (±3.5) payload=312 B/s wire=3642 B/s
 
-The trigger fired as designed (`no-relay-candidate`), the controller called `POST /ice/fallback` once, and the backend
-answered relay-unavailable (any non-200 from the broker maps to 503). What was ruled out, without issuing a credential:
+Controller and host in headless Chromium on eris against the live preview `v02-552e7bda-2`, `iceTransportPolicy: "relay"`,
+STUN dropped and every ICE URL filtered to `:443` (coturn's 3479 entries gone, so coturn is unreachable); the fallback
+fired (`no-relay-candidate`), the broker issued, and the selected pair is relay/relay with `relayProtocol: tls` via
+Cloudflare, rtt 7 ms. The receipt carries no address or credential (`problems: []`).
 
-| Check | Result |
-|---|---|
-| broker reachable from the previews' network, framing | `/healthz` → `200`, `Content-Length`, `Connection: close` |
-| backend auth | `JJ_BROKER_SECRET` == HMAC(`JJ_BROKER_KEY`, preview id) (True); a wrong secret gets `401 bad backend secret` |
-| the Cloudflare key exists | guard's `jammers_keys()`: `jammers-fallback`, uid == `CF_TURN_KEY_ID` (True) |
-| the key's token authenticates, egress from that network | curl to `generate-ice-servers` from `jammers-previews`: bad token → `401`; real token with an invalid TTL → `400` (no credential issued) |
-| backend startup | no "JJ_BROKER_URL needs…" error, so the broker transport is configured |
+### Why the earlier runs got relay-unavailable, and the fix
 
-Left: the broker's own Cloudflare call (`asupersync` h1 `HttpClient`, `tls-webpki-roots`) or its parse, or the
-backend's blocking client, fails silently: neither role logs a broker outcome. Finding which needs a one-time log
-line in `crates/jj-server` (product code, outside this session's remit) or a run with the broker's call traced. If the
-Cloudflare call itself succeeded and only the parse failed, one credential was issued per run (two at most; TTL
-30 min, no relayed traffic). The guard's per-tag listing will show any `jj-preview-…` tag after Cloudflare's lag.
+1. A diagnostic first (c5fba547): the broker and the backend now print one stderr line per distinct fallback failure
+   cause (Cloudflare call failed / answered `<status> <error codes>` / reply unreadable; broker unreachable / answered /
+   reply unreadable), never a body that could hold a credential (`cf_error_summary`, unit-tested).
+2. A throwaway backend with that image (`jjp-v02-diag`, the preview's env, removed afterwards) printed:
+   `jj-server: relay fallback unavailable: broker unreachable: jammers-turn-broker:8080: Connection refused (os error 111)`.
+3. Cause: the `jammers-previews` network has IPv6 on; glibc in the Debian-based backend resolves `jammers-turn-broker`
+   to its IPv6 address first, the broker listened on `0.0.0.0:8080`, and the backend's client connected to the first
+   address only. (A musl-based Python container resolved IPv4 first, which is why replaying the request by hand
+   worked and the broker itself was fine.)
+4. Fixes: the backend client tries every resolved address (fe11c722), and the broker binds `[::]:8080`
+   (`infra/turn-broker/deploy.py`, d399f7cc; deploy-turn-broker run 2215: `listening on [::]:8080`). The live run above
+   used the old backend image with the dual-stack broker.
+
+Credentials issued in total: the passing run (host and controller endpoints), plus two by-hand broker replays during
+the diagnosis (`jj-preview-rm-diag-c-diag`, `…-c-diag2`, never used for traffic). All have a 30-minute TTL.
+
+Guard per-tag listing: pending Cloudflare's analytics lag (empty at 12:44 UTC); see below.
 
 The guard dry-run against a synthetic breach: done 2026-10-07, `guard-dry-run.txt`.
