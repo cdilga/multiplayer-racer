@@ -1,6 +1,7 @@
 // The Retry / Lobby screen after a failed round preparation (P1-M08a): the director has retried once with the conservative
 // recipe and given up, so the next round has no track. The room, its players and the results stay as they were; the host
 // chooses: Retry draws a fresh track seed and prepares again, Lobby goes back to the Lobby (and clears this screen).
+import { paintKit } from '../../../shared/ui';
 import './failure.css';
 
 /** What the screen needs of the sim client. */
@@ -40,6 +41,7 @@ export function mountFailureScreen(host: FailureHost): FailureScreen {
           <p class="pf-detail" data-detail>${esc(message)}</p>
           <div class="pf-acts"><button class="btn brush primary big" data-act="retry" type="button">Retry</button>
             <button class="btn brush" data-act="lobby" type="button">Lobby</button></div></div></section>`;
+      paintKit(root);
       root.querySelector('[data-act=retry]')!.addEventListener('click', () => {
         hide();
         host.input({ type: 'ui', ui: 'reroll' });

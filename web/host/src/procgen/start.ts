@@ -37,7 +37,8 @@ export async function startPreparation(client: SimClient, world: World, params: 
     devMap,
     // One frame between building a map and offering it, so the main thread is idle for the sim's commit.
     afterStage: () => new Promise((r) => requestAnimationFrame(() => r())),
-    onError: (m) => banner(`Map refused: ${m}`),
+    // A dev map's refusal is a developer's message (the banner); a player-facing failure is the Retry / Lobby screen.
+    onError: devMap ? (m) => banner(`Map refused: ${m}`) : undefined,
     onFailed: (m) => failure.show(m),
   });
   preparer.attach();
