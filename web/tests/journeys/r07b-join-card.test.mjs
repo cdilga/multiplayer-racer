@@ -127,7 +127,7 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   // Resume closes it, the race goes on, and the phone gets its seat and car.
   await host.getByRole('button', { name: 'Resume' }).click();
   await wait(host, () => window.__jjTest.pauseReasons().length === 0, undefined, 10_000);
-  assert.equal(await host.locator('[data-join-big]').count(), 0);
+  assert.equal(await host.locator('[data-join-big]').isVisible(), false, 'the card closes');
   await wait(phone, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
   await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 20_000);
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');

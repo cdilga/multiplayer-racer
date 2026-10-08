@@ -14,3 +14,4 @@
   .strip .tools { gap: 2px; }
   .strip .tools .btn.icon { width: 34px; min-width: 34px; }
 }
+.fs-prompt .btn.quiet img.i { filter: none; }
