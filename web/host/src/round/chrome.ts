@@ -192,11 +192,11 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
       const seats = [...(room.seats as Seat[])].sort((a, b) => a.number - b.number);
       const fs = fullscreenSupport();
       menuEl.innerHTML = `<section class="mn-panel" data-menu aria-labelledby="mn-t"><h2 id="mn-t" class="display">${racing() ? 'Paused' : 'Host <span class="acc">menu</span>'}</h2>
-        <div class="mn-join" data-join><div class="mn-join-words"><h3 class="display">Join <span class="acc">in</span></h3>${joinText()}</div></div>
+        <div class="mn-join" data-join><div class="mn-join-words"><h3 class="display">Join <span class="acc">in</span></h3>${joinText()}</div>
+          <a class="btn brush mn-credits" data-credits href="${basePath()}credits" target="_blank" rel="noopener">Credits</a></div>
         <div class="mn-acts main"><button class="btn brush primary" type="button" data-act="resume" data-autofocus>${racing() ? 'Resume' : 'Close'}</button>
         ${racing() ? '<button class="btn brush" type="button" data-act="ask-end">End round</button>' : ''}
-        <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button>
-        <a class="btn brush" data-credits href="${basePath()}credits" target="_blank" rel="noopener">Credits</a></div>
+        <button class="btn brush danger-o" type="button" data-act="ask-disband">Disband room</button></div>
         <h3 class="display">Display</h3>
         <div class="mn-view" data-view role="group" aria-label="Viewing distance">${PROFILES.map((p) => `<button class="btn brush${profileChoice() === p ? ' primary' : ''}" type="button" data-act="view" data-profile="${p}" aria-pressed="${profileChoice() === p}">${p === 'auto' ? `Auto (${activeProfile()})` : p === 'tv' ? 'TV' : p === 'desk' ? 'Desk' : 'Handheld'}</button>`).join('')}
           ${fs.fullscreen ? '<button class="btn brush" type="button" data-act="fullscreen">Full screen</button>' : ''}</div>

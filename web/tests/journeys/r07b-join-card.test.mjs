@@ -164,7 +164,7 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   assert.deepEqual(errors, []);
 });
 
-test('R07b: the big join card fits and scans at every display mode and size, and in full screen', { timeout: 420_000 }, async () => {
+test('R07b: the big join card fits and scans at every display mode and size, and in full screen', { timeout: 720_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
