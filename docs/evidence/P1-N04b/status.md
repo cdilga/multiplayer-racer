@@ -44,6 +44,8 @@ Cloudflare, rtt 7 ms. The receipt carries no address or credential (`problems: [
 Credentials issued in total: the passing run (host and controller endpoints), plus two by-hand broker replays during
 the diagnosis (`jj-preview-rm-diag-c-diag`, `…-c-diag2`, never used for traffic). All have a 30-minute TTL.
 
-Guard per-tag listing: pending Cloudflare's analytics lag (empty at 12:44 UTC); see below.
+Guard per-tag listing (`guard.top_identifiers`, the guard's own `top_1h` query, run from the Mac with the guard's
+scoped token at 12:45:59 UTC): `[('jj-preview-rm-c56f6348eebcc283-host', 0.003 MB), ('jj-preview-rm-c56f6348eebcc283-c-c70d89103106', 0.0 MB)]`:
+the run's two issued tags (`jj-<realm>-<roomId>-<endpointId>`, host and controller endpoints).
 
 The guard dry-run against a synthetic breach: done 2026-10-07, `guard-dry-run.txt`.
