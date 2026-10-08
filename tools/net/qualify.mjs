@@ -87,6 +87,7 @@ async function clock(page) {
 }
 
 const browsers = [];
+const fallbackAnswers = [];
 let result;
 try {
   const local = await chromium.launch({ args });
@@ -98,6 +99,13 @@ try {
   await hostCtx.addInitScript(hostRecorder);
   const host = await hostCtx.newPage();
   const ctl = await ctlCtx.newPage();
+  // The relay-fallback answers, for the failure dump: status, and the body only when it isn't a credential list.
+  for (const [who, p] of [['host', host], ['controller', ctl]])
+    p.on('response', async (r) => {
+      if (!r.url().endsWith('/api/v1/ice/fallback')) return;
+      const body = r.status() === 200 ? '(ice list)' : (await r.text().catch(() => '')).slice(0, 200);
+      fallbackAnswers.push(`${who} ${r.status()} ${body}`);
+    });
   const q = '?hello';
   await host.goto(`${base}host${q}`);
   await until(host, () => window.__jjHello?.code());
@@ -189,6 +197,7 @@ try {
   process.exitCode = ok ? 0 : 1;
 } catch (e) {
   console.log(`qualify ${row}: FAIL ${String(e.message ?? e).split('\n')[0]}`);
+  for (const a of fallbackAnswers) console.log(`  POST /ice/fallback -> ${a}`);
   // Where each page's link got to (states and the relay-fallback record only: no addresses or credentials).
   for (const b of browsers)
     for (const c of b.contexts())
