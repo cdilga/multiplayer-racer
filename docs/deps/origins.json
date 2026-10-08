@@ -12,6 +12,11 @@
     { "host": "www.w3.org", "why": "XML namespace URIs (createElementNS); never fetched" },
     { "host": "github.com", "why": "issue links inside three.js console warnings; never fetched" },
     { "host": "www.shadertoy.com", "why": "a credit inside a three.js shader comment; never fetched" },
+    { "host": "commons.wikimedia.org", "why": "credits page (P1-C09): links to the reference photographs' Commons pages; never fetched" },
+    { "host": "creativecommons.org", "why": "credits page: links to the licence texts of those photographs; never fetched" },
+    { "host": "crates.io", "why": "credits page: each Rust crate's name links to its crates.io page; never fetched" },
+    { "host": "www.npmjs.com", "why": "credits page: each web package's name links to its npm page; never fetched" },
+    { "host": "scripts.sil.org", "why": "the SIL Open Font License text names its FAQ page; never fetched" },
     { "host": "jcgt.org", "why": "a paper citation (GGX VNDF sampling) inside a three.js WebGLRenderer shader comment; never fetched" }
   ]
 }

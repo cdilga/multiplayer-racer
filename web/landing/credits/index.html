@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15203A" />
+    <title>Credits and licences · Joystick Jammers</title>
+    <link rel="icon" href="../../../art/ui/brand/favicon.svg" />
+  </head>
+  <body>
+    <main class="credits" id="app">
+      <header class="c-head">
+        <h1 class="display italic">Credits <span class="acc">and licences</span></h1>
+        <p><a class="c-back" id="back" href="./">Back to Joystick Jammers</a></p>
+      </header>
+
+      <section class="panel c-sec" aria-labelledby="c-team">
+        <h2 id="c-team" class="kicker">The team</h2>
+        <p><b>Chris Dilger</b> owns, designs and directs Joystick Jammers. The code, the models and the tools are written by <b>Claude</b> (Anthropic) coding agents working to his direction, with each result checked in a running browser before it goes in.</p>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-insp">
+        <h2 id="c-insp" class="kicker">Inspirations</h2>
+        <p>Couch racers where everyone shares one screen and short, loud rounds beat long ones: Micro Machines and Mario Kart are the honest touchstones, along with the cars, roads and red dirt of the Australian outback. We took the idea, nothing else: no code, art or audio comes from those games, and none comes from any other project of ours.</p>
+        <p>The cars are bubbly caricatures made up for this game. Any real car they remind you of is a nod, not an endorsement; the makers aren't involved.</p>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-fonts">
+        <h2 id="c-fonts" class="kicker">Fonts</h2>
+        <p><b>Barlow</b>, <b>Barlow Condensed</b> and <b>Barlow Semi Condensed</b> by Jeremy Tribby and the Barlow Project Authors, under the SIL Open Font License 1.1. Subsetted and served from this site. Copyright 2017 The Barlow Project Authors (<a href="https://github.com/jpt/barlow" rel="noopener">github.com/jpt/barlow</a>).</p>
+        <details class="c-text"><summary>The full SIL Open Font License 1.1</summary><pre id="ofl"></pre></details>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-music">
+        <h2 id="c-music" class="kicker">Music</h2>
+        <p>The menu and race music is instrumental, generated for this game with <b>YuE2-3B</b> on the owner's own GPU machine, then edited into loops and loudness-matched. The prompts, seeds and model revision are kept with each track.</p>
+        <p class="c-note">Licence note: the YuE2 model weights are CC BY-NC 4.0 with an extra permission for individual creators to use their outputs commercially. That fits an individual's playtest; it has to be looked at again before any company or commercial release.</p>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-voice">
+        <h2 id="c-voice" class="kicker">The announcer</h2>
+        <p>The announcer is the owner's own voice. His recordings were cloned with <b>Qwen3-TTS</b> (1.7B) on the owner's GPU machine; a few lines use the smaller <b>FrankenTTS</b> (0.6B) where the audio manifest says so. The recordings and weights are not in the game.</p>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-refs">
+        <h2 id="c-refs" class="kicker">Reference photos and signs</h2>
+        <p>Real Australian road signs and guard rail were studied to get the look right. The game's own signs, rails and posts are built in code; nothing below is shipped or traced. The photographs we kept as references come from Wikimedia Commons:</p>
+        <ul class="c-list" id="refs"></ul>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-shader">
+        <h2 id="c-shader" class="kicker">Shader kit</h2>
+        <p>The comic-look shaders were written with the <b>webgpu-threejs-tsl</b> skill kit by Daniel Greenheck (MIT, declared by the author) for three.js.</p>
+      </section>
+
+      <section class="panel c-sec" aria-labelledby="c-lic">
+        <h2 id="c-lic" class="kicker">Third-party licences</h2>
+        <p id="lic-summary">Everything the game ships is listed here, generated from the lockfiles (<code>Cargo.lock</code> and the web lockfile) so it can't go stale. Everything is served from this site: no outside services are loaded.</p>
+        <p class="c-note">Some crates offer a choice (for example MIT or Apache-2.0); the list shows the whole expression.</p>
+        <h3 class="c-sub">In the browser</h3>
+        <table class="c-table" id="lic-web"><thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">Licence</th></tr></thead><tbody></tbody></table>
+        <h3 class="c-sub">In the server and the simulation (Rust)</h3>
+        <table class="c-table" id="lic-rust"><thead><tr><th scope="col">Crate</th><th scope="col">Version</th><th scope="col">Licence</th></tr></thead><tbody></tbody></table>
+      </section>
+    </main>
+    <script type="module" src="./credits.ts"></script>
+  </body>
+</html>

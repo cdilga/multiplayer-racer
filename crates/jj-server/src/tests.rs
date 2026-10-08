@@ -27,6 +27,7 @@ fn bundle(base: &str) -> Bundle {
     b.insert_page(Page::Landing, &page("landing"), base);
     b.insert_page(Page::Host, &page("host"), base);
     b.insert_page(Page::Controller, &page("controller"), base);
+    b.insert_page(Page::Credits, &page("credits"), base);
     b
 }
 
@@ -168,6 +169,7 @@ fn serves_pages_and_immutable_assets_under_a_preview_base_with_real_404s() {
             ("host", "host"),
             ("c", "controller"),
             ("hub", "controller"),
+            ("credits", "credits"),
             ("j/ABCD", "controller"),
             ("j/abcd", "controller"),
         ] {

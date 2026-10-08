@@ -62,3 +62,8 @@ body {
   .actions .panel { gap: var(--sp-2); padding: var(--sp-3); }
   .kicker { margin-top: calc(-1 * var(--sp-5)); }
 }
+
+/* The credits link under the actions. */
+.foot { text-align: center; }
+.credits-link { display: inline-block; padding: .35em .9em; background: var(--c-paper); color: var(--c-ink); border: var(--outline) solid var(--c-ink); font-weight: 700; text-decoration: none; }
+.credits-link:hover, .credits-link:focus-visible { background: var(--c-saffron); }

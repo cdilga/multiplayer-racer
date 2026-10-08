@@ -38,6 +38,7 @@ export default defineConfig({
         landing: resolve(import.meta.dirname, 'landing/index.html'),
         host: resolve(import.meta.dirname, 'host/index.html'),
         controller: resolve(import.meta.dirname, 'controller/index.html'),
+        credits: resolve(import.meta.dirname, 'landing/credits/index.html'),
       },
       output,
     },

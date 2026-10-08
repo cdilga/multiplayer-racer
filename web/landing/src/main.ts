@@ -25,6 +25,7 @@ const error = $<HTMLParagraphElement>('code-error');
 const scan = $<HTMLButtonElement>('scan');
 
 hostLink.href = routes.host;
+$<HTMLAnchorElement>('credits-link').href = `${base}credits`;
 scan.append(icon('scan-qr-code'));
 
 function showError(message: string | null): void {

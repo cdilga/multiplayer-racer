@@ -1,0 +1,26 @@
+/* Credits and licences (P1-C09): the landing page's painted world behind cream panels, readable text first. */
+body { min-height: 100vh; }
+.credits {
+  width: min(100%, 52em); margin: 0 auto; display: grid; gap: var(--sp-5);
+  padding: max(var(--sp-4), env(safe-area-inset-top)) max(var(--sp-4), env(safe-area-inset-right)) var(--sp-7) max(var(--sp-4), env(safe-area-inset-left));
+}
+.c-head h1 { margin: 0; color: var(--c-paper); font-size: var(--fs-display, 2.4rem); line-height: 1; text-shadow: 0 .06em 0 var(--c-ink); }
+.c-head .acc { color: var(--c-saffron); }
+.c-back, .c-sec a { color: var(--c-ink); font-weight: 700; text-decoration: underline; text-underline-offset: .15em; }
+.c-head .c-back { display: inline-block; margin-top: var(--sp-2); padding: .2em .7em; background: var(--c-paper); border: var(--outline) solid var(--c-ink); text-decoration: none; }
+.c-sec { display: grid; gap: var(--sp-3); }
+.c-sec p { margin: 0; line-height: 1.45; color: var(--c-ink); }
+.c-sec .kicker { margin: calc(-1 * var(--sp-6)) 0 0 calc(-1 * var(--sp-2)); justify-self: start; }
+.c-note { padding: var(--sp-2) var(--sp-3); background: color-mix(in srgb, var(--c-saffron) 22%, var(--c-paper)); border-left: .3em solid var(--c-saffron); }
+.c-list { margin: 0; padding-left: 1.2em; display: grid; gap: .35em; }
+.c-sub { margin: var(--sp-2) 0 0; font: 900 italic 1.1rem/1.1 var(--font-display); text-transform: uppercase; color: var(--c-ink); }
+.c-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.c-table th, .c-table td { text-align: left; padding: .3em .5em; border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 22%, transparent); vertical-align: top; overflow-wrap: anywhere; }
+.c-table thead th { font-weight: 800; border-bottom: .15em solid var(--c-ink); }
+.c-table tbody th { font-weight: 600; }
+.c-text summary { cursor: pointer; font-weight: 700; padding: .3em 0; }
+.c-text pre { max-height: 22em; overflow: auto; margin: .5em 0 0; padding: var(--sp-3); background: color-mix(in srgb, var(--c-ink) 6%, var(--c-paper)); font: 500 .75rem/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+@media (max-width: 480px) {
+  .c-table { font-size: .8rem; }
+  .c-table th, .c-table td { padding: .25em .3em; }
+}

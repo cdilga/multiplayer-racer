@@ -1,0 +1,29 @@
+{
+  "what": "The licences a shipped dependency may carry (P1-C09, R70). The game is GPL-3.0-or-later, so every entry is compatible with it. An SPDX expression passes when every AND side passes and, for OR, at least one side does. Anything else needs a named exception with its reason.",
+  "allow": [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "BSL-1.0",
+    "0BSD",
+    "GPL-3.0-or-later",
+    "OFL-1.1"
+  ],
+  "exceptions": {
+    "asupersync": { "licence": "LicenseRef-MIT-OpenAI-Anthropic-Rider", "why": "MIT plus the OpenAI/Anthropic rider; accepted by the owner (R2, R112, R115)" },
+    "asupersync-macros": { "licence": "LicenseRef-MIT-OpenAI-Anthropic-Rider", "why": "as asupersync (R112, R115)" },
+    "franken-decision": { "licence": "LicenseRef-MIT-OpenAI-Anthropic-Rider", "why": "Jeffrey Emanuel licence, accepted by the owner (R115)" },
+    "franken-evidence": { "licence": "LicenseRef-MIT-OpenAI-Anthropic-Rider", "why": "Jeffrey Emanuel licence, accepted by the owner (R115)" },
+    "franken-kernel": { "licence": "LicenseRef-MIT-OpenAI-Anthropic-Rider", "why": "Jeffrey Emanuel licence, accepted by the owner (R115)" },
+    "webpki-roots": { "licence": "CDLA-Permissive-2.0", "why": "Mozilla's root certificate list as data; permissive" }
+  },
+  "rustRoots": ["jj-server", "jj-wasm-host", "jj-wasm-input", "jj-wasm-procgen"]
+}

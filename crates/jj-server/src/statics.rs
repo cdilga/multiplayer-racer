@@ -17,6 +17,8 @@ pub enum Page {
     Landing,
     Host,
     Controller,
+    /// Credits and licences (P1-C09).
+    Credits,
 }
 
 impl Page {
@@ -25,6 +27,7 @@ impl Page {
             Page::Landing => "landing/index.html",
             Page::Host => "host/index.html",
             Page::Controller => "controller/index.html",
+            Page::Credits => "landing/credits/index.html",
         }
     }
 }
@@ -117,7 +120,7 @@ impl Bundle {
                 })?;
             }
         }
-        for page in [Page::Landing, Page::Host, Page::Controller] {
+        for page in [Page::Landing, Page::Host, Page::Controller, Page::Credits] {
             let path = dist.join(page.file());
             if path.is_file() {
                 let html = std::fs::read_to_string(&path)?;

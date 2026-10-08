@@ -18,4 +18,5 @@ t "The surface-strips test map is what its generator writes (P1-S03a)" bash -c '
 t "Vehicle bake is reproducible and committed; loads in three.js (P1-V02)" bash -c 'node tools/vehicles/bake.mjs --check && node --test tools/vehicles/test/'
 t "The N08 qualification harness logic (tools/net)" node --test tools/net/qualify.test.mjs
 t "The committed emulator receipts show what the beads cite (P1-F08)" node --test web/tests/emulators/
+t "Every shipped dependency has an allowed licence and the credits list matches the lockfiles (P1-C09)" bash -c 'node tools/licences/check.mjs && node --test tools/licences/'
 exit $rc
