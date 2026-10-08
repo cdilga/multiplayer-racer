@@ -111,6 +111,12 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   await shot(host, 'tv-1920x1080-join-big');
   const decoded = await decode(host, '[data-join-card=big] .qr');
   assert.equal(decoded, joinUrl, 'the big QR carries the join URL');
+  // The footer QR toggles it: shut (the race resumes), then open again for the phone.
+  await host.locator('.foot-qr').click();
+  await wait(host, () => window.__jjTest.pauseReasons().length === 0 && !window.__jjChrome.state.menu, undefined, 10_000);
+  await host.locator('.foot-qr').click();
+  await host.locator('[data-join-big]').waitFor({ state: 'visible' });
+  await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
 
   // A phone joins from what the QR says, while the race is paused.
   const phone = await (await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 915, height: 412 } })).newPage();
@@ -131,11 +137,12 @@ test('R07b: the footer QR pauses and shows the big join card; a phone joins from
   await wait(phone, () => window.__jjController.inspect().phase === 'playing', undefined, 60_000);
   await wait(host, (n) => window.__jjRoom.view().seats.length === n, synth + 1, 20_000);
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Running');
-  // Opened again, the card counts the phone.
-  await host.locator('.foot-qr').click();
+  // Opened again, the card counts the phone. One more racer can free a grid cell for the QR (then the footer has none to
+  // press), so this opens it the way the footer does, through the chrome's own surface.
+  await host.evaluate(() => window.__jjChrome.openJoin());
   await wait(host, (n) => document.querySelector('[data-join-n]')?.textContent === `${n} in the room`, synth + 1, 10_000);
   await shot(host, 'tv-1920x1080-join-big-after-phone');
-  await host.locator('.foot-qr').click(); // the footer QR toggles it shut
+  await host.locator('[data-join-big] [data-act=resume]').click();
   await wait(host, () => window.__jjTest.pauseReasons().length === 0 && !window.__jjChrome.state.menu, undefined, 10_000);
 
   // The pause menu carries the join card too.
