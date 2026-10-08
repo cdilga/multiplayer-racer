@@ -21,8 +21,11 @@ fix, self-review) and **P1-R07** (host HUD, lobby and results: the same loop on 
    `jammers-ui` skill's tour.
 2. **Look at every image** (Read the PNGs). Compare with the reference the bead cites (`art/ui/accepted/2026-10-07/`,
    the world-look frames, the biome refs).
-3. **Judge each failure line.** `live-check` is strict on purpose: on a page that scrolls, text cut by the *bottom*
-   edge is the fold, not a defect; on a page that hides overflow (the TV screens) it is a real cut. Decide from the image.
+3. **Judge each failure line.** `live-check` is strict on purpose: "cut off by the screen edge" means an element crosses
+   the edge of the *first screen* (the viewport). The saved PNG is the whole page, so on a page that scrolls, open the
+   image: if the quoted text is complete there, it was only crossing the fold, not a defect (the quotes run a label and
+   its value together, e.g. "What it isbeads: …" is the "What it is" label plus its value). On a page that hides its
+   overflow (the TV screens) the same line is a real cut.
 4. **Fix and repeat** until a full pass shows nothing you'd be embarrassed to show the owner.
 5. **Write `docs/evidence/<P1-ID>/self-review.md`** with `## Looked at`, `## Defects found and fixed`,
    `## Remaining defects`, `## Not covered`, naming every image file, and commit it with the images (small jpg/webp).
@@ -34,11 +37,17 @@ scripts/remote/eris.sh --run visual-demo 'node art/ui/lib/live-check.mjs --viewp
 scp 'eris:Work/runs/visual-demo/shots/*.png' <a scratch dir>/    # then Read each PNG
 ```
 
-Stated result (2026-10-08): two screenshots, `index_412x915.png` and `index_1920x1080.png`; `live-check` reports
-`FAIL … cut off by the screen edge: "What it isbeads: tracker", …` for both and exits 1. Looking at the images shows
-the index is a scrolling page and those rows simply continue below the first screen: not defects (step 3). The
-resulting `self-review.md` lists both images under "Looked at", "none" under fixed and remaining defects for the fold
-lines, and under "Not covered" the states this example didn't capture (an empty register, a pinned row).
+Stated result (2026-10-08): two full-page screenshots, `index_412x915.png` and `index_1920x1080.png`; `live-check`
+reports `FAIL … cut off by the screen edge: "What it isbeads: tracker"` (412x915; at 1920x1080 also "Buildv0.2-revamp
+eceaeeb", a "What changed" commit title and "Ran: room, join-webrtc, …") and exits 1. Opening the images shows every
+quoted string complete, so these are fold crossings, not defects (step 3). The cards themselves change as previews
+publish (playable, not playable with its reason, retired): that's data, not layout. The resulting `self-review.md` lists
+both images under "Looked at", "none" under fixed and remaining defects, and under "Not covered" what this example
+didn't capture (an empty register, a pinned row, expanded "What changed", WebKit).
+
+Notes for the run: `eris.sh` syncs eris's clean clone to your **pushed** HEAD (uncommitted Mac changes never reach it;
+it may print `RU_SYNC=skipped (runs in progress …)` when another run holds the clone, which is fine). Keep the command in
+single quotes so `$JJ_RUN_DIR` (`~/Work/runs/<id>` on eris) expands there. Make the scratch dir before `scp`ing into it.
 
 ## Traps
 

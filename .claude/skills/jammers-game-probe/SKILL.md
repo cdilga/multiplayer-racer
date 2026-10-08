@@ -41,6 +41,10 @@ Stated result (game commit f830de5):
   matches`, `tuned: max_engine_force=4000`, one `BAD car 0 @   720 forwardSpeed = 13.169 NOT in [15, 35]`, the full
   outcome signature, and `exit 1`.
 
+The second run's `exit 1` is the point of the example, not a broken run. Each run's files (outcome.json, journal.bin,
+trace.jsonl) land in the clone's `target/jj-runs/sim-<scenario>[-tuned]/` on eris. eris runs your **pushed** HEAD
+(`eris.sh` says which); the numbers are the same at any commit that didn't change the sim or the Cruz profile.
+
 Read it as: the sim is deterministic (the replay matched both times), and the envelope caught the weaker engine at
 tick 720. That is the loop for any tuning question: change one value with `--set`, see which envelope moves, then
 `--sweep max_engine_force=3000..9000:7` for a curve, then `--compare <accepted trace>` before committing a profile.

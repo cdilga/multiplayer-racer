@@ -30,10 +30,15 @@ for `Running`. Stated result: nine `captured …png` lines (`tv-1920x1080-lobby-
 `phone-412x915-joined`, `phone-915x412-join`, `phone-915x412-joined`, `tv-1920x1080-lobby-two`, `tv-1920x1080-race`,
 `phone-412x915-race`, `phone-915x412-race`) and `ui-tour: PASS`. The race capture shows two tiles (#1 Davo red, #2
 Shazza blue, "1st Lap 1/3"), the footer with the room code and QR; the portrait phone shows its HUD with "Turn
-sideways" over the sticks (portrait is the fallback, landscape the intended grip).
+sideways" over the sticks (portrait is the fallback, landscape the intended grip); the landscape "joined" capture shows
+the first-run tutorial card ("STEP 1 OF 7 / STEER") over the sticks, which is the controller's real first state.
 
-Change the preview id to the one you're checking (the index at https://jammers-preview.dilger.dev/ lists them). For a
+Previews retire (Latest and the three newest stay); if the page 410s, change the preview id to a live one (the index at https://jammers-preview.dilger.dev/ lists them). For a
 local build, serve it with `web/landing/tests/lib/site.mjs` (`build` + `serve`) and pass that base.
+
+Notes for the run: `eris.sh` syncs eris's clean clone to your **pushed** HEAD (uncommitted Mac changes never reach it;
+it may print `RU_SYNC=skipped (runs in progress …)`, which is fine). The single quotes keep `$JJ_RUN_DIR` for eris
+(`~/Work/runs/<id>`); make the scratch dir before `scp`ing into it.
 
 ## Rules
 
