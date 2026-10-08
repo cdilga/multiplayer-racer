@@ -13,3 +13,24 @@ Publisher fixes on the way (jammers-deploy): registry auth via the Docker token 
 f1cceb9); the newest green build with an image publishes (86e477c); a fresh TrueNAS session after the smoke and an edge
 catch-up (29ef4e6); the register commit rebases before pushing (364753f); the poll skips its 7-minute tool install with
 nothing to do (0fd3976). In the game repo: the image now bundles the procgen kit stand-ins (3892d51).
+
+## 2026-10-08 (BrownCreek): R117, the move into this repo
+
+- The deploy code lives in `infra/` (previews, TURN broker, POC) and runs from `.gitea/workflows/deploy-*.yml` on the
+  `jammers-deploy` runner. `cdilga/jammers-deploy` is archived (its workflows were removed first, 89a77fb).
+- Previews are recorded as git tags and commit statuses (`infra/previews/README.md`): the old register (6 rows, at
+  3ddc6c9e) was migrated into `preview/`/`retired/` tags with `preview/smoke/<id>` statuses.
+- **First publish from here:** deploy-previews run 2122 (dispatch, `--republish`): `v02-552e7bda-2` playable
+  (`smoke: PASS room E6K2, isolated from 2 other preview(s), join-webrtc (host, 0 ms), input, resume, drive, hud,
+  round`), tag `preview/v02-552e7bda-2` and status written with the workflow's token (no CI run started), and the same run
+  retired `v02-eceaeeb8-3` (tag `retired/v02-eceaeeb8-3`). Scheduled polls run every 5 minutes (e.g. 2179–2183).
+- **AC5 as replaced by R117:** the repo's Actions secrets are `CF_TURN_KEY_API_TOKEN`, `CF_TURN_KEY_ID`, `JJ_BROKER_KEY`,
+  `JJ_ROOM_KEY_MASTER`, `REGISTRY_PUSH_TOKEN`, `SOURCE_READ_TOKEN`, `TRUENAS_APPS_WRITE_KEY`, `TURN_STATIC_AUTH_SECRET`;
+  `POC_DEPLOY_KEY` is deleted, and its `jammers-poc-deploy` public key was removed from the TrueNAS user. The guard
+  `scripts/ci/check-deploy-secrets.sh` runs in the checks job (it flagged the old `poc-deploy.yml` before its removal).
+- **AC6:** `v02-552e7bda-2`'s env has `JJ_BROKER_URL` and its own `JJ_BROKER_SECRET` (= HMAC(broker key, its id), checked on
+  TrueNAS as a boolean); no `CF_*` or `JJ_BROKER_KEY`.
+- **AC2 still 2 of 3:** v02-552e7bda (scheduled run 2020) used an image I re-tagged by hand, so it isn't zero-manual.
+  The third scheduled publish needs a green ci.yml run: none since 552e7bd (run 1991); the latest runs fail in product
+  journeys (JN4/JN5 and the damage journeys, run 2136), not in the deploy lanes. CI now re-tags the last green image for
+  commits that don't rebuild it, so the next green run publishes with no hand step. D05 and D06 wait on D04.

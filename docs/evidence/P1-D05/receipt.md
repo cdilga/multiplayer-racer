@@ -31,3 +31,9 @@ pinned live yet.
 ## AC4: visual self-review
 
 `self-review.md` (the live captures looked at, two defects fixed, the remaining ones listed).
+
+## 2026-10-08 (BrownCreek): the index renders from git (R117)
+
+The edge index is rendered from tags and commit statuses (`infra/previews/scripts/record.py`) and carries a
+`<meta name="jj-index">` key, so the 5-minute poll re-applies it when the record changes. Live after the move: 3 live
+cards (two `Smoke passed`, pinned first during the D06 pin test) and 4 retired ones, from the migrated record.

@@ -28,3 +28,11 @@ each step (pinned + Latest + at most three unpinned younger than 24 h).
 Found on the way: the hourly retention workflow shared the `publish` concurrency group, so the 5-minute poll replaced
 every waiting run and it never ran (1606, 1631, 1666). It has its own group now (jammers-deploy 2e5d64a); reconciling on
 every publish (as above) was and is the main path.
+
+## 2026-10-08 (BrownCreek): pin and unpin on the tag record (R117)
+
+Retention workflow run 2138 (`pin=v02-39f5aa80`, `label=Pin test`): `pin/v02-39f5aa80 (Pin test): created`,
+`retired: []`; the next publish poll re-applied the index, and the live page listed `class="card pinned"
+id="v02-39f5aa80"` with the `Pin test` tag first, above the newer `v02-552e7bda-2`. Run 2184 (`unpin=v02-39f5aa80`)
+removed the tag. Neither tag started a CI run (made with the workflow's token). Unit tests: `infra/previews/tests`
+(25, in the checks job).
