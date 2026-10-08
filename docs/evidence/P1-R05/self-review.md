@@ -33,6 +33,6 @@ named captures and side-by-sides with the POC (`review.md`). Playwright Chromium
 - The rear-view mirror shows a strip of the car's own roof at its bottom edge.
 
 ## Not covered
-- The accepted-mock review (AC1): the accepted set doesn't exist until G-DESIGN.
+- The accepted-mock review is done (`review.md`, against `art/ui/accepted/2026-10-07/`).
 - Collision pull-in is exercised on the greybox's barriers and buildings but not captured in a dedicated view.
 - The controller's SetCamera reaching the host (C02); here the seat's mode is set through the host API.

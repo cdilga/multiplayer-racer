@@ -3,6 +3,7 @@
 import type { World } from '../render/world';
 import type { SimClient } from '../worker/client';
 import { ProcgenClient } from './client';
+import { mountFailureScreen } from './failure';
 import { RoundPreparer } from './prepare';
 
 /** One-line banner for a map the host refused (a broken dev map, or a failed preparation). */
@@ -27,6 +28,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
     const { loadDevMap } = await import('./devmaps');
     devMap = () => loadDevMap(name);
   }
+  const failure = mountFailureScreen(client);
   const preparer = new RoundPreparer({
     host: client,
     presenter: world,
@@ -36,6 +38,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
     // One frame between building a map and offering it, so the main thread is idle for the sim's commit.
     afterStage: () => new Promise((r) => requestAnimationFrame(() => r())),
     onError: (m) => banner(`Map refused: ${m}`),
+    onFailed: (m) => failure.show(m),
   });
   preparer.attach();
   // A dev map is judged now, not at the first round, so a broken one is named while the host is still in the Lobby.
@@ -72,6 +75,7 @@ export async function startPreparation(client: SimClient, world: World, params: 
         : null;
     },
     reroll: () => preparer.reroll(),
+    failure: () => ({ visible: failure.visible }),
   };
   return preparer;
 }

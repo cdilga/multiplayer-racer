@@ -96,6 +96,47 @@ export async function androidController({ port, log = () => {} }) {
     async setStick(x, y) {
       await page.evaluate(([x, y]) => window.__jjHello.setStick(x, y), [x, y]);
     },
+    /**
+     * The REAL controller page (not the hello room's): opens the join URL in Chrome, joins the race under `name` and resolves
+     * with the endpoint id. `page` is then the controller page over CDP (`window.__jjController`).
+     */
+    async joinRace(url, name) {
+      adbShell('input keyevent KEYCODE_HOME');
+      adbShell(`am start -a android.intent.action.VIEW -d ${url} com.android.chrome`);
+      const { chromium } = await import('playwright');
+      await until(
+        'the emulator controller page',
+        async () => {
+          if (dismiss()) await sleep(1500);
+          try {
+            browser ??= await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`);
+            page = browser.contexts().flatMap((c) => c.pages()).find((p) => p.url().startsWith(url.split('?')[0]));
+            return page;
+          } catch {
+            browser = null;
+            return false;
+          }
+        },
+        120_000,
+        2500,
+      );
+      await page.waitForFunction(() => window.__jjController?.inspect().phase === 'ready-to-join', undefined, { timeout: 90_000 });
+      await page.locator('#name').fill(name);
+      await page.getByRole('button', { name: 'Join the race' }).click();
+      await page.waitForFunction(() => window.__jjController.inspect().phase === 'playing', undefined, { timeout: 90_000 });
+      return page.evaluate(() => window.__jjController.inspect().link.endpointId);
+    },
+    get page() {
+      return page;
+    },
+    /** The app goes to the background (Home), as a player switching away; Chrome keeps the connection but stops painting. */
+    background() {
+      adbShell('input keyevent KEYCODE_HOME');
+    },
+    /** Chrome comes back to the front. */
+    foreground() {
+      adbShell('am start -n com.android.chrome/com.google.android.apps.chrome.Main');
+    },
     /** The phone goes away: Chrome is force-stopped (no `bye`, as a phone losing its page). */
     async leave() {
       try {

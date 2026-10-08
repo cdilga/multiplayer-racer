@@ -19,6 +19,8 @@ function encode(input: unknown): Uint8Array | undefined {
   if ('claim' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_claim(f.claim));
   if ('ready' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_ready(f.ready));
   if ('identify' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_identify());
+  if ('leave' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_leave());
+  if ('sitOut' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_sit_out());
   const s = f.state;
   return wasm.encode_net_bytes(i.endpoint, true, wasm.controller_state(s.source, s.seq, s.drive[0], s.drive[1]));
 }

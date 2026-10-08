@@ -189,6 +189,39 @@ test('failure: the conservative retry runs, and if that fails the room settles i
   }
 });
 
+test('a preparation failure shows Retry / Lobby, keeps the room, and Retry prepares again', { timeout: 90_000 }, async () => {
+  const { page, errors, api } = await open({ fail: 'all' });
+  await api('startRound');
+  await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') !== null, 'the Retry / Lobby screen');
+  const shown = await page.evaluate(() => ({
+    title: document.querySelector('.pf-title')?.textContent,
+    acts: [...document.querySelectorAll('.pf [data-act]')].map((b) => b.textContent),
+    detail: document.querySelector('[data-detail]')?.textContent,
+    room: window.__prep.room().phase,
+    seats: window.__prep.room().seats.length,
+  }));
+  assert.deepEqual(shown.acts, ['Retry', 'Lobby']);
+  assert.match(shown.detail, /no valid map/);
+  assert.equal(shown.room, 'Lobby');
+  assert.equal(shown.seats, 1, 'the room and its player are kept');
+  const requested = (await api('stats')).requested;
+  // Retry draws a fresh track and prepares again (and fails again here: the screen comes back, once).
+  await page.click('[data-act=retry]');
+  await page.evaluate((n) => (window.__req0 = n), requested);
+  await waitFor(page, () => window.__prep.stats().requested > window.__req0, 'a new preparation');
+  await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') !== null, 'the screen again after the retry fails');
+  // Lobby closes the screen and leaves the room in the Lobby with its player.
+  await page.click('[data-act=lobby]');
+  await waitFor(page, () => document.querySelector('[data-screen=prepare-failed]') === null, 'the screen to close');
+  const room = await api('room');
+  assert.equal(room.phase, 'Lobby');
+  assert.equal(room.seats.length, 1);
+  assert.equal((await api('presented')).committed, 0, 'no invalid map is ever loaded');
+  assert.deepEqual(errors, []);
+  evidence.runs.retryLobbyScreen = { shown, requestedBefore: requested };
+  await page.close();
+});
+
 test('a dev map goes through the validator: a good one races, a broken one is refused with the validator\'s message', { timeout: 60_000 }, async () => {
   const greybox = await readFile(join(repo, 'maps/greybox-loop.json'), 'utf8');
   {

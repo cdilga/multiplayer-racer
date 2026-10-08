@@ -40,6 +40,8 @@ export interface PrepareOptions {
   afterStage?: () => Promise<void>;
   /** A refusal or failure the host should show. */
   onError?: (message: string) => void;
+  /** The preparation failed for good (the conservative retry failed too): the host offers Retry or the Lobby. */
+  onFailed?: (message: string) => void;
 }
 
 export interface PrepareStats {
@@ -66,6 +68,8 @@ export class RoundPreparer {
   committed: MapJson | null = null;
   private staged: { preparation: number; map: StagedMap } | null = null;
   private failedLast = false;
+  /** `stats.failed` when the host was last told a preparation failed for good (or last saw a good map). */
+  private toldFailed = 0;
   private unsub: Array<() => void> = [];
 
   constructor(private o: PrepareOptions) {}
@@ -171,6 +175,12 @@ export class RoundPreparer {
   private onRoom(room: RoomView): void {
     const staged = this.staged;
     const p = room.preparation;
+    if (p?.verdict === 'ok') this.toldFailed = this.stats.failed;
+    // Nothing is pending, the sim holds no good map and a failure has happened since the last good one: it failed for good.
+    if (p && !p.pending && !p.prepared && p.verdict !== 'ok' && this.stats.failed > this.toldFailed && (room.phase === 'Lobby' || room.phase === 'Intermission')) {
+      this.toldFailed = this.stats.failed;
+      this.o.onFailed?.(this.stats.lastError);
+    }
     if (!staged || !p) return;
     if ((room.phase === 'Countdown' || room.phase === 'Running') && p.verdict === 'ok' && !p.prepared && staged.preparation === this.delivered) {
       this.staged = null;

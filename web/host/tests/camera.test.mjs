@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import { rolldown } from 'rolldown';
 import { newReverse, reverseYaw, stepReverse } from '../src/camera/reverse.ts';
 import { openHost, serve } from './lib/surface.mjs';
 
@@ -206,4 +207,76 @@ test('reversing camera: a flip part-way through a swing turns round from where i
     assert.ok(Math.abs(reverseYaw(s) - before) < (Math.PI * 1.5 * DT) / CFG.blendS + 1e-9, 'continuous');
   }
   assert.ok(mid > 0);
+});
+
+// The chase point stays clear of undulating ground (P1-R05): rig.ts bundled as it ships and driven as pure data. The car
+// drives a rolling road (8 m rises every 30 m); every frame the camera sits above the ground under it by the preset's
+// clearance and keeps its line of sight to the car over the ground. The control: with no ground function the same drive
+// puts the camera inside a rise, so the check has teeth.
+async function loadRig() {
+  const bundle = await rolldown({ input: join(repo, 'web/host/src/camera/rig.ts'), external: ['three'], logLevel: 'silent' });
+  const { output } = await bundle.generate({ format: 'esm' });
+  const file = join(repo, 'web/host/tests/.rig-bundle.mjs');
+  await writeFile(file, output[0].code);
+  await bundle.close();
+  return import(`${file}?${Date.now()}`);
+}
+
+test('the chase point stays clear of undulating ground (and would not without it)', async () => {
+  const { CameraRig } = await loadRig();
+  const { Vector3, Quaternion, PerspectiveCamera } = await import('three');
+  const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
+  const rolling = (x, z) => 4 + 4 * Math.sin((z / 30) * Math.PI * 2); // 0..8 m, a rise every 30 m
+  const drive = (ground) => {
+    const rig = new CameraRig();
+    rig.groundAt = ground;
+    const cam = new PerspectiveCamera(60, 16 / 9, 0.1, 500);
+    const car = { pos: new Vector3(0, rolling(0, 0) + 0.4, 0), rot: new Quaternion(), life: 1 };
+    let worstClear = Infinity;
+    let worstLos = Infinity;
+    for (let f = 0; f < 900; f++) {
+      car.pos.z += 0.25; // 15 m/s at 60 fps
+      car.pos.y = rolling(car.pos.x, car.pos.z) + 0.4;
+      rig.update(1, cam, car, 1 / 60);
+      worstClear = Math.min(worstClear, cam.position.y - rolling(cam.position.x, cam.position.z));
+      const eye = car.pos.y + prof.rig.pullInEyeUpM;
+      for (let k = 1; k < 8; k++) {
+        const t = k / 8;
+        const z = cam.position.z + (car.pos.z - cam.position.z) * t;
+        const y = cam.position.y + (eye - cam.position.y) * t;
+        worstLos = Math.min(worstLos, y - rolling(cam.position.x, z));
+      }
+    }
+    return { worstClear: +worstClear.toFixed(2), worstLos: +worstLos.toFixed(2) };
+  };
+  const clear = drive(rolling);
+  const control = drive(null);
+  runs.groundClearance = { withGround: clear, withoutGround: control, groundClearM: prof.rig.groundClearM };
+  assert.ok(clear.worstClear >= prof.rig.groundClearM - 0.01, `the chase point stayed ${prof.rig.groundClearM} m over the ground (worst ${clear.worstClear} m)`);
+  assert.ok(clear.worstLos >= 0.2 - 0.01, `the car stayed in sight over the rises (worst ${clear.worstLos} m)`);
+  assert.ok(control.worstClear < 0 || control.worstLos < 0, `without the ground the same drive buries the camera or hides the car (${JSON.stringify(control)})`);
+});
+
+test('camera distance is a setting: the host default follows the player count, a player may override, and null goes back', async () => {
+  const { CameraRig, distanceFor } = await loadRig();
+  const prof = JSON.parse(await readFile(join(repo, 'assets/profiles/camera.json'), 'utf8'));
+  const rig = new CameraRig();
+  for (const n of [1, 4, 12, 24, 99]) {
+    rig.players = n;
+    assert.equal(rig.distance(1), distanceFor(n), `the default for ${n} players`);
+    assert.ok(['near', 'mid', 'far'].includes(rig.distance(1)));
+  }
+  rig.players = 4;
+  const host = rig.distance(1);
+  const other = ['near', 'mid', 'far'].find((d) => d !== host);
+  rig.setDistance(2, other);
+  assert.equal(rig.distance(2), other, "a player's own choice");
+  assert.equal(rig.distance(1), host, "another player's tile keeps the host default");
+  rig.hostDistance = other === 'far' ? 'near' : 'far';
+  assert.equal(rig.distance(1), rig.hostDistance, 'the host can pin one distance for everybody');
+  assert.equal(rig.distance(2), other, 'a pinned host default does not touch an override');
+  rig.setDistance(2, null);
+  assert.equal(rig.distance(2), rig.hostDistance, 'null goes back to the host default');
+  assert.ok(prof.chase.near.backM < prof.chase.mid.backM && prof.chase.mid.backM < prof.chase.far.backM, 'near < mid < far');
+  runs.distanceSetting = { byCount: prof.distance.byCount, default: prof.distance.default };
 });

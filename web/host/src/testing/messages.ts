@@ -8,6 +8,8 @@ export type ControllerFrame =
   | { claim: string }
   | { ready: boolean }
   | { identify: true }
+  | { leave: true }
+  | { sitOut: true }
   | { state: { source: number; seq: number; drive: [number, number] } };
 export type TestInput = SimInput | { type: 'controller'; endpoint: string; frame: ControllerFrame };
 

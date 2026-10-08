@@ -3,6 +3,7 @@
 import greybox from '../../../maps/greybox-loop.json?raw';
 import { MapRenderer, type MapJson } from '../src/render/map/map';
 import { ProcgenClient, type PreparedMap, type Procgen } from '../src/procgen/client';
+import { mountFailureScreen, type FailureScreen } from '../src/procgen/failure';
 import { RoundPreparer } from '../src/procgen/prepare';
 import { TestClient, createWorker } from '../src/testing/testing';
 import { SimClient } from '../src/worker/client';
@@ -21,6 +22,7 @@ const presented = { staged: 0, committed: 0, disposed: 0, commitMaps: [] as stri
 let client: SimClient;
 let test: TestClient;
 let preparer: RoundPreparer;
+let failure: FailureScreen;
 let calls = 0;
 const refused: string[] = [];
 
@@ -45,8 +47,10 @@ const api = {
     client = new SimClient(createWorker());
     test = new TestClient(client);
     await client.start({ mapJson: greybox, seed: o.seed ?? 3 }, { describe: false, live: true });
+    failure = mountFailureScreen(client);
     preparer = new RoundPreparer({
       host: client,
+      onFailed: (m) => failure.show(m),
       procgen: procgenFor(o),
       devMap: o.devMap === undefined ? undefined : async () => o.devMap!,
       onError: (m) => refused.push(m),
