@@ -35,6 +35,9 @@ const C = {
   dirtDust: [0.84, 0.42, 0.24] as [number, number, number],
   dirtDustEnd: [0.88, 0.56, 0.4] as [number, number, number],
   gravel: [0.42, 0.32, 0.22] as [number, number, number],
+  // Gravel's dust and stones: pale crushed stone, so the spray reads against red earth (a dark brown fleck vanished).
+  gravelDust: [0.76, 0.68, 0.56] as [number, number, number],
+  stone: [0.86, 0.8, 0.7] as [number, number, number],
   smoke: [0.92, 0.9, 0.86] as [number, number, number],
   smokeEnd: [0.62, 0.6, 0.58] as [number, number, number],
   dark: [0.1, 0.1, 0.11] as [number, number, number],
@@ -190,7 +193,7 @@ export class Emitter {
           this.rate(st, `dust${side}`, dust * k, dt, () => {
             const w = at(side, 0.12, -1.55);
             const back = rotate(0, 0, -1);
-            const c0 = surface === 1 ? C.dirtDust : surface === 2 ? C.gravel : C.tarmacDust;
+            const c0 = surface === 1 ? C.dirtDust : surface === 2 ? C.gravelDust : C.tarmacDust;
             this.spawn({
               family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],
               vx: -vel[0] * 0.2 + back[0] * 1.2 + this.jitter(0.9), vy: 0.5 + this.rand() * 0.7, vz: -vel[2] * 0.2 + back[2] * 1.2 + this.jitter(0.9),
@@ -199,12 +202,13 @@ export class Emitter {
             });
           });
           if (surface === 2)
-            this.rate(st, `pebble${side}`, 20 * k, dt, () => {
+            this.rate(st, `pebble${side}`, 36 * k, dt, () => {
               const w = at(side, 0.15, -1.5);
               this.spawn({
                 family: 'dust', blend: 'alpha', x: w[0], y: w[1], z: w[2],
-                vx: -vel[0] * 0.15 + this.jitter(1.6), vy: 2 + this.rand() * 2.5, vz: -vel[2] * 0.3 + this.jitter(1.6),
-                life: 0.7, size0: 0.07, size1: 0.07, c0: C.gravel, c1: C.gravel, alpha: 1, drag: 0.9, gravity: 14, rim: 0,
+                // Stones big enough to see from the chase camera, inked like the puffs: a comic spray of pebbles.
+                vx: -vel[0] * 0.15 + this.jitter(2), vy: 3 + this.rand() * 3, vz: -vel[2] * 0.3 + this.jitter(2),
+                life: 0.8, size0: 0.17, size1: 0.14, c0: C.stone, c1: C.gravelDust, alpha: 1, drag: 0.9, gravity: 14, rim: 0.9,
               });
             });
         }
@@ -257,14 +261,14 @@ export class Emitter {
       } else if (st.parts.size) st.parts.clear();
       if (nonIntact >= 2) {
         const k = Math.min(1, nonIntact / 5);
-        this.rate(st, 'dsmoke', 8 + 12 * k, dt, () => {
+        this.rate(st, 'dsmoke', 14 + 18 * k, dt, () => {
           // From the engine bay but lifted and drifting up and back: a chase camera sees it over the car's roofline, not
           // across its paint (fresh-eyes: identity covered when it billowed at the bonnet).
           const e = at(this.jitter(0.3), 1.5, 0.6);
           this.spawn({
             family: 'damage-smoke', blend: 'alpha', x: e[0], y: e[1], z: e[2],
             vx: vel[0] * 0.5 + this.jitter(0.25), vy: 1.3 + this.rand() * 0.6, vz: vel[2] * 0.5 + this.jitter(0.25),
-            life: 1.6 + this.rand(), size0: 0.45, size1: 1.9, c0: C.dark, c1: C.darkEnd, alpha: 0.6 + 0.15 * k, drag: 0.5, gravity: -0.9, rim: 0.8,
+            life: 1.8 + this.rand(), size0: 0.5, size1: 2.3, c0: C.dark, c1: C.darkEnd, alpha: 0.85, drag: 0.5, gravity: -0.9, rim: 0.8,
           });
         });
       }
@@ -348,7 +352,7 @@ export class Emitter {
   }
 
   private landing(x: number, z: number, ground: number, y: number, k: number, surface: number): void {
-    const c0 = surface === 1 ? C.dirtDust : surface === 2 ? C.gravel : C.tarmacDust;
+    const c0 = surface === 1 ? C.dirtDust : surface === 2 ? C.gravelDust : C.tarmacDust;
     const gy = Math.min(y, ground + 0.15);
     for (let j = 0; j < 8 + Math.round(10 * k); j++) {
       const a = (j / 14) * Math.PI * 2 + this.rand();

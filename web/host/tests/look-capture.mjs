@@ -199,6 +199,8 @@ const FX = [
   ['impact-sparks-1tile', 1, [4], ['impact', 'sparks'], { hit: true }],
   ['landing-1tile', 1, [11], ['landing']],
   ['detach-damage-1tile', 1, [5], ['detach', 'damage-smoke']],
+  // A badly damaged car trailing smoke: the followed car lost a door and loosened its front at 4 s.
+  ['damage-smoke-1tile', 1, [5], ['damage-smoke'], { min: { 'damage-smoke': 60 } }],
   ['wreck-fire-1tile', 1, [0], ['wreck-fire'], { see: true }],
   ['wreck-fire-overview', 0, [], ['wreck-fire']],
   ['driving-4tiles', 4, [0, 1, 2, 3], ['dust', 'tyre-smoke', 'boost', 'lamp']],
@@ -251,7 +253,7 @@ async function fxShot([name, tiles, follow, families, opts = {}], out, report, r
       );
       break;
     }
-    if (families.every((f) => alive[f] > 0) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
+    if (families.every((f) => alive[f] > (opts.min?.[f] ?? 0)) && seen && (!families.includes('sparks') || alive.sparks >= 12)) break;
     await sleep(15);
   }
   alive = await page.evaluate(() => window.__jjRender.vehicles()?.fx.alive ?? {});
