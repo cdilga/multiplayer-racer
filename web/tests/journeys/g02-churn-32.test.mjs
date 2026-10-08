@@ -1,8 +1,9 @@
 // P1-G02 AC "one churn run at 32 synthetic controllers shows there is no cap": 32 controllers (the test surface's
 // synthetic frames: the same hello / claim / ready / leave a phone sends) fill the Lobby, churn there (eight leave, eight new
 // ones join), start a race with all 32 on the grid, churn mid-race (ten leave, ten drop in, each with a car), and shrink to
-// two. (res=0.25 and a small viewport: this run judges seats and cars, not pixels, and a software-GL host draws 32 tiles slowly.) At every step the room's seats are exactly the controllers that are in it (no phantom seat, no refused claim), and a
-// car stands for every seat. Nothing in the run is sized to 24 or 32: a 33rd controller joins as well.
+// two. Two things keep it feasible on a software-GL runner: `map=greybox-loop` skips track generation (which there outlasts any
+// wait), and res=0.25 with a small viewport (this run judges seats and cars, not pixels). At every step the room's seats are exactly the
+// controllers in it (no phantom seat, no refused claim) and a car stands for every seat. Nothing is sized to 24 or 32: a 33rd joins as well.
 //   node --test web/tests/journeys/g02-churn-32.test.mjs
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
@@ -23,7 +24,20 @@ after(async () => {
   await server?.close();
 });
 
-const wait = (page, fn, arg, ms = 120_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
+// A timed-out wait says where the room was (phase, seats, preparation, cars), so a slow runner's stall names its step.
+const wait = (page, fn, arg, ms = 120_000) =>
+  page.waitForFunction(fn, arg, { timeout: ms, polling: 100 }).catch(async (e) => {
+    const state = await page
+      .evaluate(async () => ({
+        phase: window.__jjRoom?.view()?.phase,
+        seats: window.__jjRoom?.view()?.seats.length,
+        preparation: window.__jjRoom?.view()?.preparation ?? window.__jjPrepare?.room?.(),
+        prepare: window.__jjPrepare?.stats?.(),
+        cars: (await window.__jjTest.observe()).cars.length,
+      }))
+      .catch((x) => ({ unreadable: String(x) }));
+    throw new Error(`${e.message.split('\n')[0]} (${fn.toString().slice(0, 90)}) state ${JSON.stringify(state)}`);
+  });
 // Every frame of a step goes in one page round trip: on a software-GL host each separate `evaluate` waits behind a host frame.
 const frames = (host, list) => host.evaluate(async (list) => { for (const [endpoint, f] of list) await window.__jjTest.input({ type: 'controller', endpoint, frame: f }); }, list);
 const seatsOf = (host) => host.evaluate(() => window.__jjRoom.view().seats.map((s) => s.name).sort());
@@ -33,7 +47,7 @@ test('churn at 32 synthetic controllers: no cap, no phantom seats', { timeout: 9
   const host = await (await browser.newContext({ viewport: { width: 960, height: 540 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
-  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99&res=0.25`);
+  await host.goto(`${server.origin}${BASE}host?room&test=live&laps=99&res=0.25&map=greybox-loop`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
 
   const inRoom = new Map(); // endpoint -> name
