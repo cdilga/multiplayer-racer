@@ -1,0 +1,106 @@
+{
+  "journey": "F10 demo on the G00 hello room, per lane",
+  "tier": "milestone",
+  "takenAt": "2026-10-08T07:25:30.911Z",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "platform": "darwin/arm64",
+    "kernel": "Darwin 27.0.0",
+    "cpu": "Apple M1 Pro",
+    "cpus": 8,
+    "memGiB": 16
+  },
+  "loopback": {
+    "ok": false,
+    "why": "a Chromium phone never connected to a Chromium host over loopback WebRTC (ice checking, pc connecting, link connecting); WebRTC journeys run on eris"
+  },
+  "preflight": [
+    {
+      "id": "chromium",
+      "label": "Chromium (darwin, Playwright)",
+      "available": true
+    },
+    {
+      "id": "webkit",
+      "label": "WebKit (Playwright; not Safari)",
+      "available": true
+    },
+    {
+      "id": "firefox",
+      "label": "Firefox (Playwright)",
+      "available": false,
+      "reason": "firefox isn't installed for Playwright here (/Users/cdilga/Library/Caches/ms-playwright/firefox-1538/firefox/Nightly.app/Contents/MacOS/firefox)"
+    },
+    {
+      "id": "ios-simulator",
+      "label": "iOS Simulator",
+      "available": true
+    },
+    {
+      "id": "android-emulator",
+      "label": "Android emulator",
+      "available": false,
+      "reason": "no Android SDK at /Users/cdilga/Android/Sdk on this machine"
+    },
+    {
+      "id": "macos-chrome-headed",
+      "label": "macOS Chrome headed (real GPU)",
+      "available": true
+    },
+    {
+      "id": "macos-safari",
+      "label": "macOS Safari",
+      "available": false,
+      "reason": "no lane: the owner checks it in Q02"
+    },
+    {
+      "id": "windows",
+      "label": "Windows browsers",
+      "available": false,
+      "reason": "no lane: the owner checks them in Q02"
+    },
+    {
+      "id": "real-devices",
+      "label": "Real phones, pads and the TCL",
+      "available": false,
+      "reason": "no lane: owner playtests"
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "chromium",
+      "label": "Chromium (darwin, Playwright)",
+      "machine": "Chriss-MacBook-Pro.local",
+      "status": "not-selected",
+      "reason": "--lanes ios-simulator"
+    },
+    {
+      "lane": "webkit",
+      "label": "WebKit (Playwright; not Safari)",
+      "machine": "Chriss-MacBook-Pro.local",
+      "status": "not-selected",
+      "reason": "--lanes ios-simulator"
+    },
+    {
+      "lane": "firefox",
+      "label": "Firefox (Playwright)",
+      "machine": "Chriss-MacBook-Pro.local",
+      "status": "not-selected",
+      "reason": "--lanes ios-simulator"
+    },
+    {
+      "lane": "android-emulator",
+      "label": "Android emulator",
+      "machine": "Chriss-MacBook-Pro.local",
+      "status": "not-selected",
+      "reason": "--lanes ios-simulator"
+    },
+    {
+      "lane": "ios-simulator",
+      "label": "iOS Simulator",
+      "machine": "Chriss-MacBook-Pro.local",
+      "status": "unavailable",
+      "reason": "a Chromium phone never connected to a Chromium host over loopback WebRTC (ice checking, pc connecting, link connecting); WebRTC journeys run on eris"
+    }
+  ]
+}

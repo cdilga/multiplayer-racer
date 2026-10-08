@@ -22,3 +22,17 @@ Still open: the **iOS Simulator** demo lane needs a host whose WebRTC the simula
 browsers can't connect over loopback (the Mac matrix's probe), and the harness runs host and controllers on one machine,
 so the iOS lane is still `unavailable` here. The iOS Simulator itself works on the Mac per test
 (`docs/evidence/P1-A03/ios-simulator-decode-2026-10-08.json`: 78/78 clips decoded in Mobile Safari 27.0).
+
+## 2026-10-08 07:25 UTC (BrownCreek): Mac rerun after the owner's firewall change
+
+The application firewall now lists Playwright's `Google Chrome for Testing.app` and `chrome-headless-shell` as "Allow
+incoming connections". Rerun: `matrix.mjs --tier milestone --lanes ios-simulator` (new `--lanes` filter, so the Mac only
+runs the lane asked for) → `matrix-mac-ios-2026-10-08.json`: the loopback probe still fails (`ice checking, pc
+connecting`), so the iOS lane is still `unavailable`.
+
+The firewall was not the cause. A bare pair of RTCPeerConnections inside **one page** on the Mac never connects either,
+and its only ICE candidate is `10.4.5.222 typ host`: the address of `utun4`, a point-to-point VPN tunnel interface
+(`inet 10.4.5.222 --> 10.4.5.222`), not the Wi-Fi address on `en0` (192.168.10.x, the default route). Chromium gathers
+only the tunnel's address and UDP to it goes nowhere; `--allow-loopback-in-peer-connection` and the full Chrome for
+Testing binary (instead of the headless shell) change nothing. With that VPN disconnected (or set not to own the
+interface Chromium picks), the probe and the iOS lane should run; that's an owner step on the Mac.

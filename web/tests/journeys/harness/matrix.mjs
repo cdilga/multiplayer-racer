@@ -3,7 +3,8 @@
 // journey in every lane this machine has, each lane recorded with its label and machine; a lane that couldn't run says so and
 // why. Writes docs/evidence/P1-F10/matrix-<host>-<stamp>.json (override the folder with JJ_EVIDENCE_DIR).
 //
-//   node web/tests/journeys/harness/matrix.mjs [--tier every-wave|milestone]
+//   node web/tests/journeys/harness/matrix.mjs [--tier every-wave|milestone] [--lanes ios-simulator,webkit]
+//   --lanes runs only those lanes (the others are recorded as `not-selected`), e.g. one lane on a Mac kept light.
 //
 // Lanes (§13.1): Chromium (every wave and milestone), WebKit (controllers; milestone), Firefox (milestone only), the Android
 // emulator and the iOS Simulator (milestone). Before any demo runs, a one-phone WebRTC probe decides whether this machine can
@@ -22,6 +23,7 @@ const arg = (k, d) => {
   return i > 0 ? process.argv[i + 1] : d;
 };
 const tier = arg('--tier', 'milestone');
+const only = arg('--lanes', '').split(',').filter(Boolean);
 const EVIDENCE = process.env.JJ_EVIDENCE_DIR ?? join(repo, 'docs/evidence/P1-F10');
 mkdirSync(EVIDENCE, { recursive: true });
 
@@ -87,7 +89,8 @@ const results = [];
 for (const lane of plan) {
   const l = byId[lane.needs];
   const base = { lane: lane.id, label: l.label, machine: machine().host };
-  if (!lane.when.includes(tier)) results.push({ ...base, status: 'not-in-tier', reason: `${lane.id} runs at ${lane.when.join(' and ')}` });
+  if (only.length && !only.includes(lane.id)) results.push({ ...base, status: 'not-selected', reason: `--lanes ${only.join(',')}` });
+  else if (!lane.when.includes(tier)) results.push({ ...base, status: 'not-in-tier', reason: `${lane.id} runs at ${lane.when.join(' and ')}` });
   else if (!l.available) results.push({ ...base, status: 'unavailable', reason: l.reason });
   else if (!probe.ok) results.push({ ...base, status: 'unavailable', reason: probe.why });
   else results.push({ ...base, ...runDemo(lane.env, lane.name), ...(l.avd ? { avd: l.avd } : {}), ...(l.device ? { device: l.device, runtime: l.runtime } : {}) });
