@@ -17,11 +17,11 @@ Captures: `c07-settings.test.mjs` and `c07-landscape-short.test.mjs` with `JJ_CA
 - Storage-denied note was below the fold in the capture: the test scrolls it into view.
 
 ## Remaining defects
-- **Camera distance is stored and shown (`session.cameraDistance`) but not sent to the host**: there is no protocol message for it (only SetCamera fp/tp). The AC "...and is sent to the host" is unmet until a field is added to jj-protocol.
+- (Fixed in 2310cd2b: camera distance goes to the host as `SetCameraDistance`.)
 - Vibration switch only affects the sticks' own tap buzz (via sticks.ts); iOS shows the switch disabled with a reason.
 - During a stick drag in Test these controls the base overlaps the "Drive" label (minor).
 - Portrait play screen: the tutorial card and the "Turn sideways" card stack on top of each other (C06 behaviour, not changed here).
-- Not compared side by side against art/ui/accepted/2026-10-07 settings mock by a second reviewer.
+- Second reviewer: see `fresh-eyes.md` (PASS).
 
 ## Not covered
 - Real phones, iOS Safari, a real haptic motor, tilt steering (C07.2).
