@@ -10,7 +10,7 @@ named captures and side-by-sides with the POC (`review.md`). Playwright Chromium
   first-person mirrors in place, nothing blank.
 - `first-person-4.jpg`, `mixed-fp-tp-12.jpg`: the bead's named captures (see `review.md`).
 - `self-review/tiles_4_tp_fp_tp_tp_1920x1080.jpg`: third person framing next to first person at TV size.
-- `self-review/24_map_tiles_12_cams_…_915x412.jpg` (phone landscape host, 12 seats) and
+- `self-review/24_map_tiles_12_cams_fp_tp_tp_fp_tp_fp_tp_tp_fp_tp_fp_tp_915x412.jpg` (phone landscape host, 12 seats) and
   `self-review/8_map_tiles_4_cams_fp_tp_fp_tp_412x915.jpg` (phone portrait host).
 - `r05-vs-poc.jpg`: N = 4, 8 and 32 against the POC framing captures.
 
