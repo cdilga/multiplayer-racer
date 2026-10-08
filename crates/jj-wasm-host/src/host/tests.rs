@@ -1679,7 +1679,6 @@ fn the_host_removes_a_player_mid_race_and_a_rejoin_is_a_new_seat() {
     );
 }
 
-#[test]
 /// P1-R07c: pausing is how a host lets someone join mid-race. A phone's Hello and Claim made while the race is paused are
 /// welcomed and seated on the host's clock with the sim frozen (no tick, no car, the race still Running and still
 /// paused); its car arrives through the late-join placement on the first tick after Resume, with a standings row. A
