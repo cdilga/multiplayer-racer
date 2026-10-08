@@ -109,7 +109,12 @@ const STREET: &[Lineside] = &[
         collides: true,
         avoid_corners: false,
         params: &[("heightCm", 800, 1100), ("radiusMm", 1800, 2600)],
-        ..rule("town/water-tower", (220.0, 360.0), Side::Either, (16.0, 26.0))
+        ..rule(
+            "town/water-tower",
+            (220.0, 360.0),
+            Side::Either,
+            (16.0, 26.0),
+        )
     },
     // The Olgas on the horizon (the reference's distant domes): M05's dome piece, consumed through the registry, far out.
     Lineside {
