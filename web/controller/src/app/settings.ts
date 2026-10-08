@@ -188,7 +188,7 @@ export class SettingsSheet {
       <div class="banner settings-auto" data-box="banner" role="status"><span>Autopilot is driving your car<small>Everyone else keeps racing.</small></span></div>
       <div class="panel" data-box="controls"><h1 class="display italic">Your controls</h1>
         ${seg('layout', 'Stick placement', [['floating', 'Floating sticks'], ['fixed', 'Fixed sticks']], p.layout)}
-        <div class="row">Layout${seg('controls', 'Stick layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)']], p.controls)}</div>
+        <div class="row">Controls${seg('controls', 'Stick layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)']], p.controls)}</div>
         <div class="row">Steering${seg('steering', 'Steering response', [['gentle', 'Gentle'], ['direct', 'Direct']], p.steering)}</div>
         <div class="row">Camera distance${seg('cameraDistance', 'Camera distance', [['near', 'Near'], ['host', "Host's"], ['far', 'Far']], p.cameraDistance)}</div>
         ${toggle('vibration', 'Vibration', haptics && p.vibration, haptics ? '' : "This phone can't vibrate from a web page", !haptics)}
