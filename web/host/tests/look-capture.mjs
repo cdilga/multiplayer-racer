@@ -57,6 +57,9 @@ const LOOK = [
   ['gantry-24tiles-tv-1080p', 24, 1920, 1080, 'start'],
   ['corner-1tile-laptop-1366', 1, 1366, 768, 'corner'],
   ['straight-4tiles-laptop-1366', 4, 1366, 768, 'straight'],
+  // A phone as the host (P1-R08), landscape and portrait.
+  ['corner-1tile-phone-915x412', 1, 915, 412, 'corner'],
+  ['straight-2tiles-phone-412x915', 2, 412, 915, 'straight'],
 ];
 
 // A real room of 24 joined controllers once crashed headless GPU Chromium on eris (the page closed during the joins). The 24-tile

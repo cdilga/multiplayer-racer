@@ -16,7 +16,7 @@ const repo = resolve(import.meta.dirname, '../../..');
 const only = process.argv.slice(2);
 // [name, players, width, height, biome segment, fraction along it]
 const jobs = [
-  { id: 'town', dir: 'P1-M04', recipe: 'town', shots: [['street-tv-1080p', 1, 1920, 1080, 'town', 'frontage'], ['street-tiles-1080p', 4, 1920, 1080, 'town', 'frontage'], ['street-laptop-1366', 4, 1366, 768, 'town', 'frontage']] },
+  { id: 'town', dir: 'P1-M04', recipe: 'town', shots: [['street-tv-1080p', 1, 1920, 1080, 'town', 'frontage'], ['street-tiles-1080p', 4, 1920, 1080, 'town', 'frontage'], ['street-laptop-1366', 4, 1366, 768, 'town', 'frontage'], ['street-phone-915x412', 1, 915, 412, 'town', 'frontage'], ['street-phone-412x915', 2, 412, 915, 'town', 'frontage']] },
   { id: 'rocks', dir: 'P1-M05', recipe: 'rocks', shots: [['domes-tv-1080p', 1, 1920, 1080, 'rocks', 0.5], ['domes-tiles-1080p', 4, 1920, 1080, 'rocks', 0.5], ['domes-laptop-1366', 4, 1366, 768, 'rocks', 0.5], ['jump-tv-1080p', 1, 1920, 1080, 'rocks', 'jump']] },
   { id: 'dirt', dir: 'P1-M06', recipe: 'outback-dirt', shots: [['track-tv-1080p', 1, 1920, 1080, 'outback-dirt', 0.5], ['track-tiles-1080p', 4, 1920, 1080, 'outback-dirt', 0.5], ['track-laptop-1366', 4, 1366, 768, 'outback-dirt', 0.5]] },
   { id: 'bitumen', dir: 'P1-M07', recipe: 'outback-bitumen', shots: [['highway-tv-1080p', 1, 1920, 1080, 'outback-bitumen', 0.5], ['highway-tiles-1080p', 4, 1920, 1080, 'outback-bitumen', 0.5], ['highway-laptop-1366', 4, 1366, 768, 'outback-bitumen', 0.5]] },
