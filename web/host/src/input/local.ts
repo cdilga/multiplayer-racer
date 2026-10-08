@@ -5,7 +5,7 @@
 //   makes a phantom seat. From then on it sends every poll while connected.
 // - Pads use the standard mapping: left stick DRIVE, right stick ACTION, View/Select = Identify, Start = READY.
 //   Key clusters come from `clusters.json` (data). Holding Identify + READY for `leaveHoldMs` leaves the seat.
-// - Digital steering is rate-shaped (keys ramp the DRIVE x axis); everything else is immediate.
+// - Digital steering is rate-shaped (keys ramp the right stick's x axis, R116); everything else is immediate.
 // - Steering wheels with pedals (P1-C05.2) map onto the same two sticks through a profile (`wheel.ts`): a shipped one
 //   matched by USB ids, or one saved by calibrating that device in the input drawer. A non-standard device with an
 //   axis resting far from centre (pedals) and no profile sends nothing until it's mapped, so it can't claim a seat
@@ -250,7 +250,7 @@ export class LocalInput {
         s.view.wheel = {
           profile: prof.label,
           verified: prof.verified,
-          steer: w.axes[0],
+          steer: w.axes[2],
           throttle: pedal(pad.axes[prof.throttle.axis], prof.throttle),
           brake: pedal(pad.axes[prof.brake.axis], prof.brake),
         };
@@ -275,14 +275,17 @@ export class LocalInput {
     const s = this.sources.get(c.id);
     if (!s) return;
     const k = (code: string) => (this.keys.has(code) ? 1 : 0);
+    // R116 (P1-C11): the cluster's "drive" keys are throttle and brake (up, down) and STEER (left, right, on the right stick's x
+    // axis); its "action" keys are the drift (left, right, on the left stick's x axis) and the forward and back flick (up,
+    // down, on the right stick's y axis). Steering is rate-shaped: the axis ramps toward the keys, full lock in
+    // 1/steerRatePerS s. Launch: hold the brake key, then release it as the throttle key goes down (a snap from -1 to +1).
     const target = k(c.drive.right) - k(c.drive.left);
-    // Rate-shaped steering: the DRIVE x axis ramps toward the keys, full lock in 1/steerRatePerS s.
     const step = map.steerRatePerS * dt;
-    const x = s.axes[0] + Math.max(-step, Math.min(step, target - s.axes[0]));
+    const steer = s.axes[2] + Math.max(-step, Math.min(step, target - s.axes[2]));
     const y = k(c.drive.up) - k(c.drive.down);
-    const ax = k(c.action.right) - k(c.action.left);
-    const ay = k(c.action.up) - k(c.action.down);
-    this.update(s, [x, y, ax, ay], this.keys.has(c.identify), this.keys.has(c.ready), now);
+    const drift = k(c.action.right) - k(c.action.left);
+    const flick = k(c.action.up) - k(c.action.down);
+    this.update(s, [drift, y, steer, flick], this.keys.has(c.identify), this.keys.has(c.ready), now);
   }
 
   private update(s: Source, axes: Axes, identify: boolean, ready: boolean, now: number): void {

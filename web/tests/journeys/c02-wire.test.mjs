@@ -25,7 +25,7 @@ closeContextsAfterEach(() => browser);
 
 const wait = (page, fn, arg, ms = 30_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 50 });
 
-test('the sticks arrive as DRIVE and ACTION: throttle, brake, steer, boost and drift, each independent of the other stick', { timeout: 240_000 }, async () => {
+test('R116: the left stick drives, drifts and launches, the right stick steers: each independent of the other', { timeout: 240_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   await host.goto(`${server.origin}${BASE}host?drive&test=live`);
   await wait(host, () => window.__jjNet?.code() && window.__jjTest, undefined, 60_000);
@@ -56,30 +56,38 @@ test('the sticks arrive as DRIVE and ACTION: throttle, brake, steer, boost and d
   };
   const still = { x: 0, y: 0 };
 
-  // Which sign the sim gives a push to the right.
-  await set({ x: 1, y: 0 }, still);
+  // Which sign the sim gives a push to the right: the RIGHT stick steers (R116).
+  await set(still, { x: 1, y: 0 });
   const right = Math.sign((await until('steer right', (s) => Math.abs(s.steer) > 0.8)).steer);
-  await set({ x: -1, y: 0 }, still);
+  await set(still, { x: -1, y: 0 });
   await until('steer left', (s) => Math.sign(s.steer) === -right && Math.abs(s.steer) > 0.8);
-  // DRIVE up: throttle, nothing else.
+  // The left stick's x is not steering.
+  await set({ x: 0.4, y: -0.9 }, still);
+  const lean = await until('throttle', (s) => s.throttle > 0.7);
+  assert.ok(Math.abs(lean.steer) < 0.1, `a thumb lean on the left stick does not steer: ${JSON.stringify(lean)}`);
+  // LEFT up: throttle, nothing else (no boost at the rim: the boost is the launch).
   await set({ x: 0, y: -1 }, still);
   const up = await until('throttle', (s) => s.throttle > 0.8);
-  assert.ok(Math.abs(up.steer) < 0.1 && up.brake < 0.1, `up is throttle only: ${JSON.stringify(up)}`);
-  // DRIVE down: brake or reverse, no throttle.
+  assert.ok(Math.abs(up.steer) < 0.1 && up.brake < 0.1 && !up.action.boosting, `up is throttle only: ${JSON.stringify(up)}`);
+  // LEFT down: brake or reverse, no throttle.
   await set({ x: 0, y: 1 }, still);
   const down = await until('brake', (s) => s.brake > 0.5 || s.throttle < -0.5);
   assert.ok(!(down.throttle > 0.1), `down is not throttle: ${JSON.stringify(down)}`);
-  // ACTION right: boost asked for, and it leaves DRIVE alone (steer stays 0, throttle stays what DRIVE says).
-  const meter0 = (await seen()).action.boost;
+  // Full throttle and full lock together: different sticks, so both at once.
   await set({ x: 0, y: -1 }, { x: 1, y: 0 });
-  const boost = await until('boost', (s) => s.throttle > 0.8 && (s.action.boosting === true || s.action.boost < meter0 - 0.02), 30_000);
-  assert.ok(Math.abs(boost.steer) < 0.1 && boost.throttle > 0.8, `the action stick does not steer or lift the throttle: ${JSON.stringify(boost)}`);
-  // ACTION left: drift (when the car is moving fast enough to), and again no leak into steer.
-  await set({ x: 0, y: -1 }, { x: -1, y: 0 });
-  const drift = await until('drift', (s) => s.throttle > 0.8 && (s.action.drift > 0 || s.action.drifting === true), 20_000).catch(() => null);
-  const steady = await until('drive holds', (s) => s.throttle > 0.8);
-  assert.ok(Math.abs(steady.steer) < 0.1, `the action stick's drift side does not steer: ${JSON.stringify(steady)}`);
-  if (drift) console.log('# drift seen at the host');
+  const both = await until('throttle and lock', (s) => s.throttle > 0.8 && Math.abs(s.steer) > 0.8);
+  assert.ok(!both.action.boosting && !both.action.drift, `full throttle with full lock is neither drift nor boost: ${JSON.stringify(both)}`);
+  // LEFT sideways: the drift, at the stick's magnitude of throttle, and the right stick still steers on its own.
+  await set({ x: 1, y: -0.3 }, still);
+  const drift = await until('drift', (s) => s.action.drift > 0.5 || s.action.drifting === true, 30_000);
+  assert.ok(drift.throttle > 0.9, `a drift at the rim keeps full throttle: ${JSON.stringify(drift)}`);
+  assert.ok(Math.abs(drift.steer) < 0.1, `the left stick's drift side does not steer: ${JSON.stringify(drift)}`);
+  // The launch: pull the left stick all the way back, hold, snap it forward: the front lifts (a wheelie).
+  await set(still, still);
+  await set({ x: 0, y: 1 }, still);
+  await host.waitForTimeout(600);
+  await set({ x: 0, y: -1 }, still);
+  await until('the launch', (s) => s.action.wheelie === true, 15_000);
   await set(still, still);
   await until('neutral', (s) => Math.abs(s.steer) < 0.05 && s.throttle < 0.05 && s.brake < 0.05);
 });

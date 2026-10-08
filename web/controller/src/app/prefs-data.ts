@@ -3,6 +3,8 @@
 // tests import this directly.
 export type Layout = 'floating' | 'fixed';
 export type Steering = 'gentle' | 'direct';
+/** The stick layout: R116 two sticks (default) or the old one-stick layout (steer on the left stick, the right stick's sectors). */
+export type Controls = 'dual' | 'classic';
 export type CameraDistance = 'near' | 'host' | 'far';
 export type TiltDeadzone = 'small' | 'medium' | 'large';
 export type TiltSensitivity = 'gentle' | 'normal' | 'sharp';
@@ -10,6 +12,7 @@ export type TiltSensitivity = 'gentle' | 'normal' | 'sharp';
 export interface ControllerPreferences {
   v: 1;
   layout: Layout;
+  controls: Controls;
   steering: Steering;
   cameraDistance: CameraDistance;
   vibration: boolean;
@@ -28,6 +31,7 @@ export interface ControllerPreferences {
 export const DEFAULTS: ControllerPreferences = {
   v: 1,
   layout: 'floating',
+  controls: 'dual',
   steering: 'gentle',
   cameraDistance: 'host',
   vibration: true,
@@ -55,6 +59,7 @@ export function sanitise(raw: unknown): ControllerPreferences {
   return {
     v: 1,
     layout: oneOf(r.layout, ['floating', 'fixed'], DEFAULTS.layout),
+    controls: oneOf(r.controls, ['dual', 'classic'], DEFAULTS.controls),
     steering: oneOf(r.steering, ['gentle', 'direct'], DEFAULTS.steering),
     cameraDistance: oneOf(r.cameraDistance, ['near', 'host', 'far'], DEFAULTS.cameraDistance),
     vibration: bool(r.vibration, DEFAULTS.vibration),

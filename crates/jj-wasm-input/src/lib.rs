@@ -201,6 +201,20 @@ impl WasmEndpoint {
         .collect()
     }
 
+    /// How much of the wheelie launch's cooldown is left at `now_ms`, as a fraction 0..=1 (0: ready): the ring on the left
+    /// stick knob (P1-C11).
+    #[wasm_bindgen(js_name = launchCooldown)]
+    pub fn launch_cooldown(&self, idx: usize, now_ms: f64) -> f64 {
+        self.sources.get(idx).map_or(0.0, |s| {
+            let (left, total) = s.launch_cooldown(now_ms as u64);
+            if total == 0 {
+                0.0
+            } else {
+                left as f64 / total as f64
+            }
+        })
+    }
+
     /// Neutralises a source (`WHY_*` tag): sticks read neutral, pending detections never fire.
     /// Also marks the endpoint due for a prompt send.
     #[wasm_bindgen]
@@ -365,13 +379,15 @@ mod tests {
 
     #[test]
     fn an_endpoint_detects_and_sends() {
+        // R116 (the default layout): a quick flick up on the right stick fires the forward utility, once.
         let mut ep = WasmEndpoint::new();
         let idx = ep.add_source(5);
-        let actions = ep.sample(idx, 0, 0, 0, 32_767, true, true, 0.0);
-        assert_eq!(actions.len(), 1, "the UP entry fires");
+        assert_eq!(ep.sample(idx, 0, 0, 0, 0, false, false, 0.0).len(), 0);
+        let actions = ep.sample(idx, 0, 0, 0, 32_767, true, true, 30.0);
+        assert_eq!(actions.len(), 1, "the flick up fires");
         assert_eq!(actions[0].kind_tag(), KIND_UTILITY_FORWARD);
         // One tap between sends: exactly one action, and the release adds nothing.
-        let actions = ep.sample(idx, 0, 0, 0, 0, false, false, 5.0);
+        let actions = ep.sample(idx, 0, 0, 0, 0, false, false, 35.0);
         assert_eq!(actions.len(), 0, "the release itself fires nothing");
         let flush = ep.poll(16.0).expect("the initial flush is due");
         assert_eq!(
@@ -381,5 +397,34 @@ mod tests {
         );
         assert_eq!(flush.batch(0)[0], 0x10, "a StateBatch on the state channel");
         assert_eq!(flush.reason(), REASON_CHANGED);
+    }
+
+    #[test]
+    fn the_old_layout_is_a_per_source_setting_and_fires_on_entry() {
+        let mut ep = WasmEndpoint::new();
+        let idx = ep.add_source(5);
+        ep.set_classic(idx, true);
+        let actions = ep.sample(idx, 0, 0, 0, 32_767, true, true, 0.0);
+        assert_eq!(actions.len(), 1, "the old sector fires on entry");
+        assert_eq!(actions[0].kind_tag(), KIND_UTILITY_FORWARD);
+    }
+
+    #[test]
+    fn the_launch_cooldown_reads_as_a_fraction_that_empties() {
+        let mut ep = WasmEndpoint::new();
+        let idx = ep.add_source(5);
+        let mut t = 0.0;
+        while t < 500.0 {
+            ep.sample(idx, 0, -32_767, 0, 0, true, false, t);
+            t += 20.0;
+        }
+        assert_eq!(ep.launch_cooldown(idx, t), 0.0, "ready before a launch");
+        let fired = ep.sample(idx, 0, 32_767, 0, 0, true, false, t + 40.0);
+        assert_eq!(fired.len(), 1, "pull then snap launches");
+        let full = ep.launch_cooldown(idx, t + 40.0);
+        assert!(full > 0.99, "the ring starts full: {full}");
+        let half = ep.launch_cooldown(idx, t + 40.0 + 2_000.0);
+        assert!(half > 0.4 && half < 0.6, "and empties: {half}");
+        assert_eq!(ep.launch_cooldown(idx, t + 40.0 + 5_000.0), 0.0);
     }
 }

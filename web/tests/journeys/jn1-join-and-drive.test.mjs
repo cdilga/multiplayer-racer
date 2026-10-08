@@ -134,9 +134,10 @@ test('JN1: phones join by QR and by code, claim, and each drives its own car; ke
   at('drive');
   const epA = youA.link.endpointId;
   const epB = youB.link.endpointId;
-  const hold = (p, d) => p.page.evaluate((d) => window.__jjController.setSticks({ ...d, touch: true }, { x: 0, y: 0, touch: false }), d);
+  // R116: the left stick drives (y), the right stick steers (x).
+  const hold = (p, d, a = { x: 0, y: 0 }) => p.page.evaluate(([d, a]) => window.__jjController.setSticks({ ...d, touch: true }, { ...a, touch: a.x !== 0 || a.y !== 0 }), [d, a]);
   await hold(a, { x: 0, y: -1 });
-  await hold(b, { x: 0.9, y: -0.8 });
+  await hold(b, { x: 0, y: -0.8 }, { x: 0.9, y: 0 });
   await shot(a.page, 'phone-landscape-844x390-driving');
   const { start, now } = await driveTicks(host, 300);
   await shot(host, 'tv-1280x720-three-seats');

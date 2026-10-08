@@ -50,15 +50,23 @@ test('dead zone, sensitivity and neutral shape the steer; it is monotonic and cl
   near(steerFrom(-179, 179, { deadzoneDeg: 0, fullLockDeg: 4 }), 0.5);
 });
 
-test('tilt replaces only the DRIVE steer axis: throttle, brake and the whole ACTION stick are untouched (R60)', () => {
+test("tilt replaces only the steering axis: the right stick's x (R116); the left stick and the flicks are untouched", () => {
   const drive = { x: 0.1, y: -0.8, touch: true };
   const action = { x: 0.9, y: 0.4, touch: true };
   const [d, a] = applyTilt(drive, action, -0.6);
-  assert.deepEqual(d, { x: -0.6, y: -0.8, touch: true });
-  assert.equal(a, action, 'the action stick is the same object, unread and unwritten');
+  assert.equal(d, drive, 'the left stick is the same object, unread and unwritten');
+  assert.deepEqual(a, { x: -0.6, y: 0.4, touch: true });
   const [d2, a2] = applyTilt(drive, action, null);
   assert.equal(d2, drive);
   assert.equal(a2, action);
+});
+
+test('in the old one-stick layout tilt replaces the left stick steer axis, as before (R60)', () => {
+  const drive = { x: 0.1, y: -0.8, touch: true };
+  const action = { x: 0.9, y: 0.4, touch: true };
+  const [d, a] = applyTilt(drive, action, -0.6, true);
+  assert.deepEqual(d, { x: -0.6, y: -0.8, touch: true });
+  assert.equal(a, action);
 });
 
 test('it is off by default, persists as a setting, and bad stored values fall back', () => {

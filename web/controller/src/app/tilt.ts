@@ -47,9 +47,13 @@ export function steerFrom(roll: number, neutral: number, s: TiltSettings): numbe
   return Math.sign(d) * Math.min(1, (m - s.deadzoneDeg) / Math.max(1, s.fullLockDeg - s.deadzoneDeg));
 }
 
-/** Tilt replaces the DRIVE steer axis only: throttle/brake (drive y) and the whole ACTION stick pass through untouched. */
-export function applyTilt<T extends { x: number; y: number; touch: boolean }>(drive: T, action: T, steer: number | null): [T, T] {
-  return steer === null ? [drive, action] : [{ ...drive, x: steer }, action];
+/**
+ * Tilt replaces the steering axis only (R116: the right stick's x; in the old one-stick layout the left stick's x): throttle,
+ * brake, drift and the flicks pass through untouched.
+ */
+export function applyTilt<T extends { x: number; y: number; touch: boolean }>(drive: T, action: T, steer: number | null, classic = false): [T, T] {
+  if (steer === null) return [drive, action];
+  return classic ? [{ ...drive, x: steer }, action] : [drive, { ...action, x: steer }];
 }
 
 export type TiltState = 'off' | 'asking' | 'waiting' | 'live' | 'denied' | 'no-sensor';

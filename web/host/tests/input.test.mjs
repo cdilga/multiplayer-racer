@@ -69,7 +69,7 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   await page.waitForTimeout(500);
   assert.equal((await observe()).host.seats.length, 0, 'no phantom seats');
 
-  // Pad 1 straight on, pad 2 throttle and right, keys A throttle (W), keys B brake/reverse and left (K, J).
+  // Pad 1 straight on (left stick up), pad 2 throttle (left stick) and right (right stick steers, R116), keys A throttle (W), keys B brake/reverse and left (K, J).
   // One source at a time, each waiting for its seat, so the grid order (and so who drives next to whom) doesn't depend
   // on whether the host sampled them in one frame or several (it does under load).
   const seated = async (n) => {
@@ -79,7 +79,7 @@ test('two pads and two key clusters claim four seats, each drives its own car; a
   };
   await page.evaluate(() => window.__pads.axes(0, [0, -1, 0, 0]));
   await seated(1);
-  await page.evaluate(() => window.__pads.axes(1, [0.8, -0.7, 0, 0]));
+  await page.evaluate(() => window.__pads.axes(1, [0, -0.7, 0.8, 0]));
   await seated(2);
   await page.keyboard.down('KeyW');
   await seated(3);

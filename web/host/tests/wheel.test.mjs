@@ -239,20 +239,20 @@ test('a wheel with a shipped profile maps at once, unconfirmed until "Looks righ
   await ctx.close();
 });
 
-/** The recorded wheel (50 ms samples) as fixture stick spans: DRIVE x = steering, y = accelerator − brake. */
+/** The recorded wheel (50 ms samples) as fixture stick spans (R116): the right stick's x = steering, the left stick's y = accelerator − brake. */
 function traceFixture(trace) {
   const tick = (ms) => Math.round((ms * 120) / 1000);
   const t0 = trace[0].ms;
   const inputs = trace.map((s, i) => {
     const from = tick(s.ms - t0);
     const next = trace[i + 1];
-    return { car: 0, fromTick: from, ...(next ? { toTick: tick(next.ms - t0) } : {}), stick: [s.steer, +(s.throttle - s.brake).toFixed(4)] };
+    return { car: 0, fromTick: from, ...(next ? { toTick: tick(next.ms - t0) } : {}), stick: [0, +(s.throttle - s.brake).toFixed(4)], action: [s.steer, 0] };
   }).filter((s) => s.toTick === undefined || s.toTick > s.fromTick);
   const ticks = tick(trace.at(-1).ms - t0) + 1;
   const peak = trace.reduce((m, s, i) => (s.brake > 0.5 && m < 0 ? i : m), -1);
   return {
     scenario: 'wheel-trace',
-    what: 'P1-C05.2 (R90): a wheel run recorded live in the host (an emulated wheel calibrated in the drawer) and replayed as fixture sticks through jj-input and the sim: the car accelerates, turns with the wheel, then slows on the brake.',
+    what: 'P1-C05.2 (R90): a wheel run recorded live in the host (an emulated wheel calibrated in the drawer) and replayed as fixture sticks through jj-input and the sim (R116: the wheel steers on the right stick's x, the pedals are the left stick's y): the car accelerates, turns with the wheel, then slows on the brake.',
     map: 'maps/greybox-loop.json',
     seed: 83,
     ticks,

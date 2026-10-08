@@ -63,35 +63,47 @@ const waitStep = async (page, n) => {
   }
 };
 
+/** The wheelie launch, the boost (R116): pull the left stick all the way back, hold it, then snap it to full forward. */
+const launch = (page, hold = 600) =>
+  page.evaluate(async (hold) => {
+    const c = window.__jjController;
+    const none = { x: 0, y: 0, touch: false };
+    c.setSticks({ x: 0, y: 1, touch: true }, none);
+    await new Promise((r) => setTimeout(r, hold));
+    c.setSticks({ x: 0, y: -1, touch: true }, none);
+    await new Promise((r) => setTimeout(r, 250));
+    c.setSticks(none, none);
+  }, hold);
+
 test('C06: a newcomer is coached through every control by doing it; nothing pauses', { timeout: 180_000 }, async () => {
   const { host, page, ctx } = await hostAndPhone();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await shot(page, 'phone-tutorial-step1');
-  await sticks(page, { x: 1, y: 0 }, z);
-  await sticks(page, { x: -1, y: 0 }, z);
+  // R116: the right stick steers.
+  await sticks(page, z, { x: 1, y: 0 });
+  await sticks(page, z, { x: -1, y: 0 });
   await shot(page, 'phone-tutorial-step1-won');
   await waitStep(page, 1);
   await shot(page, 'phone-tutorial-step2');
   await sticks(page, { x: 0, y: -1 }, z);
   await sticks(page, { x: 0, y: 1 }, z);
   await waitStep(page, 2);
-  await shot(page, 'phone-tutorial-step3-boost');
-  await sticks(page, z, { x: 1, y: 0 });
+  await shot(page, 'phone-tutorial-step3-drift');
+  await sticks(page, { x: 1, y: -0.3 }, z, 200);
   await waitStep(page, 3);
-  await shot(page, 'phone-tutorial-step4-drift');
-  await sticks(page, z, { x: -1, y: 0 });
+  await shot(page, 'phone-tutorial-step4-launch');
+  await launch(page);
+  await shot(page, 'phone-launch-cooldown-ring-844x390'); // the ring on the left stick knob while the launch cools down
   await waitStep(page, 4);
   await shot(page, 'phone-tutorial-oi');
+  await page.waitForTimeout(400);
   await sticks(page, z, { x: 0, y: -1 }, 80);
   await shot(page, 'phone-tutorial-oi-ticked');
   await waitStep(page, 5);
   await shot(page, 'phone-tutorial-step6-cone');
+  await page.waitForTimeout(400);
   await sticks(page, z, { x: 0, y: 1 }, 80);
   await waitStep(page, 6);
-  await shot(page, 'phone-tutorial-step7-wheelie');
-  // The wheelie: pull the left stick all the way back, hold for the preload, let go.
-  await sticks(page, { x: 0, y: 1 }, z, 600);
-  await waitStep(page, 7);
   await shot(page, 'phone-tutorial-done');
   assert.equal(await host.evaluate(() => window.__jjRoom.view().phase), 'Lobby', 'the tutorial never starts or holds anything');
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'the host never paused');
@@ -107,8 +119,8 @@ test('C06: a newcomer is coached through every control by doing it; nothing paus
 test('C06: Skip is one tap on any step, never blocks Ready, and is remembered', { timeout: 120_000 }, async () => {
   const { host, page } = await hostAndPhone();
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
-  await sticks(page, { x: 1, y: 0 }, z);
-  await sticks(page, { x: -1, y: 0 }, z);
+  await sticks(page, z, { x: 1, y: 0 });
+  await sticks(page, z, { x: -1, y: 0 });
   await waitStep(page, 1);
   await shot(page, 'phone-tutorial-before-skip');
   await page.getByRole('button', { name: 'Skip tutorial' }).click();
@@ -138,9 +150,9 @@ test('C06: the host sees each control and the seat\'s tile shows the next one in
   await wait(page, () => window.__jjTutorial.inspect()?.open === true);
   await wait(host, () => window.__jjRoom.view().seats[0]?.prompt?.step === 0, undefined, 10_000);
   // The host sees the steer goals as they happen.
-  await sticks(page, { x: 1, y: 0 }, z, 400);
+  await sticks(page, z, { x: 1, y: 0 }, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.done?.includes('right'), undefined, 10_000);
-  await sticks(page, { x: -1, y: 0 }, z, 400);
+  await sticks(page, z, { x: -1, y: 0 }, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 1, undefined, 10_000);
   // The race starts (the card gets out of the way); the tile carries on from the control the host last saw.
   await startRace(page, host);
@@ -148,9 +160,9 @@ test('C06: the host sees each control and the seat\'s tile shows the next one in
   await shot(host, 'tv-prompt-go-and-stop-1280x720');
   await sticks(page, { x: 0, y: -1 }, z, 400);
   await sticks(page, { x: 0, y: 1 }, z, 400);
-  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Boost/i.test(e.textContent)), undefined, 60_000);
-  await shot(host, 'tv-prompt-boost-1280x720');
-  await sticks(page, z, { x: 1, y: 0 }, 400);
+  await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Drift/i.test(e.textContent)), undefined, 60_000);
+  await shot(host, 'tv-prompt-drift-1280x720');
+  await sticks(page, { x: 1, y: -0.3 }, z, 400);
   await wait(host, () => window.__jjRoom.view().seats[0].prompt?.step === 3, undefined, 10_000);
   assert.deepEqual(await tilePrompt(host).then((t) => t.length), 1, 'one prompt on the one tile');
   assert.equal((await host.evaluate(() => window.__jjTest.observe())).host.pauseMask, 0, 'prompts never paused the host');
@@ -184,7 +196,7 @@ test('C06: a newcomer who joins a race in progress gets the prompts on their til
   assert.equal((await late.evaluate(() => window.__jjTutorial.inspect())).open, false, 'no card in a race (it would hand the car to the autopilot)');
   await wait(host, () => [...document.querySelectorAll('.hud-tile [data-prompt]')].some((e) => !e.hidden && /Steer/i.test(e.textContent)), undefined, 60_000);
   await shot(host, 'tv-prompt-late-joiner-steer-1280x720');
-  await sticks(late, { x: 1, y: 0 }, z, 400);
-  await sticks(late, { x: -1, y: 0 }, z, 400);
+  await sticks(late, z, { x: 1, y: 0 }, 400);
+  await sticks(late, z, { x: -1, y: 0 }, 400);
   await wait(host, () => window.__jjRoom.view().seats[1].prompt?.step === 1, undefined, 30_000);
 });

@@ -10,8 +10,8 @@ export function stickZone(kind: StickKind): HTMLElement {
   const z = document.createElement('div');
   z.className = `zone ${kind}`;
   z.dataset.box = `zone-${kind}`;
-  z.setAttribute('aria-label', kind === 'drive' ? 'Drive stick: steer, accelerate, brake and reverse' : 'Action stick: boost right, drift left, utilities up and down');
-  z.innerHTML = `<span class="tag display">${kind === 'drive' ? 'Drive' : 'Action'}</span><div class="base"><div class="preload" style="--p:0%"></div><div class="knob"></div></div>`;
+  z.setAttribute('aria-label', kind === 'drive' ? 'Drive stick: accelerate up, brake and reverse down, drift sideways; pull back then snap forward to launch' : 'Steer stick: steer left and right, flick up or down to fire forward or back');
+  z.innerHTML = `<span class="tag display">${kind === 'drive' ? 'Drive' : 'Steer'}</span><div class="base"><div class="preload" style="--p:0%"></div><div class="knob"></div></div>`;
   return z;
 }
 

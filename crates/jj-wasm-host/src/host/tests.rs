@@ -504,7 +504,8 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     assert_eq!(kinds2, 11, "the pieces keep their debris slots, kind 2");
 }
 
-fn boost_then_drift(classic: bool) {
+fn boost_then_drift_classic() {
+    let classic = true;
     // P1-S03b: a phone holding DRIVE up with ACTION right boosts (jj-input's held right sector, through the source
     // semantics into the sim's applied input); swinging ACTION left is the handbrake drift.
     let mut h = driving_host();
@@ -525,11 +526,9 @@ fn boost_then_drift(classic: bool) {
     for (k, t) in (0..240u64).step_by(6).enumerate() {
         // The old layout: the right stick held right boosts, held left drifts. R116: the left stick at the rim boosts, pushed
         // sideways drifts.
-        let (drive, action) = match (classic, t < 120) {
-            (true, true) => ([0, 32_767], [32_767, 0]),
-            (true, false) => ([0, 32_767], [-32_767, 0]),
-            (false, true) => ([0, 32_767], [0, 0]),
-            (false, false) => ([32_767, 0], [0, 0]),
+        let (drive, action) = match t < 120 {
+            true => ([0, 32_767], [32_767, 0]),
+            false => ([0, 32_767], [-32_767, 0]),
         };
         let batch = StateBatch {
             minor: STATE_MINOR,
@@ -570,15 +569,64 @@ fn boost_then_drift(classic: bool) {
 }
 
 #[test]
-fn the_left_stick_boosts_at_the_rim_then_drifts_sideways() {
-    // P1-C11 (R116): the default layout.
-    boost_then_drift(false);
+fn the_old_layouts_action_stick_still_boosts_then_drifts() {
+    // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.
+    boost_then_drift_classic();
 }
 
 #[test]
-fn the_old_layouts_action_stick_still_boosts_then_drifts() {
-    // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.
-    boost_then_drift(true);
+fn r116_the_rim_is_not_a_boost_and_a_sideways_push_drifts_at_full_throttle() {
+    // P1-C11 (R116, amended): the boost is the wheelie launch, so full forward to the rim is only throttle; the left stick
+    // pushed sideways is the drift and its throttle reads the stick's magnitude.
+    let mut h = driving_host();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("phone".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Ava".into(),
+        },
+    ] {
+        h.schedule(0, &net("phone", Channel::Cmd, c.encode()))
+            .unwrap();
+    }
+    for (k, t) in (0..240u64).step_by(6).enumerate() {
+        let drive = if t < 120 { [0, 32_767] } else { [32_767, 0] };
+        let batch = StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: k as u16 + 1,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(1),
+                seq: k as u16 + 1,
+                drive,
+                action: [0, 0],
+                flags: StateFlags(StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH),
+            }],
+        };
+        h.schedule(t, &net("phone", Channel::State, batch.encode().unwrap()))
+            .unwrap();
+    }
+    let mut boosted = false;
+    while h.tick() < 120 {
+        h.step_one();
+        boosted |= h.sim().action_state(CarId(0)).is_some_and(|a| a.boosting);
+    }
+    assert!(!boosted, "the rim is only throttle");
+    while h.tick() < 200 {
+        h.step_one();
+    }
+    let a = h.sim().action_state(CarId(0)).unwrap();
+    assert!(a.drift > 0.9 && !a.boosting, "sideways drifts: {a:?}");
+    let applied = h.sim().applied_input(CarId(0)).unwrap();
+    assert!(
+        applied.drift && !applied.boost && applied.throttle > 30_000,
+        "at full throttle: {applied:?}"
+    );
 }
 
 #[test]
@@ -2123,7 +2171,7 @@ fn the_seats_prompts_follow_what_the_host_sees_and_skip_hides_them() {
     let p = prompt(&h);
     assert_eq!(
         (p["step"].clone(), p["of"].clone(), p["done"].clone()),
-        (0.into(), 7.into(), serde_json::json!(["right"]))
+        (0.into(), 6.into(), serde_json::json!(["right"]))
     );
     drive(&mut h, -32_767, 10);
     assert_eq!(prompt(&h)["step"], 1, "both sides seen: the next control");

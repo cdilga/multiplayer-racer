@@ -98,7 +98,7 @@ test('tilt steering: off by default, opt-in, steers the host car through the nor
   await page.getByRole('button', { name: 'Save and back to driving' }).click();
 
   // Which sign the host gives a stick pushed right: a clockwise turn of the phone must match it.
-  await page.evaluate(() => window.__jjController.setSticks({ x: 1, y: 0, touch: true }, { x: 0, y: 0, touch: false }));
+  await page.evaluate(() => window.__jjController.setSticks({ x: 0, y: 0, touch: false }, { x: 1, y: 0, touch: true }));
   let rightSign = 0;
   for (const t0 = Date.now(); Math.abs((await seen()).steer ?? 0) < 0.8; await page.waitForTimeout(150)) assert.ok(Date.now() - t0 < 15_000, 'the host never saw the stick');
   rightSign = Math.sign((await seen()).steer);

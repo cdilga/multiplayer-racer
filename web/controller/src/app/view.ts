@@ -12,7 +12,7 @@ import './layout-short.css';
 import { watchBadge } from '../hub/badge';
 import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
-import { Preferences, SettingsSheet, shape } from './settings';
+import { Preferences, SettingsSheet, shapeSticks } from './settings';
 import { CarSheet, rosterOf } from './carsheet';
 import { A2HS_TEXT, FullscreenControl } from './fullscreen';
 
@@ -58,7 +58,7 @@ function dress(root: ParentNode): void {
 const TOOLS = `<div class="tools" data-box="tools"><button class="btn primary" data-act="ready" aria-label="Ready: start the race when everyone is">Ready</button><button class="btn identify" data-act="identify" aria-label="Identify: flash my number on the TV"><i data-ico="locate-fixed"></i>Identify</button><button class="btn quiet icon" data-act="car" aria-label="Car: choose your car" hidden><i data-ico="car"></i></button><button class="btn quiet icon" data-act="camera" aria-label="Camera: chase or in the car"><i data-ico="video"></i></button><button class="btn quiet icon" data-act="recover" aria-label="Recover: put my car back on the road"><i data-ico="rotate-ccw"></i></button><button class="btn quiet icon" data-act="help" aria-label="Help: the controls tutorial"><i data-ico="circle-help"></i></button><button class="btn quiet icon" data-act="fullscreen" aria-label="Full screen" aria-pressed="false"><i data-ico="maximize"></i></button><button class="btn quiet icon" data-act="settings" aria-label="Settings: your controls"><i data-ico="settings"></i></button><button class="btn quiet icon" data-act="leave" aria-label="Leave the room"><i data-ico="log-out"></i></button></div>`;
 
 /** Indicators, not buttons (br-dim.10): flat wells the action stick lights, never focusable or tappable. */
-const POD = `<div class="pod" data-box="pod" role="group" aria-label="Boost and utilities, fired by the action stick"><div class="pod-boost" data-ind="boost" role="img" aria-label="Boost: action stick right"><span class="pod-label display">Boost <b class="dir" aria-hidden="true">→</b></span><div class="meter"><i data-hud="boost" style="--v:0%"></i></div></div></div>`;
+const POD = `<div class="pod" data-box="pod" role="group" aria-label="The launch: pull the left stick back, then snap it forward"><div class="pod-boost" data-ind="launch" role="img" aria-label="Launch: pull the left stick back, then snap it forward"><span class="pod-label display">Launch <b class="dir" aria-hidden="true">↓↑</b></span><div class="meter"><i data-hud="launch" style="--v:100%"></i></div></div></div>`;
 
 /** Text colour on a seat colour (the kit's table, by luminance). */
 const seatOn = (rgb: [number, number, number]) => ((0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255 > 0.55 ? '#15203A' : '#FFF4DE');
@@ -85,9 +85,23 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     tilt.neutral = v.tiltNeutral;
   };
   let stopBadge: (() => void) | null = null;
+  /** The wheelie launch's cooldown (the boost, R116) as a ring on the left stick's knob and a readiness bar in the pod. */
+  let ringTimer: ReturnType<typeof setInterval> | undefined;
+  const paintLaunch = () => {
+    const left = session.launchCooldown();
+    const ring = app.querySelector<HTMLElement>('.zone.drive .preload');
+    if (ring) {
+      ring.style.setProperty('--p', `${Math.round(left * 100)}%`);
+      ring.classList.toggle('cool', left > 0);
+    }
+    const bar = app.querySelector<HTMLElement>('[data-hud=launch]');
+    bar?.style.setProperty('--v', `${Math.round((1 - left) * 100)}%`);
+    bar?.closest('.pod-boost')?.toggleAttribute('data-cooling', left > 0);
+  };
   const prefsNow = () => {
     prefs ??= new Preferences(session.realm);
     session.cameraDistance = prefs.value.cameraDistance;
+    session.classic = prefs.value.controls === 'classic';
     return prefs;
   };
 
@@ -173,7 +187,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     area.className = `sticks${land ? ' with-pod' : ''}`;
     const dz = stickZone('drive');
     const az = stickZone('action');
-    az.querySelector('.knob')?.append(icon('zap'));
+    dz.querySelector('.knob')?.append(icon('zap'));
     const pod = document.createElement('div');
     pod.innerHTML = POD;
     if (land) area.append(dz, pod.firstElementChild!, az);
@@ -194,7 +208,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       });
     }
     // Tutorial-lite (P1-C06): newcomers get it in the Lobby; Help shows it again. It only coaches.
-    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on));
+    tutorial = new Tutorial(area, (open) => session.menu(open), () => session.identify(), (on) => session.tutorial(on), () => session.classic);
     if (session.roomPhase === 'Lobby') {
       tutorialOffered = true;
       if (Tutorial.wanted()) tutorial.show();
@@ -209,7 +223,9 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     // Tilt (C07.2, opt-in) replaces only the DRIVE steer axis; everything else is the sticks'.
     const push = () => {
       if (!sticks) return;
-      const [d, a] = applyTilt(shape(sticks.drive.value, steering()), shape(sticks.action.value, steering()), sheet?.open ? null : tilt.steer);
+      const controls = prefsNow().value.controls;
+      const [sd, sa] = shapeSticks(sticks.drive.value, sticks.action.value, steering(), controls);
+      const [d, a] = applyTilt(sd, sa, sheet?.open ? null : tilt.steer, controls === 'classic');
       session.setSticks(d, a);
     };
     tilt.onChange = push;
@@ -222,6 +238,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     cars = null;
     p.subscribe((v) => {
       session.cameraDistance = v.cameraDistance;
+      session.classic = v.controls === 'classic';
       syncTilt();
     });
     app.querySelector('[data-act=fullscreen]')!.addEventListener('click', () => {
@@ -240,6 +257,8 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
       // Personal confirmation while driving (master §10.6a).
       if (confirmLeave()) session.leave();
     });
+    clearInterval(ringTimer);
+    ringTimer = setInterval(paintLaunch, 100);
     stopBadge?.();
     stopBadge = watchBadge(session, app.querySelector<HTMLElement>('[data-hud=conn]')!);
     updateHud();
@@ -338,7 +357,7 @@ export function mountController(app: HTMLElement, session: Session, prefillName:
     const posEl = app.querySelector<HTMLElement>('[data-hud=pos]');
     if (posEl) posEl.innerHTML = h?.position ? `${h.position}<sup>${place(h.position).slice(String(h.position).length)}</sup>` : '';
     set('lap', h?.lap ? `Lap ${h.lap[0]}/${h.lap[1]}` : '');
-    app.querySelector<HTMLElement>('[data-hud=boost]')?.style.setProperty('--v', `${Math.round(((h?.boost ?? 0) / 255) * 100)}%`);
+    paintLaunch();
     app.querySelector('.screen')?.toggleAttribute('data-paused', session.phase === 'host-paused');
     updateFullscreen();
   };

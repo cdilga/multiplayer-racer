@@ -1,5 +1,5 @@
-//! The first-drive prompts' state (P1-C06): the seven controls a newcomer is taught, steer, brake and reverse, boost,
-//! drift, OI!, cone, wheelie, tracked from what the HOST detects for the seat (its sampled sticks and the discrete
+//! The first-drive prompts' state (P1-C06): the six controls a newcomer is taught (R116 layout): steer, go and stop, drift,
+//! launch (the boost: pull back, snap forward), OI!, cone, tracked from what the HOST detects for the seat (its sampled sticks and the discrete
 //! actions it applies), so the seat's tile can show the next one and clear it when the control is seen. The phone's
 //! own tutorial card tracks the same sequence from its side; the two never wait on each other and nothing here pauses
 //! the room, holds Ready, a car pick or a race start. Data, not UI: `room_json` carries `{step, done}` per seat.
@@ -8,14 +8,13 @@ use jj_input::SourceSemantics;
 use jj_protocol::cmd::ActionKind;
 
 /// Each step's goal ids, in order (the wording is the host UI's, `web/host/src/ui/prompts/steps.ts`).
-pub const STEPS: [&[&str]; 7] = [
+pub const STEPS: [&[&str]; 6] = [
     &["right", "left"],
     &["go", "stop"],
-    &["boost"],
     &["drift"],
+    &["launch"],
     &["oi"],
     &["cone"],
-    &["wheelie"],
 ];
 
 /// A stick past this counts as the gesture (the same 0.7 the phone's card uses).
@@ -79,9 +78,6 @@ impl PromptTrack {
         if s.drive.brake > PAST && (self.done.contains(&"go") || self.step > 1) {
             self.tick_goal("stop");
         }
-        if s.boost {
-            self.tick_goal("boost");
-        }
         if s.drift {
             self.tick_goal("drift");
         }
@@ -92,7 +88,7 @@ impl PromptTrack {
         self.tick_goal(match kind {
             ActionKind::UtilityForward => "oi",
             ActionKind::UtilityRear => "cone",
-            ActionKind::Wheelie { .. } => "wheelie",
+            ActionKind::Wheelie { .. } => "launch",
         });
     }
 }
@@ -136,13 +132,14 @@ mod tests {
         p.sample(&sticks(0.0, 1.0, 0.0, false, false));
         p.sample(&sticks(0.0, 0.0, 1.0, false, false));
         assert_eq!(p.step, 2);
-        p.sample(&sticks(0.0, 0.0, 0.0, false, true));
         p.sample(&sticks(0.0, 0.0, 0.0, true, false));
-        assert_eq!(p.step, 4);
+        assert_eq!(p.step, 3, "drift done: the launch is next");
+        p.action(ActionKind::UtilityForward);
+        assert_eq!(p.step, 3, "OI! before the launch ticks nothing");
+        p.action(ActionKind::Wheelie { preload_ms: 600 });
         p.action(ActionKind::UtilityForward);
         p.action(ActionKind::UtilityRear);
-        p.action(ActionKind::Wheelie { preload_ms: 600 });
-        assert!(!p.showing(), "all seven seen: finished");
+        assert!(!p.showing(), "all six seen: finished");
     }
 
     #[test]

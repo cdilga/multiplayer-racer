@@ -10,7 +10,7 @@
 import { apply_curve } from '../pkg/jj_wasm_input.js';
 import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
-import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
+import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type Controls, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
 import type { Tilt } from './tilt';
 import type { FullscreenControl } from './fullscreen';
 
@@ -21,6 +21,19 @@ export type { CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadz
 export function shape(v: Stick, steering: Steering): Stick {
   const { deadzone, gamma } = PRESETS[steering];
   return { x: apply_curve(v.x, deadzone, gamma), y: apply_curve(v.y, deadzone, gamma), touch: v.touch };
+}
+
+/**
+ * Both sticks through the personal curve. R116 (the default): the response preset shapes the right stick's x, the steering;
+ * the left stick (throttle, brake, drift, launch) and the right stick's y (the flicks) keep a small dead zone and no curve, so
+ * the snap and the drift sector land where the profile's thresholds say. The old one-stick layout shapes every axis, as before.
+ */
+export function shapeSticks(drive: Stick, action: Stick, steering: Steering, controls: Controls): [Stick, Stick] {
+  if (controls === 'classic') return [shape(drive, steering), shape(action, steering)];
+  const flat = PRESETS.direct.deadzone;
+  const lin = (v: Stick): Stick => ({ x: apply_curve(v.x, flat, 1), y: apply_curve(v.y, flat, 1), touch: v.touch });
+  const a = lin(action);
+  return [lin(drive), { ...a, x: shape(action, steering).x }];
 }
 
 export const SAVE_FAILED_NOTE = "Applied for now — this browser couldn't remember your settings";
@@ -175,6 +188,7 @@ export class SettingsSheet {
       <div class="banner settings-auto" data-box="banner" role="status"><span>Autopilot is driving your car<small>Everyone else keeps racing.</small></span></div>
       <div class="panel" data-box="controls"><h1 class="display italic">Your controls</h1>
         ${seg('layout', 'Stick placement', [['floating', 'Floating sticks'], ['fixed', 'Fixed sticks']], p.layout)}
+        <div class="row">Layout${seg('controls', 'Stick layout', [['dual', 'Two sticks'], ['classic', 'One stick (old)']], p.controls)}</div>
         <div class="row">Steering${seg('steering', 'Steering response', [['gentle', 'Gentle'], ['direct', 'Direct']], p.steering)}</div>
         <div class="row">Camera distance${seg('cameraDistance', 'Camera distance', [['near', 'Near'], ['host', "Host's"], ['far', 'Far']], p.cameraDistance)}</div>
         ${toggle('vibration', 'Vibration', haptics && p.vibration, haptics ? '' : "This phone can't vibrate from a web page", !haptics)}
@@ -322,7 +336,8 @@ export class SettingsSheet {
       const z = stickZone(kind);
       col.append(z);
       return attachStick(z, (v) => {
-        this.testValues[kind] = shape(v, this.d.prefs.value.steering);
+        const both = shapeSticks(kind === 'drive' ? v : { x: 0, y: 0, touch: false }, kind === 'action' ? v : { x: 0, y: 0, touch: false }, this.d.prefs.value.steering, this.d.prefs.value.controls);
+        this.testValues[kind] = kind === 'drive' ? both[0] : both[1];
         this.readout();
       }, fixed);
     };

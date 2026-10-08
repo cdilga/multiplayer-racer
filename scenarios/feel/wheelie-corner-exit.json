@@ -1,6 +1,6 @@
 {
  "scenario": "wheelie-corner-exit",
- "what": "R116 corner-exit launch (P1-C11). Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 40 % steer. launch: the left stick pulled fully back for 0.45 s (the brakes hold and arm the launch) then snapped to full forward on the way out: a short front-light wheelie (about 7 degrees for 0.4 s, steering stops while the nose is up) and the launch burst, no wreck and no wall strike (it stays on the road). plain: brakes at 80 % (short of the preload zone), then full forward at the same moment: no wheelie, no burst. roll-on: the same pull, then eased to full forward over 0.8 s, which is not a snap: no launch. Expect: only launch lifts or bursts, and it ends the fastest and furthest.",
+ "what": "R116 corner-exit launch (P1-C11). Three Cruz Missiles enter the greybox hairpin's approach at 14 m/s with the right stick held at a steady 28 % steer. launch: the left stick pulled fully back for 0.45 s (the brakes hold and arm the launch) then snapped to full forward on the way out: a short front-light wheelie (about 7 degrees for 0.4 s, steering stops while the nose is up) and the launch burst, no wreck and no wall strike (it stays on the road). plain: brakes at 80 % (short of the preload zone), then full forward at the same moment: no wheelie, no burst. roll-on: the same pull, then eased to full forward over 0.8 s, which is not a snap: no launch. Expect: only launch lifts or bursts, and it ends the fastest and furthest.",
  "map": "scenarios/duels/yard/duel-yard.json",
  "seed": 7,
  "ticks": 720,
@@ -55,7 +55,7 @@
     -1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -67,7 +67,7 @@
     1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -80,7 +80,7 @@
     -0.8
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -92,7 +92,7 @@
     1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -105,7 +105,7 @@
     -1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -118,7 +118,7 @@
     -0.75
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -131,7 +131,7 @@
     -0.5
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -144,7 +144,7 @@
     -0.25
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -157,7 +157,7 @@
     0.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -170,7 +170,7 @@
     0.25
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -183,7 +183,7 @@
     0.5
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -196,7 +196,7 @@
     0.75
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -209,7 +209,7 @@
     1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   },
@@ -221,7 +221,7 @@
     1.0
    ],
    "action": [
-    0.4,
+    0.28,
     0
    ]
   }

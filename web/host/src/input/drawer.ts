@@ -8,7 +8,7 @@ const key = (code: string) => code.replace(/^Key/, '').replace(/^Arrow/, '');
 
 export function legend(c: Cluster): string {
   const stick = (s: Cluster['drive']) => `${key(s.up)}${key(s.left)}${key(s.down)}${key(s.right)}`;
-  return `${c.label}: drive ${stick(c.drive)}, action ${stick(c.action)}, Identify ${key(c.identify)}, READY ${key(c.ready)} (hold both 2 s to leave)`;
+  return `${c.label}: throttle, brake and steer ${stick(c.drive)}, drift and flicks ${stick(c.action)}, Identify ${key(c.identify)}, READY ${key(c.ready)} (hold both 2 s to leave)`;
 }
 
 /** Renders the drawer into `root` and keeps it current. */

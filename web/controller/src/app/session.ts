@@ -404,6 +404,7 @@ export class Session {
         this.endpoint = new wasm.WasmEndpoint();
         this.srcIdx = this.endpoint.addSource(w.source);
       }
+      this.endpoint.setClassic(this.srcIdx, this.classicLayout);
       this.set('playing');
       if (this.carChoice) this.send('cmd', wasm.encodePick(this.carChoice, false));
       if (this.camDistance !== 'host') this.sendCameraDistance();
@@ -545,6 +546,22 @@ export class Session {
   /** Sit out (the settings sheet, C07): the seat steps out of the next round and the car is parked. */
   sitOut(): void {
     this.send('cmd', wasm.encodeSitOut());
+  }
+
+  /** The old one-stick layout is a personal setting (C07): every record then says so and the host reads the sticks that way. */
+  private classicLayout = false;
+  get classic(): boolean {
+    return this.classicLayout;
+  }
+  set classic(on: boolean) {
+    this.classicLayout = on;
+    if (this.endpoint && this.srcIdx >= 0) this.endpoint.setClassic(this.srcIdx, on);
+  }
+
+  /** How much of the wheelie launch's cooldown is left, 0 (ready) to 1 (just launched): the ring on the left stick's knob. */
+  launchCooldown(): number {
+    if (!this.endpoint || this.srcIdx < 0 || this.classicLayout) return 0;
+    return this.endpoint.launchCooldown(this.srcIdx, performance.now());
   }
 
   /** The player's camera-distance preference (C07). There is no wire message for it yet: the value is kept for the host. */

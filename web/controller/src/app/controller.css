@@ -442,3 +442,7 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
 .cooee span { position: relative; font-size: 44px; color: var(--c-paper); text-shadow: 0 3px 0 var(--c-ink); }
 @keyframes jj-cooee { 0% { opacity: 0; } 6% { opacity: 1; filter: brightness(2.2); } 100% { opacity: 0; filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) { .cooee .flash { display: none; } }
+
+/* The wheelie launch (the boost, R116): its cooldown is a paper ring on the left stick's knob, and the pod bar shows it ready. */
+.zone.drive .preload.cool { background: conic-gradient(var(--c-paper) var(--p, 0%), transparent 0); opacity: .9; }
+.pod-boost[data-cooling] .dir { opacity: .5; }

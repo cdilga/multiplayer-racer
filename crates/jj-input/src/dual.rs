@@ -257,7 +257,11 @@ mod tests {
 
     #[test]
     fn steering_is_analog_with_a_radial_deadzone_and_a_curve() {
-        let p = p();
+        // The shipped curve is linear (the player's own response preset shapes it on the phone); the curve is data.
+        let mut prof = InputProfile::standard();
+        prof.steer.gamma = 1.4;
+        prof.steer.radial_deadzone = 0.08;
+        let p = prof.resolve();
         assert_eq!(steer([0, 0], &p), 0.0);
         assert_eq!(steer([q(0.05), 0], &p), 0.0, "inside the radial deadzone");
         assert!(

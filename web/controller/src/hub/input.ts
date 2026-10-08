@@ -97,9 +97,11 @@ export class KeyCluster {
     const want = h(c.drive.right) - h(c.drive.left);
     const step = STEER_RATE * dt;
     this.steer = want === 0 ? 0 : Math.max(-1, Math.min(1, this.steer + Math.sign(want) * step));
+    // R116 (as the host's clusters): the cluster's drive keys are throttle and brake (y) and steer (the right stick's x); its action
+    // keys are the drift (the left stick's x) and the forward and back flick (the right stick's y).
     return {
-      drive: { x: this.steer, y: h(c.drive.down) - h(c.drive.up) },
-      action: { x: h(c.action.right) - h(c.action.left), y: h(c.action.down) - h(c.action.up) },
+      drive: { x: h(c.action.right) - h(c.action.left), y: h(c.drive.down) - h(c.drive.up) },
+      action: { x: this.steer, y: h(c.action.down) - h(c.action.up) },
       identify: this.held.has(c.identify),
       ready: this.held.has(c.ready),
     };
