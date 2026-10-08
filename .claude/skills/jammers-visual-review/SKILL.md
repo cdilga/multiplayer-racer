@@ -1,0 +1,47 @@
+---
+name: jammers-visual-review
+description: The visual self-review loop for Joystick Jammers 0.2 - capture a page or game state at the owner's real device sizes with art/ui/lib/live-check.mjs, look at every screenshot, compare it with the named reference (art/ui/accepted/<date>/, world-look frames, biome refs), fix, repeat, and write docs/evidence/<P1-ID>/self-review.md in the committed format close.sh checks. Use before handing off or closing any bead labelled visual (UI, screens, HUD, lobby, results, controller layouts, renderer output, vehicles, tracks, captions), when a page "looks off", or when someone asks for screenshots or a self-review.
+---
+
+# Jammers visual review (owner 2026-10-04: look at your own work before anyone else does)
+
+The process is `docs/process/visual-self-review.md`; this skill is the working recipe. `scripts/beads/close.sh` refuses a
+`visual` bead without a committed `self-review.md` that has the four sections and names screenshots that exist.
+
+**Distilled from** steps repeated in two closed beads: **P1-U03** (phone mocks at real phone sizes: capture, look,
+fix, self-review) and **P1-R07** (host HUD, lobby and results: the same loop on the host pages at TV, laptop and phone).
+
+## The loop
+
+1. **Capture the matrix where browsers run** (eris, not the Mac): `node art/ui/lib/live-check.mjs --help` for the
+   flags. It opens each path at each viewport, fails on 4xx/5xx, undecoded images, script errors, horizontal overflow,
+   text cut off by the screen edge and blank canvases, and saves a PNG per page and viewport. Default base is the live
+   preview host; `--base <url>` for a preview, `--local` for `art/ui` from the checkout, `--tv` for every TV mock state,
+   `--fullscreen` to re-check after a resize. Game states (lobby, race, results) come from the real pages: see the
+   `jammers-ui` skill's tour.
+2. **Look at every image** (Read the PNGs). Compare with the reference the bead cites (`art/ui/accepted/2026-10-07/`,
+   the world-look frames, the biome refs).
+3. **Judge each failure line.** `live-check` is strict on purpose: on a page that scrolls, text cut by the *bottom*
+   edge is the fold, not a defect; on a page that hides overflow (the TV screens) it is a real cut. Decide from the image.
+4. **Fix and repeat** until a full pass shows nothing you'd be embarrassed to show the owner.
+5. **Write `docs/evidence/<P1-ID>/self-review.md`** with `## Looked at`, `## Defects found and fixed`,
+   `## Remaining defects`, `## Not covered`, naming every image file, and commit it with the images (small jpg/webp).
+
+## Worked example (eris, about a minute): the live preview index at phone and TV sizes
+
+```bash
+scripts/remote/eris.sh --run visual-demo 'node art/ui/lib/live-check.mjs --viewports 412x915,1920x1080 --out $JJ_RUN_DIR/shots / ; echo "exit $?"; ls $JJ_RUN_DIR/shots'
+scp 'eris:Work/runs/visual-demo/shots/*.png' <a scratch dir>/    # then Read each PNG
+```
+
+Stated result (2026-10-08): two screenshots, `index_412x915.png` and `index_1920x1080.png`; `live-check` reports
+`FAIL … cut off by the screen edge: "What it isbeads: tracker", …` for both and exits 1. Looking at the images shows
+the index is a scrolling page and those rows simply continue below the first screen: not defects (step 3). The
+resulting `self-review.md` lists both images under "Looked at", "none" under fixed and remaining defects for the fold
+lines, and under "Not covered" the states this example didn't capture (an empty register, a pinned row).
+
+## Traps
+
+`docs/learnings/ui.md` (fonts that only load from the edge path, full-screen-only layouts, WebKit differences) and
+`docs/learnings/render.md` for canvases that read back empty (WebGL without preserveDrawingBuffer: judge the pixels in
+the screenshot, not the read-back).
