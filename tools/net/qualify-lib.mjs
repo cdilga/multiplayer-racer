@@ -47,7 +47,7 @@ export function iceRewriteScript(opts) {
   const opts = ${JSON.stringify(opts)};
   const Native = window.RTCPeerConnection;
   window.__qualPcs = [];
-  window.RTCPeerConnection = function (config = {}, ...rest) {
+  const rewrite = (config = {}) => {
     const c = { ...config };
     if (opts.policy) c.iceTransportPolicy = opts.policy;
     c.iceServers = (c.iceServers ?? []).map((s) => {
@@ -57,9 +57,18 @@ export function iceRewriteScript(opts) {
       if (opts.onlyUrlIncludes) urls = urls.filter((u) => u.includes(opts.onlyUrlIncludes));
       return { ...s, urls };
     }).filter((s) => s.urls.length);
-    const pc = new Native(c, ...rest);
+    return c;
+  };
+  window.RTCPeerConnection = function (config = {}, ...rest) {
+    const pc = new Native(rewrite(config), ...rest);
     window.__qualPcs.push(pc);
     return pc;
+  };
+  // The relay fallback (and credential refreshes) hand new servers to a live connection through setConfiguration():
+  // the same rewrite applies, so a row restricted to one entry stays restricted after the fallback.
+  const nativeSet = Native.prototype.setConfiguration;
+  Native.prototype.setConfiguration = function (config) {
+    return nativeSet.call(this, rewrite(config));
   };
   window.RTCPeerConnection.prototype = Native.prototype;
   window.RTCPeerConnection.generateCertificate = Native.generateCertificate;

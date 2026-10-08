@@ -34,6 +34,15 @@ test('the ICE rewrite script is valid JS and restricts to the TLS-443 entry', ()
   });
   assert.equal(log[0].iceTransportPolicy, 'relay');
   assert.deepEqual(log[0].iceServers.map((s) => s.urls), [['turns:turn.cloudflare.com:443?transport=tcp']]);
+  // The relay fallback hands its servers over with setConfiguration(): restricted the same way.
+  const set = [];
+  const g3 = { RTCPeerConnection: class { setConfiguration(c) { set.push(c); } } };
+  new Function('window', src)(g3);
+  new g3.RTCPeerConnection({}).setConfiguration({
+    iceServers: [{ urls: ['turn:turn.cloudflare.com:3478?transport=udp', 'turns:turn.cloudflare.com:443?transport=tcp'] }],
+  });
+  assert.deepEqual(set[0].iceServers.map((s) => s.urls), [['turns:turn.cloudflare.com:443?transport=tcp']]);
+  assert.equal(set[0].iceTransportPolicy, 'relay');
   const lan = [];
   const g2 = { RTCPeerConnection: class { constructor(c) { lan.push(c); } } };
   new Function('window', iceRewriteScript({ rewriteTurn: '192.168.11.12:3479' }))(g2);
