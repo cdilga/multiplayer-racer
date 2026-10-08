@@ -1,14 +1,14 @@
 Town (P1-M04): 10 seeds, `jj_procgen::validate::check` (jj-map rules + transitions + envelopes + wayfinding)
-seed 0: ok, plan requested, 267 pieces, 20 props, 1 features, gameplay hash 5a48f430d30cf76135f80c665a1a749906901c8ddd115fd68c1a00cbeb0e8347
-seed 1: ok, plan requested, 314 pieces, 35 props, 1 features, gameplay hash fe57da453049cfcd965f1fb16cf3d06efec33bfe85c6f1b91432cc090abf621b
-seed 2: ok, plan requested, 258 pieces, 15 props, 1 features, gameplay hash b741b41798c0c8aa64657fcaf66a5233c142c8c942e1ffa935c9e7240311d205
-seed 3: ok, plan requested, 226 pieces, 14 props, 1 features, gameplay hash a4f9b31752dd8e5570479c586c8afd0ab06b97999db2b746a4850552c0c2b0d8
-seed 4: ok, plan requested, 316 pieces, 23 props, 1 features, gameplay hash b3126e7f1ac6a14e748bae1292ba6ce6db0589433260ff87a20f6f583e11c0a9
-seed 5: ok, plan requested, 307 pieces, 13 props, 1 features, gameplay hash 6b3000b5a2aba37484042e32b51045ee8071f22f1c14dfe15bf2361379a11b49
-seed 6: ok, plan requested, 298 pieces, 25 props, 1 features, gameplay hash b3fa207185dc5a57e33ec1b7727ec6d7a9854eaf30d59be4525001a627b1ba24
-seed 7: ok, plan requested, 303 pieces, 22 props, 1 features, gameplay hash e9bb6fee20002e1609af4ca9d2dc9825dd1ba73c4632eb9564b63c3cca51c3e6
-seed 8: ok, plan requested, 343 pieces, 24 props, 1 features, gameplay hash 4ca2bc7a25ed31c9dc61067f8b269160b9c46c09a35a5c5cc2f5cf831273102f
-seed 9: ok, plan requested, 345 pieces, 16 props, 1 features, gameplay hash 83be2b841390b79080954ecd730dfea03ef80134a3e7e52890d0c293d08c41f7
+seed 0: ok, plan requested, 269 pieces, 31 props, 1 features, gameplay hash b19614838b05f63c0f72daf9abc2163f9264dc2ecb6f63a4ed95c309412b005e
+seed 1: ok, plan requested, 305 pieces, 54 props, 1 features, gameplay hash ae2309720b375aa018ed254997c1bee1a2914ab5423653eda3379b6b20031ec5
+seed 2: ok, plan requested, 260 pieces, 33 props, 1 features, gameplay hash 8671cb270003a70747f47443460c05bc16b5b4df04a214f9184e422e234409aa
+seed 3: ok, plan requested, 230 pieces, 25 props, 1 features, gameplay hash daac04f05852b80969706738f1c61ff224d3d22cb954f1463ad0f14efec3b04a
+seed 4: ok, plan requested, 324 pieces, 41 props, 1 features, gameplay hash 8ebdcadd5b9db40d0c6f0d0a2ec5d46bd40f05e1c61cafe68f8df78fda6ee510
+seed 5: ok, plan requested, 315 pieces, 26 props, 1 features, gameplay hash 5516bb119857a90fe995c06a108f6b5477eefcc1651e3a47038dfe924228082b
+seed 6: ok, plan requested, 302 pieces, 40 props, 1 features, gameplay hash 790d08a97aa24584b01173052d7ddc23393dbe46f69ba6c8cadf95685b3a4762
+seed 7: ok, plan requested, 308 pieces, 41 props, 1 features, gameplay hash 872888c2207b6d93bc3d1c4d972bc002791ba5725045c4a6c2306b72375542fb
+seed 8: ok, plan requested, 346 pieces, 43 props, 1 features, gameplay hash 529ce421fc6cbc8e250bf9f01801205184192099f569814370525ae74e4a5314
+seed 9: ok, plan requested, 351 pieces, 34 props, 1 features, gameplay hash 8e4f17268b978bbb3ed99b432e3033c3c238a3b9d927e687a685c352180e6289
 
 over 10 seeds: 255 houses, 160 shopfronts, 27 side streets (junctions), 167 wheelie bins out
-seed 0 pieces: {"generic/bin (prop)": 16, "generic/cone (prop)": 4, "signs/crest": 1, "signs/junction": 4, "signs/kangaroo": 1, "town/gum-tree": 105, "town/house": 28, "town/mailbox": 6, "town/power-line": 5, "town/power-pole": 10, "town/shopfront": 9, "town/side-street": 4, "town/water-tower": 4, "wayfinding/chevron-post": 36, "wayfinding/finish-gantry": 2, "wayfinding/guard-rail": 52}
+seed 0 pieces: {"generic/bin (prop)": 16, "generic/cone (prop)": 4, "signs/crest": 1, "signs/junction": 4, "signs/kangaroo": 1, "town/bin-red (prop)": 11, "town/gum-tree": 104, "town/house": 28, "town/mailbox": 6, "town/power-line": 5, "town/power-pole": 10, "town/shopfront": 9, "town/side-street": 4, "town/water-tower": 7, "wayfinding/chevron-post": 36, "wayfinding/finish-gantry": 2, "wayfinding/guard-rail": 52}
