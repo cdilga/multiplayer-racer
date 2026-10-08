@@ -141,8 +141,10 @@ const HUSK_AT: [number, number, number] = [-14, 0, 6];
 export function fxDemoState(i: number, n: number, tick: number): Pick<CarPose, 'flags' | 'vel' | 'boost' | 'throttle'> {
   const a = syntheticPose(i, n, tick);
   const b = syntheticPose(i, n, tick + 1);
-  const same = a.life === b.life;
-  const vel: [number, number, number] = same ? [(b.pos[0] - a.pos[0]) * TICK_HZ, 0, (b.pos[2] - a.pos[2]) * TICK_HZ] : [0, 0, 0];
+  // Across a respawn the next pose is the new life's: take the velocity from the tick before instead (a zero here read as
+  // a full-speed stop, so every car 'crashed' at its respawn).
+  const [p, q] = a.life === b.life ? [a, b] : [syntheticPose(i, n, tick - 1), a];
+  const vel: [number, number, number] = p.life === q.life ? [(q.pos[0] - p.pos[0]) * TICK_HZ, 0, (q.pos[2] - p.pos[2]) * TICK_HZ] : [0, 0, 0];
   const kind = i % 6;
   let flags = 0;
   let boost = 0.2;
