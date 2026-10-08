@@ -4,7 +4,9 @@ Newest first, pinned builds on top (`pin/<id>` tags; a pin's label such as "Play
   Build        id, branch, short commit, time (shown in the viewer's local time)
   What it is   the commit's one-line title and a "What changed" disclosure (commits since the previous preview)
   Status       "Smoke passed: <steps>", or "Not playable" with the reason; never a claim for a step that didn't run
-  Keep         pinned / latest / expires in Xh (counted down in the browser from the 24 h age limit)
+  Keep         pinned / latest / one of the 3 newest / expires in Xh (counted down in the browser from the 24 h age limit),
+               and a Pin or Unpin link to the Retention workflow's run form on Gitea (owner sign-in; scripts/preview-pin.sh
+               does the same from a shell)
   Open         Host and Join (only for playable previews, on the preview's own base path) and its CI run as evidence
 Retired previews sit below, greyed, with the reason they were retired. Styled from edge/tokens.json (a copy of the
 game's UI token file: swap it for the accepted set and re-render, no template change).
@@ -20,6 +22,7 @@ import retention
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOKENS = ROOT / "edge" / "tokens.json"
 FONT_BASE = "/"  # the edge serves the design mirror (fonts/…) at the site root
+PIN_FORM = "https://git.dilger.dev/cdilga/multiplayer-racer/actions?workflow=deploy-retention.yml"
 
 
 def tokens() -> dict:
@@ -78,7 +81,7 @@ def time_tag(ts: str | None) -> str:
     return f'<time data-local datetime="{html.escape(ts)}">{html.escape(ts.replace("T", " ").replace("+00:00", " UTC"))}</time>'
 
 
-def keep_html(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], now: datetime) -> str:
+def keep_html(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], newest: set[str], now: datetime) -> str:
     if p.get("retired"):
         return f'<span class="muted">Retired {time_tag(p["retired"])}</span>'
     out = []
@@ -87,14 +90,21 @@ def keep_html(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], no
     if is_latest:
         out.append("<b>Latest</b>: kept while it is the newest")
     if not out:
-        expires = parse(p.get("publishedAt"))
-        if p["id"] in keep and expires:
-            left = retention.MAX_AGE - (now - expires)
+        published = parse(p.get("publishedAt"))
+        if p["id"] in newest:
+            out.append(f"<b>{retention.NEWEST_KEPT} newest</b>: kept until {retention.NEWEST_KEPT} newer builds are up and it is 24 h old")
+        elif p["id"] in keep and published:
+            left = retention.MAX_AGE - (now - published)
             hours = max(0, left.total_seconds()) / 3600
-            iso = (expires + retention.MAX_AGE).isoformat(timespec="seconds")
+            iso = (published + retention.MAX_AGE).isoformat(timespec="seconds")
             out.append(f'Expires <span data-expires="{iso}">in {hours:.0f} h</span>')
         else:
             out.append("Retires at the next publish")
+    pid = html.escape(p["id"])
+    if pinned_by:
+        out.append(f'<a class="ev" href="{PIN_FORM}" title="Run workflow with unpin = {pid}">Unpin</a> <span class="muted">(unpin = <code>{pid}</code>)</span>')
+    else:
+        out.append(f'<a class="ev" href="{PIN_FORM}" title="Run workflow with pin = {pid}">\U0001F4CC Pin</a> <span class="muted">(pin = <code>{pid}</code>)</span>')
     return "<br>".join(out)
 
 
@@ -135,7 +145,7 @@ def title_text(t: str) -> str:
     return t
 
 
-def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], now: datetime) -> str:
+def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], newest: set[str], now: datetime) -> str:
     tags = "".join(f'<span class="tag">{html.escape(label)}</span> ' for label in pinned_by + (["Latest"] if is_latest else []))
     cls = "card" + (" pinned" if pinned_by else "") + (" retired" if p.get("retired") else "")
     branch = html.escape(p.get("branch", ""))
@@ -145,7 +155,7 @@ def card(p: dict, pinned_by: list[str], is_latest: bool, keep: set[str], now: da
             f'<div><h3>Build</h3>{branch + " " if branch else ""}<code>{sha}</code><br>{time_tag(p.get("publishedAt"))}</div>'
             f'<div><h3>What it is</h3>{html.escape(title_text(p.get("title", ""))) or "<span class=muted>No title</span>"}{changed_html(p)}</div>'
             f'<div><h3>Status</h3>{status_html(p)}</div>'
-            f'<div><h3>Keep</h3>{keep_html(p, pinned_by, is_latest, keep, now)}</div>'
+            f'<div><h3>Keep</h3>{keep_html(p, pinned_by, is_latest, keep, newest, now)}</div>'
             f'<div class="wide"><h3 style="margin:0">Open</h3>{open_html(p)}</div></article>')
 
 
@@ -172,6 +182,7 @@ def render(reg: dict, now: datetime | None = None) -> str:
             labels.setdefault(pid, []).append(label)
     latest = reg.get("labels", {}).get("Latest")
     keep = retention.keep_set(reg, now) if previews else set()
+    newest = {p["id"] for p in retention.newest_unpinned(reg)[:retention.NEWEST_KEPT]}
 
     def pinned_by(p):
         return labels.get(p["id"], []) or (["Pinned"] if p["id"] in pins else [])
@@ -180,16 +191,16 @@ def render(reg: dict, now: datetime | None = None) -> str:
     gone = [p for p in previews if p.get("retired")]
     top = [p for p in live if p["id"] in pins or p["id"] in labels]
     rest = [p for p in live if p not in top]
-    body = "".join(card(p, pinned_by(p), p["id"] == latest, keep, now) for p in top + rest)
+    body = "".join(card(p, pinned_by(p), p["id"] == latest, keep, newest, now) for p in top + rest)
     if not body:
         body = '<article class="card"><div class="wide"><strong>No previews yet.</strong> Every 0.2 build that passes CI lands here.</div></article>'
     if gone:
-        body += "<h2>Retired</h2>" + "".join(card(p, [], False, keep, now) for p in gone)
+        body += "<h2>Retired</h2>" + "".join(card(p, [], False, keep, newest, now) for p in gone)
     return f"""<!doctype html>
 <html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jammers previews</title><style>{style(tokens())}</style></head>
 <body><main><div class="tag">Rainbow previews</div><h1>Joystick <span>Jammers</span> 0.2</h1>
-<p>Every 0.2 build that passes CI lands here, newest first, pinned builds on top. Open <b>Host</b> on the TV or laptop, then scan its QR with your phones. A build that fails its smoke test is listed as not playable, with the reason.</p>
+<p>Every 0.2 build that passes CI lands here, newest first, pinned builds on top. Open <b>Host</b> on the TV or laptop, then scan its QR with your phones. A build that fails its smoke test is listed as not playable, with the reason. The {retention.NEWEST_KEPT} newest builds always stay up, and so does anything under 24 hours old; pinned builds stay until unpinned.</p>
 {body}
 <p><small class="muted">The game you can play today is 0.1 at <a href="https://jammers.dilger.dev">jammers.dilger.dev</a>. The design POC is at <a href="/poc/">/poc/</a>.</small></p>
 </main><script>{SCRIPT}</script></body></html>

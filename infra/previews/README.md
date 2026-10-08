@@ -13,7 +13,7 @@ in the checks job).
 | `scripts/publish.py` | green CI run + image digest → a TrueNAS app `jjp-<id>` per preview, health, smoke, the git record |
 | `scripts/record.py` | **git is the record of what is deployed**: tags and commit statuses (below) |
 | `scripts/smoke.mjs` | the fixed public smoke steps (`room`, `join-webrtc`, `input`, `resume`, `drive`, `hud`, `round`), all mandatory since P1-D07 |
-| `scripts/retention.py` | pins, Latest, the three newest young previews stay; the rest are retired |
+| `scripts/retention.py` | pins, Latest, the three newest (any age) and anything under 24 h stay; the rest are retired (R118) |
 | `scripts/index_page.py` | the index at https://jammers-preview.dilger.dev/ |
 | `scripts/truenas.py` | the middleware's JSON-RPC over wss, as the `jammersdeploy` user (privilege APPS_WRITE only) |
 | `edge/` | the Caddy edge (`/p/<id>/` → `jjp-<id>:8080`, `/poc/`, the index), applied by the publisher |
@@ -28,10 +28,10 @@ in the checks job).
 | tag `pin/<id>` | pinned: exempt from retention. The annotation's first line is its label (`Playtest 1`, or `Pinned`) |
 | tag `retired/<id>` | replaces `preview/<id>` when retention retires it; adds the time and reason |
 
-Pin or unpin: run the Retention workflow with `pin` (and an optional `label`) or `unpin` set to a preview id; it makes
+Pin or unpin: `scripts/preview-pin.sh <id> [label]` / `--unpin <id>`, or the Pin link on the index, both of which run the Retention workflow with `pin` (and an optional `label`) or `unpin` set to a preview id; it makes
 or deletes `pin/<id>` with the workflow's own token, which starts no CI run. A hand-pushed tag works too, but Gitea runs
 the workflows **of the tagged commit** on a tag push, and commits older than the R117 move lack the branch-only trigger
-(`docs/learnings/ci.md`). The next publish poll (5 min) re-applies the index. The old file register was migrated once
+(`docs/learnings/ci.md`). The Retention run re-applies the index itself. The old file register was migrated once
 into tags and statuses (`scripts/migrate_register.py`).
 
 Infrastructure (TrueNAS apps): `jammers-net` owns the `jammers-previews` Docker network; `jammers-preview-edge` is the

@@ -1,7 +1,7 @@
 # Preview retention (P1-D06, R117), hourly (publish also reconciles on every publish). Code: infra/previews/.
 # Pin or unpin on demand: run this with `pin` (or `unpin`) set to a preview id; the pin is the tag `pin/<id>`
-# (infra/previews/scripts/record.py), made with this workflow's token so it starts no CI run. The next publish poll
-# (5 minutes) re-applies the index.
+# (infra/previews/scripts/record.py), made with this workflow's token so it starts no CI run. The run re-applies the index.
+# From a shell: scripts/preview-pin.sh <id> [label] (or --unpin <id>).
 # Its own concurrency group: in a shared group the 5-minute publish poll replaced every waiting retention run.
 name: Retention
 on:

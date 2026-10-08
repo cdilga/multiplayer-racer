@@ -247,13 +247,7 @@ def changes(token: str, prev: str | None, sha: str) -> list[str]:
         return []
 
 
-def set_latest(reg: dict):
-    """Latest is the newest playable, un-retired preview; never one that failed its smoke."""
-    live = [p["id"] for p in reg["previews"] if p.get("status") == "playable" and not p.get("retired")]
-    if live:
-        reg["labels"]["Latest"] = live[0]  # previews are newest first
-    else:
-        reg["labels"].pop("Latest", None)
+set_latest = record.set_latest
 
 
 def short_title(t: str, n: int = 200) -> str:
@@ -467,7 +461,7 @@ async def main():
             record.set_status(row, "success" if ok else "failure", row.get("smokeResult") if ok else (row["reason"] or "not playable"))
     # A fresh session: the smoke takes minutes and TrueNAS drops an idle API socket meanwhile (run 1714).
     async with TrueNAS(secrets["TRUENAS_APPS_WRITE_KEY"]) as nas:
-        # Retention (P1-D06) on every publish: pins, Latest and the three newest young previews stay.
+        # Retention (P1-D06) on every publish: pins, Latest, the three newest and anything under 24 hours stay.
         retired = await retention.reconcile(nas, reg, datetime.now(timezone.utc), record)
         for pid in retired:
             print(f"publish: retired {pid}")

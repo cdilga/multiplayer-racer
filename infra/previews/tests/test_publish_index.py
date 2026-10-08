@@ -140,11 +140,22 @@ class Index(unittest.TestCase):
         self.assertIn("boom", h)  # the failed row's reason
         self.assertIn("Expired: older than 24 hours.", h)  # the retired row's reason
         self.assertIn("What changed (2 commits)", h)
-        self.assertIn("data-expires", h)
+        self.assertIn("3 newest</b>: kept until", h)  # c is one of the three newest: no countdown
+        self.assertNotIn('data-expires="', h)
+        self.assertIn("pin = <code>v02-dddddddd</code>", h)
+        self.assertIn("unpin = <code>v02-bbbbbbbb</code>", h)
+        self.assertNotIn("pin = <code>v02-aaaaaaaa</code>", h)  # a retired build can't be pinned
         self.assertIn('href="/p/v02-dddddddd/host"', h)
         self.assertIn('href="http://ci/9"', h)
         self.assertNotIn('href="/p/v02-cccccccc/', h)  # a failed smoke is not advertised
         self.assertNotIn('href="/p/v02-aaaaaaaa/', h)  # nor is a retired one
+
+    def test_a_fourth_young_build_counts_down(self):
+        reg = {"labels": {"Latest": "v02-eeeeeeee"}, "pins": [],
+               "previews": [row(f"v02-{c * 8}", h) for c, h in zip("edcb", (1, 2, 3, 4))]}
+        h = index_page.render(reg, NOW)
+        self.assertEqual(h.count('data-expires="'), 1)
+        self.assertLess(h.index('id="v02-bbbbbbbb"'), h.index('data-expires="'))
 
     def test_explicit_pin_stays_first_even_when_old_and_page_has_no_dollar(self):
         reg = self.reg()

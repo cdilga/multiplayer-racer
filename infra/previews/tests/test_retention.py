@@ -21,16 +21,39 @@ class Retention(unittest.TestCase):
         for i in range(5):
             publish(reg, f"p{i}", T0 + timedelta(hours=i))
         now = T0 + timedelta(hours=5)
-        self.assertEqual(keep_set(reg, now), {"p4", "p3", "p2"}, "three newest unpinned; p4 is also Latest")
+        self.assertEqual(keep_set(reg, now), {"p0", "p1", "p2", "p3", "p4"}, "a busy day: everything under 24 h stays")
         reg["pins"].append("p0")
-        self.assertEqual(keep_set(reg, now), {"p0", "p4", "p3", "p2"}, "a pin is additional")
-        # A day and a half later: the young ones aged out, Latest and the pin stay.
+        self.assertEqual(keep_set(reg, now), {"p0", "p1", "p2", "p3", "p4"}, "a pin is additional")
+        # A day and a half later: the three newest stay whatever their age, the older unpinned one expires.
         now = T0 + timedelta(hours=40)
-        self.assertEqual(keep_set(reg, now), {"p0", "p4"})
+        self.assertEqual(keep_set(reg, now), {"p0", "p4", "p3", "p2"})
         publish(reg, "p5", now)
-        self.assertEqual(keep_set(reg, now), {"p0", "p5"}, "p4 is neither latest nor young now")
+        self.assertEqual(keep_set(reg, now), {"p0", "p5", "p4", "p3"}, "p2 drops out of the three newest and is old")
         reg["pins"].remove("p0")
-        self.assertEqual(set(plan(reg, now)), {"p0", "p1", "p2", "p3", "p4"})
+        self.assertEqual(set(plan(reg, now)), {"p0", "p1", "p2"})
+
+    def test_quiet_days_never_drop_below_three(self):
+        reg = {"previews": [], "labels": {}, "pins": []}
+        for i in range(4):
+            publish(reg, f"p{i}", T0 + timedelta(days=i))
+        now = T0 + timedelta(days=30)
+        self.assertEqual(keep_set(reg, now), {"p3", "p2", "p1"})
+
+    def test_labelled_pin_is_kept_and_not_counted_in_the_three(self):
+        reg = {"previews": [], "labels": {}, "pins": []}
+        for i in range(5):
+            publish(reg, f"p{i}", T0 + timedelta(days=i))
+        reg["labels"]["Playtest 1"] = "p0"
+        now = T0 + timedelta(days=30)
+        self.assertEqual(keep_set(reg, now), {"p0", "p4", "p3", "p2"})
+
+    def test_latest_kept_past_three_failed_builds(self):
+        reg = {"previews": [], "labels": {}, "pins": []}
+        publish(reg, "good", T0)
+        for i in range(3):
+            reg["previews"].insert(0, {"id": f"bad{i}", "publishedAt": (T0 + timedelta(days=i + 1)).isoformat(), "status": "not playable"})
+        now = T0 + timedelta(days=30)
+        self.assertEqual(keep_set(reg, now), {"good", "bad0", "bad1", "bad2"})
 
     def test_idempotent_after_retiring(self):
         reg = {"previews": [], "labels": {}, "pins": []}

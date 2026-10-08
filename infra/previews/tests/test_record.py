@@ -56,7 +56,7 @@ class Record(unittest.TestCase):
         self.assertEqual((a["status"], a["smoke"], a["digest"]), ("playable", ["room", "join-webrtc"], "sha256:1"))
         self.assertEqual((b["status"], b["reason"]), ("not playable", "FAIL step round: timeout"))
         self.assertEqual(old["retired"], "2026-10-08T00:00:00+00:00", "a retired tag wins over a leftover preview tag")
-        self.assertEqual(reg["labels"], {"Playtest 1": "v02-aaaaaaaa"})
+        self.assertEqual(reg["labels"], {"Playtest 1": "v02-aaaaaaaa", "Latest": "v02-aaaaaaaa"})  # Latest is derived on load
         self.assertEqual(reg["pins"], ["v02-bbbbbbbb"])
 
     def test_retiring_swaps_the_tag_and_keeps_the_story(self):

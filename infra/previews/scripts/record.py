@@ -125,7 +125,18 @@ def load() -> dict:
             by_sha[row["sha"]] = statuses(row["sha"])
         apply_status(row, by_sha[row["sha"]].get(f"preview/smoke/{row['id']}"))
     previews = sorted(rows.values(), key=lambda r: r.get("publishedAt", ""), reverse=True)
-    return {"previews": previews, "labels": labels, "pins": pins}
+    reg = {"previews": previews, "labels": labels, "pins": pins}
+    set_latest(reg)  # not a tag: derived, so the hourly retention run and the index see it too
+    return reg
+
+
+def set_latest(reg: dict):
+    """Latest is the newest playable, un-retired preview; never one that failed its smoke."""
+    live = [p["id"] for p in reg["previews"] if p.get("status") == "playable" and not p.get("retired")]
+    if live:
+        reg["labels"]["Latest"] = live[0]  # previews are newest first
+    else:
+        reg["labels"].pop("Latest", None)
 
 
 def summary(row: dict, kind: str) -> str:
