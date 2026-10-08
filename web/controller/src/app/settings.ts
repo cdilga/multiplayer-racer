@@ -12,7 +12,7 @@ import { stickZone, attachStick, type StickHandle } from './sticks';
 import type { Stick } from './session';
 import { DEFAULTS, PRESETS, sanitise, type CameraDistance, type ControllerPreferences, type Layout, type Steering, type TiltDeadzone, type TiltSensitivity } from './prefs-data';
 import type { Tilt } from './tilt';
-import { A2HS_TEXT, type FullscreenControl } from './fullscreen';
+import type { FullscreenControl } from './fullscreen';
 
 export { DEFAULTS, PRESETS, sanitise };
 export type { CameraDistance, ControllerPreferences, Layout, Steering, TiltDeadzone, TiltSensitivity };
@@ -201,7 +201,7 @@ export class SettingsSheet {
     const f = this.d.fullscreen;
     if (!f) return '';
     if (f.mode === 'standalone') return '<div class="row" data-row="fullscreen"><span>Full screen<small>On: opened from the Home Screen</small></span></div>';
-    if (f.mode === 'home-screen') return `<div class="row off" data-row="fullscreen"><span>Full screen<small data-note="a2hs">${A2HS_TEXT}</small></span></div>`;
+    if (f.mode === 'home-screen') return `<div class="row" data-row="fullscreen"><span>Full screen<small data-note="a2hs">Not from a page in this browser. Share, then Add to Home Screen, and open the room from there.</small></span></div>`;
     return toggle('fullscreen', 'Full screen', f.active, f.active ? 'Tap to leave full screen' : 'Tap to go full screen').replace('<div class="row"', '<div class="row" data-row="fullscreen"');
   }
 

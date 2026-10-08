@@ -155,7 +155,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions, paint: (el: 
   };
   const joinText = () =>
     joinUrl
-      ? `<p class="mn-join-how">Scan with a phone camera, or open</p><p class="mn-url" data-join-url>${esc(joinUrl)}</p>`
+      ? `<p class="mn-join-how">Scan with a phone camera, or open</p><p class="mn-url" data-join-url>${esc(joinUrl).replace(/\//g, '/<wbr>')}</p>`
       : `<p class="mn-join-how">Room code <b>${esc(opts.code)}</b> at ${esc(opts.domain)}</p>`;
 
   const seatOf = (n: number) => (room?.seats as Seat[] | undefined)?.find((s) => s.seat === n);
