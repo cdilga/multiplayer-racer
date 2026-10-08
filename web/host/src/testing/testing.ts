@@ -103,6 +103,8 @@ interface FakeController {
   source: number;
   seq: number;
   drive: [number, number] | null;
+  /** The right stick (R116: it steers). */
+  action: [number, number];
 }
 
 /** The debug overlay: a top-down plot of the route and cars, and per-car wheel compression, slip and contact. */
@@ -239,15 +241,17 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
       const seat = (await observe()).host.seats.find((s) => s.endpoint === endpoint);
       // In a real room (R110) the Lobby has no cars: `lobby` accepts a seat without one (round preparation's captures).
       if (!seat || (seat.car === null && !opts.lobby)) throw new Error(`${name} didn't get a seat and car`);
-      fakes.set(endpoint, { endpoint, source: seat.source, seq: 0, drive: null });
+      fakes.set(endpoint, { endpoint, source: seat.source, seq: 0, drive: null, action: [0, 0] });
       return { endpoint, seat: seat.seat as number, source: seat.source, car: seat.car };
     },
 
-    /** Holds a fake controller's drive stick at [x, y] (−32767..32767), or lets go (`null`). */
-    drive(endpoint: string, drive: [number, number] | null) {
+    /** Holds a fake controller's sticks (−32767..32767): `drive` is the left stick (throttle, brake, drift, launch), `action`
+     *  the right (R116: its x steers, a flick fires the utilities); `null` lets go of both. */
+    drive(endpoint: string, drive: [number, number] | null, action: [number, number] = [0, 0]) {
       const f = fakes.get(endpoint);
       if (!f) throw new Error(`no fake controller ${endpoint}`);
       f.drive = drive;
+      f.action = drive ? action : [0, 0];
     },
 
     /** Steps `every` ticks at a time, re-sending every held stick first (as a phone would), until `predicate` holds
@@ -261,7 +265,7 @@ export function attach(client: SimClient, ctx: { mapJson: string; seed: number; 
         for (const f of fakes.values()) {
           if (!f.drive) continue;
           f.seq = (f.seq + 1) & 0xffff;
-          test.input({ type: 'controller', endpoint: f.endpoint, frame: { state: { source: f.source, seq: f.seq, drive: f.drive } } });
+          test.input({ type: 'controller', endpoint: f.endpoint, frame: { state: { source: f.source, seq: f.seq, drive: f.drive, ...(f.action[0] || f.action[1] ? { action: f.action } : {}) } } });
         }
         await step(every);
         state = await observe();

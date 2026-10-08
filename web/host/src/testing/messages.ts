@@ -10,7 +10,7 @@ export type ControllerFrame =
   | { identify: true }
   | { leave: true }
   | { sitOut: true }
-  | { state: { source: number; seq: number; drive: [number, number] } };
+  | { state: { source: number; seq: number; drive: [number, number]; action?: [number, number] } };
 export type TestInput = SimInput | { type: 'controller'; endpoint: string; frame: ControllerFrame };
 
 /** Extra `init` options the testing worker reads. */

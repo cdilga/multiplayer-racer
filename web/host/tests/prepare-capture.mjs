@@ -39,7 +39,7 @@ async function run(name, players, viewport, query = '') {
   await page.waitForFunction(() => window.__jjPrepare.stats().committed === 1, null, { timeout: 60_000 });
   // The grid is held through the countdown; then everyone drives forward, steering a little differently.
   await page.waitForFunction(() => window.__jjRoom.view()?.phase === 'Running', null, { timeout: 60_000 });
-  for (const [k, c] of crew.entries()) await page.evaluate(([e, s]) => window.__jjTest.drive(e, [s, 28_000]), [c.endpoint, (k - 1.5) * 1_200]);
+  for (const [k, c] of crew.entries()) await page.evaluate(([e, s]) => window.__jjTest.drive(e, [0, 28_000], [s, 0]), [c.endpoint, (k - 1.5) * 1_200]);
   // Sticks are re-sent as a phone would, a few ticks at a time, until the cars are well into the lap.
   await page.evaluate(() => window.__jjTest.untilFact((st) => st.cars.some((c) => c.speed > 14), { maxTicks: 2400, every: 6 }));
   await page.evaluate(() => window.__jjTest.untilFact(() => false, { maxTicks: 1500, every: 6 }));

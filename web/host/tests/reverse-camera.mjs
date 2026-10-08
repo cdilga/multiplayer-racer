@@ -26,7 +26,7 @@ async function scenario(name, viewport, players) {
   const eps = [];
   for (let i = 0; i < players; i++) eps.push(await page.evaluate((n) => window.__jjTest.join(`P${n}`), i + 1));
   const seat = eps[0].seat;
-  const drive = (y, x = 0) => page.evaluate(([e, a, b]) => window.__jjTest.drive(e, [a, b]), [eps[0].endpoint, x, y]);
+  const drive = (y, x = 0) => page.evaluate(([e, a, b]) => window.__jjTest.drive(e, [0, b], [a, 0]), [eps[0].endpoint, x, y]); // R116: x is the right stick's steer
   // Only the first fake sends DRIVE. Found on the way: every fake joins as source 1 and the sim applies the last frame
   // it saw to all of them, so competing senders flicker every car's input; with one sender all tiles do the same drive.
   const cam = () => page.evaluate((s) => window.__jjRender.cameras()[s], seat);

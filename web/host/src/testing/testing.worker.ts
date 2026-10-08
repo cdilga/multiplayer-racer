@@ -22,7 +22,7 @@ function encode(input: unknown): Uint8Array | undefined {
   if ('leave' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_leave());
   if ('sitOut' in f) return wasm.encode_net_bytes(i.endpoint, false, wasm.controller_sit_out());
   const s = f.state;
-  return wasm.encode_net_bytes(i.endpoint, true, wasm.controller_state(s.source, s.seq, s.drive[0], s.drive[1]));
+  return wasm.encode_net_bytes(i.endpoint, true, s.action ? wasm.controller_state2(s.source, s.seq, s.drive[0], s.drive[1], s.action[0], s.action[1]) : wasm.controller_state(s.source, s.seq, s.drive[0], s.drive[1]));
 }
 
 function status(w: SimWorker<Sim>): WorkerStatus {

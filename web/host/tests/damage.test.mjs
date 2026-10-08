@@ -45,7 +45,7 @@ async function drivingHost(orbit, camdist = 7) {
   // Pump the stick like a phone: the surface only re-sends it while stepping, and the live clock runs on its own.
   await page.evaluate(
     ([endpoint]) => {
-      window.__pump = setInterval(() => window.__jjTest.drive(endpoint, window.__stick ?? [0, 12000]), 50);
+      window.__pump = setInterval(() => window.__jjTest.drive(endpoint, window.__stick ?? [0, 12000], [window.__steer ?? 0, 0]), 50);
       window.__jjTest.drive(endpoint, [0, 12000]);
     },
     [me.endpoint],
@@ -67,11 +67,11 @@ test('a loose door swings on the car and a detached bumper stays behind as debri
   // A loose door (health 10 of 60) and a loose bumper: they swing on the chassis' accelerations as the car swerves.
   await damage(page, car, 'door_FR', 10);
   await damage(page, car, 'door_RR', 10);
-  // A steady turn holds a sideways acceleration, which holds the door that way open: try each way until the door at the
+  // R116: the right stick steers (the left stick's x would drift), so the steer goes in `__steer`. A steady turn holds a sideways acceleration, which holds the door that way open: try each way until the door at the
   // camera's side stands open (the one direction closes it against its stop).
   let swing = 0;
   for (const x of [-20000, 20000, -20000, 20000]) {
-    await page.evaluate((v) => { window.__stick = [v, 14000]; }, x);
+    await page.evaluate((v) => { window.__stick = [0, 14000]; window.__steer = v; }, x);
     const r = await page.evaluate(() =>
       window.__jjTest.untilFact((s) => Math.abs(s.cars[0].parts.find((p) => p.part === 'door_FR').angleDeg) > 12, { maxTicks: 240, every: 6 }),
     );
@@ -95,7 +95,7 @@ test('a detached bumper stays on the road as debris while the car backs away, in
   // The clock is held: the sim moves only when this test steps it (untilFact re-sends the held stick as a phone would), so
   // the sequence is the same every run; a live clock let a slow runner's timing change how the car met its own bumper.
   await page.evaluate(() => window.__jjTest.hold(true));
-  const stick = (v) => page.evaluate(([e, v]) => { window.__stick = v; window.__jjTest.drive(e, v); }, [me.endpoint, v]);
+  const stick = (v) => page.evaluate(([e, v]) => { window.__stick = v; window.__steer = 0; window.__jjTest.drive(e, v); }, [me.endpoint, v]);
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed >= 6, { maxTicks: 1500, every: 6 }));
   // The bumper goes: debris (a dynamic body) stays where it came off while the car drives on.
   await stick([0, 20000]);
@@ -160,7 +160,7 @@ test('a detached bumper stays on the road as debris while the car backs away, in
 test('a missing door shows the core\'s dark bay, on the real host path', { timeout: 120_000 }, async () => {
   const { page, errors, me } = await drivingHost(270);
   const car = me.car;
-  await page.evaluate(() => { window.__stick = [0, 0]; });
+  await page.evaluate(() => { window.__stick = [0, 0]; window.__steer = 0; });
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed < 0.5, { maxTicks: 60, every: 6 }));
   const before = await vehicles(page, 0);
   assert.deepEqual(before.interiors, { engine: 0, cabin: 0, boot: 0 }, 'an intact car shows no interior');
@@ -182,7 +182,7 @@ test('capture strip: intact, loose, detached, wreck (husk and scattered parts, a
   const car = me.car;
   const shot = (name) => page.screenshot({ path: join(evidenceDir, `strip-${name}.jpg`), quality: 85 });
   // 1. intact, rolling gently near its start.
-  await page.evaluate(() => { window.__stick = [9000, 9000]; });
+  await page.evaluate(() => { window.__stick = [0, 9000]; window.__steer = 0; });
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed >= 3, { maxTicks: 1500, every: 6 }));
   await frames(page, 4);
   await shot('1-intact');
@@ -190,7 +190,7 @@ test('capture strip: intact, loose, detached, wreck (husk and scattered parts, a
   await damage(page, car, 'door_FR', 10);
   await damage(page, car, 'door_RR', 10);
   for (const x of [-16000, 16000, -16000, 16000]) {
-    await page.evaluate((v) => { window.__stick = [v, 9000]; }, x);
+    await page.evaluate((v) => { window.__stick = [0, 9000]; window.__steer = v; }, x);
     const r = await page.evaluate(() =>
       window.__jjTest.untilFact((s) => Math.abs(s.cars[0].parts.find((p) => p.part === 'door_FR').angleDeg) > 8, { maxTicks: 200, every: 6 }),
     );
@@ -201,7 +201,7 @@ test('capture strip: intact, loose, detached, wreck (husk and scattered parts, a
   // 3. the bumper comes off.
   await damage(page, car, 'front', 0);
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.debris.some((d) => d.kind === 'Part'), { maxTicks: 60, every: 3 }));
-  await page.evaluate(() => { window.__stick = [0, 0]; });
+  await page.evaluate(() => { window.__stick = [0, 0]; window.__steer = 0; });
   await page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed < 0.4, { maxTicks: 900, every: 6 }));
   await frames(page, 6);
   await shot('3-detached');
@@ -209,12 +209,12 @@ test('capture strip: intact, loose, detached, wreck (husk and scattered parts, a
   // (A fresh run so the crash is a few metres from the anchor and the husk is in the picture beside the new car.)
   await page.close();
   const w = await drivingHost(100, 'far');
-  await w.page.evaluate(() => { window.__stick = [0, 12000]; });
+  await w.page.evaluate(() => { window.__stick = [0, 12000]; window.__steer = 0; });
   await w.page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].speed >= 3, { maxTicks: 1500, every: 6 }));
   const before = (await observe(w.page)).cars.find((c) => c.car === w.me.car).position;
   await damage(w.page, w.me.car, 'wheel_FL', 0);
   await damage(w.page, w.me.car, 'wheel_RR', 0);
-  await w.page.evaluate(() => { window.__stick = [0, 0]; });
+  await w.page.evaluate(() => { window.__stick = [0, 0]; window.__steer = 0; });
   await w.page.evaluate(() => window.__jjTest.untilFact((s) => s.cars[0].race.wrecks >= 1, { maxTicks: 60, every: 3 }));
   await w.page.evaluate(() => window.__jjTest.step(150));
   await w.page.waitForFunction(() => window.__jjRender.vehicles(0).cars >= 1, null, { timeout: 10_000 });

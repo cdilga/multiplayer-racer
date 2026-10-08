@@ -399,6 +399,34 @@ pub mod test_codec {
         ControllerCmd::SitOut.encode()
     }
 
+    /// A state record with both sticks: `drive` is the left stick, `action` the right one (R116: the right stick steers).
+    #[wasm_bindgen]
+    pub fn controller_state2(
+        source: u16,
+        seq: u16,
+        dx: i16,
+        dy: i16,
+        ax: i16,
+        ay: i16,
+    ) -> Result<Vec<u8>, JsError> {
+        StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: seq,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(source),
+                seq,
+                drive: [dx, dy],
+                action: [ax, ay],
+                flags: StateFlags(
+                    StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH | StateFlags::ACTION_TOUCH,
+                ),
+            }],
+        }
+        .encode()
+        .map_err(|e| JsError::new(&format!("{e:?}")))
+    }
+
     #[wasm_bindgen]
     pub fn controller_state(source: u16, seq: u16, dx: i16, dy: i16) -> Result<Vec<u8>, JsError> {
         StateBatch {
