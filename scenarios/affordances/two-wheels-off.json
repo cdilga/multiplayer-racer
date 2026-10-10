@@ -1,9 +1,9 @@
 {
  "scenario": "two-wheels-off",
- "what": "\u00a77.3a 'lose the car with two detached' (P1-S04c; the loose-wheel-drive row is the other half): a car at 12 m/s on the main straight loses its front left and rear right wheels on the same tick. Two detached wheels wreck it: every remaining part pops off as debris, its chassis stays on the track as a husk (a dynamic body), and the player is back at their anchor, upright on a fresh intact car with the same identity, after the 2 s hold. Baselines: no input and mashing wreck it just the same, so what differs is the deliberate run driving the fresh car off its anchor again once the hold is over.",
+ "what": "\u00a77.3a 'lose the car with a detached wheel' (P1-S04c, amended by R121 2026-10-10: one wheel is enough, and the car gets a grace; the row keeps P1-S04c's name): a car at 12 m/s on the main straight, a little throttle, loses its front left wheel at 0.5 s (tick 60 of 120 Hz). It drives on for the profile's wheel_loss_respawn_s (2 s), still moving and upright, unwrecked; then it is wrecked: every remaining part pops off as debris, its chassis stays on the track as a husk (a dynamic body), and the player is back at their anchor, upright on a fresh intact car with the same identity, after the 2 s hold. Baselines: no input and mashing wreck it just the same, so what differs is the deliberate run driving the fresh car off its anchor again once the hold is over.",
  "map": "maps/greybox-loop.json",
  "seed": 43,
- "ticks": 600,
+ "ticks": 960,
  "cars": [
   {
    "routePoint": 20,
@@ -21,12 +21,6 @@
    "car": 0,
    "part": "wheel_FL",
    "health": 0
-  },
-  {
-   "tick": 60,
-   "car": 0,
-   "part": "wheel_RR",
-   "health": 0
   }
  ],
  "inputs": [
@@ -37,6 +31,27 @@
   }
  ],
  "expect": [
+  {
+   "car": 0,
+   "atTick": 240,
+   "metric": "wrecks",
+   "min": 0,
+   "max": 0
+  },
+  {
+   "car": 0,
+   "atTick": 240,
+   "metric": "speed",
+   "min": 3,
+   "max": 20
+  },
+  {
+   "car": 0,
+   "atTick": 240,
+   "metric": "upY",
+   "min": 0.9,
+   "max": 1.001
+  },
   {
    "car": 0,
    "metric": "wrecks",

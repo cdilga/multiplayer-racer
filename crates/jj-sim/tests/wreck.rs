@@ -1,6 +1,6 @@
 //! P1-S04c (plan §6.3, §7.3a): wrecks, husks and respawn.
 //!
-//! - two wheels detached, a stuck flip and an out-of-bounds fall each wreck the car: every part still on it pops off as
+//! - a lost wheel (after its R121 grace), a stuck flip and an out-of-bounds fall each wreck the car: every part still on it pops off as
 //!   debris, its chassis stays where it was as a husk (a dynamic body), and the player is back at their own anchor, on a
 //!   fresh intact car with the same identity, after the 2 s hold;
 //! - husks and parts stay dynamic for the round (and an out-of-bounds husk is caught by a plane under the map and sleeps
@@ -80,20 +80,27 @@ fn near(p: [f32; 3], x: f32, z: f32, within: f32) -> bool {
 }
 
 #[test]
-fn two_detached_wheels_wreck_the_car_and_it_respawns_at_its_anchor() {
+fn a_lost_wheel_wrecks_the_car_after_its_grace_and_it_respawns_at_its_anchor() {
+    // R121 (amends P1-S04c's two-wheel rule): one wheel off and the car drives on for the profile's grace, then it is
+    // wrecked and respawns fresh.
     let map = yard();
     let mut sim = rig(&map, 2);
     sim.place_car(CarId(0), at(20.0, 0.05, -30.0), 0.0, [14.0, 0.0, 0.0]);
     steps(&mut sim, 30);
     let [ax, az] = anchor(0);
     assert_eq!(wrecks(&sim, 0), 0);
+    let grace =
+        (sim.profile().tuning.damage.wheel_loss_respawn_s * jj_sim::TICK_HZ as f32).round() as u64;
     sim.set_part_health(CarId(0), part_index("wheel_FL").unwrap() as u8, 0.0);
-    steps(&mut sim, 2);
-    assert_eq!(wrecks(&sim, 0), 0, "one wheel isn't a wreck");
-    sim.set_part_health(CarId(0), part_index("wheel_RR").unwrap() as u8, 0.0);
+    steps(&mut sim, grace - 2);
+    assert_eq!(
+        wrecks(&sim, 0),
+        0,
+        "a lost wheel drives on through its grace"
+    );
     let before = sim.car_state(CarId(0)).unwrap().position;
-    steps(&mut sim, 2);
-    assert_eq!(wrecks(&sim, 0), 1, "two wheels off is a wreck");
+    steps(&mut sim, 4);
+    assert_eq!(wrecks(&sim, 0), 1, "and is a wreck when it runs out");
     // The husk stays where the car was, a dynamic body; every part is debris; the other car was never touched.
     let h = husks(&sim);
     assert_eq!(h.len(), 1);
@@ -260,4 +267,53 @@ fn a_wreck_never_injects_energy_and_replays_bit_for_bit() {
     );
     assert_eq!(replayed.state_hash(), sim.state_hash(), "the wreck replays");
     assert_eq!(husks(&replayed).len(), 1);
+}
+
+/// R121 (owner playtest 1): damage doesn't slow a car until a wheel comes off. A Cruz Missile with every part loose
+/// (each just under its loose threshold) laps the greybox on the autopilot within 1 % of an undamaged one on the same
+/// seed, and it is never wrecked for it.
+#[test]
+fn a_car_with_every_part_loose_laps_as_fast_as_an_intact_one() {
+    const GREYBOX: &str = include_str!("../../../maps/greybox-loop.json");
+    let map = load_json(GREYBOX.as_bytes(), &Registry::generic()).expect("the greybox validates");
+    let s = u64::from(TICK_HZ);
+    let lap = |loose: bool, seed: u64| {
+        let mut sim = Sim::new(&map, &Registry::generic(), seed, VehicleProfile::cruz());
+        let car = sim.spawn_grid(1)[0];
+        sim.start_race(1);
+        sim.set_autopilot(car, true);
+        if loose {
+            let d = sim.profile().tuning.damage.clone();
+            for (i, name) in jj_sim::damage::PART_NAMES.iter().enumerate().skip(1) {
+                let max = match *name {
+                    "front" => d.health_front,
+                    "back" => d.health_back,
+                    n if n.starts_with("door") => d.health_door,
+                    _ => d.health_wheel,
+                };
+                sim.set_part_health(car, i as u8, max * d.loose_fraction * 0.9);
+            }
+            assert!(
+                sim.part_states(car)
+                    .unwrap()
+                    .iter()
+                    .skip(1)
+                    .all(|p| *p == PartState::Loose),
+                "every part is loose"
+            );
+        }
+        while !sim.race().is_finished(car.0) && sim.tick() < 200 * s {
+            sim.step();
+        }
+        let rc = sim.race().car(car.0).unwrap();
+        assert_eq!(rc.wrecks, 0, "loose parts never wreck a car");
+        rc.finished_at.expect("the lap finishes") as f64 / s as f64
+    };
+    for seed in [5, 6] {
+        let (intact, loose) = (lap(false, seed), lap(true, seed));
+        assert!(
+            (loose - intact).abs() <= intact * 0.01,
+            "seed {seed}: loose {loose:.2} s vs intact {intact:.2} s"
+        );
+    }
 }

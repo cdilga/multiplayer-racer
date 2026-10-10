@@ -185,8 +185,10 @@ pub struct DamageTuning {
     /// (1/s). Visual springs on the chassis' accelerations; they never push back on the body.
     pub spring_stiffness: f32,
     pub spring_damping: f32,
-    /// A loose wheel loses this fraction of its friction slip.
+    /// A loose wheel loses this fraction of its friction slip (0 since R121: damage costs nothing until a wheel comes off).
     pub loose_wheel_grip_loss: f32,
+    /// After the first wheel comes off, the car drives on this long, s, then is wrecked and respawns fresh (R121).
+    pub wheel_loss_respawn_s: f32,
     /// A detaching part leaves at this much extra speed, m/s, away from the chassis' centre of mass (an authorised input
     /// to the energy ledger).
     pub detach_kick_mps: f32,
@@ -212,7 +214,8 @@ impl Default for DamageTuning {
             attribution_margin_m: 0.3,
             spring_stiffness: 25.0,
             spring_damping: 4.0,
-            loose_wheel_grip_loss: 0.15,
+            loose_wheel_grip_loss: 0.0,
+            wheel_loss_respawn_s: 2.0,
             detach_kick_mps: 1.5,
             detach_clear_ms: 250.0,
         }

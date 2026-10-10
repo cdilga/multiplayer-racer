@@ -505,7 +505,7 @@ fn loose_and_detached_parts_reach_the_snapshot_and_main_as_part_records_and_even
 
 #[test]
 fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_event() {
-    // P1-S04c through the real host path: two detached wheels wreck the car. Main gets Wrecked (with the wheel's cause);
+    // P1-S04c through the real host path: detached wheels wreck the car once R121's grace runs out. Main gets Wrecked (with the wheel's cause);
     // the snapshot has the husk (part 255) and the ten parts as pieces (state 3: they belong to a car that has since been
     // rebuilt), the debris list keeps their slots (kind 2), and the respawned car's parts are all intact.
     use jj_protocol::abi::SimEvent;
@@ -518,7 +518,8 @@ fn a_wreck_leaves_a_husk_and_its_parts_as_pieces_in_the_snapshot_and_a_wrecked_e
     }
     h.sim.set_part_health(CarId(0), 7, 0.0);
     h.sim.set_part_health(CarId(0), 10, 0.0);
-    for _ in 0..30 {
+    let grace = (h.sim.profile().tuning.damage.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
+    for _ in 0..grace + 30 {
         h.advance(now);
         now += 8_334;
     }

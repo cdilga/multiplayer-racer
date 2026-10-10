@@ -1,9 +1,9 @@
 {
  "scenario": "detach-energy",
- "what": "Energy accounting through the fixture runner (P1-S04b, plan §13b.1): a car at 14 m/s loses its front bumper, a door and a wheel on the same tick, with every kick in the authorised-work ledger. `energyGainJ`, the most kinetic + potential energy minus the ledger ever rose above its start, stays under the solver's tolerance (it falls: friction and the ground take energy, nothing makes it). The cars wait out spawn protection first; the second car sits parked as a bystander.",
+ "what": "Energy accounting through the fixture runner (P1-S04b, plan §13b.1): a car at 14 m/s loses its front bumper, a door and a wheel on the same tick, with every kick in the authorised-work ledger. `energyGainJ`, the most kinetic + potential energy minus the ledger ever rose above its start, stays under the solver's tolerance (it falls: friction and the ground take energy, nothing makes it). The cars wait out spawn protection first; the second car sits parked as a bystander. It ends at tick 500, inside R121's 2 s wheel-loss grace (the wheel goes at 270), so no wreck's respawn mixes into the ledger.",
  "map": "scenarios/damage/yard.json",
  "seed": 12,
- "ticks": 600,
+ "ticks": 500,
  "cars": [
   {"pose": {"x": -60.0, "y": 0.1, "z": -20.0, "headingDeg": 0}},
   {"pose": {"x": -48.0, "y": 0.1, "z": -20.0, "headingDeg": 0}}

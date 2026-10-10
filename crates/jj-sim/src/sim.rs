@@ -145,6 +145,9 @@ struct Car {
     incarnation: u32,
     /// What took this incarnation's last part off, and whose car it was (the cause of a wheel-loss wreck).
     last_detach: Option<(damage::OtherBody, Option<u32>)>,
+    /// The tick this incarnation first lost a wheel (R121): it drives on until `wheel_loss_respawn_s` later, then is
+    /// wrecked and respawns fresh.
+    wheel_lost_at: Option<u64>,
 }
 
 /// The catch plane's top, below the kill plane, and its half extent, m.
@@ -1013,6 +1016,7 @@ impl Sim {
             last_linvel: Vector::ZERO,
             incarnation: 0,
             last_detach: None,
+            wheel_lost_at: None,
         });
     }
 
@@ -1425,14 +1429,19 @@ impl Sim {
         self.fresh_debris.push((idx, until));
     }
 
-    /// A car with two or more wheels detached is wrecked (P1-S04c).
+    /// A car that loses a wheel drives on for `wheel_loss_respawn_s`, then is wrecked and respawns as a fresh car (R121,
+    /// owner playtest 1: a car on three wheels was too punishing; amends P1-S04c's two-wheel rule).
     fn check_wheel_wrecks(&mut self) {
         let t = self.profile.tuning.damage.clone();
+        let after = libm::roundf(t.wheel_loss_respawn_s * TICK_HZ as f32) as u64;
         for ci in 0..self.cars.len() {
             let gone = (damage::WHEEL_FL..PARTS)
-                .filter(|&i| self.cars[ci].damage.state(i, &t) == PartState::Detached)
-                .count();
-            if gone >= 2
+                .any(|i| self.cars[ci].damage.state(i, &t) == PartState::Detached);
+            if !gone {
+                continue;
+            }
+            let since = *self.cars[ci].wheel_lost_at.get_or_insert(self.tick);
+            if self.tick >= since + after
                 && let Some(e) = self.race.wreck(self.tick, ci as u32, Respawned::WheelLoss)
             {
                 self.apply(e);
@@ -1568,6 +1577,7 @@ impl Sim {
         c.springs = [Spring::default(); PARTS];
         c.removed = [false; PARTS];
         c.incarnation += 1;
+        c.wheel_lost_at = None;
     }
 
     /// Fresh debris that has had its clearing time, and no longer overlaps any car, collides with everything like any other

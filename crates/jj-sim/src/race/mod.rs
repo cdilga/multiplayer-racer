@@ -211,7 +211,7 @@ pub enum Respawned {
     Recover,
     OutOfBounds,
     FlipWreck,
-    /// Two or more wheels detached (P1-S04c).
+    /// A wheel came off and its grace ran out (R121; was two wheels, P1-S04c).
     WheelLoss,
 }
 
