@@ -205,11 +205,14 @@ pub fn surface_point(map: &Map, f: &Feature, d: &JumpDesign, u: f64, lat: f64) -
     [x, ground_height_m(&map.terrain, x, z) + d.height(u, lat), z]
 }
 
+/// A triangle mesh: vertex positions in metres and counter-clockwise index triples.
+pub type JumpMesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
+
 /// A sharp jump as one triangle mesh (positions in metres, counter-clockwise from above): cross-sections every 25 cm up
 /// the ramp, then the table and the landing ramp. A cross-section is four points, the flat top's two edges and the foot
 /// of each sloped side; the table also gets a front skirt down to the ground at the lip, where it is wider than the
 /// ramp. The sim collides with exactly these triangles and the renderer draws them.
-pub fn jump_mesh(map: &Map, f: &Feature) -> Option<(Vec<[f64; 3]>, Vec<[u32; 3]>)> {
+pub fn jump_mesh(map: &Map, f: &Feature) -> Option<JumpMesh> {
     let d = JumpDesign::of(f)?;
     let base = base_index(map, f);
     let mut verts: Vec<[f64; 3]> = Vec::new();
