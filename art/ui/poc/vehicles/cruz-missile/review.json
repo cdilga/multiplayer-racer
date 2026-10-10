@@ -1,0 +1,413 @@
+{
+  "id": "cruz-missile",
+  "name": "Cruz Missile",
+  "status": "awaiting-review",
+  "date": "2026-10-10",
+  "beads": [
+    "P1-V02",
+    "P1-V03",
+    "br-bwju.1",
+    "br-p1-d03b-poc-cleanup-uod"
+  ],
+  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Rear drive, 1200 kg.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": null,
+  "reference": {
+    "sheet": "media/reference/lod-plus-1.png",
+    "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Front IoU is limited by the reference's own perspective, so don't chase it.",
+    "compare": [
+      {
+        "lod": 0,
+        "label": "LOD0 against the lod+1 sheet",
+        "sheet": "media/reference-lod0/sheet.png",
+        "iou": {
+          "side": 0.964,
+          "top": 0.9499,
+          "front": 0.9088,
+          "rear": 0.9317
+        },
+        "weightedIou": 0.9466
+      },
+      {
+        "lod": 2,
+        "label": "LOD2 against the lowest-lod sheet",
+        "sheet": "media/reference-lod2/sheet.png",
+        "iou": {
+          "side": 0.9436,
+          "top": 0.9479,
+          "front": 0.9123,
+          "rear": 0.9341
+        },
+        "weightedIou": 0.9388
+      }
+    ]
+  },
+  "turntable": {
+    "assetJson": "media/model/cruz-missile.asset.json",
+    "atlas": "media/model/cruz-missile.atlas.png",
+    "emissive": "media/model/cruz-missile.emissive.png",
+    "sheet": "media/turntable/lods.jpg",
+    "lods": [
+      {
+        "lod": 0,
+        "glb": "media/model/cruz-missile.lod0.glb",
+        "tris": 1264,
+        "draws": 11,
+        "maxTris": 1300,
+        "withinBudget": true
+      },
+      {
+        "lod": 1,
+        "glb": "media/model/cruz-missile.lod1.glb",
+        "tris": 890,
+        "draws": 11,
+        "maxTris": 900,
+        "withinBudget": true
+      },
+      {
+        "lod": 2,
+        "glb": "media/model/cruz-missile.lod2.glb",
+        "tris": 594,
+        "draws": 11,
+        "maxTris": 600,
+        "withinBudget": true
+      }
+    ]
+  },
+  "damage": {
+    "strip": "media/damage/damage-strip.jpg",
+    "overview": "media/damage/damage-strip-overview.jpg",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front, door_FL and wheel_FL detached; a stripped shell. Detached parts persist as dynamic debris, so the lying parts are the debris they leave.",
+    "parts": [
+      {
+        "name": "core",
+        "hinge": null,
+        "pivot": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "front",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": 0,
+          "max": 25
+        },
+        "pivot": [
+          0,
+          1.1031818181818183,
+          0.8300000000000001
+        ]
+      },
+      {
+        "name": "back",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": -25,
+          "max": 0
+        },
+        "pivot": [
+          0,
+          1.1786363636363637,
+          -0.8300000000000001
+        ]
+      },
+      {
+        "name": "door_FL",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": -70,
+          "max": 0
+        },
+        "pivot": [
+          0.9655384615384615,
+          0.6288636363636364,
+          0.8300000000000001
+        ]
+      },
+      {
+        "name": "door_FR",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": 0,
+          "max": 70
+        },
+        "pivot": [
+          -0.9655384615384615,
+          0.6288636363636364,
+          0.8300000000000001
+        ]
+      },
+      {
+        "name": "door_RL",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": -70,
+          "max": 0
+        },
+        "pivot": [
+          0.94,
+          0.6476515151515152,
+          -0.15
+        ]
+      },
+      {
+        "name": "door_RR",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": 0,
+          "max": 70
+        },
+        "pivot": [
+          -0.94,
+          0.6476515151515152,
+          -0.15
+        ]
+      },
+      {
+        "name": "wheel_FL",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0.85,
+          0.4,
+          1.34
+        ]
+      },
+      {
+        "name": "wheel_FR",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          -0.85,
+          0.4,
+          1.34
+        ]
+      },
+      {
+        "name": "wheel_RL",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0.85,
+          0.4,
+          -1.34
+        ]
+      },
+      {
+        "name": "wheel_RR",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          -0.85,
+          0.4,
+          -1.34
+        ]
+      }
+    ],
+    "interiors": {
+      "engine": [
+        "front"
+      ],
+      "cabin": [
+        "door_FL",
+        "door_FR",
+        "door_RL",
+        "door_RR"
+      ],
+      "boot": [
+        "back"
+      ]
+    }
+  },
+  "paints": {
+    "sheet": "media/paints/paints.jpg",
+    "colours": [
+      {
+        "name": "red",
+        "hex": "#E5322D"
+      },
+      {
+        "name": "blue",
+        "hex": "#2563EB"
+      },
+      {
+        "name": "orange",
+        "hex": "#FF7A1A"
+      },
+      {
+        "name": "teal",
+        "hex": "#00B5B8"
+      },
+      {
+        "name": "yellow",
+        "hex": "#FFD23F"
+      },
+      {
+        "name": "pink",
+        "hex": "#FF4FA3"
+      },
+      {
+        "name": "charcoal",
+        "hex": "#2A2D34"
+      },
+      {
+        "name": "green",
+        "hex": "#22A447"
+      },
+      {
+        "name": "white",
+        "hex": "#F4F1EA"
+      },
+      {
+        "name": "purple",
+        "hex": "#8B3FD9"
+      },
+      {
+        "name": "maroon",
+        "hex": "#8E1B3F"
+      },
+      {
+        "name": "sky",
+        "hex": "#5EC8FF"
+      }
+    ],
+    "pattern": "Seat colour on the paint key, the number on the roof (anchor roof_number) and in the HUD badge; tyres stay dark, glass and lamps keep their colour. Full-tier patterns (plan section 2.3) are not drawn yet."
+  },
+  "inWorld": [
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p)",
+      "size": "large",
+      "image": "media/in-world/grid-1.jpg"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "image": "media/in-world/grid-4.jpg"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "image": "media/in-world/grid-24.jpg"
+    },
+    {
+      "label": "From the Derby overview camera",
+      "size": "overview",
+      "image": "media/in-world/damage-strip-overview.jpg"
+    }
+  ],
+  "gate": {
+    "result": "PASS",
+    "findings": [
+      {
+        "result": "PASS",
+        "text": "contract + reproducibility (validator clean, byte-reproducible bake, schema and fixtures updated)"
+      },
+      {
+        "result": "PASS",
+        "text": "budget + silhouette (1264/890/594 ≤ 1300/900/600; interiors 24/36/32 tris each ≤ 80, drawn only when exposed;"
+      },
+      {
+        "result": "PASS",
+        "text": "paint key / one material / draws per tile (one atlas material incl. interiors; 216 draws at 24×24)"
+      },
+      {
+        "result": "PASS",
+        "text": "damage states (each part intact → loose about its §6.3 hinge line → detached; dark bays and interior blocks behind"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (mass fractions sum to 1; origin on the ground between the axles; core proxy rounded; feel bank passes)"
+      },
+      {
+        "result": "PASS",
+        "text": "identity/readability at the smallest tile (24-tile capture; paint key under six colours)"
+      }
+    ],
+    "report": "media/gate/validation.md"
+  },
+  "handling": {
+    "source": "assets/profiles/cruz-missile.json",
+    "massKg": 1200,
+    "drive": "Rear",
+    "accel": {
+      "value": 5.83,
+      "unit": "m/s2",
+      "note": "engine force over mass at launch: an upper bound, drag and traction not included"
+    },
+    "topSpeed": {
+      "value": null,
+      "note": "Not measured yet: the feel bank (S03) asserts envelopes, not a top speed. Each new car's handling bead records it here, measured (R123)."
+    },
+    "cornering": {
+      "maxSteerRad": 0.55,
+      "steerFalloffMps": 25,
+      "frictionSlip": 2,
+      "driftRearGrip": 0.37,
+      "rollInfluence": 0.12
+    },
+    "braking": {
+      "maxBrakeForceN": 14000
+    },
+    "boost": {
+      "engineGain": 0.6,
+      "drainPerS": 0.35,
+      "rechargePerS": 0.12
+    },
+    "wheelRadiusM": 0.4
+  }
+}

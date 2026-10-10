@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicle review</title>
+<link rel="icon" href="../../brand/favicon.svg">
+<link rel="stylesheet" href="./vehicles.css">
+<!-- Self-hosted only (R70). One template for every roster vehicle: review.html?v=<id>, filled from <id>/review.json. -->
+<script type="importmap">{ "imports": {
+  "three": "../vendor/three/three.module.min.js",
+  "three/addons/": "../vendor/three/addons/"
+} }</script>
+</head>
+<body>
+<header><div class="in">
+  <img src="../../brand/wordmark-on-ink.svg" alt="Joystick Jammers">
+  <a href="../">Design site</a> / <a href="./">Vehicles</a>
+  <h1 id="name">Vehicle review</h1>
+  <div class="meta" id="meta"></div>
+  <p id="summary"></p>
+</div></header>
+<main id="main"><p>Loading…</p></main>
+<script type="module" src="./review.js"></script>
+</body>
+</html>

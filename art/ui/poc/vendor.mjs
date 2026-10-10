@@ -28,6 +28,11 @@ mkdirSync(join(here, 'vendor', 'three', 'addons', 'csm'), { recursive: true });
 for (const f of ['CSMShadowNode.js', 'CSMFrustum.js']) copyFileSync(join(three, 'examples', 'jsm', 'csm', f), join(here, 'vendor', 'three', 'addons', 'csm', f));
 mkdirSync(join(here, 'vendor', 'three', 'addons', 'utils'), { recursive: true });
 copyFileSync(join(three, 'examples', 'jsm', 'utils', 'BufferGeometryUtils.js'), join(here, 'vendor', 'three', 'addons', 'utils', 'BufferGeometryUtils.js'));
+// The Vehicles review pages (P1-D03b, bwju.1) load the baked GLBs and orbit them.
+mkdirSync(join(here, 'vendor', 'three', 'addons', 'loaders'), { recursive: true });
+copyFileSync(join(three, 'examples', 'jsm', 'loaders', 'GLTFLoader.js'), join(here, 'vendor', 'three', 'addons', 'loaders', 'GLTFLoader.js'));
+mkdirSync(join(here, 'vendor', 'three', 'addons', 'controls'), { recursive: true });
+copyFileSync(join(three, 'examples', 'jsm', 'controls', 'OrbitControls.js'), join(here, 'vendor', 'three', 'addons', 'controls', 'OrbitControls.js'));
 copyFileSync(join(three, 'LICENSE'), join(here, 'vendor', 'three', 'LICENSE'));
 writeFileSync(join(here, 'vendor', 'three', 'VERSION'), `three ${version} (npm), copied from the repo-root node_modules\n`);
 

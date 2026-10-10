@@ -5,7 +5,7 @@ name: POC deploy
 on:
   push:
     branches: [v0.2-revamp]
-    paths: ["art/ui/**", ".gitea/workflows/deploy-poc.yml", "infra/poc/**"]
+    paths: ["art/ui/**", ".gitea/workflows/deploy-poc.yml", "infra/poc/**", "art/vehicles/**", "assets/profiles/**", "tools/vehicles/review/**"]
   workflow_dispatch:
 concurrency:
   group: deploy-poc
@@ -21,6 +21,9 @@ jobs:
       - name: LFS objects for the POC
         run: |
           git lfs install --local
-          git lfs pull --include="art/ui/**"
+          git lfs pull --include="art/ui/**,art/vehicles/**"
+      # The vehicle review pages are generated from the roster data and the profiles; rebuild so they're never stale.
+      - name: Vehicle review pages
+        run: node tools/vehicles/review/build.mjs
       - name: Publish
         run: infra/poc/publish.sh

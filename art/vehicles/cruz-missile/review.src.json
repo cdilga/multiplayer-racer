@@ -1,0 +1,38 @@
+{
+  "what": "What the design site's Vehicles review page shows for this car (R126). tools/vehicles/review/build.mjs turns this, vehicle.json, the bake and assets/profiles/<id>.json into art/ui/poc/vehicles/<id>/; tools/vehicles/review/check.mjs fails if any Vehicles-contract item is missing. Paths are repo-relative.",
+  "name": "Cruz Missile",
+  "status": "awaiting-review",
+  "date": "2026-10-10",
+  "beads": ["P1-V02", "P1-V03", "br-bwju.1", "br-p1-d03b-poc-cleanup-uod"],
+  "summary": "The Playtest-1 car: a Holden Cruze-based rally sedan code-built from the owner's reference sheets (R81). Rear drive, 1200 kg.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": null,
+  "reference": {
+    "sheet": "art/vehicles/cruz-missile/refs/lod-plus-1.png",
+    "compare": [
+      { "lod": 0, "label": "LOD0 against the lod+1 sheet", "dir": "spikes/art-pipeline/J-cruze-lowpoly/out/final" },
+      { "lod": 2, "label": "LOD2 against the lowest-lod sheet", "dir": "spikes/art-pipeline/J-cruze-lowpoly/out/final_L2_vs_lowest" }
+    ],
+    "note": "Left to right per view: the reference, the model rendered from the same view, and the silhouette diff (green is model outside the reference, red is reference the model misses). Front IoU is limited by the reference's own perspective, so don't chase it."
+  },
+  "turntable": { "sheet": "docs/evidence/P1-V03/lods.jpg", "validation": "docs/evidence/P1-V03/validation.md" },
+  "damage": {
+    "strip": "docs/evidence/P1-V03/damage-strip.jpg",
+    "overview": "docs/evidence/P1-V03/damage-strip-overview.jpg",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front, door_FL and wheel_FL detached; a stripped shell. Detached parts persist as dynamic debris, so the lying parts are the debris they leave."
+  },
+  "paints": {
+    "sheet": "docs/evidence/P1-V03/paints.jpg",
+    "identity": "art/ui/tokens.json",
+    "pattern": "Seat colour on the paint key, the number on the roof (anchor roof_number) and in the HUD badge; tyres stay dark, glass and lamps keep their colour. Full-tier patterns (plan section 2.3) are not drawn yet."
+  },
+  "inWorld": [
+    { "label": "Own car in its tile, large (1 tile, TV 1080p)", "size": "large", "path": "docs/evidence/P1-V03/grid-1.jpg" },
+    { "label": "Four tiles", "size": "medium", "path": "docs/evidence/P1-V03/grid-4.jpg" },
+    { "label": "24 tiles, small (each car about 100 px)", "size": "small", "path": "docs/evidence/P1-V03/grid-24.jpg" },
+    { "label": "From the Derby overview camera", "size": "overview", "path": "docs/evidence/P1-V03/damage-strip-overview.jpg" }
+  ],
+  "gate": { "report": "docs/evidence/P1-V03/validation.md" },
+  "profile": "assets/profiles/cruz-missile.json",
+  "handling": { "topSpeedMps": null, "topSpeedNote": "Not measured yet: the feel bank (S03) asserts envelopes, not a top speed. Each new car's handling bead records it here, measured (R123)." }
+}

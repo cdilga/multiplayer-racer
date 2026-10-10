@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Design review</title>
+<title>Design site</title>
 <link rel="icon" href="../brand/favicon.svg">
 <style>
   * { box-sizing: border-box; }
@@ -11,83 +11,154 @@
   header { background: var(--c-ink); color: var(--c-paper); padding: 28px 24px 22px; }
   header .in, main { max-width: 1120px; margin: 0 auto; }
   header img { height: 96px; display: block; margin-bottom: 12px; }
-  header p { margin: 0; max-width: 820px; }
+  header p { margin: 0 0 8px; max-width: 820px; }
   main { padding: 8px 24px 80px; }
+  nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+  nav.jump a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 3px solid var(--c-ink); border-radius: 10px; background: #fff9ec; color: var(--c-ink); font-weight: 700; text-decoration: none; }
   h1, h2, h3 { font-family: var(--font-display); font-weight: 900; text-transform: uppercase; line-height: 1; }
-  h2 { font-style: italic; font-size: 40px; margin: 36px 0 6px; }
-  h2 .n { color: var(--c-cobalt); }
+  h2 { font-style: italic; font-size: 44px; margin: 44px 0 4px; border-bottom: 4px solid var(--c-ink); padding-bottom: 6px; }
+  h3 { font-size: 30px; margin: 26px 0 4px; }
   .why { margin: 0 0 12px; max-width: 900px; }
   .links { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
-  .links a { display: inline-flex; align-items: center; min-height: 48px; padding: 0 14px; border: 3px solid var(--c-ink); border-radius: 10px; background: #fff9ec; color: var(--c-ink); font-weight: 700; text-decoration: none; box-shadow: 0 4px 0 rgb(21 32 58 / .85); }
+  .links a, a.btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 14px; border: 3px solid var(--c-ink); border-radius: 10px; background: #fff9ec; color: var(--c-ink); font-weight: 700; text-decoration: none; box-shadow: 0 4px 0 rgb(21 32 58 / .85); }
   .links a.primary { background: var(--c-saffron); }
-  table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 10px 0 0; }
-  th, td { border: 2px solid var(--c-ink); padding: 6px 10px; vertical-align: top; text-align: left; }
-  th { background: var(--c-paper-shade); }
-  .status { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 2px solid var(--c-ink); font-size: 14px; font-weight: 700; vertical-align: middle; margin-left: 8px; }
-  .status.ready { background: var(--c-success); color: var(--c-paper); }
-  .status.wait { background: var(--c-paper-shade); }
-  .status.blocked { background: var(--c-danger-tint); color: var(--c-danger); }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 2px 0 8px; font-size: 16px; }
+  .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 2px solid var(--c-ink); font-size: 14px; font-weight: 700; background: var(--c-paper-shade); white-space: nowrap; }
+  .chip.accepted { background: var(--c-success); color: var(--c-paper); }
+  .chip.awaiting-review { background: var(--c-saffron); }
+  .chip.changes-asked, .chip.no-review-data { background: var(--c-danger-tint); color: var(--c-danger); }
   .how { background: var(--c-paper-shade); border: 2px solid var(--c-paper-line); border-radius: 10px; padding: 14px 16px; margin-top: 18px; }
+  .entries > article { margin-bottom: 8px; }
+  @media (max-width: 600px) { header { padding: 20px 16px; } header img { height: 64px; } main { padding: 4px 16px 64px; } h2 { font-size: 34px; } h3 { font-size: 26px; } }
 </style>
 </head>
 <body>
 <header><div class="in">
   <img src="../brand/wordmark-on-ink.svg" alt="Joystick Jammers">
-  <p><b>Design review (G-DESIGN).</b> Each item is one worked proposal with a one-line why; tell the session what to change and it comes back as rework. Open the TV items on the TV laptop (full screen, from the couch), and the phone items on your own phone, once in a dim room. Your checklist: <code>docs/playtests/owner-checklists.md</code> §1.</p>
+  <p><b>Design site.</b> The one place design work is reviewed, on a phone or a laptop: the accepted UI references, the in-world look, audio, motion, and a review page for every vehicle. Sections list their newest work first; each entry carries its date, bead and status. Tell the session what to change and it comes back as a bug bead citing the entry.</p>
+  <nav class="jump" aria-label="Sections" id="jump"></nav>
 </div></header>
 <main>
-  <div class="how"><b>Keys:</b> in the TV mocks, <b>H</b> returns to their contents page; every state has its own link, so you can send one back by URL. The phone mock's <b>Mock ▾</b> button jumps between states and turns on the edge-safe and thumb-reach overlays. Nothing here sends anything anywhere.</div>
+  <div class="how"><b>Keys:</b> in the TV mocks, <b>H</b> returns to their contents page; every state has its own link, so you can send one back by URL. The phone mock's <b>Mock ▾</b> button jumps between states and turns on the edge-safe and thumb-reach overlays. Open the TV items on the TV laptop (full screen, from the couch) and the phone items on your own phone, once in a dim room. Nothing here sends anything anywhere. Your checklist: <code>docs/playtests/owner-checklists.md</code> §1.</div>
 
-  <h2><span class="n">1</span> Design guide and tokens <span class="status ready">ready</span></h2>
-  <p class="why">One palette, two self-hosted fonts (Barlow Condensed for display, Barlow Semi Condensed for everything else), a type scale per viewing distance, the identity kit and a copy glossary, all as data that a script checks. <i>Why: every UI task builds from the same numbers.</i></p>
-  <div class="links"><a class="primary" href="./guide.html">Read the guide</a><a href="../sheets/cvd.html">Colour-blind sheet</a><a href="../sheets/fonts.html">Fonts under stress</a></div>
+  <section class="group" data-group="vehicles">
+    <div class="entries" id="vehicle-entries"></div>
+  </section>
 
-  <h2><span class="n">11</span> Brand and components <span class="status ready">ready</span></h2>
-  <p class="why">One wordmark, an app icon, and a QR that's plain, quiet-zoned and at least 8 px per module on the TV; a component sheet with every state, including keyboard and gamepad focus. <i>Why: every generated image drew a different logo, and a logo inside the QR stops phones scanning it.</i></p>
-  <div class="links"><a class="primary" href="../sheets/brand.html">Brand sheet</a><a href="../sheets/components.html">Component sheet</a></div>
+  <section class="group" data-group="ui">
+    <div class="entries">
+      <article data-entry="ui-guide">
+        <h3>Design guide and tokens</h3>
+        <p class="why">One palette, two self-hosted fonts (Barlow Condensed for display, Barlow Semi Condensed for everything else), a type scale per viewing distance, the identity kit and a copy glossary, all as data that a script checks. <i>Why: every UI task builds from the same numbers.</i></p>
+        <div class="links"><a class="primary" href="./guide.html">Read the guide</a><a href="../sheets/cvd.html">Colour-blind sheet</a><a href="../sheets/fonts.html">Fonts under stress</a></div>
+      </article>
+      <article data-entry="ui-brand">
+        <h3>Brand and components</h3>
+        <p class="why">One wordmark, an app icon, and a QR that's plain, quiet-zoned and at least 8 px per module on the TV; a component sheet with every state, including keyboard and gamepad focus. <i>Why: every generated image drew a different logo, and a logo inside the QR stops phones scanning it.</i></p>
+        <div class="links"><a class="primary" href="../sheets/brand.html">Brand sheet</a><a href="../sheets/components.html">Component sheet</a></div>
+      </article>
+      <article data-entry="ui-tv-grid">
+        <h3>The TV grid</h3>
+        <p class="why"><b>Round 5:</b> every tile the same size, filling the screen (no bands above or below). The join QR (with <b>Join now</b>) and the positions only take the spare cells the arrangement leaves anyway; with none, both dock in the footer and clicking the QR pauses with it big. Third person by default, first person per seat; the per-tile HUD in the corners. <i>Why: the game gets every pixel the layout can give it.</i></p>
+        <div class="links"><a class="primary" href="./tv/#grid&n=32&reflow=1">Players join and leave (1 → 32 → 1)</a><a href="./tv/#grid&n=3">N = 3</a><a href="./tv/#grid&n=7">7</a><a href="./tv/#grid&n=8">8</a><a href="./tv/#grid&n=13">13</a><a href="./tv/#grid&n=24">24</a><a href="./tv/#grid&n=32">32</a><a href="./tv/#grid&n=64">64</a><a href="./tv/#grid&n=8&fp=2,5,7">Mixed cameras</a><a href="./tv/#hud&n=8">HUD states</a><a href="./tv/#hud&n=32&base=100">HUD at 32</a><a href="./tv/#countdown&n=8">Countdown</a><a href="./tv/#identify&n=8&seat=3">Identify</a><a href="./tv/#overlays&n=8">Your-car arrow</a></div>
+      </article>
+      <article data-entry="ui-lobby">
+        <h3>The lobby</h3>
+        <p class="why">Every player on one screen over a still view of the upcoming track, with their number, name and state (joining, choosing a car, ready); the cards shrink and drop detail as the room grows, never a scroll or a cap. The join card and Start race share the screen. <i>Why: the lobby shows the room.</i></p>
+        <div class="links"><a href="./tv/#lobby&n=2">2 players</a><a href="./tv/#lobby&n=8">8</a><a class="primary" href="./tv/#lobby&n=16">16</a><a href="./tv/#lobby&n=32">32</a><a href="./tv/#lobby&n=60">60</a><a href="./tv/#lobby&n=150">150</a></div>
+      </article>
+      <article data-entry="ui-results">
+        <h3>Round complete and highlights</h3>
+        <p class="why">One screen: the highlight replay leads (half to two thirds of it), the placings, the join card, the next-race timer and the host's three buttons packed beside it. <i>Why: the highlights are the fun.</i></p>
+        <div class="links"><a href="./tv/#results&n=1">1 player</a><a class="primary" href="./tv/#results&n=8">8</a><a href="./tv/#results&n=32">32</a><a href="./tv/#results&n=150">150</a></div>
+      </article>
+      <article data-entry="ui-host">
+        <h3>Host controls, the pause menu and the captions</h3>
+        <p class="why">The footer carries the room, the readouts and Pause, Full screen and the host menu; anything that needs the screen pauses first. The pause menu keeps the join card beside it; camera and distance are each player's own (phones on the phone, pads and keyboards over their own tile); laps are locked during a race. One caption style everywhere. <i>Why: nothing covers a player's view while racing.</i></p>
+        <div class="links"><a class="primary" href="./tv/#paused&n=8">Pause menu</a><a href="./tv/#paused&n=8&sub=join">Join while paused</a><a href="./tv/#padsettings&n=8&seat=3">A pad player's settings</a><a href="./tv/#paused&n=8&sub=players">Players and controllers</a><a href="./tv/#paused&n=8&sub=end">End round</a><a href="./tv/#paused&n=8&sub=disband">Disband</a><a href="./tv/#menu&n=8">Host menu</a><a href="./tv/#diagnostics&n=8">Diagnostics</a><a href="./tv/#grid&n=8&layout=static">Static layout</a><a href="./tv/#captions&n=8">Captions</a><a href="./tv/#captions&n=13">Caption in a spare cell</a></div>
+      </article>
+      <article data-entry="ui-phone">
+        <h3>The phone controller</h3>
+        <p class="why">M2's sticks (DRIVE left, ACTION right) on an ink base with cream panels and your colour; boost, wheelie preload and cone cooldown beside the sticks; Identify, camera, Recover and the menu along the top, away from your thumbs; every connection state as one card with the next step. <i>Why: no glare in a dark room, and your number and colour are always on screen.</i></p>
+        <div class="links"><a class="primary" href="./phone/">Open on your phone</a><a href="./phone/frames.html#race">In device frames</a><a href="./phone/frames.html#race&stick=preload">Wheelie preload</a><a href="./phone/frames.html#lobby">Lobby / Ready</a><a href="./phone/frames.html#join">Join</a><a href="./phone/frames.html#settings">Settings</a><a href="./phone/frames.html#tutorial">Tutorial</a><a href="./phone/frames.html#reconnecting">Reconnecting</a><a href="./phone/frames.html#no-route">No route</a></div>
+      </article>
+      <article data-entry="ui-overview">
+        <h3>Derby Overview (reference for later)</h3>
+        <p class="why">One shared view of the bowl at a fixed 60° pitch that frames every car and never rotates; identity rings under the cars; thin bands for the timer and damage points; your Grid ↔ Overview switch. <i>Why: derby needs one screen everyone can read; it's built in Full.</i></p>
+        <div class="links"><a href="./tv/#overview&n=8">8 cars</a><a href="./tv/#overview&n=16">16</a><a class="primary" href="./tv/#overview&n=32">32</a></div>
+      </article>
+    </div>
+  </section>
 
+  <section class="group" data-group="look">
+    <div class="entries">
+      <article data-entry="look-world" id="look">
+        <h3>The in-world look</h3>
+        <p class="why">The comic treatment live on the real Cruz Missile (toon ramp, ink outlines, halftone in the shadows, grade) in an outback dressed toward H4, under the real HUD at 24 tiles. At 24 tiles it runs without bloom and FXAA, which cost far more than the rest of the look together. <i>Why: the look has to hold at 24 tiles on a laptop GPU (measured: 120 Hz at 1080p).</i> Needs a WebGPU browser (Chrome or Edge).</p>
+        <div class="links"><a class="primary" href="./world/#grid&n=24">The look at 24 tiles (no UI)</a><a href="./world/#tv">One tile</a><a href="./world/#graphics">Track graphics</a><a href="./world/#paint">Paint next to its badge</a><a href="./world/#overview&n=16">Derby Overview</a><a href="./world/?mode=plain#grid&n=24">Without the look</a></div>
+        <p class="why"><b>Round 2: Mad Max looks, ink, lighting.</b> Five Mad Max looks on the same scene (Fury road is the recommendation) plus round 1's, switched live from the bar at the bottom; ink on the car's outer silhouette, or none; shadow, AO, AA and road options with their measured cost; halftone only on the ground, never on a car; brake lamps, boost flames, hazard beacons and roadside flares. <i>Why: you asked for a Mad Max tone with the choices side by side.</i></p>
+        <div class="links"><a class="primary" href="./world/#tv">Looks: one tile</a><a href="./world/#grid&n=8">Looks: 8 tiles</a><a href="./world/#closeup">Car close-up (ink, shadow, lamps)</a><a href="./world/?roadtex=0#shimmer&n=24">Shimmer at 24 tiles: round 1 lines</a><a href="./world/#shimmer&n=24">Shimmer at 24 tiles: textured road</a></div>
+      </article>
+    </div>
+  </section>
 
-  <h2><span class="n">2–5</span> The TV grid <span class="status ready">ready</span></h2>
-  <p class="why"><b>Round 5:</b> every tile the same size, filling the screen (no bands above or below). The join QR (with <b>Join now</b>) and the positions only take the spare cells the arrangement leaves anyway; with none, both dock in the footer and clicking the QR pauses with it big. Third person by default, first person per seat; the per-tile HUD in the corners. <i>Why: the game gets every pixel the layout can give it.</i></p>
-  <div class="links"><a class="primary" href="./tv/#grid&n=32&reflow=1">Players join and leave (1 → 32 → 1)</a><a href="./tv/#grid&n=3">N = 3</a><a href="./tv/#grid&n=7">7</a><a href="./tv/#grid&n=8">8</a><a href="./tv/#grid&n=13">13</a><a href="./tv/#grid&n=24">24</a><a href="./tv/#grid&n=32">32</a><a href="./tv/#grid&n=64">64</a><a href="./tv/#grid&n=8&fp=2,5,7">Mixed cameras</a><a href="./tv/#hud&n=8">HUD states</a><a href="./tv/#hud&n=32&base=100">HUD at 32</a><a href="./tv/#countdown&n=8">Countdown</a><a href="./tv/#identify&n=8&seat=3">Identify</a><a href="./tv/#overlays&n=8">Your-car arrow</a></div>
+  <section class="group" data-group="audio">
+    <div class="entries">
+      <article data-entry="audio-engine">
+        <h3>Engine sound</h3>
+        <p class="why">The Cruz Missile's procedural engine: RPM, throttle, boost, surfaces, damage and a scripted lap, playable on the TV and your phone (P1-A04).</p>
+        <div class="links"><a class="primary" href="./audio/engine/">Play the engine</a></div>
+      </article>
+      <article data-entry="audio-voice">
+        <h3>Announcer voice</h3>
+        <p class="why">The current lines first, then the earlier audition: four prompt-only candidates, two restyle-once references and two TTS engines side by side (P1-A01b).</p>
+        <div class="links"><a class="primary" href="./audio/voice/">Listen and compare</a></div>
+      </article>
+    </div>
+  </section>
 
-  <h2><span class="n">6</span> The lobby <span class="status ready">ready</span></h2>
-  <p class="why">Every player on one screen over a still view of the upcoming track, with their number, name and state (joining, choosing a car, ready); the cards shrink and drop detail as the room grows, never a scroll or a cap. The join card and Start race share the screen. <i>Why: the lobby shows the room.</i></p>
-  <div class="links"><a href="./tv/#lobby&n=2">2 players</a><a href="./tv/#lobby&n=8">8</a><a class="primary" href="./tv/#lobby&n=16">16</a><a href="./tv/#lobby&n=32">32</a><a href="./tv/#lobby&n=60">60</a><a href="./tv/#lobby&n=150">150</a></div>
-
-  <h2><span class="n">7</span> Round complete + highlights <span class="status ready">ready</span></h2>
-  <p class="why">One screen: the highlight replay leads (half to two thirds of it), the placings, the join card, the next-race timer and the host's three buttons packed beside it. <i>Why: the highlights are the fun.</i></p>
-  <div class="links"><a href="./tv/#results&n=1">1 player</a><a class="primary" href="./tv/#results&n=8">8</a><a href="./tv/#results&n=32">32</a><a href="./tv/#results&n=150">150</a></div>
-
-  <h2><span class="n">12</span> Your host controls, the pause menu and the captions <span class="status ready">ready</span></h2>
-  <p class="why">The footer carries the room, the readouts and Pause, Full screen and the host menu; anything that needs the screen pauses first. The pause menu keeps the join card beside it; camera and distance are each player's own (phones on the phone, pads and keyboards over their own tile); laps are locked during a race. One caption style everywhere. <i>Why: nothing covers a player's view while racing.</i></p>
-  <div class="links"><a class="primary" href="./tv/#paused&n=8">Pause menu</a><a href="./tv/#paused&n=8&sub=join">Join while paused</a><a href="./tv/#padsettings&n=8&seat=3">A pad player's settings</a><a href="./tv/#paused&n=8&sub=players">Players and controllers</a><a href="./tv/#paused&n=8&sub=end">End round</a><a href="./tv/#paused&n=8&sub=disband">Disband</a><a href="./tv/#menu&n=8">Host menu</a><a href="./tv/#diagnostics&n=8">Diagnostics</a><a href="./tv/#grid&n=8&layout=static">Static layout</a><a href="./tv/#captions&n=8">Captions</a><a href="./tv/#captions&n=13">Caption in a spare cell</a></div>
-
-  <h2><span class="n">8, 13</span> The phone controller <span class="status ready">ready</span></h2>
-  <p class="why">M2's sticks (DRIVE left, ACTION right) on an ink base with cream panels and your colour; boost, wheelie preload and cone cooldown beside the sticks; Identify, camera, Recover and the menu along the top, away from your thumbs; every connection state as one card with the next step. <i>Why: no glare in a dark room, and your number and colour are always on screen.</i></p>
-  <div class="links"><a class="primary" href="./phone/">Open on your phone</a><a href="./phone/frames.html#race">In device frames</a><a href="./phone/frames.html#race&stick=preload">Wheelie preload</a><a href="./phone/frames.html#lobby">Lobby / Ready</a><a href="./phone/frames.html#join">Join</a><a href="./phone/frames.html#settings">Settings</a><a href="./phone/frames.html#tutorial">Tutorial</a><a href="./phone/frames.html#reconnecting">Reconnecting</a><a href="./phone/frames.html#no-route">No route</a></div>
-
-  <h2><span class="n">9, 10</span> The in-world look and motion <span class="status ready">ready</span></h2>
-  <p class="why">The comic treatment live on the real Cruz Missile (toon ramp, ink outlines, halftone in the shadows, grade) in an outback dressed toward H4, under the real HUD at 24 tiles, plus the motion reel and its reduced-motion version. At 24 tiles it runs without bloom and FXAA, which cost far more than the rest of the look together. <i>Why: the look has to hold at 24 tiles on a laptop GPU (measured: 120 Hz at 1080p).</i> Needs a WebGPU browser (Chrome or Edge).</p>
-  <div class="links" id="look"><a class="primary" href="./world/#grid&n=24">The look at 24 tiles (no UI)</a><a href="./world/#tv">One tile</a><a href="./world/#graphics">Track graphics</a><a href="./world/#paint">Paint next to its badge</a><a href="./world/#overview&n=16">Derby Overview</a><a href="./world/?mode=plain#grid&n=24">Without the look</a><a href="./motion/side.html">Motion timings: Full beside Reduced (stand-in screens; the real lobby and results are above)</a><a href="./motion/?autoplay=both">Motion reel (Full, then Reduced)</a></div>
-  <p class="why"><b>Round 2: Mad Max looks, ink, lighting.</b> Five Mad Max looks on the same scene (Fury road is the recommendation) plus round 1's, switched live from the bar at the bottom; ink on the car's outer silhouette, or none; shadow, AO, AA and road options with their measured cost; halftone only on the ground, never on a car; brake lamps, boost flames, hazard beacons and roadside flares. <i>Why: you asked for a Mad Max tone with the choices side by side.</i></p>
-  <div class="links"><a class="primary" href="./world/#tv">Looks: one tile</a><a href="./world/#grid&n=8">Looks: 8 tiles</a><a href="./world/#closeup">Car close-up (ink, shadow, lamps)</a><a href="./world/?roadtex=0#shimmer&n=24">Shimmer at 24 tiles: round 1 lines</a><a href="./world/#shimmer&n=24">Shimmer at 24 tiles: textured road</a></div>
-
-  <h2><span class="n">14</span> Derby Overview (reference for later) <span class="status ready">ready</span></h2>
-  <p class="why">One shared view of the bowl at a fixed 60° pitch that frames every car and never rotates; identity rings under the cars; thin bands for the timer and damage points; your Grid ↔ Overview switch. <i>Why: derby needs one screen everyone can read; it's built in Full.</i></p>
-  <div class="links"><a href="./tv/#overview&n=8">8 cars</a><a href="./tv/#overview&n=16">16</a><a class="primary" href="./tv/#overview&n=32">32</a></div>
-
-  <h2>Engine sound <span class="status wait" id="synth-status">coming</span></h2>
-  <p class="why">The Cruz Missile's procedural engine: RPM, throttle, boost, surfaces, damage and a scripted lap, playable on the TV and your phone (P1-A04).</p>
-  <div class="links" id="synth"></div>
-  <p class="why">Announcer voice: the current lines first, then the earlier audition: four prompt-only candidates, two restyle-once references and two TTS engines side by side (P1-A01b). <a href="./audio/voice/">Listen and compare</a></p>
+  <section class="group" data-group="motion">
+    <div class="entries">
+      <article data-entry="motion-reel">
+        <h3>Motion reel</h3>
+        <p class="why">The motion reel and its reduced-motion version, with the timings side by side. <i>Why: motion has to read at a glance and have a calm twin.</i></p>
+        <div class="links"><a class="primary" href="./motion/?autoplay=both">Motion reel (Full, then Reduced)</a><a href="./motion/side.html">Motion timings: Full beside Reduced (stand-in screens; the real lobby and results are above)</a></div>
+      </article>
+    </div>
+  </section>
 </main>
 <script type="module">
+  // Sections, dates, beads and statuses come from design.json; the Vehicles entries come from vehicles/roster.json
+  // (generated from the roster data). Without scripts every entry above still shows, just without its status.
   import { loadTokens } from './shared/tokens.js';
+  import { STATUS, chip, esc } from './vehicles/status.js';
   await loadTokens();
-  // Light up the engine section when its page exists (A04's synth lands separately).
-  const has = async (p) => { try { return (await fetch(p, { method: 'HEAD' })).ok; } catch { return false; } };
-  if (await has('./audio/engine/index.html')) { document.getElementById('synth').innerHTML = '<a class="primary" href="./audio/engine/">Play the engine</a>'; const s = document.getElementById('synth-status'); s.className = 'status ready'; s.textContent = 'ready'; }
+  const design = await (await fetch('./design.json')).json();
+  const roster = await (await fetch('./vehicles/roster.json')).json();
+  const vbox = document.getElementById('vehicle-entries');
+  vbox.innerHTML = `<p class="why"><a class="btn" href="./vehicles/">Turn any vehicle at any LOD, damage state and paint</a></p>` + roster.vehicles.map((v) => `
+    <article data-entry="vehicle-${esc(v.id)}" data-date="${esc(v.date ?? '')}">
+      <h3>${esc(v.name)}</h3>
+      <div class="meta">${chip(v.status)}${v.date ? `<span>${esc(v.date)}</span>` : ''}${(v.beads ?? []).map((b) => `<span class="chip">${esc(b)}</span>`).join('')}</div>
+      <p class="why">${esc(v.summary ?? (v.missing ? `No review data yet (missing ${v.missing.join(', ')}).` : ''))}</p>
+      <div class="links">${v.missing ? '' : `<a class="primary" href="./vehicles/review.html?v=${encodeURIComponent(v.id)}">Review page</a><a href="./vehicles/#${encodeURIComponent(v.id)}">Turn it</a>`}</div>
+    </article>`).join('');
+  const jump = document.getElementById('jump');
+  for (const g of design.groups) {
+    const sec = document.querySelector(`[data-group="${g.id}"]`); if (!sec) continue;
+    sec.id = `g-${g.id}`;
+    sec.insertAdjacentHTML('afterbegin', `<h2>${esc(g.title)}</h2><p class="why">${esc(g.why)}</p>`);
+    jump.insertAdjacentHTML('beforeend', `<a href="#g-${g.id}">${esc(g.title)}</a>`);
+    document.querySelectorAll(`[data-group="${g.id}"] [data-entry]`).forEach((a) => {
+      const e = design.entries[a.dataset.entry]; if (!e) return;
+      a.dataset.date = e.date;
+      a.querySelector('h3').insertAdjacentHTML('afterend', `<div class="meta">${chip(e.status)}<span>${esc(e.date)}</span><span class="chip">${esc(e.bead)}</span></div>`);
+    });
+    // Newest work first within a section (stable for equal dates).
+    const box = sec.querySelector('.entries');
+    [...box.querySelectorAll(':scope > article')].map((a, i) => [a, i]).sort((x, y) => (y[0].dataset.date ?? '').localeCompare(x[0].dataset.date ?? '') || x[1] - y[1]).forEach(([a]) => box.append(a));
+  }
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
 </body>
 </html>

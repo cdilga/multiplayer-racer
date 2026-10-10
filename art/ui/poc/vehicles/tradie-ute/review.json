@@ -1,0 +1,403 @@
+{
+  "id": "tradie-ute",
+  "name": "Tradie Ute",
+  "status": "awaiting-review",
+  "date": "2026-10-10",
+  "beads": [
+    "br-bwju.2",
+    "br-bwju"
+  ],
+  "summary": "The owner's dual-cab Mitsubishi Triton as a roster car (R123): tray, TJM-style bull bar, snorkel on the driver's A-pillar, roof rack, hi-vis tradie livery. Code-built from the Triton build script's proportions. Rear drive, 1900 kg: heavier and torquier than the Cruz, lower top speed.",
+  "feedback": "Comment on this page (what to change, which view or state); the session turns each comment into a bug bead that cites this page and the car's id.",
+  "specTwin": null,
+  "reference": {
+    "sheet": "media/reference/sheet.png",
+    "note": "Left to right per view: the Triton mesh's silhouette, the model's, and the diff (green is model outside the reference, red is reference the model misses). Both are bounding-box normalised. The Triton carries a canopy and a roof bag the model leaves out, and the model is a wider, caricatured stance, so the IoU is a recognisability check, not a fit target.",
+    "compare": [
+      {
+        "lod": 0,
+        "label": "LOD0 against the owner's Triton mesh (the reference is that mesh's own silhouettes, not photographs)",
+        "sheet": "media/reference-lod0/sheet.png",
+        "iou": {
+          "side": 0.757,
+          "top": 0.7978,
+          "front": 0.7158,
+          "rear": 0.7159
+        },
+        "weightedIou": 0.7569
+      }
+    ]
+  },
+  "turntable": {
+    "assetJson": "media/model/tradie-ute.asset.json",
+    "atlas": "media/model/tradie-ute.atlas.png",
+    "emissive": "media/model/tradie-ute.emissive.png",
+    "sheet": "media/turntable/lods.png",
+    "lods": [
+      {
+        "lod": 0,
+        "glb": "media/model/tradie-ute.lod0.glb",
+        "tris": 1216,
+        "draws": 11,
+        "maxTris": 1300,
+        "withinBudget": true
+      },
+      {
+        "lod": 1,
+        "glb": "media/model/tradie-ute.lod1.glb",
+        "tris": 870,
+        "draws": 11,
+        "maxTris": 900,
+        "withinBudget": true
+      },
+      {
+        "lod": 2,
+        "glb": "media/model/tradie-ute.lod2.glb",
+        "tris": 594,
+        "draws": 11,
+        "maxTris": 600,
+        "withinBudget": true
+      }
+    ]
+  },
+  "damage": {
+    "strip": "media/damage/damage-strip.png",
+    "overview": "media/damage/damage-strip-overview.png",
+    "note": "Left to right: intact; door_FL and door_RL loose; front and back loose; wheel_FL cambered; front detached; door_FL detached; back (tray) detached; wheel_FL detached; both front doors and the tray detached; a stripped shell. Posed in a three.js viewer about each part's hinge line; the host renderer cannot draw a second vehicle yet.",
+    "parts": [
+      {
+        "name": "core",
+        "hinge": null,
+        "pivot": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "front",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": 0,
+          "max": 25
+        },
+        "pivot": [
+          0,
+          1.24,
+          0.8899999999999999
+        ]
+      },
+      {
+        "name": "back",
+        "hinge": {
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "min": -25,
+          "max": 0
+        },
+        "pivot": [
+          0,
+          1.24,
+          -0.8899999999999999
+        ]
+      },
+      {
+        "name": "door_FL",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": -70,
+          "max": 0
+        },
+        "pivot": [
+          1,
+          0.75,
+          0.8899999999999999
+        ]
+      },
+      {
+        "name": "door_FR",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": 0,
+          "max": 70
+        },
+        "pivot": [
+          -1,
+          0.75,
+          0.8899999999999999
+        ]
+      },
+      {
+        "name": "door_RL",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": -70,
+          "max": 0
+        },
+        "pivot": [
+          1,
+          0.75,
+          0
+        ]
+      },
+      {
+        "name": "door_RR",
+        "hinge": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "min": 0,
+          "max": 70
+        },
+        "pivot": [
+          -1,
+          0.75,
+          0
+        ]
+      },
+      {
+        "name": "wheel_FL",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0.88,
+          0.43,
+          1.45
+        ]
+      },
+      {
+        "name": "wheel_FR",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          -0.88,
+          0.43,
+          1.45
+        ]
+      },
+      {
+        "name": "wheel_RL",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          0.88,
+          0.43,
+          -1.45
+        ]
+      },
+      {
+        "name": "wheel_RR",
+        "hinge": {
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -6,
+          "max": 6
+        },
+        "pivot": [
+          -0.88,
+          0.43,
+          -1.45
+        ]
+      }
+    ],
+    "interiors": {
+      "engine": [
+        "front"
+      ],
+      "cabin": [
+        "door_FL",
+        "door_FR",
+        "door_RL",
+        "door_RR"
+      ],
+      "boot": [
+        "back"
+      ]
+    }
+  },
+  "paints": {
+    "sheet": "media/paints/paints.png",
+    "colours": [
+      {
+        "name": "red",
+        "hex": "#E5322D"
+      },
+      {
+        "name": "blue",
+        "hex": "#2563EB"
+      },
+      {
+        "name": "orange",
+        "hex": "#FF7A1A"
+      },
+      {
+        "name": "teal",
+        "hex": "#00B5B8"
+      },
+      {
+        "name": "yellow",
+        "hex": "#FFD23F"
+      },
+      {
+        "name": "pink",
+        "hex": "#FF4FA3"
+      },
+      {
+        "name": "charcoal",
+        "hex": "#2A2D34"
+      },
+      {
+        "name": "green",
+        "hex": "#22A447"
+      },
+      {
+        "name": "white",
+        "hex": "#F4F1EA"
+      },
+      {
+        "name": "purple",
+        "hex": "#8B3FD9"
+      },
+      {
+        "name": "maroon",
+        "hex": "#8E1B3F"
+      },
+      {
+        "name": "sky",
+        "hex": "#5EC8FF"
+      }
+    ],
+    "pattern": "Seat colour on the paint key (white texels tint; the hi-vis livery, glass, lamps and tyres keep their colour), the number on the roof (anchor roof_number, between the rack rails) and in the HUD badge. docs/evidence/br-bwju.2/paints-strip.png shows white plus five player colours."
+  },
+  "inWorld": [
+    {
+      "label": "Own car in its tile, large (1 tile, TV 1080p; viewer, not the host renderer)",
+      "size": "large",
+      "image": "media/in-world/grid-1.png"
+    },
+    {
+      "label": "Four tiles",
+      "size": "medium",
+      "image": "media/in-world/grid-4.png"
+    },
+    {
+      "label": "24 tiles, small (each car about 100 px)",
+      "size": "small",
+      "image": "media/in-world/grid-24.png"
+    },
+    {
+      "label": "From the Derby overview camera (top-down damage row)",
+      "size": "overview",
+      "image": "media/in-world/damage-strip-overview.png"
+    }
+  ],
+  "gate": {
+    "result": "PASS",
+    "findings": [
+      {
+        "result": "PASS",
+        "text": "contract + reproducibility (validator clean, mass fractions sum 1.00, origin between the axles, anchors present, no badges or real names)"
+      },
+      {
+        "result": "PASS",
+        "text": "budget; silhouette: weighted IoU 0.757 against the owner's Triton mesh (side 0.757, top 0.798, front 0.716, rear 0.716). The model omits the canopy and the roof bag the Triton carries and is a wider, caricatured stance, so this is a recognisability check, not a fit target"
+      },
+      {
+        "result": "PASS",
+        "text": "paint key / one material (the Cruz's atlas layout and material; draw cost per tile is the Cruz's 11 parts)"
+      },
+      {
+        "result": "PASS",
+        "text": "damage states (each part rotates about its hinge line to its limit; detached parts lie as separate bodies; dark bays and interior blocks behind missing panels)"
+      },
+      {
+        "result": "PASS",
+        "text": "physics fit (convex colliders per part from the bake, profile geometry synced from the sidecar, settles with no NaN)"
+      },
+      {
+        "result": "WARN",
+        "text": "identity/readability at the smallest tile: legible in grid-24.png (roof stripes, tray, bull bar); the roof number is not drawn by this viewer, so number legibility is untested"
+      },
+      {
+        "result": "WARN",
+        "text": "engine sound: assets/audio/engine/tradie-ute.json derived from the Cruz profile (diesel-ish retune); `art/ui/poc/audio/engine/check.mjs` result is in the self-review"
+      }
+    ],
+    "report": "media/gate/validation.md"
+  },
+  "handling": {
+    "source": "assets/profiles/tradie-ute.json",
+    "massKg": 1900,
+    "drive": "Rear",
+    "accel": {
+      "value": 6.05,
+      "unit": "m/s2",
+      "note": "engine force over mass at launch: an upper bound, drag and traction not included"
+    },
+    "topSpeed": {
+      "value": null,
+      "note": "Not measured yet: the R122 handling bank and the autopilot test assert envelopes. Three greybox laps under autopilot take 155 s against the Cruz's 151 s. R123's balance bead records the measured top speed."
+    },
+    "cornering": {
+      "maxSteerRad": 0.5,
+      "steerFalloffMps": 22,
+      "frictionSlip": 1.9,
+      "driftRearGrip": 0.55,
+      "rollInfluence": 0.1
+    },
+    "braking": {
+      "maxBrakeForceN": 22000
+    },
+    "boost": {
+      "engineGain": 0.6,
+      "drainPerS": 0.35,
+      "rechargePerS": 0.12
+    },
+    "wheelRadiusM": 0.43
+  }
+}
