@@ -2,7 +2,7 @@
 
 `listen-through.ogg` (Ogg Opus, 19.2 s) is the host's own master output (after the limiter) recorded while a scripted car drives the host's audio path: cruise, a drift with a countersteer and the R120 exit boost, a plain boost, a scrub, surface changes (tarmac, gravel, dirt, off-track), two jumps and a short hop. The engine, tyre, rolling, wind and effect layers all play together, as in a round.
 
-Regenerate: `JJ_DIST=web/dist node --test web/host/tests/audio-motion.test.mjs` (the clip and this table are rewritten from the run). Chromium headless, software audio.
+Regenerate: `JJ_CLIP=1 JJ_DIST=web/dist node --test web/host/tests/audio-motion.test.mjs` (the clip and this table are rewritten from the run). Chromium headless, software audio.
 
 ## What to listen for
 

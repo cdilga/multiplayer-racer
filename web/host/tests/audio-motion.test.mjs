@@ -2,7 +2,7 @@
 // A scripted drive (lib/motion-scenario.mjs) feeds car records through the director's snapshot path; the probe checks each
 // cue fired at its sim event with levels following their drivers (slip, speed, height, fall speed), and renders every new
 // effect offline to show it is audible. A second test records the host's own output for the owner's listen-through clip.
-//   JJ_DIST=<build dir> node --test --test-concurrency=1 web/host/tests/audio-motion.test.mjs
+//   [JJ_CLIP=1] JJ_DIST=<build dir> node --test --test-concurrency=1 web/host/tests/audio-motion.test.mjs
 // Writes docs/evidence/br-0uqj/ (JJ_EVIDENCE_DIR overrides the root): probe.json, listen-through.ogg + README.md.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -134,7 +134,8 @@ test('br-0uqj: every new effect renders audible offline, and the exit boost is l
   await page.close();
 });
 
-test('br-0uqj: the listen-through clip, recorded from the host mix during the scripted drive', { timeout: 120_000 }, async () => {
+// Evidence, not a check: needs ffmpeg/ffprobe (absent from the CI image), so it runs only with JJ_CLIP=1.
+test('br-0uqj: the listen-through clip, recorded from the host mix during the scripted drive', { timeout: 120_000, skip: !process.env.JJ_CLIP && 'evidence clip: run with JJ_CLIP=1' }, async () => {
   const { page, errors } = await open();
   const r = await page.evaluate(motionScenario, { realtime: true });
   assert.ok(r.recording.length > 5000, 'the recording has audio');
@@ -158,7 +159,7 @@ test('br-0uqj: the listen-through clip, recorded from the host mix during the sc
   const phases = r.marks.map((m) => `| ${m.startS.toFixed(1)} | ${m.name}${m.airS ? ` (air ${m.airS} s)` : ''} |`);
   await writeFile(
     join(out, 'README.md'),
-    `# br-0uqj listen-through (R125)\n\n\`listen-through.ogg\` (Ogg Opus, ${r.durationS.toFixed(1)} s) is the host's own master output (after the limiter) recorded while a scripted car drives the host's audio path: cruise, a drift with a countersteer and the R120 exit boost, a plain boost, a scrub, surface changes (tarmac, gravel, dirt, off-track), two jumps and a short hop. The engine, tyre, rolling, wind and effect layers all play together, as in a round.\n\nRegenerate: \`JJ_DIST=web/dist node --test web/host/tests/audio-motion.test.mjs\` (the clip and this table are rewritten from the run). Chromium headless, software audio.\n\n## What to listen for\n\n- Tyre squeal gets louder and higher as the slide gets deeper; a scrub without the drift flag is quieter; none on loose ground beyond a hiss.\n- Drift exit: a gear-drop blip then a 1.2 s exhaust roar, clearly longer and lower than the plain boost whoosh that follows later.\n- Rolling noise changes character per surface: tarmac hum, gravel crunch, dirt, a low off-track rumble. A small thump marks each change.\n- Jumps: take-off whoosh, engine unloads, wind arrives after 0.3 s and rises with height, landing thump bigger for the big jump. The short hop has none of these.\n\n## Scenario phases (seconds into the clip)\n\n| s | phase |\n|---|---|\n${phases.join('\n')}\n\n## Cue timestamps (seconds into the clip, +/- 0.1)\n\n| s | cue | reason | detail |\n|---|---|---|---|\n${rows.join('\n')}\n\nSteady layers (squeal, rolling, wind) have no event: their levels per phase are in \`probe.json\`.\n`,
+    `# br-0uqj listen-through (R125)\n\n\`listen-through.ogg\` (Ogg Opus, ${r.durationS.toFixed(1)} s) is the host's own master output (after the limiter) recorded while a scripted car drives the host's audio path: cruise, a drift with a countersteer and the R120 exit boost, a plain boost, a scrub, surface changes (tarmac, gravel, dirt, off-track), two jumps and a short hop. The engine, tyre, rolling, wind and effect layers all play together, as in a round.\n\nRegenerate: \`JJ_CLIP=1 JJ_DIST=web/dist node --test web/host/tests/audio-motion.test.mjs\` (the clip and this table are rewritten from the run). Chromium headless, software audio.\n\n## What to listen for\n\n- Tyre squeal gets louder and higher as the slide gets deeper; a scrub without the drift flag is quieter; none on loose ground beyond a hiss.\n- Drift exit: a gear-drop blip then a 1.2 s exhaust roar, clearly longer and lower than the plain boost whoosh that follows later.\n- Rolling noise changes character per surface: tarmac hum, gravel crunch, dirt, a low off-track rumble. A small thump marks each change.\n- Jumps: take-off whoosh, engine unloads, wind arrives after 0.3 s and rises with height, landing thump bigger for the big jump. The short hop has none of these.\n\n## Scenario phases (seconds into the clip)\n\n| s | phase |\n|---|---|\n${phases.join('\n')}\n\n## Cue timestamps (seconds into the clip, +/- 0.1)\n\n| s | cue | reason | detail |\n|---|---|---|---|\n${rows.join('\n')}\n\nSteady layers (squeal, rolling, wind) have no event: their levels per phase are in \`probe.json\`.\n`,
   );
   await page.close();
 });
