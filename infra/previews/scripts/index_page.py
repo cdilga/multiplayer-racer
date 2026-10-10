@@ -23,6 +23,8 @@ import retention
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOKENS = ROOT / "edge" / "tokens.json"
 FONT_BASE = "/"  # the edge serves the design mirror (fonts/…) at the site root
+# How many commit titles a card lists under What changed before linking to the rest (a size bound, see changed_html).
+CHANGED_SHOWN = 6
 PIN_FORM = "https://git.dilger.dev/cdilga/multiplayer-racer/actions?workflow=deploy-retention.yml"
 
 
@@ -123,7 +125,13 @@ def changed_html(p: dict) -> str:
     items = p.get("changed") or []
     if not items:
         return '<details><summary>What changed</summary><p class="muted">No change list recorded (first preview, or the compare failed).</p></details>'
-    lis = "".join(f"<li>{html.escape(title_text(c))}</li>" for c in items)
+    # The first CHANGED_SHOWN titles, then a link to the full history: the whole index travels inside the edge app's
+    # compose through the TrueNAS middleware, whose messages stop at 64 kB (a busy day's 14 previews overflowed it).
+    lis = "".join(f"<li>{html.escape(title_text(c))}</li>" for c in items[:CHANGED_SHOWN])
+    if len(items) > CHANGED_SHOWN and p.get("sha"):
+        more = len(items) - CHANGED_SHOWN
+        url = f"https://git.dilger.dev/cdilga/multiplayer-racer/commits/commit/{html.escape(p['sha'])}"
+        lis += f'<li class="muted"><a href="{url}">and {more} more</a></li>'
     return f'<details><summary>What changed ({len(items)} commit{"s" if len(items) != 1 else ""})</summary><ul class="changed">{lis}</ul></details>'
 
 
