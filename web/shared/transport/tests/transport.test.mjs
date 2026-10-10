@@ -42,7 +42,12 @@ async function startController(origin, code, query = '', ms = 15_000) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`${origin}${BASE}j/${code}?hello${query.replace(/^\?/, '&')}`);
-  await until(page, () => window.__jjHello?.link().state === 'connected', undefined, ms);
+  try {
+    await until(page, () => window.__jjHello?.link().state === 'connected', undefined, ms);
+  } catch (e) {
+    await ctx.close();
+    throw e;
+  }
   return { ctx, page, errors, link: () => page.evaluate(() => window.__jjHello.link()) };
 }
 
@@ -187,7 +192,9 @@ describe('relay through a local coturn', { skip: !haveCoturn && !process.env.JJ_
       const host = await startHost(server.origin, '&ice=relay');
       // 60 s like the fallback case below: a relay-only link needs two allocations and a permission round trip through
       // coturn, and on a loaded runner one of nine runs took past 30 s after coturn had already answered STUN (run 2010).
-      const c = await startController(server.origin, host.code, '?ice=relay', 60_000);
+      // Bimodal in CI: 1.2 s when it works, a dead 60 s when a first allocation/permission packet is lost (runs 2969,
+      // 2982, 2988; never reproduced locally). A fresh controller recovers, so try up to three times at 15 s each.
+      const c = await withRetries(3, () => startController(server.origin, host.code, '?ice=relay', 15_000));
       const ep = await moveAndSee(host, c, -0.7, 0.3);
       const paths = await host.page.evaluate(() => window.__jjHello.paths());
       assert.equal(paths[ep]?.local, 'relay', JSON.stringify(paths[ep]));
@@ -285,11 +292,20 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
     try {
       const host = await startHost(server.origin, '&ice=relay');
       await script(host.page);
-      const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
-      const page = await ctx.newPage();
-      await script(page);
-      await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
-      await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 60_000);
+      // Same lost-first-packet hang as the relay case above (it took 61 s, then failed): retry with a fresh page.
+      const { ctx, page } = await withRetries(2, async () => {
+        const ctx = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+        try {
+          const page = await ctx.newPage();
+          await script(page);
+          await page.goto(`${server.origin}${BASE}j/${host.code}?hello&ice=relay`);
+          await until(page, () => window.__jjHello?.link().state === 'connected', undefined, 35_000);
+          return { ctx, page };
+        } catch (e) {
+          await ctx.close();
+          throw e;
+        }
+      });
       const l = await page.evaluate(() => window.__jjHello.link());
       assert.equal(l.relayFallback.state, 'merged');
       assert.ok(l.restarts >= 1 || l.rebuilds >= 1, 'ICE restarted after the merge');
@@ -304,6 +320,19 @@ describe('Cloudflare fallback merges and connects (P1-N04b)', { skip: !haveCotur
     }
   });
 });
+
+/** Runs `fn` until it resolves, at most `n` times; a failed attempt's error is thrown only after the last one. `fn` cleans up
+ *  after itself when it throws. */
+async function withRetries(n, fn) {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= n) throw e;
+      console.log(`# attempt ${i}/${n} failed (${String(e.message).split('\n')[0]}); retrying with a fresh page`);
+    }
+  }
+}
 
 /** Waits until coturn answers a STUN binding request on 127.0.0.1:port (a fixed sleep raced coturn's startup on a busy CI
  *  runner: the first allocation went unanswered and the link only came up after a restart, past the test's 15 s). */
