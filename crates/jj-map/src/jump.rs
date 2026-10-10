@@ -96,7 +96,11 @@ impl JumpDesign {
 
     /// The surface height above the ground (m) at `u` along the jump and `lat` from the centerline.
     pub fn height(&self, u: f64, lat: f64) -> f64 {
-        let w = if u <= self.ramp_m { self.ramp_w } else { self.land_w };
+        let w = if u <= self.ramp_m {
+            self.ramp_w
+        } else {
+            self.land_w
+        };
         self.profile(u) * Self::side(w, lat)
     }
 }
@@ -130,7 +134,11 @@ fn along(map: &Map, base: usize, u: f64) -> ([f64; 2], [f64; 2]) {
     let (mut i, mut rest) = (base, u.max(0.0));
     loop {
         let open_end = !map.route.closed && i + 1 >= n;
-        let (a, b) = if open_end { (p(n - 2), p(n - 1)) } else { (p(i), p(i + 1)) };
+        let (a, b) = if open_end {
+            (p(n - 2), p(n - 1))
+        } else {
+            (p(i), p(i + 1))
+        };
         let len = libm::hypot(b[0] - a[0], b[1] - a[1]).max(1e-9);
         if open_end || rest <= len || i > base + n {
             let t = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
@@ -227,7 +235,11 @@ pub fn jump_mesh(map: &Map, f: &Feature) -> Option<(Vec<[f64; 3]>, Vec<[u32; 3]>
             for tri in [[a0, b0, a1], [a1, b0, b1]] {
                 let [p, q, r] = tri.map(|i| verts[i as usize]);
                 let ny = (q[2] - p[2]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[2] - p[2]);
-                tris.push(if ny >= 0.0 { tri } else { [tri[0], tri[2], tri[1]] });
+                tris.push(if ny >= 0.0 {
+                    tri
+                } else {
+                    [tri[0], tri[2], tri[1]]
+                });
             }
         }
     };

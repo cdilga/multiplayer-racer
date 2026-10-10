@@ -789,20 +789,38 @@ fn an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_an
     while h.tick() < ms(2_500) {
         h.step_one();
     }
-    assert!(!h.sim().has_autopilot(CarId(0)), "not yet: the dropout time has not passed");
-    assert!(unplugged(&h).is_some_and(|u| (1_300..=1_700).contains(&u)), "{:?}", unplugged(&h));
+    assert!(
+        !h.sim().has_autopilot(CarId(0)),
+        "not yet: the dropout time has not passed"
+    );
+    assert!(
+        unplugged(&h).is_some_and(|u| (1_300..=1_700).contains(&u)),
+        "{:?}",
+        unplugged(&h)
+    );
     while h.tick() < ms(4_500) {
         h.step_one();
     }
-    assert!(h.sim().has_autopilot(CarId(0)), "autopilot after DROPOUT_MS though the stream never went quiet");
-    assert!(unplugged(&h).is_some_and(|u| u >= 3_300), "held and counting: {:?}", unplugged(&h));
+    assert!(
+        h.sim().has_autopilot(CarId(0)),
+        "autopilot after DROPOUT_MS though the stream never went quiet"
+    );
+    assert!(
+        unplugged(&h).is_some_and(|u| u >= 3_300),
+        "held and counting: {:?}",
+        unplugged(&h)
+    );
     assert_eq!(h.seats.seats().count(), 1, "the seat is held");
     while h.tick() < ms(6_500) {
         h.step_one();
     }
     assert!(unplugged(&h).is_none(), "plugged in again");
     assert!(
-        !h.sim().has_autopilot(CarId(0)) || matches!(h.sim().autopilot_state(CarId(0)).map(|a| a.mode), Some(jj_sim::autopilot::Mode::Handback)),
+        !h.sim().has_autopilot(CarId(0))
+            || matches!(
+                h.sim().autopilot_state(CarId(0)).map(|a| a.mode),
+                Some(jj_sim::autopilot::Mode::Handback)
+            ),
         "the press took the car back"
     );
 }
@@ -978,15 +996,23 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
     }
     assert_eq!(seats_at(&h), 2);
     // R119: the room view says how long the unplugged seat has been unplugged (and nothing else is).
-    let unplugged: Vec<Option<u64>> = serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+    let unplugged: Vec<Option<u64>> = serde_json::from_str::<serde_json::Value>(&h.room_json())
+        .unwrap()["seats"]
         .as_array()
         .unwrap()
         .iter()
         .map(|s| s["unpluggedMs"].as_u64())
         .collect();
-    assert_eq!(unplugged.iter().filter(|u| u.is_some()).count(), 1, "only the unplugged pad: {unplugged:?}");
+    assert_eq!(
+        unplugged.iter().filter(|u| u.is_some()).count(),
+        1,
+        "only the unplugged pad: {unplugged:?}"
+    );
     let held_for = unplugged.iter().flatten().next().copied().unwrap();
-    assert!((2_700..=2_900).contains(&held_for), "unplugged for about 2.8 s: {held_for}");
+    assert!(
+        (2_700..=2_900).contains(&held_for),
+        "unplugged for about 2.8 s: {held_for}"
+    );
     let at = autopiloted_at.expect("the unplugged pad's car went to the autopilot");
     assert!(
         at > ms(2_000) + ms(DROPOUT_MS) - 6 && at <= ms(2_000) + ms(DROPOUT_MS) + 2,

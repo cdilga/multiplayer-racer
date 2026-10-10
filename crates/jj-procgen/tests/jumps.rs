@@ -151,7 +151,10 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
                 }
                 // A slow car (the reference lap's 15 m/s) still leaves the lip.
                 if speed == 15.0 && o.airborne_s < 0.25 {
-                    bad.push(format!("{id}: only {:.2} s in the air at 15 m/s", o.airborne_s));
+                    bad.push(format!(
+                        "{id}: only {:.2} s in the air at 15 m/s",
+                        o.airborne_s
+                    ));
                 }
                 // Past the design speed (the validator's 26 m/s) a car may overshoot the landing and run off the road
                 // afterwards; it still has to land on its wheels.
@@ -195,8 +198,7 @@ fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
             let u = d.ramp_m - 0.01;
             for lat in [-1.5, 0.0, 1.5] {
                 let p = surface_point(&map.map, f, &d, u, lat);
-                let designed = ground_height_m(&map.map.terrain, p[0], p[2])
-                    + d.profile(u);
+                let designed = ground_height_m(&map.map.terrain, p[0], p[2]) + d.profile(u);
                 let got = sim
                     .ground_height(p[0] as f32, p[2] as f32, p[1] as f32 + 5.0)
                     .expect("a ray down onto the lip hits");
