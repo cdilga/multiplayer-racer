@@ -3,7 +3,7 @@
 // chip classes (a brushed chip with an icon: colour is never the only cue).
 import { icon } from '../../../shared/ui';
 import type { Session } from '../app/session';
-import './hub.css';
+import './sources.css';
 
 export type PathLabel = { kind: 'direct' | 'relay' | 'reconnecting' | 'connecting'; text: string; rttMs: number | null };
 

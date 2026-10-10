@@ -53,13 +53,16 @@ export const screenK = (w = window.innerWidth, h = window.innerHeight): number =
 
 const colourVars = (i: number) => `--b:var(--id-${i % tokenData.seatColors.length});--on:var(--id-${i % tokenData.seatColors.length}-on)`;
 const nameOf = (s: RoomView['seats'][number]) => s.name || (s.local ? 'Host keys' : 'Player');
+/** "12s", "3m 05s": how long a pad has been unplugged (R119). */
+const unpluggedFor = (ms: number): string => (ms < 60_000 ? `${Math.floor(ms / 1000)}s` : `${Math.floor(ms / 60_000)}m ${String(Math.floor((ms % 60_000) / 1000)).padStart(2, '0')}s`);
 type LobbyState = 'ready' | 'choosing' | 'picked' | 'away';
 /** Ready; a car picked and the picker closed; away; else still choosing (no pick yet, or the picker is open). */
-const stateOf = (s: RoomView['seats'][number]): LobbyState => (s.presence === 'Left' ? 'away' : s.ready ? 'ready' : s.vehicle && !s.choosing ? 'picked' : 'choosing');
+const stateOf = (s: RoomView['seats'][number]): LobbyState => (s.presence === 'Left' || (s.unpluggedMs ?? null) !== null ? 'away' : s.ready ? 'ready' : s.vehicle && !s.choosing ? 'picked' : 'choosing');
 const LABEL = { ready: 'Ready', choosing: 'Choosing car…', picked: 'Picked', away: 'Away' } as const;
 const CAR_NAMES = new Map((roster.cars as Array<{ id: string; name: string }>).map((c) => [c.id, c.name]));
 /** What the card says: the car's name once it is picked (a roster id the host doesn't know shows tidied up). */
 const labelOf = (st: LobbyState, s: RoomView['seats'][number]): string => {
+  if (st === 'away' && (s.unpluggedMs ?? null) !== null) return `Unplugged ${unpluggedFor(s.unpluggedMs!)}`;
   if (st !== 'picked' || !s.vehicle) return LABEL[st];
   const id = s.vehicle;
   return CAR_NAMES.get(id) ?? id.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
@@ -245,7 +248,7 @@ export function mountRoundScreens(client: RoundClient, join: JoinInfo): RoundScr
     const wasCountdown = lastPhase === 'Countdown';
     lastPhase = phase;
     document.documentElement.dataset.jjPhase = phase;
-    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
+    const key = `${phase}:${room.round}:${room.armed}:${room.seats.map((s) => `${s.seat}${s.number}${s.name}${s.ready}${s.presence}${s.unpluggedMs == null ? '' : Math.floor(s.unpluggedMs / 1000)}${s.vehicle ?? ''}${s.choosing ? 1 : 0}`).join()}`;
     const racing = phase === 'Running' || phase === 'Finalising' || phase === 'Countdown';
     hud.show(racing);
     if (phase === 'Countdown' || phase === 'Preparing') return countdown(room);

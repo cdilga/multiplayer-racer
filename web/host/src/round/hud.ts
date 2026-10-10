@@ -76,7 +76,8 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       const total = room?.laps ?? 0;
       const lap = s?.laps === null || s?.laps === undefined ? null : Math.min(s.laps + 1, Math.max(1, total));
       const pos = s?.position ?? null;
-      const state = s ? (s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
+      const unplugged = s?.unpluggedMs ?? null;
+      const state = s ? (unplugged !== null ? 'unplugged' : s.presence === 'Left' ? 'reconnecting' : s.presence === 'SittingOut' ? 'autopilot' : '') : '';
       // Placing rewrote the inline style, so the seat colour (border, Identify pulse) goes back on every paint.
       if (s) {
         box.style.setProperty('--seat', `var(--id-${s.colourIndex % 12})`);
@@ -84,7 +85,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       }
       // Before the lights go out there is no place or lap to show (Countdown/Preparing/Lobby): the pill waits for the race.
       const started = room?.phase === 'Running' || room?.phase === 'Finalising';
-      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, s?.boost, s?.wreckMs, started ? s?.prompt : null]);
+      const key = JSON.stringify([started, s?.number, s?.name, s?.colourIndex, pos, lap, total, s?.finished, state, unplugged === null ? null : Math.floor(unplugged / 1000), s?.boost, s?.wreckMs, started ? s?.prompt : null]);
       // Visibility is applied every paint, not only when the contents changed: a box's hidden flag must always match whether
       // its tile has a seat now, whatever the cache last saw.
       box.hidden = !s;
@@ -114,7 +115,7 @@ export function mountHud(parent: HTMLElement, kOf: () => number): Hud {
       boost.dataset.boost = boost.hidden ? '' : String(s.boost);
       if (!boost.hidden) boost.firstElementChild!.setAttribute('style', `width:${Math.round(Math.max(0, Math.min(1, s.boost! / 255)) * 100)}%`);
       box.querySelector<HTMLElement>('.hud-status')!.innerHTML =
-        state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
+        state === 'unplugged' ? `<span class="chip chip-warn" data-unplugged>Unplugged ${Math.floor(unplugged! / 1000)}s</span>` : state === 'autopilot' ? '<span class="chip chip-auto">Autopilot</span>' : state === 'reconnecting' ? '<span class="chip chip-warn">Reconnecting…</span>' : '';
       // The first-drive prompt (C06): the next control, only in a race, never covering the car (bottom of the tile).
       const pr = box.querySelector<HTMLElement>('[data-prompt]')!;
       const prompt = started ? s.prompt : null;

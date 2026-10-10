@@ -735,6 +735,78 @@ fn boost_then_drift_classic() {
     );
 }
 
+/// P1-C13 (R119): a source on a shared connection that says it is unplugged keeps getting its 20 Hz refresh sent with the
+/// others, so it is never silent; it still goes to the autopilot after DROPOUT_MS, the seat is held (and says for how long),
+/// and plugging back in and pressing takes the car back.
+#[test]
+fn an_unplugged_source_on_a_live_connection_autopilots_after_the_dropout_time_and_is_held() {
+    let mut h = driving_host();
+    for c in [
+        ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId("laptop".into()),
+            resume: None,
+        },
+        ControllerCmd::Claim {
+            request: RequestId(1),
+            name: "Pad".into(),
+        },
+    ] {
+        h.schedule(0, &net("laptop", Channel::Cmd, c.encode()))
+            .unwrap();
+    }
+    let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
+    // Throttle until 1 s, unplugged (refreshes keep coming, flagged unavailable) from 1 s to 5 s, plugged and pressed after.
+    for (k, t) in (0..ms(7_000)).step_by(3).enumerate() {
+        let (drive, flags) = if t < ms(1_000) || t >= ms(5_000) {
+            ([0, 32_767], StateFlags::AVAILABLE | StateFlags::DRIVE_TOUCH)
+        } else {
+            ([0, 0], 0)
+        };
+        let batch = StateBatch {
+            minor: STATE_MINOR,
+            batch_seq: k as u16 + 1,
+            sent_at_ms: 0,
+            records: vec![StateRecord {
+                source: SourceHandle(1),
+                seq: k as u16 + 1,
+                drive,
+                action: [0, 0],
+                flags: StateFlags(flags),
+            }],
+        };
+        h.schedule(t, &net("laptop", Channel::State, batch.encode().unwrap()))
+            .unwrap();
+    }
+    let unplugged = |h: &Host| {
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"][0]["unpluggedMs"].as_u64()
+    };
+    while h.tick() < ms(900) {
+        h.step_one();
+    }
+    assert!(!h.sim().has_autopilot(CarId(0)) && unplugged(&h).is_none());
+    while h.tick() < ms(2_500) {
+        h.step_one();
+    }
+    assert!(!h.sim().has_autopilot(CarId(0)), "not yet: the dropout time has not passed");
+    assert!(unplugged(&h).is_some_and(|u| (1_300..=1_700).contains(&u)), "{:?}", unplugged(&h));
+    while h.tick() < ms(4_500) {
+        h.step_one();
+    }
+    assert!(h.sim().has_autopilot(CarId(0)), "autopilot after DROPOUT_MS though the stream never went quiet");
+    assert!(unplugged(&h).is_some_and(|u| u >= 3_300), "held and counting: {:?}", unplugged(&h));
+    assert_eq!(h.seats.seats().count(), 1, "the seat is held");
+    while h.tick() < ms(6_500) {
+        h.step_one();
+    }
+    assert!(unplugged(&h).is_none(), "plugged in again");
+    assert!(
+        !h.sim().has_autopilot(CarId(0)) || matches!(h.sim().autopilot_state(CarId(0)).map(|a| a.mode), Some(jj_sim::autopilot::Mode::Handback)),
+        "the press took the car back"
+    );
+}
+
 #[test]
 fn the_old_layouts_action_stick_still_boosts_then_drifts() {
     // The old one-stick layout, a personal setting: the flag on every record tells the host to read it that way.
@@ -905,6 +977,16 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
         }
     }
     assert_eq!(seats_at(&h), 2);
+    // R119: the room view says how long the unplugged seat has been unplugged (and nothing else is).
+    let unplugged: Vec<Option<u64>> = serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s["unpluggedMs"].as_u64())
+        .collect();
+    assert_eq!(unplugged.iter().filter(|u| u.is_some()).count(), 1, "only the unplugged pad: {unplugged:?}");
+    let held_for = unplugged.iter().flatten().next().copied().unwrap();
+    assert!((2_700..=2_900).contains(&held_for), "unplugged for about 2.8 s: {held_for}");
     let at = autopiloted_at.expect("the unplugged pad's car went to the autopilot");
     assert!(
         at > ms(2_000) + ms(DROPOUT_MS) - 6 && at <= ms(2_000) + ms(DROPOUT_MS) + 2,
@@ -921,6 +1003,14 @@ fn host_pads_claim_on_press_drop_out_to_the_autopilot_and_come_back() {
     assert!(
         matches!(back, None | Some(Some(jj_sim::autopilot::Mode::Handback))),
         "fresh input took it back: {back:?}"
+    );
+    assert!(
+        serde_json::from_str::<serde_json::Value>(&h.room_json()).unwrap()["seats"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|s| s["unpluggedMs"].is_null()),
+        "plugged again: nothing is unplugged"
     );
 }
 

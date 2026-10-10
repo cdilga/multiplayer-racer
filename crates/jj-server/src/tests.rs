@@ -168,7 +168,6 @@ fn serves_pages_and_immutable_assets_under_a_preview_base_with_real_404s() {
             ("", "landing"),
             ("host", "host"),
             ("c", "controller"),
-            ("hub", "controller"),
             ("credits", "credits"),
             ("j/ABCD", "controller"),
             ("j/abcd", "controller"),
@@ -188,6 +187,15 @@ fn serves_pages_and_immutable_assets_under_a_preview_base_with_real_404s() {
                 .status,
             404
         );
+        // R119: the hub route is deleted outright (no forwarding): every joined controller is a hub.
+        for gone in ["hub", "hub/"] {
+            assert_eq!(
+                app.handle(&Request::new("GET", &format!("{base}{gone}")), T0)
+                    .status,
+                404,
+                "{base}{gone}"
+            );
+        }
         assert_eq!(
             app.handle(&Request::new("GET", &format!("{base}random")), T0)
                 .status,

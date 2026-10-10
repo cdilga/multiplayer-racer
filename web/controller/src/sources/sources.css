@@ -1,0 +1,66 @@
+/* The sources list (every joined controller carries extra players, R119) and the phone's connection badge (P1-C08), in the accepted kit's look (P1-C08.style): an ink panel holding
+   recessed rows, each with a brushed seat badge in the seat colour, the kind, a brushed status chip and the path. No row
+   is ever hidden: long names and paths truncate with an ellipsis, and the list scrolls at any count. */
+.hub { position: absolute; inset: 0; overflow: auto; padding: var(--sp-4); display: grid; align-content: start; gap: var(--sp-4); width: min(880px, 100%); margin: 0 auto; box-sizing: border-box; }
+.hub-panel.panel-ink { padding: var(--sp-3); min-width: 0; background: var(--c-ink-raised); color: var(--c-paper); border: var(--outline) solid var(--c-ink-soft); border-radius: var(--r-panel); box-shadow: 0 var(--sh-y) 0 var(--shadow-c-on-ink); }
+.hub-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+.hub-row { --seat-on: var(--c-paper); display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto auto; align-items: center; gap: 4px var(--sp-3); padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2); min-width: 0;
+  background: var(--c-ink); color: var(--c-paper); border: var(--outline) solid var(--c-ink-soft); border-left: 8px solid var(--seat); border-radius: var(--radius); box-shadow: inset 0 3px 0 rgb(0 0 0 / .35); }
+.hub-row.hub-flash { background: var(--seat); color: var(--seat-on); border-color: var(--c-paper); box-shadow: 0 0 0 3px var(--c-saffron), 0 var(--sh-y) 0 var(--shadow-c-on-ink); }
+.hub-row.hub-flash .hub-path, .hub-row.hub-flash .hub-bytes { color: inherit; opacity: 1; }
+.hub-row[data-state=unplugged] { border-style: dashed; border-left-style: solid; }
+.hub-row[data-state=unplugged] .hub-kind, .hub-row[data-state=unplugged] .hub-badge { opacity: .7; }
+.hub-row .badge.hub-badge { min-width: 0; width: 100%; height: 2.5rem; padding: 0 0 .25em; font-size: 26px; border: 0; }
+.hub-badge.none { display: grid; place-items: center; height: 2.5rem; border: var(--outline) dashed var(--c-ink-soft); border-radius: var(--radius); color: var(--c-ink-soft); font: 900 italic 26px/1 var(--font-display); }
+.hub-kind .ic { width: 22px; height: 22px; flex: none; }
+.hub-kind { display: flex; align-items: center; gap: var(--sp-2); font-weight: 700; font-size: var(--fs-body); min-width: 0; }
+.hub-label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.hub-row .hub-state { min-height: 2.2em; max-width: 100%; min-width: 0; font-size: var(--fs-label); padding-inline: 1em; overflow: hidden; justify-self: end; }
+.hub-state-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.hub-row .hub-state.chip-ready { font-size: var(--fs-label); }
+.hub-path { grid-column: 2 / -1; max-width: 14em; font-weight: 600; font-size: var(--fs-label); color: var(--c-paper-shade); min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.hub-bytes { display: none; grid-column: 2 / -1; font-size: var(--fs-caption); color: var(--c-paper-shade); opacity: .8; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.hub-row:not(:has(.hub-bytes:not(:empty))) .hub-bytes { display: none; }
+.hub.tray { position: static; width: auto; padding: 6px; gap: 6px; }
+/* On the join card and any non-driving screen the list is a readable panel low on the page; the driving screen slims it to a tray
+   between the sticks (below). Only its Leave and Remove buttons take a touch. */
+.hub-tray { position: fixed; left: 50%; transform: translateX(-50%); bottom: 8px; z-index: 8; width: min(520px, 94%); max-height: 42vh; overflow: hidden auto; }
+/* Off the driving screen the list takes touches (scroll, Leave, Remove) and the card above it makes room: it never sits on the card. */
+body:has(.hub-tray .hub-row):not(:has(.screen.play)) .card-screen { padding-bottom: calc(42vh + 16px); }
+body:has(.screen.play) .hub-tray { pointer-events: none; }
+.hub-tray:not(:has(.hub-row)) { max-height: none; }
+.hub-tray .hub-path { display: none; }
+.hub-tray .hub-hint { margin: 0 0 4px; padding: 0 var(--sp-2); text-align: center; font-weight: 600; font-size: var(--fs-label); color: var(--c-paper-shade); }
+.hub-tray .hub-panel.panel-ink { padding: var(--sp-2); }
+.hub-tray .hub-act { pointer-events: auto; min-height: 2.2em; padding: 0 .9em; font-size: var(--fs-label); }
+.hub-tray .hub-badge.none { height: 1.9rem; font-size: 18px; }
+.hub-tray .hub-list { gap: 4px; }
+body:has(.screen.play) .hub-tray { width: min(300px, 46%); background: rgb(21 32 58 / .94); border: var(--outline) solid var(--c-ink-soft); border-radius: var(--radius); box-shadow: 0 var(--sh-y) 0 var(--shadow-c-on-ink); }
+body:has(.screen.play) .hub-tray:not(:has(.hub-row)) { display: none; }
+body:has(.screen.play) .hub-tray .hub-hint, body:has(.screen.play) .hub-tray .hub-path, body:has(.screen.play) .hub-tray .hub-bytes { display: none; }
+body:has(.screen.play) .hub-tray .hub-panel.panel-ink { padding: 0; background: none; border: 0; box-shadow: none; }
+body:has(.screen.play) .hub-tray .hub-row { grid-template-columns: 2.6rem minmax(0, 1fr) auto auto; padding: 3px 6px 3px 4px; border-width: 2px; border-left-width: 8px; }
+body:has(.screen.play) .hub-tray .hub-row .badge.hub-badge { height: 1.9rem; font-size: 18px; }
+body:has(.screen.play) .hub-tray .hub-row .hub-state { font-size: 12px; padding-inline: .8em; }
+body:has(.screen.play) .hub-tray .hub-row .hub-state.chip-ready { font-size: 13px; }
+body:has(.screen.play) .hub-tray .hub-act { font-size: 12px; min-height: 1.9rem; padding: 0 .6em; }
+/* Connected is the normal state: on the driving screen only the exceptions (joining, ready, autopilot, unplugged) get a chip. */
+body:has(.screen.play) .hub-tray .hub-row[data-state=connected] .hub-state { display: none; }
+body:has(.screen.play) .hub-tray .hub-kind { font-size: 14px; }
+body:has(.screen.play) .hub-tray .hub-kind .ic, body:has(.screen.play) .hub-tray .hub-state .ic { display: none; }
+@media (orientation: portrait) { body:has(.screen.play) .hub-tray { width: min(360px, 94%); bottom: 12px; } }
+@media (max-width: 520px) {
+  .hub { padding: var(--sp-3); }
+  .hub-panel { padding: var(--sp-2); }
+  .hub-row { grid-template-columns: 3.6rem minmax(0, 1fr) auto auto; }
+}
+@media (prefers-reduced-motion: no-preference) { .hub-row.hub-flash { animation: hub-pop var(--dur-base) var(--ease-sticker); } }
+@keyframes hub-pop { from { transform: scale(.97); } to { transform: none; } }
+
+/* The phone's connection badge (the strip's [data-hud=conn]): the kit's brushed chip, small. */
+.conn.chip { min-height: 2em; margin-right: 10px; padding: 0 .9em .3em; font-size: var(--fs-caption); font-style: normal; text-transform: none; letter-spacing: 0; }
+.conn.chip .ic { width: 1.1em; height: 1.1em; }
+
+.hub-tray .hub-add { pointer-events: auto; min-height: 2em; padding: 0 .8em; font-size: var(--fs-label); margin-left: .5em; }
+.hub-tray [data-adding] { color: var(--c-saffron); }
+body:has(.screen.play) .hub-tray[data-armed=true] .hub-hint { display: block; }

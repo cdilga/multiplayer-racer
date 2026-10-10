@@ -107,6 +107,17 @@ enum Origin {
     Local(LocalSourceId),
 }
 
+impl SeatInput {
+    /// Records the first unavailable sample's time and clears it when the source is available again (R119).
+    fn note_plug(&mut self, available: bool, now_ms: u64) {
+        if available {
+            self.unplugged_since_ms = None;
+        } else if self.unplugged_since_ms.is_none() {
+            self.unplugged_since_ms = Some(now_ms);
+        }
+    }
+}
+
 struct SeatInput {
     state: SourceState,
     car: Option<CarId>,
@@ -120,6 +131,9 @@ struct SeatInput {
     idle_cued: bool,
     /// The controller's menu (Settings, Help) is open: the autopilot drives until it closes and the player steers.
     menu_open: bool,
+    /// R119: when (sim ms) this seat's source reported itself unplugged (unavailable); `None` while it is plugged. The seat is
+    /// held with its car on the autopilot; nothing expires it, the TV and the page show how long.
+    unplugged_since_ms: Option<u64>,
     /// The first-drive prompts (C06): which of the seven controls the host has seen this seat do.
     prompt: prompts::PromptTrack,
 }
@@ -625,7 +639,12 @@ impl Host {
                 }
                 continue;
             }
-            if age.is_some_and(|a| a > DROPOUT_MS) {
+            // R119: a source that says it is unplugged keeps its refresh stream going on a shared endpoint (a controller carries
+            // many sources), so it reads as gone after DROPOUT_MS just as a silent one does.
+            let unplugged_for = input
+                .unplugged_since_ms
+                .map_or(0, |t| now_ms.saturating_sub(t));
+            if age.is_some_and(|a| a > DROPOUT_MS) || unplugged_for > DROPOUT_MS {
                 if !input.dropped && !self.sim.has_autopilot(car) {
                     self.sim.set_autopilot(car, true);
                     input.dropped = true;
@@ -730,6 +749,7 @@ impl Host {
                             classic: r.flags.has(StateFlags::CLASSIC),
                         };
                         input.state.sample(r.drive, r.action, flags, now_ms);
+                        input.note_plug(flags.available, now_ms);
                         // Seen the moment it arrives: a short deflection between two ticks still counts for the prompts.
                         if input.prompt.on {
                             input.prompt.sample(&input.state.semantics());
@@ -818,6 +838,7 @@ impl Host {
                         input
                             .state
                             .sample([axes[0], axes[1]], [axes[2], axes[3]], flags, now_ms);
+                    input.note_plug(flags.available, now_ms);
                     // A host pad's gestures are detected here (a controller sends its own as `Action`).
                     if let Some(car) = input.car {
                         for a in fired {
@@ -1112,6 +1133,7 @@ impl Host {
                     active_ms: 0,
                     idle_cued: false,
                     menu_open: false,
+                    unplugged_since_ms: None,
                     prompt: prompts::PromptTrack::default(),
                 });
                 if let Origin::Net(_) = origin

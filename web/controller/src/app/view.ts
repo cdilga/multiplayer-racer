@@ -9,7 +9,7 @@ import type { Phase, Session } from './session';
 import { Tutorial } from './tutorial';
 import './settings.css';
 import './layout-short.css';
-import { watchBadge } from '../hub/badge';
+import { watchBadge } from '../sources/badge';
 import { ausName } from './ausname';
 import { DEADZONES, SENSITIVITIES, Tilt, applyTilt } from './tilt';
 import { Preferences, SettingsSheet, shapeSticks } from './settings';

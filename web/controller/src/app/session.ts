@@ -608,12 +608,13 @@ export class Session {
 
   private onVisibility = (): void => {
     for (const k of [...this.kids.values()]) k.onVisibility();
-    if (!this.endpoint || this.srcIdx < 0) return;
-    if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
-    else {
-      this.endpoint.resume(this.srcIdx);
-      this.link?.resume();
+    if (this.endpoint && this.srcIdx >= 0) {
+      if (document.visibilityState === 'hidden') this.endpoint.neutralise(this.srcIdx, WHY_HIDDEN);
+      else this.endpoint.resume(this.srcIdx);
     }
+    // The connection is the carrier's (R119): a laptop that carries only pads and keys, with no touch seat of its own,
+    // retries it the moment its page is shown again too. A source riding a carrier leaves that to the carrier.
+    if (!this.parent && document.visibilityState !== 'hidden') this.link?.resume();
   };
 
   /** One tab per seat (§11): a newer tab for the same room fences this one; "Use this one" takes it back. */

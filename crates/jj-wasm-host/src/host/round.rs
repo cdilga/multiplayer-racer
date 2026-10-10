@@ -412,6 +412,8 @@ impl Host {
                     "position": car.and_then(|c| order.iter().position(|&o| o == c)).map(|p| p + 1),
                     "boost": car.and_then(|c| self.sim.action_state(CarId(c))).map(|a| (a.boost.clamp(0.0, 1.0) * 255.0).round() as u8),
                     "finished": race.and_then(|r| r.finished_at).is_some(),
+                    // R119: how long this seat's pad has been unplugged (null while plugged); nothing expires the seat.
+                    "unpluggedMs": self.inputs.get(&s.id).and_then(|i| i.unplugged_since_ms).map(|t| super::tick_ms(self.sim.tick()).saturating_sub(t)),
                     "prompt": self.inputs.get(&s.id).filter(|i| i.prompt.showing()).map(|i| serde_json::json!({ "step": i.prompt.step, "of": super::prompts::STEPS.len(), "done": i.prompt.done() })),
                 })
             })

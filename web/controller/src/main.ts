@@ -1,4 +1,4 @@
-// The controller page (`B/c`, `B/j/<CODE>`, P1-C02/C03). `?hello` keeps the walking skeleton (P1-G00) for the
+// The controller page (`B/c`, `B/j/<CODE>`, P1-C02/C03): the one join journey (R119). `?hello` keeps the walking skeleton (P1-G00) for the
 // transport journeys. `window.__jjController` exposes the session for tests (no secrets).
 import { basePath } from '../../shared/src/base';
 import { applyProfile } from '../../shared/ui';
@@ -26,25 +26,12 @@ function mountTray(): HTMLElement {
 async function boot(root: HTMLElement): Promise<void> {
   if (params.has('hello')) return (await import('./hello/hello')).mountHello(root);
   const code = codeFromPath();
-  // `B/hub`: the hub's own entry (C08), a room code then the hub page for it.
-  if (!code && /^hub\/?$/.test(location.pathname.slice(basePath().length))) {
-    applyProfile();
-    (await import('./hub/hub')).mountHubEntry(root);
-    document.documentElement.dataset.jjController = 'ready';
-    return;
-  }
   if (!code) {
     // No code in the URL: the landing page's join card asks for one.
     location.replace(basePath());
     return;
   }
   applyProfile();
-  // The hub (C08): `B/j/<CODE>?hub` is the page for a second laptop with pads and keys; every source joins on its own.
-  if (params.has('hub')) {
-    (await import('./hub/hub')).mountHub(root, code, params.get('ice') === 'relay' ? 'relay' : 'all');
-    document.documentElement.dataset.jjController = 'ready';
-    return;
-  }
   const session = new Session({ iceTransportPolicy: params.get('ice') === 'relay' ? 'relay' : 'all' });
   mountController(root, session, prefillName);
   (window as unknown as { __jjController: unknown }).__jjController = {
@@ -72,9 +59,11 @@ async function boot(root: HTMLElement): Promise<void> {
   addEventListener('popstate', () => history.pushState({ guard: true }, ''));
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('dblclick', (e) => e.preventDefault());
-  // A pad paired to this phone (R65) joins as a second seat in its own tray; only loaded once a pad shows up.
-  addEventListener('gamepadconnected', () => void import('./hub/hub').then((h) => h.pairPads(session, mountTray())), { once: true });
+  // Every joined controller carries extra players (R119): a pad or key cluster pressed on this page claims its own seat over
+  // this page's one connection, whether or not its own touch player ever taps in.
+  const sources = import('./sources/sources').then((m) => m.mountSources(session, mountTray(), params.get('ice') === 'relay' ? 'relay' : 'all'));
   await session.start(code);
+  await sources;
   document.documentElement.dataset.jjController = 'ready';
 }
 
