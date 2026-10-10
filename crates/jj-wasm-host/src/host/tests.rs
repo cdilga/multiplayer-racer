@@ -766,7 +766,7 @@ fn a_host_pad_identifies_sits_out_leaves_and_joins_again_as_a_new_seat() {
     let ms = |t: u64| t * u64::from(TICK_HZ) / 1000;
     h.schedule(0, &pad(4, [0, 20_000], 0)).unwrap();
     h.schedule(0, &pad(9, [0, 20_000], 0)).unwrap();
-    // Past the seat reducer's 3 s Identify limit (joining auto-flashes).
+    // Past the seat reducer's Identify limit (joining auto-flashes).
     h.schedule(ms(3_500), &pad(4, [0, 0], LOCAL_IDENTIFY))
         .unwrap();
     h.schedule(ms(3_600), &pad(4, [0, 0], 0)).unwrap();
@@ -1190,6 +1190,63 @@ fn finishing_the_race_on_demand_gives_intermission_with_standings_for_every_race
         "every racer is placed"
     );
     assert_eq!(room["standings"].as_array().unwrap().len(), 4);
+}
+
+/// Owner playtest 1 (br-gw74.1): Identify answers every press after a round starts. Each round builds a new sim whose
+/// tick restarts at 0; the seats keep their own clock, so a long Lobby doesn't freeze the Identify limit in the race.
+#[test]
+fn identify_answers_every_press_after_a_long_lobby_and_a_round_start() {
+    let mut h = Host::new(&init()).unwrap();
+    for (k, p) in ["p1", "p2"].iter().enumerate() {
+        let hello = ControllerCmd::Hello {
+            protocol: PROTOCOL_VERSION,
+            build: BuildId("t".into()),
+            endpoint: EndpointId((*p).into()),
+            resume: Some(format!("s{k}")),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, hello)).unwrap();
+        let claim = ControllerCmd::Claim {
+            request: RequestId(1),
+            name: format!("Ava{k}"),
+        }
+        .encode();
+        h.handle(&net(p, Channel::Cmd, claim)).unwrap();
+    }
+    let mut now = 0u64;
+    let mut flashes = 0usize;
+    let mut step = |h: &mut Host, ticks: u64, flashes: &mut usize| {
+        for _ in 0..ticks {
+            h.advance(now);
+            now += 8_334;
+            while let Some(m) = h.next_message() {
+                if let SimToMain::Events { batch } = m {
+                    *flashes += batch.iter().filter(|e| matches!(e, SimEvent::Identify { .. })).count();
+                }
+            }
+        }
+    };
+    // A long Lobby (60 s): the sim ticks far ahead of where the round's new world will start.
+    step(&mut h, 120 * 60, &mut flashes);
+    for p in ["p1", "p2"] {
+        h.handle(&net(p, Channel::Cmd, ControllerCmd::Ready { on: true }.encode()))
+            .unwrap();
+    }
+    let mut guard = 0;
+    while h.phase() != jj_session::director::Phase::Running {
+        step(&mut h, 60, &mut flashes);
+        guard += 1;
+        assert!(guard < 600, "the round starts on its own");
+    }
+    step(&mut h, 240, &mut flashes);
+    for press in 1..=3 {
+        let before = flashes;
+        h.handle(&net("p1", Channel::Cmd, ControllerCmd::Identify.encode()))
+            .unwrap();
+        step(&mut h, 30, &mut flashes);
+        assert!(flashes > before, "press {press} in the race flashed (sim tick {})", h.tick());
+        step(&mut h, 2 * 120, &mut flashes); // 2 s between presses
+    }
 }
 
 /// P1-M08a (host side): with main preparing maps, the director's request becomes a `PrepareRequested` event with the

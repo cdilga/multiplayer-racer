@@ -251,13 +251,14 @@ img.i { width: 22px; height: 22px; vertical-align: middle; }
   .pod-cd { width: 100%; text-align: center; }
 }
 
-/* POC1-21: the identify flash on the controller, the TV's tween in the player's colour */
-.cooee-phone { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: var(--seat); overflow: hidden; pointer-events: none; }
+/* POC1-21: the identify flash on the controller, the TV's tween in the player's colour. A see-through wash (owner playtest 1):
+   the sticks stay visible under it, and touches pass through, so you keep driving while it shows. */
+.cooee-phone { position: fixed; inset: 0; z-index: 23; display: grid; place-items: center; background: color-mix(in srgb, var(--seat) 30%, transparent); overflow: hidden; pointer-events: none; }
 .cooee-phone .flash { position: absolute; inset: 0; background: radial-gradient(closest-side, rgb(255 255 255 / .95), color-mix(in srgb, #fff 45%, var(--seat)) 55%, transparent 100%); opacity: 0; animation: cooee-flash 1.5s cubic-bezier(.2, .7, .3, 1) forwards; }
 .cooee-phone .lab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: cooee-pop 1.5s cubic-bezier(.2, .7, .3, 1) forwards; opacity: 0; }
 .cooee-phone b { padding: .08em .45em; background: var(--seat); color: var(--seat-on); border: 4px solid var(--c-ink); box-shadow: 0 6px 0 var(--c-ink); font-size: min(17vw, 26vh); font-style: italic; text-transform: none; white-space: nowrap; }
 .cooee-phone .lab span { padding: 4px 12px; background: var(--c-ink); color: var(--c-paper); font-size: 20px; font-weight: 700; }
-@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: 1; } 30% { opacity: .85; } 100% { opacity: 0; } }
+@keyframes cooee-flash { 0% { opacity: 0; } 8% { opacity: .55; } 30% { opacity: .4; } 100% { opacity: 0; } }
 @keyframes cooee-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.6); } 10% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 85% { opacity: 1; transform: rotate(-4deg) scale(1); } 100% { opacity: 0; transform: rotate(-4deg) scale(1); } }
 @keyframes cooee-held { 0% { opacity: .6; } 100% { opacity: 0; } }
 @keyframes cooee-held-label { 0% { opacity: 1; } 100% { opacity: 0; } }

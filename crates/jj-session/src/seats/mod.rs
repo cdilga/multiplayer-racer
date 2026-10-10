@@ -47,7 +47,8 @@ pub const IDENTITY_PALETTE: [[u8; 3]; 12] = [
 pub struct SeatConfig {
     /// Sim ticks per second (the Identify limit is in ticks).
     pub tick_hz: u32,
-    /// Seconds between player-triggered Identify flashes for one seat (master §5.2).
+    /// Seconds between player-triggered Identify flashes for one seat: anti-spam only (owner playtest 1 found the old
+    /// 3 s swallowing ordinary repeat presses; master §5.2's figure is superseded).
     pub identify_every_s: u32,
     pub palette: Vec<[u8; 3]>,
 }
@@ -56,7 +57,7 @@ impl Default for SeatConfig {
     fn default() -> Self {
         Self {
             tick_hz: 60,
-            identify_every_s: 3,
+            identify_every_s: 1,
             palette: IDENTITY_PALETTE.to_vec(),
         }
     }
@@ -453,8 +454,9 @@ impl Seats {
                 }
             }
             Input::Respawned { seat } => {
-                if let Some(s) = self.seats.get_mut(&seat) {
-                    s.identify_last = Some(self.now);
+                // The respawn's own flash doesn't use up the player's press (owner playtest 1: autopilot respawns made
+                // the next press look ignored).
+                if self.seats.contains_key(&seat) {
                     out.push(Output::Identify { seat });
                 }
             }

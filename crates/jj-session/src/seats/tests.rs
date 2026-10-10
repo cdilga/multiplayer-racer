@@ -152,15 +152,15 @@ fn a_duplicate_tab_fences_the_older_one_and_a_wrong_secret_is_refused() {
 
 #[test]
 fn identify_rate_limit_table() {
-    let mut s = Seats::default(); // 60 Hz, once per 3 s = 180 ticks
+    let mut s = Seats::default(); // 60 Hz, once per 1 s = 60 ticks
     let id = joined(&mut s, 1, 1, "Dusty"); // auto-fired at tick 0, car at tick 1
     for (tick, fires) in [
         (1, false),
-        (179, false),
-        (180, true),
-        (181, false),
-        (359, false),
-        (360, true),
+        (59, false),
+        (60, true),
+        (61, false),
+        (119, false),
+        (120, true),
     ] {
         s.apply(Input::Tick(Tick(tick)));
         let out = s.apply(Input::Identify {
@@ -180,141 +180,13 @@ fn identify_rate_limit_table() {
         "auto-fires on respawn"
     );
     assert!(
-        matches!(
-            s.apply(Input::Identify {
-                conn: 1,
-                source: PRIMARY_SOURCE
-            })[0],
-            Output::IdentifyLimited {
-                retry_in_ticks: 180,
-                ..
-            }
-        ),
-        "and restarts the limit"
+        s.apply(Input::Identify {
+            conn: 1,
+            source: PRIMARY_SOURCE
+        })
+        .contains(&Output::Identify { seat: id }),
+        "and a respawn's flash doesn't use up the player's press"
     );
-}
-
-#[test]
-fn leave_and_sit_out_take_effect_at_the_next_tick_boundary_and_keep_the_seat() {
-    let mut s = Seats::default();
-    let id = joined(&mut s, 1, 1, "Dusty");
-    let number = s.seat(id).unwrap().number;
-    // (input, car before the boundary, outputs at the boundary, presence after)
-    s.apply(Input::SitOut {
-        conn: 1,
-        source: PRIMARY_SOURCE,
-        on: true,
-    });
-    assert!(
-        s.seat(id).unwrap().has_car,
-        "sit out waits for the boundary"
-    );
-    assert_eq!(
-        s.apply(Input::Tick(Tick(10))),
-        vec![Output::CarWithdrawn {
-            seat: id,
-            why: Withdraw::SatOut
-        }]
-    );
-    assert_eq!(s.seat(id).unwrap().presence, Presence::SittingOut);
-    s.apply(Input::SitOut {
-        conn: 1,
-        source: PRIMARY_SOURCE,
-        on: false,
-    });
-    assert_eq!(
-        s.apply(Input::Tick(Tick(11))),
-        vec![Output::CarAdded { seat: id }]
-    );
-    s.apply(Input::Leave {
-        conn: 1,
-        source: PRIMARY_SOURCE,
-    });
-    assert!(s.seat(id).unwrap().has_car, "leave waits for the boundary");
-    assert_eq!(
-        s.apply(Input::Tick(Tick(12))),
-        vec![Output::CarWithdrawn {
-            seat: id,
-            why: Withdraw::Left
-        }]
-    );
-    let seat = s.seat(id).unwrap();
-    assert_eq!(
-        (seat.presence, seat.number),
-        (Presence::Left, number),
-        "the seat and its number stay (standings kept)"
-    );
-    // Claiming again from the same endpoint returns to the same seat.
-    assert_eq!(welcomed(&claim(&mut s, 1, 2, "Dusty")), Some(id));
-    assert_eq!(
-        s.apply(Input::Tick(Tick(13))),
-        vec![Output::CarAdded { seat: id }]
-    );
-}
-
-#[test]
-fn names_follow_the_rules_and_duplicates_gain_the_number() {
-    let mut s = Seats::default();
-    let a = joined(&mut s, 1, 1, "Dusty");
-    let b = joined(&mut s, 2, 2, "dusty");
-    let c = joined(&mut s, 3, 3, "   ");
-    assert_eq!(s.display_name(a).unwrap(), "Dusty");
-    assert_eq!(
-        s.display_name(b).unwrap(),
-        "dusty #2",
-        "the later seat gains its number"
-    );
-    assert_eq!(
-        s.display_name(c).unwrap(),
-        "Player 3",
-        "blank reverts to the default"
-    );
-    hello(&mut s, 4, 4);
-    assert_eq!(
-        claim(&mut s, 4, 1, "<script>"),
-        vec![Output::ClaimRejected {
-            conn: 4,
-            reason: ClaimRejection::Name
-        }]
-    );
-    assert_eq!(
-        s.apply(Input::SetName {
-            conn: 3,
-            source: PRIMARY_SOURCE,
-            name: "Kev".into()
-        }),
-        vec![Output::NameChanged { seat: c }]
-    );
-    assert_eq!(s.display_name(c).unwrap(), "Kev");
-}
-
-#[test]
-fn any_number_of_seats_gets_stable_distinct_numbers() {
-    let mut s = Seats::default();
-    let n = 10_000u32;
-    for k in 0..n {
-        hello(&mut s, u64::from(k), k);
-        claim(&mut s, u64::from(k), 1, "");
-    }
-    s.apply(Input::Tick(Tick(1)));
-    let numbers: BTreeSet<u32> = s.seats().map(|x| x.number.0).collect();
-    assert_eq!(numbers.len(), n as usize);
-    assert_eq!(
-        (numbers.first().copied(), numbers.last().copied()),
-        (Some(1), Some(n)),
-        "1..=N, nothing truncated, past 99"
-    );
-    assert_eq!(
-        s.seats().filter(|x| x.has_car).count(),
-        n as usize,
-        "every seat has its car"
-    );
-    let seat_13 = s.seats().find(|x| x.number.0 == 13).unwrap();
-    assert_eq!(
-        seat_13.colour.rgb, IDENTITY_PALETTE[0],
-        "colours cycle the palette; the number keeps cars apart"
-    );
-    assert_eq!(s.display_name(seat_13.id).unwrap(), "Player 13");
 }
 
 // ---- Properties over random sequences

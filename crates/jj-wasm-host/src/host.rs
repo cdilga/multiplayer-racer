@@ -185,6 +185,10 @@ pub struct Host {
     seen_utility_events: usize,
     /// How many of the sim's damage events have become seat events (P1-S04a).
     seen_damage_events: usize,
+    /// The seats' clock: every step, never reset. The sim's tick restarts at 0 with each round's new world, and the
+    /// seat reducer keeps the highest tick it has seen, so feeding it the sim tick froze its timers (Identify's limit)
+    /// after every round start (owner playtest 1, br-gw74.1).
+    session_tick: u64,
     session_rev: u32,
     /// The party loop (G01): director, standings, laps, free drive.
     round: round::RoundState,
@@ -297,6 +301,7 @@ impl Host {
             seen_race_events: 0,
             seen_utility_events: 0,
             seen_damage_events: 0,
+            session_tick: 0,
             session_rev: 0,
             round: round::RoundState::new(seed),
             #[cfg(feature = "testing")]
@@ -556,7 +561,8 @@ impl Host {
         for msg in std::mem::take(&mut self.queued) {
             self.apply(msg, tick);
         }
-        for o in self.seats.apply(seats::Input::Tick(Tick(tick + 1))) {
+        self.session_tick += 1;
+        for o in self.seats.apply(seats::Input::Tick(Tick(self.session_tick))) {
             self.seat_output(o);
         }
         // A loaded fixture's events and scripted inputs come before the seats' controls, as in `jj sim`.
@@ -768,7 +774,8 @@ impl Host {
                         on: !sitting,
                     }));
                 }
-                if identify {
+                // The leave chord holds Identify too: leaving doesn't flash.
+                if identify && !leave {
                     outs.extend(self.seats.apply(seats::Input::Identify {
                         conn,
                         source: seats::PRIMARY_SOURCE,

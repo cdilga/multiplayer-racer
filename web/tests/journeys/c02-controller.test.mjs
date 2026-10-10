@@ -237,6 +237,35 @@ describe('the player colour and Identify', () => {
     await page.locator('.cooee-phone').waitFor({ state: 'detached', timeout: 5000 });
     await ctx.close();
   });
+
+  test('the Cooee flash is see-through and both sticks keep driving under it (owner playtest 1)', { timeout: 60_000 }, async () => {
+    const eng = engines.find((e) => e.name === 'chromium');
+    const { ctx, page } = await open(eng, 'playing&seat=12', LAND);
+    const cdp = await ctx.newCDPSession(page);
+    const d = await box(page, '.zone.drive');
+    const a = await box(page, '.zone.action');
+    await page.locator('[data-act=identify]').click();
+    await page.locator('.cooee-phone').waitFor({ timeout: 5000 });
+    const look = await page.evaluate(([dx, dy]) => {
+      const o = document.querySelector('.cooee-phone');
+      const alpha = (c) => { const m = c.match(/rgba?\(([^)]+)\)/) ?? c.match(/color\(srgb ([^)]+)\)/); const parts = m ? m[1].split(/[ ,/]+/).filter(Boolean) : []; return parts.length >= 4 ? Number(parts[3]) : 1; };
+      return { bg: alpha(getComputedStyle(o).backgroundColor), events: getComputedStyle(o).pointerEvents, hit: document.elementFromPoint(dx, dy)?.closest('.cooee-phone') !== null };
+    }, [d.x + d.width / 2, d.y + d.height / 2]);
+    assert.ok(look.bg <= 0.5, `the wash lets the sticks show through (background alpha ${look.bg})`);
+    assert.equal(look.events, 'none', 'touches pass through the flash');
+    assert.equal(look.hit, false, 'the drive stick, not the flash, is what a thumb lands on');
+    const p1 = { x: d.x + d.width / 2, y: d.y + d.height / 2, id: 1 };
+    const p2 = { x: a.x + a.width / 2, y: a.y + a.height / 2, id: 2 };
+    const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts });
+    await touch('touchStart', [p1, p2]);
+    await touch('touchMove', [{ ...p1, y: p1.y - 150 }, { ...p2, x: p2.x + 150 }]);
+    assert.ok(await page.locator('.cooee-phone').count(), 'still flashing while driving');
+    const s = await sticks(page);
+    assert.ok(s.drive.y < -0.9 && s.action.x > 0.9 && s.drive.touch && s.action.touch, `both sticks drive under the flash: ${JSON.stringify(s)}`);
+    await shot(page, 'c02-identify-flash-driving');
+    await touch('touchEnd', []);
+    await ctx.close();
+  });
 });
 
 describe('landscape first, full screen and the wake lock', () => {
