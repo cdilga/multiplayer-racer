@@ -271,7 +271,12 @@ mod tests {
     #[test]
     fn the_shipped_profile_is_valid_and_round_trips() {
         let p = InputProfile::standard();
-        assert_eq!(p.drift.enter_angle_deg, 35.0);
+        // The R120 drift entry: a full or nearly full sideways push.
+        assert_eq!(p.drift.enter_angle_deg, 70.0);
+        assert_eq!(p.drift.enter_deflection, 0.9);
+        assert_eq!(p.drift.exit_angle_deg, 58.0);
+        assert_eq!(p.drift.exit_deflection, 0.75);
+        assert_eq!(p.drift.max_pull_back, 0.35);
         let again = InputProfile::from_json(&serde_json::to_string(&p).unwrap()).unwrap();
         assert_eq!(p, again);
     }
@@ -279,7 +284,8 @@ mod tests {
     #[test]
     fn the_validator_names_every_bad_number() {
         let mut p = InputProfile::standard();
-        p.drift.exit_angle_deg = 40.0;
+        // Above the 70 degree entry angle, so the hysteresis rule (exit < enter) fails.
+        p.drift.exit_angle_deg = 75.0;
         p.flick.rim = 0.2;
         p.steer.gamma = 0.5;
         p.flick.max_travel_ms = 5;
@@ -304,8 +310,9 @@ mod tests {
     fn a_changed_value_changes_the_resolved_thresholds_without_code() {
         let mut p = InputProfile::standard();
         let before = p.resolve();
-        p.drift.enter_deflection = 0.8;
-        p.drift.enter_angle_deg = 50.0;
+        // Both move above the shipped 0.9 and 70 degrees, so the resolved entry must rise.
+        p.drift.enter_deflection = 0.95;
+        p.drift.enter_angle_deg = 80.0;
         let after = p.resolve();
         assert!(after.drift_enter > before.drift_enter);
         assert!(after.drift_enter_tan > before.drift_enter_tan);

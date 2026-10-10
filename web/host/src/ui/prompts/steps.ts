@@ -10,7 +10,7 @@ export interface PromptStep {
 export const PROMPT_STEPS: PromptStep[] = [
   { title: 'Steer', text: 'Right stick: push right, then left', goals: [['right', 'Right'], ['left', 'Left']] },
   { title: 'Go and stop', text: 'Left stick up to drive, back to brake', goals: [['go', 'Go'], ['stop', 'Brake']] },
-  { title: 'Drift', text: 'Left stick out to the side', goals: [['drift', 'Drift']] },
+  { title: 'Drift', text: 'Left stick all the way to the side, then let go', goals: [['drift', 'Drift']] },
   { title: 'Launch', text: 'Left stick: pull back, then snap forward', goals: [['launch', 'Launch']] },
   { title: 'OI!', text: 'Flick the right stick up', goals: [['oi', 'OI!']] },
   { title: 'Cone', text: 'Flick the right stick down', goals: [['cone', 'Cone']] },

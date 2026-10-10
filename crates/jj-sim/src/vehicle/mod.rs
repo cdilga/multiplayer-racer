@@ -54,6 +54,11 @@ pub struct ActionState {
     pub utility_fired: [u32; 2],
     /// The tick the wheelie launch can next fire (the cooldown, P1-C11).
     pub wheelie_ready: u64,
+    /// R120: seconds of real drift held so far (the handbrake on, rear sliding, at speed), and the drift-exit boost's
+    /// ticks left once it's let go ("drop a gear and disappear"); how many exit boosts this car has fired.
+    pub drift_held_s: f32,
+    pub exit_boost_ticks: u32,
+    pub exit_boosts: u32,
 }
 
 impl ActionState {
@@ -67,6 +72,9 @@ impl ActionState {
             utility_ready: [0; 2],
             utility_fired: [0; 2],
             wheelie_ready: 0,
+            drift_held_s: 0.0,
+            exit_boost_ticks: 0,
+            exit_boosts: 0,
         }
     }
 
@@ -83,6 +91,25 @@ impl ActionState {
     ) {
         let t = &p.tuning;
         self.wheelie_ticks = self.wheelie_ticks.saturating_sub(1);
+        self.exit_boost_ticks = self.exit_boost_ticks.saturating_sub(1);
+        // R120: a held drift banks exit boost; letting the handbrake go after at least `drift_exit_min_s` of it fires a
+        // burst of `drift_exit_boost_per_s` seconds per second held (up to `drift_exit_boost_max_s`).
+        let real = self.drift > 0.5
+            && rear_slip_deg >= t.drift_exit_min_slip_deg
+            && speed >= t.drift_charge_min_mps;
+        if input.drift {
+            if real {
+                self.drift_held_s += dt;
+            }
+        } else if self.drift_held_s > 0.0 {
+            if t.drift_exit_boost_per_s > 0.0 && self.drift_held_s >= t.drift_exit_min_s {
+                let s =
+                    (self.drift_held_s * t.drift_exit_boost_per_s).min(t.drift_exit_boost_max_s);
+                self.exit_boost_ticks = libm::roundf(s * crate::sim::TICK_HZ as f32) as u32;
+                self.exit_boosts += 1;
+            }
+            self.drift_held_s = 0.0;
+        }
         self.drift = if input.drift {
             1.0
         } else {
@@ -94,10 +121,12 @@ impl ActionState {
         if !input.boost {
             self.armed = true;
         }
-        self.boosting = input.boost
+        let metered = input.boost
             && self.armed
             && (self.boost >= t.boost_min_start || (self.boosting && self.boost > 0.0));
-        if self.boosting {
+        // The exit boost is boost (the same drive, flame and sound), but free: it never drains the meter.
+        self.boosting = metered || self.exit_boost_ticks > 0;
+        if metered {
             self.boost -= t.boost_drain_per_s * dt;
             if self.boost <= 0.0 {
                 self.armed = false;
@@ -298,5 +327,41 @@ mod tests {
             slow.map(|w| w.friction_slip),
             [base, base * 0.8, base * 0.7, base * 0.9]
         );
+    }
+}
+
+#[cfg(test)]
+mod r120_tests {
+    use super::*;
+
+    /// R120: a held real drift, let go, fires the exit boost for the profile's seconds per second held; it is boost
+    /// (`boosting`) without draining the meter.
+    #[test]
+    fn letting_go_of_a_held_drift_fires_a_free_exit_boost() {
+        let p = VehicleProfile::cruz();
+        let t = &p.tuning;
+        let mut a = ActionState::new(&p);
+        let dt = 1.0 / crate::sim::TICK_HZ as f32;
+        let drift = DriveInput {
+            drift: true,
+            ..DriveInput::default()
+        };
+        for _ in 0..crate::sim::TICK_HZ {
+            a.update(&p, drift, 20.0, 15.0, dt);
+        }
+        assert!(
+            a.drift_held_s > 0.9,
+            "one second of real drift held: {}",
+            a.drift_held_s
+        );
+        let meter = a.boost;
+        a.update(&p, DriveInput::default(), 0.0, 15.0, dt);
+        let want = (1.0 * t.drift_exit_boost_per_s).min(t.drift_exit_boost_max_s);
+        assert!(
+            a.exit_boost_ticks as f32 / crate::sim::TICK_HZ as f32 > want * 0.9,
+            "{a:?}"
+        );
+        assert!(a.boosting && a.exit_boosts == 1, "{a:?}");
+        assert!(a.boost >= meter, "free: the meter doesn't drain");
     }
 }

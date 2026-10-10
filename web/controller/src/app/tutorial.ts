@@ -28,8 +28,9 @@ export const STEPS: Step[] = [
     if (k === 'drive' && v.y < -0.7) g.go = true;
     if (k === 'drive' && g.go && v.y > 0.7) g.stop = true;
   } },
-  { title: 'Drift', text: 'Push the left stick out to the side while you drive.', goals: [['drift', 'Drift']], stick: (k, v, g) => {
-    if (k === 'drive' && Math.abs(v.x) > 0.7) g.drift = true;
+  { title: 'Drift', text: 'Push the left stick all the way to the side, steer against the slide, then let go: you shoot out of the corner.', goals: [['drift', 'Drift']], stick: (k, v, g) => {
+    // R120: a drift needs the stick fully (or nearly fully) sideways.
+    if (k === 'drive' && Math.abs(v.x) > 0.9) g.drift = true;
   } },
   { title: 'Launch', text: 'Pull the left stick all the way back, hold a moment, then snap it forward. It is your boost.', goals: [['launch', 'Launch']], action: (a, g) => {
     if (a === WHEELIE) g.launch = true;

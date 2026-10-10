@@ -232,7 +232,10 @@ fn stuck_flip_and_out_of_bounds_wrecks_leave_husks_that_persist_dynamic() {
     for i in 0..2 {
         let st = sim.car_state(CarId(i as u32)).unwrap();
         assert!(st.up_y > 0.9, "car {i} upright: {st:?}");
-        assert!(!sim.race().course.out_of_bounds(st.position), "car {i} in bounds");
+        assert!(
+            !sim.race().course.out_of_bounds(st.position),
+            "car {i} in bounds"
+        );
     }
 }
 

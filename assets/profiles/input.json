@@ -6,10 +6,10 @@
     "gamma": 1.0
   },
   "drift": {
-    "enterAngleDeg": 35,
-    "enterDeflection": 0.6,
-    "exitAngleDeg": 25,
-    "exitDeflection": 0.45,
+    "enterAngleDeg": 70,
+    "enterDeflection": 0.9,
+    "exitAngleDeg": 58,
+    "exitDeflection": 0.75,
     "maxPullBack": 0.35
   },
   "launch": {

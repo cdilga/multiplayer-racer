@@ -1,7 +1,7 @@
 //! The R116 dual-stick layout (P1-C11): the left stick drives, drifts and launches; the right stick steers and fires.
 //!
 //! - **Left stick** `y` is throttle, brake/reverse and the wheelie preload ([`crate::intent`], [`crate::wheelie`]). `x` is
-//!   **drift**, behind an angular deadzone about vertical (35 degrees and 0.6 deflection to enter, less to leave:
+//!   **drift**, behind an angular deadzone about vertical (70 degrees and 0.9 deflection to enter, R120: full or nearly full side lock; 58 and 0.75 to leave:
 //!   hysteresis), so full throttle with a natural thumb lean never drifts. While drifting the throttle reads the stick's
 //!   magnitude, so a drift at the rim keeps full throttle. Sticks keep their circular range (no disc-to-square remap).
 //!   **Boost is the wheelie launch**: a full pull back held for the preload time, then a snap to full forward inside the
@@ -174,7 +174,8 @@ mod tests {
     fn a_drift_at_the_rim_keeps_full_throttle() {
         let p = p();
         let mut held = DriveStickMachine::default();
-        for deg in [45.0, 60.0, 80.0, 90.0, -45.0, -90.0] {
+        // Past the 70 degree entry angle (R120) at the rim.
+        for deg in [75.0, 80.0, 90.0, -75.0, -90.0] {
             let drive = polar(1.0, deg);
             held.sample(drive, &p);
             let s = semantics(drive, [0, 0], &held, false, &p);
@@ -186,39 +187,67 @@ mod tests {
             );
             held.sample([0, 0], &p);
         }
-        // Half-way out sideways is a drift at half throttle.
-        held.sample(polar(0.7, 90.0), &p);
-        let t = semantics(polar(0.7, 90.0), [0, 0], &held, false, &p)
+        // Just inside the 0.9 entry deflection, sideways, is a drift at that throttle.
+        held.sample(polar(0.92, 90.0), &p);
+        let t = semantics(polar(0.92, 90.0), [0, 0], &held, false, &p)
             .drive
             .throttle;
-        assert!((t - 0.7).abs() < 0.01, "{t}");
+        assert!((t - 0.92).abs() < 0.01, "{t}");
     }
 
     #[test]
     fn a_drift_has_hysteresis_in_angle_and_in_deflection() {
         let p = p();
         let mut h = DriveStickMachine::default();
-        h.sample(polar(0.8, 30.0), &p);
-        assert!(!h.drifting(), "30 degrees is inside the 35 degree deadzone");
-        h.sample(polar(0.8, 40.0), &p);
+        h.sample(polar(0.95, 60.0), &p);
+        assert!(!h.drifting(), "60 degrees is inside the 70 degree deadzone");
+        h.sample(polar(0.95, 75.0), &p);
         assert!(h.drifting());
-        h.sample(polar(0.8, 28.0), &p);
+        h.sample(polar(0.95, 64.0), &p);
         assert!(
             h.drifting(),
-            "still a drift between the exit angle (25) and the entry angle (35)"
+            "still a drift between the exit angle (58) and the entry angle (70)"
         );
-        h.sample(polar(0.8, 20.0), &p);
+        h.sample(polar(0.95, 50.0), &p);
         assert!(!h.drifting(), "released below the exit angle");
-        h.sample(polar(0.5, 90.0), &p);
-        assert!(!h.drifting(), "0.5 deflection is below the entry 0.6");
+        h.sample(polar(0.8, 90.0), &p);
+        assert!(!h.drifting(), "0.8 deflection is below the entry 0.9");
+        h.sample(polar(0.95, 90.0), &p);
+        h.sample(polar(0.8, 90.0), &p);
+        assert!(h.drifting(), "held down to the exit deflection 0.75");
         h.sample(polar(0.7, 90.0), &p);
-        h.sample(polar(0.5, 90.0), &p);
-        assert!(h.drifting(), "held down to the exit deflection 0.45");
-        h.sample(polar(0.4, 90.0), &p);
         assert!(!h.drifting());
         // Pulled back to brake: never a drift.
         h.sample(polar(1.0, 150.0), &p);
         assert!(!h.drifting());
+    }
+
+    #[test]
+    fn r120_a_natural_lean_at_full_throttle_never_drifts_and_full_side_lock_does() {
+        let p = p();
+        // Full forward deflection leaned up to 60 degrees off vertical: never a drift, throttle unchanged.
+        for deg in [0.0, 15.0, 30.0, 45.0, 60.0] {
+            let mut h = DriveStickMachine::default();
+            let drive = polar(1.0, deg);
+            h.sample(drive, &p);
+            let s = semantics(drive, [0, 0], &h, false, &p);
+            assert!(!s.drift, "{deg} degrees at full forward is not a drift");
+            assert_eq!(
+                s.drive.throttle,
+                drive_intent([0, drive[1]]).throttle,
+                "{deg}: throttle is the forward throttle"
+            );
+        }
+        // A push to 80 degrees at full deflection drifts.
+        let mut h = DriveStickMachine::default();
+        h.sample(polar(1.0, 80.0), &p);
+        assert!(h.drifting(), "80 degrees at full deflection drifts");
+        // Easing back to 65 degrees at 0.95 keeps the drift (hysteresis).
+        h.sample(polar(0.95, 65.0), &p);
+        assert!(h.drifting(), "65 degrees at 0.95 is still a drift");
+        // Down to 50 degrees releases it (below the 58 degree exit angle).
+        h.sample(polar(0.95, 50.0), &p);
+        assert!(!h.drifting(), "50 degrees releases the drift");
     }
 
     #[test]

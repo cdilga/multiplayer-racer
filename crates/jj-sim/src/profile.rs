@@ -152,6 +152,16 @@ pub struct Tuning {
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
+    /// R120 drift exit: the least drift held (s) that earns a boost on release, seconds of boost per second held, its cap.
+    #[serde(default)]
+    pub drift_exit_min_s: f32,
+    /// … counting only while the rear slides at least this much (deg): any real slide, not the meter's 10° charge.
+    #[serde(default)]
+    pub drift_exit_min_slip_deg: f32,
+    #[serde(default)]
+    pub drift_exit_boost_per_s: f32,
+    #[serde(default)]
+    pub drift_exit_boost_max_s: f32,
     /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
     #[serde(default)]
     pub air_level_torque: f32,
