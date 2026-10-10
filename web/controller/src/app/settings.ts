@@ -173,6 +173,16 @@ export class SettingsSheet {
       unFs?.();
     };
     this.render();
+    // The bottom fade says there's more to scroll to (data-more), on the sheet and as the window changes size.
+    const more = () => this.el.toggleAttribute('data-more', this.el.scrollTop + this.el.clientHeight < this.el.scrollHeight - 4);
+    this.el.addEventListener('scroll', more, { passive: true });
+    addEventListener('resize', more);
+    requestAnimationFrame(more);
+    const unResize = this.unsub;
+    this.unsub = () => {
+      unResize();
+      removeEventListener('resize', more);
+    };
     d.onOpen();
   }
 

@@ -131,6 +131,15 @@ test('C02b: the full-screen toggle (tools and settings) enters and leaves and fo
   const drive = await page.evaluate(() => window.__jjController.inspect().sticks.drive);
   assert.ok(drive.touch && (Math.abs(drive.x) > 0.1 || Math.abs(drive.y) > 0.1), `the stick drives under the prompt: ${JSON.stringify(drive)}`);
   await page.mouse.up();
+  // Owner playtest 1: the settings sheet opened over a lost full screen hides the prompt (it covered the sheet's Steering
+  // row and Reset); closing the sheet brings it back for the race.
+  await page.locator('.tools [data-act=settings]').click();
+  await page.locator('[data-overlay=settings]').waitFor();
+  assert.equal(await page.locator('[data-overlay=fs-prompt]').isVisible(), false, 'no prompt over the settings sheet');
+  await shot(page, 'phone-915x412-race-fullscreen-lost-settings');
+  await page.getByRole('button', { name: 'Save and back to driving' }).click();
+  await wait(page, () => !document.querySelector('[data-overlay=settings]'));
+  assert.equal(await page.locator('[data-overlay=fs-prompt]').isVisible(), true, 'the prompt is back once the sheet closes');
   // One tap goes back in; the prompt goes.
   await page.getByRole('button', { name: 'Back to full screen' }).click();
   await wait(page, () => !!document.fullscreenElement);
