@@ -984,6 +984,7 @@ name = "jj-map"
 version = "0.2.0"
 dependencies = [
  "jj-types",
+ "libm",
  "postcard",
  "serde",
  "serde_json",

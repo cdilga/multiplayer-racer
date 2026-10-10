@@ -1,6 +1,6 @@
 {
  "scenario": "air-level",
- "what": "§7.3 Air control, §7.3a 'level the car in the air' (P1-S03a). Two Cruz Missiles leave the ground 3 m up at 12 m/s with 6 m/s of climb, one tipped 25° onto its right side (left side up), one 25° onto its left. While airborne the player steers into the tilt to start it rolling level, then the other way to stop the roll (DRIVE x rolls the body in the air), and each lands level on its wheels. Baselines: no input lands tipped; holding the first stick over-rotates; mashing lands wherever it lands.",
+ "what": "§7.3 Air control, §7.3a 'level the car in the air' (P1-S03a). Two Cruz Missiles leave the ground 3 m up at 12 m/s with 6 m/s of climb, one tipped 25° onto its right side (left side up), one 25° onto its left. While airborne the player steers into the tilt to start it rolling level, then the other way to stop the roll (DRIVE x rolls the body in the air), and each lands level on its wheels. Since owner playtest 1 the car also levels itself in the air (air_level_torque, R122's arcade control), so no input lands level too; what the stick still does in the air is turn the car (the baselines differ in yaw rate).",
  "map": "maps/greybox-loop.json",
  "seed": 13,
  "ticks": 300,
@@ -29,8 +29,8 @@
  "baselines": {
   "kinds": ["no-input", "mash", "hold"],
   "differ": [
-   {"car": 0, "metric": "landingUpY", "by": 0.02},
-   {"car": 1, "metric": "landingUpY", "by": 0.02}
+   {"car": 0, "metric": "maxYawRateDegS", "by": 5.0},
+   {"car": 1, "metric": "maxYawRateDegS", "by": 5.0}
   ]
  }
 }

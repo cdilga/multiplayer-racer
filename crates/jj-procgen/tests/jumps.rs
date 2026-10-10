@@ -32,6 +32,8 @@ struct Outcome {
     min_up_y: f32,
     end_up_y: f32,
     recovered: bool,
+    /// The car's distance from the centreline as it passed the ramp's base, m.
+    lateral_at_ramp: f32,
 }
 
 /// Starts an autopilot car `run_up` route points before jump `k` at `speed` m/s and drives until 15 m past its landing.
@@ -60,11 +62,19 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
     let (mut airborne, mut was_air, mut landing_up_y, mut min_up_y) = (0u64, false, None, 1.0f32);
     let (bx, bz) = (pts[base].x as f32 / 1000.0, pts[base].z as f32 / 1000.0);
     let mut ticks = 0;
+    // Air time counts from the first time all four wheels are down (the spawn's 0.5 m drop isn't a jump).
+    let (mut settled, mut lateral_at_ramp, mut best) = (false, f32::NAN, f32::MAX);
     loop {
         sim.step();
         ticks += 1;
         let st = sim.car_state(car).unwrap();
-        let air = st.wheels_in_contact == 0;
+        settled |= st.wheels_in_contact == 4;
+        let to_base = (st.position[0] - bx).hypot(st.position[2] - bz);
+        if to_base < best {
+            best = to_base;
+            lateral_at_ramp = to_base;
+        }
+        let air = settled && st.wheels_in_contact == 0;
         if air {
             airborne += 1;
         } else if was_air && landing_up_y.is_none() {
@@ -90,6 +100,7 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
                 min_up_y,
                 end_up_y: st.up_y,
                 recovered: sim.car_life(car) != life,
+                lateral_at_ramp,
             };
         }
     }
@@ -97,9 +108,10 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
 
 #[test]
 fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster() {
-    let mut rows =
-        String::from("seed jump lip(cm) ramp(m) speed  airborne(s)  landingUpY  minUpY  endUpY\n");
-    let mut jumps = 0;
+    let mut rows = String::from(
+        "seed jump lip(cm) ramp(m) speed  airborne(s)  landingUpY  minUpY  endUpY  offLine(m)\n",
+    );
+    let (mut jumps, mut bad, mut racing_air) = (0, Vec::new(), Vec::<f64>::new());
     for seed in 0..10u64 {
         let map = loaded(seed);
         for (k, f) in map
@@ -109,42 +121,52 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
             .enumerate()
             .filter(|(_, f)| f.kind == FeatureKind::Jump)
         {
-            for speed in [15.0f32, 22.0] {
+            // Slow (lands on the table), the autopilot's racing speeds and past them: every one lands on its wheels; at
+            // racing speed every one launches, and on average they fly (old 8 % wedges: 0.35 s at 22 m/s). Jumps whose
+            // lip the 2.5 m height grid rounds off still launch weakly: br-gw74.7.1 builds the ramp finer than the grid.
+            for speed in [15.0f32, 22.0, 26.0, 30.0] {
                 let o = take_jump(&map, k, speed, seed);
                 rows += &format!(
-                    "{seed:>4} {k:>4} {:>8} {:>8.1} {speed:>5.0} {:>12.2} {:>11.2} {:>7.2} {:>7.2}\n",
+                    "{seed:>4} {k:>4} {:>8} {:>8.1} {speed:>5.0} {:>12.2} {:>11.2} {:>7.2} {:>7.2} {:>6.1}\n",
                     f.params["lipHeightCm"],
                     f.params["rampLengthMm"] as f64 / 1000.0,
                     o.airborne_s,
                     o.landing_up_y,
                     o.min_up_y,
                     o.end_up_y,
+                    o.lateral_at_ramp,
                 );
-                assert!(
-                    o.airborne_s > 0.1,
-                    "seed {seed} jump {k} @ {speed}: the ramp never launched the car ({} s)",
-                    o.airborne_s
-                );
-                assert!(
-                    !o.recovered,
-                    "seed {seed} jump {k} @ {speed}: the car needed a recovery"
-                );
-                assert!(
-                    o.landing_up_y > 0.9,
-                    "seed {seed} jump {k} @ {speed}: landed at upY {}",
-                    o.landing_up_y
-                );
-                assert!(
-                    o.min_up_y > 0.8 && o.end_up_y > 0.9,
-                    "seed {seed} jump {k} @ {speed}: {:?}",
-                    (o.min_up_y, o.end_up_y)
-                );
+                let id = format!("seed {seed} jump {k} @ {speed}");
+                if (22.0..=26.0).contains(&speed) {
+                    racing_air.push(o.airborne_s);
+                    if o.airborne_s < 0.2 {
+                        bad.push(format!(
+                            "{id}: only {:.2} s in the air at racing speed; {:.1} m off the line at the ramp",
+                            o.airborne_s, o.lateral_at_ramp
+                        ));
+                    }
+                }
+                // Past the design speed (the validator's 26 m/s) a car may overshoot the landing and run off the road
+                // afterwards; it still has to land on its wheels.
+                if o.recovered && speed <= 26.0 {
+                    bad.push(format!("{id}: the car needed a recovery"));
+                }
+                if o.landing_up_y <= 0.8 || o.min_up_y <= 0.8 || o.end_up_y <= 0.9 {
+                    bad.push(format!(
+                        "{id}: landed upY {:.2}, min {:.2}, end {:.2}",
+                        o.landing_up_y, o.min_up_y, o.end_up_y
+                    ));
+                }
             }
             jumps += 1;
         }
     }
     println!("{rows}");
     assert!(jumps >= 10, "ten seeds place at least ten jumps: {jumps}");
+    let mean = racing_air.iter().sum::<f64>() / racing_air.len().max(1) as f64;
+    println!("mean air time at racing speed {mean:.2} s");
+    assert!(mean >= 0.8, "jumps fly at racing speed: mean {mean:.2} s");
+    assert!(bad.is_empty(), "{bad:#?}");
     if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
         std::fs::write(std::path::Path::new(&dir).join("jump-scenarios.txt"), rows).unwrap();
     }

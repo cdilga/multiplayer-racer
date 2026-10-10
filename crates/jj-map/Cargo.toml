@@ -10,6 +10,8 @@ repository.workspace = true
 
 [dependencies]
 jj-types.workspace = true
+# Jump flight for the landability rule: libm, so procgen sizes landings identically natively and in WASM.
+libm.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 postcard.workspace = true

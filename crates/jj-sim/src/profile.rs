@@ -152,6 +152,12 @@ pub struct Tuning {
     /// Airborne only (no wheel in contact): torque at full stick, N·m. DRIVE y pitches, DRIVE x rolls.
     pub air_pitch_torque: f32,
     pub air_roll_torque: f32,
+    /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
+    #[serde(default)]
+    pub air_level_torque: f32,
+    /// … damped on its pitch and roll rate (N·m·s per rad/s).
+    #[serde(default)]
+    pub air_level_damping: f32,
     pub surfaces: SurfaceGrip,
     /// Part health and the damage episodes (plan §6.3, R86, P1-S04a).
     #[serde(default)]

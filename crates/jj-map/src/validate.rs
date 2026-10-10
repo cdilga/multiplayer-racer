@@ -26,6 +26,19 @@ pub mod limits {
     pub const MIN_BYPASS_WIDTH_MM: f64 = 4_000.0;
     pub const MIN_RAMP_LENGTH_MM: i64 = 3_000;
     pub const MAX_LIP_HEIGHT_CM: i64 = 300;
+    /// A jump is landable when a car leaving its lip at this speed comes down inside its landing (owner playtest 1):
+    /// the autopilot's top speed, so a racing line never flies past the reserved landing into whatever comes next.
+    pub const JUMP_DESIGN_SPEED_MPS: f64 = 26.0;
+
+    /// How far (m) past the end of its ramp a car leaving a jump's lip at `speed_mps` comes back down to the road's
+    /// level: a ballistic flight from the lip's height at the ramp's angle (no drag, g = 9.81).
+    pub fn jump_flight_m(lip_cm: i64, ramp_mm: i64, speed_mps: f64) -> f64 {
+        let (h, l) = (lip_cm as f64 / 100.0, (ramp_mm as f64 / 1000.0).max(1e-6));
+        let a = libm::atan(h / l);
+        let (vx, vy) = (speed_mps * libm::cos(a), speed_mps * libm::sin(a));
+        let t = (vy + libm::sqrt(vy * vy + 2.0 * 9.81 * h)) / 9.81;
+        vx * t
+    }
     /// A kerb across the road stays drivable.
     pub const MAX_KERB_HEIGHT_CM: i64 = 20;
     /// Start grid: rows and columns no tighter than a car needs.
@@ -528,6 +541,18 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                         &at,
                         format!(
                             "landing {land_len} mm × {land_w} mm: needs ≥ {MIN_LANDING_LENGTH_MM} mm long and at least the ramp's width"
+                        ),
+                    );
+                }
+                let flight = jump_flight_m(lip, ramp_len, JUMP_DESIGN_SPEED_MPS);
+                if flight * 1000.0 > land_len as f64 {
+                    add(
+                        &mut v,
+                        Rule::LandingEnvelope,
+                        &at,
+                        format!(
+                            "a car at {JUMP_DESIGN_SPEED_MPS} m/s flies {flight:.1} m past the ramp, beyond its {:.1} m landing",
+                            land_len as f64 / 1000.0
                         ),
                     );
                 }

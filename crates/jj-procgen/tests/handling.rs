@@ -128,7 +128,29 @@ fn a_car_thrown_about_on_generated_roads_never_dives_or_rolls_over() {
     for seed in 1..=6u64 {
         let map = loaded(seed);
         let n = map.map.route.points.len();
-        for at in (0..n).step_by(40) {
+        // Jumps are the jump bank's (tests/jumps.rs): a run that starts within 60 m before a jump or on its landing is
+        // a jump taken, not a turn.
+        let pts = &map.map.route.points;
+        let near_jump = |at: usize| {
+            map.map.features.iter().any(|f| {
+                if f.kind != jj_map::FeatureKind::Jump {
+                    return false;
+                }
+                let base = (0..n)
+                    .min_by_key(|&i| {
+                        let (dx, dz) = (
+                            i64::from(pts[i].x - f.pose.x),
+                            i64::from(pts[i].z - f.pose.z),
+                        );
+                        dx * dx + dz * dz
+                    })
+                    .unwrap();
+                let len = (f.params["rampLengthMm"] + f.params["landingLengthMm"]) as usize / 2_500;
+                let ahead = (base + n - at) % n; // points from `at` forward to the base
+                ahead <= 24 || (at + n - base) % n <= len
+            })
+        };
+        for at in (0..n).step_by(40).filter(|&at| !near_jump(at)) {
             for speed in [15.0f32, 25.0, 35.0] {
                 // The road alone first: where it bottoms or flips a car going straight (a crest or jump taken too fast),
                 // that's the jump's landing envelope (br-gw74.7), not the turn's; the turns are judged where it doesn't.

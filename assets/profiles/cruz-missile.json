@@ -2584,6 +2584,8 @@
     "wheelie_max_reverse_mps": 0.5,
     "air_pitch_torque": 900.0,
     "air_roll_torque": 1500.0,
+    "air_level_torque": 3200.0,
+    "air_level_damping": 2200.0,
     "surfaces": {
       "tarmac": 1.0,
       "packed_dirt": 0.8,

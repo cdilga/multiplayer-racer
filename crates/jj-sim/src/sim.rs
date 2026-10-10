@@ -1173,6 +1173,24 @@ impl Sim {
                     self.ledger += f64::from(ti.dot(b.angvel()));
                     b.apply_torque_impulse(ti, true);
                 }
+                // In the air the car levels itself (arcade, owner playtest 1: a held throttle over a real jump tipped
+                // it onto its nose): a spring toward world-up on pitch and roll, damped, so the stick only biases the
+                // attitude. Its work is authorised in the ledger like the stick's.
+                let up = iso.rotation * Vector::Y;
+                // Only in near-upright flight (a jump), never in a tumble: a car rolled past 45° is the flip assist's.
+                if airborne
+                    && p.tuning.air_level_torque > 0.0
+                    && up.y > core::f32::consts::FRAC_1_SQRT_2
+                {
+                    let tilt = up.cross(Vector::Y);
+                    let w = b.angvel();
+                    let w_tilt = w - Vector::Y * w.dot(Vector::Y);
+                    let ti = (tilt * p.tuning.air_level_torque
+                        - w_tilt * p.tuning.air_level_damping)
+                        * DT;
+                    self.ledger += f64::from(ti.dot(w));
+                    b.apply_torque_impulse(ti, true);
+                }
             }
             // Only a positive engine force wakes a sleeping chassis in Rapier: wake it on any control input.
             if !input.is_neutral()

@@ -78,7 +78,7 @@ gates.sort((a, b) => a.at - b.at);
 
 // The jump: ramp base 20 m into the dirt straight, on the + side, leaving a bypass lane on the − side.
 const jp = pts[idxAt(jumpAtS)];
-const jump = { rampLengthMm: 8000, rampWidthMm: 4500, lipHeightCm: 120, landingLengthMm: 25000, landingWidthMm: 6000 };
+const jump = { rampLengthMm: 8000, rampWidthMm: 4500, lipHeightCm: 120, landingLengthMm: 28000, landingWidthMm: 6000 };
 const jumpLateral = 2.5;
 const jumpEnd = idxAt(jumpAtS + (jump.rampLengthMm + jump.landingLengthMm) / 1000 + 2);
 const jumpStart = idxAt(jumpAtS - 2);
