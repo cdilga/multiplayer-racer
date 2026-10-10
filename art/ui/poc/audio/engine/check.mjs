@@ -725,7 +725,7 @@ try {
   const wanted = schemaLeaves(schema);
   const missing = wanted.filter((p) => !labInfo.paths.includes(p));
   const extra = labInfo.paths.filter((p) => !wanted.includes(p));
-  record('SL1', `every schema field has a lab control, generated from the schema (${wanted.length} fields) and both manifest profiles are in the picker`, missing.length === 0 && extra.length === 0 && labInfo.profiles.length === 2 && labInfo.current === 'cruz-missile', `missing ${missing.join(', ')} extra ${extra.join(', ')}`);
+  record('SL1', `every schema field has a lab control, generated from the schema (${wanted.length} fields) and every manifest profile is in the picker (${manifestFiles.length})`, missing.length === 0 && extra.length === 0 && labInfo.profiles.length === manifestFiles.length && labInfo.current === 'cruz-missile', `missing ${missing.join(', ')} extra ${extra.join(', ')}`);
 
   await SL.evaluate(() => window.__gallery.lab.selectProfile('hay-hauler'));
   await SL.click('#start-btn');
