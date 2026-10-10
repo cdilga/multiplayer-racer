@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 pub const PROFILE: &str = "jj.vehicle-profile.v1";
 /// The Cruz Missile's profile, compiled in: what the host's worker and fixtures without their own use.
 pub const CRUZ_MISSILE_JSON: &str = include_str!("../../../assets/profiles/cruz-missile.json");
+/// The Tradie Ute's profile (`assets/profiles/tradie-ute.json`, br-bwju.2): heavier and torquier than the Cruz.
+pub const TRADIE_UTE_JSON: &str = include_str!("../../../assets/profiles/tradie-ute.json");
 /// Gravity used to size the static sag, m/s² (the world's gravity).
 const G: f32 = 9.81;
 
@@ -162,6 +164,9 @@ pub struct Tuning {
     pub drift_exit_boost_per_s: f32,
     #[serde(default)]
     pub drift_exit_boost_max_s: f32,
+    /// The exit boost's extra drive (like `boost_engine_gain`, which it replaces while it burns if larger; 0 = the meter boost's).
+    #[serde(default)]
+    pub drift_exit_boost_gain: f32,
     /// In the air the car levels itself toward world-up (N·m per radian of tilt, from the sine of the tilt) …
     #[serde(default)]
     pub air_level_torque: f32,
@@ -273,6 +278,11 @@ impl VehicleProfile {
     /// The Cruz Missile (`assets/profiles/cruz-missile.json`).
     pub fn cruz() -> Self {
         Self::from_json(CRUZ_MISSILE_JSON).expect("the compiled-in Cruz Missile profile parses")
+    }
+
+    /// The Tradie Ute (`assets/profiles/tradie-ute.json`).
+    pub fn tradie_ute() -> Self {
+        Self::from_json(TRADIE_UTE_JSON).expect("the compiled-in Tradie Ute profile parses")
     }
 
     /// The hull's axis-aligned box: (min, max).

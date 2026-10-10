@@ -59,6 +59,9 @@ pub struct ActionState {
     pub drift_held_s: f32,
     pub exit_boost_ticks: u32,
     pub exit_boosts: u32,
+    /// The exit boost is banked but waits for the rear tyres to bite again (the drift blend back under half and the rear slipping under `drift_exit_min_slip_deg`): drive
+    /// while the rear is still sliding sideways is lost to the tyres, so the burst starts when the car straightens.
+    pub exit_boost_wait: bool,
 }
 
 impl ActionState {
@@ -75,6 +78,7 @@ impl ActionState {
             drift_held_s: 0.0,
             exit_boost_ticks: 0,
             exit_boosts: 0,
+            exit_boost_wait: false,
         }
     }
 
@@ -91,7 +95,9 @@ impl ActionState {
     ) {
         let t = &p.tuning;
         self.wheelie_ticks = self.wheelie_ticks.saturating_sub(1);
-        self.exit_boost_ticks = self.exit_boost_ticks.saturating_sub(1);
+        if !self.exit_boost_wait {
+            self.exit_boost_ticks = self.exit_boost_ticks.saturating_sub(1);
+        }
         // R120: a held drift banks exit boost; letting the handbrake go after at least `drift_exit_min_s` of it fires a
         // burst of `drift_exit_boost_per_s` seconds per second held (up to `drift_exit_boost_max_s`).
         let real = self.drift > 0.5
@@ -107,6 +113,7 @@ impl ActionState {
                     (self.drift_held_s * t.drift_exit_boost_per_s).min(t.drift_exit_boost_max_s);
                 self.exit_boost_ticks = libm::roundf(s * crate::sim::TICK_HZ as f32) as u32;
                 self.exit_boosts += 1;
+                self.exit_boost_wait = true;
             }
             self.drift_held_s = 0.0;
         }
@@ -115,6 +122,9 @@ impl ActionState {
         } else {
             (self.drift - dt / t.drift_recovery_s).max(0.0)
         };
+        if self.exit_boost_wait && self.drift <= 0.5 && rear_slip_deg < t.drift_exit_min_slip_deg {
+            self.exit_boost_wait = false;
+        }
         // A burst starts from `boost_min_start` of meter and runs while held, down to empty; an empty meter ends it
         // until boost is let go. So holding boost forever is one burst, and boosting again means choosing when
         // (§7.3a "boost-forever isn't the best line").
@@ -125,7 +135,7 @@ impl ActionState {
             && self.armed
             && (self.boost >= t.boost_min_start || (self.boosting && self.boost > 0.0));
         // The exit boost is boost (the same drive, flame and sound), but free: it never drains the meter.
-        self.boosting = metered || self.exit_boost_ticks > 0;
+        self.boosting = metered || (self.exit_boost_ticks > 0 && !self.exit_boost_wait);
         if metered {
             self.boost -= t.boost_drain_per_s * dt;
             if self.boost <= 0.0 {
@@ -176,7 +186,14 @@ pub fn wheel_commands(
         }
     };
     let (engine, braking) = if action.boosting {
-        let gain = 1.0 + t.boost_engine_gain;
+        // The drift-exit burst can drive harder than the meter's boost; whichever is bigger applies.
+        let exit_burning = action.exit_boost_ticks > 0 && !action.exit_boost_wait;
+        let extra = if exit_burning {
+            t.boost_engine_gain.max(t.drift_exit_boost_gain)
+        } else {
+            t.boost_engine_gain
+        };
+        let gain = 1.0 + extra;
         (
             drive(t.max_engine_force * gain, t.max_engine_power_w * gain),
             0.0,
@@ -361,7 +378,24 @@ mod r120_tests {
             a.exit_boost_ticks as f32 / crate::sim::TICK_HZ as f32 > want * 0.9,
             "{a:?}"
         );
-        assert!(a.boosting && a.exit_boosts == 1, "{a:?}");
+        assert!(a.exit_boosts == 1, "{a:?}");
+        // It waits for the rear tyres to bite again (blend under half, no slide), then burns.
+        assert!(a.exit_boost_wait && !a.boosting, "waiting: {a:?}");
+        let ticks = a.exit_boost_ticks;
+        for _ in 0..crate::sim::TICK_HZ / 2 {
+            a.update(&p, DriveInput::default(), 0.0, 15.0, dt);
+        }
+        assert!(!a.exit_boost_wait && a.boosting, "burning: {a:?}");
+        assert!(a.exit_boost_ticks < ticks, "it counts down once it burns");
         assert!(a.boost >= meter, "free: the meter doesn't drain");
+        // Still sliding sideways, it keeps waiting.
+        let mut b = ActionState::new(&p);
+        for _ in 0..crate::sim::TICK_HZ {
+            b.update(&p, drift, 20.0, 15.0, dt);
+        }
+        for _ in 0..crate::sim::TICK_HZ {
+            b.update(&p, DriveInput::default(), 30.0, 15.0, dt);
+        }
+        assert!(b.exit_boost_wait && !b.boosting, "sliding: {b:?}");
     }
 }
