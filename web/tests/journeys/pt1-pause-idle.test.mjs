@@ -29,11 +29,15 @@ closeContextsAfterEach(() => browser);
 const wait = (page, fn, arg, ms = 60_000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
 const frame = (host, endpoint, f) => host.evaluate(([endpoint, f]) => window.__jjTest.input({ type: 'controller', endpoint, frame: f }), [endpoint, f]);
 const sample = (host) => host.evaluate(() => ({ frames: window.__jjRender.stats().frames, tick: window.__jjRender.stats().tick, ...window.__jjRender.idle() }));
+/** Main-thread busy time (CDP Performance TaskDuration, seconds) since the page opened. */
+const busy = async (cdp) => (await cdp.send('Performance.getMetrics')).metrics.find((m) => m.name === 'TaskDuration').value;
 
 test('paused host: no drawing and no ticks while paused; racing resumes after', { timeout: 240_000 }, async () => {
   const host = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   const errors = [];
   host.on('pageerror', (e) => errors.push(e.message));
+  const cdp = await host.context().newCDPSession(host);
+  await cdp.send('Performance.enable');
   await host.goto(`${server.origin}${BASE}host?room&test=live&laps=9`);
   await wait(host, () => window.__jjNet?.code() && window.__jjRoom?.view()?.phase === 'Lobby');
   for (let k = 1; k <= 2; k++) {
@@ -46,8 +50,10 @@ test('paused host: no drawing and no ticks while paused; racing resumes after', 
   await host.waitForTimeout(2000);
 
   const r0 = await sample(host);
+  const rb0 = await busy(cdp);
   await host.waitForTimeout(2000);
   const r1 = await sample(host);
+  const racingBusy = ((await busy(cdp)) - rb0) / 2;
   const racingFps = (r1.frames - r0.frames) / 2;
   assert.ok(r1.tick > r0.tick, 'the race is moving before the pause');
 
@@ -55,13 +61,16 @@ test('paused host: no drawing and no ticks while paused; racing resumes after', 
   await wait(host, () => window.__jjTest.pauseReasons().length > 0, undefined, 10_000);
   await host.waitForTimeout(1000); // the 600 ms settle after the change
   const p0 = await sample(host);
+  const pb0 = await busy(cdp);
   await host.waitForTimeout(5000);
   const p1 = await sample(host);
+  const pausedBusy = ((await busy(cdp)) - pb0) / 5;
   const pausedFps = (p1.frames - p0.frames) / 5;
   assert.ok(p1.held, 'the world is held while paused');
   assert.equal(p1.tick, p0.tick, 'the sim does not tick while paused');
   assert.ok(pausedFps <= 1, `paused drawing is near zero (${pausedFps} fps vs ${racingFps} racing)`);
   assert.ok(p1.skips > p0.skips, 'the frame loop is skipping draws');
+  assert.ok(pausedBusy < racingBusy * 0.25, `the page's main thread mostly idles while paused (${pausedBusy} vs ${racingBusy} s/s)`);
 
   await host.evaluate(() => window.__jjChrome.closeMenu());
   await wait(host, () => window.__jjTest.pauseReasons().length === 0, undefined, 15_000);
@@ -74,5 +83,5 @@ test('paused host: no drawing and no ticks while paused; racing resumes after', 
   const resumedFps = (q1.frames - q0.frames) / 2;
   assert.ok(resumedFps >= racingFps * 0.6, `frames flow again (${resumedFps} fps vs ${racingFps})`);
   assert.deepEqual(errors, []);
-  writeFileSync(`${CAPTURE}/pause-idle.json`, JSON.stringify({ browser: `Playwright Chromium ${browser.version()}`, viewport: '1280x720', racingFps, pausedFps, resumedFps, pausedTicks: p1.tick - p0.tick, skipsWhilePaused: p1.skips - p0.skips }, null, 2));
+  writeFileSync(`${CAPTURE}/pause-idle.json`, JSON.stringify({ browser: `Playwright Chromium ${browser.version()}`, viewport: '1280x720', racingFps, pausedFps, resumedFps, mainThreadBusySecPerSec: { racing: racingBusy, paused: pausedBusy }, pausedTicks: p1.tick - p0.tick, skipsWhilePaused: p1.skips - p0.skips }, null, 2));
 });
