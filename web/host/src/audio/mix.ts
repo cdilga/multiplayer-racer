@@ -19,7 +19,7 @@ export interface LogEntry {
 export type MixState = 'locked' | 'running' | 'blocked' | 'unsupported' | 'failed';
 
 /** Ducking: how far the music and engines fall while the announcer talks, and the ramps. */
-export const DUCK = { music: 0.3, engine: 0.55, attackS: 0.12, releaseS: 0.5 };
+export const DUCK = { music: 0.3, engine: 0.55, sfx: 0.7, attackS: 0.12, releaseS: 0.5 };
 const BASE = { music: 0.55, voice: 1, sfx: 0.9, engine: 0.7 } as const;
 const MUTE_KEY = 'jj-host-audio-muted';
 
@@ -28,6 +28,7 @@ export class Mix {
   state: MixState = 'locked';
   readonly log: LogEntry[] = [];
   private master: GainNode | null = null;
+  private limiter: DynamicsCompressorNode | null = null;
   private buses = new Map<BusName, GainNode>();
   private duckers = new Set<number>();
   private nextDuck = 1;
@@ -71,6 +72,32 @@ export class Mix {
     this.note('mute', { muted: on });
   }
 
+  private recorder: { rec: MediaRecorder; chunks: Blob[] } | null = null;
+
+  /** Starts recording the master output (after the limiter: what the host plays) for the listen-through clips. */
+  startRecording(): boolean {
+    if (!this.ctx || !this.limiter || this.recorder) return false;
+    const dest = this.ctx.createMediaStreamDestination();
+    this.limiter.connect(dest);
+    const rec = new MediaRecorder(dest.stream, { mimeType: 'audio/webm;codecs=opus' });
+    const chunks: Blob[] = [];
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.start(250);
+    this.recorder = { rec, chunks };
+    return true;
+  }
+
+  /** Stops the recording; resolves with the webm/opus bytes. */
+  stopRecording(): Promise<Uint8Array> {
+    const r = this.recorder;
+    this.recorder = null;
+    if (!r) return Promise.resolve(new Uint8Array());
+    return new Promise((resolve) => {
+      r.rec.onstop = async () => resolve(new Uint8Array(await new Blob(r.chunks).arrayBuffer()));
+      r.rec.stop();
+    });
+  }
+
   /** The bus a sound plays into (null until a context exists). */
   bus(name: BusName): GainNode | null {
     return this.buses.get(name) ?? null;
@@ -105,6 +132,7 @@ export class Mix {
         limiter.ratio.value = 12;
         limiter.attack.value = 0.003;
         limiter.release.value = 0.2;
+        this.limiter = limiter;
         this.master.connect(limiter).connect(this.ctx.destination);
         for (const name of ['music', 'voice', 'sfx', 'engine'] as const) {
           const g = this.ctx.createGain();
@@ -177,6 +205,7 @@ export class Mix {
     };
     set('music', DUCK.music);
     set('engine', DUCK.engine);
-    this.note('duck', { down, bus: { music: down ? DUCK.music : 1, engine: down ? DUCK.engine : 1 } });
+    set('sfx', DUCK.sfx);
+    this.note('duck', { down, bus: { music: down ? DUCK.music : 1, engine: down ? DUCK.engine : 1, sfx: down ? DUCK.sfx : 1 } });
   }
 }

@@ -13,6 +13,7 @@
 // sound; the voices only exist while the context runs.
 import { assertProfile, create, createDrivetrain, type Drivetrain, type EngineProfile, type EngineVoice, type Surface } from '../../../shared/audio/engine-synth';
 import type { Mix } from './mix';
+import { MOTION } from './motion';
 
 const profileFiles = import.meta.glob('../../../../assets/audio/engine/*.json', { eager: true, import: 'default' }) as Record<string, unknown>;
 export const PROFILES: Record<string, EngineProfile> = {};
@@ -34,6 +35,11 @@ export interface CarFact {
   /** Loose plus detached parts as a fraction of the ten. */
   damage: number;
   held: boolean;
+  /** Derived on the host from the car record (br-0uqj); absent in scripted facts that predate them. */
+  slip?: number;
+  airborne?: boolean;
+  airS?: number;
+  height?: number;
 }
 
 interface Slot {
@@ -48,7 +54,8 @@ interface Slot {
   score: number;
 }
 
-const SURFACES: Surface[] = ['tarmac', 'dirt', 'gravel'];
+// Ground class 3 (off-track) has the dirt voice here; the motion layer (motion.ts) gives it its own rumble.
+const SURFACES: Surface[] = ['tarmac', 'dirt', 'gravel', 'dirt'];
 /** The voices the budget never goes below, and the most it grows to, however the cost reads. */
 const MIN_VOICES = 4;
 /** Update cost (ms per snapshot) the budget aims to stay under. */
@@ -149,9 +156,10 @@ export class EngineBank {
       const f = s.fact;
       s.voice.set({
         rpm: s.rpm,
-        throttle: f.throttle,
+        // Wheels off the ground, the engine unloads (throttle falls away). Tyre squeal is the motion layer's (it follows slip).
+        throttle: f.airborne ? f.throttle * MOTION.airThrottle : f.throttle,
         boost: f.boosting ? 1 : 0,
-        drift: f.drifting ? 1 : 0,
+        drift: 0,
         surface: SURFACES[f.surface] ?? 'tarmac',
         damage: f.damage,
         gear: s.gear,
@@ -160,6 +168,11 @@ export class EngineBank {
       });
     }
     return created;
+  }
+
+  /** True when the car's engine voice exists (the motion layers share its budget). */
+  isVoiced(car: number): boolean {
+    return this.slots.get(car)?.voice != null;
   }
 
   /** The engines now, for the introspection surface and the scripted-round tests. */

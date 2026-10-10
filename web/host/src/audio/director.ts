@@ -10,6 +10,7 @@ import { SNAPSHOT_CAR, SNAPSHOT_DEBRIS, SNAPSHOT_HEADER } from '../render/snapsh
 import { Announcer } from './announcer';
 import { EngineBank, type CarFact } from './engine';
 import type { Mix } from './mix';
+import { MOTION, MotionBank, MotionTracker, SURFACE_NAMES, type MotionCar } from './motion';
 import { Music, type MusicCue } from './music';
 import type { Sfx } from './sfx';
 
@@ -45,6 +46,11 @@ export class AudioDirector {
   private lastBeep = -1;
   private vy = new Map<number, number>();
   private boosting = new Set<number>();
+  /** Slip, take-off and landing derived from the car records (br-0uqj), and the layers that follow them. */
+  readonly tracker = new MotionTracker();
+  readonly motion: MotionBank;
+  private lastTick = new Map<number, number>();
+  private mstate = new Map<number, { drifting: boolean; driftAt: number; driftEndAt: number; heldS: number; surface: number | undefined; air: boolean; wind: boolean }>();
 
   constructor(
     private mix: Mix,
@@ -56,6 +62,8 @@ export class AudioDirector {
     this.engines = engines ?? new EngineBank(mix);
     this.engines.own = () => new Set(this.room?.seats.filter((s) => s.local && s.car !== null).map((s) => s.car as number) ?? []);
     this.engines.wantOn = (car) => this.engineWanted(car);
+    this.motion = new MotionBank(mix);
+    this.motion.voiced = (car) => this.engines.isVoiced(car);
   }
 
   private carOf(seat: number): number | null {
@@ -262,7 +270,9 @@ export class AudioDirector {
         const state = view.getUint16(at + 6, true);
         if (state === 1 || state === 2) loose.set(view.getUint32(at, true), (loose.get(view.getUint32(at, true)) ?? 0) + 1);
       }
+      const tick = Number(view.getBigUint64(8, true));
       const facts: CarFact[] = [];
+      const motion: MotionCar[] = [];
       for (let i = 0; i < cars; i++) {
         const at = SNAPSHOT_HEADER + i * SNAPSHOT_CAR;
         const car = view.getUint32(at, true);
@@ -281,26 +291,80 @@ export class AudioDirector {
           damage: Math.min(1, (loose.get(car) ?? 0) / 10),
           held: (flags & FLAG_HELD) !== 0,
         };
+        // What the record implies and the sim does not say: slip against the heading, take-off, air time, height.
+        const prevTick = this.lastTick.get(car);
+        this.lastTick.set(car, tick);
+        const m = this.tracker.step(car, prevTick === undefined || tick <= prevTick ? 0 : (tick - prevTick) / 120, view.getFloat32(at + 12, true), [view.getFloat32(at + 20, true), view.getFloat32(at + 24, true), view.getFloat32(at + 28, true), view.getFloat32(at + 32, true)], [vx, vy, vz]);
+        fact.slip = m.slip;
+        fact.airborne = m.airborne;
+        fact.airS = m.airS;
+        fact.height = m.height;
         facts.push(fact);
         this.carFacts(fact, vy, nowMs);
+        motion.push(this.motionCar(fact));
       }
       this.engines.update(facts, nowMs);
+      this.motion.update(motion);
     } catch {
       /* a malformed snapshot is the renderer's to report; audio carries on */
     }
   }
 
-  /** One car's snapshot facts: boost and landing triggers (public so scripted rounds can feed facts the sim hasn't made). */
-  carFacts(f: CarFact, vy: number, _nowMs = performance.now()): void {
+  motionCar(f: CarFact): MotionCar {
+    return { car: f.car, speed: f.speed, drifting: f.drifting, surface: f.surface, slip: f.slip ?? 0, airborne: f.airborne ?? false, airS: f.airS ?? 0, height: f.height ?? 0, held: f.held };
+  }
+
+  /** One car's snapshot facts: drift, boost, take-off, landing and surface triggers (public so scripted rounds can feed facts the sim hasn't made). */
+  carFacts(f: CarFact, vy: number, nowMs = performance.now()): void {
     // A wreck hold ends when the car is let go again: the engine may start.
     if (!f.held && this.wrecked.has(f.car)) this.wrecked.delete(f.car);
+    const id = String(f.car);
+    let m = this.mstate.get(f.car);
+    if (!m) {
+      m = { drifting: false, driftAt: 0, driftEndAt: -1e9, heldS: 0, surface: undefined, air: false, wind: false };
+      this.mstate.set(f.car, m);
+    }
+    const air = f.airborne === true;
+    // Drift: the slide begins (a chirp, the squeal layer takes over) and ends (the held time is what the exit boost scales by).
+    if (f.drifting && !m.drifting) {
+      m.drifting = true;
+      m.driftAt = nowMs;
+      this.sfx.trigger('drift-start', Math.min(1, 0.35 + f.speed / 40 + (f.slip ?? 0) * 0.5), 'car.drift_start', { car: f.car, slip: +(f.slip ?? 0).toFixed(2), speed: +f.speed.toFixed(1) }, id, nowMs);
+    } else if (!f.drifting && m.drifting) {
+      m.drifting = false;
+      m.driftEndAt = nowMs;
+      m.heldS = (nowMs - m.driftAt) / 1000;
+      this.mix.note('motion', { event: 'drift-end', car: f.car, heldS: +m.heldS.toFixed(2) });
+    }
+    // Boost: straightening out of a held drift is R120's exit boost (its own sound, sized by the drift held); any other boost is the whoosh.
     if (f.boosting && !this.boosting.has(f.car)) {
       this.boosting.add(f.car);
-      this.sfx.trigger('boost-whoosh', 0.7, 'car.boost', { car: f.car }, String(f.car));
+      const fromDrift = m.drifting || nowMs - m.driftEndAt <= MOTION.exitWindowS * 1000;
+      if (fromDrift) {
+        const heldS = m.drifting ? (nowMs - m.driftAt) / 1000 : m.heldS;
+        this.sfx.trigger('drift-exit-boost', Math.min(1, Math.max(0.25, heldS / MOTION.exitFullHeldS)), 'car.drift_exit_boost', { car: f.car, heldS: +heldS.toFixed(2) }, id, nowMs);
+      } else this.sfx.trigger('boost-whoosh', 0.7, 'car.boost', { car: f.car }, id, nowMs);
     } else if (!f.boosting) this.boosting.delete(f.car);
+    // Take-off and the wind that follows once the jump is long enough.
+    if (air && !m.air) this.sfx.trigger('takeoff-whoosh', Math.min(1, 0.3 + f.speed / 30), 'car.takeoff', { car: f.car, speed: +f.speed.toFixed(1), vy: +vy.toFixed(1) }, id, nowMs);
+    if (air && !m.wind && (f.airS ?? 0) >= MOTION.windAfterS) {
+      m.wind = true;
+      this.mix.note('motion', { event: 'wind-on', car: f.car, airS: +(f.airS ?? 0).toFixed(2) });
+    }
+    if (!air && m.wind) {
+      m.wind = false;
+      this.mix.note('motion', { event: 'wind-off', car: f.car });
+    }
+    m.air = air;
     // A landing: a fast fall that stops within a snapshot or two (the vertical speed jumps up by 3 m/s or more).
     const prev = this.vy.get(f.car);
-    if (prev !== undefined && prev < -3 && vy - prev > 3) this.sfx.trigger('landing-thud', Math.min(1, -prev / 12), 'car.landing', { car: f.car, fallMps: +(-prev).toFixed(1) }, String(f.car));
+    if (prev !== undefined && prev < -3 && vy - prev > 3) this.sfx.trigger('landing-thud', Math.min(1, -prev / 12), 'car.landing', { car: f.car, fallMps: +(-prev).toFixed(1) }, id, nowMs);
     this.vy.set(f.car, vy);
+    // The ground under the car changed: a transient in the new surface's voice (the rolling layer crossfades by itself).
+    if (m.surface !== undefined && m.surface !== f.surface && !air && !f.held) {
+      const to = SURFACE_NAMES[f.surface] ?? 'tarmac';
+      this.sfx.trigger(`surface-${to}` as 'surface-tarmac', Math.min(1, 0.25 + f.speed / 30), 'car.surface_change', { car: f.car, from: SURFACE_NAMES[m.surface] ?? 'tarmac', to, speed: +f.speed.toFixed(1) }, id, nowMs);
+    }
+    m.surface = f.surface;
   }
 }

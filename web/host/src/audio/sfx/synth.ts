@@ -12,6 +12,13 @@ export const SFX_KINDS = [
   'wreck-crunch',
   'landing-thud',
   'boost-whoosh',
+  'drift-start', // the tyres let go: a short chirp as the slide begins (br-0uqj)
+  'drift-exit-boost', // R120: a gear-drop blip and a 1.2 s exhaust roar, grows with the drift held
+  'takeoff-whoosh', // the wheels leave the ground: a rising whoosh
+  'surface-tarmac', // the ground under a car changed: a short transient in the new surface's voice
+  'surface-dirt',
+  'surface-gravel',
+  'surface-off-track',
   'oi-honk',
   'cone-thunk',
   'join-chime',
@@ -103,6 +110,37 @@ const RECIPES: Record<SfxKind, (g: G) => void> = {
   },
   'boost-whoosh'(g) {
     burst(g, { hz: 400, q: 1.2, peak: 0.5, attack: 0.18, decay: 0.55, sweepTo: 3200 });
+  },
+  'drift-start'(g) {
+    burst(g, { hz: 2600, q: 6, peak: 0.18 + 0.2 * g.k, attack: 0.01, decay: 0.22, sweepTo: 1500 });
+    tone(g, { type: 'sine', hz: 1900, to: 1250, peak: 0.05 + 0.06 * g.k, attack: 0.01, decay: 0.2 });
+  },
+  'drift-exit-boost'(g) {
+    // Drop a gear: a short blip down in pitch, then the roar: a low saw growl climbing as filtered noise opens up, 1.2 s.
+    tone(g, { type: 'square', hz: 460, to: 300, peak: 0.16, attack: 0.004, decay: 0.09 });
+    tone({ ...g, t: g.t + 0.1 }, { type: 'square', hz: 330, to: 215, peak: 0.14, attack: 0.004, decay: 0.09 });
+    const r = { ...g, t: g.t + 0.2 };
+    burst(r, { type: 'lowpass', hz: 300, q: 1.5, peak: 0.45 + 0.3 * g.k, attack: 0.12, decay: 1.2, sweepTo: 1800 + 1400 * g.k });
+    tone(r, { type: 'sawtooth', hz: 85, to: 190 + 60 * g.k, peak: 0.22 + 0.2 * g.k, attack: 0.15, decay: 1.2 });
+    tone(r, { type: 'square', hz: 42, to: 95, peak: 0.16, attack: 0.15, decay: 1.2 });
+  },
+  'takeoff-whoosh'(g) {
+    burst(g, { hz: 500, q: 0.9, peak: 0.28 + 0.3 * g.k, attack: 0.05, decay: 0.4, sweepTo: 2600 });
+    tone(g, { type: 'sine', hz: 140, to: 60, peak: 0.12 + 0.12 * g.k, decay: 0.25 });
+  },
+  'surface-tarmac'(g) {
+    tone(g, { type: 'sine', hz: 110, to: 80, peak: 0.1 + 0.15 * g.k, decay: 0.12 });
+  },
+  'surface-dirt'(g) {
+    burst(g, { type: 'lowpass', hz: 700, peak: 0.16 + 0.25 * g.k, decay: 0.14 });
+    burst({ ...g, t: g.t + 0.03 }, { hz: 1800, q: 1, peak: 0.1 + 0.15 * g.k, decay: 0.08 });
+  },
+  'surface-gravel'(g) {
+    for (let i = 0; i < 6; i++) burst({ ...g, t: g.t + i * 0.018 }, { hz: 2600 + 500 * (i % 3), q: 3, peak: (0.14 + 0.2 * g.k) * (1 - i * 0.12), decay: 0.04 });
+  },
+  'surface-off-track'(g) {
+    burst(g, { type: 'lowpass', hz: 240, peak: 0.25 + 0.35 * g.k, attack: 0.02, decay: 0.3 });
+    tone(g, { type: 'sine', hz: 70, to: 45, peak: 0.12 + 0.2 * g.k, decay: 0.25 });
   },
   'oi-honk'(g) {
     const t = g.t;

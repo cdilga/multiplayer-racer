@@ -8,6 +8,7 @@ import { AudioDirector } from './director';
 import { benchEngines, PROFILES, type CarFact } from './engine';
 import { Mix } from './mix';
 import { Music } from './music';
+import { encodeSnapshot, snapshotBytes, type CarPose } from '../render/snapshot';
 import { Sfx } from './sfx';
 import { renderSfx, SFX_KINDS, type SfxKind } from './sfx/synth';
 
@@ -59,6 +60,25 @@ export function mountAudio(client: SimClient, doc: Document = document): AudioHa
     clear: () => (mix.log.length = 0),
     state: () => ({ mix: mix.state, muted: mix.isMuted, ducked: mix.ducked, music: music.current, sfxPeakVoices: sfx.peakVoices, sfxDropped: sfx.dropped, engineBudget: director.engines.budget, engineCostMs: +director.engines.costMs.toFixed(3), engineBuildMs: +director.engines.buildMs.toFixed(2), decodeFailures: [...announcer.failed] }),
     engines: () => director.engines.engines(),
+    /** Motion layers per car (squeal, rolling, wind levels and the facts behind them), br-0uqj. */
+    motion: () => director.motion.levels(),
+    startRecording: () => {
+      mix.note('record', { state: 'start' });
+      return mix.startRecording();
+    },
+    /** Stops the recording; the webm/opus bytes as base64 (the listen-through clips). */
+    async stopRecording() {
+      const b = await mix.stopRecording();
+      let s = '';
+      for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+      return btoa(s);
+    },
+    /** Scripted cars as a JJS1 snapshot would carry them (pose, velocity, flags), through the same decoder as the worker's. `at` is a virtual clock (ms). */
+    feedCars: (tick: number, cars: CarPose[], at?: number) => {
+      const buf = new ArrayBuffer(snapshotBytes(cars.length));
+      encodeSnapshot(buf, tick, cars);
+      director.onSnapshot(new DataView(buf), at);
+    },
     captions: () => announcer.captions.slice(),
     captionShown: () => doc.querySelector('#jj-caption')?.textContent ?? '',
     variants: () => VARIANTS.map((v) => ({ moment: v.moment, variant: v.variant, trigger: v.trigger, caption: v.caption, ogg: Boolean(v.ogg), m4a: Boolean(v.m4a) })),
@@ -74,6 +94,7 @@ export function mountAudio(client: SimClient, doc: Document = document): AudioHa
     feedFacts: (facts: CarFact[], vys: number[] = []) => {
       facts.forEach((f, i) => director.carFacts(f, vys[i] ?? 0));
       director.engines.update(facts);
+      director.motion.update(facts.map((f) => director.motionCar(f)));
     },
     useProfile: (id: string) => (director.engines.profileOf = () => id),
     gains: () => Object.fromEntries((['music', 'voice', 'sfx', 'engine'] as const).map((b) => [b, +(mix.bus(b)?.gain.value ?? 0).toFixed(3)])),
