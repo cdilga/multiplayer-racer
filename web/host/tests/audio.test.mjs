@@ -302,7 +302,8 @@ test('A05: a scripted 8-car round: engines follow rpm, throttle, boost and surfa
   // Wreck stops the engine (R103), and it starts again when the hold ends.
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_FL', health: 0 }), joined[0].car);
   await page.evaluate((c) => window.__jjTest.command({ cmd: 'damage', car: c, part: 'wheel_RR', health: 0 }), joined[0].car);
-  await page.evaluate(() => window.__jjTest.step(30));
+  // A lost wheel wrecks the car once its grace runs out (R121: 2 s, 240 ticks).
+  await page.evaluate(() => window.__jjTest.step(250));
   await page.waitForTimeout(400);
   let log = await page.evaluate(() => window.__jjAudio.log('engine'));
   assert.ok(log.some((l) => l.car === joined[0].car && l.ignition === false), `the wrecked car's engine stopped: ${JSON.stringify(log.slice(-4))}`);

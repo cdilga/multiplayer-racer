@@ -276,3 +276,13 @@ not feel targets.
   A pull held longer costs more and isn't repaid more, so late and held releases lose; an early one gets nothing.
 - Trap: the "from rest" duel looks like it needs a big launch; the cost it has to beat is the pull's own duration, so the reward
   is a multiple of that cost, not a magic number.
+
+## 2026-10-10 · Determinism traps found by the duel parity lane
+- **A value that feeds the physics must come from libm**, even if it was written for observers. `car_state().heading`
+  used std `atan2`; R125's rolling respawn started feeding it back into the car's velocity and the duel parity lane
+  (native vs WASM full-state hashes) split on `drift-boost-chain.botched` (a spin, an autopilot Recover, a roll). Now
+  `car_state` and `route_spawn` use `libm::atan2f`. `sqrt` is exactly rounded and safe; trig, `pow` and `exp` aren't.
+- **CI's browser runners are several times slower than eris** (a G07 test: 77 s there, 15 s on eris). Long journeys that
+  click after a heavy screen (8 tiles, a 12-player results screen) have timed out in Playwright's "performing click
+  action" while passing on the Mac and eris; those clicks take a 120 s timeout. If one still hangs, the page's main
+  thread is blocked: profile it before widening anything.

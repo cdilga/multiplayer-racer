@@ -277,7 +277,9 @@ test('JN5: mixed controllers join and leave through every phase, growing to 12 a
   // One phone leaves in the Intermission itself; the results screen counts down to the next round, and on a slow host
   // six leaves outlast it (run 1656), so the host takes the room back to the Lobby next and the rest leave there.
   await leave(host, phones[2]); // Bazza
-  await host.getByRole('button', { name: 'Return to lobby' }).click();
+  // CI's shared runners are several times slower than a host: this click has waited out 30 s in "performing click
+  // action" there (runs 2839-2869) while passing on the Mac and eris; give it the slow host's time.
+  await host.getByRole('button', { name: 'Return to lobby' }).click({ timeout: 120_000 });
   await wait(host, () => window.__jjRoom.view().phase === 'Lobby');
   for (const p of phones.slice(3, 8)) await leave(host, p); // … Thommo; Jonesy and Sheila stay
   await wait(host, () => window.__jjRoom.view().seats.length === 4); // Jonesy, Sheila and both key clusters

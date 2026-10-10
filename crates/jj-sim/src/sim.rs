@@ -939,13 +939,15 @@ impl Sim {
                 if let Some(st) = self.car_state(CarId(car)) {
                     let v = crate::race::RESPAWN_ROLL_FRACTION
                         * self.path.planned_speed(st.position[0], st.position[2]);
-                    let (sin, cos) = (libm::sinf(st.heading), libm::cosf(st.heading));
+                    // `heading` is libm's (car_state): it feeds the physics here, so native and WASM step bit for bit.
+                    let heading = st.heading;
+                    let (sin, cos) = (libm::sinf(heading), libm::cosf(heading));
                     // Through teleport, at the pose it's at: the speed it's given is setup, booked in the ledger.
                     let pose = SpawnPose {
                         x: st.position[0],
                         y: st.position[1],
                         z: st.position[2],
-                        heading: st.heading,
+                        heading,
                     };
                     self.teleport(CarId(car), pose, 0.0, [v * sin, 0.0, v * cos]);
                     self.protect(CarId(car));
@@ -1885,7 +1887,8 @@ impl Sim {
             angvel: [w.x, w.y, w.z],
             forward_speed: v.dot(fwd),
             up_y: up.y,
-            heading: fwd.x.atan2(fwd.z),
+            // libm, not std: the respawn roll (R125) steps the physics from it, and native and WASM must agree.
+            heading: libm::atan2f(fwd.x, fwd.z),
             wheels_in_contact: c
                 .vehicle
                 .wheels()
@@ -2121,7 +2124,7 @@ pub fn route_spawn(map: &LoadedMap, index: usize, lateral: f32, lift: f32) -> Sp
         x: a.x as f32 / 1000.0 + nx * lateral,
         y: a.y as f32 / 1000.0 + lift,
         z: a.z as f32 / 1000.0 + nz * lateral,
-        heading: dx.atan2(dz),
+        heading: libm::atan2f(dx, dz),
     }
 }
 

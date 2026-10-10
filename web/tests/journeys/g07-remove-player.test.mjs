@@ -169,7 +169,7 @@ test('G07: the pause menu at eight players on a phone-sized host lists everyone 
     for (let k = 1; k <= 8; k++) await frame(host, `syn${k}`, { ready: true });
     await wait(host, () => window.__jjRoom.view().phase === 'Running', null, 120_000);
     await host.evaluate(() => window.__jjTest.command({ cmd: 'autopilot', on: true }));
-    await host.locator('[data-act=menu]').click();
+    await host.locator("[data-act=menu]").click({ timeout: 120_000 }); // 8 tiles on a slow CI runner: see jn5 (runs 2839-2869)
     await wait(host, () => document.querySelectorAll('[data-players] li').length === 8);
     assert.equal(await host.locator('[data-players] [data-act=ask-remove]').count(), 8);
     await host.screenshot({ path: `${CAPTURE}/menu-race-8@phone.jpg`, type: 'jpeg', quality: 80 });
