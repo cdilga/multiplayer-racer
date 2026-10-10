@@ -1,7 +1,11 @@
 # P1-C13 visual self-review (R119: one join journey)
 
 Captured by `JJ_CAPTURE_DIR=<dir> node --test web/tests/journeys/c13-one-join.test.mjs` (headless Chromium, SwiftShader, emulated
-Gamepad API and real key events). Every image was looked at; the defects found and fixed are listed at the end.
+Gamepad API and real key events).
+
+## Looked at
+
+Every image below was opened and looked at (PearlPond re-checked the race chip and the phone portrait).
 
 | Image | What it shows |
 |---|---|
@@ -26,12 +30,6 @@ Gamepad API and real key events). Every image was looked at; the defects found a
    landscape, 94% up to 360 px portrait) and its buttons only take touches themselves.
 4. The TV's lobby did not repaint while a pad stayed unplugged; its repaint key now includes the unplugged seconds.
 
-## Not shown (superseded: the race chip is now captured, see the end)
-
-The in-race TV tile chip ("Unplugged Ns" in the per-tile HUD, `web/host/src/round/hud.ts`) is covered by code and the lobby
-capture only; no race-screen capture was taken (the journeys run the host in lobby and free-drive modes). Real devices:
-`ev:owner`, P1-Q02.
-
 ## Added after the first review
 
 - `c13-tv-race-unplugged-chip.png`: a real two-car race on the TV, pad 1 unplugged. Its tile carries an orange "Unplugged 4s" chip
@@ -39,3 +37,12 @@ capture only; no race-screen capture was taken (the journeys run the host in lob
   "Not shown" item above.
 - `c13-laptop-add-a-player.png`: "Add a player" tapped on a laptop's join card: the hint becomes a saffron prompt to press a pad
   button or a cluster key, with Cancel. The join card is untouched (no second touch player, R65).
+
+## Remaining defects
+
+- Portrait phone (`c13-phone-with-pad-portrait.png`): the tutorial card is drawn over the "Turn sideways" prompt. It predates this
+  bead; filed as br-2cy4.
+
+## Not covered
+
+- Real devices (`ev:owner`): the P1-Q02 checklist row. WebKit and a real TV were not captured.
