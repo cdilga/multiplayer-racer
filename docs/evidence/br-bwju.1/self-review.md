@@ -14,4 +14,9 @@ Car too small in the stage: camera moved closer. Everything else rendered as int
 
 ## Remaining defects
 - Detached parts' resting poses are approximate (placed beside the car, not simulated); the real states are in the captured strip on the review page.
-- Not run on the deployed preview or a real phone; the car rotates by default (Spin toggles it).
+- The car rotates by default (Spin toggles it).
+
+## Not covered
+
+- Real phones and WebKit. The deployed page answers (https://jammers-preview.dilger.dev/poc/vehicles/, roster.json lists
+  cruz-missile and tradie-ute) but was not re-captured there.
