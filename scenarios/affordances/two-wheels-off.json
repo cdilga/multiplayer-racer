@@ -1,6 +1,6 @@
 {
  "scenario": "two-wheels-off",
- "what": "\u00a77.3a 'lose the car with a detached wheel' (P1-S04c, amended by R121 2026-10-10: one wheel is enough, and the car gets a grace; the row keeps P1-S04c's name): a car at 12 m/s on the main straight, a little throttle, loses its front left wheel at 0.5 s (tick 60 of 120 Hz). It drives on for the profile's wheel_loss_respawn_s (2 s), still moving and upright, unwrecked; then it is wrecked: every remaining part pops off as debris, its chassis stays on the track as a husk (a dynamic body), and the player is back at their anchor, upright on a fresh intact car with the same identity, after the 2 s hold. Baselines: no input and mashing wreck it just the same, so what differs is the deliberate run driving the fresh car off its anchor again once the hold is over.",
+ "what": "\u00a77.3a 'lose the car with a detached wheel' (P1-S04c, amended by R121 2026-10-10: one wheel is enough, and the car gets a grace; the row keeps P1-S04c's name): a car at 12 m/s on the main straight, a little throttle, loses its front left wheel at 0.5 s (tick 60 of 120 Hz). It drives on for the profile's wheel_loss_respawn_s (2 s), still moving and upright, unwrecked; then it is wrecked: every remaining part pops off as debris, its chassis stays on the track as a husk (a dynamic body), and the player is back at their anchor, upright on a fresh intact car with the same identity, after a 1 s hold, rolling off it (R125). Baselines: no input and mashing wreck it just the same, so what differs is the deliberate run driving the fresh car off its anchor again once the hold is over.",
  "map": "maps/greybox-loop.json",
  "seed": 43,
  "ticks": 960,
@@ -79,8 +79,8 @@
   {
    "car": 0,
    "metric": "travel",
-   "min": 0,
-   "max": 12
+   "min": 5,
+   "max": 80
   }
  ],
  "baselines": {

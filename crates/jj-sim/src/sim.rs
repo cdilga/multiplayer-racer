@@ -933,6 +933,24 @@ impl Sim {
                 self.teleport(CarId(car), pose, 0.0, [0.0; 3]);
                 self.protect(CarId(car));
             }
+            // R125: the hold is over, the car rolls off along its heading at a fraction of the planned speed there, and
+            // its spawn protection (ghosted for cars) runs again from now.
+            Effect::Roll { car } => {
+                if let Some(st) = self.car_state(CarId(car)) {
+                    let v = crate::race::RESPAWN_ROLL_FRACTION
+                        * self.path.planned_speed(st.position[0], st.position[2]);
+                    let (sin, cos) = (libm::sinf(st.heading), libm::cosf(st.heading));
+                    // Through teleport, at the pose it's at: the speed it's given is setup, booked in the ledger.
+                    let pose = SpawnPose {
+                        x: st.position[0],
+                        y: st.position[1],
+                        z: st.position[2],
+                        heading: st.heading,
+                    };
+                    self.teleport(CarId(car), pose, 0.0, [v * sin, 0.0, v * cos]);
+                    self.protect(CarId(car));
+                }
+            }
             Effect::Ghost { car } => {
                 // A protected car turns ghost (not solid) when its protection ends.
                 if self

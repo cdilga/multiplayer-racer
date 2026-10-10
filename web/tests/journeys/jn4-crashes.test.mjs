@@ -190,11 +190,11 @@ test('JN4: four controllers crash head-on, T-bone and side-swipe: parts go loose
   const debrisSettled = debrisOfPieces(settled);
 
   // Nobody stays stuck: every controller holds DRIVE forward. Each car drives away, or wrecks and is back at its anchor in
-  // about 2 s (the respawn hold). The room never pauses meanwhile.
+  // about 1 s (the respawn hold, R125), rolling off it. The room never pauses meanwhile.
   const da = scenario.driveAway;
   // A car still under 3 m of travel when `handToAutopilotAfterTicks` are up (two cars nose to nose with a fallen bumper between
   // them can't both push through) goes to the autopilot, which presses Recover after 3 s stuck: it respawns at its anchor
-  // after the 2 s hold. Same rule as the native calibration.
+  // after the 1 s hold (R125). Same rule as the native calibration.
   const handed = await page.evaluate(
     async ({ da, endpoints, cars, at0 }) => {
       const s = window.__jjTest;

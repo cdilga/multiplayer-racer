@@ -123,6 +123,28 @@ impl Path {
     fn ahead(&self, a: usize, b: usize) -> f32 {
         (self.s[b] - self.s[a]).rem_euclid(self.total)
     }
+
+    /// The speed the autopilot plans at (x, z) from a standing start: the tightest curvature within its braking horizon
+    /// at full speed sets it, as `drive` does (R125's rolling respawn starts from a fraction of it).
+    pub fn planned_speed(&self, x: f32, z: f32) -> f32 {
+        let n = self.n();
+        let idx = self.nearest(x, z);
+        let horizon = MAX_SPEED * MAX_SPEED / (2.0 * PLAN_BRAKE);
+        let (mut k_max, mut p) = (0.0f32, idx);
+        while self.ahead(idx, p) <= horizon {
+            k_max = k_max.max(self.curvature[p]);
+            p = (p + 1) % n;
+            if p == idx {
+                break;
+            }
+        }
+        if k_max > 1e-4 {
+            SKILL * libm::sqrtf(LATERAL_GRIP / k_max)
+        } else {
+            MAX_SPEED
+        }
+        .clamp(MIN_SPEED, MAX_SPEED)
+    }
 }
 
 /// What the car looks like to the autopilot.

@@ -145,12 +145,18 @@ fn out_of_bounds_always_recovers() {
     ];
     for (k, (pose, v)) in throws.into_iter().enumerate() {
         s.place_car(car, pose, 0.0, v);
-        steps(&mut s, 5 * S);
+        // Respawned within 5 s; then (R125) it sits at its anchor for the hold, which is where it's checked.
+        let mut waited = 0;
+        while respawns(&s, 0, Respawned::OutOfBounds) < k + 1 && waited < 5 * S {
+            s.step();
+            waited += 1;
+        }
         assert_eq!(
             respawns(&s, 0, Respawned::OutOfBounds),
             k + 1,
             "throw {k} wasn't recovered"
         );
+        steps(&mut s, S / 2);
         let st = s.car_state(car).unwrap();
         assert!(
             !s.race().course.out_of_bounds(st.position),
@@ -165,6 +171,13 @@ fn out_of_bounds_always_recovers() {
         assert!(
             (st.position[0] - anchor.x).hypot(st.position[2] - anchor.z) < 1.0,
             "throw {k}: not at the anchor"
+        );
+        // After the hold it rolls off (R125) and stays in bounds.
+        steps(&mut s, 2 * S);
+        let st = s.car_state(car).unwrap();
+        assert!(
+            !s.race().course.out_of_bounds(st.position),
+            "throw {k}: rolled out of bounds"
         );
     }
     assert_eq!(
@@ -405,7 +418,7 @@ fn finished_cars_are_ghosts_to_racers() {
 }
 
 #[test]
-fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
+fn recover_needs_a_slow_or_inverted_car_and_holds_it_then_rolls_it_off() {
     let map = greybox();
     let mut s = sim(&map, 7);
     let car = s.spawn_car(route_spawn(&map, 20, 0.0, 0.6));
@@ -445,13 +458,16 @@ fn recover_needs_a_slow_or_inverted_car_and_holds_it_for_2_s() {
             },
         );
         assert!(s.race().is_held(0, s.tick()));
+        assert!(
+            s.car_state(car).unwrap().linvel[0].abs() < 0.5,
+            "no controls during the hold"
+        );
         s.step();
     }
-    assert!(
-        s.car_state(car).unwrap().linvel[0].abs() < 0.5,
-        "no controls during the 2 s hold"
-    );
     assert!(!s.race().is_held(0, at + RESPAWN_HOLD_TICKS));
+    // R125: the hold ends with a rolling start along the route.
+    let st = s.car_state(car).unwrap();
+    assert!(st.forward_speed > 2.0, "rolls off its anchor: {st:?}");
     assert!(
         !s.recover(car),
         "not again straight away (it's moving under throttle)"

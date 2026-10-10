@@ -46,8 +46,13 @@ pub const FLIP_REST_TICKS: u64 = SECOND;
 pub const FLIP_ASSIST_TICKS: u64 = 3 * SECOND;
 pub const RECOVER_SPEED: f32 = 3.0;
 pub const RECOVER_SLOW_TICKS: u64 = SECOND;
-/// Recover's 2 s penalty, and the hold after a wreck: the player respawns at their anchor about 2 s later (R20).
-pub const RESPAWN_HOLD_TICKS: u64 = 2 * SECOND;
+/// The hold after a respawn: the car waits at its anchor this long, then rolls off (R125, 2026-10-10: 1 s, then a rolling
+/// start; was R20's 2 s standing hold).
+pub const RESPAWN_HOLD_TICKS: u64 = SECOND;
+/// A respawned car rolls off at this fraction of the autopilot's planned speed there (R125).
+pub const RESPAWN_ROLL_FRACTION: f32 = 0.6;
+/// An anchor has at least this much recovery span ahead of it, m (R125: never on, or just before, a hazard).
+pub const ANCHOR_CLEAR_M: f32 = 15.0;
 pub const FINISH_WINDOW_TICKS: u64 = 30 * SECOND;
 pub const DEADLINE_MIN_TICKS: u64 = 180 * SECOND;
 /// Lateral slack beyond the road's half-width for a gate crossing.
@@ -106,6 +111,41 @@ impl Course {
         let finish = sorted.iter().position(|g| g.finish).unwrap_or(0);
         sorted.rotate_left(finish);
         let finish_s = sorted.first().map_or(0.0, |g| s[g.at as usize % n]);
+        // R125 respawn placement (br-ilne): a gate's anchor is the nearest route point at or behind it that sits in a
+        // recovery span (the map leaves jump flights and landings, and any later hazard, out of them) with at least
+        // ANCHOR_CLEAR_M of that span ahead, so a respawn never lands on a hazard or rolls straight into one.
+        let in_recovery = |i: usize| {
+            m.route.recovery.iter().any(|sp| {
+                let (a, b) = (sp.from as usize, sp.to as usize);
+                if a <= b {
+                    a <= i && i <= b
+                } else {
+                    i >= a || i <= b
+                }
+            })
+        };
+        let clear_ahead = |i: usize| {
+            let mut j = i;
+            let mut d = 0.0;
+            while d < ANCHOR_CLEAR_M {
+                if !in_recovery(j) {
+                    return false;
+                }
+                let k = (j + 1) % n;
+                d += libm::hypotf(pts[k].0 - pts[j].0, pts[k].1 - pts[j].1);
+                j = k;
+                if j == i {
+                    break;
+                }
+            }
+            true
+        };
+        let anchor_at = |at: usize| {
+            (0..n)
+                .map(|back| (at + n - back) % n)
+                .find(|&i| clear_ahead(i))
+                .unwrap_or(at)
+        };
         let gates = sorted
             .iter()
             .map(|g| {
@@ -121,7 +161,7 @@ impl Course {
                     tz: dz / len,
                     half_width: m.route.points[at].width as f32 / 2000.0,
                     from_finish: (s[at] - finish_s).rem_euclid(total),
-                    anchor: route_spawn(map, at, 0.0, RESPAWN_LIFT_M),
+                    anchor: route_spawn(map, anchor_at(at), 0.0, RESPAWN_LIFT_M),
                 }
             })
             .collect();
@@ -226,6 +266,10 @@ pub enum Effect {
     Ghost {
         car: u32,
     },
+    /// A respawn's hold is over: the car rolls off its anchor (R125).
+    Roll {
+        car: u32,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -275,6 +319,8 @@ pub struct CarRace {
     pub anchor: SpawnPose,
     pub finished_at: Option<u64>,
     pub hold_until: u64,
+    /// The tick a respawned car rolls off its anchor (its hold's end), until it has.
+    pub roll_at: Option<u64>,
     pub assist_since: Option<u64>,
     pub wrecks: u32,
     pub recoveries: u32,
@@ -333,6 +379,7 @@ impl Race {
             anchor: spawn,
             finished_at: None,
             hold_until: 0,
+            roll_at: None,
             assist_since: None,
             wrecks: 0,
             recoveries: 0,
@@ -466,6 +513,7 @@ impl Race {
     fn respawn(&mut self, tick: u64, car: u32, why: Respawned) -> Effect {
         let c = &mut self.cars[car as usize];
         c.hold_until = tick + RESPAWN_HOLD_TICKS;
+        c.roll_at = Some(c.hold_until);
         c.assist_since = None;
         c.rest_inverted = 0;
         c.slow = 0;
@@ -507,6 +555,10 @@ impl Race {
         let mut effects = Vec::new();
         for (i, &v) in views.iter().enumerate().take(self.cars.len()) {
             let car = i as u32;
+            if self.cars[i].roll_at.is_some_and(|t| tick >= t) {
+                self.cars[i].roll_at = None;
+                effects.push(Effect::Roll { car });
+            }
             if tick < self.cars[i].hold_until {
                 self.cars[i].last = Some(v);
                 continue;
