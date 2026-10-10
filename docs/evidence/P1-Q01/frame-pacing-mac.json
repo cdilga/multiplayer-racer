@@ -1,0 +1,692 @@
+{
+  "label": "P1-Q01 host frame pacing",
+  "evidenceKind": "ev:hardware",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "model": "MacBook Pro",
+    "cpu": "Apple M1 Pro",
+    "memory": "16 GB",
+    "platform": "darwin/arm64",
+    "gpu": "Apple M1 Pro",
+    "display": "3024 x 1964 Retina"
+  },
+  "browser": "headed Google chrome, Chromium 154.0.8037.98 (Playwright)",
+  "build": "5719295e30f9",
+  "takenAt": "2026-10-10T10:41:12.202Z",
+  "gpuContention": {
+    "idleOtherGpuProcesses": [
+      "Logi Tune gpu-process pid 7098 at 0.0% CPU",
+      "1Password gpu-process pid 19775 at 0.0% CPU",
+      "/Users/cdilga/Library/Caches/ms-playwrig gpu-process pid 20378 at 0.0% CPU",
+      "/Users/cdilga/Library/Caches/ms-playwrig gpu-process pid 20386 at 0.0% CPU",
+      "Signal gpu-process pid 26847 at 0.0% CPU"
+    ],
+    "acknowledgedBusy": [
+      "Brave Browser gpu-process pid 6687 at 24.0% CPU"
+    ]
+  },
+  "cohort": "synthetic 32-car snapshot (frozen tick 300) on the greybox map; one host tab; no controllers",
+  "viewportNote": "the render size is the Playwright viewport at DPR 1 (the window is resized to it); renderPixels is what the host drew into",
+  "rows": [
+    {
+      "size": "1080p",
+      "tiles": 1,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.2,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 39,
+      "triangles": 139688,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 4,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.1,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 121,
+      "triangles": 323112,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 3,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 8,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.1,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 232,
+      "triangles": 615786,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 12,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.1,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 342,
+      "triangles": 908318,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 16,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.1,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 451,
+      "triangles": 1200708,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 2,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 24,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 675,
+      "triangles": 1786340,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "tiles": 32,
+      "renderPixels": [
+        1920,
+        1080
+      ],
+      "nativePixels": [
+        1920,
+        1080
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 898,
+      "triangles": 2371830,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 1,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 8.9,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 8.9,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 39,
+      "triangles": 139688,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 4,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 8.9,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 8.9,
+        "p99": 9.2,
+        "max": 9.2
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 121,
+      "triangles": 430824,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 8,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.1,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 8.9,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 232,
+      "triangles": 819242,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 12,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 342,
+      "triangles": 1207518,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 16,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.3,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 451,
+      "triangles": 1200708,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 24,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.2,
+        "p99": 9.3,
+        "max": 9.3
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 675,
+      "triangles": 1786340,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "tiles": 32,
+      "renderPixels": [
+        3840,
+        2160
+      ],
+      "nativePixels": [
+        3840,
+        2160
+      ],
+      "resolutionSource": "native",
+      "countsAsNative": true,
+      "steady": {
+        "frames": 600,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "warmup": {
+        "frames": 120,
+        "p50": 8.3,
+        "p95": 9.3,
+        "p99": 9.4,
+        "max": 9.4
+      },
+      "hitches": {
+        "hitches": 0,
+        "byKind": {
+          "shader-compile": 0,
+          "gc": 0,
+          "main-thread-js": 0,
+          "render-submit-or-upload": 0,
+          "first-use-upload": 0,
+          "other-gpu-or-compositor": 0
+        },
+        "worst": [],
+        "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+      },
+      "draws": 898,
+      "triangles": 2371830,
+      "backend": "WebGL2 (WebGLRenderer)",
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    }
+  ],
+  "nativeRowsOnly": true,
+  "note": "rows with countsAsNative=false (auto- or user-lowered, or browser-limited) do not count as native-resolution evidence (R111)"
+}

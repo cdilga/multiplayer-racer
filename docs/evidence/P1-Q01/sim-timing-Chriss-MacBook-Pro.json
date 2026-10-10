@@ -1,0 +1,187 @@
+{
+  "label": "P1-Q01 sim timing (native vs WASM, snapshot cost, debris growth)",
+  "evidenceKind": "ev:hardware (the machine below; headless is irrelevant to sim timing)",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "cpu": "Apple M1 Pro",
+    "cpus": 8,
+    "platform": "darwin/arm64",
+    "node": "v26.10.0"
+  },
+  "build": "df3902a6",
+  "nativeBinary": "target/release/jj (release)",
+  "wasm": "jj-wasm-host testing build, run in Node (V8 WASM), not a browser worker; worker overhead and a browser JIT are not in these numbers",
+  "cohort": "fixture perf-debris-N: N cars on the greybox grid, all parts stripped at tick 30; measured ticks 150..750",
+  "nativeMethod": "wall time of `jj sim` at T+K ticks minus at T ticks (min of 3), so process start and map load cancel",
+  "takenAt": "2026-10-10T10:34:01.903Z",
+  "rows": [
+    {
+      "cars": 1,
+      "wasmMsPerTick": {
+        "mean": 0.1359,
+        "p95": 0.3611,
+        "max": 0.5669
+      },
+      "debris": 16,
+      "snapshotBytes": 1056,
+      "snapshotWriteMs": {
+        "median": 0.0025,
+        "max": 0.5206
+      },
+      "hash": "7aa7001930999e2c7f877f1c899a47a0b6cc46e3eb508da3778853db9e9f0be9",
+      "nativeMsPerTick": 0.0767,
+      "wasmOverNative": 1.77,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "7aa7001930999e2c7f877f1c899a47a0b6cc46e3eb508da3778853db9e9f0be9",
+      "nativeHash": "7aa7001930999e2c7f877f1c899a47a0b6cc46e3eb508da3778853db9e9f0be9",
+      "parity": true
+    },
+    {
+      "cars": 2,
+      "wasmMsPerTick": {
+        "mean": 0.1583,
+        "p95": 0.2889,
+        "max": 0.3232
+      },
+      "debris": 27,
+      "snapshotBytes": 1912,
+      "snapshotWriteMs": {
+        "median": 0.0035,
+        "max": 0.2141
+      },
+      "hash": "c39e1ae7e9a1c5cc6c1f492b307afceeafa7740d2c03c070c96e75340c05916a",
+      "nativeMsPerTick": 0.1612,
+      "wasmOverNative": 0.98,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "c39e1ae7e9a1c5cc6c1f492b307afceeafa7740d2c03c070c96e75340c05916a",
+      "nativeHash": "c39e1ae7e9a1c5cc6c1f492b307afceeafa7740d2c03c070c96e75340c05916a",
+      "parity": true
+    },
+    {
+      "cars": 4,
+      "wasmMsPerTick": {
+        "mean": 0.3136,
+        "p95": 0.6008,
+        "max": 0.7281
+      },
+      "debris": 49,
+      "snapshotBytes": 3624,
+      "snapshotWriteMs": {
+        "median": 0.0058,
+        "max": 0.0319
+      },
+      "hash": "c81bceabe0443dcfaa6a84d46fa4cd5edcf5b05aff917c83b35c9749e964e5b2",
+      "nativeMsPerTick": 0.2926,
+      "wasmOverNative": 1.07,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "c81bceabe0443dcfaa6a84d46fa4cd5edcf5b05aff917c83b35c9749e964e5b2",
+      "nativeHash": "c81bceabe0443dcfaa6a84d46fa4cd5edcf5b05aff917c83b35c9749e964e5b2",
+      "parity": true
+    },
+    {
+      "cars": 8,
+      "wasmMsPerTick": {
+        "mean": 0.5599,
+        "p95": 0.9451,
+        "max": 1.1829
+      },
+      "debris": 93,
+      "snapshotBytes": 7048,
+      "snapshotWriteMs": {
+        "median": 0.0071,
+        "max": 0.0194
+      },
+      "hash": "f4990c04446246f6627eea7e3981d0b6ce5debca6bcd068628e1d38ca8c7f363",
+      "nativeMsPerTick": 0.5628,
+      "wasmOverNative": 0.99,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "f4990c04446246f6627eea7e3981d0b6ce5debca6bcd068628e1d38ca8c7f363",
+      "nativeHash": "f4990c04446246f6627eea7e3981d0b6ce5debca6bcd068628e1d38ca8c7f363",
+      "parity": true
+    },
+    {
+      "cars": 16,
+      "wasmMsPerTick": {
+        "mean": 1.4187,
+        "p95": 2.1005,
+        "max": 2.6151
+      },
+      "debris": 181,
+      "snapshotBytes": 13896,
+      "snapshotWriteMs": {
+        "median": 0.0129,
+        "max": 0.2885
+      },
+      "hash": "4c576326177637c41528fcf5d92badd2038a81b5a1e571c4758625b9d8c22ad8",
+      "nativeMsPerTick": 1.3913,
+      "wasmOverNative": 1.02,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "4c576326177637c41528fcf5d92badd2038a81b5a1e571c4758625b9d8c22ad8",
+      "nativeHash": "4c576326177637c41528fcf5d92badd2038a81b5a1e571c4758625b9d8c22ad8",
+      "parity": true
+    },
+    {
+      "cars": 24,
+      "wasmMsPerTick": {
+        "mean": 6.4865,
+        "p95": 25.2213,
+        "max": 28.5742
+      },
+      "debris": 269,
+      "snapshotBytes": 20744,
+      "snapshotWriteMs": {
+        "median": 0.018,
+        "max": 0.0472
+      },
+      "hash": "63052ec81e958487d0b0220fb252d03b56faa5028670d442250699a022d26f10",
+      "nativeMsPerTick": 2.2032,
+      "wasmOverNative": 2.94,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "63052ec81e958487d0b0220fb252d03b56faa5028670d442250699a022d26f10",
+      "nativeHash": "63052ec81e958487d0b0220fb252d03b56faa5028670d442250699a022d26f10",
+      "parity": true
+    },
+    {
+      "cars": 48,
+      "wasmMsPerTick": {
+        "mean": 12.0978,
+        "p95": 47.5798,
+        "max": 53.7108
+      },
+      "debris": 533,
+      "snapshotBytes": 41288,
+      "snapshotWriteMs": {
+        "median": 0.0368,
+        "max": 0.0917
+      },
+      "hash": "7b2feb4aa4b56da1ff03f032e23da2bb9d67cc9ca55d42fe7e3468a91225b7f9",
+      "nativeMsPerTick": 7.8363,
+      "wasmOverNative": 1.54,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "7b2feb4aa4b56da1ff03f032e23da2bb9d67cc9ca55d42fe7e3468a91225b7f9",
+      "nativeHash": "7b2feb4aa4b56da1ff03f032e23da2bb9d67cc9ca55d42fe7e3468a91225b7f9",
+      "parity": true
+    },
+    {
+      "cars": 96,
+      "wasmMsPerTick": {
+        "mean": 18.2753,
+        "p95": 23.3906,
+        "max": 24.4705
+      },
+      "debris": 1061,
+      "snapshotBytes": 82656,
+      "snapshotWriteMs": {
+        "median": 0.1195,
+        "max": 0.3338
+      },
+      "hash": "1f300cb6f20d48e04758284371b7457f755dc5618797d651fe40e9139e106eb7",
+      "nativeMsPerTick": 24.62,
+      "wasmOverNative": 0.74,
+      "budgetMsPerTick": 8.33,
+      "wasmHash": "1f300cb6f20d48e04758284371b7457f755dc5618797d651fe40e9139e106eb7",
+      "nativeHash": "1f300cb6f20d48e04758284371b7457f755dc5618797d651fe40e9139e106eb7",
+      "parity": true
+    }
+  ]
+}

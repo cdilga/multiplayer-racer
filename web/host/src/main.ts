@@ -88,6 +88,9 @@ async function boot(): Promise<void> {
     /** Paused drawing (owner playtest 1): whether the world is held and how many frames it has skipped. */
     idle: () => ({ held: world.isHeld, skips: world.heldSkips }),
     frame: () => world.frame(),
+    /** Compiled shader programs so far (WebGL backend; null elsewhere): a rise during a frame is a shader compile (P1-Q01's
+     *  hitch attribution). Read by the perf helper once per frame; never logged. */
+    programs: () => (world.backend.renderer as unknown as { info: { programs?: unknown[] } }).info.programs?.length ?? null,
     /** Capture hook (P1-R12): stops the frame loop, so the canvas keeps the frame just drawn (a short-lived flash included)
      *  for a screenshot that takes longer than the effect lives. */
     hold: () => world.stop(),

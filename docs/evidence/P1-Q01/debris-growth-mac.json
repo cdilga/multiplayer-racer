@@ -1,0 +1,3497 @@
+{
+  "label": "P1-Q01 draws/tris/frame time/sim rate as debris grows (live host)",
+  "evidenceKind": "ev:hardware",
+  "machine": {
+    "host": "Chriss-MacBook-Pro.local",
+    "model": "MacBook Pro",
+    "cpu": "Apple M1 Pro",
+    "memory": "16 GB",
+    "platform": "darwin/arm64",
+    "gpu": "Apple M1 Pro",
+    "display": "3024 x 1964 Retina"
+  },
+  "browser": "headed Google chrome, Chromium 154.0.8037.98 (Playwright)",
+  "build": "5cdaa94cec85",
+  "takenAt": "2026-10-10T10:47:10.934Z",
+  "gpuContention": {
+    "idleOtherGpuProcesses": [
+      "Brave Browser gpu-process pid 6687 at 0.1% CPU",
+      "Logi Tune gpu-process pid 7098 at 0.0% CPU",
+      "1Password gpu-process pid 19775 at 0.0% CPU",
+      "Signal gpu-process pid 26847 at 0.0% CPU"
+    ],
+    "acknowledgedBusy": []
+  },
+  "cohort": "perf-debris-N fixture (N cars on the greybox grid, all ten parts stripped per car at tick 30; nothing capped), live sim worker (wasm testing build), min(N,24) tiles, one host tab, no controllers",
+  "budgets": {
+    "frameMs60": 16.7,
+    "simTickMs": 8.333333333333334,
+    "simHz": 120
+  },
+  "rows": [
+    {
+      "size": "1080p",
+      "cars": 1,
+      "tiles": 1,
+      "debrisBodies": 16,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.2,
+            "p99": 9.3,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 15,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 22966,
+            "max": 23424
+          },
+          "tick": 248.827999997139,
+          "simHz": 120.1,
+          "workerPublished": 272,
+          "workerSkipped": 43,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.3,
+            "p99": 9.4,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 64658,
+            "max": 64678
+          },
+          "tick": 499.12,
+          "simHz": 120,
+          "workerPublished": 522,
+          "workerSkipped": 43,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.1,
+            "p99": 9.4,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 64644,
+            "max": 64656
+          },
+          "tick": 746.66,
+          "simHz": 120,
+          "workerPublished": 769,
+          "workerSkipped": 43,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.3,
+            "p99": 9.4,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 46,
+            "max": 46
+          },
+          "triangles": {
+            "median": 64504,
+            "max": 64510
+          },
+          "tick": 995.564000005722,
+          "simHz": 119.7,
+          "workerPublished": 1019,
+          "workerSkipped": 43,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 4,
+      "tiles": 4,
+      "debrisBodies": 49,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 8.9,
+            "p99": 9.2,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 45,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 104824,
+            "max": 112152
+          },
+          "tick": 250.14,
+          "simHz": 120.7,
+          "workerPublished": 274,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.3,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 457032,
+            "max": 457160
+          },
+          "tick": 498.5880000114441,
+          "simHz": 119.9,
+          "workerPublished": 522,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.2,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 457088,
+            "max": 457160
+          },
+          "tick": 746.875999994278,
+          "simHz": 119.8,
+          "workerPublished": 771,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 8.9,
+            "p99": 9.3,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 145,
+            "max": 149
+          },
+          "triangles": {
+            "median": 456432,
+            "max": 457056
+          },
+          "tick": 995.864000005722,
+          "simHz": 119.8,
+          "workerPublished": 1019,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 8,
+      "tiles": 8,
+      "debrisBodies": 93,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.3,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 85,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 285,
+            "max": 285
+          },
+          "triangles": {
+            "median": 274176,
+            "max": 303872
+          },
+          "tick": 250.3,
+          "simHz": 120,
+          "workerPublished": 274,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 8.9,
+            "p99": 9.2,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 285,
+            "max": 285
+          },
+          "triangles": {
+            "median": 1605344,
+            "max": 1605840
+          },
+          "tick": 499.18,
+          "simHz": 120,
+          "workerPublished": 524,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.3,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 285,
+            "max": 285
+          },
+          "triangles": {
+            "median": 1606336,
+            "max": 1606848
+          },
+          "tick": 747.347999997139,
+          "simHz": 120.2,
+          "workerPublished": 771,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 8.9,
+            "p99": 9.3,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 283,
+            "max": 284
+          },
+          "triangles": {
+            "median": 1605348,
+            "max": 1605826
+          },
+          "tick": 996.227999997139,
+          "simHz": 119.8,
+          "workerPublished": 1021,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 16,
+      "tiles": 16,
+      "debrisBodies": 181,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.2,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 165,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 557,
+            "max": 557
+          },
+          "triangles": {
+            "median": 816336,
+            "max": 933584
+          },
+          "tick": 251.26400000572204,
+          "simHz": 120.1,
+          "workerPublished": 272,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.6,
+            "p99": 17.5,
+            "max": 17.7
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 557,
+            "max": 557
+          },
+          "triangles": {
+            "median": 5982288,
+            "max": 5988880
+          },
+          "tick": 521.096000008583,
+          "simHz": 119.4,
+          "workerPublished": 542,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.4,
+            "p95": 15.8,
+            "p99": 16.7,
+            "max": 17
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 557,
+            "max": 557
+          },
+          "triangles": {
+            "median": 5989392,
+            "max": 5991184
+          },
+          "tick": 786.071999988556,
+          "simHz": 119.9,
+          "workerPublished": 807,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.1,
+            "p99": 9.3,
+            "max": 9.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 555,
+            "max": 556
+          },
+          "triangles": {
+            "median": 5984308,
+            "max": 5987106
+          },
+          "tick": 1034.456000008583,
+          "simHz": 119.7,
+          "workerPublished": 1055,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 24,
+      "tiles": 24,
+      "debrisBodies": 269,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.3,
+            "p99": 16.7,
+            "max": 17.2
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 245,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 1625632,
+            "max": 1891744
+          },
+          "tick": 260.02399999141693,
+          "simHz": 120.3,
+          "workerPublished": 282,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 16.5,
+            "p95": 24.9,
+            "p99": 26.7,
+            "max": 30.9
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 13143952,
+            "max": 13147936
+          },
+          "tick": 728.6480000114441,
+          "simHz": 119.8,
+          "workerPublished": 747,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 16.7,
+            "p95": 21.3,
+            "p99": 25,
+            "max": 27.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 825,
+            "max": 827
+          },
+          "triangles": {
+            "median": 13131286,
+            "max": 13143044
+          },
+          "tick": 1201.187999997139,
+          "simHz": 119.7,
+          "workerPublished": 1221,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 16.6,
+            "p95": 18.9,
+            "p99": 21.7,
+            "max": 25.1
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 820,
+            "max": 822
+          },
+          "triangles": {
+            "median": 13115410,
+            "max": 13121646
+          },
+          "tick": 1640.732000002861,
+          "simHz": 120.1,
+          "workerPublished": 1659,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 32,
+      "tiles": 24,
+      "debrisBodies": 357,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.7,
+            "p99": 17.5,
+            "max": 19.1
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 2025968,
+            "max": 17324416
+          },
+          "tick": 282.0719999885559,
+          "simHz": 119.4,
+          "workerPublished": 281,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 25,
+            "p95": 28.8,
+            "p99": 34.2,
+            "max": 35.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 17379330,
+            "max": 17388208
+          },
+          "tick": 960.36,
+          "simHz": 119.9,
+          "workerPublished": 855,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 19,
+            "p95": 27.5,
+            "p99": 28.7,
+            "max": 29
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 824,
+            "max": 827
+          },
+          "triangles": {
+            "median": 17359226,
+            "max": 17369492
+          },
+          "tick": 1561.575999994278,
+          "simHz": 120.2,
+          "workerPublished": 1426,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 17.5,
+            "p95": 25.4,
+            "p99": 26.4,
+            "max": 30
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 821,
+            "max": 823
+          },
+          "triangles": {
+            "median": 17354916,
+            "max": 17357888
+          },
+          "tick": 2115.815999994278,
+          "simHz": 120.2,
+          "workerPublished": 1973,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 48,
+      "tiles": 24,
+      "debrisBodies": 533,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.8,
+            "p95": 26.8,
+            "p99": 31.2,
+            "max": 32.3
+          },
+          "hitches": {
+            "hitches": 18,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 3,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 15
+            },
+            "worst": [
+              {
+                "frame": 226,
+                "ms": 32.3,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 239,
+                "ms": 31.3,
+                "kind": "gc"
+              },
+              {
+                "frame": 230,
+                "ms": 31.2,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 231,
+                "ms": 30.4,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 223,
+                "ms": 30.2,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 2845072,
+            "max": 25862656
+          },
+          "tick": 363.02400000572203,
+          "simHz": 118.9,
+          "workerPublished": 241,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 29.3,
+            "p95": 40,
+            "p99": 43.3,
+            "max": 51.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 825,
+            "max": 829
+          },
+          "triangles": {
+            "median": 25856896,
+            "max": 25866304
+          },
+          "tick": 1235,
+          "simHz": 119.1,
+          "workerPublished": 483,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 25.7,
+            "p95": 34,
+            "p99": 39.8,
+            "max": 52.6
+          },
+          "hitches": {
+            "hitches": 1,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 1
+            },
+            "worst": [
+              {
+                "frame": 185,
+                "ms": 52.6,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 823,
+            "max": 823
+          },
+          "triangles": {
+            "median": 25838380,
+            "max": 25842460
+          },
+          "tick": 2004.552000002861,
+          "simHz": 120.5,
+          "workerPublished": 806,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 24.4,
+            "p95": 32,
+            "p99": 33.9,
+            "max": 34.1
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 822,
+            "max": 823
+          },
+          "triangles": {
+            "median": 25837758,
+            "max": 25840878
+          },
+          "tick": 2718.912000002861,
+          "simHz": 119.6,
+          "workerPublished": 1296,
+          "workerSkipped": 12,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "1080p",
+      "cars": 96,
+      "tiles": 24,
+      "debrisBodies": 1061,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 9.2,
+            "p95": 24.4,
+            "p99": 27.9,
+            "max": 31.5
+          },
+          "hitches": {
+            "hitches": 8,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 2,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 6
+            },
+            "worst": [
+              {
+                "frame": 100,
+                "ms": 31.5,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 104,
+                "ms": 29.2,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 105,
+                "ms": 27.9,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 101,
+                "ms": 26.4,
+                "kind": "gc"
+              },
+              {
+                "frame": 49,
+                "ms": 26,
+                "kind": "gc"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 965,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 5133904,
+            "max": 6385264
+          },
+          "tick": 166,
+          "simHz": 51.9,
+          "workerPublished": 59,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 16.7,
+            "p95": 24.7,
+            "p99": 25.2,
+            "max": 26.8
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 5147584,
+            "max": 5149360
+          },
+          "tick": 272.02399999141693,
+          "simHz": 21.6,
+          "workerPublished": 69,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 38.6,
+            "p95": 56.9,
+            "p99": 59,
+            "max": 181
+          },
+          "hitches": {
+            "hitches": 1,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 1,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [
+              {
+                "frame": 120,
+                "ms": 181,
+                "kind": "main-thread-js"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 34671520,
+            "max": 51332560
+          },
+          "tick": 421,
+          "simHz": 18.4,
+          "workerPublished": 77,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1440,
+            810
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "auto-lowered",
+          "countsAsNative": false,
+          "autoLowered": [
+            {
+              "from": 1,
+              "to": 0.75,
+              "p95Ms": 59.600000000000364,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 593
+            }
+          ]
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 37.5,
+            "p95": 42.1,
+            "p99": 45.5,
+            "max": 47.8
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 34666144,
+            "max": 34674928
+          },
+          "tick": 554.564000005722,
+          "simHz": 16.3,
+          "workerPublished": 87,
+          "workerSkipped": 13,
+          "renderPixels": [
+            1440,
+            810
+          ],
+          "nativePixels": [
+            1920,
+            1080
+          ],
+          "resolutionSource": "auto-lowered",
+          "countsAsNative": false,
+          "autoLowered": [
+            {
+              "from": 1,
+              "to": 0.75,
+              "p95Ms": 59.600000000000364,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 593
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 1,
+      "tiles": 1,
+      "debrisBodies": 16,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.3,
+            "p99": 9.4,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 15,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 22966,
+            "max": 23424
+          },
+          "tick": 248.09600000858308,
+          "simHz": 120.1,
+          "workerPublished": 274,
+          "workerSkipped": 9,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.4,
+            "p99": 17.2,
+            "max": 17.5
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 64658,
+            "max": 64674
+          },
+          "tick": 504.56399999141695,
+          "simHz": 120.1,
+          "workerPublished": 530,
+          "workerSkipped": 9,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.2,
+            "p99": 11.1,
+            "max": 12.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 47,
+            "max": 47
+          },
+          "triangles": {
+            "median": 64648,
+            "max": 64652
+          },
+          "tick": 756.312000002861,
+          "simHz": 119.6,
+          "workerPublished": 782,
+          "workerSkipped": 9,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9,
+            "p99": 9.2,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 16,
+          "debrisDrawnAsDebris": 5,
+          "cars": 1,
+          "draws": {
+            "median": 46,
+            "max": 46
+          },
+          "triangles": {
+            "median": 64504,
+            "max": 64512
+          },
+          "tick": 1004.9240000057221,
+          "simHz": 119.9,
+          "workerPublished": 1030,
+          "workerSkipped": 9,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 3,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 4,
+      "tiles": 4,
+      "debrisBodies": 49,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.7,
+            "p99": 17.4,
+            "max": 17.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 118064,
+            "max": 125648
+          },
+          "tick": 270.647999997139,
+          "simHz": 119.9,
+          "workerPublished": 295,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.8,
+            "p99": 17.4,
+            "max": 17.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 618488,
+            "max": 618728
+          },
+          "tick": 550.071999988556,
+          "simHz": 120.1,
+          "workerPublished": 574,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.4,
+            "p95": 12.8,
+            "p99": 16.4,
+            "max": 17.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 149,
+            "max": 149
+          },
+          "triangles": {
+            "median": 618536,
+            "max": 618632
+          },
+          "tick": 836.2039999914169,
+          "simHz": 119.8,
+          "workerPublished": 861,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.5,
+            "p99": 10.1,
+            "max": 10.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 49,
+          "debrisDrawnAsDebris": 5,
+          "cars": 4,
+          "draws": {
+            "median": 145,
+            "max": 145
+          },
+          "triangles": {
+            "median": 617920,
+            "max": 618024
+          },
+          "tick": 1084.131999988556,
+          "simHz": 120.4,
+          "workerPublished": 1109,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 8,
+      "tiles": 8,
+      "debrisBodies": 93,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.8,
+            "p99": 17.4,
+            "max": 17.5
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 285,
+            "max": 285
+          },
+          "triangles": {
+            "median": 324528,
+            "max": 2210784
+          },
+          "tick": 279.50399999141695,
+          "simHz": 119.9,
+          "workerPublished": 304,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 9.2,
+            "p95": 17.5,
+            "p99": 23.1,
+            "max": 25
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 285,
+            "max": 285
+          },
+          "triangles": {
+            "median": 2215408,
+            "max": 2216272
+          },
+          "tick": 627.02,
+          "simHz": 119.9,
+          "workerPublished": 652,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 16.7,
+            "p99": 17.3,
+            "max": 17.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 284,
+            "max": 285
+          },
+          "triangles": {
+            "median": 2216192,
+            "max": 2216720
+          },
+          "tick": 894.7680000114441,
+          "simHz": 119.8,
+          "workerPublished": 920,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.3,
+            "p95": 9.3,
+            "p99": 9.4,
+            "max": 9.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 93,
+          "debrisDrawnAsDebris": 5,
+          "cars": 8,
+          "draws": {
+            "median": 279,
+            "max": 283
+          },
+          "triangles": {
+            "median": 2214556,
+            "max": 2215508
+          },
+          "tick": 1144.8879999971389,
+          "simHz": 119.5,
+          "workerPublished": 1170,
+          "workerSkipped": 13,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 16,
+      "tiles": 16,
+      "debrisBodies": 181,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 9.2,
+            "p95": 20.4,
+            "p99": 25.5,
+            "max": 26.7
+          },
+          "hitches": {
+            "hitches": 3,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 1,
+              "other-gpu-or-compositor": 2
+            },
+            "worst": [
+              {
+                "frame": 238,
+                "ms": 26.7,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 37,
+                "ms": 25.5,
+                "kind": "first-use-upload"
+              },
+              {
+                "frame": 100,
+                "ms": 25.5,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 557,
+            "max": 557
+          },
+          "triangles": {
+            "median": 819248,
+            "max": 5979184
+          },
+          "tick": 361.464000005722,
+          "simHz": 120,
+          "workerPublished": 379,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 17,
+            "p95": 25.3,
+            "p99": 27.3,
+            "max": 30.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 557,
+            "max": 557
+          },
+          "triangles": {
+            "median": 5985456,
+            "max": 5988464
+          },
+          "tick": 858.5879999971389,
+          "simHz": 120,
+          "workerPublished": 874,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 9.7,
+            "p95": 18.6,
+            "p99": 22.7,
+            "max": 24.7
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 553,
+            "max": 555
+          },
+          "triangles": {
+            "median": 5979868,
+            "max": 5981940
+          },
+          "tick": 1203.3440000057221,
+          "simHz": 120.4,
+          "workerPublished": 1218,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 8.4,
+            "p95": 16.5,
+            "p99": 17.3,
+            "max": 17.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 181,
+          "debrisDrawnAsDebris": 5,
+          "cars": 16,
+          "draws": {
+            "median": 549,
+            "max": 551
+          },
+          "triangles": {
+            "median": 5977056,
+            "max": 5978670
+          },
+          "tick": 1478.66,
+          "simHz": 119.8,
+          "workerPublished": 1494,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 24,
+      "tiles": 24,
+      "debrisBodies": 269,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 13,
+            "p95": 24.9,
+            "p99": 28.8,
+            "max": 33.4
+          },
+          "hitches": {
+            "hitches": 4,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 1,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 3
+            },
+            "worst": [
+              {
+                "frame": 38,
+                "ms": 33.4,
+                "kind": "gc"
+              },
+              {
+                "frame": 214,
+                "ms": 31,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 234,
+                "ms": 28.8,
+                "kind": "other-gpu-or-compositor"
+              },
+              {
+                "frame": 230,
+                "ms": 27.8,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 1800784,
+            "max": 13130224
+          },
+          "tick": 430.54799999713896,
+          "simHz": 119.9,
+          "workerPublished": 446,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 19.1,
+            "p95": 27.1,
+            "p99": 30,
+            "max": 32.2
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 828,
+            "max": 829
+          },
+          "triangles": {
+            "median": 13138724,
+            "max": 13148800
+          },
+          "tick": 1031.3480000114441,
+          "simHz": 120.3,
+          "workerPublished": 1045,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 16.8,
+            "p95": 23.8,
+            "p99": 25,
+            "max": 25.4
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 821,
+            "max": 824
+          },
+          "triangles": {
+            "median": 13118384,
+            "max": 13126346
+          },
+          "tick": 1515.132000002861,
+          "simHz": 120.1,
+          "workerPublished": 1528,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 15.7,
+            "p95": 22.2,
+            "p99": 24.6,
+            "max": 27.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 269,
+          "debrisDrawnAsDebris": 5,
+          "cars": 24,
+          "draws": {
+            "median": 818,
+            "max": 819
+          },
+          "triangles": {
+            "median": 13113398,
+            "max": 13114696
+          },
+          "tick": 1954.5280000114442,
+          "simHz": 120,
+          "workerPublished": 1968,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 32,
+      "tiles": 24,
+      "debrisBodies": 357,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 17.7,
+            "p95": 29.3,
+            "p99": 34.5,
+            "max": 35.6
+          },
+          "hitches": {
+            "hitches": 1,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 1
+            },
+            "worst": [
+              {
+                "frame": 195,
+                "ms": 35.6,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 2379248,
+            "max": 17383168
+          },
+          "tick": 541.72,
+          "simHz": 119.3,
+          "workerPublished": 484,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 26.3,
+            "p95": 33.3,
+            "p99": 35.8,
+            "max": 36.2
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 828,
+            "max": 829
+          },
+          "triangles": {
+            "median": 17368964,
+            "max": 17387152
+          },
+          "tick": 1313.8160000085832,
+          "simHz": 119.9,
+          "workerPublished": 1177,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 17.7,
+            "p95": 25.5,
+            "p99": 27.8,
+            "max": 30.5
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 823,
+            "max": 824
+          },
+          "triangles": {
+            "median": 17355296,
+            "max": 17357882
+          },
+          "tick": 1877.972000002861,
+          "simHz": 119.7,
+          "workerPublished": 1719,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 17.3,
+            "p95": 25.4,
+            "p99": 31.2,
+            "max": 32.8
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 357,
+          "debrisDrawnAsDebris": 5,
+          "cars": 32,
+          "draws": {
+            "median": 818,
+            "max": 820
+          },
+          "triangles": {
+            "median": 17354484,
+            "max": 17356308
+          },
+          "tick": 2421.264000005722,
+          "simHz": 119.9,
+          "workerPublished": 2261,
+          "workerSkipped": 16,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 48,
+      "tiles": 24,
+      "debrisBodies": 533,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 26.7,
+            "p95": 41.8,
+            "p99": 44.3,
+            "max": 50.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 25788112,
+            "max": 25864050
+          },
+          "tick": 751,
+          "simHz": 118.6,
+          "workerPublished": 290,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 33,
+            "p95": 42.6,
+            "p99": 46,
+            "max": 47.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 823,
+            "max": 825
+          },
+          "triangles": {
+            "median": 25840204,
+            "max": 25854312
+          },
+          "tick": 1734.552000002861,
+          "simHz": 120.1,
+          "workerPublished": 646,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 27.6,
+            "p95": 35.3,
+            "p99": 43.1,
+            "max": 47.1
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 822,
+            "max": 823
+          },
+          "triangles": {
+            "median": 25836798,
+            "max": 25840398
+          },
+          "tick": 2562.583999991417,
+          "simHz": 119.7,
+          "workerPublished": 1168,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 27.8,
+            "p95": 35,
+            "p99": 38.1,
+            "max": 41.6
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 533,
+          "debrisDrawnAsDebris": 5,
+          "cars": 48,
+          "draws": {
+            "median": 821,
+            "max": 822
+          },
+          "triangles": {
+            "median": 25836992,
+            "max": 25840546
+          },
+          "tick": 3378.888000011444,
+          "simHz": 119.6,
+          "workerPublished": 1748,
+          "workerSkipped": 17,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    },
+    {
+      "size": "4k",
+      "cars": 96,
+      "tiles": 24,
+      "debrisBodies": 1061,
+      "windows": [
+        {
+          "window": 1,
+          "frame": {
+            "frames": 240,
+            "p50": 33.6,
+            "p95": 50.8,
+            "p99": 66.1,
+            "max": 67.6
+          },
+          "hitches": {
+            "hitches": 1,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 1
+            },
+            "worst": [
+              {
+                "frame": 70,
+                "ms": 67.6,
+                "kind": "other-gpu-or-compositor"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 5143648,
+            "max": 6362224
+          },
+          "tick": 275,
+          "simHz": 33.8,
+          "workerPublished": 69,
+          "workerSkipped": 14,
+          "renderPixels": [
+            3840,
+            2160
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "native",
+          "countsAsNative": true
+        },
+        {
+          "window": 2,
+          "frame": {
+            "frames": 240,
+            "p50": 51.7,
+            "p95": 66.4,
+            "p99": 81.2,
+            "max": 225.3
+          },
+          "hitches": {
+            "hitches": 2,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 2,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [
+              {
+                "frame": 75,
+                "ms": 225.3,
+                "kind": "main-thread-js"
+              },
+              {
+                "frame": 204,
+                "ms": 189.9,
+                "kind": "main-thread-js"
+              }
+            ],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 51347872,
+            "max": 51393856
+          },
+          "tick": 458,
+          "simHz": 17.1,
+          "workerPublished": 82,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "auto-lowered",
+          "countsAsNative": false,
+          "autoLowered": [
+            {
+              "from": 1,
+              "to": 0.75,
+              "p95Ms": 67.39999999999964,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 299
+            },
+            {
+              "from": 0.75,
+              "to": 0.5,
+              "p95Ms": 67.89999999999782,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 393
+            }
+          ]
+        },
+        {
+          "window": 3,
+          "frame": {
+            "frames": 240,
+            "p50": 49.4,
+            "p95": 57.8,
+            "p99": 59.6,
+            "max": 64.3
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 51356272,
+            "max": 51365776
+          },
+          "tick": 586,
+          "simHz": 13.1,
+          "workerPublished": 88,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "auto-lowered",
+          "countsAsNative": false,
+          "autoLowered": [
+            {
+              "from": 1,
+              "to": 0.75,
+              "p95Ms": 67.39999999999964,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 299
+            },
+            {
+              "from": 0.75,
+              "to": 0.5,
+              "p95Ms": 67.89999999999782,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 393
+            }
+          ]
+        },
+        {
+          "window": 4,
+          "frame": {
+            "frames": 240,
+            "p50": 49.2,
+            "p95": 57.7,
+            "p99": 59.7,
+            "max": 65.9
+          },
+          "hitches": {
+            "hitches": 0,
+            "byKind": {
+              "shader-compile": 0,
+              "gc": 0,
+              "main-thread-js": 0,
+              "render-submit-or-upload": 0,
+              "first-use-upload": 0,
+              "other-gpu-or-compositor": 0
+            },
+            "worst": [],
+            "method": "heuristic: program-count rise = shader compile; heap drop = GC; Long Animation Frame script/render share = main-thread JS / render submit; first warm-up frames = first-use upload; rest = GPU/compositor"
+          },
+          "simDebrisBodies": 1061,
+          "debrisDrawnAsDebris": 5,
+          "cars": 96,
+          "draws": {
+            "median": 829,
+            "max": 829
+          },
+          "triangles": {
+            "median": 51321280,
+            "max": 51345376
+          },
+          "tick": 704,
+          "simHz": 13.1,
+          "workerPublished": 98,
+          "workerSkipped": 14,
+          "renderPixels": [
+            1920,
+            1080
+          ],
+          "nativePixels": [
+            3840,
+            2160
+          ],
+          "resolutionSource": "auto-lowered",
+          "countsAsNative": false,
+          "autoLowered": [
+            {
+              "from": 1,
+              "to": 0.75,
+              "p95Ms": 67.39999999999964,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 299
+            },
+            {
+              "from": 0.75,
+              "to": 0.5,
+              "p95Ms": 67.89999999999782,
+              "budgetMs": 50,
+              "seconds": 5,
+              "atFrame": 393
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "attempts": 1,
+      "neighbourOnGpu": [],
+      "clean": true
+    }
+  ],
+  "nativeRowsOnly": false,
+  "note": "rows whose windows are not countsAsNative (auto/user-lowered, browser-limited) are not native-resolution evidence (R111). simHz below 120 means the worker sim could not hold its tick budget at that car/debris count."
+}
