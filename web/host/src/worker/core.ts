@@ -61,6 +61,8 @@ export interface Extension<S extends Sim> {
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const LOOP_MS = 2;
+/** While paused (and no resume countdown runs) nothing steps, so the loop only drains joins and menu input. */
+const PAUSED_LOOP_MS = 25;
 
 export class SimWorker<S extends Sim> {
   sim: S | null = null;
@@ -75,6 +77,8 @@ export class SimWorker<S extends Sim> {
   private pool: ArrayBuffer[] = [];
   private uiCommand = 1;
   private lastPause = '';
+  /** Paused with no resume countdown: the loop slows to `PAUSED_LOOP_MS`. */
+  private idle = false;
   /** Local sources' latest unapplied sample time, and their recent host-applied input ages (P1-C05). */
   private pending = new Map<number, number>();
   private ages = new Map<number, number[]>();
@@ -193,6 +197,7 @@ export class SimWorker<S extends Sim> {
   private pauseState(s: S): void {
     const mask = s.pause_mask();
     const countdownMs = s.countdown_ms();
+    this.idle = mask !== 0 && countdownMs === 0;
     const key = `${mask}:${Math.ceil(countdownMs / 1000)}`;
     if (key === this.lastPause) return;
     this.lastPause = key;
@@ -247,7 +252,7 @@ export class SimWorker<S extends Sim> {
       }
     });
     this.pump();
-    if (!this.faulted) setTimeout(() => this.loop(), LOOP_MS);
+    if (!this.faulted) setTimeout(() => this.loop(), this.idle ? PAUSED_LOOP_MS : LOOP_MS);
   }
 
   private async receive(msg: ToWorker | ({ kind: string } & Record<string, unknown>)): Promise<void> {

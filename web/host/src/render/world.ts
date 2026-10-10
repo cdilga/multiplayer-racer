@@ -109,6 +109,11 @@ export class World {
   readonly rig = new CameraRig();
   private mirrorCam = new PerspectiveCamera(46, 2, 0.3, 600);
   private lastFrame = 0;
+  /** Paused (any pause reason): frames are drawn only until `heldUntil` after the last change, then the loop idles. */
+  private held = false;
+  private heldUntil = 0;
+  /** Frames skipped while held (introspection for the pause probe, R90). */
+  heldSkips = 0;
   /** Called when the set of off-screen arrows changes: per tile, the rect (device px) and the arrow's angle. */
   onArrows: (arrows: { x: number; y: number; w: number; h: number; angle: number }[], dpr: number) => void = () => {};
   private arrowKey = '';
@@ -204,6 +209,7 @@ export class World {
       const e = entries[0];
       const box = e?.devicePixelContentBoxSize?.[0];
       this.devicePx = box ? [box.inlineSize, box.blockSize] : null;
+      this.invalidate();
     });
     try {
       this.observer.observe(canvas, { box: 'device-pixel-content-box' });
@@ -239,6 +245,7 @@ export class World {
     // The plain beyond the map sits just under its lowest ground, or it would cover terrain that dips below zero.
     this.ground.position.y = Math.min(0, ...map.terrain.heights.map((h) => h / 100)) - 0.05;
     const t = map.terrain;
+    this.invalidate();
     this.mapBox = [t.originX / 1000, (t.originX + (t.cols - 1) * t.spacing) / 1000, t.originZ / 1000, (t.originZ + (t.rows - 1) * t.spacing) / 1000];
     return this.map;
   }
@@ -267,6 +274,7 @@ export class World {
     const next = source.onSnapshot;
     source.onSnapshot = (s: Snapshot) => {
       this.interp.push(decodeSnapshot(s.view));
+      this.invalidate();
       next(s);
     };
   }
@@ -301,13 +309,37 @@ export class World {
   }
 
   private changed(): void {
+    this.invalidate();
     this.resize();
     this.onResolution();
+  }
+
+  /** Pauses or resumes drawing (owner playtest 1: a paused host should be paused). While held the world is frozen, so
+   *  a frame is drawn only for a while after something changes (`invalidate`) or while an Identify mark is up. */
+  hold(on: boolean): void {
+    if (on === this.held) return;
+    this.held = on;
+    this.invalidate();
+  }
+
+  /** Something visible changed (a resize, a setting, the room, an event): a held world draws for the next 600 ms. */
+  invalidate(): void {
+    this.heldUntil = performance.now() + 600;
+  }
+
+  get isHeld(): boolean {
+    return this.held;
   }
 
   start(): void {
     const loop = (now: number) => {
       this.raf = requestAnimationFrame(loop);
+      if (this.held && now > this.heldUntil && this.identifyMarks.active().length === 0) {
+        // Idle: no draw, and the gap isn't fed to the frame budget when drawing resumes.
+        this.heldSkips++;
+        this.lastRaf = 0;
+        return;
+      }
       if (this.lastRaf && this.realFrameTimes) this.noteFrameTime(now - this.lastRaf);
       this.lastRaf = now;
       this.frame();

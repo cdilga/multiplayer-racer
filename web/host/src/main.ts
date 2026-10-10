@@ -85,6 +85,8 @@ async function boot(): Promise<void> {
   mountResolutionSetting(document.body, world, chip);
   (window as unknown as { __jjRender: unknown }).__jjRender = {
     stats: () => ({ ...world.stats }),
+    /** Paused drawing (owner playtest 1): whether the world is held and how many frames it has skipped. */
+    idle: () => ({ held: world.isHeld, skips: world.heldSkips }),
     frame: () => world.frame(),
     /** Capture hook (P1-R12): stops the frame loop, so the canvas keeps the frame just drawn (a short-lived flash included)
      *  for a screenshot that takes longer than the effect lives. */
@@ -269,6 +271,12 @@ async function boot(): Promise<void> {
     v.paintOf = (car) => seatPaint.get(car) ?? palette(car);
   });
   world.attach(client);
+  // Paused means paused (owner playtest 1): the world stops drawing while the worker holds the sim, and wakes for a
+  // moment when the room, an event, a setting or the page changes so menus and resizes still show.
+  client.onPause = (reasons) => world.hold(reasons.length > 0);
+  client.watchRoom(() => world.invalidate());
+  client.watchEvents(() => world.invalidate());
+  for (const t of ['pointerdown', 'keydown', 'input', 'resize'] as const) addEventListener(t, () => world.invalidate(), { passive: true });
   // Audio (P1-A03/A05/A07) taps the client's snapshot, event and room feeds last, so it wraps whatever the page set.
   mountAudio(client);
   world.start();
