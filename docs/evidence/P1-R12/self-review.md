@@ -41,3 +41,11 @@ Independent reviews: `fresh-eyes-round1.md` (FAIL), `fresh-eyes-round2.md` (FAIL
 - Effects in a real race (the demo drives the families on purpose; the race path is the same emitter fed by snapshots).
 - Real TV, phones as host, WebKit: Chromium headless on eris's GPU only. Full-screen and resize: effects have no layout.
 - The WebGPU paths (no TSL compute particles yet; the WebGLRenderer route ships).
+
+## 2026-10-10 evening: the 4K cost investigation
+An attempt to cut the effects' 4K frame cost (dust, smoke and fire overdraw) re-captured every effect on the Mac (headed Chrome 154,
+Apple M1 Pro) with a sprite-geometry, size-cap and per-kind-shader build and compared each image with the eris captures above:
+the dust-dirt, wreck-fire, damage-smoke and all-24-tiles shots looked the same (the same inked puffs, the same smoke column and
+fire, the cap only trimmed the largest near-lens puffs, which are already faded there). The build was then dropped because none
+of its changes measurably reduced the cost against HEAD (see `cost.md`, "Investigation"), so the shipped effects code is
+unchanged and the captures in `captures/` are the original eris set, restored. No new look to judge.
