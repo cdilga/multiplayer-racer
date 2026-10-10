@@ -26,7 +26,44 @@
   still costs 0.2 s). Procgen goldens re-blessed (version 8).
 - All crate tests (234) and `jj sim` scenarios pass; clippy clean.
 
-## Not done here (br-gw74.7.1)
-- The 2.5 m height grid rounds some lips into humps: a few jumps launch weakly (0.2-0.5 s at racing speed) and slow
-  cars sometimes barely leave the ground. The fix is ramp geometry finer than the grid.
-- The mid-air render capture (this bead's AC4) — open.
+## br-gw74.7.1: sharp jump geometry (generator version 9)
+
+The 2.5 m height grid rounded the 4 m wide ramp's lip into a hump on some seeds. Generated jumps (`sharp = 1` in their
+params) are no longer written into the grid at all:
+
+- `crates/jj-map/src/jump.rs`: `JumpDesign` (read from the feature's params: `rampLengthMm`, `rampWidthMm`, `lipHeightCm`,
+  `tableLengthMm`, `landingWidthMm`, `downSlopeMilli`, `blendMm`), its `profile`/`height`, and `jump_mesh`: one triangle mesh
+  (cross-sections every 25 cm up the ramp, then table and landing ramp, 1.5 m sloped sides, a front skirt at the lip)
+  standing on the natural ground (bilinear grid height). f64 + libm, so native and WASM agree.
+- Ramp profile: a 3 m parabola out of the ground into a straight ramp at slope `lip / (ramp - blend/2)`, so the nose never
+  meets a kink at the foot (a straight wedge stalled the car there) and the lip is 1.2-1.5x the mean slope. Validator:
+  `jump_flight_kicker_m` uses that exit slope (`blendMm` absent = straight wedge, so the hand-made maps are unchanged).
+- Sim: `Sim::new` adds each sharp jump as a trimesh collider (`FIX_INTERNAL_EDGES`, terrain groups). Convex hulls per slice
+  were tried first and ghost-collided at their seams (the car stopped dead on the ramp); the trimesh does not.
+  `Sim::ground_height(x, z, from_y)` is a ray probe (terrain + jump) used by the lip test.
+- Procgen: route `y` over a jump follows the centreline profile; props and dressing on a jump stand on its surface.
+- Renderer (`web/host/src/render/map/map.ts`): draws the same triangles (TS port of `jump_mesh`), and the ramp's white
+  lines and walls follow the surface. Anything that reads the bare height grid (`groundAt`) does not see the jump.
+
+Numbers (`cargo test -p jj-procgen --test jumps`, ten seeds, 18 jumps, Cruz, autopilot from 12.5 m before the ramp):
+
+| speed | airborne min / mean / max (s) | min landing upY |
+|---|---|---|
+| 15 m/s | 0.80 / 0.90 / 1.02 | 0.99 |
+| 22 m/s | 0.95 / 1.11 / 1.78 | 0.93 |
+| 26 m/s | 0.99 / 1.13 / 1.25 | 0.84 |
+| 30 m/s | 1.02 / 1.23 / 2.23 | 0.99 |
+
+(Bars now: every jump 22-26 m/s >= 0.5 s, 15 m/s >= 0.25 s, all landings upright, no recovery up to 26 m/s.)
+Lip probe (`every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds`): the sim's own ray against the colliders, 1 cm
+below the lip edge at lat -1.5 / 0 / +1.5 m, worst error 0.4 cm (bar 5 cm).
+
+Test harness change: the car now starts 12.5 m before the ramp (was 60 m). From 60 m the autopilot's speed plan braked for
+a bend right before some jumps (seed 8: target 9 m/s) or drifted 4 m off the line, so the "22-26 m/s" rows were measuring
+the corner, not the ramp.
+
+Goldens re-blessed (generator 9): `crates/jj-procgen/tests/goldens/seeds.txt` and `recipes.txt` (jumps no longer in the
+grid; new params; landings sized for the steeper exit).
+
+## Not done here
+- The mid-air render capture (br-gw74.7 AC4 / br-gw74.7.1 AC3) is open.

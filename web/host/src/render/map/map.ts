@@ -72,6 +72,13 @@ class Soup {
       this.colour.push(col.r, col.g, col.b);
     }
   }
+  tri(a: number[], b: number[], c: number[], colour: string): void {
+    col.set(colour);
+    for (const v of [a, b, c]) {
+      this.pos.push(v[0]!, v[1]!, v[2]!);
+      this.colour.push(col.r, col.g, col.b);
+    }
+  }
   mesh(material: Material): Mesh {
     const g = new BufferGeometry();
     g.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
@@ -85,6 +92,38 @@ class Soup {
 
 /** The sim's yaw: centidegrees, turned clockwise seen from above (jj-sim `yaw_rotation`). */
 export const yawQuat = (yaw: number, q = new Quaternion()) => q.setFromAxisAngle(new Vector3(0, 1, 0), -((yaw / 100) * Math.PI) / 180);
+
+/** A sharp jump's design (jj-map `jump.rs`): its ramp, table and landing ramp are exact geometry above the ground, not part of
+ *  the height grid. Lengths in metres. */
+interface JumpDesign {
+  ramp: number;
+  rampW: number;
+  lip: number;
+  table: number;
+  landW: number;
+  down: number;
+  blend: number;
+}
+const EDGE_SLOPE = 1.5;
+const jumpDesign = (p: Params): JumpDesign | null => {
+  if (p.sharp !== 1) return null;
+  const m = (k: string) => (p[k] ?? 0) / 1000;
+  const lip = (p.lipHeightCm ?? 0) / 100;
+  return { ramp: m('rampLengthMm'), rampW: m('rampWidthMm'), lip, table: m('tableLengthMm'), landW: m('landingWidthMm'), down: lip / m('downSlopeMilli'), blend: m('blendMm') };
+};
+const jumpLength = (d: JumpDesign) => d.ramp + d.table + d.down;
+/** Height along the centreline before any edge slope: the blended kicker, the table, the landing ramp. */
+const jumpProfile = (d: JumpDesign, u: number): number => {
+  if (u < 0 || u > jumpLength(d)) return 0;
+  if (u <= d.ramp) {
+    const slope = d.lip / (d.ramp - d.blend / 2);
+    return u < d.blend ? (slope * u * u) / (2 * d.blend) : slope * (u - d.blend / 2);
+  }
+  return u <= d.ramp + d.table ? d.lip : d.lip * (1 - (u - d.ramp - d.table) / d.down);
+};
+const jumpSide = (w: number, lat: number): number => Math.min(1, Math.max(0, (w / 2 + EDGE_SLOPE - Math.abs(lat)) / EDGE_SLOPE));
+/** Height above the ground (m) at `u` along the jump and `lat` from its centreline. */
+const jumpHeight = (d: JumpDesign, u: number, lat: number): number => jumpProfile(d, u) * jumpSide(u <= d.ramp ? d.rampW : d.landW, lat);
 
 export interface MapStats {
   terrainCells: number;
@@ -252,6 +291,79 @@ export class MapRenderer {
     return { point: p[best]!, left: [nx, nz] as const, fwd: [-nz, nx] as const };
   }
 
+  /** Index of the route point nearest (x, z) mm. */
+  private nearestIndex(x: number, z: number): number {
+    let best = 0;
+    let d = Infinity;
+    this.map.route.points.forEach((q, k) => {
+      const dd = (q.x - x) ** 2 + (q.z - z) ** 2;
+      if (dd < d) [d, best] = [dd, k];
+    });
+    return best;
+  }
+
+  /** The point `u` metres along the route polyline from point `base`, with its unit tangent (jj-map `jump.rs` `along`). */
+  private routeAlong(base: number, u: number): { x: number; z: number; tx: number; tz: number } {
+    const p = this.map.route.points;
+    const n = p.length;
+    let rest = Math.max(u, 0);
+    for (let i = base, guard = 0; ; i++, guard++) {
+      const openEnd = !this.map.route.closed && i + 1 >= n;
+      const a = openEnd ? p[n - 2]! : p[i % n]!;
+      const b = openEnd ? p[n - 1]! : p[(i + 1) % n]!;
+      const [dx, dz] = [mm(b.x - a.x), mm(b.z - a.z)];
+      const len = Math.max(Math.hypot(dx, dz), 1e-9);
+      if (openEnd || rest <= len || guard > n) {
+        const o = openEnd ? b : a;
+        const [tx, tz] = [dx / len, dz / len];
+        return { x: mm(o.x) + tx * rest, z: mm(o.z) + tz * rest, tx, tz };
+      }
+      rest -= len;
+    }
+  }
+
+  /** A sharp jump's surface: the same triangles the sim collides with (jj-map `jump_mesh`): cross-sections every 25 cm up the
+   *  ramp, then the table and the landing ramp, plus the table's front skirt at the lip. */
+  private jumpMesh(s: Soup, d: JumpDesign, base: number): void {
+    const colour = '#c08a5a';
+    const section = (u: number, w: number): number[][] =>
+      [-w / 2 - EDGE_SLOPE, -w / 2, w / 2, w / 2 + EDGE_SLOPE].map((lat) => {
+        const r = this.routeAlong(base, u);
+        const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
+        return [x, this.groundAt(x, z) + jumpProfile(d, u) * jumpSide(w, lat), z];
+      });
+    // Counter-clockwise from above, whatever order the corners came in.
+    const tri = (a: number[], b: number[], c: number[]) => {
+      const ny = (b[2]! - a[2]!) * (c[0]! - a[0]!) - (b[0]! - a[0]!) * (c[2]! - a[2]!);
+      if (ny >= 0) s.tri(a, b, c, colour);
+      else s.tri(a, c, b, colour);
+    };
+    const strip = (a: number[][], b: number[][]) => {
+      for (let j = 0; j < 3; j++) {
+        tri(a[j]!, b[j]!, a[j + 1]!);
+        tri(a[j + 1]!, b[j]!, b[j + 1]!);
+      }
+    };
+    const steps = Math.ceil(d.ramp / 0.25);
+    let prev = section(0, d.rampW);
+    for (let k = 1; k <= steps; k++) {
+      const next = section((d.ramp * k) / steps, d.rampW);
+      strip(prev, next);
+      prev = next;
+    }
+    prev = section(d.ramp, d.landW);
+    const skirt = prev.map((v) => [v[0]!, this.groundAt(v[0]!, v[2]!), v[2]!]);
+    for (let j = 0; j < 3; j++) {
+      tri(prev[j]!, skirt[j]!, prev[j + 1]!);
+      tri(prev[j + 1]!, skirt[j]!, skirt[j + 1]!);
+    }
+    for (const u of [d.ramp + d.table, jumpLength(d)]) {
+      const next = section(u, d.landW);
+      strip(prev, next);
+      prev = next;
+    }
+  }
+
   /** The core's features as painted markings and ramp walls on the ground they lie on (never floating pads): a jump is a ramp
    *  with low stone walls along its sides and white lines across it; a creek dip is a muddy wash; crests and whoops show as
    *  the ground itself. Everything follows the heightfield. */
@@ -263,7 +375,15 @@ export class MapRenderer {
       const [lx, lz] = near.left;
       const ox = mm(f.pose.x);
       const oz = mm(f.pose.z);
+      // A sharp jump follows the route's polyline and stands above the ground by its exact height (see `jumpMesh`).
+      const design = f.kind === 'jump' ? jumpDesign(f.params) : null;
+      const base = design ? this.nearestIndex(f.pose.x, f.pose.z) : 0;
       const at = (along: number, lat: number, lift: number): number[] => {
+        if (design) {
+          const r = this.routeAlong(base, along);
+          const [x, z] = [r.x - r.tz * lat, r.z + r.tx * lat];
+          return [x, this.groundAt(x, z) + jumpHeight(design, along, lat) + lift, z];
+        }
         const [x, z] = [ox + fx * along + lx * lat, oz + fz * along + lz * lat];
         return [x, this.groundAt(x, z) + lift, z];
       };
@@ -291,6 +411,7 @@ export class MapRenderer {
           s.quad(top(a0, l1), top(a1, l1), foot(a1, l1), foot(a0, l1), '#7a3a26');
         }
       };
+      if (design) this.jumpMesh(s, design, base);
       if (f.kind === 'jump') {
         const ramp = mm(f.params.rampLengthMm ?? 8000);
         const width = mm(f.params.rampWidthMm ?? 4500) / 2;

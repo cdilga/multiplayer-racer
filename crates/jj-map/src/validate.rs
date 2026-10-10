@@ -33,8 +33,14 @@ pub mod limits {
     /// How far (m) past the end of its ramp a car leaving a jump's lip at `speed_mps` comes back down to the road's
     /// level: a ballistic flight from the lip's height at the ramp's angle (no drag, g = 9.81).
     pub fn jump_flight_m(lip_cm: i64, ramp_mm: i64, speed_mps: f64) -> f64 {
+        jump_flight_kicker_m(lip_cm, ramp_mm, speed_mps, 1.0)
+    }
+
+    /// [`jump_flight_m`] for a ramp whose height grows as (u/l)^`kicker`: the car leaves the lip at the ramp's end
+    /// slope, `kicker` times the mean slope (a straight wedge is 1).
+    pub fn jump_flight_kicker_m(lip_cm: i64, ramp_mm: i64, speed_mps: f64, kicker: f64) -> f64 {
         let (h, l) = (lip_cm as f64 / 100.0, (ramp_mm as f64 / 1000.0).max(1e-6));
-        let a = libm::atan(h / l);
+        let a = libm::atan(kicker * h / l);
         let (vx, vy) = (speed_mps * libm::cos(a), speed_mps * libm::sin(a));
         let t = (vy + libm::sqrt(vy * vy + 2.0 * 9.81 * h)) / 9.81;
         vx * t
@@ -544,7 +550,11 @@ pub fn validate(map: &Map, registry: &Registry) -> Report {
                         ),
                     );
                 }
-                let flight = jump_flight_m(lip, ramp_len, JUMP_DESIGN_SPEED_MPS);
+                // The lip is steeper than the mean slope by the blend at the ramp's foot (`blendMm`, 0 for a straight wedge).
+                let kicker = f.params.get("blendMm").map_or(1.0, |&b| {
+                    ramp_len as f64 / (ramp_len as f64 - b as f64 / 2.0).max(1.0)
+                });
+                let flight = jump_flight_kicker_m(lip, ramp_len, JUMP_DESIGN_SPEED_MPS, kicker);
                 if flight * 1000.0 > land_len as f64 {
                     add(
                         &mut v,

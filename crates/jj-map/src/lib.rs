@@ -11,6 +11,7 @@
 
 pub mod canon;
 mod geom;
+pub mod jump;
 pub mod kit;
 pub mod model;
 pub mod validate;

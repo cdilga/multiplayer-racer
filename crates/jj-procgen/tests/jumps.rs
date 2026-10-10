@@ -43,7 +43,9 @@ fn take_jump(map: &LoadedMap, k: usize, speed: f32, sim_seed: u64) -> Outcome {
     let get = |key: &str| *f.params.get(key).unwrap() as f64 / 1000.0;
     let pts = &map.map.route.points;
     let n = pts.len();
-    let start = (base + n - 24) % n; // 60 m before the ramp
+    // 12.5 m before the ramp (the generator keeps the entry straight that far): the car meets it at the stated speed (the autopilot slows for a bend, so a longer run-up
+    // would test the corner speed, not the ramp).
+    let start = (base + n - 5) % n;
     let mut sim = Sim::new(
         map,
         &jj_procgen::registry(),
@@ -123,7 +125,8 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
         {
             // Slow (lands on the table), the autopilot's racing speeds and past them: every one lands on its wheels; at
             // racing speed every one launches, and on average they fly (old 8 % wedges: 0.35 s at 22 m/s). Jumps whose
-            // lip the 2.5 m height grid rounds off still launch weakly: br-gw74.7.1 builds the ramp finer than the grid.
+            // lip the 2.5 m height grid used to round off now launch like the rest: the ramp is exact geometry
+            // (jj_map::jump, br-gw74.7.1).
             for speed in [15.0f32, 22.0, 26.0, 30.0] {
                 let o = take_jump(&map, k, speed, seed);
                 rows += &format!(
@@ -139,12 +142,16 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
                 let id = format!("seed {seed} jump {k} @ {speed}");
                 if (22.0..=26.0).contains(&speed) {
                     racing_air.push(o.airborne_s);
-                    if o.airborne_s < 0.2 {
+                    if o.airborne_s < 0.5 {
                         bad.push(format!(
                             "{id}: only {:.2} s in the air at racing speed; {:.1} m off the line at the ramp",
                             o.airborne_s, o.lateral_at_ramp
                         ));
                     }
+                }
+                // A slow car (the reference lap's 15 m/s) still leaves the lip.
+                if speed == 15.0 && o.airborne_s < 0.25 {
+                    bad.push(format!("{id}: only {:.2} s in the air at 15 m/s", o.airborne_s));
                 }
                 // Past the design speed (the validator's 26 m/s) a car may overshoot the landing and run off the road
                 // afterwards; it still has to land on its wheels.
@@ -165,9 +172,45 @@ fn cars_land_every_placed_jump_upright_on_ten_seeds_at_design_speed_and_faster()
     assert!(jumps >= 10, "ten seeds place at least ten jumps: {jumps}");
     let mean = racing_air.iter().sum::<f64>() / racing_air.len().max(1) as f64;
     println!("mean air time at racing speed {mean:.2} s");
-    assert!(mean >= 0.8, "jumps fly at racing speed: mean {mean:.2} s");
     assert!(bad.is_empty(), "{bad:#?}");
+    assert!(mean >= 0.8, "jumps fly at racing speed: mean {mean:.2} s");
     if let Some(dir) = std::env::var_os("JJ_EVIDENCE_DIR") {
         std::fs::write(std::path::Path::new(&dir).join("jump-scenarios.txt"), rows).unwrap();
     }
+}
+
+/// The ramp's lip is where it was designed to be: the ground a car meets (the sim's own ray against the colliders) at
+/// the lip is within 5 cm of the ground plus the designed lip height, on every jump of ten seeds.
+#[test]
+fn every_lip_is_within_5_cm_of_its_designed_height_on_ten_seeds() {
+    use jj_map::jump::{JumpDesign, ground_height_m, surface_point};
+    let (mut n, mut worst, mut bad) = (0, 0.0f32, Vec::new());
+    for seed in 0..10u64 {
+        let map = loaded(seed);
+        let mut sim = Sim::new(&map, &jj_procgen::registry(), seed, VehicleProfile::cruz());
+        sim.step();
+        for (k, f) in map.map.features.iter().enumerate() {
+            let Some(d) = JumpDesign::of(f) else { continue };
+            // 1 cm before the lip's edge, on the centreline and 1.5 m either side (inside the 4 m flat top).
+            let u = d.ramp_m - 0.01;
+            for lat in [-1.5, 0.0, 1.5] {
+                let p = surface_point(&map.map, f, &d, u, lat);
+                let designed = ground_height_m(&map.map.terrain, p[0], p[2])
+                    + d.profile(u);
+                let got = sim
+                    .ground_height(p[0] as f32, p[2] as f32, p[1] as f32 + 5.0)
+                    .expect("a ray down onto the lip hits");
+                let err = (f64::from(got) - designed).abs() as f32;
+                worst = worst.max(err);
+                if err > 0.05 {
+                    bad.push(format!(
+                        "seed {seed} jump {k} lat {lat}: lip {got:.3} m vs designed {designed:.3} m"
+                    ));
+                }
+            }
+            n += 1;
+        }
+    }
+    println!("{n} jumps, worst lip error {:.1} cm", worst * 100.0);
+    assert!(n >= 10 && bad.is_empty(), "{n} jumps: {bad:#?}");
 }

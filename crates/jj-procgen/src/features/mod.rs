@@ -36,6 +36,8 @@ pub struct Limits {
     pub jump_table_m: (f64, f64),
     /// The landing ramp's slope back down to the road (fall over run).
     pub jump_down_slope: f64,
+    /// Concave transition at the ramp's foot, m (a parabola into the ramp's slope; the lip is that much steeper).
+    pub jump_blend_m: f64,
     /// Steepest ramp (rise over run).
     pub jump_ramp_slope: f64,
     /// Gentlest ramp: below it a tabletop barely launches a car.
@@ -63,6 +65,7 @@ pub const LIMITS: Limits = Limits {
     jump_landing_m: (34.0, 46.0),
     jump_table_m: (4.0, 8.0),
     jump_down_slope: 0.16,
+    jump_blend_m: 3.0,
     jump_ramp_slope: 0.21,
     jump_min_ramp_slope: 0.16,
     jump_road_grade: 0.045,
@@ -281,10 +284,11 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
                 whole(rng, LIMITS.jump_table_m.0, LIMITS.jump_table_m.1, 1.0) * 1000,
             );
             // The landing reaches past the flight at the validator's design speed, with 4 m to spare.
-            let flight = jj_map::limits::jump_flight_m(
+            let flight = jj_map::limits::jump_flight_kicker_m(
                 lip,
                 p["rampLengthMm"],
                 jj_map::limits::JUMP_DESIGN_SPEED_MPS,
+                ramp_mm as f64 / (ramp_mm as f64 - LIMITS.jump_blend_m * 500.0),
             );
             let land = whole(rng, LIMITS.jump_landing_m.0, LIMITS.jump_landing_m.1, 1.0) * 1000;
             p.insert(
@@ -292,6 +296,17 @@ fn draw_params(kind: FeatureKind, rng: &mut Rng) -> BTreeMap<String, i64> {
                 land.max(((flight + 4.0) as i64 + 1) * 1000),
             );
             p.insert("landingWidthMm".into(), 6_000);
+            // Sharp geometry (jj_map::jump): the sim collides with, and the renderer draws, the exact ramp, table and
+            // landing ramp instead of a 2.5 m grid's rounding of them.
+            p.insert("sharp".into(), 1);
+            p.insert(
+                "blendMm".into(),
+                libm::round(LIMITS.jump_blend_m * 1000.0) as i64,
+            );
+            p.insert(
+                "downSlopeMilli".into(),
+                libm::round(LIMITS.jump_down_slope * 1000.0) as i64,
+            );
         }
         FeatureKind::Crest => {
             let len = whole(rng, 30.0, 60.0, 5.0) * 5;
@@ -373,6 +388,10 @@ fn delta(
     };
     match kind {
         FeatureKind::Jump => {
+            // Jumps with `sharp` geometry are not written into the grid at all (see `bake`).
+            if p.get("sharp") == Some(&1) {
+                return 0.0;
+            }
             let (l, lip) = (get("rampLengthMm") / 1000.0, get("lipHeightCm") / 100.0);
             let (table, down) = (get("tableLengthMm") / 1000.0, lip / LIMITS.jump_down_slope);
             let (w, lw) = (get("rampWidthMm") / 1000.0, get("landingWidthMm") / 1000.0);
@@ -473,19 +492,31 @@ fn bake(map: &mut Map, line: &Line) {
         let now = ground_height_m(&map.terrain, x, z);
         q.y += libm::round((now - was) * 1000.0) as i32;
     }
+    // The road over a sharp jump follows its centerline profile exactly (the grid carries none of it).
+    for f in &map.features {
+        let Some(d) = jj_map::jump::JumpDesign::of(f) else {
+            continue;
+        };
+        let base = zone_base(line, f);
+        for (i, q) in map.route.points.iter_mut().enumerate() {
+            q.y += libm::round(d.profile(line.s[i] - base) * 1000.0) as i32;
+        }
+    }
     let terrain = map.terrain.clone();
+    let (route, jumps) = (map.route.clone(), map.features.clone());
     for pose in map
         .dressing
         .iter_mut()
         .map(|d| &mut d.pose)
         .chain(map.props.iter_mut().map(|q| &mut q.pose))
     {
-        let y = ground_height_m(
-            &terrain,
-            f64::from(pose.x) / 1000.0,
-            f64::from(pose.z) / 1000.0,
-        );
-        pose.y = mm(y);
+        let (x, z) = (f64::from(pose.x) / 1000.0, f64::from(pose.z) / 1000.0);
+        // Whatever stands on a sharp jump stands on its surface, not inside it.
+        let up: f64 = jumps
+            .iter()
+            .map(|f| jj_map::jump::height_above_ground_m(&route, f, x, z))
+            .fold(0.0, f64::max);
+        pose.y = mm(ground_height_m(&terrain, x, z) + up);
     }
     for f in &mut map.features {
         let i = line.index_at(zone_base(line, f));

@@ -282,6 +282,22 @@ impl Sim {
             .collision_groups(TERRAIN_GROUPS);
         world.insert_collider(ground, None);
 
+        // Sharp jumps (br-gw74.7.1): the ramp, table and landing ramp are the exact triangles of `jj_map::jump`, not a 2.5 m
+        // grid's rounding of them. They are ground to the car (the terrain's groups).
+        for f in &m.features {
+            if let Some((verts, tris)) = jj_map::jump::jump_mesh(m, f) {
+                let pts: Vec<Vector> = verts
+                    .iter()
+                    .map(|p| Vector::new(p[0] as f32, p[1] as f32, p[2] as f32))
+                    .collect();
+                if let Ok(b) =
+                    ColliderBuilder::trimesh_with_flags(pts, tris, TriMeshFlags::FIX_INTERNAL_EDGES)
+                {
+                    world.insert_collider(b.friction(0.9).collision_groups(TERRAIN_GROUPS), None);
+                }
+            }
+        }
+
         // A solid catch plane well under the kill plane (P1-S04c): whatever falls out of the map (a wreck's husk and parts, a
         // prop knocked off the edge) comes to rest on it instead of falling for ever, so a husk is never despawned and
         // never costs more than a sleeping body.
@@ -1870,6 +1886,21 @@ impl Sim {
     pub fn part_state(&self, car: CarId, part: &str) -> Option<PartState> {
         let i = damage::part_index(part)?;
         self.part_states(car).map(|s| s[i])
+    }
+
+    /// The ground's height (m) straight below (x, z) as the cars meet it (terrain and sharp jump pieces), found by a ray
+    /// from `from_y` down; `None` when nothing is under it. A probe for tests and tools (needs one `step` first).
+    pub fn ground_height(&self, x: f32, z: f32, from_y: f32) -> Option<f32> {
+        let queries = self.world.broad_phase.as_query_pipeline(
+            self.world.narrow_phase.query_dispatcher(),
+            &self.world.bodies,
+            &self.world.colliders,
+            QueryFilter::default().groups(CAR_RAYS),
+        );
+        let ray = Ray::new(Vector::new(x, from_y, z), Vector::new(0.0, -1.0, 0.0));
+        queries
+            .cast_ray(&ray, 1.0e4, true)
+            .map(|(_, toi)| from_y - toi)
     }
 
     pub fn car_state(&self, car: CarId) -> Option<CarState> {
