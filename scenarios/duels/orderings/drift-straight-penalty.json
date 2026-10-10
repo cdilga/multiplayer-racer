@@ -17,7 +17,7 @@
   {
    "faster": "plain",
    "slower": "drift-*",
-   "byS": 0.02
+   "byS": 0.016
   },
   {
    "faster": "plain",

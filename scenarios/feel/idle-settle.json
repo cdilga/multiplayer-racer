@@ -1,6 +1,6 @@
 {
  "scenario": "idle-settle",
- "what": "§7.3 Suspension (P1-S03a). Two Cruz Missiles dropped onto the greybox's main straight (0.6 m and 0.2 m) settle in one go: at most one rebound, back at their design pose (origin on the road), all four wheels down. Then a deliberate drive shows the suspension working: throttle squats, a turn rolls, braking dives, visibly. Baselines: no input and mashing never show that squat, roll and dive pattern.",
+ "what": "§7.3 Suspension (P1-S03a). Two Cruz Missiles dropped onto the greybox's main straight (0.6 m and 0.2 m) settle in one go: at most one rebound, back at their design pose (origin on the road), all four wheels down. Then a deliberate drive shows the suspension working: throttle squats, a turn rolls, braking dives, visibly. Roll is small since R122 (roll_influence 0.12, about 1 degree here): arcade cars lean a little, never onto their sills. Baselines: no input and mashing never show that squat, roll and dive pattern.",
  "map": "maps/greybox-loop.json",
  "seed": 1,
  "ticks": 600,
@@ -24,7 +24,7 @@
   {"car": 0, "atTick": 120, "metric": "wheelsInContact", "min": 4, "max": 4},
   {"car": 0, "atTick": 120, "metric": "upY", "min": 0.99, "max": 1.001},
   {"car": 0, "metric": "maxPitchDeg", "min": 2.0, "max": 8.0},
-  {"car": 0, "metric": "maxRollDeg", "min": 2.5, "max": 10.0},
+  {"car": 0, "metric": "maxRollDeg", "min": 0.5, "max": 10.0},
   {"car": 0, "metric": "minUpY", "min": 0.95, "max": 1.001},
   {"car": 1, "atTick": 120, "metric": "rebounds", "min": 0, "max": 1},
   {"car": 1, "atTick": 120, "metric": "height", "min": -0.04, "max": 0.04},
@@ -32,7 +32,7 @@
   {"car": 1, "atTick": 120, "metric": "wheelsInContact", "min": 4, "max": 4},
   {"car": 1, "atTick": 120, "metric": "upY", "min": 0.99, "max": 1.001},
   {"car": 1, "metric": "maxPitchDeg", "min": 2.0, "max": 8.0},
-  {"car": 1, "metric": "maxRollDeg", "min": 2.5, "max": 10.0},
+  {"car": 1, "metric": "maxRollDeg", "min": 0.5, "max": 10.0},
   {"car": 1, "metric": "minUpY", "min": 0.95, "max": 1.001}
  ],
  "baselines": {

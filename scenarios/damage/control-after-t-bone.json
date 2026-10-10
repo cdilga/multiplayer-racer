@@ -47,10 +47,6 @@
   "damagedOnly": [
    {
     "car": 0,
-    "part": "front"
-   },
-   {
-    "car": 0,
     "part": "door_FR"
    },
    {

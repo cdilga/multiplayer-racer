@@ -80,6 +80,14 @@ not feel targets.
   toward the centre of mass before applying it. That `roll_influence` is private and fixed at Bullet's 0.1, so roll is cut
   by 90 % (0.5° in a hard turn). The sim applies (up · h · (r − 0.1)) × J per wheel after `update_vehicle`, exactly what a
   public `roll_influence` of r would do. It's a profile number, not a fudge factor.
+- **…and too much of it dives the car (2026-10-10, R122).** At r = 0.6 a hard turn rolled the bubbly body onto its sill
+  (its hull sits only 0.115 m off the ground at rest) and flipped it: the handling bank
+  (`crates/jj-procgen/tests/handling.rs`) found 53 roll-overs in 513 thrown-about runs on generated roads and an 84° roll on
+  flat tarmac. r = 0.12 gives none, about 1° of lean at idle-settle and 12.6° worst (a spin under locked brakes at
+  35 m/s). Suspension stiffness, rest length and travel didn't help (rest length doesn't move the ride height: the hard
+  points keep the design pose; capping travel lifts wheels). Below 0.1 changes nothing. The debris-pile escape is
+  chaotic in r (0.1 stuck, 0.12 out in 19 m, 0.15 in 30 m, 0.18 stuck), so it is fragile; drift rear grip went 0.35 →
+  0.31 to keep drifting down a straight at least a tick slower than driving it.
 - **The profile is compiled in** (`include_str!`), so `jj sim` and the host see edits to
   `assets/profiles/cruz-missile.json` only after a rebuild. Tune with `--set`/`--sweep` first, then write the file.
 - **DRIVE y is one stick.** Throttle drives; brake, or a negative throttle (the stick pulled down, as mash baselines
